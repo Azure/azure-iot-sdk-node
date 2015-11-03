@@ -4,10 +4,9 @@
 'use strict';
 
 var transportSpecificTests = require('./_client_test.js');
-var RealTransport = require('./transport.js');
 
 describe('Over real AMQP', function () {
-  this.timeout(10000);
+  this.timeout(15000);
   var opts = {
     transport: null,
     connectionString: process.env.IOTHUB_CONNECTION_STRING,
