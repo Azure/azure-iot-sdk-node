@@ -7,7 +7,7 @@ The Azure IoT device SDK for Node allows to build devices that communicate with 
 Use the device SDK to:
 * Send event data to Azure IoT Hub.
 * Receive messages from IoT Hub.
-* Communicate with the service via MQTT (optionally over WebSockets, AMQP (optionally over WebSockets),  or HTTP.
+* Communicate with the service via MQTT (optionally over WebSockets), AMQP (optionally over WebSockets),  or HTTP.
 * Synchronize an Azure IoT Hub device Twin with Azure IoT Hub from a device
 * Implement Azure IoT Hub Direct Device Methods on devices
 * Implement Azure IoT Device Mangement features on devices
