@@ -1,12 +1,86 @@
+# Microsoft Azure IoT service SDK for Node.js
+
 The Azure IoT Service SDK for Node.js helps you build applications that interact with your devices and manage their identities in your IoT hub.
+
+[![npm version](https://badge.fury.io/js/azure-iothub.svg)](https://badge.fury.io/js/azure-iothub)
+
+## Prerequisites
+You need to install **Node.js** JavaScript runtime environment for Azure IoT JavaScript client SDK to run on your platform. For downloading Node.js refer to [Node.js][nodejs_lnk]. To check if your platform (OS) is **supported** check if install package is available at [Node.js][nodejs_dwld_lnk].
+[npm][npm_lnk] is a package manager command line tool that will be included when Node.js is installed. This is the tool that you will use to install Azure IoT node.js client side SDK.
 
 ## Installation
 
-```
-npm install azure-iothub@latest
-```
+`npm install -g azure-iothub@latest` to get the latest (pre-release) version.
+
+`npm install -g azure-iothub` to get the latest (release) version.
 
 ## Features
 
 * Create/remove/update/list device identities in your IoT hub
 * Send messages to your devices and get feedback when they're delivered
+* Work with the Azurte IoT Hub Device Twins
+* Invoke Cloud to Device Direct Methods on a device
+
+## How to use the Azure IoT service SDK for Node.js
+
+Once you have installed the package as indicated above, you can start using the features of the Service SDK in your code. Below is a code snippet showing how to add a new device in the Azuyre IoT Hub device registry:
+
+Note that for this sample to work, you will need to [setup your IoT hub][lnk-setup-iot-hub] and retreive credentials for the service app. In the code, replace '[IoT Connection String]' with an access policy's credentials for your IoT Hub.
+
+```js
+var iothub = require('azure-iothub');
+
+var connectionString = '[IoT Connection String]';
+
+var registry = iothub.Registry.fromConnectionString(connectionString);
+
+// Create a new device
+var device = {
+deviceId: 'sample-device-' + Date.now()
+};
+
+registry.create(device, function(err, deviceInfo, res) {
+    if (err) console.log(op + ' error: ' + err.toString());
+    if (res) console.log(op + ' status: ' + res.statusCode + ' ' + res.statusMessage);
+    if (deviceInfo) console.log(op + ' device info: ' + JSON.stringify(deviceInfo));
+});
+
+```
+
+Check out the [samples][samples] for details on the various features of the Service SDK
+
+## Read more
+
+* [Azure IoT Hub dev center][iot-dev-center]
+* [Azure IoT Hub documentation][iot-hub-documentation]
+* [API reference][node-api-reference]
+
+
+## Directory structure
+
+Service SDK subfolders:
+
+### /devdoc
+
+Development requirements documentation
+
+### /lib
+
+Code for the library
+
+### /Samples
+
+Set of simple samples showing how to use the features of the Service SDK
+
+### /test
+
+Test files
+
+[nodejs_lnk]: https://nodejs.org/
+[nodejs_dwld_lnk]: https://nodejs.org/en/download/
+[npm_lnk]:https://docs.npmjs.com/getting-started/what-is-npm
+[samples]: ./samples/
+[lnk-setup-iot-hub]: https://aka.ms/howtocreateazureiothub
+[node-api-reference]: http://azure.github.io/azure-iot-sdks/
+[iot-dev-center]: http://azure.com/iotdev
+[iot-hub-documentation]: https://docs.microsoft.com/en-us/azure/iot-hub/

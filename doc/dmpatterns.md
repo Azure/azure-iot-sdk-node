@@ -1,13 +1,11 @@
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
-
 # The device management patterns samples
 
 The device management pattern samples support the following device management tutorials, which provide both the device and service side code ready to execute. 
 
-- [Get started with device management](https://azure.microsoft.com/en-us/documentation/articles/iot-hub-device-management-get-started/)
-- [How to do a firmware update](https://azure.microsoft.com/en-us/documentation/articles/iot-hub-firmware-update/)
+- [Get started with device management][get-started-dm-doc]
+- [How to do a firmware update][fw-update-doc]
 
-To learn more about Azure IoT Hub device management, see [Overview of Azure IoT Hub device management](https://azure.microsoft.com/en-us/documentation/articles/iot-hub-device-management-overview/).
+To learn more about Azure IoT Hub device management, see [Overview of Azure IoT Hub device management][overview-iot-dm-doc].
 
 ## Running the samples
 
@@ -26,7 +24,6 @@ From the root directory of the repository, run through the following steps to se
     node service\samples\dmpatterns_reboot_service.js <IotHub connection string>
     ```
 
-
 ### Firmware Update device management pattern:
 
 1. Start the device side first, as it will register the C2D method listener for firmware update:
@@ -41,3 +38,6 @@ From the root directory of the repository, run through the following steps to se
     node service\samples\dmpatterns_fwupdate_service.js <IotHub connection string>
     ```
 
+[overview-iot-dm-doc]: https://azure.microsoft.com/en-us/documentation/articles/iot-hub-device-management-overview/
+[get-started-dm-doc]: https://azure.microsoft.com/en-us/documentation/articles/iot-hub-device-management-get-started
+[fw-update-doc]: https://azure.microsoft.com/en-us/documentation/articles/iot-hub-firmware-update/
