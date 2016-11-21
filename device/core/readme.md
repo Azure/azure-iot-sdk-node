@@ -19,9 +19,7 @@ You need to install **Node.js** JavaScript runtime environment for Azure IoT Jav
 
 ## Install
 
-`npm install -g azure-iot-device@latest` to get the latest (pre-release) version.
-
-`npm install -g azure-iot-device` to get the latest (release) version.
+`npm install -g azure-iot-device` to get the latest version.
 
 ## Getting Started
 
