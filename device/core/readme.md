@@ -1,4 +1,4 @@
-#azure-iot-device
+)#azure-iot-device
 The core components of the Azure IoT device SDK.
 
 [![npm version](https://badge.fury.io/js/azure-iot-device.svg)](https://badge.fury.io/js/azure-iot-device)
