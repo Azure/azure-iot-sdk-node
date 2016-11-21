@@ -1,0 +1,6 @@
+[submodule "tools/iothub-explorer"]
+	path = tools/iothub-explorer
+	url = https://github.com/azure/iothub-explorer.git
+[submodule "tools/iothub-diagnostics"]
+	path = tools/iothub-diagnostics
+	url = https://github.com/azure/iothub-diagnostics.git
