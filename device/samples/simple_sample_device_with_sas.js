@@ -3,11 +3,11 @@
 
 'use strict';
 
-var Amqp = require('azure-iot-device-amqp').Amqp;
+var Protocol = require('azure-iot-device-mqtt').Mqtt;
 // Uncomment one of these transports and then change it in fromConnectionString to test other transports
-// var AmqpWs = require('azure-iot-device-amqp').AmqpWs;
-// var Http = require('azure-iot-device-http').Http;
-// var Mqtt = require('azure-iot-device-mqtt').Mqtt;
+// var Protocol = require('azure-iot-device-amqp').AmqpWs;
+// var Protocol = require('azure-iot-device-http').Http;
+// var Protocol = require('azure-iot-device-amqp').Amqp;
 var Client = require('azure-iot-device').Client;
 var Message = require('azure-iot-device').Message;
 
@@ -16,7 +16,7 @@ var Message = require('azure-iot-device').Message;
 var sas = "[SharedAccessSignature]";
 
 // fromSharedAccessSignature must specify a transport constructor, coming from any transport package.
-var client = Client.fromSharedAccessSignature(sas, Amqp);
+var client = Client.fromSharedAccessSignature(sas, Protocol);
 
 var connectCallback = function (err) {
   if (err) {
