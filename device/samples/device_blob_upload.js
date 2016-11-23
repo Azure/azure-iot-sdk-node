@@ -3,7 +3,7 @@
 
 'use strict';
 
-var Protocol = require('azure-iot-device-amqp').Amqp;
+var Protocol = require('azure-iot-device-mqtt').Mqtt;
 var Client = require('azure-iot-device').Client;
 var fs = require('fs');
 
