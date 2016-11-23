@@ -98,10 +98,6 @@ if %e2e-tests%==1 (
   if errorlevel 1 goto :cleanup
 )
 
-cd %node-root%\..\tools\iothub-explorer
-call npm -s test
-if errorlevel 1 goto :cleanup
-
 goto :cleanup
 
 
@@ -126,7 +122,8 @@ goto :eof
 
 :cleanup
 set EXITCODE=%ERRORLEVEL%
-call node %node-root%\..\tools\iothub-explorer\iothub-explorer.js delete %IOTHUB_X509_DEVICE_ID% --login %IOTHUB_CONNECTION_STRING% 
+call node %node-root%\build\tools\delete_device.js --connectionString %IOTHUB_CONNECTION_STRING% --deviceId %IOTHUB_X509_DEVICE_ID%
 del %IOTHUB_X509_CERTIFICATE%
 del %IOTHUB_X509_KEY%
 exit /b %EXITCODE%
+

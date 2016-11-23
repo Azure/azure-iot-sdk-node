@@ -14,7 +14,7 @@ var argv = require('yargs')
            .describe('connectionString', 'Azure IoT Hub service connection string that shall have device creation permissions')
            .describe('deviceId', 'Unique identifier for the device that shall be created')
            .describe('daysValid', 'Number of days the certificate will remain valid')
-           .argv
+           .argv;
 
 var certFile = argv.deviceId + '-cert.pem';
 var keyFile = argv.deviceId + '-key.pem';
@@ -60,7 +60,7 @@ function createCertsAndDevice(done) {
 }
 
 var registry = Registry.fromConnectionString(argv.connectionString);
-registry.get(argv.deviceId, function(err, deviceInfo) {
+registry.get(argv.deviceId, function(err) {
   if (!err) {
     console.log(chalk.red('Device already exists: ' + argv.deviceId));
     process.exit(1);
@@ -71,8 +71,8 @@ registry.get(argv.deviceId, function(err, deviceInfo) {
         process.exit(1);
       } else {
         console.log(chalk.green('Device \'' + argv.deviceId + '\' created successfully.'));
-        console.log(chalk.white('\tcertificate file: ' + certfile));
-        console.log(chalk.white('\tkey file: ' + keyfile));
+        console.log(chalk.white('\tcertificate file: ' + certFile));
+        console.log(chalk.white('\tkey file: ' + keyFile));
         process.exit(0);
       }
     });
