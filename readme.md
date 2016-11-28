@@ -20,7 +20,7 @@ The API reference documentation is [here][node-api-reference].
    * [Device SDK](./device/core/readme.md)
    * [Service SDK](./service/readme.md)
 
-* **Working with the SDKs code**: if you are working with the SDKs code to modify it or to contibute changes, then you can clone the repository and build the libraries following [these instructions](./doc/node-devbox-setup.md).
+* **Working with the SDKs code**: if you are working with the SDKs code to modify it or to contribute changes, then you can clone the repository and build the libraries following [these instructions](./doc/node-devbox-setup.md).
 
 ## Samples
 
