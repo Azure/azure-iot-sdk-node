@@ -1,14 +1,14 @@
 {
   "name": "azure-iot-device",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Azure IoT device SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "device.js",
   "typings": "device.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.1.0",
-    "azure-iot-http-base": "1.1.0",
+    "azure-iot-common": "1.1.1",
+    "azure-iot-http-base": "1.1.1",
     "azure-storage": "^1.2.0",
     "debug": "^2.2.0",
     "lodash": "^4.15.0",
