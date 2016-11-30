@@ -82,6 +82,9 @@ echo.
 echo -- Creating links for %cd% --
 call npm link azure-iot-common
 call npm link azure-iot-device
+call npm link azure-iot-device-amqp
+call npm link azure-iot-device-http
+call npm link azure-iot-device-mqtt
 call npm link azure-iothub
 call npm install
 

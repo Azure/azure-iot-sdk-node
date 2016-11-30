@@ -73,10 +73,13 @@ npm link azure-iot-device-mqtt
 npm link azure-iothub
 npm install
 
-cd $node_root/../tools/iothub-explorer
+cd $node_root/tools/iothub-explorer
 echo "\n-- Creating links for `pwd` --"
 npm link azure-iot-common
 npm link azure-iot-device
+npm link azure-iot-device-amqp
+npm link azure-iot-device-http
+npm link azure-iot-device-mqtt
 npm link azure-iothub
 npm install
 [ $? -eq 0 ] || exit $?
