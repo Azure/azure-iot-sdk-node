@@ -16,4 +16,4 @@ declare class Twin extends EventEmitter {
   static fromDeviceClient(client: Client, done: (error?: Error, twin?: Twin) => void): void;
 }
 
-export = Client;
+export = Twin;
