@@ -10,7 +10,7 @@ var targetDevice = '<Device Id>';
 var methodParams = {
   methodName: '<Method Name>', 
   payload: '[Method Payload]',
-  timeoutInSeconds: 42
+  responseTimeoutInSeconds: 15 // set response timeout as 15 seconds 
 };
 
 var client = Client.fromConnectionString(connectionString);

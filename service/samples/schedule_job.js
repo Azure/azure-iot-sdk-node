@@ -17,7 +17,7 @@ var jobClient = JobClient.fromConnectionString(connectionString);
 var methodParams = {
   methodName: 'methodName',
   payload: null,
-  timeoutInSeconds: 42
+  responseTimeoutInSeconds: 15 // set response timeout as 15 seconds 
 };
 
 var methodJobId = uuid.v4();
