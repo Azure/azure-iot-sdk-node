@@ -4,7 +4,7 @@
 declare interface DeviceMethodParams {
     name: string;
     payload?: any;
-    timeoutInSeconds?: number;
+    responseTimeoutInSeconds?: number;
     connectTimeoutInSeconds?: number; // default is 0
 }
 
