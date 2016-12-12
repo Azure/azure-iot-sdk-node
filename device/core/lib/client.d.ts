@@ -4,6 +4,7 @@
 import { EventEmitter } from 'events';
 import { Stream } from 'stream';
 import { Message, results, Receiver, TransportConfig } from 'azure-iot-common';
+import Twin = require('./twin');
 
 declare class Client extends EventEmitter {
   constructor(transport: Client.Transport, connStr: string, blobUploadClient: Client.BlobUpload);
