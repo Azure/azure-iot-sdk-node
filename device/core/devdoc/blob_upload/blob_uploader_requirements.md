@@ -32,9 +32,11 @@ fs.stat(filePath, function (err, fileStats) {
 
 # Public API
 ## BlobUploader(storageApi) constructor
-**SRS_NODE_DEVICE_BLOB_UPLOAD_16_007: [** `BlobUploader` should use the `azure-storage` package to upload data if `storageApi` is falsy. **]**
-
 **SRS_NODE_DEVICE_BLOB_UPLOAD_16_008: [** `BlobUploader` should use the `storageApi` object to upload data if `storageApi` is truthy. **]**
+
+**SRS_NODE_DEVICE_BLOB_UPLOAD_06_001: [** `BlobUploader` should denote delay loading with null for the storageApi property if `storageApi` is falsy **]**
+
+**SRS_NODE_DEVICE_BLOB_UPLOAD_06_002: [** `BlobUploader` should delay load azure-storage into the storageAPI property if `storageApi` is falsy **]**
 
 ## uploadToBlob(blobInfo, stream, streamSize, done)
 **SRS_NODE_DEVICE_BLOB_UPLOAD_16_001: [** `uploadToBlob` shall throw a `ReferenceError` if `blobInfo` is falsy. **]**

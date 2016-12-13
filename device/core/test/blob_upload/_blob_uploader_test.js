@@ -5,17 +5,16 @@
 
 var assert = require('chai').assert;
 var stream = require('stream');
-var storage = require('azure-storage');
 var ArgumentError = require('azure-iot-common').errors.ArgumentError;
 var BlobUploader = require('../../lib/blob_upload/blob_uploader.js');
 var FakeStorageApi = require('./fake_storage_api.js');
 
 describe('BlobUploader', function() {
   describe('#constructor', function () {
-    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_16_007: [if `storageApi` is falsy, `BlobUploader` should use the `azure-storage` package to upload data.]*/
-    it('creates the \'BlobUploader\' instance with the azure-storage package if \'storageApi\' is falsy', function() {
+    /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_06_001: [`BlobUploader` should denote delay loading with null for the storageApi property if `storageApi` is falsy]*/
+    it('creates the \'BlobUploader\' instance with the null storageApi property if \'storageApi\' is falsy', function() {
       var uploader = new BlobUploader();
-      assert.deepEqual(uploader.storageApi, storage);
+      assert.isNull(uploader.storageApi);
     });
 
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_16_008: [if `storageApi` is truthy, `BlobUploader` should use the `storageApi` object to upload data.]*/
@@ -33,9 +32,9 @@ describe('BlobUploader', function() {
       blobName: 'blobName',
       sasToken: 'sasToken'
     };
-    
+
     var fakeStream = new stream.Readable();
-    
+
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_16_001: [`uploadToBlob` shall throw a `ReferenceError` if `blobInfo` is falsy.]*/
     [undefined, '', null, 0].forEach(function (falsyValue) {
       it('throws when \'blobInfo\' is \'' + falsyValue + '\'', function() {

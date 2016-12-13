@@ -63,7 +63,7 @@ create_test_device()
 
 delete_test_device()
 {
-    node $node_root/../tools/iothub-explorer/iothub-explorer.js delete $IOTHUB_X509_DEVICE_ID --login $IOTHUB_CONNECTION_STRING 
+    node $node_root/tools/iothub-explorer/iothub-explorer.js delete $IOTHUB_X509_DEVICE_ID --login $IOTHUB_CONNECTION_STRING
     rm $IOTHUB_X509_CERTIFICATE
     rm $IOTHUB_X509_KEY
 }
@@ -119,7 +119,7 @@ then
     [ $? -eq 0 ] || cleanup_and_exit $?
 fi
 
-cd $node_root/../tools/iothub-explorer
+cd $node_root/tools/iothub-explorer
 npm -s test
 
 cleanup_and_exit $?
