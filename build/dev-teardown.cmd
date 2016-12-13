@@ -13,7 +13,7 @@ echo .
 echo -- Removing links for build tools --
 call npm rm azure-iothub
 
-cd %node-root%\..\tools\iothub-explorer
+cd %node-root%\tools\iothub-explorer
 echo -- Removing links for %cd% --
 call npm rm azure-iothub
 call npm rm azure-iot-device-mqtt

@@ -191,7 +191,7 @@ describe('Client', function () {
       }, errors.NotImplementedError);
     });
   });
-  
+
   describe('setOptions', function() {
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
     [null, undefined].forEach(function(options) {
@@ -474,8 +474,8 @@ describe('Client', function () {
     /*Test_SRS_NODE_DEVICE_CLIENT_16_001: [The `close` function shall call the transport's `disconnect` function if it exists.]*/
     it('disconnects the transport if called while updating the shared access signature', function(testCallback){
       var transport = {
-        connect: sinon.stub().callsArgWith(0, null, new results.Connected()), 
-        disconnect: sinon.stub().callsArgWith(0, null, new results.Disconnected()), 
+        connect: sinon.stub().callsArgWith(0, null, new results.Connected()),
+        disconnect: sinon.stub().callsArgWith(0, null, new results.Disconnected()),
         updateSharedAccessSignature: sinon.stub(), // will not call the callback, leaving the state machine in the 'updating_sas' state.
         removeListener: function () {},
         on: function () {}
@@ -492,7 +492,7 @@ describe('Client', function () {
     /*Test_SRS_NODE_DEVICE_CLIENT_16_001: [The `close` function shall call the transport's `disconnect` function if it exists.]*/
     it('closes the transport when called while connecting', function(testCallback) {
       var transport = {
-        connect: function() {}, // will not call the callback, leaving the state machine in the 'CONNECTING' state 
+        connect: function() {}, // will not call the callback, leaving the state machine in the 'CONNECTING' state
         disconnect: function(callback) { callback(null, new results.Disconnected()); },
         removeListener: function () {},
         on: function () {}
@@ -939,8 +939,10 @@ describe('Client', function () {
 
       var receiver = new DummyReceiver();
       sinon.stub(receiver, 'on', function(evt) {
-        assert.strictEqual(evt, 'message');
-        testCallback();
+        if(evt !== 'errorReceived') {
+          assert.strictEqual(evt, 'message');
+          testCallback();
+        }
       });
 
       var DummyTransport = function () {
@@ -1004,7 +1006,7 @@ describe('Client', function () {
         };
         this.connect = function(callback) {
           /* The process of reconnecting after updating the shared access signature
-           * later in the test should take long enough for the on('message') call 
+           * later in the test should take long enough for the on('message') call
            * to hit the 'UPDATING_SAS' state of the state machine. 2 ticks is the minimum.
            */
           process.nextTick(function() {
@@ -1050,7 +1052,7 @@ describe('Client', function () {
           callback(null, receiver);
         };
         this.connect = function(callback) {
-          /* The process of connecting should take long enough for the on('message') call 
+          /* The process of connecting should take long enough for the on('message') call
            * to hit the 'CONNECTING' state of the state machine. 2 ticks is the minimum.
            */
           process.nextTick(function() {
@@ -1511,7 +1513,7 @@ describe('Client', function () {
   describe('getTwin', function() {
     it('creates the device twin correctly', function(done) {
       var client = new Client({});
-      
+
       /* Tests_SRS_NODE_DEVICE_CLIENT_18_001: [** The `getTwin` method shall call the `azure-iot-device-core!Twin.fromDeviceClient` method to create the device client object. **]** */
       var fakeTwin = {
         fromDeviceClient: function(obj, innerDone) {
@@ -1530,7 +1532,7 @@ describe('Client', function () {
 
 describe('Over simulated HTTPS', function () {
   var registry = {
-    create: function(deviceId, done) { 
+    create: function(deviceId, done) {
       done(null, {
         deviceId: deviceId,
         authentication: {
