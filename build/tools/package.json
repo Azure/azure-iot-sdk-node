@@ -10,14 +10,14 @@
     },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/azure/azure-iot-sdks.git"
+    "url": "git+https://github.com/azure/azure-iot-sdk-node.git"
   },
   "author": "Microsoft Corporation",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/azure/azure-iot-sdks/issues"
+    "url": "https://github.com/azure/azure-iot-sdk-node/issues"
   },
-  "homepage": "https://github.com/azure/azure-iot-sdks#readme",
+  "homepage": "https://github.com/azure/azure-iot-sdk-node#readme",
   "dependencies": {
     "azure-iothub": "1.1.1",
     "chalk": "^1.1.3",
