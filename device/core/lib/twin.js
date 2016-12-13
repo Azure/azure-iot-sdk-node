@@ -63,9 +63,9 @@ Twin.fromDeviceClient = function(client, done) {
 
     twin.on("newListener", twin._handleNewListener.bind(twin));
 
-    /* Codes_SRS_NODE_DEVICE_TWIN_18_005: [** If the protocol does not contain a `getTwinReceiver` method, `fromDeviceClient` shall call the `done` callback with a `NotImplementedError` object **]**  */
+    /* Codes_SRS_NODE_DEVICE_TWIN_18_005: [** If the protocol does not contain a `getTwinReceiver` method, `fromDeviceClient` shall throw a `NotImplementedError` error **]**  */
     if (!client._transport.getTwinReceiver) {
-      done(new errors.NotImplementedError('transport does not support Twin'));
+      throw new errors.NotImplementedError('transport does not support Twin');
     } else {
       client._twin = twin;
       client.on('_sharedAccessSignatureUpdated', function() {

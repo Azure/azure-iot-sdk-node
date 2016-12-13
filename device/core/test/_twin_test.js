@@ -149,13 +149,12 @@ describe('Twin', function () {
       });
     });
 
-    /* Tests_SRS_NODE_DEVICE_TWIN_18_005: [** If the protocol does not contain a `getTwinReceiver` method, `fromDeviceClient` shall call the `done` callback with a `NotImplementedError` object **]**  */
-    it('returns failure if the protocol doesnt support twin', function (done) {
+    /* Tests_SRS_NODE_DEVICE_TWIN_18_005: [** If the protocol does not contain a `getTwinReceiver` method, `fromDeviceClient` shall throw a `NotImplementedError` error **]**  */
+    it('throws if the protocol doesnt support twin', function () {
       var client = new FakeClient({});
-      Twin.fromDeviceClient(client, function(err) {
-        assert.instanceOf(err,errors.NotImplementedError);
-        done();
-      });
+      assert.throws(function() {
+        Twin.fromDeviceClient(client, function() {});
+      }, errors.NotImplementedError);
     });
     
     /* Tests_SRS_NODE_DEVICE_TWIN_18_007: [** `fromDeviceClient` shall add handlers for the both the `subscribed` and `error` events on the twinReceiver **]**  */

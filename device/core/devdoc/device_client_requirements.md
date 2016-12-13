@@ -80,6 +80,8 @@ client.sendEvent(new Message('hello world'), print);
 #### sendEvent(message, sendEventCallback)
 The `sendEvent` method sends an event message to the IoT Hub as the device indicated in the constructor argument.
 
+**SRS_NODE_DEVICE_CLIENT_16_081: [** The `sendEvent` method shall throw a `NotImplementedError` if the transport doesn't have that feature. **]**
+
 **SRS_NODE_DEVICE_CLIENT_05_002: [** The `sendEvent` method shall send the event (indicated by the `message` argument) via the transport associated with the Client instance. **]**
 
 **SRS_NODE_DEVICE_CLIENT_05_003: [** When the `sendEvent` method completes, the callback function (indicated by the `sendEventCallback` argument) shall be invoked with the same arguments as the underlying transport method's callback. **]**
@@ -92,6 +94,8 @@ The `sendEvent` method sends an event message to the IoT Hub as the device indic
 
 #### sendEventBatch(messages, sendEventBatchCallback)
 The `sendEventBatch` method sends a list of event messages to the IoT Hub as the device indicated in the constructor argument.
+
+**SRS_NODE_DEVICE_CLIENT_16_082: [** The `sendEventBatch` method shall throw a `NotImplementedError` if the transport doesn't have that feature. **]**
 
 **SRS_NODE_DEVICE_CLIENT_07_004: [** The `sendEventBatch` method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance. **]**
 
@@ -129,6 +133,8 @@ The `sendEventBatch` method sends a list of event messages to the IoT Hub as the
 
 **SRS_NODE_DEVICE_CLIENT_16_016: [** The `complete` method shall throw a `ReferenceError` if the `message` parameter is falsy. **]**
 
+**SRS_NODE_DEVICE_CLIENT_16_078: [** The `complete` method shall throw a `NotImplementedError` if the transport doesn't have that feature. **]**
+
 **SRS_NODE_DEVICE_CLIENT_16_007: [** The `complete` method shall call the `complete` method of the transport with the message as an argument **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_008: [** The `completeCallback` callback shall be called with a `null` error object and a `MessageCompleted` result once the transport has completed the message. **]**
@@ -145,6 +151,8 @@ The `sendEventBatch` method sends a list of event messages to the IoT Hub as the
 
 **SRS_NODE_DEVICE_CLIENT_16_018: [** The `reject` method shall throw a ReferenceError if the `message` parameter is falsy. **]**
 
+**SRS_NODE_DEVICE_CLIENT_16_079: [** The `reject` method shall throw a `NotImplementedError` if the transport doesn't have that feature. **]**
+
 **SRS_NODE_DEVICE_CLIENT_16_010: [** The `reject` method shall call the `reject` method of the transport with the message as an argument **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_011: [** The `rejectCallback` callback shall be called with a `null` error object and a `MessageRejected` result once the transport has completed the message. **]**
@@ -160,6 +168,8 @@ The `sendEventBatch` method sends a list of event messages to the IoT Hub as the
 #### abandon(message, abandonCallback)
 
 **SRS_NODE_DEVICE_CLIENT_16_017: [** The `abandon` method shall throw a ReferenceError if the `message` parameter is falsy. **]**
+
+**SRS_NODE_DEVICE_CLIENT_16_080: [** The `abandon` method shall throw a `NotImplementedError` if the transport doesn't have that feature. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_013: [** The `abandon` method shall call the `abandon` method of the transport with the message as an argument **]**
 

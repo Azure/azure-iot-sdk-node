@@ -83,7 +83,7 @@ var Client = function (transport, connStr, blobUploadClient) {
     if (thisClient._sasRenewalTimeout) {
       clearTimeout(thisClient._sasRenewalTimeout);
     }
-    if (thisClient._transportCanDisconnect()) {
+    if (thisClient._isImplementedInTransport('disconnect')) {
       /*Codes_SRS_NODE_DEVICE_CLIENT_16_001: [The `close` function shall call the transport's `disconnect` function if it exists.]*/
       thisClient._transport.disconnect(function(disconnectError, disconnectResult) {
         /*Codes_SRS_NODE_DEVICE_CLIENT_16_046: [The `close` method shall remove the listener that has been attached to the transport `disconnect` event.]*/
@@ -108,7 +108,7 @@ var Client = function (transport, connStr, blobUploadClient) {
           };
 
           this.transition('connecting');
-          if (thisClient._transportCanConnect()) {
+          if (thisClient._isImplementedInTransport('connect')) {
             thisClient._transport.connect(function(connectErr, connectResult) {
               /*Codes_SRS_NODE_DEVICE_CLIENT_16_045: [If the transport successfully establishes a connection the `open` method shall subscribe to the `disconnect` event of the transport.]*/
               thisClient._transport.removeListener('disconnect', thisClient._disconnectHandler); // remove the old one before adding a new -- this can happen when renewing SAS tokens
@@ -184,14 +184,24 @@ var Client = function (transport, connStr, blobUploadClient) {
           }.bind(this));
         },
         sendEvent: function (msg, sendEventCallback) {
-          thisClient._transport.sendEvent(msg, function(err, result) {
-            safeCallback(sendEventCallback, err, result);
-          });
+          /*Codes_SRS_NODE_DEVICE_CLIENT_16_081: [The `sendEvent` method shall throw a `NotImplementedError` if the transport doesn't have that feature.]*/
+          if (thisClient._isImplementedInTransport('sendEvent')) {
+            thisClient._transport.sendEvent(msg, function(err, result) {
+              safeCallback(sendEventCallback, err, result);
+            });
+          } else {
+            throw new errors.NotImplementedError('sendEvent is not supported with ' + thisClient._transport.constructor.name);
+          }
         },
         sendEventBatch: function (msgBatch, sendEventBatchCallback) {
-          thisClient._transport.sendEventBatch(msgBatch, function(err, result) {
-            safeCallback(sendEventBatchCallback, err, result);
-          });
+          /*Codes_SRS_NODE_DEVICE_CLIENT_16_082: [The `sendEventBatch` method shall throw a `NotImplementedError` if the transport doesn't have that feature.]*/
+          if (thisClient._isImplementedInTransport('sendEventBatch')) {
+            thisClient._transport.sendEventBatch(msgBatch, function(err, result) {
+              safeCallback(sendEventBatchCallback, err, result);
+            });
+          } else {
+            throw new errors.NotImplementedError('sendEventBatch is not supported with ' + thisClient._transport.constructor.name);
+          }
         },
         updateSharedAccessSignature: function(sharedAccessSignature, updateSasCallback) {
           this.transition('updating_sas');
@@ -238,19 +248,34 @@ var Client = function (transport, connStr, blobUploadClient) {
           });
         },
         complete: function(message, completeCallback) {
-          thisClient._transport.complete(message, function(err, result) {
-            safeCallback(completeCallback, err, result);
-          });
+          /*Codes_SRS_NODE_DEVICE_CLIENT_16_078: [The `complete` method shall throw a `NotImplementedError` if the transport doesn't have that feature.]*/
+          if (thisClient._isImplementedInTransport('complete')) {
+            thisClient._transport.complete(message, function(err, result) {
+              safeCallback(completeCallback, err, result);
+            });
+          } else {
+            throw new errors.NotImplementedError('complete is not supported with ' + thisClient._transport.constructor.name);
+          }
         },
         abandon: function(message, abandonCallback) {
-          thisClient._transport.abandon(message, function(err, result) {
-            safeCallback(abandonCallback, err, result);
-          });
+          /*Codes_SRS_NODE_DEVICE_CLIENT_16_080: [The `abandon` method shall throw a `NotImplementedError` if the transport doesn't have that feature.]*/
+          if (thisClient._isImplementedInTransport('abandon')) {
+            thisClient._transport.abandon(message, function(err, result) {
+              safeCallback(abandonCallback, err, result);
+            });
+          } else {
+            throw new errors.NotImplementedError('abandon is not supported with ' + thisClient._transport.constructor.name);
+          }
         },
         reject: function(message, rejectCallback) {
-          thisClient._transport.reject(message, function(err, result) {
-            safeCallback(rejectCallback, err, result);
-          });
+          /*Codes_SRS_NODE_DEVICE_CLIENT_16_079: [The `reject` method shall throw a `NotImplementedError` if the transport doesn't have that feature.]*/
+          if (thisClient._isImplementedInTransport('reject')) {
+            thisClient._transport.reject(message, function(err, result) {
+              safeCallback(rejectCallback, err, result);
+            });
+          } else {
+            throw new errors.NotImplementedError('reject is not supported with ' + thisClient._transport.constructor.name);
+          }
         },
         startReceiver: function() {
           /*Codes_SRS_NODE_DEVICE_CLIENT_16_065: [The client shall connect the transport if needed to subscribe receive messages.]*/
@@ -428,12 +453,8 @@ Client.prototype._renewSharedAccessSignature = function () {
   }.bind(this));
 };
 
-Client.prototype._transportCanConnect = function() {
-  return !!this._transport.connect && typeof this._transport.connect === 'function';
-};
-
-Client.prototype._transportCanDisconnect = function() {
-  return !!this._transport.disconnect && typeof this._transport.disconnect === 'function';
+Client.prototype._isImplementedInTransport = function(fnName) {
+  return typeof this._transport[fnName] === 'function';
 };
 
 /**

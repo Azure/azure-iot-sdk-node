@@ -714,6 +714,32 @@ describe('Client', function () {
           });
         });
       });
+
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_081: [The `sendEvent` method shall throw a `NotImplementedError` if the transport doesn't have that feature.]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_082: [The `sendEventBatch` method shall throw a `NotImplementedError` if the transport doesn't have that feature.]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_078: [The `complete` method shall throw a `NotImplementedError` if the transport doesn't have that feature.]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_079: [The `reject` method shall throw a `NotImplementedError` if the transport doesn't have that feature.]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_080: [The `abandon` method shall throw a `NotImplementedError` if the transport doesn't have that feature.]*/
+      it('throws if the method doesn\'t exist on the transport', function() {
+        var transport = {
+          connect: sinon.stub().callsArgWith(0, null, new results.Connected()),
+          removeListener: function () {},
+          sendEvent: function () {},
+          sendEventBatch: function () {},
+          complete: function() {},
+          reject: function() {},
+          abandon: function() {},
+          on: function () {}
+        };
+        delete transport[funcName];
+
+        var client = new Client(transport);
+        client.open(function() {
+          assert.throws(function() {
+            client[funcName]('message');
+          }, errors.NotImplementedError);
+        });
+      });
     });
   });
 

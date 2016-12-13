@@ -99,6 +99,7 @@ Mqtt.prototype.getReceiver = function (done) {
 };
 
 /**
+ * @deprecated          // Implementation test belongs in the client.
  * @method              module:azure-iot-device-mqtt.Mqtt#complete
  * @description         Settles the message as complete and calls the done callback with the result.
  *
@@ -111,6 +112,7 @@ Mqtt.prototype.complete = function (message, done) {
 };
 
 /**
+ * @deprecated          // Implementation test belongs in the client.
  * @method              module:azure-iot-device-mqtt.Mqtt#reject
  * @description         Settles the message as rejected and calls the done callback with the result.
  *
@@ -122,6 +124,7 @@ Mqtt.prototype.reject = function () {
 };
 
 /**
+ * @deprecated          // Implementation test belongs in the client.
  * @method              module:azure-iot-device-mqtt.Mqtt#abandon
  * @description         Settles the message as abandoned and calls the done callback with the result.
  *
