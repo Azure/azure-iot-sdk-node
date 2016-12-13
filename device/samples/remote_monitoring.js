@@ -91,7 +91,6 @@ client.open(function (err) {
       }
       catch (err) {
         printErrorFor('parse received message')(err);
-        client.reject(msg, printErrorFor('reject'));
       }
     });
 
