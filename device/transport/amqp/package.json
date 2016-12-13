@@ -36,10 +36,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Azure/azure-iot-sdks.git"
+    "url": "git+https://github.com/Azure/azure-iot-sdk-node.git"
   },
   "bugs": {
-    "url": "https://github.com/Azure/azure-iot-sdks/issues"
+    "url": "https://github.com/Azure/azure-iot-sdk-node/issues"
   },
-  "homepage": "https://github.com/Azure/azure-iot-sdks#readme"
+  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme"
 }
