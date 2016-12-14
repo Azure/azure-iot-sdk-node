@@ -7,7 +7,7 @@ var uuid = require('uuid');
 var JobClient = require('azure-iothub').JobClient;
 
 var connectionString = '<IoT Hub Connection String>';
-var deviceArray = "deviceId IN ['<device Id 1>', '<device Id 2>']"; // example deviceArray = "deviceId IN ['MyDevice1', 'MyDevice2']"
+var queryCondition = "deviceId IN ['<device Id 1>', '<device Id 2>']"; // example queryCondition = "deviceId IN ['MyDevice1', 'MyDevice2']"
 // For a single device you can also set queryCondition as "deviceId = '<device id>'" . Example, "deviceId = 'MyDevice1'"; 
 var startTime = new Date();
 var maxExecutionTimeInSeconds =  3600;
@@ -24,7 +24,7 @@ var methodParams = {
 var methodJobId = uuid.v4();
 console.log('scheduling Device Method job with id: ' + methodJobId);
 jobClient.scheduleDeviceMethod(methodJobId,
-                               deviceArray,
+                               queryCondition,
                                methodParams,
                                startTime,
                                maxExecutionTimeInSeconds,
@@ -55,7 +55,7 @@ var twinJobId = uuid.v4();
 
 console.log('scheduling Twin Update job with id: ' + twinJobId);
 jobClient.scheduleTwinUpdate(twinJobId,
-                             deviceArray,
+                             queryCondition,
                              twinPatch,
                              startTime,
                              maxExecutionTimeInSeconds,
