@@ -7,7 +7,8 @@ var uuid = require('uuid');
 var JobClient = require('azure-iothub').JobClient;
 
 var connectionString = '<IoT Hub Connection String>';
-var deviceArray = ['<Device Id>', '<Device Id>'];
+var deviceArray = "deviceId IN ['<device Id 1>', '<device Id 2>']"; // example deviceArray = "deviceId IN ['MyDevice1', 'MyDevice2']"
+// For a single device you can also set queryConditon as "deviceId = '<device id>'" . Example, "deviceId = 'MyDevice1'"; 
 var startTime = new Date();
 var maxExecutionTimeInSeconds =  3600;
 

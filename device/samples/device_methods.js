@@ -51,7 +51,7 @@ function onGetDeviceLog(request, response) {
     });
 }
 
-function onDoorLock(request, response) {
+function onLockDoor(request, response) {
     printDeviceMethodRequest(request);
 
     // Implement actual logic here.

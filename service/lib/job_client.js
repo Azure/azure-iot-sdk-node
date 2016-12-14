@@ -233,7 +233,7 @@ JobClient.prototype.scheduleDeviceMethod = function(jobId, queryCondition, metho
   var fullMethodParams = {
     methodName: methodParams.methodName,
     payload: methodParams.payload || DeviceMethod.defaultPayload,
-    timeoutInSeconds: methodParams.timeoutInSeconds || DeviceMethod.defaultTimeout
+    responseTimeoutInSeconds: methodParams.responseTimeoutInSeconds || DeviceMethod.defaultTimeout
   };
 
   /*Codes_SRS_NODE_JOB_CLIENT_16_020: [The `scheduleDeviceMethod` method shall construct the HTTP request as follows:
