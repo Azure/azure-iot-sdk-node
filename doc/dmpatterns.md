@@ -39,5 +39,5 @@ From the root directory of the repository, run through the following steps to se
     ```
 
 [overview-iot-dm-doc]: https://azure.microsoft.com/en-us/documentation/articles/iot-hub-device-management-overview/
-[get-started-dm-doc]: https://azure.microsoft.com/en-us/documentation/articles/iot-hub-device-management-get-started
-[fw-update-doc]: https://azure.microsoft.com/en-us/documentation/articles/iot-hub-firmware-update/
+[get-started-dm-doc]: https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-node-node-device-management-get-started
+[fw-update-doc]: https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-node-node-firmware-update
