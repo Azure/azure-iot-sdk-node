@@ -184,7 +184,7 @@ JobClient.prototype.cancelJob = function(jobId, done) {
  * @param {Object}    methodParams      An object describing the method and shall have the following properties: 
  *                                      - methodName          The name of the method that shall be invoked.
  *                                      - payload             [optional] The payload to use for the method call.
- *                                      - timeoutInSeconds    [optional] The number of seconds IoT Hub shall wait for the device 
+ *                                      - responseTimeoutInSeconds [optional] The number of seconds IoT Hub shall wait for the device 
  * @param {Date}      jobStartTime      Time time at which the job should start
  * @param {Number}    maxExecutionTimeInSeconds  The maximum time alloted for this job to run in seconds.
  * @param {Function}  done              The function to call when the operation is
@@ -229,7 +229,7 @@ JobClient.prototype.scheduleDeviceMethod = function(jobId, queryCondition, metho
   }
 
   /*Codes_SRS_NODE_JOB_CLIENT_16_030: [The `scheduleDeviceMethod` method shall use the `DeviceMethod.defaultPayload` value if `methodParams.payload` is `undefined`.]*/
-  /*Codes_SRS_NODE_JOB_CLIENT_16_031: [The `scheduleDeviceMethod` method shall use the `DeviceMethod.defaultTimeout` value if `methodParams.timeoutInSeconds` is falsy.]*/
+    /*Codes_SRS_NODE_JOB_CLIENT_16_031: [The `scheduleDeviceMethod` method shall use the `DeviceMethod.defaultTimeout` value if `methodParams.responseTimeoutInSeconds` is falsy.]*/
   var fullMethodParams = {
     methodName: methodParams.methodName,
     payload: methodParams.payload || DeviceMethod.defaultPayload,
