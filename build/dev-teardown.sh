@@ -9,15 +9,6 @@ cd $node_root/build/tools
 echo "-- Removing links for `pwd` --"
 npm rm azure-iothub
 
-cd $node_root/tools/iothub-explorer
-echo "-- Removing links for `pwd` --"
-npm rm azure-iothub
-npm rm azure-iot-device-mqtt
-npm rm azure-iot-device-http
-npm rm azure-iot-device-amqp
-npm rm azure-iot-device
-npm rm azure-iot-common
-
 cd $node_root/e2etests
 echo "\n-- Removing links for `pwd` --"
 npm rm azure-iothub
