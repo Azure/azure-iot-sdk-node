@@ -11,7 +11,7 @@
  */
 function ArgumentError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -27,7 +27,7 @@ ArgumentError.prototype.name = 'ArgumentError';
  */
 function DeviceMaximumQueueDepthExceededError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -43,7 +43,7 @@ DeviceMaximumQueueDepthExceededError.prototype.name = 'DeviceMaximumQueueDepthEx
  */
   function DeviceNotFoundError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -59,7 +59,7 @@ DeviceNotFoundError.prototype.name = 'DeviceNotFoundError';
  */
 function FormatError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -75,7 +75,7 @@ FormatError.prototype.name = 'FormatError';
  */
 function UnauthorizedError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -85,7 +85,7 @@ UnauthorizedError.prototype.name = 'UnauthorizedError';
 
 function NotImplementedError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -95,7 +95,7 @@ NotImplementedError.prototype.name = 'NotImplementedError';
 
 function NotConnectedError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -105,7 +105,7 @@ NotConnectedError.prototype.name = 'NotConnectedError';
 
 function IotHubQuotaExceededError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -115,7 +115,7 @@ IotHubQuotaExceededError.prototype.name = 'IotHubQuotaExceededError';
 
 function MessageTooLargeError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -125,7 +125,7 @@ MessageTooLargeError.prototype.name = 'MessageTooLargeError';
 
 function InternalServerError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -135,7 +135,7 @@ InternalServerError.prototype.name = 'InternalServerError';
 
 function ServiceUnavailableError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -145,7 +145,7 @@ ServiceUnavailableError.prototype.name = 'ServiceUnavailableError';
 
 function IotHubNotFoundError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -155,7 +155,7 @@ IotHubNotFoundError.prototype.name = 'IotHubNotFoundError';
 
 function JobNotFoundError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -165,7 +165,7 @@ JobNotFoundError.prototype.name = 'JobNotFoundError';
 
 function TooManyDevicesError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -175,7 +175,7 @@ TooManyDevicesError.prototype.name = 'TooManyDevicesError';
 
 function ThrottlingError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -185,7 +185,7 @@ ThrottlingError.prototype.name = 'ThrottlingError';
 
 function DeviceAlreadyExistsError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -195,7 +195,7 @@ DeviceAlreadyExistsError.prototype.name = 'DeviceAlreadyExistsError';
 
 function InvalidEtagError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -211,7 +211,7 @@ InvalidEtagError.prototype.name = 'InvalidEtagError';
  */
 function TimeoutError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -227,7 +227,7 @@ TimeoutError.prototype.name = 'TimeoutError';
  */
 function BadDeviceResponseError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -244,7 +244,7 @@ BadDeviceResponseError.prototype.name = 'BadDeviceResponseError';
  */
 function GatewayTimeoutError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
@@ -260,7 +260,7 @@ GatewayTimeoutError.prototype.name = 'GatewayTimeoutError';
  */
 function DeviceTimeoutError(message) {
   this.message = message;
-  this.stack = (new Error()).stack;
+  Error.captureStackTrace(this, this.constructor);
   Error.call(this, message);
 }
 
