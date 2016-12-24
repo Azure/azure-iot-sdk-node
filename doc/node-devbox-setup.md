@@ -24,6 +24,13 @@ Complete the following steps to set up your development environment:
   * Run the `build/dev-setup.sh` script to prepare your development environment.
   * Then run the `build/build.sh` script to verify your installation.
 
+## Environment variables required to run the tests
+
+If you intend on running the SDK test suite, there are a few environment variables that need to be configured:
+- **OPENSSL_CONF**: The SDK build script relies on OpenSSL to create certificates and keys so OpenSSL must be in the path and `OPENSSL_CONF` must be set to the path of your `openssl.cnf` configuration file
+- **IOTHUB_CONNECTION_STRING** must be set to a configuration string of your IoT Hub that has rights to create/delete devices and send messages to devices (typically, the one associated with the `iothubowner` policy or equivalent). Connection strings can be found in the settings section of the Azure portal.
+- **STORAGE_CONNECTION_STRING** must be set to an Azure Storage connection string if you want to test bulk import/export of device identities
+
 ## Tests
 
 The Azure IoT SDKs team keeps a close watch on tests and code coverage when committing new code, whether it's for bugfixes or new features.
