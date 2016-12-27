@@ -8,22 +8,23 @@ The core components of the Azure IoT device SDK.
 Use the Azure IoT device SDK to:
 * Send event data to Azure IoT Hub.
 * Receive messages from IoT Hub.
-* Communicate with the service via MQTT (optionally over WebSockets, AMQP (optionally over WebSockets),  or HTTP.
+* Communicate with the service via MQTT (optionally over WebSockets), AMQP (optionally over WebSockets),  or HTTP.
 * Synchronize an Azure IoT Hub device Twin with Azure IoT Hub from a device
 * Implement Azure IoT Hub Direct Device Methods on devices
 * Implement Azure IoT Device Mangement features on devices
 
 ## Prerequisites
-You need to install **Node.js** JavaScript runtime environment for Azure IoT JavaScript client SDK to run on your platform. For downloading Node.js refer to [Node.js][nodejs_lnk]. To check if your platform (OS) is **supported** check if install package is available at [Node.js][nodejs_dwld_lnk].
-[npm][npm_lnk] is a package manager command line tool that will be included when Node.js is installed. This is the tool that you will use to install Azure IoT node.js client side SDK.
+You need to install the [Node.js][nodejs_lnk] JavaScript runtime environment to run the Azure IoT JavaScript client SDK on your platform. To check if Node.js supports your platform (OS), verify that an install package is available on the [Node.js download page][nodejs_dwld_lnk].
 
-## Install
+[npm][npm_lnk] is a command-line package manager that is installed with Node.js is installed, and will be used to install Azure IoT node.js client side SDK.
+
+## Installation
 
 `npm install -g azure-iot-device` to get the latest version.
 
 ## Getting Started
 
-This package contains the core components of the Azure IoT device SDK, but doesn't include a transport over which to communicate with Azure IoT Hub. Your application must require a transport package in addition to the core package to do something useful.
+This package contains the core components of the Azure IoT device SDK, but doesn't include a transport over which to communicate with Azure IoT Hub. Your application **must** require a transport package in addition to the core package to do something useful.
 
 For example, if you want to send an event from your device to an IoT Hub _using the AMQP protocol_ you must first install the **azure-iot-device-amqp** package:
 
