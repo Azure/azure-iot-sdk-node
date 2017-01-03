@@ -75,12 +75,13 @@ describe('Over real HTTPS', function () {
       [basicDevice, x509Device].forEach(function(device) {
         it('creates a new device with deviceId: ' + device.deviceId, function (done) {
           var registry = Registry.fromConnectionString(goodConnectionString);
-          registry.create(device, function (err, dev) {
+          registry.create(device, function (err, dev, response) {
             if (err) {
               done(err);
             } else {
               assert.equal(device.deviceId, dev.deviceId);
               assert.notEqual(device, dev);
+              assert.equal(response.statusCode, 200);
               done();
             }
           });
@@ -95,11 +96,12 @@ describe('Over real HTTPS', function () {
     describe('#get', function () {
       it('returns information about the given device', function (done) {
         var registry = Registry.fromConnectionString(goodConnectionString);
-        registry.get(basicDevice.deviceId, function (err, dev) {
+        registry.get(basicDevice.deviceId, function (err, dev, response) {
           if (err) {
             done(err);
           } else {
             assert.equal(basicDevice.deviceId, dev.deviceId);
+            assert.equal(response.statusCode, 200);
             basicDevice = dev;
             done();
           }
@@ -114,11 +116,12 @@ describe('Over real HTTPS', function () {
     describe('#list', function () {
       it('returns information about a list of devices', function (done) {
         var registry = Registry.fromConnectionString(goodConnectionString);
-        registry.list(function (err, deviceList) {
+        registry.list(function (err, deviceList, response) {
           if (err) {
             done(err);
           } else {
             assert.isArray(deviceList);
+            assert.equal(response.statusCode, 200);
             done();
           }
         });
@@ -132,11 +135,12 @@ describe('Over real HTTPS', function () {
     describe('#update', function () {
       it('updates information about a device', function (done) {
         var registry = Registry.fromConnectionString(goodConnectionString);
-        registry.update(basicDevice, function (err, dev) {
+        registry.update(basicDevice, function (err, dev, response) {
           if (err) {
             done(err);
           } else {
             assert.equal(basicDevice.deviceId, dev.deviceId);
+            assert.equal(response.statusCode, 200);
             done();
           }
         });

@@ -132,11 +132,11 @@ Registry.prototype.create = function (deviceInfo, done) {
     'Content-Type': 'application/json; charset=utf-8'
   };
 
-  this._restApiClient.executeApiCall('PUT', path, httpHeaders, deviceInfo, function(err, device) {
+  this._restApiClient.executeApiCall('PUT', path, httpHeaders, deviceInfo, function(err, device, httpResponse) {
     if (err) {
       done(err);
     } else {
-      done(null, new Device(device));
+      done(null, new Device(device), httpResponse);
     }
   });
 };
@@ -180,11 +180,11 @@ Registry.prototype.update = function (deviceInfo, done) {
     'If-Match': '*'
   };
 
-  this._restApiClient.executeApiCall('PUT', path, httpHeaders, deviceInfo, function(err, device) {
+  this._restApiClient.executeApiCall('PUT', path, httpHeaders, deviceInfo, function(err, device, httpResponse) {
     if (err) {
       done(err);
     } else {
-      done(null, new Device(device));
+      done(null, new Device(device), httpResponse);
     }
   });
 };
@@ -216,11 +216,11 @@ Registry.prototype.get = function (deviceId, done) {
   ```]*/
   var path = endpoint.devicePath(deviceId) + endpoint.versionQueryString();
 
-  this._restApiClient.executeApiCall('GET', path, null, null, function(err, device) {
+  this._restApiClient.executeApiCall('GET', path, null, null, function(err, device, httpResponse) {
     if (err) {
       done(err);
     } else {
-      done(null, new Device(device));
+      done(null, new Device(device), httpResponse);
     }
   });
 };
@@ -247,11 +247,11 @@ Registry.prototype.list = function (done) {
   ```]*/
   var path = endpoint.devicePath('') + endpoint.versionQueryString();
 
-  this._restApiClient.executeApiCall('GET', path, null, null, function(err, devices) {
+  this._restApiClient.executeApiCall('GET', path, null, null, function(err, devices, httpResponse) {
     if (err) {
       done(err);
     } else {
-      done(null, devices ? devices.map(function(device) { return new Device(device); }) : []);
+      done(null, devices ? devices.map(function(device) { return new Device(device); }) : [], httpResponse);
     }
   });
 };
