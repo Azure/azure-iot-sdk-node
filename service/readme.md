@@ -5,8 +5,9 @@ The Azure IoT Service SDK for Node.js helps you build applications that interact
 [![npm version](https://badge.fury.io/js/azure-iothub.svg)](https://badge.fury.io/js/azure-iothub)
 
 ## Prerequisites
-You need to install **Node.js** JavaScript runtime environment for Azure IoT JavaScript client SDK to run on your platform. For downloading Node.js refer to [Node.js][nodejs_lnk]. To check if your platform (OS) is **supported** check if install package is available at [Node.js][nodejs_dwld_lnk].
-[npm][npm_lnk] is a package manager command line tool that will be included when Node.js is installed. This is the tool that you will use to install Azure IoT node.js client side SDK.
+You need to install the [Node.js][nodejs_lnk] JavaScript runtime environment to run the Azure IoT JavaScript client SDK on your platform. To check if Node.js supports your platform (OS), verify that an install package is available on the [Node.js download page][nodejs_dwld_lnk].
+
+[npm][npm_lnk] is a command-line package manager that is installed with Node.js is installed, and will be used to install Azure IoT node.js client side SDK.
 
 ## Installation
 
