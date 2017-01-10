@@ -50,19 +50,23 @@ The `connect` method establishes a connection with the server using the config o
 ### MqttBase.disconnect(done)
 The `disconnect` method closes the connection to the server.
 
-**SRS_NODE_COMMON_MQTT_BASE_16_001: [** The `disconnect` method shall call the done callback when the connection to the server has been closed. **]** 
+**SRS_NODE_COMMON_MQTT_BASE_16_001: [** The `disconnect` method shall call the done callback when the connection to the server has been closed. **]**
 
 ### Mqtt.publish(message)
 The `publish` method publishes the message passed as argument.
 
-**SRS_NODE_COMMON_MQTT_BASE_12_006: [** The `publish` method shall throw `ReferenceError` “Invalid message” if the message is falsy **]**
+**SRS_NODE_COMMON_MQTT_BASE_12_006: [** The `publish` method shall throw `ReferenceError` “Invalid message” if the message is falsy. **]**
 
-**SRS_NODE_COMMON_MQTT_BASE_12_007: [** The `publish` method shall call `publish`  on MQTT.JS  library with the given message **]**
+**SRS_NODE_COMMON_MQTT_BASE_12_007: [** The `publish` method shall call `publish`  on MQTT.JS  library with the given message. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_008: [** The `publish` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_009: [** If the message has properties, the property keys and values shall be uri-encoded, then serialized and appended at the end of the topic with the following convention: `<key>=<value>&<key2>=<value2>&<key3>=<value3>(...)`. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `publish` method shall use QoS level of 1. **]**
 
 ### MqttBase.subscribe()
-**SRS_NODE_COMMON_MQTT_BASE_12_008: [** The `subscribe` method shall call `subscribe`  on MQTT.JS  library with the given message and with the hardcoded topic path **]**
+**SRS_NODE_COMMON_MQTT_BASE_12_008: [** The `subscribe` method shall call `subscribe`  on MQTT.JS  library with the given message and with the hardcoded topic path. **]**
 
 ### MqttBase.receive()
-**SRS_NODE_COMMON_MQTT_BASE_12_010: [** The `receive` method shall implement the MQTT.JS library callback event and calls back to the caller with the given callback **]**
-
-
+**SRS_NODE_COMMON_MQTT_BASE_12_010: [** The `receive` method shall implement the MQTT.JS library callback event and calls back to the caller with the given callback. **]**

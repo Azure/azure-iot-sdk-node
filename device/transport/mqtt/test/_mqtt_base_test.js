@@ -4,6 +4,7 @@
 'use strict';
 
 var assert = require('chai').assert;
+var sinon = require('sinon');
 
 var MqttBase = require('../lib/mqtt_base.js');
 var PackageJson = require('../package.json');
@@ -292,6 +293,73 @@ describe('MqttBase', function () {
         });
       });
 
+      fakemqtt.emit('connect', { connack: true });
+    });
+
+    /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_008: [** The `publish` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`.]*/
+    it('uses the proper topic format', function(done) {
+      var config = {
+        host: "host.name",
+        deviceId: "deviceId",
+        sharedAccessSignature: "sasToken"
+      };
+
+      var fakemqtt = new FakeMqtt();
+      sinon.spy(fakemqtt, 'publish');
+      var transport = new MqttBase(fakemqtt);
+      transport.connect(config, function () {
+        transport.client.publishShouldSucceed(true);
+        transport.publish(new Message('message'), function() {});
+        assert(fakemqtt.publish.calledWith('devices/deviceId/messages/events/'));
+        done();
+      });
+      fakemqtt.emit('connect', { connack: true });
+    });
+
+    /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_009: [** If the message has properties, the property keys and values shall be uri-encoded, then serialized and appended at the end of the topic with the following convention: `<key>=<value>&<key2>=<value2>&<key3>=<value3>(...)`.]*/
+    it('correctly serializes properties on the topic', function(done) {
+      var config = {
+        host: "host.name",
+        deviceId: "deviceId",
+        sharedAccessSignature: "sasToken"
+      };
+
+      var testMessage = new Message('message');
+      testMessage.properties.add('key1', 'value1');
+      testMessage.properties.add('key2', 'value2');
+      testMessage.properties.add('key$', 'value$');
+
+      var fakemqtt = new FakeMqtt();
+      sinon.spy(fakemqtt, 'publish');
+      var transport = new MqttBase(fakemqtt);
+      transport.connect(config, function () {
+        transport.client.publishShouldSucceed(true);
+        transport.publish(testMessage, function() {
+          assert(fakemqtt.publish.calledWith('devices/deviceId/messages/events/key1=value1&key2=value2&key%24=value%24'));
+          done();
+        });
+      });
+      fakemqtt.emit('connect', { connack: true });
+    });
+
+    /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `publish` method shall use QoS level of 1.]*/
+    it('uses a QoS of 1', function(done) {
+      var config = {
+        host: "host.name",
+        deviceId: "deviceId",
+        sharedAccessSignature: "sasToken"
+      };
+
+      var fakemqtt = new FakeMqtt();
+      sinon.spy(fakemqtt, 'publish');
+      var transport = new MqttBase(fakemqtt);
+      transport.connect(config, function () {
+        transport.client.publishShouldSucceed(true);
+        transport.publish(new Message('message'), function() {
+          assert.equal(fakemqtt.publish.args[0][2].qos, 1);
+          done();
+        });
+      });
       fakemqtt.emit('connect', { connack: true });
     });
   });

@@ -36,7 +36,9 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
     it('Service sends ' + numberOfc2dMessages + ' C2D messages and they are all received by the device', function (done) {
       this.timeout(180000);
       var foundTheMessage = false;
+      var foundTheProperty = false;
       var messageToSend = new Message(uuid.v4());
+      messageToSend.properties.add('key1', 'value1');
       messageToSend.expiryTimeUtc = Date.now() + 60000; // Expire 60s from now, to reduce the chance of us hitting the 50-message limit on the IoT Hub
       deviceClient.open(function (openErr) {
         debug('device has opened.');
@@ -52,6 +54,13 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
             //
             if (msg.data.toString() === messageToSend.data.toString()) {
               foundTheMessage = true;
+              for (var i = 0; i < msg.properties.count(); i++) {
+                if (msg.properties.getItem(i).key.indexOf('key1') >= 0) {
+                  assert.equal(msg.properties.getItem(i).value, 'value1');
+                  foundTheProperty = true;
+                }
+              }
+              assert(foundTheProperty, 'Message was found but custom property was missing');
               deviceClient.removeAllListeners('message');
               clearInterval(myInterval);
             }
@@ -153,6 +162,7 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
                     done(openErr);
                   } else {
                     var message = new Message(buffer);
+                    //need to add properties test when the event hubs node sdk supports it.
                     deviceClient.sendEvent(message, function (sendErr) {
                       if (sendErr) {
                         done(sendErr);

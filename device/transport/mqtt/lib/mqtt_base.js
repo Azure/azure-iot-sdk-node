@@ -131,7 +131,19 @@ MqttBase.prototype.publish = function (message, done) {
     throw new ReferenceError('Invalid message');
   }
 
-  this.client.publish(this._topicTelemetryPublish, message.data.toString(), { qos: 1, retain: false }, function (err, puback) {
+  /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_008: [The `publish` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`.]*/
+  var topic = this._topicTelemetryPublish;
+
+  /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_009: [If the message has properties, the property keys and values shall be uri-encoded, then serialized and appended at the end of the topic with the following convention: `<key>=<value>&<key2>=<value2>&<key3>=<value3>(...)`.]*/
+  if (message.properties.count() > 0) {
+    for (var i = 0; i < message.properties.count(); i++) {
+      if (i > 0) topic += '&';
+      topic += encodeURIComponent(message.properties.propertyList[i].key) + '=' + encodeURIComponent(message.properties.propertyList[i].value);
+    }
+  }
+
+  /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `publish` method shall use QoS level of 1.]*/
+  this.client.publish(topic, message.data.toString(), { qos: 1, retain: false }, function (err, puback) {
     if (done) {
       if (err) {
         done(err);

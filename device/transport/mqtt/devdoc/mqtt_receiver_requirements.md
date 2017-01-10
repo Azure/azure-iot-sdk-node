@@ -54,3 +54,11 @@ interface MethodMessage {
 **SRS_NODE_DEVICE_MQTT_RECEIVER_16_006: [** When there are no more listeners for the `message` event, the topic should be unsubscribed. **]**
 
 **SRS_NODE_DEVICE_MQTT_RECEIVER_13_004: [** When there are no more listeners for the `method` event, the topic should be unsubscribed. **]**
+
+**SRS_NODE_DEVICE_MQTT_RECEIVER_16_007: [** When a message is received, the receiver shall populate the generated `Message` object `properties` property with the user properties serialized in the topic. **]**
+
+**SRS_NODE_DEVICE_MQTT_RECEIVER_16_008: [** When a message is received, the receiver shall populate the generated `Message` object `messageId` with the value of the property `$.mid` serialized in the topic, if present. **]**
+
+**SRS_NODE_DEVICE_MQTT_RECEIVER_16_009: [** When a message is received, the receiver shall populate the generated `Message` object `to` with the value of the property `$.to` serialized in the topic, if present. **]**
+
+**SRS_NODE_DEVICE_MQTT_RECEIVER_16_010: [** When a message is received, the receiver shall populate the generated `Message` object `expiryTimeUtc` with the value of the property `$.exp` serialized in the topic, if present. **]**

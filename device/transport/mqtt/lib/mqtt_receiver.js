@@ -171,9 +171,40 @@ MqttReceiver.prototype._dispatchMqttMessage = function (topic, payload) {
 };
 
 MqttReceiver.prototype._onC2DMessage = function (topic, payload) {
-  // needs proper conversion to transport-agnostic message.
   /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_005: [When a message event is emitted, the parameter shall be of type Message]*/
   var msg = new Message(payload);
+
+  var topicParts = topic.split('/');
+  // Message properties are always the 5th segment of the topic
+  if (topicParts[4]) {
+    var keyValuePairs = topicParts[4].split('&');
+
+    for(var i = 0; i < keyValuePairs.length; i++) {
+      var keyValuePair = keyValuePairs[i].split('=');
+      var k = decodeURIComponent(keyValuePair[0]);
+      var v = decodeURIComponent(keyValuePair[1]);
+
+      switch(k) {
+        case '$.mid': 
+          /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_008: [When a message is received, the receiver shall populate the generated `Message` object `messageId` with the value of the property `$.mid` serialized in the topic, if present.]*/
+          msg.messageId = v;
+          break;
+        case '$.to':
+          /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_009: [When a message is received, the receiver shall populate the generated `Message` object `to` with the value of the property `$.to` serialized in the topic, if present.]*/
+          msg.to = v;
+          break;
+        case '$.exp':
+          /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_010: [When a message is received, the receiver shall populate the generated `Message` object `expiryTimeUtc` with the value of the property `$.exp` serialized in the topic, if present.]*/
+          msg.expiryTimeUtc = v;
+          break;
+        default:
+          /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_007: [When a message is received, the receiver shall populate the generated `Message` object `properties` property with the user properties serialized in the topic.]*/
+          msg.properties.add(k, v);
+          break;
+      }
+    }
+  }
+
   /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_004: [If there is a listener for the message event, a message event shall be emitted for each message received.]*/
   this.emit('message', msg);
 };
