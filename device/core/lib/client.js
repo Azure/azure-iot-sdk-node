@@ -163,8 +163,10 @@ var Client = function (transport, connStr, blobUploadClient) {
       'connected': {
         _onEnter: function() {
           /*Codes_SRS_NODE_DEVICE_CLIENT_16_065: [The client shall connect the transport if needed to subscribe receive messages.]*/
-          if (!thisClient._receiver && thisClient.listeners('message').length > 0) {
-            thisClient._connectReceiver();
+          if (!thisClient._receiver) {
+            if ((thisClient.listeners('message').length > 0) || (Object.keys(thisClient._methodCallbackMap).length > 0)) {
+              thisClient._connectReceiver();
+            }
           }
         },
         _onExit: function() {
