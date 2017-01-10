@@ -69,59 +69,77 @@ module.exports = function(hubConnectionString) {
       }
     });
 
+    var methodName = 'method1';
+    var methodResult = 200;
+
+    var setMethodHandler = function(testPayload) {
+      debug('---------- new method test ------------');
+      // setup device to handle the method call
+      deviceClient.onDeviceMethod(methodName, function(request, response) {
+        // validate request
+        assert.isNotNull(request);
+        assert.strictEqual(request.methodName, methodName);
+        assert.deepEqual(request.payload, testPayload);
+        debug('device: received method request');
+        debug(JSON.stringify(request, null, 2));
+        // validate response
+        assert.isNotNull(response);
+
+        // send the response
+        response.send(methodResult, testPayload, function(err) {
+          debug('send method response with statusCode: ' + methodResult);
+          if(!!err) {
+            console.error('An error ocurred when sending a method response:\n' +
+                err.toString());
+          }
+        });
+      });
+    };
+
+    var sendMethodCall = function(testPayload, done) {
+      setTimeout(function() {
+        // make the method call via the service
+        var methodParams = {
+          methodName: methodName, 
+          payload: testPayload,
+          timeoutInSeconds: 10
+        };
+        debug('service sending method call:');
+        debug(JSON.stringify(methodParams, null, 2));
+        ServiceClient
+            .fromConnectionString(hubConnectionString)
+            .invokeDeviceMethod(
+                deviceDescription.deviceId,
+                methodParams,
+                function(err, result) {
+                  if(!err) {
+                    debug('got method results');
+                    debug(JSON.stringify(result, null, 2));
+                    assert.strictEqual(result.status, methodResult);
+                    assert.deepEqual(result.payload, testPayload);
+                  }
+                  debug('---------- end method test ------------');
+                  done(err);
+                });
+      }, 1000);
+    };
+
     [null, '', 'foo', { k1: 'v1' }, {}].forEach(function(testPayload) {
       it('makes and receives a method call', function(done) {
-        debug('---------- new method test ------------');
-        var methodName = 'method1';
-        var methodResult = 200;
-
-        // setup device to handle the method call
-        deviceClient.onDeviceMethod(methodName, function(request, response) {
-          // validate request
-          assert.isNotNull(request);
-          assert.strictEqual(request.methodName, methodName);
-          assert.deepEqual(request.payload, testPayload);
-          debug('device: received method request');
-          debug(JSON.stringify(request, null, 2));
-          // validate response
-          assert.isNotNull(response);
-
-          // send the response
-          response.send(methodResult, testPayload, function(err) {
-            debug('send method response with statusCode: ' + methodResult);
-            if(!!err) {
-              console.error('An error ocurred when sending a method response:\n' +
-                  err.toString());
-            }
-          });
-        });
-
-        setTimeout(function() {
-          // make the method call via the service
-          var methodParams = {
-            methodName: methodName, 
-            payload: testPayload,
-            timeoutInSeconds: 20
-          };
-          debug('service sending method call:');
-          debug(JSON.stringify(methodParams, null, 2));
-          ServiceClient
-              .fromConnectionString(hubConnectionString)
-              .invokeDeviceMethod(
-                  deviceDescription.deviceId,
-                  methodParams,
-                  function(err, result) {
-                    if(!err) {
-                      debug('got method results');
-                      debug(JSON.stringify(result, null, 2));
-                      assert.strictEqual(result.status, methodResult);
-                      assert.deepEqual(result.payload, testPayload);
-                    }
-                    debug('---------- end method test ------------');
-                    done(err);
-                  });
-        }, 1000);
+        setMethodHandler(testPayload);
+        sendMethodCall(testPayload,done);
       });
+    });
+
+    it('makes and receives a method call after renewing the SAS token', function(done) {
+      var testPayload = {'k1' : 'v1'};
+      setMethodHandler(testPayload);
+        deviceClient.on('_sharedAccessSignatureUpdated', function() {
+          setTimeout(function() {
+            sendMethodCall(testPayload, done);
+          },1000);
+      });
+      deviceClient._renewSharedAccessSignature();
     });
   });
 };
