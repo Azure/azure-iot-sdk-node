@@ -135,9 +135,9 @@ module.exports = function(hubConnectionString) {
       var testPayload = {'k1' : 'v1'};
       setMethodHandler(testPayload);
         deviceClient.on('_sharedAccessSignatureUpdated', function() {
-          setTimeout(function() {
-            sendMethodCall(testPayload, done);
-          },1000);
+        setTimeout(function() {
+          sendMethodCall(testPayload, done);
+        }, 1000);
       });
       deviceClient._renewSharedAccessSignature();
     });

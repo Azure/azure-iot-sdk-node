@@ -277,17 +277,22 @@ var runTests = function (hubConnectionString) {
 
     it('can send reported properties to the service after renewing the sas token', function(done) {
       deviceClient.on('_sharedAccessSignatureUpdated', function() {
-        // service bug -- delay before sending properties.  Will be fixed as part of some "clock skew" fix.
+        // _sharedAccessSignatureUpdated fired when the signature has been updated,
+        // but we still have to wait for the library to connect and register for events.
+        // We really need a "twinReady" event, but we don't have one right now.
         setTimeout(function() {
           sendsAndReceiveReportedProperties(done);
-        },5000);
+        }, 1000);
       });
       deviceClient._renewSharedAccessSignature();
     });
 
     it('can receive desired properties from the service after renewing the sas token', function(done) {
       deviceClient.on('_sharedAccessSignatureUpdated', function() {
-        sendsAndReceivesDesiredProperties(done);
+        // See note above about "twinReady" event.
+        setTimeout(function() {
+          sendsAndReceivesDesiredProperties(done);
+        }, 1000);
       });
       deviceClient._renewSharedAccessSignature();
     });
@@ -334,7 +339,7 @@ var runTests = function (hubConnectionString) {
 
     it('can renew SAS 20 times without failure', function(done) 
     {
-      this.timeout(60000);
+      this.timeout(120000);
       var iteration = 0;
       var doItAgain = function() {
         iteration++;
@@ -342,7 +347,11 @@ var runTests = function (hubConnectionString) {
           done();
         } else {
           deviceClient._renewSharedAccessSignature();
-          setTimeout(doItAgain, 1000);
+          // at this point, signature renewal has begun, but the connection is
+          // not complete.  We need a "connection complete" event here, but
+          // we don't have one yet.  Instead, sleep for a while -- 3 seconds
+          // is good enough for now.
+          setTimeout(doItAgain, 3000);
         }
       };
 
