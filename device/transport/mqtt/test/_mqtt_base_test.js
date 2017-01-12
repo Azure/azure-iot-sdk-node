@@ -362,5 +362,44 @@ describe('MqttBase', function () {
       });
       fakemqtt.emit('connect', { connack: true });
     });
+
+    [
+      /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_011: [The `publish` method shall serialize the `messageId` property of the message as a key-value pair on the topic with the key `$.mid`.]*/
+      { propName: 'messageId', serializedAs: '%24.mid', fakeValue: 'fakeMessageId' },
+      /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_012: [The `publish` method shall serialize the `correlationId` property of the message as a key-value pair on the topic with the key `$.cid`.]*/
+      { propName: 'correlationId', serializedAs: '%24.cid', fakeValue: 'fakeCorrelationId' },
+      /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_013: [The `publish` method shall serialize the `userId` property of the message as a key-value pair on the topic with the key `$.uid`.]*/
+      { propName: 'userId', serializedAs: '%24.uid', fakeValue: 'fakeUserId' },
+      /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_014: [The `publish` method shall serialize the `to` property of the message as a key-value pair on the topic with the key `$.to`.]*/
+      { propName: 'to', serializedAs: '%24.to', fakeValue: 'fakeTo' },
+      /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_015: [The `publish` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`.]*/
+      { propName: 'expiryTimeUtc', serializedAs: '%24.exp', fakeValue: 'fakeDateString' },
+      { propName: 'expiryTimeUtc', serializedAs: '%24.exp', fakeValue: new Date(1970, 1, 1), fakeSerializedValue: encodeURIComponent(new Date(1970, 1, 1).toISOString()) }
+    ].forEach(function(testProperty) {
+      it('serializes Message.' + testProperty.propName + ' as ' + decodeURIComponent(testProperty.serializedAs) + ' on the topic', function(done) {
+        var config = {
+        host: "host.name",
+        deviceId: "deviceId",
+        sharedAccessSignature: "sasToken"
+      };
+
+      var testMessage = new Message('message');
+      testMessage[testProperty.propName] = testProperty.fakeValue;
+      testMessage.properties.add('fakeKey', 'fakeValue');
+
+      var fakemqtt = new FakeMqtt();
+      sinon.spy(fakemqtt, 'publish');
+      var transport = new MqttBase(fakemqtt);
+      transport.connect(config, function () {
+        transport.client.publishShouldSucceed(true);
+        transport.publish(testMessage, function() {
+          var serializedPropertyValue = testProperty.fakeSerializedValue || testProperty.fakeValue;
+          assert(fakemqtt.publish.calledWith('devices/deviceId/messages/events/' + testProperty.serializedAs + '=' + serializedPropertyValue + '&fakeKey=fakeValue'));
+          done();
+        });
+      });
+      fakemqtt.emit('connect', { connack: true });
+      });
+    });
   });
 }); 

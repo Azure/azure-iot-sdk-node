@@ -65,6 +65,16 @@ The `publish` method publishes the message passed as argument.
 
 **SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `publish` method shall use QoS level of 1. **]**
 
+**SRS_NODE_COMMON_MQTT_BASE_16_011: [** The `publish` method shall serialize the `messageId` property of the message as a key-value pair on the topic with the key `$.mid`. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_012: [** The `publish` method shall serialize the `correlationId` property of the message as a key-value pair on the topic with the key `$.cid`. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_013: [** The `publish` method shall serialize the `userId` property of the message as a key-value pair on the topic with the key `$.uid`. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_014: [** The `publish` method shall serialize the `to` property of the message as a key-value pair on the topic with the key `$.to`. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_015: [** The `publish` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`. **]**
+
 ### MqttBase.subscribe()
 **SRS_NODE_COMMON_MQTT_BASE_12_008: [** The `subscribe` method shall call `subscribe`  on MQTT.JS  library with the given message and with the hardcoded topic path. **]**
 
