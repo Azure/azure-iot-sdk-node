@@ -168,6 +168,35 @@ describe('MqttReceiver', function () {
         mqttClient.emitMessage('message', 'devices/foo/messages/devicebound/%24.exp=2017-01-06T23%3A37%3A00.669Z');
       });
 
+      /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_011: [When a message is received, the receiver shall populate the generated `Message` object `correlationId` with the value of the property `$.cid` serialized in the topic, if present.]*/
+      it('populates Message.correlationId from the topic', function (done) {
+        var fakeCid = 'fakeCorrelationId';
+        var mqttClient = new FakeMqttClient();
+        var receiver = new MqttReceiver(mqttClient, 'topic');
+        receiver.on('message', function (msg) {
+          assert.equal(msg.constructor.name, 'Message');
+          assert.equal(msg.correlationId, fakeCid);
+          done();
+        });
+
+        mqttClient.emitMessage('message', 'devices/foo/messages/devicebound/%24.cid=' + fakeCid);
+      });
+
+      /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_012: [When a message is received, the receiver shall populate the generated `Message` object `userId` with the value of the property `$.uid` serialized in the topic, if present.]*/
+      it('populates Message.userId from the topic', function (done) {
+        var fakeUid = 'fakeUserId';
+        var mqttClient = new FakeMqttClient();
+        var receiver = new MqttReceiver(mqttClient, 'topic');
+        receiver.on('message', function (msg) {
+          assert.equal(msg.constructor.name, 'Message');
+          assert.equal(msg.userId, fakeUid);
+          done();
+        });
+
+        mqttClient.emitMessage('message', 'devices/foo/messages/devicebound/%24.uid=' + fakeUid);
+      });
+
+
       it('creates a message even if the properties topic segment is empty', function(done) {
         var mqttClient = new FakeMqttClient();
         var receiver = new MqttReceiver(mqttClient, 'topic');

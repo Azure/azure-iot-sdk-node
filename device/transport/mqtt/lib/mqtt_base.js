@@ -8,6 +8,7 @@ var debug = require('debug')('mqtt-common');
 var PackageJson = require('../package.json');
 var results = require('azure-iot-common').results;
 var endpoint = require('azure-iot-common').endpoint;
+var querystring = require('querystring');
 
 /**
  * @class           module:azure-iot-device-mqtt.MqttBase
@@ -134,10 +135,29 @@ MqttBase.prototype.publish = function (message, done) {
   /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_008: [The `publish` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`.]*/
   var topic = this._topicTelemetryPublish;
 
+  var systemProperties = {};
+
+  /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_011: [The `publish` method shall serialize the `messageId` property of the message as a key-value pair on the topic with the key `$.mid`.]*/
+  if (message.messageId) systemProperties['$.mid'] = message.messageId;
+  /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_012: [The `publish` method shall serialize the `correlationId` property of the message as a key-value pair on the topic with the key `$.cid`.]*/
+  if (message.correlationId) systemProperties['$.cid'] = message.correlationId;
+  /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_013: [The `publish` method shall serialize the `userId` property of the message as a key-value pair on the topic with the key `$.uid`.]*/
+  if (message.userId) systemProperties['$.uid'] = message.userId;
+  /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_014: [The `publish` method shall serialize the `to` property of the message as a key-value pair on the topic with the key `$.to`.]*/
+  if (message.to) systemProperties['$.to'] = message.to;
+  /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_015: [The `publish` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`.]*/
+  if (message.expiryTimeUtc) {
+    var expiryString = message.expiryTimeUtc instanceof Date ? message.expiryTimeUtc.toISOString() : message.expiryTimeUtc;
+    systemProperties['$.exp'] = (expiryString || undefined);
+  }
+
+  var sysPropString = querystring.stringify(systemProperties);
+  topic += sysPropString;
+
   /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_009: [If the message has properties, the property keys and values shall be uri-encoded, then serialized and appended at the end of the topic with the following convention: `<key>=<value>&<key2>=<value2>&<key3>=<value3>(...)`.]*/
   if (message.properties.count() > 0) {
     for (var i = 0; i < message.properties.count(); i++) {
-      if (i > 0) topic += '&';
+      if (i > 0 || sysPropString) topic += '&';
       topic += encodeURIComponent(message.properties.propertyList[i].key) + '=' + encodeURIComponent(message.properties.propertyList[i].value);
     }
   }
