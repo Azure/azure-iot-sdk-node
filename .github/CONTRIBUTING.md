@@ -19,13 +19,10 @@ That is definitely something we want to hear about. Please open an issue on gith
 Our SDK is entirely open-source and we do accept pull-requests if you feel like taking a stab at fixing the bug and maybe adding your name to our commit history :) Please mention
 any relevant issue number in the pull request description.
 
-# Contribute documentation
-For simple markdown files, we accept documentation pull requests submitted against the `master` branch, if it's about existing SDK features.
-If your PR is about future changes or has changes to the comments in the code itself, we'll treat is as a code change (see the next section).
+# Contribute code and/or documentation
+We look at all pull requests submitted against the `master` branch carefully. We also actively use the [Wiki](https://github.com/Azure/azure-iot-sdk-node/wiki) for longer-form documents. The wiki can be cloned and used as a regular Git repository so feel free to contribute there too!
 
-# Contribute code
-Unlike documentation, we require pull-requests for code to be submitted against the `develop` branch in order to review and run it in our gated build system. We try to maintain a high bar
-for code quality and maintainability, we insist on having tests associated with the code, and if necessary, additions/modifications to the requirement documents.
+As far as code is concerned the code associated with the PR will be pulled and run through the gated build before it makes it to the master branch. As much as possible, we insist on having tests associated with the code, and if necessary, additions/modifications to the requirement documents. As a matter of fact, the build will fail if code coverage goes down.
 
 Also, have you signed the [Contribution License Agreement](https://cla.microsoft.com/) ([CLA](https://cla.microsoft.com/))? A friendly bot will remind you about it when you submit your pull-request.
 
