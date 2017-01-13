@@ -312,8 +312,8 @@ var Client = function (transport, connStr, blobUploadClient) {
     }
   });
   
-  this._fsm.on('transition', function (action, oldState, newState) {
-    debug('Client state change: ' + oldState + ' -> ' + newState + ' (action: ' + action + ')');
+  this._fsm.on('transition', function (data) {
+    debug('Client state change: ' + data.fromState + ' -> ' + data.toState + ' (action: ' + data.action + ')');
   });
 
   this._disconnectHandler = function (err) {

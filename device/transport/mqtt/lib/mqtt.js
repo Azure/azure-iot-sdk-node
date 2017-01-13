@@ -51,10 +51,12 @@ util.inherits(Mqtt, EventEmitter);
 Mqtt.prototype.connect = function (done) {
   this._twinReceiver = null;
   this._mqtt.connect(this._config, function (err, result) {
+    debug('connect');
     if (err) {
       if (done) done(err);
     } else {
       this._mqtt.client.on('disconnect', function (err) {
+        debug('on disconnect');
         this.emit('disconnect', err);
       }.bind(this));
 
@@ -71,6 +73,7 @@ Mqtt.prototype.connect = function (done) {
  */
 /* Codes_SRS_NODE_DEVICE_MQTT_16_001: [The disconnect method should call the disconnect method on MqttTransport.] */
 Mqtt.prototype.disconnect = function (done) {
+  debug('disconnect');
   this._mqtt.disconnect(function (err, result) {
     if (done) done(err, result);
   });
@@ -84,6 +87,7 @@ Mqtt.prototype.disconnect = function (done) {
  */
 /* Codes_SRS_NODE_DEVICE_MQTT_12_005: [The sendEvent method shall call the publish method on MqttTransport */
 Mqtt.prototype.sendEvent = function (message, done) {
+  debug('publish ' + JSON.stringify(message));
   this._mqtt.publish(message, done);
 };
 
@@ -143,6 +147,7 @@ Mqtt.prototype.abandon = function () {
  * @param {Function}      done      The callback to be invoked when `updateSharedAccessSignature` completes.
  */
 Mqtt.prototype.updateSharedAccessSignature = function (sharedAccessSignature, done) {
+  debug('updateSharedAccessSignature');
   /*Codes_SRS_NODE_DEVICE_MQTT_16_008: [The updateSharedAccessSignature method shall disconnect the current connection operating with the deprecated token, and re-iniialize the transport object with the new connection parameters.]*/
   this._mqtt.disconnect(function (err) {
     if (err) {
@@ -305,6 +310,7 @@ Mqtt.prototype.sendMethodResponse = function(response, done) {
   );
 
   debug('sending response using topic: ' + topicName);
+  debug(JSON.stringify(response.payload));
   // publish the response message
   this._mqtt.client.publish(topicName, JSON.stringify(response.payload), { qos: 0, retain: false }, function(err) {
     if(!!done && typeof(done) === 'function') {
