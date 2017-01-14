@@ -54,4 +54,4 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 [iot-dev-center]: http://azure.com/iotdev
 [iot-hub-documentation]: https://docs.microsoft.com/en-us/azure/iot-hub/
 [azure-iot-sdks]: http://github.com/azure/azure-iot-sdks
-[node-api-reference]: http://azure.github.io/azure-iot-sdks/
+[node-api-reference]: http://azure.github.io/azure-iot-sdk-node/
