@@ -222,6 +222,29 @@ describe('MqttBase', function () {
         fakemqtt.emit(event, new Error('could not connect'));
       });
     });
+
+    it('calls the done callback with an error only and exactly once even if multiple events are received', function(done) {
+        var config = {
+          host: "host.name",
+          deviceId: "deviceId",
+          sharedAccessSignature: "sasToken"
+        };
+        
+        var callbackCounter = 0;
+
+        var fakemqtt = new FakeMqtt();
+        var transport = new MqttBase(fakemqtt);
+        transport.connect(config, function(err) {
+          callbackCounter++;
+          assert.equal(callbackCounter, 1);
+          assert.isNotNull(err);
+          done();
+        });
+
+        fakemqtt.emit('error', new Error('could not connect'));
+        fakemqtt.emit('close');
+    });
+
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_007: [The `connect` method shall not throw if the `done` argument has not been passed.]*/
     it('does not throw if the `done` argument is undefined', function() {
       var mqtt = new MqttBase(new FakeMqtt());

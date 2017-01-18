@@ -6,6 +6,7 @@
 var MqttReceiver = require('./mqtt_receiver.js');
 var debug = require('debug')('mqtt-common');
 var PackageJson = require('../package.json');
+var errors = require('azure-iot-common').errors;
 var results = require('azure-iot-common').results;
 var endpoint = require('azure-iot-common').endpoint;
 var querystring = require('querystring');
@@ -75,32 +76,39 @@ MqttBase.prototype.connect = function (config, done) {
   this.client = this.mqttprovider.connect(uri, this._options);
   /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_007: [The `connect` method shall not throw if the `done` argument has not been passed.]*/
   if (done) {
+    var self = this;
+
     var errCallback = function (error) {
-      done(error);
+      var err = error || new errors.NotConnectedError(null, 'Unable to establish a connection');
+      self.client.removeListener('close', errCallback);
+      self.client.removeListener('offline', errCallback);
+      self.client.removeListener('disconnect', errCallback);
+      self.client.removeListener('error', errCallback);
+      done(err);
     };
 
-  /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_003: [The `connect` method shall call the `done` callback with a standard javascript `Error` object if the connection failed.]*/
-    this.client.on('error', errCallback);
-    this.client.on('close', errCallback);
-    this.client.on('offline', errCallback);
-    this.client.on('disconnect', errCallback);
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_003: [The `connect` method shall call the `done` callback with a standard javascript `Error` object if the connection failed.]*/
+    self.client.on('error', errCallback);
+    self.client.on('close', errCallback);
+    self.client.on('offline', errCallback);
+    self.client.on('disconnect', errCallback);
 
-    this.client.on('connect', function (connack) {
+    self.client.on('connect', function (connack) {
       debug('Device is connected');
       debug('CONNACK: ' + JSON.stringify(connack));
 
-      this.client.removeListener('close', errCallback);
-      this.client.removeListener('offline', errCallback);
-      this.client.removeListener('disconnect', errCallback);
+      self.client.removeListener('close', errCallback);
+      self.client.removeListener('offline', errCallback);
+      self.client.removeListener('disconnect', errCallback);
 
-      this.client.on('close', function () {
+      self.client.on('close', function () {
         debug('Device connection to the server has been closed');
-        this._receiver = null;
-      }.bind(this));
+        self._receiver = null;
+      });
 
       /*Codes_SRS_NODE_COMMON_MQTT_BASE_12_005: [The `connect` method shall call connect on MQTT.JS  library and call the `done` callback with a `null` error object and the result as a second argument.]*/
       done(null, connack);
-    }.bind(this));
+    });
   }
 };
 
