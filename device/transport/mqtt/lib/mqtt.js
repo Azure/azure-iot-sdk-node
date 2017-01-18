@@ -55,8 +55,9 @@ Mqtt.prototype.connect = function (done) {
     if (err) {
       if (done) done(err);
     } else {
-      this._mqtt.client.on('disconnect', function (err) {
-        debug('on disconnect');
+      /* Codes_SRS_NODE_DEVICE_MQTT_18_026: When MqttTransport fires the close event, the Mqtt object shall emit a disconnect event */
+      this._mqtt.client.on('close', function (err) {
+        debug('on close');
         this.emit('disconnect', err);
       }.bind(this));
 

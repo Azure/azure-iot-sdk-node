@@ -9,7 +9,7 @@ var util = require('util');
 var Message = require('azure-iot-common').Message;
 var QueryString = require('querystring');
 var URL = require('url');
-var debug = require('debug')('device:mqtt');
+var debug = require('debug')('device:mqtt-receiver');
 
 var TOPIC_METHODS_SUBSCRIBE = "$iothub/methods/POST/#";
 
@@ -156,7 +156,7 @@ MqttReceiver.prototype._removeSubscription = function (topic) {
 
 MqttReceiver.prototype._dispatchMqttMessage = function (topic, payload) {
   debug('message received on ' + topic);
-  debug(JSON.stringify(payload.toString()));
+  debug(JSON.stringify(payload ? payload.toString() : null));
   // dispatch the message to the appropriate handler
   var self = this;
   var targetTopic = null;

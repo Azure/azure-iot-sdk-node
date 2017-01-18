@@ -8,6 +8,7 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 var Mqtt = require('../lib/mqtt.js');
 var errors = require('azure-iot-common').errors;
+var EventEmitter = require('events').EventEmitter;
 
 describe('Mqtt', function () {
   var fakeConfig = {
@@ -249,5 +250,42 @@ describe('Mqtt', function () {
         mqtt.setOptions(fakeX509Options);
       });
     });
+  });
+
+  describe('#connect', function() {
+
+    var makeFakeTransport = function() {
+      var fakeTransport = new EventEmitter();
+      fakeTransport.fakeClient = new EventEmitter();
+
+      fakeTransport.connect = function() {
+        return fakeTransport.fakeClient;
+      };
+      return fakeTransport;
+    };
+
+    /* Tests_SRS_NODE_DEVICE_MQTT_12_004: [The connect method shall call the connect method on MqttTransport */
+    it ('calls connect on the transport', function(done) {
+      var fakeTransport = makeFakeTransport();
+      sinon.spy(fakeTransport,'connect');
+
+      var mqtt = new Mqtt(fakeConfig, fakeTransport);
+      mqtt.connect(function() {
+        assert(fakeTransport.connect.calledOnce);
+        done();
+      });
+      fakeTransport.fakeClient.emit('connect');
+    });
+
+    /* Tests_SRS_NODE_DEVICE_MQTT_18_026: When MqttTransport fires the close event, the Mqtt object shall emit a disconnect event */
+    it('registers to emit disconnect when close received', function(done) {
+      var fakeTransport = makeFakeTransport();
+      var mqtt = new Mqtt(fakeConfig, fakeTransport);
+      mqtt.on('disconnect', done);
+      mqtt.connect();
+      fakeTransport.fakeClient.emit('connect');
+      fakeTransport.fakeClient.emit('close');
+    });
+
   });
 });
