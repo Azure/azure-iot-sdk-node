@@ -110,7 +110,7 @@ Client.fromSharedAccessSignature = function fromSharedAccessSignature(sharedAcce
   };
 
   /*Codes_SRS_NODE_IOTHUB_CLIENT_05_007: [The fromSharedAccessSignature method shall return a new instance of the Client object, as by a call to new Client(transport).]*/
-  return new Client(new Transport(config));
+  return new Client(new Transport(config), new RestApiClient(config));
 };
 
 Client.prototype._disconnectHandler = function (reason) {

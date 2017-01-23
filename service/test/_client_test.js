@@ -40,6 +40,7 @@ describe('Client', function () {
     it('returns an instance of Client', function () {
       var client = Client.fromConnectionString(connStr);
       assert.instanceOf(client, Client);
+      assert.isOk(client._restApiClient);
     });
   });
 
@@ -71,6 +72,7 @@ describe('Client', function () {
     it('returns an instance of Client', function () {
       var client = Client.fromSharedAccessSignature(token);
       assert.instanceOf(client, Client);
+      assert.isOk(client._restApiClient);
     });
   });
 
