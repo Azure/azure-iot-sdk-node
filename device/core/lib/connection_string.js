@@ -17,5 +17,29 @@ module.exports = {
     }
 
     return connectionString;
+  },
+  createWithSharedAccessKey: function createWithSharedAccessKey(hostName, deviceId, symmetricKey) {
+    /*Codes_SRS_NODE_DEVICE_CONNSTR_16_003: [The `createWithSharedAccessKey` static method shall throw a `ReferenceError` if one or more of the `hostName`, `deviceId` or `sharedAccessKey` are falsy.]*/
+    if (!hostName) {
+      throw new ReferenceError('hostName cannot be \'' + hostName + '\'');
+    } else if (!deviceId) {
+      throw new ReferenceError('deviceId cannot be \'' + deviceId + '\'');
+    } else if (!symmetricKey) {
+      throw new ReferenceError('symmetricKey cannot be \'' + symmetricKey + '\'');
+    }
+
+    /*Codes_SRS_NODE_DEVICE_CONNSTR_16_002: [The `createWithSharedAccessKey` static method shall returns a valid connection string with the values passed as arguments.]*/
+    return 'HostName=' + hostName + ';DeviceId=' + deviceId + ';SharedAccessKey=' + symmetricKey;
+  },
+  createWithX509Certificate: function createWithX509Certificate(hostName, deviceId) {
+    /*Codes_SRS_NODE_DEVICE_CONNSTR_16_005: [The `createWithX509Certificate` static method shall throw a `ReferenceError` if one or more of the `hostName` or `deviceId` are falsy.]*/
+    if (!hostName) {
+      throw new ReferenceError('hostName cannot be \'' + hostName + '\'');
+    } else if (!deviceId) {
+      throw new ReferenceError('deviceId cannot be \'' + deviceId + '\'');
+    }
+
+    /*Codes_SRS_NODE_DEVICE_CONNSTR_16_004: [The `createWithX509Certificate` static method shall returns a valid x509 connection string with the values passed as arguments.]*/
+    return 'HostName=' + hostName + ';DeviceId=' + deviceId + ';x509=true';
   }
 };

@@ -23,10 +23,22 @@ console.log('SharedAccessKey=' + cn.SharedAccessKey);
 Creates a new instance of the object.
 
 ### parse(source) [static]
-The parse static method returns a new instance of the ConnectionString object with properties corresponding to each 'name=value' field found in source.
+The `parse` static method returns a new instance of the `ConnectionString` object with properties corresponding to each 'name=value' field found in source.
 
 **SRS_NODE_DEVICE_CONNSTR_05_001: [** The `parse` method shall return the result of calling `azure-iot-common.ConnectionString.parse`.**]**
 
 **SRS_NODE_DEVICE_CONNSTR_05_002: [** It shall throw `ArgumentError` if any of `HostName` or `DeviceId` fields are not found in the source argument.**]**
 
 **SRS_NODE_DEVICE_CONNSTR_16_001: [** It shall throw `ArgumentError` if `SharedAccessKey` and `x509` are present at the same time or if none of them are present. **]**
+
+### createWithSharedAccessKey(hostName, deviceId, sharedAccessKey) [static]
+
+**SRS_NODE_DEVICE_CONNSTR_16_002: [** The `createWithSharedAccessKey` static method shall returns a valid connection string with the values passed as arguments. **]**
+
+**SRS_NODE_DEVICE_CONNSTR_16_003: [** The `createWithSharedAccessKey` static method shall throw a `ReferenceError` if one or more of the `hostName`, `deviceId` or `sharedAccessKey` are falsy. **]**
+
+### createWithX509Certificate(hostName, deviceId) [static]
+
+**SRS_NODE_DEVICE_CONNSTR_16_004: [** The `createWithX509Certificate` static method shall returns a valid x509 connection string with the values passed as arguments. **]**
+
+**SRS_NODE_DEVICE_CONNSTR_16_005: [** The `createWithX509Certificate` static method shall throw a `ReferenceError` if one or more of the `hostName` or `deviceId` are falsy. **]**
