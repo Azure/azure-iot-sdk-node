@@ -97,6 +97,11 @@ Amqp.prototype.connect = function connect(uri, sslOptions, done) {
       wsTransport.register(amqp10.TransportProvider);
     }
     this._amqp.policy.connect.options.sslOptions = sslOptions;
+    var connectError = null;
+    var connectErrorHander = function (err) {
+      connectError = err;
+    };
+    this._amqp.on('client:errorReceived', connectErrorHander);
     this._amqp.connect(this.uri)
       .then(function (result) {
         debug('AMQP transport connected.');
@@ -106,9 +111,10 @@ Amqp.prototype.connect = function connect(uri, sslOptions, done) {
         return null;
       }.bind(this))
       .catch(function (err) {
+        this._amqp.removeListener('client:errorReceived', connectErrorHander);
         this._connected = false;
         /*Codes_SRS_NODE_COMMON_AMQP_16_003: [The connect method shall call the done callback if the connection fails.] */
-        if (done) process.nextTick(function() { done(err); });
+        if (done) process.nextTick(function() { done(connectError || err); });
       }.bind(this));
   } else {
     debug('connect called when already connected.');

@@ -19,6 +19,7 @@ var device_teardown = require('./test/device_teardown.js');
 var twin_e2e_tests = require('./test/twin_e2e_tests.js');
 var device_method = require('./test/device_method.js');
 var job_client = require('./test/job_client.js');
+var authentication_tests = require('./test/authentication.js');
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 var storageConnectionString = process.env.STORAGE_CONNECTION_STRING;
@@ -42,6 +43,7 @@ device_provision(hubConnectionString, function (err, provisionedDevices) {
     file_upload_tests(hubConnectionString, deviceHttp.Http, provisionedDevices[1]);
     service_client(hubConnectionString);
     registry_tests(hubConnectionString, storageConnectionString);
+    authentication_tests(hubConnectionString);
   }
   device_teardown(hubConnectionString, provisionedDevices);
   if (!provisionedDevices || provisionedDevices.length !== 3) {

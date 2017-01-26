@@ -3,6 +3,7 @@
 
 'use strict';
 
+var Promise = require('bluebird');
 var assert = require('chai').assert;
 var sinon = require('sinon');
 require('sinon-as-promised');
@@ -52,11 +53,26 @@ describe('Amqp', function () {
     });
 
     /*Tests_SRS_NODE_COMMON_AMQP_16_003: [If given as an argument, the connect method shall call the `done` callback with a standard `Error` object if the connection fails.]*/
-    it('Calls the done callback with an error if connecting fails', function(testCallback) {
+    it('Calls the done callback with an error if connecting fails (disconnected)', function(testCallback) {
       var amqp = new Amqp();
       sinon.stub(amqp._amqp, 'connect').rejects('connection failed');
       amqp.connect('uri', null, function(err) {
         assert.instanceOf(err, Error);
+        testCallback();
+      });
+    });
+
+    it('Calls the done callback with an error if connecting fails (auth error)', function(testCallback) {
+      var amqp = new Amqp();
+      var testError = new Error();
+      sinon.stub(amqp._amqp, 'connect', function() {
+        return new Promise(function (resolve, reject) {
+          amqp._amqp.emit('client:errorReceived', testError);
+          reject(new Error('cannot connect'));
+        });
+      });
+      amqp.connect('uri', null, function(err) {
+        assert.strictEqual(err, testError);
         testCallback();
       });
     });
