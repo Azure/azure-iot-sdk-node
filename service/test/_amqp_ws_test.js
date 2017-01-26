@@ -5,6 +5,7 @@
 var Amqp = require('../lib/amqp.js');
 var AmqpWs = require('../lib/amqp_ws.js');
 var assert = require('chai').assert;
+var sinon = require('sinon');
 
 describe('AmqpWs', function() {
   describe('#constructor', function() {
@@ -18,6 +19,24 @@ describe('AmqpWs', function() {
       });
       
       assert.instanceOf(amqpWs, Amqp);
+    });
+  });
+
+  describe('#connect', function() {
+    it('calls the connect method on the base AMQP object with the correct URL', function() {
+      var testConfig = {
+        host: 'host',
+        hubName: 'hubName',
+        keyName: 'keyName',
+        sharedAccessSignature: 'sas'
+      };
+
+      var amqpWs = new AmqpWs(testConfig);
+
+      sinon.spy(amqpWs._amqp, 'connect');
+      amqpWs.connect(function(){});
+      assert.strictEqual(amqpWs._amqp.connect.args[0][0].indexOf('wss://'), 0);
+      assert(amqpWs._amqp.connect.args[0][0].indexOf('$iothub/websocket') > 0);
     });
   });
 });

@@ -61,11 +61,13 @@ Client.fromConnectionString = function fromConnectionString(connStr, Transport) 
   /*Codes_SRS_NODE_IOTHUB_CLIENT_05_002: [The fromConnectionString method shall throw ReferenceError if the connStr argument is falsy.]*/
   if (!connStr) throw new ReferenceError('connStr is \'' + connStr + '\'');
 
+  /*Codes_SRS_NODE_IOTHUB_CLIENT_16_016: [The `fromConnectionString` method shall use the `Transport` constructor passed as argument to instantiate a transport object if it's not falsy.]*/
+  /*Codes_SRS_NODE_IOTHUB_CLIENT_16_017: [The `fromConnectionString` method shall use the default Transport (Amqp) if the `Transport` optional argument is falsy.]*/
   if(!Transport){
       Transport = DefaultTransport;
   }
 
-  /*Codes_SRS_NODE_IOTHUB_CLIENT_05_003: [Otherwise, it shall derive and transform the needed parts from the connection string in order to create a new instance of the default transport (azure-iothub.Transport).]*/
+  /*Codes_SRS_NODE_IOTHUB_CLIENT_16_015: [The `fromConnectionString` method shall create a new transport instance and pass it a config object formed from the connection string given as argument.]*/
   var cn = ConnectionString.parse(connStr);
 
   var config = {
@@ -95,13 +97,16 @@ Client.fromSharedAccessSignature = function fromSharedAccessSignature(sharedAcce
   /*Codes_SRS_NODE_IOTHUB_CLIENT_05_005: [The fromSharedAccessSignature method shall throw ReferenceError if the sharedAccessSignature argument is falsy.]*/
   if (!sharedAccessSignature) throw new ReferenceError('sharedAccessSignature is \'' + sharedAccessSignature + '\'');
 
+  /*Codes_SRS_NODE_IOTHUB_CLIENT_16_019: [The `fromSharedAccessSignature` method shall use the `Transport` constructor passed as argument to instantiate a transport object if it's not falsy.]*/
+  /*Codes_SRS_NODE_IOTHUB_CLIENT_16_020: [The `fromSharedAccessSignature` method shall use the default Transport (Amqp) if the `Transport` optional argument is falsy.]*/
   if(!Transport){
       Transport = DefaultTransport;
   }
-  /*Codes_SRS_NODE_IOTHUB_CLIENT_05_006: [Otherwise, it shall derive and transform the needed parts from the shared access signature in order to create a new instance of the default transport (azure-iothub.Transport).]*/
+
   var sas = SharedAccessSignature.parse(sharedAccessSignature);
   var decodedUri = decodeURIComponent(sas.sr);
 
+  /*Codes_SRS_NODE_IOTHUB_CLIENT_16_018: [The `fromSharedAccessSignature` method shall create a new transport instance and pass it a config object formed from the connection string given as argument.]*/
   var config = {
     hubName: decodedUri.split('.', 1)[0],
     host: decodedUri,

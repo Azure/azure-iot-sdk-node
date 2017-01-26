@@ -30,10 +30,20 @@ describe('Client', function () {
       }, ReferenceError, 'connStr is \'undefined\'');
     });
 
-    /*Tests_SRS_NODE_IOTHUB_CLIENT_05_003: [Otherwise, it shall derive and transform the needed parts from the connection string in order to create a new instance of the default transport (azure-iothub.Transport).]*/
+    /*Tests_SRS_NODE_IOTHUB_CLIENT_16_017: [The `fromConnectionString` method shall use the default Transport (Amqp) if the `Transport` optional argument is falsy.]*/
     it('creates an instance of the default transport', function () {
       var client = Client.fromConnectionString(connStr);
       assert.instanceOf(client._transport, Amqp);
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_CLIENT_16_016: [The `fromConnectionString` method shall use the `Transport` constructor passed as argument to instantiate a transport object if it's not falsy.]*/
+    it('uses the transport given as argument', function() {
+      var FakeTransport = function (config) {
+        assert.isOk(config);
+      };
+
+      var client = Client.fromConnectionString(connStr, FakeTransport);
+      assert.instanceOf(client._transport, FakeTransport);
     });
 
     /*Tests_SRS_NODE_IOTHUB_CLIENT_05_004: [The fromConnectionString method shall return a new instance of the Client object, as by a call to new Client(transport).]*/
@@ -54,6 +64,7 @@ describe('Client', function () {
       }, ReferenceError, 'sharedAccessSignature is \'undefined\'');
     });
 
+    /*Tests_SRS_NODE_IOTHUB_CLIENT_16_018: [The `fromSharedAccessSignature` method shall create a new transport instance and pass it a config object formed from the connection string given as argument.]*/
     it('correctly populates the config structure', function() {
       var client = Client.fromSharedAccessSignature(token);
       assert.equal(client._transport._config.hubName, 'hubName');
@@ -62,10 +73,20 @@ describe('Client', function () {
       assert.equal(client._transport._config.sharedAccessSignature, token);
     });
 
-    /*Tests_SRS_NODE_IOTHUB_CLIENT_05_006: [Otherwise, it shall derive and transform the needed parts from the shared access signature in order to create a new instance of the default transport (azure-iothub.Transport).]*/
+    /*Tests_SRS_NODE_IOTHUB_CLIENT_16_020: [The `fromSharedAccessSignature` method shall use the default Transport (Amqp) if the `Transport` optional argument is falsy.]*/
     it('creates an instance of the default transport', function () {
       var client = Client.fromSharedAccessSignature(token);
       assert.instanceOf(client._transport, Amqp);
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_CLIENT_16_019: [The `fromSharedAccessSignature` method shall use the `Transport` constructor passed as argument to instantiate a transport object if it's not falsy.]*/
+    it('uses the transport given as argument', function() {
+      var FakeTransport = function (config) {
+        assert.isOk(config);
+      };
+
+      var client = Client.fromSharedAccessSignature(token, FakeTransport);
+      assert.instanceOf(client._transport, FakeTransport);
     });
 
     /*Tests_SRS_NODE_IOTHUB_CLIENT_05_007: [The fromSharedAccessSignature method shall return a new instance of the Client object, as by a call to new Client(transport).]*/

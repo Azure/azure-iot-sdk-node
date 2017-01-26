@@ -4,6 +4,7 @@
 'use strict';
 
 var util = require('util');
+var anHourFromNow = require('azure-iot-common').anHourFromNow;
 var Base = require('azure-iot-amqp-base').Amqp;
 var Amqp = require('./amqp.js');
 var PackageJson = require('../package.json');
@@ -21,19 +22,21 @@ var PackageJson = require('../package.json');
 - `sharedAccessSignature–` (string) the key associated with the key name.]*/
 function AmqpWs(config) {
   this._config = config;
-  var uri = 'wss://' +
-            encodeURIComponent(this._config.keyName) +
-            '%40sas.root.' +
-            this._config.hubName +
-            ':' +
-            encodeURIComponent(this._config.sharedAccessSignature) +
-            '@' +
-            this._config.host + ':443/$iothub/websocket';
- 
-  this._amqp = new Base(uri, false, PackageJson.name + '/' + PackageJson.version);
+  this._amqp = new Base(false, PackageJson.name + '/' + PackageJson.version);
 }
 
 /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_WS_16_002: [`AmqpWs` should inherit from `Amqp`.]*/
 util.inherits(AmqpWs, Amqp);
+
+AmqpWs.prototype._getConnectionUri = function _createConnectionUri() {
+  return 'wss://' +
+          encodeURIComponent(this._config.keyName) +
+          '%40sas.root.' +
+          this._config.hubName +
+          ':' +
+          encodeURIComponent((typeof(this._config.sharedAccessSignature) === 'string') ? this._config.sharedAccessSignature : this._config.sharedAccessSignature.extend(anHourFromNow())) +
+          '@' +
+          this._config.host + ':443/$iothub/websocket';
+};
 
 module.exports = AmqpWs;

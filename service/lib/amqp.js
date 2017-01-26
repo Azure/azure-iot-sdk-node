@@ -63,6 +63,15 @@ Amqp.prototype._handleSASRenewal = function() {
   }.bind(this)));
 };
 
+Amqp.prototype._getConnectionUri = function _createConnectionUri() {
+  return 'amqps://' +
+         encodeURIComponent(this._config.keyName) +
+         '%40sas.root.' +
+         this._config.hubName +
+         ':' +
+         encodeURIComponent((typeof(this._config.sharedAccessSignature) === 'string') ? this._config.sharedAccessSignature : this._config.sharedAccessSignature.extend(anHourFromNow())) + '@' + this._config.host;
+};
+
 /**
  * @method             module:azure-iothub.Amqp#connect
  * @description        Establishes a connection with the IoT Hub instance.
@@ -70,12 +79,7 @@ Amqp.prototype._handleSASRenewal = function() {
  */
 /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_019: [The `connect` method shall call the `connect` method of the base AMQP transport and translate its result to the caller into a transport-agnostic object.]*/
 Amqp.prototype.connect = function connect(done) {
-  var uri = 'amqps://' +
-         encodeURIComponent(this._config.keyName) +
-         '%40sas.root.' +
-         this._config.hubName +
-         ':' +
-         encodeURIComponent((typeof(this._config.sharedAccessSignature) === 'string') ? this._config.sharedAccessSignature : this._config.sharedAccessSignature.extend(anHourFromNow())) + '@' + this._config.host;
+  var uri = this._getConnectionUri();
 
   this._amqp.connect(uri, undefined, handleResult('AMQP Transport: Could not connect', function (err, result) {
       //
