@@ -102,26 +102,39 @@ See the 'env' subsection of the 'Device client integration tests' section in [la
 ```
 
 ## Debugging iothub-explorer
-[iothub-explorer](https://github.com/Azure/iothub-explorer) is a lot like debugging the sample code file: we specify the main iothub-explorer javascript file as the program to start.
-A nice trick though is to add the connection string and the command that you want to run to the list of arguments. Also, if you'd rather run iothub-explorer in an interactive console (in which you can type) as opposed to the Visual Studio Code debug prompt, switch the `externalConsole` property to `true`.
+[iothub-explorer](https://github.com/Azure/iothub-explorer) is a lot like debugging the sample code file: we specify an iothub-explorer javascript file as the program to start.  Becuase the iothub-explorer main entry point spawns another process when it starts, you will get an error when attaching the debugger similar to:
+
+```
+Debugger listening on [::]:35919
+Error: listen EADDRINUSE :::35919
+```
+
+Instead, you can run the file for the command you are trying to debug directly.  Each ```iothub-explorer-<command>.js``` file can be used an independent script.  See the example Visual Studio Code configuration below for an example of debugging the ```get``` device command.
+
+You can also supply the connection string to the command in the configuration. Finally, if you'd rather run iothub-explorer in an interactive console (in which you can type) as opposed to the Visual Studio Code debug prompt, switch the `externalConsole` property to `true`.
+
 ```json
 {
-	"name": "iothub-explorer",
-	"type": "node",
-	"request": "launch",
-	"program": "iothub-explorer.js",
-	"stopOnEntry": false,
-	"args": ["<ConnectionString>", "<Command>"],
-	"cwd": ".",
-	"runtimeExecutable": null,
-	"runtimeArgs": [
-		"--nolazy"
-	],
-	"env": {
-		"NODE_ENV": "development"
-	},
-	"externalConsole": false,
-	"sourceMaps": false,
-	"outDir": null
-}
+            "name": "iothub-explorer",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceRoot}/iothub-explorer-get.js",
+            "stopOnEntry": false,
+            "args": [
+                "-l",
+                "<connectionstring>",
+                "<device-id>"
+            ],
+            "cwd": "${workspaceRoot}",
+            "runtimeExecutable": null,
+            "runtimeArgs": [
+                "--nolazy"
+            ],
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "externalConsole": false,
+            "sourceMaps": false,
+            "outDir": null
+        },
 ```
