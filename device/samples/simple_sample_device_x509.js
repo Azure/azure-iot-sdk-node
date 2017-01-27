@@ -60,8 +60,8 @@ var connectCallback = function (err) {
 };
 
  var options = {
-   cert : fs.readFileSync(certFile).toString(),
-   key : fs.readFileSync(keyFile).toString(),
+   cert : fs.readFileSync(certFile, 'utf-8').toString(),
+   key : fs.readFileSync(keyFile, 'utf-8').toString(),
    passphrase: passphrase
  };
 
