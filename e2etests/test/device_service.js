@@ -4,9 +4,8 @@
 'use strict';
 
 var assert = require('chai').assert;
-var debug = require('debug')('e2etests');
+var debug = require('debug')('e2etests:c2dd2c');
 var uuid = require('uuid');
-var chalk = require('chalk');
 
 var serviceSdk = require('azure-iothub');
 var Message = require('azure-iot-common').Message;
@@ -14,8 +13,8 @@ var createDeviceClient = require('./testUtils.js').createDeviceClient;
 var closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
 var closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubClients;
 var eventHubClient = require('azure-event-hubs').Client;
-var errors = require('azure-iot-common').errors;
-var numberOfc2dMessages = 1;
+
+var maximumMessageSize = ((256*1024)-512);
 
 var runTests = function (hubConnectionString, deviceTransport, provisionedDevice) {
   describe('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication, connected over ' + deviceTransport.name + ' using device/service clients c2d', function () {
@@ -33,36 +32,54 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
       closeDeviceServiceClients(deviceClient, serviceClient, done);
     });
 
-    it('Service sends ' + numberOfc2dMessages + ' C2D messages and they are all received by the device', function (done) {
+    it('Service sends a C2D message of maximum size and it is received by the device', function (done) {
+      var receivingSideDone = false;
+      var sendingSideDone = false;
+      function tryFinish(done)
+      {
+        if (receivingSideDone && sendingSideDone)
+        {
+          done();
+        }
+      }
       this.timeout(180000);
+      //
+      // The size of non payload is calculated based on the value of the messageId value size,
+      // the expiryTimeUtc value size and then on the application property value size plus one
+      // for the application property name.
+      //
+      var uuidData = uuid.v4();
+      var sizeOfNonPayload = (2*(uuidData.length)) + 8 + 1;
+      var bufferSize = maximumMessageSize - sizeOfNonPayload;
+      var buffer = new Buffer(bufferSize);
+      var message = new Message(buffer);
+      message.messageId = uuidData;
+      message.expiryTimeUtc = Date.now() + 60000; // Expire 60s from now, to reduce the chance of us hitting the 50-message limit on the IoT Hub
+      message.properties.add('a', uuidData);
+      buffer.fill(uuidData);
+
       var foundTheMessage = false;
       var foundTheProperty = false;
-      var messageToSend = new Message(uuid.v4());
-      messageToSend.properties.add('key1', 'value1');
-      messageToSend.expiryTimeUtc = Date.now() + 60000; // Expire 60s from now, to reduce the chance of us hitting the 50-message limit on the IoT Hub
       deviceClient.open(function (openErr) {
         debug('device has opened.');
         if (openErr) {
           done(openErr);
         } else {
-          var myInterval = {};
           debug('about to connect a listener.');
           deviceClient.on('message', function (msg) {
-            debug('msg delivered with payload: '+msg.data.toString());
             //
             // Make sure that the message we are looking at is one of the messages that we just sent.
             //
-            if (msg.data.toString() === messageToSend.data.toString()) {
+            if (msg.data.toString() === message.data.toString()) {
               foundTheMessage = true;
               for (var i = 0; i < msg.properties.count(); i++) {
-                if (msg.properties.getItem(i).key.indexOf('key1') >= 0) {
-                  assert.equal(msg.properties.getItem(i).value, 'value1');
+                if (msg.properties.getItem(i).key.indexOf('a') >= 0) {
+                  assert.equal(msg.properties.getItem(i).value, uuidData);
                   foundTheProperty = true;
                 }
               }
               assert(foundTheProperty, 'Message was found but custom property was missing');
               deviceClient.removeAllListeners('message');
-              clearInterval(myInterval);
             }
             //
             // It doesn't matter whether this was a message we want, complete it so that the message queue stays clean.
@@ -76,37 +93,29 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
             });
 
             if (foundTheMessage) {
-              done();
+              receivingSideDone = true;
+              debug('trying to finish from the receiving side');
+              tryFinish(done);
             }
           });
           debug('about to open the service client');
-          setTimeout( function() {
-            serviceClient.open(function (serviceErr) {
-              if (serviceErr) {
-                done(serviceErr);
-              } else {
-                var msgSentCounter = 0;
-                myInterval = setInterval(function () {
-                  serviceClient.send(provisionedDevice.deviceId, messageToSend, function (sendErr) {
-                    // If the message has been found already, these errors are from unsent "retry" messages so we can safely ignore them.
-                    if (sendErr && !foundTheMessage) {
-                      clearInterval(myInterval);
-                      done(sendErr);
-                    } else {
-                      if (msgSentCounter < 7) {
-                        msgSentCounter++;
-                        debug('Sent ' + msgSentCounter + ' message(s)');
-                      } else {
-                        clearInterval(myInterval);
-                        console.log(chalk.red('exceeding retries on c2d'));
-                        done(new errors.NotConnectedError('exceeding retries on c2d'));
-                      }
-                    }
-                  });
-                }, 2000);
-              }
-            });
-          } ,1000);
+          serviceClient.open(function (serviceErr) {
+            debug('At service client open callback - error is:' + serviceErr);
+            if (serviceErr) {
+              done(serviceErr);
+            } else {
+              serviceClient.send(provisionedDevice.deviceId, message, function (sendErr) {
+                debug('At service client send callback - error is: ' + sendErr);
+                if (sendErr) {
+                  done(sendErr);
+                } else {
+                  sendingSideDone = true;
+                  debug('trying to finish from the sending side');
+                  tryFinish(done);
+                }
+              });
+            }
+          });
         }
       });
     });
@@ -128,10 +137,30 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
     });
 
     it('Device sends a message of maximum size and it is received by the service', function (done) {
+      var receivingSideDone = false;
+      var sendingSideDone = false;
+      function tryFinish(done)
+      {
+        if (receivingSideDone && sendingSideDone)
+        {
+          done();
+        }
+      }
       this.timeout(120000);
-      var bufferSize = 254*1024;
-      var buffer = new Buffer(bufferSize);
+      //
+      // The size of non payload is calculated based on the value of the messageId value size
+      // and then on the application property value size plus one for the application property name.
+      //
       var uuidData = uuid.v4();
+      var sizeOfNonPayload = (2*uuidData.length) + 1;
+      var bufferSize = maximumMessageSize - sizeOfNonPayload;
+      var buffer = new Buffer(bufferSize);
+      var message = new Message(buffer);
+      debug(' message max send: size of non playload ' + sizeOfNonPayload);
+      debug(' message max send: buffersize ' + bufferSize);
+      debug(' message max send: maximum message size ' + maximumMessageSize);
+      message.messageId = uuidData;
+      message.properties.add('a', uuidData);
       buffer.fill(uuidData);
       ehClient.open()
               .then(ehClient.getPartitionIds.bind(ehClient))
@@ -142,10 +171,12 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
                       done(err);
                     });
                     receiver.on('message', function (eventData) {
-                        if (eventData.systemProperties['iothub-connection-device-id'] === provisionedDevice.deviceId) {
+                        if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
                           if ((eventData.body.length === bufferSize) && (eventData.body.indexOf(uuidData) === 0)) {
                             receiver.removeAllListeners();
-                            done();
+                            receivingSideDone = true;
+                            debug('trying to finish from the receiving side');
+                            tryFinish(done);
                           } else {
                             debug('eventData.body: ' + eventData.body + ' doesn\'t match: ' + uuidData);
                           }
@@ -161,12 +192,14 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
                   if (openErr) {
                     done(openErr);
                   } else {
-                    var message = new Message(buffer);
                     //need to add properties test when the event hubs node sdk supports it.
                     deviceClient.sendEvent(message, function (sendErr) {
                       if (sendErr) {
                         done(sendErr);
                       }
+                      sendingSideDone = true;
+                      debug('trying to finish from the sending side');
+                      tryFinish(done);
                     });
                   }
                 });
