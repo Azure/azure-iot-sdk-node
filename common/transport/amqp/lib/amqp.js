@@ -71,10 +71,6 @@ function Amqp(autoSettleMessages, sdkVersionString) {
     }
   }, amqp10.Policy.EventHub));
 
-  this._amqp.on('client:errorReceived', function (err) {
-    debug('Error received from node-amqp10: ' + err.message);
-  }.bind(this));
-
   this._receivers = {};
   this._sender = null;
   this._connected = false;
@@ -174,6 +170,7 @@ Amqp.prototype.send = function send(message, endpoint, to, done) {
 
     var amqpMessage = AmqpMessage.fromMessage(message);
     amqpMessage.properties.to = to;
+    var connectionError = null;
     var sendAction = function (sender, msg, done) {
       sender.send(msg)
         .then(function (state) {
@@ -190,16 +187,23 @@ Amqp.prototype.send = function send(message, endpoint, to, done) {
     };
 
     if (!this._sender) {
+      /*Codes_SRS_NODE_COMMON_AMQP_16_007: [If send encounters an error before it can send the request, it shall invoke the done callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
+      var clientErrorHandler = function(err) {
+        connectionError = err;
+      };
+      this._amqp.on('client:errorReceived', clientErrorHandler);
+
       this._amqp.createSender(endpoint)
         .then(function (sender) {
           this._sender = sender;
-          /*Codes_SRS_NODE_COMMON_AMQP_16_007: [If send encounters an error before it can send the request, it shall invoke the done callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
-          this._sender.on('errorReceived', function (err) {
-            if (done) process.nextTick(function() { done(err); });
-            return null;
-          });
+          this._amqp.removeListener('client:errorReceived', clientErrorHandler);
 
-          sendAction(this._sender, amqpMessage, done);
+          if (!connectionError) {
+            sendAction(sender, amqpMessage, done);
+          } else {
+            if (done) process.nextTick(function() { done(connectionError); });
+          }
+
           return null;
         }.bind(this))
         .catch(function(err) {
