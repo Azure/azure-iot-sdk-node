@@ -34,15 +34,19 @@ Once you have a device identity for your sample, get the following files from th
 Place the files in the folder of your choice on the target machine/device then go through the following steps:
 * Open the file **__sample_file.js__** in a text editor.
 * Locate the following code in the file:
-    ```
-    var connectionString = '[IoT Device Connection String]';
-    ```
+
+```js
+var connectionString = '[IoT Device Connection String]';
+```
+
 * Replace `[IoT Device Connection String]` with the connection string for your device. Save the changes.
 * From a shell or Node.js command prompt, navigate to the folder where you placed the sample files. Run the sample application using the following commands:
-    ```
-    npm install
-    node sample_file.js
-    ```
+
+```
+$ npm install
+$ node sample_file.js
+```
+
 * In order to monitor and interact with the sample, you can use the [iothub-explorer][iothub-explorer] utility which can be used to display the messages sent by the device, send messages back to the device, interact with the device Twin, or invoke a C2D Direct Method on the device.
 
 
