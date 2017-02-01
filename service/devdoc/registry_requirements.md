@@ -270,6 +270,18 @@ Request-Id: <guid>
 ```
 **]**
 
+### getRegistryStatistics(done)
+The `getRegistryStatistics` method retrieves the count of devices (enabled, disabled and total) currently in the device identity registry.
+
+**SRS_NODE_IOTHUB_REGISTRY_16_058: [** The `getRegistryStatics` method shall construct an HTTP request using information supplied by the caller as follows:
+```
+GET /statistics/devices?api-version=<version> HTTP/1.1
+Authorization: <config.sharedAccessSignature>
+Request-Id: <guid>
+```
+**]**
+
+
 ### All HTTP requests
 All HTTP requests to the registry API should implement the following requirements:
 

@@ -701,4 +701,27 @@ describe('Registry', function() {
       });
     });
   });
+
+  describe('#getRegistryStatistics', function() {
+  /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_058: [The `getRegistryStatics` method shall construct an HTTP request using information supplied by the caller as follows:
+    ```
+    GET /statistics/devices?api-version=<version> HTTP/1.1
+    Authorization: <config.sharedAccessSignature>
+    Request-Id: <guid>
+    ```]*/
+    it('constructs a valid HTTP request', function(testCallback) {
+      var fakeHttpHelper = {
+        executeApiCall: function (method, path, httpHeaders, body, done) {
+          assert.equal(method, 'GET');
+          assert.equal(path, '/statistics/devices' + endpoint.versionQueryString());
+          done();
+        }
+      };
+
+      var registry = new Registry(fakeConfig, fakeHttpHelper);
+      registry.getRegistryStatistics(testCallback);
+    });
+    
+    testErrorCallback('getRegistryStatistics');
+  });
 });

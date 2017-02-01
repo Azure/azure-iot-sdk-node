@@ -15,6 +15,9 @@ declare class Registry {
     list(done: (err: Error, devices?: Device[], response?: any) => void): void;
     delete(deviceId: string, done: Registry.ResponseCallback): void;
 
+    // Device Statistics
+    getRegistryStatistics(done: (err: Error, statistics: Registry.RegistryStatistics, response: any) => void): void;
+
     // Bulk Import/Export Jobs
     importDevicesFromBlob(inputBlobContainerUri: string, outputBlobContainerUri: string, done: Registry.JobCallback): void;
     exportDevicesToBlob(outputBlobContainerUri: string, excludeKeys: boolean, done: Registry.JobCallback): void;
@@ -45,6 +48,12 @@ declare namespace Registry {
 
     interface QueryDescription {
         query: string;
+    }
+
+    interface RegistryStatistics {
+        totalDeviceCount: number;
+        enabledDeviceCount: number;
+        disabledDeviceCount: number;
     }
 
     type DeviceCallback = (err: Error, device: Device) => void;

@@ -562,4 +562,15 @@ Registry.prototype._executeQueryFunc = function (sqlQuery, pageSize) {
   };
 };
 
+/**
+ * @method                module:azure-iothub.Registry#getRegistryStatistics
+ * @description           Gets statistics about the devices in the device identity registry.
+ * @param {Function}      done   The callback that will be called with either an Error object or 
+ *                               the device registry statistics.
+ */
+Registry.prototype.getRegistryStatistics = function getRegistryStatistics (done) {
+  var path = '/statistics/devices' + endpoint.versionQueryString();
+  this._restApiClient.executeApiCall('GET', path, {}, null, done);
+};
+
 module.exports = Registry;
