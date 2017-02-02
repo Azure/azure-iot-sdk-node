@@ -8,10 +8,11 @@ declare class Query {
     sql: string;
     pageSize: any;
     hasMoreResults: boolean;
+    continuationToken: string;
 
     constructor(sqlQuery: string, pageSize: Number, registry: Registry);
-    next(done?: (err: Error, results: any, response: any) => void): void;
-    nextAsTwin(done?: (err: Error, results: DeviceTwin[], response: any) => void): void;
+    next(continuationToken?: string, done?: (err: Error, results: any, response: any) => void): void;
+    nextAsTwin(continuationToken?: string, done?: (err: Error, results: DeviceTwin[], response: any) => void): void;
     toJSON(): Object;
 }
 

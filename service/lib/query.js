@@ -19,28 +19,39 @@ function Query(executeQueryFn, registry) {
   this._registry = registry;
 
   this.hasMoreResults = true;
-  this._continuationToken = null;
+  this.continuationToken = null;
 }
 
 /**
  * @method              module:azure-iothub.Query#next
  * @description         Gets the next page of results for this query.
- * @param {Function}    done       The callback that will be called with either an Error object or 
- *                                 the results of the query.
+ * @param {string}      continuationToken    Continuation Token used for paging through results (optional)
+ * @param {Function}    done                 The callback that will be called with either an Error object or 
+ *                                           the results of the query.
  */
-Query.prototype.next = function(done) {
+Query.prototype.next = function(continuationToken, done) {
   var self = this;
-  self._executeQueryFn(self._continuationToken, function(err, result, response) {
+
+  /*Codes_SRS_NODE_SERVICE_QUERY_16_016: [If `continuationToken` is a function and `done` is undefined the `next` method shall assume that `continuationToken` is actually the callback and us it as such (see requirements associated with the `done` parameter)]*/
+  if (typeof continuationToken === 'function' && !done) {
+    done = continuationToken;
+    continuationToken = null;
+  }
+
+  /*Codes_SRS_NODE_SERVICE_QUERY_16_017: [the `next` method shall use the `continuationToken` passed as argument instead of its own property `Query.continuationToken` if it's not falsy.]*/
+  var ct = continuationToken || self.continuationToken;
+
+  self._executeQueryFn(ct, function(err, result, response) {
     if (err) {
       /*Codes_SRS_NODE_SERVICE_QUERY_16_008: [The `next` method shall call the `done` callback with a single argument that is an instance of the standard Javascript `Error` object if the request failed.]*/
       done(err);
     } else {
-      /*Codes_SRS_NODE_SERVICE_QUERY_16_006: [The `next` method shall set the `Query._continuationToken` property to the `continuationToken` value of the query result.]*/
-      self._continuationToken = response.headers['x-ms-continuation'];
+      /*Codes_SRS_NODE_SERVICE_QUERY_16_006: [The `next` method shall set the `Query.continuationToken` property to the `continuationToken` value of the query result.]*/
+      self.continuationToken = response.headers['x-ms-continuation'];
 
       /*Codes_SRS_NODE_SERVICE_QUERY_16_013: [The `next` method shall set the `Query.hasMoreResults` property to `true` if the `continuationToken` property of the result object is not `null`.]*/
       /*Codes_SRS_NODE_SERVICE_QUERY_16_014: [The `next` method shall set the `Query.hasMoreResults` property to `false` if the `continuationToken` property of the result object is `null`.]*/
-      self.hasMoreResults = self._continuationToken !== undefined;
+      self.hasMoreResults = self.continuationToken !== undefined;
 
       /*Codes_SRS_NODE_SERVICE_QUERY_16_007: [The `next` method shall call the `done` callback with a `null` error object, the results of the query and the response of the underlying transport if the request was successful.]*/
       done(null, result, response);
@@ -51,12 +62,22 @@ Query.prototype.next = function(done) {
 /**
  * @method              module:azure-iothub.Query#nextAsTwin
  * @description         Gets the next page of results for this query and cast them as Twins.
- * @param {Function}    done       The callback that will be called with either an Error object or 
- *                                 the results of the query.
+ * @param {string}      continuationToken    Continuation Token used for paging through results (optional)
+ * @param {Function}    done                 The callback that will be called with either an Error object or 
+ *                                           the results of the query.
  */
-Query.prototype.nextAsTwin = function(done) {
+Query.prototype.nextAsTwin = function(continuationToken, done) {
   var self = this;
-  this.next(function(err, result, response) {
+
+  /*Codes_SRS_NODE_SERVICE_QUERY_16_016: [If `continuationToken` is a function and `done` is undefined the `next` method shall assume that `continuationToken` is actually the callback and us it as such (see requirements associated with the `done` parameter)]*/
+  if (typeof continuationToken === 'function' && !done) {
+    done = continuationToken;
+    continuationToken = null;
+  }
+
+  var ct = continuationToken || self.continuationToken;
+
+  this.next(ct, function(err, result, response) {
     if (err) {
       /*Codes_SRS_NODE_SERVICE_QUERY_16_008: [The `next` method shall call the `done` callback with a single argument that is an instance of the standard Javascript `Error` object if the request failed.]*/
       done(err);

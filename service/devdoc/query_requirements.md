@@ -40,12 +40,12 @@ The `Query` constructor initializes a new instance of the `Query` class.
 
 **SRS_NODE_SERVICE_QUERY_16_015: [** The `Query` constructor shall initialize the `hasMoreResults` property to `true`. **]**
 
-### next(done)
+### next(continuationToken, done)
 The `next` method runs the query and calls the `done` callback with a new page of results.
 
 **SRS_NODE_SERVICE_QUERY_16_008: [** The `next` method shall call the `done` callback with a single argument that is an instance of the standard Javascript `Error` object if the request failed. **]**
 
-### nextAsTwin(done)
+### nextAsTwin(continuationToken, done)
 The `nextAsTwin` method runs the query and call the `done` callback with an error a new page of results casted as device twins.
 
 **SRS_NODE_SERVICE_QUERY_16_009: [** The `nextAsTwin` method shall call the `done` callback with a `null` error object and a collection of `Twin` objects created from the results of the query if the request was successful. **]**
@@ -56,15 +56,19 @@ The `nextAsTwin` method runs the query and call the `done` callback with an erro
 {
   sql: <Query.sqlQuery>,
   pageSize: <Query.pageSize>,
-  continuationToken: <Query._continuationToken>
+  continuationToken: <Query.continuationToken>
 }
 ```
 **]**
 
-**SRS_NODE_SERVICE_QUERY_16_006: [** The `next` method shall set the `Query._continuationToken` property to the `continuationToken` value of the query result. **]**
+**SRS_NODE_SERVICE_QUERY_16_006: [** The `next` method shall set the `Query.continuationToken` property to the `continuationToken` value of the query result. **]**
 
 **SRS_NODE_SERVICE_QUERY_16_013: [** The `next` method shall set the `Query.hasMoreResults` property to `true` if the `continuationToken` property of the result object is not `null`. **]**
 
 **SRS_NODE_SERVICE_QUERY_16_014: [** The `next` method shall set the `Query.hasMoreResults` property to `false` if the `continuationToken` property of the result object is `null`. **]**
 
 **SRS_NODE_SERVICE_QUERY_16_007: [** The `next` method shall call the `done` callback with a `null` error object, the results of the query and the response of the underlying transport if the request was successful. **]**
+
+**SRS_NODE_SERVICE_QUERY_16_016: [** If `continuationToken` is a function and `done` is undefined the `next` method shall assume that `continuationToken` is actually the callback and us it as such (see requirements associated with the `done` parameter) **]**
+
+**SRS_NODE_SERVICE_QUERY_16_017: [** the `next` method shall use the `continuationToken` passed as argument instead of its own property `Query.continuationToken` if it's not falsy. **]**

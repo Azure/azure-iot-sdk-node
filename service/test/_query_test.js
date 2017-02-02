@@ -36,6 +36,45 @@ describe('Query', function() {
   });
 
   var nextCommonTests = function(nextName) {
+    /*Tests_SRS_NODE_SERVICE_QUERY_16_006: [The `next` method shall set the `Query.continuationToken` property to the `continuationToken` value of the query result.]*/
+    it('sets the continuationToken property when a new page of results is received', function(testCallback) {
+      var fakeContinuationToken = 'continuationToken';
+      var fakeResponse = { 
+        statusCode: 200,
+        headers: { 
+          'x-ms-continuation': fakeContinuationToken 
+        }
+      };
+      var fakeExecuteFn = sinon.stub().callsArgWith(1, null, [], fakeResponse);
+      
+      var query = new Query(fakeExecuteFn);
+
+      query[nextName](function() {
+        assert.strictEqual(query.continuationToken, fakeContinuationToken);
+        testCallback();
+      });
+    });
+
+    /*Tests_SRS_NODE_SERVICE_QUERY_16_017: [the `next` method shall use the `continuationToken` passed as argument instead of its own property `Query.continuationToken` if it's not falsy.]*/
+    it('uses the continuationToken given as argument', function(testCallback) {
+      var fakeContinuationToken = 'firstContinuationToken';
+      var fakeResponse = { 
+        statusCode: 200,
+        headers: { 
+          'x-ms-continuation': 'secondContinuationToken' 
+        }
+      };
+      var fakeExecuteFn = sinon.stub().callsArgWith(1, null, [], fakeResponse);
+      
+      var query = new Query(fakeExecuteFn);
+
+      query[nextName](fakeContinuationToken, function() {
+        assert(fakeExecuteFn.calledWith(fakeContinuationToken));
+        testCallback();
+      });
+    });
+
+    /*Tests_SRS_NODE_SERVICE_QUERY_16_016: [** If `continuationToken` is a function and `done` is undefined the `next` method shall assume that `continuationToken` is actually the callback and us it as such (see requirements associated with the `done` parameter)]*/
     it('uses the previous continuationToken in the following query', function(testCallback) {
       var fakeContinuationToken = 'continuationToken';
       var fakeResponse = { 
