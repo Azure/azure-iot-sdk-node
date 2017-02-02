@@ -55,20 +55,21 @@ var runTests = function(hubConnectionString) {
     });
 
     function waitForJobStatus(jobClient, jobId, desiredJobStatus, callback) {
-      var waitInterval = setInterval(function(){
+      var intervalInMs = 3000;
+      var waitFunction = function() {
         jobClient.getJob(jobId, continueWith(callback, function(job) {
           debug('Got job ' + jobId + ' status: ' + job.status);
           if(job.status === desiredJobStatus) {
-            clearInterval(waitInterval);
             callback(null, job);
           } else if (job.status === 'failed' || job.status === 'cancelled'){
-            clearInterval(waitInterval);
             callback(new Error('Job ' + jobId + ' status is: ' + job.status));
           } else {
             debug('Job ' + jobId + ' current status: ' + job.status + ' waiting for ' + desiredJobStatus);
+            setTimeout(waitFunction, intervalInMs);
           }
         }));
-      }, 1000);
+      };
+      setTimeout(waitFunction, intervalInMs);
     }
 
     describe('scheduleTwinUpdate', function() {
