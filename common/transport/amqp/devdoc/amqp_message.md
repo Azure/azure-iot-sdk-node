@@ -48,6 +48,8 @@ As this is an internal API, the input argument message can be assumed to be of t
 
 **SRS_NODE_IOTHUB_AMQPMSG_05_007: [** If the `message` argument has a `messageId` property, the `properties` property of the `AmqpMessage` object shall have a property named `messageId` with the same value. **]**
 
+**SRS_NODE_IOTHUB_AMQPMSG_16_010: [** If the `message` argument has a `correlationId` property, the `properties` property of the `AmqpMessage` object shall have a property named `correlationId` with the same value. **]**
+
 **SRS_NODE_IOTHUB_AMQPMSG_05_008: [** If needed, the created `AmqpMessage` object shall have a property of type `Object` named `applicationProperties`. **]**
 
 **SRS_NODE_IOTHUB_AMQPMSG_05_009: [** If the `message` argument has an `ack` property, the `applicationProperties` property of the `AmqpMessage` object shall have a property named `iothub-ack` with the same value. **]**
@@ -57,3 +59,24 @@ As this is an internal API, the input argument message can be assumed to be of t
 **SRS_NODE_IOTHUB_AMQPMSG_05_005: [** If `message.getData()` is truthy, the `AmqpMessage` object shall have a property named `body` with the value returned from `message.getData()`. **]**
 
 **SRS_NODE_IOTHUB_AMQPMSG_05_006: [** The generated `AmqpMessage` object shall be returned to the caller. **]**
+
+# toMessage(amqpMessage) [static]
+The `toMessage` static method takes an AMQP message from the underlying library and transforms it into a transport-agnostic `Message` object.
+
+**SRS_NODE_IOTHUB_AMQPMSG_16_001: [** The `toMessage` method shall throw if the `amqpMessage` argument is falsy. **]**
+
+**SRS_NODE_IOTHUB_AMQPMSG_16_002: [** The `toMessage` method shall return a `Message` object. **]**
+
+**SRS_NODE_IOTHUB_AMQPMSG_16_003: [** The `toMessage` method shall set the `Message.correlationId` property to the `AmqpMessage.properties.correlationId` value if it is present. **]**
+
+**SRS_NODE_IOTHUB_AMQPMSG_16_004: [** The `toMessage` method shall set the `Message.messageId` property to the `AmqpMessage.properties.messageId` value if it is present. **]**
+
+**SRS_NODE_IOTHUB_AMQPMSG_16_005: [** The `toMessage` method shall set the `Message.to` property to the `AmqpMessage.properties.to` value if it is present. **]**
+
+**SRS_NODE_IOTHUB_AMQPMSG_16_006: [** The `toMessage` method shall set the `Message.expiryTimeUtc` property to the `AmqpMessage.properties.absoluteExpiryTime` value if it is present. **]**
+
+**SRS_NODE_IOTHUB_AMQPMSG_16_007: [** The `toMessage` method shall convert the user-defined `AmqpMessage.applicationProperties` to a `Properties` collection stored in `Message.applicationProperties`. **]**
+
+**SRS_NODE_IOTHUB_AMQPMSG_16_008: [** The `toMessage` method shall set the `Message.ack` property to the `AmqpMessage.applicationProperties['iothub-ack']` value if it is present. **]**
+
+**SRS_NODE_IOTHUB_AMQPMSG_16_009: [** The `toMessage` method shall set the `Message.data` of the message to the content of the `AmqpMessage.body` property. **]**

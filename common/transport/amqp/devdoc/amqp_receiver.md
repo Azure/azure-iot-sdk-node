@@ -37,8 +37,6 @@ The AmqpReceiver constructor returns a new instance of an AmqpReceiver object th
 
 **SRS_NODE_IOTHUB_AMQPRECEIVER_16_014: [** The parameter to the message event emitted by the AmqpReceiver class should be an azure-iot-common:Message **]**
 
-**SRS_NODE_IOTHUB_AMQPRECEIVER_13_001: [** If the AMQP message has values in it's `applicationProperties` property then those shall be added to the `properties` property of the newly created message object. **]**
-
 **SRS_NODE_IOTHUB_AMQPRECEIVER_16_003: [** The created AmqpReceiver object shall emit a `errorReceived` event when an error is received. **]**
 
 **SRS_NODE_IOTHUB_AMQPRECEIVER_16_004: [** If the receiver object passed as an argument is falsy, the AmqpReceiver should throw an exception of type ReferenceError **]**

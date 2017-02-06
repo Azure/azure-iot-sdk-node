@@ -67,6 +67,15 @@ describe('AmqpMessage', function () {
       assert.equal(amqpMessage.properties.messageId, messageId);
     });
 
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_010: [If the `message` argument has a `correlationId` property, the `properties` property of the `AmqpMessage` object shall have a property named `correlationId` with the same value.]*/
+    it('maps message.correlationId to amqpMessage.properties.correlationId', function () {
+      var correlationId = '123';
+      var message = new Message();
+      message.correlationId = correlationId;
+      var amqpMessage = AmqpMessage.fromMessage(message);
+      assert.equal(amqpMessage.properties.correlationId, correlationId);
+    });
+
     /*Tests_SRS_NODE_IOTHUB_AMQPMSG_05_007: [If the message argument has a messageId property, the properties property of the AmqpMessage object shall have a property named messageId with the same value.]*/
     it('does not set amqpMessage.properties.messageId if message.messageId isn\'t set', function () {
       var amqpMessage = AmqpMessage.fromMessage(new Message());
@@ -139,6 +148,113 @@ describe('AmqpMessage', function () {
     it('does not set amqpMessage.body if message does not have a body', function () {
       var amqpMessage = AmqpMessage.fromMessage(new Message());
       assert.notProperty(amqpMessage, 'body');
+    });
+  });
+
+  describe('#toMessage', function() {
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_001: [The `toMessage` method shall throw if the `amqpMessage` argument is falsy.]*/
+    [null, undefined, ''].forEach(function(badMsg) {
+      it ('throws if amqpMessage is \'' + badMsg + '\'', function() {
+        assert.throws(function() {
+          return AmqpMessage.toMessage(badMsg);
+        }, ReferenceError);
+      });
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_002: [The `toMessage` method shall return a `Message` object.]*/
+    it('creates a Message object', function() {
+      var testAmqpMessage = { properties: {} };
+      assert.instanceOf(AmqpMessage.toMessage(testAmqpMessage), Message);
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_003: [The `toMessage` method shall set the `Message.correlationId` property to the `AmqpMessage.properties.correlationId` value if it is present.]*/
+    it('sets the correlationId property', function() {
+      var testAmqpMessage = {
+        properties: {
+          correlationId: 'test'
+        }
+      };
+
+      var convertedMessage = AmqpMessage.toMessage(testAmqpMessage);
+      assert.strictEqual(convertedMessage.correlationId, testAmqpMessage.properties.correlationId);
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_004: [The `toMessage` method shall set the `Message.messageId` property to the `AmqpMessage.properties.messageId` value if it is present.]*/
+    it('sets the messageId property', function() {
+      var testAmqpMessage = {
+        properties: {
+          messageId: 'test'
+        }
+      };
+
+      var convertedMessage = AmqpMessage.toMessage(testAmqpMessage);
+      assert.strictEqual(convertedMessage.messageId, testAmqpMessage.properties.messageId);
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_005: [The `toMessage` method shall set the `Message.to` property to the `AmqpMessage.properties.to` value if it is present.]*/
+    it('sets the to property', function() {
+      var testAmqpMessage = {
+        properties: {
+          to: 'test'
+        }
+      };
+
+      var convertedMessage = AmqpMessage.toMessage(testAmqpMessage);
+      assert.strictEqual(convertedMessage.to, testAmqpMessage.properties.to);
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_006: [The `toMessage` method shall set the `Message.expiryTimeUtc` property to the `AmqpMessage.properties.absoluteExpiryTime` value if it is present.]*/
+    it('sets the absoluteExpiryTime property', function() {
+      var testAmqpMessage = {
+        properties: {
+          absoluteExpiryTime: 'test'
+        }
+      };
+
+      var convertedMessage = AmqpMessage.toMessage(testAmqpMessage);
+      assert.strictEqual(convertedMessage.expiryTimeUtc, testAmqpMessage.properties.absoluteExpiryTime);
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_008: [The `toMessage` method shall set the `Message.ack` property to the `AmqpMessage.applicationProperties['iothub-ack']` value if it is present.]*/
+    it('sets the ack property', function() {
+      var testAmqpMessage = {
+        properties: {},
+        applicationProperties: {
+          'iothub-ack': 'test'
+        }
+      };
+
+      var convertedMessage = AmqpMessage.toMessage(testAmqpMessage);
+      assert.strictEqual(convertedMessage.ack, testAmqpMessage.applicationProperties['iothub-ack']);
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_007: [The `toMessage` method shall convert the user-defined `AmqpMessage.applicationProperties` to a `Properties` collection stored in `Message.applicationProperties`.]*/
+    it('sets the custom properties', function() {
+      var testAmqpMessage = {
+        properties: {},
+        applicationProperties: {
+          k1: 'v1',
+          k2: 'v2'
+        }
+      };
+
+      var convertedMessage = AmqpMessage.toMessage(testAmqpMessage);
+      assert.strictEqual(convertedMessage.properties.count(), 2);
+      assert.strictEqual(convertedMessage.properties.getItem(0).key, 'k1');
+      assert.strictEqual(convertedMessage.properties.getItem(0).value, 'v1');
+      assert.strictEqual(convertedMessage.properties.getItem(1).key, 'k2');
+      assert.strictEqual(convertedMessage.properties.getItem(1).value, 'v2');
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_009: [The `toMessage` method shall set the `Message.data` of the message to the content of the `AmqpMessage.body` property.]*/
+    it('sets the body of the message', function() {
+      var testAmqpMessage = {
+        properties: {},
+        body: 'test'
+      };
+
+      var convertedMessage = AmqpMessage.toMessage(testAmqpMessage);
+      assert.strictEqual(convertedMessage.data, testAmqpMessage.body);
     });
   });
 });

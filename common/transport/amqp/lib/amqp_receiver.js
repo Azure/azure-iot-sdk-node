@@ -5,7 +5,7 @@
 
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
-var Message = require('azure-iot-common').Message;
+var AmqpMessage = require('./amqp_message.js');
 var results = require('azure-iot-common').results;
 
 /**
@@ -59,36 +59,7 @@ AmqpReceiver.prototype._onAmqpMessage = function (amqpMessage) {
    * @event module:azure-iot-amqp-base.AmqpReceiver#message
    * @type {Message}
    */
-  var msg = new Message();
-
-  if (amqpMessage.properties.to) {
-    msg.to = amqpMessage.properties.to;
-  }
-
-  if (amqpMessage.properties.absoluteExpiryTime) {
-    msg.expiryTimeUtc = amqpMessage.properties.absoluteExpiryTime;
-  }
-
-  if (amqpMessage.properties.messageId) {
-    msg.messageId = amqpMessage.properties.messageId;
-  }
-
-  if (amqpMessage.body) {
-    msg.data = amqpMessage.body;
-  }
-
-  /*Codes_SRS_NODE_IOTHUB_AMQPRECEIVER_13_001: [ If the AMQP message has values in it's applicationProperties property then those shall be added to the properties property of the newly created message object. ]*/
-  if(amqpMessage.applicationProperties) {
-    var appProps = amqpMessage.applicationProperties;
-    for (var key in appProps) {
-      if (appProps.hasOwnProperty(key)) {
-        msg.properties.add(key, appProps[key], '');
-      }
-    }
-  }
-
-  msg.transportObj = amqpMessage;
-
+  var msg = AmqpMessage.toMessage(amqpMessage);
   this.emit('message', msg);
 };
 

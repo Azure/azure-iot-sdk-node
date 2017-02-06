@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
+var Message = require('azure-iot-common').Message;
 
 /**
  * @class           module:azure-iot-amqp-base.AmqpMessage
@@ -36,6 +37,11 @@ AmqpMessage.fromMessage = function fromMessage(message) {
   /*Codes_SRS_NODE_IOTHUB_AMQPMSG_05_007: [If the message argument has a messageId property, the properties property of the AmqpMessage object shall have a property named messageId with the same value.]*/
   if (message.messageId) {
     amqpMessage.properties.messageId = message.messageId;
+  }
+
+  /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_010: [If the `message` argument has a `correlationId` property, the `properties` property of the `AmqpMessage` object shall have a property named `correlationId` with the same value.]*/
+  if (message.correlationId) {
+    amqpMessage.properties.correlationId = message.correlationId;
   }
 
   /*Codes_SRS_NODE_IOTHUB_AMQPMSG_05_008: [If needed, the created AmqpMessage object shall have a property of type Object named applicationProperties.]*/
@@ -76,6 +82,66 @@ AmqpMessage.fromMessage = function fromMessage(message) {
 
   /*Codes_SRS_NODE_IOTHUB_AMQPMSG_05_006: [The generated AmqpMessage object shall be returned to the caller.]*/
   return amqpMessage;
+};
+
+/**
+ * @method          module:azure-iot-amqp-base.AmqpMessage.toMessage
+ * @description     Creates a transport-agnostic azure-iot-common.Message{@link module:azure-iot-common.Message} object from transport-specific AMQP message.
+ * 
+ * @param {AmqpMessage}   message   The {@linkcode AmqpMessage} object from which to create an Message.
+ */
+AmqpMessage.toMessage = function toMessage(amqpMessage) {
+  /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_001: [The `toMessage` method shall throw if the `amqpMessage` argument is falsy.]*/
+  if(!amqpMessage) {
+    throw new ReferenceError('amqpMessage cannot be \'' + amqpMessage + '\'');
+  }
+
+  var msg = new Message();
+
+  /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_005: [The `toMessage` method shall set the `Message.to` property to the `AmqpMessage.properties.to` value if it is present.]*/
+  if (amqpMessage.properties.to) {
+    msg.to = amqpMessage.properties.to;
+  }
+
+  /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_006: [The `toMessage` method shall set the `Message.expiryTimeUtc` property to the `AmqpMessage.properties.absoluteExpiryTime` value if it is present.]*/
+  if (amqpMessage.properties.absoluteExpiryTime) {
+    msg.expiryTimeUtc = amqpMessage.properties.absoluteExpiryTime;
+  }
+
+  /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_004: [The `toMessage` method shall set the `Message.messageId` property to the `AmqpMessage.properties.messageId` value if it is present.]*/
+  if (amqpMessage.properties.messageId) {
+    msg.messageId = amqpMessage.properties.messageId;
+  }
+
+  /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_003: [The `toMessage` method shall set the `Message.correlationId` property to the `AmqpMessage.properties.correlationId` value if it is present.]*/
+  if (amqpMessage.properties.correlationId) {
+    msg.correlationId = amqpMessage.properties.correlationId;
+  }
+
+  /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_009: [The `toMessage` method shall set the `Message.data` of the message to the content of the `AmqpMessage.body` property.]*/
+  if (amqpMessage.body) {
+    msg.data = amqpMessage.body;
+  }
+  
+  /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_007: [The `toMessage` method shall convert the user-defined `AmqpMessage.applicationProperties` to a `Properties` collection stored in `Message.applicationProperties`.]*/
+  if(amqpMessage.applicationProperties) {
+    var appProps = amqpMessage.applicationProperties;
+    for (var key in appProps) {
+      if (appProps.hasOwnProperty(key)) {
+        /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_008: [The `toMessage` method shall set the `Message.ack` property to the `AmqpMessage.applicationProperties['iothub-ack']` value if it is present.]*/
+        if (key === 'iothub-ack') {
+          msg.ack = appProps[key];
+        } else {
+          msg.properties.add(key, appProps[key]);
+        }
+      }
+    }
+  }
+
+  msg.transportObj = amqpMessage;
+
+  /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_002: [The `toMessage` method shall return a `Message` object.]*/
+  return msg;
 };
 
 module.exports = AmqpMessage;

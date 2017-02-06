@@ -19,6 +19,7 @@ declare namespace AmqpMessage {
         to?: string;
         absoluteExpiryTime?: Date;
         messageId?: string;
+        correlationId?: string;
         applicationProperties: Dictionary<string>;
     }
 }
