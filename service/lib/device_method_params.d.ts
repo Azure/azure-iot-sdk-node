@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 declare interface DeviceMethodParams {
-    name: string;
+    methodName: string;
     payload?: any;
     responseTimeoutInSeconds?: number;
     connectTimeoutInSeconds?: number; // default is 0
