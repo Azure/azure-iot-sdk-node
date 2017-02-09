@@ -9,8 +9,8 @@ declare class Registry {
     constructor(config: Registry.TransportConfig, restApiClient: RestApiClient);
 
     // CRUD operations
-    create(deviceInfo: { deviceId: string; }, done: Registry.DeviceCallback): void;
-    update(deviceInfo: { deviceId: string; }, done: Registry.DeviceCallback): void;
+    create(deviceInfo: Registry.DeviceDescription, done: Registry.DeviceCallback): void;
+    update(deviceInfo: Registry.DeviceDescription, done: Registry.DeviceCallback): void;
     get(deviceId: string, done: Registry.DeviceCallback): void;
     list(done: (err: Error, devices?: Device[], response?: any) => void): void;
     delete(deviceId: string, done: Registry.ResponseCallback): void;
@@ -24,6 +24,11 @@ declare class Registry {
     listJobs(done: (err: Error, jobsList?: string[]) => void): void;
     getJob(jobId: string, done: Registry.JobCallback): void;
     cancelJob(jobId: string, done: Registry.JobCallback): void;
+
+    // Bulk Device Identity
+    addDevices(devices: Registry.DeviceDescription[], done: Registry.BulkDeviceIdentityCallback): void;
+    updateDevices(devices: Registry.DeviceDescription[], forceUpdate: boolean, done: Registry.BulkDeviceIdentityCallback): void;
+    removeDevices(devices: Registry.DeviceDescription[], forceRemove: boolean, done: Registry.BulkDeviceIdentityCallback): void;
 
     // Twin
     getTwin(deviceId: string, done: Registry.ResponseCallback): void;
@@ -59,6 +64,22 @@ declare namespace Registry {
     type DeviceCallback = (err: Error, device: Device) => void;
     type ResponseCallback = (err: Error, device: any, response: any) => void;
     type JobCallback = (err: Error, jobStatus?: JobStatus) => void;
+    type BulkDeviceIdentityCallback = ( err: Error, result: BulkRegistryOperationResult, response: any) => void;
+
+    interface DeviceDescription {
+      deviceId: string;
+    }
+
+    interface DeviceRegistryOperationError {
+      deviceId: string;
+      errorCode: Error;
+      errorStatus: string;
+    }
+
+    interface BulkRegistryOperationResult {
+      isSuccessful: boolean;
+      errors: DeviceRegistryOperationError[];
+    }
 }
 
 export = Registry;
