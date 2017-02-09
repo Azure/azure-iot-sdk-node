@@ -22,7 +22,7 @@ var Device = require('./device.js');
  *                  to create a Registry object.
  * @param {Object}  config      An object containing the necessary information to connect to the IoT Hub instance:
  *                              - host: the hostname for the IoT Hub instance
- *                              - sharedAccessSignature: A shared access signature with valid access rights and expiry. 
+ *                              - sharedAccessSignature: A shared access signature with valid access rights and expiry.
  */
 /*Codes_SRS_NODE_IOTHUB_REGISTRY_05_001: [The Registry constructor shall accept a transport object]*/
 function Registry(config, restApiClient) {
@@ -141,6 +141,127 @@ Registry.prototype.create = function (deviceInfo, done) {
   });
 };
 
+Registry.prototype._bulkOperation = function(devices, done) {
+  /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_011: [The `addDevices` method shall construct an HTTP request using information supplied by the caller, as follows:
+  ```
+  POST /devices?api-version=<version> HTTP/1.1
+  Authorization: <sharedAccessSignature>
+  Content-Type: application/json; charset=utf-8
+  Request-Id: <guid>
+
+  <stringified array supplied by the argument devices annotated with importMode property and deviceId property replaced by id>
+  ```
+  ]*/
+  /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_013: [The `updateDevices` method shall construct an HTTP request using information supplied by the caller, as follows:
+  ```
+  POST /devices?api-version=<version> HTTP/1.1
+  Authorization: <sharedAccessSignature>
+  Content-Type: application/json; charset=utf-8
+  Request-Id: <guid>
+
+  <list supplied by the argument devices annotated with importMode property and deviceId property replaced by id>
+  ```
+  ]*/
+  /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_018: [The `removeDevices` method shall construct an HTTP request using information supplied by the caller, as follows:
+  ```
+  POST /devices?api-version=<version> HTTP/1.1
+  Authorization: <sharedAccessSignature>
+  Content-Type: application/json; charset=utf-8
+  Request-Id: <guid>
+
+  <stringified array supplied by the argument devices annotated with importMode property and deviceId property replaced by id>
+  ```
+  ]*/
+  var path = '/devices' + endpoint.versionQueryString();
+  var httpHeaders = {
+    'Content-Type': 'application/json; charset=utf-8'
+  };
+
+  this._restApiClient.executeApiCall('POST', path, httpHeaders, devices, done);
+};
+
+function _validateAndPrepareDevice(source, operation) {
+  if (!source.deviceId) {
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_010: [The `addDevices` method shall throw `ArgumentError` if any elements of devices do NOT contain a `deviceId` property.]*/
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_012: [The `updateDevices` method shall throw `ArgumentError` if any elements of devices do NOT contain a `deviceId` property.]*/
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_017: [The `removeDevices` method shall throw `ArgumentError` if any elements of devices do NOT contain a `deviceId` property.]*/
+    throw new ArgumentError('The object is missing the property: deviceId');
+  } else {
+    //
+    // And now remove the device id and put it back as id.
+    //
+    var actualDeviceId = source.deviceId;
+    var preparedDevice = JSON.parse(JSON.stringify(source));
+    delete preparedDevice.deviceId;
+    preparedDevice.id = actualDeviceId;
+    preparedDevice.importMode = operation;
+    return preparedDevice;
+  }
+}
+
+Registry.prototype._processBulkDevices = function (devices, operation, force, forceTrueAlternative, forceFalseAlternative, done) {
+  if (!devices) {
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_004: [The `addDevices` method shall throw `ReferenceError` if the `devices` argument is falsy.]*/
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_025: [The `updateDevices` method shall throw `ReferenceError` if the `devices` argument is falsy.]*/
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_006: [The `removeDevices` method shall throw `ReferenceError` if the deviceInfo is falsy.]*/
+    throw new ReferenceError('devices cannot be \'' + devices + '\'');
+  } else if (!Array.isArray(devices)) {
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_021: [The `addDevices` method shall throw `ArgumentError` if devices is NOT an array.]*/
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_020: [The `updateDevices` method shall throw `ArgumentError` if devices is NOT an array.]*/
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_019: [The `removeDevices` method shall throw `ArgumentError` if devices is NOT an array.]*/
+    throw new ArgumentError('devices must be an array');
+  } else if ((devices.length === 0) || (devices.length > 100)) {
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_014: [The `addDevices` method shall throw `ArgumentError` if devices.length == 0  or is greater than 100.]*/
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_015: [The `updateDevices` method shall throw `ArgumentError` if devices.length == 0  or is greater than 100.]*/
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_016: [The `removeDevices` method shall throw `ArgumentError` if devices.length == 0  or is greater than 100.]*/
+    throw new ArgumentError('The device array has an invalid size of ' + devices.length);
+  } else {
+    var importMode;
+    if (operation === null) {
+      //
+      // The api utilizes a force parameter.  Check to insure it's present and a boolean.
+      //
+      if ((typeof force) !== "boolean") {
+        /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_026: [The `updateDevices` method shall throw `ReferenceError` if the `forceUpdate` parameter is null or undefined.]*/
+        /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_027: [The `removeDevices` method shall throw `ReferenceError` if the `forceRemove` parameter is null or undefined.]*/
+        /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_024: [The `updateDevices` method shall throw `ReferenceError` if the `forceUpdate` parameter is NOT typeof boolean.]*/
+        /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_023: [The `removeDevices` method shall throw `ReferenceError` if the `forceRemove` parameter is NOT typeof boolean.]*/
+        throw new ReferenceError('force parameter must be present and a boolean');
+      } else {
+        /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_008: [If the `forceUpdate` parameter is true importMode will be set to `Update` otherwise it will be set to `UpdateIfMatchETag`.]*/
+        /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_007: [If the `forceRemove` parameter is true then importMode will be set to `Delete` otherwise it will be set to `DeleteIfMatchETag`.]*/
+        importMode = force ? forceTrueAlternative : forceFalseAlternative;
+      }
+    } else {
+      /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_009: [The `addDevices` method shall utilize an importMode = `create`.]*/
+      importMode = operation;
+    }
+    var bulkArray = [];
+    devices.forEach(function(currentDevice) {
+      bulkArray.push(_validateAndPrepareDevice(currentDevice,importMode));
+    });
+    this._bulkOperation(bulkArray,done);
+  }
+};
+
+/**
+ * @method            module:azure-iothub.Registry#addDevices
+ * @description       Adds an array of devices.
+ *
+ * @param {Object}    devices     An array of objects which must include a `deviceId`
+ *                                property whose value is a valid device
+ *                                identifier.
+ * @param {Function}  done        The function to call when the operation is
+ *                                complete. `done` will be called with three
+ *                                arguments: an Error object (can be null), a
+ *                                BulkRegistryOperationResult
+ *                                and a transport-specific response object useful
+ *                                for logging or debugging.
+ */
+Registry.prototype.addDevices = function (devices, done) {
+  this._processBulkDevices(devices, 'create', null, null, null, done);
+};
+
 /**
  * @method            module:azure-iothub.Registry#update
  * @description       Updates an existing device identity on an IoT hub with
@@ -187,6 +308,27 @@ Registry.prototype.update = function (deviceInfo, done) {
       done(null, new Device(device), httpResponse);
     }
   });
+};
+
+/**
+ * @method            module:azure-iothub.Registry#updateDevices
+ * @description       Updates an array of devices.
+ *
+ * @param {Object}    devices     An array of objects which must include a `deviceId`
+ *                                property whose value is a valid device
+ *                                identifier.
+ * @param {boolean}   forceUpdate if `forceUpdate` is true then the device will be
+ *                                updated regardless of an etag.  Otherwise the etags
+ *                                must match.
+ * @param {Function}  done        The function to call when the operation is
+ *                                complete. `done` will be called with three
+ *                                arguments: an Error object (can be null), a
+ *                                BulkRegistryOperationResult
+ *                                and a transport-specific response object useful
+ *                                for logging or debugging.
+ */
+Registry.prototype.updateDevices = function (devices, forceUpdate, done) {
+  this._processBulkDevices(devices, null, forceUpdate, 'Update', 'UpdateIfMatchETag', done);
 };
 
 /**
@@ -290,6 +432,27 @@ Registry.prototype.delete = function (deviceId, done) {
 };
 
 /**
+ * @method            module:azure-iothub.Registry#removeDevices
+ * @description       Updates an array of devices.
+ *
+ * @param {Object}    devices     An array of objects which must include a `deviceId`
+ *                                property whose value is a valid device
+ *                                identifier.
+ * @param {boolean}   forceRemove if `forceRemove` is true then the device will be
+ *                                removed regardless of an etag.  Otherwise the etags
+ *                                must match.
+ * @param {Function}  done        The function to call when the operation is
+ *                                complete. `done` will be called with three
+ *                                arguments: an Error object (can be null), a
+ *                                BulkRegistryOperationResult
+ *                                and a transport-specific response object useful
+ *                                for logging or debugging.
+ */
+Registry.prototype.removeDevices = function (devices, forceRemove, done) {
+  this._processBulkDevices(devices, null, forceRemove, 'Delete', 'DeleteIfMatchETag', done);
+};
+
+/**
  * @method              module:azure-iothub.Registry#importDevicesFromBlob
  * @description         Imports devices from a blob in bulk job.
  * @param {String}      inputBlobContainerUri   The URI to a container with a blob named 'devices.txt' containing a list of devices to import.
@@ -307,7 +470,7 @@ Registry.prototype.importDevicesFromBlob = function (inputBlobContainerUri, outp
   ```
   POST /jobs/create?api-version=<version> HTTP/1.1
   Authorization: <config.sharedAccessSignature>
-  Content-Type: application/json; charset=utf-8 
+  Content-Type: application/json; charset=utf-8
   Request-Id: <guid>
 
   {
@@ -345,7 +508,7 @@ Registry.prototype.exportDevicesToBlob = function (outputBlobContainerUri, exclu
   ```
   POST /jobs/create?api-version=<version> HTTP/1.1
   Authorization: <config.sharedAccessSignature>
-  Content-Type: application/json; charset=utf-8 
+  Content-Type: application/json; charset=utf-8
   Request-Id: <guid>
 
   {
@@ -377,11 +540,11 @@ Registry.prototype.listJobs = function (done) {
   /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_037: [The `listJobs` method shall construct an HTTP request using information supplied by the caller, as follows:
   ```
   GET /jobs?api-version=<version> HTTP/1.1
-  Authorization: <config.sharedAccessSignature> 
+  Authorization: <config.sharedAccessSignature>
   Request-Id: <guid>
   ```]*/
   var path = "/jobs" + endpoint.versionQueryString();
-  
+
   this._restApiClient.executeApiCall('GET', path, null, null, done);
 };
 
@@ -399,7 +562,7 @@ Registry.prototype.getJob = function (jobId, done) {
   /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_038: [The `getJob` method shall construct an HTTP request using information supplied by the caller, as follows:
   ```
   GET /jobs/<jobId>?api-version=<version> HTTP/1.1
-  Authorization: <config.sharedAccessSignature> 
+  Authorization: <config.sharedAccessSignature>
   Request-Id: <guid>
   ```]*/
   var path = "/jobs/" + jobId + endpoint.versionQueryString();
@@ -431,7 +594,7 @@ Registry.prototype.cancelJob = function (jobId, done) {
  * @method              module:azure-iothub.Registry#getTwin
  * @description         Gets the Device Twin of the device with the specified device identifier.
  * @param {String}      deviceId   The device identifier.
- * @param {Function}    done       The callback that will be called with either an Error object or 
+ * @param {Function}    done       The callback that will be called with either an Error object or
  *                                 the device twin instance.
  */
 Registry.prototype.getTwin = function (deviceId, done) {
@@ -465,7 +628,7 @@ Registry.prototype.getTwin = function (deviceId, done) {
  * @param {Object}      patch      The desired properties and tags to patch the device twin with.
  * @param {string}      etag       The latest etag for this device twin or '*' to force an update even if
  *                                 the device twin has been updated since the etag was obtained.
- * @param {Function}    done       The callback that will be called with either an Error object or 
+ * @param {Function}    done       The callback that will be called with either an Error object or
  *                                 the device twin instance.
  */
 Registry.prototype.updateTwin = function(deviceId, patch, etag, done) {
@@ -508,7 +671,7 @@ Registry.prototype.updateTwin = function(deviceId, patch, etag, done) {
  * @description         Creates a query that can be run on the IoT Hub instance to find information about devices or jobs.
  * @param {String}      sqlQuery   The query written as an SQL string.
  * @param {Number}      pageSize   The desired number of results per page (optional. default: 1000, max: 10000).
- * 
+ *
  * @throws {ReferenceError}        If the sqlQuery argument is falsy.
  * @throws {TypeError}             If the sqlQuery argument is not a string or the pageSize argument not a number, null or undefined.
  */
@@ -565,7 +728,7 @@ Registry.prototype._executeQueryFunc = function (sqlQuery, pageSize) {
 /**
  * @method                module:azure-iothub.Registry#getRegistryStatistics
  * @description           Gets statistics about the devices in the device identity registry.
- * @param {Function}      done   The callback that will be called with either an Error object or 
+ * @param {Function}      done   The callback that will be called with either an Error object or
  *                               the device registry statistics.
  */
 Registry.prototype.getRegistryStatistics = function getRegistryStatistics (done) {

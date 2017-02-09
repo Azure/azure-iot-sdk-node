@@ -14,12 +14,46 @@ var Query = require('../lib/query.js');
 var fakeDevice = { deviceId: 'deviceId' };
 var fakeConfig = { host: 'host', sharedAccessSignature: 'sas' };
 
+var zeroDevices = [];
+var oneHundredOneDevices = new Array(101).map(function (x, i) { return { deviceId: i.toString() }; });
+
 function testFalsyArg(methodUnderTest, argName, argValue, ExpectedErrorType) {
   var errorName = ExpectedErrorType ? ExpectedErrorType.name : 'Error';
   it('throws a ' + errorName + ' if \'' + argName + '\' is \'' + JSON.stringify(argValue) + '\' (type:' + typeof(argValue) + ')', function() {
     var registry = new Registry({ host: 'host', sharedAccessSignature: 'sas' });
     assert.throws(function() {
       registry[methodUnderTest](argValue, function() {});
+    }, ExpectedErrorType);
+  });
+}
+
+function testDevicesFalsyArg(methodUnderTest, argName, argValue, ExpectedErrorType) {
+  var errorName = ExpectedErrorType ? ExpectedErrorType.name : 'Error';
+  it('throws a ' + errorName + ' if \'' + argName + '\' is \'' + JSON.stringify(argValue) + '\' (type:' + typeof(argValue) + ')', function() {
+    var registry = new Registry({ host: 'host', sharedAccessSignature: 'sas' });
+    assert.throws(function() {
+      registry[methodUnderTest](argValue, true, function() {});
+    }, ExpectedErrorType);
+  });
+}
+
+function testDevicesNonBooleanForce(methodUnderTest, argName, argValue, ExpectedErrorType) {
+  var errorName = ExpectedErrorType ? ExpectedErrorType.name : 'Error';
+  it('throws a ' + errorName + ' if \'' + argName + '\' is \'' + JSON.stringify(argValue) + '\' (type:' + typeof(argValue) + ')', function() {
+    var registry = new Registry({ host: 'host', sharedAccessSignature: 'sas' });
+    assert.throws(function() {
+      registry[methodUnderTest]([{deviceId: 'a'},{deviceId:'b'}], argValue, function() {});
+    }, ExpectedErrorType);
+  });
+}
+
+
+function testWrongLengthArg(methodUnderTest, argName, argValue, ExpectedErrorType) {
+  var errorName = ExpectedErrorType ? ExpectedErrorType.name : 'Error';
+  it('throws a ' + errorName + ' if \'' + argName + '\' is length \'' + argValue.length + '\' (type:' + typeof(argValue) + ')', function() {
+    var registry = new Registry({ host: 'host', sharedAccessSignature: 'sas' });
+    assert.throws(function() {
+      registry[methodUnderTest](argValue, true, function() {});
     }, ExpectedErrorType);
   });
 }
@@ -187,6 +221,7 @@ describe('Registry', function() {
       registry.create(fakeDevice, testCallback);
     });
   });
+
 
   describe('#update', function(){
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_043: [The `update` method shall throw `ReferenceError` if the `deviceInfo` argument is falsy.]*/
@@ -450,7 +485,7 @@ describe('Registry', function() {
     ```
     POST /jobs/create?api-version=<version> HTTP/1.1
     Authorization: <config.sharedAccessSignature>
-    Content-Type: application/json; charset=utf-8 
+    Content-Type: application/json; charset=utf-8
     Request-Id: <guid>
 
     {
@@ -499,7 +534,7 @@ describe('Registry', function() {
     ```
     POST /jobs/create?api-version=<version> HTTP/1.1
     Authorization: <config.sharedAccessSignature>
-    Content-Type: application/json; charset=utf-8 
+    Content-Type: application/json; charset=utf-8
     Request-Id: <guid>
 
     {
@@ -535,7 +570,7 @@ describe('Registry', function() {
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_037: [The `listJobs` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
     GET /jobs?api-version=<version> HTTP/1.1
-    Authorization: <config.sharedAccessSignature> 
+    Authorization: <config.sharedAccessSignature>
     Request-Id: <guid>
     ```]*/
     it('constructs a valid HTTP request', function(testCallback) {
@@ -558,12 +593,12 @@ describe('Registry', function() {
       testFalsyArg('getJob', 'jobId', badJobId, ReferenceError);
     });
 
-    testErrorCallback('getJob', 'fakeJobId');  
+    testErrorCallback('getJob', 'fakeJobId');
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_038: [The `getJob` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
     GET /jobs/<jobId>?api-version=<version> HTTP/1.1
-    Authorization: <config.sharedAccessSignature> 
+    Authorization: <config.sharedAccessSignature>
     Request-Id: <guid>
     ```]*/
     it('constructs a valid HTTP request', function(testCallback) {
@@ -721,7 +756,183 @@ describe('Registry', function() {
       var registry = new Registry(fakeConfig, fakeHttpHelper);
       registry.getRegistryStatistics(testCallback);
     });
-    
+
     testErrorCallback('getRegistryStatistics');
   });
+
+  describe('add/update/removeDevices', function () {
+
+    describe('#addDevices', function(){
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_004: [ The `addDevices` method shall throw `ReferenceError` if the `devices` argument is falsy.]*/
+      [undefined, null].forEach(function(badDevices) {
+        testFalsyArg('addDevices', 'devices', badDevices, ReferenceError);
+      });
+
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_010: [The `addDevices` method shall throw `ArgumentError` if any the elements of devices do NOT contain a `deviceId` property.]*/
+      [undefined, null, ''].forEach(function(badDeviceId) {
+        testFalsyArg('addDevices', 'devices', [{deviceId: 'goodDevice'},{ deviceId: badDeviceId }], errors.ArgumentError);
+      });
+
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_014: [The `addDevices` method shall throw `ArgumentError` if devices.length == 0  or is greater than 100.]*/
+      [zeroDevices,oneHundredOneDevices].forEach(function(badDevices) {
+        testWrongLengthArg('addDevices', 'devices', badDevices, errors.ArgumentError);
+      });
+
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_021: [The `addDevices` method shall throw `ArgumentError` if devices is NOT an array.]*/
+      [1,'just a string',{deviceId: 'goodDevice'}, function () {}].forEach(function(notAnArray) {
+        testFalsyArg('addDevices', 'devices', notAnArray, errors.ArgumentError);
+      });
+
+      testErrorCallback('addDevices', [fakeDevice]);
+
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_009: [The `addDevices` method shall utilize an importMode = `create`.]*/
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_011: [The `addDevices` method shall construct an HTTP request using information supplied by the caller, as follows:
+      ```
+      POST /devices?api-version=<version> HTTP/1.1
+      Authorization: <sharedAccessSignature>
+      Content-Type: application/json; charset=utf-8
+      Request-Id: <guid>
+
+      <stringified array supplied by the argument devices annotated with importMode property and deviceId property replaced by id>
+      ```
+      ]*/
+      it('constructs a valid HTTP request', function(testCallback) {
+        var addedDevices = [{deviceId: 'deviceone'},{deviceId: 'devicetwo'}];
+        var sentBody = [{id:'deviceone',importMode:'create'},{id:'devicetwo',importMode:'create'}];
+        var fakeHttpHelper = {
+          executeApiCall: function (method, path, httpHeaders, body, done) {
+            assert.equal(method, 'POST');
+            assert.equal(path, '/devices' + endpoint.versionQueryString());
+            assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
+            assert.deepEqual(body, sentBody);
+
+            done();
+          }
+        };
+
+        var registry = new Registry(fakeConfig, fakeHttpHelper);
+        registry.addDevices(addedDevices, testCallback);
+      });
+
+    });
+
+    describe('#updateDevices', function(){
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_025: [The `updateDevices` method shall throw `ReferenceError` if the `devices` argument is falsy.]*/
+      [undefined, null].forEach(function(badDevices) {
+        testDevicesFalsyArg('updateDevices', 'devices', badDevices, ReferenceError);
+      });
+
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_012: [The `updateDevices` method shall throw `ArgumentError` if any elements of devices do NOT contain a `deviceId` property.]*/
+      [undefined, null, ''].forEach(function(badDeviceId) {
+        testDevicesFalsyArg('updateDevices', 'devices', [{deviceId: 'goodDevice'},{ deviceId: badDeviceId }], errors.ArgumentError);
+      });
+
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_015: [The `updateDevices` method shall throw `ArgumentError` if devices.length == 0  or is greater than 100.]*/
+      [zeroDevices,oneHundredOneDevices].forEach(function(badDevices) {
+        testWrongLengthArg('updateDevices', 'devices', badDevices, errors.ArgumentError);
+      });
+
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_020: [The `updateDevices` method shall throw `ArgumentError` if devices is NOT an array.]*/
+      [1,'just a string',{deviceId: 'goodDevice'}, function () {}].forEach(function(notAnArray) {
+        testDevicesFalsyArg('updateDevices', 'devices', notAnArray, errors.ArgumentError);
+      });
+
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_026: [The `updateDevices` method shall throw `ReferenceError` if the `forceUpdate` parameter is null or undefined.]*/
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_024: [The `updateDevices` method shall throw `ReferenceError` if the `forceUpdate` parameter is NOT typeof boolean.]*/
+      [1,'just a string',{deviceId: 'goodDevice'}, function () {}, undefined, null].forEach(function(notABoolean) {
+        testDevicesNonBooleanForce('updateDevices', 'forceUpdate', notABoolean, ReferenceError);
+      });
+
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_008: [If the `forceUpdate` parameter is true importMode will be set to `Update` otherwise it will be set to `UpdateIfMatchETag`.]*/
+      /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_013: [The `updateDevices` method shall construct an HTTP request using information supplied by the caller, as follows:
+      ```
+      POST /devices?api-version=<version> HTTP/1.1
+      Authorization: <sharedAccessSignature>
+      Content-Type: application/json; charset=utf-8
+      Request-Id: <guid>
+
+      <list supplied by the argument devices annotated with importMode property and deviceId property replaced by id>
+      ```
+      ]*/
+      [{ force: true, importMode: 'Update'}, { force: false, importMode: 'UpdateIfMatchETag'}].forEach(function(forceArg) {
+        it('constructs a valid HTTP request with forceUpdate of ' + forceArg.force + ' and importMode of ' + forceArg.importMode, function(testCallback) {
+          var updatedDevices = [{deviceId: 'deviceone'},{deviceId: 'devicetwo'}];
+          var sentBody = [{id:'deviceone', importMode: forceArg.importMode},{id:'devicetwo', importMode: forceArg.importMode}];
+          var fakeHttpHelper = {
+            executeApiCall: function (method, path, httpHeaders, body, done) {
+              assert.equal(method, 'POST');
+              assert.equal(path, '/devices' + endpoint.versionQueryString());
+              assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
+              assert.deepEqual(body, sentBody);
+
+              done();
+            }
+          };
+
+          var registry = new Registry(fakeConfig, fakeHttpHelper);
+          registry.updateDevices(updatedDevices, forceArg.force, testCallback);
+        });
+      });
+    });
+
+    describe('#removeDevices', function(){
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_006: [The `removeDevices` method shall throw `ReferenceError` if the deviceInfo is falsy.]*/
+      [undefined, null].forEach(function(badDevices) {
+        testDevicesFalsyArg('removeDevices', 'devices', badDevices, ReferenceError);
+      });
+
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_017: [The `removeDevices` method shall throw `ArgumentError` if any elements of devices do NOT contain a `deviceId` property.]*/
+      [undefined, null, ''].forEach(function(badDeviceId) {
+        testDevicesFalsyArg('removeDevices', 'devices', [{deviceId: 'goodDevice'},{ deviceId: badDeviceId }], errors.ArgumentError);
+      });
+
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_016: [The `removeDevices` method shall throw `ArgumentError` if devices.length == 0  or is greater than 100.]*/
+      [zeroDevices,oneHundredOneDevices].forEach(function(badDevices) {
+        testWrongLengthArg('removeDevices', 'devices', badDevices, errors.ArgumentError);
+      });
+
+      /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_019: [The `removeDevices` method shall throw `ArgumentError` if devices is NOT an array.]*/
+      [1,'just a string',{deviceId: 'goodDevice'}, function () {}].forEach(function(notAnArray) {
+        testDevicesFalsyArg('removeDevices', 'devices', notAnArray, errors.ArgumentError);
+      });
+
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_027: [The `removeDevices` method shall throw `ReferenceError` if the `forceRemove` parameter is null or undefined.]*/
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_023: [The `removeDevices` method shall throw `ReferenceError` if the `forceRemove` parameter is NOT typeof boolean.]*/
+      [1,'just a string',{deviceId: 'goodDevice'}, function () {}, undefined, null].forEach(function(notABoolean) {
+        testDevicesNonBooleanForce('removeDevices', 'forceUpdate', notABoolean, ReferenceError);
+      });
+
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_007: [If the `forceRemove` parameter is true then importMode will be set to `Delete` otherwise it will be set to `DeleteIfMatchETag`.]*/
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_018: [The `removeDevices` method shall construct an HTTP request using information supplied by the caller, as follows:
+      ```
+      POST /devices?api-version=<version> HTTP/1.1
+      Authorization: <sharedAccessSignature>
+      Content-Type: application/json; charset=utf-8
+      Request-Id: <guid>
+
+      <stringified array supplied by the argument devices annotated with importMode property and deviceId property replaced by id>
+      ```
+      ]*/
+      [{ force: true, importMode: 'Delete'}, { force: false, importMode: 'DeleteIfMatchETag'}].forEach(function(forceArg) {
+        it('constructs a valid HTTP request with forceDelete of ' + forceArg.force + ' and importMode of ' + forceArg.importMode, function(testCallback) {
+          var removedDevices = [{deviceId: 'deviceone'},{deviceId: 'devicetwo'}];
+          var sentBody = [{id:'deviceone', importMode: forceArg.importMode},{id:'devicetwo', importMode: forceArg.importMode}];
+          var fakeHttpHelper = {
+            executeApiCall: function (method, path, httpHeaders, body, done) {
+              assert.equal(method, 'POST');
+              assert.equal(path, '/devices' + endpoint.versionQueryString());
+              assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
+              assert.deepEqual(body, sentBody);
+
+              done();
+            }
+          };
+
+          var registry = new Registry(fakeConfig, fakeHttpHelper);
+          registry.removeDevices(removedDevices, forceArg.force, testCallback);
+        });
+      });
+    });
+  });
+
 });
