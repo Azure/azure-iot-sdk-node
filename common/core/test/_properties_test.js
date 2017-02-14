@@ -58,4 +58,25 @@ describe('properties', function () {
       assert.isUndefined(failProperty.getItem(5));
     });
   });
+
+  describe('#getValue', function() {
+    /*Tests_SRS_NODE_IOTHUB_PROPERTIES_16_002: [`Properties.getValue` should return the corresponding value of the `value` property of the element with the `key` property passed as argument.]*/
+    it('returns the value of the property if it exists', function() {
+      var testKey = 'key';
+      var testValue = 'testValue';
+      var properties = new IotProperties();
+      properties.add('key2', 'value2');
+      properties.add(testKey, testValue);
+      properties.add('key3', 'value3');
+      assert.strictEqual(properties.getValue(testKey), testValue);
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_PROPERTIES_16_001: [`Properties.getValue` should return `undefined` if no element within the `propertyList` array contains `key`.]*/
+    it('returns undefined when given a key that doesn\'t exist', function() {
+      var properties = new IotProperties();
+      properties.add('key2', 'value2');
+      properties.add('key3', 'value3');
+      assert.isUndefined(properties.getValue('key1'));
+    });
+  });
 });

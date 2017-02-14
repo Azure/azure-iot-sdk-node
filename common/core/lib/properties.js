@@ -54,6 +54,22 @@ Properties.prototype.getItem = function (index) {
 };
 
 /**
+ * Returns the value property of the element that has the given key.
+ * @returns {Object}  corresponding value or undefined if the key doesn't exist.
+ */
+Properties.prototype.getValue = function (key) {
+  for (var i = 0; i < this.propertyList.length; i++) {
+    /*Codes_SRS_NODE_IOTHUB_PROPERTIES_16_002: [`Properties.getValue` should return the corresponding value of the `value` property of the element with the `key` property passed as argument.]*/
+    if (this.propertyList[i].key === key) {
+      return this.propertyList[i].value;
+    }
+  }
+
+  /*Codes_SRS_NODE_IOTHUB_PROPERTIES_16_001: [`Properties.getValue` should return `undefined` if no element within the `propertyList` array contains `key`.]*/
+  return undefined;
+};
+
+/**
  * Returns the number of items in the collection.
  */
 /* Codes_SRS_NODE_IOTHUB_PROPERTIES_07_002: [Properties.Count shall return the number of items in the Properties map.] */

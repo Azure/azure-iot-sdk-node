@@ -14,6 +14,7 @@ Public Interface
 |--------------------------------------|----------------|----------------------------------------------------------------|
 | `Properties.add(itemKey, itemValue)` | void           | Adds the key-value pair to the collection.                     |
 | `Properties.getItem(index)`          | Key/value Pair | Returns the key/value pair corresponding to the given index.   |
+| `Properties.getValue(key)`           | Any            | Returns the value corresponding to the given key.              |
 | `Properties.count`                   | Number         | Returns the number of items in the collection.                 |
 
 Requirements
@@ -33,4 +34,9 @@ Requirements
 
 ### Properties.count()
 
-**SRS_NODE_IOTHUB_PROPERTIES_07_002: [** Properties.Count shall return the number of items in the Properties map. **]**
+**SRS_NODE_IOTHUB_PROPERTIES_07_002: [** `Properties.count()` shall return the number of items in the Properties map. **]**
+
+### Properties.getValue(key)
+**SRS_NODE_IOTHUB_PROPERTIES_16_001: [** `Properties.getValue` should return `undefined` if no element within the `propertyList` array contains `key`. **]**
+
+**SRS_NODE_IOTHUB_PROPERTIES_16_002: [** `Properties.getValue` should return the corresponding value of the `value` property of the element with the `key` property passed as argument. **]**
