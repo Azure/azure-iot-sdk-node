@@ -3,6 +3,8 @@
 
 'use strict';
 
+var apiVersion = '2016-11-14';
+
 function devicePath(id) {
   return '/devices/' + id;
 }
@@ -20,7 +22,7 @@ function feedbackPath(id, lockToken) {
 }
 
 function versionQueryString() {
-  return '?api-version=2016-11-14';
+  return '?api-version=' + apiVersion;
 }
 
 var endpoint = {
@@ -28,7 +30,8 @@ var endpoint = {
   eventPath: eventPath,
   messagePath: messagePath,
   feedbackPath: feedbackPath,
-  versionQueryString: versionQueryString
+  versionQueryString: versionQueryString,
+  apiVersion: apiVersion
 };
 
 module.exports = endpoint;
