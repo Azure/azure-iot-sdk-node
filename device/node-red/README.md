@@ -15,7 +15,7 @@ To use the Azure IoT Hub Node-RED node, you need to have the following installed
 ## Install the Node-RED node 
 To install the node, run the following command from the folder containing the package.json file for the node.
    ```
-   npm install -g
+   npm install -g node-red-contrib-azureiothubnode
    ```
 
 ## First simple flow
