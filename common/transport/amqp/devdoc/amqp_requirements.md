@@ -72,16 +72,48 @@ Disconnects the application or device from the IoT Hub instance.
 ### send (message, endpoint, to, done)
 Builds and sends an AMQP message with the body set to the message parameter to the IoT Hub service, using the endpoint and destination passed as arguments.
 
-**SRS_NODE_COMMON_AMQP_16_006: [**The send method shall construct an AMQP message using information supplied by the caller, as follows:
-- The `to` field of the message should be set to the `to` argument.
+**SRS_NODE_COMMON_AMQP_16_006: [**The `send` method shall construct an AMQP message using information supplied by the caller, as follows:
+- The `to` field of the message should be set to the `to` argument if not `undefined` otherwise the property shouldn't be created.
 - The `body` of the message should be built using the message argument.**]**
 
-**SRS_NODE_COMMON_AMQP_16_007: [**If send encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message).**]**
+**SRS_NODE_COMMON_AMQP_16_007: [**If `send` encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message).**]**
 
 ### getReceiver(endpoint, done)
 Configures an AmqpReceiver object to use the endpoint passed as a parameter and calls the `done` callback with the receiver instance as an argument.
 
 **SRS_NODE_COMMON_AMQP_16_009: [**If a receiver for this endpoint has already been created, the getReceiver method should call the `done` method with the existing instance as an argument.**]**
 
-**SRS_NODE_COMMON_AMQP_16_010: [**If a receiver for this endpoint doesn�t exist, the getReceiver method should create a new AmqpReceiver object and then call the `done` method with the object that was just created as an argument.**]**
+**SRS_NODE_COMMON_AMQP_16_010: [**If a receiver for this endpoint doesn't exist, the getReceiver method should create a new AmqpReceiver object and then call the `done` method with the object that was just created as an argument.**]**
 
+### attachSenderLink(endpoint, properties, done)
+**SRS_NODE_COMMON_AMQP_16_012: [** The `attachSenderLink` method shall throw a ReferenceError if the `endpoint` argument is falsy. **]**
+**SRS_NODE_COMMON_AMQP_16_032: [** The `attachSenderLink` method shall call the `done` callback with a `NotConnectedError` object if the amqp client is not connected when the method is called. **]**
+**SRS_NODE_COMMON_AMQP_16_013: [** The `attachSenderLink` method shall call `createSender` on the `amqp10` client object. **]**
+**SRS_NODE_COMMON_AMQP_16_014: [** The `attachSenderLink` method shall create a policy object that contain link properties to be merged is the properties argument is not falsy. **]**
+**SRS_NODE_COMMON_AMQP_16_015: [** The `attachSenderLink` method shall call the `done` callback with a `null` error and the link object that was created if the link was attached successfully. **]**
+**SRS_NODE_COMMON_AMQP_16_016: [** The `attachSenderLink` method shall call the `done` callback with an `Error` object if the link object wasn't created successfully. **]**
+
+### attachReceiverLink(endpoint, properties, done)
+**SRS_NODE_COMMON_AMQP_16_017: [** The `attachReceiverLink` method shall throw a ReferenceError if the `endpoint` argument is falsy. **]**
+**SRS_NODE_COMMON_AMQP_16_033: [** The `attachReceiverLink` method shall call the `done` callback with a `NotConnectedError` object if the amqp client is not connected when the method is called. **]**
+**SRS_NODE_COMMON_AMQP_16_018: [** The `attachReceiverLink` method shall call `createReceiver` on the `amqp10` client object. **]**
+**SRS_NODE_COMMON_AMQP_16_019: [** The `attachReceiverLink` method shall create a policy object that contain link properties to be merged is the properties argument is not falsy. **]**
+**SRS_NODE_COMMON_AMQP_16_020: [** The `attachReceiverLink` method shall call the `done` callback with a `null` error and the link object that was created if the link was attached successfully. **]**
+**SRS_NODE_COMMON_AMQP_16_021: [** The `attachReceiverLink` method shall call the `done` callback with an `Error` object if the link object wasn't created successfully. **]**
+
+# detachSenderLink(endpoint, done)
+**SRS_NODE_COMMON_AMQP_16_022: [** The `detachSenderLink` method shall throw a ReferenceError if the `endpoint` argument is falsy. **]**
+**SRS_NODE_COMMON_AMQP_16_023: [** The `detachSenderLink` method shall call detach on the link object corresponding to the endpoint passed as argument. **]**
+**SRS_NODE_COMMON_AMQP_16_024: [** The `detachSenderLink` method shall call the `done` callback with no arguments if detaching the link succeeded. **]**
+**SRS_NODE_COMMON_AMQP_16_025: [** The `detachSenderLink` method shall call the `done` callback with no arguments if the link for this endpoint doesn't exist. **]**
+**SRS_NODE_COMMON_AMQP_16_026: [** The `detachSenderLink` method shall call the `done` callback with an `Error` object if there was an error while detaching the link. **]**
+
+# detachReceiverLink(endpoint, done)
+**SRS_NODE_COMMON_AMQP_16_027: [** The `detachReceiverLink` method shall throw a ReferenceError if the `endpoint` argument is falsy. **]**
+**SRS_NODE_COMMON_AMQP_16_028: [** The `detachReceiverLink` method shall call detach on the link object corresponding to the endpoint passed as argument. **]**
+**SRS_NODE_COMMON_AMQP_16_029: [** The `detachReceiverLink` method shall call the `done` callback with no arguments if detaching the link succeeded. **]**
+**SRS_NODE_COMMON_AMQP_16_030: [** The `detachReceiverLink` method shall call the `done` callback with no arguments if the link for this endpoint doesn't exist. **]**
+**SRS_NODE_COMMON_AMQP_16_031: [** The `detachReceiverLink` method shall call the `done` callback with an `Error` object if there was an error while detaching the link. **]**
+
+### All methods
+**SRS_NODE_COMMON_AMQP_16_011: [** All methods should treat the `done` callback argument as optional and not throw if it is not passed as argument. **]**
