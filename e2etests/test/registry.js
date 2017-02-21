@@ -231,7 +231,7 @@ var runTests = function (hubConnectionString, storageConnectionString) {
         });
       });
     });
-    
+
 
     it.skip('Imports then exports devices', function(done) {
       this.timeout(120000);
@@ -470,6 +470,123 @@ var runTests = function (hubConnectionString, storageConnectionString) {
       .then(deleteContainers)
       .then(function() { done(); })
       .catch(function(err) { done(err); });
+    });
+
+    it('bulk Identity add/update/remove', function (done) {
+      var registry = Registry.fromConnectionString(hubConnectionString);
+
+      // Specify the new devices.
+      var deviceAddArray = [
+        {
+          deviceId: '0000e2e-node-registry-identity-j-delete-me' + uuid.v4(),
+          status: 'disabled',
+          authentication: {
+            symmetricKey: {
+              primaryKey: new Buffer(uuid.v4()).toString('base64'),
+              secondaryKey: new Buffer(uuid.v4()).toString('base64')
+            }
+          }
+        },
+        {
+          deviceId: '0000e2e-node-registry-identity-j-delete-me' + uuid.v4(),
+          status: 'disabled',
+          authentication: {
+            symmetricKey: {
+              primaryKey: new Buffer(uuid.v4()).toString('base64'),
+              secondaryKey: new Buffer(uuid.v4()).toString('base64')
+            }
+          }
+        },
+        {
+          deviceId: '0000e2e-node-registry-identity-j-delete-me' + uuid.v4(),
+          status: 'disabled',
+          authentication: {
+            symmetricKey: {
+              primaryKey: new Buffer(uuid.v4()).toString('base64'),
+              secondaryKey: new Buffer(uuid.v4()).toString('base64')
+            }
+          }
+        }
+      ];
+
+      var deviceUpdateArray = [
+        {
+          deviceId: deviceAddArray[0].deviceId,
+          status: 'enabled'
+        },
+        {
+          deviceId: deviceAddArray[1].deviceId,
+          status: 'enabled'
+        },
+        {
+          deviceId: deviceAddArray[2].deviceId,
+          status: 'enabled'
+        }
+      ];
+
+      var deviceRemoveArray = [
+        {
+          deviceId: deviceAddArray[0].deviceId
+        },
+        {
+          deviceId: deviceAddArray[1].deviceId
+        },
+        {
+          deviceId: deviceAddArray[2].deviceId
+        }
+      ];
+
+      registry.addDevices(deviceAddArray, andContinue( 'adding', function next() {
+        registry.get(deviceUpdateArray[0].deviceId, checkStatusAndContinue( 'disabled', function next() {
+          registry.get(deviceUpdateArray[1].deviceId, checkStatusAndContinue( 'disabled', function next() {
+            registry.get(deviceUpdateArray[2].deviceId, checkStatusAndContinue( 'disabled', function next() {
+              registry.updateDevices(deviceUpdateArray, true, andContinue('updating', function next() {
+                registry.get(deviceUpdateArray[0].deviceId, checkStatusAndContinue( 'enabled', function next() {
+                  registry.get(deviceUpdateArray[1].deviceId, checkStatusAndContinue( 'enabled', function next() {
+                    registry.get(deviceUpdateArray[2].deviceId, checkStatusAndContinue( 'enabled', function next() {
+                      registry.removeDevices(deviceRemoveArray, true, andContinue('removing', function next() {
+                        registry.get(deviceRemoveArray[0].deviceId, checkRemoveAndContinue( function next() {
+                          registry.get(deviceRemoveArray[1].deviceId, checkRemoveAndContinue( function next() {
+                            registry.get(deviceRemoveArray[2].deviceId, checkRemoveAndContinue( function next() {
+                              done();
+                            }));
+                          }));
+                        }));
+                      }));
+                    }));
+                  }));
+                }));
+              }));
+            }));
+          }));
+        }));
+      }));
+
+      function andContinue(op, next) {
+        return function processResult(err, resultData) {
+          assert.isNull(err);
+          assert.isNotNull(resultData);
+          assert.isTrue(resultData.isSuccessful);
+          assert.equal(resultData.errors.length,0);
+          if (next) next();
+        };
+      }
+
+      function checkStatusAndContinue(enabled, next) {
+        return function processStatus(err, deviceInfo) {
+          assert.isNull(err);
+          assert.isNotNull(deviceInfo);
+          assert.equal(deviceInfo.status, enabled);
+          if (next) next();
+        };
+      }
+
+      function checkRemoveAndContinue(next) {
+        return function processRemove(err) {
+          assert.instanceOf(err, errors.DeviceNotFoundError);
+          if (next) next();
+        };
+      }
     });
   });
 };
