@@ -89,7 +89,7 @@ function safeCallback(callback, error, result) {
  * @method             module:azure-iot-amqp-base.Amqp#connect
  * @description        Establishes a connection with the IoT Hub instance.
  * @param              uri    The uri to connect with.
- * @param {Function}   done   Called when the connection is established of if an error happened.
+ * @param {Function}   done   Called when the connection is established or if an error happened.
  */
 Amqp.prototype.connect = function connect(uri, sslOptions, done) {
   /*Codes_SRS_NODE_COMMON_AMQP_06_002: [The connect method shall throw a ReferenceError if the uri parameter has not been supplied.] */
@@ -228,11 +228,11 @@ Amqp.prototype.getReceiver = function getReceiver(endpoint, done) {
  * @method             module:azure-iot-amqp-base.Amqp#attachReceiverLink
  * @description        Creates and attaches an AMQP receiver link for the specified endpoint.
  *
- * @param {string}    endpoint  Endpoint used for the receiver link.
- * @param {Object}    linkProperties    Dictionnary of key/value pairs that are going to be inserted as properties in the 'attach' AMQP frame.
- * @param {Function}  done      Callback used to return the link object or an Error.
+ * @param {string}    endpoint    Endpoint used for the receiver link.
+ * @param {Object}    linkOptions Configuration options to be merged with the AMQP10 policies for the link..
+ * @param {Function}  done        Callback used to return the link object or an Error.
  */
-Amqp.prototype.attachReceiverLink = function attachReceiverLink(endpoint, linkProperties, done) {
+Amqp.prototype.attachReceiverLink = function attachReceiverLink(endpoint, linkOptions, done) {
   /*Codes_SRS_NODE_COMMON_AMQP_16_017: [The `attachReceiverLink` method shall throw a ReferenceError if the `endpoint` argument is falsy.]*/
   if (!endpoint) {
     throw new ReferenceError('endpoint cannot be \'' + endpoint + '\'');
@@ -250,10 +250,9 @@ Amqp.prototype.attachReceiverLink = function attachReceiverLink(endpoint, linkPr
     /*Codes_SRS_NODE_COMMON_AMQP_16_007: [If send encounters an error before it can send the request, it shall invoke the done callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
     this._amqp.on('client:errorReceived', clientErrorHandler);
 
-    /*Codes_SRS_NODE_COMMON_AMQP_16_019: [The `attachReceiverLink` method shall create a policy object that contain link properties to be merged is the properties argument is not falsy.]*/
-    var attachProps = linkProperties ? { attach: { properties: linkProperties } }: undefined;
+    /*Codes_SRS_NODE_COMMON_AMQP_06_004: [The `attachReceiverLink` method shall create a policy object that contain link options to be merged if the linkOptions argument is not falsy.]*/
     /*Codes_SRS_NODE_COMMON_AMQP_16_018: [The `attachReceiverLink` method shall call `createReceiver` on the `amqp10` client object.]*/
-    self._amqp.createReceiver(endpoint, attachProps)
+    self._amqp.createReceiver(endpoint, linkOptions)
       .then(function (receiver) {
         self._amqp.removeListener('client:errorReceived', clientErrorHandler);
         if (!connectionError) {
@@ -281,11 +280,11 @@ Amqp.prototype.attachReceiverLink = function attachReceiverLink(endpoint, linkPr
  * @method             module:azure-iot-amqp-base.Amqp#attachSenderLink
  * @description        Creates and attaches an AMQP sender link for the specified endpoint.
  *
- * @param {string}    endpoint          Endpoint used for the sender link.
- * @param {Object}    linkProperties    Dictionnary of key/value pairs that are going to be inserted as properties in the 'attach' AMQP frame.
- * @param {Function}  done              Callback used to return the link object or an Error.
+ * @param {string}    endpoint    Endpoint used for the sender link.
+ * @param {Object}    linkOptions Configuration options to be merged with the AMQP10 policies for the link..
+ * @param {Function}  done        Callback used to return the link object or an Error.
  */
-Amqp.prototype.attachSenderLink = function attachSenderLink(endpoint, linkProperties, done) {
+Amqp.prototype.attachSenderLink = function attachSenderLink(endpoint, linkOptions, done) {
   /*Codes_SRS_NODE_COMMON_AMQP_16_012: [The `attachSenderLink` method shall throw a ReferenceError if the `endpoint` argument is falsy.]*/
   if (!endpoint) {
     throw new ReferenceError('endpoint cannot be \'' + endpoint + '\'');
@@ -303,10 +302,9 @@ Amqp.prototype.attachSenderLink = function attachSenderLink(endpoint, linkProper
     /*Codes_SRS_NODE_COMMON_AMQP_16_007: [If send encounters an error before it can send the request, it shall invoke the done callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
     this._amqp.on('client:errorReceived', clientErrorHandler);
 
-    /*Codes_SRS_NODE_COMMON_AMQP_16_014: [The `attachSenderLink` method shall create a policy object that contain link properties to be merged is the properties argument is not falsy.]*/
-    var attachProps = linkProperties ? { attach: { properties: linkProperties } }: undefined;
+    /*Codes_SRS_NODE_COMMON_AMQP_06_003: [The `attachSenderLink` method shall create a policy object that contain link options to be merged if the linkOptions argument is not falsy.]*/
     /*Codes_SRS_NODE_COMMON_AMQP_16_013: [The `attachSenderLink` method shall call `createSender` on the `amqp10` client object.]*/
-    self._amqp.createSender(endpoint, attachProps)
+    self._amqp.createSender(endpoint, linkOptions)
       .then(function (sender) {
         self._amqp.removeListener('client:errorReceived', clientErrorHandler);
         if (!connectionError) {
@@ -318,7 +316,7 @@ Amqp.prototype.attachSenderLink = function attachSenderLink(endpoint, linkProper
           /*Codes_SRS_NODE_COMMON_AMQP_16_016: [The `attachSenderLink` method shall call the `done` callback with an `Error` object if the link object wasn't created successfully.]*/
           safeCallback(done, connectionError);
         }
-        
+
         return null;
       })
       .catch(function (err) {

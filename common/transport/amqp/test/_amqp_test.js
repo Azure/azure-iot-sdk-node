@@ -131,7 +131,7 @@ describe('Amqp', function () {
       var amqp = new Amqp();
       var sender = new EventEmitter();
       sender.send = sinon.stub().resolves('message enqueued');
-      
+
       sinon.stub(amqp._amqp, 'connect').resolves('connected');
       sinon.stub(amqp._amqp, 'createSender').resolves(sender);
 
@@ -141,7 +141,7 @@ describe('Amqp', function () {
             assert.instanceOf(result, results.MessageEnqueued);
           }
           testCallback(err);
-        
+
         });
       });
     });
@@ -151,7 +151,7 @@ describe('Amqp', function () {
       var amqp = new Amqp();
       var sender = new EventEmitter();
       sender.send = sinon.stub().resolves('message enqueued');
-      
+
       sinon.stub(amqp._amqp, 'connect').resolves('connected');
       sinon.stub(amqp._amqp, 'createSender').rejects('failed to create sender');
 
@@ -167,7 +167,7 @@ describe('Amqp', function () {
       var amqp = new Amqp();
       var sender = new EventEmitter();
       sender.send = sinon.stub().rejects('could not send');
-      
+
       sinon.stub(amqp._amqp, 'connect').resolves('connected');
       sinon.stub(amqp._amqp, 'createSender').resolves(sender);
 
@@ -203,7 +203,7 @@ describe('Amqp', function () {
       var amqp = new Amqp();
       var sender = new EventEmitter();
       sender.send = sinon.stub().resolves('message enqueued');
-      
+
       sinon.stub(amqp._amqp, 'connect').resolves('connected');
       sinon.stub(amqp._amqp, 'createSender').resolves(sender);
 
@@ -222,7 +222,7 @@ describe('Amqp', function () {
       var amqp = new Amqp();
       var sender = new EventEmitter();
       sender.send = sinon.stub().resolves('message enqueued');
-      
+
       sinon.stub(amqp._amqp, 'connect').resolves('connected');
       sinon.stub(amqp._amqp, 'createSender').resolves(sender);
 
@@ -237,7 +237,7 @@ describe('Amqp', function () {
       var amqp = new Amqp();
       var sender = new EventEmitter();
       sender.send = sinon.stub().rejects('failed to enqueue message');
-      
+
       sinon.stub(amqp._amqp, 'connect').resolves('connected');
       sinon.stub(amqp._amqp, 'createSender').resolves(sender);
 
@@ -340,7 +340,7 @@ describe('Amqp', function () {
           amqp.connect('uri', null, function() {
             amqp[testConfig.amqpFunc](endpoint, null, function(err, result) {
               assert.isNull(err);
-              assert.isUndefined(amqp._amqp[testConfig.amqp10Func].args[0][1]);
+              assert.isNotTrue(amqp._amqp[testConfig.amqp10Func].args[0][1]);
               assert.isOk(result);
               assert.strictEqual(result, amqp[testConfig.privateLinkArray][endpoint]);
               testCallback();
@@ -348,8 +348,8 @@ describe('Amqp', function () {
           });
         });
 
-        /*Tests_SRS_NODE_COMMON_AMQP_16_014: [The `attachSenderLink` method shall create a policy object that contain link properties to be merged is the properties argument is not falsy.]*/
-        /*Tests_SRS_NODE_COMMON_AMQP_16_019: [The `attachReceiverLink` method shall create a policy object that contain link properties to be merged is the properties argument is not falsy.]*/
+        /*Tests_SRS_NODE_COMMON_AMQP_06_003: [The `attachSenderLink` method shall create a policy object that contain link options to be merged if the linkOptions argument is not falsy.]*/
+        /*Tests_SRS_NODE_COMMON_AMQP_06_004: [The `attachReceiverLink` method shall create a policy object that contain link options to be merged if the linkOptions argument is not falsy.]*/
         it('sets up the attach properties object with the link properties passed as argument', function(testCallback) {
           var amqp = new Amqp();
           var endpoint = 'endpoint';
@@ -363,7 +363,7 @@ describe('Amqp', function () {
             /*Tests_SRS_NODE_COMMON_AMQP_16_015: [The `attachSenderLink` method shall call the `done` callback with a `null` error and the link object that was created if the link was attached successfully.]*/
             /*Tests_SRS_NODE_COMMON_AMQP_16_020: [The `attachReceiverLink` method shall call the `done` callback with a `null` error and the link object that was created if the link was attached successfully.]*/
             amqp[testConfig.amqpFunc](endpoint, fakeLinkProps, function() {
-              assert.deepEqual(amqp._amqp[testConfig.amqp10Func].args[0][1], { attach: { properties: fakeLinkProps }});
+              assert.deepEqual(amqp._amqp[testConfig.amqp10Func].args[0][1], { fakeKey: 'fakeValue'});
               testCallback();
             });
           });
