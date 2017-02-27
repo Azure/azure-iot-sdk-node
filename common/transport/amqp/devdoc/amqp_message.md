@@ -48,13 +48,19 @@ As this is an internal API, the input argument message can be assumed to be of t
 
 **SRS_NODE_IOTHUB_AMQPMSG_05_007: [** If the `message` argument has a `messageId` property, the `properties` property of the `AmqpMessage` object shall have a property named `messageId` with the same value. **]**
 
+**SRS_NODE_IOTHUB_AMQPMSG_16_011: [** If the `Message.messageId` property is a UUID, the AMQP type of the `AmqpMessage.properties.messageId` property shall be forced to UUID. **]**
+
 **SRS_NODE_IOTHUB_AMQPMSG_16_010: [** If the `message` argument has a `correlationId` property, the `properties` property of the `AmqpMessage` object shall have a property named `correlationId` with the same value. **]**
+
+**SRS_NODE_IOTHUB_AMQPMSG_16_012: [** If the `Message.correlationId` property is a UUID, the AMQP type of the `AmqpMessage.properties.correlationId` property shall be forced to UUID. **]**
 
 **SRS_NODE_IOTHUB_AMQPMSG_05_008: [** If needed, the created `AmqpMessage` object shall have a property of type `Object` named `applicationProperties`. **]**
 
 **SRS_NODE_IOTHUB_AMQPMSG_05_009: [** If the `message` argument has an `ack` property, the `applicationProperties` property of the `AmqpMessage` object shall have a property named `iothub-ack` with the same value. **]**
 
 **SRS_NODE_IOTHUB_AMQPMSG_13_001: [** If `message.properties` is truthy, then all the properties in it shall be copied to the `applicationProperties` property of the `AmqpMessage` object. **]**
+
+**SRS_NODE_IOTHUB_AMQPMSG_16_013: [** If one of the property key is `IoThub-status`, this property is reserved and shall be forced to an `int` AMQP type. **]**
 
 **SRS_NODE_IOTHUB_AMQPMSG_05_005: [** If `message.getData()` is truthy, the `AmqpMessage` object shall have a property named `body` with the value returned from `message.getData()`. **]**
 

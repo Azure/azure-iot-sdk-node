@@ -6,6 +6,7 @@
 var assert = require('chai').assert;
 var Message = require('azure-iot-common').Message;
 var AmqpMessage = require('../lib/amqp_message.js');
+var uuid = require('uuid');
 
 describe('AmqpMessage', function () {
   describe('#fromMessage', function () {
@@ -67,6 +68,16 @@ describe('AmqpMessage', function () {
       assert.equal(amqpMessage.properties.messageId, messageId);
     });
 
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_011: [If the `Message.messageId` property is a UUID, the AMQP type of the `AmqpMessage.properties.messageId` property shall be forced to UUID.]*/
+    it('Forces the messageId type to UUID if it actually is a uuid', function() {
+      var messageId = uuid.v4();
+      var message = new Message();
+      message.messageId = messageId;
+      var amqpMessage = AmqpMessage.fromMessage(message);
+      assert.strictEqual(amqpMessage.properties.messageId.typeName, 'uuid');
+      assert.strictEqual(amqpMessage.properties.messageId.value, messageId);
+    });
+
     /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_010: [If the `message` argument has a `correlationId` property, the `properties` property of the `AmqpMessage` object shall have a property named `correlationId` with the same value.]*/
     it('maps message.correlationId to amqpMessage.properties.correlationId', function () {
       var correlationId = '123';
@@ -74,6 +85,16 @@ describe('AmqpMessage', function () {
       message.correlationId = correlationId;
       var amqpMessage = AmqpMessage.fromMessage(message);
       assert.equal(amqpMessage.properties.correlationId, correlationId);
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_012: [If the `Message.correlationId` property is a UUID, the AMQP type of the `AmqpMessage.properties.correlationId` property shall be forced to UUID.]*/
+    it('Forces the correlationId type to UUID if it actually is a uuid', function() {
+      var correlationId = uuid.v4();
+      var message = new Message();
+      message.correlationId = correlationId;
+      var amqpMessage = AmqpMessage.fromMessage(message);
+      assert.equal(amqpMessage.properties.correlationId.typeName, 'uuid');
+      assert.strictEqual(amqpMessage.properties.correlationId.value, correlationId);
     });
 
     /*Tests_SRS_NODE_IOTHUB_AMQPMSG_05_007: [If the message argument has a messageId property, the properties property of the AmqpMessage object shall have a property named messageId with the same value.]*/
@@ -121,6 +142,18 @@ describe('AmqpMessage', function () {
         assert.property(amqpMessage.applicationProperties, keyItem);
         assert.strictEqual(amqpMessage.applicationProperties[keyItem], valueItem);
       }
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_013: [If one of the property key is `IoThub-status`, this property is reserved and shall be forced to an `int` AMQP type.]*/
+    it('forces the IoThub-status property encoding to \'int\' if it exists', function() {
+      var message = new Message();
+      var statusKey = 'IoThub-status';
+      var statusValue = 42;
+      message.properties.add(statusKey, statusValue);
+
+      var amqpMessage = AmqpMessage.fromMessage(message);
+      assert.strictEqual(amqpMessage.applicationProperties[statusKey].typeName, 'int');
+      assert.strictEqual(amqpMessage.applicationProperties[statusKey].value, statusValue);
     });
 
     /*Tests_SRS_NODE_IOTHUB_AMQPMSG_13_001: [ If message.properties is truthy, then all the properties in it shall be copied to the applicationProperties property of the AmqpMessage object. ]*/

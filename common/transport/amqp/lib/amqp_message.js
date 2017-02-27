@@ -3,6 +3,18 @@
 
 'use strict';
 var Message = require('azure-iot-common').Message;
+var TypeEncoder = require('amqp10').Type;
+
+function encodeUuid (uuidString) {
+  var uuidRegEx = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+  var uuid;
+  if (typeof uuidString === 'string' && uuidString.match(uuidRegEx)) {
+    uuid = TypeEncoder.uuid(uuidString);
+  } else {
+    uuid = uuidString;
+  }
+  return uuid;
+}
 
 /**
  * @class           module:azure-iot-amqp-base.AmqpMessage
@@ -36,12 +48,13 @@ AmqpMessage.fromMessage = function fromMessage(message) {
 
   /*Codes_SRS_NODE_IOTHUB_AMQPMSG_05_007: [If the message argument has a messageId property, the properties property of the AmqpMessage object shall have a property named messageId with the same value.]*/
   if (message.messageId) {
-    amqpMessage.properties.messageId = message.messageId;
+    amqpMessage.properties.messageId = encodeUuid(message.messageId);
   }
 
   /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_010: [If the `message` argument has a `correlationId` property, the `properties` property of the `AmqpMessage` object shall have a property named `correlationId` with the same value.]*/
   if (message.correlationId) {
-    amqpMessage.properties.correlationId = message.correlationId;
+    /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_012: [If the `Message.correlationId` property is a UUID, the AMQP type of the `AmqpMessage.properties.correlationId` property shall be forced to UUID.]*/
+    amqpMessage.properties.correlationId = encodeUuid(message.correlationId);
   }
 
   /*Codes_SRS_NODE_IOTHUB_AMQPMSG_05_008: [If needed, the created AmqpMessage object shall have a property of type Object named applicationProperties.]*/
@@ -68,7 +81,9 @@ AmqpMessage.fromMessage = function fromMessage(message) {
       for (var index = 0; index < propsCount; index++) {
         var item = props.getItem(index);
         if(!!item) {
-          amqpMessage.applicationProperties[item.key] = item.value;
+          /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_013: [If one of the property key is `IoThub-status`, this property is reserved and shall be forced to an `int` AMQP type.]*/
+          var val = (item.key === 'IoThub-status') ? TypeEncoder.int(item.value) : item.value;
+          amqpMessage.applicationProperties[item.key] = val;
         }
       }
     }
@@ -76,7 +91,7 @@ AmqpMessage.fromMessage = function fromMessage(message) {
 
   /*Codes_SRS_NODE_IOTHUB_AMQPMSG_05_005: [If message.getData() is truthy, the AmqpMessage object shall have a property named body with the value returned from message.getData().]*/
   var body = message.getData();
-  if (body) {
+  if (body !== undefined) {
     amqpMessage.body = body;
   }
 
@@ -119,7 +134,7 @@ AmqpMessage.toMessage = function toMessage(amqpMessage) {
   }
 
   /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_009: [The `toMessage` method shall set the `Message.data` of the message to the content of the `AmqpMessage.body` property.]*/
-  if (amqpMessage.body) {
+  if (amqpMessage.body !== undefined) {
     msg.data = amqpMessage.body;
   }
   
