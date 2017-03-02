@@ -9,7 +9,9 @@
   "dependencies": {
     "azure-iot-amqp-base": "1.1.6",
     "azure-iot-common": "1.1.5",
-    "azure-iot-device": "1.1.7"
+    "azure-iot-device": "1.1.7",
+    "debug": "^2.6.0",
+    "machina": "^2.0.0"
   },
   "devDependencies": {
     "azure-iothub": "1.1.7",
@@ -29,7 +31,7 @@
     "alltest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
     "ci": "npm -s run lint && npm -s run alltest-min && npm -s run check-cover",
     "test": "npm -s run lint && npm -s run unittest",
-    "check-cover": "istanbul check-coverage --statements 91 --branches 75 --functions 91 --lines 91"
+    "check-cover": "istanbul check-coverage --statements 95 --branches 86 --functions 96 --lines 96"
   },
   "engines": {
     "node": ">= 0.10"

@@ -10,6 +10,8 @@ var endpoint = require('azure-iot-common').endpoint;
 var PackageJson = require('../package.json');
 var results = require('azure-iot-common').results;
 var translateError = require('./amqp_device_errors.js');
+var DeviceMethodClient = require('./amqp_device_method_client.js');
+var AmqpReceiver = require('./amqp_receiver.js');
 
 /**
  * @class module:azure-iot-device-amqp.Amqp
@@ -35,6 +37,9 @@ Amqp.prototype._initialize = function () {
   this._amqp.setDisconnectHandler(function (err) {
     this.emit('disconnect', err);
   }.bind(this));
+
+  this._deviceMethodClient = new DeviceMethodClient(this._config, this._amqp);
+  this._receiver = new AmqpReceiver(this._config, this._amqp, this._deviceMethodClient);
 };
 
 var handleResult = function (errorMessage, done) {
@@ -105,9 +110,8 @@ Amqp.prototype.sendEvent = function sendEvent(message, done) {
  */
 /* Codes_SRS_NODE_DEVICE_AMQP_16_006: [If a receiver for this endpoint has already been created, the getReceiver method should call the done() method with the existing instance as an argument.]*/
 /* Codes_SRS_NODE_DEVICE_AMQP_16_007: [If a receiver for this endpoint doesn’t exist, the getReceiver method should create a new AmqpReceiver object and then call the done() method with the object that was just created as an argument.]*/
-Amqp.prototype.getReceiver = function getMessageReceiver(done) {
-  var messageEndpoint = endpoint.messagePath(encodeURIComponent(this._config.deviceId));
-  this._amqp.getReceiver(messageEndpoint, handleResult('AMQP Transport: Could not get receiver', done));
+Amqp.prototype.getReceiver = function getReceiver(done) {
+  done(null, this._receiver);
 };
 
 /**
@@ -215,5 +219,21 @@ Amqp.prototype.setOptions = function (options, done) {
 //Amqp.prototype.sendEventBatch = function (messages, done) {
 // Placeholder - Not implemented yet.
 //};
+
+/**
+ * The `sendMethodResponse` method sends a direct method response to the IoT Hub
+ * @param {Object}     methodResponse   Object describing the device method response.
+ * @param {Function}   callback         The callback to be invoked when
+ *                                      `sendMethodResponse` completes execution.
+ */
+Amqp.prototype.sendMethodResponse = function sendMethodResponse(methodResponse, callback) {
+  /*Codes_SRS_NODE_DEVICE_AMQP_16_019: [The `sendMethodResponse` shall throw a `ReferenceError` if the `methodResponse` object is falsy.]*/
+  if (!methodResponse) {
+    throw new ReferenceError('\'methodResponse\' cannot be \'' + methodResponse + '\'');
+  }
+
+  /*Codes_SRS_NODE_DEVICE_AMQP_16_020: [The `sendMethodResponse` response shall call the `AmqpDeviceMethodClient.sendMethodResponse` method with the arguments that were given to it.]*/
+  this._deviceMethodClient.sendMethodResponse(methodResponse, callback);
+};
 
 module.exports = Amqp;

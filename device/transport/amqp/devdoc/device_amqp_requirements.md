@@ -90,22 +90,28 @@ Gets the AmqpReceiver object used to subscribe to messages and errors sent to th
 
 ### abandon(message, done)
 
-**SRS_NODE_DEVICE_AMQP_16_012: [**The ‘abandon’ method shall call the ‘abandon’ method of the receiver object and pass it the `message` and the callback given as parameters.**]**
+**SRS_NODE_DEVICE_AMQP_16_012: [**The `abandon` method shall call the ‘abandon’ method of the receiver object and pass it the `message` and the callback given as parameters.**]**
 
 ### complete(message, done)
 
-**SRS_NODE_DEVICE_AMQP_16_013: [**The ‘complete’ method shall call the ‘complete’ method of the receiver object and pass it the message and the callback given as parameters.**]**
+**SRS_NODE_DEVICE_AMQP_16_013: [**The `complete` method shall call the ‘complete’ method of the receiver object and pass it the message and the callback given as parameters.**]**
 
 ### reject(message, done)
 
-**SRS_NODE_DEVICE_AMQP_16_014: [**The ‘reject’ method shall call the ‘reject’ method of the receiver object and pass it the message and the callback given as parameters.**]**
+**SRS_NODE_DEVICE_AMQP_16_014: [**The `reject` method shall call the ‘reject’ method of the receiver object and pass it the message and the callback given as parameters.**]**
 
 ### updateSharedAccessSignature(sharedAccessSignature, done)
 
-**SRS_NODE_DEVICE_AMQP_16_015: [**The updateSharedAccessSignature method shall save the new shared access signature given as a parameter to its configuration.**]**
+**SRS_NODE_DEVICE_AMQP_16_015: [**The `updateSharedAccessSignature` method shall save the new shared access signature given as a parameter to its configuration.**]**
 
-**SRS_NODE_DEVICE_AMQP_16_016: [**The updateSharedAccessSignature method shall disconnect the current connection operating with the deprecated token, and re-initialize the transport object with the new connection parameters.**]**
+**SRS_NODE_DEVICE_AMQP_16_016: [**The `updateSharedAccessSignature` method shall disconnect the current connection operating with the deprecated token, and re-initialize the transport object with the new connection parameters.**]**
 
-**SRS_NODE_DEVICE_AMQP_16_017: [**The updateSharedAccessSignature method shall call the `done` method with an Error object if updating the configuration or re-initializing the transport object.**]**
+**SRS_NODE_DEVICE_AMQP_16_017: [**The `updateSharedAccessSignature` method shall call the `done` method with an Error object if updating the configuration or re-initializing the transport object.**]**
 
-**SRS_NODE_DEVICE_AMQP_16_018: [**The updateSharedAccessSignature method shall call the `done` callback with a null error object and a SharedAccessSignatureUpdated object as a result, indicating that the client needs to reestablish the transport connection when ready.**]**
+**SRS_NODE_DEVICE_AMQP_16_018: [**The `updateSharedAccessSignature` method shall call the `done` callback with a null error object and a SharedAccessSignatureUpdated object as a result, indicating that the client needs to reestablish the transport connection when ready.**]**
+
+### sendMethodResponse(methodResponse, callback)
+
+**SRS_NODE_DEVICE_AMQP_16_019: [** The `sendMethodResponse` shall throw a `ReferenceError` if the `methodResponse` object is falsy. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_020: [** The `sendMethodResponse` response shall call the `AmqpDeviceMethodClient.sendMethodResponse` method with the arguments that were given to it. **]**

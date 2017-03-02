@@ -23,15 +23,12 @@ describe('Amqp', function () {
     };
 
     receiver = new DummyReceiver();
-    var DummyAmqp = function () {
-      this.getReceiver = function (endpoint, callback) {
-        assert.isOk(endpoint);
-        callback(null, receiver);
-      };
-    };
 
     transport = new Amqp({ host: 'hub.host.name', hubName: 'hub', deviceId: 'deviceId', sas: 'sas.key' });
-    transport._amqp = new DummyAmqp();
+    transport._receiver = receiver;
+    transport._deviceMethodClient = {
+      sendMethodResponse: sinon.spy()
+    };
   });
 
   afterEach(function () {
@@ -60,6 +57,25 @@ describe('Amqp', function () {
     it('calls the receiver `abandon` method', function () {
       transport.abandon(testMessage, testCallback);
       assert(receiver.abandon.calledWith(testMessage, testCallback));
+    });
+  });
+
+  describe('#sendMethodResponse', function() {
+    /*Tests_SRS_NODE_DEVICE_AMQP_16_019: [The `sendMethodResponse` shall throw a `ReferenceError` if the `methodResponse` object is falsy.]*/
+    [null, undefined].forEach(function(badResponse) {
+      it('throws a ReferenceError if the methodResponse object is \'' + badResponse + '\'', function() {
+        assert.throws(function() {
+          transport.sendMethodResponse(badResponse, function() {});
+        }, ReferenceError);
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_AMQP_16_020: [The `sendMethodResponse` response shall call the `AmqpDeviceMethodClient.sendMethodResponse` method with the arguments that were given to it.]*/
+    it('calls the `sendMethodResponse` method on the AmqpDeviceMethodClient object', function() {
+      var fakeMethodResponse = { status: 200, payload: null };
+      var fakeCallback = function() {};
+      transport.sendMethodResponse(fakeMethodResponse, fakeCallback);
+      assert(transport._deviceMethodClient.sendMethodResponse.calledWith(fakeMethodResponse, fakeCallback));
     });
   });
 
