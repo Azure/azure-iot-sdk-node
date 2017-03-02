@@ -61,13 +61,13 @@ var Client = function (transport, connStr, blobUploadClient) {
 
   this.on('newListener', function (eventName) {
     if (eventName === 'message') {
-      /* Schedules the startReceiver() on the next tick because the event handler for the 
+      /* Schedules startMessageReceiver() on the next tick because the event handler for the 
        * 'message' event is only added after this handler (for 'newListener') finishes and
        * the state machine depends on having an event handler on 'message' to determine if 
        * it should connect the receiver, depending on its state.
        */
       process.nextTick(function() { 
-        thisClient._fsm.handle('startReceiver');
+        thisClient._fsm.handle('startMessageReceiver');
       });
     }
   });
@@ -126,10 +126,20 @@ var Client = function (transport, connStr, blobUploadClient) {
         updateSharedAccessSignature: function(newSas, updateSasCallback) {
           thisClient._transport.updateSharedAccessSignature(newSas, updateSasCallback);
         },
-        startReceiver: function() {
+        startMessageReceiver: function() {
           this.deferUntilTransition('connected');
           this.handle('open', function(err) {
             if(err) {
+              /*Codes_SRS_NODE_DEVICE_CLIENT_16_006: [The ‘error’ event shall be emitted when an error occurred within the client code.] */
+              thisClient.emit('error', err);
+            }
+          });
+        },
+        startMethodReceiver: function() {
+          this.deferUntilTransition('connected');
+          this.handle('open', function(err) {
+            if(err) {
+              /*Codes_SRS_NODE_DEVICE_CLIENT_16_006: [The ‘error’ event shall be emitted when an error occurred within the client code.] */
               thisClient.emit('error', err);
             }
           });
@@ -164,8 +174,11 @@ var Client = function (transport, connStr, blobUploadClient) {
         _onEnter: function() {
           /*Codes_SRS_NODE_DEVICE_CLIENT_16_065: [The client shall connect the transport if needed to subscribe receive messages.]*/
           if (!thisClient._receiver) {
-            if ((thisClient.listeners('message').length > 0) || (Object.keys(thisClient._methodCallbackMap).length > 0)) {
-              thisClient._connectReceiver();
+            if (thisClient.listeners('message').length > 0) {
+              thisClient._connectMessageReceiver();
+            }
+            if (Object.keys(thisClient._methodCallbackMap).length > 0) {
+              thisClient._connectMethodReceiver();
             }
           }
         },
@@ -279,10 +292,18 @@ var Client = function (transport, connStr, blobUploadClient) {
             throw new errors.NotImplementedError('reject is not supported with ' + thisClient._transport.constructor.name);
           }
         },
-        startReceiver: function() {
+        startMessageReceiver: function() {
           /*Codes_SRS_NODE_DEVICE_CLIENT_16_065: [The client shall connect the transport if needed to subscribe receive messages.]*/
           if (!thisClient._receiver) {
-            thisClient._connectReceiver();
+            thisClient._connectMessageReceiver();
+          }
+        },
+        startMethodReceiver: function(methodName, callback) {
+          thisClient._methodCallbackMap[methodName] = callback;
+          if(!thisClient._receiver) {
+            thisClient._connectMethodReceiver();
+          } else {
+            thisClient._addMethodCallback(methodName, callback);
           }
         },
         getTwin: function(done, twin) {
@@ -376,12 +397,7 @@ Client.prototype.onDeviceMethod = function(methodName, callback) {
   this._validateDeviceMethodInputs(methodName, callback);
 
   // Codes_SRS_NODE_DEVICE_CLIENT_13_003: [ The client shall start listening for method calls from the service whenever there is a listener subscribed for a method callback. ]
-  this._methodCallbackMap[methodName] = callback;
-  if(!this._receiver) {
-    this._connectReceiver();
-  } else {
-    this._addMethodCallback(methodName, callback);
-  }
+  this._fsm.handle('startMethodReceiver', methodName, callback);
 };
 
 Client.prototype._addMethodCallback = function(methodName, callback) {
@@ -405,29 +421,44 @@ Client.prototype._addMethodCallback = function(methodName, callback) {
 // SAS token created by the client have a lifetime of 60 minutes, renew every 45 minutes
 Client.sasRenewalInterval = 2700000;
 
-Client.prototype._connectReceiver = function () {
-  debug('Getting receiver object from the transport');
+Client.prototype._connectMessageReceiver = function () {
   var self = this;
-  this._transport.getReceiver(function (err, receiver) {
-    if (!err) {
-      debug('Subscribing to message events from the receiver object of the transport');
-      self._receiver = receiver;
-      self._receiver.on('message', function (msg) {
-        self.emit('message', msg);
-      });
+  this._getCurrentReceiver(function() {
+    debug('Subscribing to message events from the receiver object of the transport');
 
-      // add listeners for all existing method callbacks
+    self._receiver.on('message', function (msg) {
+      self.emit('message', msg);
+    });
+  });
+    
+};
+
+Client.prototype._connectMethodReceiver = function () {
+  var self = this;
+  this._getCurrentReceiver(function() {
+    debug('Subscribing to method events from the receiver object of the transport');
+    // add listeners for all existing method callbacks
+    if (Object.keys(self._methodCallbackMap).length > 0) {
       for (var methodName in self._methodCallbackMap) {
         if (self._methodCallbackMap.hasOwnProperty(methodName)) {
           var callback = self._methodCallbackMap[methodName];
           self._addMethodCallback(methodName, callback);
         }
       }
+    }
+  });
+};
 
+Client.prototype._getCurrentReceiver = function (callback) {
+  var self = this;
+  this._transport.getReceiver(function (err, receiver) {
+    if (!err && receiver !== self._receiver) {
+      self._receiver = receiver;
       /*Codes_SRS_NODE_DEVICE_CLIENT_16_006: [The ‘error’ event shall be emitted when an error occurred within the client code.] */
       self._receiver.on('errorReceived', function (err) {
         self.emit('error', err);
       });
+      callback();
     } else {
       throw new Error('Transport failed to start receiving messages: ' + err.message);
     }

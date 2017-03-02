@@ -759,6 +759,10 @@ describe('Client', function () {
           requestId: '42'
         });
       };
+
+      this.emitErrorReceived = function(err) {
+        this.emit('errorReceived', err);
+      };
     };
     util.inherits(MockReceiver, EventEmitter);
 
@@ -836,21 +840,69 @@ describe('Client', function () {
     });
 
     // Tests_SRS_NODE_DEVICE_CLIENT_13_001: [ The onDeviceMethod method shall cause the callback function to be invoked when a cloud-to-device method invocation signal is received from the IoT Hub service. ]
-    it('calls callback when C2D method call arrives', function(done) {
+    it('calls callback when C2D method call arrives when subscribed from a disconnected state', function(done) {
       // setup
       var transport = new MockTransport();
       var client = new Client(transport);
-      var callback = sinon.spy();
-      client.onDeviceMethod('reboot', callback);
+      client.onDeviceMethod('reboot', function() {
+        done();
+      });
 
       // test
       transport.receiver.emitMethodCall('reboot');
+    });
 
-      // assert
-      assert.isTrue(callback.calledOnce);
+    // Tests_SRS_NODE_DEVICE_CLIENT_13_001: [ The onDeviceMethod method shall cause the callback function to be invoked when a cloud-to-device method invocation signal is received from the IoT Hub service. ]
+    it('calls callback when C2D method call arrives when subscribed from a connected state', function(done) {
+      // setup
+      var transport = new MockTransport();
+      var client = new Client(transport);
+      client.open(function() {
+        client.onDeviceMethod('firstMethod', function() {}); // This will connect the method receiver
+        client.onDeviceMethod('reboot', function() {
+          done();
+        });
+      });
 
-      // cleanup
-      done();
+      // test
+      transport.receiver.emitMethodCall('reboot');
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_006: [The ‘error’ event shall be emitted when an error occurred within the client code.] */
+    it('emits an error event when it cannot connect the transport', function(testCallback) {
+      // setup
+      var fakeError = new Error('could not open');
+      var transport = {
+        connect: function(openCallback) {
+          openCallback(fakeError);
+        },
+        sendMethodResponse: function() {},
+        removeListener: function() {},
+        on: function() {}
+      };
+      var client = new Client(transport);
+      client.on('error', function(err) {
+        assert.strictEqual(err, fakeError);
+        testCallback();
+      });
+      client.onDeviceMethod('reboot', function() {});
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_006: [The ‘error’ event shall be emitted when an error occurred within the client code.] */
+    it('emits an error event when the receiver emits an errorReceived event', function(testCallback) {
+      // setup
+      var transport = new MockTransport();
+      var fakeError = new Error('fake error');
+      var client = new Client(transport);
+      client.on('error', function(err) {
+        assert.strictEqual(err, fakeError);
+        testCallback();
+      });
+
+      client.onDeviceMethod('reboot', function() {});
+
+      // test
+      transport.receiver.emitErrorReceived(fakeError);
     });
 
     // Tests_SRS_NODE_DEVICE_CLIENT_13_003: [ The client shall start listening for method calls from the service whenever there is a listener subscribed for a method callback. ]
