@@ -60,7 +60,7 @@ client.sendEvent(new Message('hello world'), print);
 
 **SRS_NODE_DEVICE_CLIENT_16_020: [** The `open` function should start listening for C2D messages if there are listeners on the `message` event **]**
 
-**SRS_NODE_DEVICE_CLIENT_16_064: [** The `open` method shall call the `openCallback` immediately with a null error object and a `results.Connected()` object if called while renewing the shared access signature. **]** 
+**SRS_NODE_DEVICE_CLIENT_16_064: [** The `open` method shall call the `openCallback` immediately with a null error object and a `results.Connected()` object if called while renewing the shared access signature. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_061: [** The `open` method shall not throw if the `openCallback` callback has not been provided. **]**
 
@@ -75,7 +75,7 @@ client.sendEvent(new Message('hello world'), print);
 
 **SRS_NODE_DEVICE_CLIENT_16_055: [** The `close` method shall call the `closeCallback` function when done with either a single Error object if it failed or null and a results.Disconnected object if successful. **]**
 
-**SRS_NODE_DEVICE_CLIENT_16_058: [** The `close` method shall immediately call the `closeCallback` function if provided and the transport is already disconnected. **]** 
+**SRS_NODE_DEVICE_CLIENT_16_058: [** The `close` method shall immediately call the `closeCallback` function if provided and the transport is already disconnected. **]**
 
 #### sendEvent(message, sendEventCallback)
 The `sendEvent` method sends an event message to the IoT Hub as the device indicated in the constructor argument.
@@ -187,11 +187,13 @@ The `sendEventBatch` method sends a list of event messages to the IoT Hub as the
 
 **SRS_NODE_DEVICE_CLIENT_16_031: [** The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the sharedAccessSignature parameter is falsy. **]**
 
+**SRS_NODE_DEVICE_CLIENT_06_002: [** The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the client was created using x509. **]**
+
 **SRS_NODE_DEVICE_CLIENT_16_032: [** The `updateSharedAccessSignature` method shall call the `updateSharedAccessSignature` method of the transport currently in use with the sharedAccessSignature parameter. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_033: [** The `updateSharedAccessSignature` method shall reconnect the transport to the IoTHub service if it was connected before before the method is called. **]**
 
-**SRS_NODE_DEVICE_CLIENT_16_034: [** The `updateSharedAccessSignature` method shall not reconnect the transport if the transport was disconnected to begin with. **]**
+**SRS_NODE_DEVICE_CLIENT_16_034: [** The `updateSharedAccessSignature` method shall not reconnect when the 'needToReconnect' property of the result argument of the callback is false. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_035: [** The `updateSharedAccessSignature` method shall call the `done` callback with an error object if an error happened while renewing the token. **]**
 
@@ -215,7 +217,7 @@ The `sendEventBatch` method sends a list of event messages to the IoT Hub as the
 
 **SRS_NODE_DEVICE_CLIENT_18_002: [** The `getTwin` method shall pass itself as the first parameter to `fromDeviceClient` and it shall pass the `done` method as the second parameter. **]**
 
-**SRS_NODE_DEVICE_CLIENT_18_003: [** The `getTwin` method shall use the second parameter (if it is not falsy) to call `fromDeviceClient` on. **]**    
+**SRS_NODE_DEVICE_CLIENT_18_003: [** The `getTwin` method shall use the second parameter (if it is not falsy) to call `fromDeviceClient` on. **]**
 
 #### onDeviceMethod(methodName, callback)
 
@@ -235,7 +237,7 @@ interface DeviceMethodRequest {
 interface DeviceMethodResponse {
   properties: StringMap;
   write(data: Buffer | string): void;
-  end(status: number, done?: (err: any): void); 
+  end(status: number, done?: (err: any): void);
 }
 
 interface DeviceMethodEventHandler {

@@ -9,7 +9,13 @@ var AmqpMessage = require('./amqp_message.js');
 var AmqpReceiver = require('./amqp_receiver.js');
 var errors = require('azure-iot-common').errors;
 var results = require('azure-iot-common').results;
+
+var uuid = require('uuid');
 var debug = require('debug')('amqp-common');
+
+
+var _putTokenSendingEndpoint = '$cbs';
+var _putTokenReceivingEndpoint = '$cbs';
 
 /**
  * @class module:azure-iot-amqp-base.Amqp
@@ -74,6 +80,36 @@ function Amqp(autoSettleMessages, sdkVersionString) {
 
   this._receivers = {};
   this._senders = {};
+  this._putToken = {};
+  //
+  // This array will hold outstanding put token operations.  The array has
+  // a monotonically increasing time ordering.  This is effected by the nature
+  // of inserting new elements at the end of the array.  Note that elements may
+  // be removed from the array at any index.  The elements are the following object
+  // {
+  //  putTokenCallback - The callback to be invoked on termination of the put token operation.
+  //                     This could be because the put token operation response was received
+  //                     from the service or because the put token operation times out.
+  //
+  //  expirationTime -   The number of seconds from the epoch, by which the put token operation will
+  //                     be expected to finish.
+  //
+  //  correlationId -    The put token operation was sent with a message id.  The response
+  //                     to the put token operation will contain this message id as the
+  //                     correlation id.  This id is a uuid.
+  // }
+  //
+  this._putToken.outstandingPutTokens = [];
+  //
+  // Currently a fixed value.  Could have a set option if we want to make this configurable.
+  //
+  this._putToken.numberOfSecondsToTimeout = 120;
+  //
+  // While there are ANY put token operations outstanding a timer will be invoked every
+  // 10 seconds to examine the outstandingPutTokens array for any put tokens that may have
+  // expired.
+  //
+  this._putToken.putTokenTimeOutExaminationInterval = 10000;
   this._connected = false;
 }
 
@@ -93,7 +129,7 @@ function safeCallback(callback, error, result) {
  * @param {Function}   done   Called when the connection is established or if an error happened.
  */
 Amqp.prototype.connect = function connect(uri, sslOptions, done) {
-  /*Codes_SRS_NODE_COMMON_AMQP_06_002: [The connect method shall throw a ReferenceError if the uri parameter has not been supplied.] */
+  /*Codes_SRS_NODE_COMMON_AMQP_06_002: [The `connect` method shall throw a ReferenceError if the uri parameter has not been supplied.] */
   if (!uri) throw new ReferenceError('The uri parameter can not be \'' + uri + '\'');
   if (!this._connected) {
     this.uri = uri;
@@ -111,14 +147,14 @@ Amqp.prototype.connect = function connect(uri, sslOptions, done) {
       .then(function (result) {
         debug('AMQP transport connected.');
         this._connected = true;
-        /*Codes_SRS_NODE_COMMON_AMQP_16_002: [The connect method shall establish a connection with the IoT hub instance and call the done() callback if given as argument] */
+        /*Codes_SRS_NODE_COMMON_AMQP_16_002: [The `connect` method shall establish a connection with the IoT hub instance and if given as argument call the `done` callback with a null error object in the case of success and a `results.Connected` object.]*/
         safeCallback(done, null, new results.Connected(result));
         return null;
       }.bind(this))
       .catch(function (err) {
         this._amqp.removeListener('client:errorReceived', connectErrorHander);
         this._connected = false;
-        /*Codes_SRS_NODE_COMMON_AMQP_16_003: [The connect method shall call the done callback if the connection fails.] */
+        /*Codes_SRS_NODE_COMMON_AMQP_16_003: [The `connect` method shall call the `done` callback if the connection fails.] */
         safeCallback(done, connectError || err);
       }.bind(this));
   } else {
@@ -192,7 +228,7 @@ Amqp.prototype.send = function send(message, endpoint, to, done) {
   if (!this._connected) {
     safeCallback(done, new errors.NotConnectedError('Cannot send while disconnected.'));
   } else {
-    /*Codes_SRS_NODE_COMMON_AMQP_16_006: [The send method shall construct an AMQP message using information supplied by the caller, as follows:
+    /*Codes_SRS_NODE_COMMON_AMQP_16_006: [The `send` method shall construct an AMQP message using information supplied by the caller, as follows:
     The ‘to’ field of the message should be set to the ‘to’ argument.
     The ‘body’ of the message should be built using the message argument.] */
 
@@ -208,7 +244,7 @@ Amqp.prototype.send = function send(message, endpoint, to, done) {
           return null;
         })
         .catch(function (err) {
-          /*Codes_SRS_NODE_IOTHUB_AMQPCOMMON_16_007: [If sendEvent encounters an error before it can send the request, it shall invoke the done callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
+          /*Codes_SRS_NODE_IOTHUB_AMQPCOMMON_16_007: [If sendEvent encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
           safeCallback(done, err);
         });
     };
@@ -268,7 +304,7 @@ Amqp.prototype.attachReceiverLink = function attachReceiverLink(endpoint, linkOp
     var clientErrorHandler = function(err) {
       connectionError = err;
     };
-    /*Codes_SRS_NODE_COMMON_AMQP_16_007: [If send encounters an error before it can send the request, it shall invoke the done callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
+    /*Codes_SRS_NODE_COMMON_AMQP_16_007: [If send encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
     this._amqp.on('client:errorReceived', clientErrorHandler);
 
     /*Codes_SRS_NODE_COMMON_AMQP_06_004: [The `attachReceiverLink` method shall create a policy object that contain link options to be merged if the linkOptions argument is not falsy.]*/
@@ -320,7 +356,7 @@ Amqp.prototype.attachSenderLink = function attachSenderLink(endpoint, linkOption
     var clientErrorHandler = function(err) {
       connectionError = err;
     };
-    /*Codes_SRS_NODE_COMMON_AMQP_16_007: [If send encounters an error before it can send the request, it shall invoke the done callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
+    /*Codes_SRS_NODE_COMMON_AMQP_16_007: [If send encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
     this._amqp.on('client:errorReceived', clientErrorHandler);
 
     /*Codes_SRS_NODE_COMMON_AMQP_06_003: [The `attachSenderLink` method shall create a policy object that contain link options to be merged if the linkOptions argument is not falsy.]*/
@@ -341,7 +377,7 @@ Amqp.prototype.attachSenderLink = function attachSenderLink(endpoint, linkOption
         return null;
       })
       .catch(function (err) {
-        /*Codes_SRS_NODE_IOTHUB_AMQPCOMMON_16_007: [If sendEvent encounters an error before it can send the request, it shall invoke the done callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
+        /*Codes_SRS_NODE_IOTHUB_AMQPCOMMON_16_007: [If sendEvent encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
         var error = new errors.NotConnectedError('AMQP: Could not create sender');
         error.amqpError = err;
         safeCallback(done, error);
@@ -410,5 +446,196 @@ Amqp.prototype._detachLink = function _detachLink(link, detachCallback) {
     });
   }
 };
+
+Amqp.prototype._removeExpiredPutTokens = function removeExpiredPutTokens() {
+  var currentTime = Math.round(Date.now() / 1000);
+  var expiredPutTokens = [];
+  while (this._putToken.outstandingPutTokens.length > 0) {
+    //
+    // The timeouts in this array by definition are monotonically increasing.  We will be done looking if we
+    // hit one that is not yet expired.
+    //
+    /*Codes_SRS_NODE_COMMON_AMQP_06_007: [ The `putToken` method will time out the put token operation if no response is returned within a configurable number of seconds.]*/
+    if (this._putToken.outstandingPutTokens[0].expirationTime < currentTime) {
+      expiredPutTokens.push(this._putToken.outstandingPutTokens[0]);
+      this._putToken.outstandingPutTokens.splice(0, 1);
+    } else {
+      break;
+    }
+  }
+  expiredPutTokens.forEach(function(currentExpiredPut) {
+    /*Codes_SRS_NODE_COMMON_AMQP_06_008: [ The `putToken` method will invoke the `putTokenCallback` (if supplied) with an error object if the put token operation timed out. .]*/
+    safeCallback(currentExpiredPut.putTokenCallback, new errors.TimeoutError('Put Token operation had no response within ' + this._putToken.numberOfSecondsToTimeout));
+  }.bind(this));
+  //
+  // If there are any putTokens left keep trying to time them out.
+  //
+  if (this._putToken.outstandingPutTokens.length > 0) {
+    this._putToken.timeoutTimer = setTimeout(this._removeExpiredPutTokens.bind(this), this._putToken.putTokenTimeOutExaminationInterval);
+  }
+};
+
+/**
+ * @method             module:azure-iot-amqp-base.Amqp#putToken
+ * @description        Sends a put token operation to the IoT Hub to provide authentication for a device.
+ * @param              audience          The path that describes what is being authenticated.  An example would be
+ *                                       hub.azure-devices.net%2Fdevices%2Fmydevice
+ * @param              token             The actual sas token being used to authenticate the device.  For the most
+ *                                       part the audience is likely to be the sr field of the token.
+ * @param {Function}   putTokenCallback  Called when the put token operation terminates.
+ */
+Amqp.prototype.putToken = function(audience, token, putTokenCallback) {
+
+  /*Codes_SRS_NODE_COMMON_AMQP_06_016: [The `putToken` method shall throw a ReferenceError if the `audience` argument is falsy.]*/
+  if (!audience) {
+    throw new ReferenceError('audience cannot be \'' + audience + '\'');
+  }
+
+  /*Codes_SRS_NODE_COMMON_AMQP_06_017: [The `putToken` method shall throw a ReferenceError if the `token` argument is falsy.]*/
+  if (!token) {
+    throw new ReferenceError('token cannot be \'' + token + '\'');
+  }
+
+  /*Codes_SRS_NODE_COMMON_AMQP_06_018: [The `putToken` method shall call the `putTokenCallback` callback (if provided) with a `NotConnectedError` object if the amqp client is not connected when the method is called.]*/
+  if (!this._connected) {
+    safeCallback(putTokenCallback, new errors.NotConnectedError('Cannot putToken while disconnected.'));
+  } else if (!this._senders[_putTokenSendingEndpoint] || !this._receivers[_putTokenReceivingEndpoint]) {
+    /*Codes_SRS_NODE_COMMON_AMQP_06_022: [ The `putToken` method shall call the `putTokenCallback` callback (if provided) with a `NotConnectedError` object if the `initializeCBS` has NOT been invoked.]*/
+    safeCallback(putTokenCallback, new errors.NotConnectedError('Cannot putToken unless initializeCBS invoked.'));
+  } else {
+    /*Codes_SRS_NODE_COMMON_AMQP_06_005: [The `putToken` method shall construct an amqp message that contains the following application properties:
+    'operation': 'put-token'
+    'type': 'servicebus.windows.net:sastoken'
+    'name': <audience>
+
+    and system properties of
+
+    'to': '$cbs'
+    'messageId': <uuid>
+    'reply_to': 'cbs']
+
+    and a body containing <sasToken>. */
+    var amqpMessage = new AmqpMessage();
+    amqpMessage.applicationProperties = {
+      operation: 'put-token',
+      type: 'servicebus.windows.net:sastoken',
+      name: audience
+    };
+    amqpMessage.body = token;
+    amqpMessage.properties = {
+      to: '$cbs',
+      messageId: uuid.v4(),
+      reply_to: 'cbs'
+    };
+    var outstandingPutToken = {
+      putTokenCallback: putTokenCallback,
+      expirationTime: Math.round(Date.now() / 1000) + this._putToken.numberOfSecondsToTimeout,
+      correlationId: amqpMessage.properties.messageId
+    };
+    this._putToken.outstandingPutTokens.push(outstandingPutToken);
+    //
+    // If this is the first put token then start trying to time it out.
+    //
+    if (this._putToken.outstandingPutTokens.length === 1) {
+      this._putToken.timeoutTimer = setTimeout(this._removeExpiredPutTokens.bind(this), this._putToken.putTokenTimeOutExaminationInterval);
+    }
+    /*Codes_SRS_NODE_COMMON_AMQP_06_015: [The `putToken` method shall send this message over the `$cbs` sender link.]*/
+    this._senders[_putTokenSendingEndpoint].send(amqpMessage)
+      .then(function () {
+        //
+        // Only here if the message was queued successfully.  Yay!  We already set up a callback
+        // to handle the response message of the put token operation.  That will finish up anything
+        // we need to do.
+        //
+        return null;
+      })
+      .catch(function (err) {
+        //
+        // Sadness.  Something went wrong sending the put token.
+        //
+        // Find the operation in the outstanding array.  Remove it from the array since, well, it's not outstanding anymore.
+        // Since we may have arrived here asynchronously, we simply can't assume that it is the end of the array.  But,
+        // it's more likely near the end.
+        //
+        for (var i = this._putToken.outstandingPutTokens.length - 1;i >= 0; i--) {
+          if (this._putToken.outstandingPutTokens[i].correlationId === amqpMessage.properties.messageId) {
+            var outStandingPutTokenInError = this._putToken.outstandingPutTokens[i];
+            this._putToken.outstandingPutTokens.splice(i, 1);
+            //
+            // This was the last outstanding put token.  No point in having a timer around trying to time nothing out.
+            //
+            if (this._putToken.outstandingPutTokens.length === 0) {
+              clearTimeout(this._putToken.timeoutTimer);
+            }
+            /*Codes_SRS_NODE_COMMON_AMQP_06_006: [The `putToken` method shall call `putTokenCallback` (if supplied) if the `send` generates an error such that no response from the service will be forthcoming.]*/
+            safeCallback(outStandingPutTokenInError.putTokenCallback, err);
+            break;
+          }
+        }
+      }.bind(this));
+  }
+};
+
+/**
+ * @method             module:azure-iot-amqp-base.Amqp#initializeCBS
+ * @description        If CBS authentication is to be used, set it up.
+ * @param {Function}   initializeCBSCallback  Called when the initialization terminates.
+ */
+Amqp.prototype.initializeCBS = function(initializeCBSCallback) {
+  if (!this._connected) {
+    /*Codes_SRS_NODE_COMMON_AMQP_06_021: [If given as an argument, the `initializeCBS` method shall call `initializeCBSCallback` with a `NotConnectedError` object if amqp client is not connnected. **]*/
+    safeCallback(initializeCBSCallback, new errors.NotConnectedError('Initializing CBS must only be done on a connnected client'));
+  } else {
+    /*Codes_SRS_NODE_COMMON_AMQP_06_009: [The `initializeCBS` method shall establish a sender link to the `$cbs` endpoint for sending put token operations, utilizing a custom policy `{encoder: function(body) { return body;}}` which forces the amqp layer to send the token as an amqp value in the body.]*/
+    this.attachSenderLink(_putTokenSendingEndpoint, {encoder: function(body) { return body;}}, function (err) {
+      if (err) {
+        this.disconnect(function () {
+          /*Codes_SRS_NODE_COMMON_AMQP_06_019: [If given as an argument, the `initializeCBS` method shall call `initializeCBSCallback` with a standard `Error` object if the link/listener establishment fails.]*/
+          safeCallback(initializeCBSCallback, err);
+          });
+      } else {
+        /*Codes_SRS_NODE_COMMON_AMQP_06_010: [The `initializeCBS` method shall establish a receiver link to the cbs endpoint.]*/
+        this.attachReceiverLink(_putTokenReceivingEndpoint, null, function (err) {
+          if (err) {
+            this.disconnect( function () {
+              /*Codes_SRS_NODE_COMMON_AMQP_06_019: [If given as an argument, the `initializeCBS` method shall call `initializeCBSCallback` with a standard `Error` object if the link/listener establishment fails.]*/
+              safeCallback(initializeCBSCallback, err);
+              });
+          } else {
+            /*Codes_SRS_NODE_COMMON_AMQP_06_011: [The `initializeCBS` method shall set up a listener for responses to put tokens.]*/
+            this._receivers[_putTokenReceivingEndpoint].on('message', function (msg) {
+              for (var i = 0; i < this._putToken.outstandingPutTokens.length; i++) {
+                if (msg.correlationId === this._putToken.outstandingPutTokens[i].correlationId) {
+                  var completedPutToken = this._putToken.outstandingPutTokens[i];
+                  this._putToken.outstandingPutTokens.splice(i, 1);
+                  if (completedPutToken.putTokenCallback) {
+                    /*Codes_SRS_NODE_COMMON_AMQP_06_013: [A put token response of 200 will invoke `putTokenCallback` with null parameters.]*/
+                    var error = null;
+                    if (msg.properties.getValue('status-code') !== 200) {
+                      /*Codes_SRS_NODE_COMMON_AMQP_06_014: [A put token response not equal to 200 will invoke `putTokenCallback` with an error object of UnauthorizedError.]*/
+                      error = new errors.UnauthorizedError(msg.properties.getValue('status-description'));
+                    }
+                    safeCallback(completedPutToken.putTokenCallback, error);
+                  }
+                  break;
+                }
+              }
+              //
+              // Regardless of whether we found the put token in the list of outstanding
+              // operations, accept it.  This could be a put token that we previously
+              // timed out.  Be happy.  It made it home, just too late to be useful.
+              //
+              /*Codes_SRS_NODE_COMMON_AMQP_06_012: [All responses shall be completed.]*/
+              this._receivers[_putTokenReceivingEndpoint].complete(msg);
+            }.bind(this));
+            /*Codes_SRS_NODE_COMMON_AMQP_06_020: [If given as an argument, the `initializeCBS` method shall call `initializeCBSCallback` with a null error object if successful.]*/
+            safeCallback(initializeCBSCallback, null);
+          }
+        }.bind(this));
+      }
+    }.bind(this));
+  }
+};
+
 
 module.exports = Amqp;

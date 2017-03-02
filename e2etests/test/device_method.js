@@ -7,6 +7,7 @@ var Registry = require('azure-iothub').Registry;
 var ServiceClient = require('azure-iothub').Client;
 var ConnectionString = require('azure-iothub').ConnectionString;
 var SharedAccessSignature = require('azure-iothub').SharedAccessSignature;
+var deviceSas = require('azure-iot-device').SharedAccessSignature;
 var deviceSdk = require('azure-iot-device');
 var anHourFromNow = require('azure-iot-common').anHourFromNow;
 var util = require('util');
@@ -102,7 +103,7 @@ module.exports = function(hubConnectionString, protocols) {
         setTimeout(function() {
           // make the method call via the service
           var methodParams = {
-            methodName: methodName, 
+            methodName: methodName,
             payload: testPayload,
             timeoutInSeconds: 10
           };
@@ -150,7 +151,7 @@ module.exports = function(hubConnectionString, protocols) {
             sendMethodCall(serviceClient, testPayload, done);
           }, 1000);
         });
-        deviceClient._renewSharedAccessSignature();
+        deviceClient.updateSharedAccessSignature(deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString());
       });
     });
   });

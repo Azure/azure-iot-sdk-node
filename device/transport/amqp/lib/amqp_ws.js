@@ -5,34 +5,6 @@
 
 var util = require('util');
 var Amqp = require('./amqp.js');
-var errors = require('azure-iot-common').errors;
-var translateCommonError = require('azure-iot-amqp-base').translateError;
-
-var translateError = function translateError(message, amqpError) {
-  var error;
-
-  if (amqpError.constructor.name === 'AMQPError' && amqpError.condition.contents === 'amqp:resource-limit-exceeded') {
-    /*Codes_SRS_NODE_DEVICE_AMQP_DEVICE_ERRORS_16_001: [`translateError` shall return an `IotHubQuotaExceededError` if the AMQP error condition is `amqp:resource-limit-exceeded`.]*/
-    error = new errors.IotHubQuotaExceededError(message);
-  } else {
-    error = translateCommonError(message, amqpError);
-  }
-
-  error.amqpError = amqpError;
-
-  return error;
-};
-
-
-var handleResult = function (errorMessage, done) {
-  return function (err, result) {
-    if (err) {
-      done(translateError(errorMessage, err));
-    } else {
-      done(null, result);
-    }
-  };
-};
 
 /**
  * @class module:azure-iot-device-amqp.AmqpWs
@@ -51,20 +23,8 @@ function AmqpWs(config) {
 util.inherits(AmqpWs, Amqp);
 
 AmqpWs.prototype.connect = function connect(done) {
-  var uri = 'wss://';
-  if (!this._config.x509) {
-    uri += encodeURIComponent(this._config.deviceId) +
-           '@sas.' +
-           this._config.hubName +
-           ':' +
-           encodeURIComponent(this._config.sharedAccessSignature) +
-          '@';
-  }
-  uri += this._config.host + ':443/$iothub/websocket';
-
-  var sslOptions = this._config.x509;
-
-  this._amqp.connect(uri, sslOptions, handleResult('AMQP Transport: Could not connect', done));
+  var uri = 'wss://' + this._config.host + ':443/$iothub/websocket';
+  this._commonConnect(uri,done);
 };
 
 

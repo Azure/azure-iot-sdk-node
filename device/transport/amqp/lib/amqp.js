@@ -7,6 +7,12 @@ var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 var Base = require('azure-iot-amqp-base').Amqp;
 var endpoint = require('azure-iot-common').endpoint;
+var SharedAccessSignature = require('azure-iot-common').SharedAccessSignature;
+
+var UnauthorizedError = require('azure-iot-common').errors.UnauthorizedError;
+var DeviceNotFoundError = require('azure-iot-common').errors.DeviceNotFoundError;
+var NotConnectedError = require('azure-iot-common').errors.NotConnectedError;
+
 var PackageJson = require('../package.json');
 var results = require('azure-iot-common').results;
 var translateError = require('./amqp_device_errors.js');
@@ -52,6 +58,48 @@ var handleResult = function (errorMessage, done) {
   };
 };
 
+var getTranslatedError = function(err, message) {
+  if (err instanceof UnauthorizedError || err instanceof NotConnectedError || err instanceof DeviceNotFoundError) {
+    return err;
+  }
+  return translateError(message, err);
+};
+
+Amqp.prototype._commonConnect = function _commonConnect(uri, done) {
+  var sslOptions = this._config.x509;
+  this._amqp.connect(uri, sslOptions, function (err, connectResult) {
+    if (err) {
+      done(translateError('AMQP Transport: Could not connect', err));
+    } else {
+      if (!sslOptions) {
+        /*Codes_SRS_NODE_DEVICE_AMQP_06_005: [If x509 authentication is NOT being utilized then `initializeCBS` shall be invoked.]*/
+        this._amqp.initializeCBS(function (err) {
+          if (err) {
+            /*Codes_SRS_NODE_DEVICE_AMQP_06_008: [If `initializeCBS` is not successful then the client will be disconnected.]*/
+            this._amqp.disconnect(function() {
+              done(getTranslatedError(err, 'AMQP Transport: Could not initialize CBS'));
+            });
+          } else {
+            /*Codes_SRS_NODE_DEVICE_AMQP_06_006: [If `initializeCBS` is successful, `putToken` shall be invoked If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter audience, created from the sr of the sas signature, the next parameter of the actual sas, and a callback.]*/
+            this._amqp.putToken(SharedAccessSignature.parse(this._config.sharedAccessSignature, ['sr', 'sig', 'se']).sr, this._config.sharedAccessSignature, function(err) {
+              if (err) {
+                /*Codes_SRS_NODE_DEVICE_AMQP_06_009: [If `putToken` is not successful then the client will be disconnected.]*/
+                this._amqp.disconnect(function() {
+                  done(getTranslatedError(err, 'AMQP Transport: Could not authorize with puttoken'));
+                });
+              } else {
+                done(null, connectResult);
+              }
+            }.bind(this));
+          }
+        }.bind(this));
+      } else {
+        done(null, connectResult);
+      }
+    }
+  }.bind(this));
+};
+
 /**
  * @method              module:azure-iot-device-amqp.Amqp#connect
  * @description         Establishes a connection with the IoT Hub instance.
@@ -61,19 +109,8 @@ var handleResult = function (errorMessage, done) {
 /*Codes_SRS_NODE_DEVICE_AMQP_16_008: [The done callback method passed in argument shall be called if the connection is established]*/
 /*Codes_SRS_NODE_DEVICE_AMQP_16_009: [The done callback method passed in argument shall be called with an error object if the connecion fails]*/
 Amqp.prototype.connect = function connect(done) {
-  var uri = 'amqps://';
-  if (!this._config.x509) {
-    uri += encodeURIComponent(this._config.deviceId) +
-           '@sas.' +
-           this._config.hubName +
-           ':' +
-          encodeURIComponent(this._config.sharedAccessSignature) + '@';
-  }
-  uri += this._config.host;
-
-  var sslOptions = this._config.x509;
-
-  this._amqp.connect(uri, sslOptions, handleResult('AMQP Transport: Could not connect', done));
+  var uri = 'amqps://' + this._config.host;
+  this._commonConnect(uri, done);
 };
 
 /**
@@ -164,17 +201,19 @@ Amqp.prototype.abandon = function (message, done) {
  * @param {Function}      done      The callback to be invoked when `updateSharedAccessSignature` completes.
  */
 Amqp.prototype.updateSharedAccessSignature = function (sharedAccessSignature, done) {
-  this._amqp.disconnect(function (err) {
+  /*Codes_SRS_NODE_DEVICE_AMQP_16_015: [The updateSharedAccessSignature method shall save the new shared access signature given as a parameter to its configuration.] */
+  this._config.sharedAccessSignature = sharedAccessSignature;
+  /*Codes_SRS_NODE_DEVICE_AMQP_06_010: [The `updateSharedAccessSignature` method shall call the amqp transport `putToken` method with the first parameter audience, created from the sr of the sas signature, the next parameter of the actual sas, and a callback.]*/
+  this._amqp.putToken(SharedAccessSignature.parse(this._config.sharedAccessSignature, ['sr', 'sig', 'se']).sr, this._config.sharedAccessSignature, function(err) {
     if (err) {
-      /*Codes_SRS_NODE_DEVICE_AMQP_16_017: [The updateSharedAccessSignature method shall call the `done` method with an Error object if updating the configuration or re-initializing the transport object.] */
-      if (done) done(err);
+      this._amqp.disconnect(function() {
+        if (done) {
+          done(getTranslatedError(err, 'AMQP Transport: Could not authorize with puttoken'));
+        }
+      });
     } else {
-      /*Codes_SRS_NODE_DEVICE_AMQP_16_015: [The updateSharedAccessSignature method shall save the new shared access signature given as a parameter to its configuration.] */
-      this._config.sharedAccessSignature = sharedAccessSignature;
-      /*Codes_SRS_NODE_DEVICE_AMQP_16_016: [The updateSharedAccessSignature method shall disconnect the current connection operating with the deprecated token, and re-initialize the transport object with the new connection parameters.] */
-      this._initialize();
-      /*Codes_SRS_NODE_DEVICE_AMQP_16_018: [The updateSharedAccessSignature method shall call the `done` callback with a null error object and a SharedAccessSignatureUpdated object as a result, indicating that the client needs to reestablish the transport connection when ready.] */
-      done(null, new results.SharedAccessSignatureUpdated(true));
+      /*Codes_SRS_NODE_DEVICE_AMQP_06_011: [The `updateSharedAccessSignature` method shall call the `done` callback with a null error object and a SharedAccessSignatureUpdated object as a result, indicating the client does NOT need to reestablish the transport connection.]*/
+      if (done) done(null, new results.SharedAccessSignatureUpdated(false));
     }
   }.bind(this));
 };

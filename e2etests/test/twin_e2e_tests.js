@@ -7,6 +7,8 @@ var Registry = require('azure-iothub').Registry;
 var ConnectionString = require('azure-iothub').ConnectionString;
 var deviceSdk = require('azure-iot-device');
 var deviceMqtt = require('azure-iot-device-mqtt').Mqtt;
+var deviceSas = require('azure-iot-device').SharedAccessSignature;
+var anHourFromNow = require('azure-iot-common').anHourFromNow;
 var uuid = require('uuid');
 var _ = require('lodash');
 var assert = require('chai').assert;
@@ -18,7 +20,7 @@ var newProps = {
     baz : 2,
     tweedle : {
       dee : 3
-    } 
+    }
   }
 };
 
@@ -37,7 +39,7 @@ var nullIndividualProps = {
 };
 
 var nullMergeResult = JSON.parse(JSON.stringify(newProps));
-delete nullMergeResult.tweedle; 
+delete nullMergeResult.tweedle;
 
 var runTests = function (hubConnectionString) {
   describe('Twin', function() {
@@ -54,7 +56,7 @@ var runTests = function (hubConnectionString) {
       var host = ConnectionString.parse(hubConnectionString).HostName;
       var pkey = new Buffer(uuid.v4()).toString('base64');
       var deviceId = '0000e2etest-delete-me-twin-e2e-' + uuid.v4();
-      
+
       deviceDescription = {
         deviceId:  deviceId,
         status: 'enabled',
@@ -95,7 +97,7 @@ var runTests = function (hubConnectionString) {
       if (deviceClient) {
         deviceClient.close(function(err) {
           if (err) return done(err);
-            
+
           var registry = Registry.fromConnectionString(hubConnectionString);
           registry.delete(deviceDescription.deviceId, function(err) {
             if (err) return done(err);
@@ -119,7 +121,7 @@ var runTests = function (hubConnectionString) {
       var compare = function(left, right) {
         _.every(_.keys(right), function(key) {
           if (typeof right[key] !== 'function' && !key.startsWith('$')) {
-            assert.equal(left[key], right[key], 'key ' + key + ' not matched between service and device'); 
+            assert.equal(left[key], right[key], 'key ' + key + ' not matched between service and device');
           }
         });
       };
@@ -199,7 +201,7 @@ var runTests = function (hubConnectionString) {
     };
 
     it('sends and receives desired properties', sendsAndReceivesDesiredProperties);
-      
+
     var mergeDesiredProperties = function(first, second, newEtag, result, done) {
       serviceTwin.update( { properties : { desired : first } }, function(err) {
         if (err) return done(err);
@@ -284,7 +286,7 @@ var runTests = function (hubConnectionString) {
           sendsAndReceiveReportedProperties(done);
         }, 1000);
       });
-      deviceClient._renewSharedAccessSignature();
+      deviceClient.updateSharedAccessSignature(deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString());
     });
 
     it('can receive desired properties from the service after renewing the sas token', function(done) {
@@ -294,7 +296,7 @@ var runTests = function (hubConnectionString) {
           sendsAndReceivesDesiredProperties(done);
         }, 1000);
       });
-      deviceClient._renewSharedAccessSignature();
+      deviceClient.updateSharedAccessSignature(deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString());
     });
 
     it.skip('call null out all reported properties', function(done) {
@@ -337,7 +339,7 @@ var runTests = function (hubConnectionString) {
       mergeTags(newProps, nullIndividualProps, "*", nullMergeResult, done);
     });
 
-    it('can renew SAS 20 times without failure', function(done) 
+    it('can renew SAS 20 times without failure', function(done)
     {
       this.timeout(120000);
       var iteration = 0;
@@ -346,7 +348,7 @@ var runTests = function (hubConnectionString) {
         if (iteration === 20) {
           done();
         } else {
-          deviceClient._renewSharedAccessSignature();
+          deviceClient.updateSharedAccessSignature(deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString());
           // at this point, signature renewal has begun, but the connection is
           // not complete.  We need a "connection complete" event here, but
           // we don't have one yet.  Instead, sleep for a while -- 3 seconds
@@ -385,7 +387,7 @@ var runTests = function (hubConnectionString) {
             callback();
         }
       ], done);
-      
+
     });
 
   });

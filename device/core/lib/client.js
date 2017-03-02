@@ -43,7 +43,10 @@ var Client = function (transport, connStr, blobUploadClient) {
 
   if (this._connectionString && ConnectionString.parse(this._connectionString).SharedAccessKey) {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_027: [If a connection string argument is provided and is using SharedAccessKey authentication, the Client shall automatically generate and renew SAS tokens.] */
-    this._sasRenewalTimeout = setTimeout(this._renewSharedAccessSignature.bind(this), Client.sasRenewalInterval); 
+    this._useAutomaticRenewal = true;
+    this._sasRenewalTimeout = setTimeout(this._renewSharedAccessSignature.bind(this), Client.sasRenewalInterval);
+  } else {
+    this._useAutomaticRenewal = false;
   }
 
   this.blobUploadClient = blobUploadClient;
@@ -61,12 +64,12 @@ var Client = function (transport, connStr, blobUploadClient) {
 
   this.on('newListener', function (eventName) {
     if (eventName === 'message') {
-      /* Schedules startMessageReceiver() on the next tick because the event handler for the 
+      /* Schedules startMessageReceiver() on the next tick because the event handler for the
        * 'message' event is only added after this handler (for 'newListener') finishes and
-       * the state machine depends on having an event handler on 'message' to determine if 
+       * the state machine depends on having an event handler on 'message' to determine if
        * it should connect the receiver, depending on its state.
        */
-      process.nextTick(function() { 
+      process.nextTick(function() {
         thisClient._fsm.handle('startMessageReceiver');
       });
     }
@@ -113,7 +116,7 @@ var Client = function (transport, connStr, blobUploadClient) {
               /*Codes_SRS_NODE_DEVICE_CLIENT_16_045: [If the transport successfully establishes a connection the `open` method shall subscribe to the `disconnect` event of the transport.]*/
               thisClient._transport.removeListener('disconnect', thisClient._disconnectHandler); // remove the old one before adding a new -- this can happen when renewing SAS tokens
               thisClient._transport.on('disconnect', thisClient._disconnectHandler);
-              transportConnectedCallback(connectErr, connectResult);
+                transportConnectedCallback(connectErr, connectResult);
             });
           } else {
             transportConnectedCallback(null, new results.Connected());
@@ -230,6 +233,7 @@ var Client = function (transport, connStr, blobUploadClient) {
           }
 
           thisClient.blobUploadClient.updateSharedAccessSignature(sharedAccessSignature);
+
           if (thisClient._twin) {
             thisClient._twin.updateSharedAccessSignature();
           }
@@ -242,21 +246,25 @@ var Client = function (transport, connStr, blobUploadClient) {
             } else {
               debug('sas token updated: ' + result.constructor.name + ' needToReconnect: ' + result.needToReconnect);
               /*Codes_SRS_NODE_DEVICE_CLIENT_16_033: [The updateSharedAccessSignature method shall reconnect the transport to the IoTHub service if it was connected before before the method is clled.]*/
-              /*Codes_SRS_NODE_DEVICE_CLIENT_16_034: [The updateSharedAccessSignature method shall not reconnect the transport if the transport was disconnected to begin with.]*/
+              /*Codes_SRS_NODE_DEVICE_CLIENT_16_034: [The `updateSharedAccessSignature` method shall not reconnect when the 'needToReconnect' property of the result argument of the callback is false.]*/
               if (result.needToReconnect) {
                 thisClient._fsm.transition('connecting');
                 thisClient._transport.connect(function(connectErr) {
                   if (connectErr) {
                     safeUpdateSasCallback(connectErr);
                   } else {
-                    thisClient._sasRenewalTimeout = setTimeout(thisClient._renewSharedAccessSignature.bind(thisClient), Client.sasRenewalInterval); 
-                    /*Codes_SRS_NODE_DEVICE_CLIENT_16_036: [The updateSharedAccessSignature method shall call the `updateSasCallback` callback with a null error object and a result of type SharedAccessSignatureUpdated if the oken was updated successfully.]*/
+                    if (thisClient._useAutomaticRenewal) {
+                      thisClient._sasRenewalTimeout = setTimeout(thisClient._renewSharedAccessSignature.bind(thisClient), Client.sasRenewalInterval);
+                      /*Codes_SRS_NODE_DEVICE_CLIENT_16_036: [The updateSharedAccessSignature method shall call the `updateSasCallback` callback with a null error object and a result of type SharedAccessSignatureUpdated if the oken was updated successfully.]*/
+                    }
                     safeUpdateSasCallback(null, new results.SharedAccessSignatureUpdated(false));
                   }
                 });
               } else {
-                thisClient._sasRenewalTimeout = setTimeout(thisClient._renewSharedAccessSignature.bind(thisClient), Client.sasRenewalInterval); 
-                /*Codes_SRS_NODE_DEVICE_CLIENT_16_036: [The updateSharedAccessSignature method shall call the `updateSasCallback` callback with a null error object and a result of type SharedAccessSignatureUpdated if the oken was updated successfully.]*/
+                if (thisClient._useAutomaticRenewal) {
+                  thisClient._sasRenewalTimeout = setTimeout(thisClient._renewSharedAccessSignature.bind(thisClient), Client.sasRenewalInterval);
+                  /*Codes_SRS_NODE_DEVICE_CLIENT_16_036: [The updateSharedAccessSignature method shall call the `updateSasCallback` callback with a null error object and a result of type SharedAccessSignatureUpdated if the oken was updated successfully.]*/
+                }
                 safeUpdateSasCallback(null, new results.SharedAccessSignatureUpdated(false));
               }
             }
@@ -332,7 +340,7 @@ var Client = function (transport, connStr, blobUploadClient) {
       }
     }
   });
-  
+
   this._fsm.on('transition', function (data) {
     debug('Client state change: ' + data.fromState + ' -> ' + data.toState + ' (action: ' + data.action + ')');
   });
@@ -430,7 +438,7 @@ Client.prototype._connectMessageReceiver = function () {
       self.emit('message', msg);
     });
   });
-    
+
 };
 
 Client.prototype._connectMethodReceiver = function () {
@@ -475,8 +483,7 @@ Client.prototype._disconnectReceiver = function () {
 Client.prototype._renewSharedAccessSignature = function () {
   var cn = ConnectionString.parse(this._connectionString);
   var sas = SharedAccessSignature.create(cn.HostName, cn.DeviceId, cn.SharedAccessKey, anHourFromNow());
-
-  this.updateSharedAccessSignature(sas.toString(), function (err) {
+  this._fsm.handle('updateSharedAccessSignature', sas.toString(), function (err) {
     if (err) {
       /*Codes_SRS_NODE_DEVICE_CLIENT_16_006: [The ‘error’ event shall be emitted when an error occurred within the client code.] */
       this.emit('error', err);
@@ -565,11 +572,20 @@ Client.fromSharedAccessSignature = function (sharedAccessSignature, Transport) {
  *                              completes execution.
  *
  * @throws {ReferenceError}     If the sharedAccessSignature parameter is falsy.
+ * @throws {ReferenceError}     If the client uses x509 authentication.
  */
 Client.prototype.updateSharedAccessSignature = function (sharedAccessSignature, updateSasCallback) {
   /*Codes_SRS_NODE_DEVICE_CLIENT_16_031: [The updateSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature parameter is falsy.]*/
   if (!sharedAccessSignature) throw new ReferenceError('sharedAccessSignature is falsy');
-  this._fsm.handle('updateSharedAccessSignature', sharedAccessSignature, updateSasCallback);
+  if (this._useAutomaticRenewal) console.log('calling updateSharedAccessSignature while using automatic sas renewal');
+  /*Codes_SRS_NODE_DEVICE_CLIENT_06_002: [The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the client was created using x509.]*/
+  if (this._connectionString && ConnectionString.parse(this._connectionString).x509) throw new ReferenceError('client uses x509');
+  this._fsm.handle('updateSharedAccessSignature', sharedAccessSignature, function (err, result) {
+    if (!err) {
+      this.emit('_sharedAccessSignatureUpdated');
+    }
+    safeCallback(updateSasCallback, err, result);
+  }.bind(this));
 };
 
 /**
@@ -667,10 +683,10 @@ Client.prototype.setTransportOptions = function (options, done) {
 /**
  * @method          module:azure-iot-device.Client#setOptions
  * @description     The `setOptions` method let the user configure the client.
- * 
+ *
  * @param  {Object}    options  The options structure
  * @param  {Function}  done     The callback that shall be called when setOptions is finished.
- * 
+ *
  * @throws {ReferenceError}     If the options structure is falsy
  */
 

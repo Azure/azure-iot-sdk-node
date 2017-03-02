@@ -16,6 +16,7 @@ var errors = require('azure-iot-common').errors;
 var Message = require('azure-iot-common').Message;
 
 describe('Client', function () {
+  var sharedKeyConnectionString = 'HostName=host;DeviceId=id;SharedAccessKey=key';
   describe('#constructor', function () {
     /*Tests_SRS_NODE_DEVICE_CLIENT_05_001: [The Client constructor shall throw ReferenceError if the transport argument is falsy.]*/
     it('throws if transport arg is falsy', function () {
@@ -28,7 +29,6 @@ describe('Client', function () {
   });
 
   describe('#fromConnectionString', function () {
-    var connectionString = 'HostName=host;DeviceId=id;SharedAccessKey=key';
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_05_003: [The fromConnectionString method shall throw ReferenceError if the connStr argument is falsy.]*/
     it('throws if connStr arg is falsy', function () {
@@ -42,7 +42,7 @@ describe('Client', function () {
     /*Tests_SRS_NODE_DEVICE_CLIENT_05_006: [The fromConnectionString method shall return a new instance of the Client object, as by a call to new Client(new Transport(...)).]*/
     it('returns an instance of Client', function () {
       var DummyTransport = function () { };
-      var client = Client.fromConnectionString(connectionString, DummyTransport);
+      var client = Client.fromConnectionString(sharedKeyConnectionString, DummyTransport);
       assert.instanceOf(client, Client);
     });
 
@@ -63,8 +63,9 @@ describe('Client', function () {
         };
       };
 
-      var client = Client.fromConnectionString(connectionString, DummyTransport);
+      var client = Client.fromConnectionString(sharedKeyConnectionString, DummyTransport);
       assert.instanceOf(client, Client);
+      client.sasRenewalInterval = 2700000;
       tick = firstTick;
       this.clock.tick(tick); // 30 minutes. shouldn't have updated yet.
       assert.isFalse(sasUpdated);
@@ -429,6 +430,40 @@ describe('Client', function () {
         client.open();
       });
     });
+
+    [true, false].forEach( function(doReconnect) {
+      it('should invoke the renew path with a reconnect of ' + doReconnect.toString(), function(testCallback){
+        this.clock = sinon.useFakeTimers();
+        var connectedResults = new results.Connected();
+        var dummyTransport = {
+          connect: function(callback) {
+              callback(null, connectedResults);
+          },
+          on: function () {},
+          updateSharedAccessSignature: sinon.stub().callsArgWith(1, null, new results.SharedAccessSignatureUpdated(doReconnect)),
+          removeListener: function () {}
+        };
+
+        var client = new Client(dummyTransport, sharedKeyConnectionString);
+        client.blobUploadClient = { updateSharedAccessSignature: function() {} };
+        var renewalInterval = Client.sasRenewalInterval;
+        client.open(function(err, res) {
+          if (err) {
+            testCallback(err);
+          } else {
+            assert.equal(res, connectedResults);
+            assert(dummyTransport.updateSharedAccessSignature.notCalled);
+            this.clock.tick(renewalInterval+1);
+            process.nextTick(function () {
+              assert(dummyTransport.updateSharedAccessSignature.calledOnce);
+              this.clock.restore();
+              testCallback();
+            }.bind(this));
+          }
+        }.bind(this));
+      });
+    });
+
   });
 
   describe('#close', function () {
@@ -1385,6 +1420,16 @@ describe('Client', function () {
       });
     });
 
+    /*Tests_SRS_NODE_DEVICE_CLIENT_06_002: [The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the client was created using x509.]*/
+    it('throws a ReferenceError if client created using x509', function () {
+      var DummyTransport = function () { };
+      var client = new Client(new DummyTransport(), 'HostName=host;DeviceId=id;x509=true');
+      assert.throws(function () {
+        client.updateSharedAccessSignature('sas', function () { });
+      }, ReferenceError);
+    });
+
+
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_032: [The updateSharedAccessSignature method shall call the updateSharedAccessSignature method of the transport currently in use with the sharedAccessSignature parameter.]*/
     it('calls the transport `updateSharedAccessSignature` method with the sharedAccessSignature parameter', function () {
       var DummyTransport = function () {
@@ -1433,7 +1478,7 @@ describe('Client', function () {
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_034: [The updateSharedAccessSignature method shall not reconnect the transport if the transport was disconnected to begin with.]*/
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_034: [The `updateSharedAccessSignature` method shall not reconnect when the 'needToReconnect' property of the result argument of the callback is false.]*/
     it('Doesn\'t reconnect the transport if it\'s not necessary', function (done) {
       var DummyTransport = function () {
         this.connect = function () { assert.fail(); };
@@ -1560,6 +1605,7 @@ describe('Client', function () {
         });
       });
     });
+
   });
 
   describe('getTwin', function() {
