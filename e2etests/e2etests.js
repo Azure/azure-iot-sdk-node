@@ -25,6 +25,8 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 var storageConnectionString = process.env.STORAGE_CONNECTION_STRING;
 var generalProtocols = [deviceHttp.Http, deviceAmqp.Amqp, deviceAmqp.AmqpWs, deviceMqtt.Mqtt];
 var acknowledgementProtocols = [deviceHttp.Http, deviceAmqp.Amqp, deviceAmqp.AmqpWs];
+var deviceMethodsProtocols = [deviceMqtt.Mqtt, deviceMqtt.MqttWs, deviceAmqp.Amqp, deviceAmqp.AmqpWs];
+
 device_provision(hubConnectionString, function (err, provisionedDevices) {
   if (err) {
     console.log('Unable to create the devices needed.');
@@ -59,6 +61,6 @@ device_provision(hubConnectionString, function (err, provisionedDevices) {
 });
 
 twin_e2e_tests(hubConnectionString);
-device_method(hubConnectionString);
+device_method(hubConnectionString, deviceMethodsProtocols);
 job_client(hubConnectionString);
 
