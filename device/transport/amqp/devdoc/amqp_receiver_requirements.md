@@ -14,9 +14,9 @@ and redirects calls to its own method to those clients.
 **SRS_NODE_DEVICE_AMQP_RECEIVER_16_002: [** The `AmqpReceiver` object shall inherit from the `EventEmitter` node object. **]**
 
 ### on('message', messageCallback)
-**SRS_NODE_DEVICE_AMQP_RECEIVER_16_003: [** The `AmqpReceiver` shall forward any new listener of the `message` or `errorReceived` event to the underlying message receiver. **]**
+**SRS_NODE_DEVICE_AMQP_RECEIVER_16_003: [** The `AmqpReceiver` shall forward any new listener of the `message` event to the underlying amqp message receiver. **]**
 
-**SRS_NODE_DEVICE_AMQP_RECEIVER_16_008: [** The `AmqpReceiver` shall remove any new listener of the `message` or `errorReceived` event of the underlying message receiver if removed from its own `message` and `errorReceived` events. **]**
+**SRS_NODE_DEVICE_AMQP_RECEIVER_16_008: [** The `AmqpReceiver` shall remove any listener of its `message` event from the underlying amqp message receiver. **]**
 
 ### complete(message, callback) [deprecated]
 NOTE: This method is deprecated and the `azure-iot-device-amqp.Amqp.complete` method should be used instead.

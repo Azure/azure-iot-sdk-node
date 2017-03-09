@@ -14,25 +14,36 @@ describe('AmqpReceiver', function () {
     deviceId: 'fakeDeviceId'
   };
 
-  var fakeAmqpReceiver = {
-    complete: sinon.spy(),
-    reject: sinon.spy(),
-    abandon: sinon.spy(),
-    on: sinon.spy(),
-    removeListener: sinon.spy()
-  };
+  var fakeAmqpReceiver, fakeAmqpClient, fakeMethodClient;
 
-  var fakeAmqpClient = {
-    getReceiver: function(ep, callback) {
-      assert.strictEqual(ep, '/devices/' + fakeConfig.deviceId + '/messages/devicebound');
-      callback(null, fakeAmqpReceiver);
-    }
-  };
+  beforeEach(function() {
+    fakeAmqpReceiver = {
+      complete: sinon.spy(),
+      reject: sinon.spy(),
+      abandon: sinon.spy(),
+      on: sinon.spy(),
+      removeListener: sinon.spy(),
+      listeners: sinon.stub().returns([])
+    };
 
-  var fakeMethodClient = {
-    on: sinon.spy(),
-    onDeviceMethod: sinon.spy()
-  };
+    fakeAmqpClient = {
+      getReceiver: function(ep, callback) {
+        assert.strictEqual(ep, '/devices/' + fakeConfig.deviceId + '/messages/devicebound');
+        callback(null, fakeAmqpReceiver);
+      }
+    };
+
+    fakeMethodClient = {
+      on: sinon.spy(),
+      onDeviceMethod: sinon.spy()
+    };
+  });
+
+  afterEach(function() {
+    fakeAmqpReceiver = null;
+    fakeAmqpClient = null;
+    fakeMethodClient = null;
+  });
 
   describe('#constructor', function() {
     /*Tests_SRS_NODE_DEVICE_AMQP_RECEIVER_16_001: [The `AmqpReceiver` constructor shall initialize a new instance of an `AmqpReceiver` object.]*/
@@ -46,26 +57,72 @@ describe('AmqpReceiver', function () {
     });
   });
 
-  ['message', 'errorReceived'].forEach(function(eventName) {
-    /*Tests_SRS_NODE_DEVICE_AMQP_RECEIVER_16_003: [The `AmqpReceiver` shall forward any new listener of the `message` or `errorReceived` events to the underlying message receiver.]*/
-    describe('#on(\'' + eventName + '\', callback)', function() {
-      it('forwards listeners of the message event to the underlying AMQP receiver object', function() {
-        var recv = new AmqpReceiver(fakeConfig, fakeAmqpClient, fakeMethodClient);
-        var fakeCallback = function() {};
-        recv.on('message', fakeCallback);
-        assert(fakeAmqpReceiver.on.calledWith('message', fakeCallback));
-      });
+  /*Tests_SRS_NODE_DEVICE_AMQP_RECEIVER_16_003: [The `AmqpReceiver` shall forward any new listener of the `message` event to the underlying amqp message receiver.]*/
+  describe('#on(\'message\', callback)', function() {
+    it('forwards listeners of the message event to the underlying AMQP receiver object', function() {
+      var recv = new AmqpReceiver(fakeConfig, fakeAmqpClient, fakeMethodClient);
+      var fakeCallback = function() {};
+      recv.on('message', fakeCallback);
+      assert(fakeAmqpReceiver.on.calledWith('message', fakeCallback));
     });
 
-    /*Tests_SRS_NODE_DEVICE_AMQP_RECEIVER_16_008: [The `AmqpReceiver` shall remove any new listener of the `message` or `errorReceived` event of the underlying message receiver if removed from its own `message` and `errorReceived` events.]*/
-    describe('#removeListener(\'' + eventName + '\', callback)', function() {
-      it('removes the listener on the underlying AMQP receiver', function() {
-        var recv = new AmqpReceiver(fakeConfig, fakeAmqpClient, fakeMethodClient);
-        var fakeCallback = function() {};
-        recv.on(eventName, fakeCallback);
-        recv.removeListener(eventName, fakeCallback);
-        assert(fakeAmqpReceiver.removeListener.calledWith(eventName));
+    it('subscribes to the errorReceived event if the first time the message listener is attached', function() {
+      var recv = new AmqpReceiver(fakeConfig, fakeAmqpClient, fakeMethodClient);
+      var fakeCallback = function() {};
+      recv.on('message', fakeCallback);
+      assert(fakeAmqpReceiver.on.calledWith('errorReceived'));
+      recv.on('message', fakeCallback);
+      assert.strictEqual(fakeAmqpReceiver.on.callCount, 3); // 2 times fo the messages, once for errorReceived
+    });
+
+    it('forwards the errorReceived events once set up', function(testCallback) {
+      var fakeReceiver = new EventEmitter();
+      var fakeAmqpClient = {
+        getReceiver: function(ep, callback) {
+          callback(null, fakeReceiver);
+        }
+      };
+      var fakeError = new Error('fake error');
+      var recv = new AmqpReceiver(fakeConfig, fakeAmqpClient, fakeMethodClient);
+      var fakeCallback = function() {};
+      recv.on('message', fakeCallback);
+      recv.on('errorReceived', function(err) {
+        assert.strictEqual(err, fakeError);
+        testCallback();
       });
+      fakeReceiver.emit('errorReceived', fakeError);
+    });
+  });
+
+  /*Tests_SRS_NODE_DEVICE_AMQP_RECEIVER_16_008: [The `AmqpReceiver` shall remove any listener of its `message` event from the underlying amqp message receiver.]*/
+  describe('#removeListener(\'message\', callback)', function() {
+    it('removes the listener on the underlying AMQP receiver', function() {
+      var recv = new AmqpReceiver(fakeConfig, fakeAmqpClient, fakeMethodClient);
+      var fakeCallback = function() {};
+      recv.on('message', fakeCallback);
+      recv.removeListener('message', fakeCallback);
+      assert.isTrue(fakeAmqpReceiver.removeListener.calledWith('message'));
+    });
+
+    it('removes the errorReceived listener if no one is listening to message events', function() {
+      var fakeReceiver = new EventEmitter();
+      var fakeAmqpClient = {
+        getReceiver: function(ep, callback) {
+          callback(null, fakeReceiver);
+        }
+      };
+      var recv = new AmqpReceiver(fakeConfig, fakeAmqpClient, fakeMethodClient);
+      var fakeCallback1 = function() {};
+      var fakeCallback2 = function() {};
+      assert.strictEqual(fakeReceiver.listeners('errorReceived').length, 0);
+      recv.on('message', fakeCallback1);
+      assert.strictEqual(fakeReceiver.listeners('errorReceived').length, 1);
+      recv.on('message', fakeCallback2);
+      assert.strictEqual(fakeReceiver.listeners('errorReceived').length, 1);
+      recv.removeListener('message', fakeCallback1);
+      assert.strictEqual(fakeReceiver.listeners('errorReceived').length, 1);
+      recv.removeListener('message', fakeCallback2);
+      assert.strictEqual(fakeReceiver.listeners('errorReceived').length, 0);
     });
   });
 
@@ -74,7 +131,7 @@ describe('AmqpReceiver', function () {
       var recv = new AmqpReceiver(fakeConfig, fakeAmqpClient, fakeMethodClient);
       var fakeCallback = function() {};
       recv.on('foo', fakeCallback);
-      assert.isFalse(fakeAmqpReceiver.on.notCalled);
+      assert(fakeAmqpReceiver.on.notCalled);
     });
   });
 

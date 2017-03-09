@@ -20,21 +20,33 @@ function AmqpReceiver(config, amqpClient, deviceMethodClient) {
   this._messagingEndpoint = endpoint.messagePath(encodeURIComponent(this._config.deviceId));
 
   var self = this;
+  var errorListener = function(err) {
+    self.emit('errorReceived', err);
+  };
+  var errorListenerInitialized = false;
 
   /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_008: [The `AmqpReceiver` shall remove any new listener of the `message` or `errorReceived` event of the underlying message receiver if removed from its own `message` and `errorReceived` events.]*/
   this.on('removeListener', function _onRemoveMessageListener(eventName, eventCallback) {
-    if (eventName === 'message' || eventName === 'errorReceived') {
+    if (eventName === 'message') {
       self._amqpClient.getReceiver(self._messagingEndpoint, function(err, msgReceiver) {
-        msgReceiver.removeListener(eventName, eventCallback);
+        msgReceiver.removeListener('message', eventCallback);
+        if (msgReceiver.listeners('message').length === 0) {
+          msgReceiver.removeListener('errorReceived', errorListener);
+          errorListenerInitialized = false;
+        }
       });
     }
   });
 
   /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_003: [The `AmqpReceiver` shall forward any new listener of the `message` or `errorReceived` events to the underlying message receiver.]*/
   this.on('newListener', function _onAddMessageListener(eventName, eventCallback) {
-    if (eventName === 'message' || eventName === 'errorReceived') {
+    if (eventName === 'message') {
       self._amqpClient.getReceiver(self._messagingEndpoint, function(err, msgReceiver) {
         msgReceiver.on(eventName, eventCallback);
+        if(!errorListenerInitialized) {
+          msgReceiver.on('errorReceived', errorListener);
+          errorListenerInitialized = true;
+        }
       });
     }
   });
