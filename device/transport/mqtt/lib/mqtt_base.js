@@ -79,7 +79,7 @@ MqttBase.prototype.connect = function (config, done) {
     var self = this;
 
     var errCallback = function (error) {
-      var err = error || new errors.NotConnectedError(null, 'Unable to establish a connection');
+      var err = error || new errors.NotConnectedError('Unable to establish a connection');
       self.client.removeListener('close', errCallback);
       self.client.removeListener('offline', errCallback);
       self.client.removeListener('disconnect', errCallback);

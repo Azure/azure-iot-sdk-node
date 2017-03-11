@@ -67,7 +67,7 @@ var translateError = function translateError(mqttError) {
 
   /* Codes_SRS_NODE_DEVICE_MQTT_ERRORS_18_011: [** `translateError` shall return an `Error` if none of the other string rules match **]** */
   else {
-    err = new Error('mqtt.js returned ' + mqttError.message + ' error');
+    err = mqttError;
   }
   
   err.transportError = mqttError;

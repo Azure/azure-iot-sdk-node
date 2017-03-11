@@ -9,6 +9,7 @@ var pem  = require('pem');
 
 var UnauthorizedError = require('azure-iot-common').errors.UnauthorizedError;
 var DeviceNotFoundError = require('azure-iot-common').errors.DeviceNotFoundError;
+var NotConnectedError = require('azure-iot-common').errors.NotConnectedError;
 var Message = require('azure-iot-common').Message;
 var Registry = require('azure-iothub').Registry;
 var ServiceConnectionString = require('azure-iothub').ConnectionString;
@@ -54,8 +55,11 @@ module.exports = function authentication_tests(hubConnectionString) {
           var invalidConnectionString = DeviceConnectionString.createWithSharedAccessKey(hostName, testDeviceId, invalidPrimaryKey);
           var deviceClient = DeviceClient.fromConnectionString(invalidConnectionString, Transport);
           deviceClient.sendEvent(new Message('testMessage'), function(err) {
-            assert.instanceOf(err, UnauthorizedError);
-            testCallback();
+            if(err instanceof UnauthorizedError || err instanceof NotConnectedError) {
+              testCallback();
+            } else {
+              testCallback(err);
+            }
           });
         });
       });
@@ -68,8 +72,11 @@ module.exports = function authentication_tests(hubConnectionString) {
           var expiredSASToken = DeviceSAS.create(hostName, testDeviceId, testDeviceKey, yesterday).toString();
           var deviceClient = DeviceClient.fromSharedAccessSignature(expiredSASToken, Transport);
           deviceClient.sendEvent(new Message('testMessage'), function(err) {
-            assert.instanceOf(err, UnauthorizedError);
-            testCallback();
+            if(err instanceof UnauthorizedError || err instanceof NotConnectedError) {
+              testCallback();
+            } else {
+              testCallback(err);
+            }
           });
         });
       });
@@ -88,7 +95,7 @@ module.exports = function authentication_tests(hubConnectionString) {
             var connectionString = DeviceConnectionString.createWithSharedAccessKey(hostName, deviceIdConfig.id, testDeviceKey);
             var deviceClient = DeviceClient.fromConnectionString(connectionString, Transport);
             deviceClient.sendEvent(new Message('testMessage'), function(err) {
-              if (err instanceof UnauthorizedError || err instanceof DeviceNotFoundError) {
+              if (err instanceof UnauthorizedError || err instanceof DeviceNotFoundError || err instanceof NotConnectedError) {
                 // AMQP and MQTT translate to Unauthorized but HTTP to DeviceNotFound
                 testCallback();
               } else {
