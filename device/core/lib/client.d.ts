@@ -56,7 +56,7 @@ declare namespace Client {
   interface DeviceMethodRequest {
     requestId: string;
     methodName: string;
-    body?: Buffer;
+    payload?: Buffer;
   }
 
   interface DeviceMethodResponse {

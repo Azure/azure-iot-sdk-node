@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { Policy } from 'amqp10';
-import { Promise } from 'bluebird';
+import * as Promise from 'bluebird';
 
 import { Message } from 'azure-iot-common';
 import { results } from 'azure-iot-common';
@@ -26,7 +26,7 @@ declare class Amqp {
 
 declare namespace Amqp {
     interface AmqpSender {
-        send(message: AmqpMessage): Promise;
+        send(message: AmqpMessage): Promise<any>;
     }
 }
 

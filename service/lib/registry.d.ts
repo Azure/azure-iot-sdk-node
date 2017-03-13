@@ -68,6 +68,7 @@ declare namespace Registry {
 
     interface DeviceDescription {
       deviceId: string;
+      [x: string]: any;
     }
 
     interface DeviceRegistryOperationError {

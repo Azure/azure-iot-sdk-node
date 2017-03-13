@@ -3,5 +3,5 @@
 
 import { SharedAccessSignature } from 'azure-iot-common';
 
-export declare function create(host: string, policy: string, key: string, expiry: string): SharedAccessSignature;
+export declare function create(host: string, policy: string, key: string, expiry: string | number): SharedAccessSignature;
 export declare function parse(source: string): SharedAccessSignature;

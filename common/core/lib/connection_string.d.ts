@@ -8,6 +8,7 @@ declare interface ConnectionString {
     DeviceId?: string;
     SharedAccessKey?: string;
     GatewayHostName?: string;
+    SharedAccessKeyName?: string;
 }
 
 declare namespace ConnectionString {
