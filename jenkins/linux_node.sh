@@ -5,6 +5,9 @@
 build_root=$(cd "$(dirname "$0")/.." && pwd)
 cd $build_root
 
+# Disable the npm progress bar (supposedly faster)
+npm set progress=false
+
 # Set up links in the npm cache to ensure we're exercising all the code in
 # the repo, rather than downloading released versions of our packages from
 # npm.

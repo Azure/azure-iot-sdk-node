@@ -10,6 +10,9 @@ for %%i in ("%build-root%") do set build-root=%%~fi
 
 cd %build-root%
 
+REM Disable the npm progress bar (supposedly faster)
+call npm set progress=false
+
 REM Set up links in the npm cache to ensure we're exercising all the code in
 REM the repo, rather than downloading released versions of our packages from
 REM npm.
