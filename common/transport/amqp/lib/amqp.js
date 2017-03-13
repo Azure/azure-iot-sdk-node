@@ -4,6 +4,7 @@
 'use strict';
 
 var amqp10 = require('amqp10');
+var Promise = require('bluebird');
 var AmqpMessage = require('./amqp_message.js');
 var AmqpReceiver = require('./amqp_receiver.js');
 var errors = require('azure-iot-common').errors;
@@ -144,18 +145,38 @@ Amqp.prototype.setDisconnectHandler = function (disconnectCallback) {
  * @param {Function}   done   Called when disconnected of if an error happened.
  */
 Amqp.prototype.disconnect = function disconnect(done) {
-  this._amqp.disconnect()
-    .then(function (result) {
-      this._connected = false;
-      this._senders = {};
-      /*Codes_SRS_NODE_COMMON_AMQP_16_004: [The disconnect method shall call the done callback when the application/service has been successfully disconnected from the service] */
-      safeCallback(done, null, result);
-      return null;
-    }.bind(this))
-    .catch(function (err) {
-      /*SRS_NODE_COMMON_AMQP_16_005: [The disconnect method shall call the done callback and pass the error as a parameter if the disconnection is unsuccessful] */
-      safeCallback(done, err);
-    });
+  var self = this;
+
+  /*Codes_SRS_NODE_COMMON_AMQP_16_034: [The `disconnect` method shall detach all open links before disconnecting the underlying AMQP client.]*/
+  var openLinks = [];
+  for (var sender_endpoint in this._senders) {
+    if (this._senders.hasOwnProperty(sender_endpoint)) {
+      openLinks.push(this._senders[sender_endpoint]);
+      delete this._senders[sender_endpoint];
+    }
+  }
+  self._senders = {};
+
+  for (var receiver_endpoint in this._receivers) {
+    if (this._receivers.hasOwnProperty(receiver_endpoint)) {
+      openLinks.push(this._receivers[receiver_endpoint]._amqpReceiver);
+      delete this._receivers[receiver_endpoint];
+    }
+  }
+  self.receivers = {};
+
+  Promise.all(openLinks.map(function (link) { return link.detach(); }))
+         .then(this._amqp.disconnect.bind(this._amqp))
+         .then(function (result) {
+           self._connected = false;
+           /*Codes_SRS_NODE_COMMON_AMQP_16_004: [The disconnect method shall call the done callback when the application/service has been successfully disconnected from the service] */
+           safeCallback(done, null, result);
+           return null;
+         })
+         .catch(function (err) {
+           /*SRS_NODE_COMMON_AMQP_16_005: [The disconnect method shall call the done callback and pass the error as a parameter if the disconnection is unsuccessful] */
+           safeCallback(done, err);
+         });
 };
 
 /**
@@ -341,10 +362,14 @@ Amqp.prototype.detachReceiverLink = function detachReceiverLink(endpoint, detach
     throw new ReferenceError('endpoint cannot be \'' + endpoint + '\'');
   }
   var self = this;
-  this._detachLink(this._receivers[endpoint], function(err) {
-    delete(self._receivers[endpoint]);
-    detachCallback(err);
-  });
+  if(!this._receivers[endpoint]) {
+    safeCallback(detachCallback);
+  } else {
+    this._detachLink(this._receivers[endpoint]._amqpReceiver, function(err) {
+      delete(self._receivers[endpoint]);
+      detachCallback(err);
+    });
+  }
 };
 
 /**

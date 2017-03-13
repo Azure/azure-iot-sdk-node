@@ -65,9 +65,11 @@ A done callback.
 ### disconnect(done)
 Disconnects the application or device from the IoT Hub instance.
 
-**SRS_NODE_COMMON_AMQP_16_004: [**The disconnect method shall call the `done` callback when the application/service has been successfully disconnected from the service**]**
+**SRS_NODE_COMMON_AMQP_16_034: [** The `disconnect` method shall detach all open links before disconnecting the underlying AMQP client. **]**
 
-**SRS_NODE_COMMON_AMQP_16_005: [**The disconnect method shall call the `done` callback and pass the error as a parameter if the disconnection is unsuccessful**]**
+**SRS_NODE_COMMON_AMQP_16_004: [**The `disconnect` method shall call the `done` callback when the application/service has been successfully disconnected from the service**]**
+
+**SRS_NODE_COMMON_AMQP_16_005: [**The `disconnect` method shall call the `done` callback and pass the error as a parameter if the disconnection is unsuccessful**]**
 
 ### send (message, endpoint, to, done)
 Builds and sends an AMQP message with the body set to the message parameter to the IoT Hub service, using the endpoint and destination passed as arguments.

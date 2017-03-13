@@ -13,6 +13,7 @@ var uuid = require('uuid');
 
 var runTests = function (hubConnectionString, deviceTransport, provisionedDevice) {
   describe('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication, connected over ' + deviceTransport.name, function () {
+    this.timeout(60000);
 
     var serviceClient, deviceClient;
 
@@ -26,7 +27,6 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
     });
 
     it('Service sends 1 C2D message and it is re-sent until the device completes it', function (done) {
-      this.timeout(60000);
       var guid = uuid.v4();
 
       var abandonnedOnce = false;
@@ -87,7 +87,6 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
     });
 
     it('Service sends 1 C2D message and it is re-sent until the device rejects it', function (done) {
-      this.timeout(60000);
       var guid = uuid.v4();
 
       var abandonnedOnce = false;
