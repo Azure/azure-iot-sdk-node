@@ -330,10 +330,10 @@ describe('Amqp', function () {
   });
 
   describe('Links', function() {
-    var endpoint = 'endpoint';
+    var fake_generic_endpoint = 'fake_generic_endpoint';
     [
       {amqpFunc: 'attachSenderLink', amqp10Func: 'createSender', privateLinkArray: '_senders', fakeLinkObject: { send: function() {} }},
-      {amqpFunc: 'attachReceiverLink', amqp10Func: 'createReceiver', privateLinkArray: '_receivers', fakeLinkObject: { endpoint: endpoint }},
+      {amqpFunc: 'attachReceiverLink', amqp10Func: 'createReceiver', privateLinkArray: '_receivers', fakeLinkObject: { endpoint: fake_generic_endpoint }},
     ].forEach(function(testConfig) {
       describe('#' + testConfig.amqpFunc, function() {
         /*Tests_SRS_NODE_COMMON_AMQP_16_012: [The `attachSenderLink` method shall throw a ReferenceError if the `endpoint` argument is falsy.]*/
@@ -351,7 +351,7 @@ describe('Amqp', function () {
         /*Tests_SRS_NODE_COMMON_AMQP_16_033: [The `attachReceiverLink` method shall call the `done` callback with a `NotConnectedError` object if the amqp client is not connected when the method is called.]*/
         it('calls the done callback with a NotConnectedError if the client is not connected', function(testCallback) {
           var amqp = new Amqp();
-          amqp[testConfig.amqpFunc](endpoint, null, function(err) {
+          amqp[testConfig.amqpFunc](fake_generic_endpoint, null, function(err) {
             assert.instanceOf(err, errors.NotConnectedError);
             testCallback();
           });
@@ -364,11 +364,11 @@ describe('Amqp', function () {
           sinon.stub(amqp._amqp, 'connect').resolves('connected');
           sinon.stub(amqp._amqp, testConfig.amqp10Func).resolves(testConfig.fakeLinkObject);
           amqp.connect('uri', null, function() {
-            amqp[testConfig.amqpFunc](endpoint, null, function(err, result) {
+            amqp[testConfig.amqpFunc](fake_generic_endpoint, null, function(err, result) {
               assert.isNull(err);
               assert.isNotTrue(amqp._amqp[testConfig.amqp10Func].args[0][1]);
               assert.isOk(result);
-              assert.strictEqual(result, amqp[testConfig.privateLinkArray][endpoint]);
+              assert.strictEqual(result, amqp[testConfig.privateLinkArray][fake_generic_endpoint]);
               testCallback();
             });
           });
@@ -378,7 +378,6 @@ describe('Amqp', function () {
         /*Tests_SRS_NODE_COMMON_AMQP_06_004: [The `attachReceiverLink` method shall create a policy object that contain link options to be merged if the linkOptions argument is not falsy.]*/
         it('sets up the attach properties object with the link properties passed as argument', function(testCallback) {
           var amqp = new Amqp();
-          var endpoint = 'endpoint';
           var fakeLinkProps = {
             fakeKey: 'fakeValue'
           };
@@ -388,7 +387,7 @@ describe('Amqp', function () {
           amqp.connect('uri', null, function() {
             /*Tests_SRS_NODE_COMMON_AMQP_16_015: [The `attachSenderLink` method shall call the `done` callback with a `null` error and the link object that was created if the link was attached successfully.]*/
             /*Tests_SRS_NODE_COMMON_AMQP_16_020: [The `attachReceiverLink` method shall call the `done` callback with a `null` error and the link object that was created if the link was attached successfully.]*/
-            amqp[testConfig.amqpFunc](endpoint, fakeLinkProps, function() {
+            amqp[testConfig.amqpFunc](fake_generic_endpoint, fakeLinkProps, function() {
               assert.deepEqual(amqp._amqp[testConfig.amqp10Func].args[0][1], { fakeKey: 'fakeValue'});
               testCallback();
             });
@@ -403,7 +402,7 @@ describe('Amqp', function () {
           sinon.stub(amqp._amqp, 'connect').resolves('connected');
           sinon.stub(amqp._amqp, testConfig.amqp10Func).rejects(fakeError);
           amqp.connect('uri', null, function() {
-            amqp[testConfig.amqpFunc]('endpoint', null, function(err) {
+            amqp[testConfig.amqpFunc](fake_generic_endpoint, null, function(err) {
               assert.strictEqual(fakeError, err.amqpError);
               testCallback();
             });
@@ -416,7 +415,7 @@ describe('Amqp', function () {
           sinon.stub(amqp._amqp, 'connect').resolves('connected');
           sinon.stub(amqp._amqp, testConfig.amqp10Func).resolves(testConfig.fakeLinkObject);
           amqp.connect('uri', null, function() {
-            amqp[testConfig.amqpFunc]('endpoint', null, function(err) {
+            amqp[testConfig.amqpFunc](fake_generic_endpoint, null, function(err) {
               assert.strictEqual(fakeError, err);
               testCallback();
             });
@@ -446,11 +445,11 @@ describe('Amqp', function () {
         sinon.stub(fakeLink, 'detach').resolves();
 
         var amqp = new Amqp();
-        amqp._senders[endpoint] = fakeLink;
+        amqp._senders[fake_generic_endpoint] = fakeLink;
         /*Tests_SRS_NODE_COMMON_AMQP_16_024: [The `detachSenderLink` method shall call the `done` callback with no arguments if detaching the link succeeded.]*/
-        amqp.detachSenderLink(endpoint, function(err) {
+        amqp.detachSenderLink(fake_generic_endpoint, function(err) {
           assert.isUndefined(err);
-          assert.isUndefined(amqp._senders[endpoint]);
+          assert.isUndefined(amqp._senders[fake_generic_endpoint]);
           testCallback();
         });
       });
@@ -463,10 +462,10 @@ describe('Amqp', function () {
         sinon.stub(fakeLink, 'detach').resolves();
 
         var amqp = new Amqp();
-        assert.isUndefined(amqp._senders[endpoint]);
-        amqp.detachSenderLink(endpoint, function(err) {
+        assert.isUndefined(amqp._senders[fake_generic_endpoint]);
+        amqp.detachSenderLink(fake_generic_endpoint, function(err) {
           assert.isUndefined(err);
-          assert.isUndefined(amqp._senders[endpoint]);
+          assert.isUndefined(amqp._senders[fake_generic_endpoint]);
           testCallback();
         });
       });
@@ -480,10 +479,10 @@ describe('Amqp', function () {
         sinon.stub(fakeLink, 'detach').rejects(fakeError);
 
         var amqp = new Amqp();
-        amqp._senders[endpoint] = fakeLink;
-        amqp.detachSenderLink(endpoint, function(err) {
+        amqp._senders[fake_generic_endpoint] = fakeLink;
+        amqp.detachSenderLink(fake_generic_endpoint, function(err) {
           assert.strictEqual(fakeError, err);
-          assert.isUndefined(amqp._senders[endpoint]);
+          assert.isUndefined(amqp._senders[fake_generic_endpoint]);
           testCallback();
         });
       });
@@ -510,29 +509,22 @@ describe('Amqp', function () {
         sinon.stub(fakeLink._amqpReceiver, 'detach').resolves();
 
         var amqp = new Amqp();
-        amqp._receivers[endpoint] = fakeLink;
+        amqp._receivers[fake_generic_endpoint] = fakeLink;
         /*Tests_SRS_NODE_COMMON_AMQP_16_029: [The `detachReceiverLink` method shall call the `done` callback with no arguments if detaching the link succeeded.]*/
-        amqp.detachReceiverLink(endpoint, function(err) {
+        amqp.detachReceiverLink(fake_generic_endpoint, function(err) {
           assert.isUndefined(err);
-          assert.isUndefined(amqp._receivers[endpoint]);
+          assert.isUndefined(amqp._receivers[fake_generic_endpoint]);
           testCallback();
         });
       });
 
       /*Tests_SRS_NODE_COMMON_AMQP_16_030: [The `detachReceiverLink` method shall call the `done` callback with no arguments if the link for this endpoint doesn't exist.]*/
       it('calls the callback immediately if there\'s no link attached', function (testCallback) {
-        var fakeLink = {
-          _amqpReceiver: {
-            detach: function () { return new Promise(function() {}); }
-          }
-        };
-        sinon.stub(fakeLink._amqpReceiver, 'detach').resolves();
-
         var amqp = new Amqp();
-        assert.isUndefined(amqp._receivers[endpoint]);
-        amqp.detachReceiverLink(endpoint, function(err) {
+        assert.isUndefined(amqp._receivers[fake_generic_endpoint]);
+        amqp.detachReceiverLink(fake_generic_endpoint, function(err) {
           assert.isUndefined(err);
-          assert.isUndefined(amqp._receivers[endpoint]);
+          assert.isUndefined(amqp._receivers[fake_generic_endpoint]);
           testCallback();
         });
       });
@@ -548,10 +540,10 @@ describe('Amqp', function () {
         sinon.stub(fakeLink._amqpReceiver, 'detach').rejects(fakeError);
 
         var amqp = new Amqp();
-        amqp._receivers[endpoint] = fakeLink;
-        amqp.detachReceiverLink(endpoint, function(err) {
+        amqp._receivers[fake_generic_endpoint] = fakeLink;
+        amqp.detachReceiverLink(fake_generic_endpoint, function(err) {
           assert.strictEqual(fakeError, err);
-          assert.isUndefined(amqp._receivers[endpoint]);
+          assert.isUndefined(amqp._receivers[fake_generic_endpoint]);
           testCallback();
         });
       });
