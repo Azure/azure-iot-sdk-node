@@ -7,73 +7,81 @@ node_root=$(cd "$(dirname "$0")/.." && pwd)
 
 cd $node_root/common/core
 echo "\n-- Creating links for `pwd` --"
-npm link
+yarn link
+yarn install
 [ $? -eq 0 ] || exit $?
 
 cd $node_root/common/transport/amqp
 echo "\n-- Creating links for `pwd` --"
-npm link azure-iot-common
-npm link
+yarn link azure-iot-common
+yarn link
+yarn install
 [ $? -eq 0 ] || exit $?
 
 cd $node_root/common/transport/http
 echo "\n-- Creating links for `pwd` --"
-npm link azure-iot-common
-npm link
+yarn link azure-iot-common
+yarn link
+yarn install
 [ $? -eq 0 ] || exit $?
 
 cd $node_root/device/core
 echo "\n-- Creating links for `pwd` --"
-npm link azure-iot-http-base
-npm link azure-iot-common
-npm link
+yarn link azure-iot-http-base
+yarn link azure-iot-common
+yarn link
+yarn install
 [ $? -eq 0 ] || exit $?
 
 cd $node_root/service
 echo "\n-- Creating links for `pwd` --"
-npm link azure-iot-common
-npm link azure-iot-amqp-base
-npm link azure-iot-http-base
-npm link
+yarn link azure-iot-common
+yarn link azure-iot-amqp-base
+yarn link azure-iot-http-base
+yarn link
+yarn install
 [ $? -eq 0 ] || exit $?
 
 cd $node_root/device/transport/amqp
 echo "\n-- Creating links for `pwd` --"
-npm link azure-iot-amqp-base
-npm link azure-iot-common
-npm link azure-iot-device
-npm link azure-iothub
-npm link
+yarn link azure-iot-amqp-base
+yarn link azure-iot-common
+yarn link azure-iot-device
+yarn link azure-iothub
+yarn link
+yarn install
 [ $? -eq 0 ] || exit $?
 
 cd $node_root/device/transport/http
 echo "\n-- Creating links for `pwd` --"
-npm link azure-iot-http-base
-npm link azure-iot-common
-npm link azure-iot-device
-npm link azure-iothub
-npm link
+yarn link azure-iot-http-base
+yarn link azure-iot-common
+yarn link azure-iot-device
+yarn link azure-iothub
+yarn link
+yarn install
 [ $? -eq 0 ] || exit $?
 
 cd $node_root/device/transport/mqtt
 echo "\n-- Creating links for `pwd` --"
-npm link azure-iot-common
-npm link azure-iot-device
-npm link azure-iothub
-npm link
+yarn link azure-iot-common
+yarn link azure-iot-device
+yarn link azure-iothub
+yarn link
+yarn install
 [ $? -eq 0 ] || exit $?
 
 cd $node_root/e2etests
 echo "\n-- Creating links for `pwd` --"
-npm link azure-iot-common
-npm link azure-iot-device
-npm link azure-iot-device-amqp
-npm link azure-iot-device-http
-npm link azure-iot-device-mqtt
-npm link azure-iothub
-npm install
+yarn link azure-iot-common
+yarn link azure-iot-device
+yarn link azure-iot-device-amqp
+yarn link azure-iot-device-http
+yarn link azure-iot-device-mqtt
+yarn link azure-iothub
+yarn install
 
 cd $node_root/build/tools
 echo "\n-- Creating links for `pwd` --"
-npm link azure-iothub
-npm install
+yarn link azure-iothub
+yarn install

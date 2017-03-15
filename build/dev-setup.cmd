@@ -11,74 +11,82 @@ for %%i in ("%node-root%") do set node-root=%%~fi
 cd %node-root%\common\core
 echo.
 echo -- Creating links for %cd% --
-call npm link
+call yarn link
+call yarn install
 
 cd %node-root%\common\transport\amqp
 echo.
 echo -- Creating links for %cd% --
-call npm link azure-iot-common
-call npm link
+call yarn link azure-iot-common
+call yarn link
+call yarn install
 
 cd %node-root%\common\transport\http
 echo.
 echo -- Creating links for %cd% --
-call npm link azure-iot-common
-call npm link
+call yarn link azure-iot-common
+call yarn link
+call yarn install
 
 cd %node-root%\device\core
 echo.
 echo -- Creating links for %cd% --
-call npm link azure-iot-http-base
-call npm link azure-iot-common
-call npm link
+call yarn link azure-iot-http-base
+call yarn link azure-iot-common
+call yarn link
+call yarn install
 
 cd %node-root%\service
 echo.
 echo -- Creating links for %cd% --
-call npm link azure-iot-common
-call npm link azure-iot-amqp-base
-call npm link azure-iot-http-base
-call npm link
+call yarn link azure-iot-common
+call yarn link azure-iot-amqp-base
+call yarn link azure-iot-http-base
+call yarn link
+call yarn install
 
 cd %node-root%\device\transport\amqp
 echo.
 echo -- Creating links for %cd% --
-call npm link azure-iot-amqp-base
-call npm link azure-iot-common
-call npm link azure-iot-device
-call npm link azure-iothub
-call npm link
+call yarn link azure-iot-amqp-base
+call yarn link azure-iot-common
+call yarn link azure-iot-device
+call yarn link azure-iothub
+call yarn link
+call yarn install
 
 cd %node-root%\device\transport\http
 echo.
 echo -- Creating links for %cd% --
-call npm link azure-iot-http-base
-call npm link azure-iot-common
-call npm link azure-iot-device
-call npm link azure-iothub
-call npm link
+call yarn link azure-iot-http-base
+call yarn link azure-iot-common
+call yarn link azure-iot-device
+call yarn link azure-iothub
+call yarn link
+call yarn install
 
 cd %node-root%\device\transport\mqtt
 echo.
 echo -- Creating links for %cd% --
-call npm link azure-iot-common
-call npm link azure-iot-device
-call npm link azure-iothub
-call npm link
+call yarn link azure-iot-common
+call yarn link azure-iot-device
+call yarn link azure-iothub
+call yarn link
+call yarn install
 
 cd %node-root%\e2etests
 echo.
 echo -- Creating links for %cd% --
-call npm link azure-iot-common
-call npm link azure-iot-device
-call npm link azure-iot-device-amqp
-call npm link azure-iot-device-http
-call npm link azure-iot-device-mqtt
-call npm link azure-iothub
-call npm install
+call yarn link azure-iot-common
+call yarn link azure-iot-device
+call yarn link azure-iot-device-amqp
+call yarn link azure-iot-device-http
+call yarn link azure-iot-device-mqtt
+call yarn link azure-iothub
+call yarn install
 
 cd %node-root%\build\tools
 echo .
 echo -- Setting up links for build tools --
-call npm link azure-iothub
-call npm install
+call yarn link azure-iothub
+call yarn install
