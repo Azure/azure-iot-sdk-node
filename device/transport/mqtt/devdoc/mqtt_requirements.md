@@ -98,7 +98,7 @@ The `complete` method is there for compatibility purposes with other transports 
 **SRS_NODE_DEVICE_MQTT_16_005: [** The `complete` method shall call the `done` callback given as argument immediately since all messages are automatically completed. **]** 
 
 ### reject(message, done)
-The `reject` method is there for compatibility purposes with other transports but will throw because the MQTT protocol doesn't support abandonning messages.
+The `reject` method is there for compatibility purposes with other transports but will throw because the MQTT protocol doesn't support rejecting messages.
 
 **SRS_NODE_DEVICE_MQTT_16_006: [** The `reject` method shall throw because MQTT doesn’t support rejecting messages. **]** 
 
