@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-amqp-base",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "AMQP operations used by Azure IoT device and service SDKs",
   "author": "Microsoft Corporation",
   "license": "MIT",
@@ -10,7 +10,7 @@
     "amqp10": "3.5.0",
     "bluebird": "^3.5.0",
     "amqp10-transport-ws": "^0.0.5",
-    "azure-iot-common": "1.1.5",
+    "azure-iot-common": "1.1.6",
     "debug": "^2.6.0",
     "uuid": "^3.0.1"
   },
