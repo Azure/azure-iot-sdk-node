@@ -11,6 +11,16 @@ var endpoint = require('azure-iot-common').endpoint;
 var PackageJson = require('../package.json');
 var translateError = require('./amqp_service_errors.js');
 
+var SharedAccessSignature = require('azure-iot-common').SharedAccessSignature;
+
+var UnauthorizedError = require('azure-iot-common').errors.UnauthorizedError;
+var DeviceNotFoundError = require('azure-iot-common').errors.DeviceNotFoundError;
+var NotConnectedError = require('azure-iot-common').errors.NotConnectedError;
+var debug = require('debug')('azure-iothub');
+
+
+
+
 /**
  * @class       module:azure-iothub.Amqp
  * @classdesc   Constructs an {@linkcode Amqp} object that can be used in an application
@@ -28,7 +38,8 @@ function Amqp(config, amqpBase) {
   EventEmitter.call(this);
   this._amqp = amqpBase ? amqpBase : new Base(true, PackageJson.name + '/' + PackageJson.version);
   this._config = config;
-  this._renewalInterval = null;
+  this._renewalTimeout = null;
+  this._renewalNumberOfMilliseconds = 2700000;
   this._amqp.setDisconnectHandler(function (err) {
     this.emit('disconnect', err);
   }.bind(this));
@@ -51,25 +62,30 @@ var handleResult = function (errorMessage, done) {
   };
 };
 
+var getTranslatedError = function(err, message) {
+  if (err instanceof UnauthorizedError || err instanceof NotConnectedError || err instanceof DeviceNotFoundError) {
+    return err;
+  }
+  return translateError(message, err);
+};
+
 Amqp.prototype._handleSASRenewal = function() {
-  this.disconnect(handleResult('SAS Renewal could not disconnect', function (err) {
-    if (!err) {
-      this.connect(handleResult('SAS Renewal could not connect', function(err) {
-        if (err) {
-          console.log("Unable to re-establish the connection following SAS renewal");
+  this._amqp.putToken(SharedAccessSignature.parse(this._config.sharedAccessSignature, ['sr', 'sig', 'se']).sr, this._config.sharedAccessSignature.extend(anHourFromNow()), function(err) {
+    if (err) {
+      debug('error from the put token' + err);
+      this._amqp.disconnect(function(disconnectError) {
+        if (disconnectError) {
+          debug('error from disconnect following failed put token' + err);
         }
-      }));
+      });
+    } else {
+      this._renewalTimeout = setTimeout(this._handleSASRenewal.bind(this), this._renewalNumberOfMilliseconds);
     }
-  }.bind(this)));
+  }.bind(this));
 };
 
 Amqp.prototype._getConnectionUri = function _createConnectionUri() {
-  return 'amqps://' +
-         encodeURIComponent(this._config.keyName) +
-         '%40sas.root.' +
-         this._config.hubName +
-         ':' +
-         encodeURIComponent((typeof(this._config.sharedAccessSignature) === 'string') ? this._config.sharedAccessSignature : this._config.sharedAccessSignature.extend(anHourFromNow())) + '@' + this._config.host;
+  return 'amqps://' + this._config.host;
 };
 
 /**
@@ -81,21 +97,39 @@ Amqp.prototype._getConnectionUri = function _createConnectionUri() {
 Amqp.prototype.connect = function connect(done) {
   var uri = this._getConnectionUri();
 
-  this._amqp.connect(uri, undefined, handleResult('AMQP Transport: Could not connect', function (err, result) {
-      //
-      // If the base transport completes the connection without error AND we
-      // aren't using a SAS token that was passed in by the appliction then set
-      // up an interval timer to renew the sas every 45 minutes.
-      //
-      if (!err) {
-        if (typeof(this._config.sharedAccessSignature) !== 'string') {
-          this._renewalInterval = setInterval(this._handleSASRenewal.bind(this), 2700000);
+  this._amqp.connect(uri, undefined, function (err, connectResult) {
+    if (err) {
+      if (done) done(translateError('AMQP Transport: Could not connect', err));
+    } else {
+      /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_001: [`initializeCBS` shall be invoked.]*/
+      this._amqp.initializeCBS(function (err) {
+        if (err) {
+          /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_002: [If `initializeCBS` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
+          this._amqp.disconnect(function() {
+            if (done) done(getTranslatedError(err, 'AMQP Transport: Could not initialize CBS'));
+          });
+        } else {
+          /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_003: [If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter audience, created from the sr of the sas signature, the next parameter of the actual sas, and a callback.]*/
+          var audience = SharedAccessSignature.parse(this._config.sharedAccessSignature, ['sr', 'sig', 'se']).sr;
+          var applicationSuppliedSas = typeof(this._config.sharedAccessSignature) === 'string';
+          var sasToken = applicationSuppliedSas ? this._config.sharedAccessSignature : this._config.sharedAccessSignature.extend(anHourFromNow());
+          this._amqp.putToken(audience, sasToken, function(err) {
+            if (err) {
+              /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_004: [** If `putToken` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
+              this._amqp.disconnect(function() {
+                if (done) done(getTranslatedError(err, 'AMQP Transport: Could not authorize with puttoken'));
+              });
+            } else {
+              if (!applicationSuppliedSas) {
+                this._renewalTimeout = setTimeout(this._handleSASRenewal.bind(this), this._renewalNumberOfMilliseconds);
+              }
+              if (done) done(null, connectResult);
+            }
+          }.bind(this));
         }
-      }
-      if (done) {
-        done(err, result);
-      }
-  }.bind(this)));
+      }.bind(this));
+    }
+  }.bind(this));
 };
 
 /**
@@ -105,8 +139,8 @@ Amqp.prototype.connect = function connect(done) {
  */
 /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_020: [** The `disconnect` method shall call the `disconnect` method of the base AMQP transport and translate its result to the caller into a transport-agnostic object.]*/
 Amqp.prototype.disconnect = function disconnect(done) {
-  if (this._renewalInterval) {
-    clearInterval(this._renewalInterval);
+  if (this._renewalTimeout) {
+    clearTimeout(this._renewalTimeout);
   }
   this._amqp.disconnect(handleResult('AMQP Transport: Could not disconnect', done));
 };
