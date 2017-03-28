@@ -65,7 +65,20 @@ var getTranslatedError = function(err, message) {
   return translateError(message, err);
 };
 
-Amqp.prototype._commonConnect = function _commonConnect(uri, done) {
+Amqp.prototype._getConnectionUri = function _getConnectionUri() {
+  return 'amqps://' + this._config.host;
+};
+
+/**
+ * @method              module:azure-iot-device-amqp.Amqp#connect
+ * @description         Establishes a connection with the IoT Hub instance.
+ * @param {Function}   done   Called when the connection is established of if an error happened.
+ *
+ */
+/*Codes_SRS_NODE_DEVICE_AMQP_16_008: [The done callback method passed in argument shall be called if the connection is established]*/
+/*Codes_SRS_NODE_DEVICE_AMQP_16_009: [The done callback method passed in argument shall be called with an error object if the connecion fails]*/
+Amqp.prototype.connect = function connect(done) {
+  var uri = this._getConnectionUri();
   var sslOptions = this._config.x509;
   this._amqp.connect(uri, sslOptions, function (err, connectResult) {
     if (err) {
@@ -98,19 +111,6 @@ Amqp.prototype._commonConnect = function _commonConnect(uri, done) {
       }
     }
   }.bind(this));
-};
-
-/**
- * @method              module:azure-iot-device-amqp.Amqp#connect
- * @description         Establishes a connection with the IoT Hub instance.
- * @param {Function}   done   Called when the connection is established of if an error happened.
- *
- */
-/*Codes_SRS_NODE_DEVICE_AMQP_16_008: [The done callback method passed in argument shall be called if the connection is established]*/
-/*Codes_SRS_NODE_DEVICE_AMQP_16_009: [The done callback method passed in argument shall be called with an error object if the connecion fails]*/
-Amqp.prototype.connect = function connect(done) {
-  var uri = 'amqps://' + this._config.host;
-  this._commonConnect(uri, done);
 };
 
 /**

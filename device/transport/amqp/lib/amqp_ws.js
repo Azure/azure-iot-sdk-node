@@ -22,10 +22,8 @@ function AmqpWs(config) {
 
 util.inherits(AmqpWs, Amqp);
 
-AmqpWs.prototype.connect = function connect(done) {
-  var uri = 'wss://' + this._config.host + ':443/$iothub/websocket';
-  this._commonConnect(uri,done);
+AmqpWs.prototype._getConnectionUri = function _getConnectionUri() {
+  return 'wss://' + this._config.host + ':443/$iothub/websocket';
 };
-
 
 module.exports = AmqpWs;
