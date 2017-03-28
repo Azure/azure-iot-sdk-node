@@ -88,7 +88,7 @@ The `getReceiver` method creates a receiver object and returns it, or returns th
 **SRS_NODE_DEVICE_MQTT_16_003: [** If a receiver for this endpoint doesn’t exist, the `getReceiver` method should create a new `MqttReceiver` object and then call the `done` callback with the object that was just created as an argument. **]** 
 
 ### abandon(message, done)
-The `abandon` method is there for compatibility purposes with other transports but will throw because the MQTT protocol doesn't support abandonning messages.
+The `abandon` method is there for compatibility purposes with other transports but will throw because the MQTT protocol doesn't support abandoning messages.
 
 **SRS_NODE_DEVICE_MQTT_16_004: [** The `abandon` method shall throw because MQTT doesn’t support abandoning messages. **]** 
 
@@ -98,7 +98,7 @@ The `complete` method is there for compatibility purposes with other transports 
 **SRS_NODE_DEVICE_MQTT_16_005: [** The `complete` method shall call the `done` callback given as argument immediately since all messages are automatically completed. **]** 
 
 ### reject(message, done)
-The `reject` method is there for compatibility purposes with other transports but will throw because the MQTT protocol doesn't support abandonning messages.
+The `reject` method is there for compatibility purposes with other transports but will throw because the MQTT protocol doesn't support rejecting messages.
 
 **SRS_NODE_DEVICE_MQTT_16_006: [** The `reject` method shall throw because MQTT doesn’t support rejecting messages. **]** 
 

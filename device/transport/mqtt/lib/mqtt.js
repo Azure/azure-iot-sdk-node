@@ -133,7 +133,7 @@ Mqtt.prototype.reject = function () {
  * @method              module:azure-iot-device-mqtt.Mqtt#abandon
  * @description         Settles the message as abandoned and calls the done callback with the result.
  *
- * @throws {Error}      The MQTT transport does not support rejecting messages.
+ * @throws {Error}      The MQTT transport does not support abandoning messages.
  */
 /*Codes_SRS_NODE_DEVICE_MQTT_16_004: [The ‘abandon’ method shall throw because MQTT doesn’t support abandoning messages.] */
 Mqtt.prototype.abandon = function () {
