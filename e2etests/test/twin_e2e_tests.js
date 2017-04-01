@@ -387,9 +387,21 @@ var runTests = function (hubConnectionString) {
             callback();
         }
       ], done);
-
     });
 
+    it('can disconnect and reconnect without recreating the transport', function(testCallback) {
+      deviceClient.close(function(err) {
+        if (err) return testCallback(err);
+        deviceClient.open(function(err) {
+          if (err) return testCallback(err);
+          deviceClient.getTwin(function(err, newTwin) {
+            if (err) return testCallback(err);
+            assert.strictEqual(newTwin, deviceTwin);
+            testCallback();
+          });
+        });
+      });
+    });
   });
 };
 

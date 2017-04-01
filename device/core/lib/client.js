@@ -342,6 +342,7 @@ var Client = function (transport, connStr, blobUploadClient) {
   });
 
   this._fsm.on('transition', function (data) {
+    thisClient.emit('_' + data.toState);
     debug('Client state change: ' + data.fromState + ' -> ' + data.toState + ' (action: ' + data.action + ')');
   });
 

@@ -609,7 +609,7 @@ describe('Twin', function () {
     
   });
 
-  it('when _sharedAccessSignatureUpdated is fired, the twin object shall re-get and re-subscribe', function(done) {
+  it('when _connected is fired, the twin object shall re-get and re-subscribe', function(done) {
     var client = new FakeClient();
     Twin.fromDeviceClient(client, function(err, twin) {
       if (err) return done(err);
@@ -621,7 +621,7 @@ describe('Twin', function () {
       });
       process.nextTick(function() {
         twin.updateSharedAccessSignature();
-        client.emit('_sharedAccessSignatureUpdated');
+        client.emit('_connected');
       });
     });
   });

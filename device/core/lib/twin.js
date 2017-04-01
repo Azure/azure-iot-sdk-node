@@ -68,7 +68,7 @@ Twin.fromDeviceClient = function(client, done) {
       throw new errors.NotImplementedError('transport does not support Twin');
     } else {
       client._twin = twin;
-      client.on('_sharedAccessSignatureUpdated', function() {
+      client.on('_connected', function() {
         twin._connectSubscribeAndGetProperties(function() {});
       });
       twin._connectSubscribeAndGetProperties(done);
