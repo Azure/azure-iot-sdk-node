@@ -1,0 +1,27 @@
+{
+  "name": "az-iot-sdk-node-network-e2e-test",
+  "version": "0.0.1",
+  "description": "Suite of tests messing with the network connection in order to test the device client reliability",
+  "author": "Microsoft Corp.",
+  "license": "MIT",
+  "main": "run-test.js",
+  "bin": {
+    "create-device": "./create-device.js",
+    "delete-device": "./delete-device.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "dependencies": {
+    "azure-iothub": "^1.1.7",
+    "azure-iot-common": "^1.1.5",
+    "azure-iot-device": "^1.1.7",
+    "azure-iot-device-amqp": "^1.1.7",
+    "azure-iot-device-http": "^1.1.7",
+    "azure-iot-device-mqtt": "^1.1.7",
+    "network": "^0.3.2",
+    "yargs": "^7.0.2",
+    "uuid": "^3.0.1"
+  }
+}
