@@ -10,9 +10,6 @@ This being said, the more you do, the quicker it'll go through our gated build!
 - [ ] I added or modified the existing tests to cover the change (we do not allow our test coverage to go down).
 - If this is a modification that impacts the behavior of a public API
   - [ ] I edited the corresponding document in the `devdoc` folder and added or modified requirements.
-- I submitted this PR against the correct branch: 
-  - [ ] This pull-request contains code (and maybe docs): it is submitted against the `develop` branch. 
-  - [ ] This pull-request contains only docs: it is submitted against the `master` branch. 
 
 # Reference/Link to the issue solved with this PR (if any)
 
