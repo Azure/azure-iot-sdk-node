@@ -90,21 +90,24 @@ describe('MqttBase', function () {
       var transport = new MqttBase(fakemqtt);
 
       fakemqtt.connect = function(host, options) {
-        assert.equal(options.clientId, config.deviceId);
-        assert.equal(options.username, config.host + '/' +
+        assert.strictEqual(options.clientId, config.deviceId);
+        assert.strictEqual(options.username, config.host + '/' +
                                        config.deviceId +
                                        '/DeviceClientType=' +
                                        encodeURIComponent(
                                          'azure-iot-device/' + PackageJson.version
                                        ) +
                                        '&' + endpoint.versionQueryString().substr(1));
-        assert.equal(options.password, config.sharedAccessSignature);
+        assert.strictEqual(options.password.toString(), config.sharedAccessSignature);
 
-        assert.equal(options.cmd, 'connect');
-        assert.equal(options.protocolId, 'MQTT');
-        assert.equal(options.protocolVersion, '4');
-        assert.equal(options.clean, false);
-        assert.equal(options.rejectUnauthorized, true);
+        assert.strictEqual(options.cmd, 'connect');
+        assert.strictEqual(options.protocolId, 'MQTT');
+        assert.strictEqual(options.protocolVersion, 4);
+        assert.isFalse(options.clean);
+        assert.isTrue(options.rejectUnauthorized);
+        /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_016: [The `connect` method shall configure the `keepalive` ping interval to 3 minutes by default since the Azure Load Balancer TCP Idle timeout default is 4 minutes.]*/
+        assert.isFalse(options.reschedulePings);
+        assert.strictEqual(options.keepalive, 180);
       };
 
       transport.connect(config);
@@ -125,23 +128,26 @@ describe('MqttBase', function () {
       var transport = new MqttBase(fakemqtt);
 
       fakemqtt.connect = function(host, options) {
-        assert.equal(options.clientId, config.deviceId);
-        assert.equal(options.username, config.host + '/' +
+        assert.strictEqual(options.clientId, config.deviceId);
+        assert.strictEqual(options.username, config.host + '/' +
                                        config.deviceId +
                                        '/DeviceClientType=' +
                                        encodeURIComponent(
                                          'azure-iot-device/' + PackageJson.version
                                        ) +
                                        '&' + endpoint.versionQueryString().substr(1));
-        assert.equal(options.cert, config.x509.cert);
-        assert.equal(options.key, config.x509.key);
-        assert.equal(options.passphrase, config.x509.passphrase);
+        assert.strictEqual(options.cert, config.x509.cert);
+        assert.strictEqual(options.key, config.x509.key);
+        assert.strictEqual(options.passphrase, config.x509.passphrase);
 
-        assert.equal(options.cmd, 'connect');
-        assert.equal(options.protocolId, 'MQTT');
-        assert.equal(options.protocolVersion, '4');
-        assert.equal(options.clean, false);
-        assert.equal(options.rejectUnauthorized, true);
+        assert.strictEqual(options.cmd, 'connect');
+        assert.strictEqual(options.protocolId, 'MQTT');
+        assert.strictEqual(options.protocolVersion, 4);
+        assert.isFalse(options.clean);
+        assert.isTrue(options.rejectUnauthorized);
+        /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_016: [The `connect` method shall configure the `keepalive` ping interval to 3 minutes by default since the Azure Load Balancer TCP Idle timeout default is 4 minutes.]*/
+        assert.isFalse(options.reschedulePings);
+        assert.strictEqual(options.keepalive, 180);
       };
 
       transport.connect(config);

@@ -47,6 +47,8 @@ The `connect` method establishes a connection with the server using the config o
 
 **SRS_NODE_COMMON_MQTT_BASE_16_007: [** The `connect` method shall not throw if the `done` argument has not been passed. **]**
 
+**SRS_NODE_COMMON_MQTT_BASE_16_016: [** The `connect` method shall configure the `keepalive` ping interval to 3 minutes by default since the Azure Load Balancer TCP Idle timeout default is 4 minutes. (https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-tcp-idle-timeout) **]**
+
 ### MqttBase.disconnect(done)
 The `disconnect` method closes the connection to the server.
 
