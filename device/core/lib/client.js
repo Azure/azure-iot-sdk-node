@@ -578,7 +578,7 @@ Client.fromSharedAccessSignature = function (sharedAccessSignature, Transport) {
 Client.prototype.updateSharedAccessSignature = function (sharedAccessSignature, updateSasCallback) {
   /*Codes_SRS_NODE_DEVICE_CLIENT_16_031: [The updateSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature parameter is falsy.]*/
   if (!sharedAccessSignature) throw new ReferenceError('sharedAccessSignature is falsy');
-  if (this._useAutomaticRenewal) console.log('calling updateSharedAccessSignature while using automatic sas renewal');
+  if (this._useAutomaticRenewal) debug('calling updateSharedAccessSignature while using automatic sas renewal');
   /*Codes_SRS_NODE_DEVICE_CLIENT_06_002: [The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the client was created using x509.]*/
   if (this._connectionString && ConnectionString.parse(this._connectionString).x509) throw new ReferenceError('client uses x509');
   this._fsm.handle('updateSharedAccessSignature', sharedAccessSignature, function (err, result) {
