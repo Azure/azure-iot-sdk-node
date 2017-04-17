@@ -20,7 +20,7 @@ var Twin = function(client) {
 
 util.inherits(Twin, EventEmitter);
 
-Twin.timeout = 1000;
+Twin.timeout = 120000;
 
 Twin.errorEvent = 'error';
 Twin.subscribedEvent = 'subscribed';
