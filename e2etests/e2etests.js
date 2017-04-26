@@ -3,7 +3,8 @@
 
 'use strict';
 
-var errors = require('azure-iot-common').errors;
+var assert = require('chai').assert;
+
 var deviceAmqp = require('azure-iot-device-amqp');
 var deviceHttp = require('azure-iot-device-http');
 var deviceMqtt = require('azure-iot-device-mqtt');
@@ -15,6 +16,8 @@ var file_upload_tests = require('./test/file_upload.js');
 var device_acknowledge_tests = require('./test/device_acknowledge_tests.js');
 var sas_token_tests = require('./test/sas_token_tests.js');
 var service_client = require('./test/service.js');
+var d2c_disconnect = require('./test/d2c_disconnect.js');
+var c2d_disconnect = require('./test/c2d_disconnect.js');
 var device_teardown = require('./test/device_teardown.js');
 var twin_e2e_tests = require('./test/twin_e2e_tests.js');
 var device_method = require('./test/device_method.js');
@@ -39,19 +42,28 @@ device_provision(hubConnectionString, function (err, provisionedDevices) {
         device_service_tests(hubConnectionString, protocolToTest, deviceToTest);
       });
     });
+
+    // In the interest of saving time, we only will perform the connection
+    // tests on the shared key device.
+    assert.equal(provisionedDevices[1].authenticationDescription, 'shared private key');
+    c2d_disconnect(hubConnectionString, provisionedDevices[1]);
+    d2c_disconnect(hubConnectionString, provisionedDevices[1]);
+
+
     generalProtocols.forEach(function(protocolToTest) {
       sas_token_tests(hubConnectionString, protocolToTest, provisionedDevices[1]);
     });
     file_upload_tests(hubConnectionString, deviceHttp.Http, provisionedDevices[1]);
-    service_client(hubConnectionString);
-    registry_tests(hubConnectionString, storageConnectionString);
-    authentication_tests(hubConnectionString);
   }
+  service_client(hubConnectionString);
+  registry_tests(hubConnectionString, storageConnectionString);
+  authentication_tests(hubConnectionString);
+
   device_teardown(hubConnectionString, provisionedDevices);
   if (!provisionedDevices || provisionedDevices.length !== 3) {
     describe('device creation did not', function() {
       it('completely work', function(done) {
-          done(new errors.ArgumentError(''));
+          done(new Error(''));
       });
     });
   }
