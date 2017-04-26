@@ -389,7 +389,7 @@ var runTests = function (hubConnectionString) {
       ], done);
     });
 
-    it('can disconnect and reconnect without recreating the transport', function(testCallback) {
+    it.skip('can disconnect and reconnect without recreating the transport', function(testCallback) {
       deviceClient.close(function(err) {
         if (err) return testCallback(err);
         deviceClient.open(function(err) {
