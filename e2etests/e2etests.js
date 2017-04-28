@@ -18,6 +18,7 @@ var sas_token_tests = require('./test/sas_token_tests.js');
 var service_client = require('./test/service.js');
 var d2c_disconnect = require('./test/d2c_disconnect.js');
 var c2d_disconnect = require('./test/c2d_disconnect.js');
+var method_disconnect = require('./test/method_disconnect.js');
 var device_teardown = require('./test/device_teardown.js');
 var twin_e2e_tests = require('./test/twin_e2e_tests.js');
 var device_method = require('./test/device_method.js');
@@ -48,6 +49,7 @@ device_provision(hubConnectionString, function (err, provisionedDevices) {
     assert.equal(provisionedDevices[1].authenticationDescription, 'shared private key');
     c2d_disconnect(hubConnectionString, provisionedDevices[1]);
     d2c_disconnect(hubConnectionString, provisionedDevices[1]);
+    method_disconnect(hubConnectionString, provisionedDevices[1]);
 
 
     generalProtocols.forEach(function(protocolToTest) {

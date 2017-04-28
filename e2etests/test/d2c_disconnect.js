@@ -3,7 +3,7 @@
 
 'use strict';
 
-var debug = require('debug')('e2etests:d2ctcpdisconnect');
+var debug = require('debug')('e2etests:d2cdisconnect');
 var uuid = require('uuid');
 
 var deviceAmqp = require('azure-iot-device-amqp');
@@ -77,11 +77,11 @@ var protocolAndTermination = [
     closeReason: ' severs AMQP CBS response link ',
     delayInSeconds: 2
   },
-  { //----------------- FAILS - ERRORS ARE EMITTED THAT HAVE NO HANDLER.
+  { //----------------- FAILS - Disconnect does not make it up to client.
     testEnabled: false,
     transport: deviceAmqp.Amqp,
-    operationType: 'KillAmqpC2DLink',
-    closeReason: ' severs AMQP C2D link ',
+    operationType: 'KillAmqpD2CLink',
+    closeReason: ' severs AMQP D2C link ',
     delayInSeconds: 2
   },
   {

@@ -4,7 +4,7 @@
 'use strict';
 
 var assert = require('chai').assert;
-var debug = require('debug')('e2etests:c2dtcpdisconnect');
+var debug = require('debug')('e2etests:c2ddisconnect');
 var uuid = require('uuid');
 var deviceAmqp = require('azure-iot-device-amqp');
 var deviceMqtt = require('azure-iot-device-mqtt');
