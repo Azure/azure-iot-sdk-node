@@ -1,0 +1,256 @@
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+'use strict';
+
+var Registry = require('azure-iothub').Registry;
+var ConnectionString = require('azure-iothub').ConnectionString;
+var debug = require('debug')('e2etests:twindisconnect');
+var Message = require('azure-iot-common').Message;
+var deviceSdk = require('azure-iot-device');
+var deviceMqtt = require('azure-iot-device-mqtt');
+var deviceAmqp = require('azure-iot-device-amqp');
+var uuid = require('uuid');
+var assert = require('chai').assert;
+
+var setTwinMoreNewPropsTimeout;
+
+var doConnectTest = function doConnectTest(doIt) {
+  return doIt ? it : it.skip;
+};
+
+var protocolAndTermination = [
+  {
+    testEnabled: true,
+    transport: deviceMqtt.Mqtt,
+    operationType: 'KillTcp',
+    closeReason: ' severs the TCP connection ',
+    delayInSeconds: 2
+  },
+  {
+    testEnabled: true,
+    transport: deviceMqtt.MqttWs,
+    operationType: 'KillTcp',
+    closeReason: ' severs the TCP connection ',
+    delayInSeconds: 2
+  },
+  { // !!!!!!!!!!!!!!!!! Functionality does not yet exist.
+    testEnabled: false,
+    transport: deviceAmqp.Amqp,
+    operationType: 'KillAmqpTwinLinkReq',
+    closeReason: ' severs AMQP TWIN request link ',
+    delayInSeconds: 2
+  },
+  { // !!!!!!!!!!!!!!!!! Functionality does not yet exist.
+    testEnabled: false,
+    transport: deviceAmqp.Amqp,
+    operationType: 'KillAmqpTwinLinkResp',
+    closeReason: ' severs AMQP TWIN response link ',
+    delayInSeconds: 2
+  },
+  { // !!!!!!!!!!!!!!!!! Functionality does not yet exist.
+    testEnabled: false,
+    transport: deviceAmqp.AmqpWs,
+    operationType: 'KillAmqpTwinLinkReq',
+    closeReason: ' severs AMQP TWIN request link ',
+    delayInSeconds: 2
+  },
+  { // !!!!!!!!!!!!!!!!! Functionality does not yet exist.
+    testEnabled: false,
+    transport: deviceAmqp.AmqpWs,
+    operationType: 'KillAmqpTwinLinkResp',
+    closeReason: ' severs AMQP TWIN response link ',
+    delayInSeconds: 2
+  },
+  {
+    testEnabled: true,
+    transport: deviceMqtt.Mqtt,
+    operationType: 'ShutDownMqtt',
+    closeReason: ' cleanly shutdowns MQTT connection ',
+    delayInSeconds: 2
+  },
+  {
+    testEnabled: true,
+    transport: deviceMqtt.MqttWs,
+    operationType: 'ShutDownMqtt',
+    closeReason: ' cleanly shutdowns MQTT connection ',
+    delayInSeconds: 2
+  },
+  { // No twin AMQP yet
+    testEnabled: false,
+    transport: deviceAmqp.Amqp,
+    operationType: 'ShutDownAmqp',
+    closeReason: ' cleanly shutdowns AMQP connection ',
+    delayInSeconds: 2
+  },
+  { // No twin AMQP yet
+    testEnabled: false,
+    transport: deviceAmqp.AmqpWs,
+    operationType: 'ShutDownAmqp',
+    closeReason: ' cleanly shutdowns AMQP connection ',
+    delayInSeconds: 2
+  },
+];
+
+
+var newProps = {
+  foo : 1,
+  bar : {
+    baz : 2,
+    tweedle : {
+      dee : 3
+    }
+  }
+};
+
+var moreNewProps = {
+  bar : {
+    baz : 3
+  }
+};
+
+var nullMergeResult = JSON.parse(JSON.stringify(newProps));
+delete nullMergeResult.tweedle;
+
+var runTests = function (hubConnectionString) {
+  protocolAndTermination.forEach( function (testConfiguration) {
+    describe('Device utilizing shared private key authentication, connected over ' + testConfiguration.transport.name + ' using device/service clients - disconnect twin', function () {
+
+      this.timeout(10000);
+      var deviceClient, deviceTwin;
+      var serviceTwin;
+
+      var deviceDescription;
+
+      beforeEach(function (done) {
+        this.timeout(10000);
+        setTwinMoreNewPropsTimeout = null;
+        var host = ConnectionString.parse(hubConnectionString).HostName;
+        var pkey = new Buffer(uuid.v4()).toString('base64');
+        var deviceId = '0000e2etest-delete-me-twin-e2e-disconnect-' + uuid.v4();
+
+        deviceDescription = {
+          deviceId:  deviceId,
+          status: 'enabled',
+            authentication: {
+            symmetricKey: {
+              primaryKey: pkey,
+              secondaryKey: new Buffer(uuid.v4()).toString('base64')
+            }
+          },
+          connectionString: 'HostName=' + host + ';DeviceId=' + deviceId + ';SharedAccessKey=' + pkey
+        };
+
+        var registry = Registry.fromConnectionString(hubConnectionString);
+
+        registry.create(deviceDescription, function (err) {
+          if (err) return done(err);
+
+          deviceClient = deviceSdk.Client.fromConnectionString(deviceDescription.connectionString, testConfiguration.transport);
+
+          deviceClient.open(function(err) {
+            if (err) return done(err);
+            deviceClient.getTwin(function(err, twin) {
+              if (err) return done(err);
+              deviceTwin = twin;
+
+              registry.getTwin(deviceDescription.deviceId, function(err, twin) {
+                if (err) return done(err);
+                serviceTwin = twin;
+                done();
+              });
+            });
+          });
+        });
+      });
+
+      afterEach(function (done) {
+        this.timeout(10000);
+        if (setTwinMoreNewPropsTimeout) clearTimeout(setTwinMoreNewPropsTimeout);
+        if (deviceClient) {
+          deviceClient.close(function(err) {
+            if (err) return done(err);
+
+            var registry = Registry.fromConnectionString(hubConnectionString);
+            registry.delete(deviceDescription.deviceId, function(err) {
+              if (err) return done(err);
+              done();
+            });
+          });
+        } else {
+          done();
+        }
+      });
+
+      doConnectTest(testConfiguration.testEnabled)('Simple twin update, client twin receives it, and' + testConfiguration.closeReason + 'which is noted by the iot hub client', function(testCallback) {
+        this.timeout(20000);
+        debug('about to connect a disconnect listener.');
+        deviceClient.on('disconnect', function () {
+          debug('We did get a disconnect message');
+          if (deviceTwin.properties.desired.$version === 2) {
+            testCallback();
+          } else {
+            testCallback(new Error('unexpected disconnect'));
+          }
+        });
+        assert.equal(deviceTwin.properties.desired.$version, 1);
+        serviceTwin.update( { properties : { desired : newProps } }, function(err) {
+          if (err) return testCallback(err);
+          deviceTwin.on('properties.desired', function() {
+            if (deviceTwin.properties.desired.$version === 2) {
+              var terminateMessage = new Message('');
+              terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
+              terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
+              terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
+              deviceClient.sendEvent(terminateMessage, function (sendErr) {
+                debug('at the callback for the fault injection send, err is:' + sendErr);
+              });
+            } else if (deviceTwin.properties.desired.$version >= 2) {
+              testCallback(new Error('incorrect property version received - ' + deviceTwin.properties.desired.$version));
+            }
+          });
+        });
+      });
+
+      doConnectTest(false)('Simple twin update, client twin receives it, and' + testConfiguration.closeReason + 'which is NOT noted by the iot hub client', function(testCallback) {
+        this.timeout(20000);
+        debug('about to connect a disconnect listener.');
+        deviceClient.on('disconnect', function () {
+          debug('We did get a disconnect message');
+          testCallback(new Error('unexpected disconnect'));
+        });
+        var setTwinMoreNewProps = function() {
+          serviceTwin.update( { properties : { desired : moreNewProps } }, function(err) {
+            debug('At the timeout delayed update');
+            if (err) return testCallback(err);
+          });
+        };
+        assert.equal(deviceTwin.properties.desired.$version,1);
+        serviceTwin.update( { properties : { desired : newProps } }, function(err) {
+          if (err) return testCallback(err);
+          deviceTwin.on('properties.desired', function() {
+            if (deviceTwin.properties.desired.$version === 1) {
+              // ignore $update === 1.  assert needed to make jshint happy
+              assert(true);
+            } else if (deviceTwin.properties.desired.$version === 2) {
+              var terminateMessage = new Message('');
+              terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
+              terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
+              terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
+              deviceClient.sendEvent(terminateMessage, function (sendErr) {
+                debug('at the callback for the fault injection send, err is:' + sendErr);
+              });
+              setTwinMoreNewPropsTimeout = setTimeout(setTwinMoreNewProps.bind(this), testConfiguration.delayInSeconds + 1000);
+            } else if (deviceTwin.properties.desired.$version === 3) {
+              testCallback();
+            } else {
+              testCallback(new Error('incorrect property version received - ' + deviceTwin.properties.desired.$version));
+            }
+          });
+        });
+      });
+    });
+  });
+};
+module.exports = runTests;
+

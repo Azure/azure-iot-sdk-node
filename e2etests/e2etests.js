@@ -19,6 +19,7 @@ var service_client = require('./test/service.js');
 var d2c_disconnect = require('./test/d2c_disconnect.js');
 var c2d_disconnect = require('./test/c2d_disconnect.js');
 var throttle_disconnect = require('./test/throttle_disconnect.js');
+var twin_disconnect = require('./test/twin_disconnect.js');
 var method_disconnect = require('./test/method_disconnect.js');
 var upload_disconnect = require('./test/upload_disconnect.js');
 var device_teardown = require('./test/device_teardown.js');
@@ -58,6 +59,7 @@ device_provision(hubConnectionString, function (err, provisionedDevices) {
     uploadDisconnectProtocols.forEach(function(protocolToTest) {
       upload_disconnect(hubConnectionString, protocolToTest, provisionedDevices[1]);
     });
+    twin_disconnect(hubConnectionString);
 
     generalProtocols.forEach(function(protocolToTest) {
       sas_token_tests(hubConnectionString, protocolToTest, provisionedDevices[1]);
