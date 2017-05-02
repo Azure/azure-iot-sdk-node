@@ -72,6 +72,39 @@ describe('Http', function () {
       // cleanup
       done();
     });
+
+
+    /*Tests_SRS_NODE_DEVICE_HTTP_16_014: [If the `message` object has a `messageId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-MessageId`.]*/
+    /*Tests_SRS_NODE_DEVICE_HTTP_16_015: [If the `message` object has a `correlationId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-CorrelationId`.]*/
+    /*Tests_SRS_NODE_DEVICE_HTTP_16_016: [If the `message` object has a `userId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-UserId`.]*/
+    /*Tests_SRS_NODE_DEVICE_HTTP_16_017: [If the `message` object has a `to` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-To`.]*/
+    /*Tests_SRS_NODE_DEVICE_HTTP_16_018: [If the `message` object has a `expiryTimeUtc` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Expiry`.]*/
+    /*Tests_SRS_NODE_DEVICE_HTTP_16_019: [If the `message` object has a `ack` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Ack`.]*/
+    [
+      { messagePropertyName: 'messageId', headerName: 'IoTHub-MessageId', fakeValue: 'fakeMessageId' },
+      { messagePropertyName: 'correlationId', headerName: 'IoTHub-CorrelationId', fakeValue: 'fakeCorrelationId' },
+      { messagePropertyName: 'userId', headerName: 'IoTHub-UserId', fakeValue: 'fakeUserId' },
+      { messagePropertyName: 'to', headerName: 'IoTHub-To', fakeValue: 'fakeTo' },
+      { messagePropertyName: 'expiryTimeUtc', headerName: 'IoTHub-Expiry', fakeValue: new Date().toISOString() },
+      { messagePropertyName: 'ack', headerName: 'IoTHub-Ack', fakeValue: 'full' }
+    ].forEach(function(testConfig) {
+      it('correctly populates the ' + testConfig.headerName + ' header if the message has a ' + testConfig.messagePropertyName + ' property', function() {
+        transport._http = {
+          buildRequest: sinon.stub().returns({
+            write: function() {},
+            end: function() {}
+          })
+        };
+
+        var msg = new Message('fakeBody');
+        msg[testConfig.messagePropertyName] = testConfig.fakeValue;
+
+        transport.sendEvent(msg, function() {});
+
+        var headers = transport._http.buildRequest.args[0][2];
+        assert.strictEqual(headers[testConfig.headerName], testConfig.fakeValue);
+      });
+    });
   });
 
   describe('#sendEventBatch', function() {
@@ -146,7 +179,7 @@ describe('Http', function () {
         done();
       });
     });
-    
+
     it('instanciate the receiver if necessary', function() {
       var transport = new Http({ host: 'hub.host.name', hubName: 'hub', deviceId: 'deviceId', sas: 'sas.key' });
       assert.doesNotThrow(function() {

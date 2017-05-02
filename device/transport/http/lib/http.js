@@ -41,7 +41,7 @@ function handleResponse(done) {
 and either:
 - `sharedAccessSignature` - (string) a shared access signature generated from the credentials of a policy with the "device connect" permissions.
 or:
-- `x509` (object) an object with 3 properties: `cert`, `key` and `passphrase`, all strings, containing the necessary information to connect to the service. 
+- `x509` (object) an object with 3 properties: `cert`, `key` and `passphrase`, all strings, containing the necessary information to connect to the service.
 ]*/
 function Http(config) {
   this._config = config;
@@ -50,7 +50,7 @@ function Http(config) {
 
  Http.prototype._insertAuthHeaderIfNecessary = function (headers) {
   if(!this._config.x509) {
-    /*Codes_SRS_NODE_DEVICE_HTTP_16_012: [If using a shared access signature for authentication, the following additional header should be used in the HTTP request: 
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_012: [If using a shared access signature for authentication, the following additional header should be used in the HTTP request:
     ```
     Authorization: <config.sharedAccessSignature>
     ```]*/
@@ -101,6 +101,36 @@ Http.prototype.sendEvent = function (message, done) {
     var propItem = message.properties.getItem(i);
     /*Codes_SRS_NODE_DEVICE_HTTP_13_001: [ sendEvent shall add message properties as HTTP headers and prefix the key name with the string iothub-app. ]*/
     httpHeaders[MESSAGE_PROP_HEADER_PREFIX + propItem.key] = propItem.value;
+  }
+
+  if (message.messageId) {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_014: [If the `message` object has a `messageId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-MessageId`.]*/
+    httpHeaders['IoTHub-MessageId'] = message.messageId;
+  }
+
+  if (message.correlationId) {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_015: [If the `message` object has a `correlationId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-CorrelationId`.]*/
+    httpHeaders['IoTHub-CorrelationId'] = message.correlationId;
+  }
+
+  if (message.userId) {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_016: [If the `message` object has a `userId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-UserId`.]*/
+    httpHeaders['IoTHub-UserId'] = message.userId;
+  }
+
+  if (message.to) {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_017: [If the `message` object has a `to` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-To`.]*/
+    httpHeaders['IoTHub-To'] = message.to;
+  }
+
+  if (message.expiryTimeUtc) {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_018: [If the `message` object has a `expiryTimeUtc` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Expiry`.]*/
+    httpHeaders['IoTHub-Expiry'] = message.expiryTimeUtc;
+  }
+
+  if (message.ack) {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_019: [If the `message` object has a `ack` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Ack`.]*/
+    httpHeaders['IoTHub-Ack'] = message.ack;
   }
 
   /*Codes_SRS_NODE_DEVICE_HTTP_16_013: [If using x509 authentication the `Authorization` header shall not be set and the x509 parameters shall instead be passed to the underlying transpoort.]*/
@@ -178,7 +208,7 @@ Http.prototype.sendEventBatch = function (messages, done) {
     'Content-Type': 'application/vnd.microsoft.iothub.json',
     'User-Agent': 'azure-iot-device/' + PackageJson.version
   };
-  
+
   this._insertAuthHeaderIfNecessary(httpHeaders);
 
   /*Codes_SRS_NODE_DEVICE_HTTP_16_013: [If using x509 authentication the `Authorization` header shall not be set and the x509 parameters shall instead be passed to the underlying transpoort.]*/

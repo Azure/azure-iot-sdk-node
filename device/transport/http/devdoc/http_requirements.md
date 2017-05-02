@@ -46,7 +46,7 @@ http.getReceiver(function (receiver) {
 and either:
 - `sharedAccessSignature` - (string) a shared access signature generated from the credentials of a policy with the "device connect" permissions.
 or:
-- `x509` (object) an object with 3 properties: `cert`, `key` and `passphrase`, all strings, containing the necessary information to connect to the service. 
+- `x509` (object) an object with 3 properties: `cert`, `key` and `passphrase`, all strings, containing the necessary information to connect to the service.
 **]**
 
 ### sendEvent(message, done)
@@ -65,6 +65,18 @@ Host: <config.host>
 **]**
 
 **SRS_NODE_DEVICE_HTTP_13_001: [** `sendEvent` shall add message properties as HTTP headers and prefix the key name with the string **iothub-app**. **]**
+
+**SRS_NODE_DEVICE_HTTP_16_014: [** If the `message` object has a `messageId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-MessageId`. **]**
+
+**SRS_NODE_DEVICE_HTTP_16_015: [** If the `message` object has a `correlationId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-CorrelationId`. **]**
+
+**SRS_NODE_DEVICE_HTTP_16_016: [** If the `message` object has a `userId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-UserId`. **]**
+
+**SRS_NODE_DEVICE_HTTP_16_017: [** If the `message` object has a `to` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-To`. **]**
+
+**SRS_NODE_DEVICE_HTTP_16_018: [** If the `message` object has a `expiryTimeUtc` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Expiry`. **]**
+
+**SRS_NODE_DEVICE_HTTP_16_019: [** If the `message` object has a `ack` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Ack`. **]**
 
 ### sendEventBatch(messages, done)
 
@@ -136,7 +148,7 @@ err - the standard JavaScript Error object, with the Node.js http.ServerResponse
 - `body` - the body of the HTTP response
 - `response` - the Node.js http.ServerResponse object returned by the transport**]**
 
-**SRS_NODE_DEVICE_HTTP_16_012: [** If using a shared access signature for authentication, the following additional header should be used in the HTTP request: 
+**SRS_NODE_DEVICE_HTTP_16_012: [** If using a shared access signature for authentication, the following additional header should be used in the HTTP request:
 ```
 Authorization: <config.sharedAccessSignature>
 ```
