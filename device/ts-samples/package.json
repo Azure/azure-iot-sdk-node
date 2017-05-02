@@ -1,0 +1,31 @@
+{
+  "name": "azure-iot-device-ts-samples",
+  "version": "0.0.1",
+  "description": "Device code samples for the Azure IoT Hub Device SDK",
+  "main": "sample_device.js",
+  "scripts": {
+    "lint": "tslint --project . --type-check -c ../../tslint.json",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/azure/azure-iot-sdk-node.git"
+  },
+  "author": "Microsoft Corporation",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/azure/azure-iot-sdk-node/issues"
+  },
+  "homepage": "https://github.com/azure/azure-iot-sdk-node#readme",
+  "dependencies": {
+    "@types/node": "^7.0.14",
+    "azure-iot-common": "^1.1.6",
+    "azure-iot-device": "^1.1.10",
+    "azure-iot-device-amqp": "^1.1.10",
+    "azure-iot-device-http": "^1.1.10",
+    "azure-iot-device-mqtt": "^1.1.10",
+    "tslint": "^5.1.0",
+    "typescript": "^2.2.2"
+  }
+}

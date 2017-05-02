@@ -1,0 +1,37 @@
+{
+  "name": "ts-e2e",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "lint": "tslint --type-check --project . -c ../tslint.json",
+    "pretest": "tsc",
+    "test": "mocha ./lib/*.tests.js"
+  },
+  "keywords": [],
+  "author": "Microsoft Corporation",
+  "license": "MIT",
+  "dependencies": {
+    "@types/bluebird": "^3.5.0",
+    "@types/chai": "^3.5.1",
+    "@types/debug": "0.0.29",
+    "@types/mocha": "^2.2.41",
+    "@types/node": "^7.0.8",
+    "@types/uuid": "^2.0.29",
+    "azure-event-hubs": "0.0.6",
+    "azure-iot-common": "^1.1.6",
+    "azure-iot-device": "^1.1.10",
+    "azure-iot-device-amqp": "^1.1.10",
+    "azure-iot-device-http": "^1.1.10",
+    "azure-iot-device-mqtt": "^1.1.10",
+    "azure-iothub": "^1.1.9",
+    "chai": "^3.5.0",
+    "debug": "^2.6.6",
+    "jest": "^19.0.2",
+    "mocha": "^3.3.0",
+    "ts-jest": "^19.0.0",
+    "tslint": "^4.5.1",
+    "typescript": "^2.2.1",
+    "uuid": "^3.0.1"
+  }
+}
