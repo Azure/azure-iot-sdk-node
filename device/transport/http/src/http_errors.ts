@@ -3,16 +3,22 @@
 
 'use strict';
 
-var errors = require('azure-iot-common').errors;
+import { errors } from 'azure-iot-common';
+import { IncomingMessage } from 'http';
+
+export class HttpTransportError extends Error {
+  response?: IncomingMessage;
+  responseBody?: any;
+}
 
 /* Codes_SRS_NODE_DEVICE_HTTP_ERRORS_16_010: [`translateError` shall accept 3 arguments:
  * - A custom error message to give context to the user.
  * - the body of  the HTTP response, containing the explanation of why the request failed
  * - the HTTP response object itself]
  */
-var translateError = function translateError(message, body, response) {
-  var error;
-  switch(response.statusCode) {
+export function translateError(message: string, body: any, response: IncomingMessage): HttpTransportError {
+  let error: HttpTransportError;
+  switch (response.statusCode) {
     case 400:
       /*Codes_SRS_NODE_DEVICE_HTTP_ERRORS_16_003: [`translateError` shall return an `ArgumentError` if the HTTP response status code is `400`.]*/
       error = new errors.ArgumentError(message);
@@ -54,6 +60,4 @@ var translateError = function translateError(message, body, response) {
   error.response = response;
   error.responseBody = body;
   return error;
-};
-
-module.exports = translateError;
+}

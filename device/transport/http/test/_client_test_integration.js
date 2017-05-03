@@ -4,7 +4,7 @@
 'use strict';
 
 var Registry = require('azure-iothub').Registry;
-var Http = require('../lib/http.js');
+var Http = require('../lib/http.js').Http;
 var clientTests = require('azure-iot-device/test/_client_common_testrun.js');
 
 describe('Over real HTTPS', function () {

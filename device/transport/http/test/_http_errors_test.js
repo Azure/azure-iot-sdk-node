@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 var errors = require('azure-iot-common').errors;
-var translateError = require('../lib/http_errors.js');
+var translateError = require('../lib/http_errors.js').translateError;
 
 describe('translateError', function() {
 

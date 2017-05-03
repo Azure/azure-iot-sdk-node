@@ -62,6 +62,7 @@ call npm link azure-iot-common
 call npm link azure-iot-device
 call npm link azure-iothub
 call npm link
+call npm run build
 
 cd %node-root%\device\transport\mqtt
 echo.

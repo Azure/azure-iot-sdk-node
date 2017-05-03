@@ -7,7 +7,7 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 
 var Message = require('azure-iot-common').Message;
-var Http = require('../lib/http.js');
+var Http = require('../lib/http.js').Http;
 
 describe('Http', function () {
   var transport = null;

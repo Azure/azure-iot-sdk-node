@@ -6,7 +6,7 @@
 var assert = require('chai').assert;
 var Message = require('azure-iot-common').Message;
 var ArgumentError = require('azure-iot-common').errors.ArgumentError;
-var HttpReceiver = require('../lib/http_receiver.js');
+var HttpReceiver = require('../lib/http_receiver.js').HttpReceiver;
 var sinon = require('sinon');
 
 var FakeHttp = function () { };
