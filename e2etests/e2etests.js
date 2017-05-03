@@ -20,6 +20,7 @@ var d2c_disconnect = require('./test/d2c_disconnect.js');
 var c2d_disconnect = require('./test/c2d_disconnect.js');
 var throttle_disconnect = require('./test/throttle_disconnect.js');
 var method_disconnect = require('./test/method_disconnect.js');
+var upload_disconnect = require('./test/upload_disconnect.js');
 var device_teardown = require('./test/device_teardown.js');
 var twin_e2e_tests = require('./test/twin_e2e_tests.js');
 var device_method = require('./test/device_method.js');
@@ -31,6 +32,8 @@ var storageConnectionString = process.env.STORAGE_CONNECTION_STRING;
 var generalProtocols = [deviceHttp.Http, deviceAmqp.Amqp, deviceAmqp.AmqpWs, deviceMqtt.Mqtt];
 var acknowledgementProtocols = [deviceHttp.Http, deviceAmqp.Amqp, deviceAmqp.AmqpWs];
 var deviceMethodsProtocols = [deviceMqtt.Mqtt, deviceMqtt.MqttWs, deviceAmqp.Amqp, deviceAmqp.AmqpWs];
+var uploadDisconnectProtocols = [deviceMqtt.Mqtt, deviceMqtt.MqttWs, deviceAmqp.Amqp, deviceAmqp.AmqpWs];
+
 
 device_provision(hubConnectionString, function (err, provisionedDevices) {
   if (err) {
@@ -52,7 +55,9 @@ device_provision(hubConnectionString, function (err, provisionedDevices) {
     d2c_disconnect(hubConnectionString, provisionedDevices[1]);
     method_disconnect(hubConnectionString, provisionedDevices[1]);
     throttle_disconnect(hubConnectionString, provisionedDevices[1]);
-
+    uploadDisconnectProtocols.forEach(function(protocolToTest) {
+      upload_disconnect(hubConnectionString, protocolToTest, provisionedDevices[1]);
+    });
 
     generalProtocols.forEach(function(protocolToTest) {
       sas_token_tests(hubConnectionString, protocolToTest, provisionedDevices[1]);
