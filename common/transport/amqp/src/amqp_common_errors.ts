@@ -1,20 +1,25 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+
 'use strict';
 
-var errors = require('azure-iot-common').errors;
-var amqp10 = require('amqp10');
+import { errors } from 'azure-iot-common';
+import { Errors as Amqp10Errors } from 'amqp10';
+
+export interface AmqpTransportError extends Error {
+  amqpError?: Error;
+}
 
 /*Codes_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_010: [ `translateError` shall accept 2 argument:
 *- A custom error message to give context to the user.
 *- the AMQP error object itself]
 */
-var translateError = function translateError(message, amqpError) {
-  var error;
+export function translateError(message: string, amqpError: Error): AmqpTransportError {
+  let error: AmqpTransportError;
 
-  if (amqpError.condition) {
-    switch (amqpError.condition) {
+  if ((amqpError as Amqp10Errors.ProtocolError).condition) {
+    switch ((amqpError as Amqp10Errors.ProtocolError).condition) {
       case 'amqp:not-found':
         /*Codes_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_006: [`translateError` shall return an `DeviceNotFoundError` if the AMQP error condition is `amqp:not-found`.]*/
         error = new errors.DeviceNotFoundError(message);
@@ -47,8 +52,7 @@ var translateError = function translateError(message, amqpError) {
         /*Codes_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_002: [If the AMQP error code is unknown, `translateError` should return a generic Javascript `Error` object.]*/
         error = new Error(message);
     }
-  }
-  else if (amqpError instanceof amqp10.Errors.AuthenticationError) {
+  } else if (amqpError instanceof Amqp10Errors.AuthenticationError) {
     error = new errors.UnauthorizedError(message);
   } else {
     /*Codes_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_002: [If the AMQP error code is unknown, `translateError` should return a generic Javascript `Error` object.]*/
@@ -62,6 +66,4 @@ var translateError = function translateError(message, amqpError) {
   error.amqpError = amqpError;
 
   return error;
-};
-
-module.exports = translateError;
+}

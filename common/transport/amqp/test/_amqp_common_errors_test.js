@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 var errors = require('azure-iot-common').errors;
-var translateError = require('../lib/amqp_common_errors.js');
+var translateError = require('../lib/amqp_common_errors.js').translateError;
 
 describe('translateError', function() {
   /*Tests_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_002: [If the AMQP error code is unknown, `translateError` should return a generic Javascript `Error` object.]*/

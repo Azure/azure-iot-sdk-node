@@ -8,7 +8,6 @@ node_root=$(cd "$(dirname "$0")/.." && pwd)
 cd $node_root/common/core
 echo "\n-- Creating links for `pwd` --"
 npm link
-npm run lint
 npm run build
 [ $? -eq 0 ] || exit $?
 
@@ -16,6 +15,7 @@ cd $node_root/common/transport/amqp
 echo "\n-- Creating links for `pwd` --"
 npm link azure-iot-common
 npm link
+npm run build
 [ $? -eq 0 ] || exit $?
 
 cd $node_root/common/transport/http

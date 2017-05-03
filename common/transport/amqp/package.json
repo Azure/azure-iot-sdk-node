@@ -8,9 +8,9 @@
   "typings": "index.d.ts",
   "dependencies": {
     "amqp10": "3.5.0",
-    "bluebird": "^3.5.0",
     "amqp10-transport-ws": "^0.0.5",
     "azure-iot-common": "1.1.6",
+    "bluebird": "^3.5.0",
     "debug": "^2.6.0",
     "uuid": "^3.0.1"
   },
@@ -21,19 +21,21 @@
     "istanbul": "^0.4.5",
     "jshint": "^2.9.4",
     "mocha": "^3.2.0",
-    "tslint": "^3.14.0",
-    "typescript": "^1.8.10",
+    "tslint": "^5.1.0",
+    "typescript": "2.2.2",
+    "@types/node": "^7.0.12",
     "uuid": "^3.0.1"
   },
   "scripts": {
-    "lint": "jshint --show-non-errors . && tslint -c ../../../tslint.json \"{lib,.}/*.ts\"",
+    "lint": "tslint --type-check --project . -c ../../../tslint.json",
+    "build": "tsc",
     "unittest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test.js",
     "alltest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test*.js",
     "unittest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test.js",
     "alltest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
-    "ci": "npm -s run lint && npm -s run alltest-min && npm -s run check-cover",
-    "test": "npm -s run lint && npm -s run unittest",
-    "check-cover": "istanbul check-coverage --statements 95 --branches 85 --functions 91 --lines 95"
+    "ci": "npm -s run lint && npm -s run build  && npm -s run alltest-min && npm -s run check-cover",
+    "test": "npm -s run lint && npm -s run build  && npm -s run unittest",
+    "check-cover": "istanbul check-coverage --statements 95 --branches 82 --functions 89 --lines 95"
   },
   "engines": {
     "node": ">= 0.10"

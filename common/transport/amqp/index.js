@@ -10,8 +10,8 @@
  */
 
 module.exports = {
-  Amqp: require('./lib/amqp.js'),
-  AmqpMessage: require('./lib/amqp_message.js'),
-  AmqpReceiver: require('./lib/amqp_receiver.js'),
-  translateError: require('./lib/amqp_common_errors.js')
+  Amqp: require('./lib/amqp.js').Amqp,
+  AmqpMessage: require('./lib/amqp_message.js').AmqpMessage,
+  AmqpReceiver: require('./lib/amqp_receiver.js').AmqpReceiver,
+  translateError: require('./lib/amqp_common_errors.js').translateError
 };
