@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 var uuid = require('uuid');
-var Registry = require('../lib/registry.js');
+var Registry = require('../lib/registry.js').Registry;
 var ConnectionString = require('../lib/connection_string.js');
 
 function makeConnectionString(host, policy, key) {

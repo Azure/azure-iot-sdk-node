@@ -7,9 +7,9 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 var endpoint = require('azure-iot-common').endpoint;
 var errors = require('azure-iot-common').errors;
-var Registry = require('../lib/registry.js');
-var Twin = require('../lib/twin.js');
-var Query = require('../lib/query.js');
+var Registry = require('../lib/registry.js').Registry;
+var Twin = require('../lib/twin.js').Twin;
+var Query = require('../lib/query.js').Query;
 
 var fakeDevice = { deviceId: 'deviceId' };
 var fakeConfig = { host: 'host', sharedAccessSignature: 'sas' };

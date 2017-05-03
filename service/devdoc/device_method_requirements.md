@@ -40,7 +40,9 @@ The `DeviceMethod` constructor initializes a new instance of a `DeviceMethod` ob
 
 **SRS_NODE_IOTHUB_DEVICE_METHOD_16_013: [** The `DeviceMethod` constructor shall set the `DeviceMethod.params` property to the `params` argument value. **]**
 
-**SRS_NODE_IOTHUB_DEVICE_METHOD_16_006: [** The `DeviceMethod` constructor shall set the `DeviceMethod.params.timeoutInSeconds` property value to the `params.timeoutInSeconds` argument value or to the default (`30`) if the `timeoutInSeconds` value is falsy. **]**  
+**SRS_NODE_IOTHUB_DEVICE_METHOD_16_006: [** The `DeviceMethod` constructor shall set the `DeviceMethod.params.responseTimeoutInSeconds` property value to the `params.responseTimeoutInSeconds` argument value or to the default (`30`) if the `responseTimeoutInSeconds` value is falsy. **]**  
+
+**SRS_NODE_IOTHUB_DEVICE_METHOD_16_016: [** The `DeviceMethod` constructor shall set the `DeviceMethod.params.connectTimeoutInSeconds` property value to the `params.connectTimeoutInSeconds` argument value or to the default (`0`) if the `connectTimeoutInSeconds` value is falsy. **]**
 
 **SRS_NODE_IOTHUB_DEVICE_METHOD_16_015: [** The `DeviceMethod` constructor shall set the `DeviceMethod.params.payload` property value to the `params.payload` argument value or to the default (`null`) if the `payload` argument is `null` or `undefined`. **]**  
 
@@ -58,7 +60,8 @@ Content-Type: application/json; charset=utf-8
 Request-Id: <guid>
 {
   "methodName": <DeviceMethod.params.name>,
-  "timeoutInSeconds": <DeviceMethod.params.timeoutInSeconds>,
+  "responseTimeoutInSeconds": <DeviceMethod.params.responseTimeoutInSeconds>,
+  "connectTimeoutInSeconds": <DeviceMethod.params.connectTimeoutInSeconds>,
   "payload": <DeviceMethod.params.payload>
 }
 ```

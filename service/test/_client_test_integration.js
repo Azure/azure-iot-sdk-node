@@ -2,8 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-var Registry = require('../lib/registry.js');
-var AmqpWs = require('../lib/amqp_ws.js');
+var Registry = require('../lib/registry.js').Registry;
+var AmqpWs = require('../lib/amqp_ws.js').AmqpWs;
 
 var transportSpecificTests = require('./_client_common_testrun.js');
 

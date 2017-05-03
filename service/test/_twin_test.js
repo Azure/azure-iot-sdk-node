@@ -6,8 +6,8 @@
 var assert = require('chai').assert;
 var sinon = require('sinon');
 var errors = require('azure-iot-common').errors;
-var Registry = require('../lib/registry.js');
-var Twin = require('../lib/twin.js');
+var Registry = require('../lib/registry.js').Registry;
+var Twin = require('../lib/twin.js').Twin;
 
 var fakeConfig = { host: 'host', sharedAccessSignature: 'sas' };
 var testRegistry = new Registry(fakeConfig, {});
@@ -100,11 +100,11 @@ describe('Twin', function() {
     /*Tests_SRS_NODE_IOTHUB_TWIN_16_022: [The method shall call the `done` callback with an `Error` object if the request failed]*/
     it('calls the done callback with an Error object if the request failed', function(testCallback) {
       var fakeDeviceId = 'deviceId';
-      var fakeTwinUpdate = { 
+      var fakeTwinUpdate = {
         deviceId: fakeDeviceId,
         tags: {
           update: 42
-        } 
+        }
       };
       var fakeResponse = { statusCode: 200 };
       var registry = new Registry(fakeConfig, {});
@@ -166,7 +166,7 @@ describe('Twin', function() {
       assert(registry.updateTwin.calledWith(fakeDeviceId, fakePatch, fakeEtag));
     });
 
-    
+
     /*Tests_SRS_NODE_IOTHUB_TWIN_16_021: [The method shall copy properties, tags, and etag in the twin returned in the callback of the `Registry` method call into its parent object.]*/
     it('copy the result of the updateTwin call into the current instance', function(testCallback) {
       var fakeDeviceId = 'deviceId';
@@ -186,11 +186,11 @@ describe('Twin', function() {
     /*Tests_SRS_NODE_IOTHUB_TWIN_16_022: [The method shall call the `done` callback with an `Error` object if the request failed]*/
     it('calls the done callback with an Error object if the request failed', function(testCallback) {
       var fakeDeviceId = 'deviceId';
-      var fakeTwinUpdate = { 
+      var fakeTwinUpdate = {
         deviceId: fakeDeviceId,
         tags: {
           update: 42
-        } 
+        }
       };
       var fakeResponse = { statusCode: 200 };
       var registry = new Registry(fakeConfig, {});

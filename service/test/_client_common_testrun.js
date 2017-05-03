@@ -4,7 +4,7 @@
 'use strict';
 
 var assert = require('chai').assert;
-var Client = require('../lib/client.js');
+var Client = require('../lib/client.js').Client;
 var errors = require('azure-iot-common').errors;
 var Message = require('azure-iot-common').Message;
 var AmqpReceiver = require('azure-iot-amqp-base').AmqpReceiver;
@@ -34,20 +34,20 @@ function transportSpecificTests(opts) {
       /*Tests_SRS_NODE_IOTHUB_CLIENT_05_022: [When the close method completes, the callback function (indicated by the done argument) shall be invoked with the following arguments:
       err - standard JavaScript Error object (or subclass)]*/
       /*Tests_SRS_NODE_IOTHUB_CLIENT_05_023: [The argument err passed to the callback done shall be null if the protocol operation was successful.]*/
-      testSubject.close(function (closeErr) { 
+      testSubject.close(function (closeErr) {
         opts.registry.delete(deviceId, function (registryErr) {
           if (closeErr || registryErr) {
             var aggregateError = new Error('failed to tear down the environment');
             aggregateError.closeError = closeErr;
             aggregateError.registryError = registryErr;
-            done(aggregateError); 
+            done(aggregateError);
           } else {
             done();
           }
         });
       });
 
-      
+
     });
 
     describe('#send', function () {

@@ -2,8 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-var Amqp = require('../lib/amqp.js');
-var AmqpWs = require('../lib/amqp_ws.js');
+var Amqp = require('../lib/amqp.js').Amqp;
+var AmqpWs = require('../lib/amqp_ws.js').AmqpWs;
 var assert = require('chai').assert;
 var sinon = require('sinon');
 
@@ -17,7 +17,7 @@ describe('AmqpWs', function() {
         keyName: 'keyName',
         sharedAccessSignature: 'sas'
       });
-      
+
       assert.instanceOf(amqpWs, Amqp);
     });
   });

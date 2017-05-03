@@ -5,8 +5,8 @@
 
 var assert = require('chai').assert;
 var sinon = require('sinon');
-var Query = require('../lib/query.js');
-var Twin = require('../lib/twin.js');
+var Query = require('../lib/query.js').Query;
+var Twin = require('../lib/twin.js').Twin;
 
 describe('Query', function() {
   describe('#constructor', function() {
@@ -39,14 +39,14 @@ describe('Query', function() {
     /*Tests_SRS_NODE_SERVICE_QUERY_16_006: [The `next` method shall set the `Query.continuationToken` property to the `continuationToken` value of the query result.]*/
     it('sets the continuationToken property when a new page of results is received', function(testCallback) {
       var fakeContinuationToken = 'continuationToken';
-      var fakeResponse = { 
+      var fakeResponse = {
         statusCode: 200,
-        headers: { 
-          'x-ms-continuation': fakeContinuationToken 
+        headers: {
+          'x-ms-continuation': fakeContinuationToken
         }
       };
       var fakeExecuteFn = sinon.stub().callsArgWith(1, null, [], fakeResponse);
-      
+
       var query = new Query(fakeExecuteFn);
 
       query[nextName](function() {
@@ -58,14 +58,14 @@ describe('Query', function() {
     /*Tests_SRS_NODE_SERVICE_QUERY_16_017: [the `next` method shall use the `continuationToken` passed as argument instead of its own property `Query.continuationToken` if it's not falsy.]*/
     it('uses the continuationToken given as argument', function(testCallback) {
       var fakeContinuationToken = 'firstContinuationToken';
-      var fakeResponse = { 
+      var fakeResponse = {
         statusCode: 200,
-        headers: { 
-          'x-ms-continuation': 'secondContinuationToken' 
+        headers: {
+          'x-ms-continuation': 'secondContinuationToken'
         }
       };
       var fakeExecuteFn = sinon.stub().callsArgWith(1, null, [], fakeResponse);
-      
+
       var query = new Query(fakeExecuteFn);
 
       query[nextName](fakeContinuationToken, function() {
@@ -77,10 +77,10 @@ describe('Query', function() {
     /*Tests_SRS_NODE_SERVICE_QUERY_16_016: [** If `continuationToken` is a function and `done` is undefined the `next` method shall assume that `continuationToken` is actually the callback and us it as such (see requirements associated with the `done` parameter)]*/
     it('uses the previous continuationToken in the following query', function(testCallback) {
       var fakeContinuationToken = 'continuationToken';
-      var fakeResponse = { 
+      var fakeResponse = {
         statusCode: 200,
-        headers: { 
-          'x-ms-continuation': fakeContinuationToken 
+        headers: {
+          'x-ms-continuation': fakeContinuationToken
         }
       };
       var fakeExecuteFn = sinon.stub().callsArgWith(1, null, [], fakeResponse);
@@ -135,10 +135,10 @@ describe('Query', function() {
         { deviceId: 'deviceId2' },
         { deviceId: 'deviceId3' }
       ];
-      var fakeResponse = { 
+      var fakeResponse = {
         statusCode: 200,
-        headers: { 
-          'x-ms-continuation': null 
+        headers: {
+          'x-ms-continuation': null
         }
       };
       var fakeExecuteFn = sinon.stub().callsArgWith(1, null, fakeResults, fakeResponse);
@@ -163,10 +163,10 @@ describe('Query', function() {
         fakeResults.push({ deviceId: 'deviceId' + i });
       }
 
-      var fakeResponse = { 
+      var fakeResponse = {
         statusCode: 200,
-        headers: { 
-          'x-ms-continuation': null 
+        headers: {
+          'x-ms-continuation': null
         }
       };
 
@@ -190,10 +190,10 @@ describe('Query', function() {
         fakeResults.push({ deviceId: 'deviceId' + i });
       }
 
-      var fakeResponse = { 
+      var fakeResponse = {
         statusCode: 200,
-        headers: { 
-          'x-ms-continuation': null 
+        headers: {
+          'x-ms-continuation': null
         }
       };
 

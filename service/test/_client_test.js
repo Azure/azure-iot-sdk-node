@@ -4,8 +4,8 @@
 'use strict';
 
 var assert = require('chai').assert;
-var Amqp = require('../lib/amqp.js');
-var Client = require('../lib/client.js');
+var Amqp = require('../lib/amqp.js').Amqp;
+var Client = require('../lib/client.js').Client;
 var Message = require('azure-iot-common').Message;
 var SimulatedAmqp = require('./amqp_simulated.js');
 var transportSpecificTests = require('./_client_common_testrun.js');

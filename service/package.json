@@ -20,18 +20,23 @@
     "istanbul": "^0.4.4",
     "jshint": "^2.9.2",
     "mocha": "^3.0.1",
-    "tslint": "^3.14.0",
-    "typescript": "^1.8.10"
+    "typings": "^2.1.1",
+    "tslint": "^5.1.0",
+    "typescript": "2.2.2",
+    "@types/node": "^7.0.5",
+    "@types/debug": "0.0.29"
   },
   "scripts": {
-    "lint": "jshint --show-non-errors . && tslint -c ../tslint.json \"{lib,.}/*.ts\"",
+    "lint": "tslint --exclude ./samples --type-check --project . -c ../tslint.json",
+    "typings": "typings install",
+    "build": "tsc",
     "unittest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test.js",
     "alltest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test*.js",
     "unittest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test.js",
     "alltest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
-    "ci": "npm -s run lint && npm -s run alltest-min && npm -s run check-cover",
-    "test": "npm -s run lint && npm -s run unittest",
-    "check-cover": "istanbul check-coverage --statements 98 --branches 96 --functions 98 --lines 98",
+    "ci": "npm run typings && npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
+    "test": "npm run typings && npm -s run lint && npm -s run build && npm -s run unittest",
+    "check-cover": "istanbul check-coverage --statements 96 --branches 91  --lines 97 --functions 93",
     "cover": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js"
   },
   "engines": {

@@ -39,6 +39,8 @@ npm link azure-iot-common
 npm link azure-iot-amqp-base
 npm link azure-iot-http-base
 npm link
+npm run typings
+npm run build
 [ $? -eq 0 ] || exit $?
 
 cd $node_root/device/transport/amqp

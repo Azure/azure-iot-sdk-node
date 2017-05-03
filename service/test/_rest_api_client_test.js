@@ -7,7 +7,7 @@ var assert = require('chai').assert;
 var errors = require('azure-iot-common').errors;
 var HttpBase = require('azure-iot-http-base').Http;
 var PackageJson = require('../package.json');
-var RestApiClient = require('../lib/rest_api_client.js');
+var RestApiClient = require('../lib/rest_api_client.js').RestApiClient;
 
 var fakeConfig = { host: 'host', sharedAccessSignature: 'sas' };
 
@@ -102,7 +102,7 @@ describe('RestApiClient', function() {
       var client = new RestApiClient(fakeConfig, fakeHttpHelper);
       client.executeApiCall('GET', '/fake/path', null, null, testCallback);
     });
-    
+
     /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_029: [If `done` is `undefined` and the `timeout` argument is a function, `timeout` should be used as the callback.]*/
     it('can use the timeout parameter as callback', function(testCallback) {
       var fakeHttpHelper = {

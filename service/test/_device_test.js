@@ -3,7 +3,7 @@
 
 'use strict';
 var assert = require('chai').assert;
-var Device = require('../lib/device.js');
+var Device = require('../lib/device.js').Device;
 
 describe('Device', function() {
   describe('constructor', function() {

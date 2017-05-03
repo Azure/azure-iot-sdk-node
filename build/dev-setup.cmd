@@ -43,6 +43,8 @@ call npm link azure-iot-common
 call npm link azure-iot-amqp-base
 call npm link azure-iot-http-base
 call npm link
+call npm run typings
+call npm run build
 
 cd %node-root%\device\transport\amqp
 echo.

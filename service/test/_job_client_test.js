@@ -7,9 +7,9 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 
 var endpoint = require('azure-iot-common').endpoint;
-var JobClient = require('../lib/job_client.js');
-var DeviceMethod = require('../lib/device_method.js');
-var Query = require('../lib/query.js');
+var JobClient = require('../lib/job_client.js').JobClient;
+var DeviceMethod = require('../lib/device_method.js').DeviceMethod;
+var Query = require('../lib/query.js').Query;
 
 describe('JobClient', function() {
   function testFalsyArg (fn, badArgName, badArgValue, args) {
@@ -39,7 +39,7 @@ describe('JobClient', function() {
         assert.strictEqual(err, fakeError);
         cb();
       });
-      
+
       var client = new JobClient(fakeRestApiClient);
       client[fnName].apply(client, failArgs);
     });
@@ -57,7 +57,7 @@ describe('JobClient', function() {
         assert.strictEqual(response, fakeResponse);
         cb();
       });
-      
+
       var client = new JobClient(fakeRestApiClient);
       client[fnName].apply(client, successArgs);
     });
@@ -120,7 +120,7 @@ describe('JobClient', function() {
 
       var client = new JobClient(fakeRestApiClient);
       client.getJob(fakeJobId, function() {});
-      
+
       assert.strictEqual(fakeRestApiClient.executeApiCall.args[0][0], 'GET');
       assert.strictEqual(fakeRestApiClient.executeApiCall.args[0][1], '/jobs/v2/' + fakeJobId + endpoint.versionQueryString());
       assert.strictEqual(fakeRestApiClient.executeApiCall.args[0][2], null);
@@ -211,7 +211,7 @@ describe('JobClient', function() {
       assert.deepEqual(fakeRestApiClient.executeApiCall.args[0][2], { 'x-ms-max-item-count': fakePageSize });
       assert.isNull(fakeRestApiClient.executeApiCall.args[0][3]);
     });
-    
+
     it('creates a valid HTTP request with a continuationToken', function(testCallback) {
       var fakeToken = 'testToken';
       var fakeRestApiClient = { executeApiCall: sinon.stub().callsArgWith(4, null, [], { statusCode: 200, headers: { 'x-ms-continuation': fakeToken }})};
@@ -280,7 +280,7 @@ describe('JobClient', function() {
       testFalsyArg(new JobClient({}).scheduleDeviceMethod, 'queryCondition', badQuery, ['id', badQuery, goodParams]);
     });
 
-    /*Tests_SRS_NODE_JOB_CLIENT_16_029: [The `scheduleDeviceMethod` method shall throw a `ReferenceError` if `methodParams` is falsy.]*/ 
+    /*Tests_SRS_NODE_JOB_CLIENT_16_029: [The `scheduleDeviceMethod` method shall throw a `ReferenceError` if `methodParams` is falsy.]*/
     [undefined, null].forEach(function(badParams) {
       testFalsyArg(new JobClient({}).scheduleDeviceMethod, 'methodParams', badParams, ['id', 'SELECT * FROM devices', badParams]);
     });
@@ -306,14 +306,14 @@ describe('JobClient', function() {
     });
 
     /*Tests_SRS_NODE_JOB_CLIENT_16_030: [The `scheduleDeviceMethod` method shall use the `DeviceMethod.defaultPayload` value if `methodParams.payload` is `undefined`.]*/
-     /*Tests_SRS_NODE_JOB_CLIENT_16_031: [The `scheduleDeviceMethod` method shall use the `DeviceMethod.defaultTimeout` value if `methodParams.responseTimeoutInSeconds` is falsy.]*/
+     /*Tests_SRS_NODE_JOB_CLIENT_16_031: [The `scheduleDeviceMethod` method shall use the `DeviceMethod.defaultResponseTimeout` value if `methodParams.responseTimeoutInSeconds` is falsy.]*/
     it('uses the default payload and responseTimeoutInSeconds if either of those methodParams properties are undefined', function () {
       var fakeRestApiClient = { executeApiCall: sinon.stub() };
 
       var client = new JobClient(fakeRestApiClient);
       client.scheduleDeviceMethod('id', 'SELECT * FROM devices', { methodName: 'name' }, new Date(), 86400, function() {});
       assert.strictEqual(fakeRestApiClient.executeApiCall.args[0][3].cloudToDeviceMethod.payload, DeviceMethod.defaultPayload);
-      assert.strictEqual(fakeRestApiClient.executeApiCall.args[0][3].cloudToDeviceMethod.responseTimeoutInSeconds, DeviceMethod.defaultTimeout);
+      assert.strictEqual(fakeRestApiClient.executeApiCall.args[0][3].cloudToDeviceMethod.responseTimeoutInSeconds, DeviceMethod.defaultResponseTimeout);
     });
 
     /*Tests_SRS_NODE_JOB_CLIENT_16_020: [The `scheduleDeviceMethod` method shall construct the HTTP request as follows:
@@ -366,7 +366,7 @@ describe('JobClient', function() {
     testCallback('scheduleDeviceMethod', ['jobId', 'query', {methodName: 'name'}, new Date()]);
     testCallback('scheduleDeviceMethod', ['jobId', 'query', {methodName: 'name'}, new Date(), 3600]);
   });
-  
+
   describe('scheduleTwinUpdate', function() {
     var goodPatch = {
       tags: {

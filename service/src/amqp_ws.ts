@@ -3,8 +3,8 @@
 
 'use strict';
 
-var util = require('util');
-var Amqp = require('./amqp.js');
+import { Amqp } from './amqp';
+import { Client } from './client';
 
 /**
  * @class       module:azure-iothub.AmqpWs
@@ -17,15 +17,13 @@ var Amqp = require('./amqp.js');
 - `hubName` - (string) the name of the IoT Hub instance (without suffix such as .azure-devices.net).
 - `keyName` – (string) the name of a key that can be used to communicate with the IoT Hub instance
 - `sharedAccessSignature–` (string) the key associated with the key name.]*/
-function AmqpWs(config) {
-  Amqp.call(this, config);
-}
-
 /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_WS_16_002: [`AmqpWs` should inherit from `Amqp`.]*/
-util.inherits(AmqpWs, Amqp);
+export class AmqpWs extends Amqp implements Client.Transport {
+  constructor(config: Client.TransportConfigOptions) {
+    super(config);
+  }
 
-AmqpWs.prototype._getConnectionUri = function _createConnectionUri() {
-  return 'wss://' + this._config.host + ':443/$iothub/websocket';
-};
-
-module.exports = AmqpWs;
+  protected _getConnectionUri(): string {
+    return 'wss://' + this._config.host + ':443/$iothub/websocket';
+  }
+}
