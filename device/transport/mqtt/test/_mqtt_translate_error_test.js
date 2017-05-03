@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 var errors = require('azure-iot-common').errors;
-var translateError = require('../lib/mqtt-translate-error.js');
+var translateError = require('../lib/mqtt_translate_error.js').translateError;
 
 describe('MqttTranslateError', function () {
 

@@ -6,7 +6,7 @@
 var assert = require('chai').assert;
 var sinon = require('sinon');
 
-var MqttBase = require('../lib/mqtt_base.js');
+var MqttBase = require('../lib/mqtt_base.js').MqttBase;
 var PackageJson = require('../package.json');
 var FakeMqtt = require('./_fake_mqtt.js');
 var Message = require('azure-iot-common').Message;

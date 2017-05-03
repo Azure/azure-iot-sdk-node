@@ -4,7 +4,7 @@
 'use strict';
 
 var assert = require('chai').assert;
-var MqttWs = require('../lib/mqtt_ws.js');
+var MqttWs = require('../lib/mqtt_ws.js').MqttWs;
 
 describe('MqttWs', function () {
   var fakeConfig = {

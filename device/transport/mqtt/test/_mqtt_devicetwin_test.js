@@ -6,10 +6,10 @@
 var assert = require('chai').assert;
 
 var MqttProvider = require('./_fake_mqtt.js');
-var Mqtt = require('../lib/mqtt');
+var Mqtt = require('../lib/mqtt').Mqtt;
 var errors = require('azure-iot-common').errors;
 var sinon = require('sinon');
-var MqttTwinReceiver = require('../lib/mqtt-twin-receiver.js');
+var MqttTwinReceiver = require('../lib/mqtt_twin_receiver.js').MqttTwinReceiver;
 
 var config = {
   'host' : 'mock_host',

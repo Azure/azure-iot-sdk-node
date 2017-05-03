@@ -3,8 +3,8 @@
 
 'use strict';
 
-var Base = require('./mqtt.js');
-var util = require('util');
+import { ClientConfig, Client, StableConnectionTransport, TwinTransport } from 'azure-iot-device';
+import { Mqtt } from './mqtt';
 
 /**
  * @class        module:azure-iot-device-mqtt.MqttWs
@@ -15,12 +15,10 @@ var util = require('util');
 /*Codes_SRS_NODE_DEVICE_MQTT_12_001: [The constructor shall accept the transport configuration structure.]*/
 /*Codes_SRS_NODE_DEVICE_MQTT_12_002: [The constructor shall store the configuration structure in a member variable.]*/
 /*Codes_SRS_NODE_DEVICE_MQTT_12_003: [The constructor shall create an base transport object and store it in a member variable.]*/
-function MqttWs(config) {
-  Base.call(this, config);
-  /*Codes_SRS_NODE_DEVICE_MQTT_16_017: [The `MqttWs` constructor shall initialize the `uri` property of the `config` object to `wss://<host>:443/$iothub/websocket`.]*/
-  this._config.uri  = 'wss://' + config.host + ':443/$iothub/websocket';
+export class MqttWs extends Mqtt implements Client.Transport, StableConnectionTransport, TwinTransport {
+  constructor(config: ClientConfig) {
+    super(config);
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_017: [The `MqttWs` constructor shall initialize the `uri` property of the `config` object to `wss://<host>:443/$iothub/websocket`.]*/
+    (this._config as any).uri  = 'wss://' + config.host + ':443/$iothub/websocket';
+  }
 }
-
-util.inherits(MqttWs, Base);
-
-module.exports = MqttWs;

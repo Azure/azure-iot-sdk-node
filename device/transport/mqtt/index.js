@@ -4,8 +4,8 @@
 'use strict';
 
 var device = require('azure-iot-device');
-var Mqtt = require('./lib/mqtt.js');
-var MqttWs = require('./lib/mqtt_ws.js');
+var Mqtt = require('./lib/mqtt.js').Mqtt;
+var MqttWs = require('./lib/mqtt_ws.js').MqttWs;
 
 /**
  * The `azure-iot-device-mqtt` module provides support the MQTT protocol to the device [client]{@link module:azure-iot-device.Client} using secure sockets.

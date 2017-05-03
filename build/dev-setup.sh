@@ -67,6 +67,7 @@ npm link azure-iot-common
 npm link azure-iot-device
 npm link azure-iothub
 npm link
+npm run build
 [ $? -eq 0 ] || exit $?
 
 cd $node_root/e2etests

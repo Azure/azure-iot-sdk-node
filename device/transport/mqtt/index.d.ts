@@ -3,6 +3,6 @@
 
 import { Client } from 'azure-iot-device';
 
-export import Mqtt = require('./lib/mqtt');
-export import MqttWs = require('./lib/mqtt_ws');
+export { Mqtt } from './lib/mqtt';
+export { MqttWs } from './lib/mqtt_ws';
 export declare function clientFromConnectionString(connectionString: string): Client;

@@ -6,7 +6,7 @@
 require('es5-shim');
 var assert = require('chai').assert;
 var sinon = require('sinon');
-var Mqtt = require('../lib/mqtt.js');
+var Mqtt = require('../lib/mqtt.js').Mqtt;
 var errors = require('azure-iot-common').errors;
 var EventEmitter = require('events').EventEmitter;
 
