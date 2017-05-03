@@ -7,7 +7,7 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 
 var Message = require('azure-iot-common').Message;
-var Amqp = require('../lib/amqp.js');
+var Amqp = require('../lib/amqp.js').Amqp;
 var errors = require('azure-iot-common').errors;
 
 

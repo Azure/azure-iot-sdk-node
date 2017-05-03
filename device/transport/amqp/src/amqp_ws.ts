@@ -3,8 +3,8 @@
 
 'use strict';
 
-var util = require('util');
-var Amqp = require('./amqp.js');
+import { Amqp } from './amqp.js';
+import { ClientConfig, Client, StableConnectionTransport } from 'azure-iot-device';
 
 /**
  * @class module:azure-iot-device-amqp.AmqpWs
@@ -16,14 +16,13 @@ var Amqp = require('./amqp.js');
  *
  * @param {Object}  config   Configuration object generated from the connection string by the client.
  */
-function AmqpWs(config) {
-  Amqp.call(this, config);
+export class AmqpWs extends Amqp implements Client.Transport, StableConnectionTransport {
+  constructor(config: ClientConfig) {
+    super(config);
+  }
+
+  protected _getConnectionUri(): string {
+    return 'wss://' + this._config.host + ':443/$iothub/websocket';
+  }
 }
 
-util.inherits(AmqpWs, Amqp);
-
-AmqpWs.prototype._getConnectionUri = function _getConnectionUri() {
-  return 'wss://' + this._config.host + ':443/$iothub/websocket';
-};
-
-module.exports = AmqpWs;

@@ -1,7 +1,9 @@
 {
   "name": "azure-iot-device-amqp",
   "main": "index.d.ts",
-  "dependencies": {},
+  "dependencies": {
+    "amqp10": "registry:npm/amqp10#3.3.1+20170124180914"
+  },
   "globalDependencies": {
     "node": "registry:dt/node#6.0.0+20160813124416"
   }

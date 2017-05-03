@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 var errors = require('azure-iot-common').errors;
-var translateError = require('../lib/amqp_device_errors.js');
+var translateError = require('azure-iot-amqp-base').translateError;
 
 describe('translateError', function() {
   /*Tests_SRS_NODE_DEVICE_AMQP_DEVICE_ERRORS_16_001: [`translateError` shall return an `IotHubQuotaExceededError` if the AMQP error condition is `amqp:resource-limit-exceeded`.]*/
@@ -18,7 +18,7 @@ describe('translateError', function() {
       };
 
       var fake_error = new AMQPError();
-      fake_error.condition = { contents: testParams.errorDescription };
+      fake_error.condition = testParams.errorDescription;
 
       /*Tests_SRS_NODE_DEVICE_AMQP_ERRORS_16_010: [ `translateError` shall accept 2 argument:
       *- A custom error message to give context to the user.

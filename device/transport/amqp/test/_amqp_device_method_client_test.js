@@ -7,7 +7,7 @@ var Message = require('azure-iot-common').Message;
 var errors = require('azure-iot-common').errors;
 var endpoint = require('azure-iot-common').endpoint;
 
-var AmqpDeviceMethodClient = require('../lib/amqp_device_method_client.js');
+var AmqpDeviceMethodClient = require('../lib/amqp_device_method_client.js').AmqpDeviceMethodClient;
 
 var fakeConfig = {
   deviceId: 'deviceId'

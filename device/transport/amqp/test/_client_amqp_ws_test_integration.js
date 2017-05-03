@@ -4,7 +4,7 @@
 'use strict';
 
 var Registry = require('azure-iothub').Registry;
-var AmqpWs = require('../lib/amqp_ws.js');
+var AmqpWs = require('../lib/amqp_ws.js').AmqpWs;
 var clientTests = require('azure-iot-device/test/_client_common_testrun.js');
 
 
