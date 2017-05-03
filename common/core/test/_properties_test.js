@@ -4,7 +4,7 @@
 'use strict';
 
 var assert = require('chai').assert;
-var IotProperties = require('../lib/properties.js');
+var IotProperties = require('../lib/properties.js').Properties;
 
 var propertyNum = 10;
 

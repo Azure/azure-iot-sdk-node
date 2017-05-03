@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 var ArgumentError = require('../lib/errors.js').ArgumentError;
-var ConnectionString = require('../lib/connection_string.js');
+var ConnectionString = require('../lib/connection_string.js').ConnectionString;
 
 describe('ConnectionString', function () {
   describe('#parse', function () {

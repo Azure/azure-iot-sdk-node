@@ -1,7 +1,12 @@
-// Copyright (c) Microsoft. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+/*! Copyright (c) Microsoft. All rights reserved.
+ *! Licensed under the MIT license. See LICENSE file in the project root for full license information.
+ */
 
 'use strict';
+
+export interface Result {
+    tranportObj?: any;
+}
 
 /**
  * @class       module:azure-iot-common.MessageEnqueued
@@ -11,8 +16,11 @@
  *
  * @augments {Object}
  */
-function MessageEnqueued(transportObj) {
-  this.transportObj = transportObj;
+export class MessageEnqueued implements Result {
+  transportObj?: any;
+  constructor(transportObj?: any) {
+    this.transportObj = transportObj;
+  }
 }
 
 /**
@@ -23,8 +31,11 @@ function MessageEnqueued(transportObj) {
  *
  * @augments {Object}
  */
-function MessageCompleted(transportObj) {
-  this.transportObj = transportObj;
+export class MessageCompleted implements Result {
+  transportObj?: any;
+  constructor(transportObj?: any) {
+    this.transportObj = transportObj;
+  }
 }
 
 /**
@@ -35,8 +46,11 @@ function MessageCompleted(transportObj) {
  *
  * @augments {Object}
  */
-function MessageRejected(transportObj) {
-  this.transportObj = transportObj;
+export class MessageRejected implements Result {
+  transportObj?: any;
+  constructor(transportObj?: any) {
+    this.transportObj = transportObj;
+  }
 }
 
 /**
@@ -47,8 +61,11 @@ function MessageRejected(transportObj) {
  *
  * @augments {Object}
  */
-function MessageAbandoned(transportObj) {
-  this.transportObj = transportObj;
+export class MessageAbandoned implements Result {
+  transportObj?: any;
+  constructor(transportObj?: any) {
+    this.transportObj = transportObj;
+  }
 }
 
 /**
@@ -59,8 +76,11 @@ function MessageAbandoned(transportObj) {
  *
  * @augments {Object}
  */
-function Connected(transportObj) {
-  this.transportObj = transportObj;
+export class Connected implements Result {
+  transportObj?: any;
+  constructor(transportObj?: any) {
+    this.transportObj = transportObj;
+  }
 }
 
 /**
@@ -72,9 +92,13 @@ function Connected(transportObj) {
  *
  * @augments {Object}
  */
-function Disconnected(transportObj, reason) {
-  this.transportObj = transportObj;
-  this.reason = reason;
+export class Disconnected implements Result {
+  transportObj?: any;
+  reason: string;
+  constructor(transportObj?: any, reason?: string) {
+    this.transportObj = transportObj;
+    this.reason = reason;
+  }
 }
 
 /**
@@ -85,8 +109,11 @@ function Disconnected(transportObj, reason) {
  *
  * @augments {Object}
  */
-function TransportConfigured(transportObj) {
-  this.transportObj = transportObj;
+export class TransportConfigured implements Result {
+  transportObj?: any;
+  constructor(transportObj?: any) {
+    this.transportObj = transportObj;
+  }
 }
 
 /**
@@ -97,17 +124,9 @@ function TransportConfigured(transportObj) {
  *
  * @augments {Object}
  */
-function SharedAccessSignatureUpdated(needToReconnect) {
-  this.needToReconnect = needToReconnect;
+export class SharedAccessSignatureUpdated {
+  needToReconnect: boolean;
+  constructor(needToReconnect: boolean) {
+    this.needToReconnect = needToReconnect;
+  }
 }
-
-module.exports = {
-  MessageEnqueued: MessageEnqueued,
-  MessageCompleted: MessageCompleted,
-  MessageRejected: MessageRejected,
-  MessageAbandoned: MessageAbandoned,
-  Connected: Connected,
-  Disconnected: Disconnected,
-  TransportConfigured: TransportConfigured,
-  SharedAccessSignatureUpdated: SharedAccessSignatureUpdated
-};

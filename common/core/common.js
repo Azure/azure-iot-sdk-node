@@ -12,10 +12,10 @@
 module.exports = {
   anHourFromNow: require('./lib/authorization.js').anHourFromNow,
   encodeUriComponentStrict: require('./lib/authorization.js').encodeUriComponentStrict,
-  ConnectionString: require('./lib/connection_string.js'),
+  ConnectionString: require('./lib/connection_string.js').ConnectionString,
   endpoint: require('./lib/endpoint.js'),
   errors: require('./lib/errors.js'),
   results: require('./lib/results.js'),
-  Message: require('./lib/message.js'),
-  SharedAccessSignature: require('./lib/shared_access_signature.js')
+  Message: require('./lib/message.js').Message,
+  SharedAccessSignature: require('./lib/shared_access_signature.js').SharedAccessSignature
 };

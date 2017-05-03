@@ -6,7 +6,7 @@
 var assert = require('chai').assert;
 var ArgumentError = require('../lib/errors.js').ArgumentError;
 var FormatError = require('../lib/errors.js').FormatError;
-var SharedAccessSignature = require('../lib/shared_access_signature.js');
+var SharedAccessSignature = require('../lib/shared_access_signature.js').SharedAccessSignature;
 
 var key = new Buffer('password').toString('base64');
 

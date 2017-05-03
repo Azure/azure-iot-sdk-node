@@ -4,7 +4,7 @@
 'use strict';
 
 var assert = require('chai').assert;
-var createDictionary = require('../lib/dictionary.js');
+var createDictionary = require('../lib/dictionary.js').createDictionary;
 
 describe('createDictionary', function () {
   /*Tests_SRS_NODE_COMMON_DICTIONARY_05_001: [The function createDictionary shall accept as arguments the source string and a field separator string.]*/

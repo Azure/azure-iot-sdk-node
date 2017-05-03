@@ -12,6 +12,8 @@ cd %node-root%\common\core
 echo.
 echo -- Creating links for %cd% --
 call npm link
+call npm run lint
+call npm run build
 
 cd %node-root%\common\transport\amqp
 echo.
