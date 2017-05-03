@@ -34,6 +34,7 @@ echo -- Creating links for %cd% --
 call npm link azure-iot-http-base
 call npm link azure-iot-common
 call npm link
+call npm run build
 
 cd %node-root%\service
 echo.

@@ -3,7 +3,5 @@
 
 'use strict';
 
-module.exports = {
-  DeviceMethodRequest: require('./device_method_request.js'),
-  DeviceMethodResponse: require('./device_method_response.js')
-};
+export { BlobUploadClient } from './blob_upload_client';
+export { BlobSasError, BlobUploadNotificationError } from './blob_upload_errors';

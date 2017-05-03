@@ -6,7 +6,7 @@
 var assert = require('chai').assert;
 var stream = require('stream');
 var ArgumentError = require('azure-iot-common').errors.ArgumentError;
-var BlobUploader = require('../../lib/blob_upload/blob_uploader.js');
+var BlobUploader = require('../../lib/blob_upload/blob_uploader.js').BlobUploader;
 var FakeStorageApi = require('./fake_storage_api.js');
 
 describe('BlobUploader', function() {

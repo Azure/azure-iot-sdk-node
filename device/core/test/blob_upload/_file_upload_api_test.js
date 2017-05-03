@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 var endpoint = require('azure-iot-common').endpoint;
-var FileUploadApi = require('../../lib/blob_upload/file_upload_api.js');
+var FileUploadApi = require('../../lib/blob_upload/file_upload_api.js').FileUploadApi;
 var packageJson = require('../../package.json');
 
 describe('FileUploadApi', function() {

@@ -4,7 +4,7 @@
 'use strict';
 
 var assert = require('chai').assert;
-var Twin = require('../lib/twin.js');
+var Twin = require('../lib/twin.js').Twin;
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 var errors = require('azure-iot-common').errors;

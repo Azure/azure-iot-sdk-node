@@ -6,7 +6,8 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 var stream = require('stream');
 var BlobUploadClient = require('../../lib/blob_upload').BlobUploadClient;
-var errors = require('../../lib/blob_upload').errors;
+var BlobUploadNotificationError = require('../../lib/blob_upload').BlobUploadNotificationError;
+var BlobSasError = require('../../lib/blob_upload').BlobSasError;
 
 var FakeFileUploadApi = function() {
   this.getBlobSharedAccessSignature = sinon.spy();
@@ -91,7 +92,7 @@ describe('BlobUploadClient', function() {
 
       var client = new BlobUploadClient(fakeConfig, fakeFileUpload, fakeBlobUploader);
       client.uploadToBlob(fakeBlobName, fakeStream, 42, function(err) {
-        assert.instanceOf(err, errors.BlobSasError);
+        assert.strictEqual(err.name, 'BlobSasError');
         done();
       });
     });
@@ -183,7 +184,7 @@ describe('BlobUploadClient', function() {
 
       var client = new BlobUploadClient(fakeConfig, fakeFileUpload, fakeBlobUploader);
       client.uploadToBlob(fakeBlobName, fakeStream, fakeStreamLength, function(err) {
-        assert.instanceOf(err, errors.BlobUploadNotificationError);
+        assert.strictEqual(err.name, 'BlobUploadNotificationError');
         done();
       });
     });

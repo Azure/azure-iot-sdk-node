@@ -3,7 +3,7 @@
 
 'use strict';
 var assert = require('chai').assert;
-var BlobUploadResult = require('../../lib/blob_upload/blob_upload_result.js');
+var BlobUploadResult = require('../../lib/blob_upload/blob_upload_result.js').BlobUploadResult;
 
 describe('BlobUploadResult', function() {
   describe('#constructor', function() {

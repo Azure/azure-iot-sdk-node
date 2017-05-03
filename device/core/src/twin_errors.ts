@@ -3,11 +3,15 @@
 
 'use strict';
 
-var errors = require('azure-iot-common').errors;
+import { errors } from 'azure-iot-common';
 
-var translateError = function translateError(response, status) {
-  var error;
-  switch(status) {
+export class TwinBaseError extends Error {
+  response?: any;
+}
+
+export function translateError(response: any, status: number): TwinBaseError {
+  let error: TwinBaseError;
+  switch (status) {
     case 400:
       /*Codes_SRS_NODE_DEVICE_TWIN_ERRORS_18_003: [`translateError` shall return an `ArgumentError` if the response status code is `400`.]*/
       error = new errors.ArgumentError();
@@ -50,11 +54,9 @@ var translateError = function translateError(response, status) {
       break;
     default:
       /*Codes_SRS_NODE_DEVICE_TWIN_ERRORS_18_002: [If the error code is unknown, `translateError` should return a generic Javascript `Error` object.]*/
-      error = new Error("server returned error " + status);
+      error = new Error('server returned error ' + status);
   }
-  
+
   error.response = response;
   return error;
-};
-
-module.exports = translateError;
+}

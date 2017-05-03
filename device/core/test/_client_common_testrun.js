@@ -6,7 +6,7 @@
 var assert = require('chai').assert;
 var fs = require('fs');
 
-var Client = require('../lib/client.js');
+var Client = require('../lib/client.js').Client;
 var ConnectionString = require('azure-iot-common').ConnectionString;
 
 var Message = require('azure-iot-common').Message;
