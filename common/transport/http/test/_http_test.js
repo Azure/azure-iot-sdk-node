@@ -1,6 +1,6 @@
 'use strict';
 
-var Http = require('../lib/http.js');
+var Http = require('../lib/http.js').Http;
 var assert = require('chai').assert;
 
 describe('Http', function() {

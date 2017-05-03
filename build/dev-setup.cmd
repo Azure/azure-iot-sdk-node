@@ -26,6 +26,7 @@ echo.
 echo -- Creating links for %cd% --
 call npm link azure-iot-common
 call npm link
+call npm run build
 
 cd %node-root%\device\core
 echo.

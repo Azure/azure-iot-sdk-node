@@ -10,5 +10,5 @@
  */
 
 module.exports = {
-  Http: require('./lib/http.js')
+  Http: require('./lib/http.js').Http
 };
