@@ -2,9 +2,13 @@
   "compilerOptions": {
     "target": "es5",
     "module": "commonjs",
+    "lib": [ "es2017" ], 
+    "strict": true,
+    "strictNullChecks": false,
     "moduleResolution": "node",
-    "removeComments": false,
-    "noImplicitAny": true,
-    "suppressImplicitAnyIndexErrors": true
+    "typeRoots": [
+      "typings"
+    ],
+    "types": [ "@types/node" ]
   }
 }
