@@ -52,11 +52,10 @@ export class SharedAccessSignature {
   toString(): string {
     /*Codes_SRS_NODE_COMMON_SAS_05_019: [The toString method shall return a shared-access signature token of the form:
     SharedAccessSignature sr=<url-encoded resourceUri>&sig=<urlEncodedSignature>&se=<expiry>&skn=<urlEncodedKeyName>]*/
-    const self = this;
     let sas = 'SharedAccessSignature ';
     ['sr', 'sig', 'skn', 'se'].forEach((key: string): void => {
       /*Codes_SRS_NODE_COMMON_SAS_05_020: [The skn segment is not part of the returned string if the skn property is not defined.]*/
-      if (self[key]) {
+      if (this[key]) {
         if (sas[sas.length - 1] !== ' ') sas += '&';
         sas += key + '=' + this[key];
       }
@@ -83,7 +82,7 @@ export class SharedAccessSignature {
       keyName - an identifier associated with the key
       key - a base64-encoded key value
       expiry - an integer value representing the number of seconds since the epoch 00:00:00 UTC on 1 January 1970.]*/
-    static create(resourceUri: string, keyName: string, key: string, expiry: number | string): SharedAccessSignature {
+  static create(resourceUri: string, keyName: string, key: string, expiry: number | string): SharedAccessSignature {
     function throwRef(name: string, value: any): void {
       throw new ReferenceError('Argument \'' + name + '\' is ' + value);
     }

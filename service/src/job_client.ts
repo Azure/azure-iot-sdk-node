@@ -11,7 +11,6 @@ import { DeviceMethod } from './device_method';
 import { Query } from './query';
 import { DeviceMethodParams } from './interfaces';
 
-// TODO: Review these interfaces/types
 export type JobType = 'scheduleUpdateTwin' | 'scheduleDeviceMethod';
 export type JobStatus = 'queued' | 'scheduled' | 'running' | 'cancelled' | 'finished';
 

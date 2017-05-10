@@ -31,8 +31,7 @@ export class Properties {
     if (itemKey === 'Authorization' || itemKey === 'iothub-to') {
       return false;
     } else {
-      const objProperty = { key: itemKey, value: itemValue };
-      this.propertyList.push(objProperty);
+      this.propertyList.push({ key: itemKey, value: itemValue });
       return true;
     }
   };
