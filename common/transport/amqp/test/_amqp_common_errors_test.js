@@ -7,23 +7,45 @@ var assert = require('chai').assert;
 var errors = require('azure-iot-common').errors;
 var translateError = require('../lib/amqp_common_errors.js').translateError;
 
+
+/*Tests_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_012: [`translateError` shall return a custom error type according to this table if the AMQP error condition is one of the following:
+| AMQP Error Condition                       | Custom Error Type                    |
+| ------------------------------------------ | ------------------------------------ |
+| "amqp:internal-error"                      | InternalServerError                  |
+| "amqp:link:message-size-exceeded"          | MessageTooLargeError                 |
+| "amqp:not-found"                           | DeviceNotFoundError                  |
+| "amqp:not-implemented"                     | NotImplementedError                  |
+| "amqp:not-allowed"                         | InvalidOperationError                |
+| "amqp:resource-limit-exceeded"             | IotHubQuotaExceededError             |
+| "amqp:unauthorized-access"                 | UnauthorizedError                    |
+| "com.microsoft:argument-error"             | ArgumentError                        |
+| "com.microsoft:argument-out-of-range"      | ArgumentOutOfRangeError              |
+| "com.microsoft:device-already-exists"      | DeviceAlreadyExistsError             |
+| "com.microsoft:device-container-throttled" | ThrottlingError                      |
+| "com.microsoft:iot-hub-suspended"          | IoTHubSuspendedError                 |
+| "com.microsoft:message-lock-lost"          | DeviceMessageLockLostError           |
+| "com.microsoft:precondition-failed"        | PreconditionFailedError              |
+| "com.microsoft:quota-exceeded"             | IotHubQuotaExceededError             |
+| "com.microsoft:timeout"                    | ServiceUnavailableError              |
+]*/
 describe('translateError', function() {
-  /*Tests_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_002: [If the AMQP error code is unknown, `translateError` should return a generic Javascript `Error` object.]*/
-  /*Tests_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_003: [`translateError` shall return an `ArgumentError` if the AMQP error condition is `com.microsoft:argument-out-of-range`.]*/
-  /*Tests_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_004: [`translateError` shall return an `UnauthorizedError` if the AMQP error condition is `amqp:unauthorized-access`.]*/
-  /*Tests_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_006: [`translateError` shall return an `DeviceNotFoundError` if the AMQP error condition is `amqp:not-found`.]*/
-  /*Tests_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_007: [`translateError` shall return an `MessageTooLargeError` if the AMQP error condition is `amqp:link-message-size-exceeded`.]*/
-  /*Tests_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_008: [`translateError` shall return an `InternalServerError` if the AMQP error condition is `amqp:internal-error`.]*/
-  /*Tests_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_011: [`translateError` shall return an `IotHubQuotaExceededError` if the AMQP error condition is `amqp:resource-limit-exceeded`.]*/
-  /*Tests_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_009: [`translateError` shall return an `ServiceUnavailableError` if the AMQP error condition is `com.microsoft:timeout`.]*/
   [
-    { errorDescription: 'com.microsoft:argument-out-of-range', errorMessage: 'Fake bad request', expectedErrorType: errors.ArgumentError },
-    { errorDescription: 'amqp:unauthorized-access', errorMessage: 'Fake unauthorized', expectedErrorType: errors.UnauthorizedError },
-    { errorDescription: 'amqp:not-found', errorMessage: 'Fake not found', expectedErrorType: errors.DeviceNotFoundError },
-    { errorDescription: 'amqp:link-message-size-exceeded', errorMessage: 'Fake request too large', expectedErrorType: errors.MessageTooLargeError },
-    { errorDescription: 'amqp:internal-error', errorMessage: 'Fake internal server error', expectedErrorType: errors.InternalServerError },
-    { errorDescription: 'amqp:resource-limit-exceeded', errorMessage: 'Fake quota exceeded error', expectedErrorType: errors.IotHubQuotaExceededError },
-    { errorDescription: 'com.microsoft:timeout', errorMessage: 'Fake server unavailable', expectedErrorType: errors.ServiceUnavailableError },
+    { errorDescription: 'amqp:internal-error', errorMessage: 'Fake internal error', expectedErrorType: errors.InternalServerError },
+    { errorDescription: 'amqp:link:message-size-exceeded', errorMessage: 'Message too large', expectedErrorType: errors.MessageTooLargeError },
+    { errorDescription: 'amqp:not-found', errorMessage: 'Device not found', expectedErrorType: errors.DeviceNotFoundError },
+    { errorDescription: 'amqp:not-implemented', errorMessage: 'Not implemented', expectedErrorType: errors.NotImplementedError },
+    { errorDescription: 'amqp:not-allowed', errorMessage: 'Not allowed', expectedErrorType: errors.InvalidOperationError },
+    { errorDescription: 'amqp:resource-limit-exceeded', errorMessage: 'Quota exceeded', expectedErrorType: errors.IotHubQuotaExceededError },
+    { errorDescription: 'amqp:unauthorized-access', errorMessage: 'Unauthorized', expectedErrorType: errors.UnauthorizedError },
+    { errorDescription: 'com.microsoft:argument-error', errorMessage: 'Argument error', expectedErrorType: errors.ArgumentError },
+    { errorDescription: 'com.microsoft:argument-out-of-range', errorMessage: 'Argument out of range', expectedErrorType: errors.ArgumentOutOfRangeError },
+    { errorDescription: 'com.microsoft:device-already-exists', errorMessage: 'Device already exists', expectedErrorType: errors.DeviceAlreadyExistsError },
+    { errorDescription: 'com.microsoft:device-container-throttled', errorMessage: 'Throttled', expectedErrorType: errors.ThrottlingError },
+    { errorDescription: 'com.microsoft:iot-hub-suspended', errorMessage: 'IoT hub suspended', expectedErrorType: errors.IoTHubSuspendedError },
+    { errorDescription: 'com.microsoft:message-lock-lost', errorMessage: 'Message lock lost', expectedErrorType: errors.DeviceMessageLockLostError },
+    { errorDescription: 'com.microsoft:precondition-failed', errorMessage: 'Precondition failed', expectedErrorType: errors.PreconditionFailedError },
+    { errorDescription: 'com.microsoft:quota-exceeded', errorMessage: 'Quota exceeded', expectedErrorType: errors.IotHubQuotaExceededError },
+    { errorDescription: 'com.microsoft:timeout', errorMessage: 'Timeout', expectedErrorType: errors.ServiceUnavailableError },
     { errorDescription: 'unknown', errorMessage: 'Unknown error', expectedErrorType: Error }
   ].forEach(function(testParams) {
     it('returns an \'' + testParams.expectedErrorType.name + '\' if the amqp error description is \'' + testParams.errorDescription + '\'', function(){
@@ -53,7 +75,7 @@ describe('translateError', function() {
       var error = new Error('unknown reason');
       var message = 'unknown error type';
       var err = translateError(message, error);
-      
+
       /*Tests_SRS_NODE_DEVICE_AMQP_ERRORS_16_001: [Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 2 properties:
       *- `amqpError` shall contain the error object returned by the AMQP layer.
       *- `message` shall contain a human-readable error message]

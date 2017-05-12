@@ -11,19 +11,26 @@
 
 **SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_002: [** If the AMQP error code is unknown, `translateError` should return a generic Javascript `Error` object. **]**
 
-**SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_003: [** `translateError` shall return an `ArgumentError` if the AMQP error condition is `com.microsoft:argument-out-of-range`. **]**
-
-**SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_004: [** `translateError` shall return an `UnauthorizedError` if the AMQP error condition is `amqp:unauthorized-access`. **]**
-
-**SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_006: [** `translateError` shall return an `DeviceNotFoundError` if the AMQP error condition is `amqp:not-found`. **]**
-
-**SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_007: [** `translateError` shall return an `MessageTooLargeError` if the AMQP error condition is `amqp:link-message-size-exceeded`. **]**
-
-**SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_008: [** `translateError` shall return an `InternalServerError` if the AMQP error condition is `amqp:internal-error`. **]**
-
-**SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_011: [** `translateError` shall return an `IotHubQuotaExceededError` if the AMQP error condition is `amqp:resource-limit-exceeded`. **]**
-
-**SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_009: [** `translateError` shall return an `ServiceUnavailableError` if the AMQP error condition is `com.microsoft:timeout`. **]**
+**SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_012: [** `translateError` shall return a custom error type according to this table if the AMQP error condition is one of the following:
+| AMQP Error Condition                       | Custom Error Type                    |
+| ------------------------------------------ | ------------------------------------ |
+| "amqp:internal-error"                      | InternalServerError                  |
+| "amqp:link:message-size-exceeded"          | MessageTooLargeError                 |
+| "amqp:not-found"                           | DeviceNotFoundError                  |
+| "amqp:not-implemented"                     | NotImplementedError                  |
+| "amqp:not-allowed"                         | InvalidOperationError                |
+| "amqp:resource-limit-exceeded"             | IotHubQuotaExceededError             |
+| "amqp:unauthorized-access"                 | UnauthorizedError                    |
+| "com.microsoft:argument-error"             | ArgumentError                        |
+| "com.microsoft:argument-out-of-range"      | ArgumentOutOfRangeError              |
+| "com.microsoft:device-already-exists"      | DeviceAlreadyExistsError             |
+| "com.microsoft:device-container-throttled" | IoTHubThrottledError                 |
+| "com.microsoft:iot-hub-suspended"          | IoTHubSuspendedError                 |
+| "com.microsoft:message-lock-lost"          | DeviceMessageLockLostError           |
+| "com.microsoft:precondition-failed"        | PreconditionFailedError              |
+| "com.microsoft:quota-exceeded"             | IotHubQuotaExceededError             |
+| "com.microsoft:timeout"                    | ServiceUnavailableError              |
+**]**
 
 **SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_010: [** `translateError` shall accept 2 argument:
 - A custom error message to give context to the user.

@@ -10,10 +10,14 @@ describe('errors', function() {
 
   [
     errors.ArgumentError,
+    errors.ArgumentOutOfRangeError,
     errors.DeviceMaximumQueueDepthExceededError,
     errors.DeviceNotFoundError,
+    errors.DeviceMessageLockLostError,
     errors.FormatError,
     errors.InternalServerError,
+    errors.InvalidOperationError,
+    errors.PreconditionFailedError,
     errors.IotHubQuotaExceededError,
     errors.MessageTooLargeError,
     errors.NotConnectedError,
@@ -24,6 +28,7 @@ describe('errors', function() {
     errors.JobNotFoundError,
     errors.TooManyDevicesError,
     errors.ThrottlingError,
+    errors.IoTHubSuspendedError,
     errors.DeviceAlreadyExistsError,
     errors.InvalidEtagError,
     errors.TimeoutError,

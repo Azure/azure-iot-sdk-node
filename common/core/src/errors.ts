@@ -20,6 +20,21 @@ export class ArgumentError extends Error {
 }
 
 /**
+ * @class       module:azure-iot-common.ArgumentOutOfRangeError
+ * @classdesc   Error thrown when an argument has a value that is out of the admissible range.
+ *
+ * @augments {Error}
+ */
+export class ArgumentOutOfRangeError extends Error {
+  constructor(message?: string) {
+    super(message);
+    this.name = 'ArgumentOutOfRangeError';
+    this.message = message;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+/**
  * @class       module:azure-iot-common.DeviceMaximumQueueDepthExceededError
  * @classdesc   Error thrown when the message queue for a device is full.
  *
@@ -143,6 +158,21 @@ export class IotHubNotFoundError extends Error {
   }
 }
 
+/**
+ * @class       module:azure-iot-common.IoTHubSuspendedError
+ * @classdesc   Error thrown when IoT Hub has been suspended.
+ *
+ * @augments {Error}
+ */
+export class IoTHubSuspendedError extends Error {
+  constructor(message?: string) {
+    super(message);
+    this.name = 'IoTHubSuspendedError';
+    this.message = message;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
 export class JobNotFoundError extends Error {
   constructor(message?: string) {
     super(message);
@@ -161,6 +191,12 @@ export class TooManyDevicesError extends Error {
   }
 }
 
+/**
+ * @class       module:azure-iot-common.ThrottlingError
+ * @classdesc   Error thrown when IoT Hub is throttled due to excessive activity.
+ *
+ * @augments {Error}
+ */
 export class ThrottlingError extends Error {
   constructor(message?: string) {
     super(message);
@@ -170,6 +206,12 @@ export class ThrottlingError extends Error {
   }
 }
 
+/**
+ * @class       module:azure-iot-common.DeviceAlreadyExistsError
+ * @classdesc   Error thrown when the device id used for device creation already exists in the Device Identity Registry.
+ *
+ * @augments {Error}
+ */
 export class DeviceAlreadyExistsError extends Error {
   constructor(message?: string) {
     super(message);
@@ -179,10 +221,61 @@ export class DeviceAlreadyExistsError extends Error {
   }
 }
 
+/**
+ * @class       module:azure-iot-common.DeviceMessageLockLostError
+ * @classdesc   Error thrown when settling a message fails because the lock token associated with the message is lost.
+ *
+ * @augments {Error}
+ */
+export class DeviceMessageLockLostError extends Error {
+  constructor(message?: string) {
+    super(message);
+    this.name = 'DeviceMessageLockLostError';
+    this.message = message;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+/**
+ * @class       module:azure-iot-common.InvalidEtagError
+ * @classdesc   Error thrown when the eTag specified is incorrectly formatted or out of date.
+ *
+ * @augments {Error}
+ */
 export class InvalidEtagError extends Error {
   constructor(message?: string) {
     super(message);
     this.name = 'InvalidEtagError';
+    this.message = message;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+/**
+ * @class       module:azure-iot-common.InvalidOperationError
+ * @classdesc   Error thrown when an operation is attempted but is not allowed.
+ *
+ * @augments {Error}
+ */
+export class InvalidOperationError extends Error {
+  constructor(message?: string) {
+    super(message);
+    this.name = 'InvalidOperationError';
+    this.message = message;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+/**
+ * @class       module:azure-iot-common.PreconditionFailedError
+ * @classdesc   Error thrown when a condition that should have been met in order to execute an operation was not.
+ *
+ * @augments {Error}
+ */
+export class PreconditionFailedError extends Error {
+  constructor(message?: string) {
+    super(message);
+    this.name = 'PreconditionFailedError';
     this.message = message;
     Error.captureStackTrace(this, this.constructor);
   }
