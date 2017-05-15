@@ -49,6 +49,9 @@ Place the files in the folder of your choice on the target machine/device then g
 
 To run the Device Management samples, follow our [DM patterns documentation][dm-patterns].
 
+## Using the SDK with Promises rather than callbacks
+If you'd like to see how to "convert" this samples to promises instead of using callbacks, please refer to [this page][promises] of the wiki!
+
 ## Read More
 For more information on how to use this library refer to the documents below:
 - [Prepare your node.js development environment](../../doc/node-devbox-setup.md)
@@ -63,3 +66,4 @@ For more information on how to use this library refer to the documents below:
 [iothub-explorer]: https://github.com/azure/iothub-explorer
 [dm-patterns]: ../../doc/dmpatterns.md
 [debug-with-vscode]: ../../doc/get_started/node-debug-vscode.md
+[promises]: https://github.com/Azure/azure-iot-sdk-node/wiki/Promises
