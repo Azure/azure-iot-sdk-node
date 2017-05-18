@@ -105,7 +105,7 @@ var protocolAndTermination = [
 
 var runTests = function (hubConnectionString, provisionedDevice) {
   protocolAndTermination.forEach( function (testConfiguration) {
-    describe('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication, connected over ' + testConfiguration.transport.name + ' using device/service clients - disconnect c2d', function () {
+    describe.skip('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication, connected over ' + testConfiguration.transport.name + ' using device/service clients - disconnect c2d', function () {
 
       var serviceClient, deviceClient;
 

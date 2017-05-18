@@ -610,7 +610,7 @@ export class Client extends EventEmitter {
    * @param {Function} done             The callback to call when the connection is established.
    *
    */
-  getTwin(done: (err?: Error, twin?: Twin) => void, twin: Twin): void {
+  getTwin(done: (err?: Error, twin?: Twin) => void, twin?: Twin): void {
     this._fsm.handle('getTwin', done, twin);
   }
 

@@ -35,7 +35,7 @@ export class FileUploadApi implements FileUploadInterface {
     this.deviceId = deviceId;
     this.hostname = hostname;
     /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_018: [`FileUploadApi` shall instantiate the default `azure-iot-http-base.Http` transport if `transport` is not specified, otherwise it shall use the specified transport.]*/
-    this.http = httpTransport ? httpTransport : DefaultHttpTransport;
+    this.http = httpTransport ? httpTransport : new DefaultHttpTransport();
   }
 
   getBlobSharedAccessSignature(blobName: string, auth: X509 | SharedAccessSignature, done: (err?: Error, uploadParams?: UploadParams) => void): void {

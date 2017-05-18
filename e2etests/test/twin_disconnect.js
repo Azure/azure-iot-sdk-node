@@ -114,7 +114,7 @@ delete nullMergeResult.tweedle;
 
 var runTests = function (hubConnectionString) {
   protocolAndTermination.forEach( function (testConfiguration) {
-    describe('Device utilizing shared private key authentication, connected over ' + testConfiguration.transport.name + ' using device/service clients - disconnect twin', function () {
+    describe.skip('Device utilizing shared private key authentication, connected over ' + testConfiguration.transport.name + ' using device/service clients - disconnect twin', function () {
 
       this.timeout(10000);
       var deviceClient, deviceTwin;
