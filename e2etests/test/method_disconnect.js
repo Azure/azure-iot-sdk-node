@@ -110,7 +110,7 @@ var protocolAndTermination = [
 
 var runTests = function (hubConnectionString, provisionedDevice) {
   protocolAndTermination.forEach( function (testConfiguration) {
-    describe('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication, connected over ' + testConfiguration.transport.name + ' using device/eventhub clients - disconnect methods', function () {
+    describe.skip('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication, connected over ' + testConfiguration.transport.name + ' using device/eventhub clients - disconnect methods', function () {
 
       var deviceClient, serviceClient;
       var secondMethodTimeout;

@@ -8,7 +8,7 @@
   "main": "e2etests.js",
   "dependencies": {
     "async": "^2.1.2",
-    "azure-event-hubs": "0.0.6",
+    "azure-event-hubs": "0.0.8",
     "azure-iot-common": "1.1.7",
     "azure-iot-device": "1.1.11",
     "azure-iot-device-amqp": "1.1.11",

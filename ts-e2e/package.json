@@ -18,7 +18,7 @@
     "@types/mocha": "^2.2.41",
     "@types/node": "^7.0.8",
     "@types/uuid": "^2.0.29",
-    "azure-event-hubs": "0.0.6",
+    "azure-event-hubs": "0.0.8",
     "azure-iot-common": "^1.1.6",
     "azure-iot-device": "^1.1.10",
     "azure-iot-device-amqp": "^1.1.10",

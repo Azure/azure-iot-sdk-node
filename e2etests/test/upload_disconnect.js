@@ -13,7 +13,7 @@ var closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClie
 var Message = require('azure-iot-common').Message;
 
 var runTests = function (hubConnectionString, deviceTransport, provisionedDevice) {
-  describe('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication, connected over ' + deviceTransport.name + ':', function () {
+  describe.skip('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication, connected over ' + deviceTransport.name + ':', function () {
     this.timeout(120000);
     var serviceClient, deviceClient;
     var testFilesConfig = [{
