@@ -202,7 +202,7 @@ function sendEventBatchTests(Transport, registry) {
       after(function(done) {
         registry.delete(deviceId, done);
       });
-      
+
       /*Tests_SRS_NODE_DEVICE_CLIENT_05_008: [The sendEventBatch method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance.]*/
       /*Tests_SRS_NODE_DEVICE_CLIENT_05_017: [With the exception of receive, when a Client method completes successfully, the callback function (indicated by the done argument) shall be invoked with the following arguments:
       err - null

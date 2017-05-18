@@ -81,8 +81,8 @@ export class HttpReceiver extends EventEmitter implements Receiver {
       }
     });
 
-    this.on('newListener', () => {
-      if (!this._receiverStarted) {
+    this.on('newListener', (eventName) => {
+      if (!this._receiverStarted && eventName === 'message') {
         this._startReceiver();
       }
     });

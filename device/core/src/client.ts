@@ -45,6 +45,7 @@ export class Client extends EventEmitter {
   private _useAutomaticRenewal: boolean;
   private _sasRenewalTimeout: number;
   private _receiver: Receiver;
+  private _messageReceiverConnected: boolean;
   private _methodCallbackMap: any;
   private _fsm: machina.Fsm;
   private _disconnectHandler: (err?: Error, result?: any) => void;
@@ -71,6 +72,7 @@ export class Client extends EventEmitter {
     this._transport = transport;
     this._receiver = null;
     this._methodCallbackMap = {};
+    this._messageReceiverConnected = false;
 
     this.on('removeListener', (eventName) => {
       if (this._receiver && eventName === 'message' && this.listeners('message').length === 0) {
@@ -147,7 +149,6 @@ export class Client extends EventEmitter {
             this._transport.updateSharedAccessSignature(newSas, updateSasCallback);
           },
           startMessageReceiver: () => {
-            this._fsm.deferUntilTransition('connected');
             this._fsm.handle('open', (err) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_CLIENT_16_006: [The ‘error’ event shall be emitted when an error occurred within the client code.] */
@@ -193,14 +194,32 @@ export class Client extends EventEmitter {
         'connected': {
           _onEnter: () => {
             /*Codes_SRS_NODE_DEVICE_CLIENT_16_065: [The client shall connect the transport if needed to subscribe receive messages.]*/
-            if (!this._receiver) {
-              if (this.listeners('message').length > 0) {
-                this._connectMessageReceiver();
+            this._transport.getReceiver((err, receiver) => {
+              if (err) {
+                this.emit('error', err);
+              } else {
+                this._receiver = receiver;
+
+                this._receiver.on('errorReceived', (err) => {
+                  this.emit('error', err);
+                });
+
+                if (this.listeners('message').length > 0) {
+                  this._connectMessageReceiver();
+                }
+
+                // add listeners for all existing method callbacks
+                if (Object.keys(this._methodCallbackMap).length > 0) {
+                  debug('Subscribing to method events from the receiver object of the transport');
+                  for (let methodName in this._methodCallbackMap) {
+                    if (this._methodCallbackMap.hasOwnProperty(methodName)) {
+                      const callback = this._methodCallbackMap[methodName];
+                      this._addMethodCallback(methodName, callback);
+                    }
+                  }
+                }
               }
-              if (Object.keys(this._methodCallbackMap).length > 0) {
-                this._connectMethodReceiver();
-              }
-            }
+            });
           },
           _onExit: () => {
             this._disconnectReceiver();
@@ -319,17 +338,14 @@ export class Client extends EventEmitter {
           },
           startMessageReceiver: () => {
             /*Codes_SRS_NODE_DEVICE_CLIENT_16_065: [The client shall connect the transport if needed to subscribe receive messages.]*/
-            if (!this._receiver) {
+            if (!this._messageReceiverConnected) {
               this._connectMessageReceiver();
             }
           },
           startMethodReceiver: (methodName, callback) => {
             this._methodCallbackMap[methodName] = callback;
-            if (!this._receiver) {
-              this._connectMethodReceiver();
-            } else {
-              this._addMethodCallback(methodName, callback);
-            }
+            this._addMethodCallback(methodName, callback);
+
           },
           getTwin: (done, twin) => {
             /* Codes_SRS_NODE_DEVICE_CLIENT_18_001: [** The `getTwin` method shall call the `azure-iot-device-core!Twin.fromDeviceClient` method to create the device client object. **]** */
@@ -664,51 +680,18 @@ export class Client extends EventEmitter {
   }
 
   private _connectMessageReceiver(): void {
-    const self = this;
-    this._getCurrentReceiver(() => {
-      debug('Subscribing to message events from the receiver object of the transport');
-
-      self._receiver.on('message', (msg) => {
-        self.emit('message', msg);
+    if (!this._messageReceiverConnected) {
+      this._receiver.on('message', (msg) => {
+        this.emit('message', msg);
       });
-    });
-  }
-
-  private _connectMethodReceiver(): void {
-    const self = this;
-    this._getCurrentReceiver(() => {
-      debug('Subscribing to method events from the receiver object of the transport');
-      // add listeners for all existing method callbacks
-      if (Object.keys(self._methodCallbackMap).length > 0) {
-        for (let methodName in self._methodCallbackMap) {
-          if (self._methodCallbackMap.hasOwnProperty(methodName)) {
-            const callback = self._methodCallbackMap[methodName];
-            self._addMethodCallback(methodName, callback);
-          }
-        }
-      }
-    });
-  }
-
-  private _getCurrentReceiver(callback: (err?: Error, receiver?: any) => void): void {
-    const self = this;
-    this._transport.getReceiver((err, receiver) => {
-      if (!err && receiver !== self._receiver) {
-        self._receiver = receiver;
-        /*Codes_SRS_NODE_DEVICE_CLIENT_16_006: [The ‘error’ event shall be emitted when an error occurred within the client code.] */
-        self._receiver.on('errorReceived', (err) => {
-          self.emit('error', err);
-        });
-        callback();
-      } else {
-        throw new Error('Transport failed to start receiving messages: ' + err.message);
-      }
-    });
+      this._messageReceiverConnected = true;
+    }
   }
 
   private _disconnectReceiver(): void {
     if (this._receiver) {
       this._receiver.removeAllListeners('message');
+      this._messageReceiverConnected = false;
       this._receiver = null;
     }
   }
