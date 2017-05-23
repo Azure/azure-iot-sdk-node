@@ -284,7 +284,7 @@ describe('Amqp', function () {
     it('calls the done callback with a null Error and a receiver if successful', function(testCallback) {
       var amqp = new Amqp();
       sinon.stub(amqp._amqp, 'connect').resolves('connected');
-      sinon.stub(amqp._amqp, 'createReceiver').resolves('receiver');
+      sinon.stub(amqp._amqp, 'createReceiver').resolves(new EventEmitter());
 
       amqp.connect('uri', null, function() {
         amqp.getReceiver('endpoint', function(err, receiver) {
@@ -298,7 +298,7 @@ describe('Amqp', function () {
     it('gets the existing receiver for an endpoint if it was previously created', function(testCallback) {
       var amqp = new Amqp();
       sinon.stub(amqp._amqp, 'connect').resolves('connected');
-      sinon.stub(amqp._amqp, 'createReceiver').resolves(new AmqpReceiver('fake'));
+      sinon.stub(amqp._amqp, 'createReceiver').resolves(new EventEmitter());
 
       amqp.connect('uri', null, function() {
         amqp.getReceiver('endpoint', function(err, recv1) {
@@ -764,8 +764,8 @@ describe('Amqp', function () {
   describe('Links', function() {
     var fake_generic_endpoint = 'fake_generic_endpoint';
     [
-      {amqpFunc: 'attachSenderLink', amqp10Func: 'createSender', privateLinkArray: '_senders', fakeLinkObject: { send: function() {} }},
-      {amqpFunc: 'attachReceiverLink', amqp10Func: 'createReceiver', privateLinkArray: '_receivers', fakeLinkObject: { endpoint: fake_generic_endpoint }},
+      {amqpFunc: 'attachSenderLink', amqp10Func: 'createSender', privateLinkArray: '_senders', fakeLinkObject: new EventEmitter()},
+      {amqpFunc: 'attachReceiverLink', amqp10Func: 'createReceiver', privateLinkArray: '_receivers', fakeLinkObject: new EventEmitter()},
     ].forEach(function(testConfig) {
       describe('#' + testConfig.amqpFunc, function() {
         /*Tests_SRS_NODE_COMMON_AMQP_16_012: [The `attachSenderLink` method shall throw a ReferenceError if the `endpoint` argument is falsy.]*/
@@ -853,6 +853,19 @@ describe('Amqp', function () {
             });
 
             amqp._amqp.emit('client:errorReceived', fakeError);
+          });
+        });
+
+        it('subscribe to the detached event and removes it from ' + testConfig.privateLinkArray + ' if it is emitted', function(testCallback) {
+          var amqp = new Amqp();
+          sinon.stub(amqp._amqp, 'connect').resolves('connected');
+          sinon.stub(amqp._amqp, testConfig.amqp10Func).resolves(testConfig.fakeLinkObject);
+          amqp.connect('uri', null, function() {
+            amqp[testConfig.amqpFunc](fake_generic_endpoint, null, function(err) {
+              testConfig.fakeLinkObject.emit('detached');
+              assert.isUndefined(amqp[testConfig.privateLinkArray][fake_generic_endpoint]);
+              testCallback();
+            });
           });
         });
       });

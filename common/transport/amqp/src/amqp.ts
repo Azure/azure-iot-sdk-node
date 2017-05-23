@@ -322,6 +322,12 @@ export class Amqp {
       /*Codes_SRS_NODE_COMMON_AMQP_16_018: [The `attachReceiverLink` method shall call `createReceiver` on the `amqp10` client object.]*/
       self._amqp.createReceiver(endpoint, linkOptions)
         .then((receiver) => {
+          receiver.on('detached', (detached) => {
+            debug('receiver link detached: ' + endpoint);
+            if (self._receivers[endpoint]) {
+              delete self._receivers[endpoint];
+            }
+          });
           self._amqp.removeListener('client:errorReceived', clientErrorHandler);
           if (!connectionError) {
             self._receivers[endpoint] = new AmqpReceiver(receiver);
@@ -374,6 +380,12 @@ export class Amqp {
       /*Codes_SRS_NODE_COMMON_AMQP_16_013: [The `attachSenderLink` method shall call `createSender` on the `amqp10` client object.]*/
       self._amqp.createSender(endpoint, linkOptions)
         .then((sender) => {
+          sender.on('detached', () => {
+            debug('sender link detached: ' + endpoint);
+            if (self._senders[endpoint]) {
+              delete self._senders[endpoint];
+            }
+          });
           self._amqp.removeListener('client:errorReceived', clientErrorHandler);
           if (!connectionError) {
             self._senders[endpoint] = sender;
