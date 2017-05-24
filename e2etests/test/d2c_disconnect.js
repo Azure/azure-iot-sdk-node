@@ -36,49 +36,49 @@ var protocolAndTermination = [
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceMqtt.Mqtt,
     operationType: 'KillTcp',
     closeReason: ' severs the TCP connection ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceMqtt.MqttWs,
     operationType: 'KillTcp',
     closeReason: ' severs the TCP connection ',
     delayInSeconds: 2
   },
-  { //
+  {
     testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpConnection',
     closeReason: ' severs the AMQP connection ',
     delayInSeconds: 2
   },
-  { // !!!!!!!!!!!!!!!!!!!  FAILS - SDK Client simply hangs on the response.
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpSession',
     closeReason: ' severs the AMQP session ',
     delayInSeconds: 1
   },
-  { // !!!!!!!!!!!!!!!!! FAILS - SDK Client simply hangs on the response.
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpCBSLinkReq',
     closeReason: ' severs AMQP CBS request link ',
     delayInSeconds: 2
   },
-  { // !!!!!!!!!!!!!!!!! FAILS - SDK Client simply hangs on the response.
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpCBSLinkResp',
     closeReason: ' severs AMQP CBS response link ',
     delayInSeconds: 2
   },
-  { //----------------- FAILS - Disconnect does not make it up to client.
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpD2CLink',
     closeReason: ' severs AMQP D2C link ',
@@ -92,7 +92,7 @@ var protocolAndTermination = [
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceMqtt.Mqtt,
     operationType: 'ShutDownMqtt',
     closeReason: ' cleanly shutdowns MQTT connection ',
@@ -103,7 +103,7 @@ var protocolAndTermination = [
 
 var runTests = function (hubConnectionString, provisionedDevice) {
   protocolAndTermination.forEach( function (testConfiguration) {
-    describe.skip('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication, connected over ' + testConfiguration.transport.name + ' using device/eventhub clients - disconnect d2c', function () {
+    describe('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication, connected over ' + testConfiguration.transport.name + ' using device/eventhub clients - disconnect d2c', function () {
 
       var deviceClient, ehClient, senderInterval;
 
@@ -126,6 +126,15 @@ var runTests = function (hubConnectionString, provisionedDevice) {
         var originalMessage = new Message(uuidData);
         var messageReceived = false;
         originalMessage.messageId = uuidData;
+        var disconnectHandler = function () {
+          debug('We did get a disconnect message');
+          deviceClient.removeListener('disconnect', disconnectHandler);
+          if (messageReceived) {
+            testCallback();
+          } else {
+            testCallback(new Error('unexpected disconnect'));
+          }
+        };
         ehClient.open()
                 .then(ehClient.getPartitionIds.bind(ehClient))
                 .then(function (partitionIds) {
@@ -161,14 +170,7 @@ var runTests = function (hubConnectionString, provisionedDevice) {
                     if (openErr) {
                       testCallback(openErr);
                     } else {
-                      deviceClient.on('disconnect', function () {
-                        if (messageReceived) {
-                          debug('received the disconnect after sending the termination');
-                          testCallback();
-                        } else {
-                          testCallback(new Error('unexpected disconnect'));
-                        }
-                      });
+                      deviceClient.on('disconnect', disconnectHandler);
                       deviceClient.sendEvent(originalMessage, function (sendErr) {
                         if (sendErr) {
                           testCallback(sendErr);

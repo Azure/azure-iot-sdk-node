@@ -17,6 +17,7 @@ const debug = dbg('amqp-common');
 
 const _putTokenSendingEndpoint = '$cbs';
 const _putTokenReceivingEndpoint = '$cbs';
+const _amqpClientError = 'client:errorReceived';
 
 export type GenericAmqpBaseCallback = (err: Error | null, result?: any) => void;
 
@@ -76,6 +77,7 @@ export class Amqp {
   private _amqp: amqp10.Client;
   private _receivers: { [key: string]: any; } = {};
   private _senders: { [key: string]: any; } = {};
+  private _disconnectHandler: (err: Error) => void;
 
   private _putToken: PutTokenStatus = new PutTokenStatus();
 
@@ -150,20 +152,30 @@ export class Amqp {
       }
       this._amqp.policy.connect.options.sslOptions = sslOptions;
       let connectError = null;
-      const connectErrorHander = (err) => {
+      const connectErrorHandler = (err) => {
         connectError = err;
       };
-      this._amqp.on('client:errorReceived', connectErrorHander);
+
+      const amqpErrorHandler = (err) => {
+        debug('amqp10 error: ' + err.toString());
+        if (this._disconnectHandler) {
+          this._disconnectHandler(err);
+        }
+      };
+
+      this._amqp.on(_amqpClientError, connectErrorHandler);
       this._amqp.connect(this.uri)
         .then((result) => {
           debug('AMQP transport connected.');
           this._connected = true;
+          this._amqp.on(_amqpClientError, amqpErrorHandler);
+          this._amqp.removeListener(_amqpClientError, connectErrorHandler);
           /*Codes_SRS_NODE_COMMON_AMQP_16_002: [The `connect` method shall establish a connection with the IoT hub instance and if given as argument call the `done` callback with a null error object in the case of success and a `results.Connected` object.]*/
           this._safeCallback(done, null, new results.Connected(result));
           return null;
         })
         .catch((err) => {
-          this._amqp.removeListener('client:errorReceived', connectErrorHander);
+          this._amqp.removeListener(_amqpClientError, connectErrorHandler);
           this._connected = false;
           /*Codes_SRS_NODE_COMMON_AMQP_16_003: [The `connect` method shall call the `done` callback if the connection fails.] */
           this._safeCallback(done, connectError || err);
@@ -180,9 +192,10 @@ export class Amqp {
    * @param {Function}   disconnectCallback   Called when the connection disconnected.
    */
   setDisconnectHandler(disconnectCallback: GenericAmqpBaseCallback): void {
+    this._disconnectHandler = disconnectCallback;
     this._amqp.on('connection:closed', () => {
       this._connected = false;
-      disconnectCallback(new Error('amqp10: connection closed'));
+      this._disconnectHandler(new Error('amqp10: connection closed'));
     });
   }
 
@@ -213,7 +226,7 @@ export class Amqp {
     self._receivers = {};
 
     Promise.all(openLinks.map((link) => link.detach()))
-          .then(this._amqp.disconnect.bind(this._amqp))
+          .then(() => this._amqp.disconnect())
           .then((result) => {
             self._connected = false;
             /*Codes_SRS_NODE_COMMON_AMQP_16_004: [The disconnect method shall call the done callback when the application/service has been successfully disconnected from the service] */

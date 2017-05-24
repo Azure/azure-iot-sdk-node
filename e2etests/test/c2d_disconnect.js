@@ -38,14 +38,14 @@ var protocolAndTermination = [
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceMqtt.Mqtt,
     operationType: 'KillTcp',
     closeReason: ' severs the TCP connection ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceMqtt.MqttWs,
     operationType: 'KillTcp',
     closeReason: ' severs the TCP connection ',
@@ -58,29 +58,29 @@ var protocolAndTermination = [
     closeReason: ' severs the AMQP connection ',
     delayInSeconds: 2
   },
-  { // !!!!!!!!!!!!!!!!!!!  FAILS - SDK Client simply hangs on the response.
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpSession',
     closeReason: ' severs the AMQP session ',
     delayInSeconds: 1
   },
-  { // !!!!!!!!!!!!!!!!! FAILS - SDK Client simply hangs on the response.
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpCBSLinkReq',
     closeReason: ' severs AMQP CBS request link ',
     delayInSeconds: 2
   },
-  { // !!!!!!!!!!!!!!!!! FAILS - SDK Client simply hangs on the response.
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpCBSLinkResp',
     closeReason: ' severs AMQP CBS response link ',
     delayInSeconds: 2
   },
-  { //----------------- FAILS - ERRORS ARE EMITTED THAT HAVE NO HANDLER.
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpC2DLink',
     closeReason: ' severs AMQP C2D link ',
@@ -94,7 +94,7 @@ var protocolAndTermination = [
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceMqtt.Mqtt,
     operationType: 'ShutDownMqtt',
     closeReason: ' cleanly shutdowns MQTT connection ',
@@ -105,7 +105,7 @@ var protocolAndTermination = [
 
 var runTests = function (hubConnectionString, provisionedDevice) {
   protocolAndTermination.forEach( function (testConfiguration) {
-    describe.skip('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication, connected over ' + testConfiguration.transport.name + ' using device/service clients - disconnect c2d', function () {
+    describe('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication, connected over ' + testConfiguration.transport.name + ' using device/service clients - disconnect c2d', function () {
 
       var serviceClient, deviceClient;
 
@@ -128,6 +128,16 @@ var runTests = function (hubConnectionString, provisionedDevice) {
         var sendingSideDone = false;
         var uuidData = uuid.v4();
         var originalMessage = new Message(uuidData);
+        var disconnectHandler = function () {
+          debug('We did get a disconnect message');
+          deviceClient.removeListener('disconnect', disconnectHandler);
+          if (receivingSideDone) {
+            testCallback();
+          } else {
+            testCallback(new Error('unexpected disconnect'));
+          }
+        };
+
         originalMessage.messageId = uuidData;
         originalMessage.expiryTimeUtc = Date.now() + 60000; // Expire 60s from now, to reduce the chance of us hitting the 50-message limit on the IoT Hub
 
@@ -137,14 +147,7 @@ var runTests = function (hubConnectionString, provisionedDevice) {
             testCallback(openErr);
           } else {
             debug('about to connect a listener.');
-            deviceClient.on('disconnect', function () {
-              debug('We did get a disconnect message');
-              if (receivingSideDone) {
-                testCallback();
-              } else {
-                testCallback(new Error('unexpected disconnect'));
-              }
-            });
+            deviceClient.on('disconnect', disconnectHandler);
             deviceClient.on('message', function (receivedMessage) {
               deviceClient.complete(receivedMessage, function (err, result) { // It doesn't matter whether this was a message we want, complete it so that the message queue stays clean.
                 if (err) {
