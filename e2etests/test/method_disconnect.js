@@ -36,56 +36,56 @@ var protocolAndTermination = [
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceMqtt.Mqtt,
     operationType: 'KillTcp',
     closeReason: ' severs the TCP connection ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceMqtt.MqttWs,
     operationType: 'KillTcp',
     closeReason: ' severs the TCP connection ',
     delayInSeconds: 2
   },
-  { //
+  {
     testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpConnection',
     closeReason: ' severs the AMQP connection ',
     delayInSeconds: 2
   },
-  { // !!!!!!!!!!!!!!!!!!!  FAILS - SDK Client simply hangs on the response.
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpSession',
     closeReason: ' severs the AMQP session ',
     delayInSeconds: 1
   },
-  { // !!!!!!!!!!!!!!!!! FAILS - SDK Client simply hangs on the response.
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpCBSLinkReq',
     closeReason: ' severs AMQP CBS request link ',
     delayInSeconds: 2
   },
-  { // !!!!!!!!!!!!!!!!! FAILS - SDK Client simply hangs on the response.
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpCBSLinkResp',
     closeReason: ' severs AMQP CBS response link ',
     delayInSeconds: 2
   },
-  { //----------------- FAILS - emit error is thrown with no handler..
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpMethodReqLink',
     closeReason: ' severs AMQP method request link ',
     delayInSeconds: 2
   },
-  { //----------------- FAILS - Disconnect does not make it up to client.
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpMethodRespLink',
     closeReason: ' severs AMQP method response link ',
@@ -99,7 +99,7 @@ var protocolAndTermination = [
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceMqtt.Mqtt,
     operationType: 'ShutDownMqtt',
     closeReason: ' cleanly shutdowns MQTT connection ',
@@ -110,7 +110,7 @@ var protocolAndTermination = [
 
 var runTests = function (hubConnectionString, provisionedDevice) {
   protocolAndTermination.forEach( function (testConfiguration) {
-    describe.skip('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication, connected over ' + testConfiguration.transport.name + ' using device/eventhub clients - disconnect methods', function () {
+    describe('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication, connected over ' + testConfiguration.transport.name + ' using device/eventhub clients - disconnect methods', function () {
 
       var deviceClient, serviceClient;
       var secondMethodTimeout;
@@ -162,7 +162,8 @@ var runTests = function (hubConnectionString, provisionedDevice) {
           var methodParams = {
             methodName: methodName,
             payload: testPayload,
-            timeoutInSeconds: 10
+            connectTimeoutInSeconds: 10,
+            responseTimeoutInSeconds: 10
           };
           debug('service sending method call:');
           debug(JSON.stringify(methodParams, null, 2));
@@ -185,14 +186,16 @@ var runTests = function (hubConnectionString, provisionedDevice) {
       doConnectTest(testConfiguration.testEnabled)('Service sends a method, iothub client receives it, and' + testConfiguration.closeReason + 'which is noted by the iot hub device client', function (testCallback) {
         this.timeout(20000);
         var firstMethodSent = false;
-        deviceClient.on('disconnect', function () {
+        var disconnectHandler = function () {
+          debug('We did get a disconnect message');
+          deviceClient.removeListener('disconnect', disconnectHandler);
           if (firstMethodSent) {
-            debug('received the disconnect after sending the termination');
             testCallback();
           } else {
             testCallback(new Error('unexpected disconnect'));
           }
-        });
+        };
+        deviceClient.on('disconnect', disconnectHandler);
         var firstPayload = { k1: uuid.v4() };
         setMethodHandler(methodName1, firstPayload);
         sendMethodCall(serviceClient, methodName1, firstPayload, function(err) {

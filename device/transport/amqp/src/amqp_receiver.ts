@@ -37,10 +37,12 @@ export class AmqpReceiver extends EventEmitter implements Receiver {
     this.on('removeListener', (eventName, eventCallback) => {
       if (eventName === 'message') {
         this._amqpClient.getReceiver(this._messagingEndpoint, (err, msgReceiver) => {
-          msgReceiver.removeListener('message', eventCallback);
-          if (msgReceiver.listeners('message').length === 0) {
-            msgReceiver.removeListener('errorReceived', errorListener);
-            errorListenerInitialized = false;
+          if (msgReceiver) {
+            msgReceiver.removeListener('message', eventCallback);
+            if (msgReceiver.listeners('message').length === 0) {
+              msgReceiver.removeListener('errorReceived', errorListener);
+              errorListenerInitialized = false;
+            }
           }
         });
       }

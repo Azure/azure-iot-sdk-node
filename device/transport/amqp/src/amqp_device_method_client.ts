@@ -116,7 +116,16 @@ export class AmqpDeviceMethodClient extends EventEmitter {
                   debug(JSON.stringify(methodRequest, null, 2));
                   this.emit('method_' + methodName, methodRequest);
                 });
-                methodReceiver.on('errorReceived', (err) => this.emit('errorReceived', err));
+                methodReceiver.on('errorReceived', (err) => {
+                  this._fsm.transition('disconnecting');
+                  this._amqpClient.detachReceiverLink(this._methodEndpoint, () => {
+                    this._amqpClient.detachSenderLink(this._methodEndpoint, () => {
+                      this._methodReceiverInitialized = false;
+                      this._fsm.transition('disconnected');
+                      this.emit('errorReceived', err);
+                    });
+                  });
+                });
                 this._methodReceiverInitialized = true;
               }
 

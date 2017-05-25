@@ -76,7 +76,7 @@ export class Client extends EventEmitter {
 
     this.on('removeListener', (eventName) => {
       if (this._receiver && eventName === 'message' && this.listeners('message').length === 0) {
-        this._disconnectReceiver();
+        this._disconnectMessageReceiver();
       }
     });
 
@@ -222,7 +222,7 @@ export class Client extends EventEmitter {
             });
           },
           _onExit: () => {
-            this._disconnectReceiver();
+            this._destroyReceiver();
             this._receiver = null;
           },
           /*Codes_SRS_NODE_DEVICE_CLIENT_16_060: [The `open` method shall call the `openCallback` callback with a null error object and a `results.Connected()` result object if the transport is already connected, doesn't need to connect or has just connected successfully.]*/
@@ -688,9 +688,16 @@ export class Client extends EventEmitter {
     }
   }
 
-  private _disconnectReceiver(): void {
+  private _disconnectMessageReceiver(): void {
     if (this._receiver) {
       this._receiver.removeAllListeners('message');
+      this._messageReceiverConnected = false;
+    }
+  }
+
+  private _destroyReceiver(): void {
+    if (this._receiver) {
+      this._receiver.removeAllListeners();
       this._messageReceiverConnected = false;
       this._receiver = null;
     }

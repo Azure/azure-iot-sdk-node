@@ -274,6 +274,12 @@ describe('AmqpDeviceMethodClient', function() {
         attachReceiverLink: function(endpoint, options, callback) {
           callback(null, {});
         },
+        detachSenderLink: function (endpoint, callback) {
+          callback(null, {});
+        },
+        detachReceiverLink: function (endpoint, callback) {
+          callback(null, {});
+        },
         getReceiver: function(ep, callback) {
           callback(null, fakeAmqpReceiver);
         }
@@ -324,7 +330,7 @@ describe('AmqpDeviceMethodClient', function() {
       var message1 = new Message();
       message1.properties.add('IoThub-methodname', 'testMethod1');
       message1.correlationId = 'correlationId1';
-      
+
       var message2 = new Message();
       message2.properties.add('IoThub-methodname', 'testMethod2');
       message2.correlationId = 'correlationId2';
