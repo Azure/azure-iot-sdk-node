@@ -1,43 +1,82 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { Registry, Device } from '../../iothub';
+import {
+    Device,
+    Registry
+} from 'azure-iothub';
 
-const connectionString = '[IoT Connection String]';
-
-let registry = Registry.fromConnectionString(connectionString);
-
-
-// List devices
-console.log('**listing devices..');
-registry.list((err, deviceList) => {
-    deviceList.forEach((device) => {
-        let key = device.authentication ? device.authentication.symmetricKey.primaryKey : '<no primary key>';
-        console.log(device.deviceId + ': ' + key);
+/**
+ * Get list of Devices in IoT Registry - returns Promise
+ */
+const listDevices = async (registry: Registry): Promise<Device[]> => {
+    return new Promise<Device[]>((resolve, reject) => {
+        registry.list((error: Error, deviceList: Device[]) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(deviceList);
+            }
+        });
     });
-});
-
-// Create a new device
-let device = new Device();
-device.deviceId = 'sample-device-' + Date.now();
-console.log('\n**creating device \'' + device.deviceId + '\'');
-registry.create(device, printAndContinue('create', () => {
-
-    // Get the newly-create device
-    console.log('\n**getting device \'' + device.deviceId + '\'');
-    registry.get(device.deviceId, printAndContinue('get', () => {
-
-        // Delete the new device
-        console.log('\n**deleting device \'' + device.deviceId + '\'');
-        registry.delete(device.deviceId, printAndContinue('delete'));
-    }));
-}));
-
-function printAndContinue(op: string, next?: () => void): Registry.ResponseCallback {
-    return (err, deviceInfo, res) => {
-        if (err) console.log(op + ' error: ' + err.toString());
-        if (res) console.log(op + ' status: ' + res.statusCode + ' ' + res.statusMessage);
-        if (deviceInfo) console.log(op + ' device info: ' + JSON.stringify(deviceInfo));
-        if (next) next();
-    };
-}
+};
+/**
+ * Create new Device - returns Promise
+ */
+const createDevice = async(registry: Registry, newDevice: Registry.DeviceDescription): Promise<Device> => {
+    return new Promise<Device>((resolve, reject) => {
+        registry.create(newDevice, (error: Error, device?: Device, response?: any) => {
+            if (error) {
+                reject(error);
+            } else {
+                console.log(`create status: ${response.statusCode} ${response.statusMessage}`);
+                console.log(`create device info: ${JSON.stringify(device)}`);
+                resolve(device);
+            }
+        });
+    });
+};
+/**
+ * Get Device from Registry - returns Promise
+ */
+const getDevice = async (registry: Registry, deviceId: string): Promise<Device> => {
+    return new Promise<Device>((resolve, reject) => {
+        registry.get(deviceId, (error: Error, device?: Device, response?: any) => {
+            if (error) {
+                reject(error);
+            } else {
+                console.log(`get status: ${response.statusCode} ${response.statusMessage}`);
+                console.log(`get device info: ${JSON.stringify(device)}`);
+                resolve(device);
+            }
+        });
+    });
+};
+//
+const connectionString = process.env.IOTHUB_CONNECTION_STRING;
+const registry = Registry.fromConnectionString(connectionString);
+(async() => {
+    // listing devices
+    console.log('**listing devices ...');
+    try {
+        const deviceList: Device[] = await listDevices(registry);
+        deviceList.forEach((device: Device) => {
+            let key = (device.authentication) ?
+                device.authentication.symmetricKey.primaryKey :
+                '<no primary key>';
+            console.log(`${device.deviceId}:${key}`);
+        });
+    } catch (error) {
+        console.log(error);
+    }
+    // Create a new device
+    let device = new Device();
+    device.deviceId = `sample-device-${Date.now()}`;
+    console.log(`**creating device ${device.deviceId}`);
+    try {
+        device = await createDevice(registry, device);
+        device = await getDevice(registry, device.deviceId);
+    } catch (error) {
+        console.log(error);
+    }
+})();
