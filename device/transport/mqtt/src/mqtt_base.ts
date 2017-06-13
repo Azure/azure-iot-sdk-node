@@ -186,7 +186,7 @@ export class MqttBase {
     }
 
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `publish` method shall use QoS level of 1.]*/
-    this.client.publish(topic, message.data.toString(), { qos: 1, retain: false }, (err, puback) => {
+    this.client.publish(topic, message.data, { qos: 1, retain: false }, (err, puback) => {
       if (done) {
         if (err) {
           done(err);
