@@ -50,11 +50,11 @@ build/dev-setup.sh
 ## Run all the tests
 Since the SDK is written using plain javascript there is no compile step, so running the build script from the command line is the easiest way to run the tests in the same way our gated build system would:
 ```
-build\build.cmd --integration-tests
+build\build.cmd --integration-tests --e2e-tests
 ```
 or on Mac/Linux
 ```
-build\build.cmd --integration-tests
+build\build.sh --integration-tests --e2e-tests
 ```
 
 The `--integration-tests` flag ensures all tests (including integration and end-to-end) are run. If you omit it, it will run only unit tests.
