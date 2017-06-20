@@ -49,7 +49,7 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
 
     testFilesConfig.forEach(function(fileConfig) {
       it('device successfully uploads a file of ' + fileConfig.fileSizeInKb + 'Kb and the notification is received by the service', function(done) {
-        var testBlobName = 'e2eblob';
+        var testBlobName = 'mye2edir/e2eblob';
         fs.stat(fileConfig.fileName, function (err, fileStats) {
           if(err) {
             done(err);

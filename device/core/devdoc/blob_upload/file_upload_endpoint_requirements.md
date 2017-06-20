@@ -20,17 +20,24 @@ The `FileUploadApi` class provide methods to get an Azure Storage blob SAS URI f
 
 **SRS_NODE_FILE_UPLOAD_ENDPOINT_16_005: [** `getBlobSharedAccessSignature` shall throw a `ReferenceError` if `auth` is falsy. **]**
 
-**SRS_NODE_FILE_UPLOAD_ENDPOINT_16_006: [** `getBlobSharedAccessSignature` shall create a `GET` HTTP request to a path formatted as the following:
-`/devices/<deviceId>/files/<filename>?api-version=<api-version>`
+**SRS_NODE_FILE_UPLOAD_ENDPOINT_16_006: [** `getBlobSharedAccessSignature` shall create a `POST` HTTP request to a path formatted as the following:
+`/devices/<deviceId>/files?api-version=<api-version>`
 **]**
 
-**SRS_NODE_FILE_UPLOAD_ENDPOINT_16_007: [** The `GET` HTTP request shall have the following headers:
+**SRS_NODE_FILE_UPLOAD_ENDPOINT_16_007: [** The `POST` HTTP request shall have the following headers:
 ```
-Accept: 'application/json'
-Host: <hostname>
+Host: '<hostname>'
 Authorization: <iotHubSas>
-'User-Agent': <sdk name and version>,
+Accept: 'application/json',
+'Content-Type': 'application/json',
+'Content-Length': <content length>,
+'User-Agent': <sdk name and version>
 ```
+The `POST` HTTP request shall have the following body:
+{
+   blobName: '<name of the blob for which a SAS URI will be generated>'
+}
+
 **]**
 
 **SRS_NODE_FILE_UPLOAD_ENDPOINT_16_008: [** `getBlobSasUri` shall call the `done` callback with an `Error` object if the request fails **]**

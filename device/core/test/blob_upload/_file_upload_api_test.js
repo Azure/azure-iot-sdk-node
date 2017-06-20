@@ -70,16 +70,21 @@ describe('FileUploadApi', function() {
       });
     });
 
-    /*Tests_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_006: [`getBlobSharedAccessSignature` shall create a `GET` HTTP request to a path formatted as the following:
-    `/devices/<deviceId>/files/<filename>?api-version=<api-version>`]*/
-    it('builds a valid path for the HTTP GET request', function() {
+    /*Tests_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_006: [`getBlobSharedAccessSignature` shall create a `POST` HTTP request to a path formatted as the following:
+    `/devices/<deviceId>/files?api-version=<api-version>`]*/
+    it('builds a valid path for the HTTP POST request', function() {
       var testFileName = 'testfile.txt';
       var testDeviceId = 'testDevice';
+      var testBody = { blobName: testFileName };
+
       var FakeHttpTransport = function() {
         this.buildRequest = function (method, path) {
-          assert.equal(method, 'GET');
-          assert.equal(path, '/devices/' + testDeviceId + '/files/' + testFileName + endpoint.versionQueryString());
+          assert.equal(method, 'POST');
+          assert.equal(path, '/devices/' + testDeviceId + '/files' + endpoint.versionQueryString());
           return {
+             write: function(body) {
+             assert.equal(body, JSON.stringify(testBody));
+            },
             end: function() {}
           };
         };
@@ -89,27 +94,40 @@ describe('FileUploadApi', function() {
       fileUpload.getBlobSharedAccessSignature(testFileName, 'sas');
     });
 
-    /*Tests_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_007: [The `GET` HTTP request shall have the following headers:
+    /*Tests_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_007: [The `POST` HTTP request shall have the following headers:
     ```
-    Accept: 'application/json'
-    Host: <hostname>
-    Authorization: <sharedAccessSignature>
-    'User-Agent': <sdk name and version>,
-    ```]*/
+   Host: '<hostname>'
+   Authorization: <iotHubSas>
+   Accept: 'application/json',
+   'Content-Type': 'application/json',
+   'Content-Length': <content length>,
+   'User-Agent': <sdk name and version>
+  ```
+ The `POST` HTTP request shall have the following body:
+ {
+   blobName: '<name of the blob for which a SAS URI will be generated>'
+ }
+   ```]*/
     it('builds a valid set of headers with a shared access signature for the HTTP request', function() {
       var testFileName = 'testfile.txt';
       var testDeviceId = 'testDevice';
       var testHostName = 'host.name';
       var testIoTHubSas = 'hubSas';
+      var testBody = { blobName: testFileName };
 
       var FakeHttpTransport = function() {
         this.buildRequest = function (method, path, headers) {
-          assert.equal(headers.Accept, 'application/json');
           assert.equal(headers.Host, testHostName);
           assert.equal(headers.Authorization, testIoTHubSas);
+          assert.equal(headers.Accept, 'application/json');
+          assert.equal(headers['Content-Type'], 'application/json');
+          assert.equal(headers['Content-Length'], JSON.stringify(testBody).length);
           assert.equal(headers['User-Agent'], packageJson.name + '/' + packageJson.version);
           
           return {
+             write: function(body) {
+             assert.equal(body, JSON.stringify(testBody));
+            },
             end: function() {}
           };
         };
@@ -123,6 +141,7 @@ describe('FileUploadApi', function() {
       var testFileName = 'testfile.txt';
       var testDeviceId = 'testDevice';
       var testHostName = 'host.name';
+      var testBody = { blobName: testFileName };
       var x509Auth = {
         cert: 'cert',
         key: 'key',
@@ -137,6 +156,9 @@ describe('FileUploadApi', function() {
           assert.isUndefined(headers.Authorization);
           assert.equal(auth, x509Auth);
           return {
+             write: function(body) {
+             assert.equal(body, JSON.stringify(testBody));
+            },
             end: function() {}
           };
         };
@@ -153,10 +175,14 @@ describe('FileUploadApi', function() {
       var testDeviceId = 'testDevice';
       var testHostName = 'host.name';
       var testIoTHubSas = 'hubSas';
+      var testBody = { blobName: testFileName };
 
       var FailingTransport = function() {
         this.buildRequest = function(method, path, headers, hostname, x509auth, callback) {
           return {
+            write: function(body) {
+            assert.equal(body, JSON.stringify(testBody));
+            },
             end: function() {
               callback(new Error('fake failure'));
             }
@@ -187,6 +213,7 @@ describe('FileUploadApi', function() {
       var testCorrelationId = 'correlationId';
       var testContainerName = 'containerName';
       var testSasToken = 'sasToken';
+      var testBody = { blobName: testFileName };
 
       var fakeResult = JSON.stringify({
         correlationId: testCorrelationId,
@@ -199,6 +226,9 @@ describe('FileUploadApi', function() {
       var FakeHttpTransport = function() {
         this.buildRequest = function(method, path, headers, hostname, x509auth, callback) {
           return {
+            write: function(body) {
+            assert.equal(body, JSON.stringify(testBody));
+            },
             end: function() {
               callback(null, fakeResult);
             }
