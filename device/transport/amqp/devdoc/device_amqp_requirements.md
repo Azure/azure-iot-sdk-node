@@ -117,3 +117,45 @@ Gets the AmqpReceiver object used to subscribe to messages and errors sent to th
 **SRS_NODE_DEVICE_AMQP_16_019: [** The `sendMethodResponse` shall throw a `ReferenceError` if the `methodResponse` object is falsy. **]**
 
 **SRS_NODE_DEVICE_AMQP_16_020: [** The `sendMethodResponse` response shall call the `AmqpDeviceMethodClient.sendMethodResponse` method with the arguments that were given to it. **]**
+
+### sendTwinRequest(method, resource, properties, body, done)
+
+**SRS_NODE_DEVICE_AMQP_06_012: [** The `sendTwinRequest` method shall not throw `ReferenceError` if the `done` callback is falsy. **]**
+**SRS_NODE_DEVICE_AMQP_06_013: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `method` argument is falsy. **]**
+**SRS_NODE_DEVICE_AMQP_06_014: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `resource` argument is falsy. **]**
+**SRS_NODE_DEVICE_AMQP_06_015: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `properties` argument is falsy. **]**
+**SRS_NODE_DEVICE_AMQP_06_016: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `body` argument is falsy. **]**
+**SRS_NODE_DEVICE_AMQP_06_017: [** The `sendTwinRequest` method shall throw an `ArgumentError` if the `method` argument is not a string. **]**
+**SRS_NODE_DEVICE_AMQP_06_018: [** The `sendTwinRequest` method shall throw an `ArgumentError` if the `resource` argument is not a string. **]**
+**SRS_NODE_DEVICE_AMQP_06_019: [** The `sendTwinRequest` method shall throw an `ArgumentError` if the `properties` argument is not a an object. **]**
+
+An new Amqp message shall be instantiated.
+
+**SRS_NODE_DEVICE_AMQP_06_020: [** The `method` argument shall be the value of the amqp message `operation` annotation. **]**
+**SRS_NODE_DEVICE_AMQP_06_021: [** The `resource` argument shall be the value of the amqp message `resource` annotation. **]**
+**SRS_NODE_DEVICE_AMQP_06_031: [** If the `resource` argument terminates in a slash, the slash shall be removed from the annotation. **]**
+**SRS_NODE_DEVICE_AMQP_06_039: [** If the `resource` argument length is zero (after terminating slash removal), the resource annotation shall not be set. **]**
+**SRS_NODE_DEVICE_AMQP_06_032: [** If the `operation` argument is `PATCH`, the `version` annotation shall be set to `null`. **]**
+
+**SRS_NODE_DEVICE_AMQP_06_028: [** The `sendTwinRequest` method shall throw an `ArgumentError` if any members of the `properties` object fails to serialize to a string. **]**
+
+**SRS_NODE_DEVICE_AMQP_06_022: [** All properties, except $rid, shall be set as the part of the properties map of the amqp message. **]**
+**SRS_NODE_DEVICE_AMQP_06_023: [** The $rid property shall be set as the `correlationId` in the properties map of the amqp message. **]**
+
+**SRS_NODE_DEVICE_AMQP_06_024: [** The `body` shall be value of the body of the amqp message. **]**
+
+**SRS_NODE_DEVICE_AMQP_06_025: [** The amqp message will be sent upstream to the IoT Hub via the amqp client `send`. **]**
+
+**SRS_NODE_DEVICE_AMQP_06_040: [** If an error occurs in the `sendTwinRequest` method, the `done` callback shall be called with the error as the first parameter. **]**
+**SRS_NODE_DEVICE_AMQP_06_041: [** If an error occurs, the `sendTwinRequest` shall use the AMQP `translateError` module to convert the amqp-specific error to a transport agnostic error before passing it into the `done` callback. **]**
+
+**SRS_NODE_DEVICE_AMQP_06_042: [** If the `sendTwinRequest` method is successful, the first parameter to the `done` callback shall be null and the second parameter shall be a MessageEnqueued object. **]**
+
+### getTwinReceiver
+
+**SRS_NODE_DEVICE_AMQP_06_033: [** The `getTwinReceiver` method shall throw an `ReferenceError` if done is falsy **]**
+**SRS_NODE_DEVICE_AMQP_06_034: [** If a twin receiver for this endpoint doesn't exist, the `getTwinReceiver` method should create a new `AmqpTwinReceiver` object. **]**
+**SRS_NODE_DEVICE_AMQP_06_035: [** If a twin receiver for this endpoint has already been created, the `getTwinReceiver` method should not create a new `AmqpTwinReceiver` object. **]**
+**SRS_NODE_DEVICE_AMQP_06_036: [** The `getTwinReceiver` method shall call the `done` method after it complete. **]**
+**SRS_NODE_DEVICE_AMQP_06_037: [** If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `AmqpTwinReceiver` object as the second parameter of the `done` function with null as the first parameter. **]**
+**SRS_NODE_DEVICE_AMQP_06_038: [** If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `AmqpTwinReceiver` object as the second parameter of the `done` function with null as the first parameter. **]**

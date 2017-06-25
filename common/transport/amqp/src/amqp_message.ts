@@ -36,6 +36,10 @@ export class AmqpMessage {
     [key: string]: any
   };
 
+  messageAnnotations: {
+    [key: string]: any
+  };
+
   /**
    * @method          module:azure-iot-amqp-base.AmqpMessage.fromMessage
    * @description     Takes a azure-iot-common.Message{@link module:azure-iot-common.Message} object and creates an AMQP message from it.

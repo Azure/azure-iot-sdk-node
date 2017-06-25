@@ -4,11 +4,13 @@
 'use strict';
 
 import { EventEmitter } from 'events';
+
 import { ClientConfig, DeviceMethodResponse, StableConnectionTransport, Client } from 'azure-iot-device';
 import { Amqp as BaseAmqpClient, translateError } from 'azure-iot-amqp-base';
 import { endpoint, SharedAccessSignature, errors, results, Message, X509 } from 'azure-iot-common';
 import { AmqpDeviceMethodClient } from './amqp_device_method_client';
 import { AmqpReceiver } from './amqp_receiver';
+import { AmqpTwinReceiver } from './amqp_twin_receiver';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -46,6 +48,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   private _deviceMethodClient: AmqpDeviceMethodClient;
   private _receiver: AmqpReceiver;
   private _amqp: BaseAmqpClient;
+  private _twinReceiver: AmqpTwinReceiver;
 
   constructor(config: ClientConfig) {
     super();
@@ -264,6 +267,49 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
 
     /*Codes_SRS_NODE_DEVICE_AMQP_16_020: [The `sendMethodResponse` response shall call the `AmqpDeviceMethodClient.sendMethodResponse` method with the arguments that were given to it.]*/
     this._deviceMethodClient.sendMethodResponse(methodResponse, callback);
+  }
+
+  /**
+   * @method          module:azure-iot-device-amqp.Amqp#sendTwinRequest
+   * @description     Send a device-twin specific messager to the IoT Hub instance
+   *
+   * @param {String}        method    name of the method to invoke ('PUSH', 'PATCH', etc)
+   * @param {String}        resource  name of the resource to act on (e.g. '/properties/reported/') with beginning and ending slashes
+   * @param {Object}        properties  object containing name value pairs for request properties (e.g. { 'rid' : 10, 'index' : 17 })
+   * @param {String}        body  body of request
+   * @param {Function}      done  the callback to be invoked when this function completes.
+   *
+   * @throws {ReferenceError}   One of the required parameters is falsy
+   * @throws {ArgumentError}  One of the parameters is an incorrect type
+   */
+  sendTwinRequest(method: string, resource: string, properties: { [key: string]: string }, body: any, done?: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    this._twinReceiver.sendTwinRequest(method, resource, properties, body, done);
+  }
+
+  /**
+   * @method          module:azure-iot-device-mqtt.Amqp#getTwinReceiver
+   * @description     Get a receiver object that handles C2D device-twin traffic
+   *
+   * @param {Function}  done      the callback to be invoked when this function completes.
+   *
+   * @throws {ReferenceError}   One of the required parameters is falsy
+   */
+  getTwinReceiver(done?: (err?: Error, receiver?: AmqpTwinReceiver) => void): void {
+    /* Codes_SRS_NODE_DEVICE_AMQP_06_033: [The `getTwinReceiver` method shall throw an `ReferenceError` if done is falsy] */
+    if (!done) {
+      throw new ReferenceError('required parameter is missing');
+    }
+
+    /*Codes_SRS_NODE_DEVICE_AMQP_06_034: [If a twin receiver for this endpoint doesn't exist, the `getTwinReceiver` method should create a new `AmqpTwinReceiver` object.] */
+    /*Codes_SRS_NODE_DEVICE_AMQP_06_035: [If a twin receiver for this endpoint has already been created, the `getTwinReceiver` method should not create a new `AmqpTwinReceiver` object.] */
+    if (!this._twinReceiver) {
+      this._twinReceiver = new AmqpTwinReceiver(this._config, this._amqp);
+    }
+
+    /*Codes_SRS_NODE_DEVICE_AMQP_06_036: [The `getTwinReceiver` method shall call the `done` method after it complete.] */
+    /*Codes_SRS_NODE_DEVICE_AMQP_06_037: [If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `AmqpTwinReceiver` object as the second parameter of the `done` function with null as the first parameter.] */
+    /*Codes_SRS_NODE_DEVICE_AMQP_06_038: [If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `AmqpTwinReceiver` object as the second parameter of the `done` function with null as the first parameter.] */
+    done(null, this._twinReceiver);
   }
 
   protected _getConnectionUri(): string {

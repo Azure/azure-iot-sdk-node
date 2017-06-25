@@ -4,6 +4,7 @@
 'use strict';
 
 var Client = require('azure-iot-device').Client;
+//var Protocol = require('azure-iot-device-amqp').Amqp;
 var Protocol = require('azure-iot-device-mqtt').Mqtt;
 var _ = require('lodash');
 
@@ -30,15 +31,15 @@ client.open(function(err) {
         // First, set up code to handle desired property changes.
 
         // Important note: when the twin is done being created, the desired
-        // properties have already been retrieved from the service.  When we 
+        // properties have already been retrieved from the service.  When we
         // add these handlers, there is a chance that the handlers will be called
         // almost immediately if the relevant properties have already been
         // retrieved from the service.  In this way "property change" could mean
         // "the property is changing from one value to another value", or it could
         // mean "the property is changing from being unset to being set."
-        // 
+        //
         // There are 4 examples here.  The app developer has the option to chose
-        // which sample style to use (or mix and match).  All of the events 
+        // which sample style to use (or mix and match).  All of the events
         // shown here will fire and it's up to the app developer to decide what
         // to listen for.
         //
@@ -50,25 +51,25 @@ client.open(function(err) {
 
         // Usage example #1: receiving all patches with a single event handler.
         //
-        // This code will output any properties that are received from the 
+        // This code will output any properties that are received from the
         // service.
         //
         twin.on('properties.desired', function(delta) {
             console.log('new desired properties received:');
             console.log(JSON.stringify(delta));
         });
-        
-        // Usage example #2: receiving an event if anything under 
+
+        // Usage example #2: receiving an event if anything under
         // properties.desired.climate changes
         //
-        // This code will output desired min and max temperature every time 
+        // This code will output desired min and max temperature every time
         // the service updates either one.
         //
         // For example (service API code):
         //  twin.properties.desired.update({
-        //    climate : { 
-        //      minTemperature: 68, 
-        //      maxTemperature: 76 
+        //    climate : {
+        //      minTemperature: 68,
+        //      maxTemperature: 76
         //    }
         //  });
         //
@@ -94,7 +95,7 @@ client.open(function(err) {
         // Usage example #3: receiving an event for a single (scalar) property
         // value.  This event is only fired if the fanOn boolean value is part
         // of the patch.
-        // 
+        //
         // This code will output the new desired fan state whenever the service
         // updates it.
         //
@@ -113,7 +114,7 @@ client.open(function(err) {
         });
 
         // Usage example #4: handle add or delete operations.  The app developer
-        // is responsible for inferring add/update/delete operations based on 
+        // is responsible for inferring add/update/delete operations based on
         // the contents of the patch.
         //
         // This code will output the results of adding, updating, or deleting
@@ -141,7 +142,7 @@ client.open(function(err) {
         //    }
         //  });
         //
-        
+
         // To do this, first we have to keep track of "all modules that we know
         // about".
         var moduleList = {};
@@ -150,13 +151,13 @@ client.open(function(err) {
         // if anything was added, removed, or updated.
         twin.on('properties.desired.modules', function(delta) {
           Object.keys(delta).forEach(function(key) {
-            
+
             if (delta[key] === null && moduleList[key]) {
-              // If our patch contains a null value, but we have a record of 
+              // If our patch contains a null value, but we have a record of
               // this module, then this is a delete operation.
               console.log('deleting module ' + key);
               delete moduleList[key];
-              
+
             } else if (delta[key]) {
               if (moduleList[key]) {
                 // Our patch contains a module, and we've seen this before.
@@ -165,9 +166,9 @@ client.open(function(err) {
                 console.log(JSON.stringify(delta[key]));
                 // Store the complete object instead of just the delta
                 moduleList[key] = twin.properties.desired.modules[key];
-                
+
               } else {
-                // Our patch contains a module, but we've never seen this 
+                // Our patch contains a module, but we've never seen this
                 // before.  Must be an add operation.
                 console.log('adding module ' + key + ':');
                 console.log(JSON.stringify(delta[key]));
