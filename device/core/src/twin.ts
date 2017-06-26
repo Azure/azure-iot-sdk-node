@@ -178,7 +178,7 @@ export class Twin extends EventEmitter {
     /* Codes_SRS_NODE_DEVICE_TWIN_18_026: [** When calling `_sendTwinRequest`, `properties.reported.update` shall pass `method`='PATCH', `resource`='/properties/reported/', `properties`={}, and `body`=the `body` parameter passed in to `reportState` as a string. **]**    */
     /* Codes_SRS_NODE_DEVICE_TWIN_18_027: [** `properties.reported.update` shall call `done` with the results from `_sendTwinRequest` **]**  */
     const self = this;
-    this._sendTwinRequest('PATCH', '/properties/reported/', {}, JSON.stringify(state), (err) => {
+    this._sendTwinRequest('PATCH', '/properties/reported', {}, JSON.stringify(state), (err) => {
       /* Codes_SRS_NODE_DEVICE_TWIN_18_033: [** If `_sendTwinRequest` fails, `properties.reported.update` shall not merge the contents of the patch object into `properties.reported` **]** */
       if (err) {
         done(err);
@@ -219,7 +219,7 @@ export class Twin extends EventEmitter {
     const self = this;
     /* Codes_SRS_NODE_DEVICE_TWIN_18_034: [** `fromDeviceClient` shall ignore any PATCH operations that arrive before the GET returns **]** */
     this._clearCachedProperties();
-    this._sendTwinRequest('GET', '/', {}, ' ', (err, body) => {
+    this._sendTwinRequest('GET', '', {}, ' ', (err, body) => {
       if (err) {
         done(err);
       } else {

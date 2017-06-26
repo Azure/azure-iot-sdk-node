@@ -26,9 +26,9 @@ describe('Mqtt', function () {
     provider.publishShouldSucceed(true);
     transport = new Mqtt(config, provider);
   });
-  
+
   describe('#sendTwinRequest', function () {
-    
+
     /* Tests_SRS_NODE_DEVICE_MQTT_18_001: [** The `sendTwinRequest` method shall call the publish method on `MqttTransport`. **]** */
     it('calls publish method on transport', function() {
       provider.publish = sinon.spy();
@@ -59,14 +59,6 @@ describe('Mqtt', function () {
       assert.throws(function() {
         transport.sendTwinRequest({}, '/res', {'rid':10}, 'body', function() {});
       }, errors.ArgumentError);
-    });
-
-    /* Tests_SRS_NODE_DEVICE_MQTT_18_019: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `resource` argument is falsy. **]** */
-    it('throws if resource is falsy', function() {
-      transport.connect();
-      assert.throws(function() {
-        transport.sendTwinRequest('PUT', null, {'rid':10}, 'body', function() {});
-      }, ReferenceError);
     });
 
     /* Tests_SRS_NODE_DEVICE_MQTT_18_020: [** The `sendTwinRequest` method shall throw an `ArgumentError` if the `resource` argument is not a string. **]** */
@@ -114,7 +106,7 @@ describe('Mqtt', function () {
     it('correctly builds properties string', function() {
       var publish = sinon.spy(provider, 'publish');
       transport.connect();
-      transport.sendTwinRequest('a/', 'b/', {'rid' : 10, 'pid' : 20}, 'body', function() {});
+      transport.sendTwinRequest('a', '/b', {'rid' : 10, 'pid' : 20}, 'body', function() {});
       assert(publish.calledWith('$iothub/twin/a/b/?rid=10&pid=20'));
     });
 
@@ -129,7 +121,7 @@ describe('Mqtt', function () {
       // 7.5.2: $iothub/twin/PATCH/properties/reported/?$rid={request id}&$version={base version}
       var publish = sinon.spy(provider, 'publish');
       transport.connect();
-      transport.sendTwinRequest('PATCH', '/properties/reported/', {'$rid':10, '$version': 200}, 'body', function() {});
+      transport.sendTwinRequest('PATCH', '/properties/reported', {'$rid':10, '$version': 200}, 'body', function() {});
       assert(publish.calledWith('$iothub/twin/PATCH/properties/reported/?$rid=10&$version=200'));
     });
 
@@ -168,7 +160,7 @@ describe('Mqtt', function () {
       });
     });
 
-    
+
   });
 
   describe('#getTwinReceiver', function () {
@@ -178,13 +170,13 @@ describe('Mqtt', function () {
         transport.getTwinReceiver();
       }, ReferenceError);
     });
-    
+
     /* Tests_SRS_NODE_DEVICE_MQTT_18_005: [** The `getTwinReceiver` method shall call the `done` method after it completes **]** */
     it ('calls done when complete', function(done) {
       transport.connect();
       transport.getTwinReceiver(done);
     });
-    
+
     /* Tests_SRS_NODE_DEVICE_MQTT_18_003: [** If a twin receiver for this endpoint doesn't exist, the `getTwinReceiver` method should create a new `MqttTwinReceiver` object. **]** */
     /* Tests_SRS_NODE_DEVICE_MQTT_18_006: [** If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `MqttTwinReceiver` object as the second parameter of the `done` function with null as the first parameter. **]** */
     it ('creates a new twin receiver object', function(done) {
@@ -195,7 +187,7 @@ describe('Mqtt', function () {
         done();
       });
     });
-    
+
     /* Tests_SRS_NODE_DEVICE_MQTT_18_002: [** If a twin receiver for this endpoint has already been created, the `getTwinReceiver` method should not create a new `MqttTwinReceiver` object. **]** */
     /* Tests_SRS_NODE_DEVICE_MQTT_18_007: [** If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `MqttTwinReceiver` object as the second parameter of the `done` function with null as the first parameter. **]** */
     it ('only creates one twin receiver object', function(done) {
@@ -215,4 +207,4 @@ describe('Mqtt', function () {
   });
 
 });
-          
+
