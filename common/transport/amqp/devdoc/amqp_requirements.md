@@ -78,10 +78,10 @@ Builds and sends an AMQP message with the body set to the message parameter to t
 - The `to` field of the message should be set to the `to` argument if not `undefined` otherwise the property shouldn't be created.
 - The `body` of the message should be built using the message argument.**]**
 
-**SRS_NODE_COMMON_AMQP_16_007: [**If `send` encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message).**]**
+**SRS_NODE_COMMON_AMQP_16_007: [**If `send` encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript `Error` object with a text description of the error (err.message).**]**
 
 ### getReceiver(endpoint, done)
-Configures an AmqpReceiver object to use the endpoint passed as a parameter and calls the `done` callback with the receiver instance as an argument.
+Configures a `ReceiverLink` object to use the endpoint passed as a parameter and calls the `done` callback with the receiver instance as an argument.
 
 **SRS_NODE_COMMON_AMQP_16_009: [**If a receiver for this endpoint has already been created, the getReceiver method should call the `done` method with the existing instance as an argument.**]**
 
@@ -89,7 +89,6 @@ Configures an AmqpReceiver object to use the endpoint passed as a parameter and 
 
 ### attachSenderLink(endpoint, properties, done)
 **SRS_NODE_COMMON_AMQP_16_012: [** The `attachSenderLink` method shall throw a ReferenceError if the `endpoint` argument is falsy. **]**
-**SRS_NODE_COMMON_AMQP_16_032: [** The `attachSenderLink` method shall call the `done` callback with a `NotConnectedError` object if the amqp client is not connected when the method is called. **]**
 **SRS_NODE_COMMON_AMQP_16_013: [** The `attachSenderLink` method shall call `createSender` on the `amqp10` client object. **]**
 **SRS_NODE_COMMON_AMQP_06_003: [** The `attachSenderLink` method shall create a policy object that contain link options to be merged if the linkOptions argument is not falsy. **]**
 **SRS_NODE_COMMON_AMQP_16_015: [** The `attachSenderLink` method shall call the `done` callback with a `null` error and the link object that was created if the link was attached successfully. **]**
@@ -97,7 +96,6 @@ Configures an AmqpReceiver object to use the endpoint passed as a parameter and 
 
 ### attachReceiverLink(endpoint, properties, done)
 **SRS_NODE_COMMON_AMQP_16_017: [** The `attachReceiverLink` method shall throw a ReferenceError if the `endpoint` argument is falsy. **]**
-**SRS_NODE_COMMON_AMQP_16_033: [** The `attachReceiverLink` method shall call the `done` callback with a `NotConnectedError` object if the amqp client is not connected when the method is called. **]**
 **SRS_NODE_COMMON_AMQP_16_018: [** The `attachReceiverLink` method shall call `createReceiver` on the `amqp10` client object. **]**
 **SRS_NODE_COMMON_AMQP_06_004: [** The `attachReceiverLink` method shall create a policy object that contain link options to be merged if the linkOptions argument is not falsy. **]**
 **SRS_NODE_COMMON_AMQP_16_020: [** The `attachReceiverLink` method shall call the `done` callback with a `null` error and the link object that was created if the link was attached successfully. **]**
@@ -117,44 +115,23 @@ Configures an AmqpReceiver object to use the endpoint passed as a parameter and 
 **SRS_NODE_COMMON_AMQP_16_030: [** The `detachReceiverLink` method shall call the `done` callback with no arguments if the link for this endpoint doesn't exist. **]**
 **SRS_NODE_COMMON_AMQP_16_031: [** The `detachReceiverLink` method shall call the `done` callback with an `Error` object if there was an error while detaching the link. **]**
 
-# putToken(audience, token, putTokenCallback)
-
-**SRS_NODE_COMMON_AMQP_06_016: [** The `putToken` method shall throw a ReferenceError if the `audience` argument is falsy. **]**
-**SRS_NODE_COMMON_AMQP_06_017: [** The `putToken` method shall throw a ReferenceError if the `token` argument is falsy. **]**
-**SRS_NODE_COMMON_AMQP_06_018: [** The `putToken` method shall call the `putTokenCallback` callback (if provided) with a `NotConnectedError` object if the amqp client is not connected when the method is called. **]**
-**SRS_NODE_COMMON_AMQP_06_022: [** The `putToken` method shall call the `putTokenCallback` callback (if provided) with a `NotConnectedError` object if the `initializeCBS` has NOT been invoked. **]**
-**SRS_NODE_COMMON_AMQP_06_005: [** The `putToken` method shall construct an amqp message that contains the following application properties:
-'operation': 'put-token'
-'type': 'servicebus.windows.net:sastoken'
-'name': <audience>
-
-and system properties of
-
-'to': '$cbs'
-'messageId': <uuid>
-'reply_to': 'cbs'
-
-and a body containing <sasToken>. **]**
-
-**SRS_NODE_COMMON_AMQP_06_015: [** The `putToken` method shall send this message over the `$cbs` sender link. **]**
-**SRS_NODE_COMMON_AMQP_06_006: [** The `putToken` method shall call `putTokenCallback` (if supplied) if the `send` generates an error such that no response from the service will be forthcoming. **]**
-**SRS_NODE_COMMON_AMQP_06_007: [** The `putToken` method will time out the put token operation if no response is returned within a configurable number of seconds. **]**
-**SRS_NODE_COMMON_AMQP_06_008: [** The `putToken` method will invoke the `putTokenCallback` (if supplied) with an error object if the put token operation timed out. **]**
-
 #initializeCBS(initializeCBSCallback)
 
-**SRS_NODE_COMMON_AMQP_06_021: [** If given as an argument, the `initializeCBS` method shall call `initializeCBSCallback` with a `NotConnectedError` object if amqp client is not connnected. **]**
-**SRS_NODE_COMMON_AMQP_06_009: [** The `initializeCBS` method shall establish a sender link to the `$cbs` endpoint for sending put token operations, utilizing a custom policy `{encoder: function(body) { return body;}}` which forces the amqp layer to send the token as an amqp value in the body. **]**
-**SRS_NODE_COMMON_AMQP_06_010: [** The `initializeCBS` method shall establish a receiver link to the cbs endpoint. **]**
-**SRS_NODE_COMMON_AMQP_06_011: [** The `initializeCBS` method shall set up a listener for responses to put tokens. **]**
-**SRS_NODE_COMMON_AMQP_06_019: [** If given as an argument, the `initializeCBS` method shall call `initializeCBSCallback` with a standard `Error` object if the link/listener establishment fails. **]**
-**SRS_NODE_COMMON_AMQP_06_020: [** If given as an argument, the `initializeCBS` method shall call `initializeCBSCallback` with a null error object if successful. **]**
+**SRS_NODE_COMMON_AMQP_16_035: [** The `initializeCBS` method shall create a new `ClaimsBasedSecurityAgent` object with its `amqp10` client object. **]**
 
-# $cbs listener
+**SRS_NODE_COMMON_AMQP_16_036: [** The `initializeCBS` method shall call the attach method on the newly created `ClaimsBasedSecurityAgent` object to establish sender and receiver links to the `$cbs` endpoints. **]**
 
-**SRS_NODE_COMMON_AMQP_06_013: [** A put token response of 200 will invoke `putTokenCallback` with null parameters. **]**
-**SRS_NODE_COMMON_AMQP_06_014: [** A put token response not equal to 200 will invoke `putTokenCallback` with an error object of UnauthorizedError. **]**
-**SRS_NODE_COMMON_AMQP_06_012: [** All responses shall be completed. **]**
+**SRS_NODE_COMMON_AMQP_16_037: [** If the state machine is in a `detached` state, the `initializeCBS` client shall connect the client and get into the `connected` state before proceeding with the normal operations. **]**
+
+**SRS_NODE_COMMON_AMQP_16_038: [** The `initializeCBS` method shall call the `initializeCBSCallback` callback with no arguments if the `ClaimsBasedSecurityAgent` was successfully attached. **]**
+
+**SRS_NODE_COMMON_AMQP_16_039: [** The `initializeCBS` method shall call the `initializeCBSCallback` callback with the Error object returned by the `ClaimsBasedSecurityAgent` if it failed to attach. **]**
+
+# putToken(audience, token, putTokenCallback)
+
+**SRS_NODE_COMMON_AMQP_16_040: [** The `putToken` method shall call the internal `ClaimsBasedSecurityAgent` instance `putToken` method with the same arguments. **]**
+
+**SRS_NODE_COMMON_AMQP_16_041: [** If the state machine is in a `detached` state, the `putToken` client shall connect the client and get into the `connected` state before proceeding with the nor **]**mal operations.
 
 ### All methods
 **SRS_NODE_COMMON_AMQP_16_011: [** All methods should treat the `done` callback argument as optional and not throw if it is not passed as argument. **]**

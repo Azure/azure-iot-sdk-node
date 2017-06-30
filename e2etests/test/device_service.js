@@ -35,10 +35,8 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
     it('Service sends a C2D message of maximum size and it is received by the device', function (done) {
       var receivingSideDone = false;
       var sendingSideDone = false;
-      function tryFinish(done)
-      {
-        if (receivingSideDone && sendingSideDone)
-        {
+      function tryFinish(done) {
+        if (receivingSideDone && sendingSideDone) {
           done();
         }
       }
@@ -79,7 +77,6 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
                 }
               }
               assert(foundTheProperty, 'Message was found but custom property was missing');
-              deviceClient.removeAllListeners('message');
             }
             //
             // It doesn't matter whether this was a message we want, complete it so that the message queue stays clean.
@@ -89,14 +86,14 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
                 done(err);
               } else {
                 assert.equal(result.constructor.name, 'MessageCompleted');
+                if (foundTheMessage) {
+                  receivingSideDone = true;
+                  deviceClient.removeAllListeners('message');
+                  debug('trying to finish from the receiving side');
+                  tryFinish(done);
+                }
               }
             });
-
-            if (foundTheMessage) {
-              receivingSideDone = true;
-              debug('trying to finish from the receiving side');
-              tryFinish(done);
-            }
           });
           debug('about to open the service client');
           serviceClient.open(function (serviceErr) {
