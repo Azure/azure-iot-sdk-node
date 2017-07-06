@@ -5,7 +5,7 @@
 'use strict';
 
 export interface Result {
-    tranportObj?: any;
+    transportObj?: any;
 }
 
 /**
