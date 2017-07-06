@@ -6,7 +6,7 @@
 import { EventEmitter } from 'events';
 import * as dbg from 'debug';
 
-import { anHourFromNow, endpoint, errors, SharedAccessSignature, Message} from 'azure-iot-common';
+import { anHourFromNow, endpoint, errors, SharedAccessSignature, Message } from 'azure-iot-common';
 import { Amqp as Base } from 'azure-iot-amqp-base';
 import { translateError } from './amqp_service_errors.js';
 import { Callback } from './interfaces';

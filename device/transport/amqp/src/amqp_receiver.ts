@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'events';
 import { endpoint, Message, results, Receiver } from 'azure-iot-common';
-import { ClientConfig, DeviceMethodRequest, DeviceMethodResponse} from 'azure-iot-device';
+import { ClientConfig, DeviceMethodRequest, DeviceMethodResponse } from 'azure-iot-device';
 import { AmqpDeviceMethodClient } from './amqp_device_method_client';
 import { Amqp as BaseAmqpClient } from 'azure-iot-amqp-base';
 
