@@ -41,16 +41,25 @@ device_provision(hubConnectionString, function (err, provisionedDevices) {
     console.log('Unable to create the devices needed.');
   } else {
     provisionedDevices.forEach(function(deviceToTest) {
-      acknowledgementProtocols.forEach(function (protocolToTest) {
-        device_acknowledge_tests(hubConnectionString, protocolToTest, deviceToTest);
+      if (deviceToTest.authenticationDescription !== 'CA signed certificate') {
+        acknowledgementProtocols.forEach(function (protocolToTest) {
+          device_acknowledge_tests(hubConnectionString, protocolToTest, deviceToTest);
         });
-      generalProtocols.forEach(function(protocolToTest) {
-        device_service_tests(hubConnectionString, protocolToTest, deviceToTest);
-      });
+      }
+      if (deviceToTest.authenticationDescription !== 'CA signed certificate') {
+        generalProtocols.forEach(function(protocolToTest) {
+          device_service_tests(hubConnectionString, protocolToTest, deviceToTest);
+        });
+      }
     });
 
-    // In the interest of saving time, we only will perform the connection
-    // tests on the shared key device.
+    // CA certs don't work for http and ca cert chains don't work for web sockets.
+    assert.equal(provisionedDevices[3].authenticationDescription, 'CA signed certificate');
+    device_service_tests(hubConnectionString, deviceMqtt.Mqtt, provisionedDevices[3]);
+    device_service_tests(hubConnectionString, deviceAmqp.Amqp, provisionedDevices[3]);
+    device_acknowledge_tests(hubConnectionString, deviceAmqp.Amqp, provisionedDevices[3]);
+    //In the interest of saving time, we only will perform the connection
+    //tests on the shared key device.
     assert.equal(provisionedDevices[1].authenticationDescription, 'shared private key');
     c2d_disconnect(hubConnectionString, provisionedDevices[1]);
     d2c_disconnect(hubConnectionString, provisionedDevices[1]);
@@ -71,7 +80,7 @@ device_provision(hubConnectionString, function (err, provisionedDevices) {
   authentication_tests(hubConnectionString);
 
   device_teardown(hubConnectionString, provisionedDevices);
-  if (!provisionedDevices || provisionedDevices.length !== 3) {
+  if (!provisionedDevices || provisionedDevices.length !== 4) {
     describe('device creation did not', function() {
       it('completely work', function(done) {
           done(new Error(''));

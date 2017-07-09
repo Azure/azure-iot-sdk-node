@@ -61,6 +61,26 @@ The `fromSharedAccessSignature` static method returns a new instance of the `Reg
 
 ## CRUD operation for the device registry
 
+### normalize authentication
+With 2017-06-30 api release crud device information MUST contain authentication specification
+
+**SRS_NODE_IOTHUB_REGISTRY_06_028: [** A device information with no authentication will be normalized with the following authentication:
+```
+authentication : {
+  type: 'sas',
+  symmetricKey: {
+    primaryKey: '',
+    secondaryKey: ''
+  }
+}
+``` **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_06_029: [** A device information with an authentication object that contains a `type` property is considered normalized. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_06_030: [** A device information with an authentication object that contains the x509Thumbprint property will be normalized with a `type` property with value "selfSigned". **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_06_031: [** A device information with an authentication object that doesn't contain the x509Thumbprint property will be normalized with a `type` property with value "sas". **]**
+
 ### create(deviceInfo, done)
 The `create` method creates a device with the given device properties.
 

@@ -12,6 +12,16 @@ var Twin = require('../lib/twin.js').Twin;
 var Query = require('../lib/query.js').Query;
 
 var fakeDevice = { deviceId: 'deviceId' };
+var normalizedFakeDevice = {
+  deviceId: 'deviceId',
+  authentication: {
+    type: 'sas',
+    symmetricKey: {
+      primaryKey: '',
+      secondaryKey: ''
+    }
+  }
+};
 var fakeConfig = { host: 'host', sharedAccessSignature: 'sas' };
 
 var zeroDevices = [];
@@ -205,13 +215,24 @@ describe('Registry', function() {
 
     <deviceInfo>
     ```]*/
+    /* Tests_SRS_NODE_IOTHUB_REGISTRY_06_028: [A device information with no authentication will be normalized with the following authentication:
+    authentication : {
+      type: 'sas',
+      symmetricKey: {
+        primaryKey: '',
+        secondaryKey: ''
+      }
+    }
+    ] */
+
     it('constructs a valid HTTP request', function(testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.equal(method, 'PUT');
           assert.equal(path, '/devices/' + fakeDevice.deviceId + endpoint.versionQueryString());
           assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
-          assert.equal(body, fakeDevice);
+          assert.deepEqual(body, normalizedFakeDevice);
+          assert.notEqual(fakeDevice, normalizedFakeDevice);
 
           done();
         }
@@ -251,7 +272,7 @@ describe('Registry', function() {
           assert.equal(method, 'PUT');
           assert.equal(path, '/devices/' + fakeDevice.deviceId + endpoint.versionQueryString());
           assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
-          assert.equal(body, fakeDevice);
+          assert.deepEqual(body, normalizedFakeDevice);
           done();
         }
       };
@@ -796,9 +817,22 @@ describe('Registry', function() {
       <stringified array supplied by the argument devices annotated with importMode property and deviceId property replaced by id>
       ```
       ]*/
+      /* Tests_SRS_NODE_IOTHUB_REGISTRY_06_029: [** A device information with an authentication object that contains a `type` property is considered normalized.] */
+      /* Tests_SRS_NODE_IOTHUB_REGISTRY_06_031: [A device information with an authentication object that doesn't contain the x509Thumbprint property will be normalized with a `type` property with value "sas".] */
+      /* Tests_SRS_NODE_IOTHUB_REGISTRY_06_030: [A device information with an authentication object that contains the x509Thumbprint property will be normalized with a `type` property with value "selfSigned".] */
       it('constructs a valid HTTP request', function(testCallback) {
-        var addedDevices = [{deviceId: 'deviceone'},{deviceId: 'devicetwo'}];
-        var sentBody = [{id:'deviceone',importMode:'create'},{id:'devicetwo',importMode:'create'}];
+        var addedDevices = [
+          { deviceId: 'devicezero'},
+          { deviceId: 'deviceone', authentication: { x509Thumbprint: { primaryThumbprint: '' }}},
+          { deviceId: 'devicetwo', authentication: { symmetricKey: { primaryKey: 'abc' }}},
+          { deviceId: 'devicethree', authentication: { type: 'certificateAuthority' }},
+        ];
+        var sentBody = [
+          { id: 'devicezero', importMode:'create', authentication: { type: 'sas', symmetricKey: { primaryKey: '', secondaryKey: '' }}},
+          { id: 'deviceone', importMode:'create', authentication: { type: 'selfSigned', x509Thumbprint: { primaryThumbprint: '' }}},
+          { id: 'devicetwo', importMode:'create', authentication: { type: 'sas', symmetricKey: { primaryKey: 'abc' }}},
+          { id: 'devicethree', importMode:'create', authentication: { type: 'certificateAuthority' }},
+        ];
         var fakeHttpHelper = {
           executeApiCall: function (method, path, httpHeaders, body, done) {
             assert.equal(method, 'POST');
@@ -857,7 +891,10 @@ describe('Registry', function() {
       [{ force: true, importMode: 'Update'}, { force: false, importMode: 'UpdateIfMatchETag'}].forEach(function(forceArg) {
         it('constructs a valid HTTP request with forceUpdate of ' + forceArg.force + ' and importMode of ' + forceArg.importMode, function(testCallback) {
           var updatedDevices = [{deviceId: 'deviceone'},{deviceId: 'devicetwo'}];
-          var sentBody = [{id:'deviceone', importMode: forceArg.importMode},{id:'devicetwo', importMode: forceArg.importMode}];
+          var sentBody = [
+            { id:'deviceone', importMode: forceArg.importMode, authentication: { type: 'sas', symmetricKey: { primaryKey: '', secondaryKey: '' }}},
+            { id:'devicetwo', importMode: forceArg.importMode, authentication: { type: 'sas', symmetricKey: { primaryKey: '', secondaryKey: '' }}}
+          ];
           var fakeHttpHelper = {
             executeApiCall: function (method, path, httpHeaders, body, done) {
               assert.equal(method, 'POST');
@@ -916,7 +953,10 @@ describe('Registry', function() {
       [{ force: true, importMode: 'Delete'}, { force: false, importMode: 'DeleteIfMatchETag'}].forEach(function(forceArg) {
         it('constructs a valid HTTP request with forceDelete of ' + forceArg.force + ' and importMode of ' + forceArg.importMode, function(testCallback) {
           var removedDevices = [{deviceId: 'deviceone'},{deviceId: 'devicetwo'}];
-          var sentBody = [{id:'deviceone', importMode: forceArg.importMode},{id:'devicetwo', importMode: forceArg.importMode}];
+          var sentBody = [
+            { id:'deviceone', importMode: forceArg.importMode, authentication: { type: 'sas', symmetricKey: { primaryKey: '', secondaryKey: ''}} },
+            { id:'devicetwo', importMode: forceArg.importMode, authentication: { type: 'sas', symmetricKey: { primaryKey: '', secondaryKey: ''}} }
+          ];
           var fakeHttpHelper = {
             executeApiCall: function (method, path, httpHeaders, body, done) {
               assert.equal(method, 'POST');

@@ -85,7 +85,9 @@ export class Registry {
       'Content-Type': 'application/json; charset=utf-8'
     };
 
-    this._restApiClient.executeApiCall('PUT', path, httpHeaders, deviceInfo, (err, device, httpResponse) => {
+    let normalizedDeviceInfo = JSON.parse(JSON.stringify(deviceInfo));
+    this._normalizeAuthentication(normalizedDeviceInfo);
+    this._restApiClient.executeApiCall('PUT', path, httpHeaders, normalizedDeviceInfo, (err, device, httpResponse) => {
       if (err) {
         done(err);
       } else {
@@ -133,7 +135,9 @@ export class Registry {
       'If-Match': '*'
     };
 
-    this._restApiClient.executeApiCall('PUT', path, httpHeaders, deviceInfo, (err, device, httpResponse) => {
+    let normalizedDeviceInfo = JSON.parse(JSON.stringify(deviceInfo));
+    this._normalizeAuthentication(normalizedDeviceInfo);
+    this._restApiClient.executeApiCall('PUT', path, httpHeaders, normalizedDeviceInfo, (err, device, httpResponse) => {
       if (err) {
         done(err);
       } else {
@@ -640,7 +644,7 @@ export class Registry {
           delete preparedDevice.deviceId;
           preparedDevice.id = actualDeviceId;
           preparedDevice.importMode = importMode;
-
+          this._normalizeAuthentication(preparedDevice);
           bulkArray.push(preparedDevice);
         }
       });
@@ -683,7 +687,39 @@ export class Registry {
 
       this._restApiClient.executeApiCall('POST', path, headers, query, done);
     };
+
   }
+
+  private _normalizeAuthentication(deviceInfo: Registry.DeviceDescription): void {
+    if (!deviceInfo.hasOwnProperty('authentication')) {
+      /* Codes_SRS_NODE_IOTHUB_REGISTRY_06_028: [A device information with no authentication will be normalized with the following authentication:
+      authentication : {
+        type: 'sas',
+        symmetricKey: {
+          primaryKey: '',
+          secondaryKey: ''
+        }
+      }
+      ] */
+      deviceInfo.authentication = {
+          type: 'sas',
+          symmetricKey: {
+            primaryKey: '',
+            secondaryKey: ''
+          }
+        };
+    /* Codes_SRS_NODE_IOTHUB_REGISTRY_06_029: [** A device information with an authentication object that contains a `type` property is considered normalized.] */
+    } else if (!deviceInfo.authentication.hasOwnProperty('type')) {
+      if (!deviceInfo.authentication.hasOwnProperty('x509Thumbprint')) {
+        /* Codes_SRS_NODE_IOTHUB_REGISTRY_06_031: [A device information with an authentication object that doesn't contain the x509Thumbprint property will be normalized with a `type` property with value "sas".] */
+        deviceInfo.authentication.type = 'sas';
+      } else {
+        /* Codes_SRS_NODE_IOTHUB_REGISTRY_06_030: [A device information with an authentication object that contains the x509Thumbprint property will be normalized with a `type` property with value "selfSigned".] */
+        deviceInfo.authentication.type = 'selfSigned';
+      }
+    }
+  }
+
   /**
    * @method          module:azure-iothub.Registry.fromConnectionString
    * @description     Constructs a Registry object from the given connection
@@ -735,6 +771,7 @@ export class Registry {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_05_013: [The fromSharedAccessSignature method shall return a new instance of the `Registry` object.]*/
     return new Registry(config);
   }
+
 }
 
 export namespace Registry {

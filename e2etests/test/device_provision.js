@@ -18,6 +18,9 @@ var chalk = require('chalk');
 var device_provision = function (hubConnectionString, done) {
   var provisionedDevices = [];
   var registry = Registry.fromConnectionString(hubConnectionString);
+  var CARootCert = new Buffer(process.env.IOTHUB_CA_ROOT_CERT, 'base64').toString('ascii');
+  var CARootCertKey = new Buffer(process.env.IOTHUB_CA_ROOT_CERT_KEY, 'base64').toString('ascii');
+
   var host = ConnectionString.parse(hubConnectionString).HostName;
 
   function setupDevice(deviceDescription, provisionDescription, done) {
@@ -31,7 +34,7 @@ var device_provision = function (hubConnectionString, done) {
       }
     });
   }
-  
+
   function createCertDevice(deviceId, done) {
     var certOptions = {
       selfSigned: true,
@@ -52,6 +55,7 @@ var device_provision = function (hubConnectionString, done) {
                 deviceId: deviceId,
                 status: 'enabled',
                 authentication: {
+                  type: 'selfSigned',
                   x509Thumbprint: {
                     primaryThumbprint: thumbPrint
                   }
@@ -72,6 +76,47 @@ var device_provision = function (hubConnectionString, done) {
     });
   }
 
+  function createCACertDevice(deviceId, done) {
+
+    pem.createCSR( { commonName: deviceId }, function (err, csrResult) {
+      if (err) {
+        done(err);
+      } else {
+        pem.createCertificate(
+          {
+            csr: csrResult.csr,
+            clientKey: csrResult.clientKey,
+            serviceKey: CARootCertKey,
+            serviceCertificate: CARootCert,
+            serial: uuid.v4().toString(),
+            days: 1
+          }, function (err, certConstructionResult) {
+          if (err) {
+            done(err);
+          } else {
+            setupDevice(
+              {
+                deviceId: deviceId,
+                status: 'enabled',
+                authentication: {
+                  type: 'certificateAuthority'
+                }
+              },
+              {
+                authenticationDescription: 'CA signed certificate',
+                deviceId: deviceId,
+                connectionString: 'HostName=' + host + ';DeviceId=' + deviceId + ';x509=true',
+                certificate: certConstructionResult.certificate,
+                clientKey: certConstructionResult.clientKey
+              },
+              done
+            );
+          }
+        });
+      }
+    });
+  }
+
   function createKeyDevice(deviceId, done) {
     var pkey = new Buffer(uuid.v4()).toString('base64');
     setupDevice(
@@ -79,6 +124,7 @@ var device_provision = function (hubConnectionString, done) {
         deviceId: deviceId,
         status: 'enabled',
         authentication: {
+          type: 'sas',
           symmetricKey: {
             primaryKey: pkey,
             secondaryKey: new Buffer(uuid.v4()).toString('base64')
@@ -102,6 +148,7 @@ var device_provision = function (hubConnectionString, done) {
         deviceId: deviceId,
         status: 'enabled',
         authentication: {
+          type: 'sas',
           symmetricKey: {
             primaryKey: pkey,
             secondaryKey: new Buffer(uuid.v4()).toString('base64')
@@ -139,7 +186,9 @@ var device_provision = function (hubConnectionString, done) {
   createDeviceSafe( '0000e2etest-delete-me-node-x509-' + uuid.v4(), createCertDevice, function() {
     createDeviceSafe('0000e2etest-delete-me-node-key-' + uuid.v4(), createKeyDevice, function() {
       createDeviceSafe('0000e2etest-delete-me-node-sas-' + uuid.v4(), createSASDevice, function() {
-        done(null,provisionedDevices);
+        createDeviceSafe('0000e2etest-CACert-' + uuid.v4(), createCACertDevice, function() {
+          done(null,provisionedDevices);
+        });
       });
     });
   });
