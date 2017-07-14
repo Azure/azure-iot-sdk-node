@@ -22,7 +22,7 @@ const responseTopic = '$iothub/twin/res';
  *
  * @param {Object} config   configuration object
  * @fires AmqpTwinReceiver#subscribed   an response or post event has been set up for listening.
- * @fires AmqpTwinReceiver#error    an error has occured
+ * @fires AmqpTwinReceiver#error    an error has occurred
  * @fires AmqpTwinReceiver#response   a response message has been received from the service
  * @fires AmqpTwinReceiver#post a post message has been received from the service
  * @throws {ReferenceError} If client parameter is falsy.
@@ -67,9 +67,9 @@ export class AmqpTwinReceiver extends EventEmitter {
     this._eventQueue = [];
     this._eventQueueError = null;
 
-    /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_007: [The endpoint argument for attacheReceiverLink shall be `/device/<deviceId>/twin/`.] */
-    /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_009: [The endpoint argument for attacheSenderLink shall be `/device/<deviceId>/twin/`.] */
-    this._endpoint = endpoint.devicePath(config.deviceId) + '/twin/';
+    /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_007: [The endpoint argument for attacheReceiverLink shall be `/device/<deviceId>/twin`.] */
+    /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_009: [The endpoint argument for attacheSenderLink shall be `/device/<deviceId>/twin`.] */
+    this._endpoint = endpoint.devicePath(config.deviceId) + '/twin';
 
     this._fsm = new machina.Fsm({
       namespace: 'amqp-twin-receiver',
@@ -112,7 +112,7 @@ export class AmqpTwinReceiver extends EventEmitter {
             const linkCorrelationId: string  = uuid.v4().toString();
             this._client.attachReceiverLink( this._endpoint, this._generateTwinLinkProperties(linkCorrelationId), (receiverLinkError?: Error, receiverTransportObject?: any): void => {
               if (receiverLinkError) {
-                /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_022: [If an error occcurs on establishing the upstream or downstream link then the `error` event shall be emitted.] */
+                /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_022: [If an error occurs on establishing the upstream or downstream link then the `error` event shall be emitted.] */
                 this._fsm.handle('handleErrorEmit', receiverLinkError);
               } else {
                 this._downstreamAmqpLink = receiverTransportObject;
@@ -123,7 +123,7 @@ export class AmqpTwinReceiver extends EventEmitter {
                     this._fsm.handle('handleErrorEmit', senderLinkError);
                   } else {
                     this._upstreamAmqpLink = senderTransportObject;
-                    this._upstreamAmqpLink.on('detached',this._onAmqpDetached.bind(this));
+                    this._upstreamAmqpLink.on('detached', this._onAmqpDetached.bind(this));
                     this._upstreamAmqpLink.on('errorReceived', this._handleError.bind(this));
                     this._fsm.transition('connected');
                   }
@@ -257,7 +257,7 @@ export class AmqpTwinReceiver extends EventEmitter {
 
   /**
    * @method          module:azure-iot-device-amqp.Amqp#sendTwinRequest
-   * @description     Send a device-twin specific messager to the IoT Hub instance
+   * @description     Send a device-twin specific message to the IoT Hub instance
    *
    * @param {String}        method    name of the method to invoke ('PUSH', 'PATCH', etc)
    * @param {String}        resource  name of the resource to act on (e.g. '/properties/reported/') with beginning and ending slashes
@@ -340,11 +340,12 @@ export class AmqpTwinReceiver extends EventEmitter {
       // The service sending back any response is an implied success.  Set status to 200.
       //
       /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_016: [When a `response` event is emitted, the parameter shall be an object which contains `status`, `requestId` and `body` members.] */
-      /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_017: [The `requestId` value is aquired from the amqp message correlationId property in the response amqp message.] */
+      /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_026: [The `status` value is acquired from the amqp message status message annotation.] */
+      /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_017: [The `requestId` value is acquired from the amqp message correlationId property in the response amqp message.] */
       /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_018: [the `body` parameter of the `response` event shall be the data of the received amqp message.] */
       const response = {
         'topic': responseTopic,
-        'status': 200,
+        'status': message.transportObj.messageAnnotations.status,
         '$rid': message.correlationId,
         'body': message.data
       };
@@ -467,10 +468,6 @@ export class AmqpTwinReceiver extends EventEmitter {
       amqpMessage.messageAnnotations.resource = localResource;
     }
 
-    /*Codes_SRS_NODE_DEVICE_AMQP_06_032: [If the `operation` argument is `PATCH`, the `version` annotation shall be set to `null`.] */
-    if (method === 'PATCH') {
-      amqpMessage.messageAnnotations.version = null;
-    }
     Object.keys(properties).forEach((key) => {
       /* Codes_SRS_NODE_DEVICE_AMQP_06_028: [The `sendTwinRequest` method shall throw an `ArgumentError` if any members of the `properties` object fails to serialize to a string.] */
       if (!this._isString(properties[key]) && !this._isNumber(properties[key]) && !this._isBoolean(properties[key])) {
@@ -492,12 +489,12 @@ export class AmqpTwinReceiver extends EventEmitter {
     /* Codes_SRS_NODE_DEVICE_AMQP_06_025: [The amqp message will be sent upstream to the IoT Hub via the amqp client `send`.]*/
     this._upstreamAmqpLink.send(amqpMessage)
       .then((state) => {
-        debug(' amqp-twin-receiver: Good dispostion on the amqp message send: ' + JSON.stringify(state));
+        debug(' amqp-twin-receiver: Good disposition on the amqp message send: ' + JSON.stringify(state));
         this._safeCallback(done, null, new results.MessageEnqueued(state));
         return null;
       })
       .catch((err) => {
-        debug(' amqp-twin-receiver: Bad dispostion on the amqp message send: ' + err);
+        debug(' amqp-twin-receiver: Bad disposition on the amqp message send: ' + err);
         this._safeCallback(done, translateError('Unable to send Twin message', err));
       });
   }

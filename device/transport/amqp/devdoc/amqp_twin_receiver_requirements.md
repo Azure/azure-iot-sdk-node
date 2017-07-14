@@ -27,7 +27,7 @@ receiver.on('response', function(response) {
 
 **SRS_NODE_DEVICE_AMQP_TWIN_06_006: [** When a listener is added for the `response` event, and the `post` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLink`. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_007: [** The endpoint argument for attacheReceiverLink shall be `/devices/<deviceId>/twin/`. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_06_007: [** The endpoint argument for attacheReceiverLink shall be `/devices/<deviceId>/twin`. **]**
 
 **SRS_NODE_DEVICE_AMQP_TWIN_06_008: [** The link options argument for attachReceiverLink shall be:
  attach: {
@@ -40,7 +40,7 @@ receiver.on('response', function(response) {
       } **]**
 
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_009: [** The endpoint argument for attacheSenderLink shall be `/device/<deviceId>/twin/`. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_06_009: [** The endpoint argument for attacheSenderLink shall be `/device/<deviceId>/twin`. **]**
 
 **SRS_NODE_DEVICE_AMQP_TWIN_06_010: [** The link options argument for attachSenderLink shall be:
  attach: {
@@ -61,7 +61,9 @@ receiver.on('response', function(response) {
 
 **SRS_NODE_DEVICE_AMQP_TWIN_06_016: [** When a `response` event is emitted, the parameter shall be an object which contains `status`, `requestId` and `body` members. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_017: [** The `requestId` value is aquired from the amqp message correlationId property in the response amqp message. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_06_017: [** The `requestId` value is acquired from the amqp message correlationId property in the response amqp message. **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_06_026: [** The `status` value is acquired from the amqp message status message annotation. **]**
 
 **SRS_NODE_DEVICE_AMQP_TWIN_06_018: [** The `body` parameter of the `response` event shall be the data of the received amqp message. **]**
 
@@ -81,10 +83,10 @@ The endpoints and link options are as for the response event.
 
 ### error
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_022: [** If an error occcurs on establishing the upstream or downstream link then the `error` event shall be emitted. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_06_022: [** If an error occurs on establishing the upstream or downstream link then the `error` event shall be emitted. **]**
 
 **SRS_NODE_DEVICE_AMQP_TWIN_06_023: [** If a detach with error occurs on the upstream or the downstream link then the `error` event shall be emitted. **]**
 
 **SRS_NODE_DEVICE_AMQP_TWIN_06_024: [** If any detach occurs the other link will also be detached by the twin receiver. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_025: [** When the `error` event is emitted, the first parameter shall be an error object obtained via the amqp `translateErrror` module. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_06_025: [** When the `error` event is emitted, the first parameter shall be an error object obtained via the amqp `translateError` module. **]**

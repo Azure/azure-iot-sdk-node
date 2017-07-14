@@ -62,7 +62,7 @@ describe('AmqpTwinReceiver', function () {
       var attachSender = sinon.spy(amqpClient, 'attachSenderLink');
       var attachReceiver = sinon.spy(amqpClient, 'attachReceiverLink');
       var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
-      newTwinReceiver.on('response',function () {});
+      newTwinReceiver.on('response', function () {});
       assert(attachSender.calledOnce);
       assert(attachReceiver.calledOnce);
     });
@@ -73,19 +73,19 @@ describe('AmqpTwinReceiver', function () {
       var attachReceiver = sinon.spy(amqpClient, 'attachReceiverLink');
       var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
       newTwinReceiver.on('post', function() {});
-      newTwinReceiver.on('response',function () {});
+      newTwinReceiver.on('response', function () {});
       assert(attachSender.calledOnce);
       assert(attachReceiver.calledOnce);
     });
 
-    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_007: [The endpoint argument for attacheReceiverLink shall be `/devices/<deviceId>/twin/`.] */
-    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_009: [The endpoint argument for attacheSenderLink shall be `/devices/<deviceId>/twin/`.] */
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_007: [The endpoint argument for attacheReceiverLink shall be `/devices/<deviceId>/twin`.] */
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_009: [The endpoint argument for attacheSenderLink shall be `/devices/<deviceId>/twin`.] */
     it('endpoint argument for attache/Receiver/Sender/Link shall be `/devices/<deviceId>/twin`.', function() {
       var amqpClient = new AmqpProvider();
       var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
-      newTwinReceiver.on('response',function () {});
-      assert.equal(amqpClient.attachSenderEndpoint,'/devices/' + fakeConfig.deviceId + '/twin/', 'attach sender called with correct endpoint');
-      assert.equal(amqpClient.attachReceiverEndpoint,'/devices/' + fakeConfig.deviceId + '/twin/', 'attach receiver called with correct endpoint');
+      newTwinReceiver.on('response', function () {});
+      assert.equal(amqpClient.attachSenderEndpoint, '/devices/' + fakeConfig.deviceId + '/twin', 'attach sender called with correct endpoint');
+      assert.equal(amqpClient.attachReceiverEndpoint, '/devices/' + fakeConfig.deviceId + '/twin', 'attach receiver called with correct endpoint');
     });
 
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_010: [** The link options argument for attachSenderLink shall be:
@@ -109,7 +109,7 @@ describe('AmqpTwinReceiver', function () {
     it('link options argument for attache/Receiver/Sender/Link shall be ...', function() {
       var amqpClient = new AmqpProvider();
       var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
-      newTwinReceiver.on('response',function () {});
+      newTwinReceiver.on('response', function () {});
       assert.equal(amqpClient.attachSenderLinkOptions.attach.sndSettleMode, 1, ' sender send settle mode not set appropriately' );
       assert.equal(amqpClient.attachSenderLinkOptions.attach.rcvSettleMode, 0, ' sender rcv settle mode not set appropriately' );
       assert.equal(amqpClient.attachReceiverLinkOptions.attach.sndSettleMode, 1, ' receiver send settle mode not set appropriately' );
@@ -117,17 +117,17 @@ describe('AmqpTwinReceiver', function () {
       assert.equal(amqpClient.attachSenderLinkOptions.attach.properties['com.microsoft:api-version'], endpoint.apiVersion, ' sender api version not set appropriately');
       assert.equal(amqpClient.attachReceiverLinkOptions.attach.properties['com.microsoft:api-version'], endpoint.apiVersion, ' receiver api version not set appropriately');
       assert.equal(amqpClient.attachReceiverLinkOptions.attach.properties['com.microsoft:channel-correlation-id'], amqpClient.attachSenderLinkOptions.attach.properties['com.microsoft:channel-correlation-id'], ' send and receiver correlation not equal');
-      assert(amqpClient.attachSenderLinkOptions.attach.properties['com.microsoft:channel-correlation-id'].length,41); // 32 hex digits + 4 dashes + twin:
-      assert(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(amqpClient.attachSenderLinkOptions.attach.properties['com.microsoft:channel-correlation-id'].substr(5,36)), 'correlationId does not contains a uuid');
+      assert(amqpClient.attachSenderLinkOptions.attach.properties['com.microsoft:channel-correlation-id'].length, 41); // 32 hex digits + 4 dashes + twin:
+      assert(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(amqpClient.attachSenderLinkOptions.attach.properties['com.microsoft:channel-correlation-id'].substr(5, 36)), 'correlationId does not contains a uuid');
     });
 
     /* Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_011: [** Upon successfully establishing the upstream and downstream links the `subscribed` event shall be emitted from the twin receiver, with an argument object of {eventName: "response", transportObject: <object>}.] */
     it('subscribe event emitted on successful listen for response', function() {
-      var subcalls = 0;
+      var subCalls = 0;
       var subResponseCalls = 0;
       var subPostCalls = 0;
       var subscribeHandler = function(subObject) {
-        subcalls++;
+        subCalls++;
         if (subObject.eventName === 'response') {
           subResponseCalls++;
         }
@@ -135,12 +135,12 @@ describe('AmqpTwinReceiver', function () {
           subPostCalls++;
         }
       };
-      var subspy = sinon.spy();
+      var subSpy = sinon.spy();
       var amqpClient = new AmqpProvider();
       var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
       newTwinReceiver.on('subscribed', subscribeHandler);
       newTwinReceiver.on('response', function () {});
-      assert.equal(subcalls, 1,'subscribe handler invoked improper number of times');
+      assert.equal(subCalls, 1, 'subscribe handler invoked improper number of times');
       assert.equal(subResponseCalls, 1, 'response event emitted incorrect number of times')
     });
 
@@ -182,8 +182,9 @@ describe('AmqpTwinReceiver', function () {
     });
 
     /* Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_015: [If there is a listener for the `response` event, a `response` event shall be emitted for each response received for requests initiated by SendTwinRequest.] */
+    /* Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_026: [The `status` value is acquired from the amqp message status message annotation.] */
     /* Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_016: [When a `response` event is emitted, the parameter shall be an object which contains `status`, `requestId` and `body` members.] */
-    /* Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_017: [The `requestId` value is aquired from the amqp message correlationId property in the response amqp message.] */
+    /* Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_017: [The `requestId` value is acquired from the amqp message correlationId property in the response amqp message.] */
     /* Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_018: [The `body` parameter of the `response` event shall be the data of the received amqp message.] */
     it('Emit a response message for a sendTwinRequest.', function(responseDone) {
       var amqpClient = new AmqpProvider();
@@ -199,12 +200,16 @@ describe('AmqpTwinReceiver', function () {
             var newMessage = new Message();
             newMessage.correlationId = '10';
             newMessage.data = messageData;
-            amqpClient.fakeReceiverLink.emit('message',newMessage);
+            newMessage.transportObj = {};
+            newMessage.transportObj.messageAnnotations = {};
+            newMessage.transportObj.messageAnnotations['status'] = 201;
+            amqpClient.fakeReceiverLink.emit('message', newMessage);
           });
         }
       });
       newTwinReceiver.on('response', function(data) {
         assert.isDefined(data.status);
+        assert.equal(data.status, 201, 'returned status is not set appropriately');
         assert.isDefined(data.$rid);
         assert.equal(data.$rid, '10', '$rid not set appropriately');
         assert.isDefined(data.body);
@@ -218,7 +223,7 @@ describe('AmqpTwinReceiver', function () {
       var messageData = 'some string for the body.';
       var dummyResponseHandler = function() {};
       var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
-      var sendCalled = sinon.spy(amqpClient.fakeSenderLink,'send');
+      var sendCalled = sinon.spy(amqpClient.fakeSenderLink, 'send');
       newTwinReceiver.on('response', dummyResponseHandler);  // This will start the connecting sequence.
       assert(sendCalled.notCalled);
       newTwinReceiver.sendTwinRequest('GET', '/abc', { '$rid' : 10 }, messageData, function() {});
@@ -239,7 +244,7 @@ describe('AmqpTwinReceiver', function () {
       newTwinReceiver.on('subscribed', subscribeCallback.callbackFunction);
       newTwinReceiver.on('response', dummyResponseHandler);  // This will start the connecting sequence.
       assert(subSpy.notCalled);
-      newTwinReceiver.on('response', dummyResponseHandler);  // Still should be in the connectiong sequence.
+      newTwinReceiver.on('response', dummyResponseHandler);  // Still should be in the connecting sequence.
       assert(subSpy.notCalled);
       amqpClient.invokeDelayCallback();  // This should cause the connect sequence to finish.
       assert(subSpy.calledTwice);
@@ -257,9 +262,9 @@ describe('AmqpTwinReceiver', function () {
       newTwinReceiver.on('subscribed', subscribeCallback.callbackFunction);
       newTwinReceiver.on('response', dummyResponseHandler);  // This will start the connecting sequence.
       assert(subSpy.notCalled);
-      newTwinReceiver.on('response', dummyResponseHandler);  // Still should be in the connectiong sequence.
+      newTwinReceiver.on('response', dummyResponseHandler);  // Still should be in the connecting sequence.
       assert(subSpy.notCalled);
-      newTwinReceiver.removeListener('response',dummyResponseHandler);
+      newTwinReceiver.removeListener('response', dummyResponseHandler);
       assert(subSpy.notCalled);
       amqpClient.invokeDelayCallback();  // This should cause the connect sequence to finish.
       assert(subSpy.calledTwice);
@@ -277,9 +282,9 @@ describe('AmqpTwinReceiver', function () {
       newTwinReceiver.on('subscribed', subscribeCallback.callbackFunction);
       newTwinReceiver.on('response', dummyResponseHandler);  // This will start the connecting sequence.
       assert(subSpy.notCalled);
-      newTwinReceiver.on('response', dummyResponseHandler);  // Still should be in the connectiong sequence.
+      newTwinReceiver.on('response', dummyResponseHandler);  // Still should be in the connecting sequence.
       assert(subSpy.notCalled);
-      newTwinReceiver.removeListener('response',dummyResponseHandler);
+      newTwinReceiver.removeListener('response', dummyResponseHandler);
       assert(subSpy.notCalled);
       amqpClient.invokeDelayCallback();  // This should cause the connect sequence to finish.
       assert(subSpy.calledTwice);
@@ -301,10 +306,10 @@ describe('AmqpTwinReceiver', function () {
       // The next call should start the disconnecting.  However, that
       // won't complete until force the detach callback.
       //
-      newTwinReceiver.removeListener('response',dummyResponseHandler);
+      newTwinReceiver.removeListener('response', dummyResponseHandler);
       newTwinReceiver.on('response', dummyResponseHandler);  // These next 3 should pend because disconnecting.
       newTwinReceiver.sendTwinRequest('GET', '/abc', { '$rid' : 10 }, 'not important', function(err) {
-        assert(subSpy.calledOnce); // No subscription should have occured.
+        assert(subSpy.calledOnce); // No subscription should have occurred.
         assert(err.message === 'Link Detached');
         testDone();
       });
@@ -323,7 +328,7 @@ describe('AmqpTwinReceiver', function () {
       var detachSender = sinon.spy(amqpClient, 'detachSenderLink');
       var detachReceiver = sinon.spy(amqpClient, 'detachReceiverLink');
       var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
-      newTwinReceiver.on('response',function () {});
+      newTwinReceiver.on('response', function () {});
       newTwinReceiver.on('error', errorHandler);
       assert(detachSender.notCalled, 'detach sender should not have been called');
       assert(detachReceiver.notCalled, 'detach receiver should not have been called');
@@ -342,7 +347,7 @@ describe('AmqpTwinReceiver', function () {
       var attachSender = sinon.spy(amqpClient, 'attachSenderLink');
       var attachReceiver = sinon.spy(amqpClient, 'attachReceiverLink');
       var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
-      newTwinReceiver.on('post',function () {});
+      newTwinReceiver.on('post', function () {});
       assert(attachSender.calledOnce);
       assert(attachReceiver.calledOnce);
     });
@@ -352,7 +357,7 @@ describe('AmqpTwinReceiver', function () {
       var attachSender = sinon.spy(amqpClient, 'attachSenderLink');
       var attachReceiver = sinon.spy(amqpClient, 'attachReceiverLink');
       var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
-      newTwinReceiver.on('response',function () {});
+      newTwinReceiver.on('response', function () {});
       newTwinReceiver.on('post', function() {});
       assert(attachSender.calledOnce);
       assert(attachReceiver.calledOnce);
@@ -370,7 +375,7 @@ describe('AmqpTwinReceiver', function () {
           responseDone();
         }
       });
-      newTwinReceiver.on('post',function () {});
+      newTwinReceiver.on('post', function () {});
       assert(sendCalled.calledOnce, 'sendTwinRequest invoked incorrect number of times');
       assert.equal(amqpClient.lastSendMessage.messageAnnotations['operation'], 'PUT', 'inappropriate operation sent');
       assert.equal(amqpClient.lastSendMessage.messageAnnotations['resource'], resource, 'inappropriate resource sent');
@@ -392,7 +397,7 @@ describe('AmqpTwinReceiver', function () {
           amqpClient.fakeReceiverLink.emit('message', newDesiredMessage);
         }
       });
-      newTwinReceiver.on('post',function (propUpdate) {
+      newTwinReceiver.on('post', function (propUpdate) {
         if (propUpdate === messageData) {
           responseDone();
         }
@@ -434,7 +439,7 @@ describe('AmqpTwinReceiver', function () {
   });
 
   describe('#errors', function() {
-    /* Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_022: [If an error occcurs on establishing the upstream or downstream link then the `error` event shall be emitted.] */
+    /* Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_022: [If an error occurs on establishing the upstream or downstream link then the `error` event shall be emitted.] */
     [
       { direction: 'sender', provider: AmqpProviderAttachSenderFails },
       { direction: 'receiver', provider: AmqpProviderAttachReceiverFails }
@@ -446,7 +451,7 @@ describe('AmqpTwinReceiver', function () {
           assert.equal(err.constructor.name, 'UnauthorizedError');
           testDone();
         });
-        newTwinReceiver.on('response',function () {});
+        newTwinReceiver.on('response', function () {});
       });
     });
 
@@ -459,11 +464,11 @@ describe('AmqpTwinReceiver', function () {
         var dummyResponseHandler = function() {};
         var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
         newTwinReceiver.on('error', function(err) {
-          /* Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_025: [When the `error` event is emitted, the first parameter shall be an error object obtained via the amqp `translateErrror` module.] */
+          /* Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_025: [When the `error` event is emitted, the first parameter shall be an error object obtained via the amqp `translateError` module.] */
           assert.equal(err.constructor.name, 'UnauthorizedError');
           testDone();
         });
-        newTwinReceiver.on('response',dummyResponseHandler);
+        newTwinReceiver.on('response', dummyResponseHandler);
         newTwinReceiver.removeListener('response', dummyResponseHandler)
       });
     });
@@ -494,7 +499,7 @@ describe('AmqpTwinReceiver', function () {
           assert.equal(err.constructor.name, 'InternalServerError');
           testDone();
         });
-        newTwinReceiver.on('response',function() {});
+        newTwinReceiver.on('response', function() {});
       });
     });
   });
@@ -611,16 +616,7 @@ describe('AmqpTwinReceiver', function () {
       var amqpClient = new AmqpProvider();
       var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
       newTwinReceiver.sendTwinRequest('GET', '/', { '$rid' : 10 }, 'a string for the body', function() {});
-      assert(!amqpClient.lastSendMessage.messageAnnotations.hasOwnProperty('resource'),'message contains a resource annotation inappropriately');
-    });
-
-    /* Tests_SRS_NODE_DEVICE_AMQP_06_032: [If the `operation` argument is `PATCH`, the `version` annotation shall be set to `null`.] */
-    it('PATCH method results in AMQP(null) annotation.', function() {
-      var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
-      newTwinReceiver.sendTwinRequest('PATCH', '/', { '$rid' : 10 }, 'a string for the body', function() {});
-      assert(amqpClient.lastSendMessage.messageAnnotations.hasOwnProperty('version'),'PATCH message does NOT contain a version annotation');
-      assert.equal(amqpClient.lastSendMessage.messageAnnotations.version, null, 'PATCH operation message contains a version annotation not null');
+      assert(!amqpClient.lastSendMessage.messageAnnotations.hasOwnProperty('resource'), 'message contains a resource annotation inappropriately');
     });
 
     /* Tests_SRS_NODE_DEVICE_AMQP_06_022: [All properties, except $rid, shall be set as the part of the properties map of the amqp message.] */
@@ -629,14 +625,14 @@ describe('AmqpTwinReceiver', function () {
       var amqpClient = new AmqpProvider();
       var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
       newTwinReceiver.sendTwinRequest('PATCH', '/', { '$rid' : 10, 'rid': 10, 'from': 'the south', 'to': 'the north' }, 'a string for the body', function() {});
-      assert.isFalse(amqpClient.lastSendMessage.properties.hasOwnProperty('$rid'),'$rid property set inappropriately in message');
-      assert(amqpClient.lastSendMessage.properties.hasOwnProperty('rid'),'rid property not in message');
+      assert.isFalse(amqpClient.lastSendMessage.properties.hasOwnProperty('$rid'), '$rid property set inappropriately in message');
+      assert(amqpClient.lastSendMessage.properties.hasOwnProperty('rid'), 'rid property not in message');
       assert.strictEqual(amqpClient.lastSendMessage.properties['rid'], 10, 'rid property set inappropriately');
-      assert(amqpClient.lastSendMessage.properties.hasOwnProperty('from'),'from property not in message');
+      assert(amqpClient.lastSendMessage.properties.hasOwnProperty('from'), 'from property not in message');
       assert.strictEqual(amqpClient.lastSendMessage.properties['from'], 'the south', 'from property set inappropriately');
-      assert(amqpClient.lastSendMessage.properties.hasOwnProperty('to'),'to property not in message');
+      assert(amqpClient.lastSendMessage.properties.hasOwnProperty('to'), 'to property not in message');
       assert.strictEqual(amqpClient.lastSendMessage.properties['to'], 'the north', 'to property set inappropriately');
-      assert(amqpClient.lastSendMessage.properties.hasOwnProperty('correlationId'),'correlation property not in message');
+      assert(amqpClient.lastSendMessage.properties.hasOwnProperty('correlationId'), 'correlation property not in message');
       assert.strictEqual(amqpClient.lastSendMessage.properties['correlationId'], '10', 'correlation property set inappropriately');
     });
 
@@ -647,7 +643,7 @@ describe('AmqpTwinReceiver', function () {
       var messageData = 'a string for the body';
       var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
       newTwinReceiver.sendTwinRequest('PATCH', '/', { '$rid' : 10, 'rid': 10, 'from': 'the south', 'to': 'the north' }, messageData, function() {});
-      assert(amqpClient.lastSendMessage.hasOwnProperty('body'),'body property not in message');
+      assert(amqpClient.lastSendMessage.hasOwnProperty('body'), 'body property not in message');
       assert.equal(amqpClient.lastSendMessage.body, messageData, 'body set inappropriately');
     });
 
@@ -718,7 +714,7 @@ describe('AmqpTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_AMQP_06_037: [If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `AmqpTwinReceiver` object as the second parameter of the `done` function with null as the first parameter.] */
     /* Tests_SRS_NODE_DEVICE_AMQP_06_038: [If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `AmqpTwinReceiver` object as the second parameter of the `done` function with null as the first parameter.] */
     it('only creates one twin receiver object', function(done) {
-      transport.getTwinReceiver(function(err,receiver1) {
+      transport.getTwinReceiver(function(err, receiver1) {
         assert.isNull(err);
         assert.instanceOf(receiver1, AmqpTwinReceiver);
         transport.getTwinReceiver(function(err, receiver2) {

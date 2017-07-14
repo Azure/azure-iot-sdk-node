@@ -135,7 +135,6 @@ An new Amqp message shall be instantiated.
 **SRS_NODE_DEVICE_AMQP_06_021: [** The `resource` argument shall be the value of the amqp message `resource` annotation. **]**
 **SRS_NODE_DEVICE_AMQP_06_031: [** If the `resource` argument terminates in a slash, the slash shall be removed from the annotation. **]**
 **SRS_NODE_DEVICE_AMQP_06_039: [** If the `resource` argument length is zero (after terminating slash removal), the resource annotation shall not be set. **]**
-**SRS_NODE_DEVICE_AMQP_06_032: [** If the `operation` argument is `PATCH`, the `version` annotation shall be set to `null`. **]**
 
 **SRS_NODE_DEVICE_AMQP_06_028: [** The `sendTwinRequest` method shall throw an `ArgumentError` if any members of the `properties` object fails to serialize to a string. **]**
 

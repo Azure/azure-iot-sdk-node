@@ -131,24 +131,26 @@ export class AmqpMessage {
     /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_009: [The `toMessage` method shall set the `Message.data` of the message to the content of the `AmqpMessage.body` property.]*/
     let msg = new Message(amqpMessage.body);
 
-    /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_005: [The `toMessage` method shall set the `Message.to` property to the `AmqpMessage.properties.to` value if it is present.]*/
-    if (amqpMessage.properties.to) {
-      msg.to = amqpMessage.properties.to;
-    }
+    if (amqpMessage.properties) {
+      /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_005: [The `toMessage` method shall set the `Message.to` property to the `AmqpMessage.properties.to` value if it is present.]*/
+      if (amqpMessage.properties.to) {
+        msg.to = amqpMessage.properties.to;
+      }
 
-    /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_006: [The `toMessage` method shall set the `Message.expiryTimeUtc` property to the `AmqpMessage.properties.absoluteExpiryTime` value if it is present.]*/
-    if (amqpMessage.properties.absoluteExpiryTime) {
-      msg.expiryTimeUtc = amqpMessage.properties.absoluteExpiryTime;
-    }
+      /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_006: [The `toMessage` method shall set the `Message.expiryTimeUtc` property to the `AmqpMessage.properties.absoluteExpiryTime` value if it is present.]*/
+      if (amqpMessage.properties.absoluteExpiryTime) {
+        msg.expiryTimeUtc = amqpMessage.properties.absoluteExpiryTime;
+      }
 
-    /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_004: [The `toMessage` method shall set the `Message.messageId` property to the `AmqpMessage.properties.messageId` value if it is present.]*/
-    if (amqpMessage.properties.messageId) {
-      msg.messageId = amqpMessage.properties.messageId;
-    }
+      /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_004: [The `toMessage` method shall set the `Message.messageId` property to the `AmqpMessage.properties.messageId` value if it is present.]*/
+      if (amqpMessage.properties.messageId) {
+        msg.messageId = amqpMessage.properties.messageId;
+      }
 
-    /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_003: [The `toMessage` method shall set the `Message.correlationId` property to the `AmqpMessage.properties.correlationId` value if it is present.]*/
-    if (amqpMessage.properties.correlationId) {
-      msg.correlationId = amqpMessage.properties.correlationId;
+      /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_003: [The `toMessage` method shall set the `Message.correlationId` property to the `AmqpMessage.properties.correlationId` value if it is present.]*/
+      if (amqpMessage.properties.correlationId) {
+        msg.correlationId = amqpMessage.properties.correlationId;
+      }
     }
 
     /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_007: [The `toMessage` method shall convert the user-defined `AmqpMessage.applicationProperties` to a `Properties` collection stored in `Message.applicationProperties`.]*/
