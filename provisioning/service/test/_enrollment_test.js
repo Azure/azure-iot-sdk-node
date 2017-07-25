@@ -1,0 +1,511 @@
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+"use strict";
+
+var assert = require('chai').assert;
+var sinon = require('sinon');
+var errors = require('azure-iot-common').errors;
+var DeviceEnrollment = require('../lib/enrollment.js').DeviceEnrollment;
+
+var fakeRegistrationId = 'fakeId';
+var fakeDeviceId = 'sample-device';
+var fakeEnrollment = {
+  registrationId: fakeRegistrationId,
+  deviceId: fakeDeviceId,
+  etag: 'etag',
+  attestation: {
+    type: 'tpm',
+    tpm: {
+      endorsementKey: 'endorsementkey'
+    }
+  },
+  initialTwinState: null
+};
+
+var fakeEnrollmentNoEtag = {
+  registrationId: fakeRegistrationId,
+  deviceId: fakeDeviceId,
+  attestation: {
+    type: 'tpm',
+    tpm: {
+      endorsementKey: 'endorsementkey'
+    }
+  },
+  initialTwinState: null
+};
+
+var fakeGroupId = 'fakeGroup';
+var fakeEnrollmentGroup = {
+  enrollmentGroupId: fakeGroupId,
+  etag: 'etag'
+};
+
+var fakeEnrollmentGroupNoEtag = {
+  enrollmentGroupId: fakeGroupId,
+};
+
+var fakeRegistration = {
+  registrationId: 'fakeId',
+  etag: 'etag'
+};
+
+var fakeRegistrationNoEtag = {
+  registrationId: 'fakeId'
+};
+
+function _versionQueryString() {
+  return '?api-version=2017-08-31-preview';
+}
+
+
+function testFalsyArg(methodUnderTest, argName, argValue, ExpectedErrorType) {
+  var errorName = ExpectedErrorType ? ExpectedErrorType.name : 'Error';
+  it('Throws a ' + errorName + ' if \'' + argName + '\' is \'' + JSON.stringify(argValue) + '\' (type:' + typeof(argValue) + ')', function() {
+    var de = new DeviceEnrollment({ host: 'host', sharedAccessSignature: 'sas' });
+    assert.throws(function() {
+      de[methodUnderTest](argValue, function() {});
+    }, ExpectedErrorType);
+  });
+}
+
+function testErrorCallback(methodUnderTest, arg1, arg2, arg3) {
+  /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_037: [When any registry operation method receives an HTTP response with a status code >= 300, it shall invoke the `done` callback function with an error translated using the requirements detailed in `registry_http_errors_requirements.md`] */
+  it('Calls the done callback with a proper error if an HTTP error occurs', function(testCallback) {
+    var FakeHttpErrorHelper = {
+      executeApiCall: function (method, path, httpHeaders, body, done) {
+        done(new errors.DeviceNotFoundError('Not found'));
+      }
+    };
+
+    var de = new DeviceEnrollment({ host: 'host', sharedAccessSignature: 'sas' }, FakeHttpErrorHelper);
+    var callback = function(err, result, response) {
+      assert.instanceOf(err, errors.DeviceNotFoundError);
+      assert.isUndefined(result);
+      assert.isUndefined(response);
+      testCallback();
+    };
+
+    if (arg1 && arg2 && arg3) {
+      de[methodUnderTest](arg1, arg2, arg3, callback);
+    } else if (arg1 && arg2) {
+      de[methodUnderTest](arg1, arg2, callback);
+    } else if (arg1 && !arg2) {
+      de[methodUnderTest](arg1, callback);
+    } else {
+      de[methodUnderTest](callback);
+    }
+  });
+
+  /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_036: [If any device enrollment operation method encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript `Error` object with a text description of the error (err.message).] */
+  it('Calls the done callback with a standard error if not an HTTP error', function(testCallback) {
+    var FakeGenericErrorHelper = {
+      executeApiCall: function (method, path, httpHeaders, body, done) {
+        done(new Error('Fake Error'));
+      }
+    };
+
+    var de = new DeviceEnrollment({ host: 'host', sharedAccessSignature: 'sas' }, FakeGenericErrorHelper);
+    var callback = function(err, result, response) {
+      assert.instanceOf(err, Error);
+      assert.isUndefined(result);
+      assert.isUndefined(response);
+      testCallback();
+    };
+
+    if (arg1 && arg2 && arg3) {
+      de[methodUnderTest](arg1, arg2, arg3, callback);
+    } else if (arg1 && arg2) {
+      de[methodUnderTest](arg1, arg2, callback);
+    } else if (arg1 && !arg2) {
+      de[methodUnderTest](arg1, callback);
+    } else {
+      de[methodUnderTest](callback);
+    }
+  });
+}
+
+describe('DeviceEnrollment', function() {
+  describe('#constructor', function() {
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_001: [The `DeviceEnrollment` construction shall throw a `ReferenceError` if the `config` object is falsy.] */
+    [undefined, null].forEach(function(badConfig) {
+      it('Throws if \'config\' is \'' + badConfig + '\'', function() {
+        assert.throws(function() {
+          return new DeviceEnrollment(badConfig);
+        }, ReferenceError);
+      });
+    });
+
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_002: [The `DeviceEnrollment` constructor shall throw an `ArgumentError` if the `config` object is missing one or more of the following properties:
+                                                          - `host`: the IoT Hub hostname
+                                                          - `sharedAccessSignature`: shared access signature with the permissions for the desired operations.] */
+
+    [undefined, null, ''].forEach(function(badConfigProperty) {
+      it('Throws if \'config.host\' is \'' + badConfigProperty + '\'', function() {
+        assert.throws(function() {
+          return new DeviceEnrollment({host: badConfigProperty, sharedAccessSignature: 'sharedAccessSignature'});
+        }, errors.ArgumentError);
+      });
+
+      it('Throws if \'config.sharedAccessSignature\' is \'' + badConfigProperty + '\'', function() {
+        assert.throws(function() {
+          return new DeviceEnrollment({host: 'host', sharedAccessSignature: badConfigProperty});
+        }, errors.ArgumentError);
+      });
+    });
+
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_003: [The `DeviceEnrollment` constructor shall use the `restApiClient` provided as a second argument if it is provided.] */
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_004: [The `DeviceEnrollment` constructor shall use `azure-iot-http-base.RestApiClient` if no `restApiClient` argument is provided.] */
+  });
+
+  describe('#fromConnectionString', function() {
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_005: [** The `fromConnectionString` method shall throw `ReferenceError` if the value argument is falsy. **]*/
+    [undefined, null, ''].forEach(function(falsyConnectionString) {
+      it('Throws if \'value\' is \'' + falsyConnectionString + '\'', function() {
+        assert.throws(function() {
+          return DeviceEnrollment.fromConnectionString(falsyConnectionString);
+        }, ReferenceError);
+      });
+    });
+
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_006: [`fromConnectionString` method shall derive and transform the needed parts from the connection string in order to create a `config` object for the constructor (see `SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_002`).  **] */
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_007: [The `fromConnectionString` method shall return a new instance of the `DeviceEnrollment` object.] */
+    it('Returns a new instance of the DeviceEnrollment object', function() {
+      var de = DeviceEnrollment.fromConnectionString('HostName=a.b.c;SharedAccessKeyName=name;SharedAccessKey=key');
+      assert.instanceOf(de, DeviceEnrollment);
+    });
+  });
+
+  describe('#createOrUpdateIndividualEnrollment', function(){
+
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_009: [The `createOrUpdateIndividualEnrollment` method shall throw `ReferenceError` if the `enrollment` argument is falsy.]*/
+    [undefined, null].forEach(function(falsyEnrollment) {
+      testFalsyArg('createOrUpdateIndividualEnrollment', 'enrollment', falsyEnrollment, ReferenceError);
+    });
+
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_011: [The `createOrUpdateIndividualEnrollment` method shall throw `ArgumentError` if the `enrollment.registrationId` property is falsy.] */
+    [undefined, null].forEach(function(badRegistrationId) {
+      var badEnrollment = {};
+      badEnrollment.registrationId = badRegistrationId;
+      testFalsyArg('createOrUpdateIndividualEnrollment', 'enrollment', badEnrollment, errors.ArgumentError);
+    });
+
+    testErrorCallback('createOrUpdateIndividualEnrollment', fakeEnrollmentNoEtag);
+
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_010: [** The `createOrUpdateIndividualEnrollment` method shall construct an HTTP request using information supplied by the caller, as follows:
+    PUT /enrollments/<uri-encoded-enrollment.registrationId>?api-version=<version> HTTP/1.1
+    Authorization: <sharedAccessSignature>
+    Accept: application/json
+    Content-Type: application/json; charset=utf-8
+
+    <stringified json string of the enrollment argument>
+    ] */
+
+    it('Constructs a valid HTTP request', function(testCallback) {
+      var fakeHttpHelper = {
+        executeApiCall: function (method, path, httpHeaders, body, done) {
+          assert.equal(method, 'PUT');
+          assert.equal(path, '/enrollments/' + encodeURIComponent(fakeRegistrationId) + _versionQueryString());
+          assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
+          assert.equal(httpHeaders['Accept'], 'application/json');
+          assert.equal(Object.keys(httpHeaders).length, 2,'Should be only two headers');
+          assert.deepEqual(body, fakeEnrollmentNoEtag);
+
+          done();
+        }
+      };
+
+      var de = new DeviceEnrollment({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
+      de.createOrUpdateIndividualEnrollment(fakeEnrollmentNoEtag, testCallback);
+    });
+  });
+
+  describe('#createOrUpdateEnrollmentGroup', function(){
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_012: [The `createOrUpdateEnrollmentGroup` method shall throw `ReferenceError` if the `EnrollmentGroup` argument is falsy.] */
+    [undefined, null].forEach(function(falsyEnrollmentGroup) {
+      testFalsyArg('createOrUpdateEnrollmentGroup', 'enrollmentGroup', falsyEnrollmentGroup, ReferenceError);
+    });
+
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_013: [`createOrUpdateEnrollmentGroup` method shall throw `ArgumentError` if the `enrollmentGroup.enrollmentGroupsId` property is falsy.] */
+    [undefined, null].forEach(function(badGroupId) {
+      var badEnrollmentGroup = {};
+      badEnrollmentGroup.enrollmentGroupId = badGroupId;
+      testFalsyArg('createOrUpdateEnrollmentGroup', 'enrollmentGroup', badEnrollmentGroup, errors.ArgumentError);
+    });
+
+    testErrorCallback('createOrUpdateEnrollmentGroup', fakeEnrollmentGroupNoEtag);
+
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_014: [The `createOrUpdateEnrollmentGroup` method shall construct an HTTP request using information supplied by the caller, as follows:
+      PUT /enrollmentGroups/<uri-encoded-enrollmentGroup.enrollmentGroupsId>?api-version=<version> HTTP/1.1
+      Authorization: <sharedAccessSignature>
+      Accept: application/json
+      Content-Type: application/json; charset=utf-8
+
+      <stringified json string of the enrollmentGroup argument>
+      ] */
+    it('Constructs a valid HTTP request', function(testCallback) {
+      var fakeHttpHelper = {
+        executeApiCall: function (method, path, httpHeaders, body, done) {
+          assert.equal(method, 'PUT');
+          assert.equal(path, '/enrollmentGroups/' + encodeURIComponent(fakeGroupId) + _versionQueryString());
+          assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
+          assert.equal(httpHeaders['Accept'], 'application/json');
+          assert.equal(Object.keys(httpHeaders).length, 2,'Should be only two headers');
+          assert.deepEqual(body, fakeEnrollmentGroupNoEtag);
+
+          done();
+        }
+      };
+
+      var de = new DeviceEnrollment({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
+      de.createOrUpdateEnrollmentGroup(fakeEnrollmentGroupNoEtag, testCallback);
+    });
+  });
+
+  function testDeleteAPI(methodUnderTest, uriPath, falsyArgArgumentName, firstArgumentObject, firstArgumentObjectNoEtag, firstArgumentObjectIdPropertyName) {
+
+    describe('#' + methodUnderTest, function() {
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_015: [The `deleteIndividualEnrollment` method shall throw `ReferenceError` if the `enrollmentOrId` argument is falsy.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_016: [The `deleteEnrollmentGroup` method shall throw `ReferenceError` if the `enrollmentGroupOrId` argument is falsy.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_025: [The `deleteDeviceRegistrationStatus` method shall throw `ReferenceError` if the `idOrRegistrationStatus` argument is falsy.] */
+      [undefined, null, 0, false].forEach(function(invalidFirstArgument) {
+        testFalsyArg(methodUnderTest, falsyArgArgumentName, invalidFirstArgument, ReferenceError);
+      });
+
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_040: [The `deleteIndividualEnrollment` method, if the first argument is a string, the second argument if present, must be a string or a callback, otherwise shall throw ArgumentError.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_045: [The `deleteEnrollmentGroup` method, if the first argument is a string, the second argument if present, must be a string or a callback, otherwise shall throw ArgumentError.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_050: [The `deleteDeviceRegistrationStatus` method, if the first argument is a string, the second argument if present, must be a string or a callback, otherwise shall throw ArgumentError.] */
+      it('Throws argument error if second parameter is wrong type when using a string as first argument', function() {
+        var de = new DeviceEnrollment({ host: 'host', sharedAccessSignature: 'sas' });
+        assert.throws(function() {
+          de[methodUnderTest]('fake-registration', 1, function() {});
+        }, errors.ArgumentError);
+      });
+
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_041: [The `deleteIndividualEnrollment` method, if the first argument is a string and the second argument is a string, the third argument if present, must be a callback, otherwise shall throw ArgumentError.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_046: [The `deleteEnrollmentGroup` method, if the first argument is a string and the second argument is a string, the third argument if present, must be a callback, otherwise shall throw ArgumentError.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_051: [The `deleteDeviceRegistrationStatus` method, if the first argument is a string and the second argument is a string, the third argument if present, must be a callback, otherwise shall throw ArgumentError.] */
+      it('Throws argument error if third parameter is wrong type when using a string first argument and etag', function() {
+        var de = new DeviceEnrollment({ host: 'host', sharedAccessSignature: 'sas' });
+        assert.throws(function() {
+          de[methodUnderTest]('fake-registration', 'etag', 'not the correct type');
+        }, errors.ArgumentError);
+      });
+
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_042: [The `deleteIndividualEnrollment` method, if the first argument is an Enrollment object, the second argument if present, must be a callback, otherwise shall throw ArgumentError.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_047: [The `deleteEnrollmentGroup` method, if the first argument is an EnrollmentGroup object, the second argument if present, must be a callback, otherwise shall throw ArgumentError.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_052: [The `deleteDeviceRegistrationStatus` method, if the first argument is an DeviceRegistrationStatus object, the second argument if present, must be a callback, otherwise shall throw ArgumentError.] */
+      it('Throws argument error if first parameter is an object and second parameter is NOT a callback', function() {
+        var de = new DeviceEnrollment({ host: 'host', sharedAccessSignature: 'sas' });
+        assert.throws(function() {
+          de[methodUnderTest](firstArgumentObjectNoEtag, 'etag');
+        }, errors.ArgumentError);
+      });
+
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_017: [The `deleteIndividualEnrollment` method, if the first argument is an Enrollment object, shall throw an ArgumentError, if the registrationId property is falsy.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_018: [The `deleteEnrollmentGroup` method, if the first argument is an EnrollmentGroup object, shall throw an ArgumentError, if the `enrollmentGroupId' property is falsy.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_026: [The `deleteDeviceRegistrationStatus` method, if the first argument is a `DeviceRegistrationStatus` object, shall throw an ArgumentError, if the `registrationId' property is falsy.] */
+      [undefined, null].forEach(function(badId) {
+        var badObject = {};
+        badObject[firstArgumentObjectIdPropertyName] = badId;
+        testFalsyArg(methodUnderTest, falsyArgArgumentName, badObject, errors.ArgumentError);
+      });
+
+      testErrorCallback(methodUnderTest, firstArgumentObject);
+
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_043: [** The `deleteIndividualEnrollment` method, if the first argument is a string, and the second argument is NOT a string, shall construct an HTTP request using information supplied by the caller as follows:
+        DELETE /enrollments/<uri-encoded-enrollmentOrId>?api-version=<version> HTTP/1.1
+        Authorization: <sharedAccessSignature>
+        ] */
+      it('Constructs a valid HTTP request for a STRING first parameter with NO etag', function(testCallback) {
+        var stringIdName = 'fake-enrollment';
+        var fakeHttpHelper = {
+          executeApiCall: function (method, path, httpHeaders, body, done) {
+            assert.equal(method, 'DELETE');
+            assert.equal(path, uriPath + encodeURIComponent(stringIdName) + _versionQueryString());
+            assert.equal(body, null);
+            done();
+          }
+        };
+        var de = new DeviceEnrollment({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
+        de[methodUnderTest](stringIdName, testCallback);
+      });
+
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_044: [** The `deleteIndividualEnrollment` method, if the first argument is a string, and the second argument is a string, shall construct an HTTP request using information supplied by the caller as follows:
+        DELETE /enrollments/<uri-encoded-enrollmentOrId>?api-version=<version> HTTP/1.1
+        If-Match: <second argument>
+        Authorization: <sharedAccessSignature>
+        ] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_048: [** The `deleteEnrollmentGroup` method, if the first argument is a string, and the second argument is NOT a string, shall construct an HTTP request using information supplied by the caller as follows:
+        DELETE /enrollmentGroups/<uri-encoded-enrollmentGroupOrId>?api-version=<version> HTTP/1.1
+        Authorization: <sharedAccessSignature>
+        ] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_053: [** The `deleteDeviceRegistrationStatus` method, if the first argument is a string, and the second argument is NOT a string, shall construct an HTTP request using information supplied by the caller as follows:
+        DELETE /registrations/<uri-encoded-idOrRegistrationStatus>?api-version=<version> HTTP/1.1
+        Authorization: <sharedAccessSignature>
+        ] */
+      it('Constructs a valid HTTP request for a STRING first parameter and a STRING second parameter', function(testCallback) {
+        var stringIdName = 'fake-enrollment';
+        var etag = 'etag';
+        var fakeHttpHelper = {
+          executeApiCall: function (method, path, httpHeaders, body, done) {
+            assert.equal(method, 'DELETE');
+            assert.equal(path, uriPath + encodeURIComponent(stringIdName) + _versionQueryString());
+            assert.deepEqual(httpHeaders, {'If-Match': etag});
+            assert.equal(Object.keys(httpHeaders).length, 1,'Should be only one header');
+            assert.equal(body, null);
+            done();
+          }
+        };
+        var de = new DeviceEnrollment({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
+        de[methodUnderTest](stringIdName, etag, testCallback);
+      });
+
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_021: [The `deleteIndividualEnrollment` method, if the first argument is an enrollment object, with a non-falsy etag property, shall construct an HTTP request using information supplied by the caller as follows:
+        DELETE /enrollments/<uri-encoded-enrollmentOrId.registrationId>?api-version=<version> HTTP/1.1
+        If-Match: enrollmentOrId.etag
+        Authorization: <sharedAccessSignature>
+        ] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_022: [The `deleteEnrollmentGroup` method, if the first argument is an EnrollmentGroup object, with a non-falsy etag property, shall construct an HTTP request using information supplied by the caller as follows:
+        DELETE /enrollmentGroups/<uri-encoded-enrollmentGroupOrId.enrollmentGroupId>?api-version=<version> HTTP/1.1
+        If-Match: enrollmentParameter.etag
+        Authorization: <sharedAccessSignature>
+        ] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_028: [** The `deleteDeviceRegistrationStatus` method, if the first argument is a `DeviceRegistrationStatus` object, with a non-falsy etag property, shall construct an HTTP request using information supplied by the caller as follows:
+        DELETE /registrations/<uri-encoded-idOrRegistrationStatus.registrationId>?api-version=<version> HTTP/1.1
+        If-Match: idOrRegistrationStatus.etag
+        Authorization: <sharedAccessSignature>
+        ] */
+      it('constructs a valid HTTP request for ' + falsyArgArgumentName + ' parameter with etag', function(testCallback) {
+        var fakeHttpHelper = {
+          executeApiCall: function (method, path, httpHeaders, body, done) {
+            assert.equal(method, 'DELETE');
+            assert.equal(path, uriPath + encodeURIComponent(firstArgumentObject[firstArgumentObjectIdPropertyName]) + _versionQueryString());
+            assert.deepEqual(httpHeaders, {'If-Match': firstArgumentObject.etag});
+            assert.equal(Object.keys(httpHeaders).length, 1,'Should be only one header');
+            assert.equal(body, null);
+            done();
+          }
+        };
+
+        var de = new DeviceEnrollment({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
+        de[methodUnderTest](firstArgumentObject, testCallback);
+      });
+
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_024: [The `deleteIndividualEnrollment` method, if the first argument is an enrollment object, with a falsy etag property, shall construct an HTTP request using information supplied by the caller as follows:
+        DELETE /enrollments/<uri-encoded-enrollmentParameter.registrationId>?api-version=<version> HTTP/1.1
+        Authorization: <sharedAccessSignature>
+        ] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_023: [The `deleteEnrollmentGroup` method, if the first argument is an EnrollmentGroup object, with a falsy etag property, shall construct an HTTP request using information supplied by the caller as follows:
+        DELETE /enrollmentGroups/<uri-encoded-enrollmentGroupOrId.enrollmentGroupId>?api-version=<version> HTTP/1.1
+        Authorization: <sharedAccessSignature>
+        ] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_029: [** The `deleteDeviceRegistrationStatus` method, if the first argument is a `DeviceRegistrationStatus` object, with a falsy etag property, shall construct an HTTP request using information supplied by the caller as follows:
+        DELETE /registrations/<uri-encoded-idOrRegistrationStatus.registrationId>?api-version=<version> HTTP/1.1
+        Authorization: <sharedAccessSignature>
+        ] */
+      it('constructs a valid HTTP request for ' + falsyArgArgumentName + ' parameter without etag', function(testCallback) {
+        var fakeHttpHelper = {
+          executeApiCall: function (method, path, httpHeaders, body, done) {
+            assert.equal(method, 'DELETE');
+            assert.equal(path, uriPath + encodeURIComponent(firstArgumentObjectNoEtag[firstArgumentObjectIdPropertyName]) + _versionQueryString());
+            assert.equal(Object.keys(httpHeaders).length,0,'Should be zero headers');
+            assert.equal(body, null);
+            done();
+          }
+        };
+
+        var de = new DeviceEnrollment({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
+        de[methodUnderTest](firstArgumentObjectNoEtag, testCallback);
+      });
+    });
+  }
+
+  testDeleteAPI('deleteIndividualEnrollment', '/enrollments/', 'enrollment', fakeEnrollment, fakeEnrollmentNoEtag, 'registrationId');
+  testDeleteAPI('deleteEnrollmentGroup', '/enrollmentGroups/', 'enrollmentGroup', fakeEnrollmentGroup, fakeEnrollmentGroupNoEtag, 'enrollmentGroupId');
+  testDeleteAPI('deleteDeviceRegistrationStatus', '/registrations/', 'registrationStatus', fakeRegistration, fakeRegistrationNoEtag, 'registrationId');
+
+  function testGetAPI(methodUnderTest, uriPath) {
+
+    describe('#' + methodUnderTest, function() {
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_030: [The `getIndividualEnrollment` method shall throw `ReferenceError` if the id argument is falsy.] */
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_031: [The `getEnrollmentGroup` method shall throw `ReferenceError` if the id argument is falsy.] */
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_032: [The `getDeviceRegistrationStatus` method shall throw `ReferenceError` if the id argument is falsy.] */
+    [undefined, null, 0, false].forEach(function(id) {
+        testFalsyArg(methodUnderTest, 'id', id, ReferenceError);
+      });
+
+      testErrorCallback(methodUnderTest, 'fakeId');
+
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_033: [** The `getIndividualEnrollment` method shall construct an HTTP request using information supplied by the caller as follows:
+        GET /enrollments/<uri-encoded-id>?api-version=<version> HTTP/1.1
+        Accept: application/json
+        Authorization: <sharedAccessSignature>
+        ] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_034: [** The `getEnrollmentGroup` method shall construct an HTTP request using information supplied by the caller as follows:
+        GET /enrollmentGroups/<uri-encoded-id>?api-version=<version> HTTP/1.1
+        Authorization: <sharedAccessSignature>
+        ] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_035: [** The `getDeviceRegistrationStatus` method shall construct an HTTP request using information supplied by the caller as follows:
+        GET /registrations/<uri-encoded-id>?api-version=<version> HTTP/1.1
+        Authorization: <sharedAccessSignature>
+        ] */
+      it('Constructs a valid HTTP request for id parameter', function(testCallback) {
+        var id = 'fakeRegistration';
+        var fakeHttpHelper = {
+          executeApiCall: function (method, path, httpHeaders, body, done) {
+            assert.equal(method, 'GET');
+            assert.equal(path, uriPath + encodeURIComponent(id) + _versionQueryString());
+            assert.equal(httpHeaders['Accept'], 'application/json');
+            assert.equal(Object.keys(httpHeaders).length, 1,'Should be one headers');
+            assert.equal(body, null);
+            done();
+          }
+        };
+
+        var de = new DeviceEnrollment({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
+        de[methodUnderTest](id, testCallback);
+      });
+    });
+  }
+
+  testGetAPI('getIndividualEnrollment', '/enrollments/');
+  testGetAPI('getEnrollmentGroup', '/enrollmentGroups/');
+  testGetAPI('getDeviceRegistrationStatus', '/registrations/');
+
+
+  describe('#bulkOperation', function() {
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_038: [The `bulkOperation` method shall throw `ReferenceError` if the `bulkOperation` argument is falsy.] */
+    [undefined, null].forEach(function(bo) {
+      testFalsyArg('bulkOperation', 'bulkOperation', bo, ReferenceError);
+    });
+
+    var fakeBo = {mode: 'update', enrollments: [fakeEnrollment]};
+    testErrorCallback('bulkOperation', fakeBo);
+
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_039: [** The `bulkOperation` method shall construct an HTTP request using information supplied by the caller as follows:
+      POST /enrollments?api-version=<version> HTTP/1.1
+      Authorization: <sharedAccessSignature>
+      Accept: application/json
+      Content-Type: application/json; charset=utf-8
+
+      <stringified json string of the bulkOperation argument>
+      ] */
+    it('Constructs a valid HTTP request for bulkOperation parameter', function(testCallback) {
+      var fakeHttpHelper = {
+        executeApiCall: function (method, path, httpHeaders, body, done) {
+          assert.equal(method, 'POST');
+          assert.equal(path, '/enrollments/' + _versionQueryString());
+          assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
+          assert.equal(httpHeaders['Accept'], 'application/json');
+          assert.equal(Object.keys(httpHeaders).length, 2,'Should be two headers');
+          assert.deepEqual(body, fakeBo);
+          done();
+        }
+      };
+
+      var de = new DeviceEnrollment({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
+      de.bulkOperation(fakeBo, testCallback);
+    });
+  });
+});

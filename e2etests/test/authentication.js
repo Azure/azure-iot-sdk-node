@@ -25,7 +25,7 @@ var transports = [Amqp, AmqpWs, Mqtt, MqttWs, Http];
 
 module.exports = function authentication_tests(hubConnectionString) {
   describe('Authentication', function() {
-    this.timeout(30000);
+    this.timeout(40000);
     var hostName = ServiceConnectionString.parse(hubConnectionString).HostName;
     var testDeviceId = 'nodee2etestDeviceAuth-' + uuid.v4();
     var testDeviceKey = '';

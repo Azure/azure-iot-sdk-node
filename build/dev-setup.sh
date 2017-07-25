@@ -124,6 +124,15 @@ npm link azure-iot-device-mqtt
 npm link azure-iothub
 npm install
 
+cd $node_root/provisioning/service
+echo "\n-- Creating links for `pwd` --"
+npm link azure-iot-common
+npm link azure-iot-http-base
+npm link
+npm run build
+[ $? -eq 0 ] || exit $?
+
+
 cd $node_root/build/tools
 echo "\n-- Creating links for `pwd` --"
 npm link azure-iothub

@@ -14,7 +14,7 @@
  * It also supports Device identity registry operations with the {@link azure-iothub.Registry} object:
  * - creating, removing, updating, and listing device identities registered with an IoT hub
  * - get and update and query device twins
- * 
+ *
  * Finally, the `{@link azure-iothub.JobClient} object allows to schedule long running tasks that:
  * - execute direct methods on one or more devices at a specific time
  * - update one or more device twins at a specific time

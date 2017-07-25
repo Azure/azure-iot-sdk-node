@@ -44,6 +44,12 @@ echo "-- Removing links for `pwd` --"
 npm rm
 npm rm azure-iot-common
 
+cd $node_root/provisioning/service
+echo "-- Removing links for `pwd` --"
+npm rm
+npm rm azure-iot-http-base
+npm rm azure-iot-common
+
 cd $node_root/device/transport/mqtt
 echo "-- Removing links for `pwd` --"
 npm rm

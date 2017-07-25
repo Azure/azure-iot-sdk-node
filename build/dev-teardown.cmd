@@ -49,6 +49,12 @@ echo -- Removing links for %cd% --
 call npm rm
 call npm rm azure-iot-common
 
+cd %node-root%\provisioning\service
+echo -- Removing links for %cd% --
+call npm rm
+call npm rm azure-iot-http-base
+call npm rm azure-iot-common
+
 cd %node-root%\device\transport\mqtt
 echo -- Removing links for %cd% --
 call npm rm

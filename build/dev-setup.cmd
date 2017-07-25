@@ -128,6 +128,14 @@ call npm link azure-iot-device-mqtt
 call npm link azure-iothub
 call npm install
 
+cd %node-root%\provisioning\service
+echo.
+echo -- Creating links for %cd% --
+call npm link azure-iot-common
+call npm link azure-iot-http-base
+call npm link
+call npm run build
+
 cd %node-root%\build\tools
 echo .
 echo -- Setting up links for build tools --
