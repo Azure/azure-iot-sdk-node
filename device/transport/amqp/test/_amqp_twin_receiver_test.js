@@ -528,15 +528,6 @@ describe('AmqpTwinReceiver', function () {
       }, errors.ArgumentError);
     });
 
-    /* Tests_SRS_NODE_DEVICE_AMQP_06_014: [The `sendTwinRequest` method shall throw an `ReferenceError` if the `resource` argument is falsy.] */
-    it('throws if resource is falsy', function() {
-      var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
-      assert.throws(function() {
-        newTwinReceiver.sendTwinRequest('PUT', null, { '$rid':10 }, 'body', function() {});
-      }, ReferenceError);
-    });
-
     /* Tests_SRS_NODE_DEVICE_AMQP_06_018: [The `sendTwinRequest` method shall throw an `ArgumentError` if the `resource` argument is not a string.] */
   it('throws if resource is not a string', function() {
       var amqpClient = new AmqpProvider();
@@ -598,28 +589,20 @@ describe('AmqpTwinReceiver', function () {
       assert.equal(amqpClient.lastSendMessage.messageAnnotations.resource, '/abc', 'resource not set appropriately');
     });
 
-    /* Tests_SRS_NODE_DEVICE_AMQP_06_031: [If the `resource` argument terminates in a slash, the slash shall be removed from the annotation.] */
-    it('resource argument terminating slash shall be removed', function() {
-      var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
-      newTwinReceiver.sendTwinRequest('GET', '/abc/', { '$rid' : 10 }, 'a string for the body', function() {});
-      assert.equal(amqpClient.lastSendMessage.messageAnnotations.resource, '/abc', 'resource not set appropriately');
-    });
-
-    /* Tests_SRS_NODE_DEVICE_AMQP_06_039: [If the `resource` argument length is zero (after terminating slash removal), the resource annotation shall not be set.] */
+    /* Tests_SRS_NODE_DEVICE_AMQP_06_039: [If the `resource` argument length is zero, the resource annotation shall not be set.] */
     it('resource length zero has no resource annotation', function() {
       var amqpClient = new AmqpProvider();
       var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
-      newTwinReceiver.sendTwinRequest('GET', '/', { '$rid' : 10 }, 'a string for the body', function() {});
-      assert(!amqpClient.lastSendMessage.messageAnnotations.hasOwnProperty('resource'),'message contains a resource annotation inappropriately');
+      newTwinReceiver.sendTwinRequest('GET', '', { '$rid' : 10 }, 'a string for the body', function() {});
+      assert(!amqpClient.lastSendMessage.messageAnnotations.hasOwnProperty('resource'), 'message contains a resource annotation inappropriately');
     });
 
     /* Tests_SRS_NODE_DEVICE_AMQP_06_032: [If the `operation` argument is `PATCH`, the `version` annotation shall be set to `null`.] */
     it('PATCH method results in AMQP(null) annotation.', function() {
       var amqpClient = new AmqpProvider();
       var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
-      newTwinReceiver.sendTwinRequest('PATCH', '/', { '$rid' : 10 }, 'a string for the body', function() {});
-      assert(amqpClient.lastSendMessage.messageAnnotations.hasOwnProperty('version'),'PATCH message does NOT contain a version annotation');
+      newTwinReceiver.sendTwinRequest('PATCH', '', { '$rid' : 10 }, 'a string for the body', function() {});
+      assert(amqpClient.lastSendMessage.messageAnnotations.hasOwnProperty('version'), 'PATCH message does NOT contain a version annotation');
       assert.equal(amqpClient.lastSendMessage.messageAnnotations.version, null, 'PATCH operation message contains a version annotation not null');
     });
 
@@ -628,15 +611,15 @@ describe('AmqpTwinReceiver', function () {
     it('properties of the message set appropriately', function() {
       var amqpClient = new AmqpProvider();
       var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
-      newTwinReceiver.sendTwinRequest('PATCH', '/', { '$rid' : 10, 'rid': 10, 'from': 'the south', 'to': 'the north' }, 'a string for the body', function() {});
-      assert.isFalse(amqpClient.lastSendMessage.properties.hasOwnProperty('$rid'),'$rid property set inappropriately in message');
-      assert(amqpClient.lastSendMessage.properties.hasOwnProperty('rid'),'rid property not in message');
+      newTwinReceiver.sendTwinRequest('PATCH', '', { '$rid' : 10, 'rid': 10, 'from': 'the south', 'to': 'the north' }, 'a string for the body', function() {});
+      assert.isFalse(amqpClient.lastSendMessage.properties.hasOwnProperty('$rid'), '$rid property set inappropriately in message');
+      assert(amqpClient.lastSendMessage.properties.hasOwnProperty('rid'), 'rid property not in message');
       assert.strictEqual(amqpClient.lastSendMessage.properties['rid'], 10, 'rid property set inappropriately');
-      assert(amqpClient.lastSendMessage.properties.hasOwnProperty('from'),'from property not in message');
+      assert(amqpClient.lastSendMessage.properties.hasOwnProperty('from'), 'from property not in message');
       assert.strictEqual(amqpClient.lastSendMessage.properties['from'], 'the south', 'from property set inappropriately');
-      assert(amqpClient.lastSendMessage.properties.hasOwnProperty('to'),'to property not in message');
+      assert(amqpClient.lastSendMessage.properties.hasOwnProperty('to'), 'to property not in message');
       assert.strictEqual(amqpClient.lastSendMessage.properties['to'], 'the north', 'to property set inappropriately');
-      assert(amqpClient.lastSendMessage.properties.hasOwnProperty('correlationId'),'correlation property not in message');
+      assert(amqpClient.lastSendMessage.properties.hasOwnProperty('correlationId'), 'correlation property not in message');
       assert.strictEqual(amqpClient.lastSendMessage.properties['correlationId'], '10', 'correlation property set inappropriately');
     });
 

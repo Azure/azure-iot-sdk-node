@@ -122,7 +122,6 @@ Gets the AmqpReceiver object used to subscribe to messages and errors sent to th
 
 **SRS_NODE_DEVICE_AMQP_06_012: [** The `sendTwinRequest` method shall not throw `ReferenceError` if the `done` callback is falsy. **]**
 **SRS_NODE_DEVICE_AMQP_06_013: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `method` argument is falsy. **]**
-**SRS_NODE_DEVICE_AMQP_06_014: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `resource` argument is falsy. **]**
 **SRS_NODE_DEVICE_AMQP_06_015: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `properties` argument is falsy. **]**
 **SRS_NODE_DEVICE_AMQP_06_016: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `body` argument is falsy. **]**
 **SRS_NODE_DEVICE_AMQP_06_017: [** The `sendTwinRequest` method shall throw an `ArgumentError` if the `method` argument is not a string. **]**
@@ -133,8 +132,7 @@ An new Amqp message shall be instantiated.
 
 **SRS_NODE_DEVICE_AMQP_06_020: [** The `method` argument shall be the value of the amqp message `operation` annotation. **]**
 **SRS_NODE_DEVICE_AMQP_06_021: [** The `resource` argument shall be the value of the amqp message `resource` annotation. **]**
-**SRS_NODE_DEVICE_AMQP_06_031: [** If the `resource` argument terminates in a slash, the slash shall be removed from the annotation. **]**
-**SRS_NODE_DEVICE_AMQP_06_039: [** If the `resource` argument length is zero (after terminating slash removal), the resource annotation shall not be set. **]**
+**SRS_NODE_DEVICE_AMQP_06_039: [** If the `resource` argument length is zero, the resource annotation shall not be set. **]**
 **SRS_NODE_DEVICE_AMQP_06_032: [** If the `operation` argument is `PATCH`, the `version` annotation shall be set to `null`. **]**
 
 **SRS_NODE_DEVICE_AMQP_06_028: [** The `sendTwinRequest` method shall throw an `ArgumentError` if any members of the `properties` object fails to serialize to a string. **]**

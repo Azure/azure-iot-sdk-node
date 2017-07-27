@@ -420,10 +420,9 @@ export class AmqpTwinReceiver extends EventEmitter {
   private _sendTwinRequest(method: string, resource: string, properties: { [key: string]: string }, body: any, done?: (err?: Error, result?: results.MessageEnqueued) => void): void {
     /* Codes_SRS_NODE_DEVICE_AMQP_06_012: [The `sendTwinRequest` method shall not throw `ReferenceError` if the `done` callback is falsy.] */
     /* Codes_SRS_NODE_DEVICE_AMQP_06_013: [The `sendTwinRequest` method shall throw an `ReferenceError` if the `method` argument is falsy.] */
-    /* Codes_SRS_NODE_DEVICE_AMQP_06_014: [The `sendTwinRequest` method shall throw an `ReferenceError` if the `resource` argument is falsy.] */
     /* Codes_SRS_NODE_DEVICE_AMQP_06_015: [The `sendTwinRequest` method shall throw an `ReferenceError` if the `properties` argument is falsy.] */
     /* Codes_SRS_NODE_DEVICE_AMQP_06_016: [The `sendTwinRequest` method shall throw an `ReferenceError` if the `body` argument is falsy.] */
-    if (!method || !resource || !properties || !body) {
+    if (!method || !properties || !body) {
       throw new ReferenceError('required parameter is missing');
     }
 
@@ -442,29 +441,13 @@ export class AmqpTwinReceiver extends EventEmitter {
     amqpMessage.messageAnnotations = {};
     amqpMessage.properties = {};
 
-    //
-    // Amqp requires that the resource designation NOT be terminated by a slash.  The agnostic twin client was terminating the
-    // resources with a slash which worked just dandy for MQTT.
-    //
-    // We need to cut off a terminating slash.  If we cut off a terminating slash and the length of resource is zero then simply
-    // don't specify a resource.
-    //
-    // What if the caller specifies a "//" resource?  Don't do that.
-    //
-    // So you'll note that in this case "/" sent down will be turned into an empty string.  So why not
-    // simply send down "" to begin with?  Because you can't send a falsy parameter.
-    //
     /* Codes_SRS_NODE_DEVICE_AMQP_06_020: [The `method` argument shall be the value of the amqp message `operation` annotation.] */
     amqpMessage.messageAnnotations.operation = method;
-    let localResource: string = resource;
-    /* Codes_SRS_NODE_DEVICE_AMQP_06_031: [If the `resource` argument terminates in a slash, the slash shall be removed from the annotation.] */
-    if (localResource.substr(localResource.length - 1, 1) === '/') {
-      localResource = localResource.slice(0, localResource.length - 1);
-    }
-    /* Codes_SRS_NODE_DEVICE_AMQP_06_039: [If the `resource` argument length is zero (after terminating slash removal), the resource annotation shall not be set.] */
-    if (localResource.length > 0) {
+
+    /* Codes_SRS_NODE_DEVICE_AMQP_06_039: [If the `resource` argument length is zero, the resource annotation shall not be set.] */
+    if (resource.length > 0) {
       /* Codes_SRS_NODE_DEVICE_AMQP_06_021: [The `resource` argument shall be the value of the amqp message `resource` annotation.] */
-      amqpMessage.messageAnnotations.resource = localResource;
+      amqpMessage.messageAnnotations.resource = resource;
     }
 
     /*Codes_SRS_NODE_DEVICE_AMQP_06_032: [If the `operation` argument is `PATCH`, the `version` annotation shall be set to `null`.] */

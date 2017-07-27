@@ -472,7 +472,7 @@ describe('Twin', function () {
           if (err) return done(err);
           assert(sendTwinRequest.calledOnce);
           assert.equal(sendTwinRequest.firstCall.args[0],'PATCH');
-          assert.equal(sendTwinRequest.firstCall.args[1],'/properties/reported/');
+          assert.equal(sendTwinRequest.firstCall.args[1],'/properties/reported');
           assert.equal(JSON.stringify(sendTwinRequest.firstCall.args[2]),'{}');
           assert.equal(sendTwinRequest.firstCall.args[3],'{"phone_number":"867-5309"}');
           done();
