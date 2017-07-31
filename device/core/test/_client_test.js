@@ -64,12 +64,18 @@ describe('Client', function () {
       });
 
       assert.instanceOf(client, Client);
-      client.sasRenewalInterval = 2700000;
-      tick = firstTick;
-      this.clock.tick(tick); // 30 minutes. shouldn't have updated yet.
-      assert.isFalse(sasUpdated);
-      tick = secondTick;
-      this.clock.tick(tick); // +20 => 50 minutes. should've updated so the callback will be called and the test will terminate.
+      client.open(function (err) {
+        if (err) {
+          testCallback(err);
+        } else {
+          client.sasRenewalInterval = 2700000;
+          tick = firstTick;
+          this.clock.tick(tick); // 30 minutes. shouldn't have updated yet.
+          assert.isFalse(sasUpdated);
+          tick = secondTick;
+          this.clock.tick(tick); // +20 => 50 minutes. should've updated so the callback will be called and the test will terminate.
+        }
+      }.bind(this));
     });
 
     it('doesn\'t try to renew the SAS token when using x509', function (testCallback) {
