@@ -54,7 +54,7 @@ Check out the [samples][samples] for details on the various features of the Serv
 
 * [Azure IoT Hub dev center][iot-dev-center]
 * [Azure IoT Hub documentation][iot-hub-documentation]
-* [API reference][node-api-reference]
+* [Node.js API reference documentation][node-api-reference]
 
 
 ## Directory structure

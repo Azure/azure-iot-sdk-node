@@ -46,7 +46,7 @@ Here is what you can expect Microsoft Support to be able to help with:
 ## Read more
 
 * [Azure IoT Hub documentation][iot-hub-documentation]
-* [Node.js API reference documentation][node-api-reference].
+* [Node.js API reference documentation][node-api-reference]
 
 # Long Term Support
 
