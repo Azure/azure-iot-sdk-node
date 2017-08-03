@@ -59,13 +59,8 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_026: [The Client constructor shall accept a connection string as an optional second argument] */
     this._connectionString = connStr;
 
-    if (this._connectionString && ConnectionString.parse(this._connectionString).SharedAccessKey) {
-      /*Codes_SRS_NODE_DEVICE_CLIENT_16_027: [If a connection string argument is provided and is using SharedAccessKey authentication, the Client shall automatically generate and renew SAS tokens.] */
-      this._useAutomaticRenewal = true;
-      this._sasRenewalTimeout = setTimeout(this._renewSharedAccessSignature.bind(this), Client.sasRenewalInterval);
-    } else {
-      this._useAutomaticRenewal = false;
-    }
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_027: [If a connection string argument is provided and is using SharedAccessKey authentication, the Client shall automatically generate and renew SAS tokens.] */
+    this._useAutomaticRenewal = !!(this._connectionString && ConnectionString.parse(this._connectionString).SharedAccessKey);
 
     this.blobUploadClient = blobUploadClient;
 
@@ -193,6 +188,9 @@ export class Client extends EventEmitter {
         },
         'connected': {
           _onEnter: () => {
+            if (this._useAutomaticRenewal) {
+              this._sasRenewalTimeout = setTimeout(this._renewSharedAccessSignature.bind(this), Client.sasRenewalInterval);
+            }
             /*Codes_SRS_NODE_DEVICE_CLIENT_16_065: [The client shall connect the transport if needed to subscribe receive messages.]*/
             this._transport.getReceiver((err, receiver) => {
               if (err) {
@@ -222,6 +220,9 @@ export class Client extends EventEmitter {
             });
           },
           _onExit: () => {
+            if (this._sasRenewalTimeout) {
+              clearTimeout(this._sasRenewalTimeout);
+            }
             this._destroyReceiver();
             this._receiver = null;
           },

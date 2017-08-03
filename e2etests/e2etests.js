@@ -25,7 +25,7 @@ var upload_disconnect = require('./test/upload_disconnect.js');
 var device_teardown = require('./test/device_teardown.js');
 var twin_e2e_tests = require('./test/twin_e2e_tests.js');
 var device_method = require('./test/device_method.js');
-var job_client = require('./test/job_client.js');
+//var job_client = require('./test/job_client.js');
 var authentication_tests = require('./test/authentication.js');
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
@@ -94,5 +94,5 @@ device_provision(hubConnectionString, function (err, provisionedDevices) {
 
 twin_e2e_tests(hubConnectionString, [deviceAmqp.Amqp, deviceMqtt.Mqtt]);
 device_method(hubConnectionString, deviceMethodsProtocols);
-job_client(hubConnectionString);
+// job_client(hubConnectionString);
 
