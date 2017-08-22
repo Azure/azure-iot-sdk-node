@@ -102,7 +102,8 @@ export class RestApiClient {
       }
 
       /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_036: [The `executeApiCall` shall set the `Content-Length` header to the length of the serialized value of `requestBody` if it is truthy.]*/
-      headers['Content-Length'] = requestBodyString.length;
+      const requestBodyStringSizeInBytes = Buffer.byteLength(requestBodyString, 'utf8');
+      headers['Content-Length'] = requestBodyStringSizeInBytes;
     }
 
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_008: [The `executeApiCall` method shall build the HTTP request using the arguments passed by the caller.]*/
