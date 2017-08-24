@@ -356,7 +356,8 @@ describe('RestApiClient', function() {
     [
       { contentType: 'text/plain; charset=utf-8', content: 'foo' },
       { contentType: 'application/json; charset=utf-8', content: 'foo' },
-      { contentType: 'application/json; charset=utf-8', content: { key: 'value' }}
+      { contentType: 'application/json; charset=utf-8', content: { key: 'value' }},
+      { contentType: 'application/json; charset=utf-8', content: { 'żółw': 'gęś' }}
     ].forEach(function(testConfig) {
       it('sets the Content-Length header when Content-Type is \'' + testConfig.contentType + '\' and content is ' + JSON.stringify(testConfig.content), function(testCallback) {
         var testHeaders = {
@@ -364,8 +365,7 @@ describe('RestApiClient', function() {
         };
 
         var testRequestBody = testConfig.content;
-        var expectedContentLength = (typeof testRequestBody === 'string') ? testRequestBody.length : JSON.stringify(testRequestBody).length;
-
+        var expectedContentLength = (typeof testRequestBody === 'string') ? Buffer.byteLength(testRequestBody, 'utf8') : Buffer.byteLength(JSON.stringify(testRequestBody), 'utf8');
         var fakeHttpHelper = {
           buildRequest: function(method, path, headers, host, requestCallback) {
             assert.equal(headers['Content-Length'], expectedContentLength);
