@@ -14,7 +14,7 @@
     "azure-iot-device-amqp": "1.1.17",
     "azure-iot-device-http": "1.1.17",
     "azure-iot-device-mqtt": "1.1.17",
-    "azure-iothub": "1.1.14",
+    "azure-iothub": "1.1.15",
     "azure-storage": "^1.2.0",
     "bluebird": "^3.3.0",
     "debug": "^2.2.0",

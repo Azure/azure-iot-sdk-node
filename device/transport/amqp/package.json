@@ -15,7 +15,7 @@
     "uuid": "^3.0.1"
   },
   "devDependencies": {
-    "azure-iothub": "1.1.14",
+    "azure-iothub": "1.1.15",
     "bluebird": "^3.5.0",
     "chai": "^3.5.0",
     "istanbul": "^0.4.5",
