@@ -4,19 +4,20 @@
 
 'use strict';
 
+/**
+ * @private
+ */
 export interface Result {
     transportObj?: any;
 }
 
 /**
- * @class       module:azure-iot-common.MessageEnqueued
- * @classdesc   Result returned when a message was successfully enqueued.
- *
- * @property {Object} transportObj  The transport-specific object
- *
- * @augments {Object}
+ * Result returned when a message was successfully enqueued.
  */
 export class MessageEnqueued implements Result {
+  /**
+   * @private
+   */
   transportObj?: any;
   constructor(transportObj?: any) {
     this.transportObj = transportObj;
@@ -24,14 +25,12 @@ export class MessageEnqueued implements Result {
 }
 
 /**
- * @class       module:azure-iot-common.MessageCompleted
- * @classdesc   Result returned when a message was successfully rejected.
- *
- * @property {Object} transportObj  The transport-specific object
- *
- * @augments {Object}
+ * Result returned when a message was successfully rejected.
  */
 export class MessageCompleted implements Result {
+  /**
+   * @private
+   */
   transportObj?: any;
   constructor(transportObj?: any) {
     this.transportObj = transportObj;
@@ -39,14 +38,12 @@ export class MessageCompleted implements Result {
 }
 
 /**
- * @class       module:azure-iot-common.MessageRejected
- * @classdesc   Result returned when a message was successfully rejected.
- *
- * @property {Object} transportObj  The transport-specific object
- *
- * @augments {Object}
+ * Result returned when a message was successfully rejected.
  */
 export class MessageRejected implements Result {
+  /**
+   * @private
+   */
   transportObj?: any;
   constructor(transportObj?: any) {
     this.transportObj = transportObj;
@@ -54,14 +51,12 @@ export class MessageRejected implements Result {
 }
 
 /**
- * @class       module:azure-iot-common.MessageAbandoned
- * @classdesc   Result returned when a message was successfully abandoned.
- *
- * @property {Object} transportObj  The transport-specific object
- *
- * @augments {Object}
+ * Result returned when a message was successfully abandoned.
  */
 export class MessageAbandoned implements Result {
+  /**
+   * @private
+   */
   transportObj?: any;
   constructor(transportObj?: any) {
     this.transportObj = transportObj;
@@ -69,14 +64,12 @@ export class MessageAbandoned implements Result {
 }
 
 /**
- * @class       module:azure-iot-common.Connected
- * @classdesc   Result returned when a transport is successfully connected.
- *
- * @property {Object} transportObj  The transport-specific object
- *
- * @augments {Object}
+ * Result returned when a transport is successfully connected.
  */
 export class Connected implements Result {
+  /**
+   * @private
+   */
   transportObj?: any;
   constructor(transportObj?: any) {
     this.transportObj = transportObj;
@@ -84,16 +77,16 @@ export class Connected implements Result {
 }
 
 /**
- * @class       module:azure-iot-common.Disconnected
- * @classdesc   Result returned when a transport is successfully disconnected.
- *
- * @property {Object} transportObj  The transport-specific object.
- * @property {String} reason        The reason why the disconnected event is emitted.
- *
- * @augments {Object}
+ * Result returned when a transport is successfully disconnected.
  */
 export class Disconnected implements Result {
+  /**
+   * @private
+   */
   transportObj?: any;
+  /**
+   * The reason why the disconnected event is emitted.
+   */
   reason: string;
   constructor(transportObj?: any, reason?: string) {
     this.transportObj = transportObj;
@@ -102,14 +95,12 @@ export class Disconnected implements Result {
 }
 
 /**
- * @class       module:azure-iot-common.TransportConfigured
- * @classdesc   Result returned when a transport is successfully configured.
- *
- * @property {Object} transportObj  The transport-specific object.
- *
- * @augments {Object}
+ * Result returned when a transport is successfully configured.
  */
 export class TransportConfigured implements Result {
+  /**
+   * @private
+   */
   transportObj?: any;
   constructor(transportObj?: any) {
     this.transportObj = transportObj;
@@ -117,14 +108,12 @@ export class TransportConfigured implements Result {
 }
 
 /**
- * @class       module:azure-iot-common.SharedAccessSignatureUpdated
- * @classdesc   Result returned when a SAS token has been successfully updated.
- *
- * @param {Boolean} needToReconnect  Value indicating whether the client needs to reconnect or not.
- *
- * @augments {Object}
+ * Result returned when a SAS token has been successfully updated.
  */
 export class SharedAccessSignatureUpdated {
+  /**
+   * Boolean indicating whether the client needs to reconnect or not.
+   */
   needToReconnect: boolean;
   constructor(needToReconnect: boolean) {
     this.needToReconnect = needToReconnect;

@@ -8,16 +8,18 @@ import { Callback } from './interfaces';
 import { Registry } from './registry';
 
 /**
- * @class                  module:azure-iothub.Query
- * @classdesc              Constructs a Query object that provides APIs to trigger the execution of a device query.
- *                         SDK users should create queries using the {@link JobClient#createQuery} and {@link Registry#createQuery} APIs
- *                         and should not try to instantiate this class directly.
- *
- * @param {Function}       executeQueryFn  The function that should be called to get a new page.
- * @param {Registry}       registry        [optional] Registry client used to create Twin objects (used in nextAsTwin()).
+ * Constructs a Query object that provides APIs to trigger the execution of a device query.
+ * SDK users should create queries using the {@link JobClient#createQuery} and {@link Registry#createQuery} APIs
+ * and should not try to instantiate this class directly.
  */
 export class Query {
+  /**
+   * Token used to iterate over multiple pages of results.
+   */
   continuationToken: string;
+  /**
+   * Boolean indicating whether there are more results pages.
+   */
   hasMoreResults: boolean;
 
   private _registry: Registry;
@@ -25,6 +27,9 @@ export class Query {
 
   /**
    * @private
+   * @constructor
+   * @param {Function}       executeQueryFn  The function that should be called to get a new page.
+   * @param {Registry}       registry        [optional] Registry client used to create Twin objects (used in nextAsTwin()).
    */
   constructor(executeQueryFn: (continuationToken: string, done: Callback<any>) => void, registry?: Registry) {
     if (!executeQueryFn) throw new ReferenceError('executeQueryFn cannot be \'' + executeQueryFn + '\'');

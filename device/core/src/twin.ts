@@ -25,7 +25,6 @@ import { TwinTransport } from './interfaces';
  *
  * For more information see {@link https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins|Understanding Device Twins}.
  *
- * @instance {Object} properties The desired and reported properties dictionnaries (respectively in `properties.desired` and `properties.reported`).
  */
 export class Twin extends EventEmitter {
   static timeout: number = 120000;
@@ -35,6 +34,9 @@ export class Twin extends EventEmitter {
   static postEvent: string = 'post';
   static desiredPath: string = 'properties.desired';
 
+  /**
+   * The desired and reported properties dictionnaries (respectively in `properties.desired` and `properties.reported`).
+   */
   properties: any; // TODO: need type
 
   private _rid: number;

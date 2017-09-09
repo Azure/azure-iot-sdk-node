@@ -9,19 +9,24 @@ import { ArgumentError, FormatError } from './errors';
 import { createDictionary } from './dictionary';
 
 /**
- * @class           module:azure-iot-common.SharedAccessSignature
- * @classdesc       An object representing a shared access signature
- * @param {String}  resourceUri   The resource URI to encode into the signature
- * @param {String}  keyName       An identifier associated with the key
- * @param {String}  key           A base64-encoded key value
- * @param {String}  expiry        An integer value representing the number of
- *                                seconds since the epoch 00:00:00 UTC on
- *                                1 January 1970.
+ * Shared access signature tokens are used to authenticate the connection when using symmetric keys (as opposed to x509 certificates) to secure the connection with the Azure IoT hub.
  */
 export class SharedAccessSignature {
+  /**
+   * private
+   */
   sr: string;
+  /**
+   * private
+   */
   se: string | number;
+  /**
+   * private
+   */
   sig: string;
+  /**
+   * private
+   */
   skn: string;
   private _key: string;
 

@@ -10,6 +10,15 @@
  * Values can only be strings.
  */
 export class Properties {
+  /**
+   * Array containing the properties stored as key/value pairs
+   * ```json
+   * [
+   *   { key: 'prop1', value: 'value1' },
+   *   { key: 'prop2', value: 'value2' }
+   * ]
+   * ```
+   */
   propertyList: any[] = [];
 
   /**

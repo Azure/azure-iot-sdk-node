@@ -38,15 +38,25 @@ export interface TwinData {
  * For more information see {@link https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins|Understanding Device Twins}.
  *
  * The recommended way to obtain a {@link Twin} for a specific device is to use the {@link Registry#getTwin} method.
- *
- * @instance {Object} properties The desired and reported properties dictionnaries (respectively in `properties.desired` and `properties.reported`).
  */
 export class Twin implements TwinData {
+  /**
+   * Unique identifier of the device identity associated with the twin, as it exists in the device identity registry.
+   */
   deviceId: string;
+  /**
+   * Tag used in optimistic concurrency to avoid multiple parallel editions of the device twin.
+   */
   etag: string;
+  /**
+   * Collection of key/value pairs that is available only on the service side and can be used in queries to find specific devices.
+   */
   tags: {
     [key: string]: string;
   };
+  /**
+   * The desired and reported properties dictionnaries (respectively in `properties.desired` and `properties.reported`).
+   */
   properties: TwinProperties;
 
   private _registry: Registry;

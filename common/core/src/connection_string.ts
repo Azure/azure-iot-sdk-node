@@ -7,12 +7,35 @@
 import { createDictionary } from './dictionary';
 import { ArgumentError } from './errors';
 
+/**
+ * Describes the parameters that enable a device or cloud application to connect to an Azure IoT hub.
+ */
 export interface ConnectionString {
+  /**
+   * Hostname of the Azure IoT hub.
+   */
   HostName?: string;
+  /**
+   * Unique device identifier as it exists in the device identity registry. This is only used for device connection strings.
+   */
   DeviceId?: string;
+  /**
+   * Symmetric key used to create shared access signature tokens that are in turn used to authenticate the connection. Associated either with a specific device or a specific service policy.
+   */
   SharedAccessKey?: string;
+  /**
+   * Name of the access policy used to connect to the Azure IoT hub. used only in the case of the service SDK, unused with the Device SDK (which uses {@link DeviceId} instead).
+   */
   SharedAccessKeyName?: string;
+  /**
+   * @deprecated
+   * This was used in public preview when MQTT support required the use of a protocol gateway.
+   * Now that MQTT is supported natively in Azure IoT Hub, this parameter is ignored and kept only for compatibility purposes.
+   */
   GatewayHostName?: string;
+  /**
+   * This property exists only if a device uses x509 certificates for authentication and if it exists, will be set to True.
+   */
   x509?: string;
 }
 

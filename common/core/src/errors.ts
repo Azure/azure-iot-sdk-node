@@ -5,8 +5,7 @@
 'use strict';
 
 /**
- * @class       module:azure-iot-common.ArgumentError
- * @classdesc   Error thrown when an argument is invalid.
+ * Error thrown when an argument is invalid.
  *
  * @augments {Error}
  */
@@ -20,8 +19,7 @@ export class ArgumentError extends Error {
 }
 
 /**
- * @class       module:azure-iot-common.ArgumentOutOfRangeError
- * @classdesc   Error thrown when an argument has a value that is out of the admissible range.
+ * Error thrown when an argument has a value that is out of the admissible range.
  *
  * @augments {Error}
  */
@@ -35,8 +33,7 @@ export class ArgumentOutOfRangeError extends Error {
 }
 
 /**
- * @class       module:azure-iot-common.DeviceMaximumQueueDepthExceededError
- * @classdesc   Error thrown when the message queue for a device is full.
+ * Error thrown when the message queue for a device is full.
  *
  * @augments {Error}
  */
@@ -50,8 +47,7 @@ export class DeviceMaximumQueueDepthExceededError extends Error {
 }
 
 /**
- * @class       module:azure-iot-common.DeviceNotFoundError
- * @classdesc   Error thrown when a device cannot be found in the IoT Hub instance registry.
+ * Error thrown when a device cannot be found in the IoT Hub instance registry.
  *
  * @augments {Error}
  */
@@ -65,8 +61,7 @@ export class DeviceNotFoundError extends Error {
 }
 
 /**
- * @class       module:azure-iot-common.FormatError
- * @classdesc   Error thrown when a string that is supposed to have a specific formatting is not formatted properly.
+ * Error thrown when a string that is supposed to have a specific formatting is not formatted properly.
  *
  * @augments {Error}
  */
@@ -80,8 +75,7 @@ export class FormatError extends Error {
 }
 
 /**
- * @class       module:azure-iot-common.UnauthorizedError
- * @classdesc   Error thrown when the connection parameters are wrong and the server refused the connection.
+ * Error thrown when the connection parameters are wrong and the server refused the connection.
  *
  * @augments {Error}
  */
@@ -159,8 +153,7 @@ export class IotHubNotFoundError extends Error {
 }
 
 /**
- * @class       module:azure-iot-common.IoTHubSuspendedError
- * @classdesc   Error thrown when IoT Hub has been suspended.
+ * Error thrown when IoT Hub has been suspended.
  *
  * @augments {Error}
  */
@@ -192,8 +185,7 @@ export class TooManyDevicesError extends Error {
 }
 
 /**
- * @class       module:azure-iot-common.ThrottlingError
- * @classdesc   Error thrown when IoT Hub is throttled due to excessive activity.
+ * Error thrown when IoT Hub is throttled due to excessive activity.
  *
  * @augments {Error}
  */
@@ -207,8 +199,7 @@ export class ThrottlingError extends Error {
 }
 
 /**
- * @class       module:azure-iot-common.DeviceAlreadyExistsError
- * @classdesc   Error thrown when the device id used for device creation already exists in the Device Identity Registry.
+ * Error thrown when the device id used for device creation already exists in the Device Identity Registry.
  *
  * @augments {Error}
  */
@@ -222,8 +213,7 @@ export class DeviceAlreadyExistsError extends Error {
 }
 
 /**
- * @class       module:azure-iot-common.DeviceMessageLockLostError
- * @classdesc   Error thrown when settling a message fails because the lock token associated with the message is lost.
+ * Error thrown when settling a message fails because the lock token associated with the message is lost.
  *
  * @augments {Error}
  */
@@ -237,8 +227,7 @@ export class DeviceMessageLockLostError extends Error {
 }
 
 /**
- * @class       module:azure-iot-common.InvalidEtagError
- * @classdesc   Error thrown when the eTag specified is incorrectly formatted or out of date.
+ * Error thrown when the eTag specified is incorrectly formatted or out of date.
  *
  * @augments {Error}
  */
@@ -252,8 +241,7 @@ export class InvalidEtagError extends Error {
 }
 
 /**
- * @class       module:azure-iot-common.InvalidOperationError
- * @classdesc   Error thrown when an operation is attempted but is not allowed.
+ * Error thrown when an operation is attempted but is not allowed.
  *
  * @augments {Error}
  */
@@ -267,8 +255,7 @@ export class InvalidOperationError extends Error {
 }
 
 /**
- * @class       module:azure-iot-common.PreconditionFailedError
- * @classdesc   Error thrown when a condition that should have been met in order to execute an operation was not.
+ * Error thrown when a condition that should have been met in order to execute an operation was not.
  *
  * @augments {Error}
  */
@@ -282,8 +269,7 @@ export class PreconditionFailedError extends Error {
 }
 
 /**
- * @class       module:azure-iot-common.TimeoutError
- * @classdesc   Error thrown when a timeout occurs
+ * Error thrown when a timeout occurs
  *
  * @augments {Error}
  */
@@ -297,8 +283,7 @@ export class TimeoutError extends Error {
 }
 
 /**
- * @class       module:azure-iot-common.BadDeviceResponseError
- * @classdesc   Error thrown when a device sends a bad response to a device method call.
+ * Error thrown when a device sends a bad response to a device method call.
  *
  * @augments {Error}
  */
@@ -312,8 +297,7 @@ export class BadDeviceResponseError extends Error {
 }
 
 /**
- * @class       module:azure-iot-common.GatewayTimeoutError
- * @classdesc   Error thrown when the IoT Hub instance doesn't process the device method call in time.
+ * Error thrown when the IoT Hub instance doesn't process the device method call in time.
  *
  * @augments {Error}
  */
@@ -328,8 +312,7 @@ export class GatewayTimeoutError extends Error {
 }
 
 /**
- * @class       module:azure-iot-common.DeviceTimeoutError
- * @classdesc   Error thrown when the device doesn't process the method call in time.
+ * Error thrown when the device doesn't process the method call in time.
  *
  * @augments {Error}
  */
