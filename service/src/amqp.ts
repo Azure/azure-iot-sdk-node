@@ -44,7 +44,7 @@ function getTranslatedError(err: Error, message: string): Error {
 
 /**
  * Transport class used by the [service client]{@link azure-iothub.Client} to connect to the Azure IoT hub using the AMQP protocol over a secure (TLS) socket.
- * This class should not be used directly and instead be passed to one of the {@link azure-iothub.Client} factory methods: {@link azure-iothub.Client#fromConnectionString|fromConnectionString} or {@link azure-iothub.Client#fromSharedAccessSignature|fromSharedAccessSignature}.
+ * This class should not be used directly and instead be passed to one of the {@link azure-iothub.Client} factory methods: {@link azure-iothub.Client.fromConnectionString|fromConnectionString} or {@link azure-iothub.Client.fromSharedAccessSignature|fromSharedAccessSignature}.
  */
 /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_001: [The Amqp constructor shall accept a config object with those 4 properties:
 host – (string) the fully-qualified DNS hostname of an IoT Hub

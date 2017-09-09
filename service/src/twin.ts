@@ -74,7 +74,7 @@ export class Twin implements TwinData {
   private _registry: Registry;
 
   /**
-   * Instantiates a new {@link Twin}. The recommended way to get a new {@link Twin} object is to use the {@link Registry#getTwin} method.
+   * Instantiates a new {@link Twin}. The recommended way to get a new {@link azure-iothub.Twin} object is to use the {@link Registry.getTwin} method.
    * @constructor
    * @param {string|Object}  device      A device identifier string or an object describing the device. If an Object,
    *                                     it must contain a deviceId property.

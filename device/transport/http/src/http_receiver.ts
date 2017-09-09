@@ -42,7 +42,7 @@ let defaultOptions: HttpReceiverOptions = {
  */
 export interface HttpReceiverOptions {
   /**
-   * interval in seconds at which the Azure IoT hub is going to be polled.
+   * Interval **in seconds** at which the Azure IoT hub is going to be polled.
    */
   interval?: number;
   /**
@@ -54,7 +54,7 @@ export interface HttpReceiverOptions {
    */
   cron?: string;
   /**
-   * Does not poll and instead rely on the user calling the {@link azure-iot-device-http.HttpReceiver.receive|receive} method.
+   * Does not poll and instead rely on the user calling the `receive` method.
    */
   manualPolling?: boolean;
   /**

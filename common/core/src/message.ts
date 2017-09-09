@@ -51,11 +51,11 @@ export class Message {
   transportObj: any;
 
   /**
-   * Creates a new {@link Message} object
+   * Creates a new {@link azure-iot-common.Message} object
    * @constructor
-   * @param data a Node [Buffer]{@linkcode https://nodejs.org/api/globals.html#globals_class_buffer}
-   *             object or anything that can be passed to the [Buffer]{@linkcode https://nodejs.org/api/globals.html#globals_class_buffer} constructor
-   *             to construct a [Buffer]{@linkcode https://nodejs.org/api/globals.html#globals_class_buffer} from.
+   * @param data a Node [Buffer]{@link https://nodejs.org/api/globals.html#globals_class_buffer}
+   *             object or anything that can be passed to the [Buffer]{@link https://nodejs.org/api/globals.html#globals_class_buffer} constructor
+   *             to construct a [Buffer]{@link https://nodejs.org/api/globals.html#globals_class_buffer} from.
    */
   /*Codes_SRS_NODE_IOTHUB_MESSAGE_07_004: [The Message constructor shall accept a variable message that will be transmitted.]*/
   constructor(data: Message.BufferConvertible) {
@@ -71,9 +71,9 @@ export class Message {
   }
 
   /**
-   * Gets the content (body) of the {@link Message}.
+   * Gets the content (body) of the {@link azure-iot-common.Message}.
    *
-   * @returns {*} The content of the {@link Message}.
+   * @returns {*} The content of the {@link azure-iot-common.Message}.
    */
   getData(): Message.BufferConvertible {
     /*Codes_SRS_NODE_IOTHUB_MESSAGE_07_003: [The getData function shall return a representation of the body of the message as the type that was presented during construction.]*/
@@ -81,7 +81,7 @@ export class Message {
   };
 
   /**
-   * Gets the data passed to the constructor as a [Buffer]{@linkcode https://nodejs.org/api/globals.html#globals_class_buffer}
+   * Gets the data passed to the constructor as a [Buffer]{@link https://nodejs.org/api/globals.html#globals_class_buffer}
    *
    * @returns {Buffer}
    */

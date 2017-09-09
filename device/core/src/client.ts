@@ -32,17 +32,17 @@ function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Er
 export class Client extends EventEmitter {
   // SAS token created by the client have a lifetime of 60 minutes, renew every 45 minutes
   /**
-   * private
+   * @private
    */
   static sasRenewalInterval: number = 2700000;
 
   // Can't be marked private because they are used in the Twin class.
   /**
-   * private
+   * @private
    */
   _transport: Client.Transport;
   /**
-   * private
+   * @private
    */
   _twin: Twin;
 
@@ -60,7 +60,7 @@ export class Client extends EventEmitter {
    * @constructor
    * @param {Object}  transport         An object that implements the interface
    *                                    expected of a transport object, e.g.,
-   *                                    {@link module:azure-iot-device~Http|Http}.
+   *                                    {@link azure-iot-device.Http|Http}.
    * @param {string}  connStr           A connection string (optional: when not provided, updateSharedAccessSignature must be called to set the SharedAccessSignature token directly).
    * @param {Object}  blobUploadClient  An object that is capable of uploading a stream to a blob.
    */
@@ -468,15 +468,12 @@ export class Client extends EventEmitter {
 
   /**
    * @method            module:azure-iot-device.Client#sendEvent
-   * @description       The [sendEvent]{@linkcode Client#sendEvent} method sends an event message
+   * @description       The [sendEvent]{@link azure-iot-device.Client.sendEvent} method sends an event message
    *                    to the IoT Hub as the device indicated by the connection string passed
    *                    via the constructor.
    *
-   * @param {Message}  message            The [message]{@linkcode module:common/message.Message}
-   *                                      to be sent.
-   * @param {Function} sendEventCallback  The callback to be invoked when `sendEvent`
-   *                                      completes execution.
-   * @see [Message]{@linkcode module:common/message.Message}
+   * @param {azure-iot-common.Message}  message            The [message]{@link azure-iot-common.Message} to be sent.
+   * @param {Function}                  sendEventCallback  The callback to be invoked when `sendEvent` completes execution.
    */
   sendEvent(message: Message, sendEventCallback?: (err?: Error, result?: results.MessageEnqueued) => void): void {
     /*Codes_SRS_NODE_DEVICE_CLIENT_05_007: [The sendEvent method shall send the event indicated by the message argument via the transport associated with the Client instance.]*/
@@ -485,11 +482,11 @@ export class Client extends EventEmitter {
 
   /**
    * @method            module:azure-iot-device.Client#sendEventBatch
-   * @description       The [sendEventBatch]{@linkcode Client#sendEventBatch} method sends a list
+   * @description       The [sendEventBatch]{@link azure-iot-device.Client.sendEventBatch} method sends a list
    *                    of event messages to the IoT Hub as the device indicated by the connection
    *                    string passed via the constructor.
    *
-   * @param {array<Message>} messages               Array of [Message]{@linkcode module:common/message.Message}
+   * @param {array<Message>} messages               Array of [Message]{@link azure-iot-common.Message}
    *                                                objects to be sent as a batch.
    * @param {Function}      sendEventBatchCallback  The callback to be invoked when
    *                                                `sendEventBatch` completes execution.

@@ -5,7 +5,7 @@
 'use strict';
 
 /**
- * Collection of user defined properties of a {@link Message} object that are going to be sent alongside the body of the message
+ * Collection of user defined properties of a {@link azure-iot-common.Message} object that are going to be sent alongside the body of the message
  * and can be used for [routing](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-csharp-csharp-process-d2c).
  * Values can only be strings.
  */

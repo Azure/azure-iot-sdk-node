@@ -83,7 +83,7 @@ export class Device implements DeviceIdentity {
   authentication?: Device.Authentication;
 
   /**
-   * Instantiate a new {@link Device} object.
+   * Instantiate a new {@link azure-iothub.Device} object.
    * @param jsonData An optional JSON representation of the device, which will be mapped to properties in the object. If no argument is provided, Device roperties will be assigned default values.
    */
   constructor(jsonData?: any) {
