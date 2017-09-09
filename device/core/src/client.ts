@@ -60,7 +60,7 @@ export class Client extends EventEmitter {
    * @constructor
    * @param {Object}  transport         An object that implements the interface
    *                                    expected of a transport object, e.g.,
-   *                                    {@link azure-iot-device.Http|Http}.
+   *                                    {@link azure-iot-device-http.Http|Http}.
    * @param {string}  connStr           A connection string (optional: when not provided, updateSharedAccessSignature must be called to set the SharedAccessSignature token directly).
    * @param {Object}  blobUploadClient  An object that is capable of uploading a stream to a blob.
    */

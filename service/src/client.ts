@@ -209,7 +209,7 @@ export class Client extends EventEmitter {
    * @static
    * @description       Creates an IoT Hub service client from the given
    *                    connection string using the default transport
-   *                    ({@link azure-iothub.Transport|Transport}).
+   *                    (Amqp) or the one specified in the second argument.
    *
    * @param {String}    connStr       A connection string which encapsulates "device
    *                                  connect" permissions on an IoT hub.
@@ -246,7 +246,7 @@ export class Client extends EventEmitter {
    * @static
    * @description       Creates an IoT Hub service client from the given
    *                    shared access signature using the default transport
-   *                    ({@link module:azure-iothub~Transport|Transport}).
+   *                    (Amqp) or the one specified in the second argument.
    *
    * @param {String}    sharedAccessSignature   A shared access signature which encapsulates
    *                            "service connect" permissions on an IoT hub.
