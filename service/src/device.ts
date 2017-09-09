@@ -5,6 +5,9 @@
 
 import * as _ from 'lodash';
 
+/**
+ * @private
+ */
 export interface DeviceIdentity {
   deviceId: string;
   generationId?: string;
@@ -22,9 +25,13 @@ export interface DeviceIdentity {
 
 /**
  * @deprecated
- * @class           module:azure-iothub.Device
- * @classdesc       Creates a representation of a device for use in the
- *                  identity {@link module:azure-iothub.Registry} APIs.
+ * Creates a representation of a device for use with the [device identity registry]{@link module:azure-iothub.Registry} APIs.
+ *
+ * This class is deprecated because the [device identity registry]{@link module:azure-iothub.Registry} can work directly with JSON objects
+ * containing a partial description of the device, not necessarily the full object. On top of that initially this class was shipped with a typo
+ * on the `symmetricKey` property name (it was pascal-cased instead of camel-cased). The SDK is keeping this class around in order not to break existing code
+ * but this will be removed in a future major version update and customers should instead use plain JSON objects.
+ *
  * @param {String}  jsonData        An optional JSON representation of the
  *                                  device, which will be mapped to properties
  *                                  in the object. If no argument is provided,

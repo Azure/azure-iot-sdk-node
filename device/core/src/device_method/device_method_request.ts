@@ -6,15 +6,14 @@ import { Client } from '../client';
 
 /**
  * @class           module:azure-iot-device.deviceMethod.DeviceMethodRequest
- * @classdesc       `DeviceMethodRequest` is a class that captures the data
- *                  passed in from the service when a device method call is
- *                  made. An instance of this class is passed as the second
- *                  parameter to the callback registered via the
- *                  {@link module:azure-iot-device.Client#onDeviceMethod} method.
- * @param {String}  requestId         The request identifier supplied by the
+ * @classdesc       Represents the data passed in from the service to the device
+ *                  when a device method is called from the cloud.
+ *                  An instance of this class is passed to the callback registered via
+ *                  {@link module:azure-iot-device.Client#onDeviceMethod}.
+ * @instance {string}  requestId         The request identifier supplied by the
  *                                    service for this device method call.
- * @param {String}  methodName        The name of the method to be called.
- * @param {Buffer}  body              A Node `Buffer` representing the payload
+ * @instance {string}  methodName        The name of the method to be called.
+ * @instance {Buffer}  body              A Node `Buffer` representing the payload
  *                                    of the method call request.
  */
 export class DeviceMethodRequest implements Client.DeviceMethodRequest {

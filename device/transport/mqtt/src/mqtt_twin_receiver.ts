@@ -18,6 +18,7 @@ const responseTopic = '$iothub/twin/res/#';
 const postTopic = '$iothub/twin/PATCH/properties/desired/#';
 
 /**
+ * @private
  * @class        module:azure-iot-device-mqtt.MqttTwinReceiver
  * @classdesc    Acts as a receiver for device-twin traffic
  *

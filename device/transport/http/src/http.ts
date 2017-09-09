@@ -34,10 +34,10 @@ function handleResponse(done: (err?: Error, result?: results.MessageEnqueued) =>
 }
 
 /**
- * @class module:azure-iot-device-http.Http
- * @classdesc       Provide HTTP transport to the device [client]{@link module:azure-iot-device.Client}.
+ * Provides the transport layer over HTTP for the {@link azure-iot-device.Client} object.
  *
- * @param   {Object}    config  Configuration object derived from the connection string by the client.
+ * This class is not meant to be used directly, instead passed to the {@link azure-iot-device.Client} class to be used as
+ * a transport.
  */
 /*Codes_SRS_NODE_DEVICE_HTTP_05_001: [The Http constructor shall accept an object with the following properties:
 - `host` - (string) the fully-qualified DNS hostname of an IoT hub
@@ -59,6 +59,7 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
   }
 
   /**
+   * @private
    * @method          module:azure-iot-device-http.Http#sendEvent
    * @description     This method sends an event to the IoT Hub as the device indicated in the
    *                  `config` parameter.
@@ -141,6 +142,7 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
   }
 
   /**
+   * @private
    * @method          module:azure-iot-device-http.Http#sendEventBatch
    * @description     The `sendEventBatch` method sends a list of event messages to the IoT Hub
    *                  as the device indicated in the `config` parameter.
@@ -219,6 +221,7 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
   }
 
   /**
+   * @private
    * @method          module:azure-iot-device-http.Http#getReceiver
    * @description     This methods gets the unique instance of the receiver that is used to asynchronously retrieve messages from the IoT Hub service.
    *
@@ -233,6 +236,7 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
   }
 
   /**
+   * @private
    * @method          module:azure-iot-device-http.Http#setOptions
    * @description     This methods sets the HTTP specific options of the transport.
    *
@@ -271,6 +275,7 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
   }
 
   /**
+   * @private
    * @method              module:azure-iot-device-http.Http#complete
    * @description         Settles the message as complete and calls the done callback with the result.
    *
@@ -285,6 +290,7 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
   }
 
   /**
+   * @private
    * @method              module:azure-iot-device-http.Http#reject
    * @description         Settles the message as rejected and calls the done callback with the result.
    *
@@ -299,6 +305,7 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
   }
 
   /**
+   * @private
    * @method              module:azure-iot-device-http.Http#abandon
    * @description         Settles the message as abandoned and calls the done callback with the result.
    *
@@ -313,6 +320,7 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
   }
 
   /**
+   * @private
    * @method          module:azure-iot-device-http.Http#updateSharedAccessSignature
    * @description     This methods sets the SAS token used to authenticate with the IoT Hub service.
    *

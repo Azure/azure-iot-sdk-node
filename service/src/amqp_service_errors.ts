@@ -7,6 +7,9 @@ import { errors } from 'azure-iot-common';
 import { translateError as translateCommonError } from 'azure-iot-amqp-base';
 import { Errors as Amqp10Errors } from 'amqp10';
 
+/**
+ * @private
+ */
 export interface AmqpTransportError extends Error {
   amqpError?: Error;
 }
@@ -15,6 +18,9 @@ export interface AmqpTransportError extends Error {
 *- A custom error message to give context to the user.
 *- the AMQP error object itself]
 */
+/**
+ * @private
+ */
 export function translateError(message: string, amqpError: Error): AmqpTransportError {
   let error: AmqpTransportError;
   /*Codes_SRS_NODE_DEVICE_AMQP_SERVICE_ERRORS_16_001: [ `translateError` shall return an `DeviceMaximumQueueDepthExceededError` if the AMQP error condition is `amqp:resource-limit-exceeded`.] */

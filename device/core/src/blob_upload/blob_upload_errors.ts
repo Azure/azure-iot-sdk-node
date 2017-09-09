@@ -4,6 +4,7 @@
 'use strict';
 
 /**
+ * @private
  * @class         module:azure-iot-device.BlobSasError
  * @classdesc     Error used when the client fails to get a blob shared access signature from the IoT Hub service.
  *
@@ -22,6 +23,7 @@ export class BlobSasError extends Error {
 }
 
 /**
+ * @private
  * @class         module:azure-iot-device.BlobUploadNotificationError
  * @classdesc     Error used when the client fails to notify the IoT Hub service that the upload is complete.
  *

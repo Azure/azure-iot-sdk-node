@@ -13,6 +13,20 @@ import { translateError } from './twin_errors';
 import { Client } from './client';
 import { TwinTransport } from './interfaces';
 
+/**
+ * A Device Twin is document describing the state of a device that is stored by an Azure IoT hub and is available even if the device is offline.
+ * It is built around 3 sections:
+ *   - Tags: key/value pairs only accessible from the service side
+ *   - Desired Properties: updated by a service and received by the device
+ *   - Reported Properties: updated by the device and received by the service.
+ *
+ * Note that although it is a possibility, desired and reported properties do not have to match
+ * and that the logic to sync these two collections, if necessary, is left to the user of the SDK.
+ *
+ * For more information see {@link https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins|Understanding Device Twins}.
+ *
+ * @instance {Object} properties The desired and reported properties dictionnaries (respectively in `properties.desired` and `properties.reported`).
+ */
 export class Twin extends EventEmitter {
   static timeout: number = 120000;
   static errorEvent: string = 'error';
@@ -27,12 +41,22 @@ export class Twin extends EventEmitter {
   private _client: Client;
   private _receiver: any; // TODO: need type
 
+  /**
+   * The constructor should not be used directly and instead the SDK user should use the {@link Client#getTwin} method to obtain a valid `Twin` object.
+   * @constructor
+   * @private
+   * @param client The device client to use in order to communicate with the Azure IoT hub.
+   */
   constructor(client: Client) {
     super();
     this._client = client;
     this._rid = 4200; // arbitrary starting value.
   }
 
+  /**
+   * @private
+   * used only by the client - no use for the SDK user.
+   */
   updateSharedAccessSignature(): void {
     this._receiver.removeAllListeners(Twin.responseEvent);
     this._receiver.removeAllListeners(Twin.postEvent);
@@ -269,14 +293,15 @@ export class Twin extends EventEmitter {
   }
 
   /**
+   * @private
    * @method          module:azure-iot-device.Twin#fromDeviceClient
-   * @description     Get a Twin object for the given client connection
+   * @description     Get a Twin object for the given client connection. This is meant to be called by the device client, not by the SDK user who should be using {@link Client#getTwin}.
+   * @static
    *
-   * @param {Object}      client  The [client]{@link module:azure-iot-device.Client} object that this Twin object is associated with.
+   * @param  {Object}         client  The [client]{@link module:azure-iot-device.Client} object that this Twin object is associated with.
+   * @param  {Function}       done  the callback to be invoked when this function completes.
    *
-   * @param {Function}      done  the callback to be invoked when this function completes.
-   *
-   * @throws {ReferenceError}   One of the required parameters is falsy
+   * @throws {ReferenceError} One of the required parameters is falsy
    */
   static fromDeviceClient(client: Client, done: (err?: Error, result?: Twin) => void): void {
     /* Codes_SRS_NODE_DEVICE_TWIN_18_002: [** `fromDeviceclient` shall throw `ReferenceError` if the `client` object is falsy **]** */

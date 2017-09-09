@@ -20,6 +20,8 @@ const TOPIC_RESPONSE_PUBLISH_FORMAT = '$iothub/%s/res/%d/?$rid=%s';
  * @class        module:azure-iot-device-mqtt.Mqtt
  * @classdesc    Provides MQTT transport for the device [client]{@link module:azure-iot-device.Client} class.
  *
+ * This class is not meant to be used directly, instead it should just be passed to the [client]{@link module:azure-iot-device.Client} object.
+ *
  * @param   {Object}    config  Configuration object derived from the connection string by the client.
  */
 /*
@@ -32,6 +34,9 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   private _mqtt: MqttBase;
   private _twinReceiver: MqttTwinReceiver;
 
+  /**
+   * @private
+   */
   constructor(config: ClientConfig, provider?: MqttBase) {
     super();
     this._config = config;
@@ -46,6 +51,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method              module:azure-iot-device-mqtt.Mqtt#connect
    * @description         Establishes the connection to the Azure IoT Hub instance using the MQTT protocol.
    *
@@ -71,6 +77,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method              module:azure-iot-device-mqtt.Mqtt#disconnect
    * @description         Terminates the connection to the IoT Hub instance.
    *
@@ -85,6 +92,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method              module:azure-iot-device-mqtt.Mqtt#sendEvent
    * @description         Sends an event to the server.
    *
@@ -97,6 +105,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method              module:azure-iot-device-mqtt.Mqtt#getReceiver
    * @description         Gets a receiver object that is used to receive and settle messages.
    *
@@ -108,6 +117,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @deprecated          // Implementation test belongs in the client.
    * @method              module:azure-iot-device-mqtt.Mqtt#complete
    * @description         Settles the message as complete and calls the done callback with the result.
@@ -121,6 +131,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @deprecated          // Implementation test belongs in the client.
    * @method              module:azure-iot-device-mqtt.Mqtt#reject
    * @description         Settles the message as rejected and calls the done callback with the result.
@@ -133,6 +144,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @deprecated          // Implementation test belongs in the client.
    * @method              module:azure-iot-device-mqtt.Mqtt#abandon
    * @description         Settles the message as abandoned and calls the done callback with the result.
@@ -145,6 +157,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method          module:azure-iot-device-mqtt.Mqtt#updateSharedAccessSignature
    * @description     This methods sets the SAS token used to authenticate with the IoT Hub service.
    *
@@ -169,6 +182,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method          module:azure-iot-device-mqtt.Mqtt#setOptions
    * @description     This methods sets the MQTT specific options of the transport.
    *
@@ -195,6 +209,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method          module:azure-iot-device-mqtt.Mqtt#sendTwinRequest
    * @description     Send a device-twin specific messager to the IoT Hub instance
    *
@@ -264,6 +279,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method            module:azure-iot-device-mqtt.Mqtt.Mqtt#sendMethodResponse
    * @description       Sends the response for a device method call to the service.
    *
@@ -321,6 +337,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method          module:azure-iot-device-mqtt.Mqtt#getTwinReceiver
    * @description     Get a receiver object that handles C2D device-twin traffic
    *

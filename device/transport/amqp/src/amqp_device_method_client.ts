@@ -17,6 +17,9 @@ const methodMessagePropertyKeys = {
   status: 'IoThub-status'
 };
 
+/**
+ * @private
+ */
 export class AmqpDeviceMethodClient extends EventEmitter {
   private _config: ClientConfig;
   private _amqpClient: any;

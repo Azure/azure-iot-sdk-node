@@ -7,14 +7,23 @@ import { Stream } from 'stream';
 import { errors } from 'azure-iot-common';
 import { UploadParams, BlobUploader as BlobUploaderInterface } from './blob_upload_client';
 
+/**
+ * @private
+ */
 export interface BlobService {
     createBlockBlobFromStream(containerName: string, blobName: string, stream: Stream, streamLength: number, done: (err: Error, body?: any, result?: { statusCode: number, body: string }) => void): void;
 }
 
+/**
+ * @private
+ */
 export interface StorageApi {
     createBlobServiceWithSas(hostName: string, sasToken: string): BlobService;
 }
 
+/**
+ * @private
+ */
 export class BlobUploader implements BlobUploaderInterface {
   storageApi: StorageApi;
 

@@ -9,11 +9,18 @@ import { Message, X509 } from 'azure-iot-common';
 import dbg = require('debug');
 const debug = dbg('azure-iot-common.Http');
 
+/**
+ * @private
+ */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
+/**
+ * @private
+ */
 export type HttpCallback = (err: Error, body?: string, response?: IncomingMessage) => void;
 
 /**
+ * @private
  * @class           module:azure-iot-http-base.Http
  * @classdesc       Basic HTTP request/response functionality used by higher-level IoT Hub libraries.
  *                  You generally want to use these higher-level objects (such as [azure-iot-device-http.Http]{@link module:azure-iot-device-http.Http}) rather than this one.

@@ -12,6 +12,7 @@ import { BlobUploadResult } from './blob_upload_result';
 const packageJson = require('../../package.json');
 
 /**
+ * @private
  * @class         module:azure-iot-device.FileUploadApi
  * @classdesc     Provides methods to use Azure IoT Hub APIs that enable simple upload to a blob.
  *

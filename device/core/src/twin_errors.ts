@@ -5,10 +5,16 @@
 
 import { errors } from 'azure-iot-common';
 
+/**
+ * @private
+ */
 export class TwinBaseError extends Error {
   response?: any;
 }
 
+/**
+ * @private
+ */
 export function translateError(response: any, status: number): TwinBaseError {
   let error: TwinBaseError;
   switch (status) {

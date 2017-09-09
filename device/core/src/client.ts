@@ -23,15 +23,12 @@ function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Er
 
 /**
  * @class           module:azure-iot-device.Client
- * @classdesc       Creates an IoT Hub device client. Normally, consumers will
- *                  call the factory method,
- *                  {@link module:azure-iot-device.Client.fromConnectionString|fromConnectionString},
+ * @classdesc       Creates an IoT Hub device client.
+ *
+ *                  Users of the SDK should call one of the factory methods,
+ *                  {@link module:azure-iot-device.Client.fromConnectionString}
+ *                  or {@link module:azure-iot-device.Client.fromSharedAccessSignature}
  *                  to create an IoT Hub device client.
- * @param {Object}  transport         An object that implements the interface
- *                                    expected of a transport object, e.g.,
- *                                    {@link module:azure-iot-device~Http|Http}.
- * @param {String}  connStr           A connection string (optional: when not provided, updateSharedAccessSignature must be called to set the SharedAccessSignature token directly).
- * @param {Object}  blobUploadClient  An object that is capable of uploading a stream to a blob.
  */
 export class Client extends EventEmitter {
   // SAS token created by the client have a lifetime of 60 minutes, renew every 45 minutes
@@ -51,6 +48,14 @@ export class Client extends EventEmitter {
   private _disconnectHandler: (err?: Error, result?: any) => void;
   private blobUploadClient: BlobUploadClient; // TODO: wrong casing/naming convention
 
+  /**
+   * @constructor
+   * @param {Object}  transport         An object that implements the interface
+   *                                    expected of a transport object, e.g.,
+   *                                    {@link module:azure-iot-device~Http|Http}.
+   * @param {string}  connStr           A connection string (optional: when not provided, updateSharedAccessSignature must be called to set the SharedAccessSignature token directly).
+   * @param {Object}  blobUploadClient  An object that is capable of uploading a stream to a blob.
+   */
   constructor(transport: Client.Transport, connStr?: string, blobUploadClient?: BlobUploadClient) {
     /*Codes_SRS_NODE_DEVICE_CLIENT_05_001: [The Client constructor shall throw ReferenceError if the transport argument is falsy.]*/
     if (!transport) throw new ReferenceError('transport is \'' + transport + '\'');

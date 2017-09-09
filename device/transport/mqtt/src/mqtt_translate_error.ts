@@ -16,11 +16,16 @@ import { errors } from 'azure-iot-common';
 /* Codes_SRS_NODE_DEVICE_MQTT_ERRORS_18_001: [** Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 2 properties:
 - `message` shall contain a human-readable error message
 - `transportError` shall contain the MQTT error object **]** */
-
+/**
+ * @private
+ */
 export class MqttTransportError extends Error {
   transportError?: Error;
 }
 
+/**
+ * @private
+ */
 export function translateError(mqttError: Error): MqttTransportError {
   let err: MqttTransportError;
 

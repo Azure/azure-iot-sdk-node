@@ -100,6 +100,7 @@ function _parseMessage(topic: string, body: any): MethodMessage {
 }
 
 /**
+ * @private
  * @class           module:azure-iot-device-mqtt.MqttReceiver
  * @classdesc       Object that is used to receive and settle messages from the server.
  *

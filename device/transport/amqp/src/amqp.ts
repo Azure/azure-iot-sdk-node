@@ -33,10 +33,10 @@ const getTranslatedError = function(err?: Error, message?: string): Error {
 };
 
 /**
- * @class module:azure-iot-device-amqp.Amqp
- * @classdesc Constructs an {@linkcode Amqp} object that can be used on a device to send
- *            and receive messages to and from an IoT Hub instance, using the AMQP protocol.
+ * Provides the transport layer over AMQP for the {@link azure-iot-device.Client} object.
  *
+ * This class is not meant to be used directly, instead passed to the {@link azure-iot-device.Client} class to be used as
+ * a transport.
  */
 /*Codes_SRS_NODE_DEVICE_AMQP_16_001: [The Amqp constructor shall accept a config object with four properties:
 host – (string) the fully-qualified DNS hostname of an IoT Hub
@@ -50,6 +50,9 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   private _amqp: BaseAmqpClient;
   private _twinReceiver: AmqpTwinReceiver;
 
+  /**
+   * @private
+   */
   constructor(config: ClientConfig) {
     super();
     this._config = config;
@@ -63,6 +66,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method              module:azure-iot-device-amqp.Amqp#connect
    * @description         Establishes a connection with the IoT Hub instance.
    * @param {Function}   done   Called when the connection is established of if an error happened.
@@ -108,6 +112,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method              module:azure-iot-device-amqp.Amqp#disconnect
    * @description         Disconnects the link to the IoT Hub instance.
    * @param {Function}   done   Called when disconnected of if an error happened.
@@ -119,6 +124,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method              module:azure-iot-device-amqp.Amqp#sendEvent
    * @description         Sends an event to the IoT Hub.
    * @param {Message}  message    The [message]{@linkcode module:common/message.Message}
@@ -135,6 +141,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method              module:azure-iot-device-amqp.Amqp#getReceiver
    * @description         Gets the {@linkcode AmqpReceiver} object that can be used to receive messages from the IoT Hub instance and accept/reject/release them.
    * @param {Function}  done      Callback used to return the {@linkcode AmqpReceiver} object.
@@ -160,6 +167,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method              module:azure-iot-device-amqp.Amqp#reject
    * @description         Settles the message as rejected and calls the done callback with the result.
    *
@@ -174,6 +182,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method              module:azure-iot-device-amqp.Amqp#abandon
    * @description         Settles the message as abandoned and calls the done callback with the result.
    *
@@ -188,6 +197,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method          module:azure-iot-device-amqp.Amqp#updateSharedAccessSignature
    * @description     This methods sets the SAS token used to authenticate with the IoT Hub service.
    *
@@ -213,6 +223,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method          module:azure-iot-device-amqp.Amqp#setOptions
    * @description     This methods sets the AMQP specific options of the transport.
    *
@@ -242,6 +253,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * The `sendEventBatch` method sends a list of event messages to the IoT Hub.
    * @param {array<Message>} messages   Array of [Message]{@linkcode module:common/message.Message}
    *                                    objects to be sent as a batch.
@@ -254,6 +266,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   // };
 
   /**
+   * @private
    * The `sendMethodResponse` method sends a direct method response to the IoT Hub
    * @param {Object}     methodResponse   Object describing the device method response.
    * @param {Function}   callback         The callback to be invoked when
@@ -270,6 +283,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method          module:azure-iot-device-amqp.Amqp#sendTwinRequest
    * @description     Send a device-twin specific messager to the IoT Hub instance
    *
@@ -287,6 +301,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method          module:azure-iot-device-mqtt.Amqp#getTwinReceiver
    * @description     Get a receiver object that handles C2D device-twin traffic
    *

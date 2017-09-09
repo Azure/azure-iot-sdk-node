@@ -22,6 +22,7 @@ const _amqpClientError = 'client:errorReceived';
 export type GenericAmqpBaseCallback = (err: Error | null, result?: any) => void;
 
 /**
+ * @private
  * @class      module:azure-iot-amqp-base.PutTokenOperation
  * @classdesc  Describes a "put token" operation state: "put-token" operations are used to renew the CBS token and stay connected.
  *
@@ -42,6 +43,7 @@ class PutTokenOperation {
 }
 
 /**
+ * @private
  * @class      module:azure-iot-amqp-base.PutTokenStatus
  * @classdesc  Describes the state of the "put token" feature of the client that enables Claim-Based-Security authentication.
  *
@@ -63,6 +65,7 @@ class PutTokenStatus {
 }
 
 /**
+ * @private
  * @class module:azure-iot-amqp-base.Amqp
  * @classdesc Basic AMQP functionality used by higher-level IoT Hub libraries.
  *            Usually you'll want to avoid using this class and instead rely on higher-level implementations

@@ -10,6 +10,8 @@ import { Mqtt } from './mqtt';
  * @class        module:azure-iot-device-mqtt.MqttWs
  * @classdesc    Provides MQTT over WebSockets transport for the device [client]{@link module:azure-iot-device.Client} class.
  *
+ * This class is not meant to be used directly, instead it should just be passed to the [client]{@link module:azure-iot-device.Client} object.
+ *
  * @param   {Object}    config  Configuration object derived from the connection string by the client.
  */
 /*Codes_SRS_NODE_DEVICE_MQTT_12_001: [The constructor shall accept the transport configuration structure.]*/

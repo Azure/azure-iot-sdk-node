@@ -5,6 +5,14 @@
 
 import { ConnectionString, errors } from 'azure-iot-common';
 
+/**
+ * Parses a connection string from a string.
+ * See {@link https://blogs.msdn.microsoft.com/iotdev/2017/05/09/understand-different-connection-strings-in-azure-iot-hub/|Understanding Connection Strings in Azure IoT Hub} for more details.
+ *
+ * @param source the string from which the {@link ConnectionString} object should be parsed.
+ *
+ * @throws {azure-iot-common.ArgumentError} if the string is missing one of the required attributes.
+ */
 export function parse(source: string): ConnectionString {
   /*Codes_SRS_NODE_DEVICE_CONNSTR_05_001: [The parse method shall return the result of calling azure-iot-common.ConnectionString.parse.]*/
   /*Codes_SRS_NODE_DEVICE_CONNSTR_05_002: [It shall throw ArgumentError if any of 'HostName' or 'DeviceId' fields are not found in the source argument.]*/
@@ -17,6 +25,13 @@ export function parse(source: string): ConnectionString {
   return connectionString;
 }
 
+/**
+ * Creates a valid connection string for a device using symmetric key authentication.
+ *
+ * @param hostName Hostname of the Azure IoT hub.
+ * @param deviceId Unique device identifier.
+ * @param symmetricKey Symmetric key used to generate the {@link SharedAccessSignature} that authenticate the connection.
+ */
 export function createWithSharedAccessKey(hostName: string, deviceId: string, symmetricKey: string): string {
   /*Codes_SRS_NODE_DEVICE_CONNSTR_16_003: [The `createWithSharedAccessKey` static method shall throw a `ReferenceError` if one or more of the `hostName`, `deviceId` or `sharedAccessKey` are falsy.]*/
   if (!hostName) {
@@ -31,6 +46,12 @@ export function createWithSharedAccessKey(hostName: string, deviceId: string, sy
   return 'HostName=' + hostName + ';DeviceId=' + deviceId + ';SharedAccessKey=' + symmetricKey;
 }
 
+/**
+ * Creates a valid connection string for a device using x509 certificate authentication.
+ *
+ * @param hostName Hostname of the Azure IoT hub.
+ * @param deviceId Unique device identifier.
+ */
 export function createWithX509Certificate(hostName: string, deviceId: string): string {
   /*Codes_SRS_NODE_DEVICE_CONNSTR_16_005: [The `createWithX509Certificate` static method shall throw a `ReferenceError` if one or more of the `hostName` or `deviceId` are falsy.]*/
   if (!hostName) {

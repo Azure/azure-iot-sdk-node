@@ -17,6 +17,7 @@ const debug = dbg('azure-iot-device:twin');
 const responseTopic = '$iothub/twin/res';
 
 /**
+ * @private
  * @class        module:azure-iot-device-amqp.AmqpTwinReceiver
  * @classdesc    Acts as a receiver for device-twin traffic
  *

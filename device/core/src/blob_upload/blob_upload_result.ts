@@ -4,6 +4,7 @@
 'use strict';
 
 /**
+ * @private
  * @class         module:azure-iot-device.BlobUploadResult
  * @classdesc     Result object used by the {@link module:azure-iot-device.blobUpload.BlobUploader} class to describe a successful upload to a blob.
  *

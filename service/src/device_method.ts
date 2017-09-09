@@ -8,6 +8,7 @@ import { RestApiClient } from './rest_api_client';
 import { DeviceMethodParams } from './interfaces';
 
 /**
+ * @private
  * @class                  module:azure-iothub.DeviceMethod
  * @classdesc              Constructs a DeviceMethod object that provides APIs to trigger the execution of a device method.
  * @param {Object}         params              An object describing the method and shall have the following properties:

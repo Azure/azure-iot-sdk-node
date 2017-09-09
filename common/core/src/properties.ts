@@ -2,20 +2,12 @@
  *! Licensed under the MIT license. See LICENSE file in the project root for full license information.
  */
 
-/**
- * The `properties` module exports the {@linkcode Properties} class which
- * is a collection type that allows you to store a collection of user
- * defined properties.
- *
- * @module common/properties
- */
-
 'use strict';
 
 /**
- * @class Properties
- * @classdesc Collection of user defined properties. Values can only be
- *            strings.
+ * Collection of user defined properties of a {@link Message} object that are going to be sent alongside the body of the message
+ * and can be used for [routing](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-csharp-csharp-process-d2c).
+ * Values can only be strings.
  */
 export class Properties {
   propertyList: any[] = [];

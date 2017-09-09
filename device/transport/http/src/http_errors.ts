@@ -6,6 +6,9 @@
 import { errors } from 'azure-iot-common';
 import { IncomingMessage } from 'http';
 
+/**
+ * @private
+ */
 export class HttpTransportError extends Error {
   response?: IncomingMessage;
   responseBody?: any;
@@ -15,6 +18,9 @@ export class HttpTransportError extends Error {
  * - A custom error message to give context to the user.
  * - the body of  the HTTP response, containing the explanation of why the request failed
  * - the HTTP response object itself]
+ */
+/**
+ * @private
  */
 export function translateError(message: string, body: any, response: IncomingMessage): HttpTransportError {
   let error: HttpTransportError;

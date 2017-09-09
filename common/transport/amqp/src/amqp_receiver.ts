@@ -9,6 +9,7 @@ import { results, Receiver, Message } from 'azure-iot-common';
 import { ReceiverLink as Amqp10ReceiverLink } from 'amqp10';
 
 /**
+ * @private
  * @class            module:azure-iot-amqp-base.AmqpReceiver
  * @classdesc        The `AmqpReceiver` class is used to receive and settle messages.
  *

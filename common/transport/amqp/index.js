@@ -6,6 +6,7 @@
 /**
  * The `azure-iot-amqp-base` module contains AMQP support code common to the Azure IoT Hub Device and Service SDKs.
  *
+ * @private
  * @module azure-iot-amqp-base
  */
 

@@ -34,6 +34,7 @@ export interface HttpReceiverOptions {
 }
 
 /**
+ * @private
  * @class module:azure-iot-device-http.HttpReceiver
  * @classdesc Provides a receiver link that can pull messages from the IoT Hub service and settle them.
  *

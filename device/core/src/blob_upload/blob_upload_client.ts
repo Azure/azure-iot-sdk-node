@@ -12,6 +12,9 @@ import { FileUploadApi as DefaultFileUploadApi } from './file_upload_api';
 
 import * as errors from './blob_upload_errors';
 
+/**
+ * @private
+ */
 export interface UploadParams {
     hostName?: string;
     containerName?: string;
@@ -20,19 +23,31 @@ export interface UploadParams {
     correlationId: string;
 }
 
+/**
+ * @private
+ */
 export interface FileUpload {
     getBlobSharedAccessSignature(blobName: string, auth: X509 | SharedAccessSignature, done: (err: Error, uploadParams?: UploadParams) => void): void;
     notifyUploadComplete(correlationId: string, auth: X509 | SharedAccessSignature, uploadResult: BlobUploadResult, done: (err?: Error) => void): void;
 }
 
+/**
+ * @private
+ */
 export interface BlobUploader {
     uploadToBlob(uploadParams: UploadParams, stream: Stream, streamLength: number, done: (err: Error, body?: any, result?: { statusCode: number, body: string }) => void): void;
 }
 
+/**
+ * @private
+ */
 export interface BlobUpload {
   uploadToBlob(blobName: string, stream: Stream, streamLength: number, done: (err?: Error) => void): void;
 }
 
+/**
+ * @private
+ */
 export class BlobUploadClient implements BlobUpload {
   private _config: any;
   private _fileUploadApi: FileUpload;

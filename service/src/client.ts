@@ -12,20 +12,25 @@ import { RestApiClient } from './rest_api_client';
 import { Callback, DeviceMethodParams } from './interfaces';
 
 /**
- * @class           module:azure-iothub.Client
- * @classdesc       Creates an IoT Hub service client. Normally, consumers will
- *                  call one of the factory methods,
- *                  {@link module:azure-iothub.Client.fromConnectionString|fromConnectionString} or
- *                  {@link module:azure-iothub.Client.fromSharedAccessSignature|fromSharedAccessSignature},
- *                  to create an IoT Hub service Client.
- * @param {Object}       transport   An object that implements the interface
- *                                   expected of a transport object, e.g.,
- *                                   {@link module:azure-iothub~Transport|Transport}.
+ * The IoT Hub service client is used to communicate with devices through an Azure IoT hub.
+ * It lets the SDK user:
+ *   - send device-to-cloud (also known as commands) to devices: commands are queued on IoT Hub and delivered asynchronously only when the device is connected. Only 50 commands can be queued per device.
+ *   - invoke direct methods on devices (which will work only if the device is currently connected: it's a synchronous way of communicating with the device)
+ *   - listen for feedback messages sent by devices for previous commands.
+ *   - listen for file upload notifications from devices.
+ *
+ * Users should create new {@link Client} instances by calling one of the factory methods,
+ * {@link module:azure-iothub.Client.fromConnectionString|fromConnectionString} or
+ * {@link module:azure-iothub.Client.fromSharedAccessSignature|fromSharedAccessSignature},
+ * to create an IoT Hub service Client.
  */
 export class Client extends EventEmitter {
   private _transport: Client.Transport;
   private _restApiClient: RestApiClient;
 
+  /**
+   * @private
+   */
   constructor(transport: Client.Transport, restApiClient?: RestApiClient) {
     super();
     /*Codes_SRS_NODE_IOTHUB_CLIENT_05_001: [The Client constructor shall throw ReferenceError if the transport argument is falsy.]*/
@@ -93,7 +98,7 @@ export class Client extends EventEmitter {
    * @method            module:azure-iothub.Client#send
    * @description       Sends a message to a device.
    * @param {String}    deviceId  The identifier of an existing device identity.
-   * @param {}          message   The body of the message to send to the device.
+   * @param {Object}    message   The body of the message to send to the device.
    *                              If `message` is not of type
    *                              {@link module:azure-iot-common.Message|Message},
    *                              it will be converted.
@@ -102,6 +107,8 @@ export class Client extends EventEmitter {
    *                              arguments: an Error object (can be null) and a
    *                              transport-specific response object useful for
    *                              logging or debugging.
+   *
+   * @throws {ReferenceError}     If `deviceId` or `message` is null, undefined or empty.
    */
   send(deviceId: string, message: Message | Message.BufferConvertible, done?: Callback<results.MessageEnqueued>): void {
     /*Codes_SRS_NODE_IOTHUB_CLIENT_05_013: [The send method shall throw ReferenceError if the deviceId or message arguments are falsy.]*/
@@ -199,6 +206,7 @@ export class Client extends EventEmitter {
 
   /**
    * @method            module:azure-iothub.Client.fromConnectionString
+   * @static
    * @description       Creates an IoT Hub service client from the given
    *                    connection string using the default transport
    *                    ({@link module:azure-iothub~Transport|Transport}).
@@ -235,6 +243,7 @@ export class Client extends EventEmitter {
 
   /**
    * @method            module:azure-iothub.Client.fromSharedAccessSignature
+   * @static
    * @description       Creates an IoT Hub service client from the given
    *                    shared access signature using the default transport
    *                    ({@link module:azure-iothub~Transport|Transport}).

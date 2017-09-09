@@ -10,19 +10,26 @@ import  * as uuid from 'uuid';
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
 
+/**
+ * @private
+ */
 export type HttpMethodVerb = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
+/**
+ * @private
+ */
 export interface HttpTransportError extends Error {
   response?: any;
   responseBody?: any;
 }
 
 /**
+ * @private
  * @class       module:azure-iothub.RestApiClient
  * @classdesc   Constructs an {@linkcode RestApiClient} object that can be used to make REST calls to the IoT Hub service.
  *
- * @params {Object}  config              The configuration object that should be used to connect to the IoT Hub service.
- * @params {Object}  httpRequestBuilder  OPTIONAL: The base http transport object. `azure-iot-common.Http` will be used if no argument is provided.
+ * @instance    {Object}  config              The configuration object that should be used to connect to the IoT Hub service.
+ * @instance    {Object}  httpRequestBuilder  OPTIONAL: The base http transport object. `azure-iot-common.Http` will be used if no argument is provided.
  *
  * @throws {ReferenceError}  If the config argument is falsy
  * @throws {ArgumentError}   If the config argument is missing a host or sharedAccessSignature error

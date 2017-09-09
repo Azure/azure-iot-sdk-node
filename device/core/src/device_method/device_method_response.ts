@@ -6,16 +6,14 @@ import { Client } from '../client';
 
 /**
  * @class           module:azure-iot-device.deviceMethod.DeviceMethodResponse
- * @classdesc       `DeviceMethodResponse` provides functionality that allows
- *                  a device method implementation to construct and send a
- *                  response back to the service for a device method call. An
- *                  instance of this class is passed as the second parameter
- *                  to the callback registered via the
- *                  {@link module:azure-iot-device.Client#onDeviceMethod} method.
- *                  method.
- * @param {String}  requestId         The request identifier supplied by the
+ * @classdesc       a {@link DeviceMethodResponse} object is provided to the user
+ *                  with each {@link DeviceMethodRequest} allowing the user to construct and send a
+ *                  well-formatted response back to the service for each device method call.
+ *                  An instance of this class is passed as the second parameter
+ *                  to the callback registered via {@link module:azure-iot-device.Client#onDeviceMethod}.
+ * @instance {string}  requestId      The request identifier supplied by the
  *                                    service for this device method call.
- * @param {Object}  transport         An object that implements the interface
+ * @instance {Object}  transport      An object that implements the interface
  *                                    expected of a transport object, e.g.,
  *                                    {@link module:azure-iot-device~Http|Http}.
  */

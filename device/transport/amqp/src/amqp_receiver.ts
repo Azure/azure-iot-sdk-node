@@ -10,6 +10,9 @@ import { AmqpDeviceMethodClient } from './amqp_device_method_client';
 import { Amqp as BaseAmqpClient } from 'azure-iot-amqp-base';
 
 /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_002: [The `AmqpReceiver` object shall inherit from the `EventEmitter` node object.]*/
+/**
+ * @private
+ */
 export class AmqpReceiver extends EventEmitter implements Receiver {
   private _config: ClientConfig;
   private _amqpClient: BaseAmqpClient;

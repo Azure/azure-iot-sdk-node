@@ -18,6 +18,7 @@ function encodeUuid(uuidString: string): any {
 }
 
 /**
+ * @private
  * @class           module:azure-iot-amqp-base.AmqpMessage
  * @classdesc       AMQP-specific message class used to prepare a [azure-iot-common.Message]{@link module:azure-iot-common.Message}
  *                  before it's sent over the wire using the AMQP protocol.

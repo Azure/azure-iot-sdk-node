@@ -25,17 +25,20 @@ export interface JobDescription {
 }
 
 /**
- * @class                     module:azure-iothub.JobClient
- * @classdesc                 Constructs a JobClient object that provides methods to update
- *                            create, monitor and cancel jobs on an IoT Hub instance.
+ * Provides methods to create, update, monitor and cancel long-running jobs on an IoT Hub instance, as well as query existing jobs.
+ * The Jobs API in Azure IoT Hub allows to schedule direct method calls and twin updates on multiple devices.
  *
- * @param {RestApiClient}     restApiClient   The HTTP registry client used to execute REST API calls.
- *
- * @throws {ReferenceError}   If the restApiClient argument is falsy.
+ * SDK users are expected to create {@link JobClient} instances using the factory methods {@link JobClient.fromConnectionString} and {@link JobClient.fromSharedAccessSignature}.
  */
 export class JobClient {
   private _restApiClient: RestApiClient;
 
+  /**
+   * @private
+   * @constructor
+   * @param {RestApiClient}     restApiClient   The HTTP registry client used to execute REST API calls.@constructor
+   * @throws {ReferenceError}   If the restApiClient argument is falsy.
+   */
   constructor(restApiClient: RestApiClient) {
     /*Codes_SRS_NODE_JOB_CLIENT_16_001: [The `JobClient` constructor shall throw a `ReferenceError` if `restApiClient` is falsy.]*/
     if (!restApiClient) throw new ReferenceError('restApiClient cannot be \'' + restApiClient + '\'');
@@ -330,6 +333,7 @@ export class JobClient {
   /**
    * @method          module:azure-iothub.JobClient.fromConnectionString
    * @description     Constructs a JobClient object from the given connection string.
+   * @static
    *
    * @param   {String}          connectionString       A connection string which encapsulates the
    *                                                   appropriate (read and/or write) Registry
@@ -356,6 +360,7 @@ export class JobClient {
   /**
    * @method            module:azure-iothub.JobClient.fromSharedAccessSignature
    * @description       Constructs a JobClient object from the given shared access signature.
+   * @static
    *
    * @param {String}    sharedAccessSignature     A shared access signature which encapsulates
    *                                              the appropriate (read and/or write) Registry

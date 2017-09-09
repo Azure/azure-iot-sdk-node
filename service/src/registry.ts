@@ -14,22 +14,24 @@ import { Callback } from './interfaces';
 const ArgumentError = errors.ArgumentError;
 
 /**
- * @class           module:azure-iothub.Registry
- * @classdesc       Constructs a Registry object with the given configuration
- *                  object. The Registry class provides access to the IoT Hub
- *                  identity service. Normally, consumers will call one of the
- *                  factory methods, e.g.,
- *                  {@link module:azure-iothub.Registry.fromConnectionString|fromSharedAccessSignature},
- *                  to create a Registry object.
- * @param {Object}  config      An object containing the necessary information to connect to the IoT Hub instance:
- *                              - host: the hostname for the IoT Hub instance
- *                              - sharedAccessSignature: A shared access signature with valid access rights and expiry.
+ * The Registry class provides access to the IoT Hub device identity service.
+ * Users of the SDK should instantiate this class with one of the factory methods:
+ * {@link Registry#fromConnectionString} or {@link Registry#fromSharedAccessSignature}.
+ *
+ * The protocol used for device identity registry operations is HTTPS.
  */
 /*Codes_SRS_NODE_IOTHUB_REGISTRY_05_001: [The Registry constructor shall accept a transport object]*/
 export class Registry {
   private _config: Registry.TransportConfig;
   private _restApiClient: RestApiClient;
 
+  /**
+   * @private
+   * @constructor
+   * @param {Object}  config      An object containing the necessary information to connect to the IoT Hub instance:
+   *                              - host: the hostname for the IoT Hub instance
+   *                              - sharedAccessSignature: A shared access signature with valid access rights and expiry.
+   */
   constructor(config: Registry.TransportConfig, restApiClient?: RestApiClient) {
     if (!config) {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_023: [The `Registry` constructor shall throw a `ReferenceError` if the config object is falsy.]*/
@@ -722,9 +724,8 @@ export class Registry {
 
   /**
    * @method          module:azure-iothub.Registry.fromConnectionString
-   * @description     Constructs a Registry object from the given connection
-   *                  string using the default transport
-   *                  ({@link module:azure-iothub.Http|Http}).
+   * @description     Constructs a Registry object from the given connection string.
+   * @static
    * @param {String}  value       A connection string which encapsulates the
    *                              appropriate (read and/or write) Registry
    *                              permissions.
@@ -748,9 +749,9 @@ export class Registry {
 
   /**
    * @method            module:azure-iothub.Registry.fromSharedAccessSignature
-   * @description       Constructs a Registry object from the given shared access
-   *                    signature using the default transport
-   *                    ({@link module:azure-iothub.Http|Http}).
+   * @description       Constructs a Registry object from the given shared access signature.
+   * @static
+   *
    * @param {String}    value     A shared access signature which encapsulates
    *                              the appropriate (read and/or write) Registry
    *                              permissions.

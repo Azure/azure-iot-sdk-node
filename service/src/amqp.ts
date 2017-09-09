@@ -41,13 +41,10 @@ function getTranslatedError(err: Error, message: string): Error {
   return translateError(message, err);
 }
 
+
 /**
- * @class       module:azure-iothub.Amqp
- * @classdesc   Constructs an {@linkcode Amqp} object that can be used in an application
- *              to connect to IoT Hub instance, using the AMQP protocol.
- *
- * @params {Object}  config    The configuration object that should be used to connect to the IoT Hub service.
- * @params {Object}  amqpBase  OPTIONAL: The Base AMQP transport object. Amqp will use azure-iot-common.Amqp if no argument is provided.
+ * Transport class used by the [service client]{@link Client} to connect to the Azure IoT hub using the AMQP protocol over a secure (TLS) socket.
+ * This class should not be used directly and instead be passed to one of the {@link Client} factory methods: {@link Client#fromConnectionString} or {@link Client#fromSharedAccessSignature}.
  */
 /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_001: [The Amqp constructor shall accept a config object with those 4 properties:
 host – (string) the fully-qualified DNS hostname of an IoT Hub
@@ -60,6 +57,9 @@ export class Amqp extends EventEmitter implements Client.Transport {
   private _renewalTimeout: number;
   private _renewalNumberOfMilliseconds: number = 2700000;
 
+  /**
+   * @private
+   */
   constructor(config: Client.TransportConfigOptions, amqpBase?: Base) {
     super();
     this._amqp = amqpBase ? amqpBase : new Base(true, packageJson.name + '/' + packageJson.version);
@@ -71,6 +71,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
   }
 
   /**
+   * @private
    * @method             module:azure-iothub.Amqp#connect
    * @description        Establishes a connection with the IoT Hub instance.
    * @param {Function}   done   Called when the connection is established of if an error happened.
@@ -115,6 +116,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
   }
 
   /**
+   * @private
    * @method             module:azure-iothub.Amqp#disconnect
    * @description        Disconnects the link to the IoT Hub instance.
    * @param {Function}   done   Called when disconnected of if an error happened.
@@ -128,6 +130,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
   }
 
   /**
+   * @private
    * @method             module:azure-iothub.Amqp#send
    * @description        Sends a message to the IoT Hub.
    * @param {Message}  message    The [message]{@linkcode module:common/message.Message}
@@ -145,6 +148,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
 
   /**
    * @deprecated
+   * @private
    * @method             module:azure-iothub.Amqp#getReceiver
    * @description        Gets the {@linkcode AmqpReceiver} object that can be used to receive messages from the IoT Hub instance and accept/reject/release them.
    * @param {Function}   done      Callback used to return the {@linkcode AmqpReceiver} object.
@@ -155,6 +159,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
   }
 
   /**
+   * @private
    * @method             module:azure-iothub.Amqp#getFeedbackReceiver
    * @description        Gets the {@linkcode AmqpReceiver} object that can be used to receive messages from the IoT Hub instance and accept/reject/release them.
    * @param {Function}   done      Callback used to return the {@linkcode AmqpReceiver} object.
@@ -166,6 +171,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
   }
 
   /**
+   * @private
    * @method             module:azure-iothub.Amqp#getFileNotificationReceiver
    * @description        Gets the {@linkcode AmqpReceiver} object that can be used to receive messages from the IoT Hub instance and accept/reject/release them.
    * @param {Function}   done      Callback used to return the {@linkcode AmqpReceiver} object.

@@ -7,10 +7,8 @@ import { Amqp } from './amqp';
 import { Client } from './client';
 
 /**
- * @class       module:azure-iothub.AmqpWs
- * @classdesc   Constructs an {@linkcode Amqp} object that can be used in an application
- *              to connect to IoT Hub instance, using the AMQP protocol over secure websockets.
- *              This class overloads the constructor of the base {@link module:azure-iothub--amqp:Amqp} class from the AMQP transport, and inherits all methods from it.
+ * Transport class used by the [service client]{@link Client} to connect to the Azure IoT hub using the AMQP protocol over secure websockets.
+ * This class should not be used directly and instead be passed to one of the {@link Client} factory methods: {@link Client#fromConnectionString} or {@link Client#fromSharedAccessSignature}.
  */
 /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_WS_16_001: [The `AmqpWs` constructor shall accept a config object with those four properties:
 - `host` – (string) the fully-qualified DNS hostname of an IoT Hub
@@ -19,6 +17,9 @@ import { Client } from './client';
 - `sharedAccessSignature–` (string) the key associated with the key name.]*/
 /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_WS_16_002: [`AmqpWs` should inherit from `Amqp`.]*/
 export class AmqpWs extends Amqp implements Client.Transport {
+  /**
+   * @private
+   */
   constructor(config: Client.TransportConfigOptions) {
     super(config);
   }

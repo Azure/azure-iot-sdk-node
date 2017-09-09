@@ -15,9 +15,10 @@ import { ClientConfig } from 'azure-iot-device';
 const packageJson = require('../package.json');
 
 /**
+ * @private
  * @class           module:azure-iot-device-mqtt.MqttBase
  * @classdesc       Base MQTT transport implementation used by higher-level IoT Hub libraries.
- *                  You generally want to use these higher-level objects (such as [azure-iot-device-mqtt.Mqtt]{@link module:azure-iot-device-mqtt.Mqtt})
+ *                  You generally want to use these higher-level objects (such as [Mqtt]{@link module:azure-iot-device-mqtt.Mqtt})
  *                  rather than this one.
  *
  * @param {Object}  config      The configuration object derived from the connection string.

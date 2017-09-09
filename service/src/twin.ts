@@ -25,15 +25,21 @@ export interface TwinData {
   properties: TwinProperties;
 }
 
-
-
 /**
- * @class                  module:azure-iothub.Twin
- * @classdesc              Constructs a Twin object that provides APIs to update
- *                         parts of the twin of a device in the IoT Hub service.
- * @param {string|Object}  device      A device identifier string or an object describing the device. If an Object,
- *                                     it must contain a deviceId property.
- * @param {Registry}       registryClient   The HTTP registry client used to execute REST API calls.
+ * A Device Twin is document describing the state of a device that is stored by an Azure IoT hub and is available even if the device is offline.
+ * It is built around 3 sections:
+ *   - Tags: key/value pairs only accessible from the service side
+ *   - Desired Properties: updated by a service and received by the device
+ *   - Reported Properties: updated by the device and received by the service.
+ *
+ * Note that although it is a possibility, desired and reported properties do not have to match
+ * and that the logic to sync these two collections, if necessary, is left to the user of the SDK.
+ *
+ * For more information see {@link https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins|Understanding Device Twins}.
+ *
+ * The recommended way to obtain a {@link Twin} for a specific device is to use the {@link Registry#getTwin} method.
+ *
+ * @instance {Object} properties The desired and reported properties dictionnaries (respectively in `properties.desired` and `properties.reported`).
  */
 export class Twin implements TwinData {
   deviceId: string;
@@ -45,6 +51,13 @@ export class Twin implements TwinData {
 
   private _registry: Registry;
 
+  /**
+   * Instantiates a new {@link Twin}. The recommended way to get a new {@link Twin} object is to use the {@link Registry#getTwin} method.
+   * @constructor
+   * @param {string|Object}  device      A device identifier string or an object describing the device. If an Object,
+   *                                     it must contain a deviceId property.
+   * @param {Registry}       registryClient   The HTTP registry client used to execute REST API calls.
+   */
   constructor(device: DeviceIdentity | string, registryClient: Registry) {
     /*Codes_SRS_NODE_IOTHUB_TWIN_16_002: [The `Twin(device, registryClient)` constructor shall throw a `ReferenceError` if `device` is falsy.]*/
     if (device === null || device === undefined || device === '') throw new ReferenceError('\'device\' cannot be \'' + device + '\'');
