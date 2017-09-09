@@ -9,20 +9,23 @@ import { DeviceIdentity } from './device';
 import { Registry } from './registry';
 import { Callback } from './interfaces';
 
-export interface TwinPropertyCollection {
-  [key: string]: any;
-}
-
-export interface TwinProperties {
-  reported: TwinPropertyCollection;
-  desired: TwinPropertyCollection;
-}
-
+/**
+ * @private
+ */
 export interface TwinData {
   deviceId: string;
   etag: string;
-  tags: TwinPropertyCollection;
-  properties: TwinProperties;
+  tags: { [key: string]: any; };
+  properties: {
+    /**
+     * Reported properties: those are written to by the device and read by the service.
+     */
+    reported: { [key: string]: any; };
+    /**
+     * Desired properties: those are written to by the service and read by the device.
+     */
+    desired: { [key: string]: any; };
+  };
 }
 
 /**
@@ -37,7 +40,7 @@ export interface TwinData {
  *
  * For more information see {@link https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins|Understanding Device Twins}.
  *
- * The recommended way to obtain a {@link Twin} for a specific device is to use the {@link Registry#getTwin} method.
+ * The recommended way to obtain a {@link azure-iothub.Twin} for a specific device is to use the {@link azure-iothub.Registry.getTwin} method.
  */
 export class Twin implements TwinData {
   /**
@@ -57,7 +60,16 @@ export class Twin implements TwinData {
   /**
    * The desired and reported properties dictionnaries (respectively in `properties.desired` and `properties.reported`).
    */
-  properties: TwinProperties;
+  properties: {
+    /**
+     * Reported properties: those are written to by the device and read by the service.
+     */
+    reported: { [key: string]: any; };
+    /**
+     * Desired properties: those are written to by the service and read by the device.
+     */
+    desired: { [key: string]: any; };
+  };
 
   private _registry: Registry;
 

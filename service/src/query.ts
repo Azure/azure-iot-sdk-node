@@ -9,7 +9,7 @@ import { Registry } from './registry';
 
 /**
  * Constructs a Query object that provides APIs to trigger the execution of a device query.
- * SDK users should create queries using the {@link JobClient#createQuery} and {@link Registry#createQuery} APIs
+ * SDK users should create queries using the {@link azure-iothub.JobClient.createQuery} and {@link azure-iothub.Registry.createQuery} APIs
  * and should not try to instantiate this class directly.
  */
 export class Query {

@@ -24,14 +24,14 @@ export interface DeviceIdentity {
 
 
 /**
- * @deprecated
- * Creates a representation of a device for use with the [device identity registry]{@link module:azure-iothub.Registry} APIs.
+ * Creates a representation of a device for use with the [device identity registry]{@link azure-iothub.Registry} APIs.
  *
- * This class is deprecated because the [device identity registry]{@link module:azure-iothub.Registry} can work directly with JSON objects
+ * **This class is deprecated** because the [device identity registry]{@link azure-iothub.Registry} can work directly with JSON objects
  * containing a partial description of the device, not necessarily the full object. On top of that initially this class was shipped with a typo
  * on the `symmetricKey` property name (it was pascal-cased instead of camel-cased). The SDK is keeping this class around in order not to break existing code
  * but this will be removed in a future major version update and customers should instead use plain JSON objects.
  *
+ * @deprecated
  */
 /*Codes_SRS_NODE_SERVICE_DEVICE_16_001: [The constructor shall accept a `null` or `undefined` value as argument and create an empty `Device` object.]*/
 export class Device implements DeviceIdentity {

@@ -7,7 +7,7 @@
 import { Properties } from './properties';
 
 /**
- * The {@link Message} object is used for telemetry (device-to-cloud) and commands (cloud-to-device) asynchronous
+ * The {@link azure-iot-common.Message} object is used for telemetry (device-to-cloud) and commands (cloud-to-device) asynchronous
  * messaging between the device and the IoT Hub service. It is transport-agnostic, meaning it works the same way over AMQP, MQTT and HTTP.
  */
 export class Message {

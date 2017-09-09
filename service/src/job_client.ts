@@ -14,6 +14,9 @@ import { DeviceMethodParams } from './interfaces';
 export type JobType = 'scheduleUpdateTwin' | 'scheduleDeviceMethod';
 export type JobStatus = 'queued' | 'scheduled' | 'running' | 'cancelled' | 'finished';
 
+/**
+ * @private
+ */
 export interface JobDescription {
   jobId: string | number;
   type: JobType;
@@ -28,7 +31,7 @@ export interface JobDescription {
  * Provides methods to create, update, monitor and cancel long-running jobs on an IoT Hub instance, as well as query existing jobs.
  * The Jobs API in Azure IoT Hub allows to schedule direct method calls and twin updates on multiple devices.
  *
- * SDK users are expected to create {@link JobClient} instances using the factory methods {@link JobClient.fromConnectionString} and {@link JobClient.fromSharedAccessSignature}.
+ * SDK users are expected to create {@link azure-iothub.JobClient} instances using the factory methods {@link azure-iothub.JobClient.fromConnectionString} and {@link azure-iothub.JobClient.fromSharedAccessSignature}.
  */
 export class JobClient {
   private _restApiClient: RestApiClient;

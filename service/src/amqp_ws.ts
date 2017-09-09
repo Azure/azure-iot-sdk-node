@@ -7,8 +7,8 @@ import { Amqp } from './amqp';
 import { Client } from './client';
 
 /**
- * Transport class used by the [service client]{@link Client} to connect to the Azure IoT hub using the AMQP protocol over secure websockets.
- * This class should not be used directly and instead be passed to one of the {@link Client} factory methods: {@link Client#fromConnectionString} or {@link Client#fromSharedAccessSignature}.
+ * Transport class used by the [service client]{@link azure-iothub.Client} to connect to the Azure IoT hub using the AMQP protocol over secure websockets.
+ * This class should not be used directly and instead be passed to one of the {@link azure-iothub.Client} factory methods: {@link azure-iothub.Client#fromConnectionString|fromConnectionString} or {@link azure-iothub.Client#fromSharedAccessSignature|fromSharedAccessSignature}.
  */
 /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_WS_16_001: [The `AmqpWs` constructor shall accept a config object with those four properties:
 - `host` – (string) the fully-qualified DNS hostname of an IoT Hub

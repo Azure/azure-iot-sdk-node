@@ -16,7 +16,7 @@ const ArgumentError = errors.ArgumentError;
 /**
  * The Registry class provides access to the IoT Hub device identity service.
  * Users of the SDK should instantiate this class with one of the factory methods:
- * {@link Registry#fromConnectionString} or {@link Registry#fromSharedAccessSignature}.
+ * {@link azure-iothub.Registry.fromConnectionString|fromConnectionString} or {@link azure-iothub.Registry.fromSharedAccessSignature|fromSharedAccessSignature}.
  *
  * The protocol used for device identity registry operations is HTTPS.
  */

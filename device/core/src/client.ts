@@ -25,16 +25,25 @@ function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Er
  * IoT Hub device client used to connect a device with an Azure IoT hub.
  *
  * Users of the SDK should call one of the factory methods,
- * {@link module:azure-iot-device.Client.fromConnectionString}
- * or {@link module:azure-iot-device.Client.fromSharedAccessSignature}
+ * {@link azure-iot-device.Client.fromConnectionString|fromConnectionString}
+ * or {@link azure-iot-device.Client.fromSharedAccessSignature|fromSharedAccessSignature}
  * to create an IoT Hub device client.
  */
 export class Client extends EventEmitter {
   // SAS token created by the client have a lifetime of 60 minutes, renew every 45 minutes
+  /**
+   * private
+   */
   static sasRenewalInterval: number = 2700000;
 
   // Can't be marked private because they are used in the Twin class.
+  /**
+   * private
+   */
   _transport: Client.Transport;
+  /**
+   * private
+   */
   _twin: Twin;
 
   private _connectionString: string;

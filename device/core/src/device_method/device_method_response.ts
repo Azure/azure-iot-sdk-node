@@ -5,23 +5,31 @@
 import { Client } from '../client';
 
 /**
- * @class           module:azure-iot-device.deviceMethod.DeviceMethodResponse
- * @classdesc       a {@link DeviceMethodResponse} object is provided to the user
- *                  with each {@link DeviceMethodRequest} allowing the user to construct and send a
- *                  well-formatted response back to the service for each device method call.
- *                  An instance of this class is passed as the second parameter
- *                  to the callback registered via {@link module:azure-iot-device.Client#onDeviceMethod}.
- * @instance {string}  requestId      The request identifier supplied by the
- *                                    service for this device method call.
- * @instance {Object}  transport      An object that implements the interface
- *                                    expected of a transport object, e.g.,
- *                                    {@link module:azure-iot-device~Http|Http}.
+ * a {@link azure-iot-device.DeviceMethodResponse} object is provided to the user with each {@link azure-iot-device.DeviceMethodRequest} allowing the user to construct and send a
+ * well-formatted response back to the service for each device method call.
+ * An instance of this class is passed as the second parameter to the callback registered via {@link azure-iot-device.Client.onDeviceMethod}.
  */
 export class DeviceMethodResponse implements Client.DeviceMethodResponse {
+  /**
+   * The request identifier supplied by the service for this device method call.
+   */
   requestId: string;
+  /**
+   * Boolean indicating whether the response has been sent already.
+   */
   isResponseComplete: boolean = false;
+  /**
+   * Status code indicating whether the method succeeded (200) or not (any other number that is not 200).
+   */
   status: number;
+  /**
+   * The payload of the response, sent back to the caller on the service side.
+   */
   payload: any;
+  /**
+   * @private
+   * An object that implements the interface expected of a transport object, e.g., {@link Http}.
+   */
   private _transport: any;
 
   constructor(requestId: string, transport: Client.Transport) {

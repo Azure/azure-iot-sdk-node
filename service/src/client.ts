@@ -19,9 +19,9 @@ import { Callback, DeviceMethodParams } from './interfaces';
  *   - listen for feedback messages sent by devices for previous commands.
  *   - listen for file upload notifications from devices.
  *
- * Users should create new {@link Client} instances by calling one of the factory methods,
- * {@link module:azure-iothub.Client.fromConnectionString|fromConnectionString} or
- * {@link module:azure-iothub.Client.fromSharedAccessSignature|fromSharedAccessSignature},
+ * Users should create new {@link azure-iothub.Client} instances by calling one of the factory methods,
+ * {@link azure-iothub.Client.fromConnectionString|fromConnectionString} or
+ * {@link azure-iothub.Client.fromSharedAccessSignature|fromSharedAccessSignature},
  * to create an IoT Hub service Client.
  */
 export class Client extends EventEmitter {

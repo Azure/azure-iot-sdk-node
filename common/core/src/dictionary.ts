@@ -30,6 +30,9 @@ export function createDictionary(source: string, separator: string): createDicti
 }
 
 export namespace createDictionary {
+  /**
+   * @private
+   */
     export interface Dictionary<T> {
         [key: string]: T;
     }

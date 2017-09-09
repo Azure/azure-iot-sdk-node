@@ -30,6 +30,9 @@ const TOPIC_RESPONSE_PUBLISH_FORMAT = '$iothub/%s/res/%d/?$rid=%s';
  Codes_SRS_NODE_DEVICE_MQTT_12_003: [The Mqtt constructor shall create an base transport object and store it in a member variable.]
 */
 export class Mqtt extends EventEmitter implements Client.Transport, StableConnectionTransport, TwinTransport {
+  /**
+   * @private
+   */
   protected _config: ClientConfig;
   private _mqtt: MqttBase;
   private _twinReceiver: MqttTwinReceiver;

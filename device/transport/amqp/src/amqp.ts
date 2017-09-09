@@ -44,6 +44,9 @@ hubName - (string) the name of the IoT Hub instance (without suffix such as .azu
 deviceId – (string) the identifier of a device registered with the IoT Hub
 sharedAccessSignature – (string) the shared access signature associated with the device registration.] */
 export class Amqp extends EventEmitter implements Client.Transport, StableConnectionTransport {
+  /**
+   * @private
+   */
   protected _config: ClientConfig;
   private _deviceMethodClient: AmqpDeviceMethodClient;
   private _receiver: AmqpReceiver;
@@ -153,6 +156,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @private
    * @method              module:azure-iot-device-amqp.Amqp#complete
    * @description         Settles the message as complete and calls the done callback with the result.
    *

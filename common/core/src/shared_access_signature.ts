@@ -13,19 +13,19 @@ import { createDictionary } from './dictionary';
  */
 export class SharedAccessSignature {
   /**
-   * private
+   * @private
    */
   sr: string;
   /**
-   * private
+   * @private
    */
   se: string | number;
   /**
-   * private
+   * @private
    */
   sig: string;
   /**
-   * private
+   * @private
    */
   skn: string;
   private _key: string;

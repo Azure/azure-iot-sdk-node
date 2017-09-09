@@ -14,6 +14,9 @@ const debug = dbg('device:mqtt-receiver');
 
 const TOPIC_METHODS_SUBSCRIBE = '$iothub/methods/POST/#';
 
+/**
+ * @private
+ */
 interface TopicDescription {
   name: string;
   listenersCount: number;
@@ -23,11 +26,17 @@ interface TopicDescription {
   handler: Function;
 }
 
+/**
+ * @private
+ */
 class MethodDescription {
   methodName: string;
   verb: string;
 }
 
+/**
+ * @private
+ */
 class MethodMessage {
   methods: MethodDescription;
   requestId: string;

@@ -8,6 +8,7 @@ import { createDictionary } from './dictionary';
 import { ArgumentError } from './errors';
 
 /**
+ * @interface azure-iot-common.ConnectionString
  * Describes the parameters that enable a device or cloud application to connect to an Azure IoT hub.
  */
 export interface ConnectionString {

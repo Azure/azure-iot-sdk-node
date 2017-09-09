@@ -19,6 +19,11 @@ export class MessageEnqueued implements Result {
    * @private
    */
   transportObj?: any;
+  /**
+   * @private
+   * @constructor
+   * @param transportObj optional transport object to help with debugging.
+   */
   constructor(transportObj?: any) {
     this.transportObj = transportObj;
   }
@@ -32,6 +37,11 @@ export class MessageCompleted implements Result {
    * @private
    */
   transportObj?: any;
+  /**
+   * @private
+   * @constructor
+   * @param transportObj optional transport object to help with debugging.
+   */
   constructor(transportObj?: any) {
     this.transportObj = transportObj;
   }
@@ -45,6 +55,11 @@ export class MessageRejected implements Result {
    * @private
    */
   transportObj?: any;
+  /**
+   * @private
+   * @constructor
+   * @param transportObj optional transport object to help with debugging.
+   */
   constructor(transportObj?: any) {
     this.transportObj = transportObj;
   }
@@ -58,6 +73,11 @@ export class MessageAbandoned implements Result {
    * @private
    */
   transportObj?: any;
+  /**
+   * @private
+   * @constructor
+   * @param transportObj optional transport object to help with debugging.
+   */
   constructor(transportObj?: any) {
     this.transportObj = transportObj;
   }
@@ -71,6 +91,11 @@ export class Connected implements Result {
    * @private
    */
   transportObj?: any;
+  /**
+   * @private
+   * @constructor
+   * @param transportObj optional transport object to help with debugging.
+   */
   constructor(transportObj?: any) {
     this.transportObj = transportObj;
   }
@@ -88,6 +113,11 @@ export class Disconnected implements Result {
    * The reason why the disconnected event is emitted.
    */
   reason: string;
+  /**
+   * @private
+   * @constructor
+   * @param transportObj optional transport object to help with debugging.
+   */
   constructor(transportObj?: any, reason?: string) {
     this.transportObj = transportObj;
     this.reason = reason;
@@ -102,6 +132,11 @@ export class TransportConfigured implements Result {
    * @private
    */
   transportObj?: any;
+  /**
+   * @private
+   * @constructor
+   * @param transportObj optional transport object to help with debugging.
+   */
   constructor(transportObj?: any) {
     this.transportObj = transportObj;
   }
@@ -115,6 +150,11 @@ export class SharedAccessSignatureUpdated {
    * Boolean indicating whether the client needs to reconnect or not.
    */
   needToReconnect: boolean;
+  /**
+   * @private
+   * @constructor
+   * @param transportObj optional transport object to help with debugging.
+   */
   constructor(needToReconnect: boolean) {
     this.needToReconnect = needToReconnect;
   }

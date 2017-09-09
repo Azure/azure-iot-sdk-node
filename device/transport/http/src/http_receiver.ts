@@ -25,28 +25,47 @@ let defaultOptions: HttpReceiverOptions = {
   drain: true
 };
 
+/**
+ * Options structure used to configure how often the HTTP receiver polls for messages.
+ * Each of these options is mutually exclusive, except for the `drain` boolean. Only one `interval`, `at`, `cron` or `manualPolling` shall be present in the options structure.
+ *
+ * This is configured by calling {@link azure-iot-device.Client.setOptions} with an options structure following this format:
+ * ```js
+ * {
+ *   http: {
+ *     receivePolicy: {
+ *       ...
+ *     }
+ *   }
+ * }
+ * ```
+ */
 export interface HttpReceiverOptions {
+  /**
+   * interval in seconds at which the Azure IoT hub is going to be polled.
+   */
   interval?: number;
+  /**
+   * Use this option to configure the receiver to receive only once at a specific time.
+   */
   at?: Date;
+  /**
+   * Use a cron-formatted string
+   */
   cron?: string;
+  /**
+   * Does not poll and instead rely on the user calling the {@link azure-iot-device-http.HttpReceiver.receive|receive} method.
+   */
   manualPolling?: boolean;
+  /**
+   * Boolean indicating whether only one message should be received all messages should be drained.
+   */
   drain?: boolean;
 }
 
 /**
  * @private
- * @class module:azure-iot-device-http.HttpReceiver
- * @classdesc Provides a receiver link that can pull messages from the IoT Hub service and settle them.
- *
- * @param {Object}  config            This is a dictionary containing the
- *                                    following keys and values:
- *
- * | Key     | Value                                                   |
- * |---------|---------------------------------------------------------|
- * | host    | The host URL of the Azure IoT Hub                       |
- * | hubName | The name of the Azure IoT Hub                           |
- * | keyName | The identifier of the device that is being connected to |
- * | key     | The shared access key auth                              |
+ * Provides a receiver link that can pull messages from the IoT Hub service and settle them.
  *
  * @emits message When a message is received
  * @emits errorReceived When there was an error trying to receive messages
@@ -68,6 +87,20 @@ export class HttpReceiver extends EventEmitter implements Receiver {
   private _timeoutObj: number;
   private _receiverStarted: boolean;
 
+  /**
+   * @private
+   * @constructor
+   * @param {Object}  config            This is a dictionary containing the
+   *                                    following keys and values:
+   *
+   * | Key     | Value                                                   |
+   * |---------|---------------------------------------------------------|
+   * | host    | The host URL of the Azure IoT Hub                       |
+   * | hubName | The name of the Azure IoT Hub                           |
+   * | keyName | The identifier of the device that is being connected to |
+   * | key     | The shared access key auth                              |
+   * @param httpHelper
+   */
   constructor(config: any, httpHelper: any) {
     super();
     this._config = config;

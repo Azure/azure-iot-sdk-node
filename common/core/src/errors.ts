@@ -88,6 +88,11 @@ export class UnauthorizedError extends Error {
   }
 }
 
+/**
+ * Error thrown when a feature is not implemented yet but the placeholder is present.
+ *
+ * @augments {Error}
+ */
 export class NotImplementedError extends Error {
   constructor(message?: string) {
     super(message);
@@ -97,6 +102,11 @@ export class NotImplementedError extends Error {
   }
 }
 
+/**
+ * Error thrown when the device is disconnected and the operation cannot be completed.
+ *
+ * @augments {Error}
+ */
 export class NotConnectedError extends Error {
   constructor(message?: string) {
     super(message);
@@ -106,6 +116,12 @@ export class NotConnectedError extends Error {
   }
 }
 
+/**
+ * Error thrown the the Azure IoT hub quota has been exceeded. Quotas are reset periodically, this operation will have to wait until then.
+ * To learn more about quotas, see {@link https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-quotas-throttling|Azure IoT Hub quotas and throttling}
+ *
+ * @augments {Error}
+ */
 export class IotHubQuotaExceededError extends Error {
   constructor(message?: string) {
     super(message);
@@ -115,7 +131,11 @@ export class IotHubQuotaExceededError extends Error {
   }
 }
 
-
+/**
+ * Error thrown when the message sent is too large: the maximum size is 256Kb.
+ *
+ * @augments {Error}
+ */
 export class MessageTooLargeError extends Error {
   constructor(message?: string) {
     super(message);
@@ -125,6 +145,11 @@ export class MessageTooLargeError extends Error {
   }
 }
 
+/**
+ * Error thrown when an internal server error occured. You may have found a bug?
+ *
+ * @augments {Error}
+ */
 export class InternalServerError extends Error {
   constructor(message?: string) {
     super(message);
@@ -134,6 +159,11 @@ export class InternalServerError extends Error {
   }
 }
 
+/**
+ * Error thrown when the service is unavailable. The operation should be retried.
+ *
+ * @augments {Error}
+ */
 export class ServiceUnavailableError extends Error {
   constructor(message?: string) {
     super(message);
@@ -143,6 +173,11 @@ export class ServiceUnavailableError extends Error {
   }
 }
 
+/**
+ * Error thrown when the Azure IoT hub was not found.
+ *
+ * @augments {Error}
+ */
 export class IotHubNotFoundError extends Error {
   constructor(message?: string) {
     super(message);
@@ -166,6 +201,11 @@ export class IoTHubSuspendedError extends Error {
   }
 }
 
+/**
+ * Error thrown when the job with the specified identifier was not found.
+ *
+ * @augments {Error}
+ */
 export class JobNotFoundError extends Error {
   constructor(message?: string) {
     super(message);
@@ -175,6 +215,11 @@ export class JobNotFoundError extends Error {
   }
 }
 
+/**
+ * Error thrown when the maximum number of devices on a specific hub has been reached.
+ *
+ * @augments {Error}
+ */
 export class TooManyDevicesError extends Error {
   constructor(message?: string) {
     super(message);
@@ -186,6 +231,7 @@ export class TooManyDevicesError extends Error {
 
 /**
  * Error thrown when IoT Hub is throttled due to excessive activity.
+ * To learn more about quotas, see {@link https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-quotas-throttling|Azure IoT Hub quotas and throttling}
  *
  * @augments {Error}
  */

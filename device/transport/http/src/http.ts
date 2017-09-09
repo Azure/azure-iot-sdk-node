@@ -52,6 +52,11 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
   private _http: Base;
   private _receiver: any;
 
+  /**
+   * @private
+   * @constructor
+   * @param config The configuration object.
+   */
   constructor(config: ClientConfig) {
     super();
     this._config = config;
