@@ -8,6 +8,12 @@ var ArgumentError = require('../lib/errors.js').ArgumentError;
 var ConnectionString = require('../lib/connection_string.js').ConnectionString;
 
 describe('ConnectionString', function () {
+  describe('#constructor', function() {
+    it('creates a ConnectionString object', function() {
+      assert.instanceOf(new ConnectionString(), ConnectionString);
+    });
+  });
+
   describe('#parse', function () {
     /*Tests_SRS_NODE_CONNSTR_05_005: [The parse method shall throw ArgumentError if any of fields in the requiredFields argument are not found in the source argument.]*/
     it('throws if connection string is missing a required field', function () {
