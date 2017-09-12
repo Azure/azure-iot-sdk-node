@@ -5,7 +5,7 @@
 
 /**
  * The `azure-iot-common` module contains code common to the Azure IoT Hub Device and Service SDKs.
- * 
+ *
  * @module azure-iot-common
  */
 
@@ -17,5 +17,9 @@ module.exports = {
   errors: require('./lib/errors.js'),
   results: require('./lib/results.js'),
   Message: require('./lib/message.js').Message,
-  SharedAccessSignature: require('./lib/shared_access_signature.js').SharedAccessSignature
+  SharedAccessSignature: require('./lib/shared_access_signature.js').SharedAccessSignature,
+  RetryOperation: require('./lib/retry_operation.js').RetryOperation,
+  RetryPolicy: require('./lib/retry_policy.js').RetryPolicy,
+  NoRetry: require('./lib/retry_policy.js').NoRetry,
+  ExponentialBackOffWithJitter: require('./lib/retry_policy.js').ExponentialBackOffWithJitter,
 };
