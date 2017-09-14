@@ -13,7 +13,7 @@ import { Client } from './client';
  * Describes the specific methods that a transport should implement to support device-to-cloud message batching.
  */
 export interface BatchingTransport extends Client.Transport {
-  sendEventBatch(messages: Message[], done: (err: Error, result?: results.MessageEnqueued) => void): void;
+  sendEventBatch(messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void;
 }
 
 /**

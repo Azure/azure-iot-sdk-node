@@ -138,7 +138,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   /* Codes_SRS_NODE_DEVICE_AMQP_16_002: [The sendEvent method shall construct an AMQP request using the message passed in argument as the body of the message.] */
   /* Codes_SRS_NODE_DEVICE_AMQP_16_003: [The sendEvent method shall call the done() callback with a null error object and a MessageEnqueued result object when the message has been successfully sent.] */
   /* Codes_SRS_NODE_DEVICE_AMQP_16_004: [If sendEvent encounters an error before it can send the request, it shall invoke the done callback function and pass the standard JavaScript Error object with a text description of the error (err.message). ] */
-  sendEvent(message: Message, done: (err: Error, result?: results.MessageEnqueued) => void): void {
+  sendEvent(message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void {
     const eventEndpoint = endpoint.eventPath(this._config.deviceId);
     this._amqp.send(message, eventEndpoint, eventEndpoint, handleResult('AMQP Transport: Could not send', done));
   }
@@ -151,7 +151,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
    */
   /* Codes_SRS_NODE_DEVICE_AMQP_16_006: [If a receiver for this endpoint has already been created, the getReceiver method should call the done() method with the existing instance as an argument.]*/
   /* Codes_SRS_NODE_DEVICE_AMQP_16_007: [If a receiver for this endpoint doesn’t exist, the getReceiver method should create a new AmqpReceiver object and then call the done() method with the object that was just created as an argument.]*/
-  getReceiver(done: (err: Error, receiver?: AmqpReceiver) => void): void {
+  getReceiver(done: (err?: Error, receiver?: AmqpReceiver) => void): void {
     done(null, this._receiver);
   }
 
