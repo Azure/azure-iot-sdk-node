@@ -102,6 +102,13 @@ export function translateError(message: string, amqpError: Error): AmqpTransport
     }
   } else if (amqpError instanceof Amqp10Errors.AuthenticationError) {
     error = new errors.UnauthorizedError(message);
+  } else if ((<any>amqpError).code) {
+    switch ((<any>amqpError).code) {
+      case 'ENOENT':
+      case 'ENOTFOUND':
+      default:
+        error = new errors.NotConnectedError(message);
+    }
   } else {
     /*Codes_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_002: [If the AMQP error code is unknown, `translateError` should return a generic Javascript `Error` object.]*/
     error = new Error(message);
