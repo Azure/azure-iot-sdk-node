@@ -71,6 +71,17 @@ describe('translateError', function() {
       assert.equal(err.amqpError, fake_error);
     });
 
+    [
+      { error: { code: 'ENOENT' }},
+      { error: { code: 'ENOTFOUND' }},
+      { error: { code: '?' }},
+    ].forEach(function (testConfig) {
+      it('returns a NotConnectedError if a connection error with code ' + testConfig.error.code + ' is encountered', function () {
+        var err = translateError('', testConfig.error);
+        assert.instanceOf(err, errors.NotConnectedError);
+      });
+    });
+
     it('returns a generic error object if the error type is unknown', function(){
       var error = new Error('unknown reason');
       var message = 'unknown error type';

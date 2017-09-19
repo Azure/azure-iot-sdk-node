@@ -165,7 +165,7 @@ module.exports = function authentication_tests(hubConnectionString) {
         registry.delete(x509testDeviceId, afterCallback);
       });
 
-      [AmqpWs].forEach(function(Transport) {
+      transports.forEach(function(Transport) {
         it('Gets an UnauthorizedError over ' + Transport.name + ' if the certificate doesn\'t match the thumbprint', function(testCallback) {
           var deviceClient = DeviceClient.fromConnectionString(x509testConnectionString, Transport);
           deviceClient.setOptions({

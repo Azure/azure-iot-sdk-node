@@ -89,11 +89,9 @@ export class AmqpDeviceMethodClient extends EventEmitter {
           },
           sendMethodResponse: () => {
             this._fsm.deferUntilTransition('connected');
-            this._fsm.transition('connecting');
           },
           onDeviceMethod: () => {
             this._fsm.deferUntilTransition('connected');
-            this._fsm.transition('connecting');
           }
         },
         'connected': {

@@ -488,16 +488,16 @@ export class AmqpTwinReceiver extends EventEmitter {
     amqpMessage.body = body.toString();
 
     /* Codes_SRS_NODE_DEVICE_AMQP_06_025: [The amqp message will be sent upstream to the IoT Hub via the amqp client `send`.]*/
-    this._upstreamAmqpLink.send(amqpMessage)
-      .then((state) => {
+    this._upstreamAmqpLink.send(amqpMessage, (err, state) => {
+      if (err) {
+        debug(' amqp-twin-receiver: Bad disposition on the amqp message send: ' + err);
+        this._safeCallback(done, translateError('Unable to send Twin message', err));
+      } else {
         debug(' amqp-twin-receiver: Good disposition on the amqp message send: ' + JSON.stringify(state));
         this._safeCallback(done, null, new results.MessageEnqueued(state));
         return null;
-      })
-      .catch((err) => {
-        debug(' amqp-twin-receiver: Bad disposition on the amqp message send: ' + err);
-        this._safeCallback(done, translateError('Unable to send Twin message', err));
-      });
+      }
+    });
   }
 
 }

@@ -3,5 +3,7 @@
 
 export { Amqp } from './lib/amqp';
 export { AmqpMessage } from './lib/amqp_message';
-export { AmqpReceiver } from './lib/amqp_receiver';
+export { ReceiverLink } from './lib/receiver_link';
+export { SenderLink } from './lib/sender_link';
+export { ReceiverLink as AmqpReceiver } from './lib/receiver_link';
 export { AmqpTransportError, translateError } from './lib/amqp_common_errors';

@@ -163,9 +163,10 @@ describe('Amqp', function () {
     it('invokes puttoken and an error results', function () {
       var testError = new Error('fake error');
       var transport = new Amqp(configWithSAS);
-      sinon.stub(transport._amqp,'putToken').callsArgWith(2, testError);
+      sinon.stub(transport._amqp, 'putToken').callsArgWith(2, testError);
       transport.updateSharedAccessSignature(simpleSas, function(err) {
-        assert.strictEqual(err, Error);
+        assert.instanceOf(err, Error);
+        assert.strictEqual(err.amqpError, testError);
       });
     });
 

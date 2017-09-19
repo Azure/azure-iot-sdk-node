@@ -14,15 +14,13 @@ var buildAmqpError = function () {
 var FakeSenderLink = function(containingClient) {
   EventEmitter.call(this);
   var owningClient = containingClient;
-  this.send = function(message) {
+  this.send = function(message, callback) {
     owningClient.lastSendMessage = message;
-    return new Promise(function(resolve, reject) {
-      if (owningClient.sendMessageShouldSucceed) {
-        resolve();
-      } else {
-        reject(buildAmqpError());
-      }
-    });
+    if (owningClient.sendMessageShouldSucceed) {
+      callback(null, {});
+    } else {
+      callback(buildAmqpError());
+    }
   };
   util.inherits(FakeSenderLink, EventEmitter);
 };
