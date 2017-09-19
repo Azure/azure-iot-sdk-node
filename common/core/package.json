@@ -7,7 +7,6 @@
   "main": "common.js",
   "typings": "common.d.ts",
   "dependencies": {
-    "crypto": "^0.0.3"
   },
   "devDependencies": {
     "@types/node": "^7.0.5",
