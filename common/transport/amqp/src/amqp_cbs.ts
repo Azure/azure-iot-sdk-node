@@ -1,6 +1,7 @@
 import * as machina from 'machina';
 import * as amqp10 from 'amqp10';
 import * as uuid from 'uuid';
+import * as async from 'async';
 
 import { errors } from 'azure-iot-common';
 import { AmqpMessage } from './amqp_message';
@@ -48,6 +49,12 @@ class PutTokenStatus {
     timeoutTimer: number;
 }
 
+/**
+ * @private
+ * Handles claims based security (sending and receiving SAS tokens over AMQP links).
+ * This resides in the amqp-base package because it's used by the device and service SDKs but
+ * the lifecycle of this object is actually managed by the upper layer of each transport.
+ */
 export class ClaimsBasedSecurityAgent {
   private static _putTokenSendingEndpoint: string = '$cbs';
   private static _putTokenReceivingEndpoint: string = '$cbs';
@@ -99,6 +106,7 @@ export class ClaimsBasedSecurityAgent {
             this._fsm.transition('attaching', callback);
           },
           detach: (callback) => { if (callback) callback(); },
+          /*Tests_SRS_NODE_AMQP_CBS_16_021: [The `forceDetach()` method shall return immediately if no link is attached.]*/
           forceDetach: () => { return; },
           putToken: (audience, token, callback) => {
             this._putTokenQueue.push({
@@ -113,7 +121,7 @@ export class ClaimsBasedSecurityAgent {
           _onEnter: (callback) => {
             this._senderLink.attach((err) => {
               if (err) {
-                this._fsm.transition('detached', callback, err);
+                this._fsm.transition('detaching', callback, err);
               } else {
                 this._receiverLink.attach((err) => {
                   if (err) {
@@ -125,7 +133,7 @@ export class ClaimsBasedSecurityAgent {
                       // operations, accept it.  This could be a put token that we previously
                       // timed out.  Be happy.  It made it home, just too late to be useful.
                       //
-                      /*Codes_SRS_NODE_AMQP_CBS_16_020: [All responses shall be completed.]*/
+                      /*Codes_SRS_NODE_AMQP_CBS_16_020: [All responses shall be accepted.]*/
                       this._receiverLink.accept(msg);
                       for (let i = 0; i < this._putToken.outstandingPutTokens.length; i++) {
                         if (msg.correlationId === this._putToken.outstandingPutTokens[i].correlationId) {
@@ -151,7 +159,16 @@ export class ClaimsBasedSecurityAgent {
             });
           },
           detach: (callback, err) => this._fsm.transition('detaching', callback, err),
-          forceDetach: () => this._fsm.transition('detached'),
+          forceDetach: () => {
+            /*Tests_SRS_NODE_AMQP_CBS_16_022: [The `forceDetach()` method shall call `forceDetach()` on all attached links.]*/
+            if (this._senderLink) {
+              this._senderLink.forceDetach();
+            }
+            if (this._receiverLink) {
+              this._receiverLink.forceDetach();
+            }
+            this._fsm.transition('detached');
+          },
           putToken: (audience, token, callback) => {
             this._putTokenQueue.push({
               audience: audience,
@@ -174,6 +191,7 @@ export class ClaimsBasedSecurityAgent {
           attach: (callback) => callback(),
           detach: (callback, err) => this._fsm.transition('detaching', callback, err),
           forceDetach: () => {
+            /*Tests_SRS_NODE_AMQP_CBS_16_022: [The `forceDetach()` method shall call `forceDetach()` on all attached links.]*/
             this._receiverLink.forceDetach();
             this._senderLink.forceDetach();
             this._fsm.transition('detached');
@@ -224,6 +242,7 @@ export class ClaimsBasedSecurityAgent {
                 // Find the operation in the outstanding array.  Remove it from the array since, well, it's not outstanding anymore.
                 // Since we may have arrived here asynchronously, we simply can't assume that it is the end of the array.  But,
                 // it's more likely near the end.
+                // If the token has expired it won't be found, but that's ok because its callback will have been called when it was removed.
                 for (let i = this._putToken.outstandingPutTokens.length - 1; i >= 0; i--) {
                   if (this._putToken.outstandingPutTokens[i].correlationId === amqpMessage.properties.messageId) {
                     const outStandingPutTokenInError = this._putToken.outstandingPutTokens[i];
@@ -246,10 +265,15 @@ export class ClaimsBasedSecurityAgent {
         detaching: {
           _onEnter: (forwardedCallback, err) => {
             /*Codes_SRS_NODE_AMQP_CBS_16_008: [`detach` shall detach both sender and receiver links and return the state machine to the `detached` state.]*/
-            this._senderLink.detach(() => {
-              this._receiverLink.detach(() => {
-                this._fsm.transition('detached', forwardedCallback, err);
-              });
+            const links = [this._senderLink, this._receiverLink];
+            async.each(links, (link, callback) => {
+              if (link) {
+                link.detach(callback);
+              } else {
+                callback();
+              }
+            }, () => {
+              this._fsm.transition('detached', forwardedCallback, err);
             });
           },
           '*': (callback) => this._fsm.deferUntilTransition('detached')

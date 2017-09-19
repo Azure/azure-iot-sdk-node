@@ -52,11 +52,19 @@ receiverLink.on('message', (msg) => {
 
 **SRS_NODE_AMQP_RECEIVER_LINK_16_020: [** The `attach` method shall call the `callback` if the link was successfully attached **]**
 
-### detach(): void
+### detach(callback?: (err?: Error) => void): void
 
 **SRS_NODE_AMQP_RECEIVER_LINK_16_009: [** The `detach` method shall detach the link created by the `amqp10.AmqpClient` underlying object. **]**
 
-### accept(message: AmqpMessage, callback: (err?: Error, result?: results.MessageAccepted) => void): void
+**SRS_NODE_AMQP_RECEIVER_LINK_16_025: [** The `detach` method shall call the `callback` with an `Error` that caused the detach whether it succeeds or fails to cleanly detach the link. **]**
+
+### forceDetach()
+
+**SRS_NODE_AMQP_RECEIVER_LINK_16_027: [** The `forceDetach` method shall call the `forceDetach` method on the underlying `amqp10` link object. **]**
+
+**SRS_NODE_AMQP_RECEIVER_LINK_16_028: [** The `forceDetach` method shall return immediately if the link is already detached. **]**
+
+### accept(message: AmqpMessage, callback?: (err?: Error, result?: results.MessageAccepted) => void): void
 
 **SRS_NODE_AMQP_RECEIVER_LINK_16_021: [** The `accept` method shall throw if the `message` argument is falsy. **]**
 
@@ -66,11 +74,11 @@ receiverLink.on('message', (msg) => {
 
 **SRS_NODE_AMQP_RECEIVER_LINK_16_014: [** If the state machine is not in the `attached` state, the `accept` method shall immediately fail with a `DeviceMessageLockLostError`. **]**
 
-### complete(message: AmqpMessage, callback: (err?: Error, result?: results.MessageAccepted) => void): void
+### complete(message: AmqpMessage, callback?: (err?: Error, result?: results.MessageAccepted) => void): void
 
 **SRS_NODE_AMQP_RECEIVER_LINK_16_015: [** The `complete` method shall call the `accept` method with the same arguments (it is here for backward compatibility purposes only). **]**
 
-### reject(message: AmqpMessage, callback: (err?: Error, result?: results.MessageRejected) => void): void
+### reject(message: AmqpMessage, callback?: (err?: Error, result?: results.MessageRejected) => void): void
 
 **SRS_NODE_AMQP_RECEIVER_LINK_16_021: [** The `reject` method shall throw if the `message` argument is falsy. **]**
 
@@ -80,7 +88,7 @@ receiverLink.on('message', (msg) => {
 
 **SRS_NODE_AMQP_RECEIVER_LINK_16_017: [** If the state machine is not in the `attached` state, the `reject` method shall immediately fail with a `DeviceMessageLockLostError`. **]**
 
-### abandon(message: AmqpMessage, callback: (err?: Error, result?: results.MessageAbandoned) => void): void
+### abandon(message: AmqpMessage, callback?: (err?: Error, result?: results.MessageAbandoned) => void): void
 
 **SRS_NODE_AMQP_RECEIVER_LINK_16_021: [** The `abandon` method shall throw if the `message` argument is falsy. **]**
 

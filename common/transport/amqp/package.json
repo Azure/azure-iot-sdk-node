@@ -7,11 +7,10 @@
   "main": "main.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "@types/async": "^2.0.42",
-    "amqp10": "^3.5.3",
+    "azure-iot-common": "1.1.11",
+    "amqp10": "3.5.3",
     "amqp10-transport-ws": "^0.0.5",
     "async": "^2.5.0",
-    "azure-iot-common": "1.1.11",
     "bluebird": "^3.5.0",
     "debug": "^3.0.1",
     "machina": "^2.0.0",
@@ -19,6 +18,7 @@
   },
   "devDependencies": {
     "@types/node": "^8.0.28",
+    "@types/async": "^2.0.42",
     "chai": "^4.1.2",
     "istanbul": "^0.4.5",
     "jshint": "^2.9.4",
@@ -36,7 +36,7 @@
     "alltest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
     "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
     "test": "npm -s run lint && npm -s run build && npm -s run alltest && npm -s run check-cover",
-    "check-cover": "istanbul check-coverage --statements 95 --branches 86 --functions 91 --lines 96"
+    "check-cover": "istanbul check-coverage --statements 95 --branches 84 --functions 91 --lines 96"
   },
   "engines": {
     "node": ">= 0.10"

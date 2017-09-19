@@ -49,9 +49,17 @@ senderLink.send(new AmqpMessage(''), linkAddress, (err) => {
 
 **SRS_NODE_AMQP_SENDER_LINK_16_008: [** If the `amqp10.AmqpClient` fails to create the link the `callback` function shall be called with this error object. **]**
 
-### detach(): void
+### detach(callback?: (err?: Error) => void): void
 
 **SRS_NODE_AMQP_SENDER_LINK_16_009: [** The `detach` method shall detach the link created by the `amqp10.AmqpClient` underlying object. **]**
+
+**SRS_NODE_AMQP_SENDER_LINK_16_023: [** The `detach` method shall call the `callback` with the original `Error` that caused the detach whether it succeeds or fails to cleanly detach the link. **]**
+
+### forceDetach()
+
+**SRS_NODE_AMQP_SENDER_LINK_16_025: [** The `forceDetach` method shall call the `forceDetach` method on the underlying `amqp10` link object. **]**
+
+**SRS_NODE_AMQP_SENDER_LINK_16_026: [** The `forceDetach` method shall return immediately if the link is already detached.  **]**
 
 ### send(message: AmqpMessage, callback: (err?: Error, result?: results.MessageEnqueued) => void): void
 
@@ -75,4 +83,4 @@ senderLink.send(new AmqpMessage(''), linkAddress, (err) => {
 
 **SRS_NODE_AMQP_SENDER_LINK_16_016: [** If an error happened that caused the link to be detached, the sender link shall call emit an `error` event with that error. **]**
 
-**SRS_NODE_AMQP_SENDER_LINK_16_018: [** If an error happened that caused the link to be detached while trying to attach the link or send a message, the `callback` for this function shall be called with that error. **]**
+**SRS_NODE_AMQP_SENDER_LINK_16_018: [** If an error happened that caused the link to be detached while trying to attach the link or send a message, the `callback` for this function shall be called with that error, and the event should not be emitted. **]**

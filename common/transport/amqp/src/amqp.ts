@@ -21,13 +21,14 @@ const _amqpClientError = 'client:errorReceived';
 export type GenericAmqpBaseCallback<T> = (err: Error | null, result?: T) => void;
 
 /**
+ * @private
  * @class module:azure-iot-amqp-base.Amqp
  * @classdesc Basic AMQP functionality used by higher-level IoT Hub libraries.
  *            Usually you'll want to avoid using this class and instead rely on higher-level implementations
  *            of the AMQP transport (see [azure-iot-device-amqp.Amqp]{@link module:azure-iot-device-amqp.Amqp} for example).
  *
  * @param   {Boolean}   autoSettleMessages      Boolean indicating whether messages should be settled automatically or if the calling code will handle it.
- * @param   {String}    sdkVersionString        String identifying the SDK used (device or service).
+ * @param   {String}    sdkVersionString        String identifying the type and version of the SDK used.
  */
 export class Amqp {
   private uri: string;
@@ -90,7 +91,7 @@ export class Amqp {
     }, amqp10.Policy.EventHub));
 
     this._fsm = new machina.Fsm({
-      namespace: sdkVersionString,
+      namespace: 'amqp-base',
       initialState: 'disconnected',
       states: {
         disconnected: {
@@ -101,7 +102,10 @@ export class Amqp {
               this._safeCallback(disconnectCallback, null, new results.Disconnected());
             }
           },
-          amqpError: (err, callback) => { callback(); }, // we're already considering ourselves disconnected. it'd be a bug though?
+          amqpError: (err, callback) => {
+            debug('received an error while disconnected: maybe a bug: ' + (!!err ? err.toString() : 'callback called but falsy error object.'));
+            callback();
+          },
           connect: (connectCallback) => {
             this._fsm.transition('connecting', connectCallback);
           },
@@ -183,8 +187,6 @@ export class Amqp {
               });
           },
           amqpError: (err, callback) => this._fsm.transition('disconnecting', callback, err),
-          connect: () => this._fsm.deferUntilTransition(),
-          disconnect: () => this._fsm.deferUntilTransition(),
           '*': () => this._fsm.deferUntilTransition()
         },
         connected: {
@@ -235,12 +237,12 @@ export class Amqp {
                 if (err) {
                   done(err);
                 } else {
-                  done(undefined, this._receivers[endpoint]);
+                  done(null, this._receivers[endpoint]);
                 }
               });
             } else {
               /*Codes_SRS_NODE_COMMON_AMQP_16_009: [If a receiver for this endpoint has already been created, the getReceiver method should call the done() method with the existing instance as an argument.] */
-              this._safeCallback(done, null, this._receivers[endpoint]);
+              done(null, this._receivers[endpoint]);
             }
           },
           attachReceiverLink: (endpoint: string, linkOptions: any, done: GenericAmqpBaseCallback<ReceiverLink>): void => {
@@ -273,7 +275,7 @@ export class Amqp {
             let senderFsm = new SenderLink(endpoint, linkOptions, this._amqp);
             this._senders[endpoint] = senderFsm;
             const attachErrorHandler = (err) => {
-              debug('sender link error event while attaching: ' + endpoint + ': ' + err.toString());
+              debug('sender link error while attaching: ' + endpoint + ': ' + err.toString());
               delete(this._senders[endpoint]);
               done(err);
             };
@@ -282,8 +284,7 @@ export class Amqp {
             debug('attaching sender link for: ' + endpoint);
             this._senders[endpoint].attach((err) => {
               if (err) {
-                debug('failed to attach sender link: ' + endpoint + ': ' + err.toString());
-                done(err);
+                attachErrorHandler(err);
               } else {
                 this._senders[endpoint].removeListener('error', attachErrorHandler);
                 this._senders[endpoint].on('error', (err) => {
@@ -314,37 +315,53 @@ export class Amqp {
         },
         disconnecting: {
           _onEnter: (disconnectCallback, err) => {
-            const disconnectFunc = err ? (callback) => {
-              callback();
-            } : (callback) => {
-              this._amqp.removeAllListeners('disconnected');
-              /*Codes_SRS_NODE_COMMON_AMQP_16_004: [The disconnect method shall call the done callback when the application/service has been successfully disconnected from the service] */
-              this._amqp.disconnect().then(() => {
+            const disconnect = (callback) => {
+              if (err) {
                 callback();
-                return null;
-              }).catch((err) => {
-                callback(err);
-              });
-            };
-
-            const detachFunc = err ? (link, callback) => {
-              if (link) {
-                link.forceDetach(err);
-              }
-              callback();
-            } : (link, callback) => {
-              if (link) {
-                link.detach(callback);
               } else {
-                callback();
+                this._amqp.removeAllListeners('disconnected');
+                /*Codes_SRS_NODE_COMMON_AMQP_16_004: [The disconnect method shall call the done callback when the application/service has been successfully disconnected from the service] */
+                this._amqp.disconnect().then(() => {
+                  callback();
+                  return null;
+                }).catch((err) => {
+                  callback(err);
+                });
               }
             };
 
-            detachFunc(this._cbs, () => {
-              let remainingLinks = this._getRemainingLinks();
+            const detachLink = (link, callback) => {
+              if (!link) {
+                return callback();
+              }
+
+              if (err) {
+                link.forceDetach(err);
+                return callback();
+              } else {
+                link.detach(callback);
+              }
+            };
+
+            detachLink(this._cbs, () => {
+              let remainingLinks = [];
+              for (let senderEndpoint in this._senders) {
+                if (this._senders.hasOwnProperty(senderEndpoint)) {
+                  remainingLinks.push(this._senders[senderEndpoint]);
+                  delete this._senders[senderEndpoint];
+                }
+              }
+
+              for (let receiverEndpoint in this._receivers) {
+                if (this._receivers.hasOwnProperty(receiverEndpoint)) {
+                  remainingLinks.push(this._receivers[receiverEndpoint]);
+                    delete this._receivers[receiverEndpoint];
+                }
+              }
+
               /*Codes_SRS_NODE_COMMON_AMQP_16_034: [The `disconnect` method shall detach all open links before disconnecting the underlying AMQP client.]*/
-              async.each(remainingLinks, detachFunc, () => {
-                disconnectFunc((err) => {
+              async.each(remainingLinks, detachLink, () => {
+                disconnect((err) => {
                   if (err) {
                     this._fsm.transition('disconnected', disconnectCallback, err);
                   } else {
@@ -405,6 +422,7 @@ export class Amqp {
   }
 
   /**
+   * @deprecated         Use attachSenderLink and the SenderLink.send() method instead
    * @method             module:azure-iot-amqp-base.Amqp#send
    * @description        Sends a message to the IoT Hub instance.
    *
@@ -418,6 +436,7 @@ export class Amqp {
   }
 
   /**
+   * @deprecated         use attachReceiverLink() instead.
    * @method             module:azure-iot-amqp-base.Amqp#getReceiver
    * @description        Gets the {@linkcode AmqpReceiver} object that can be used to receive messages from the IoT Hub instance and accept/reject/release them.
    *
@@ -516,25 +535,6 @@ export class Amqp {
         this._safeCallback(detachCallback);
       });
     }
-  }
-
-  private _getRemainingLinks(): AmqpLink[] {
-    let remainingLinks = [];
-    for (let senderEndpoint in this._senders) {
-      if (this._senders.hasOwnProperty(senderEndpoint)) {
-        remainingLinks.push(this._senders[senderEndpoint]);
-        delete this._senders[senderEndpoint];
-      }
-    }
-
-    for (let receiverEndpoint in this._receivers) {
-      if (this._receivers.hasOwnProperty(receiverEndpoint)) {
-        remainingLinks.push(this._receivers[receiverEndpoint]);
-          delete this._receivers[receiverEndpoint];
-      }
-    }
-
-    return remainingLinks;
   }
 
   /*Codes_SRS_NODE_COMMON_AMQP_16_011: [All methods should treat the `done` callback argument as optional and not throw if it is not passed as argument.]*/

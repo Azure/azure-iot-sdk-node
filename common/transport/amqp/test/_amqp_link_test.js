@@ -176,6 +176,8 @@ var AmqpMessage = require('../lib/amqp_message.js').AmqpMessage;
     });
 
     describe('forceDetach', function() {
+      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_028: [The `forceDetach` method shall return immediately if the link is already detached.]*/
+      /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_026: [The `forceDetach` method shall return immediately if the link is already detached.]*/
       it('returns if the link is already detached', function () {
         var fakeLinkObj = new EventEmitter();
         fakeLinkObj.detach = sinon.stub().resolves();
@@ -187,6 +189,41 @@ var AmqpMessage = require('../lib/amqp_message.js').AmqpMessage;
         link.forceDetach();
         assert(fakeLinkObj.detach.notCalled);
         assert(fakeLinkObj.forceDetach.notCalled);
+      });
+
+      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_027: [** The `forceDetach` method shall call the `forceDetach` method on the underlying `amqp10` link object.]*/
+      /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_025: [The `forceDetach` method shall call the `forceDetach` method on the underlying `amqp10` link object.]*/
+      it('calls forceDetach on the underlying link if it is attached', function (testCallback) {
+        var fakeLinkObj = new EventEmitter();
+        fakeLinkObj.detach = sinon.stub().resolves();
+        fakeLinkObj.forceDetach = sinon.stub();
+        var fakeAmqp10Client = new EventEmitter();
+        fakeAmqp10Client[testConfig.amqp10Method] = sinon.stub().resolves(fakeLinkObj);
+
+        var link = new testConfig.linkClass('link', {}, fakeAmqp10Client);
+        link.attach(function () {
+          link.forceDetach();
+          assert(fakeLinkObj.detach.notCalled);
+          assert(fakeLinkObj.forceDetach.calledOnce);
+          testCallback();
+        });
+      });
+
+      it('calls forceDetach on the underlying link if it is attaching and has a link object already', function (testCallback) {
+        var fakeLinkObj = new EventEmitter();
+        fakeLinkObj.detach = sinon.stub().resolves();
+        fakeLinkObj.forceDetach = sinon.stub();
+        var fakeAmqp10Client = new EventEmitter();
+        fakeAmqp10Client[testConfig.amqp10Method] = sinon.stub().resolves(fakeLinkObj);
+        sinon.stub(fakeLinkObj, 'on').callsFake(function () {
+          link.forceDetach();
+          assert(fakeLinkObj.detach.notCalled);
+          assert(fakeLinkObj.forceDetach.calledOnce);
+          testCallback();
+        });
+
+        var link = new testConfig.linkClass('link', {}, fakeAmqp10Client);
+        link.attach(function () {});
       });
     });
 

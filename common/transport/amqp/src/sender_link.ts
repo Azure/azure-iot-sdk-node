@@ -12,6 +12,13 @@ interface MessageOperation {
   callback: (err?: Error, result?: results.MessageEnqueued) => void;
 }
 
+/**
+ * @private
+ * State machine used to manage AMQP sender links
+ *
+ * @extends {EventEmitter}
+ * @implements {AmqpLink}
+ */
 /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_002: [The `SenderLink` class shall inherit from `EventEmitter`.]*/
 /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_003: [The `SenderLink` class shall implement the `AmqpLink` interface.]*/
 export class SenderLink extends EventEmitter implements AmqpLink {
@@ -94,6 +101,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             callback();
           },
           forceDetach: () => {
+            /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_026: [The `forceDetach` method shall return immediately if the link is already detached.]*/
             debug('forceDetach: link already detached');
             return;
           },
@@ -128,7 +136,15 @@ export class SenderLink extends EventEmitter implements AmqpLink {
               });
           },
           detach: (callback) => this._fsm.transition('detaching', callback),
-          forceDetach: (err) => this._fsm.transition('detached', undefined, err),
+          forceDetach: (err) => {
+            if (this._linkObject) {
+              this._removeListeners();
+              /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_025: [The `forceDetach` method shall call the `forceDetach` method on the underlying `amqp10` link object.]*/
+              this._linkObject.forceDetach();
+            }
+
+            this._fsm.transition('detached', undefined, err);
+          },
           send: (message, callback) => pushToQueue(message, callback)
         },
         attached: {
@@ -145,6 +161,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
           forceDetach: (err) => {
             if (this._linkObject) {
               this._removeListeners();
+              /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_025: [The `forceDetach` method shall call the `forceDetach` method on the underlying `amqp10` link object.]*/
               this._linkObject.forceDetach();
             }
 
@@ -166,7 +183,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
                 if (op.callback) {
                   /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_013: [If the message is successfully sent, the `callback` shall be called with a first parameter (error) set to `null` and a second parameter of type `MessageEnqueued`.]*/
                   /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_012: [If the message cannot be sent the `callback` shall be called with an `Error` object describing the AMQP error reported by the service.]*/
-                  process.nextTick(() => callback(error, result));
+                  process.nextTick(() => op.callback(error, result));
                 }
               }
             };
@@ -184,6 +201,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
         },
         detaching: {
           _onEnter: (callback, err) => {
+            /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_023: [The `detach` method shall call the `callback` with the original `Error` that caused the detach whether it succeeds or fails to cleanly detach the link.]*/
             if (this._linkObject) {
               /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_009: [** The `detach` method shall detach the link created by the `amqp10.AmqpClient` underlying object.]*/
               this._removeListeners();

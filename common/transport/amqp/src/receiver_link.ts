@@ -7,6 +7,13 @@ import { AmqpLink } from './amqp_link_interface';
 
 const debug = dbg('amqp-common:receiverlink');
 
+/**
+ * @private
+ * State machine used to manage AMQP receiver links
+ *
+ * @extends {EventEmitter}
+ * @implements {AmqpLink}
+ */
 /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_002: [** The `ReceiverLink` class shall inherit from `EventEmitter`.]*/
 /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_003: [** The `ReceiverLink` class shall implement the `AmqpLink` interface.]*/
 export class ReceiverLink  extends EventEmitter implements AmqpLink {
@@ -59,7 +66,11 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             this._fsm.transition('attaching', callback);
           },
           detach: (callback) => { this._safeCallback(callback); },
-          forceDetach: () => { return; },
+          forceDetach: () => {
+            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_028: [The `forceDetach` method shall return immediately if the link is already detached.]*/
+            debug('forceDetach: link already detached');
+            return;
+          },
           accept: (message, callback) => callback(new errors.DeviceMessageLockLostError()),
           reject: (message, callback) => callback(new errors.DeviceMessageLockLostError()),
           abandon: (message, callback) => callback(new errors.DeviceMessageLockLostError())
@@ -92,7 +103,14 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
               });
           },
           detach: (callback) => this._fsm.transition('detaching', callback),
-          forceDetach: (err) => this._fsm.transition('detached', undefined, err),
+          forceDetach: (err) => {
+            if (this._linkObject) {
+              this._removeListeners();
+              this._linkObject.forceDetach();
+            }
+
+            this._fsm.transition('detached', undefined, err);
+          },
           accept: (message, callback) => callback(new errors.DeviceMessageLockLostError()),
           reject: (message, callback) => callback(new errors.DeviceMessageLockLostError()),
           abandon: (message, callback) => callback(new errors.DeviceMessageLockLostError())
@@ -108,6 +126,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
           forceDetach: (err) => {
             if (this._linkObject) {
               this._removeListeners();
+              /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_027: [** The `forceDetach` method shall call the `forceDetach` method on the underlying `amqp10` link object.]*/
               this._linkObject.forceDetach();
             }
 
@@ -131,8 +150,10 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
         },
         detaching: {
           _onEnter: (callback, err) => {
+            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_025: [The `detach` method shall call the `callback` with an `Error` that caused the detach whether it succeeds or fails to cleanly detach the link.]*/
             if (this._linkObject) {
               this._removeListeners();
+              /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_009: [The `detach` method shall detach the link created by the `amqp10.AmqpClient` underlying object.]*/
               this._linkObject.detach().then(() => {
                 this._fsm.transition('detached', callback, err);
               }).catch((err) => {
@@ -181,6 +202,9 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
     this._fsm.handle('accept', message.transportObj, callback);
   }
 
+  /**
+   * @deprecated Use accept(message, callback) instead (to adhere more closely to the AMQP10 lingo).
+   */
   complete(message: Message, callback?: (err?: Error, result?: results.MessageCompleted) => void): void {
     /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_015: [The `complete` method shall call the `accept` method with the same arguments (it is here for backward compatibility purposes only).]*/
     this.accept(message, callback);

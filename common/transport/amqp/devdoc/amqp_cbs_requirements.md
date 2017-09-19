@@ -54,6 +54,12 @@ cbs.attach((err) => {
 
 **SRS_NODE_AMQP_CBS_16_008: [** `detach` shall detach both sender and receiver links. **]**
 
+### forceDetach()
+
+**SRS_NODE_AMQP_CBS_16_021: [** The `forceDetach()` method shall return immediately if no link is attached. **]**
+
+**SRS_NODE_AMQP_CBS_16_022: [** The `forceDetach()` method shall call `forceDetach()` on all attached links. **]**
+
 ### putToken(audience, token, callback)
 
 **SRS_NODE_AMQP_CBS_16_009: [** The `putToken` method shall throw a ReferenceError if the `audience` argument is falsy. **]**
@@ -95,4 +101,4 @@ and a body containing `<sasToken>`. **]**
 
 **SRS_NODE_AMQP_CBS_16_018: [** A put token response not equal to 200 will invoke `putTokenCallback` with an error object of `UnauthorizedError`. **]**
 
-**SRS_NODE_AMQP_CBS_16_020: [** All responses shall be completed. **]**
+**SRS_NODE_AMQP_CBS_16_020: [** All responses shall be accepted. **]**

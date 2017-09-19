@@ -144,6 +144,7 @@ describe('ClaimsBasedSecurityAgent', function() {
   });
 
   describe('#forceDetach', function () {
+    /*Tests_SRS_NODE_AMQP_CBS_16_021: [The `forceDetach()` method shall return immediately if no link is attached.]*/
     it('does not do anything if the CBS state machine is already detached', function () {
       var cbs = new CBS({});
       assert.doesNotThrow(function () {
@@ -151,6 +152,7 @@ describe('ClaimsBasedSecurityAgent', function() {
       });
     });
 
+    /*Tests_SRS_NODE_AMQP_CBS_16_022: [The `forceDetach()` method shall call `forceDetach()` on all attached links.]*/
     it('forcefully detach the links if attached', function (testCallback) {
       var fakeAmqpClient = new EventEmitter();
       var fakeSender = new EventEmitter();
@@ -173,7 +175,33 @@ describe('ClaimsBasedSecurityAgent', function() {
         assert(fakeReceiver.detach.notCalled);
         testCallback();
       });
+    });
 
+    /*Tests_SRS_NODE_AMQP_CBS_16_022: [The `forceDetach()` method shall call `forceDetach()` on all attached links.]*/
+    it('forcefully detach attached links if called while attaching', function (testCallback) {
+      var fakeAmqpClient = new EventEmitter();
+      var fakeSender = new EventEmitter();
+      fakeSender.detach = sinon.stub().resolves();
+      fakeSender.forceDetach = sinon.stub();
+      var fakeReceiver = new EventEmitter();
+      fakeReceiver.detach = sinon.stub().resolves();
+      fakeReceiver.forceDetach = sinon.stub();
+      fakeAmqpClient.createSender = sinon.stub().resolves(fakeSender);
+      fakeAmqpClient.createReceiver = sinon.stub().resolves(fakeReceiver);
+      sinon.stub(fakeReceiver, "on").callsFake(function (eventName) {
+        if (eventName === 'message') {
+          // sender is attached, receiver is attaching since we're registering for messages. good time to trigger a fake forceDetach
+          cbs.forceDetach();
+          assert(fakeSender.forceDetach.calledOnce);
+          assert(fakeReceiver.forceDetach.calledOnce);
+          assert(fakeSender.detach.notCalled);
+          assert(fakeReceiver.detach.notCalled);
+          testCallback();
+        }
+      });
+
+      var cbs = new CBS(fakeAmqpClient);
+      cbs.attach(function () {});
     });
   });
 
