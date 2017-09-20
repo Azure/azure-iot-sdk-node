@@ -3,7 +3,6 @@
 
 'use strict';
 
-var assert = require('chai').assert;
 var uuid = require('uuid');
 var pem  = require('pem');
 
