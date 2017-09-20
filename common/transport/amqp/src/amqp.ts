@@ -341,7 +341,7 @@ export class Amqp {
 
               if (err) {
                 link.forceDetach();
-                return callback();
+                callback();
               } else {
                 link.detach(callback);
               }
