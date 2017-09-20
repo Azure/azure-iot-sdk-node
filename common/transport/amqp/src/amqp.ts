@@ -166,10 +166,6 @@ export class Amqp {
               });
             };
 
-            // this._amqp.on('disconnected', () => {
-            //   this._fsm.transition('disconnecting', undefined, new errors.NotConnectedError());
-            // });
-
             this._amqp.on(_amqpClientError, connectErrorHandler);
             this._amqp.connect(this.uri)
               .then((result) => {
@@ -248,26 +244,26 @@ export class Amqp {
           attachReceiverLink: (endpoint: string, linkOptions: any, done: GenericAmqpBaseCallback<ReceiverLink>): void => {
             debug('creating receiver link for: ' + endpoint);
             this._receivers[endpoint] = new ReceiverLink(endpoint, linkOptions, this._amqp);
-            const attachErrorHandler = (err) => {
-              debug('receiver link error while attaching: ' + endpoint + ': ' + err.toString());
+            const permanentErrorHandler = (err) => {
+              debug('receiver link error - removing it from cache: ' + endpoint + ': ' + err.toString());
               delete(this._receivers[endpoint]);
+            };
+
+            const operationErrorHandler = (err) => {
+              debug('calling attachReceiverLink callback with error: ' + err.toString());
               done(err);
             };
 
-            this._amqp.on('client:errorReceived', attachErrorHandler);
-            this._receivers[endpoint].on('error', attachErrorHandler);
+            this._receivers[endpoint].on('error', permanentErrorHandler);
+            this._receivers[endpoint].on('error', operationErrorHandler);
             this._receivers[endpoint].attach((err) => {
               if (err) {
                 debug('failed to attach receiver link: ' + endpoint + ': ' + err.toString());
-                done(err);
+                permanentErrorHandler(err);
+                operationErrorHandler(err);
               } else {
-                this._amqp.removeListener('client:errorReceived', attachErrorHandler);
-                this._receivers[endpoint].removeListener('error', attachErrorHandler);
-                this._receivers[endpoint].on('error', (err) => {
-                  debug('error on sender link: ' + endpoint + ': ' + err.toString());
-                  delete(this._receivers[endpoint]);
-                });
-                debug('sender link attached: ' + endpoint);
+                this._receivers[endpoint].removeListener('error', operationErrorHandler);
+                debug('receiver link attached: ' + endpoint);
                 done(null, this._receivers[endpoint]);
               }
             });
@@ -276,25 +272,25 @@ export class Amqp {
             debug('creating sender link for: ' + endpoint);
             let senderFsm = new SenderLink(endpoint, linkOptions, this._amqp);
             this._senders[endpoint] = senderFsm;
-            const attachErrorHandler = (err) => {
+            const permanentErrorHandler = (err) => {
               debug('sender link error while attaching: ' + endpoint + ': ' + err.toString());
               delete(this._senders[endpoint]);
+            };
+
+            const operationErrorHandler = (err) => {
+              debug('calling attachSenderLink callback with error: ' + err.toString());
               done(err);
             };
 
-            this._amqp.on('client:errorReceived', attachErrorHandler);
-            this._senders[endpoint].on('error', attachErrorHandler);
+            this._senders[endpoint].on('error', permanentErrorHandler);
+            this._senders[endpoint].on('error', operationErrorHandler);
             debug('attaching sender link for: ' + endpoint);
             this._senders[endpoint].attach((err) => {
               if (err) {
-                attachErrorHandler(err);
+                permanentErrorHandler(err);
+                operationErrorHandler(err);
               } else {
-                this._amqp.removeListener('client:errorReceived', attachErrorHandler);
-                this._senders[endpoint].removeListener('error', attachErrorHandler);
-                this._senders[endpoint].on('error', (err) => {
-                  debug('error on sender link: ' + endpoint + ': ' + err.toString());
-                  delete(this._senders[endpoint]);
-                });
+                this._senders[endpoint].removeListener('error', operationErrorHandler);
                 debug('sender link attached: ' + endpoint);
                 done(null, this._senders[endpoint]);
               }
@@ -326,9 +322,11 @@ export class Amqp {
                 this._amqp.removeAllListeners('disconnected');
                 /*Codes_SRS_NODE_COMMON_AMQP_16_004: [The disconnect method shall call the done callback when the application/service has been successfully disconnected from the service] */
                 this._amqp.disconnect().then(() => {
+                  debug('amqp10 client cleanly disconnected');
                   callback();
                   return null;
                 }).catch((err) => {
+                  debug('amqp10 failed to cleanly disconnect: ' + err.toString());
                   callback(err);
                 });
               }
@@ -340,9 +338,11 @@ export class Amqp {
               }
 
               if (err) {
-                link.forceDetach();
+                debug('forceDetaching link');
+                link.forceDetach(err);
                 callback();
               } else {
+                debug('cleanly detaching link');
                 link.detach(callback);
               }
             };
@@ -365,12 +365,9 @@ export class Amqp {
 
               /*Codes_SRS_NODE_COMMON_AMQP_16_034: [The `disconnect` method shall detach all open links before disconnecting the underlying AMQP client.]*/
               async.each(remainingLinks, detachLink, () => {
-                disconnect((err) => {
-                  if (err) {
-                    this._fsm.transition('disconnected', disconnectCallback, err);
-                  } else {
-                    this._fsm.transition('disconnected', disconnectCallback);
-                  }
+                disconnect((disconnectError) => {
+                  const finalError = err || disconnectError;
+                  this._fsm.transition('disconnected', disconnectCallback, finalError);
                 });
               });
             });

@@ -2,11 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-
+import * as dbg from 'debug';
+const debug = dbg('device-amqp:amqp');
 import { EventEmitter } from 'events';
 
 import { ClientConfig, DeviceMethodResponse, StableConnectionTransport, Client } from 'azure-iot-device';
-import { Amqp as BaseAmqpClient, translateError } from 'azure-iot-amqp-base';
+import { Amqp as BaseAmqpClient, translateError, AmqpMessage, SenderLink } from 'azure-iot-amqp-base';
 import { endpoint, SharedAccessSignature, errors, results, Message, X509 } from 'azure-iot-common';
 import { AmqpDeviceMethodClient } from './amqp_device_method_client';
 import { AmqpReceiver } from './amqp_receiver';
@@ -51,7 +52,8 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   private _deviceMethodClient: AmqpDeviceMethodClient;
   private _receiver: AmqpReceiver;
   private _amqp: BaseAmqpClient;
-  private _twinReceiver: AmqpTwinClient;
+  private _twinClient: AmqpTwinClient;
+  private _d2cLink: SenderLink;
 
   /**
    * @private
@@ -140,7 +142,29 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   /* Codes_SRS_NODE_DEVICE_AMQP_16_004: [If sendEvent encounters an error before it can send the request, it shall invoke the done callback function and pass the standard JavaScript Error object with a text description of the error (err.message). ] */
   sendEvent(message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void {
     const eventEndpoint = endpoint.eventPath(this._config.deviceId);
-    this._amqp.send(message, eventEndpoint, eventEndpoint, handleResult('AMQP Transport: Could not send', done));
+    let amqpMessage = AmqpMessage.fromMessage(message);
+    amqpMessage.properties.to = eventEndpoint;
+
+    if (!this._d2cLink) {
+      this._amqp.attachSenderLink(eventEndpoint, null, (err, link) => {
+        if (err) {
+          handleResult('AMQP Transport: Could not send', done)(err);
+        } else {
+          debug('got a new D2C link');
+          this._d2cLink = link;
+          const d2cLinkErrorHandler = (err) => {
+            debug('error on C2D link: ' + err.toString());
+            this._d2cLink.removeListener('error', d2cLinkErrorHandler);
+            this._d2cLink = undefined;
+          };
+          this._d2cLink.on('error', d2cLinkErrorHandler);
+          this._d2cLink.send(amqpMessage, handleResult('AMQP Transport: Could not send', done));
+        }
+      });
+    } else {
+      debug('using existing d2c link');
+      this._d2cLink.send(amqpMessage, handleResult('AMQP Transport: Could not send', done));
+    }
   }
 
   /**
@@ -301,7 +325,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
    * @throws {ArgumentError}  One of the parameters is an incorrect type
    */
   sendTwinRequest(method: string, resource: string, properties: { [key: string]: string }, body: any, done?: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    this._twinReceiver.sendTwinRequest(method, resource, properties, body, done);
+    this._twinClient.sendTwinRequest(method, resource, properties, body, done);
   }
 
   /**
@@ -321,14 +345,14 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
 
     /*Codes_SRS_NODE_DEVICE_AMQP_06_034: [If a twin receiver for this endpoint doesn't exist, the `getTwinReceiver` method should create a new `AmqpTwinClient` object.] */
     /*Codes_SRS_NODE_DEVICE_AMQP_06_035: [If a twin receiver for this endpoint has already been created, the `getTwinReceiver` method should not create a new `AmqpTwinClient` object.] */
-    if (!this._twinReceiver) {
-      this._twinReceiver = new AmqpTwinClient(this._config, this._amqp);
+    if (!this._twinClient) {
+      this._twinClient = new AmqpTwinClient(this._config, this._amqp);
     }
 
     /*Codes_SRS_NODE_DEVICE_AMQP_06_036: [The `getTwinReceiver` method shall call the `done` method after it complete.] */
     /*Codes_SRS_NODE_DEVICE_AMQP_06_037: [If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `AmqpTwinClient` object as the second parameter of the `done` function with null as the first parameter.] */
     /*Codes_SRS_NODE_DEVICE_AMQP_06_038: [If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `AmqpTwinClient` object as the second parameter of the `done` function with null as the first parameter.] */
-    done(null, this._twinReceiver);
+    done(null, this._twinClient);
   }
 
   protected _getConnectionUri(): string {

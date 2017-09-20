@@ -334,7 +334,7 @@ describe('AmqpTwinClient', function () {
       assert(detachReceiver.notCalled, 'detach receiver should not have been called');
       var linkError = new Error();
       linkError.condition = 'amqp:internal-error'
-      amqpClient.fakeSenderLink.emit('errorReceived', linkError);
+      amqpClient.fakeSenderLink.emit('error', linkError);
     });
 
   });

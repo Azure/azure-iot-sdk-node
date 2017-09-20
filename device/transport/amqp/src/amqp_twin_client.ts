@@ -74,9 +74,9 @@ export class AmqpTwinClient extends EventEmitter {
 
     this._fsm = new machina.Fsm({
       namespace: 'amqp-twin-receiver',
-      initialState: 'disconnected',
+      initialState: 'detached',
       states: {
-        'disconnected': {
+        'detached': {
           _onEnter: () => {
             let headEvent: any[];
             while (headEvent = this._eventQueue.shift()) {
@@ -89,12 +89,12 @@ export class AmqpTwinClient extends EventEmitter {
           handleNewListener: (eventName) => {
             if ((eventName === AmqpTwinClient.responseEvent) || (eventName === AmqpTwinClient.postEvent)) {
               this._appendEventQueue();
-              this._fsm.transition('connecting');
+              this._fsm.transition('attaching');
             }
           },
           sendTwinRequest: () => {
             this._appendEventQueue();
-            this._fsm.transition('connecting');
+            this._fsm.transition('attaching');
           },
           handleErrorEmit: (err: Error) => {
             debug('_handleError: error is: ' + JSON.stringify(err));
@@ -106,7 +106,7 @@ export class AmqpTwinClient extends EventEmitter {
             }
           }
         },
-        'connecting': {
+        'attaching': {
           _onEnter: () => {
             /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_006: [When a listener is added for the `response` event, and the `post` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLink`.] */
             /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_012: [When a listener is added for the `post` event, and the `response` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLine`.] */
@@ -118,23 +118,23 @@ export class AmqpTwinClient extends EventEmitter {
               } else {
                 this._downstreamAmqpLink = receiverTransportObject;
                 this._downstreamAmqpLink.on('detached', this._onAmqpDetached.bind(this));
-                this._downstreamAmqpLink.on('errorReceived', this._handleError.bind(this));
+                this._downstreamAmqpLink.on('error', this._handleError.bind(this));
                 this._client.attachSenderLink( this._endpoint, this._generateTwinLinkProperties(linkCorrelationId), (senderLinkError?: Error, senderTransportObject?: any): void => {
                   if (senderLinkError) {
                     this._fsm.handle('handleErrorEmit', senderLinkError);
                   } else {
                     this._upstreamAmqpLink = senderTransportObject;
                     this._upstreamAmqpLink.on('detached', this._onAmqpDetached.bind(this));
-                    this._upstreamAmqpLink.on('errorReceived', this._handleError.bind(this));
-                    this._fsm.transition('connected');
+                    this._upstreamAmqpLink.on('error', this._handleError.bind(this));
+                    this._fsm.transition('attached');
                   }
                 });
               }
             });
           },
           handleErrorEmit: () => {
-            this._fsm.deferUntilTransition('disconnected');
-            this._fsm.transition('disconnecting');
+            this._fsm.deferUntilTransition('detached');
+            this._fsm.transition('detaching');
           },
           handleNewListener: () => {
             this._appendEventQueue();
@@ -146,7 +146,7 @@ export class AmqpTwinClient extends EventEmitter {
             this._appendEventQueue();
           }
         },
-        'connected': {
+        'attached': {
           _onEnter: () => {
             this._downstreamAmqpLink.on('message', this._boundMessageHandler);
             this._handleHeadOfEventQueue();
@@ -183,7 +183,7 @@ export class AmqpTwinClient extends EventEmitter {
             }
             if ((EventEmitter.listenerCount(this, AmqpTwinClient.postEvent) + EventEmitter.listenerCount(this, AmqpTwinClient.responseEvent)) === 0) {
               /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_014: [When there are no more listeners for the `response` AND the `post` event, the upstream and downstream amqp links shall be closed via calls to `detachReceiverLink` and `detachSenderLink`.] */
-              this._fsm.transition('disconnecting');
+              this._fsm.transition('detaching');
             } else {
               this._handleHeadOfEventQueue();
             }
@@ -202,21 +202,21 @@ export class AmqpTwinClient extends EventEmitter {
             this._AppendOrHandleEvent();
           },
           handleErrorEmit: () => {
-            this._fsm.deferUntilTransition('disconnected');
-            this._fsm.transition('disconnecting');
+            this._fsm.deferUntilTransition('detached');
+            this._fsm.transition('detaching');
           },
           handleLinkDetach: (detachObject) => {
             /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_023: [If a detach with error occurs on the upstream or the downstream link then the `error` event shall be emitted.] */
             /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_024: [If any detach occurs the other link will also be detached by the twin receiver.] */
             this._eventQueueError = (detachObject) ? detachObject.error : null;
-            this._fsm.deferUntilTransition('disconnected');
-            this._fsm.transition('disconnecting');
+            this._fsm.deferUntilTransition('detached');
+            this._fsm.transition('detaching');
           },
           _onExit: () => {
             this._downstreamAmqpLink.removeListener('message', this._boundMessageHandler);
           }
         },
-        'disconnecting': {
+        'detaching': {
           _onEnter: () => {
             this._client.detachSenderLink( this._endpoint, (detachSenderError: Error, result?: any) => {
               if (detachSenderError) {
@@ -230,12 +230,12 @@ export class AmqpTwinClient extends EventEmitter {
                 if (possibleError) {
                   this._fsm.handle('handleErrorEmit', possibleError);
                 }
-                this._fsm.transition('disconnected');
+                this._fsm.transition('detached');
               });
             });
           },
           handleErrorEmit: () => {
-            this._fsm.deferUntilTransition('disconnected');
+            this._fsm.deferUntilTransition('detached');
           },
           handleNewListener: () => {
             this._appendEventQueue();
@@ -248,6 +248,10 @@ export class AmqpTwinClient extends EventEmitter {
           }
         }
       }
+    });
+
+    this._fsm.on('transition', (transition) => {
+      debug(transition.fromState + ' -> ' + transition.toState + ' (action:' + transition.action + ')');
     });
 
     this.on('newListener', this._handleNewListener.bind(this));

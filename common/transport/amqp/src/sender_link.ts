@@ -64,10 +64,13 @@ export class SenderLink extends EventEmitter implements AmqpLink {
         detached: {
           _onEnter: (callback, err) => {
             this._linkObject = null;
+            debug('link detached: ' + this._linkAddress);
+            debug('unsent message queue length: ' + this._unsentMessageQueue.length);
             /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_021: [If the link fails to attach and there are messages in the queue, the callback for each message shall be called with the error that caused the detach in the first place.]*/
             if (this._unsentMessageQueue.length > 0) {
               let messageCallbackError = err || new Error('Link Detached');
 
+              debug('dequeuing and failing unsent messages');
               let unsent = this._unsentMessageQueue.shift();
               while (unsent) {
                 unsent.callback(messageCallbackError);
@@ -75,12 +78,15 @@ export class SenderLink extends EventEmitter implements AmqpLink {
               }
             }
 
+            debug('pending message queue length: ' + this._pendingMessageQueue.length);
             /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_014: [If the link is detached while a message is being sent, the `callback` shall be called with an `Error` object describing the AMQP error that caused the detach to happen in the first place.]*/
             if (this._pendingMessageQueue.length > 0) {
+              debug('dequeuing and failing pending messages');
               let messageCallbackError = err || new Error('Link Detached');
 
               let pending = this._pendingMessageQueue.shift();
               while (pending) {
+                debug('failing pending message with error: ' + messageCallbackError.toString());
                 pending.callback(messageCallbackError);
                 pending = this._pendingMessageQueue.shift();
               }
@@ -149,8 +155,10 @@ export class SenderLink extends EventEmitter implements AmqpLink {
         },
         attached: {
           _onEnter: (callback) => {
+            debug('link attached. processing unsent message queue');
             let toSend = this._unsentMessageQueue.shift();
             while (toSend) {
+              debug('got message from unsent queue');
               this._fsm.handle('send', toSend.message, toSend.callback);
               toSend = this._unsentMessageQueue.shift();
             }
@@ -173,6 +181,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
               callback: callback
             };
 
+            debug('pushing message to pending queue');
             this._pendingMessageQueue.push(op);
 
             /*Codes_SRS_NODE_COMMON_AMQP_16_011: [All methods should treat the `done` callback argument as optional and not throw if it is not passed as argument.]*/
@@ -188,13 +197,16 @@ export class SenderLink extends EventEmitter implements AmqpLink {
               }
             };
 
+            debug('sending message using underlying amqp10 link object');
             /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_010: [The `send` method shall use the link created by the underlying `amqp10.AmqpClient` to send the specified `message` to the IoT hub.]*/
             this._linkObject.send(message)
                             .then((state) => {
+                              debug('message sent successfully');
                               _processPendingMessageCallback(null, new results.MessageEnqueued(state));
                               return null;
                             })
                             .catch((err) => {
+                              debug('error sending message');
                               _processPendingMessageCallback(err);
                             });
           }

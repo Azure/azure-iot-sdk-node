@@ -75,9 +75,6 @@ device_provision(hubConnectionString, function (err, provisionedDevices) {
     });
     file_upload_tests(hubConnectionString, deviceHttp.Http, provisionedDevices[1]);
   }
-  service_client(hubConnectionString);
-  registry_tests(hubConnectionString, storageConnectionString);
-  authentication_tests(hubConnectionString);
 
   device_teardown(hubConnectionString, provisionedDevices);
   if (!provisionedDevices || provisionedDevices.length !== 4) {
@@ -92,6 +89,9 @@ device_provision(hubConnectionString, function (err, provisionedDevices) {
   run();
 });
 
+service_client(hubConnectionString);
+registry_tests(hubConnectionString, storageConnectionString);
+authentication_tests(hubConnectionString);
 twin_e2e_tests(hubConnectionString, [deviceAmqp.Amqp, deviceMqtt.Mqtt]);
 device_method(hubConnectionString, deviceMethodsProtocols);
 // job_client(hubConnectionString);

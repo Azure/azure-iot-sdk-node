@@ -3,13 +3,15 @@
 
 'use strict';
 
+var EventEmitter = require('events').EventEmitter;
 var assert = require('chai').assert;
 var sinon = require('sinon');
 
 var Message = require('azure-iot-common').Message;
 var Amqp = require('../lib/amqp.js').Amqp;
 var errors = require('azure-iot-common').errors;
-
+var results = require('azure-iot-common').results;
+var endpoint = require('azure-iot-common').endpoint;
 
 describe('Amqp', function () {
   var transport = null;
@@ -203,4 +205,70 @@ describe('Amqp', function () {
     });
   });
 
+  describe('#sendEvent', function () {
+    it('creates a new D2C link if necessary and sends the message using this link', function (testCallback) {
+      var fakeSender = new EventEmitter();
+      fakeSender.send = sinon.stub().callsArgWith(1, null, new results.MessageEnqueued());
+      var transport = new Amqp(configWithSAS);
+      transport._amqp.attachSenderLink = sinon.stub().callsArgWith(2, null, fakeSender);
+      transport.sendEvent(new Message('test'), function () {
+        assert.isTrue(transport._amqp.attachSenderLink.calledWith(endpoint.eventPath(configWithSAS.deviceId)));
+        assert.isTrue(fakeSender.send.calledOnce);
+        testCallback();
+      });
+    });
+
+    it('reuses the existing D2C link and sends the message', function (testCallback) {
+      var fakeSender = new EventEmitter();
+      fakeSender.send = sinon.stub().callsArgWith(1, null, new results.MessageEnqueued());
+      var transport = new Amqp(configWithSAS);
+      transport._amqp.attachSenderLink = sinon.stub().callsArgWith(2, null, fakeSender);
+      transport.sendEvent(new Message('test'), function () {
+        transport.sendEvent(new Message('test'), function () {
+          assert.isTrue(transport._amqp.attachSenderLink.calledOnce);
+          assert.isTrue(fakeSender.send.calledTwice);
+          testCallback();
+        });
+      });
+    });
+
+    it('calls the callback with an error if attaching the link fails', function (testCallback) {
+      var fakeSender = new EventEmitter();
+      var fakeError = new Error('fake');
+      fakeSender.send = sinon.stub().callsArgWith(1, null, new results.MessageEnqueued());
+      var transport = new Amqp(configWithSAS);
+      transport._amqp.attachSenderLink = sinon.stub().callsArgWith(2, fakeError);
+      transport.sendEvent(new Message('test'), function (err) {
+        assert.strictEqual(err.amqpError, fakeError);
+        testCallback();
+      });
+    });
+
+    it('calls the callback with an error if sending the message fails', function (testCallback) {
+      var fakeSender = new EventEmitter();
+      var fakeError = new Error('fake');
+      fakeSender.send = sinon.stub().callsArgWith(1, fakeError);
+      var transport = new Amqp(configWithSAS);
+      transport._amqp.attachSenderLink = sinon.stub().callsArgWith(2, fakeError);
+      transport.sendEvent(new Message('test'), function (err) {
+        assert.strictEqual(err.amqpError, fakeError);
+        testCallback();
+      });
+    });
+
+    it('registers an error event handler on the d2c link', function (testCallback) {
+      var fakeSender = new EventEmitter();
+      sinon.spy(fakeSender, 'on');
+      fakeSender.send = sinon.stub().callsArgWith(1, null, new results.MessageEnqueued());
+      var transport = new Amqp(configWithSAS);
+      transport._amqp.attachSenderLink = sinon.stub().callsArgWith(2, null, fakeSender);
+      transport.sendEvent(new Message('test'), function (err) {
+        assert.isTrue(fakeSender.on.calledWith('error'));
+        assert.doesNotThrow(function () {
+          fakeSender.emit('error', new Error());
+        });
+        testCallback();
+      });
+    });
+  });
 });

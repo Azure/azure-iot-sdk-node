@@ -59,8 +59,10 @@ export class AmqpDeviceMethodClient extends EventEmitter {
               callback(err);
             } else {
               if (err) {
+                debug('detached with error: ' + err.toString());
+                // This is the right thing to do but breaks the client until we have retry logic. deactivating for now.
                 /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_015: [The `AmqpDeviceMethodClient` object shall forward any error received on a link to any listening client in an `error` event.]*/
-                this.emit('error', err);
+                // this.emit('error', err);
               }
             }
           },
@@ -190,6 +192,10 @@ export class AmqpDeviceMethodClient extends EventEmitter {
           '*': (callback) => this._fsm.deferUntilTransition('detached')
         }
       }
+    });
+
+    this._fsm.on('transition', (transition) => {
+      debug(transition.fromState + ' -> ' + transition.toState + ' (action:' + transition.action + ')');
     });
   }
 
