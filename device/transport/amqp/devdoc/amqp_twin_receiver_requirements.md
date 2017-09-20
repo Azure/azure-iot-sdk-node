@@ -1,11 +1,11 @@
-# AmqpTwinReceiver Requirements
+# AmqpTwinClient Requirements
 
 ## Overview
 Object used to subscribe to the Cloud-to-Device messages for Twin
 
 ## Example
 ```javascript
-var receiver = new AmqpTwinReceiver(config: ClientConfig, client: any);
+var receiver = new AmqpTwinClient(config: ClientConfig, client: any);
 receiver.on('response', function(response) {
     console.log('Response received for request ' + response.requestId);
     console.log('  status = " + response.status);
@@ -17,9 +17,9 @@ receiver.on('response', function(response) {
 
 ### Constructor
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_004: [** The `AmqpTwinReceiver` constructor shall throw `ReferenceError` if the `config` object is falsy. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_06_004: [** The `AmqpTwinClient` constructor shall throw `ReferenceError` if the `config` object is falsy. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_002: [** The `AmqpTwinReceiver` constructor shall throw `ReferenceError` if the `client` object is falsy. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_06_002: [** The `AmqpTwinClient` constructor shall throw `ReferenceError` if the `client` object is falsy. **]**
 
 **SRS_NODE_DEVICE_AMQP_TWIN_06_005: [** The `AmqpDeviceMethodClient` shall inherit from the `EventEmitter` class. **]**
 

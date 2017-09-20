@@ -7,25 +7,26 @@
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
+    "async": "^2.5.0",
     "azure-iot-amqp-base": "1.1.12",
     "azure-iot-common": "1.1.11",
     "azure-iot-device": "1.1.17",
-    "debug": "^2.6.0",
+    "debug": "^3.0.1",
     "machina": "^2.0.0",
     "uuid": "^3.0.1"
   },
   "devDependencies": {
     "azure-iothub": "1.1.15",
     "bluebird": "^3.5.0",
-    "chai": "^3.5.0",
+    "chai": "^4.1.2",
     "istanbul": "^0.4.5",
     "jshint": "^2.9.4",
     "mocha": "^3.2.0",
-    "sinon": "^1.17.7",
+    "sinon": "^3.3.0",
     "tslint": "^5.1.0",
-    "typescript": "2.2.2",
-    "@types/node": "^7.0.5",
-    "@types/debug": "0.0.29"
+    "typescript": "2.5.2",
+    "@types/node": "^8.0.28",
+    "@types/debug": "0.0.30"
   },
   "scripts": {
     "lint": "tslint --type-check --project . -c ../../../tslint.json",
@@ -36,7 +37,7 @@
     "alltest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
     "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
     "test": "npm -s run lint && npm -s run build && npm -s run unittest",
-    "check-cover": "istanbul check-coverage --statements 95 --branches 80  --lines 96 --functions 92"
+    "check-cover": "istanbul check-coverage --statements 95 --branches 81  --lines 96 --functions 92"
   },
   "engines": {
     "node": ">= 0.10"

@@ -10,7 +10,7 @@ import { Amqp as BaseAmqpClient, translateError } from 'azure-iot-amqp-base';
 import { endpoint, SharedAccessSignature, errors, results, Message, X509 } from 'azure-iot-common';
 import { AmqpDeviceMethodClient } from './amqp_device_method_client';
 import { AmqpReceiver } from './amqp_receiver';
-import { AmqpTwinReceiver } from './amqp_twin_receiver';
+import { AmqpTwinClient } from './amqp_twin_client';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -51,7 +51,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   private _deviceMethodClient: AmqpDeviceMethodClient;
   private _receiver: AmqpReceiver;
   private _amqp: BaseAmqpClient;
-  private _twinReceiver: AmqpTwinReceiver;
+  private _twinReceiver: AmqpTwinClient;
 
   /**
    * @private
@@ -313,21 +313,21 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
    *
    * @throws {ReferenceError}   One of the required parameters is falsy
    */
-  getTwinReceiver(done?: (err?: Error, receiver?: AmqpTwinReceiver) => void): void {
+  getTwinReceiver(done?: (err?: Error, receiver?: AmqpTwinClient) => void): void {
     /* Codes_SRS_NODE_DEVICE_AMQP_06_033: [The `getTwinReceiver` method shall throw an `ReferenceError` if done is falsy] */
     if (!done) {
       throw new ReferenceError('required parameter is missing');
     }
 
-    /*Codes_SRS_NODE_DEVICE_AMQP_06_034: [If a twin receiver for this endpoint doesn't exist, the `getTwinReceiver` method should create a new `AmqpTwinReceiver` object.] */
-    /*Codes_SRS_NODE_DEVICE_AMQP_06_035: [If a twin receiver for this endpoint has already been created, the `getTwinReceiver` method should not create a new `AmqpTwinReceiver` object.] */
+    /*Codes_SRS_NODE_DEVICE_AMQP_06_034: [If a twin receiver for this endpoint doesn't exist, the `getTwinReceiver` method should create a new `AmqpTwinClient` object.] */
+    /*Codes_SRS_NODE_DEVICE_AMQP_06_035: [If a twin receiver for this endpoint has already been created, the `getTwinReceiver` method should not create a new `AmqpTwinClient` object.] */
     if (!this._twinReceiver) {
-      this._twinReceiver = new AmqpTwinReceiver(this._config, this._amqp);
+      this._twinReceiver = new AmqpTwinClient(this._config, this._amqp);
     }
 
     /*Codes_SRS_NODE_DEVICE_AMQP_06_036: [The `getTwinReceiver` method shall call the `done` method after it complete.] */
-    /*Codes_SRS_NODE_DEVICE_AMQP_06_037: [If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `AmqpTwinReceiver` object as the second parameter of the `done` function with null as the first parameter.] */
-    /*Codes_SRS_NODE_DEVICE_AMQP_06_038: [If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `AmqpTwinReceiver` object as the second parameter of the `done` function with null as the first parameter.] */
+    /*Codes_SRS_NODE_DEVICE_AMQP_06_037: [If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `AmqpTwinClient` object as the second parameter of the `done` function with null as the first parameter.] */
+    /*Codes_SRS_NODE_DEVICE_AMQP_06_038: [If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `AmqpTwinClient` object as the second parameter of the `done` function with null as the first parameter.] */
     done(null, this._twinReceiver);
   }
 

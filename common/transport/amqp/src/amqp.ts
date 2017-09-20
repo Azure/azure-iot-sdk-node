@@ -254,12 +254,14 @@ export class Amqp {
               done(err);
             };
 
+            this._amqp.on('client:errorReceived', attachErrorHandler);
             this._receivers[endpoint].on('error', attachErrorHandler);
             this._receivers[endpoint].attach((err) => {
               if (err) {
                 debug('failed to attach receiver link: ' + endpoint + ': ' + err.toString());
                 done(err);
               } else {
+                this._amqp.removeListener('client:errorReceived', attachErrorHandler);
                 this._receivers[endpoint].removeListener('error', attachErrorHandler);
                 this._receivers[endpoint].on('error', (err) => {
                   debug('error on sender link: ' + endpoint + ': ' + err.toString());
@@ -280,12 +282,14 @@ export class Amqp {
               done(err);
             };
 
+            this._amqp.on('client:errorReceived', attachErrorHandler);
             this._senders[endpoint].on('error', attachErrorHandler);
             debug('attaching sender link for: ' + endpoint);
             this._senders[endpoint].attach((err) => {
               if (err) {
                 attachErrorHandler(err);
               } else {
+                this._amqp.removeListener('client:errorReceived', attachErrorHandler);
                 this._senders[endpoint].removeListener('error', attachErrorHandler);
                 this._senders[endpoint].on('error', (err) => {
                   debug('error on sender link: ' + endpoint + ': ' + err.toString());
@@ -336,7 +340,7 @@ export class Amqp {
               }
 
               if (err) {
-                link.forceDetach(err);
+                link.forceDetach();
                 return callback();
               } else {
                 link.detach(callback);

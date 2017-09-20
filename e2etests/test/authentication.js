@@ -174,8 +174,9 @@ module.exports = function authentication_tests(hubConnectionString) {
             passphrase: undefined
           });
           deviceClient.sendEvent(new Message('testMessage'), function(err) {
-            assert.instanceOf(err, UnauthorizedError);
-            testCallback();
+            if (err instanceof UnauthorizedError) {
+              testCallback();
+            }
           });
         });
       });

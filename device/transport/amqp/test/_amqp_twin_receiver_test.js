@@ -7,7 +7,7 @@ var assert = require('chai').assert;
 var EventEmitter = require('events').EventEmitter;
 var sinon = require('sinon');
 
-var AmqpTwinReceiver = require('../lib/amqp_twin_receiver.js').AmqpTwinReceiver;
+var AmqpTwinClient = require('../lib/amqp_twin_client.js').AmqpTwinClient;
 var AmqpProvider = require('./_fake_amqp.js').FakeAmqp;
 var Amqp = require('../lib/amqp').Amqp;
 var AmqpProviderAttachSenderFails = require('./_fake_amqp.js').FakeAmqpAttachSenderFails;
@@ -25,31 +25,31 @@ var fakeConfig = {
   deviceId: 'deviceId'
 };
 
-describe('AmqpTwinReceiver', function () {
+describe('AmqpTwinClient', function () {
 
   describe('#constructor', function () {
 
-    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_004: [The `AmqpTwinReceiver` constructor shall throw `ReferenceError` if the `config` object is falsy.] */
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_004: [The `AmqpTwinClient` constructor shall throw `ReferenceError` if the `config` object is falsy.] */
     [undefined, null].forEach(function(badConfig) {
       it('throws a ReferenceError if \'config\' is \'' + badConfig + '\'', function() {
         assert.throws(function() {
-          return new AmqpTwinReceiver(badConfig, {});
+          return new AmqpTwinClient(badConfig, {});
         }, ReferenceError);
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_002: [The `AmqpTwinReceiver` constructor shall throw `ReferenceError` if the `client` object is falsy.] */
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_002: [The `AmqpTwinClient` constructor shall throw `ReferenceError` if the `client` object is falsy.] */
     [undefined, null].forEach(function(badClient) {
       it('throws a ReferenceError if \'amqpClient\' is \'' + badClient + '\'', function() {
         assert.throws(function() {
-          return new AmqpTwinReceiver({}, badClient);
+          return new AmqpTwinClient({}, badClient);
         }, ReferenceError);
       });
     });
 
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_005: [The `AmqpDeviceMethodClient` shall inherit from the `EventEmitter` class.] */
     it('inherits from EventEmitter', function() {
-      var client = new AmqpTwinReceiver({}, {});
+      var client = new AmqpTwinClient({}, {});
       assert.instanceOf(client, EventEmitter);
     });
   });
@@ -61,7 +61,7 @@ describe('AmqpTwinReceiver', function () {
       var amqpClient = new AmqpProvider();
       var attachSender = sinon.spy(amqpClient, 'attachSenderLink');
       var attachReceiver = sinon.spy(amqpClient, 'attachReceiverLink');
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.on('response', function () {});
       assert(attachSender.calledOnce);
       assert(attachReceiver.calledOnce);
@@ -71,7 +71,7 @@ describe('AmqpTwinReceiver', function () {
       var amqpClient = new AmqpProvider();
       var attachSender = sinon.spy(amqpClient, 'attachSenderLink');
       var attachReceiver = sinon.spy(amqpClient, 'attachReceiverLink');
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.on('post', function() {});
       newTwinReceiver.on('response', function () {});
       assert(attachSender.calledOnce);
@@ -82,7 +82,7 @@ describe('AmqpTwinReceiver', function () {
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_009: [The endpoint argument for attacheSenderLink shall be `/devices/<deviceId>/twin`.] */
     it('endpoint argument for attache/Receiver/Sender/Link shall be `/devices/<deviceId>/twin`.', function() {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.on('response', function () {});
       assert.equal(amqpClient.attachSenderEndpoint, '/devices/' + fakeConfig.deviceId + '/twin', 'attach sender called with correct endpoint');
       assert.equal(amqpClient.attachReceiverEndpoint, '/devices/' + fakeConfig.deviceId + '/twin', 'attach receiver called with correct endpoint');
@@ -108,7 +108,7 @@ describe('AmqpTwinReceiver', function () {
               } ] */
     it('link options argument for attache/Receiver/Sender/Link shall be ...', function() {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.on('response', function () {});
       assert.equal(amqpClient.attachSenderLinkOptions.attach.sndSettleMode, 1, ' sender send settle mode not set appropriately' );
       assert.equal(amqpClient.attachSenderLinkOptions.attach.rcvSettleMode, 0, ' sender rcv settle mode not set appropriately' );
@@ -137,7 +137,7 @@ describe('AmqpTwinReceiver', function () {
       };
       var subSpy = sinon.spy();
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.on('subscribed', subscribeHandler);
       newTwinReceiver.on('response', function () {});
       assert.equal(subCalls, 1, 'subscribe handler invoked improper number of times');
@@ -152,7 +152,7 @@ describe('AmqpTwinReceiver', function () {
       var attachReceiver = sinon.spy(amqpClient, 'attachReceiverLink');
       var detachSender = sinon.spy(amqpClient, 'detachSenderLink');
       var detachReceiver = sinon.spy(amqpClient, 'detachReceiverLink');
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.on('response', responseFunction);
       assert(detachSender.notCalled);
       assert(detachReceiver.notCalled);
@@ -168,7 +168,7 @@ describe('AmqpTwinReceiver', function () {
       var attachReceiver = sinon.spy(amqpClient, 'attachReceiverLink');
       var detachSender = sinon.spy(amqpClient, 'detachSenderLink');
       var detachReceiver = sinon.spy(amqpClient, 'detachReceiverLink');
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.on('response', responseFunction);
       newTwinReceiver.on('post', responseFunction);
       assert(detachSender.notCalled);
@@ -189,7 +189,7 @@ describe('AmqpTwinReceiver', function () {
     it('Emit a response message for a sendTwinRequest.', function(responseDone) {
       var amqpClient = new AmqpProvider();
       var messageData = 'a string for the body';
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.on('subscribed', function(event) {
         if (event.eventName === 'response') {
           process.nextTick(function () {
@@ -222,7 +222,7 @@ describe('AmqpTwinReceiver', function () {
       var amqpClient = new AmqpProviderAttachReceiverDelay();
       var messageData = 'some string for the body.';
       var dummyResponseHandler = function() {};
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       var sendCalled = sinon.spy(amqpClient.fakeSenderLink, 'send');
       newTwinReceiver.on('response', dummyResponseHandler);  // This will start the connecting sequence.
       assert(sendCalled.notCalled);
@@ -240,7 +240,7 @@ describe('AmqpTwinReceiver', function () {
       };
       var subSpy = sinon.spy(subscribeCallback, 'callbackFunction');
       var dummyResponseHandler = function() {};
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.on('subscribed', subscribeCallback.callbackFunction);
       newTwinReceiver.on('response', dummyResponseHandler);  // This will start the connecting sequence.
       assert(subSpy.notCalled);
@@ -258,7 +258,7 @@ describe('AmqpTwinReceiver', function () {
       };
       var subSpy = sinon.spy(subscribeCallback, 'callbackFunction');
       var dummyResponseHandler = function() {};
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.on('subscribed', subscribeCallback.callbackFunction);
       newTwinReceiver.on('response', dummyResponseHandler);  // This will start the connecting sequence.
       assert(subSpy.notCalled);
@@ -278,7 +278,7 @@ describe('AmqpTwinReceiver', function () {
       };
       var subSpy = sinon.spy(subscribeCallback, 'callbackFunction');
       var dummyResponseHandler = function() {};
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.on('subscribed', subscribeCallback.callbackFunction);
       newTwinReceiver.on('response', dummyResponseHandler);  // This will start the connecting sequence.
       assert(subSpy.notCalled);
@@ -298,7 +298,7 @@ describe('AmqpTwinReceiver', function () {
       };
       var subSpy = sinon.spy(subscribeCallback, 'callbackFunction');
       var dummyResponseHandler = function() {};
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.on('subscribed', subscribeCallback.callbackFunction);
       newTwinReceiver.on('response', dummyResponseHandler);  // This will make us fully connected
       assert(subSpy.calledOnce); // Should have seen the subscribe
@@ -327,7 +327,7 @@ describe('AmqpTwinReceiver', function () {
       var amqpClient = new AmqpProvider();
       var detachSender = sinon.spy(amqpClient, 'detachSenderLink');
       var detachReceiver = sinon.spy(amqpClient, 'detachReceiverLink');
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.on('response', function () {});
       newTwinReceiver.on('error', errorHandler);
       assert(detachSender.notCalled, 'detach sender should not have been called');
@@ -346,7 +346,7 @@ describe('AmqpTwinReceiver', function () {
       var amqpClient = new AmqpProvider();
       var attachSender = sinon.spy(amqpClient, 'attachSenderLink');
       var attachReceiver = sinon.spy(amqpClient, 'attachReceiverLink');
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.on('post', function () {});
       assert(attachSender.calledOnce);
       assert(attachReceiver.calledOnce);
@@ -356,7 +356,7 @@ describe('AmqpTwinReceiver', function () {
       var amqpClient = new AmqpProvider();
       var attachSender = sinon.spy(amqpClient, 'attachSenderLink');
       var attachReceiver = sinon.spy(amqpClient, 'attachReceiverLink');
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.on('response', function () {});
       newTwinReceiver.on('post', function() {});
       assert(attachSender.calledOnce);
@@ -368,7 +368,7 @@ describe('AmqpTwinReceiver', function () {
     it('calls SendTwinRequest following Link Establishment', function(responseDone) {
       var resource = '/notifications/twin/properties/desired';
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       var sendCalled = sinon.spy(amqpClient.fakeSenderLink, 'send');
       newTwinReceiver.on('subscribed', function(event) {
         if (event.eventName === 'post') {
@@ -389,7 +389,7 @@ describe('AmqpTwinReceiver', function () {
     it('POST listeners invoked for every desired prop update', function(responseDone) {
       var amqpClient = new AmqpProvider();
       var messageData = 'a string of data';
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.on('subscribed', function(event) {
         if (event.eventName === 'post') {
           var newDesiredMessage = new Message();
@@ -413,7 +413,7 @@ describe('AmqpTwinReceiver', function () {
       var resource = '/notifications/twin/properties/desired';
       var amqpClient = new AmqpProvider();
       var dummyPostHandler = function() {};
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       var sendCalled = sinon.spy(amqpClient.fakeSenderLink, 'send');
       newTwinReceiver.on('subscribed', function(event) {
         if (event.eventName === 'post') {
@@ -446,7 +446,7 @@ describe('AmqpTwinReceiver', function () {
     ].forEach(function(operation) {
       it('twin receiver emits an error if attaching ' + operation.direction + ' link fails', function(testDone) {
         var amqpClient = new operation.provider();
-        var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+        var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
         newTwinReceiver.on('error', function(err) {
           assert.equal(err.constructor.name, 'UnauthorizedError');
           testDone();
@@ -462,7 +462,7 @@ describe('AmqpTwinReceiver', function () {
       it('twin receiver emits an error if detaching ' + operation.direction + ' link fails', function(testDone) {
         var amqpClient = new operation.provider();
         var dummyResponseHandler = function() {};
-        var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+        var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
         newTwinReceiver.on('error', function(err) {
           /* Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_025: [When the `error` event is emitted, the first parameter shall be an error object obtained via the amqp `translateError` module.] */
           assert.equal(err.constructor.name, 'UnauthorizedError');
@@ -483,7 +483,7 @@ describe('AmqpTwinReceiver', function () {
         var amqpClient = new AmqpProvider();
         var detachSender = sinon.spy(amqpClient, 'detachSenderLink');
         var detachReceiver = sinon.spy(amqpClient, 'detachReceiverLink');
-        var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+        var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
         newTwinReceiver.on('subscribed', function(event) {
           if (event.eventName === 'response') {
             var linkError = new Error();
@@ -509,7 +509,7 @@ describe('AmqpTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_AMQP_06_012: [The `sendTwinRequest` method shall not throw `ReferenceError` if the `done` callback is falsy.] */
     it('does not throw if done is falsy', function() {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       assert.doesNotThrow(function() {
         newTwinReceiver.sendTwinRequest('PUT', '/res', { 'rid':10 }, 'body', null);
       });
@@ -518,7 +518,7 @@ describe('AmqpTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_AMQP_06_013: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `method` argument is falsy. **] */
     it('throws if method is falsy', function() {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       assert.throws(function() {
         newTwinReceiver.sendTwinRequest(null, '/res', { '$rid':10 }, 'body', function() {});
       }, ReferenceError);
@@ -527,7 +527,7 @@ describe('AmqpTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_AMQP_06_017: [The `sendTwinRequest` method shall throw an `ArgumentError` if the `method` argument is not a string.] */
     it('throws if method is not a string', function() {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       assert.throws(function() {
         newTwinReceiver.sendTwinRequest({}, '/res', { '$rid':10 }, 'body', function() {});
       }, errors.ArgumentError);
@@ -536,7 +536,7 @@ describe('AmqpTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_AMQP_06_014: [The `sendTwinRequest` method shall throw an `ReferenceError` if the `resource` argument is falsy.] */
     it('throws if resource is falsy', function() {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       assert.throws(function() {
         newTwinReceiver.sendTwinRequest('PUT', null, { '$rid':10 }, 'body', function() {});
       }, ReferenceError);
@@ -545,7 +545,7 @@ describe('AmqpTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_AMQP_06_018: [The `sendTwinRequest` method shall throw an `ArgumentError` if the `resource` argument is not a string.] */
   it('throws if resource is not a string', function() {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       assert.throws(function() {
         newTwinReceiver.sendTwinRequest('PUT', {}, { '$rid':10 }, 'body', function() {});
       }, errors.ArgumentError);
@@ -554,7 +554,7 @@ describe('AmqpTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_AMQP_06_015: [The `sendTwinRequest` method shall throw an `ReferenceError` if the `properties` argument is falsy.] */
     it('throws if properties is falsy', function() {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       assert.throws(function() {
         newTwinReceiver.sendTwinRequest('PUT', '/res', null, 'body', function() {});
       }, ReferenceError);
@@ -563,7 +563,7 @@ describe('AmqpTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_AMQP_06_019: [The `sendTwinRequest` method shall throw an `ArgumentError` if the `properties` argument is not a an object.] */
     it('throws if properties is not an object', function() {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       assert.throws(function() {
         newTwinReceiver.sendTwinRequest('PUT', '/res', 'properties', 'body', function() {});
       }, errors.ArgumentError);
@@ -572,7 +572,7 @@ describe('AmqpTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_AMQP_06_028: [The `sendTwinRequest` method shall throw an `ArgumentError` if any members of the `properties` object fails to serialize to a string.] */
     it('throws if properties fails to deserialize to a string', function() {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       assert.throws(function() {
         newTwinReceiver.sendTwinRequest('PUT', '/res', { 'func': function() {} }, 'body', function() {});
       }, errors.ArgumentError);
@@ -581,7 +581,7 @@ describe('AmqpTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_AMQP_06_016: [The `sendTwinRequest` method shall throw an `ReferenceError` if the `body` argument is falsy.] */
     it('throws if body is falsy', function() {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       assert.throws(function() {
         newTwinReceiver.sendTwinRequest('PUT', '/res', { '$rid' : 10 }, null, function() {});
       }, ReferenceError);
@@ -590,7 +590,7 @@ describe('AmqpTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_AMQP_06_020: [The `method` argument shall be the value of the amqp message `operation` annotation.] */
     it('method argument shall be operation annotation', function() {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.sendTwinRequest('GET', 'abc/', { '$rid' : 10 }, 'a string for the body', function() {});
       assert.equal(amqpClient.lastSendMessage.messageAnnotations.operation, 'GET', 'operation not set appropriately');
     });
@@ -598,7 +598,7 @@ describe('AmqpTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_AMQP_06_021: [The `resource` argument shall be the value of the amqp message `resource` annotation.] */
     it('resource argument shall be resource annotation', function() {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.sendTwinRequest('GET', '/abc', { '$rid' : 10 }, 'a string for the body', function() {});
       assert.equal(amqpClient.lastSendMessage.messageAnnotations.resource, '/abc', 'resource not set appropriately');
     });
@@ -606,7 +606,7 @@ describe('AmqpTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_AMQP_06_031: [If the `resource` argument terminates in a slash, the slash shall be removed from the annotation.] */
     it('resource argument terminating slash shall be removed', function() {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.sendTwinRequest('GET', '/abc/', { '$rid' : 10 }, 'a string for the body', function() {});
       assert.equal(amqpClient.lastSendMessage.messageAnnotations.resource, '/abc', 'resource not set appropriately');
     });
@@ -614,7 +614,7 @@ describe('AmqpTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_AMQP_06_039: [If the `resource` argument length is zero (after terminating slash removal), the resource annotation shall not be set.] */
     it('resource length zero has no resource annotation', function() {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.sendTwinRequest('GET', '/', { '$rid' : 10 }, 'a string for the body', function() {});
       assert(!amqpClient.lastSendMessage.messageAnnotations.hasOwnProperty('resource'), 'message contains a resource annotation inappropriately');
     });
@@ -623,7 +623,7 @@ describe('AmqpTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_AMQP_06_023: [The $rid property shall be set as the `correlationId` in the properties map of the amqp message.] */
     it('properties of the message set appropriately', function() {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.sendTwinRequest('PATCH', '/', { '$rid' : 10, 'rid': 10, 'from': 'the south', 'to': 'the north' }, 'a string for the body', function() {});
       assert.isFalse(amqpClient.lastSendMessage.properties.hasOwnProperty('$rid'), '$rid property set inappropriately in message');
       assert(amqpClient.lastSendMessage.properties.hasOwnProperty('rid'), 'rid property not in message');
@@ -641,7 +641,7 @@ describe('AmqpTwinReceiver', function () {
     it('body argument shall be value of message body', function() {
       var amqpClient = new AmqpProvider();
       var messageData = 'a string for the body';
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.sendTwinRequest('PATCH', '/', { '$rid' : 10, 'rid': 10, 'from': 'the south', 'to': 'the north' }, messageData, function() {});
       assert(amqpClient.lastSendMessage.hasOwnProperty('body'), 'body property not in message');
       assert.equal(amqpClient.lastSendMessage.body, messageData, 'body set inappropriately');
@@ -650,7 +650,7 @@ describe('AmqpTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_AMQP_06_040: [If an error occurs in the `sendTwinRequest` method, the `done` callback shall be called with the error as the first parameter.] */
     it('error occurs done shall be called with error as first parameter', function() {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       amqpClient.sendShouldSucceed(false);
       newTwinReceiver.sendTwinRequest('PATCH', '/', { '$rid' : 10, 'rid': 10, 'from': 'the south', 'to': 'the north' }, 'a string for the body', function(err) {
         assert(err);
@@ -660,7 +660,7 @@ describe('AmqpTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_AMQP_06_041: [If an error occurs, the `sendTwinRequest` shall use the AMQP `translateError` module to convert the amqp-specific error to a transport agnostic error before passing it into the `done` callback.] */
     it('error occurs shall translated to agnostic message', function() {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       amqpClient.sendShouldSucceed(false);
       newTwinReceiver.sendTwinRequest('PATCH', '/', { '$rid' : 10, 'rid': 10, 'from': 'the south', 'to': 'the north' }, 'a string for the body', function(err) {
         assert.equal(err.constructor.name, 'UnauthorizedError');
@@ -671,7 +671,7 @@ describe('AmqpTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_AMQP_06_042: [If the `sendTwinRequest` method is successful, the first parameter to the `done` callback shall be null and the second parameter shall be a MessageEnqueued object. **] */
     it('returns MessageEnqueued object on success', function(done) {
       var amqpClient = new AmqpProvider();
-      var newTwinReceiver = new AmqpTwinReceiver(fakeConfig, amqpClient);
+      var newTwinReceiver = new AmqpTwinClient(fakeConfig, amqpClient);
       newTwinReceiver.sendTwinRequest('PATCH', '/properties/reported/', { '$rid':10, '$version': 200 }, 'body', function(err, res) {
         if (err) {
           done(err);
@@ -705,18 +705,18 @@ describe('AmqpTwinReceiver', function () {
       }, ReferenceError);
     });
 
-    /* Tests_SRS_NODE_DEVICE_AMQP_06_034: [If a twin receiver for this endpoint doesn't exist, the `getTwinReceiver` method should create a new `AmqpTwinReceiver` object.] */
-    /* Tests_SRS_NODE_DEVICE_AMQP_06_035: [If a twin receiver for this endpoint has already been created, the `getTwinReceiver` method should not create a new `AmqpTwinReceiver` object.] */
+    /* Tests_SRS_NODE_DEVICE_AMQP_06_034: [If a twin receiver for this endpoint doesn't exist, the `getTwinReceiver` method should create a new `AmqpTwinClient` object.] */
+    /* Tests_SRS_NODE_DEVICE_AMQP_06_035: [If a twin receiver for this endpoint has already been created, the `getTwinReceiver` method should not create a new `AmqpTwinClient` object.] */
     it('calls done when complete', function(done) {
       transport.getTwinReceiver(done);
     });
 
-    /* Tests_SRS_NODE_DEVICE_AMQP_06_037: [If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `AmqpTwinReceiver` object as the second parameter of the `done` function with null as the first parameter.] */
-    /* Tests_SRS_NODE_DEVICE_AMQP_06_038: [If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `AmqpTwinReceiver` object as the second parameter of the `done` function with null as the first parameter.] */
+    /* Tests_SRS_NODE_DEVICE_AMQP_06_037: [If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `AmqpTwinClient` object as the second parameter of the `done` function with null as the first parameter.] */
+    /* Tests_SRS_NODE_DEVICE_AMQP_06_038: [If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `AmqpTwinClient` object as the second parameter of the `done` function with null as the first parameter.] */
     it('only creates one twin receiver object', function(done) {
       transport.getTwinReceiver(function(err, receiver1) {
         assert.isNull(err);
-        assert.instanceOf(receiver1, AmqpTwinReceiver);
+        assert.instanceOf(receiver1, AmqpTwinClient);
         transport.getTwinReceiver(function(err, receiver2) {
           assert.isNull(err);
           assert.strictEqual(receiver1, receiver2);

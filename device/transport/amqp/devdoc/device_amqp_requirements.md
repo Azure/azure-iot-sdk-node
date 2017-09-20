@@ -153,8 +153,8 @@ An new Amqp message shall be instantiated.
 ### getTwinReceiver
 
 **SRS_NODE_DEVICE_AMQP_06_033: [** The `getTwinReceiver` method shall throw an `ReferenceError` if done is falsy **]**
-**SRS_NODE_DEVICE_AMQP_06_034: [** If a twin receiver for this endpoint doesn't exist, the `getTwinReceiver` method should create a new `AmqpTwinReceiver` object. **]**
-**SRS_NODE_DEVICE_AMQP_06_035: [** If a twin receiver for this endpoint has already been created, the `getTwinReceiver` method should not create a new `AmqpTwinReceiver` object. **]**
+**SRS_NODE_DEVICE_AMQP_06_034: [** If a twin receiver for this endpoint doesn't exist, the `getTwinReceiver` method should create a new `AmqpTwinClient` object. **]**
+**SRS_NODE_DEVICE_AMQP_06_035: [** If a twin receiver for this endpoint has already been created, the `getTwinReceiver` method should not create a new `AmqpTwinClient` object. **]**
 **SRS_NODE_DEVICE_AMQP_06_036: [** The `getTwinReceiver` method shall call the `done` method after it complete. **]**
-**SRS_NODE_DEVICE_AMQP_06_037: [** If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `AmqpTwinReceiver` object as the second parameter of the `done` function with null as the first parameter. **]**
-**SRS_NODE_DEVICE_AMQP_06_038: [** If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `AmqpTwinReceiver` object as the second parameter of the `done` function with null as the first parameter. **]**
+**SRS_NODE_DEVICE_AMQP_06_037: [** If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `AmqpTwinClient` object as the second parameter of the `done` function with null as the first parameter. **]**
+**SRS_NODE_DEVICE_AMQP_06_038: [** If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `AmqpTwinClient` object as the second parameter of the `done` function with null as the first parameter. **]**

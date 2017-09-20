@@ -3,6 +3,8 @@
 
 'use strict';
 
+import * as dbg from 'debug';
+const debug = dbg('amqp-receiver');
 import { EventEmitter } from 'events';
 import { endpoint, Message, results, Receiver } from 'azure-iot-common';
 import { ClientConfig, DeviceMethodRequest, DeviceMethodResponse } from 'azure-iot-device';
@@ -25,7 +27,7 @@ export class AmqpReceiver extends EventEmitter implements Receiver {
     this._config = config;
     this._amqpClient = amqpClient;
     this._deviceMethodClient = deviceMethodClient;
-    this._deviceMethodClient.on('errorReceived', (err) => {
+    this._deviceMethodClient.on('error', (err) => {
       this.emit('errorReceived', err);
     });
 
@@ -89,5 +91,11 @@ export class AmqpReceiver extends EventEmitter implements Receiver {
   /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `Amqp[DeviceMethodClient` object.]*/
   onDeviceMethod(methodName: string, methodCallback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
     this._deviceMethodClient.onDeviceMethod(methodName, methodCallback);
+    this._deviceMethodClient.attach((err) => {
+      if (err) {
+        debug('error while attaching the device method client: ' + err.toString());
+        // no need to emit anything: the general error handler registered in the constructor will do that for us.
+      }
+    });
   }
 }

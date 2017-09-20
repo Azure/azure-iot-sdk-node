@@ -35,7 +35,8 @@ describe('AmqpReceiver', function () {
 
     fakeMethodClient = {
       on: sinon.spy(),
-      onDeviceMethod: sinon.spy()
+      onDeviceMethod: sinon.spy(),
+      attach: sinon.stub().callsArg(0)
     };
   });
 
@@ -54,6 +55,18 @@ describe('AmqpReceiver', function () {
         assert.instanceOf(recv, AmqpReceiver);
         assert.instanceOf(recv, EventEmitter);
       });
+    });
+
+    it('forwards the errorReceived event if an error is received from a device method link', function(testCallback) {
+      var fakeMethodClient = new EventEmitter();
+      var recv = new AmqpReceiver(fakeConfig, fakeAmqpClient, fakeMethodClient);
+      var fakeError = new Error('fake error');
+      var fakeCallback = function(err) {
+        assert.strictEqual(err, fakeError);
+        testCallback();
+      };
+      recv.on('errorReceived', fakeCallback);
+      fakeMethodClient.emit('error', fakeError);
     });
   });
 
@@ -160,16 +173,21 @@ describe('AmqpReceiver', function () {
       assert(fakeMethodClient.onDeviceMethod.calledWith(fakeMethodName, fakeCallback));
     });
 
-    it('forwards the errorReceived event if an error is received from a device method link', function(testCallback) {
+    it('emits an errorReceived event with the error if the links fail to connect initially', function (testCallback) {
       var fakeMethodClient = new EventEmitter();
-      var recv = new AmqpReceiver(fakeConfig, fakeAmqpClient, fakeMethodClient);
       var fakeError = new Error('fake error');
+      fakeMethodClient.onDeviceMethod = sinon.stub();
+      fakeMethodClient.attach = sinon.stub().callsArgWith(0, fakeError);
+
+      var recv = new AmqpReceiver(fakeConfig, fakeAmqpClient, fakeMethodClient);
       var fakeCallback = function(err) {
         assert.strictEqual(err, fakeError);
         testCallback();
       };
+
       recv.on('errorReceived', fakeCallback);
-      fakeMethodClient.emit('errorReceived', fakeError);
+      recv.onDeviceMethod('fakeMethod', function () {});
+      fakeMethodClient.emit('error', fakeError);
     });
   });
 });

@@ -4,13 +4,14 @@
 'use strict';
 
 import { EventEmitter } from 'events';
-import machina = require('machina');
+import * as machina  from 'machina';
+import * as async from 'async';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-amqp.AmqpDeviceMethodClient');
 
 import { Message, errors, endpoint } from 'azure-iot-common';
 import { ClientConfig, DeviceMethodRequest, DeviceMethodResponse } from 'azure-iot-device';
-import { Amqp as BaseAmqpClient } from 'azure-iot-amqp-base';
+import { Amqp as BaseAmqpClient, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
 
 const methodMessagePropertyKeys = {
   methodName: 'IoThub-methodname',
@@ -24,8 +25,9 @@ export class AmqpDeviceMethodClient extends EventEmitter {
   private _config: ClientConfig;
   private _amqpClient: any;
   private _methodEndpoint: string;
-  private _methodReceiverInitialized: boolean;
   private _fsm: any;
+  private _senderLink: SenderLink;
+  private _receiverLink: ReceiverLink;
 
   constructor(config: ClientConfig, amqpClient: BaseAmqpClient) {
     super();
@@ -44,24 +46,44 @@ export class AmqpDeviceMethodClient extends EventEmitter {
     this._amqpClient = amqpClient;
     /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_017: [The endpoint used to for the sender and receiver link shall be `/devices/<device-id>/methods/devicebound`.]*/
     this._methodEndpoint = endpoint.devicePath(encodeURIComponent(this._config.deviceId)) + '/methods/devicebound';
-    this._methodReceiverInitialized = false;
 
     this._fsm = new machina.Fsm({
-      namespace: 'device-method-client',
-      initialState: 'disconnected',
+      namespace: 'amqp-device-method-client',
+      initialState: 'detached',
       states: {
-        'disconnected': {
-          sendMethodResponse: () => {
-            this._fsm.deferUntilTransition('connected');
-            this._fsm.transition('connecting');
+        detached: {
+          _onEnter: (callback, err) => {
+            this._senderLink = undefined;
+            this._receiverLink = undefined;
+            if (callback) {
+              callback(err);
+            } else {
+              if (err) {
+                /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_015: [The `AmqpDeviceMethodClient` object shall forward any error received on a link to any listening client in an `error` event.]*/
+                this.emit('error', err);
+              }
+            }
           },
-          onDeviceMethod: () => {
-            this._fsm.deferUntilTransition('connected');
-            this._fsm.transition('connecting');
+          attach: (callback) => {
+            this._fsm.transition('attaching', callback);
+          },
+          /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_023: [The `detach` method shall call the callback with no arguments if the links are properly detached.]*/
+          detach: (callback) => callback(),
+          /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_025: [The `forceDetach` method shall immediately return if all links are already detached.]*/
+          forceDetach: () => { return; },
+          /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_026: [The `sendMethodResponse` shall fail with a `NotConnectedError` if it is called while the links are detached.]*/
+          sendMethodResponse: (response, callback) => callback(new errors.NotConnectedError('Method Links were detached - the service already considers this method failed')),
+          /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_006: [The `onDeviceMethod` method shall save the `callback` argument so that it is called when the corresponding method call is received.]*/
+          onDeviceMethod: (methodName, methodCallback) => {
+            debug('attaching callback for method: ' + methodName + 'while detached.');
+            this.on('method_' + methodName, methodCallback);
           }
         },
-        'connecting': {
-          _onEnter: () => {
+        attaching: {
+          _onEnter: (attachCallback) => {
+            /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_014: [** The `AmqpDeviceMethodClient` object shall set 2 properties of any AMQP link that it create:
+            - `com.microsoft:api-version` shall be set to the current API version in use.
+            - `com.microsoft:channel-correlation-id` shall be set to the identifier of the device (also often referred to as `deviceId`).]*/
             const linkOptions = {
               attach: {
                 properties: {
@@ -71,72 +93,116 @@ export class AmqpDeviceMethodClient extends EventEmitter {
               }
             };
 
-            this._amqpClient.attachSenderLink(this._methodEndpoint, linkOptions, (err) => {
+            /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_019: [The `attach` method shall create a SenderLink and a ReceiverLink and attach them.]*/
+            this._amqpClient.attachSenderLink(this._methodEndpoint, linkOptions, (err, senderLink) => {
               if (err) {
-                this._fsm.transition('disconnected');
-                this.emit('errorReceived', err);
+                this._fsm.transition('detaching', attachCallback, err);
               } else {
-                this._amqpClient.attachReceiverLink(this._methodEndpoint, linkOptions, (err) => {
+                this._senderLink = senderLink;
+                this._amqpClient.attachReceiverLink(this._methodEndpoint, linkOptions, (err, receiverLink) => {
                   if (err) {
-                    this._fsm.transition('disconnected');
-                    this.emit('errorReceived', err);
+                    this._fsm.transition('detaching', attachCallback, err);
                   } else {
-                    this._fsm.transition('connected');
+                    this._receiverLink = receiverLink;
+                    /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_021: [The `attach` method shall subscribe to the `message` and `error` events on the `ReceiverLink` object associated with the method endpoint.]*/
+                    this._receiverLink.on('message', (msg) => {
+                      debug('got method request');
+                      debug(JSON.stringify(msg, null, 2));
+                      const methodName = msg.properties.getValue(methodMessagePropertyKeys.methodName);
+                      const methodRequest = {
+                        methods: { methodName: methodName },
+                        requestId: msg.correlationId,
+                        body: msg.getData()
+                      };
+
+                      debug(JSON.stringify(methodRequest, null, 2));
+                      this.emit('method_' + methodName, methodRequest);
+                    });
+
+                    this._receiverLink.on('error', (err) => {
+                      this._fsm.transition('detaching', undefined, err);
+                    });
+
+                    this._fsm.transition('attached', attachCallback);
                   }
                 });
               }
             });
           },
-          sendMethodResponse: () => {
-            this._fsm.deferUntilTransition('connected');
+          forceDetach: () => {
+            /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_024: [The `forceDetach` method shall forcefully detach all links.]*/
+            if (this._senderLink) {
+              this._senderLink.forceDetach();
+            }
+            if (this._receiverLink) {
+              this._receiverLink.forceDetach();
+            }
+            this._fsm.transition('detached');
           },
-          onDeviceMethod: () => {
-            this._fsm.deferUntilTransition('connected');
+          detach: () => this._fsm.deferUntilTransition(),
+          /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_026: [The `sendMethodResponse` shall fail with a `NotConnectedError` if it is called while the links are detached.]*/
+          sendMethodResponse: (response, callback) => callback(new errors.NotConnectedError('Method Links were detached - the service already considers this method failed')),
+          /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_006: [The `onDeviceMethod` method shall save the `callback` argument so that it is called when the corresponding method call is received.]*/
+          onDeviceMethod: (methodName, methodCallback) => {
+            debug('attaching callback for method: ' + methodName + 'while attaching.');
+            this.on('method_' + methodName, methodCallback);
           }
         },
-        'connected': {
+        attached: {
+          _onEnter: (attachCallback) => {
+            attachCallback();
+          },
           sendMethodResponse: (response, callback) => {
             let message = new Message(JSON.stringify(response.payload));
             message.correlationId = response.requestId;
             message.properties.add(methodMessagePropertyKeys.status, response.status);
             this._amqpClient.send(message, this._methodEndpoint, undefined, callback);
           },
+          /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_006: [The `onDeviceMethod` method shall save the `callback` argument so that it is called when the corresponding method call is received.]*/
           onDeviceMethod: (methodName, methodCallback) => {
-            this._amqpClient.getReceiver(this._methodEndpoint, (err, methodReceiver) => {
-              if (!this._methodReceiverInitialized) {
-                methodReceiver.on('message', (msg) => {
-                  debug('got method request');
-                  debug(JSON.stringify(msg, null, 2));
-                  const methodName = msg.properties.getValue(methodMessagePropertyKeys.methodName);
-                  const methodRequest = {
-                    methods: { methodName: methodName },
-                    requestId: msg.correlationId,
-                    body: msg.getData()
-                  };
-
-                  debug(JSON.stringify(methodRequest, null, 2));
-                  this.emit('method_' + methodName, methodRequest);
-                });
-                methodReceiver.on('errorReceived', (err) => {
-                  this._fsm.transition('disconnecting');
-                  this._amqpClient.detachReceiverLink(this._methodEndpoint, () => {
-                    this._amqpClient.detachSenderLink(this._methodEndpoint, () => {
-                      this._methodReceiverInitialized = false;
-                      this._fsm.transition('disconnected');
-                      this.emit('errorReceived', err);
-                    });
-                  });
-                });
-                this._methodReceiverInitialized = true;
-              }
-
-              debug('attaching callback for method: ' + methodName);
-              this.on('method_' + methodName, methodCallback);
-            });
+            debug('attaching callback for method: ' + methodName);
+            this.on('method_' + methodName, methodCallback);
+          },
+          /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_020: [The `attach` method shall immediately call the callback if the links are already attached.]*/
+          attach: (callback) => callback(),
+          detach: (callback) => this._fsm.transition('detaching', callback),
+          forceDetach: () => {
+            /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_024: [The `forceDetach` method shall forcefully detach all links.]*/
+            this._senderLink.forceDetach();
+            this._receiverLink.forceDetach();
+            this._fsm.transition('detached');
           }
+        },
+        detaching: {
+          _onEnter: (forwardedCallback, err) => {
+            /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_022: [The `detach` method shall detach both Sender and Receiver links.]*/
+            const links = [this._senderLink, this._receiverLink];
+            async.each(links, (link, callback) => {
+              if (link) {
+                link.detach(callback);
+              } else {
+                callback();
+              }
+            }, () => {
+              this._fsm.transition('detached', forwardedCallback, err);
+            });
+          },
+          '*': (callback) => this._fsm.deferUntilTransition('detached')
         }
       }
     });
+  }
+
+  attach(callback: (err: Error) => void): void {
+    this._fsm.handle('attach', callback);
+  }
+
+  detach(callback: (err: Error) => void): void {
+    this._fsm.handle('detach', callback);
+  }
+
+  forceDetach(): void {
+    this._fsm.handle('forceDetach');
   }
 
   sendMethodResponse(response: DeviceMethodResponse, callback?: (err?: Error, result?: any) => void): void {

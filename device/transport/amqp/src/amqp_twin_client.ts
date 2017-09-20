@@ -18,20 +18,20 @@ const responseTopic = '$iothub/twin/res';
 
 /**
  * @private
- * @class        module:azure-iot-device-amqp.AmqpTwinReceiver
+ * @class        module:azure-iot-device-amqp.AmqpTwinClient
  * @classdesc    Acts as a receiver for device-twin traffic
  *
  * @param {Object} config   configuration object
- * @fires AmqpTwinReceiver#subscribed   an response or post event has been set up for listening.
- * @fires AmqpTwinReceiver#error    an error has occurred
- * @fires AmqpTwinReceiver#response   a response message has been received from the service
- * @fires AmqpTwinReceiver#post a post message has been received from the service
+ * @fires AmqpTwinClient#subscribed   an response or post event has been set up for listening.
+ * @fires AmqpTwinClient#error    an error has occurred
+ * @fires AmqpTwinClient#response   a response message has been received from the service
+ * @fires AmqpTwinClient#post a post message has been received from the service
  * @throws {ReferenceError} If client parameter is falsy.
  *
  */
 
-/* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_005: [The `AmqpTwinReceiver` shall inherit from the `EventEmitter` class.] */
-export class AmqpTwinReceiver extends EventEmitter {
+/* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_005: [The `AmqpTwinClient` shall inherit from the `EventEmitter` class.] */
+export class AmqpTwinClient extends EventEmitter {
   static errorEvent: string = 'error';
   static responseEvent: string = 'response';
   static postEvent: string = 'post';
@@ -49,14 +49,14 @@ export class AmqpTwinReceiver extends EventEmitter {
 
   constructor(config: ClientConfig, client: any) {
     super();
-    /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_003: [The `AmqpTwinReceiver` constructor shall accept a `config` object.] */
-    /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_004: [The `AmqpTwinReceiver` constructor shall throw `ReferenceError` if the `config` object is falsy.] */
+    /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_003: [The `AmqpTwinClient` constructor shall accept a `config` object.] */
+    /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_004: [The `AmqpTwinClient` constructor shall throw `ReferenceError` if the `config` object is falsy.] */
     if (!config) {
       throw new ReferenceError('required parameter is missing');
     }
 
-    /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_001: [The `AmqpTwinReceiver` constructor shall accept a `client` object.] */
-    /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_002: [** The `AmqpTwinReceiver` constructor shall throw `ReferenceError` if the `client` object is falsy. **] */
+    /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_001: [The `AmqpTwinClient` constructor shall accept a `client` object.] */
+    /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_002: [** The `AmqpTwinClient` constructor shall throw `ReferenceError` if the `client` object is falsy. **] */
     if (!client) {
       throw new ReferenceError('required parameter is missing');
     }
@@ -87,7 +87,7 @@ export class AmqpTwinReceiver extends EventEmitter {
             this._eventQueueError = null;
           },
           handleNewListener: (eventName) => {
-            if ((eventName === AmqpTwinReceiver.responseEvent) || (eventName === AmqpTwinReceiver.postEvent)) {
+            if ((eventName === AmqpTwinClient.responseEvent) || (eventName === AmqpTwinClient.postEvent)) {
               this._appendEventQueue();
               this._fsm.transition('connecting');
             }
@@ -98,11 +98,11 @@ export class AmqpTwinReceiver extends EventEmitter {
           },
           handleErrorEmit: (err: Error) => {
             debug('_handleError: error is: ' + JSON.stringify(err));
-            this.emit(AmqpTwinReceiver.errorEvent, translateError('received an error from the amqp transport: ', err));
+            this.emit(AmqpTwinClient.errorEvent, translateError('received an error from the amqp transport: ', err));
           },
           handleLinkDetach: (detachObject: any) => {
             if (detachObject && detachObject.error) {
-              this.emit(AmqpTwinReceiver.errorEvent, translateError('received an error from the amqp transport: ', detachObject.error));
+              this.emit(AmqpTwinClient.errorEvent, translateError('received an error from the amqp transport: ', detachObject.error));
             }
           }
         },
@@ -152,10 +152,10 @@ export class AmqpTwinReceiver extends EventEmitter {
             this._handleHeadOfEventQueue();
           },
           actual_handleNewListener: (eventName) => {
-            if (eventName === AmqpTwinReceiver.responseEvent) {
+            if (eventName === AmqpTwinClient.responseEvent) {
               /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_011: [** Upon successfully establishing the upstream and downstream links the `subscribed` event shall be emitted from the twin receiver, with an argument object of {eventName: "response", transportObject: <object>}.] */
-              this.emit(AmqpTwinReceiver.subscribedEvent, { 'eventName' : AmqpTwinReceiver.responseEvent, 'transportObject' : this._upstreamAmqpLink });
-            } else if (eventName === AmqpTwinReceiver.postEvent) {
+              this.emit(AmqpTwinClient.subscribedEvent, { 'eventName' : AmqpTwinClient.responseEvent, 'transportObject' : this._upstreamAmqpLink });
+            } else if (eventName === AmqpTwinClient.postEvent) {
               //
               // We need to send a PUT request upstream to enable notification of desired property changes
               // from the cloud. Then we have to wait for the (hopefully) successful response to this request.
@@ -165,7 +165,7 @@ export class AmqpTwinReceiver extends EventEmitter {
               const correlationId = uuid.v4().toString();
               /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_013: [Upon receiving a successful response message with the correlationId of the `PUT`, the `subscribed` event shall be emitted from the twin receiver, with an argument object of {eventName: "post", transportObject: <object>}.] */
               this._internalOperations[correlationId] = () => {
-                this.emit(AmqpTwinReceiver.subscribedEvent, { 'eventName' : AmqpTwinReceiver.postEvent, 'transportObject' : this._upstreamAmqpLink });
+                this.emit(AmqpTwinClient.subscribedEvent, { 'eventName' : AmqpTwinClient.postEvent, 'transportObject' : this._upstreamAmqpLink });
               };
               /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_019: [Upon successfully establishing the upstream and downstream links, a `PUT` request shall be sent on the upstream link with a correlationId set in the properties of the amqp message.] */
               this._sendTwinRequest('PUT', '/notifications/twin/properties/desired', { $rid: correlationId }, ' ');
@@ -173,7 +173,7 @@ export class AmqpTwinReceiver extends EventEmitter {
             this._handleHeadOfEventQueue();
           },
           actual_handleRemoveListener: (eventName) => {
-            if ((eventName === AmqpTwinReceiver.postEvent) && EventEmitter.listenerCount(this, AmqpTwinReceiver.postEvent) === 0) {
+            if ((eventName === AmqpTwinClient.postEvent) && EventEmitter.listenerCount(this, AmqpTwinClient.postEvent) === 0) {
               /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_021: [When there is no more listeners for the `post` event, a `DELETE` request shall be sent on the upstream link with a correlationId set in the properties of the amqp message.] */
               const correlationId = uuid.v4().toString();
               this._internalOperations[correlationId] = () => {
@@ -181,7 +181,7 @@ export class AmqpTwinReceiver extends EventEmitter {
               };
               this._sendTwinRequest('DELETE', '/notifications/twin/properties/desired', { $rid: correlationId }, ' ');
             }
-            if ((EventEmitter.listenerCount(this, AmqpTwinReceiver.postEvent) + EventEmitter.listenerCount(this, AmqpTwinReceiver.responseEvent)) === 0) {
+            if ((EventEmitter.listenerCount(this, AmqpTwinClient.postEvent) + EventEmitter.listenerCount(this, AmqpTwinClient.responseEvent)) === 0) {
               /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_014: [When there are no more listeners for the `response` AND the `post` event, the upstream and downstream amqp links shall be closed via calls to `detachReceiverLink` and `detachSenderLink`.] */
               this._fsm.transition('disconnecting');
             } else {
@@ -351,14 +351,14 @@ export class AmqpTwinReceiver extends EventEmitter {
         'body': message.data
       };
 
-      this.emit(AmqpTwinReceiver.responseEvent, response);
+      this.emit(AmqpTwinClient.responseEvent, response);
     }
   }
 
   private _onDesiredPropertyDelta(message: Message): void {
     /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_020: [If there is a listener for the `post` event, a `post` event shall be emitted for each amqp message received on the downstream link that does NOT contain a correlation id, the parameter of the emit will be is the data of the amqp message.] */
     debug('onPostMessage: The downstream message is: ' + JSON.stringify(message));
-    this.emit(AmqpTwinReceiver.postEvent, message.data);
+    this.emit(AmqpTwinClient.postEvent, message.data);
   }
 
   private _onAmqpDetached(detachObject: any): void {
