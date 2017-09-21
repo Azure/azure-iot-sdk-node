@@ -37,44 +37,44 @@ var uploadDisconnectProtocols = [deviceMqtt.Mqtt, deviceMqtt.MqttWs, deviceAmqp.
 
 
 device_provision(hubConnectionString, function (err, provisionedDevices) {
-  // if (err) {
-  //   console.log('Unable to create the devices needed.');
-  // } else {
-  //   provisionedDevices.forEach(function(deviceToTest) {
-  //     if (deviceToTest.authenticationDescription !== 'CA signed certificate') {
-  //       acknowledgementProtocols.forEach(function (protocolToTest) {
-  //         device_acknowledge_tests(hubConnectionString, protocolToTest, deviceToTest);
-  //       });
-  //     }
-  //     if (deviceToTest.authenticationDescription !== 'CA signed certificate') {
-  //       generalProtocols.forEach(function(protocolToTest) {
-  //         device_service_tests(hubConnectionString, protocolToTest, deviceToTest);
-  //       });
-  //     }
-  //   });
+  if (err) {
+    console.log('Unable to create the devices needed.');
+  } else {
+    provisionedDevices.forEach(function(deviceToTest) {
+      if (deviceToTest.authenticationDescription !== 'CA signed certificate') {
+        acknowledgementProtocols.forEach(function (protocolToTest) {
+          device_acknowledge_tests(hubConnectionString, protocolToTest, deviceToTest);
+        });
+      }
+      if (deviceToTest.authenticationDescription !== 'CA signed certificate') {
+        generalProtocols.forEach(function(protocolToTest) {
+          device_service_tests(hubConnectionString, protocolToTest, deviceToTest);
+        });
+      }
+    });
 
-  //   // CA certs don't work for http and ca cert chains don't work for web sockets.
-  //   assert.equal(provisionedDevices[3].authenticationDescription, 'CA signed certificate');
-  //   device_service_tests(hubConnectionString, deviceMqtt.Mqtt, provisionedDevices[3]);
-  //   device_service_tests(hubConnectionString, deviceAmqp.Amqp, provisionedDevices[3]);
-  //   device_acknowledge_tests(hubConnectionString, deviceAmqp.Amqp, provisionedDevices[3]);
-  //   //In the interest of saving time, we only will perform the connection
-  //   //tests on the shared key device.
-  //   assert.equal(provisionedDevices[1].authenticationDescription, 'shared private key');
-  //   c2d_disconnect(hubConnectionString, provisionedDevices[1]);
-  //   d2c_disconnect(hubConnectionString, provisionedDevices[1]);
-  //   method_disconnect(hubConnectionString, provisionedDevices[1]);
-  //   throttle_disconnect(hubConnectionString, provisionedDevices[1]);
-  //   uploadDisconnectProtocols.forEach(function(protocolToTest) {
-  //     upload_disconnect(hubConnectionString, protocolToTest, provisionedDevices[1]);
-  //   });
-  //   twin_disconnect(hubConnectionString);
+    // CA certs don't work for http and ca cert chains don't work for web sockets.
+    assert.equal(provisionedDevices[3].authenticationDescription, 'CA signed certificate');
+    device_service_tests(hubConnectionString, deviceMqtt.Mqtt, provisionedDevices[3]);
+    device_service_tests(hubConnectionString, deviceAmqp.Amqp, provisionedDevices[3]);
+    device_acknowledge_tests(hubConnectionString, deviceAmqp.Amqp, provisionedDevices[3]);
+    //In the interest of saving time, we only will perform the connection
+    //tests on the shared key device.
+    assert.equal(provisionedDevices[1].authenticationDescription, 'shared private key');
+    c2d_disconnect(hubConnectionString, provisionedDevices[1]);
+    d2c_disconnect(hubConnectionString, provisionedDevices[1]);
+    method_disconnect(hubConnectionString, provisionedDevices[1]);
+    throttle_disconnect(hubConnectionString, provisionedDevices[1]);
+    uploadDisconnectProtocols.forEach(function(protocolToTest) {
+      upload_disconnect(hubConnectionString, protocolToTest, provisionedDevices[1]);
+    });
+    twin_disconnect(hubConnectionString);
 
-  //   generalProtocols.forEach(function(protocolToTest) {
-  //     sas_token_tests(hubConnectionString, protocolToTest, provisionedDevices[1]);
-  //   });
-  //   file_upload_tests(hubConnectionString, deviceHttp.Http, provisionedDevices[1]);
-  // }
+    generalProtocols.forEach(function(protocolToTest) {
+      sas_token_tests(hubConnectionString, protocolToTest, provisionedDevices[1]);
+    });
+    file_upload_tests(hubConnectionString, deviceHttp.Http, provisionedDevices[1]);
+  }
 
   device_teardown(hubConnectionString, provisionedDevices);
   if (!provisionedDevices || provisionedDevices.length !== 4) {
@@ -89,10 +89,10 @@ device_provision(hubConnectionString, function (err, provisionedDevices) {
   run();
 });
 
-// service_client(hubConnectionString);
-// registry_tests(hubConnectionString, storageConnectionString);
-// authentication_tests(hubConnectionString);
-// twin_e2e_tests(hubConnectionString, [deviceAmqp.Amqp, deviceMqtt.Mqtt]);
-// device_method(hubConnectionString, deviceMethodsProtocols);
+service_client(hubConnectionString);
+registry_tests(hubConnectionString, storageConnectionString);
+authentication_tests(hubConnectionString);
+twin_e2e_tests(hubConnectionString, [deviceAmqp.Amqp, deviceMqtt.Mqtt]);
+device_method(hubConnectionString, deviceMethodsProtocols);
 // job_client(hubConnectionString);
 
