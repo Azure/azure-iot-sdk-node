@@ -88,7 +88,7 @@ var device_provision = function (hubConnectionString, done) {
             clientKey: csrResult.clientKey,
             serviceKey: CARootCertKey,
             serviceCertificate: CARootCert,
-            serial: uuid.v4().toString(),
+            serial: Math.floor(Math.random() * 1000000000),
             days: 1
           }, function (err, certConstructionResult) {
           if (err) {

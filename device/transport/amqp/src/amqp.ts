@@ -99,6 +99,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
               } else {
                 this._c2dLink.removeListener('error', c2dErrorListener);
                 this._c2dLink.removeListener('message', c2dMessageListener);
+                this._c2dLink = undefined;
               }
             });
           }
@@ -344,7 +345,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   /**
    * @private
    */
-  /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `Amqp[DeviceMethodClient` object.]*/
+  /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `AmqpDeviceMethodClient` object.]*/
   onDeviceMethod(methodName: string, methodCallback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
     this._deviceMethodClient.onDeviceMethod(methodName, methodCallback);
     this._deviceMethodClient.attach((err) => {

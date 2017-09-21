@@ -163,7 +163,7 @@ describe('AmqpReceiver', function () {
     });
   });
 
-  /*Tests_SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `Amqp[DeviceMethodClient` object.]*/
+  /*Tests_SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `AmqpDeviceMethodClient` object.]*/
   describe('#onDeviceMethod', function() {
     it('forwards the message and callback arguments to the underlying message receiver', function() {
       var recv = new AmqpReceiver(fakeConfig);
