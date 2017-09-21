@@ -5,6 +5,7 @@
 var EventEmitter = require('events').EventEmitter;
 var Promise = require('bluebird');
 var util = require('util');
+var results = require('azure-iot-common').results;
 
 var buildAmqpError = function () {
   var linkError = new Error();
@@ -40,6 +41,7 @@ var FakeAmqp = function() {
   this.sendMessageShouldSucceed = true;
   this.fakeSenderLink = new FakeSenderLink(this);
   this.fakeReceiverLink = new FakeReceiverLink();
+  this.setDisconnectHandler = function() {};
 
   this.attachSenderLink = function(endpoint, linkOptions, attachCallback) {
     this.attachSenderEndpoint = endpoint;
@@ -63,6 +65,19 @@ var FakeAmqp = function() {
   this.detachReceiverLink = function(endpoint, detachCallback) {
     detachCallback();
   }
+
+  this.connect = function (uri, sslOptions, callback) {
+    callback(null, new results.Connected());
+  }
+
+  this.initializeCBS = function (callback) {
+    callback();
+  }
+
+  this.putToken = function (token, audience, callback) {
+    callback();
+  }
+
   util.inherits(FakeAmqp, EventEmitter);
 };
 

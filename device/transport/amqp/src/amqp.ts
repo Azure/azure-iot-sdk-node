@@ -6,11 +6,10 @@ import * as dbg from 'debug';
 const debug = dbg('device-amqp:amqp');
 import { EventEmitter } from 'events';
 
-import { ClientConfig, DeviceMethodResponse, StableConnectionTransport, Client } from 'azure-iot-device';
-import { Amqp as BaseAmqpClient, translateError, AmqpMessage, SenderLink } from 'azure-iot-amqp-base';
-import { endpoint, SharedAccessSignature, errors, results, Message, X509 } from 'azure-iot-common';
+import { ClientConfig, DeviceMethodRequest, DeviceMethodResponse, StableConnectionTransport, Client } from 'azure-iot-device';
+import { Amqp as BaseAmqpClient, translateError, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
+import { endpoint, SharedAccessSignature, errors, results, Message, X509, Receiver } from 'azure-iot-common';
 import { AmqpDeviceMethodClient } from './amqp_device_method_client';
-import { AmqpReceiver } from './amqp_receiver';
 import { AmqpTwinClient } from './amqp_twin_client';
 
 // tslint:disable-next-line:no-var-requires
@@ -44,15 +43,19 @@ host – (string) the fully-qualified DNS hostname of an IoT Hub
 hubName - (string) the name of the IoT Hub instance (without suffix such as .azure-devices.net).
 deviceId – (string) the identifier of a device registered with the IoT Hub
 sharedAccessSignature – (string) the shared access signature associated with the device registration.] */
-export class Amqp extends EventEmitter implements Client.Transport, StableConnectionTransport {
+/*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_001: [The `Amqp` constructor shall implement the `Receiver` interface.]*/
+/*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_002: [The `Amqp` object shall inherit from the `EventEmitter` node object.]*/
+export class Amqp extends EventEmitter implements Client.Transport, StableConnectionTransport, Receiver {
   /**
    * @private
    */
   protected _config: ClientConfig;
   private _deviceMethodClient: AmqpDeviceMethodClient;
-  private _receiver: AmqpReceiver;
   private _amqp: BaseAmqpClient;
   private _twinClient: AmqpTwinClient;
+  private _c2dEndpoint: string;
+  private _d2cEndpoint: string;
+  private _c2dLink: ReceiverLink;
   private _d2cLink: SenderLink;
 
   /**
@@ -67,7 +70,59 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
     });
 
     this._deviceMethodClient = new AmqpDeviceMethodClient(this._config, this._amqp);
-    this._receiver = new AmqpReceiver(this._config, this._amqp, this._deviceMethodClient);
+    this._deviceMethodClient.on('error', (err) => {
+      this.emit('errorReceived', err);
+    });
+
+    this._c2dEndpoint = endpoint.messagePath(encodeURIComponent(this._config.deviceId));
+    this._d2cEndpoint = endpoint.eventPath(this._config.deviceId);
+
+    const c2dErrorListener = (err) => {
+      debug('Error on the C2D link: ' + err.toString());
+      // this is the right thing to do (even better would be to emit 'error' directly but can't be done right now because the client does not have the proper error handling logic.)
+      // this will come with the retry logic.
+      // this.emit('errorReceived', err);
+    };
+
+    const c2dMessageListener = (msg) => {
+      this.emit('message', msg);
+    };
+
+    /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_008: [The `Amqp` object shall remove the listeners on `message` and `error` events of the underlying `ReceiverLink` when no-one is listening to its own `message` event.]*/
+    this.on('removeListener', (eventName, eventCallback) => {
+      if (eventName === 'message') {
+        if (this._c2dLink) {
+          if (this.listeners('message').length === 0) {
+            this._c2dLink.detach((err) => {
+              if (err) {
+                debug('error detaching c2d link: ' + err.toString());
+              } else {
+                this._c2dLink.removeListener('error', c2dErrorListener);
+                this._c2dLink.removeListener('message', c2dMessageListener);
+              }
+            });
+          }
+        } else {
+          debug('No active C2D link: nothing to do here.');
+        }
+      }
+    });
+
+    /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_003: [The `Amqp` object shall listen to the `message` and error events of the underlying `ReceiverLink` object when it has listeners on its `message` event.]*/
+    this.on('newListener', (eventName, eventCallback) => {
+      debug('registering new event handler for: ' + eventName);
+      if (eventName === 'message') {
+        if (!this._c2dLink) {
+          this._amqp.attachReceiverLink(this._c2dEndpoint, null, (err, link) => {
+            this._c2dLink = link;
+            this._c2dLink.on('error', c2dErrorListener);
+            this._c2dLink.on('message', c2dMessageListener);
+          });
+        } else {
+          debug('c2d link already active: nothing to do here.');
+        }
+      }
+    });
   }
 
   /**
@@ -141,12 +196,11 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   /* Codes_SRS_NODE_DEVICE_AMQP_16_003: [The sendEvent method shall call the done() callback with a null error object and a MessageEnqueued result object when the message has been successfully sent.] */
   /* Codes_SRS_NODE_DEVICE_AMQP_16_004: [If sendEvent encounters an error before it can send the request, it shall invoke the done callback function and pass the standard JavaScript Error object with a text description of the error (err.message). ] */
   sendEvent(message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    const eventEndpoint = endpoint.eventPath(this._config.deviceId);
     let amqpMessage = AmqpMessage.fromMessage(message);
-    amqpMessage.properties.to = eventEndpoint;
+    amqpMessage.properties.to = this._d2cEndpoint;
 
     if (!this._d2cLink) {
-      this._amqp.attachSenderLink(eventEndpoint, null, (err, link) => {
+      this._amqp.attachSenderLink(this._d2cEndpoint, null, (err, link) => {
         if (err) {
           handleResult('AMQP Transport: Could not send', done)(err);
         } else {
@@ -168,15 +222,15 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @deprecated          Deprecating the receiver pattern in order to prepare for a cleaner transport layer that accomodates retry logic. use the Amqp object directly as a receiver now. it has the same APIs.
    * @private
    * @method              module:azure-iot-device-amqp.Amqp#getReceiver
    * @description         Gets the {@linkcode AmqpReceiver} object that can be used to receive messages from the IoT Hub instance and accept/reject/release them.
    * @param {Function}  done      Callback used to return the {@linkcode AmqpReceiver} object.
    */
-  /* Codes_SRS_NODE_DEVICE_AMQP_16_006: [If a receiver for this endpoint has already been created, the getReceiver method should call the done() method with the existing instance as an argument.]*/
-  /* Codes_SRS_NODE_DEVICE_AMQP_16_007: [If a receiver for this endpoint doesn’t exist, the getReceiver method should create a new AmqpReceiver object and then call the done() method with the object that was just created as an argument.]*/
-  getReceiver(done: (err?: Error, receiver?: AmqpReceiver) => void): void {
-    done(null, this._receiver);
+  /*Codes_SRS_NODE_DEVICE_AMQP_16_021: [The `getReceiver` method shall call the `done` callback with a first argument that is `null` and a second argument that it `this`, ie the current `Amqp` instance.]*/
+  getReceiver(done: (err?: Error, receiver?: Receiver) => void): void {
+    done(null, this);
   }
 
   /**
@@ -187,11 +241,9 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
    * @param {Message}     message     The message to settle as complete.
    * @param {Function}    done        The callback that shall be called with the error or result object.
    */
-  /*Codes_SRS_NODE_DEVICE_AMQP_16_013: [The ‘complete’ method shall call the ‘complete’ method of the receiver object and pass it the message and the callback given as parameters.] */
+  /*Codes_SRS_NODE_DEVICE_AMQP_16_013: [The ‘complete’ method shall call the ‘complete’ method of the C2D `ReceiverLink` object and pass it the message and the callback given as parameters.] */
   complete(message: Message, done?: (err?: Error, result?: results.MessageCompleted) => void): void {
-    this.getReceiver((err, receiver) => {
-      receiver.complete(message, done);
-    });
+    this._c2dLink.complete(message, done);
   }
 
   /**
@@ -202,11 +254,9 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
    * @param {Message}     message     The message to settle as rejected.
    * @param {Function}    done        The callback that shall be called with the error or result object.
    */
-  /*Codes_SRS_NODE_DEVICE_AMQP_16_014: [The ‘reject’ method shall call the ‘reject’ method of the receiver object and pass it the message and the callback given as parameters.] */
+  /*Codes_SRS_NODE_DEVICE_AMQP_16_014: [The ‘reject’ method shall call the ‘reject’ method of the C2D `ReceiverLink` object and pass it the message and the callback given as parameters.] */
   reject(message: Message, done?: (err?: Error, result?: results.MessageRejected) => void): void {
-    this.getReceiver((err, receiver) => {
-      receiver.reject(message, done);
-    });
+    this._c2dLink.reject(message, done);
   }
 
   /**
@@ -217,11 +267,9 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
    * @param {Message}     message     The message to settle as abandoned.
    * @param {Function}    done        The callback that shall be called with the error or result object.
    */
-  /*Codes_SRS_NODE_DEVICE_AMQP_16_012: [The ‘abandon’ method shall call the ‘abandon’ method of the receiver object and pass it the message and the callback given as parameters.] */
+  /*Codes_SRS_NODE_DEVICE_AMQP_16_012: [The ‘abandon’ method shall call the ‘abandon’ method of the C2D `ReceiverLink` object and pass it the message and the callback given as parameters.] */
   abandon(message: Message, done?: (err?: Error, result?: results.MessageAbandoned) => void): void {
-    this.getReceiver((err, receiver) => {
-      receiver.abandon(message, done);
-    });
+    this._c2dLink.abandon(message, done);
   }
 
   /**
@@ -292,6 +340,20 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   // sendEventBatch(messages: Message[], done: (err: Error, result?: results.MessageEnqueued) => void) {
   // Placeholder - Not implemented yet.
   // };
+
+  /**
+   * @private
+   */
+  /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `Amqp[DeviceMethodClient` object.]*/
+  onDeviceMethod(methodName: string, methodCallback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
+    this._deviceMethodClient.onDeviceMethod(methodName, methodCallback);
+    this._deviceMethodClient.attach((err) => {
+      if (err) {
+        debug('error while attaching the device method client: ' + err.toString());
+        // no need to emit anything: the general error handler registered in the constructor will do that for us.
+      }
+    });
+  }
 
   /**
    * @private

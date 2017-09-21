@@ -2,9 +2,11 @@
 
 
 ## Overview
-Amqp provides transport functionality for devices that want to communicate with an Azure IoT Hub using the AMQP protocol. It provides an additional level of abstraction on top of the common Amqp class (azure-iot-common.Amqp) which is not specific to the device or service.
+`Amqp` provides transport functionality for devices that want to communicate with an Azure IoT Hub using the AMQP protocol. It provides an additional level of abstraction on top of the common Amqp class (`azure-iot-common.Amqp`) which is not specific to the device or service.
 Based on the configuration parameters given to the constructor, the Amqp object will build the SASL-Plain URL used to communicate with the IoT Hub instance, as well as the sending and receiving endpoints, and will instantiate a base Amqp object to use with these parameters.
 AmqpWs works exactly the same way and provides AMQP transport over websockets. Requirements are the same.
+
+Note that the `Amqp` class now implements what used to be `AmqpReceiver` and as such some of the requirements have transferred over and have been kept mostly intact.
 
 ## Example usage
 ```js
@@ -27,6 +29,7 @@ var amqp = new Amqp(config);
 
 amqp.sendEvent(new Message('hello world'), print);
 
+// deprecated:
 amqp.getReceiver(function (receiver) {
   receiver.on('message', function (msg) {
     devAmqp.sendFeedback('complete', msg.lockToken, print);
@@ -34,6 +37,14 @@ amqp.getReceiver(function (receiver) {
   receiver.on('errorReceived', function (err) {
     print(err);
   });
+});
+
+// better way (for now):
+amqp.on('message', function (msg) {
+  devAmqp.sendFeedback('complete', msg.lockToken, print);
+});
+amqp.on('errorReceived', function (err) {
+  print(err);
 });
 ```
 
@@ -45,6 +56,10 @@ amqp.getReceiver(function (receiver) {
 `hubName` - (string) the name of the IoT Hub instance (without suffix such as .azure-devices.net)
 `deviceId` – (string) the identifier of a device registered with the IoT Hub
 `sharedAccessSignature` – (string) the shared access signature associated with the device registration.**]**
+
+**SRS_NODE_DEVICE_AMQP_RECEIVER_16_001: [** The `Amqp` constructor shall implement the `Receiver` object. **]**
+
+**SRS_NODE_DEVICE_AMQP_RECEIVER_16_002: [** The `Amqp` object shall inherit from the `EventEmitter` node object. **]**
 
 ### connect(done)
 The `connect` method establishes a connection with the Azure IoT Hub instance.
@@ -76,10 +91,9 @@ The `sendEventBatch` method sends a list of events to the IoT Hub as the device 
 **SRS_NODE_DEVICE_AMQP_16_005: [**If `sendEventBatch` encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message).**]**
 
 ### getReceiver(done)
-Gets the AmqpReceiver object used to subscribe to messages and errors sent to this device and to settle those messages.
+This method is deprecated. The `AmqpReceiver` object and pattern is going away and the `Amqp` object now implements the `Receiver` interface until we can completely get rid of it in the device client.
 
-**SRS_NODE_DEVICE_AMQP_16_006: [**If a receiver for this endpoint has already been created, the getReceiver method should call the `done` method with the existing instance as an argument.**]**
-**SRS_NODE_DEVICE_AMQP_16_007: [**If a receiver for this endpoint doesn’t exist, the getReceiver method should create a new AmqpReceiver object and then call the `done` method with the object that was just created as an argument.**]**
+**SRS_NODE_DEVICE_AMQP_16_021: [** The `getReceiver` method shall call the `done` callback with a first argument that is `null` and a second argument that it `this`, ie the current `Amqp` instance. **]**
 
 ### setOptions(options, done)
 
@@ -94,15 +108,15 @@ Gets the AmqpReceiver object used to subscribe to messages and errors sent to th
 
 ### abandon(message, done)
 
-**SRS_NODE_DEVICE_AMQP_16_012: [**The `abandon` method shall call the ‘abandon’ method of the receiver object and pass it the `message` and the callback given as parameters.**]**
+**SRS_NODE_DEVICE_AMQP_16_012: [**The `abandon` method shall call the ‘abandon’ method of the C2D `ReceiverLink` object and pass it the `message` and the callback given as parameters.**]**
 
 ### complete(message, done)
 
-**SRS_NODE_DEVICE_AMQP_16_013: [**The `complete` method shall call the ‘complete’ method of the receiver object and pass it the message and the callback given as parameters.**]**
+**SRS_NODE_DEVICE_AMQP_16_013: [**The `complete` method shall call the ‘complete’ method of the C2D `ReceiverLink` object and pass it the message and the callback given as parameters.**]**
 
 ### reject(message, done)
 
-**SRS_NODE_DEVICE_AMQP_16_014: [**The `reject` method shall call the ‘reject’ method of the receiver object and pass it the message and the callback given as parameters.**]**
+**SRS_NODE_DEVICE_AMQP_16_014: [**The `reject` method shall call the ‘reject’ method of the C2D `ReceiverLink` object and pass it the message and the callback given as parameters.**]**
 
 ### updateSharedAccessSignature(sharedAccessSignature, done)
 
@@ -158,3 +172,11 @@ An new Amqp message shall be instantiated.
 **SRS_NODE_DEVICE_AMQP_06_036: [** The `getTwinReceiver` method shall call the `done` method after it complete. **]**
 **SRS_NODE_DEVICE_AMQP_06_037: [** If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `AmqpTwinClient` object as the second parameter of the `done` function with null as the first parameter. **]**
 **SRS_NODE_DEVICE_AMQP_06_038: [** If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `AmqpTwinClient` object as the second parameter of the `done` function with null as the first parameter. **]**
+
+### on('message', messageCallback)
+**SRS_NODE_DEVICE_AMQP_RECEIVER_16_003: [** The `Amqp` object shall listen to the `message` and error events of the underlying `ReceiverLink` object when it has listeners on its `message` event. **]**
+
+**SRS_NODE_DEVICE_AMQP_RECEIVER_16_008: [** The `Amqp` object shall remove the listeners on `message` and `error` events of the underlying `ReceiverLink` when no-one is listening to its own `message` event. **]**
+
+### onDeviceMethod(methodName, methodCallback)
+**SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [** The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `AmqpDeviceMethodClient` object. **]**

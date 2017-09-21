@@ -43,30 +43,6 @@ describe('Amqp', function () {
     receiver = null;
   });
 
-  describe('#complete', function () {
-    /*Tests_SRS_NODE_DEVICE_AMQP_16_013: [The ‘complete’ method shall call the ‘complete’ method of the receiver object and pass it the message and the callback given as parameters.] */
-    it('calls the receiver `complete` method', function () {
-      transport.complete(testMessage, testCallback);
-      assert(receiver.complete.calledWith(testMessage, testCallback));
-    });
-  });
-
-  describe('#reject', function () {
-    /*Tests_SRS_NODE_DEVICE_AMQP_16_014: [The ‘reject’ method shall call the ‘reject’ method of the receiver object and pass it the message and the callback given as parameters.] */
-    it('calls the receiver `reject` method', function () {
-      transport.reject(testMessage, testCallback);
-      assert(receiver.reject.calledWith(testMessage, testCallback));
-    });
-  });
-
-  describe('#abandon', function () {
-    /*Tests_SRS_NODE_DEVICE_AMQP_16_012: [The ‘abandon’ method shall call the ‘abandon’ method of the receiver object and pass it the message and the callback given as parameters.] */
-    it('calls the receiver `abandon` method', function () {
-      transport.abandon(testMessage, testCallback);
-      assert(receiver.abandon.calledWith(testMessage, testCallback));
-    });
-  });
-
   describe('#sendMethodResponse', function() {
     /*Tests_SRS_NODE_DEVICE_AMQP_16_019: [The `sendMethodResponse` shall throw a `ReferenceError` if the `methodResponse` object is falsy.]*/
     [null, undefined].forEach(function(badResponse) {
