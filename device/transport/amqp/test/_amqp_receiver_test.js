@@ -13,7 +13,8 @@ var FakeAmqp = require('./_fake_amqp.js').FakeAmqp;
 
 describe('AmqpReceiver', function () {
   var fakeConfig = {
-    deviceId: 'fakeDeviceId'
+    deviceId: 'fakeDeviceId',
+    sharedAccessSignature: 'SharedAccessSignature sr=bad&sig=XLU2ibNOYBbld3FpFIOHbPZv3Thp4wfK%2BcqZpJz66hE%3D&skn=keyName&se=1474440492'
   };
 
   var fakeMethodClient;
@@ -56,7 +57,7 @@ describe('AmqpReceiver', function () {
 
   /*Tests_SRS_NODE_DEVICE_AMQP_RECEIVER_16_003: [The `Amqp` object shall listen to the `message` and error events of the underlying `ReceiverLink` object when it has listeners on its `message` event.]*/
   describe('#on(\'message\', callback)', function() {
-    it('subscribes to the message and error events of the underlying AMQP SenderLink object', function() {
+    it('subscribes to the message and error events of the underlying AMQP Receiver object', function() {
       var recv = new AmqpReceiver(fakeConfig);
       var fakeReceiverLink = new EventEmitter();
       sinon.spy(fakeReceiverLink, 'on');
@@ -165,13 +166,17 @@ describe('AmqpReceiver', function () {
 
   /*Tests_SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `AmqpDeviceMethodClient` object.]*/
   describe('#onDeviceMethod', function() {
-    it('forwards the message and callback arguments to the underlying message receiver', function() {
+    it('forwards the message and callback arguments to the underlying message receiver', function(testCallback) {
       var recv = new AmqpReceiver(fakeConfig);
+      recv._amqp = new FakeAmqp();
       sinon.spy(recv._deviceMethodClient, 'onDeviceMethod');
       var fakeCallback = function() {};
       var fakeMethodName = 'fakeMethodName';
-      recv.onDeviceMethod(fakeMethodName, fakeCallback);
-      assert(recv._deviceMethodClient.onDeviceMethod.calledWith(fakeMethodName, fakeCallback));
+      recv.connect(() => {
+        recv.onDeviceMethod(fakeMethodName, fakeCallback);
+        assert(recv._deviceMethodClient.onDeviceMethod.calledWith(fakeMethodName, fakeCallback));
+        testCallback();
+      });
     });
 
     it('emits an errorReceived event with the error if the links fail to connect initially', function (testCallback) {
@@ -181,12 +186,10 @@ describe('AmqpReceiver', function () {
       sinon.stub(recv._deviceMethodClient, 'onDeviceMethod');
       sinon.stub(recv._deviceMethodClient, 'attach').callsArgWith(0, fakeError);
 
-      var fakeCallback = function(err) {
+      recv.on('errorReceived', function (err) {
         assert.strictEqual(err, fakeError);
         testCallback();
-      };
-
-      recv.on('errorReceived', fakeCallback);
+      });
       recv.onDeviceMethod('fakeMethod', function () {});
       recv._deviceMethodClient.emit('error', fakeError);
     });
