@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
+import * as machina from 'machina';
+import * as async from 'async';
 import * as dbg from 'debug';
 const debug = dbg('device-amqp:amqp');
 import { EventEmitter } from 'events';
@@ -58,13 +60,20 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   private _c2dLink: ReceiverLink;
   private _d2cLink: SenderLink;
 
+  private _c2dErrorListener: (err: Error) => void;
+  private _c2dMessageListener: (msg: Message) => void;
+
+  private _d2cErrorListener: (err: Error) => void;
+
+  private _fsm: machina.Fsm;
+
   /**
    * @private
    */
-  constructor(config: ClientConfig) {
+  constructor(config: ClientConfig, baseClient?: BaseAmqpClient) {
     super();
     this._config = config;
-    this._amqp = new BaseAmqpClient(false, 'azure-iot-device/' + packageJson.version);
+    this._amqp = baseClient || new BaseAmqpClient(false, 'azure-iot-device/' + packageJson.version);
     this._amqp.setDisconnectHandler((err) => {
       this.emit('disconnect', err);
     });
@@ -74,38 +83,40 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
       this.emit('errorReceived', err);
     });
 
+    this._twinClient = new AmqpTwinClient(this._config, this._amqp);
+
     this._c2dEndpoint = endpoint.messagePath(encodeURIComponent(this._config.deviceId));
     this._d2cEndpoint = endpoint.eventPath(this._config.deviceId);
 
-    const c2dErrorListener = (err) => {
+    this._c2dErrorListener = (err) => {
       debug('Error on the C2D link: ' + err.toString());
       // this is the right thing to do (even better would be to emit 'error' directly but can't be done right now because the client does not have the proper error handling logic.)
       // this will come with the retry logic.
       // this.emit('errorReceived', err);
     };
 
-    const c2dMessageListener = (msg) => {
+    this._c2dMessageListener = (msg) => {
       this.emit('message', msg);
+    };
+
+    this._d2cErrorListener = (err) => {
+      debug('Error on the D2C link: ' + err.toString());
+      // this is the right thing to do (even better would be to emit 'error' directly but can't be done right now because the client does not have the proper error handling logic.)
+      // this will come with the retry logic.
+      // this.emit('errorReceived', err);
     };
 
     /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_008: [The `Amqp` object shall remove the listeners on `message` and `error` events of the underlying `ReceiverLink` when no-one is listening to its own `message` event.]*/
     this.on('removeListener', (eventName, eventCallback) => {
-      if (eventName === 'message') {
-        if (this._c2dLink) {
-          if (this.listeners('message').length === 0) {
-            this._c2dLink.detach((err) => {
-              if (err) {
-                debug('error detaching c2d link: ' + err.toString());
-              } else {
-                this._c2dLink.removeListener('error', c2dErrorListener);
-                this._c2dLink.removeListener('message', c2dMessageListener);
-                this._c2dLink = undefined;
-              }
-            });
+      if (eventName === 'message' && this.listeners('message').length === 0) {
+        debug('automatically detaching the link after the last message listener was removed');
+        this._fsm.handle('detachC2DLink', (err) => {
+          if (err) {
+            this.emit('errorReceived', err);
           }
-        } else {
-          debug('No active C2D link: nothing to do here.');
-        }
+        });
+      } else {
+        debug('removing listener for event: ' + eventName);
       }
     });
 
@@ -113,15 +124,290 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
     this.on('newListener', (eventName, eventCallback) => {
       debug('registering new event handler for: ' + eventName);
       if (eventName === 'message') {
-        if (!this._c2dLink) {
-          this._amqp.attachReceiverLink(this._c2dEndpoint, null, (err, link) => {
-            this._c2dLink = link;
-            this._c2dLink.on('error', c2dErrorListener);
-            this._c2dLink.on('message', c2dMessageListener);
+        if (this.listeners('message').length === 0) {
+          debug('automatically attaching the link after the first message listener was registered');
+          this._fsm.handle('attachC2DLink', (err) => {
+            debug('C2D link attached automatically');
+            if (err) {
+              debug('error attaching the C2D link automatically: ' + err.toString());
+              this.emit('errorReceived', err);
+            }
           });
-        } else {
-          debug('c2d link already active: nothing to do here.');
         }
+      } else {
+        debug('adding listener for event: ' + eventName);
+      }
+    });
+
+    this._fsm = new machina.Fsm({
+      initialState: 'disconnected',
+      states: {
+        disconnected: {
+          _onEnter: (callback, err, result) => {
+            if (callback) {
+              if (err) {
+                callback(err);
+              } else {
+                callback(null, result);
+              }
+            }
+          },
+          connect: (connectCallback) => this._fsm.transition('connecting', connectCallback),
+          disconnect: (disconnectCallback) => {
+            if (disconnectCallback) {
+              disconnectCallback(null, new results.Disconnected());
+            }
+          },
+          sendEvent: (message, sendCallback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_16_024: [The `sendEvent` method shall connect and authenticate the transport if necessary.]*/
+            this._fsm.handle('connect', (err, result) => {
+              if (err) {
+                sendCallback(err);
+              } else {
+                this._fsm.handle('sendEvent', message, sendCallback);
+              }
+            });
+          },
+          updateSharedAccessSignature: (token, callback) => {
+            // nothing to do here: the SAS has been updated in the config object.
+            callback(null, new results.SharedAccessSignatureUpdated(false));
+          },
+          getTwinReceiver: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_16_027: [** The `getTwinReceiver` method shall connect and authenticate the AMQP connection if necessary.]*/
+            this._fsm.handle('connect', (err, result) => {
+              if (err) {
+                /*Tests_SRS_NODE_DEVICE_AMQP_16_028: [The `getTwinReceiver` method shall call the `done` callback with the corresponding error if the transport fails connect or authenticate the AMQP connection.]*/
+                callback(err);
+              } else {
+                this._fsm.handle('getTwinReceiver', callback);
+              }
+            });
+          },
+          sendTwinRequest: (method, resource, properties, body, sendTwinRequestCallback) => {
+            this._fsm.handle('connect', (err, result) => {
+              if (err) {
+                sendTwinRequestCallback(err);
+              } else {
+                this._fsm.handle('sendTwinRequest', method, resource, properties, body, sendTwinRequestCallback);
+              }
+            });
+          },
+          attachC2DLink: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_16_029: [The `Amqp` object shall connect and authenticate the AMQP connection if necessary to attach the C2D `ReceiverLink` object.]*/
+            this._fsm.handle('connect', (err, result) => {
+              if (err) {
+                callback(err);
+              } else {
+                this._fsm.handle('attachC2DLink', callback);
+              }
+            });
+          },
+          onDeviceMethod: (methodName, callback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_16_021: [The`onDeviceMethod` method shall connect and authenticate the transport if necessary to start receiving methods.]*/
+            this._fsm.handle('connect', (err, result) => {
+              if (err) {
+                /*Codes_SRS_NODE_DEVICE_AMQP_16_023: [An `errorReceived` event shall be emitted by the Amqp object if the transport fails to connect while registering a method callback.]*/
+                this.emit('errorReceived', err);
+              } else {
+                this._fsm.handle('onDeviceMethod', methodName, callback);
+              }
+            });
+          }
+        },
+        connecting: {
+          _onEnter: (connectCallback) => {
+            const uri = this._getConnectionUri();
+            this._amqp.connect(uri, this._config.x509, (err, connectResult) => {
+              if (err) {
+                this._fsm.transition('disconnected', connectCallback, translateError('AMQP Transport: Could not connect', err));
+              } else {
+                this._fsm.transition('authenticating', connectCallback, connectResult);
+              }
+            });
+          },
+          connect: () => this._fsm.deferUntilTransition(),
+          disconnect: (disconnectCallback, err) => this._fsm.transition('disconnecting', disconnectCallback, err),
+          sendEvent: () => this._fsm.deferUntilTransition(),
+          updateSharedAccessSignature: (token, callback) => {
+            // nothing to do here: the SAS has been updated in the config object and putToken will be done when authenticating.
+            callback(null, new results.SharedAccessSignatureUpdated(false));
+          },
+          getTwinReceiver: () => this._fsm.deferUntilTransition(),
+          sendTwinRequest: () => this._fsm.deferUntilTransition(),
+          attachC2DLink: () => this._fsm.deferUntilTransition(),
+          onDeviceMethod: () => this._fsm.deferUntilTransition(),
+
+        },
+        authenticating: {
+          _onEnter: (connectCallback, connectResult) => {
+            if (this._config.x509) {
+              /*Codes_SRS_NODE_DEVICE_AMQP_06_005: [If x509 authentication is NOT being utilized then `initializeCBS` shall be invoked.]*/
+              this._fsm.transition('authenticated', connectCallback, connectResult);
+            } else {
+              this._amqp.initializeCBS((err) => {
+                if (err) {
+                  /*Codes_SRS_NODE_DEVICE_AMQP_06_008: [If `initializeCBS` is not successful then the client will be disconnected.]*/
+                  this._fsm.transition('disconnecting', connectCallback, getTranslatedError(err, 'AMQP Transport: Could not initialize CBS'));
+                } else {
+                  /*Codes_SRS_NODE_DEVICE_AMQP_06_006: [If `initializeCBS` is successful, `putToken` shall be invoked If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter `audience`, created from the `sr` of the shared access signature, the actual shared access signature, and a callback.]*/
+                  const sasString = this._config.sharedAccessSignature.toString();
+                  this._amqp.putToken(SharedAccessSignature.parse(sasString, ['sr', 'sig', 'se']).sr, sasString, (err) => {
+                    if (err) {
+                      /*Codes_SRS_NODE_DEVICE_AMQP_06_009: [If `putToken` is not successful then the client will be disconnected.]*/
+                      this._fsm.transition('disconnecting', connectCallback, getTranslatedError(err, 'AMQP Transport: Could not authorize with puttoken'));
+                    } else {
+                      this._fsm.transition('authenticated', connectCallback, connectResult);
+                    }
+                  });
+                }
+              });
+            }
+          },
+          connect: () => this._fsm.deferUntilTransition(),
+          disconnect: (disconnectCallback) => this._fsm.transition('disconnecting', disconnectCallback),
+          sendEvent: () => this._fsm.deferUntilTransition(),
+          updateSharedAccessSignature: () => this._fsm.deferUntilTransition(),
+          getTwinReceiver: () => this._fsm.deferUntilTransition(),
+          sendTwinRequest: () => this._fsm.deferUntilTransition(),
+          onDeviceMethod: () => this._fsm.deferUntilTransition(),
+          attachC2DLink: () => this._fsm.deferUntilTransition()
+        },
+        authenticated: {
+          _onEnter: (connectCallback, connectResult) => {
+            connectCallback(null, connectResult);
+          },
+          connect: (connectCallback) => connectCallback(null, new results.Connected()),
+          disconnect: (disconnectCallback) => this._fsm.transition('disconnecting', disconnectCallback),
+          sendEvent: (message, sendCallback) => {
+            let amqpMessage = AmqpMessage.fromMessage(message);
+            amqpMessage.properties.to = this._d2cEndpoint;
+
+            /*Codes_SRS_NODE_DEVICE_AMQP_16_025: [The `sendEvent` method shall create and attach the d2c link if necessary.]*/
+            if (!this._d2cLink) {
+              this._amqp.attachSenderLink(this._d2cEndpoint, null, (err, link) => {
+                if (err) {
+                  handleResult('AMQP Transport: Could not send', sendCallback)(err);
+                } else {
+                  debug('got a new D2C link');
+                  this._d2cLink = link;
+                  this._d2cLink.on('error', this._d2cErrorListener);
+                  this._d2cLink.send(amqpMessage, handleResult('AMQP Transport: Could not send', sendCallback));
+                }
+              });
+            } else {
+              debug('using existing d2c link');
+              this._d2cLink.send(amqpMessage, handleResult('AMQP Transport: Could not send', sendCallback));
+            }
+          },
+          updateSharedAccessSignature: (sharedAccessSignature, updateSasCallback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_06_010: [If the AMQP connection is established, the `updateSharedAccessSignature` method shall call the amqp transport `putToken` method with the first parameter `audience`, created from the `sr` of the shared access signature, the actual shared access signature, and a callback.]*/
+            this._amqp.putToken(SharedAccessSignature.parse(sharedAccessSignature, ['sr', 'sig', 'se']).sr, sharedAccessSignature, (err) => {
+              if (err) {
+                this._amqp.disconnect(() => {
+                  updateSasCallback(getTranslatedError(err, 'AMQP Transport: Could not authorize with puttoken'));
+                });
+              } else {
+                /*Codes_SRS_NODE_DEVICE_AMQP_06_011: [The `updateSharedAccessSignature` method shall call the `done` callback with a null error object and a SharedAccessSignatureUpdated object as a result, indicating the client does NOT need to reestablish the transport connection.]*/
+                updateSasCallback(null, new results.SharedAccessSignatureUpdated(false));
+              }
+            });
+          },
+          getTwinReceiver: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_16_026: [** The `getTwinReceiver` method shall call the `done` callback with a `null` error argument and the `AmqpTwinClient` instance currently in use.]*/
+            callback(null, this._twinClient);
+          },
+          sendTwinRequest: (method, resource, properties, body, sendTwinRequestCallback) => {
+            this._twinClient.sendTwinRequest(method, resource, properties, body, sendTwinRequestCallback);
+          },
+          attachC2DLink: (callback) => {
+            debug('attaching C2D link');
+            /*Codes_SRS_NODE_DEVICE_AMQP_16_030: [The `Amqp` object shall attach the C2D `ReceiverLink` object if necessary to start receiving messages.]*/
+            this._amqp.attachReceiverLink(this._c2dEndpoint, null, (err, receiverLink) => {
+              if (err) {
+                debug('error creating a C2D link: ' + err.toString());
+                handleResult('AMQP Transport: Could not attach link', callback)(err);
+              } else {
+                debug('C2D link created and attached successfully');
+                this._c2dLink = receiverLink;
+                this._c2dLink.on('error', this._c2dErrorListener);
+                this._c2dLink.on('message', this._c2dMessageListener);
+                callback();
+              }
+            });
+          },
+          detachC2DLink: (callback) => {
+            this._stopC2DListener(undefined, callback);
+          },
+          onDeviceMethod: (methodName, methodCallback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_16_022: [The `onDeviceMethod` method shall call the `onDeviceMethod` method on the `AmqpDeviceMethodClient` object with the same arguments.]*/
+            this._deviceMethodClient.onDeviceMethod(methodName, methodCallback);
+            this._deviceMethodClient.attach((err) => {
+              if (err) {
+                debug('error while attaching the device method client: ' + err.toString());
+                // no need to emit anything: the general error handler registered in the constructor will do that for us.
+              }
+            });
+          }
+        },
+        disconnecting: {
+          _onEnter: (disconnectCallback, err) => {
+            let finalError = err;
+            async.series([
+              (callback) => {
+                if (this._d2cLink) {
+                  let tmpD2CLink = this._d2cLink;
+                  this._d2cLink = undefined;
+
+                  if (err) {
+                  /*Codes_SRS_NODE_DEVICE_AMQP_16_023: [The `disconnect` method shall forcefully detach all attached links if a connection error is the causing the transport to be disconnected.]*/
+                    tmpD2CLink.forceDetach(err);
+                    tmpD2CLink.removeListener('error', this._d2cErrorListener);
+                  }
+                  tmpD2CLink.detach((detachErr) => {
+                    if (detachErr) {
+                      debug('error detaching the D2C link: ' + detachErr.toString());
+                    } else {
+                      debug('D2C link detached');
+                    }
+                    tmpD2CLink.removeListener('error', this._d2cErrorListener);
+                    if (!finalError && detachErr) {
+                      finalError = translateError('error while detaching the D2C link when disconnecting', detachErr);
+                    }
+                    callback(finalError);
+                  });
+                } else {
+                  callback();
+                }
+              },
+              (callback) => {
+                if (this._c2dLink) {
+                  /*Codes_SRS_NODE_DEVICE_AMQP_16_022: [The `disconnect` method shall detach all attached links.]*/
+                  this._stopC2DListener(err, callback);
+                } else {
+                  callback();
+                }
+              },
+              (callback) => {
+                this._amqp.disconnect((disconnectErr) => {
+                  if (disconnectErr) {
+                    debug('error disconnecting the AMQP connection: ' + disconnectErr.toString());
+                  } else {
+                    debug('amqp connection successfully disconnected.');
+                  }
+                  if (!finalError && disconnectErr) {
+                    finalError = translateError('error while disconnecting the AMQP connection', disconnectErr);
+                  }
+                  callback(finalError);
+                });
+              }
+            ], () => {
+              /*Codes_SRS_NODE_DEVICE_AMQP_16_010: [The `done` callback method passed in argument shall be called when disconnected.]*/
+              /*Codes_SRS_NODE_DEVICE_AMQP_16_011: [The `done` callback method passed in argument shall be called with an error object if disconnecting fails.]*/
+              this._fsm.transition('disconnected', disconnectCallback, finalError, new results.Disconnected());
+            });
+          },
+          '*': (connectCallback) => this._fsm.deferUntilTransition()
+        },
       }
     });
   }
@@ -136,40 +422,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   /*Codes_SRS_NODE_DEVICE_AMQP_16_008: [The done callback method passed in argument shall be called if the connection is established]*/
   /*Codes_SRS_NODE_DEVICE_AMQP_16_009: [The done callback method passed in argument shall be called with an error object if the connecion fails]*/
   connect(done?: (err?: Error, result?: results.Connected) => void): void {
-    const uri = this._getConnectionUri();
-    const sslOptions = this._config.x509;
-    this._amqp.connect(uri, sslOptions, (err, connectResult) => {
-      if (err) {
-        done(translateError('AMQP Transport: Could not connect', err));
-      } else {
-        if (!sslOptions) {
-          /*Codes_SRS_NODE_DEVICE_AMQP_06_005: [If x509 authentication is NOT being utilized then `initializeCBS` shall be invoked.]*/
-          this._amqp.initializeCBS((err) => {
-            if (err) {
-              /*Codes_SRS_NODE_DEVICE_AMQP_06_008: [If `initializeCBS` is not successful then the client will be disconnected.]*/
-              this._amqp.disconnect(() => {
-                done(getTranslatedError(err, 'AMQP Transport: Could not initialize CBS'));
-              });
-            } else {
-              /*Codes_SRS_NODE_DEVICE_AMQP_06_006: [If `initializeCBS` is successful, `putToken` shall be invoked If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter audience, created from the sr of the sas signature, the next parameter of the actual sas, and a callback.]*/
-              const sasString = this._config.sharedAccessSignature.toString();
-              this._amqp.putToken(SharedAccessSignature.parse(sasString, ['sr', 'sig', 'se']).sr, sasString, (err) => {
-                if (err) {
-                  /*Codes_SRS_NODE_DEVICE_AMQP_06_009: [If `putToken` is not successful then the client will be disconnected.]*/
-                  this._amqp.disconnect(() => {
-                    done(getTranslatedError(err, 'AMQP Transport: Could not authorize with puttoken'));
-                  });
-                } else {
-                  done(null, connectResult);
-                }
-              });
-            }
-          });
-        } else {
-          done(null, connectResult);
-        }
-      }
-    });
+    this._fsm.handle('connect', done);
   }
 
   /**
@@ -181,7 +434,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   /*Codes_SRS_NODE_DEVICE_AMQP_16_010: [The done callback method passed in argument shall be called when disconnected]*/
   /*Codes_SRS_NODE_DEVICE_AMQP_16_011: [The done callback method passed in argument shall be called with an error object if disconnecting fails]*/
   disconnect(done?: (err?: Error) => void): void {
-    this._amqp.disconnect(handleResult('AMQP Transport: Could not disconnect', done));
+    this._fsm.handle('disconnect', done);
   }
 
   /**
@@ -197,29 +450,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   /* Codes_SRS_NODE_DEVICE_AMQP_16_003: [The sendEvent method shall call the done() callback with a null error object and a MessageEnqueued result object when the message has been successfully sent.] */
   /* Codes_SRS_NODE_DEVICE_AMQP_16_004: [If sendEvent encounters an error before it can send the request, it shall invoke the done callback function and pass the standard JavaScript Error object with a text description of the error (err.message). ] */
   sendEvent(message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    let amqpMessage = AmqpMessage.fromMessage(message);
-    amqpMessage.properties.to = this._d2cEndpoint;
-
-    if (!this._d2cLink) {
-      this._amqp.attachSenderLink(this._d2cEndpoint, null, (err, link) => {
-        if (err) {
-          handleResult('AMQP Transport: Could not send', done)(err);
-        } else {
-          debug('got a new D2C link');
-          this._d2cLink = link;
-          const d2cLinkErrorHandler = (err) => {
-            debug('error on C2D link: ' + err.toString());
-            this._d2cLink.removeListener('error', d2cLinkErrorHandler);
-            this._d2cLink = undefined;
-          };
-          this._d2cLink.on('error', d2cLinkErrorHandler);
-          this._d2cLink.send(amqpMessage, handleResult('AMQP Transport: Could not send', done));
-        }
-      });
-    } else {
-      debug('using existing d2c link');
-      this._d2cLink.send(amqpMessage, handleResult('AMQP Transport: Could not send', done));
-    }
+    this._fsm.handle('sendEvent', message, done);
   }
 
   /**
@@ -244,7 +475,11 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
    */
   /*Codes_SRS_NODE_DEVICE_AMQP_16_013: [The ‘complete’ method shall call the ‘complete’ method of the C2D `ReceiverLink` object and pass it the message and the callback given as parameters.] */
   complete(message: Message, done?: (err?: Error, result?: results.MessageCompleted) => void): void {
-    this._c2dLink.complete(message, done);
+    if (this._c2dLink) {
+      this._c2dLink.complete(message, done);
+    } else {
+      done(new errors.DeviceMessageLockLostError('No active C2D link'));
+    }
   }
 
   /**
@@ -257,7 +492,11 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
    */
   /*Codes_SRS_NODE_DEVICE_AMQP_16_014: [The ‘reject’ method shall call the ‘reject’ method of the C2D `ReceiverLink` object and pass it the message and the callback given as parameters.] */
   reject(message: Message, done?: (err?: Error, result?: results.MessageRejected) => void): void {
-    this._c2dLink.reject(message, done);
+    if (this._c2dLink) {
+      this._c2dLink.reject(message, done);
+    } else {
+      done(new errors.DeviceMessageLockLostError('No active C2D link'));
+    }
   }
 
   /**
@@ -270,7 +509,11 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
    */
   /*Codes_SRS_NODE_DEVICE_AMQP_16_012: [The ‘abandon’ method shall call the ‘abandon’ method of the C2D `ReceiverLink` object and pass it the message and the callback given as parameters.] */
   abandon(message: Message, done?: (err?: Error, result?: results.MessageAbandoned) => void): void {
-    this._c2dLink.abandon(message, done);
+    if (this._c2dLink) {
+      this._c2dLink.abandon(message, done);
+    } else {
+      done(new errors.DeviceMessageLockLostError('No active C2D link'));
+    }
   }
 
   /**
@@ -284,19 +527,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   updateSharedAccessSignature(sharedAccessSignature: string, done?: (err?: Error, result?: results.SharedAccessSignatureUpdated) => void): void {
     /*Codes_SRS_NODE_DEVICE_AMQP_16_015: [The updateSharedAccessSignature method shall save the new shared access signature given as a parameter to its configuration.] */
     this._config.sharedAccessSignature = sharedAccessSignature;
-    /*Codes_SRS_NODE_DEVICE_AMQP_06_010: [The `updateSharedAccessSignature` method shall call the amqp transport `putToken` method with the first parameter audience, created from the sr of the sas signature, the next parameter of the actual sas, and a callback.]*/
-    this._amqp.putToken(SharedAccessSignature.parse(sharedAccessSignature, ['sr', 'sig', 'se']).sr, sharedAccessSignature, (err) => {
-      if (err) {
-        this._amqp.disconnect(() => {
-          if (done) {
-            done(getTranslatedError(err, 'AMQP Transport: Could not authorize with puttoken'));
-          }
-        });
-      } else {
-        /*Codes_SRS_NODE_DEVICE_AMQP_06_011: [The `updateSharedAccessSignature` method shall call the `done` callback with a null error object and a SharedAccessSignatureUpdated object as a result, indicating the client does NOT need to reestablish the transport connection.]*/
-        if (done) done(null, new results.SharedAccessSignatureUpdated(false));
-      }
-    });
+    this._fsm.handle('updateSharedAccessSignature', sharedAccessSignature, done);
   }
 
   /**
@@ -347,13 +578,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
    */
   /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `AmqpDeviceMethodClient` object.]*/
   onDeviceMethod(methodName: string, methodCallback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
-    this._deviceMethodClient.onDeviceMethod(methodName, methodCallback);
-    this._deviceMethodClient.attach((err) => {
-      if (err) {
-        debug('error while attaching the device method client: ' + err.toString());
-        // no need to emit anything: the general error handler registered in the constructor will do that for us.
-      }
-    });
+    this._fsm.handle('onDeviceMethod', methodName, methodCallback);
   }
 
   /**
@@ -388,7 +613,11 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
    * @throws {ArgumentError}  One of the parameters is an incorrect type
    */
   sendTwinRequest(method: string, resource: string, properties: { [key: string]: string }, body: any, done?: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    this._twinClient.sendTwinRequest(method, resource, properties, body, done);
+    this._fsm.handle('sendTwinRequest', method, resource, properties, body, (err) => {
+      if (done) {
+        done(err);
+      }
+    });
   }
 
   /**
@@ -406,19 +635,35 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
       throw new ReferenceError('required parameter is missing');
     }
 
-    /*Codes_SRS_NODE_DEVICE_AMQP_06_034: [If a twin receiver for this endpoint doesn't exist, the `getTwinReceiver` method should create a new `AmqpTwinClient` object.] */
-    /*Codes_SRS_NODE_DEVICE_AMQP_06_035: [If a twin receiver for this endpoint has already been created, the `getTwinReceiver` method should not create a new `AmqpTwinClient` object.] */
-    if (!this._twinClient) {
-      this._twinClient = new AmqpTwinClient(this._config, this._amqp);
-    }
-
-    /*Codes_SRS_NODE_DEVICE_AMQP_06_036: [The `getTwinReceiver` method shall call the `done` method after it complete.] */
-    /*Codes_SRS_NODE_DEVICE_AMQP_06_037: [If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `AmqpTwinClient` object as the second parameter of the `done` function with null as the first parameter.] */
-    /*Codes_SRS_NODE_DEVICE_AMQP_06_038: [If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `AmqpTwinClient` object as the second parameter of the `done` function with null as the first parameter.] */
-    done(null, this._twinClient);
+    this._fsm.handle('getTwinReceiver', done);
   }
 
   protected _getConnectionUri(): string {
     return 'amqps://' + this._config.host;
+  }
+
+  private _stopC2DListener(err: Error | undefined, callback: (err?: Error) => void): void {
+    const tmpC2DLink = this._c2dLink;
+    this._c2dLink = undefined;
+    if (err) {
+      debug('forceDetaching C2D link');
+      tmpC2DLink.forceDetach(err);
+      // detaching listeners and getting rid of the object anyway.
+      tmpC2DLink.removeListener('error', this._c2dErrorListener);
+      tmpC2DLink.removeListener('message', this._c2dMessageListener);
+    } else {
+      tmpC2DLink.detach((err) => {
+        if (err) {
+          debug('error detaching C2D link: ' + err.toString());
+        } else {
+          debug('C2D link successfully detached');
+        }
+
+        // detaching listeners and getting rid of the object anyway.
+        tmpC2DLink.removeListener('error', this._c2dErrorListener);
+        tmpC2DLink.removeListener('message', this._c2dMessageListener);
+        callback(err);
+      });
+    }
   }
 }

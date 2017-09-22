@@ -3,7 +3,7 @@
 
 ## Overview
 `Amqp` provides transport functionality for devices that want to communicate with an Azure IoT Hub using the AMQP protocol. It provides an additional level of abstraction on top of the common Amqp class (`azure-iot-common.Amqp`) which is not specific to the device or service.
-Based on the configuration parameters given to the constructor, the Amqp object will build the SASL-Plain URL used to communicate with the IoT Hub instance, as well as the sending and receiving endpoints, and will instantiate a base Amqp object to use with these parameters.
+Based on the configuration parameters given to the constructor, the Amqp object will build the URL used to communicate with the IoT Hub instance, as well as the sending and receiving endpoints, and will instantiate a base Amqp object to use with these parameters.
 AmqpWs works exactly the same way and provides AMQP transport over websockets. Requirements are the same.
 
 Note that the `Amqp` class now implements what used to be `AmqpReceiver` and as such some of the requirements have transferred over and have been kept mostly intact.
@@ -64,33 +64,47 @@ amqp.on('errorReceived', function (err) {
 ### connect(done)
 The `connect` method establishes a connection with the Azure IoT Hub instance.
 
-**SRS_NODE_DEVICE_AMQP_16_008: [**The `done` callback method passed in argument shall be called if the connection is established**]**
-**SRS_NODE_DEVICE_AMQP_16_009: [**The `done` callback method passed in argument shall be called with an error object if the connection fails**]**
+**SRS_NODE_DEVICE_AMQP_16_008: [**The `done` callback method passed in argument shall be called if the connection is established and authenticated. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_009: [**The `done` callback method passed in argument shall be called with an error object if the connection or authentication fails. **]**
+
 **SRS_NODE_DEVICE_AMQP_06_005: [** If x509 authentication is NOT being utilized then `initializeCBS` shall be invoked. **]**
+
 **SRS_NODE_DEVICE_AMQP_06_008: [** If `initializeCBS` is not successful then the client will remain disconnected and the callback will be called with an error per SRS_NODE_DEVICE_AMQP_16_009. **]**
-**SRS_NODE_DEVICE_AMQP_06_006: [**If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter audience, created from the sr of the sas signature, the next parameter of the actual sas, and a callback. **]**
+
+**SRS_NODE_DEVICE_AMQP_06_006: [**If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter `audience`, created from the `sr` field of the shared access signature, the actual shared access signature, and a callback. **]**
+
 **SRS_NODE_DEVICE_AMQP_06_009: [** If `putToken` is not successful then the client will remain disconnected and the callback will be called with an error per SRS_NODE_DEVICE_AMQP_16_009. **]**
 
 ### disconnect(done)
 The `disconnect` method terminates the connection with the Azure IoT Hub instance.
 
-**SRS_NODE_DEVICE_AMQP_16_010: [**The `done` callback method passed in argument shall be called when disconnected**]**
-**SRS_NODE_DEVICE_AMQP_16_011: [**The `done` callback method passed in argument shall be called with an error object if disconnecting fails**]**
+**SRS_NODE_DEVICE_AMQP_16_010: [**The `done` callback method passed in argument shall be called when disconnected. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_011: [**The `done` callback method passed in argument shall be called with an error object if disconnecting fails. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_022: [** The `disconnect` method shall detach all attached links. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_023: [** The `disconnect` method shall forcefully detach all attached links if a connection error is the causing the transport to be disconnected. **]**
 
 ### sendEvent(message, done)
 
 The `sendEvent` method sends an event to the IoT Hub as the device indicated in the constructor argument.
 
+**SRS_NODE_DEVICE_AMQP_16_024: [** The `sendEvent` method shall connect and authenticate the transport if necessary. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_025: [** The `sendEvent` method shall create and attach the d2c link if necessary. **]**
+
 **SRS_NODE_DEVICE_AMQP_16_002: [**The `sendEvent` method shall construct an AMQP request using the message passed in argument as the body of the message.**]**
+
 **SRS_NODE_DEVICE_AMQP_16_003: [**The `sendEvent` method shall call the `done` callback with a null error object and a MessageEnqueued result object when the message has been successfully sent.**]**
+
 **SRS_NODE_DEVICE_AMQP_16_004: [**If `sendEvent` encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message). **]**
 
 ### sendEventBatch(messages, done)
-The `sendEventBatch` method sends a list of events to the IoT Hub as the device indicated in the constructor argument.
+Not implemented
 
-**SRS_NODE_DEVICE_AMQP_16_005: [**If `sendEventBatch` encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message).**]**
-
-### getReceiver(done)
+### getReceiver(done) [deprecated]
 This method is deprecated. The `AmqpReceiver` object and pattern is going away and the `Amqp` object now implements the `Receiver` interface until we can completely get rid of it in the device client.
 
 **SRS_NODE_DEVICE_AMQP_16_021: [** The `getReceiver` method shall call the `done` callback with a first argument that is `null` and a second argument that it `this`, ie the current `Amqp` instance. **]**
@@ -122,9 +136,9 @@ This method is deprecated. The `AmqpReceiver` object and pattern is going away a
 
 **SRS_NODE_DEVICE_AMQP_16_015: [**The `updateSharedAccessSignature` method shall save the new shared access signature given as a parameter to its configuration.**]**
 
-**SRS_NODE_DEVICE_AMQP_06_010: [** The `updateSharedAccessSignature` method shall call the amqp transport `putToken` method with the first parameter audience, created from the sr of the sas signature, the next parameter of the actual sas, and a callback. *]**
+**SRS_NODE_DEVICE_AMQP_06_010: [** If the AMQP connection is established, the `updateSharedAccessSignature` method shall call the amqp transport `putToken` method with the first parameter `audience`, created from the `sr` of the shared access signature, the actual shared access signature, and a callback. **]**
 
-**SRS_NODE_DEVICE_AMQP_06_011: [** The `updateSharedAccessSignature` method shall call the `done` callback with a null error object and a SharedAccessSignatureUpdated object as a result, indicating the client does NOT need to reestablish the transport connection. **]**
+**SRS_NODE_DEVICE_AMQP_06_011: [** The `updateSharedAccessSignature` method shall call the `done` callback with a `null` error object and a `SharedAccessSignatureUpdated` object as a result, indicating the client does NOT need to reestablish the transport connection. **]**
 
 ### sendMethodResponse(methodResponse, callback)
 
@@ -135,24 +149,35 @@ This method is deprecated. The `AmqpReceiver` object and pattern is going away a
 ### sendTwinRequest(method, resource, properties, body, done)
 
 **SRS_NODE_DEVICE_AMQP_06_012: [** The `sendTwinRequest` method shall not throw `ReferenceError` if the `done` callback is falsy. **]**
+
 **SRS_NODE_DEVICE_AMQP_06_013: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `method` argument is falsy. **]**
+
 **SRS_NODE_DEVICE_AMQP_06_014: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `resource` argument is falsy. **]**
+
 **SRS_NODE_DEVICE_AMQP_06_015: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `properties` argument is falsy. **]**
+
 **SRS_NODE_DEVICE_AMQP_06_016: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `body` argument is falsy. **]**
+
 **SRS_NODE_DEVICE_AMQP_06_017: [** The `sendTwinRequest` method shall throw an `ArgumentError` if the `method` argument is not a string. **]**
+
 **SRS_NODE_DEVICE_AMQP_06_018: [** The `sendTwinRequest` method shall throw an `ArgumentError` if the `resource` argument is not a string. **]**
+
 **SRS_NODE_DEVICE_AMQP_06_019: [** The `sendTwinRequest` method shall throw an `ArgumentError` if the `properties` argument is not a an object. **]**
 
 An new Amqp message shall be instantiated.
 
 **SRS_NODE_DEVICE_AMQP_06_020: [** The `method` argument shall be the value of the amqp message `operation` annotation. **]**
+
 **SRS_NODE_DEVICE_AMQP_06_021: [** The `resource` argument shall be the value of the amqp message `resource` annotation. **]**
+
 **SRS_NODE_DEVICE_AMQP_06_031: [** If the `resource` argument terminates in a slash, the slash shall be removed from the annotation. **]**
+
 **SRS_NODE_DEVICE_AMQP_06_039: [** If the `resource` argument length is zero (after terminating slash removal), the resource annotation shall not be set. **]**
 
 **SRS_NODE_DEVICE_AMQP_06_028: [** The `sendTwinRequest` method shall throw an `ArgumentError` if any members of the `properties` object fails to serialize to a string. **]**
 
 **SRS_NODE_DEVICE_AMQP_06_022: [** All properties, except $rid, shall be set as the part of the properties map of the amqp message. **]**
+
 **SRS_NODE_DEVICE_AMQP_06_023: [** The $rid property shall be set as the `correlationId` in the properties map of the amqp message. **]**
 
 **SRS_NODE_DEVICE_AMQP_06_024: [** The `body` shall be value of the body of the amqp message. **]**
@@ -160,23 +185,32 @@ An new Amqp message shall be instantiated.
 **SRS_NODE_DEVICE_AMQP_06_025: [** The amqp message will be sent upstream to the IoT Hub via the amqp client `send`. **]**
 
 **SRS_NODE_DEVICE_AMQP_06_040: [** If an error occurs in the `sendTwinRequest` method, the `done` callback shall be called with the error as the first parameter. **]**
+
 **SRS_NODE_DEVICE_AMQP_06_041: [** If an error occurs, the `sendTwinRequest` shall use the AMQP `translateError` module to convert the amqp-specific error to a transport agnostic error before passing it into the `done` callback. **]**
 
 **SRS_NODE_DEVICE_AMQP_06_042: [** If the `sendTwinRequest` method is successful, the first parameter to the `done` callback shall be null and the second parameter shall be a MessageEnqueued object. **]**
 
-### getTwinReceiver
+### getTwinReceiver(done)
 
 **SRS_NODE_DEVICE_AMQP_06_033: [** The `getTwinReceiver` method shall throw an `ReferenceError` if done is falsy **]**
-**SRS_NODE_DEVICE_AMQP_06_034: [** If a twin receiver for this endpoint doesn't exist, the `getTwinReceiver` method should create a new `AmqpTwinClient` object. **]**
-**SRS_NODE_DEVICE_AMQP_06_035: [** If a twin receiver for this endpoint has already been created, the `getTwinReceiver` method should not create a new `AmqpTwinClient` object. **]**
-**SRS_NODE_DEVICE_AMQP_06_036: [** The `getTwinReceiver` method shall call the `done` method after it complete. **]**
-**SRS_NODE_DEVICE_AMQP_06_037: [** If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `AmqpTwinClient` object as the second parameter of the `done` function with null as the first parameter. **]**
-**SRS_NODE_DEVICE_AMQP_06_038: [** If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `AmqpTwinClient` object as the second parameter of the `done` function with null as the first parameter. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_026: [** The `getTwinReceiver` method shall call the `done` callback with a `null` error argument and the `AmqpTwinClient` instance currently in use. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_027: [** The `getTwinReceiver` method shall connect and authenticate the AMQP connection if necessary. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_028: [** The `getTwinReceiver` method shall call the `done` callback with the corresponding error if the transport fails connect or authenticate the AMQP connection. **]**
 
 ### on('message', messageCallback)
+
 **SRS_NODE_DEVICE_AMQP_RECEIVER_16_003: [** The `Amqp` object shall listen to the `message` and error events of the underlying `ReceiverLink` object when it has listeners on its `message` event. **]**
 
 **SRS_NODE_DEVICE_AMQP_RECEIVER_16_008: [** The `Amqp` object shall remove the listeners on `message` and `error` events of the underlying `ReceiverLink` when no-one is listening to its own `message` event. **]**
 
+**SRS_NODE_DEVICE_AMQP_16_029: [** The `Amqp` object shall connect and authenticate the AMQP connection if necessary to attach the C2D `ReceiverLink` object. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_030: [** The `Amqp` object shall attach the C2D `ReceiverLink` object if necessary to start receiving messages. **]**
+
+
 ### onDeviceMethod(methodName, methodCallback)
+
 **SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [** The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `AmqpDeviceMethodClient` object. **]**

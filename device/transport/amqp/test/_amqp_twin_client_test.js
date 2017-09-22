@@ -682,48 +682,4 @@ describe('AmqpTwinClient', function () {
       });
     });
   });
-
-  describe('#getTwinReceiver', function () {
-    var config = {
-      'host' : 'mock_host',
-      'deviceId' : 'mock_deviceId',
-      'sharedAccessSignature' : 'mock_sharedAccessSignature'
-    };
-
-    var provider;
-    var transport;
-
-    beforeEach(function() {
-      provider = new AmqpProvider();
-      transport = new Amqp(config, provider);
-    });
-
-    /* Tests_SRS_NODE_DEVICE_AMQP_06_033: [ The `getTwinReceiver` method shall throw an `ReferenceError` if done is falsy.]  */
-    it('throws if done is falsy', function() {
-      assert.throws(function() {
-        transport.getTwinReceiver();
-      }, ReferenceError);
-    });
-
-    /* Tests_SRS_NODE_DEVICE_AMQP_06_034: [If a twin receiver for this endpoint doesn't exist, the `getTwinReceiver` method should create a new `AmqpTwinClient` object.] */
-    /* Tests_SRS_NODE_DEVICE_AMQP_06_035: [If a twin receiver for this endpoint has already been created, the `getTwinReceiver` method should not create a new `AmqpTwinClient` object.] */
-    it('calls done when complete', function(done) {
-      transport.getTwinReceiver(done);
-    });
-
-    /* Tests_SRS_NODE_DEVICE_AMQP_06_037: [If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `AmqpTwinClient` object as the second parameter of the `done` function with null as the first parameter.] */
-    /* Tests_SRS_NODE_DEVICE_AMQP_06_038: [If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `AmqpTwinClient` object as the second parameter of the `done` function with null as the first parameter.] */
-    it('only creates one twin receiver object', function(done) {
-      transport.getTwinReceiver(function(err, receiver1) {
-        assert.isNull(err);
-        assert.instanceOf(receiver1, AmqpTwinClient);
-        transport.getTwinReceiver(function(err, receiver2) {
-          assert.isNull(err);
-          assert.strictEqual(receiver1, receiver2);
-          done();
-        });
-      });
-    });
-  });
-
 });
