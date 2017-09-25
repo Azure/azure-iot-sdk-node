@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
+import * as querystring from 'querystring';
 
 import { MqttBase } from './mqtt_base';
 import { results, errors, Message, X509 } from 'azure-iot-common';
@@ -13,6 +14,9 @@ const debug = dbg('device:mqtt');
 import { translateError } from './mqtt_translate_error';
 import { MqttTwinReceiver } from './mqtt_twin_receiver';
 import { MqttReceiver } from './mqtt_receiver';
+
+// tslint:disable-next-line:no-var-requires
+const packageJson = require('../package.json');
 
 const TOPIC_RESPONSE_PUBLISH_FORMAT = '$iothub/%s/res/%d/?$rid=%s';
 
@@ -36,21 +40,36 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   protected _config: ClientConfig;
   private _mqtt: MqttBase;
   private _twinReceiver: MqttTwinReceiver;
+  private _topicTelemetryPublish: string;
+  private _topicMessageSubscribe: string;
+  private _receiver: MqttReceiver;
 
   /**
    * @private
    */
-  constructor(config: ClientConfig, provider?: MqttBase) {
+  constructor(config: ClientConfig, provider?: any) {
     super();
     this._config = config;
+    this._topicTelemetryPublish = 'devices/' + this._config.deviceId + '/messages/events/';
+    this._topicMessageSubscribe = 'devices/' + this._config.deviceId + '/messages/devicebound/#';
+    debug('topic publish: ' + this._topicTelemetryPublish);
+    debug('topic subscribe: ' + this._topicMessageSubscribe);
+    const sdkVersionString = encodeURIComponent('azure-iot-device/' + packageJson.version);
+
     /*Codes_SRS_NODE_DEVICE_MQTT_16_016: [The Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
     (this._config as any).uri = 'mqtts://' + config.host;
     /* Codes_SRS_NODE_DEVICE_MQTT_18_025: [ If the Mqtt constructor receives a second parameter, it shall be used as a provider in place of mqtt.js ]*/
     if (provider) {
-      this._mqtt = new MqttBase(provider);
+      this._mqtt = provider;
     } else {
-      this._mqtt = new MqttBase();
+      this._mqtt = new MqttBase(sdkVersionString);
     }
+
+    /* Codes_SRS_NODE_DEVICE_MQTT_18_026: When MqttTransport fires the close event, the Mqtt object shall emit a disconnect event */
+    this._mqtt.on('error', (err) => {
+      debug('on close');
+      this.emit('disconnect', err);
+    });
   }
 
   /**
@@ -62,18 +81,11 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
    */
   /* Codes_SRS_NODE_DEVICE_MQTT_12_004: [The connect method shall call the connect method on MqttTransport */
   connect(done?: (err?: Error, result?: any) => void): void {
-    this._twinReceiver = null;
     this._mqtt.connect(this._config, (err, result) => {
       debug('connect');
       if (err) {
         if (done) done(translateError(err));
       } else {
-        /* Codes_SRS_NODE_DEVICE_MQTT_18_026: When MqttTransport fires the close event, the Mqtt object shall emit a disconnect event */
-        this._mqtt.client.on('close', (err) => {
-          debug('on close');
-          this.emit('disconnect', err);
-        });
-
         if (done) done(null, result);
       }
     });
@@ -104,7 +116,46 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   /* Codes_SRS_NODE_DEVICE_MQTT_12_005: [The sendEvent method shall call the publish method on MqttTransport */
   sendEvent(message: Message, done?: (err?: Error, result?: any) => void): void {
     debug('publish ' + JSON.stringify(message));
-    this._mqtt.publish(message, done);
+
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_008: [The `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`.]*/
+    let topic = this._topicTelemetryPublish;
+    let systemProperties: { [key: string]: string } = {};
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_011: [The `sendEvent` method shall serialize the `messageId` property of the message as a key-value pair on the topic with the key `$.mid`.]*/
+    if (message.messageId) systemProperties['$.mid'] = message.messageId;
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_012: [The `sendEvent` method shall serialize the `correlationId` property of the message as a key-value pair on the topic with the key `$.cid`.]*/
+    if (message.correlationId) systemProperties['$.cid'] = message.correlationId;
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_013: [The `sendEvent` method shall serialize the `userId` property of the message as a key-value pair on the topic with the key `$.uid`.]*/
+    if (message.userId) systemProperties['$.uid'] = message.userId;
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_014: [The `sendEvent` method shall serialize the `to` property of the message as a key-value pair on the topic with the key `$.to`.]*/
+    if (message.to) systemProperties['$.to'] = message.to;
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_015: [The `sendEvent` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`.]*/
+    if (message.expiryTimeUtc) {
+      const expiryString = message.expiryTimeUtc instanceof Date ? message.expiryTimeUtc.toISOString() : message.expiryTimeUtc;
+      systemProperties['$.exp'] = (expiryString || undefined);
+    }
+
+    const sysPropString = querystring.stringify(systemProperties);
+    topic += sysPropString;
+
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_009: [If the message has properties, the property keys and values shall be uri-encoded, then serialized and appended at the end of the topic with the following convention: `<key>=<value>&<key2>=<value2>&<key3>=<value3>(...)`.]*/
+    if (message.properties.count() > 0) {
+      for (let i = 0; i < message.properties.count(); i++) {
+        if (i > 0 || sysPropString) topic += '&';
+        topic += encodeURIComponent(message.properties.propertyList[i].key) + '=' + encodeURIComponent(message.properties.propertyList[i].value);
+      }
+    }
+
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `sendEvent` method shall use QoS level of 1.]*/
+    this._mqtt.publish(topic, message.data, { qos: 1, retain: false }, (err, puback) => {
+      debug('PUBACK: ' + JSON.stringify(puback));
+      if (done) {
+        if (err) {
+          done(err);
+        } else {
+          done(null, new results.MessageEnqueued(puback));
+        }
+      }
+    });
   }
 
   /**
@@ -116,7 +167,16 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
    */
 
   getReceiver(done?: (err?: Error, receiver?: MqttReceiver) => void): void {
-    this._mqtt.getReceiver(done);
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_002: [If a receiver for this endpoint has already been created, the getReceiver method should call the done() method with the existing instance as an argument.] */
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_003: [If a receiver for this endpoint doesn’t exist, the getReceiver method should create a new MqttReceiver object and then call the done() method with the object that was just created as an argument.] */
+    if (!this._receiver) {
+      this._receiver = new MqttReceiver(
+        this._mqtt,
+        this._topicMessageSubscribe
+      );
+    }
+
+    done(null, this._receiver);
   }
 
   /**
@@ -177,7 +237,6 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
       } else {
         /*Codes_SRS_NODE_DEVICE_MQTT_16_007: [The updateSharedAccessSignature method shall save the new shared access signature given as a parameter to its configuration.]*/
         this._config.sharedAccessSignature = sharedAccessSignature;
-        this._mqtt = new MqttBase();
         /*Codes_SRS_NODE_DEVICE_MQTT_16_010: [The updateSharedAccessSignature method shall call the `done` callback with a null error object and a SharedAccessSignatureUpdated object as a result, indicating hat the client needs to reestablish the transport connection when ready.]*/
         done(null, new results.SharedAccessSignatureUpdated(true));
       }
@@ -266,7 +325,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
 
     /* Codes_SRS_NODE_DEVICE_MQTT_18_001: [** The `sendTwinRequest` method shall call the publish method on `MqttTransport`. **]** */
     /* Codes_SRS_NODE_DEVICE_MQTT_18_015: [** The `sendTwinRequest` shall publish the request with QOS=0, DUP=0, and Retain=0 **]** */
-    this._mqtt.client.publish(topic, body.toString(), { qos: 0, retain: false }, (err, puback) => {
+    this._mqtt.publish(topic, body.toString(), { qos: 0, retain: false }, (err, puback) => {
       if (done) {
         if (err) {
           /* Codes_SRS_NODE_DEVICE_MQTT_18_016: [** If an error occurs in the `sendTwinRequest` method, the `done` callback shall be called with the error as the first parameter. **]** */
@@ -330,7 +389,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
     debug('sending response using topic: ' + topicName);
     debug(JSON.stringify(response.payload));
     // publish the response message
-    this._mqtt.client.publish(topicName, JSON.stringify(response.payload), { qos: 0, retain: false }, (err) => {
+    this._mqtt.publish(topicName, JSON.stringify(response.payload), { qos: 0, retain: false }, (err) => {
       if (!!done && typeof(done) === 'function') {
         // Codes_SRS_NODE_DEVICE_MQTT_13_006: [ If the MQTT publish fails then an error shall be returned via the done callback's first parameter. ]
         // Codes_SRS_NODE_DEVICE_MQTT_13_007: [ If the MQTT publish is successful then the done callback shall be invoked passing null for the first parameter. ]
@@ -357,7 +416,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
     /* Codes_SRS_NODE_DEVICE_MQTT_18_003: [** If a twin receiver for this endpoint doesn't exist, the `getTwinReceiver` method should create a new `MqttTwinReceiver` object. **]** */
     /* Codes_SRS_NODE_DEVICE_MQTT_18_002: [** If a twin receiver for this endpoint has already been created, the `getTwinReceiver` method should not create a new `MqttTwinReceiver` object. **]** */
     if (!this._twinReceiver) {
-      this._twinReceiver = new MqttTwinReceiver(this._mqtt.client);
+      this._twinReceiver = new MqttTwinReceiver(this._mqtt);
     }
 
     /* Codes_SRS_NODE_DEVICE_MQTT_18_005: [** The `getTwinReceiver` method shall call the `done` method after it completes **]** */

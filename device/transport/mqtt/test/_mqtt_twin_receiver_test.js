@@ -13,22 +13,20 @@ var provider;
 var receiver;
 
 var validateSubscription = function(shortname, topic, done) {
-  var subscribe = sinon.spy(provider, 'subscribe');
   receiver.on(shortname, function() {});
   process.nextTick(function() {
-    assert(subscribe.withArgs(topic).calledOnce);
+    assert(provider.subscribe.withArgs(topic).calledOnce);
     done();
   });
 };
 
 var validateUnsubscription = function(shortname, topic, done) {
-  var unsubscribe = sinon.spy(provider, 'unsubscribe');
   var func = function() { };
   receiver.on(shortname, func);
   process.nextTick(function() {
     receiver.removeListener(shortname, func);
     process.nextTick(function() {
-      assert(unsubscribe.withArgs(topic).calledOnce);
+      assert(provider.unsubscribe.withArgs(topic).calledOnce);
       done();
     });
   });
@@ -49,18 +47,18 @@ var validateEventFires = function(shortname, topic, done) {
 };
 
 describe('MqttTwinReceiver', function () {
-  
+
   beforeEach(function(done) {
     provider = new MqttProvider();
     receiver = new MqttTwinReceiver(provider);
     done();
   });
-    
+
   describe('#constructor', function () {
-    
+
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_001: [** The `MqttTwinReceiver` constructor shall accept a `client` object **]** */
     it ('accepts a config object', function() {
-      assert.equal(receiver._client, provider);
+      assert.equal(receiver._mqtt, provider);
     });
 
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_002: [** The `MqttTwinReceiver` constructor shall throw `ReferenceError` if the `client` object is falsy **]** */
@@ -113,7 +111,7 @@ describe('MqttTwinReceiver', function () {
       });
       provider.fakeMessageFromService('$iothub/twin/res/200/?$rid=42', 'fake_body');
     });
-    
+
     it ('ignores messages on invalid topics', function(done) {
       receiver.on(MqttTwinReceiver.responseEvent, function() {
         assert.fail();
@@ -130,11 +128,11 @@ describe('MqttTwinReceiver', function () {
       provider.fakeMessageFromService('$iothub/twin/res//$rid=');
       process.nextTick(done);
     });
-    
-  }); 
+
+  });
 
   describe('post event', function() {
-    
+
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_018: [** When a listener is added to the post event, the appropriate topic shall be asynchronously subscribed to. **]** */
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_019: [** The subscribed topic for post events shall be $iothub/twin/PATCH/properties/reported/# **]** */
     it ('asynchronously subscribes when  a listener is added', function(done) {
@@ -190,7 +188,7 @@ describe('MqttTwinReceiver', function () {
   });
 
   describe('subscribed event', function() {
-    
+
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_025: [** If the `subscribed` event is subscribed to, a `subscribed` event shall be emitted after an MQTT topic is subscribed to. **]** */
     it ('emits a subscribed event after successful subscription to response event', function(done) {
       receiver.on('subscribed', function() {
@@ -206,7 +204,7 @@ describe('MqttTwinReceiver', function () {
       });
       receiver.on(MqttTwinReceiver.postEvent, function() {});
     });
-    
+
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_028: [** When the `subscribed` event is emitted, the parameter shall be an object which contains an `eventName` field and an `transportObject` field. **]** */
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_026: [** When the `subscribed` event is emitted because the response MQTT topic was subscribed, the `eventName` field shall be the string 'response' **]**  */
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_029: [** When the subscribed event is emitted, the `transportObject` field shall contain the object returned by the library in the subscription response. **]** */

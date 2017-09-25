@@ -33,6 +33,7 @@ base.receive(function (topic, msg) {
 The `Mqtt` constructor receives the configuration parameters to configure the MQTT.JS library to connect to an IoT hub.
 
 **SRS_NODE_COMMON_MQTT_BASE_16_004: [** The `Mqtt` constructor shall instanciate the default MQTT.JS library if no argument is passed to it. **]**
+
 **SRS_NODE_COMMON_MQTT_BASE_16_005: [** The `Mqtt` constructor shall use the object passed as argument instead of the default MQTT.JS library if it's not falsy. **]**
 
 ### MqttBase.connect(config, done)
@@ -45,40 +46,61 @@ The `connect` method establishes a connection with the server using the config o
 
 **SRS_NODE_COMMON_MQTT_BASE_16_003: [** The `connect` method shall call the `done` callback with a standard javascript `Error` object if the connection failed. **]**
 
-**SRS_NODE_COMMON_MQTT_BASE_16_007: [** The `connect` method shall not throw if the `done` argument has not been passed. **]**
-
 **SRS_NODE_COMMON_MQTT_BASE_16_016: [** The `connect` method shall configure the `keepalive` ping interval to 3 minutes by default since the Azure Load Balancer TCP Idle timeout default is 4 minutes. (https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-tcp-idle-timeout) **]**
 
 ### MqttBase.disconnect(done)
 The `disconnect` method closes the connection to the server.
 
-**SRS_NODE_COMMON_MQTT_BASE_16_001: [** The `disconnect` method shall call the done callback when the connection to the server has been closed. **]**
+**SRS_NODE_COMMON_MQTT_BASE_16_001: [** The `disconnect` method shall call the `done` callback when the connection to the server has been closed. **]**
 
-### Mqtt.publish(message)
-The `publish` method publishes the message passed as argument.
+### Mqtt.publish(topic, payload, options, callback)
 
-**SRS_NODE_COMMON_MQTT_BASE_12_006: [** The `publish` method shall throw `ReferenceError` “Invalid message” if the message is falsy. **]**
+**SRS_NODE_COMMON_MQTT_BASE_16_017: [** The `publish` method publishes a `payload` on a `topic` using `options`. **]**
 
-**SRS_NODE_COMMON_MQTT_BASE_12_007: [** The `publish` method shall call `publish`  on MQTT.JS  library with the given message. **]**
+**SRS_NODE_COMMON_MQTT_BASE_16_018: [** The `publish` method shall throw a `ReferenceError` if the topic is falsy. **]**
 
-**SRS_NODE_COMMON_MQTT_BASE_16_008: [** The `publish` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`. **]**
+**SRS_NODE_COMMON_MQTT_BASE_16_019: [** The `publish` method shall throw a `ReferenceError` if the payload is falsy. **]**
 
-**SRS_NODE_COMMON_MQTT_BASE_16_009: [** If the message has properties, the property keys and values shall be uri-encoded, then serialized and appended at the end of the topic with the following convention: `<key>=<value>&<key2>=<value2>&<key3>=<value3>(...)`. **]**
+**SRS_NODE_COMMON_MQTT_BASE_16_020: [** The `publish` method shall call the callback with a `NotConnectedError` if the connection hasn't been established prior to calling `publish`. **]**
 
-**SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `publish` method shall use QoS level of 1. **]**
+**SRS_NODE_COMMON_MQTT_BASE_16_021: [** The  `publish` method shall call `publish` on the mqtt client object and call the `callback` argument with `null` and the `puback` object if it succeeds. **]**
 
-**SRS_NODE_COMMON_MQTT_BASE_16_011: [** The `publish` method shall serialize the `messageId` property of the message as a key-value pair on the topic with the key `$.mid`. **]**
+**SRS_NODE_COMMON_MQTT_BASE_16_022: [** The `publish` method shall call the `callback` argument with an Error if the operation fails. **]**
 
-**SRS_NODE_COMMON_MQTT_BASE_16_012: [** The `publish` method shall serialize the `correlationId` property of the message as a key-value pair on the topic with the key `$.cid`. **]**
 
-**SRS_NODE_COMMON_MQTT_BASE_16_013: [** The `publish` method shall serialize the `userId` property of the message as a key-value pair on the topic with the key `$.uid`. **]**
+### MqttBase.subscribe(topic, options, callback)
 
-**SRS_NODE_COMMON_MQTT_BASE_16_014: [** The `publish` method shall serialize the `to` property of the message as a key-value pair on the topic with the key `$.to`. **]**
+**SRS_NODE_COMMON_MQTT_BASE_12_008: [** The `subscribe` method shall call `subscribe`  on MQTT.JS  library and pass it the `topic` and `options` arguments. **]**
 
-**SRS_NODE_COMMON_MQTT_BASE_16_015: [** The `publish` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`. **]**
+**SRS_NODE_COMMON_MQTT_BASE_16_023: [** The `subscribe` method shall throw a `ReferenceError` if the topic is falsy. **]**
 
-### MqttBase.subscribe()
-**SRS_NODE_COMMON_MQTT_BASE_12_008: [** The `subscribe` method shall call `subscribe`  on MQTT.JS  library with the given message and with the hardcoded topic path. **]**
+**SRS_NODE_COMMON_MQTT_BASE_16_024: [** The `subscribe` method shall call the callback with `null` and the `suback` object if the mqtt library successfully subscribes to the `topic`. **]**
 
-### MqttBase.receive()
-**SRS_NODE_COMMON_MQTT_BASE_12_010: [** The `receive` method shall implement the MQTT.JS library callback event and calls back to the caller with the given callback. **]**
+**SRS_NODE_COMMON_MQTT_BASE_16_025: [** The `subscribe` method shall call the callback with an `Error` if the mqtt library fails to subscribe to the `topic`. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_026: [** The `subscribe` method shall call the callback with a `NotConnectedError` if the connection hasn't been established prior to calling `publish`. **]**
+
+### MqttBase.unsubscribe(topic, callback)
+
+**SRS_NODE_COMMON_MQTT_BASE_16_031: [** The `unsubscribe` method shall throw a `ReferenceError` if the `topic` argument is falsy. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_027: [** The `unsubscribe` method shall call the callback with a `NotConnectedError` if the connection hasn't been established prior to calling `publish`. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_028: [** The `unsubscribe` method shall call `unsubscribe` on the mqtt library and pass it the `topic`. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_029: [** The `unsubscribe` method shall call the `callback` argument with no arguments if the operation succeeds. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_030: [** The `unsubscribe` method shall call the `callback` argument with an `Error` if the operation fails. **]**
+
+
+### MqttBase.updateSharedAccessSignature(sharedAccessSignature, callback)
+
+**SRS_NODE_COMMON_MQTT_BASE_16_032: [** The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the `sharedAccessSignature` argument is falsy. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_033: [** The `updateSharedAccessSignature` method shall disconnect and reconnect the mqtt client with the new `sharedAccessSignature`. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_034: [** The `updateSharedAccessSignature` method shall not trigger any network activity if the mqtt client is not connected. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_035: [** The `updateSharedAccessSignature` method shall call the `callback` argument with no parameters if the operation succeeds. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_036: [** The `updateSharedAccessSignature` method shall call the `callback` argument with an `Error` if the operation fails. **]**

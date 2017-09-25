@@ -4,7 +4,7 @@
 'use strict';
 
 import { EventEmitter } from 'events';
-import { Client as MqttClient } from 'mqtt';
+import { MqttBase } from './mqtt_base';
 import * as querystring from 'querystring';
 import * as url from 'url';
 import { translateError } from './mqtt_translate_error';
@@ -36,21 +36,22 @@ export class MqttTwinReceiver extends EventEmitter {
   static postEvent: string = 'post';
   static subscribedEvent: string = 'subscribed';
 
-  private _client: MqttClient;
-  private _boundMessageHandler: Function;
+  private _mqtt: MqttBase;
+  private _boundMessageHandler: (topic: string, message: any) => void;
 
-  constructor(client: any) {
+  constructor(client: MqttBase) {
     super();
     /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_001: [** The `MqttTwinReceiver` constructor shall accept a `client` object **]** */
     /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_002: [** The `MqttTwinReceiver` constructor shall throw `ReferenceError` if the `client` object is falsy **]** */
     if (!client) {
       throw new ReferenceError('required parameter is missing');
     }
-    this._client = client;
+    this._mqtt = client;
 
     this.on('newListener', this._handleNewListener.bind(this));
     this.on('removeListener', this._handleRemoveListener.bind(this));
     this._boundMessageHandler = this._onMqttMessage.bind(this); // need to save this so that calls to add & remove listeners can be matched by the EventEmitter.
+    this._mqtt.on('message', this._boundMessageHandler);
   }
 
   private _handleNewListener(eventName: string): void {
@@ -58,10 +59,9 @@ export class MqttTwinReceiver extends EventEmitter {
 
     if (eventName === MqttTwinReceiver.responseEvent) {
       if (EventEmitter.listenerCount(this, MqttTwinReceiver.responseEvent) === 0) { // array of listeners gets updated _after_ firing this event
-        this._startListeningIfFirstSubscription();
         /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_003: [** When a listener is added for the `response` event, the appropriate topic shall be asynchronously subscribed to. **]** */
         process.nextTick( () => {
-          self._client.subscribe(responseTopic, { qos: 0 }, (err, transportObject) => {
+          self._mqtt.subscribe(responseTopic, { qos: 0 }, (err, transportObject) => {
             if (err) {
               self._handleError(err);
             } else {
@@ -76,10 +76,9 @@ export class MqttTwinReceiver extends EventEmitter {
       }
     } else if (eventName === MqttTwinReceiver.postEvent) {
       if (EventEmitter.listenerCount(this, MqttTwinReceiver.postEvent) === 0) {// array of listeners gets updated _after_ firing this event
-        this._startListeningIfFirstSubscription();
         /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_018: [** When a listener is added to the post event, the appropriate topic shall be asynchronously subscribed to. **]** */
         process.nextTick(() => {
-          self._client.subscribe(postTopic, { qos: 0 }, (err, transportObject) => {
+          self._mqtt.subscribe(postTopic, { qos: 0 }, (err, transportObject) => {
             if (err) {
               self._handleError(err);
             } else {
@@ -100,9 +99,8 @@ export class MqttTwinReceiver extends EventEmitter {
 
     if (eventName === MqttTwinReceiver.responseEvent) {
       if (EventEmitter.listenerCount(this, MqttTwinReceiver.responseEvent) === 0) { // array of listeners gets updated _before_ firing this event
-        this._stopListeningIfLastUnsubscription();
         /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_005: [** When there are no more listeners for the `response` event, the topic should be unsubscribed **]** */
-        self._client.unsubscribe(responseTopic, (err) => {
+        self._mqtt.unsubscribe(responseTopic, (err) => {
           if (err) {
             self._handleError(err);
           }
@@ -110,28 +108,13 @@ export class MqttTwinReceiver extends EventEmitter {
       }
     } else if (eventName === MqttTwinReceiver.postEvent) {
       if (EventEmitter.listenerCount(this, MqttTwinReceiver.postEvent) === 0) { // array of listeners gets updated _before_ firing this event
-        this._stopListeningIfLastUnsubscription();
         /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_021: [** When there are no more listeners for the post event, the topic should be unsubscribed. **]** */
-        self._client.unsubscribe(postTopic, (err) => {
+        self._mqtt.unsubscribe(postTopic, (err) => {
           if (err) {
             self._handleError(err);
           }
         });
       }
-    }
-  }
-
-  private _startListeningIfFirstSubscription(): void {
-    // this method is called _before_ the new listener is added to the array of listeners
-    if ((EventEmitter.listenerCount(this, MqttTwinReceiver.responseEvent) === 0) && (EventEmitter.listenerCount(this, MqttTwinReceiver.postEvent) === 0)) {
-      this._client.on('message', this._boundMessageHandler);
-    }
-  }
-
-  private _stopListeningIfLastUnsubscription(): void {
-    // this method is called _after_ the listener is removed from the array of listeners
-    if ((EventEmitter.listenerCount(this, MqttTwinReceiver.responseEvent)) && (EventEmitter.listenerCount(this, MqttTwinReceiver.postEvent) === 0)) {
-      this._client.removeListener('message', this._boundMessageHandler);
     }
   }
 

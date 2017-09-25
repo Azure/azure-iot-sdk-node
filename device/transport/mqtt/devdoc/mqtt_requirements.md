@@ -1,7 +1,7 @@
 # azure-iot-device-mqtt.Mqtt/MqttWs Requirements
 
 ## Overview
-`Mqtt` and `MqttWs` provide a standard transport interface between the generic device Client and the specific MQTT transport implementation. 
+`Mqtt` and `MqttWs` provide a standard transport interface between the generic device Client and the specific MQTT transport implementation.
 `MqttWs` will connect over secure websockets whereas `Mqtt` connects over secure TCP sockets.
 
 ## Example usage
@@ -35,7 +35,7 @@ client.connect(function (err) {
     });
 
     mqtt.getReceiver(function (err, receiver) {
-      receiver.on('message', function(msg) { 
+      receiver.on('message', function(msg) {
         console.log('received: ' + msg.getData());
       });
 
@@ -61,7 +61,7 @@ The `Mqtt` and `MqttWs` constructors initialize a new instance of the MQTT trans
 
 **SRS_NODE_DEVICE_MQTT_16_017: [** The `MqttWs` constructor shall initialize the `uri` property of the `config` object to `wss://<host>:443/$iothub/websocket`. **]**
 
-**SRS_NODE_DEVICE_MQTT_18_025: [** If the `Mqtt` constructor receives a second parameter, it shall be used as a provider in place of mqtt.js **]**  
+**SRS_NODE_DEVICE_MQTT_18_025: [** If the `Mqtt` constructor receives a second parameter, it shall be used as a provider in place of mqtt.js **]**
 
 ### connect(done)
 The `connect` method initializes a connection to an IoT hub.
@@ -80,37 +80,53 @@ The `sendEvent` method sends an event to an IoT hub on behalf of the device indi
 
 **SRS_NODE_DEVICE_MQTT_12_005: [** The `sendEvent` method shall call the publish method on `MqttTransport`. **]**
 
+**SRS_NODE_COMMON_MQTT_BASE_16_008: [** The `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_009: [** If the message has properties, the property keys and values shall be uri-encoded, then serialized and appended at the end of the topic with the following convention: `<key>=<value>&<key2>=<value2>&<key3>=<value3>(...)`. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `sendEvent` method shall use QoS level of 1. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_011: [** The `sendEvent` method shall serialize the `messageId` property of the message as a key-value pair on the topic with the key `$.mid`. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_012: [** The `sendEvent` method shall serialize the `correlationId` property of the message as a key-value pair on the topic with the key `$.cid`. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_013: [** The `sendEvent` method shall serialize the `userId` property of the message as a key-value pair on the topic with the key `$.uid`. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_014: [** The `sendEvent` method shall serialize the `to` property of the message as a key-value pair on the topic with the key `$.to`. **]**
+
+**SRS_NODE_COMMON_MQTT_BASE_16_015: [** The `sendEvent` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`. **]**
+
 ### getReceiver(done)
 The `getReceiver` method creates a receiver object and returns it, or returns the existing instance.
 
-**SRS_NODE_DEVICE_MQTT_16_002: [** If a receiver for this endpoint has already been created, the `getReceiver` method should call the `done` callback with the existing instance as an argument. **]** 
+**SRS_NODE_DEVICE_MQTT_16_002: [** If a receiver for this endpoint has already been created, the `getReceiver` method should call the `done` callback with the existing instance as an argument. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_003: [** If a receiver for this endpoint doesn’t exist, the `getReceiver` method should create a new `MqttReceiver` object and then call the `done` callback with the object that was just created as an argument. **]** 
+**SRS_NODE_DEVICE_MQTT_16_003: [** If a receiver for this endpoint doesn’t exist, the `getReceiver` method should create a new `MqttReceiver` object and then call the `done` callback with the object that was just created as an argument. **]**
 
 ### abandon(message, done)
 The `abandon` method is there for compatibility purposes with other transports but will throw because the MQTT protocol doesn't support abandoning messages.
 
-**SRS_NODE_DEVICE_MQTT_16_004: [** The `abandon` method shall throw because MQTT doesn’t support abandoning messages. **]** 
+**SRS_NODE_DEVICE_MQTT_16_004: [** The `abandon` method shall throw because MQTT doesn’t support abandoning messages. **]**
 
 ### complete(message, done)
 The `complete` method is there for compatibility purposes with other transports but doesn't do anything because messages are automatically acknowledged.
 
-**SRS_NODE_DEVICE_MQTT_16_005: [** The `complete` method shall call the `done` callback given as argument immediately since all messages are automatically completed. **]** 
+**SRS_NODE_DEVICE_MQTT_16_005: [** The `complete` method shall call the `done` callback given as argument immediately since all messages are automatically completed. **]**
 
 ### reject(message, done)
 The `reject` method is there for compatibility purposes with other transports but will throw because the MQTT protocol doesn't support rejecting messages.
 
-**SRS_NODE_DEVICE_MQTT_16_006: [** The `reject` method shall throw because MQTT doesn’t support rejecting messages. **]** 
+**SRS_NODE_DEVICE_MQTT_16_006: [** The `reject` method shall throw because MQTT doesn’t support rejecting messages. **]**
 
 ### updateSharedAccessSignature(sharedAccessSignature, done)
 
-**SRS_NODE_DEVICE_MQTT_16_007: [** The `updateSharedAccessSignature` method shall save the new shared access signature given as a parameter to its configuration. **]** 
+**SRS_NODE_DEVICE_MQTT_16_007: [** The `updateSharedAccessSignature` method shall save the new shared access signature given as a parameter to its configuration. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_008: [** The `updateSharedAccessSignature` method shall disconnect the current connection operating with the deprecated token, and re-initialize the transport object with the new connection parameters. **]** 
+**SRS_NODE_DEVICE_MQTT_16_008: [** The `updateSharedAccessSignature` method shall disconnect the current connection operating with the deprecated token, and re-initialize the transport object with the new connection parameters. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_009: [** The `updateSharedAccessSignature` method shall call the `done` method with an `Error` object if updating the configuration or re-initializing the transport object. **]** 
+**SRS_NODE_DEVICE_MQTT_16_009: [** The `updateSharedAccessSignature` method shall call the `done` method with an `Error` object if updating the configuration or re-initializing the transport object. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_010: [** The `updateSharedAccessSignature` method shall call the `done` callback with a `null` error object and a `SharedAccessSignatureUpdated` object as a result, indicating that the client needs to reestablish the transport connection when ready. **]** 
+**SRS_NODE_DEVICE_MQTT_16_010: [** The `updateSharedAccessSignature` method shall call the `done` callback with a `null` error object and a `SharedAccessSignatureUpdated` object as a result, indicating that the client needs to reestablish the transport connection when ready. **]**
 
 ### setOptions(options, done)
 
@@ -178,9 +194,9 @@ The `sendTwinRequest` method sends the given body to the given endpoint on an Io
 
 **SRS_NODE_DEVICE_MQTT_18_013: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `body` argument is falsy. **]**
 
-**SRS_NODE_DEVICE_MQTT_18_022: [** The `propertyQuery` string shall be construced from the `properties` object. **]**  
+**SRS_NODE_DEVICE_MQTT_18_022: [** The `propertyQuery` string shall be construced from the `properties` object. **]**
 
-**SRS_NODE_DEVICE_MQTT_18_023: [** Each member of the `properties` object shall add another 'name=value&' pair to the `propertyQuery` string. **]**  
+**SRS_NODE_DEVICE_MQTT_18_023: [** Each member of the `properties` object shall add another 'name=value&' pair to the `propertyQuery` string. **]**
 
 **SRS_NODE_DEVICE_MQTT_18_004: [** If a `done` callback is passed as an argument, The `sendTwinRequest` method shall call `done` after the body has been published. **]**
 
@@ -194,10 +210,10 @@ The `sendTwinRequest` method sends the given body to the given endpoint on an Io
 
 **SRS_NODE_DEVICE_MQTT_18_017: [** If the `sendTwinRequest` method is successful, the first parameter to the `done` callback shall be null and the second parameter shall be a MessageEnqueued object. **]**
 
-### getTwinReceiver(done) 
+### getTwinReceiver(done)
 The `getTwinReceiver` method creates a `MqttTwinReceiver` object for the twin response endpoint and returns it, or returns the existing instance.
 
-**SRS_NODE_DEVICE_MQTT_18_014: [** The `getTwinReceiver` method shall throw an `ReferenceError` if done is falsy **]** 
+**SRS_NODE_DEVICE_MQTT_18_014: [** The `getTwinReceiver` method shall throw an `ReferenceError` if done is falsy **]**
 
 **SRS_NODE_DEVICE_MQTT_18_003: [** If a twin receiver for this endpoint doesn’t exist, the `getTwinReceiver` method should create a new `MqttTwinReceiver` object. **]**
 

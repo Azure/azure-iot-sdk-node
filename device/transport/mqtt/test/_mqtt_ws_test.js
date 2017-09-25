@@ -9,7 +9,8 @@ var MqttWs = require('../lib/mqtt_ws.js').MqttWs;
 describe('MqttWs', function () {
   var fakeConfig = {
     host: 'host.name',
-    deviceId: 'deviceId'
+    deviceId: 'deviceId',
+    sharedAccessSignature: 'sas'
   };
 
   describe('#constructor', function () {

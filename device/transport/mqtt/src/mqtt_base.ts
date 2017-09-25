@@ -3,48 +3,128 @@
 
 'use strict';
 
-import * as querystring from 'querystring';
-import { Client as MqttClient } from 'mqtt';
-import { MqttReceiver } from './mqtt_receiver';
+import { EventEmitter } from 'events';
+import * as machina from 'machina';
+import { Client as MqttClient, IClientOptions, IClientPublishOptions, IClientSubscribeOptions } from 'mqtt';
 import * as dbg from 'debug';
 const debug = dbg('mqtt-common');
-import { errors, results, endpoint, Message } from 'azure-iot-common';
+import { errors, results, endpoint } from 'azure-iot-common';
 import { ClientConfig } from 'azure-iot-device';
 
-// tslint:disable-next-line:no-var-requires
-const packageJson = require('../package.json');
-
-/**
- * @private
- * @class           module:azure-iot-device-mqtt.MqttBase
- * @classdesc       Base MQTT transport implementation used by higher-level IoT Hub libraries.
- *                  You generally want to use these higher-level objects (such as [Mqtt]{@link module:azure-iot-device-mqtt.Mqtt})
- *                  rather than this one.
- *
- * @param {Object}  config      The configuration object derived from the connection string.
- */
 /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_004: [The `MqttBase` constructor shall instanciate the default MQTT.JS library if no argument is passed to it.]*/
 /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_005: [The `MqttBase` constructor shall use the object passed as argument instead of the default MQTT.JS library if it's not falsy.]*/
-export class MqttBase {
-  // should be private but isn't because it's used in mqtt.ts
-  client: MqttClient;
-
+export class MqttBase extends EventEmitter {
   private mqttprovider: any;
-  private _options: any;
-  private _receiver: any;
-  private _topicTelemetryPublish: string;
-  private _topicMessageSubscribe: string;
+  private _config: ClientConfig;
+  private _sdkVersionString: string;
+  private _mqttClient: MqttClient;
+  private _fsm: any;
 
-  constructor(mqttprovider?: any) {
+  constructor(sdkVersionString: string, mqttprovider?: any) {
+    super();
     this.mqttprovider = mqttprovider ? mqttprovider : require('mqtt');
+    this._sdkVersionString = sdkVersionString;
+
+    this._fsm = new machina.Fsm({
+      namespace: 'mqtt-base',
+      initialState: 'disconnected',
+      states: {
+        disconnected: {
+          _onEnter: (callback, err) => {
+            if (callback) {
+              callback(err);
+            } else {
+              if (err) {
+                this.emit('error', err);
+              }
+            }
+          },
+          connect: (callback) => this._fsm.transition('connecting', callback),
+          disconnect: (callback) => callback(),
+          /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_020: [The `publish` method shall call the callback with a `NotConnectedError` if the connection hasn't been established prior to calling `publish`.]*/
+          publish: (topic, payload, options, callback) => callback(new errors.NotConnectedError()),
+          /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_026: [The `subscribe` method shall call the callback with a `NotConnectedError` if the connection hasn't been established prior to calling `publish`.]*/
+          subscribe: (topic, options, callback) => callback(new errors.NotConnectedError()),
+          /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_027: [The `unsubscribe` method shall call the callback with a `NotConnectedError` if the connection hasn't been established prior to calling `publish`.]*/
+          unsubscribe: (topic, callback) => callback(new errors.NotConnectedError()),
+          updateSharedAccessSignature: (callback) => {
+            /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_034: [The `updateSharedAccessSignature` method shall not trigger any network activity if the mqtt client is not connected.]*/
+            debug('updating shared access signature while disconnected');
+            callback();
+          }
+        },
+        connecting: {
+          _onEnter: (connectCallback) => {
+            this._connectClient((err, connack) => {
+              if (err) {
+                this._fsm.transition('disconnected', connectCallback, err);
+              } else {
+                this._fsm.transition('connected', connectCallback, connack);
+              }
+            });
+          },
+          disconnect: (callback) => {
+            this._fsm.transition('disconnecting', callback);
+          },
+          '*': () => this._fsm.deferUntilTransition()
+        },
+        connected: {
+          _onEnter: (connectCallback, conack) => {
+            connectCallback(null, new results.Connected(conack));
+          },
+          connect: (callback) => callback(null, new results.Connected()),
+          disconnect: (callback) => this._fsm.transition('disconnecting', callback),
+          publish: (topic, payload, options, callback) => {
+            /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_017: [The `publish` method publishes a `payload` on a `topic` using `options`.]*/
+            /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_021: [The  `publish` method shall call `publish` on the mqtt client object and call the `callback` argument with `null` and the `puback` object if it succeeds.]*/
+            /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_022: [The `publish` method shall call the `callback` argument with an Error if the operation fails.]*/
+            this._mqttClient.publish(topic, payload, options, callback);
+          },
+          subscribe: (topic, options, callback) => {
+            /*Codes_SRS_NODE_COMMON_MQTT_BASE_12_008: [The `subscribe` method shall call `subscribe`  on MQTT.JS  library and pass it the `topic` and `options` arguments.]*/
+            /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_024: [The `subscribe` method shall call the callback with `null` and the `suback` object if the mqtt library successfully subscribes to the `topic`.]*/
+            /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_025: [The `subscribe` method shall call the callback with an `Error` if the mqtt library fails to subscribe to the `topic`.]*/
+            this._mqttClient.subscribe(topic, options, callback);
+          },
+          unsubscribe: (topic, callback) => {
+            /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_028: [The `unsubscribe` method shall call `unsubscribe` on the mqtt library and pass it the `topic`.]*/
+            /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_029: [The `unsubscribe` method shall call the `callback` argument with no arguments if the operation succeeds.]*/
+            /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_030: [The `unsubscribe` method shall call the `callback` argument with an `Error` if the operation fails.]*/
+            this._mqttClient.unsubscribe(topic, callback);
+          },
+          updateSharedAccessSignature: (callback) => {
+            this._fsm.transition('reconnecting', callback);
+          }
+        },
+        disconnecting: {
+          _onEnter: (disconnectCallback, err) => {
+            this._disconnectClient(!!err, () => {
+              this._fsm.transition('disconnected', disconnectCallback, err);
+            });
+          },
+          '*': () => this._fsm.deferUntilTransition()
+        },
+        reconnecting: {
+          _onEnter: (callback) => {
+            /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_033: [The `updateSharedAccessSignature` method shall disconnect and reconnect the mqtt client with the new `sharedAccessSignature`.]*/
+            /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_035: [The `updateSharedAccessSignature` method shall call the `callback` argument with no parameters if the operation succeeds.]*/
+            /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_036: [The `updateSharedAccessSignature` method shall call the `callback` argument with an `Error` if the operation fails.]*/
+            this._disconnectClient(false, () => {
+              this._connectClient((err, connack) => {
+                if (err) {
+                  this._fsm.transition('disconnected', callback, err);
+                } else {
+                  this._fsm.transition('connected', callback, connack);
+                }
+              });
+            });
+          },
+          '*': () => this._fsm.deferUntilTransition()
+        }
+      }
+    });
   }
 
-  /**
-   * @method            module:azure-iot-device-mqtt.MqttBase#connect
-   * @description       Establishes a secure connection to the IoT Hub instance using the MQTT protocol.
-   *
-   * @param {Function}  done  Callback that shall be called when the connection is established.
-   */
   connect(config: ClientConfig, done: (err?: Error, result?: any) => void): void {
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_006: [The `connect` method shall throw a ReferenceError if the config argument is falsy, or if one of the following properties of the config argument is falsy: deviceId, host, and one of sharedAccessSignature or x509.cert and x509.key.]*/
     if ((!config) ||
@@ -54,24 +134,66 @@ export class MqttBase {
       throw new ReferenceError('Invalid transport configuration');
     }
 
-    this._receiver = null;
-    const uri = (<any>config).uri || 'mqtts://' + config.host;
-    this._topicTelemetryPublish = 'devices/' + config.deviceId + '/messages/events/';
-    this._topicMessageSubscribe = 'devices/' + config.deviceId + '/messages/devicebound/#';
-    debug('topic publish: ' + this._topicTelemetryPublish);
-    debug('topic subscribe: ' + this._topicMessageSubscribe);
-    const versionString = encodeURIComponent('azure-iot-device/' + packageJson.version);
+    this._config = config;
+    this._fsm.handle('connect', done);
+  }
 
+  disconnect(done: (err?: Error, result?: any) => void): void {
+    this._fsm.handle('disconnect', done);
+  }
+
+  publish(topic: string, payload: any, options: IClientPublishOptions, done: (err?: Error, result?: any) => void): void {
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_018: [The `publish` method shall throw a `ReferenceError` if the topic is falsy.]*/
+    if (!topic) {
+      throw new ReferenceError('Invalid topic');
+    }
+
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_019: [The `publish` method shall throw a `ReferenceError` if the payload is falsy.]*/
+    if (!payload) {
+      throw new ReferenceError('Invalid payload');
+    }
+
+    this._fsm.handle('publish', topic, payload, options, done);
+  }
+
+  subscribe(topic: string, options: IClientSubscribeOptions, callback: (err?: Error, result?: any) => void): void {
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_023: [The `subscribe` method shall throw a `ReferenceError` if the topic is falsy.]*/
+    if (!topic) {
+      throw new ReferenceError('Topic cannot be \'' + topic + '\'');
+    }
+
+    this._fsm.handle('subscribe', topic, options, callback);
+  }
+
+  unsubscribe(topic: string, callback: (err?: Error, result?: any) => void): void {
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_031: [The `unsubscribe` method shall throw a `ReferenceError` if the `topic` argument is falsy.]*/
+    if (!topic) {
+      throw new ReferenceError('Topic cannot be \'' + topic + '\'');
+    }
+
+    this._fsm.handle('unsubscribe', topic, callback);
+  }
+
+  updateSharedAccessSignature(sharedAccessSignature: string, callback: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_032: [The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the `sharedAccessSignature` argument is falsy.]*/
+    if (!sharedAccessSignature) {
+      throw new ReferenceError('sharedAccessSignature cannot be \'' + sharedAccessSignature + '\'');
+    }
+    this._config.sharedAccessSignature = sharedAccessSignature;
+    this._fsm.handle('updateSharedAccessSignature', callback);
+  }
+
+  private _connectClient(callback: (err?: Error, connack?: any) => void): void {
+    const uri = (<any>this._config).uri || 'mqtts://' + this._config.host;
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_002: [The `connect` method shall use the authentication parameters contained in the `config` argument to connect to the server.]*/
-    this._options = {
-      cmd: 'connect',
+    let options: IClientOptions = {
       protocolId: 'MQTT',
       protocolVersion: 4,
       clean: false,
-      clientId: config.deviceId,
+      clientId: this._config.deviceId,
       rejectUnauthorized: true,
-      username: config.host + '/' + config.deviceId +
-                '/DeviceClientType=' + versionString +
+      username: this._config.host + '/' + this._config.deviceId +
+                '/DeviceClientType=' + this._sdkVersionString +
                 '&' + endpoint.versionQueryString().substr(1),
       reconnectPeriod: 0,  // Client will handle reconnection at the higher level.
       /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_016: [The `connect` method shall configure the `keepalive` ping interval to 3 minutes by default since the Azure Load Balancer TCP Idle timeout default is 4 minutes.]*/
@@ -79,142 +201,59 @@ export class MqttBase {
       reschedulePings: false
     };
 
-    if (config.sharedAccessSignature) {
-      this._options.password = new Buffer(config.sharedAccessSignature.toString());
-      debug('username: ' + this._options.username);
+    if (this._config.sharedAccessSignature) {
+      options.password = this._config.sharedAccessSignature.toString();
+      debug('username: ' + options.username);
       debug('uri:      ' + uri);
     } else {
-      this._options.cert = config.x509.cert;
-      this._options.key = config.x509.key;
-      this._options.passphrase = config.x509.passphrase;
+      options.cert = this._config.x509.cert;
+      options.key = this._config.x509.key;
+      (<any>options).passphrase = this._config.x509.passphrase; // forced to cast to any because passphrase is used by tls options but not surfaced by the types definition.
     }
 
-    this.client = this.mqttprovider.connect(uri, this._options);
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_007: [The `connect` method shall not throw if the `done` argument has not been passed.]*/
-    if (done) {
-      const self = this;
-
-      const errCallback = (error) => {
+    const createErrorCallback = (eventName) => {
+      return (error) => {
+        debug('received \'' + eventName + '\' from mqtt client');
         const err = error || new errors.NotConnectedError('Unable to establish a connection');
-        self.client.removeListener('close', errCallback);
-        self.client.removeListener('offline', errCallback);
-        self.client.removeListener('disconnect', errCallback);
-        self.client.removeListener('error', errCallback);
-        done(err);
+        callback(err);
       };
+    };
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_003: [The `connect` method shall call the `done` callback with a standard javascript `Error` object if the connection failed.]*/
+    const errorCallback = createErrorCallback('error');
+    const closeCallback = createErrorCallback('close');
+    const offlineCallback = createErrorCallback('offline');
+    const disconnectCallback = createErrorCallback('disconnect');
+    const messageCallback = (topic, payload) => {
+      this.emit('message', topic, payload);
+    };
 
-      /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_003: [The `connect` method shall call the `done` callback with a standard javascript `Error` object if the connection failed.]*/
-      self.client.on('error', errCallback);
-      self.client.on('close', errCallback);
-      self.client.on('offline', errCallback);
-      self.client.on('disconnect', errCallback);
+    this._mqttClient = this.mqttprovider.connect(uri, options);
+    this._mqttClient.on('message', messageCallback);
+    this._mqttClient.on('error', errorCallback);
+    this._mqttClient.on('close', closeCallback);
+    this._mqttClient.on('offline', offlineCallback);
+    this._mqttClient.on('disconnect', disconnectCallback);
 
-      self.client.on('connect', (connack) => {
-        debug('Device is connected');
-        debug('CONNACK: ' + JSON.stringify(connack));
+    this._mqttClient.on('connect', (connack) => {
+      debug('Device is connected');
+      debug('CONNACK: ' + JSON.stringify(connack));
 
-        self.client.removeListener('close', errCallback);
-        self.client.removeListener('offline', errCallback);
-        self.client.removeListener('disconnect', errCallback);
+      this._mqttClient.removeListener('close', closeCallback);
+      this._mqttClient.removeListener('offline', offlineCallback);
+      this._mqttClient.removeListener('disconnect', disconnectCallback);
 
-        self.client.on('close', () => {
-          debug('Device connection to the server has been closed');
-          self._receiver = null;
-        });
-
-        /*Codes_SRS_NODE_COMMON_MQTT_BASE_12_005: [The `connect` method shall call connect on MQTT.JS  library and call the `done` callback with a `null` error object and the result as a second argument.]*/
-        done(null, connack);
+      this._mqttClient.on('close', () => {
+        debug('Device connection to the server has been closed');
+        this._fsm.transition('disconnecting', undefined, new errors.NotConnectedError('Connection to the server has been closed.'));
       });
-    }
-  }
 
-  /**
-   * @method            module:azure-iot-device-mqtt.MqttBase#disconnect
-   * @description       Terminates the connection to the IoT Hub instance.
-   *
-   * @param {Function}  done      Callback that shall be called when the connection is terminated.
-   */
-  disconnect(done: (err?: Error, result?: any) => void): void {
-    this.client.removeAllListeners();
-    // The first parameter decides whether the connection should be forcibly closed without waiting for all sent messages to be ACKed.
-    // This should be a transport-specific parameter.
-    /* Codes_SRS_NODE_HTTP_16_001: [The disconnect method shall call the done callback when the connection to the server has been closed.] */
-    this.client.end(false, done);
-  }
-
-  /**
-   * @method            module:azure-iot-device-mqtt.MqttBase#publish
-   * @description       Publishes a message to the IoT Hub instance using the MQTT protocol.
-   *
-   * @param {Object}    message   Message to send to the IoT Hub instance.
-   * @param {Function}  done      Callback that shall be called when the connection is established.
-   */
-  /* Codes_SRS_NODE_HTTP_12_006: The PUBLISH method shall throw ReferenceError “Invalid message” if the message is falsy */
-  /* Codes_SRS_NODE_HTTP_12_007: The PUBLISH method shall call publish on MQTT.JS library with the given message */
-  publish(message: Message, done: (err?: Error, result?: any) => void): void {
-    if (!message) {
-      throw new ReferenceError('Invalid message');
-    }
-
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_008: [The `publish` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`.]*/
-    let topic = this._topicTelemetryPublish;
-
-    let systemProperties: { [key: string]: string } = {};
-
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_011: [The `publish` method shall serialize the `messageId` property of the message as a key-value pair on the topic with the key `$.mid`.]*/
-    if (message.messageId) systemProperties['$.mid'] = message.messageId;
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_012: [The `publish` method shall serialize the `correlationId` property of the message as a key-value pair on the topic with the key `$.cid`.]*/
-    if (message.correlationId) systemProperties['$.cid'] = message.correlationId;
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_013: [The `publish` method shall serialize the `userId` property of the message as a key-value pair on the topic with the key `$.uid`.]*/
-    if (message.userId) systemProperties['$.uid'] = message.userId;
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_014: [The `publish` method shall serialize the `to` property of the message as a key-value pair on the topic with the key `$.to`.]*/
-    if (message.to) systemProperties['$.to'] = message.to;
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_015: [The `publish` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`.]*/
-    if (message.expiryTimeUtc) {
-      const expiryString = message.expiryTimeUtc instanceof Date ? message.expiryTimeUtc.toISOString() : message.expiryTimeUtc;
-      systemProperties['$.exp'] = (expiryString || undefined);
-    }
-
-    const sysPropString = querystring.stringify(systemProperties);
-    topic += sysPropString;
-
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_009: [If the message has properties, the property keys and values shall be uri-encoded, then serialized and appended at the end of the topic with the following convention: `<key>=<value>&<key2>=<value2>&<key3>=<value3>(...)`.]*/
-    if (message.properties.count() > 0) {
-      for (let i = 0; i < message.properties.count(); i++) {
-        if (i > 0 || sysPropString) topic += '&';
-        topic += encodeURIComponent(message.properties.propertyList[i].key) + '=' + encodeURIComponent(message.properties.propertyList[i].value);
-      }
-    }
-
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `publish` method shall use QoS level of 1.]*/
-    this.client.publish(topic, message.data, { qos: 1, retain: false }, (err, puback) => {
-      if (done) {
-        if (err) {
-          done(err);
-        } else {
-          debug('PUBACK: ' + JSON.stringify(puback));
-          done(null, new results.MessageEnqueued(puback));
-        }
-      }
+      callback(null, connack);
     });
   }
 
-  /**
-   * @method              module:azure-iot-device-mqtt.MqttBase#getReceiver
-   * @description         Gets a receiver object that is used to receive and settle messages.
-   *
-   * @param {Function}    done   callback that shall be called with a receiver object instance.
-   */
-  /*Codes_SRS_NODE_DEVICE_MQTT_BASE_16_002: [If a receiver for this endpoint has already been created, the getReceiver method should call the done() method with the existing instance as an argument.] */
-  /*Codes_SRS_NODE_DEVICE_MQTT_BASE_16_003: [If a receiver for this endpoint doesn’t exist, the getReceiver method should create a new MqttReceiver object and then call the done() method with the object that was just created as an argument.] */
-  getReceiver(done: (err?: Error, receiver?: MqttReceiver) => void): void {
-    if (!this._receiver) {
-      this._receiver = new MqttReceiver(
-        this.client,
-        this._topicMessageSubscribe
-      );
-    }
-
-    done(null, this._receiver);
+  private _disconnectClient(forceDisconnect: boolean, callback: () => void): void {
+    this._mqttClient.removeAllListeners();
+    /* Codes_SRS_NODE_COMMON_MQTT_BASE_16_001: [The disconnect method shall call the done callback when the connection to the server has been closed.] */
+    this._mqttClient.end(forceDisconnect, callback);
   }
 }
