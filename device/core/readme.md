@@ -91,7 +91,7 @@ If you want to modify the module's code and/or contribute changes, you will need
 [lnk-manage-iot-hub]: https://aka.ms/manageiothub
 [devbox-setup]: ../../doc/node-devbox-setup.md
 [device-samples]: ../samples/
-[node-api-reference]: http://azure.github.io/azure-iot-sdks/
+[node-api-reference]: https://docs.microsoft.com/en-us/javascript/api/azure-iot-device/
 [iot-dev-center]: http://azure.com/iotdev
 [iot-hub-documentation]: https://docs.microsoft.com/en-us/azure/iot-hub/
 
