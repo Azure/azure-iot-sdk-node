@@ -4,13 +4,13 @@
 'use strict';
 
 import { EventEmitter } from 'events';
-import { Client as MqttClient } from 'mqtt';
 import { Message, Receiver } from 'azure-iot-common';
 import { DeviceMethodRequest, DeviceMethodResponse } from 'azure-iot-device';
 import * as QueryString from 'querystring';
 import * as URL from 'url';
 import * as dbg from  'debug';
 const debug = dbg('device:mqtt-receiver');
+import { MqttBase } from './mqtt_base';
 
 const TOPIC_METHODS_SUBSCRIBE = '$iothub/methods/POST/#';
 
@@ -123,17 +123,18 @@ function _parseMessage(topic: string, body: any): MethodMessage {
  * @type {Message}
  */
 export class MqttReceiver extends EventEmitter implements Receiver {
-  private _mqttClient: MqttClient;
+  private _mqtt: MqttBase;
   private _topics: { [key: string]: TopicDescription };
 
-  constructor(mqttClient: MqttClient, topicMessage: string) {
+  constructor(mqttClient: MqttBase, topicMessage: string) {
     super();
     /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_001: [If the topicMessage parameter is falsy, a ReferenceError shall be thrown.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_002: [If the mqttClient parameter is falsy, a ReferenceError shall be thrown.]*/
     if (!mqttClient) { throw new ReferenceError('mqttClient cannot be falsy'); }
     if (!topicMessage) { throw new ReferenceError('topicMessage cannot be falsy'); }
 
-    this._mqttClient = mqttClient;
+    this._mqtt = mqttClient;
+    this._mqtt.on('message', this._dispatchMqttMessage.bind(this));
 
     // MQTT topics to subscribe to
     this._topics = {
@@ -157,20 +158,6 @@ export class MqttReceiver extends EventEmitter implements Receiver {
 
     const self = this;
 
-    // gets the total number of event listeners across all MQTT topics we are
-    // interested in
-    const getTotalListeners = () => {
-      return Object.keys(self._topics)
-                  .map((name) => {
-                    return self._topics[name].listenersCount;
-                  })
-                  .reduce((previous, current) => {
-                    return previous + current;
-                  }, 0);
-    };
-
-    const dispatchMqttMessage = this._dispatchMqttMessage.bind(this);
-
     this.on('newListener', (eventName) => {
       // if the event is a 'method' event then eventName is in the format
       // 'method_{method name}'
@@ -182,12 +169,6 @@ export class MqttReceiver extends EventEmitter implements Receiver {
       if (!!topic) {
         // increment listeners count for this topic
         ++(topic.listenersCount);
-
-        // if this is the first listener then add a listener for the 'message'
-        // event on this._mqttClient
-        if (getTotalListeners() === 1) {
-          self._mqttClient.on('message', dispatchMqttMessage);
-        }
 
         // lazy-init MQTT subscription
         if (topic.subscribed === false && topic.subscribeInProgress === false) {
@@ -207,14 +188,9 @@ export class MqttReceiver extends EventEmitter implements Receiver {
                         self._topics.message :
                         null;
       if (!!topic) {
+        debug('removing listener for topic: ' + JSON.stringify(topic));
         // decrement listeners count for this topic
         --(topic.listenersCount);
-
-        // if this is the last listener then remove the listener for the 'message'
-        // event on this._mqttClient
-        if (getTotalListeners() === 0) {
-          self._mqttClient.removeListener('message', dispatchMqttMessage);
-        }
 
         // stop listening for MQTT events if our consumers stop listening for our events
         if (topic.listenersCount === 0 && topic.subscribed === true) {
@@ -233,7 +209,7 @@ export class MqttReceiver extends EventEmitter implements Receiver {
   private _setupSubscription(topic: TopicDescription): void {
     debug('subscribe: ' + JSON.stringify(topic));
     topic.subscribeInProgress = true;
-    this._mqttClient.subscribe(topic.name, { qos: 0 }, (err) => {
+    this._mqtt.subscribe(topic.name, { qos: 0 }, (err) => {
       topic.subscribeInProgress = false;
       if (!err) {
         topic.subscribed = true;
@@ -246,7 +222,7 @@ export class MqttReceiver extends EventEmitter implements Receiver {
 
   private _removeSubscription(topic: TopicDescription): void {
     debug('unsubscribe ' + JSON.stringify(topic));
-    this._mqttClient.unsubscribe(topic.name, (err) => {
+    this._mqtt.unsubscribe(topic.name, (err) => {
       if (!err) {
         topic.subscribed = false;
 
