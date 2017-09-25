@@ -82,6 +82,6 @@ Test files
 [npm_lnk]:https://docs.npmjs.com/getting-started/what-is-npm
 [samples]: ./samples/
 [lnk-setup-iot-hub]: https://aka.ms/howtocreateazureiothub
-[node-api-reference]: http://azure.github.io/azure-iot-sdk-node/
+[node-api-reference]: https://docs.microsoft.com/en-us/javascript/api/azure-iothub/
 [iot-dev-center]: http://azure.com/iotdev
 [iot-hub-documentation]: https://docs.microsoft.com/en-us/azure/iot-hub/

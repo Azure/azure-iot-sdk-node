@@ -21,7 +21,7 @@ This folder contains simple samples showing how to use the various features of t
    * **device_blob_upload.js**: Uploads a blob to Azure through IoT Hub
 
 ## How to run the samples
-   
+
 In order to run the device samples you will first need the following prerequisites:
 * Node.js v0.10 or above on your target device. (Check out [Nodejs.org](https://nodejs.org/) for more info)
 * [Create an Azure IoT Hub instance][lnk-setup-iot-hub]
@@ -62,7 +62,7 @@ For more information on how to use this library refer to the documents below:
 [lnk-setup-iot-hub]: https://aka.ms/howtocreateazureiothub
 [lnk-manage-iot-hub]: https://aka.ms/manageiothub
 [remote-monitoring-pcs]: https://docs.microsoft.com/en-us/azure/iot-suite/iot-suite-remote-monitoring-sample-walkthrough
-[node-api-reference]: http://azure.github.io/azure-iot-sdks/
+[node-api-reference]: https://docs.microsoft.com/en-us/javascript/api/azure-iot-device/
 [iothub-explorer]: https://github.com/azure/iothub-explorer
 [debug-with-vscode]: ../../doc/node-debug-vscode.md
 [node-devbox-setup]: ../../doc/node-devbox-setup.md

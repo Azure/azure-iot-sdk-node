@@ -16,7 +16,7 @@ This folder contains simple samples showing how to use the various features of t
    * **twin.js**: Interact with the Device Twins from a back-end app.
    * **twin_query.js**: Interact with the Device Twins using queries from a back-end app.
    * **device_method.js**: Invoke a C2D Direct Method on a device through IoT Hub.
-   * **dmpatterns_reboot_service.js**: Initiate a C2D method to reboot a device and view progress through the twin reported properties. 
+   * **dmpatterns_reboot_service.js**: Initiate a C2D method to reboot a device and view progress through the twin reported properties.
    * **dmpatterns_fwupdate_service.js**: Implement the service side of the firmware update DM pattern.
    * **job_query.js**: Use the jobs query feature of the service SDK.
    * **schedule_job.js**: Schedule device management jobs.
@@ -62,7 +62,7 @@ For more information on how to use this library refer to the documents below:
 
 [lnk-setup-iot-hub]: https://aka.ms/howtocreateazureiothub
 [remote-monitoring-pcs]: https://docs.microsoft.com/en-us/azure/iot-suite/iot-suite-remote-monitoring-sample-walkthrough
-[node-api-reference]: http://azure.github.io/azure-iot-sdks/
+[node-api-reference]: https://docs.microsoft.com/en-us/javascript/api/azure-iothub/
 [iothub-explorer]: https://github.com/azure/iothub-explorer
 [dm-patterns]: ../../doc/dmpatterns.md
 [debug-with-vscode]: ../../doc/get_started/node-debug-vscode.md
