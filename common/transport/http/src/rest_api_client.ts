@@ -4,11 +4,9 @@
 'use strict';
 
 import { anHourFromNow, errors, SharedAccessSignature } from 'azure-iot-common';
-import { Http as HttpBase } from 'azure-iot-http-base';
+import { Http as HttpBase } from './http';
 import  * as uuid from 'uuid';
 
-// tslint:disable-next-line:no-var-requires
-const packageJson = require('../package.json');
 
 /**
  * @private
@@ -37,15 +35,19 @@ export interface HttpTransportError extends Error {
 export class RestApiClient {
   private _config: RestApiClient.TransportConfig;
   private _http: HttpBase;
+  private _userAgent: string;
 
-  constructor(config: RestApiClient.TransportConfig, httpRequestBuilder?: HttpBase) {
+  constructor(config: RestApiClient.TransportConfig, userAgent: string, httpRequestBuilder?: HttpBase) {
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_001: [The `RestApiClient` constructor shall throw a `ReferenceError` if config is falsy.]*/
     if (!config) throw new ReferenceError('config cannot be \'' + config + '\'');
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` or `sharedAccessSignature` property.]*/
     if (!config.host) throw new errors.ArgumentError('config.host cannot be \'' + config.host + '\'');
     if (!config.sharedAccessSignature) throw new errors.ArgumentError('config.sharedAccessSignature cannot be \'' + config.sharedAccessSignature + '\'');
+    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_18_001: [The `RestApiClient` constructor shall throw a `ReferenceError` if `userAgent` is falsy.]*/
+    if (!userAgent) throw new ReferenceError('userAgent cannot be \'' + config + '\'');
 
     this._config = config;
+    this._userAgent = userAgent;
 
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_003: [The `RestApiClient` constructor shall use `azure-iot-common.Http` as the internal HTTP client if the `httpBase` argument is `undefined`.]*/
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_004: [The `RestApiClient` constructor shall use the value of the `httpBase` argument as the internal HTTP client if present.]*/
@@ -85,7 +87,7 @@ export class RestApiClient {
     let httpHeaders: any = headers || {};
     httpHeaders.Authorization = (typeof(this._config.sharedAccessSignature) === 'string') ? this._config.sharedAccessSignature as string : (this._config.sharedAccessSignature as SharedAccessSignature).extend(anHourFromNow());
     httpHeaders['Request-Id'] = uuid.v4();
-    httpHeaders['User-Agent'] = packageJson.name + '/' + packageJson.version;
+    httpHeaders['User-Agent'] = this._userAgent;
 
     let requestBodyString: string;
 

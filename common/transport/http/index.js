@@ -10,5 +10,6 @@
  */
 
 module.exports = {
-  Http: require('./lib/http.js').Http
+  Http: require('./lib/http.js').Http,
+  RestApiClient: require('./lib/rest_api_client.js').RestApiClient
 };

@@ -8,8 +8,11 @@ import { anHourFromNow, results, Message, Receiver, SharedAccessSignature } from
 import * as ConnectionString from './connection_string';
 import { Amqp } from './amqp';
 import { DeviceMethod } from './device_method';
-import { RestApiClient } from './rest_api_client';
+import { RestApiClient } from 'azure-iot-http-base';
 import { Callback, DeviceMethodParams } from './interfaces';
+
+// tslint:disable-next-line:no-var-requires
+const packageJson = require('../package.json');
 
 /**
  * The IoT Hub service client is used to communicate with devices through an Azure IoT hub.
@@ -238,7 +241,7 @@ export class Client extends EventEmitter {
     };
 
     /*Codes_SRS_NODE_IOTHUB_CLIENT_05_004: [The fromConnectionString method shall return a new instance of the Client object, as by a call to new Client(transport).]*/
-    return new Client(new transportCtor(config), new RestApiClient(config));
+    return new Client(new transportCtor(config), new RestApiClient(config, packageJson.name + '/' + packageJson.version));
   }
 
   /**
@@ -276,7 +279,7 @@ export class Client extends EventEmitter {
     };
 
     /*Codes_SRS_NODE_IOTHUB_CLIENT_05_007: [The fromSharedAccessSignature method shall return a new instance of the Client object, as by a call to new Client(transport).]*/
-    return new Client(new transportCtor(config), new RestApiClient(config));
+    return new Client(new transportCtor(config), new RestApiClient(config, packageJson.name + '/' + packageJson.version));
   }
 }
 

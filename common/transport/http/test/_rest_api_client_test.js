@@ -5,11 +5,12 @@
 
 var assert = require('chai').assert;
 var errors = require('azure-iot-common').errors;
-var HttpBase = require('azure-iot-http-base').Http;
+var HttpBase = require('../lib/http.js').Http;
 var PackageJson = require('../package.json');
 var RestApiClient = require('../lib/rest_api_client.js').RestApiClient;
 
 var fakeConfig = { host: 'host', sharedAccessSignature: 'sas' };
+var fakeAgent = 'agentString';
 
 describe('RestApiClient', function() {
   describe('#constructor', function() {
@@ -17,11 +18,20 @@ describe('RestApiClient', function() {
     [undefined, null, ''].forEach(function(badConfig) {
       it('throws a ReferenceError if \'config\' is \'' + badConfig + '\'', function() {
         assert.throws(function() {
-          return new RestApiClient(badConfig);
+          return new RestApiClient(badConfig, fakeAgent);
         }, ReferenceError);
       });
     });
 
+    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_18_001: [The `RestApiClient` constructor shall throw a `ReferenceError` if `userAgent` is falsy.]*/
+    [undefined, null, ''].forEach(function(badAgent) {
+      it('throws a ReferenceError if \'userAgent\' is \'' + badAgent + '\'', function() {
+        assert.throws(function() {
+          return new RestApiClient(fakeConfig, badAgent);
+        }, ReferenceError);
+      });
+    });
+    
     /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` or `sharedAccessSignature` property.]*/
     ['host', 'sharedAccessSignature'].forEach(function(badPropName) {
       [undefined, null, ''].forEach(function(badPropValue) {
@@ -29,7 +39,7 @@ describe('RestApiClient', function() {
           var badConfig = JSON.parse(JSON.stringify(fakeConfig));
           badConfig[badPropName] = badPropValue;
           assert.throws(function() {
-            return new RestApiClient(badConfig);
+            return new RestApiClient(badConfig, fakeAgent);
           }, errors.ArgumentError);
         });
       });
@@ -37,7 +47,7 @@ describe('RestApiClient', function() {
 
     /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_003: [The `RestApiClient` constructor shall use `azure-iot-common.Http` as the internal HTTP client if the `httpBase` argument is `undefined`.]*/
     it('uses \'azure-iot-common.Http\' if the \'httpBase\' argument is undefined', function() {
-      var client = new RestApiClient(fakeConfig);
+      var client = new RestApiClient(fakeConfig, fakeAgent);
       assert.instanceOf(client._http, HttpBase);
     });
 
@@ -53,7 +63,7 @@ describe('RestApiClient', function() {
         }
       };
 
-      var client = new RestApiClient(fakeConfig, fakeHttpBase);
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpBase);
       client.executeApiCall('method', 'path', null, null, function() {});
     });
   });
@@ -63,7 +73,7 @@ describe('RestApiClient', function() {
     /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_005: [The `executeApiCall` method shall throw a `ReferenceError` if the `method` argument is falsy.]*/
     [undefined, null, ''].forEach(function(badMethod) {
       it('throws a ReferenceError if \'method\' is \'' + badMethod + '\'', function() {
-        var client = new RestApiClient(fakeConfig);
+        var client = new RestApiClient(fakeConfig, fakeAgent);
         assert.throws(function() {
           client.executeApiCall(badMethod, '/fake/path', null, null, function() {});
         }, ReferenceError);
@@ -73,7 +83,7 @@ describe('RestApiClient', function() {
     /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_006: [The `executeApiCall` method shall throw a `ReferenceError` if the `path` argument is falsy.]*/
     [undefined, null, ''].forEach(function(badPath) {
       it('throws a ReferenceError if \'path\' is \'' + badPath + '\'', function() {
-        var client = new RestApiClient(fakeConfig);
+        var client = new RestApiClient(fakeConfig, fakeAgent);
         assert.throws(function() {
           client.executeApiCall('GET', badPath, null, null, function() {});
         }, ReferenceError);
@@ -89,7 +99,7 @@ describe('RestApiClient', function() {
         buildRequest: function(method, path, headers, host, requestCallback) {
           assert(headers.Authorization, fakeConfig.sharedAccessSignature);
           assert.isString(headers['Request-Id']);
-          assert.equal(headers['User-Agent'], PackageJson.name + '/' + PackageJson.version);
+          assert.equal(headers['User-Agent'],fakeAgent);
           return {
             write: function() {},
             end: function() {
@@ -99,7 +109,7 @@ describe('RestApiClient', function() {
         }
       };
 
-      var client = new RestApiClient(fakeConfig, fakeHttpHelper);
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
       client.executeApiCall('GET', '/fake/path', null, null, testCallback);
     });
 
@@ -119,7 +129,7 @@ describe('RestApiClient', function() {
         }
       };
 
-      var client = new RestApiClient(fakeConfig, fakeHttpHelper);
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
       client.executeApiCall('GET', '/fake/path', null, null, testCallback);
     });
 
@@ -140,7 +150,7 @@ describe('RestApiClient', function() {
         }
       };
 
-      var client = new RestApiClient(fakeConfig, fakeHttpHelper);
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
       client.executeApiCall('GET', '/fake/path', null, null, testTimeout, testCallback);
     });
 
@@ -174,7 +184,7 @@ describe('RestApiClient', function() {
         }
       };
 
-      var client = new RestApiClient(fakeConfig, fakeHttpHelper);
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
       client.executeApiCall(testMethod, testPath, testHeaders, testRequestBody, testTimeout, testCallback);
     });
 
@@ -197,7 +207,7 @@ describe('RestApiClient', function() {
         }
       };
 
-      var client = new RestApiClient(fakeConfig, fakeHttpHelper);
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
       client.executeApiCall('GET', '/test/path', null, null, function(err, result, response) {
         assert.isNull(err);
         assert.deepEqual(result, fakeResponseBody);
@@ -222,7 +232,7 @@ describe('RestApiClient', function() {
         }
       };
 
-      var client = new RestApiClient(fakeConfig, fakeHttpHelper);
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
       client.executeApiCall('GET', '/test/path', null, null, function(err) {
         assert.instanceOf(err, errors.UnauthorizedError);
         testCallback();
@@ -245,7 +255,7 @@ describe('RestApiClient', function() {
         }
       };
 
-      var client = new RestApiClient(fakeConfig, fakeHttpHelper);
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
       client.executeApiCall('GET', '/test/path', null, null, function(err) {
         assert.equal(err, fakeError);
         testCallback();
@@ -274,7 +284,7 @@ describe('RestApiClient', function() {
         }
       };
 
-      var client = new RestApiClient(fakeConfig, fakeHttpHelper);
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
       client.executeApiCall('GET', '/test/path', testHeaders, testRequestBody, testCallback);
     });
 
@@ -300,7 +310,7 @@ describe('RestApiClient', function() {
         }
       };
 
-      var client = new RestApiClient(fakeConfig, fakeHttpHelper);
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
       client.executeApiCall('GET', '/test/path', testHeaders, testRequestBody, testCallback);
     });
 
@@ -324,7 +334,7 @@ describe('RestApiClient', function() {
         }
       };
 
-      var client = new RestApiClient(fakeConfig, fakeHttpHelper);
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
       client.executeApiCall('GET', '/test/path', testHeaders, testRequestBody, testCallback);
     });
 
@@ -346,7 +356,7 @@ describe('RestApiClient', function() {
         }
       };
 
-      var client = new RestApiClient(fakeConfig, fakeHttpHelper);
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
       assert.throws(function() {
         client.executeApiCall('GET', '/test/path', testHeaders, testRequestBody, function() {});
       }, TypeError);
@@ -378,7 +388,7 @@ describe('RestApiClient', function() {
           }
         };
 
-        var client = new RestApiClient(fakeConfig, fakeHttpHelper);
+        var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
         client.executeApiCall('GET', '/test/path', testHeaders, testRequestBody, testCallback);
       });
     });
@@ -388,7 +398,7 @@ describe('RestApiClient', function() {
     /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_034: [The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the `sharedAccessSignature` argument is falsy.]*/
     [undefined, null, ''].forEach(function(badSas) {
       it('throws if \'sharedAccessSignature\' is \'' + badSas + '\'', function() {
-        var client = new RestApiClient({host: 'host', sharedAccessSignature: 'sas'});
+        var client = new RestApiClient({host: 'host', sharedAccessSignature: 'sas'}, fakeAgent);
         assert.throws(function () {
           client.updateSharedAccessSignature(badSas);
         }, ReferenceError);
@@ -410,7 +420,7 @@ describe('RestApiClient', function() {
         }
       };
 
-      var client = new RestApiClient({host: 'host', sharedAccessSignature: 'sas'}, fakeHttpRequestBuilder);
+      var client = new RestApiClient({host: 'host', sharedAccessSignature: 'sas'}, fakeAgent, fakeHttpRequestBuilder);
       client.updateSharedAccessSignature(newSas);
       client.executeApiCall('POST', '/fake/path', null, null, function() {});
     });

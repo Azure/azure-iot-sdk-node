@@ -4,12 +4,15 @@
 'use strict';
 
 import { errors, endpoint, SharedAccessSignature } from 'azure-iot-common';
-import { RestApiClient } from './rest_api_client';
+import { RestApiClient } from 'azure-iot-http-base';
 import * as ConnectionString from './connection_string';
 import { Twin } from './twin';
 import { Query } from './query';
 import { Device } from './device';
 import { Callback } from './interfaces';
+
+// tslint:disable-next-line:no-var-requires
+const packageJson = require('../package.json');
 
 const ArgumentError = errors.ArgumentError;
 
@@ -47,7 +50,7 @@ export class Registry {
     /*SRS_NODE_IOTHUB_REGISTRY_16_024: [The `Registry` constructor shall use the `restApiClient` provided as a second argument if it is provided.]*/
     /*SRS_NODE_IOTHUB_REGISTRY_16_025: [The `Registry` constructor shall use `azure-iothub.RestApiClient` if no `restApiClient` argument is provided.]*/
     // This httpRequestBuilder parameter is used only for unit-testing purposes and should not be used in other situations.
-    this._restApiClient = restApiClient || new RestApiClient(config);
+    this._restApiClient = restApiClient || new RestApiClient(config, packageJson.name + '/' + packageJson.version);
   }
 
   /**

@@ -6,10 +6,13 @@
 import { anHourFromNow, endpoint } from 'azure-iot-common';
 import * as ConnectionString from './connection_string';
 import * as SharedAccessSignature from './shared_access_signature';
-import { RestApiClient } from './rest_api_client';
+import { RestApiClient } from 'azure-iot-http-base';
 import { DeviceMethod } from './device_method';
 import { Query } from './query';
 import { DeviceMethodParams } from './interfaces';
+
+// tslint:disable-next-line:no-var-requires
+const packageJson = require('../package.json');
 
 export type JobType = 'scheduleUpdateTwin' | 'scheduleDeviceMethod';
 export type JobStatus = 'queued' | 'scheduled' | 'running' | 'cancelled' | 'finished';
@@ -357,7 +360,7 @@ export class JobClient {
     };
 
     /*Codes_SRS_NODE_JOB_CLIENT_16_003: [The `fromConnectionString` method shall return a new `JobClient` instance.]*/
-    return new JobClient(new RestApiClient(config));
+    return new JobClient(new RestApiClient(config, packageJson.name + '/' + packageJson.version));
   }
 
   /**
@@ -384,7 +387,7 @@ export class JobClient {
     };
 
     /*Codes_SRS_NODE_JOB_CLIENT_16_005: [The `fromSharedAccessSignature` method shall return a new `JobClient` instance.]*/
-    return new JobClient(new RestApiClient(config));
+    return new JobClient(new RestApiClient(config, packageJson.name + '/' + packageJson.version));
   }
 }
 

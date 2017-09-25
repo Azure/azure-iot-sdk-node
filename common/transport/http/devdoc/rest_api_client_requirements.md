@@ -5,7 +5,7 @@ The `RestApiClient` class provides common methods for top-level clients that use
 
 ## Usage
 ```js
-var restClient = new RestApiClient({ host: 'host', sharedAccessSignature: 'sharedAccessSignature'});
+var restClient = new RestApiClient({ host: 'host', sharedAccessSignature: 'sharedAccessSignature'}, 'azure-iothub');
 restClient.executeApiCall('GET', '/twins?api-version=2016-11-14', null, null, function(err, result, response) {
   if (err) {
     console.error(restClient.translateError(result, response).toString());
@@ -17,12 +17,14 @@ restClient.executeApiCall('GET', '/twins?api-version=2016-11-14', null, null, fu
 
 ## Public Interface
 
-### RestApiClient(config, httpBase)
+### constructor(config: RestApiClient.TransportConfig, userAgent: string, httpRequestBuilder?: HttpBase)
 The `RestApiClient` constructor initializes a new instance of a `RestApiClient` object that is used to communicate with the REST APIs of the IoT Hub service
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_001: [** The `RestApiClient` constructor shall throw a `ReferenceError` if config is falsy. **]**
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [** The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` or `sharedAccessSignature` property. **]**
+
+**SRS_NODE_IOTHUB_REST_API_CLIENT_18_001: [** The `RestApiClient` constructor shall throw a `ReferenceError` if `userAgent` is falsy. **]**
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_003: [** The `RestApiClient` constructor shall use `azure-iot-common.Http` as the internal HTTP client if the `httpBase` argument is `undefined`. **]**
 
