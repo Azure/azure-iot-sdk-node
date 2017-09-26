@@ -138,7 +138,7 @@ This method is deprecated. The `AmqpReceiver` object and pattern is going away a
 
 **SRS_NODE_DEVICE_AMQP_06_010: [** If the AMQP connection is established, the `updateSharedAccessSignature` method shall call the amqp transport `putToken` method with the first parameter `audience`, created from the `sr` of the shared access signature, the actual shared access signature, and a callback. **]**
 
-**SRS_NODE_DEVICE_AMQP_06_011: [** The `updateSharedAccessSignature` method shall call the `done` callback with a `null` error object and a `SharedAccessSignatureUpdated` object as a result, indicating the client does NOT need to reestablish the transport connection. **]**
+**SRS_NODE_DEVICE_AMQP_06_011: [** The `updateSharedAccessSignature` method shall call the `done` callback with a `null` error object and a `SharedAccessSignatureUpdated` object as a result, with the `needToReconnect` property set to `false`. **]**
 
 ### sendMethodResponse(methodResponse, callback)
 
@@ -194,7 +194,7 @@ An new Amqp message shall be instantiated.
 
 **SRS_NODE_DEVICE_AMQP_06_033: [** The `getTwinReceiver` method shall throw an `ReferenceError` if done is falsy **]**
 
-**SRS_NODE_DEVICE_AMQP_16_026: [** The `getTwinReceiver` method shall call the `done` callback with a `null` error argument and the `AmqpTwinClient` instance currently in use. **]**
+**SRS_NODE_DEVICE_AMQP_16_026: [** The `getTwinReceiver` method shall call the `done` callback with a `null` error argument and the `AmqpTwinClient` instance created when the `Amqp` object was instantiated. **]**
 
 **SRS_NODE_DEVICE_AMQP_16_027: [** The `getTwinReceiver` method shall connect and authenticate the AMQP connection if necessary. **]**
 
