@@ -186,10 +186,13 @@ describe('AmqpReceiver', function () {
       sinon.stub(recv._deviceMethodClient, 'onDeviceMethod');
       sinon.stub(recv._deviceMethodClient, 'attach').callsArgWith(0, fakeError);
 
-      recv.on('errorReceived', function (err) {
+      var errorCallback = function (err) {
         assert.strictEqual(err, fakeError);
+        recv.removeListener('errorReceived', errorCallback);
         testCallback();
-      });
+      };
+
+      recv.on('errorReceived', errorCallback);
       recv.onDeviceMethod('fakeMethod', function () {});
       recv._deviceMethodClient.emit('error', fakeError);
     });

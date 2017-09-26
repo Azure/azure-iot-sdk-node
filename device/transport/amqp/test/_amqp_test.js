@@ -441,6 +441,8 @@ describe('Amqp', function () {
           var connectErr = new Error('cannot connect');
           var connectCallback;
           fakeBaseClient.connect = sinon.stub().callsFake(function (uri, options, done) {
+            // will block in "connecting" state since the callback isn't called.
+            // calling connectCallback will unblock it.
             connectCallback = done;
           });
 
@@ -449,7 +451,6 @@ describe('Amqp', function () {
             fakeBaseClient.connect = sinon.stub().callsArgWith(2, null, new results.Connected());
           });
 
-          // now blocked in "connecting" state
           transport.disconnect(function (err, result) {
             assert.instanceOf(result, results.Disconnected);
             assert(fakeBaseClient.connect.calledOnce);
@@ -742,6 +743,8 @@ describe('Amqp', function () {
       it('sends the message even if called while the transport is connecting', function (testCallback) {
         var connectCallback;
         fakeBaseClient.connect = sinon.stub().callsFake(function (uri, options, done) {
+          // this will block in the 'connecting' state since the callback is not called.
+          // calling connectCallback will unblock.
           connectCallback = done;
         });
 
@@ -758,6 +761,8 @@ describe('Amqp', function () {
       it('sends the message even if called while the transport is authenticating', function (testCallback) {
         var authCallback;
         fakeBaseClient.putToken = sinon.stub().callsFake(function (audience, token, done) {
+          // this will block in the 'authenticating' state since the callback is not called.
+          // calling authCallback will unblock.
           authCallback = done;
         });
 

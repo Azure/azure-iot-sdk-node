@@ -143,12 +143,12 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
       initialState: 'disconnected',
       states: {
         disconnected: {
-          _onEnter: (callback, err, result) => {
+          _onEnter: (callback, err) => {
             if (callback) {
               if (err) {
                 callback(err);
               } else {
-                callback(null, result);
+                callback(null, new results.Disconnected());
               }
             }
           },
@@ -373,7 +373,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
                     if (!finalError && detachErr) {
                       finalError = translateError('error while detaching the D2C link when disconnecting', detachErr);
                     }
-                    callback(finalError);
+                    callback();
                   });
                 } else {
                   callback();
@@ -382,7 +382,12 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
               (callback) => {
                 if (this._c2dLink) {
                   /*Codes_SRS_NODE_DEVICE_AMQP_16_022: [The `disconnect` method shall detach all attached links.]*/
-                  this._stopC2DListener(err, callback);
+                  this._stopC2DListener(err, (detachErr) => {
+                    if (!finalError && detachErr) {
+                      finalError = translateError('error while detaching the D2C link when disconnecting', detachErr);
+                    }
+                    callback();
+                  });
                 } else {
                   callback();
                 }
@@ -397,13 +402,13 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
                   if (!finalError && disconnectErr) {
                     finalError = translateError('error while disconnecting the AMQP connection', disconnectErr);
                   }
-                  callback(finalError);
+                  callback();
                 });
               }
             ], () => {
               /*Codes_SRS_NODE_DEVICE_AMQP_16_010: [The `done` callback method passed in argument shall be called when disconnected.]*/
               /*Codes_SRS_NODE_DEVICE_AMQP_16_011: [The `done` callback method passed in argument shall be called with an error object if disconnecting fails.]*/
-              this._fsm.transition('disconnected', disconnectCallback, finalError, new results.Disconnected());
+              this._fsm.transition('disconnected', disconnectCallback, finalError);
             });
           },
           '*': (connectCallback) => this._fsm.deferUntilTransition()
@@ -519,7 +524,8 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   /**
    * @private
    * @method          module:azure-iot-device-amqp.Amqp#updateSharedAccessSignature
-   * @description     This methods sets the SAS token used to authenticate with the IoT Hub service.
+   * @description     This methods sets the SAS token used to authenticate with the IoT Hub service and performs re-authorization using the CBS links with this new token
+   *                  Updating the expiry time of the token is the responsibility of the caller.
    *
    * @param {String}        sharedAccessSignature  The new SAS token.
    * @param {Function}      done      The callback to be invoked when `updateSharedAccessSignature` completes.
@@ -629,7 +635,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
    *
    * @throws {ReferenceError}   One of the required parameters is falsy
    */
-  getTwinReceiver(done?: (err?: Error, receiver?: AmqpTwinClient) => void): void {
+  getTwinReceiver(done: (err?: Error, receiver?: AmqpTwinClient) => void): void {
     /* Codes_SRS_NODE_DEVICE_AMQP_06_033: [The `getTwinReceiver` method shall throw an `ReferenceError` if done is falsy] */
     if (!done) {
       throw new ReferenceError('required parameter is missing');
