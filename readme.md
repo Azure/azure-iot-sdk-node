@@ -36,6 +36,7 @@ Visit [Azure IoT Dev Center][iot-dev-center] to learn more about developing appl
 | Device Provisioning Service                           | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: |                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 ## How to use the Azure IoT SDKs for Node.js
+[ATTN:CONTENT REQUIRED - doc/node-devbox-setup.md does not use the recursive switch in its clone instructions. Please update that doc or remove it from the instructinos here.]
 
 Devices and data sources in an IoT solution can range from a simple network-connected sensor to a powerful, standalone computing device. Devices may have limited processing capability, memory, communication bandwidth, and communication protocol support. The IoT device SDKs enable you to implement client applications for a wide variety of devices.
 
@@ -102,12 +103,6 @@ Here is what you can expect Microsoft Support to be able to help with:
 ### /device
 
 Contains Azure IoT Hub client components that provide the raw messaging capabilities of the library. Refer to the API documentation and samples for information on how to use it.
-
-   * core: contains the protocol-independent device SDK package.
-   * node-red: contains the Node-RED module for Azure IoT Hub.
-   * samples: contains simple samples.
-   * transport: contains protocol-specific SDK packages for: AMQP, AMQP over WebSockets, MQTT, and HTTP.
-   * ts-samples: contains TypeScript samples.
 
 ### /doc
 
