@@ -57,6 +57,7 @@ In the repository, you will find a set of simple samples that will help you get 
 
 ## OS platforms and hardware compatibility
 [ATTN:CONTENT REQUIRED - this whole section is copied from the C SDK, please check requirements.]
+
 The IoT Hub device SDK for Java can be used with a broad range of OS platforms and devices:
 [INCLUDE A LIST OF PLATFORMS SUPPORTED BY Node OUT OF BOX]
 
