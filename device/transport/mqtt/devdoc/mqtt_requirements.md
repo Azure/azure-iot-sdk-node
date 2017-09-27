@@ -113,9 +113,11 @@ The `sendEvent` method sends an event to an IoT hub on behalf of the device indi
 
 **SRS_NODE_DEVICE_MQTT_16_024: [** The `sendEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to establish a connection. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_025: [** The `sendEvent` method shall be deferred until either disconnected or connected if it is called while `MqttBase` is establishing the connection. **]**
+**SRS_NODE_DEVICE_MQTT_16_025: [** If `sendEvent` is called while `MqttBase` is establishing the connection, it shall wait until the connection is established and then send the event. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_026: [** The `sendEvent` method shall be deferred until disconnected if it is called while `MqttBase` is disconnecting. **]**
+**SRS_NODE_DEVICE_MQTT_16_035: [** If `sendEvent` is called while `MqttBase` is establishing the connection, and `MqttBase` fails to establish the connection, then sendEvent shall fail. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_026: [** If `sendEvent` is called while `MqttBase` is disconnecting, it shall wait until the disconnection is complete and then try to connect again and send the event.  **]**
 
 **SRS_NODE_DEVICE_MQTT_16_027: [** The `sendEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to publish the message. **]**
 
@@ -242,9 +244,11 @@ The `sendTwinRequest` method sends the given body to the given endpoint on an Io
 
 **SRS_NODE_DEVICE_MQTT_16_029: [** The `sendTwinRequest` method shall connect the Mqtt connection if it is disconnected. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_031: [** The `sendTwinRequest` method shall be deferred until either disconnected or connected if it is called while `MqttBase` is establishing the connection. **]**
+**SRS_NODE_DEVICE_MQTT_16_031: [** If `sendTwinRequest` is called while `MqttBase` is establishing the connection, it shall wait until the connection is established and then send the twin request. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_032: [** The `sendTwinRequest` method shall be deferred until disconnected if it is called while `MqttBase` is disconnecting. **]**
+**SRS_NODE_DEVICE_MQTT_16_036: [** If `sendTwinRequest` is called while `MqttBase` is establishing the connection, and `MqttBase` fails to establish the connection, then `sendTwinRequest` shall fail. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_032: [** If `sendTwinRequest` is called while `MqttBase` is disconnecting, it shall wait until the disconnection is complete and then try to connect again and send the twin request. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_033: [** The `sendTwinRequest` method shall call its callback with an error translated using `translateError` if `MqttBase` fails to connect. **]**
 

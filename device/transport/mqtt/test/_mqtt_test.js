@@ -80,7 +80,7 @@ describe('Mqtt', function () {
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_MQTT_16_025: [The `sendEvent` method shall be deferred until either disconnected or connected if it is called while `MqttBase` is establishing the connection.]*/
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_025: [If `sendEvent` is called while `MqttBase` is establishing the connection, it shall wait until the connection is established and then send the event.]*/
     it('waits until connected if called while connecting', function (testCallback) {
       var transport = new Mqtt(fakeConfig, fakeMqttBase);
       var connectCallback;
@@ -96,6 +96,7 @@ describe('Mqtt', function () {
       connectCallback();
     });
 
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_035: [If `sendEvent` is called while `MqttBase` is establishing the connection, and `MqttBase` fails to establish the connection, then sendEvent shall fail.]*/
     it('calls the callback with an error if called while connecting and connecting fails', function (testCallback) {
       var transport = new Mqtt(fakeConfig, fakeMqttBase);
       var fakeError = new Error('test');
@@ -114,7 +115,7 @@ describe('Mqtt', function () {
       connectCallback(fakeError);
     });
 
-    /*Tests_SRS_NODE_DEVICE_MQTT_16_026: [The `sendEvent` method shall be deferred until disconnected if it is called while `MqttBase` is disconnecting.]*/
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_026: [If `sendEvent` is called while `MqttBase` is disconnecting, it shall wait until the disconnection is complete and then try to connect again and send the event. ]*/
     it('waits until disconnected to try to reconnect if called while disconnecting', function (testCallback) {
       var transport = new Mqtt(fakeConfig, fakeMqttBase);
       var disconnectCallback;
