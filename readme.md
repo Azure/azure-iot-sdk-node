@@ -5,11 +5,35 @@ This repository contains the following:
 * **Azure IoT Hub Service SDK**: enables developing back-end applications for Azure IoT
 * **Node-RED node for Azure IoT**: enables creating Node-RED flows that connect with Azure IoT Hub
 
+The API reference documentation for the device SDK is [here][node-api-device-reference].
+
+The API reference documentation for the service SDK is [here][node-api-service-reference].
+
 To find SDKs in other languages for Azure IoT, please refer to the [azure-iot-sdks][azure-iot-sdks] repository.
 
 ## Developing applications for Azure IoT
 
 Visit [Azure IoT Dev Center][iot-dev-center] to learn more about developing applications for Azure IoT.
+
+## Key features and roadmap
+
+:white_check_mark: feature available  :large_blue_diamond: feature in-progress  :large_orange_diamond: feature planned  :x: no support planned
+
+| Feature                                               | https                  | mqtt                   | mqtt-ws                | amqp                   | amqp-ws                | Description                                                                                                                                                                                                                                                                                                                                                                                        |
+|-------------------------------------------------------|------------------------|------------------------|------------------------|------------------------|------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Authentication                                        | :white_check_mark:     | :white_check_mark:     | :white_check_mark:     | :white_check_mark:     | :white_check_mark:     | Connect your device to IoT Hub securely with [supported authentication](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-security-deployment), including private key, SASToken, X-509 Self Signed and Certificate Authority (CA) Signed.  X-509 (CA) Signed is not supported on HTTPS and over websocket.                                                                                    |
+| Retry policies                                        | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | Retry policy for unsuccessful device-to-cloud messages have three options: no try, exponential backoff with jitter (default) and custom.                                                                                                                                                                                                                                                           |
+| Connection status reporting                           | :white_check_mark:     | :white_check_mark:     | :white_check_mark:     | :white_check_mark:     | :white_check_mark:     |                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Devices multiplexing over single connection           | :large_orange_diamond: | :x:                    | :x:                    | :large_orange_diamond: | :large_orange_diamond: |                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Connection Pooling - Specifying number of connections | :large_orange_diamond: | :x:                    | :x:                    | :large_orange_diamond: | :large_orange_diamond: | Send device-to-cloud messages to IoT Hub with custom properties.  You can also choose to batch send at most 256 KBs (not available over MQTT and AMQP).  Send device-to-cloud messages with system properties is in backlog.  Click [here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-messages-d2c) for detailed information on the IoT Hub features.                         |
+| Send D2C message                                      | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: |                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Receive C2D messages                                  | :white_check_mark:     | :white_check_mark:     | :white_check_mark:     | :white_check_mark:     | :white_check_mark:     | Receive cloud-to-device messages and read associated custom and system properties from IoT Hub, with the option to complete/reject/abandon C2D messages (not available over MQTT and MQTT-websocket).  Click [here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-messages-c2d) for detailed information on the IoT Hub features.                                                |
+| Upload file to Blob                                   | :white_check_mark:     | :x:                    | :x:                    | :x:                    | :x:                    | A device can initiate a file upload and notifies IoT Hub when the upload is complete.  Click [here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-file-upload) for detailed information on the IoT Hub features.                                                                                                                                                                 |
+| Device Twins                                          | :x:                    | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | IoT Hub persists a device twin for each device that you connect to IoT Hub.  The device can perform operations like get twin tags, subscribe to desired properties.  Send reported properties version and desired properties version are in backlog.  Click [here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins) for detailed information on the IoT Hub features. |
+| Direct Methods                                        | :x:                    | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | IoT Hub gives you the ability to invoke direct methods on devices from the cloud.  The SDK supports handler for method specific operation.  Generic handler is in backlog. Click [here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-direct-methods) for detailed information on the IoT Hub features.                                                                          |
+| Error reporting (TBD)                                 | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | Error reporting for exceeding quota, authentication error, throttling error, and device not found error.                                                                                                                                                                                                                                                                                           |
+| SDK Options�                                          | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | Set SDK options for proxy settings, client version string, polling time, specify TrustedCert for IoT hub, Network interface selection, C2D keep alive.                                                                                                                                                                                                                                             |
+| Device Provisioning Service                           | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: |                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 ## How to use the Azure IoT SDKs for Node.js
 
@@ -19,14 +43,32 @@ The API reference documentation is [here][node-api-reference].
 * **Using npm packages**: the simplest way to use the Azure IoT SDKs for Node.js to develop device apps is to leverage the [npm](https://npmjs.org) packages:
    * [Device SDK](./device/core/readme.md)
    * [Service SDK](./service/readme.md)
-
+* **Clone the repository**: The repository is using [GitHub Submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) for its dependencies. In order to automatically clone these submodules, you need to use the --recursive option as described here:
+```
+git clone --recursive https://github.com/Azure/azure-iot-sdk-node.git 
+```
 * **Working with the SDKs code**: if you are working with the SDK's code to modify it or to contribute changes, then you can clone the repository and build the libraries following [these instructions](./doc/node-devbox-setup.md).
 
 ## Samples
 
-Within the repository, you can find various types of simple samples that can help you get started.
+In the repository, you will find a set of simple samples that will help you get started:
 - [Device SDK samples](./device/samples/)
 - [Service SDK samples](./service/samples/)
+
+## OS platforms and hardware compatibility
+[ATTN:CONTENT REQUIRED - this whole section is copied from the C SDK, please check requirements.]
+The IoT Hub device SDK for Java can be used with a broad range of OS platforms and devices:
+[INCLUDE A LIST OF PLATFORMS SUPPORTED BY Node OUT OF BOX]
+
+The minimum requirements are for the device platform to support the following:
+
+- **Being capable of establishing an IP connection**: only IP-capable devices can communicate directly with Azure IoT Hub.
+- **Support TLS**: required to establish a secure communication channel with Azure IoT Hub.
+- **Support SHA-256** (optional): necessary to generate the secure token for authenticating the device with the service. Different authentication methods are available and not all require SHA-256.
+- **Have a Real Time Clock or implement code to connect to an NTP server**: necessary for both establishing the TLS connection and generating the secure token for authentication.
+- **Having at least 64KB of RAM**: the memory footprint of the SDK depends on the SDK and protocol used as well as the platform targeted. The smallest footprint is achieved targeting microcontrollers.
+
+You can find an exhaustive list of the OS platforms the various SDKs have been tested against in the [Azure Certified for IoT device catalog](https://catalog.azureiotsuite.com/). Note that you might still be able to use the SDKs on OS and hardware platforms that are not listed on this page: all the SDKs are open sourced and designed to be portable. If you have suggestions, feedback or issues to report, refer to the Contribution and Support sections below.
 
 ## Contribution, feedback and issues
 
@@ -46,8 +88,45 @@ Here is what you can expect Microsoft Support to be able to help with:
 ## Read more
 
 * [Azure IoT Hub documentation][iot-hub-documentation]
+* [Prepare your development environment to use the Azure IoT device SDK for Node.js][devbox-setup]
+* [Setup IoT Hub][setup-iothub]
 * [Node.js API reference: Service SDK][node-api-service-reference]
 * [Node.js API reference: Device SDK][node-api-device-reference]
+
+## SDK folder structure
+[ATTN:CONTENT REQUIRED - please provide descriptions and check those provided (they were largely based on the descriptions in the c SDK)]
+
+### /build
+
+### /common
+
+### /device
+
+Contains Azure IoT Hub client components that provide the raw messaging capabilities of the library. Refer to the API documentation and samples for information on how to use it.
+
+   * core: contains the protocol-independent device SDK package.
+   * node-red: contains the Node-RED module for Azure IoT Hub.
+   * samples: contains simple samples.
+   * transport: contains protocol-specific SDK packages for: AMQP, AMQP over WebSockets, MQTT, and HTTP.
+   * ts-samples: contains TypeScript samples.
+
+### /doc
+
+This folder contains application development guides and device setup instructions.
+
+### /e2etests
+
+### /jenkins
+
+### /network_e2e
+
+### /provisioning/transport/http/devdoc
+
+### /service
+
+Contains libraries that enable interactions with the IoT Hub service to perform operations such as sending messages to devices and managing the device identity registry.
+
+### /ts-e2e
 
 # Long Term Support
 
@@ -83,3 +162,6 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 [azure-iot-sdks]: http://github.com/azure/azure-iot-sdks
 [node-api-service-reference]: https://docs.microsoft.com/en-us/javascript/api/azure-iothub/
 [node-api-device-reference]: https://docs.microsoft.com/en-us/javascript/api/azure-iot-device/
+[devbox-setup]: doc/node-devbox-setup.md
+[setup-iothub]: https://aka.ms/howtocreateazureiothub
+
