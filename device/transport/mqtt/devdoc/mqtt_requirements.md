@@ -55,7 +55,7 @@ The `Mqtt` and `MqttWs` constructors initialize a new instance of the MQTT trans
 
 **SRS_NODE_DEVICE_MQTT_12_002: [** The constructor shall store the configuration structure in a member variable.**]**
 
-**SRS_NODE_DEVICE_MQTT_12_003: [** The constructor shall create an MqttTransport object and store it in a member variable.**]**
+**SRS_NODE_DEVICE_MQTT_12_003: [** The constructor shall create an MqttBase object and store it in a member variable.**]**
 
 **SRS_NODE_DEVICE_MQTT_16_016: [** The `Mqtt` constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`. **]**
 
@@ -64,21 +64,34 @@ The `Mqtt` and `MqttWs` constructors initialize a new instance of the MQTT trans
 **SRS_NODE_DEVICE_MQTT_18_025: [** If the `Mqtt` constructor receives a second parameter, it shall be used as a provider in place of mqtt.js **]**
 
 ### connect(done)
+
 The `connect` method initializes a connection to an IoT hub.
 
-**SRS_NODE_DEVICE_MQTT_12_004: [** The `connect` method shall call the `connect` method on `MqttTransport`. **]**
+**SRS_NODE_DEVICE_MQTT_12_004: [** The `connect` method shall call the `connect` method on `MqttBase`. **]**
 
-**SRS_NODE_DEVICE_MQTT_18_026: [** When `MqttTransport` fires the `close` event, the `Mqtt` object shall emit a `disconnect` event **]**
+**SRS_NODE_DEVICE_MQTT_18_026: [** When `MqttBase` fires the `close` event, the `Mqtt` object shall emit a `disconnect` event. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_018: [** The `connect` method shall call its callback immediately if `MqttBase` is already connected. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_019: [** The `connect` method shall calls its callback with an `Error` that has been translated from the `MqttBase` error using the `translateError` method if it fails to establish a connection. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_020: [** The `connect` method shall call its callback with a `null` error parameter and a `results.Connected` response if `MqttBase` successfully connects. **]**
 
 ### disconnect(done)
+
 The `disconnect` method should close the connection to the IoT Hub instance.
 
-**SRS_NODE_DEVICE_MQTT_16_001: [** The `disconnect` method should call the `disconnect` method on `MqttTransport`. **]**
+**SRS_NODE_DEVICE_MQTT_16_001: [** The `disconnect` method should call the `disconnect` method on `MqttBase`. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_021: [** The `disconnect` method shall call its callback immediately with a `null` argument and a `results.Disconnected` second argument if `MqttBase` is already disconnected. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_022: [** The `disconnect` method shall call its callback with a `null` error parameter and a `results.Disconnected` response if `MqttBase` successfully disconnects if not disconnected already. **]**
 
 ### sendEvent(message)
+
 The `sendEvent` method sends an event to an IoT hub on behalf of the device indicated in the constructor argument.
 
-**SRS_NODE_DEVICE_MQTT_12_005: [** The `sendEvent` method shall call the publish method on `MqttTransport`. **]**
+**SRS_NODE_DEVICE_MQTT_12_005: [** The `sendEvent` method shall call the publish method on `MqttBase`. **]**
 
 **SRS_NODE_COMMON_MQTT_BASE_16_008: [** The `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`. **]**
 
@@ -96,7 +109,18 @@ The `sendEvent` method sends an event to an IoT hub on behalf of the device indi
 
 **SRS_NODE_COMMON_MQTT_BASE_16_015: [** The `sendEvent` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`. **]**
 
+**SRS_NODE_DEVICE_MQTT_16_023: [** The `sendEvent` method shall connect the Mqtt connection if it is disconnected. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_024: [** The `sendEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to establish a connection. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_025: [** The `sendEvent` method shall be deferred until either disconnected or connected if it is called while `MqttBase` is establishing the connection. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_026: [** The `sendEvent` method shall be deferred until disconnected if it is called while `MqttBase` is disconnecting. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_027: [** The `sendEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to publish the message. **]**
+
 ### getReceiver(done)
+
 The `getReceiver` method creates a receiver object and returns it, or returns the existing instance.
 
 **SRS_NODE_DEVICE_MQTT_16_002: [** If a receiver for this endpoint has already been created, the `getReceiver` method should call the `done` callback with the existing instance as an argument. **]**
@@ -104,16 +128,19 @@ The `getReceiver` method creates a receiver object and returns it, or returns th
 **SRS_NODE_DEVICE_MQTT_16_003: [** If a receiver for this endpoint doesn’t exist, the `getReceiver` method should create a new `MqttReceiver` object and then call the `done` callback with the object that was just created as an argument. **]**
 
 ### abandon(message, done)
+
 The `abandon` method is there for compatibility purposes with other transports but will throw because the MQTT protocol doesn't support abandoning messages.
 
 **SRS_NODE_DEVICE_MQTT_16_004: [** The `abandon` method shall throw because MQTT doesn’t support abandoning messages. **]**
 
 ### complete(message, done)
+
 The `complete` method is there for compatibility purposes with other transports but doesn't do anything because messages are automatically acknowledged.
 
 **SRS_NODE_DEVICE_MQTT_16_005: [** The `complete` method shall call the `done` callback given as argument immediately since all messages are automatically completed. **]**
 
 ### reject(message, done)
+
 The `reject` method is there for compatibility purposes with other transports but will throw because the MQTT protocol doesn't support rejecting messages.
 
 **SRS_NODE_DEVICE_MQTT_16_006: [** The `reject` method shall throw because MQTT doesn’t support rejecting messages. **]**
@@ -122,11 +149,11 @@ The `reject` method is there for compatibility purposes with other transports bu
 
 **SRS_NODE_DEVICE_MQTT_16_007: [** The `updateSharedAccessSignature` method shall save the new shared access signature given as a parameter to its configuration. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_008: [** The `updateSharedAccessSignature` method shall disconnect the current connection operating with the deprecated token, and re-initialize the transport object with the new connection parameters. **]**
+**SRS_NODE_DEVICE_MQTT_16_028: [** The `updateSharedAccessSignature` method shall call the `updateSharedAccessSignature` method on the `MqttBase` object if it is connected. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_009: [** The `updateSharedAccessSignature` method shall call the `done` method with an `Error` object if updating the configuration or re-initializing the transport object. **]**
+**SRS_NODE_DEVICE_MQTT_16_009: [** The `updateSharedAccessSignature` method shall call the `done` method with an `Error` object if `MqttBase.updateSharedAccessSignature` fails. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_010: [** The `updateSharedAccessSignature` method shall call the `done` callback with a `null` error object and a `SharedAccessSignatureUpdated` object as a result, indicating that the client needs to reestablish the transport connection when ready. **]**
+**SRS_NODE_DEVICE_MQTT_16_010: [** The `updateSharedAccessSignature` method shall call the `done` callback with a `null` error object and a `SharedAccessSignatureUpdated` object with its `needToReconnect` property set to `false`, if `MqttBase.updateSharedAccessSignature` succeeds. **]**
 
 ### setOptions(options, done)
 
@@ -141,6 +168,7 @@ The `reject` method is there for compatibility purposes with other transports bu
 **SRS_NODE_DEVICE_MQTT_16_014: [** The `setOptions` method shall not throw if the `done` argument is not passed. **]**
 
 ### sendMethodResponse(response, done)
+
 The `sendMethodResponse` method sends the given response to the method's topic on an IoT Hub on behalf of the device indicated in the constructor argument. The `response` argument is an object that has the following shape:
 
 ```
@@ -166,15 +194,17 @@ interface DeviceMethodResponse {
 
 **SRS_NODE_DEVICE_MQTT_13_005: [** `sendMethodResponse` shall concatenate `response.bodyParts` into a single `Buffer` and publish the message to the MQTT topic name. **]**
 
-**SRS_NODE_DEVICE_MQTT_13_006: [** If the MQTT publish fails then an error shall be returned via the `done` callback's first parameter. **]**
+**SRS_NODE_DEVICE_MQTT_13_006: [** If the MQTT publish fails then an error that has been translated using the `translateError` method shall be returned via the `done` callback's first parameter. **]**
 
 **SRS_NODE_DEVICE_MQTT_13_007: [** If the MQTT publish is successful then the `done` callback shall be invoked passing `null` for the first parameter. **]**
 
+**SRS_NODE_DEVICE_MQTT_16_034: [** The `sendMethodResponse` method shall fail with a `NotConnectedError` if the `MqttBase` object is not connected. **]**
+
 ### sendTwinRequest(method, resource, properties, body, done)
+
 The `sendTwinRequest` method sends the given body to the given endpoint on an IoT hub on behalf of the device indicated in the constructor argument.
 
-
-**SRS_NODE_DEVICE_MQTT_18_001: [** The `sendTwinRequest` method shall call the publish method on `MqttTransport`. **]**
+**SRS_NODE_DEVICE_MQTT_18_001: [** The `sendTwinRequest` method shall call the publish method on `MqttBase`. **]**
 
 **SRS_NODE_DEVICE_MQTT_18_008: [** The `sendTwinRequest` method shall not throw if the `done` callback is falsy. **]**
 
@@ -194,7 +224,7 @@ The `sendTwinRequest` method sends the given body to the given endpoint on an Io
 
 **SRS_NODE_DEVICE_MQTT_18_013: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `body` argument is falsy. **]**
 
-**SRS_NODE_DEVICE_MQTT_18_022: [** The `propertyQuery` string shall be construced from the `properties` object. **]**
+**SRS_NODE_DEVICE_MQTT_18_022: [** The `propertyQuery` string shall be constructed from the `properties` object. **]**
 
 **SRS_NODE_DEVICE_MQTT_18_023: [** Each member of the `properties` object shall add another 'name=value&' pair to the `propertyQuery` string. **]**
 
@@ -210,7 +240,16 @@ The `sendTwinRequest` method sends the given body to the given endpoint on an Io
 
 **SRS_NODE_DEVICE_MQTT_18_017: [** If the `sendTwinRequest` method is successful, the first parameter to the `done` callback shall be null and the second parameter shall be a MessageEnqueued object. **]**
 
+**SRS_NODE_DEVICE_MQTT_16_029: [** The `sendTwinRequest` method shall connect the Mqtt connection if it is disconnected. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_031: [** The `sendTwinRequest` method shall be deferred until either disconnected or connected if it is called while `MqttBase` is establishing the connection. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_032: [** The `sendTwinRequest` method shall be deferred until disconnected if it is called while `MqttBase` is disconnecting. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_033: [** The `sendTwinRequest` method shall call its callback with an error translated using `translateError` if `MqttBase` fails to connect. **]**
+
 ### getTwinReceiver(done)
+
 The `getTwinReceiver` method creates a `MqttTwinReceiver` object for the twin response endpoint and returns it, or returns the existing instance.
 
 **SRS_NODE_DEVICE_MQTT_18_014: [** The `getTwinReceiver` method shall throw an `ReferenceError` if done is falsy **]**

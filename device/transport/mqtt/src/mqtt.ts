@@ -3,6 +3,7 @@
 
 'use strict';
 import * as querystring from 'querystring';
+import * as machina from 'machina';
 
 import { MqttBase } from './mqtt_base';
 import { results, errors, Message, X509 } from 'azure-iot-common';
@@ -43,7 +44,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   private _topicTelemetryPublish: string;
   private _topicMessageSubscribe: string;
   private _receiver: MqttReceiver;
-
+  private _fsm: machina.Fsm;
   /**
    * @private
    */
@@ -70,6 +71,183 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
       debug('on close');
       this.emit('disconnect', err);
     });
+
+    this._fsm = new machina.Fsm({
+      initialState: 'disconnected',
+      states: {
+        disconnected: {
+          _onEnter: (disconnectedCallback, err, result) => {
+            this._twinReceiver = null;
+            if (disconnectedCallback) {
+              if (err) {
+                /*Codes_SRS_NODE_DEVICE_MQTT_16_019: [The `connect` method shall calls its callback with an `Error` that has been translated from the `MqttBase` error using the `translateError` method if it fails to establish a connection.]*/
+                disconnectedCallback(translateError(err));
+              } else {
+                disconnectedCallback(undefined, result);
+              }
+            } else {
+              /* Codes_SRS_NODE_DEVICE_MQTT_18_026: When MqttTransport fires the close event, the Mqtt object shall emit a disconnect event */
+              this.emit('disconnect', err);
+            }
+          },
+          /*Codes_SRS_NODE_DEVICE_MQTT_16_021: [The `disconnect` method shall call its callback immediately with a `null` argument and a `results.Disconnected` second argument if `MqttBase` is already disconnected.]*/
+          disconnect: (callback) => callback(null, new results.Disconnected()),
+          connect: (callback) => {
+            this._fsm.transition('connecting', callback);
+          },
+          sendEvent: (topic, payload, options, sendEventCallback) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_023: [The `sendEvent` method shall connect the Mqtt connection if it is disconnected.]*/
+            this._fsm.handle('connect', (err) => {
+              if (err) {
+                /*Codes_SRS_NODE_DEVICE_MQTT_16_024: [The `sendEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to establish a connection.]*/
+                sendEventCallback(translateError(err));
+              } else {
+                this._fsm.handle('sendEvent', topic, payload, options, sendEventCallback);
+              }
+            });
+          },
+          sendTwinRequest: (topic, body, sendTwinRequestCallback) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_029: [The `sendTwinRequest` method shall connect the Mqtt connection if it is disconnected.]*/
+            this._fsm.handle('connect', (err) => {
+              if (err) {
+                /*Tests_SRS_NODE_DEVICE_MQTT_16_033: [The `sendTwinRequest` method shall call its callback with an error translated using `translateError` if `MqttBase` fails to connect.]*/
+                sendTwinRequestCallback(err);
+              } else {
+                this._fsm.handle('sendTwinRequest', topic, body, sendTwinRequestCallback);
+              }
+            });
+          },
+          updateSharedAccessSignature: (sharedAccessSignature, callback) => { callback(null, new results.SharedAccessSignatureUpdated(false)); },
+          sendMethodResponse: (response, callback) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_034: [The `sendMethodResponse` method shall fail with a `NotConnectedError` if the `MqttBase` object is not connected.]*/
+            callback(new errors.NotConnectedError('device disconnected: the service already considers the method has failed'));
+          },
+          getTwinReceiver: (callback) => {
+            this._fsm.handle('connect', (err) => {
+              if (err) {
+                callback(err);
+              } else {
+                this._fsm.handle('getTwinReceiver', callback);
+              }
+            });
+          }
+          },
+        connecting: {
+          _onEnter: (connectCallback) => {
+            this._mqtt.connect(this._config, (err, result) => {
+              debug('connect');
+              if (err) {
+                this._fsm.transition('disconnected', connectCallback, err);
+              } else {
+                /* Codes_SRS_NODE_DEVICE_MQTT_18_026: When MqttTransport fires the close event, the Mqtt object shall emit a disconnect event */
+                this._mqtt.on('close', (err) => {
+                  this._fsm.transition('disconnected', null, err);
+                });
+                this._fsm.transition('connected', connectCallback, result);
+              }
+            });
+          },
+          disconnect: (disconnectCallback) => {
+            this._fsm.transition('disconnecting', disconnectCallback);
+          },
+          /*Codes_SRS_NODE_DEVICE_MQTT_16_025: [The `sendEvent` method shall be deferred until either disconnected or connected if it is called while `MqttBase` is establishing the connection.]*/
+          /*Codes_SRS_NODE_DEVICE_MQTT_16_031: [The `sendTwinRequest` method shall be deferred until either disconnected or connected if it is called while `MqttBase` is establishing the connection.]*/
+          '*': () => this._fsm.deferUntilTransition()
+        },
+        connected: {
+          _onEnter: (connectedCallback, connectResult) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_020: [The `connect` method shall call its callback with a `null` error parameter and a `results.Connected` response if `MqttBase` successfully connects.]*/
+            if (connectedCallback) connectedCallback(null, new results.Connected(connectResult));
+          },
+          /*Codes_SRS_NODE_DEVICE_MQTT_16_018: [The `connect` method shall call its callback immediately if `MqttBase` is already connected.]*/
+          connect: (connectCallback) => connectCallback(null, new results.Connected()),
+          disconnect: (disconnectCallback) => {
+            this._fsm.transition('disconnecting', disconnectCallback);
+          },
+          sendEvent: (topic, payload, options, sendEventCallback) => {
+            this._mqtt.publish(topic, payload, options, (err, result) => {
+              if (err) {
+                /*Codes_SRS_NODE_DEVICE_MQTT_16_027: [The `sendEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to publish the message.]*/
+                sendEventCallback(translateError(err));
+              } else {
+                sendEventCallback(null, new results.MessageEnqueued(result));
+              }
+            });
+          },
+          sendTwinRequest: (topic, body, callback) => {
+            /* Codes_SRS_NODE_DEVICE_MQTT_18_001: [** The `sendTwinRequest` method shall call the publish method on `MqttTransport`. **]** */
+            /* Codes_SRS_NODE_DEVICE_MQTT_18_015: [** The `sendTwinRequest` shall publish the request with QOS=0, DUP=0, and Retain=0 **]** */
+            this._mqtt.publish(topic, body.toString(), { qos: 0, retain: false }, (err, puback) => {
+              if (err) {
+                /* Codes_SRS_NODE_DEVICE_MQTT_18_016: [** If an error occurs in the `sendTwinRequest` method, the `done` callback shall be called with the error as the first parameter. **]** */
+                /* Codes_SRS_NODE_DEVICE_MQTT_18_024: [** If an error occurs, the `sendTwinRequest` shall use the MQTT `translateError` module to convert the mqtt-specific error to a transport agnostic error before passing it into the `done` callback. **]** */
+                callback(translateError(err));
+              } else {
+                /* Codes_SRS_NODE_DEVICE_MQTT_18_004: [** If a `done` callback is passed as an argument, The `sendTwinRequest` method shall call `done` after the body has been published. **]** */
+                /* Codes_SRS_NODE_DEVICE_MQTT_18_017: [** If the `sendTwinRequest` method is successful, the first parameter to the `done` callback shall be null and the second parameter shall be a MessageEnqueued object. **]** */
+                callback(null, new results.MessageEnqueued(puback));
+              }
+            });
+          },
+          updateSharedAccessSignature: (sharedAccessSignature, callback) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_028: [The `updateSharedAccessSignature` method shall call the `updateSharedAccessSignature` method on the `MqttBase` object if it is connected.]*/
+            this._mqtt.updateSharedAccessSignature(sharedAccessSignature, (err) => {
+              if (err) {
+                /*Codes_SRS_NODE_DEVICE_MQTT_16_009: [The `updateSharedAccessSignature` method shall call the `done` method with an `Error` object if `MqttBase.updateSharedAccessSignature` fails.]*/
+                this._fsm.transition('disconnected', callback, err);
+              } else {
+                /*Codes_SRS_NODE_DEVICE_MQTT_16_010: [The `updateSharedAccessSignature` method shall call the `done` callback with a `null` error object and a `SharedAccessSignatureUpdated` object with its `needToReconnect` property set to `false`, if `MqttBase.updateSharedAccessSignature` succeeds.]*/
+                callback(null, new results.SharedAccessSignatureUpdated(false));
+              }
+            });
+          },
+          sendMethodResponse: (response, callback) => {
+            // Codes_SRS_NODE_DEVICE_MQTT_13_002: [ sendMethodResponse shall build an MQTT topic name in the format: $iothub/methods/res/<STATUS>/?$rid=<REQUEST ID>&<PROPERTIES> where <STATUS> is response.status. ]
+            // Codes_SRS_NODE_DEVICE_MQTT_13_003: [ sendMethodResponse shall build an MQTT topic name in the format: $iothub/methods/res/<STATUS>/?$rid=<REQUEST ID>&<PROPERTIES> where <REQUEST ID> is response.requestId. ]
+            // Codes_SRS_NODE_DEVICE_MQTT_13_004: [ sendMethodResponse shall build an MQTT topic name in the format: $iothub/methods/res/<STATUS>/?$rid=<REQUEST ID>&<PROPERTIES> where <PROPERTIES> is URL encoded. ]
+            const topicName = util.format(
+              TOPIC_RESPONSE_PUBLISH_FORMAT,
+              'methods',
+              response.status,
+              response.requestId
+            );
+
+            debug('sending response using topic: ' + topicName);
+            debug(JSON.stringify(response.payload));
+            // publish the response message
+            this._mqtt.publish(topicName, JSON.stringify(response.payload), { qos: 0, retain: false }, (err) => {
+              // Codes_SRS_NODE_DEVICE_MQTT_13_006: [ If the MQTT publish fails then an error shall be returned via the done callback's first parameter. ]
+              // Codes_SRS_NODE_DEVICE_MQTT_13_007: [ If the MQTT publish is successful then the done callback shall be invoked passing null for the first parameter. ]
+              callback(!!err ? translateError(err) : null);
+            });
+          },
+          getTwinReceiver: (callback) => {
+            /* Codes_SRS_NODE_DEVICE_MQTT_18_003: [** If a twin receiver for this endpoint doesn't exist, the `getTwinReceiver` method should create a new `MqttTwinReceiver` object. **]** */
+            /* Codes_SRS_NODE_DEVICE_MQTT_18_002: [** If a twin receiver for this endpoint has already been created, the `getTwinReceiver` method should not create a new `MqttTwinReceiver` object. **]** */
+            if (!this._twinReceiver) {
+              this._twinReceiver = new MqttTwinReceiver(this._mqtt);
+            }
+
+            /* Codes_SRS_NODE_DEVICE_MQTT_18_005: [** The `getTwinReceiver` method shall call the `done` method after it completes **]** */
+            /* Codes_SRS_NODE_DEVICE_MQTT_18_006: [** If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `MqttTwinReceiver` object as the second parameter of the `done` function with null as the first parameter. **]** */
+            /* Codes_SRS_NODE_DEVICE_MQTT_18_007: [** If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `MqttTwinReceiver` object as the second parameter of the `done` function with null as the first parameter. **]** */
+            callback(null, this._twinReceiver);
+          }
+        },
+        disconnecting: {
+          _onEnter: (disconnectCallback, err) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_001: [The `disconnect` method should call the `disconnect` method on `MqttBase`.]*/
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_022: [The `disconnect` method shall call its callback with a `null` error parameter and a `results.Disconnected` response if `MqttBase` successfully disconnects if not disconnected already.]*/
+            this._mqtt.disconnect((err, result) => {
+              this._fsm.transition('disconnected', disconnectCallback, err, new results.Disconnected(result));
+            });
+          },
+          /*Codes_SRS_NODE_DEVICE_MQTT_16_026: [The `sendEvent` method shall be deferred until disconnected if it is called while `MqttBase` is disconnecting.]*/
+          /*Codes_SRS_NODE_DEVICE_MQTT_16_032: [The `sendTwinRequest` method shall be deferred until disconnected if it is called while `MqttBase` is disconnecting.]*/
+          '*': () => this._fsm.deferUntilTransition()
+        }
+      }
+    });
   }
 
   /**
@@ -80,16 +258,9 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
    * @param {Function}    done   callback that shall be called when the connection is established.
    */
   /* Codes_SRS_NODE_DEVICE_MQTT_12_004: [The connect method shall call the connect method on MqttTransport */
-  connect(done?: (err?: Error, result?: any) => void): void {
-    this._mqtt.connect(this._config, (err, result) => {
-      debug('connect');
-      if (err) {
-        if (done) done(translateError(err));
-      } else {
-        if (done) done(null, result);
-      }
-    });
-  }
+    connect(done?: (err?: Error, result?: any) => void): void {
+      this._fsm.handle('connect', done);
+    }
 
   /**
    * @private
@@ -100,10 +271,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
    */
   /* Codes_SRS_NODE_DEVICE_MQTT_16_001: [The disconnect method should call the disconnect method on MqttTransport.] */
   disconnect(done?: (err?: Error, result?: any) => void): void {
-    debug('disconnect');
-    this._mqtt.disconnect((err, result) => {
-      if (done) done(err, result);
-    });
+    this._fsm.handle('disconnect', done);
   }
 
   /**
@@ -115,7 +283,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
    */
   /* Codes_SRS_NODE_DEVICE_MQTT_12_005: [The sendEvent method shall call the publish method on MqttTransport */
   sendEvent(message: Message, done?: (err?: Error, result?: any) => void): void {
-    debug('publish ' + JSON.stringify(message));
+    debug('sendEvent ' + JSON.stringify(message));
 
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_008: [The `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`.]*/
     let topic = this._topicTelemetryPublish;
@@ -146,7 +314,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
     }
 
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `sendEvent` method shall use QoS level of 1.]*/
-    this._mqtt.publish(topic, message.data, { qos: 1, retain: false }, (err, puback) => {
+    this._fsm.handle('sendEvent', topic, message.data, { qos: 1, retain: false }, (err, puback) => {
       debug('PUBACK: ' + JSON.stringify(puback));
       if (done) {
         if (err) {
@@ -159,15 +327,14 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   }
 
   /**
+   * @deprecated          The receiver pattern is being deprecated
    * @private
    * @method              module:azure-iot-device-mqtt.Mqtt#getReceiver
    * @description         Gets a receiver object that is used to receive and settle messages.
    *
    * @param {Function}    done   callback that shall be called with a receiver object instance.
    */
-
   getReceiver(done?: (err?: Error, receiver?: MqttReceiver) => void): void {
-    /*Codes_SRS_NODE_DEVICE_MQTT_16_002: [If a receiver for this endpoint has already been created, the getReceiver method should call the done() method with the existing instance as an argument.] */
     /*Codes_SRS_NODE_DEVICE_MQTT_16_003: [If a receiver for this endpoint doesn’t exist, the getReceiver method should create a new MqttReceiver object and then call the done() method with the object that was just created as an argument.] */
     if (!this._receiver) {
       this._receiver = new MqttReceiver(
@@ -176,6 +343,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
       );
     }
 
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_002: [If a receiver for this endpoint has already been created, the getReceiver method should call the done() method with the existing instance as an argument.] */
     done(null, this._receiver);
   }
 
@@ -188,8 +356,8 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
    * @param {Message}     message     The message to settle as complete.
    * @param {Function}    done        The callback that shall be called with the error or result object.
    */
-  /*Codes_SRS_NODE_DEVICE_MQTT_16_005: [The ‘complete’ method shall call the callback given as argument immediately since all messages are automatically completed.]*/
   complete(message: Message, done?: (err?: Error, result?: any) => void): void {
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_005: [The ‘complete’ method shall call the callback given as argument immediately since all messages are automatically completed.]*/
     done(null, new results.MessageCompleted());
   }
 
@@ -201,8 +369,8 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
    *
    * @throws {Error}      The MQTT transport does not support rejecting messages.
    */
-  /*Codes_SRS_NODE_DEVICE_MQTT_16_006: [The ‘reject’ method shall throw because MQTT doesn’t support rejecting messages.] */
   reject(): void {
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_006: [The ‘reject’ method shall throw because MQTT doesn’t support rejecting messages.] */
     throw new errors.NotImplementedError('the MQTT transport does not support rejecting messages.');
   }
 
@@ -214,8 +382,8 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
    *
    * @throws {Error}      The MQTT transport does not support abandoning messages.
    */
-  /*Codes_SRS_NODE_DEVICE_MQTT_16_004: [The ‘abandon’ method shall throw because MQTT doesn’t support abandoning messages.] */
   abandon(): void {
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_004: [The ‘abandon’ method shall throw because MQTT doesn’t support abandoning messages.] */
     throw new errors.NotImplementedError('The MQTT transport does not support abandoning messages.');
   }
 
@@ -229,17 +397,10 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
    */
   updateSharedAccessSignature (sharedAccessSignature: string, done?: (err?: Error, result?: any) => void): void {
     debug('updateSharedAccessSignature');
-    /*Codes_SRS_NODE_DEVICE_MQTT_16_008: [The updateSharedAccessSignature method shall disconnect the current connection operating with the deprecated token, and re-iniialize the transport object with the new connection parameters.]*/
-    this._mqtt.disconnect((err) => {
-      if (err) {
-        /*Codes_SRS_NODE_DEVICE_MQTT_16_009: [The updateSharedAccessSignature method shall call the `done` method with an Error object if updating the configuration or re-initializing the transport object.]*/
-        if (done) done(err);
-      } else {
-        /*Codes_SRS_NODE_DEVICE_MQTT_16_007: [The updateSharedAccessSignature method shall save the new shared access signature given as a parameter to its configuration.]*/
-        this._config.sharedAccessSignature = sharedAccessSignature;
-        /*Codes_SRS_NODE_DEVICE_MQTT_16_010: [The updateSharedAccessSignature method shall call the `done` callback with a null error object and a SharedAccessSignatureUpdated object as a result, indicating hat the client needs to reestablish the transport connection when ready.]*/
-        done(null, new results.SharedAccessSignatureUpdated(true));
-      }
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_007: [The `updateSharedAccessSignature` method shall save the new shared access signature given as a parameter to its configuration.]*/
+    this._config.sharedAccessSignature = sharedAccessSignature;
+    this._fsm.handle('updateSharedAccessSignature', sharedAccessSignature, (err, result) => {
+      if (done) done(err, result);
     });
   }
 
@@ -251,7 +412,6 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
    * @param {object}        options   Options to set.  Currently for MQTT these are the x509 cert, key, and optional passphrase properties. (All strings)
    * @param {Function}      done      The callback to be invoked when `setOptions` completes.
    */
-
   setOptions(options: X509, done?: (err?: Error, result?: any) => void): void {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_011: [The `setOptions` method shall throw a `ReferenceError` if the `options` argument is falsy]*/
     if (!options) throw new ReferenceError('The options parameter can not be \'' + options + '\'');
@@ -323,20 +483,8 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
     /* Codes_SRS_NODE_DEVICE_MQTT_18_021: [** The topic name passed to the publish method shall be $iothub/twin/`method`/`resource`/?`propertyQuery` **]** */
     const topic = '$iothub/twin/' + method + resource + propString;
 
-    /* Codes_SRS_NODE_DEVICE_MQTT_18_001: [** The `sendTwinRequest` method shall call the publish method on `MqttTransport`. **]** */
-    /* Codes_SRS_NODE_DEVICE_MQTT_18_015: [** The `sendTwinRequest` shall publish the request with QOS=0, DUP=0, and Retain=0 **]** */
-    this._mqtt.publish(topic, body.toString(), { qos: 0, retain: false }, (err, puback) => {
-      if (done) {
-        if (err) {
-          /* Codes_SRS_NODE_DEVICE_MQTT_18_016: [** If an error occurs in the `sendTwinRequest` method, the `done` callback shall be called with the error as the first parameter. **]** */
-          /* Codes_SRS_NODE_DEVICE_MQTT_18_024: [** If an error occurs, the `sendTwinRequest` shall use the MQTT `translateError` module to convert the mqtt-specific error to a transport agnostic error before passing it into the `done` callback. **]** */
-          done(translateError(err));
-        } else {
-          /* Codes_SRS_NODE_DEVICE_MQTT_18_004: [** If a `done` callback is passed as an argument, The `sendTwinRequest` method shall call `done` after the body has been published. **]** */
-          /* Codes_SRS_NODE_DEVICE_MQTT_18_017: [** If the `sendTwinRequest` method is successful, the first parameter to the `done` callback shall be null and the second parameter shall be a MessageEnqueued object. **]** */
-          done(null, new results.MessageEnqueued(puback));
-        }
-      }
+    this._fsm.handle('sendTwinRequest', topic, body, (err, result) => {
+      if (done) done(err, result);
     });
   }
 
@@ -359,41 +507,22 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
     if (!response) {
       throw new Error('Parameter \'response\' is falsy');
     }
-    if (!(response.requestId)) {
+    if (!response.requestId) {
       throw new Error('Parameter \'response.requestId\' is falsy');
-    }
-    if (typeof(response.requestId) === 'string' && response.requestId.length === 0) {
-      throw new Error('Parameter \'response.requestId\' is an empty string');
     }
     if (typeof(response.requestId) !== 'string') {
       throw new Error('Parameter \'response.requestId\' is not a string.');
     }
-    if (!(response.status)) {
+    if (!response.status) {
       throw new Error('Parameter \'response.status\' is falsy');
     }
     if (typeof(response.status) !== 'number') {
       throw new Error('Parameter \'response.status\' is not a number');
     }
 
-    // Codes_SRS_NODE_DEVICE_MQTT_13_002: [ sendMethodResponse shall build an MQTT topic name in the format: $iothub/methods/res/<STATUS>/?$rid=<REQUEST ID>&<PROPERTIES> where <STATUS> is response.status. ]
-    // Codes_SRS_NODE_DEVICE_MQTT_13_003: [ sendMethodResponse shall build an MQTT topic name in the format: $iothub/methods/res/<STATUS>/?$rid=<REQUEST ID>&<PROPERTIES> where <REQUEST ID> is response.requestId. ]
-    // Codes_SRS_NODE_DEVICE_MQTT_13_004: [ sendMethodResponse shall build an MQTT topic name in the format: $iothub/methods/res/<STATUS>/?$rid=<REQUEST ID>&<PROPERTIES> where <PROPERTIES> is URL encoded. ]
-
-    const topicName = util.format(
-      TOPIC_RESPONSE_PUBLISH_FORMAT,
-      'methods',
-      response.status,
-      response.requestId
-    );
-
-    debug('sending response using topic: ' + topicName);
-    debug(JSON.stringify(response.payload));
-    // publish the response message
-    this._mqtt.publish(topicName, JSON.stringify(response.payload), { qos: 0, retain: false }, (err) => {
-      if (!!done && typeof(done) === 'function') {
-        // Codes_SRS_NODE_DEVICE_MQTT_13_006: [ If the MQTT publish fails then an error shall be returned via the done callback's first parameter. ]
-        // Codes_SRS_NODE_DEVICE_MQTT_13_007: [ If the MQTT publish is successful then the done callback shall be invoked passing null for the first parameter. ]
-        done(!!err ? translateError(err) : null);
+    this._fsm.handle('sendMethodResponse', response, (err) => {
+      if (done) {
+        done(err);
       }
     });
   }
@@ -413,15 +542,6 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
       throw new ReferenceError('required parameter is missing');
     }
 
-    /* Codes_SRS_NODE_DEVICE_MQTT_18_003: [** If a twin receiver for this endpoint doesn't exist, the `getTwinReceiver` method should create a new `MqttTwinReceiver` object. **]** */
-    /* Codes_SRS_NODE_DEVICE_MQTT_18_002: [** If a twin receiver for this endpoint has already been created, the `getTwinReceiver` method should not create a new `MqttTwinReceiver` object. **]** */
-    if (!this._twinReceiver) {
-      this._twinReceiver = new MqttTwinReceiver(this._mqtt);
-    }
-
-    /* Codes_SRS_NODE_DEVICE_MQTT_18_005: [** The `getTwinReceiver` method shall call the `done` method after it completes **]** */
-    /* Codes_SRS_NODE_DEVICE_MQTT_18_006: [** If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `MqttTwinReceiver` object as the second parameter of the `done` function with null as the first parameter. **]** */
-    /* Codes_SRS_NODE_DEVICE_MQTT_18_007: [** If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `MqttTwinReceiver` object as the second parameter of the `done` function with null as the first parameter. **]** */
-    done(null, this._twinReceiver);
+    this._fsm.handle('getTwinReceiver', done);
   }
 }

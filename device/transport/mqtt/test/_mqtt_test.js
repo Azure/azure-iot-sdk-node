@@ -7,7 +7,9 @@ require('es5-shim');
 var assert = require('chai').assert;
 var sinon = require('sinon');
 var Mqtt = require('../lib/mqtt.js').Mqtt;
+var MqttReceiver = require('../lib/mqtt_receiver.js').MqttReceiver;
 var errors = require('azure-iot-common').errors;
+var results = require('azure-iot-common').results;
 var Message = require('azure-iot-common').Message;
 var EventEmitter = require('events').EventEmitter;
 
@@ -26,6 +28,7 @@ describe('Mqtt', function () {
     fakeMqttBase.publish = sinon.stub().callsArg(3);
     fakeMqttBase.subscribe = sinon.stub().callsArg(2);
     fakeMqttBase.unsubscribe = sinon.stub().callsArg(1);
+    fakeMqttBase.updateSharedAccessSignature = sinon.stub().callsArg(1);
   });
 
   afterEach(function () {
@@ -47,18 +50,105 @@ describe('Mqtt', function () {
       var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
       assert.equal(mqtt._mqtt, fakeMqttBase);
     });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_016: [The `Mqtt` constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
+    it('sets the uri property to \'mqtts://<host>\'', function () {
+      var mqtt = new Mqtt(fakeConfig);
+      assert.strictEqual(mqtt._config.uri, 'mqtts://' + fakeConfig.host);
+    });
   });
 
   describe('#sendEvent', function () {
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_023: [The `sendEvent` method shall connect the Mqtt connection if it is disconnected.]*/
+    it('connects the transport if currently disconnected', function (testCallback) {
+      var transport = new Mqtt(fakeConfig, fakeMqttBase);
+      transport.sendEvent(new Message('test'), function () {
+        assert.isTrue(fakeMqttBase.connect.calledOnce);
+        assert.isTrue(fakeMqttBase.publish.calledOnce);
+        testCallback();
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_024: [The `sendEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to establish a connection.]*/
+    it('calls the callback with an error if the transport fails to connect', function (testCallback) {
+      var transport = new Mqtt(fakeConfig, fakeMqttBase);
+      fakeMqttBase.connect = sinon.stub().callsArgWith(1, new Error('fake error'));
+      transport.sendEvent(new Message('test'), function (err) {
+        assert.isTrue(fakeMqttBase.connect.calledOnce);
+        assert.instanceOf(err, Error);
+        testCallback();
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_025: [The `sendEvent` method shall be deferred until either disconnected or connected if it is called while `MqttBase` is establishing the connection.]*/
+    it('waits until connected if called while connecting', function (testCallback) {
+      var transport = new Mqtt(fakeConfig, fakeMqttBase);
+      var connectCallback;
+      fakeMqttBase.connect = sinon.stub().callsFake(function (config, callback) {
+        connectCallback = callback;
+      });
+      transport.connect(function () {});
+      transport.sendEvent(new Message('test'), function () {
+        assert.isTrue(fakeMqttBase.connect.calledOnce);
+        assert.isTrue(fakeMqttBase.publish.calledOnce);
+        testCallback();
+      });
+      connectCallback();
+    });
+
+    it('calls the callback with an error if called while connecting and connecting fails', function (testCallback) {
+      var transport = new Mqtt(fakeConfig, fakeMqttBase);
+      var fakeError = new Error('test');
+      var connectCallback;
+      fakeMqttBase.connect = sinon.stub().callsFake(function (config, callback) {
+        connectCallback = callback;
+      });
+      transport.connect(function () {});
+      transport.sendEvent(new Message('test'), function (err) {
+        assert.instanceOf(err, Error);
+        assert.isTrue(fakeMqttBase.connect.calledOnce);
+        assert.isTrue(fakeMqttBase.publish.notCalled);
+        testCallback();
+      });
+      fakeMqttBase.connect = sinon.stub().callsArgWith(1, fakeError);
+      connectCallback(fakeError);
+    });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_026: [The `sendEvent` method shall be deferred until disconnected if it is called while `MqttBase` is disconnecting.]*/
+    it('waits until disconnected to try to reconnect if called while disconnecting', function (testCallback) {
+      var transport = new Mqtt(fakeConfig, fakeMqttBase);
+      var disconnectCallback;
+      fakeMqttBase.disconnect = sinon.stub().callsFake(function (callback) {
+        disconnectCallback = callback;
+      });
+
+      transport.connect(function () {
+        transport.disconnect(function () {});
+        // blocked in disconnecting state
+        transport.sendEvent(new Message('test'), function () {
+          assert.isTrue(fakeMqttBase.connect.calledTwice);
+          assert.isTrue(fakeMqttBase.disconnect.calledOnce);
+          assert.isTrue(fakeMqttBase.publish.calledOnce);
+          testCallback();
+        });
+        disconnectCallback();
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_027: [The `sendEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to publish the message.]*/
+    it('calls its callback with an Error if it fails to publish the message', function (testCallback) {
+      var transport = new Mqtt(fakeConfig, fakeMqttBase);
+      fakeMqttBase.publish = sinon.stub().callsArgWith(3, new Error('Server unavailable'));
+      transport.sendEvent(new Message('test'), function (err) {
+        assert.isTrue(fakeMqttBase.connect.calledOnce);
+        assert.instanceOf(err, errors.ServiceUnavailableError);
+        testCallback();
+      });
+    });
+
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_008: [** The `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`.]*/
     it('uses the proper topic format', function(done) {
-      var config = {
-        host: "host.name",
-        deviceId: "deviceId",
-        sharedAccessSignature: "sasToken"
-      };
-
-      var transport = new Mqtt(config, fakeMqttBase);
+      var transport = new Mqtt(fakeConfig, fakeMqttBase);
       transport.connect(function () {
         transport.sendEvent(new Message('test'), function() {});
         assert(fakeMqttBase.publish.calledWith('devices/deviceId/messages/events/'));
@@ -259,10 +349,20 @@ describe('Mqtt', function () {
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_MQTT_16_016: [The `Mqtt` constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
-    it('sets the uri property to \'mqtts://<host>\'', function () {
-      var mqtt = new Mqtt(fakeConfig);
-      assert.strictEqual(mqtt._config.uri, 'mqtts://' + fakeConfig.host);
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_034: [The `sendMethodResponse` method shall fail with a `NotConnectedError` if the `MqttBase` object is not connected.]*/
+    it('immediately fails and does not try to connect if the transport is disconnected', function (testCallback) {
+      var fakeResponse = {
+        requestId: 'req1',
+        status: 200,
+        payload: null
+      };
+
+      var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
+      mqtt.sendMethodResponse(fakeResponse, function (err) {
+        assert.isTrue(fakeMqttBase.connect.notCalled);
+        assert.instanceOf(err, errors.NotConnectedError);
+        testCallback();
+      });
     });
   });
 
@@ -320,21 +420,176 @@ describe('Mqtt', function () {
   });
 
   describe('#connect', function() {
-    /* Tests_SRS_NODE_DEVICE_MQTT_12_004: [The connect method shall call the connect method on MqttTransport */
-    it ('calls connect on the transport', function(done) {
+    /* Tests_SRS_NODE_DEVICE_MQTT_12_004: [The connect method shall call the connect method on MqttBase */
+    it ('calls connect on the transport', function(testCallback) {
       var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
-      mqtt.connect(function() {
+      mqtt.connect(function(err, result) {
         assert(fakeMqttBase.connect.calledOnce);
-        done();
+        /*Tests_SRS_NODE_DEVICE_MQTT_16_020: [The `connect` method shall call its callback with a `null` error parameter and a `results.Connected` response if `MqttBase` successfully connects.]*/
+        assert.instanceOf(result, results.Connected);
+        testCallback();
       });
     });
 
-    /* Tests_SRS_NODE_DEVICE_MQTT_18_026: When MqttTransport fires an error event, the Mqtt object shall emit a disconnect event */
-    it('registers to emit disconnect when an error received', function(done) {
+    /* Tests_SRS_NODE_DEVICE_MQTT_18_026: When MqttBase fires an error event, the Mqtt object shall emit a disconnect event */
+    it('registers to emit disconnect when an error received', function (testCallback) {
       var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
-      mqtt.on('disconnect', done);
+      mqtt.on('disconnect', testCallback);
       mqtt.connect(function () {
         fakeMqttBase.emit('error');
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_18_026: [When `MqttBase` fires the `close` event, the `Mqtt` object shall emit a `disconnect` event.]*/
+    it('emits a \'disconnect\' event when it receives a \'close\' event', function (testCallback) {
+      var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
+      mqtt.on('disconnect', testCallback);
+      mqtt.connect(function () {
+        fakeMqttBase.emit('close');
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_018: [The `connect` method shall call its callback immediately if `MqttBase` is already connected.]*/
+    it('calls the callback immediately if already connected', function (testCallback) {
+      var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
+      mqtt.connect(function() {
+        assert(fakeMqttBase.connect.calledOnce);
+        mqtt.connect(function () {
+          assert(fakeMqttBase.connect.calledOnce);
+          testCallback();
+        });
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_019: [The `connect` method shall calls its callback with an `Error` that has been translated from the `MqttBase` error using the `translateError` method if it fails to establish a connection.]*/
+    it('calls the callback with an error if it fails to connect', function (testCallback) {
+      var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
+      fakeMqttBase.connect = sinon.stub().callsArgWith(1, new Error('Not authorized'));
+      mqtt.connect(function (err) {
+        assert.instanceOf(err, errors.UnauthorizedError);
+        testCallback();
+      });
+    });
+  });
+
+  describe('#disconnect', function () {
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_021: [The `disconnect` method shall call its callback immediately with a `null` argument and a `results.Disconnected` second argument if `MqttBase` is already disconnected.]*/
+    it('calls the callback immediately if already disconnected', function (testCallback) {
+      var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
+      mqtt.disconnect(function () {
+        assert.isTrue(fakeMqttBase.connect.notCalled);
+        assert.isTrue(fakeMqttBase.disconnect.notCalled);
+        testCallback();
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_001: [The `disconnect` method should call the `disconnect` method on `MqttBase`.]*/
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_022: [The `disconnect` method shall call its callback with a `null` error parameter and a `results.Disconnected` response if `MqttBase` successfully disconnects if not disconnected already.]*/
+    it('disconnects the transport if connected', function (testCallback) {
+      var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
+      mqtt.connect(function () {
+        mqtt.disconnect(function () {
+          assert.isTrue(fakeMqttBase.disconnect.calledOnce);
+          testCallback();
+        });
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_001: [The `disconnect` method should call the `disconnect` method on `MqttBase`.]*/
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_022: [The `disconnect` method shall call its callback with a `null` error parameter and a `results.Disconnected` response if `MqttBase` successfully disconnects if not disconnected already.]*/
+    it('disconnects the transport if connecting', function (testCallback) {
+      fakeMqttBase.connect = sinon.stub(); // will block in 'connecting' state
+      var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
+      mqtt.connect(function () {});
+      mqtt.disconnect(function () {
+        assert.isTrue(fakeMqttBase.disconnect.calledOnce);
+        testCallback();
+      });
+    });
+  });
+
+  describe('#updateSharedAccessSignature', function () {
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_007: [The `updateSharedAccessSignature` method shall save the new shared access signature given as a parameter to its configuration.]*/
+    it('does not require reconnecting if disconnected but uses the new shared access signature on subsequent calls', function (testCallback) {
+      var newSas = 'newSas';
+      var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
+      mqtt.updateSharedAccessSignature(newSas, function () {
+        assert.isTrue(fakeMqttBase.connect.notCalled);
+        assert.isTrue(fakeMqttBase.disconnect.notCalled);
+        mqtt.connect(function () {
+          assert.strictEqual(fakeMqttBase.connect.firstCall.args[0].sharedAccessSignature, newSas);
+        });
+        testCallback();
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_009: [The `updateSharedAccessSignature` method shall call the `done` method with an `Error` object if `MqttBase.updateSharedAccessSignature` fails.]*/
+    it('calls the callback with an error if it fails to reconnect the MQTT connection', function (testCallback) {
+      var newSas = 'newSas';
+      var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
+      mqtt.connect(function () {
+        fakeMqttBase.updateSharedAccessSignature = sinon.stub().callsArgWith(1, new Error('Not authorized'));
+        mqtt.updateSharedAccessSignature(newSas, function (err) {
+          assert.isTrue(fakeMqttBase.connect.calledOnce);
+          assert.instanceOf(err, errors.UnauthorizedError);
+          testCallback();
+        });
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_010: [The `updateSharedAccessSignature` method shall call the `done` callback with a `null` error object and a `SharedAccessSignatureUpdated` object with its `needToReconnect` property set to `false`, if `MqttBase.updateSharedAccessSignature` succeeds.]*/
+    it('calls the callback and does not require the client to handle reconnection if it succeeds', function (testCallback) {
+      var newSas = 'newSas';
+      var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
+      mqtt.connect(function () {
+        mqtt.updateSharedAccessSignature(newSas, function (err, result) {
+          assert.isNotOk(err);
+          /*Tests_SRS_NODE_DEVICE_MQTT_16_028: [The `updateSharedAccessSignature` method shall call the `updateSharedAccessSignature` method on the `MqttBase` object if it is connected.]*/
+          assert.isTrue(fakeMqttBase.updateSharedAccessSignature.calledOnce);
+          assert.instanceOf(result, results.SharedAccessSignatureUpdated);
+          assert.isFalse(result.needToReconnect);
+          testCallback();
+        });
+      });
+    });
+  });
+
+  /*Tests_SRS_NODE_DEVICE_MQTT_16_005: [The `complete` method shall call the `done` callback given as argument immediately since all messages are automatically completed.]*/
+  describe('#complete', function () {
+    it('immediately calls the callback with a MessageCompleted result', function (testCallback) {
+      var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
+      mqtt.complete(new Message('fake'), function (err, result)  {
+        assert.isNotOk(err);
+        assert.instanceOf(result, results.MessageCompleted);
+        testCallback();
+      });
+    });
+  });
+
+  /*Tests_SRS_NODE_DEVICE_MQTT_16_004: [The `abandon` method shall throw because MQTT doesn’t support abandoning messages.]*/
+  /*Tests_SRS_NODE_DEVICE_MQTT_16_006: [The `reject` method shall throw because MQTT doesn’t support rejecting messages.]*/
+  ['abandon', 'reject'].forEach(function (settleMethod) {
+    describe('#' + settleMethod, function ()  {
+      it('throws a NotImplementedError', function () {
+        var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
+        assert.throws(function () {
+          mqtt[settleMethod](new Message('fake'), function () {});
+        }, errors.NotImplementedError);
+      });
+    });
+  });
+
+  describe('getReceiver', function () {
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_002: [** If a receiver for this endpoint has already been created, the `getReceiver` method should call the `done` callback with the existing instance as an argument.]*/
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_003: [** If a receiver for this endpoint doesn’t exist, the `getReceiver` method should create a new `MqttReceiver` object and then call the `done` callback with the object that was just created as an argument.]*/
+    it('creates the receiver on first call, then always returns the same receiver on subsequent calls', function (testCallback) {
+      var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
+      mqtt.getReceiver(function (err, recv1) {
+        assert.instanceOf(recv1, MqttReceiver);
+        mqtt.getReceiver(function (err, recv2) {
+          assert.strictEqual(recv1, recv2);
+          testCallback();
+        });
       });
     });
   });
