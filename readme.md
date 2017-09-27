@@ -38,7 +38,6 @@ Visit [Azure IoT Dev Center][iot-dev-center] to learn more about developing appl
 ## How to use the Azure IoT SDKs for Node.js
 
 Devices and data sources in an IoT solution can range from a simple network-connected sensor to a powerful, standalone computing device. Devices may have limited processing capability, memory, communication bandwidth, and communication protocol support. The IoT device SDKs enable you to implement client applications for a wide variety of devices.
-The API reference documentation is [here][node-api-reference].
 
 * **Using npm packages**: the simplest way to use the Azure IoT SDKs for Node.js to develop device apps is to leverage the [npm](https://npmjs.org) packages:
    * [Device SDK](./device/core/readme.md)
