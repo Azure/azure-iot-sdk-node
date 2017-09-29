@@ -642,7 +642,9 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   private _dispatchMqttMessage(topic: string, payload: any): void {
     debug('message received on ' + topic);
     debug(JSON.stringify(payload ? payload.toString() : null));
-    // dispatch the message to the appropriate handler
+    // dispatch the message to either the c2d message handler or the device method handler.
+    // finding out which topic we should dispatch the call to is done by running the regex for each topic in the this._topics dictionary
+    // after searching for the topic with regexes, targetTopic will contain the entry of the this._topics dictionary that corresponds to the topic passed as argument.
     let targetTopic = null;
     Object.keys(this._topics).some((topicIndex) => {
       // Turns out regexes are stateful. We need to reset the search index back to
@@ -654,7 +656,9 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
       }
       return targetTopic !== null;
     });
+    // we have now run through all regexes in the this._topics table but we're still not sure we found something
     if (!!targetTopic) {
+      // if the targetTopic is truthy then it means one of the regex matched, therefore we can call its corresponding handler.
       targetTopic.handler(topic, payload);
     }
   }
@@ -773,6 +777,7 @@ function _parseMessage(topic: string, body: any): MethodMessage {
     path = url.path.split('/');
     query = querystring.parse(url.query);
   } catch (err) {
+    debug('could not parse topic for received message: ' + topic);
     return undefined;
   }
 
@@ -792,7 +797,7 @@ function _parseMessage(topic: string, body: any): MethodMessage {
       // would result in there being a message.twin object
       let mod = message[path[1]] = new MethodDescription();
 
-      // parse the request ID if there is one
+      // populates the request ID if there is one
       if (!!(query.$rid)) {
         message.requestId = query.$rid;
       }

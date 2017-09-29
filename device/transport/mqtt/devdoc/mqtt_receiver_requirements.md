@@ -1,15 +1,9 @@
 # MqttReceiver Requirements
 
 ## Overview
-Object used to subscribe to the Cloud-to-Device messages endpoint and receive messages for this device
-These requirements now apply to the `Mqtt` object as the receiver pattern is being deprecated.
+Object used to subscribe to the Cloud-to-Device messages endpoint and receive messages for this device.
 
-## Example
-```javascript
-receiver.on('message', function(msg) {
-    console.log('Message received: ' + msg.data);
-});
-```
+*These requirements now apply to the `Mqtt` object as the receiver pattern is being deprecated.*
 
 ## Public API
 
