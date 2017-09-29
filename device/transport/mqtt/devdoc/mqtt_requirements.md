@@ -122,12 +122,9 @@ The `sendEvent` method sends an event to an IoT hub on behalf of the device indi
 **SRS_NODE_DEVICE_MQTT_16_027: [** The `sendEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to publish the message. **]**
 
 ### getReceiver(done)
+The receiver pattern is deprecated and all `MqttReceiver` responsibilities have been moved to `Mqtt`.
 
-The `getReceiver` method creates a receiver object and returns it, or returns the existing instance.
-
-**SRS_NODE_DEVICE_MQTT_16_002: [** If a receiver for this endpoint has already been created, the `getReceiver` method should call the `done` callback with the existing instance as an argument. **]**
-
-**SRS_NODE_DEVICE_MQTT_16_003: [** If a receiver for this endpoint doesn’t exist, the `getReceiver` method should create a new `MqttReceiver` object and then call the `done` callback with the object that was just created as an argument. **]**
+**SRS_NODE_DEVICE_MQTT_16_037: [** The `getReceiver` method shall return an instance of its parent `Mqtt` object. **]**
 
 ### abandon(message, done)
 

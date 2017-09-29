@@ -8,113 +8,78 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
-var MqttReceiver = require('../lib/mqtt_receiver.js').MqttReceiver;
+var Mqtt = require('../lib/mqtt.js').Mqtt;
+var Message = require('azure-iot-common').Message;
 
-describe('MqttReceiver', function () {
-  describe('#constructor', function () {
-    /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_001: [If the topicMessage parameter is falsy, a ReferenceError shall be thrown.]*/
-    [null, undefined, '', 0].forEach(function (topicMessage) {
-      it('throws if topicMessage is ' + topicMessage, function () {
-        assert.throws(function () {
-          return new MqttReceiver('client', topicMessage);
-        }, ReferenceError);
-      });
-    });
-
-    /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_002: [If the mqttClient parameter is falsy, a ReferenceError shall be thrown.]*/
-    [null, undefined, '', 0].forEach(function (mqttClient) {
-      it('throws if mqttClient is ' + mqttClient, function () {
-        assert.throws(function () {
-          return new MqttReceiver(mqttClient, 'topic');
-        }, ReferenceError);
-      });
-    });
-  });
-
-  var FakeMqttClient = function (client, topic) {
-    EventEmitter.call(this);
-    this._client = client;
-    this._topic = topic;
-    this.subscribe = function (topic, options, callback) { callback(); };
-    this.unsubscribe = function (topic, callback) { callback(); };
-    this.emitMessage = function (eventName, content) {
-      this.emit(eventName, content);
-    };
-    this.emitMethod = function (topic, payload) {
-      this.emit('message', topic, payload);
-    };
+describe('Mqtt as MqttReceiver', function () {
+  var fakeConfig = {
+    host: 'host.name',
+    deviceId: 'deviceId',
+    sharedAccessSignature: 'sas'
   };
 
-  util.inherits(FakeMqttClient, EventEmitter);
+  var fakeMqttBase;
+
+  beforeEach(function () {
+    fakeMqttBase = new EventEmitter();
+    fakeMqttBase.connect = sinon.stub().callsArg(1);
+    fakeMqttBase.disconnect = sinon.stub().callsArg(0);
+    fakeMqttBase.publish = sinon.stub().callsArg(3);
+    fakeMqttBase.subscribe = sinon.stub().callsArg(2);
+    fakeMqttBase.unsubscribe = sinon.stub().callsArg(1);
+    fakeMqttBase.updateSharedAccessSignature = sinon.stub().callsArg(1);
+    sinon.spy(fakeMqttBase, 'on');
+    sinon.spy(fakeMqttBase, 'removeListener');
+  });
+
+  afterEach(function () {
+    fakeMqttBase = undefined;
+  });
 
   describe('#events', function () {
     describe('#message', function() {
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_003: [When a listener is added for the message event, the topic should be subscribed to.]*/
       it('subscribes to the topic when a listener is added', function () {
-        var topicName = 'topic_subscribe_name';
-        var mqttClient = new FakeMqttClient();
-        mqttClient.on = sinon.spy();
-        mqttClient.subscribe = sinon.stub(mqttClient, 'subscribe').callsFake(function (topic, options, callback) {
-          assert(mqttClient.on.calledWith('message'));
-          assert.isOk(options);
-          assert.equal(topic, topicName);
-          callback();
-        });
-
-        var receiver = new MqttReceiver(mqttClient, topicName);
+        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
         receiver.on('message', function () { });
         receiver.on('message', function () { });
 
-        assert(mqttClient.subscribe.calledOnce, 'subscribe is not called once');
-        assert(mqttClient.subscribe.calledWith(topicName), 'subscribe is not called with topicName');
+        assert(fakeMqttBase.on.calledWith('message'));
+        assert(fakeMqttBase.subscribe.calledOnce);
       });
 
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_004: [If there is a listener for the message event, a message event shall be emitted for each message received.]*/
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_005: [When a message event is emitted, the parameter shall be of type Message]*/
       it('emits a message event with a Message object when there is a listener', function (done) {
-        var mqttClient = new FakeMqttClient();
-        var receiver = new MqttReceiver(mqttClient, 'topic');
+        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
         receiver.on('message', function (msg) {
-          assert.equal(msg.constructor.name, 'Message');
+          assert.instanceOf(msg, Message);
           done();
         });
 
-        mqttClient.emitMessage('message', 'devices/foo/messages/devicebound/%24.mid=0209afa7-1e2f-4dc1-8a6f-8500efd81db3&%24.to=%2Fdevices%2Ffoo%2Fmessages%2Fdevicebound');
+        fakeMqttBase.emit('message', 'devices/foo/messages/devicebound/%24.mid=0209afa7-1e2f-4dc1-8a6f-8500efd81db3&%24.to=%2Fdevices%2Ffoo%2Fmessages%2Fdevicebound');
       });
 
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_006: [When there are no more listeners for the message event, the topic should be unsubscribed]*/
       it('unsubscribes from the topic when there are no more listeners', function () {
-        var topicName = 'topic_subscribe_name';
-        var mqttClient = new FakeMqttClient();
-        mqttClient.subscribe = sinon.stub(mqttClient, 'subscribe').callsFake(function (topic, options, callback) {
-          assert.isOk(options);
-          assert.equal(topic, topicName);
-          callback();
-        });
-        mqttClient.unsubscribe = sinon.stub(mqttClient, 'unsubscribe').callsFake(function (topic, callback) {
-          assert.equal(topic, topicName);
-          callback();
-        });
-
         var listener1 = function () { };
         var listener2 = function () { };
-        var receiver = new MqttReceiver(mqttClient, topicName);
+        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
         receiver.on('message', listener1);
         receiver.on('message', listener2);
 
-        assert(mqttClient.subscribe.calledOnce, 'subscribe is not called once');
-        assert(mqttClient.subscribe.calledWith(topicName), 'subscribe is not called with' + topicName);
+        assert(fakeMqttBase.subscribe.calledOnce, 'subscribe is not called once');
+        assert(fakeMqttBase.subscribe.calledWith(receiver._topicMessageSubscribe), 'subscribe is not called with' + receiver._topicMessageSubscribe);
 
         receiver.removeListener('message', listener1);
-        assert(mqttClient.unsubscribe.notCalled);
+        assert(fakeMqttBase.unsubscribe.notCalled);
         receiver.removeListener('message', listener2);
-        assert(mqttClient.unsubscribe.calledOnce);
+        assert(fakeMqttBase.unsubscribe.calledOnce);
       });
 
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_007: [When a message is received, the receiver shall populate the generated `Message` object `properties` property with the user properties serialized in the topic.]*/
       it('populates user-defined message properties from the topic', function (done) {
-        var mqttClient = new FakeMqttClient();
-        var receiver = new MqttReceiver(mqttClient, 'topic');
+        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
         receiver.on('message', function (msg) {
           assert.equal(msg.constructor.name, 'Message');
           assert.equal(msg.properties.getItem(0).key, 'key1');
@@ -126,152 +91,129 @@ describe('MqttReceiver', function () {
           done();
         });
 
-        mqttClient.emitMessage('message', 'devices/foo/messages/devicebound/key1=value1&key2=value2&key%24=value%24');
+        fakeMqttBase.emit('message', 'devices/foo/messages/devicebound/key1=value1&key2=value2&key%24=value%24');
       });
 
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_008: [When a message is received, the receiver shall populate the generated `Message` object `messageId` with the value of the property `$.mid` serialized in the topic, if present.]*/
       it('populates Message.messageId from the topic', function (done) {
-        var mqttClient = new FakeMqttClient();
-        var receiver = new MqttReceiver(mqttClient, 'topic');
+        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
         receiver.on('message', function (msg) {
           assert.equal(msg.constructor.name, 'Message');
           assert.equal(msg.messageId, '0209afa7-1e2f-4dc1-8a6f-8500efd81db3');
           done();
         });
 
-        mqttClient.emitMessage('message', 'devices/foo/messages/devicebound/%24.mid=0209afa7-1e2f-4dc1-8a6f-8500efd81db3');
+        fakeMqttBase.emit('message', 'devices/foo/messages/devicebound/%24.mid=0209afa7-1e2f-4dc1-8a6f-8500efd81db3');
       });
 
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_009: [When a message is received, the receiver shall populate the generated `Message` object `to` with the value of the property `$.to` serialized in the topic, if present.]*/
       it('populates Message.to from the topic', function (done) {
-        var mqttClient = new FakeMqttClient();
-        var receiver = new MqttReceiver(mqttClient, 'topic');
+        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
         receiver.on('message', function (msg) {
           assert.equal(msg.constructor.name, 'Message');
           assert.equal(msg.to, '/devices/foo/messages/devicebound');
           done();
         });
 
-        mqttClient.emitMessage('message', 'devices/foo/messages/devicebound/%24.to=%2Fdevices%2Ffoo%2Fmessages%2Fdevicebound');
+        fakeMqttBase.emit('message', 'devices/foo/messages/devicebound/%24.to=%2Fdevices%2Ffoo%2Fmessages%2Fdevicebound');
       });
 
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_010: [When a message is received, the receiver shall populate the generated `Message` object `expiryTimeUtc` with the value of the property `$.exp` serialized in the topic, if present.]*/
       it('populates Message.expiryTimeUtc from the topic', function (done) {
-        var mqttClient = new FakeMqttClient();
-        var receiver = new MqttReceiver(mqttClient, 'topic');
+        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
         receiver.on('message', function (msg) {
           assert.equal(msg.constructor.name, 'Message');
           assert.equal(msg.expiryTimeUtc, '2017-01-06T23:37:00.669Z');
           done();
         });
 
-        mqttClient.emitMessage('message', 'devices/foo/messages/devicebound/%24.exp=2017-01-06T23%3A37%3A00.669Z');
+        fakeMqttBase.emit('message', 'devices/foo/messages/devicebound/%24.exp=2017-01-06T23%3A37%3A00.669Z');
       });
 
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_011: [When a message is received, the receiver shall populate the generated `Message` object `correlationId` with the value of the property `$.cid` serialized in the topic, if present.]*/
       it('populates Message.correlationId from the topic', function (done) {
         var fakeCid = 'fakeCorrelationId';
-        var mqttClient = new FakeMqttClient();
-        var receiver = new MqttReceiver(mqttClient, 'topic');
+        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
         receiver.on('message', function (msg) {
           assert.equal(msg.constructor.name, 'Message');
           assert.equal(msg.correlationId, fakeCid);
           done();
         });
 
-        mqttClient.emitMessage('message', 'devices/foo/messages/devicebound/%24.cid=' + fakeCid);
+        fakeMqttBase.emit('message', 'devices/foo/messages/devicebound/%24.cid=' + fakeCid);
       });
 
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_012: [When a message is received, the receiver shall populate the generated `Message` object `userId` with the value of the property `$.uid` serialized in the topic, if present.]*/
       it('populates Message.userId from the topic', function (done) {
         var fakeUid = 'fakeUserId';
-        var mqttClient = new FakeMqttClient();
-        var receiver = new MqttReceiver(mqttClient, 'topic');
+        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
         receiver.on('message', function (msg) {
           assert.equal(msg.constructor.name, 'Message');
           assert.equal(msg.userId, fakeUid);
           done();
         });
 
-        mqttClient.emitMessage('message', 'devices/foo/messages/devicebound/%24.uid=' + fakeUid);
+        fakeMqttBase.emit('message', 'devices/foo/messages/devicebound/%24.uid=' + fakeUid);
       });
 
 
       it('creates a message even if the properties topic segment is empty', function(done) {
-        var mqttClient = new FakeMqttClient();
-        var receiver = new MqttReceiver(mqttClient, 'topic');
+        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
         receiver.on('message', function (msg) {
           assert.equal(msg.constructor.name, 'Message');
           done();
         });
 
-        mqttClient.emitMessage('message', 'devices/foo/messages/devicebound/');
+        fakeMqttBase.emit('message', 'devices/foo/messages/devicebound/');
       });
     });
 
     describe('#method', function() {
       // Tests_Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_13_002: [ When a listener is added for the method event, the topic should be subscribed to. ]*/
       it('subscribes to the method topic when a listener is added', function () {
-        // setup
-        var mqttClient = new FakeMqttClient();
-        var onSpy = sinon.spy(mqttClient, 'on');
-        var subscribeStub = sinon
-              .stub(mqttClient, 'subscribe');
+        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
 
-        // stub should call 'done' with no error
-        subscribeStub.onCall(0).callsArgWith(2, null);
-        subscribeStub.onCall(1).callsArgWith(2, null);
-
-        // test
-        var receiver = new MqttReceiver(mqttClient, 'topic_message');
         receiver.on('method_UpdateFirmware', function () { });
         receiver.on('method_Reboot', function () { });
         receiver.on('message', function () { });
         receiver.on('message', function () { });
 
         // assert
-        assert.isTrue(onSpy.calledOnce,
-          'mqttClient.on was called more than once');
-        assert.isTrue(onSpy.calledWith('message'),
-          'mqttClient.on was not called for "message" event');
-        assert.isTrue(subscribeStub.calledTwice,
-          'mqttClient.subscribe was not called twice');
-        assert.isTrue(subscribeStub.firstCall.calledWith('$iothub/methods/POST/#', { qos: 0}),
-          'first call to mqttClient.subscribe was not with topic $iothub/methods/POST/#');
-        assert.isTrue(subscribeStub.secondCall.calledWith('topic_message'),
-          'second call to mqttClient.subscribe was not with topic topic_message');
+        assert.isTrue(fakeMqttBase.on.calledTwice,
+        'fakeMqttBase.on was not called twice (error + message)');
+        assert.isTrue(fakeMqttBase.on.calledWith('error'),
+        'fakeMqttBase.on was not called for "error" event');
+        assert.isTrue(fakeMqttBase.on.calledWith('message'),
+          'fakeMqttBase.on was not called for "message" event');
+        assert.isTrue(fakeMqttBase.subscribe.calledTwice,
+          'fakeMqttBase.subscribe was not called twice');
+        assert.isTrue(fakeMqttBase.subscribe.firstCall.calledWith('$iothub/methods/POST/#', { qos: 0}),
+          'first call to fakeMqttBase.subscribe was not with topic $iothub/methods/POST/#');
+        assert.isTrue(fakeMqttBase.subscribe.secondCall.calledWith(receiver._topicMessageSubscribe),
+          'second call to fakeMqttBase.subscribe was not with topic _topicMessageSubscribe');
       });
 
       // Tests_Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_13_002: [ When a listener is added for the method event, the topic should be subscribed to. ]*/
       it('does not subscribe twice to the same topic for multiple event registrations', function () {
-        // setup
-        var mqttClient = new FakeMqttClient();
-        var onSpy = sinon.spy(mqttClient, 'on');
-        var subscribeStub = sinon
-              .stub(mqttClient, 'subscribe');
-
-        // stub should call 'done' with no error
-        subscribeStub.onCall(0).callsArgWithAsync(2, null);
-        subscribeStub.onCall(1).callsArgWith(2, null);
-
-        // test
-        var receiver = new MqttReceiver(mqttClient, 'topic_message');
+        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
         receiver.on('method_UpdateFirmware', function () { });
         receiver.on('method_Reboot', function () { });
         receiver.on('message', function () { });
         receiver.on('message', function () { });
 
         // assert
-        assert.isTrue(onSpy.calledOnce,
-          'mqttClient.on was called more than once');
-        assert.isTrue(onSpy.calledWith('message'),
+        assert.isTrue(fakeMqttBase.on.calledTwice,
+          'mqttClient.on was not called twice (error + message)');
+        assert.isTrue(fakeMqttBase.on.calledWith('message'),
           'mqttClient.on was not called for "message" event');
-        assert.isTrue(subscribeStub.calledTwice,
+          assert.isTrue(fakeMqttBase.on.calledWith('error'),
+            'mqttClient.on was not called for "error" event');
+        assert.isTrue(fakeMqttBase.subscribe.calledTwice,
           'mqttClient.subscribe was not called twice');
-        assert.isTrue(subscribeStub.firstCall.calledWith('$iothub/methods/POST/#', { qos: 0}),
+        assert.isTrue(fakeMqttBase.subscribe.firstCall.calledWith('$iothub/methods/POST/#', { qos: 0}),
           'first call to mqttClient.subscribe was not with topic $iothub/methods/POST/#');
-        assert.isTrue(subscribeStub.secondCall.calledWith('topic_message'),
-          'second call to mqttClient.subscribe was not with topic topic_message');
+        assert.isTrue(fakeMqttBase.subscribe.secondCall.calledWith(receiver._topicMessageSubscribe),
+          'second call to mqttClient.subscribe was not with topic _topicMessageSubscribe');
       });
 
       // Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_13_003: [ If there is a listener for the method event, a method_<METHOD NAME> event shall be emitted for each message received. ]
@@ -290,15 +232,13 @@ describe('MqttReceiver', function () {
         }
       ]*/
       it('emits a method event when a method message is received', function() {
-        // setup
-        var mqttClient = new FakeMqttClient();
-        var receiver = new MqttReceiver(mqttClient, 'topic_message');
+        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
         var callback = sinon.spy();
         var msg;
         receiver.on('method_Reboot', callback);
 
         // test
-        mqttClient.emitMethod('$iothub/methods/POST/Reboot?$rid=1');
+        fakeMqttBase.emit('message', '$iothub/methods/POST/Reboot?$rid=1');
 
         // assert
         assert.isTrue(callback.calledOnce);
@@ -334,15 +274,13 @@ describe('MqttReceiver', function () {
         }
       ]*/
       it('emits a method event when a method message is received with properties', function() {
-        // setup
-        var mqttClient = new FakeMqttClient();
-        var receiver = new MqttReceiver(mqttClient, 'topic_message');
+        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
         var callback = sinon.spy();
         var msg;
         receiver.on('method_Reboot', callback);
 
         // test
-        mqttClient.emitMethod(
+        fakeMqttBase.emit('message',
           '$iothub/methods/POST/Reboot?$rid=1&k1=v1&k2=v2&k3=v3'
         );
 
@@ -384,16 +322,14 @@ describe('MqttReceiver', function () {
         }
       ]*/
       it('emits a method event when a method message is received with payload and properties', function() {
-        // setup
-        var mqttClient = new FakeMqttClient();
-        var receiver = new MqttReceiver(mqttClient, 'topic_message');
+        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
         var callback = sinon.spy();
         var msg, payload;
         receiver.on('method_Reboot', callback);
 
         // test
         payload = new Buffer('Here\'s some payload');
-        mqttClient.emitMethod(
+        fakeMqttBase.emit('message',
           '$iothub/methods/POST/Reboot?$rid=1&k1=v1&k2=v2&k3=v3',
           payload
         );
@@ -423,14 +359,8 @@ describe('MqttReceiver', function () {
 
       // Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_13_004: [ When there are no more listeners for the method event, the topic should be unsubscribed. ]
       it('unsubscribes from MQTT topic when there are no more listeners', function() {
-        // setup
-        var mqttClient = new FakeMqttClient();
-        var receiver = new MqttReceiver(mqttClient, 'topic_message');
-        var callback = function() {};
-        var unsubscribeStub = sinon.stub(mqttClient, 'unsubscribe');
-
-        // stub should call 'done' with no error
-        unsubscribeStub.onCall(0).callsArgWith(1, null);
+        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
+        var callback = function () {};
 
         receiver.on('method_Reboot', callback);
         receiver.on('method_UpdateFirmware', callback);
@@ -440,9 +370,9 @@ describe('MqttReceiver', function () {
         receiver.removeListener('method_UpdateFirmware', callback);
 
         // assert
-        assert.isTrue(unsubscribeStub.calledOnce,
+        assert.isTrue(fakeMqttBase.unsubscribe.calledOnce,
           'mqttClient.unsubscribe was not called');
-        assert.isTrue(unsubscribeStub.calledWith('$iothub/methods/POST/#'),
+        assert.isTrue(fakeMqttBase.unsubscribe.calledWith('$iothub/methods/POST/#'),
           'call to mqttClient.unsubscribe was not with topic $iothub/methods/POST/#');
       });
     });

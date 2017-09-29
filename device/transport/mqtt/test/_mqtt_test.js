@@ -7,7 +7,6 @@ require('es5-shim');
 var assert = require('chai').assert;
 var sinon = require('sinon');
 var Mqtt = require('../lib/mqtt.js').Mqtt;
-var MqttReceiver = require('../lib/mqtt_receiver.js').MqttReceiver;
 var errors = require('azure-iot-common').errors;
 var results = require('azure-iot-common').results;
 var Message = require('azure-iot-common').Message;
@@ -581,12 +580,10 @@ describe('Mqtt', function () {
   });
 
   describe('getReceiver', function () {
-    /*Tests_SRS_NODE_DEVICE_MQTT_16_002: [** If a receiver for this endpoint has already been created, the `getReceiver` method should call the `done` callback with the existing instance as an argument.]*/
-    /*Tests_SRS_NODE_DEVICE_MQTT_16_003: [** If a receiver for this endpoint doesn’t exist, the `getReceiver` method should create a new `MqttReceiver` object and then call the `done` callback with the object that was just created as an argument.]*/
     it('creates the receiver on first call, then always returns the same receiver on subsequent calls', function (testCallback) {
+      /*Codes_SRS_NODE_DEVICE_MQTT_16_037: [The `getReceiver` method shall return an instance of its parent `Mqtt` object.]*/
       var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
       mqtt.getReceiver(function (err, recv1) {
-        assert.instanceOf(recv1, MqttReceiver);
         mqtt.getReceiver(function (err, recv2) {
           assert.strictEqual(recv1, recv2);
           testCallback();

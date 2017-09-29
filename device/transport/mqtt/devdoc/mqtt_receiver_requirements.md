@@ -2,25 +2,16 @@
 
 ## Overview
 Object used to subscribe to the Cloud-to-Device messages endpoint and receive messages for this device
+These requirements now apply to the `Mqtt` object as the receiver pattern is being deprecated.
 
 ## Example
 ```javascript
-var receiver = new MqttReceiver(
-        client,
-        'message_topic/to/subscribe/to'
-    );
 receiver.on('message', function(msg) {
     console.log('Message received: ' + msg.data);
 });
 ```
 
 ## Public API
-
-### Constructor
-
-**SRS_NODE_DEVICE_MQTT_RECEIVER_16_001: [** If the `topicMessage` parameter is falsy, a `ReferenceError` shall be thrown. **]**
-
-**SRS_NODE_DEVICE_MQTT_RECEIVER_16_002: [** If the `mqttClient` parameter is falsy, a `ReferenceError` shall be thrown. **]**
 
 ### Events
 
