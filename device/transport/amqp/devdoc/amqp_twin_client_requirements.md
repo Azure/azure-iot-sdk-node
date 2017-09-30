@@ -90,3 +90,19 @@ The endpoints and link options are as for the response event.
 **SRS_NODE_DEVICE_AMQP_TWIN_06_024: [** If any detach occurs the other link will also be detached by the twin receiver. **]**
 
 **SRS_NODE_DEVICE_AMQP_TWIN_06_025: [** When the `error` event is emitted, the first parameter shall be an error object obtained via the amqp `translateError` module. **]**
+
+### attach(callback)
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_001: [** The `attach` method shall attach both sender and receiver links and calls its `callback` with no argument if successful. **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_002: [** The `attach` method shall call its `callback` with an `Error` if attaching either link fails. **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_003: [** The `attach` method shall call its `callback` immediately if the links are already attached. **]**
+
+### detach(callback)
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_004: [** The `detach` method shall call its `callback` immediately if the links are already detached. **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_005: [** The `detach` method shall detach the links and call its `callback` with no arguments if the links are successfully detached. **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_006: [** The `detach` method shall call its `callback` with an `Error` if detaching either of the links fail. **]**
