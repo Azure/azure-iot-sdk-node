@@ -22,7 +22,7 @@ The `RestApiClient` constructor initializes a new instance of a `RestApiClient` 
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_001: [** The `RestApiClient` constructor shall throw a `ReferenceError` if config is falsy. **]**
 
-**SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [** The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` or `sharedAccessSignature` property. **]**
+**SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [** The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` property. **]**
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_18_001: [** The `RestApiClient` constructor shall throw a `ReferenceError` if `userAgent` is falsy. **]**
 
@@ -40,6 +40,8 @@ The `executeApiCall` method builds the HTTP request using the passed arguments a
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_029: [** If `done` is `undefined` and the `timeout` argument is a function, `timeout` should be used as the callback. **]**
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_030: [** If `timeout` is defined and is not a function, the HTTP request timeout shall be adjusted to match the value of the argument. **]**
+
+**SRS_NODE_IOTHUB_REST_API_CLIENT_18_002: [** If an `x509` cert was passed into the constructor via the `config` object, `executeApiCall` shall use it to establish the TLS connection. **]**
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_007: [** The `executeApiCall` method shall add the following headers to the request:
 - Authorization: <this.sharedAccessSignature>

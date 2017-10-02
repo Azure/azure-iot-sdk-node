@@ -32,8 +32,8 @@ describe('RestApiClient', function() {
       });
     });
     
-    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` or `sharedAccessSignature` property.]*/
-    ['host', 'sharedAccessSignature'].forEach(function(badPropName) {
+    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` property.]*/
+    ['host'].forEach(function(badPropName) {
       [undefined, null, ''].forEach(function(badPropValue) {
         it('throws an ArgumentError if config.' + badPropName + 'is \'' + badPropValue + '\'', function() {
           var badConfig = JSON.parse(JSON.stringify(fakeConfig));
@@ -112,6 +112,23 @@ describe('RestApiClient', function() {
       var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
       client.executeApiCall('GET', '/fake/path', null, null, testCallback);
     });
+
+    /* Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_18_002: [ If an `x509` cert was passed into the constructor via the `config` object, `executeApiCall` shall use it to establish the TLS connection. ] */
+    it('uses the x509 cert if passed', function(testCallback) {
+      var fakeHttpHelper = {
+        buildRequest: function(method, path, headers, host, x509, requestCallback) {
+          assert.equal('yes', x509.fake);
+          testCallback();
+        }
+      };
+
+      var myFakeConfig = JSON.parse(JSON.stringify(fakeConfig));
+      myFakeConfig.x509 = { 'fake' : 'yes' };
+      var client = new RestApiClient(myFakeConfig, fakeAgent, fakeHttpHelper);
+      client.executeApiCall('GET', '/fake/path', null, null, function() {
+      });
+    });
+
 
     /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_029: [If `done` is `undefined` and the `timeout` argument is a function, `timeout` should be used as the callback.]*/
     it('can use the timeout parameter as callback', function(testCallback) {

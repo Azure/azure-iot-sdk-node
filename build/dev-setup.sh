@@ -72,6 +72,14 @@ npm link
 npm run build
 [ $? -eq 0 ] || exit $?
 
+cd $node_root/provisioning/transport/http
+echo "\n-- Creating links for `pwd` --"
+npm link azure-iot-common
+npm link azure-iot-http-base
+npm link
+npm run build
+[ $? -eq 0 ] || exit $?
+
 cd $node_root/e2etests
 echo "\n-- Creating links for `pwd` --"
 npm link azure-iot-common
