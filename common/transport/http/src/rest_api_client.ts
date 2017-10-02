@@ -3,9 +3,10 @@
 
 'use strict';
 
-import { anHourFromNow, errors, SharedAccessSignature } from 'azure-iot-common';
+import { anHourFromNow, errors, SharedAccessSignature, X509 } from 'azure-iot-common';
 import { Http as HttpBase } from './http';
 import  * as uuid from 'uuid';
+import { ClientRequest } from 'http';
 
 
 /**
@@ -40,11 +41,10 @@ export class RestApiClient {
   constructor(config: RestApiClient.TransportConfig, userAgent: string, httpRequestBuilder?: HttpBase) {
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_001: [The `RestApiClient` constructor shall throw a `ReferenceError` if config is falsy.]*/
     if (!config) throw new ReferenceError('config cannot be \'' + config + '\'');
-    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` or `sharedAccessSignature` property.]*/
+    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` property.]*/
     if (!config.host) throw new errors.ArgumentError('config.host cannot be \'' + config.host + '\'');
-    if (!config.sharedAccessSignature) throw new errors.ArgumentError('config.sharedAccessSignature cannot be \'' + config.sharedAccessSignature + '\'');
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_18_001: [The `RestApiClient` constructor shall throw a `ReferenceError` if `userAgent` is falsy.]*/
-    if (!userAgent) throw new ReferenceError('userAgent cannot be \'' + config + '\'');
+    if (!userAgent) throw new ReferenceError('userAgent cannot be \'' + userAgent + '\'');
 
     this._config = config;
     this._userAgent = userAgent;
@@ -85,7 +85,9 @@ export class RestApiClient {
     - Request-Id: <guid>
     - User-Agent: <version string>]*/
     let httpHeaders: any = headers || {};
-    httpHeaders.Authorization = (typeof(this._config.sharedAccessSignature) === 'string') ? this._config.sharedAccessSignature as string : (this._config.sharedAccessSignature as SharedAccessSignature).extend(anHourFromNow());
+    if (this._config.sharedAccessSignature) {
+      httpHeaders.Authorization = (typeof(this._config.sharedAccessSignature) === 'string') ? this._config.sharedAccessSignature as string : (this._config.sharedAccessSignature as SharedAccessSignature).extend(anHourFromNow());
+    }
     httpHeaders['Request-Id'] = uuid.v4();
     httpHeaders['User-Agent'] = this._userAgent;
 
@@ -115,8 +117,7 @@ export class RestApiClient {
       headers['Content-Length'] = requestBodyStringSizeInBytes;
     }
 
-    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_008: [The `executeApiCall` method shall build the HTTP request using the arguments passed by the caller.]*/
-    const request = this._http.buildRequest(method, path, httpHeaders, this._config.host, (err, responseBody, response) => {
+    let requestCallback: (err: Error, responseBody: any, response: any) => void = (err, responseBody, response) =>  {
       if (err) {
         if (response) {
           /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_010: [If the HTTP request fails with an error code >= 300 the `executeApiCall` method shall translate the HTTP error into a transport-agnostic error using the `translateError` method and call the `done` callback with the resulting error as the only argument.]*/
@@ -130,7 +131,16 @@ export class RestApiClient {
         const result = responseBody ? JSON.parse(responseBody) : '';
         done(null, result, response);
       }
-    });
+    };
+
+    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_008: [The `executeApiCall` method shall build the HTTP request using the arguments passed by the caller.]*/
+    let request: ClientRequest;
+    if (!!this._config.x509) {
+      /* Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_18_002: [ If an `x509` cert was passed into the constructor via the `config` object, `executeApiCall` shall use it to establish the TLS connection. ] */
+       request = this._http.buildRequest(method, path, httpHeaders, this._config.host, this._config.x509, requestCallback);
+    } else {
+       request = this._http.buildRequest(method, path, httpHeaders, this._config.host, requestCallback);
+    }
 
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_030: [If `timeout` is defined and is not a function, the HTTP request timeout shall be adjusted to match the value of the argument.]*/
     if (timeout) {
@@ -250,8 +260,9 @@ export class RestApiClient {
 export namespace RestApiClient {
     export interface TransportConfig {
         host: string;
-        sharedAccessSignature: string | SharedAccessSignature;
+        sharedAccessSignature?: string | SharedAccessSignature;
+        x509?: X509;
     }
 
-    export type ResponseCallback = (err: Error, device?: any, response?: any) => void;
+    export type ResponseCallback = (err: Error, responseBody?: any, response?: any) => void;
 }

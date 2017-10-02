@@ -93,6 +93,9 @@ if errorlevel 1 goto :cleanup
 call :lint-and-test %node-root%\service
 if errorlevel 1 goto :cleanup
 
+call :lint-and-test %node-root%\provisioning\transport\http
+if errorlevel 1 goto :cleanup
+
 if %e2e-tests%==1 (
   call :lint-and-test %node-root%\e2etests
   if errorlevel 1 goto :cleanup
