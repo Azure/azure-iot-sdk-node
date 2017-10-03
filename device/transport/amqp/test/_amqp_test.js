@@ -334,10 +334,10 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_041: [Any `error` event received on any of the links used for device methods shall trigger the emission of an `error` event by the transport, with an argument that is a `MethodsDetachedError` object with the `innerError` property set to that error.]*/
       // disabled until the client supports it
-      it.skip('emits a CloudToDeviceDetachedError with an innerError property if the link fails after being established correctly', function (testCallback) {
+      it.skip('emits a DeviceMethodsDetachedError with an innerError property if the link fails after being established correctly', function (testCallback) {
         var fakeError = new Error('fake twin receiver link error');
         transport.on('error', function (err) {
-          assert.instanceOf(err, errors.CloudToDeviceDetachedError);
+          assert.instanceOf(err, errors.DeviceMethodsDetachedError);
           assert.strictEqual(err.innerError, fakeError);
           testCallback();
         });
@@ -1629,7 +1629,7 @@ describe('Amqp', function () {
       });
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_046: [The `enableTwin` method shall attach the twin links and call its `callback` once these are successfully attached.]*/
-      it('attaches the C2D link', function (testCallback) {
+      it('attaches the twin links', function (testCallback) {
         transport.connect(function () {
           assert(fakeBaseClient.attachReceiverLink.notCalled);
           transport.enableTwin(function () {
@@ -1655,10 +1655,10 @@ describe('Amqp', function () {
       });
 
       // disabled until the client supports it
-      it.skip('emits a CloudToDeviceDetachedError with an innerError property if the link fails after being established correctly', function (testCallback) {
+      it.skip('emits a TwinDetachedError with an innerError property if the link fails after being established correctly', function (testCallback) {
         var fakeError = new Error('fake twin receiver link error');
         transport.on('error', function (err) {
-          assert.instanceOf(err, errors.CloudToDeviceDetachedError);
+          assert.instanceOf(err, errors.TwinDetachedError);
           assert.strictEqual(err.innerError, fakeError);
           testCallback();
         });
