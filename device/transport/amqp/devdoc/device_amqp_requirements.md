@@ -214,3 +214,59 @@ An new Amqp message shall be instantiated.
 ### onDeviceMethod(methodName, methodCallback)
 
 **SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [** The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `AmqpDeviceMethodClient` object. **]**
+
+### enableC2D(callback)
+
+**SRS_NODE_DEVICE_AMQP_16_031: [** The `enableC2D` method shall connect and authenticate the transport if it is disconnected. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_032: [** The `enableC2D` method shall attach the C2D link and call its `callback` once it is successfully attached. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_033: [** The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_034: [** Any `error` event received on the C2D link shall trigger the emission of an `error` event by the transport, with an argument that is a `CloudToDeviceDetachedError` object with the `innerError` property set to that error. **]**
+
+### disableC2D(callback)
+
+**SRS_NODE_DEVICE_AMQP_16_035: [** The `disableC2D` method shall call `detach` on the C2D link and call its callback when it is successfully detached. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_036: [** The `disableC2D` method shall call its `callback` with an `Error` if it fails to detach the C2D link. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_037: [** The `disableC2D` method shall call its `callback` immediately if the transport is already disconnected. **]**
+
+
+### enableMethods(callback)
+
+**SRS_NODE_DEVICE_AMQP_16_038: [** The `enableMethods` method shall connect and authenticate the transport if it is disconnected. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_039: [** The `enableMethods` method shall attach the method links and call its `callback` once these are successfully attached. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_040: [** The `enableMethods` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach method links. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_041: [** Any `error` event received on any of the links used for device methods shall trigger the emission of an `error` event by the transport, with an argument that is a `MethodsDetachedError` object with the `innerError` property set to that error. **]**
+
+### disableMethods(callback)
+
+**SRS_NODE_DEVICE_AMQP_16_042: [** The `disableMethods` method shall call `detach` on the device method links and call its callback when these are successfully detached. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_043: [** The `disableMethods` method shall call its `callback` with an `Error` if it fails to detach the device method links. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_044: [** The `disableMethods` method shall call its `callback` immediately if the transport is already disconnected. **]**
+
+
+### enableTwin(callback)
+
+**SRS_NODE_DEVICE_AMQP_16_045: [** The `enableTwin` method shall connect and authenticate the transport if it is disconnected. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_046: [** The `enableTwin` method shall attach the twin links and call its `callback` once these are successfully attached. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_047: [** The `enableTwin` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach twin links. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_048: [** Any `error` event received on any of the links used for twin shall trigger the emission of an `error` event by the transport, with an argument that is a `TwinDetachedError` object with the `innerError` property set to that error. **]**
+
+### disableTwin(callback)
+
+**SRS_NODE_DEVICE_AMQP_16_049: [** The `disableTwin` method shall call `detach` on the twin links and call its callback when these are successfully detached. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_050: [** The `disableTwin` method shall call its `callback` with an `Error` if it fails to detach the twin links. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_051: [** The `disableTwin` method shall call its `callback` immediately if the transport is already disconnected. **]**

@@ -77,7 +77,7 @@ export class AmqpTwinClient extends EventEmitter {
       initialState: 'detached',
       states: {
         'detached': {
-          _onEnter: () => {
+          _onEnter: (detachCallback) => {
             let headEvent: any[];
             while (headEvent = this._eventQueue.shift()) {
               if (headEvent.shift() === 'actual_sendTwinRequest') {
@@ -85,6 +85,13 @@ export class AmqpTwinClient extends EventEmitter {
               }
             }
             this._eventQueueError = null;
+            if (detachCallback) {
+              /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_005: [The `detach` method shall detach the links and call its `callback` with no arguments if the links are successfully detached.]*/
+              /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_002: [The `attach` method shall call its `callback` with an `Error` if attaching either link fails.]*/
+              /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_006: [The `detach` method shall call its `callback` with an `Error` if detaching either of the links fail.]*/
+              // TODO: refactoring needed: requirement not met for now...
+              detachCallback();
+            }
           },
           handleNewListener: (eventName) => {
             if ((eventName === AmqpTwinClient.responseEvent) || (eventName === AmqpTwinClient.postEvent)) {
@@ -104,10 +111,18 @@ export class AmqpTwinClient extends EventEmitter {
             if (detachObject && detachObject.error) {
               this.emit(AmqpTwinClient.errorEvent, translateError('received an error from the amqp transport: ', detachObject.error));
             }
+          },
+          attach: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_001: [The `attach` method shall attach both sender and receiver links and calls its `callback` with no argument if successful.]*/
+            this._fsm.transition('attaching', callback);
+          },
+          detach: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_004: [The `detach` method shall call its `callback` immediately if the links are already detached.]*/
+            callback();
           }
         },
         'attaching': {
-          _onEnter: () => {
+          _onEnter: (attachCallback) => {
             /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_006: [When a listener is added for the `response` event, and the `post` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLink`.] */
             /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_012: [When a listener is added for the `post` event, and the `response` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLine`.] */
             const linkCorrelationId: string  = uuid.v4().toString();
@@ -126,7 +141,7 @@ export class AmqpTwinClient extends EventEmitter {
                     this._upstreamAmqpLink = senderTransportObject;
                     this._upstreamAmqpLink.on('detached', this._onAmqpDetached.bind(this));
                     this._upstreamAmqpLink.on('error', this._handleError.bind(this));
-                    this._fsm.transition('attached');
+                    this._fsm.transition('attached', attachCallback);
                   }
                 });
               }
@@ -144,12 +159,17 @@ export class AmqpTwinClient extends EventEmitter {
           },
           sendTwinRequest: () => {
             this._appendEventQueue();
-          }
+          },
+          '*': () => this._fsm.deferUntilTransition()
         },
         'attached': {
-          _onEnter: () => {
+          _onEnter: (attachCallback) => {
             this._downstreamAmqpLink.on('message', this._boundMessageHandler);
             this._handleHeadOfEventQueue();
+            if (attachCallback) {
+              /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_001: [The `attach` method shall attach both sender and receiver links and calls its `callback` with no argument if successful.]*/
+              attachCallback();
+            }
           },
           actual_handleNewListener: (eventName) => {
             if (eventName === AmqpTwinClient.responseEvent) {
@@ -212,12 +232,19 @@ export class AmqpTwinClient extends EventEmitter {
             this._fsm.deferUntilTransition('detached');
             this._fsm.transition('detaching');
           },
+          attach: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_003: [The `attach` method shall call its `callback` immediately if the links are already attached.]*/
+            callback();
+          },
+          detach: (callback) => {
+            this._fsm.transition('detaching', callback);
+          },
           _onExit: () => {
             this._downstreamAmqpLink.removeListener('message', this._boundMessageHandler);
           }
         },
         'detaching': {
-          _onEnter: () => {
+          _onEnter: (detachCallback) => {
             this._client.detachSenderLink( this._endpoint, (detachSenderError: Error, result?: any) => {
               if (detachSenderError) {
                 debug('we received an error for the detach of the upstream link during the disconnect.  Moving on to the downstream link.');
@@ -230,7 +257,7 @@ export class AmqpTwinClient extends EventEmitter {
                 if (possibleError) {
                   this._fsm.handle('handleErrorEmit', possibleError);
                 }
-                this._fsm.transition('detached');
+                this._fsm.transition('detached', detachCallback);
               });
             });
           },
@@ -275,6 +302,14 @@ export class AmqpTwinClient extends EventEmitter {
    */
   sendTwinRequest(method: string, resource: string, properties: { [key: string]: string }, body: any, done?: (err?: Error, result?: any) => void): void {
     this._fsm.handle('sendTwinRequest', method, resource, properties, body, done);
+  }
+
+  attach(callback: (err: Error) => void): void {
+    this._fsm.handle('attach', callback);
+  }
+
+  detach(callback: (err: Error) => void): void {
+    this._fsm.handle('detach', callback);
   }
 
   private _generateTwinLinkProperties( correlationId: string): any {

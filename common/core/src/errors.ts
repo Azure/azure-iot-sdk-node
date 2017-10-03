@@ -370,3 +370,48 @@ export class DeviceTimeoutError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 }
+
+/**
+ * Error thrown when the c2d feature stopped working at the transport level, requiring the client to retry starting it.
+ *
+ * @augments {Error}
+ */
+export class CloudToDeviceDetachedError extends Error {
+  innerError: Error;
+  constructor(message?: string) {
+    super(message);
+    this.name = 'CloudToDeviceDetachedError';
+    this.message = message;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+/**
+ * Error thrown when the device methods feature stopped working at the transport level, requiring the client to retry starting it.
+ *
+ * @augments {Error}
+ */
+export class DeviceMethodsDetachedError extends Error {
+  innerError: Error;
+  constructor(message?: string) {
+    super(message);
+    this.name = 'DeviceMethodsDetachedError';
+    this.message = message;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+/**
+ * Error thrown when the twin feature stopped working at the transport level, requiring the client to retry starting it.
+ *
+ * @augments {Error}
+ */
+export class TwinDetachedError extends Error {
+  innerError: Error;
+  constructor(message?: string) {
+    super(message);
+    this.name = 'TwinDetachedError';
+    this.message = message;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
