@@ -415,3 +415,18 @@ export class TwinDetachedError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 }
+
+/**
+ * Error thrown when ant operation (local or remote) is cancelled
+ *
+ * @augments {Error}
+ */
+export class OperationCancelledError extends Error {
+  constructor(message?: string) {
+    super(message);
+    this.name = 'OperationCancelledError';
+    this.message = message;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+

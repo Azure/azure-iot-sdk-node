@@ -18,6 +18,12 @@ npm rm azure-iot-device-amqp
 npm rm azure-iot-device
 npm rm azure-iot-common
 
+cd $node_root/provisioning/transport/http
+echo "-- Removing links for `pwd` --"
+npm rm
+npm rm azure-iot-common
+npm rm azure-iot-http-base
+
 cd $node_root/device/transport/mqtt
 echo "-- Removing links for `pwd` --"
 npm rm

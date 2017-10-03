@@ -1,24 +1,26 @@
 {
-  "name": "azure-iot-http-base",
-  "version": "1.1.12",
-  "description": "HTTP operations used by Azure IoT device and service SDKs",
+  "name": "azure-iot-provisioning-http",
+  "version": "0.0.1",
+  "description": "HTTP transport for Azure Device Provisioning SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
+    "azure-iot-http-base": "1.1.12",
     "azure-iot-common": "1.1.12",
-    "debug": "^2.2.0",
-    "uuid": "^2.0.1"
+    "debug": "^3.0.1",
+    "machina": "^2.0.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",
     "istanbul": "^0.4.4",
     "jshint": "^2.9.2",
     "mocha": "^3.0.1",
+    "sinon": "^1.17.5",
     "tslint": "^5.1.0",
     "typescript": "2.2.2",
-    "@types/node": "^7.0.12"
+    "@types/node": "^7.0.5"
   },
   "scripts": {
     "lint": "tslint --type-check --project . -c ../../../tslint.json",
@@ -29,7 +31,7 @@
     "alltest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
     "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
     "test": "npm -s run lint && npm -s run build && npm -s run unittest",
-    "check-cover": "istanbul check-coverage --statements 80 --branches 77 --functions 62 --lines 80"
+    "check-cover": "istanbul check-coverage --statements 94 --branches 73 --lines 96 --functions 92"
   },
   "engines": {
     "node": ">= 0.10"

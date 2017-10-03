@@ -214,6 +214,8 @@ device/transport/http/lib/
 device/transport/mqtt/lib/
 device/ts-samples/*.js
 
+provisioning/transport/http/lib/
+
 service/lib
 
 ts-e2e/lib

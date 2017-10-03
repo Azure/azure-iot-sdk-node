@@ -1,0 +1,6 @@
+coverage/
+devdoc/
+test/
+samples/
+src/
+lib/**/*.map
