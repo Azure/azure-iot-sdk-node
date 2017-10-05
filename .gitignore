@@ -207,6 +207,7 @@ $RECYCLE.BIN/
 common/core/lib/
 common/transport/amqp/lib/
 common/transport/http/lib/
+common/transport/mqtt/lib/
 
 device/core/lib/
 device/transport/amqp/lib/

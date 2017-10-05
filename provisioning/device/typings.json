@@ -1,7 +1,0 @@
-{
-  "name": "azure-device-provisioning-client",
-  "main": "index.d.ts",
-  "dependencies": {},
-  "globalDependencies": {
-  }
-}

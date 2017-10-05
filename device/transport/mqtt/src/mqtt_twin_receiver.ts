@@ -4,10 +4,9 @@
 'use strict';
 
 import { EventEmitter } from 'events';
-import { MqttBase } from './mqtt_base';
+import { MqttBase, translateError } from 'azure-iot-mqtt-base';
 import * as querystring from 'querystring';
 import * as url from 'url';
-import { translateError } from './mqtt_translate_error';
 
 // $iothub/twin/PATCH/properties/reported/?$rid={request id}&$version={base version}
 

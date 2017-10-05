@@ -6,14 +6,13 @@ import * as querystring from 'querystring';
 import * as URL from 'url';
 import * as machina from 'machina';
 
-import { MqttBase } from './mqtt_base';
 import { results, errors, Message, X509, Receiver } from 'azure-iot-common';
 import { ClientConfig, DeviceMethodRequest, DeviceMethodResponse, Client, StableConnectionTransport, TwinTransport } from 'azure-iot-device';
 import { EventEmitter } from 'events';
 import * as util from 'util';
 import * as dbg from 'debug';
 const debug = dbg('device:mqtt');
-import { translateError } from './mqtt_translate_error';
+import { MqttBase, translateError } from 'azure-iot-mqtt-base';
 import { MqttTwinReceiver } from './mqtt_twin_receiver';
 
 // tslint:disable-next-line:no-var-requires

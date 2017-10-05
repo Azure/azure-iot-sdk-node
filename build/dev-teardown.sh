@@ -36,6 +36,7 @@ npm rm
 npm rm azure-iothub
 npm rm azure-iot-device
 npm rm azure-iot-common
+npm rm azure-iot-mqtt-base
 
 cd $node_root/device/transport/http
 echo "-- Removing links for `pwd` --"
@@ -65,6 +66,11 @@ echo "-- Removing links for `pwd` --"
 npm rm
 npm rm azure-iot-common
 npm rm azure-iot-http-base
+
+cd $node_root/common/transport/mqtt
+echo "-- Removing links for `pwd` --"
+npm rm
+npm rm azure-iot-common
 
 cd $node_root/common/transport/http
 echo "-- Removing links for `pwd` --"

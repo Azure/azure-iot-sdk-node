@@ -8,14 +8,13 @@ import * as machina from 'machina';
 import { Client as MqttClient, IClientOptions, IClientPublishOptions, IClientSubscribeOptions } from 'mqtt';
 import * as dbg from 'debug';
 const debug = dbg('mqtt-common');
-import { errors, results, endpoint } from 'azure-iot-common';
-import { ClientConfig } from 'azure-iot-device';
+import { errors, results, endpoint, SharedAccessSignature, X509 } from 'azure-iot-common';
 
 /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_004: [The `MqttBase` constructor shall instanciate the default MQTT.JS library if no argument is passed to it.]*/
 /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_005: [The `MqttBase` constructor shall use the object passed as argument instead of the default MQTT.JS library if it's not falsy.]*/
 export class MqttBase extends EventEmitter {
   private mqttprovider: any;
-  private _config: ClientConfig;
+  private _config: MqttBase.TransportConfig;
   private _sdkVersionString: string;
   private _mqttClient: MqttClient;
   private _fsm: any;
@@ -125,7 +124,7 @@ export class MqttBase extends EventEmitter {
     });
   }
 
-  connect(config: ClientConfig, done: (err?: Error, result?: any) => void): void {
+  connect(config: MqttBase.TransportConfig, done: (err?: Error, result?: any) => void): void {
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_006: [The `connect` method shall throw a ReferenceError if the config argument is falsy, or if one of the following properties of the config argument is falsy: deviceId, host, and one of sharedAccessSignature or x509.cert and x509.key.]*/
     if ((!config) ||
       (!config.host) ||
@@ -257,3 +256,13 @@ export class MqttBase extends EventEmitter {
     this._mqttClient.end(forceDisconnect, callback);
   }
 }
+
+export namespace MqttBase {
+  export interface TransportConfig {
+    host: string;
+    sharedAccessSignature?: string | SharedAccessSignature;
+    deviceId: string;
+    x509?: X509;
+  }
+}
+

@@ -28,6 +28,13 @@ call npm link azure-iot-common
 call npm link
 call npm run build
 
+cd %node-root%\common\transport\mqtt
+echo.
+echo -- Creating links for %cd% --
+call npm link azure-iot-common
+call npm link
+call npm run build
+
 cd %node-root%\device\core
 echo.
 echo -- Creating links for %cd% --
@@ -69,6 +76,7 @@ call npm run build
 cd %node-root%\device\transport\mqtt
 echo.
 echo -- Creating links for %cd% --
+call npm link azure-iot-mqtt-base
 call npm link azure-iot-common
 call npm link azure-iot-device
 call npm link azure-iothub

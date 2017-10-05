@@ -25,6 +25,13 @@ npm link
 npm run build
 [ $? -eq 0 ] || exit $?
 
+cd $node_root/common/transport/mqtt
+echo "\n-- Creating links for `pwd` --"
+npm link azure-iot-common
+npm link
+npm run build
+[ $? -eq 0 ] || exit $?
+
 cd $node_root/device/core
 echo "\n-- Creating links for `pwd` --"
 npm link azure-iot-http-base
@@ -65,6 +72,7 @@ npm run build
 
 cd $node_root/device/transport/mqtt
 echo "\n-- Creating links for `pwd` --"
+npm link azure-iot-mqtt-base
 npm link azure-iot-common
 npm link azure-iot-device
 npm link azure-iothub

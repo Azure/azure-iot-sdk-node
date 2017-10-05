@@ -6,7 +6,7 @@
 var assert = require('chai').assert;
 
 var MqttTwinReceiver = require('../lib/mqtt_twin_receiver.js').MqttTwinReceiver;
-var MqttProvider = require('./_fake_mqtt.js');
+var MqttProvider = require('../../../../common/transport/mqtt/test/_fake_mqtt.js');
 var sinon = require('sinon');
 
 var provider;
