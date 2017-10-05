@@ -7,9 +7,10 @@
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-http-base": "1.1.12",
     "azure-iot-common": "1.1.12",
     "azure-iot-device": "1.1.18",
+    "azure-iot-http-base": "1.1.12",
+    "debug": "^3.1.0",
     "node-crontab": "^0.0.8"
   },
   "devDependencies": {
@@ -32,7 +33,7 @@
     "alltest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
     "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
     "test": "npm -s run lint && npm -s run build && npm -s run unittest",
-    "check-cover": "istanbul check-coverage --statements 86 --branches 72 --lines 88 --functions 83"
+    "check-cover": "istanbul check-coverage --statements 89 --branches 81 --lines 90 --functions 83"
   },
   "engines": {
     "node": ">= 0.10"
