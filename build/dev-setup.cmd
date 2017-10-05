@@ -75,11 +75,19 @@ call npm link azure-iothub
 call npm link
 call npm run build
 
+cd %node-root%\provisioning\device
+echo.
+echo -- Creating links for %cd% --
+call npm link azure-iot-common
+call npm link
+call npm run build
+
 cd %node-root%\provisioning\transport\http
 echo.
 echo -- Creating links for %cd% --
 call npm link azure-iot-http-base
 call npm link azure-iot-common
+call npm link azure-device-provisioning-client
 call npm link
 call npm run build
 

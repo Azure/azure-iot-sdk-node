@@ -113,6 +113,9 @@ lint_and_test $node_root/device/transport/mqtt
 lint_and_test $node_root/service
 [ $? -eq 0 ] || cleanup_and_exit $?
 
+lint_and_test $node_root/provisioning/device
+[ $? -eq 0 ] || cleanup_and_exit $?
+
 lint_and_test $node_root/provisioning/transport/http
 [ $? -eq 0 ] || cleanup_and_exit $?
 

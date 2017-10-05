@@ -23,11 +23,17 @@ call npm rm azure-iot-device-amqp
 call npm rm azure-iot-device
 call npm rm azure-iot-common
 
-cd %node-root%\device\provisioning\http
+cd %node-root%\device\provisioning\transport\http
+echo -- Removing links for %cd% --
+call npm rm
+call npm rm azure-device-provisioning-client
+call npm rm azure-iot-common
+call npm rm azure-iot-http-base
+
+cd %node-root%\device\provisioning\device
 echo -- Removing links for %cd% --
 call npm rm
 call npm rm azure-iot-common
-call npm rm azure-iot-http-base
 
 cd %node-root%\device\transport\mqtt
 echo -- Removing links for %cd% --

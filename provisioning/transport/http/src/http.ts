@@ -7,15 +7,14 @@ import { EventEmitter } from 'events';
 import { RestApiClient, Http as Base } from 'azure-iot-http-base';
 import { errors, X509 } from 'azure-iot-common';
 import * as machina from 'machina';
-
-export type ProvisioningResponseCallback = (err: Error, result?: any) => void;
+import { DeviceProvisioningTransport } from 'azure-device-provisioning-client';
 
 const _defaultHeaders = {
   'Accept' : 'application/json',
   'Content-Type' : 'application/json; charset=utf-8'
 };
 
-export class Http extends EventEmitter {
+export class Http extends EventEmitter implements DeviceProvisioningTransport.Transport {
 
   private _idScope: string;
   private _registrationId: string;
@@ -30,7 +29,7 @@ export class Http extends EventEmitter {
   private _operationStatusPollingInterval: number = 2000;
   private _pollingTimer: any;
   private _restApiClient: RestApiClient;
-  private _registrationCallback: ProvisioningResponseCallback;
+  private _registrationCallback: DeviceProvisioningTransport.ResponseCallback;
 
   /**
    * @private
@@ -161,7 +160,12 @@ export class Http extends EventEmitter {
     });
   }
 
-  register(authorization: string | X509, forceRegistration: boolean, body: any, callback: ProvisioningResponseCallback): void {
+  connect(callback: (err?: Error) => void): void {
+    /* Codes_SRS_NODE_PROVISIONING_HTTP_18_038: [ `connect` shall immediately call the `callback` with no error. ] */
+    callback();
+  }
+
+  register(authorization: string | X509, forceRegistration: boolean, body: any, callback: DeviceProvisioningTransport.ResponseCallback): void {
     this._fsm.handle('register', authorization, forceRegistration, body, callback);
   }
 
@@ -179,7 +183,7 @@ export class Http extends EventEmitter {
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_031: [ If `disconnect` is called while the registration request is in progress, `register` shall call the `callback` with an `OperationCancelledError` error. ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_033: [ If `disconnect` is called while the register is waiting between polls, `register` shall call the `callback` with an `OperationCancelledError` error. ] */
     if (this._registrationCallback) {
-      let _callback: ProvisioningResponseCallback = this._registrationCallback;
+      let _callback = this._registrationCallback;
       this._registrationCallback = null;
       _callback(new errors.OperationCancelledError());
     }

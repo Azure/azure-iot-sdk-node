@@ -6,13 +6,12 @@ This module provides HTTP protocol support to communicate with the Azure device 
 ```js
 'use strict';
 
-export class Http extends EventEmitter implements DeviceProvisioningTransport {
+export class Http extends EventEmitter implements DeviceProvisioningTransport.Transport {
   api-version: string;
   operationStatusPollingInterval: number
-  constructor(idScope: string, registrationId: string) : void;
-  register(authorization: string, forceRegistration: boolean, callback: (err: Error, result?: Any) => void) : void;
-  disconnect(callback: (err) => void);
-}
+    connect(callback: (err?: Error) => void): void;
+    register(authorization: string | X509, forceRegistration: boolean, body: any, callback: DeviceProvisioningTransport.ResponseCallback): void;
+    disconnect(callback: (err?: Error) => void): void;}
 ```
 
 ## Example Usage
@@ -22,7 +21,7 @@ var Http = require('azure-iot-provisioning-http').Http;
 
 var http = new Http('__MYSCOPE__', '__MY_DEVICE_ID__');
 
-http.on('operationStatusPollingInterval', (body) => {
+http.on('operationStatus', (body) => {
   console.log('operation id ' + body.operationId + ' is currently in state ' + body.state);
 );
 
@@ -52,7 +51,11 @@ The `constructor` creates an Http transport object used to communicate with the 
 - `registrationId` - the registration id for the specific device **]**
 
 
-### register(authorization: string, forceRegistration: boolean, callback: (err: Error, result?: Any) => void) : void;
+### connect(callback: (err?: Error) => void): void;
+
+**SRS_NODE_PROVISIONING_HTTP_18_038: [** `connect` shall immediately call the `callback` with no error. **]**
+
+### register(authorization: string | X509, forceRegistration: boolean, body: any, callback: DeviceProvisioningTransport.ResponseCallback): void;
 `register` calls into the service to register the given device with the provisioning service.
 
 **SRS_NODE_PROVISIONING_HTTP_18_036: [** `register` shall call the `callback` with an `InvalidOperationError` if it is called while a previous registration is in progress. **]**
@@ -113,7 +116,7 @@ The `constructor` creates an Http transport object used to communicate with the 
 **SRS_NODE_PROVISIONING_HTTP_18_030: [** If the operation status response has a success code with a 'status' that is any other value, `register` shall call the callback with a `SyntaxError` error and stop polling. **]**
 
 
-### disconnect(callback: (err) => void);
+### disconnect(callback: (err?: Error) => void): void;}
 
 **SRS_NODE_PROVISIONING_HTTP_18_035: [** disconnect will cause polling to cease **]**
 
