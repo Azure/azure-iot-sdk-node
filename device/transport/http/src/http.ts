@@ -88,7 +88,7 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
     this.on('removeListener', () => {
       if (this._receiverStarted && this.listeners('message').length === 0) {
         this.disableC2D(() => {
-        debug('Http c2d message polling disabled');
+          debug('Http c2d message polling disabled');
         });
       }
     });
@@ -373,7 +373,6 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
    * @param {Message}     message     The message to settle as complete.
    * @param {Function}    done        The callback that shall be called with the error or result object.
    */
-  /*Codes_SRS_NODE_DEVICE_HTTP_16_002: [The ‘complete’ method shall call the ‘complete’ method of the receiver object and pass it the message and the callback given as parameters.] */
   complete(message: Message, done: (err?: Error, result?: results.MessageCompleted) => void): void {
     if (!message) throw new ReferenceError('Invalid message object.');
     this._sendFeedback('complete', message, done);
@@ -387,7 +386,6 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
    * @param {Message}     message     The message to settle as rejected.
    * @param {Function}    done        The callback that shall be called with the error or result object.
    */
-  /*Codes_SRS_NODE_DEVICE_HTTP_16_003: [The ‘reject’ method shall call the ‘reject’ method of the receiver object and pass it the message and the callback given as parameters.] */
   reject(message: Message, done: (err?: Error, result?: results.MessageRejected) => void): void {
     if (!message) throw new ReferenceError('Invalid message object.');
     this._sendFeedback('reject', message, done);
@@ -401,7 +399,6 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
    * @param {Message}     message     The message to settle as abandoned.
    * @param {Function}    done        The callback that shall be called with the error or result object.
    */
-  /*Codes_SRS_NODE_DEVICE_HTTP_16_001: [The ‘abandon’ method shall call the ‘abandon’ method of the receiver object and pass it the message and the callback given as parameters.] */
   abandon(message: Message, done: (err?: Error, result?: results.MessageAbandoned) => void): void {
     if (!message) throw new ReferenceError('Invalid message object.');
     this._sendFeedback('abandon', message, done);
@@ -594,12 +591,12 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
     }
 
     /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_008: [Only one of the interval, at, and cron fields should be populated: if more than one is populated, an ArgumentError shall be thrown.]*/
-    if (opts.interval && opts.cron ||
-        opts.interval && opts.at ||
-        opts.interval && opts.manualPolling ||
-        opts.at && opts.cron ||
-        opts.at && opts.manualPolling ||
-        opts.cron && opts.manualPolling) {
+    if ((opts.interval && opts.cron) ||
+        (opts.interval && opts.at) ||
+        (opts.interval && opts.manualPolling) ||
+        (opts.at && opts.cron) ||
+        (opts.at && opts.manualPolling) ||
+        (opts.cron && opts.manualPolling)) {
       throw new errors.ArgumentError('Only one of the (interval|at|cron) fields should be set.');
     }
 
