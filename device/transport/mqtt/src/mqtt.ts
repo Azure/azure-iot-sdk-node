@@ -161,7 +161,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
           });
         }
       } else {
-        debug('new listener for which there\'s nothing to subscribe to: ' + eventName);
+        debug('nothing to unsubscribe for this event: ' + eventName);
       }
     });
 
@@ -360,21 +360,15 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
             callback(null, this._twinReceiver);
           },
           enableC2D: (callback) => {
-            /*Codes_SRS_NODE_DEVICE_MQTT_16_049: [`enableC2D` shall subscribe to the MQTT topic for messages.]*/
             this._setupSubscription(this._topics.message, callback);
           },
           enableMethods: (callback) => {
-            /*Codes_SRS_NODE_DEVICE_MQTT_16_040: [`enableMethods` shall subscribe to the MQTT topic for direct methods.]*/
             this._setupSubscription(this._topics.method, callback);
           },
           disableC2D: (callback) => {
-            /*Codes_SRS_NODE_DEVICE_MQTT_16_042: [`disableC2D` shall unsubscribe from the topic for C2D messages.]*/
-            /*Codes_SRS_NODE_DEVICE_MQTT_16_043: [`disableC2D` shall call its callback with an `Error` if an error is received while unsubscribing.]*/
             this._removeSubscription(this._topics.message, callback);
           },
           disableMethods: (callback) => {
-            /*Codes_SRS_NODE_DEVICE_MQTT_16_045: [`disableMethods` shall unsubscribe from the topic for direct methods.]*/
-            /*Codes_SRS_NODE_DEVICE_MQTT_16_046: [`disableMethods` shall call its callback with an `Error` if an error is received while unsubscribing.]*/
             this._removeSubscription(this._topics.method, callback);
           }
         },
@@ -719,17 +713,31 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   private _setupSubscription(topic: TopicDescription, callback: (err?: Error) => void): void {
     debug('subscribe: ' + JSON.stringify(topic));
     topic.subscribeInProgress = true;
+
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_049: [`enableC2D` shall subscribe to the MQTT topic for messages.]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_040: [`enableMethods` shall subscribe to the MQTT topic for direct methods.]*/
     this._mqtt.subscribe(topic.name, { qos: 0 }, (err) => {
       topic.subscribeInProgress = false;
       topic.subscribed = true;
+      /*Codes_SRS_NODE_DEVICE_MQTT_16_050: [`enableC2D` shall call its callback with no arguments when the `SUBACK` packet is received.]*/
+      /*Codes_SRS_NODE_DEVICE_MQTT_16_051: [`enableMethods` shall call its callback with no arguments when the `SUBACK` packet is received.]*/
+      /*Codes_SRS_NODE_DEVICE_MQTT_16_052: [`enableC2D` shall call its callback with an `Error` if subscribing to the topic fails.]*/
+      /*Codes_SRS_NODE_DEVICE_MQTT_16_053: [`enableMethods` shall call its callback with an `Error` if subscribing to the topic fails.]*/
       callback(err);
     });
   }
 
   private _removeSubscription(topic: TopicDescription, callback: (err?: Error) => void): void {
     debug('unsubscribe ' + JSON.stringify(topic));
+
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_042: [`disableC2D` shall unsubscribe from the topic for C2D messages.]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_045: [`disableMethods` shall unsubscribe from the topic for direct methods.]*/
     this._mqtt.unsubscribe(topic.name, (err) => {
       topic.subscribed = !err;
+      /*Tests_SRS_NODE_DEVICE_MQTT_16_054: [`disableC2D` shall call its callback with no arguments when the `UNSUBACK` packet is received.]*/
+      /*Tests_SRS_NODE_DEVICE_MQTT_16_055: [`disableMethods` shall call its callback with no arguments when the `UNSUBACK` packet is received.]*/
+      /*Codes_SRS_NODE_DEVICE_MQTT_16_043: [`disableC2D` shall call its callback with an `Error` if an error is received while unsubscribing.]*/
+      /*Codes_SRS_NODE_DEVICE_MQTT_16_046: [`disableMethods` shall call its callback with an `Error` if an error is received while unsubscribing.]*/
       callback(err);
     });
   }

@@ -274,6 +274,10 @@ The `getTwinReceiver` method creates a `MqttTwinReceiver` object for the twin re
 
 **SRS_NODE_DEVICE_MQTT_16_049: [** `enableC2D` shall subscribe to the MQTT topic for messages. **]**
 
+**SRS_NODE_DEVICE_MQTT_16_050: [** `enableC2D` shall call its callback with no arguments when the `SUBACK` packet is received. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_052: [** `enableC2D` shall call its callback with an `Error` if subscribing to the topic fails. **]**
+
 ### enableMethods
 
 **SRS_NODE_DEVICE_MQTT_16_038: [** `enableMethods` shall connect the MQTT connection if it is disconnected. **]**
@@ -282,11 +286,17 @@ The `getTwinReceiver` method creates a `MqttTwinReceiver` object for the twin re
 
 **SRS_NODE_DEVICE_MQTT_16_040: [** `enableMethods` shall subscribe to the MQTT topic for direct methods. **]**
 
+**SRS_NODE_DEVICE_MQTT_16_051: [** `enableMethods` shall call its callback with no arguments when the `SUBACK` packet is received. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_053: [** `enableMethods` shall call its callback with an `Error` if subscribing to the topic fails. **]**
+
 ### disableC2D
 
 **SRS_NODE_DEVICE_MQTT_16_041: [** `disableC2D` shall call its callback immediately if the MQTT connection is already disconnected. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_042: [** `disableC2D` shall unsubscribe from the topic for C2D messages. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_054: [** `disableC2D` shall call its callback with no arguments when the `UNSUBACK` packet is received. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_043: [** `disableC2D` shall call its callback with an `Error` if an error is received while unsubscribing. **]**
 
@@ -295,5 +305,7 @@ The `getTwinReceiver` method creates a `MqttTwinReceiver` object for the twin re
 **SRS_NODE_DEVICE_MQTT_16_044: [** `disableMethods` shall call its callback immediately if the MQTT connection is already disconnected. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_045: [** `disableMethods` shall unsubscribe from the topic for direct methods. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_055: [** `disableMethods` shall call its callback with no arguments when the `UNSUBACK` packet is received. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_046: [** `disableMethods` shall call its callback with an `Error` if an error is received while unsubscribing. **]**

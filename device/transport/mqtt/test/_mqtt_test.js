@@ -596,12 +596,15 @@ describe('Mqtt', function () {
 
   ['enableC2D', 'enableMethods'].forEach(function (enableFeatureMethod) {
     describe('#' + enableFeatureMethod, function () {
-      /*Tests_SRS_NODE_DEVICE_MQTT_16_047: [`enableC2D` shall connect the MQTT connection if it is disconnected.]*/
-      /*Tests_SRS_NODE_DEVICE_MQTT_16_038: [`enableMethods` shall connect the MQTT connection if it is disconnected.]*/
       it('connects the transport if necessary', function (testCallback) {
         var transport = new Mqtt(fakeConfig, fakeMqttBase);
-        transport[enableFeatureMethod](function () {
+        transport[enableFeatureMethod](function (err) {
+          /*Tests_SRS_NODE_DEVICE_MQTT_16_047: [`enableC2D` shall connect the MQTT connection if it is disconnected.]*/
+          /*Tests_SRS_NODE_DEVICE_MQTT_16_038: [`enableMethods` shall connect the MQTT connection if it is disconnected.]*/
           assert.isTrue(fakeMqttBase.connect.calledOnce);
+          /*Tests_SRS_NODE_DEVICE_MQTT_16_050: [`enableC2D` shall call its callback with no arguments when the `SUBACK` packet is received.]*/
+          /*Tests_SRS_NODE_DEVICE_MQTT_16_051: [`enableMethods` shall call its callback with no arguments when the `SUBACK` packet is received.]*/
+          assert.isUndefined(err);
           /*Tests_SRS_NODE_DEVICE_MQTT_16_049: [`enableC2D` shall subscribe to the MQTT topic for messages.]*/
           /*Tests_SRS_NODE_DEVICE_MQTT_16_040: [`enableMethods` shall subscribe to the MQTT topic for direct methods.]*/
           assert.isTrue(fakeMqttBase.subscribe.calledOnce);
@@ -618,6 +621,20 @@ describe('Mqtt', function () {
           assert.isTrue(fakeMqttBase.connect.calledOnce);
           assert.instanceOf(err, Error);
           testCallback();
+        });
+      });
+
+      /*Tests_SRS_NODE_DEVICE_MQTT_16_052: [`enableC2D` shall call its callback with an `Error` if subscribing to the topic fails.]*/
+      /*Tests_SRS_NODE_DEVICE_MQTT_16_053: [`enableMethods` shall call its callback with an `Error` if subscribing to the topic fails.]*/
+      it('calls its callback with an error if subscribing fails', function (testCallback) {
+        var transport = new Mqtt(fakeConfig, fakeMqttBase);
+        fakeMqttBase.subscribe = sinon.stub().callsArgWith(2, new Error('fake error'));
+        transport.connect(function () {
+          transport[enableFeatureMethod](function (err) {
+            assert.isTrue(fakeMqttBase.subscribe.calledOnce);
+            assert.instanceOf(err, Error);
+            testCallback();
+          });
         });
       });
     });
@@ -651,6 +668,23 @@ describe('Mqtt', function () {
               /*Tests_SRS_NODE_DEVICE_MQTT_16_045: [`disableMethods` shall unsubscribe from the topic for direct methods.]*/
               assert.isTrue(fakeMqttBase.unsubscribe.calledOnce);
               assert.instanceOf(err, Error);
+              testCallback();
+            });
+          });
+        });
+      });
+
+      /*Tests_SRS_NODE_DEVICE_MQTT_16_054: [`disableC2D` shall call its callback with no arguments when the `UNSUBACK` packet is received.]*/
+      /*Tests_SRS_NODE_DEVICE_MQTT_16_055: [`disableMethods` shall call its callback with no arguments when the `UNSUBACK` packet is received.]*/
+      it('unsubscribes and calls its callback', function (testCallback) {
+        var transport = new Mqtt(fakeConfig, fakeMqttBase);
+        transport.connect(function () {
+          transport[testConfig.enableFeatureMethod](function () {
+            transport[testConfig.disableFeatureMethod](function (err) {
+              /*Tests_SRS_NODE_DEVICE_MQTT_16_042: [`disableC2D` shall unsubscribe from the topic for C2D messages.]*/
+              /*Tests_SRS_NODE_DEVICE_MQTT_16_045: [`disableMethods` shall unsubscribe from the topic for direct methods.]*/
+              assert.isTrue(fakeMqttBase.unsubscribe.calledOnce);
+              assert.isUndefined(err);
               testCallback();
             });
           });
