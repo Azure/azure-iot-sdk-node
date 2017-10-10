@@ -215,7 +215,9 @@ device/transport/http/lib/
 device/transport/mqtt/lib/
 device/ts-samples/*.js
 
+provisioning/transport/amqp/lib/
 provisioning/transport/http/lib/
+provisioning/transport/mqtt/lib/
 provisioning/device/lib/
 
 service/lib

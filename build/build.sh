@@ -119,7 +119,13 @@ lint_and_test $node_root/service
 lint_and_test $node_root/provisioning/device
 [ $? -eq 0 ] || cleanup_and_exit $?
 
+lint_and_test $node_root/provisioning/transport/amqp
+[ $? -eq 0 ] || cleanup_and_exit $?
+
 lint_and_test $node_root/provisioning/transport/http
+[ $? -eq 0 ] || cleanup_and_exit $?
+
+lint_and_test $node_root/provisioning/transport/mqtt
 [ $? -eq 0 ] || cleanup_and_exit $?
 
 if [ $e2e_tests -eq 1 ]

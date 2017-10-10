@@ -1,0 +1,18 @@
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+'use strict';
+
+var Mqtt = require('./lib/mqtt.js').Mqtt;
+
+/**
+ * The `azure-iot-provisioning-mqtt` module provides support for the MQTT protocol to the Azure Device Provisoning Service.
+ *
+ * @module azure-iot-provisioning-mqtt
+ * @requires module:azure-iot-mqtt-base
+ * @requires module:azure-iot-common
+ */
+
+module.exports = {
+  Mqtt: Mqtt
+};

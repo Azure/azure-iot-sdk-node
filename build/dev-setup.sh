@@ -87,9 +87,27 @@ npm link
 npm run build
 [ $? -eq 0 ] || exit $?
 
+cd $node_root/provisioning/transport/amqp
+echo "\n-- Creating links for `pwd` --"
+npm link azure-iot-amqp-base
+npm link azure-iot-common
+npm link azure-device-provisioning-client
+npm link
+npm run build
+[ $? -eq 0 ] || exit $?
+
 cd $node_root/provisioning/transport/http
 echo "\n-- Creating links for `pwd` --"
 npm link azure-iot-http-base
+npm link azure-iot-common
+npm link azure-device-provisioning-client
+npm link
+npm run build
+[ $? -eq 0 ] || exit $?
+
+cd $node_root/provisioning/transport/mqtt
+echo "\n-- Creating links for `pwd` --"
+npm link azure-iot-mqtt-base
 npm link azure-iot-common
 npm link azure-device-provisioning-client
 npm link

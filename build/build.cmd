@@ -99,7 +99,13 @@ if errorlevel 1 goto :cleanup
 call :lint-and-test %node-root%\provisioning\transport\device
 if errorlevel 1 goto :cleanup
 
+call :lint-and-test %node-root%\provisioning\transport\amqp
+if errorlevel 1 goto :cleanup
+
 call :lint-and-test %node-root%\provisioning\transport\http
+if errorlevel 1 goto :cleanup
+
+call :lint-and-test %node-root%\provisioning\transport\mqtt
 if errorlevel 1 goto :cleanup
 
 if %e2e-tests%==1 (

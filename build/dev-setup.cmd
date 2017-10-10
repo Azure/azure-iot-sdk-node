@@ -90,10 +90,28 @@ call npm link azure-iot-common
 call npm link
 call npm run build
 
+cd %node-root%\provisioning\transport\amqp
+echo.
+echo -- Creating links for %cd% --
+call npm link azure-iot-amqp-base
+call npm link azure-iot-common
+call npm link azure-device-provisioning-client
+call npm link
+call npm run build
+
 cd %node-root%\provisioning\transport\http
 echo.
 echo -- Creating links for %cd% --
 call npm link azure-iot-http-base
+call npm link azure-iot-common
+call npm link azure-device-provisioning-client
+call npm link
+call npm run build
+
+cd %node-root%\provisioning\transport\mqtt
+echo.
+echo -- Creating links for %cd% --
+call npm link azure-iot-mqtt-base
 call npm link azure-iot-common
 call npm link azure-device-provisioning-client
 call npm link
