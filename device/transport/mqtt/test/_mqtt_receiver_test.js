@@ -179,8 +179,8 @@ describe('Mqtt as MqttReceiver', function () {
         receiver.on('message', function () { });
 
         // assert
-        assert.isTrue(fakeMqttBase.on.calledTwice,
-        'fakeMqttBase.on was not called twice (error + message)');
+        assert.isTrue(fakeMqttBase.on.calledThrice,
+        'fakeMqttBase.on was not called twice (error + message + close)');
         assert.isTrue(fakeMqttBase.on.calledWith('error'),
         'fakeMqttBase.on was not called for "error" event');
         assert.isTrue(fakeMqttBase.on.calledWith('message'),
@@ -202,8 +202,8 @@ describe('Mqtt as MqttReceiver', function () {
         receiver.on('message', function () { });
 
         // assert
-        assert.isTrue(fakeMqttBase.on.calledTwice,
-          'mqttClient.on was not called twice (error + message)');
+        assert.isTrue(fakeMqttBase.on.calledThrice,
+          'mqttClient.on was not called twice (error + message + close)');
         assert.isTrue(fakeMqttBase.on.calledWith('message'),
           'mqttClient.on was not called for "message" event');
           assert.isTrue(fakeMqttBase.on.calledWith('error'),

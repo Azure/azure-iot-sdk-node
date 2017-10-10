@@ -591,4 +591,71 @@ describe('Mqtt', function () {
       });
     });
   });
+
+
+
+  ['enableC2D', 'enableMethods'].forEach(function (enableFeatureMethod) {
+    describe('#' + enableFeatureMethod, function () {
+      /*Tests_SRS_NODE_DEVICE_MQTT_16_047: [`enableC2D` shall connect the MQTT connection if it is disconnected.]*/
+      /*Tests_SRS_NODE_DEVICE_MQTT_16_038: [`enableMethods` shall connect the MQTT connection if it is disconnected.]*/
+      it('connects the transport if necessary', function (testCallback) {
+        var transport = new Mqtt(fakeConfig, fakeMqttBase);
+        transport[enableFeatureMethod](function () {
+          assert.isTrue(fakeMqttBase.connect.calledOnce);
+          /*Tests_SRS_NODE_DEVICE_MQTT_16_049: [`enableC2D` shall subscribe to the MQTT topic for messages.]*/
+          /*Tests_SRS_NODE_DEVICE_MQTT_16_040: [`enableMethods` shall subscribe to the MQTT topic for direct methods.]*/
+          assert.isTrue(fakeMqttBase.subscribe.calledOnce);
+          testCallback();
+        });
+      });
+
+      /*Tests_SRS_NODE_DEVICE_MQTT_16_048: [`enableC2D` shall calls its callback with an `Error` object if it fails to connect.]*/
+      /*Tests_SRS_NODE_DEVICE_MQTT_16_039: [`enableMethods` shall calls its callback with an `Error` object if it fails to connect.]*/
+      it('calls its callback with an error if it fails to connect', function (testCallback) {
+        var transport = new Mqtt(fakeConfig, fakeMqttBase);
+        fakeMqttBase.connect = sinon.stub().callsArgWith(1, new Error('fake error'));
+        transport[enableFeatureMethod](function (err) {
+          assert.isTrue(fakeMqttBase.connect.calledOnce);
+          assert.instanceOf(err, Error);
+          testCallback();
+        });
+      });
+    });
+  });
+
+  [
+    { enableFeatureMethod: 'enableC2D', disableFeatureMethod: 'disableC2D' },
+    { enableFeatureMethod: 'enableMethods', disableFeatureMethod: 'disableMethods' },
+  ].forEach(function (testConfig) {
+    describe('#' + testConfig.disableFeatureMethod, function () {
+      /*Tests_SRS_NODE_DEVICE_MQTT_16_041: [`disableC2D` shall call its callback immediately if the MQTT connection is already disconnected.]*/
+      /*Tests_SRS_NODE_DEVICE_MQTT_16_044: [`disableMethods` shall call its callback immediately if the MQTT connection is already disconnected.]*/
+      it('immediately calls its callback if the disconnected', function (testCallback) {
+        var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
+        mqtt[testConfig.disableFeatureMethod](function () {
+          assert.isTrue(fakeMqttBase.connect.notCalled);
+          assert.isTrue(fakeMqttBase.disconnect.notCalled);
+          testCallback();
+        });
+      });
+
+      /*Tests_SRS_NODE_DEVICE_MQTT_16_043: [`disableC2D` shall call its callback with an `Error` if an error is received while unsubscribing.]*/
+      /*Tests_SRS_NODE_DEVICE_MQTT_16_046: [`disableMethods` shall call its callback with an `Error` if an error is received while unsubscribing.]*/
+      it('calls its callback with an error if it fails to unsubscribe', function (testCallback) {
+        var transport = new Mqtt(fakeConfig, fakeMqttBase);
+        fakeMqttBase.unsubscribe = sinon.stub().callsArgWith(1, new Error('fake error'));
+        transport.connect(function () {
+          transport[testConfig.enableFeatureMethod](function () {
+            transport[testConfig.disableFeatureMethod](function (err) {
+              /*Tests_SRS_NODE_DEVICE_MQTT_16_042: [`disableC2D` shall unsubscribe from the topic for C2D messages.]*/
+              /*Tests_SRS_NODE_DEVICE_MQTT_16_045: [`disableMethods` shall unsubscribe from the topic for direct methods.]*/
+              assert.isTrue(fakeMqttBase.unsubscribe.calledOnce);
+              assert.instanceOf(err, Error);
+              testCallback();
+            });
+          });
+        });
+      });
+    });
+  });
 });

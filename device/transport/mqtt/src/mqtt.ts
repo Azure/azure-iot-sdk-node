@@ -11,7 +11,7 @@ import { ClientConfig, DeviceMethodRequest, DeviceMethodResponse, Client, Stable
 import { EventEmitter } from 'events';
 import * as util from 'util';
 import * as dbg from 'debug';
-const debug = dbg('device:mqtt');
+const debug = dbg('azure-iot-device-mqtt:mqtt');
 import { MqttBase, translateError } from 'azure-iot-mqtt-base';
 import { MqttTwinReceiver } from './mqtt_twin_receiver';
 
@@ -100,43 +100,68 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
     this.on('newListener', (eventName) => {
       // if the event is a 'method' event then eventName is in the format
       // 'method_{method name}'
-      const topic = eventName.indexOf('method_') === 0 ?
-                      this._topics.method :
-                      eventName === 'message' ?
-                      this._topics.message :
-                        null;
-      if (!!topic) {
-        // increment listeners count for this topic
+      if (eventName.indexOf('method_') === 0) {
+        const topic = this._topics.method;
         ++(topic.listenersCount);
-
-        // lazy-init MQTT subscription
         if (topic.subscribed === false && topic.subscribeInProgress === false) {
           // Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_003: [ When a listener is added for the message event, the topic should be subscribed to. ]
           // Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_13_002: [ When a listener is added for the method event, the topic should be subscribed to. ]
-          this._setupSubscription(topic);
+          this.enableMethods((err) => {
+            if (err) {
+              debug('error setting up subscription for ' + topic.name + ': ' + err.toString());
+            }
+          });
+        } else {
+          debug('subscription for methods is already set up');
         }
+      } else if (eventName === 'message') {
+        const topic = this._topics.message;
+        ++(topic.listenersCount);
+        if (topic.subscribed === false && topic.subscribeInProgress === false) {
+          // Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_003: [ When a listener is added for the message event, the topic should be subscribed to. ]
+          // Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_13_002: [ When a listener is added for the method event, the topic should be subscribed to. ]
+          this.enableC2D((err) => {
+            if (err) {
+              debug('error setting up subscription for ' + topic.name + ': ' + err.toString());
+            }
+          });
+        } else {
+          debug('subscription for C2D messages is already set up');
+        }
+      } else {
+        debug('new listener for which there\'s nothing to subscribe to: ' + eventName);
       }
     });
 
     this.on('removeListener', (eventName) => {
       // if the event is a 'method' event then eventName is in the format
       // 'method_{method name}'
-      const topic = eventName.indexOf('method_') === 0 ?
-                  this._topics.method :
-                  eventName === 'message' ?
-                    this._topics.message :
-                    null;
-      if (!!topic) {
-        debug('removing listener for topic: ' + JSON.stringify(topic));
-        // decrement listeners count for this topic
+      if (eventName.indexOf('method_') === 0) {
+        const topic = this._topics.method;
         --(topic.listenersCount);
-
-        // stop listening for MQTT events if our consumers stop listening for our events
         if (topic.listenersCount === 0 && topic.subscribed === true) {
           // Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_006: [ When there are no more listeners for the message event, the topic should be unsubscribed. ]
           // Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_13_004: [ When there are no more listeners for the method event, the topic should be unsubscribed. ]
-          this._removeSubscription(topic);
+          this.disableMethods((err) => {
+            if (err) {
+              debug('error setting up subscription for ' + topic.name + ': ' + err.toString());
+            }
+          });
         }
+      } else if (eventName === 'message') {
+        const topic = this._topics.message;
+        --(topic.listenersCount);
+        if (topic.listenersCount === 0 && topic.subscribed === true) {
+          // Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_006: [ When there are no more listeners for the message event, the topic should be unsubscribed. ]
+          // Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_13_004: [ When there are no more listeners for the method event, the topic should be unsubscribed. ]
+          this.disableC2D((err) => {
+            if (err) {
+              debug('error setting up subscription for ' + topic.name + ': ' + err.toString());
+            }
+          });
+        }
+      } else {
+        debug('new listener for which there\'s nothing to subscribe to: ' + eventName);
       }
     });
 
@@ -198,8 +223,38 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
                 this._fsm.handle('getTwinReceiver', callback);
               }
             });
-          }
           },
+          enableC2D: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_047: [`enableC2D` shall connect the MQTT connection if it is disconnected.]*/
+            this._fsm.handle('connect', (err) => {
+              if (err) {
+                /*Codes_SRS_NODE_DEVICE_MQTT_16_048: [`enableC2D` shall calls its callback with an `Error` object if it fails to connect.]*/
+                callback(err);
+              } else {
+                this._fsm.handle('enableC2D', callback);
+              }
+            });
+          },
+          enableMethods: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_038: [`enableMethods` shall connect the MQTT connection if it is disconnected.]*/
+            this._fsm.handle('connect', (err) => {
+              if (err) {
+                /*Codes_SRS_NODE_DEVICE_MQTT_16_039: [`enableMethods` shall calls its callback with an `Error` object if it fails to connect.]*/
+                callback(err);
+              } else {
+                this._fsm.handle('enableMethods', callback);
+              }
+            });
+          },
+          disableC2D: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_041: [`disableC2D` shall call its callback immediately if the MQTT connection is already disconnected.]*/
+            callback();
+          },
+          disableMethods: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_044: [`disableMethods` shall call its callback immediately if the MQTT connection is already disconnected.]*/
+            callback();
+          }
+        },
         connecting: {
           _onEnter: (connectCallback) => {
             this._mqtt.connect(this._config, (err, result) => {
@@ -303,6 +358,24 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
             /* Codes_SRS_NODE_DEVICE_MQTT_18_006: [** If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `MqttTwinReceiver` object as the second parameter of the `done` function with null as the first parameter. **]** */
             /* Codes_SRS_NODE_DEVICE_MQTT_18_007: [** If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `MqttTwinReceiver` object as the second parameter of the `done` function with null as the first parameter. **]** */
             callback(null, this._twinReceiver);
+          },
+          enableC2D: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_049: [`enableC2D` shall subscribe to the MQTT topic for messages.]*/
+            this._setupSubscription(this._topics.message, callback);
+          },
+          enableMethods: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_040: [`enableMethods` shall subscribe to the MQTT topic for direct methods.]*/
+            this._setupSubscription(this._topics.method, callback);
+          },
+          disableC2D: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_042: [`disableC2D` shall unsubscribe from the topic for C2D messages.]*/
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_043: [`disableC2D` shall call its callback with an `Error` if an error is received while unsubscribing.]*/
+            this._removeSubscription(this._topics.message, callback);
+          },
+          disableMethods: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_045: [`disableMethods` shall unsubscribe from the topic for direct methods.]*/
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_046: [`disableMethods` shall call its callback with an `Error` if an error is received while unsubscribing.]*/
+            this._removeSubscription(this._topics.method, callback);
           }
         },
         disconnecting: {
@@ -608,33 +681,56 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
     this._fsm.handle('getTwinReceiver', done);
   }
 
+  /**
+   * @private
+   */
   onDeviceMethod(methodName: string, callback: (methodRequest: DeviceMethodRequest, methodResponse: DeviceMethodResponse) => void): void {
     this.on('method_' + methodName, callback);
   }
 
-  private _setupSubscription(topic: TopicDescription): void {
+  /**
+   * @private
+   */
+  enableC2D(callback: (err?: Error) => void): void {
+    this._fsm.handle('enableC2D', callback);
+  }
+
+  /**
+   * @private
+   */
+  disableC2D(callback: (err?: Error) => void): void {
+    this._fsm.handle('disableC2D', callback);
+  }
+
+  /**
+   * @private
+   */
+  enableMethods(callback: (err?: Error) => void): void {
+    this._fsm.handle('enableMethods', callback);
+  }
+
+  /**
+   * @private
+   */
+  disableMethods(callback: (err?: Error) => void): void {
+    this._fsm.handle('disableMethods', callback);
+  }
+
+  private _setupSubscription(topic: TopicDescription, callback: (err?: Error) => void): void {
     debug('subscribe: ' + JSON.stringify(topic));
     topic.subscribeInProgress = true;
     this._mqtt.subscribe(topic.name, { qos: 0 }, (err) => {
       topic.subscribeInProgress = false;
-      if (!err) {
-        topic.subscribed = true;
-      }
-
-      // TODO: There doesn't seem to be a way in the current design to surface
-      //       the error if the MQTT topic subscription fails. Fix this.
+      topic.subscribed = true;
+      callback(err);
     });
   }
 
-  private _removeSubscription(topic: TopicDescription): void {
+  private _removeSubscription(topic: TopicDescription, callback: (err?: Error) => void): void {
     debug('unsubscribe ' + JSON.stringify(topic));
     this._mqtt.unsubscribe(topic.name, (err) => {
-      if (!err) {
-        topic.subscribed = false;
-
-        // TODO: There doesn't seem to be a way in the current design to surface
-        //       the error if the MQTT topic unsubscription fails. Fix this.
-      }
+      topic.subscribed = !err;
+      callback(err);
     });
   }
 
