@@ -11,22 +11,20 @@ You need to install the [Node.js][nodejs_lnk] JavaScript runtime environment to 
 
 ## Installation
 
-`npm install -g azure-iothub@latest` to get the latest (pre-release) version.
-
-`npm install -g azure-iothub` to get the latest (release) version.
+`npm install azure-iothub` to get the latest version.
 
 ## Features
 
 * Create/remove/update/list device identities in your IoT hub
 * Send messages to your devices and get feedback when they're delivered
-* Work with the Azurte IoT Hub Device Twins
+* Work with the Azure IoT Hub Device Twins
 * Invoke Cloud to Device Direct Methods on a device
 
 ## How to use the Azure IoT service SDK for Node.js
 
 Once you have installed the package as indicated above, you can start using the features of the Service SDK in your code. Below is a code snippet showing how to add a new device in the Azuyre IoT Hub device registry:
 
-Note that for this sample to work, you will need to [setup your IoT hub][lnk-setup-iot-hub] and retreive credentials for the service app. In the code, replace '[IoT Connection String]' with an access policy's credentials for your IoT Hub.
+Note that for this sample to work, you will need to [setup your IoT hub][lnk-setup-iot-hub] and retrieve credentials for the service app. In the code, replace '[IoT Connection String]' with the connection string of an access policy of your IoT hub.
 
 ```js
 var iothub = require('azure-iothub');
@@ -69,7 +67,7 @@ Development requirements documentation
 
 Code for the library
 
-### /Samples
+### /samples
 
 Set of simple samples showing how to use the features of the Service SDK
 

@@ -3,7 +3,7 @@
 This repository contains the following:
 * **Azure IoT Hub Device SDK**: to connect client devices to Azure IoT Hub
 * **Azure IoT Hub Service SDK**: enables developing back-end applications for Azure IoT
-* **Node-RED node for Azure IoT**: enables creating Node-RED flows that connect with Azure IoT Hub
+* **Node-RED node for Azure IoT**: demonstrates how to create a Node-RED node that connect with Azure IoT Hub
 
 The API reference documentation for the device SDK is [here][node-api-device-reference].
 
@@ -16,16 +16,15 @@ To find SDKs in other languages for Azure IoT, please refer to the [azure-iot-sd
 Visit [Azure IoT Dev Center][iot-dev-center] to learn more about developing applications for Azure IoT.
 
 ## How to use the Azure IoT SDKs for Node.js
-[ATTN:CONTENT REQUIRED - doc/node-devbox-setup.md does not use the recursive switch in its clone instructions. Please update that doc or remove it from the instructinos here.]
 
 Devices and data sources in an IoT solution can range from a simple network-connected sensor to a powerful, standalone computing device. Devices may have limited processing capability, memory, communication bandwidth, and communication protocol support. The IoT device SDKs enable you to implement client applications for a wide variety of devices.
 
 * **Using npm packages**: the simplest way to use the Azure IoT SDKs for Node.js to develop device apps is to leverage the [npm](https://npmjs.org) packages:
    * [Device SDK](./device/core/readme.md)
    * [Service SDK](./service/readme.md)
-* **Clone the repository**: The repository is using [GitHub Submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) for its dependencies. In order to automatically clone these submodules, you need to use the --recursive option as described here:
+* **Clone the repository**
 ```
-git clone --recursive https://github.com/Azure/azure-iot-sdk-node.git 
+git clone https://github.com/Azure/azure-iot-sdk-node.git
 ```
 * **Working with the SDKs code**: if you are working with the SDK's code to modify it or to contribute changes, then you can clone the repository and build the libraries following [these instructions](./doc/node-devbox-setup.md).
 
@@ -66,21 +65,11 @@ In the repository, you will find a set of simple samples that will help you get 
 - [Device SDK samples](./device/samples/)
 - [Service SDK samples](./service/samples/)
 
-## OS platforms and hardware compatibility
-[ATTN:CONTENT REQUIRED - this whole section is copied from the C SDK, please check requirements.]
+## Platforms compatibility
 
-The IoT Hub device SDK for Java can be used with a broad range of OS platforms and devices:
-[INCLUDE A LIST OF PLATFORMS SUPPORTED BY Node OUT OF BOX]
+The Azure IoT SDK for Node.js should work with versions of Node.js as old as v0.10.x. this being said, a lot of dependencies are slowly dropping support for these older versions and we really have no control over that.
 
-The minimum requirements are for the device platform to support the following:
-
-- **Being capable of establishing an IP connection**: only IP-capable devices can communicate directly with Azure IoT Hub.
-- **Support TLS**: required to establish a secure communication channel with Azure IoT Hub.
-- **Support SHA-256** (optional): necessary to generate the secure token for authenticating the device with the service. Different authentication methods are available and not all require SHA-256.
-- **Have a Real Time Clock or implement code to connect to an NTP server**: necessary for both establishing the TLS connection and generating the secure token for authentication.
-- **Having at least 64KB of RAM**: the memory footprint of the SDK depends on the SDK and protocol used as well as the platform targeted. The smallest footprint is achieved targeting microcontrollers.
-
-You can find an exhaustive list of the OS platforms the various SDKs have been tested against in the [Azure Certified for IoT device catalog](https://catalog.azureiotsuite.com/). Note that you might still be able to use the SDKs on OS and hardware platforms that are not listed on this page: all the SDKs are open sourced and designed to be portable. If you have suggestions, feedback or issues to report, refer to the Contribution and Support sections below.
+It is recommended to update to at least Node.js v4.x.x.
 
 ## Contribution, feedback and issues
 

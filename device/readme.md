@@ -24,16 +24,18 @@ Device SDK subfolders:
 
 ### /core
 
-Protocol-independent device SDK package.
+Device SDK Client package. This is used in conjunction with a protocol implementation package coming from one of the `transport` folder.
 
-### /node-red
+### /transport
 
-Node-RED module for Azure IoT Hub.
+Protocol-specific SDK packages for: AMQP, AMQP over WebSockets, MQTT, MQTT over WebSockets and HTTP.
 
 ### /samples
 
 Sample applications exercising basic features.
 
-### /transport
+### /node-red
 
-Protocol-specific SDK packages for: AMQP, AMQP over WebSockets, MQTT, and HTTP.
+Sample Node-RED module for Azure IoT Hub.
+
+*This is meant to serve only basic scenarios for testing and is not recommended as a production-ready node-red module.*
