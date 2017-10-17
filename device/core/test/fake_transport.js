@@ -37,16 +37,20 @@ function FakeTransport() {
     callback(null, new results.MessageRejected());
   };
 
-  this.getReceiver = function (callback) {
-    callback(null, new EventEmitter());
-  };
-
   this.updateSharedAccessSignature = function (newSas, callback) {
     callback(null, new results.SharedAccessSignatureUpdated(false));
   };
 
   this.setOptions = function (newSas, callback) {
     callback(null, new results.TransportConfigured());
+  };
+
+  this.enableC2D = function (callback) {
+    callback();
+  };
+
+  this.disableC2D = function (callback) {
+    callback();
   };
 }
 

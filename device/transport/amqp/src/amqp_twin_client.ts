@@ -12,7 +12,7 @@ import { ClientConfig } from 'azure-iot-device';
 
 import * as uuid from 'uuid';
 import * as dbg from 'debug';
-const debug = dbg('azure-iot-device:twin');
+const debug = dbg('azure-iot-device-amqp:AmqpTwinClient');
 
 const responseTopic = '$iothub/twin/res';
 

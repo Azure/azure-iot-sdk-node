@@ -6,7 +6,7 @@ import _ = require('lodash');
 import { EventEmitter } from 'events';
 import * as traverse from 'traverse';
 import * as dbg from 'debug';
-const debug = dbg('azure-iot-device.Twin');
+const debug = dbg('azure-iot-device:Twin');
 
 import { errors } from 'azure-iot-common';
 import { translateError } from './twin_errors';
@@ -53,15 +53,6 @@ export class Twin extends EventEmitter {
     super();
     this._client = client;
     this._rid = 4200; // arbitrary starting value.
-  }
-
-  /**
-   * @private
-   * used only by the client - no use for the SDK user.
-   */
-  updateSharedAccessSignature(): void {
-    this._receiver.removeAllListeners(Twin.responseEvent);
-    this._receiver.removeAllListeners(Twin.postEvent);
   }
 
   private _connectSubscribeAndGetProperties(done: (err?: Error, result?: Twin) => void): void {
@@ -332,11 +323,6 @@ export class Twin extends EventEmitter {
         throw new errors.NotImplementedError('transport does not support Twin');
       } else {
         client._twin = twin;
-        client.on('_connected', () => {
-          twin._connectSubscribeAndGetProperties(() => {
-            debug('Twin reconnected');
-          });
-        });
         twin._connectSubscribeAndGetProperties(done);
       }
     }

@@ -8,6 +8,7 @@ var sinon = require('sinon');
 var EventEmitter = require('events').EventEmitter;
 var AmqpReceiver = require('../lib/amqp.js').Amqp;
 var Message = require('azure-iot-common').Message;
+var errors = require('azure-iot-common').errors;
 
 var FakeAmqp = require('./_fake_amqp.js').FakeAmqp;
 
@@ -47,27 +48,17 @@ describe('AmqpReceiver', function () {
       var recv = new AmqpReceiver(fakeConfig);
       var fakeError = new Error('fake error');
       var fakeCallback = function(err) {
-        assert.strictEqual(err, fakeError);
+        assert.strictEqual(err.innerError, fakeError);
+        assert.instanceOf(err, errors.DeviceMethodsDetachedError);
         testCallback();
       };
-      recv.on('errorReceived', fakeCallback);
+      recv.on('error', fakeCallback);
       recv._deviceMethodClient.emit('error', fakeError);
     });
   });
 
   /*Tests_SRS_NODE_DEVICE_AMQP_RECEIVER_16_003: [The `Amqp` object shall listen to the `message` and error events of the underlying `ReceiverLink` object when it has listeners on its `message` event.]*/
   describe('#on(\'message\', callback)', function() {
-    it('subscribes to the message and error events of the underlying AMQP Receiver object', function() {
-      var recv = new AmqpReceiver(fakeConfig);
-      var fakeReceiverLink = new EventEmitter();
-      sinon.spy(fakeReceiverLink, 'on');
-      recv._amqp = new FakeAmqp();
-      sinon.stub(recv._amqp, 'attachReceiverLink').callsArgWith(2, null, fakeReceiverLink);
-      recv.on('message', function () {});
-      assert(fakeReceiverLink.on.calledWith('message'));
-      assert(fakeReceiverLink.on.calledWith('error'));
-    });
-
     it('forwards \'message\' events to all listeners once set up', function (testCallback) {
       var recv1messageReceived = false;
       var recv2messageReceived = false;
@@ -91,41 +82,27 @@ describe('AmqpReceiver', function () {
         }
       });
 
-      fakeReceiverLink.emit('message', testMessage);
+      recv.enableC2D(function () {
+        fakeReceiverLink.emit('message', testMessage);
+      });
     });
 
-    // skipped for now because the client cannot handle this. will reenable with the retry logic.
-    it.skip('emits an errorReceived event if an error is received on the C2D link', function (testCallback) {
+    it('emits an errorReceived event if an error is received on the C2D link', function (testCallback) {
       var testError = new Error('test');
       var recv = new AmqpReceiver(fakeConfig);
       var fakeReceiverLink = new EventEmitter();
       recv._amqp = new FakeAmqp();
       sinon.stub(recv._amqp, 'attachReceiverLink').callsArgWith(2, null, fakeReceiverLink);
       recv.on('message', function (msg) {});
-      recv.on('errorReceived', function (err) {
-        assert.strictEqual(err, testError);
+      recv.on('error', function (err) {
+        assert.strictEqual(err.innerError, testError);
+        assert.instanceOf(err, errors.CloudToDeviceDetachedError);
         testCallback();
       });
 
-      fakeReceiverLink.emit('error', testError);
-    });
-  });
-
-  /*Tests_SRS_NODE_DEVICE_AMQP_RECEIVER_16_008: [The `Amqp` object shall remove the listeners on `message` and `error` events of the underlying `ReceiverLink` when no-one is listening to its own `message` event.]*/
-  describe('#removeListener(\'message\', callback)', function() {
-    it('removes the \'message\' and \'error\' listeners and detaches the underlying AMQP receiver if no one is listening', function() {
-      var recv = new AmqpReceiver(fakeConfig);
-      var fakeReceiverLink = new EventEmitter();
-      fakeReceiverLink.detach = sinon.stub().callsArg(0);
-      sinon.stub(fakeReceiverLink, 'removeListener');
-      recv._amqp = new FakeAmqp();
-      sinon.stub(recv._amqp, 'attachReceiverLink').callsArgWith(2, null, fakeReceiverLink);
-      var fakeCallback = function() {};
-      recv.on('message', fakeCallback);
-      recv.removeListener('message', fakeCallback);
-      assert.isTrue(fakeReceiverLink.removeListener.calledWith('message'));
-      assert.isTrue(fakeReceiverLink.removeListener.calledWith('error'));
-      assert.isTrue(fakeReceiverLink.detach.calledOnce);
+      recv.enableC2D(function () {
+        fakeReceiverLink.emit('error', testError);
+      });
     });
   });
 
@@ -156,9 +133,11 @@ describe('AmqpReceiver', function () {
         sinon.stub(recv._amqp, 'attachReceiverLink').callsArgWith(2, null, fakeReceiverLink);
         var fakeMessage = new Message('foo');
         recv.on('message', function () {});
-        recv[methodName](fakeMessage, function () {
-          assert(fakeReceiverLink[methodName].calledWith(fakeMessage));
-          testCallback();
+        recv.enableC2D(function () {
+          recv[methodName](fakeMessage, function () {
+            assert(fakeReceiverLink[methodName].calledWith(fakeMessage));
+            testCallback();
+          });
         });
       });
     });
@@ -179,7 +158,7 @@ describe('AmqpReceiver', function () {
       });
     });
 
-    it('emits an errorReceived event with the error if the links fail to connect initially', function (testCallback) {
+    it('emits an error event with the error if the links fail to connect initially', function (testCallback) {
       var fakeMethodClient = new EventEmitter();
       var fakeError = new Error('fake error');
       var recv = new AmqpReceiver(fakeConfig);
@@ -187,12 +166,13 @@ describe('AmqpReceiver', function () {
       sinon.stub(recv._deviceMethodClient, 'attach').callsArgWith(0, fakeError);
 
       var errorCallback = function (err) {
-        assert.strictEqual(err, fakeError);
-        recv.removeListener('errorReceived', errorCallback);
+        assert.strictEqual(err.innerError, fakeError);
+        assert.instanceOf(err, errors.DeviceMethodsDetachedError);
+        recv.removeListener('error', errorCallback);
         testCallback();
       };
 
-      recv.on('errorReceived', errorCallback);
+      recv.on('error', errorCallback);
       recv.onDeviceMethod('fakeMethod', function () {});
       recv._deviceMethodClient.emit('error', fakeError);
     });

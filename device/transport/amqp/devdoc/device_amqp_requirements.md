@@ -200,16 +200,6 @@ An new Amqp message shall be instantiated.
 
 **SRS_NODE_DEVICE_AMQP_16_028: [** The `getTwinReceiver` method shall call the `done` callback with the corresponding error if the transport fails connect or authenticate the AMQP connection. **]**
 
-### on('message', messageCallback)
-
-**SRS_NODE_DEVICE_AMQP_RECEIVER_16_003: [** The `Amqp` object shall listen to the `message` and error events of the underlying `ReceiverLink` object when it has listeners on its `message` event. **]**
-
-**SRS_NODE_DEVICE_AMQP_RECEIVER_16_008: [** The `Amqp` object shall remove the listeners on `message` and `error` events of the underlying `ReceiverLink` when no-one is listening to its own `message` event. **]**
-
-**SRS_NODE_DEVICE_AMQP_16_029: [** The `Amqp` object shall connect and authenticate the AMQP connection if necessary to attach the C2D `ReceiverLink` object. **]**
-
-**SRS_NODE_DEVICE_AMQP_16_030: [** The `Amqp` object shall attach the C2D `ReceiverLink` object if necessary to start receiving messages. **]**
-
 
 ### onDeviceMethod(methodName, methodCallback)
 

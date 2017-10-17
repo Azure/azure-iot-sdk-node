@@ -98,13 +98,6 @@ Host: <config.host>
 
 **SRS_NODE_DEVICE_HTTP_13_002: [** `sendEventBatch` shall prefix the key name for all message properties with the string **iothub-app**. **]**
 
-### getReceiver(done)
-
-the getReceiver method queries the client for an `HttpReceiver` object that can be used to receive messages and settle them.
-
-**SRS_NODE_DEVICE_HTTP_16_005: [**The `getReceiver` method shall call the `done` method passed as argument with the receiver object as a parameter**]**
-**SRS_NODE_DEVICE_HTTP_16_006: [**The `getReceiver` method shall return the same unique instance if called multiple times in a row**]**
-
 ### setOptions(options, done)
 
 **SRS_NODE_DEVICE_HTTP_16_004: [** The `setOptions` method shall call the `setOptions` method of the HTTP Receiver with the content of the `http.receivePolicy` property of the `options` parameter.**]**

@@ -11,7 +11,7 @@ import { ClientConfig, DeviceMethodRequest, DeviceMethodResponse, Client, Stable
 import { EventEmitter } from 'events';
 import * as util from 'util';
 import * as dbg from 'debug';
-const debug = dbg('azure-iot-device-mqtt:mqtt');
+const debug = dbg('azure-iot-device-mqtt:Mqtt');
 import { MqttBase, translateError } from 'azure-iot-mqtt-base';
 import { MqttTwinReceiver } from './mqtt_twin_receiver';
 
@@ -81,7 +81,6 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
     this._topics = {
       'message': {
         name: this._topicMessageSubscribe,
-        listenersCount: 0,
         subscribeInProgress: false,
         subscribed: false,
         topicMatchRegex: /^devices\/.*\/messages\/devicebound\/.*$/g,
@@ -89,81 +88,12 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
       },
       'method': {
         name: this._topicMethodSucbscribe,
-        listenersCount: 0,
         subscribeInProgress: false,
         subscribed: false,
         topicMatchRegex: /^\$iothub\/methods\/POST\/.*$/g,
         handler: this._onDeviceMethod.bind(this)
       }
     };
-
-    this.on('newListener', (eventName) => {
-      // if the event is a 'method' event then eventName is in the format
-      // 'method_{method name}'
-      if (eventName.indexOf('method_') === 0) {
-        const topic = this._topics.method;
-        ++(topic.listenersCount);
-        if (topic.subscribed === false && topic.subscribeInProgress === false) {
-          // Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_003: [ When a listener is added for the message event, the topic should be subscribed to. ]
-          // Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_13_002: [ When a listener is added for the method event, the topic should be subscribed to. ]
-          this.enableMethods((err) => {
-            if (err) {
-              debug('error setting up subscription for ' + topic.name + ': ' + err.toString());
-            }
-          });
-        } else {
-          debug('subscription for methods is already set up');
-        }
-      } else if (eventName === 'message') {
-        const topic = this._topics.message;
-        ++(topic.listenersCount);
-        if (topic.subscribed === false && topic.subscribeInProgress === false) {
-          // Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_003: [ When a listener is added for the message event, the topic should be subscribed to. ]
-          // Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_13_002: [ When a listener is added for the method event, the topic should be subscribed to. ]
-          this.enableC2D((err) => {
-            if (err) {
-              debug('error setting up subscription for ' + topic.name + ': ' + err.toString());
-            }
-          });
-        } else {
-          debug('subscription for C2D messages is already set up');
-        }
-      } else {
-        debug('new listener for which there\'s nothing to subscribe to: ' + eventName);
-      }
-    });
-
-    this.on('removeListener', (eventName) => {
-      // if the event is a 'method' event then eventName is in the format
-      // 'method_{method name}'
-      if (eventName.indexOf('method_') === 0) {
-        const topic = this._topics.method;
-        --(topic.listenersCount);
-        if (topic.listenersCount === 0 && topic.subscribed === true) {
-          // Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_006: [ When there are no more listeners for the message event, the topic should be unsubscribed. ]
-          // Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_13_004: [ When there are no more listeners for the method event, the topic should be unsubscribed. ]
-          this.disableMethods((err) => {
-            if (err) {
-              debug('error setting up subscription for ' + topic.name + ': ' + err.toString());
-            }
-          });
-        }
-      } else if (eventName === 'message') {
-        const topic = this._topics.message;
-        --(topic.listenersCount);
-        if (topic.listenersCount === 0 && topic.subscribed === true) {
-          // Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_006: [ When there are no more listeners for the message event, the topic should be unsubscribed. ]
-          // Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_13_004: [ When there are no more listeners for the method event, the topic should be unsubscribed. ]
-          this.disableC2D((err) => {
-            if (err) {
-              debug('error setting up subscription for ' + topic.name + ': ' + err.toString());
-            }
-          });
-        }
-      } else {
-        debug('nothing to unsubscribe for this event: ' + eventName);
-      }
-    });
 
     this._fsm = new machina.Fsm({
       initialState: 'disconnected',
@@ -462,19 +392,6 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
         }
       }
     });
-  }
-
-  /**
-   * @deprecated          The receiver pattern is being deprecated
-   * @private
-   * @method              module:azure-iot-device-mqtt.Mqtt#getReceiver
-   * @description         Gets a receiver object that is used to receive and settle messages.
-   *
-   * @param {Function}    done   callback that shall be called with a receiver object instance.
-   */
-  getReceiver(done?: (err?: Error, receiver?: Receiver) => void): void {
-    /*Codes_SRS_NODE_DEVICE_MQTT_16_037: [The `getReceiver` method shall return an instance of its parent `Mqtt` object.]*/
-    done(null, this);
   }
 
   /**
@@ -846,7 +763,6 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
  */
 interface TopicDescription {
   name: string;
-  listenersCount: number;
   subscribeInProgress: boolean;
   subscribed: boolean;
   topicMatchRegex: RegExp;

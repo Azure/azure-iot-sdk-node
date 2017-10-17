@@ -6,16 +6,15 @@
 import { Stream } from 'stream';
 import { EventEmitter } from 'events';
 import * as dbg from 'debug';
-const debug = dbg('azure-iot-device.Client');
-import * as machina from 'machina';
+const debug = dbg('azure-iot-device:Client');
 
-import { anHourFromNow, results, errors, Message, Receiver, TransportConfig } from 'azure-iot-common';
+import { anHourFromNow, results, errors, Message, TransportConfig } from 'azure-iot-common';
 import * as ConnectionString from './connection_string.js';
 import * as SharedAccessSignature from './shared_access_signature.js';
 import { BlobUploadClient } from './blob_upload';
 import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
 import { Twin } from './twin';
-import { StableConnectionTransport , DeviceMethodTransport, BatchingTransport, DeviceMethodReceiver, ClientConfig } from './interfaces';
+import { StableConnectionTransport , DeviceMethodTransport, ClientConfig } from './interfaces';
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
   if (callback) callback(error, result);
@@ -49,12 +48,10 @@ export class Client extends EventEmitter {
   private _connectionString: string;
   private _useAutomaticRenewal: boolean;
   private _sasRenewalTimeout: number;
-  private _receiver: Receiver;
-  private _messageReceiverConnected: boolean;
   private _methodCallbackMap: any;
-  private _fsm: machina.Fsm;
   private _disconnectHandler: (err?: Error, result?: any) => void;
   private blobUploadClient: BlobUploadClient; // TODO: wrong casing/naming convention
+  private _c2dEnabled: boolean;
 
   /**
    * @constructor
@@ -69,6 +66,7 @@ export class Client extends EventEmitter {
     if (!transport) throw new ReferenceError('transport is \'' + transport + '\'');
 
     super();
+    this._c2dEnabled = false;
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_026: [The Client constructor shall accept a connection string as an optional second argument] */
     this._connectionString = connStr;
 
@@ -78,325 +76,46 @@ export class Client extends EventEmitter {
     this.blobUploadClient = blobUploadClient;
 
     this._transport = transport;
-    this._receiver = null;
+    this._transport.on('message', (msg) => {
+      this.emit('message', msg);
+    });
+
+    this._transport.on('error', (err) => {
+      debug('Transport error: ' + err.toString());
+      this.emit('disconnect', err);
+    });
+
     this._methodCallbackMap = {};
-    this._messageReceiverConnected = false;
 
     this.on('removeListener', (eventName) => {
-      if (this._receiver && eventName === 'message' && this.listeners('message').length === 0) {
-        this._disconnectMessageReceiver();
+      if (eventName === 'message' && this.listeners('message').length === 0) {
+        this._disableC2D((err) => {
+          if (err) {
+            this.emit('error', err);
+          }
+        });
       }
     });
 
     this.on('newListener', (eventName) => {
       if (eventName === 'message') {
-        /* Schedules startMessageReceiver() on the next tick because the event handler for the
-        * 'message' event is only added after this handler (for 'newListener') finishes and
-        * the state machine depends on having an event handler on 'message' to determine if
-        * it should connect the receiver, depending on its state.
-        */
-        process.nextTick(() => {
-          this._fsm.handle('startMessageReceiver');
+        this._enableC2D((err) => {
+          if (err) {
+            this.emit('error', err);
+          }
         });
       }
     });
 
-    const _closeTransport = (closeCallback: (err?: Error, result?: any) => void): void => {
-      const onDisconnected = (err?: Error, result?: any): void => {
-        this._fsm.transition('disconnected');
-        /*Codes_SRS_NODE_DEVICE_CLIENT_16_056: [The `close` method shall not throw if the `closeCallback` is not passed.]*/
-        /*Codes_SRS_NODE_DEVICE_CLIENT_16_055: [The `close` method shall call the `closeCallback` function when done with either a single Error object if it failed or null and a results.Disconnected object if successful.]*/
-        safeCallback(closeCallback, err, result);
-      };
-
-      if (this._sasRenewalTimeout) {
-        clearTimeout(this._sasRenewalTimeout);
-      }
-
-      if (this._isImplementedInTransport('disconnect')) {
-        /*Codes_SRS_NODE_DEVICE_CLIENT_16_001: [The `close` function shall call the transport's `disconnect` function if it exists.]*/
-        (this._transport as StableConnectionTransport).disconnect((disconnectError, disconnectResult) => {
-          /*Codes_SRS_NODE_DEVICE_CLIENT_16_046: [The `close` method shall remove the listener that has been attached to the transport `disconnect` event.]*/
-          this._transport.removeListener('disconnect', this._disconnectHandler);
-          onDisconnected(disconnectError, disconnectResult);
-        });
-      } else {
-        onDisconnected(null, new results.Disconnected());
-      }
-    };
-
-    this._fsm = new machina.Fsm({
-      namespace: 'device-client',
-      initialState: 'disconnected',
-      states: {
-        'disconnected': {
-          open: (openCallback) => {
-            const transportConnectedCallback = (err, result) => {
-              this._fsm.transition(!!err ? 'disconnected' : 'connected');
-              /*Codes_SRS_NODE_DEVICE_CLIENT_16_060: [The `open` method shall call the `openCallback` callback with a null error object and a `results.Connected()` result object if the transport is already connected, doesn't need to connect or has just connected successfully.]*/
-              safeCallback(openCallback, err, result);
-            };
-
-            this._fsm.transition('connecting');
-            if (this._isImplementedInTransport('connect')) {
-              (this._transport as StableConnectionTransport).connect((connectErr, connectResult) => {
-                /*Codes_SRS_NODE_DEVICE_CLIENT_16_045: [If the transport successfully establishes a connection the `open` method shall subscribe to the `disconnect` event of the transport.]*/
-                this._transport.removeListener('disconnect', this._disconnectHandler); // remove the old one before adding a new -- this can happen when renewing SAS tokens
-                this._transport.on('disconnect', this._disconnectHandler);
-                  transportConnectedCallback(connectErr, connectResult);
-              });
-            } else {
-              transportConnectedCallback(null, new results.Connected());
-            }
-          },
-          close: (closeCallback) => {
-            /*Codes_SRS_NODE_DEVICE_CLIENT_16_058: [The `close` method shall immediately call the `closeCallback` function if provided and the transport is already disconnected.]*/
-            safeCallback(closeCallback, null, new results.Disconnected());
-          },
-          updateSharedAccessSignature: (newSas, updateSasCallback) => {
-            this._transport.updateSharedAccessSignature(newSas, updateSasCallback);
-          },
-          startMessageReceiver: () => {
-            this._fsm.handle('open', (err) => {
-              if (err) {
-                /*Codes_SRS_NODE_DEVICE_CLIENT_16_006: [The ‘error’ event shall be emitted when an error occurred within the client code.] */
-                this.emit('error', err);
-              }
-            });
-          },
-          startMethodReceiver: () => {
-            this._fsm.deferUntilTransition('connected');
-            this._fsm.handle('open', (err) => {
-              if (err) {
-                /*Codes_SRS_NODE_DEVICE_CLIENT_16_006: [The ‘error’ event shall be emitted when an error occurred within the client code.] */
-                this.emit('error', err);
-              }
-            });
-          },
-          getTwin: (callback) => {
-            this._fsm.deferUntilTransition('connected');
-            this._fsm.handle('open', (err) => {
-              if (err) {
-                callback(err);
-              }
-            });
-          },
-          '*': (method, message, callback) => {
-            this._fsm.deferUntilTransition('connected');
-            this._fsm.handle('open', (err) => {
-              if (err) {
-                callback(err);
-              }
-            });
-          }
-        },
-        'connecting': {
-          /*Codes_SRS_NODE_DEVICE_CLIENT_16_001: [The `close` function shall call the transport's `disconnect` function if it exists.]*/
-          close: (closeCallback) => {
-            _closeTransport(closeCallback);
-          },
-          '*': () => {
-            this._fsm.deferUntilTransition();
-          }
-        },
-        'connected': {
-          _onEnter: () => {
-            if (this._useAutomaticRenewal) {
-              this._sasRenewalTimeout = setTimeout(this._renewSharedAccessSignature.bind(this), Client.sasRenewalInterval);
-            }
-            /*Codes_SRS_NODE_DEVICE_CLIENT_16_065: [The client shall connect the transport if needed to subscribe receive messages.]*/
-            this._transport.getReceiver((err, receiver) => {
-              if (err) {
-                this.emit('error', err);
-              } else {
-                this._receiver = receiver;
-
-                this._receiver.on('errorReceived', (err) => {
-                  this.emit('error', err);
-                });
-
-                if (this.listeners('message').length > 0) {
-                  this._connectMessageReceiver();
-                }
-
-                // add listeners for all existing method callbacks
-                if (Object.keys(this._methodCallbackMap).length > 0) {
-                  debug('Subscribing to method events from the receiver object of the transport');
-                  for (let methodName in this._methodCallbackMap) {
-                    if (this._methodCallbackMap.hasOwnProperty(methodName)) {
-                      const callback = this._methodCallbackMap[methodName];
-                      this._addMethodCallback(methodName, callback);
-                    }
-                  }
-                }
-              }
-            });
-          },
-          _onExit: () => {
-            if (this._sasRenewalTimeout) {
-              clearTimeout(this._sasRenewalTimeout);
-            }
-            this._destroyReceiver();
-            this._receiver = null;
-          },
-          /*Codes_SRS_NODE_DEVICE_CLIENT_16_060: [The `open` method shall call the `openCallback` callback with a null error object and a `results.Connected()` result object if the transport is already connected, doesn't need to connect or has just connected successfully.]*/
-          open: (openCallback) => {
-            /*Codes_SRS_NODE_DEVICE_CLIENT_16_061: [The `open` method shall not throw if the `openCallback` callback has not been provided.]*/
-            safeCallback(openCallback, null, new results.Connected());
-          },
-          close: (closeCallback) => {
-            this._fsm.transition('disconnecting');
-            _closeTransport((err, result) => {
-              this._fsm.transition('disconnected');
-              safeCallback(closeCallback, err, result);
-            });
-          },
-          sendEvent: (msg, sendEventCallback) => {
-            /*Codes_SRS_NODE_DEVICE_CLIENT_16_081: [The `sendEvent` method shall throw a `NotImplementedError` if the transport doesn't have that feature.]*/
-            if (this._isImplementedInTransport('sendEvent')) {
-              this._transport.sendEvent(msg, (err, result) => {
-                safeCallback(sendEventCallback, err, result);
-              });
-            } else {
-              throw new errors.NotImplementedError('sendEvent is not supported with this transport');
-            }
-          },
-          sendEventBatch: (msgBatch, sendEventBatchCallback) => {
-            /*Codes_SRS_NODE_DEVICE_CLIENT_16_082: [The `sendEventBatch` method shall throw a `NotImplementedError` if the transport doesn't have that feature.]*/
-            if (this._isImplementedInTransport('sendEventBatch')) {
-              (this._transport as BatchingTransport).sendEventBatch(msgBatch, (err, result) => {
-                safeCallback(sendEventBatchCallback, err, result);
-              });
-            } else {
-              throw new errors.NotImplementedError('sendEventBatch is not supported with this transport');
-            }
-          },
-          updateSharedAccessSignature: (sharedAccessSignature, updateSasCallback) => {
-            this._fsm.transition('updating_sas');
-            const safeUpdateSasCallback = (err?: Error, result?: any): void => {
-              if (err) {
-                this._fsm.transition('disconnected');
-              } else {
-                this._fsm.transition('connected');
-              }
-              safeCallback(updateSasCallback, err, result);
-            };
-
-            this.blobUploadClient.updateSharedAccessSignature(sharedAccessSignature);
-
-            if (this._twin) {
-              this._twin.updateSharedAccessSignature();
-            }
-
-            /*Codes_SRS_NODE_DEVICE_CLIENT_16_032: [The updateSharedAccessSignature method shall call the updateSharedAccessSignature method of the transport currently inuse with the sharedAccessSignature parameter.]*/
-            this._transport.updateSharedAccessSignature(sharedAccessSignature, (err, result) => {
-              if (err) {
-                /*Codes_SRS_NODE_DEVICE_CLIENT_16_035: [The updateSharedAccessSignature method shall call the `updateSasCallback` callback with an error object if an error happened while renewng the token.]*/
-                safeUpdateSasCallback(err);
-              } else {
-                debug('sas token updated; needToReconnect: ' + result.needToReconnect);
-                /*Codes_SRS_NODE_DEVICE_CLIENT_16_033: [The updateSharedAccessSignature method shall reconnect the transport to the IoTHub service if it was connected before before the method is clled.]*/
-                /*Codes_SRS_NODE_DEVICE_CLIENT_16_034: [The `updateSharedAccessSignature` method shall not reconnect when the 'needToReconnect' property of the result argument of the callback is false.]*/
-                if (result.needToReconnect) {
-                  this._fsm.transition('connecting');
-                  (this._transport as StableConnectionTransport).connect((connectErr) => {
-                    if (connectErr) {
-                      safeUpdateSasCallback(connectErr);
-                    } else {
-                      if (this._useAutomaticRenewal) {
-                        this._sasRenewalTimeout = setTimeout(this._renewSharedAccessSignature.bind(this), Client.sasRenewalInterval);
-                        /*Codes_SRS_NODE_DEVICE_CLIENT_16_036: [The updateSharedAccessSignature method shall call the `updateSasCallback` callback with a null error object and a result of type SharedAccessSignatureUpdated if the oken was updated successfully.]*/
-                      }
-                      safeUpdateSasCallback(null, new results.SharedAccessSignatureUpdated(false));
-                    }
-                  });
-                } else {
-                  if (this._useAutomaticRenewal) {
-                    this._sasRenewalTimeout = setTimeout(this._renewSharedAccessSignature.bind(this), Client.sasRenewalInterval);
-                    /*Codes_SRS_NODE_DEVICE_CLIENT_16_036: [The updateSharedAccessSignature method shall call the `updateSasCallback` callback with a null error object and a result of type SharedAccessSignatureUpdated if the oken was updated successfully.]*/
-                  }
-                  safeUpdateSasCallback(null, new results.SharedAccessSignatureUpdated(false));
-                }
-              }
-            });
-          },
-          complete: (message, completeCallback) => {
-            /*Codes_SRS_NODE_DEVICE_CLIENT_16_078: [The `complete` method shall throw a `NotImplementedError` if the transport doesn't have that feature.]*/
-            if (this._isImplementedInTransport('complete')) {
-              this._transport.complete(message, (err, result) => {
-                safeCallback(completeCallback, err, result);
-              });
-            } else {
-              throw new errors.NotImplementedError('complete is not supported with this transport');
-            }
-          },
-          abandon: (message, abandonCallback) => {
-            /*Codes_SRS_NODE_DEVICE_CLIENT_16_080: [The `abandon` method shall throw a `NotImplementedError` if the transport doesn't have that feature.]*/
-            if (this._isImplementedInTransport('abandon')) {
-              this._transport.abandon(message, (err, result) => {
-                safeCallback(abandonCallback, err, result);
-              });
-            } else {
-              throw new errors.NotImplementedError('abandon is not supported with this transport');
-            }
-          },
-          reject: (message, rejectCallback) => {
-            /*Codes_SRS_NODE_DEVICE_CLIENT_16_079: [The `reject` method shall throw a `NotImplementedError` if the transport doesn't have that feature.]*/
-            if (this._isImplementedInTransport('reject')) {
-              this._transport.reject(message, (err, result) => {
-                safeCallback(rejectCallback, err, result);
-              });
-            } else {
-              throw new errors.NotImplementedError('reject is not supported with this transport');
-            }
-          },
-          startMessageReceiver: () => {
-            /*Codes_SRS_NODE_DEVICE_CLIENT_16_065: [The client shall connect the transport if needed to subscribe receive messages.]*/
-            if (!this._messageReceiverConnected) {
-              this._connectMessageReceiver();
-            }
-          },
-          startMethodReceiver: (methodName, callback) => {
-            this._methodCallbackMap[methodName] = callback;
-            this._addMethodCallback(methodName, callback);
-
-          },
-          getTwin: (done, twin) => {
-            /* Codes_SRS_NODE_DEVICE_CLIENT_18_001: [** The `getTwin` method shall call the `azure-iot-device-core!Twin.fromDeviceClient` method to create the device client object. **]** */
-            /* Codes_SRS_NODE_DEVICE_CLIENT_18_002: [** The `getTwin` method shall pass itself as the first parameter to `fromDeviceClient` and it shall pass the `done` method as the second parameter. **]**  */
-            /* Codes_SRS_NODE_DEVICE_CLIENT_18_003: [** The `getTwin` method shall use the second parameter (if it is not falsy) to call `fromDeviceClient` on. **]**    */
-            (twin || require('./twin.js').Twin).fromDeviceClient(this, done);
-          }
-        },
-        'disconnecting': {
-          '*': () => {
-            this._fsm.deferUntilTransition();
-          }
-        },
-        'updating_sas': {
-          close: (closeCallback) => {
-            this._fsm.transition('disconnecting');
-            _closeTransport((err, result) => {
-              this._fsm.transition('disconnected');
-              closeCallback(err, result);
-            });
-          },
-          '*': () => {
-            this._fsm.deferUntilTransition();
-          }
-        }
-      }
-    });
-
-    this._fsm.on('transition', (data) => {
-      this.emit('_' + data.toState);
-      debug('Client state change: ' + data.fromState + ' -> ' + data.toState + ' (action: ' + data.action + ')');
-    });
+    if (this._useAutomaticRenewal) {
+      this._sasRenewalTimeout = setTimeout(this._renewSharedAccessSignature.bind(this), Client.sasRenewalInterval);
+    }
 
     this._disconnectHandler = (err) => {
-      this._fsm.transition('disconnected');
       this.emit('disconnect', new results.Disconnected(err));
     };
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_045: [If the transport successfully establishes a connection the `open` method shall subscribe to the `disconnect` event of the transport.]*/
+    this._transport.on('disconnect', this._disconnectHandler);
   }
 
   /**
@@ -419,8 +138,15 @@ export class Client extends EventEmitter {
     // validate input args
     this._validateDeviceMethodInputs(methodName, callback);
 
+    this._methodCallbackMap[methodName] = callback;
+    this._addMethodCallback(methodName, callback);
+
     // Codes_SRS_NODE_DEVICE_CLIENT_13_003: [ The client shall start listening for method calls from the service whenever there is a listener subscribed for a method callback. ]
-    this._fsm.handle('startMethodReceiver', methodName, callback);
+    (this._transport as DeviceMethodTransport).enableMethods((err) => {
+      if (err) {
+        this.emit('error', err);
+      }
+    });
   }
 
   /*Codes_SRS_NODE_DEVICE_CLIENT_05_016: [When a Client method encounters an error in the transport, the callback function (indicated by the done argument) shall be invoked with the following arguments:
@@ -446,7 +172,11 @@ export class Client extends EventEmitter {
     if (this._useAutomaticRenewal) debug('calling updateSharedAccessSignature while using automatic sas renewal');
     /*Codes_SRS_NODE_DEVICE_CLIENT_06_002: [The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the client was created using x509.]*/
     if (this._connectionString && ConnectionString.parse(this._connectionString).x509) throw new ReferenceError('client uses x509');
-    this._fsm.handle('updateSharedAccessSignature', sharedAccessSignature, (err, result) => {
+
+
+    this.blobUploadClient.updateSharedAccessSignature(sharedAccessSignature);
+
+    this._transport.updateSharedAccessSignature(sharedAccessSignature, (err, result) => {
       if (!err) {
         this.emit('_sharedAccessSignatureUpdated');
       }
@@ -463,7 +193,15 @@ export class Client extends EventEmitter {
    *                                 completes execution.
    */
   open(openCallback: (err?: Error, result?: results.Connected) => void): void {
-    this._fsm.handle('open', openCallback);
+    if (this._isImplementedInTransport('connect')) {
+      (this._transport as StableConnectionTransport).connect((connectErr, connectResult) => {
+        /*Codes_SRS_NODE_DEVICE_CLIENT_16_060: [The `open` method shall call the `openCallback` callback with a null error object and a `results.Connected()` result object if the transport is already connected, doesn't need to connect or has just connected successfully.]*/
+        safeCallback(openCallback, connectErr, connectResult);
+      });
+    } else {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_16_060: [The `open` method shall call the `openCallback` callback with a null error object and a `results.Connected()` result object if the transport is already connected, doesn't need to connect or has just connected successfully.]*/
+      safeCallback(openCallback, null, new results.Connected());
+    }
   }
 
   /**
@@ -477,7 +215,11 @@ export class Client extends EventEmitter {
    */
   sendEvent(message: Message, sendEventCallback?: (err?: Error, result?: results.MessageEnqueued) => void): void {
     /*Codes_SRS_NODE_DEVICE_CLIENT_05_007: [The sendEvent method shall send the event indicated by the message argument via the transport associated with the Client instance.]*/
-    this._fsm.handle('sendEvent', message, sendEventCallback);
+    this._transport.sendEvent(message, (err, result) => {
+      if (sendEventCallback) {
+        sendEventCallback(err, result);
+      }
+    });
   }
 
   /**
@@ -493,7 +235,15 @@ export class Client extends EventEmitter {
    */
   sendEventBatch(messages: Message[], sendEventBatchCallback?: (err?: Error, result?: results.MessageEnqueued) => void): void {
     /*Codes_SRS_NODE_DEVICE_CLIENT_05_008: [The sendEventBatch method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance.]*/
-    this._fsm.handle('sendEventBatch', messages, sendEventBatchCallback);
+    if (this._transport.sendEventBatch) {
+      this._transport.sendEventBatch(messages, (err, result) => {
+        if (sendEventBatchCallback) {
+          sendEventBatchCallback(err, result);
+        }
+      });
+    } else {
+      throw new errors.NotImplementedError('Transport does not support message batching');
+    }
   }
 
   /**
@@ -503,7 +253,9 @@ export class Client extends EventEmitter {
    * @param {Function} closeCallback    The callback to be invoked when the connection has been closed.
    */
   close(closeCallback?: (err?: Error, result?: results.Disconnected) => void): void {
-    this._fsm.handle('close', closeCallback);
+    this._closeTransport((err, result) => {
+      safeCallback(closeCallback, err, result);
+    });
   }
 
   /**
@@ -571,7 +323,11 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_016: [The ‘complete’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
     if (!message) throw new ReferenceError('message is \'' + message + '\'');
 
-    this._fsm.handle('complete', message, completeCallback);
+    this._transport.complete(message, (err, result) => {
+      if (completeCallback) {
+        completeCallback(err, result);
+      }
+    });
   }
 
   /**
@@ -587,7 +343,11 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_018: [The reject method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
     if (!message) throw new ReferenceError('message is \'' + message + '\'');
 
-    this._fsm.handle('reject', message, rejectCallback);
+    this._transport.reject(message, (err, result) => {
+      if (rejectCallback) {
+        rejectCallback(err, result);
+      }
+    });
   }
 
   /**
@@ -603,7 +363,11 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_017: [The abandon method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
     if (!message) throw new ReferenceError('message is \'' + message + '\'');
 
-    this._fsm.handle('abandon', message, abandonCallback);
+    this._transport.abandon(message, (err, result) => {
+      if (abandonCallback) {
+        abandonCallback(err, result);
+      }
+    });
   }
 
   /**
@@ -638,7 +402,10 @@ export class Client extends EventEmitter {
    *
    */
   getTwin(done: (err?: Error, twin?: Twin) => void, twin?: Twin): void {
-    this._fsm.handle('getTwin', done, twin);
+    /* Codes_SRS_NODE_DEVICE_CLIENT_18_001: [** The `getTwin` method shall call the `azure-iot-device-core!Twin.fromDeviceClient` method to create the device client object. **]** */
+    /* Codes_SRS_NODE_DEVICE_CLIENT_18_002: [** The `getTwin` method shall pass itself as the first parameter to `fromDeviceClient` and it shall pass the `done` method as the second parameter. **]**  */
+    /* Codes_SRS_NODE_DEVICE_CLIENT_18_003: [** The `getTwin` method shall use the second parameter (if it is not falsy) to call `fromDeviceClient` on. **]**    */
+    (twin || require('./twin.js').Twin).fromDeviceClient(this, done);
   }
 
   private _validateDeviceMethodInputs(methodName: string, callback: (request: Client.DeviceMethodRequest, response: Client.DeviceMethodResponse) => void): void {
@@ -674,7 +441,7 @@ export class Client extends EventEmitter {
 
   private _addMethodCallback(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
     const self = this;
-    (this._receiver as DeviceMethodReceiver).onDeviceMethod(methodName, (message) => {
+    (this._transport as DeviceMethodTransport).onDeviceMethod(methodName, (message) => {
       // build the request object
       const request = new DeviceMethodRequest(
         message.requestId,
@@ -690,34 +457,39 @@ export class Client extends EventEmitter {
     });
   }
 
-  private _connectMessageReceiver(): void {
-    if (!this._messageReceiverConnected) {
-      this._receiver.on('message', (msg) => {
-        this.emit('message', msg);
+  private _enableC2D(callback: (err?: Error) => void): void {
+    if (!this._c2dEnabled) {
+      this._transport.enableC2D((err) => {
+        if (!err) {
+          this._c2dEnabled = true;
+        }
+        callback(err);
       });
-      this._messageReceiverConnected = true;
+    } else {
+      callback();
     }
   }
 
-  private _disconnectMessageReceiver(): void {
-    if (this._receiver) {
-      this._receiver.removeAllListeners('message');
-      this._messageReceiverConnected = false;
-    }
-  }
-
-  private _destroyReceiver(): void {
-    if (this._receiver) {
-      this._receiver.removeAllListeners();
-      this._messageReceiverConnected = false;
-      this._receiver = null;
+  private _disableC2D(callback: (err?: Error) => void): void {
+    if (this._c2dEnabled) {
+      this._transport.disableC2D((err) => {
+        if (!err) {
+          this._c2dEnabled = false;
+        }
+        callback(err);
+      });
+    } else {
+      callback();
     }
   }
 
   private _renewSharedAccessSignature(): void {
     const cn = ConnectionString.parse(this._connectionString);
     const sas = SharedAccessSignature.create(cn.HostName, cn.DeviceId, cn.SharedAccessKey, anHourFromNow());
-    this._fsm.handle('updateSharedAccessSignature', sas.toString(), (err) => {
+    this.updateSharedAccessSignature(sas.toString(), (err) => {
+      if (this._useAutomaticRenewal) {
+        this._sasRenewalTimeout = setTimeout(this._renewSharedAccessSignature.bind(this), Client.sasRenewalInterval);
+      }
       if (err) {
         /*Codes_SRS_NODE_DEVICE_CLIENT_16_006: [The ‘error’ event shall be emitted when an error occurred within the client code.] */
         this.emit('error', err);
@@ -729,6 +501,31 @@ export class Client extends EventEmitter {
 
   private _isImplementedInTransport(fnName: string): boolean {
     return typeof this._transport[fnName] === 'function';
+  }
+
+  private _closeTransport(closeCallback: (err?: Error, result?: any) => void): void {
+    const onDisconnected = (err?: Error, result?: any): void => {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_16_056: [The `close` method shall not throw if the `closeCallback` is not passed.]*/
+      /*Codes_SRS_NODE_DEVICE_CLIENT_16_055: [The `close` method shall call the `closeCallback` function when done with either a single Error object if it failed or null and a results.Disconnected object if successful.]*/
+      safeCallback(closeCallback, err, result);
+    };
+
+    if (this._sasRenewalTimeout) {
+      clearTimeout(this._sasRenewalTimeout);
+    }
+
+    this._disableC2D(() => {
+      if (this._isImplementedInTransport('disconnect')) {
+        /*Codes_SRS_NODE_DEVICE_CLIENT_16_001: [The `close` function shall call the transport's `disconnect` function if it exists.]*/
+        (this._transport as StableConnectionTransport).disconnect((disconnectError, disconnectResult) => {
+          /*Codes_SRS_NODE_DEVICE_CLIENT_16_046: [The `close` method shall remove the listener that has been attached to the transport `disconnect` event.]*/
+          this._transport.removeListener('disconnect', this._disconnectHandler);
+          onDisconnected(disconnectError, disconnectResult);
+        });
+      } else {
+        onDisconnected(null, new results.Disconnected());
+      }
+    });
   }
 
   /**
@@ -807,12 +604,13 @@ export namespace Client {
   export interface Transport extends EventEmitter {
     setOptions?(options: any, done: (err?: Error, result?: results.TransportConfigured) => void): void;
     updateSharedAccessSignature(sharedAccessSignature: string, done: (err?: Error, result?: results.SharedAccessSignatureUpdated) => void): void;
-    getReceiver(func: (err?: Error, receiver?: Receiver) => void): void;
     sendEvent(message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void;
     sendEventBatch?(messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void;
     complete(message: Message, done: (err?: Error, result?: results.MessageCompleted) => void): void;
     reject(message: Message, done: (err?: Error, results?: results.MessageRejected) => void): void;
     abandon(message: Message, done: (err?: Error, results?: results.MessageAbandoned) => void): void;
+    enableC2D(callback: (err?: Error) => void): void;
+    disableC2D(callback: (err?: Error) => void): void;
   }
 
   export interface BlobUpload {

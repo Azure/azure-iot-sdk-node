@@ -52,14 +52,9 @@ export interface MethodMessage {
  */
 export interface DeviceMethodTransport extends Client.Transport {
   sendMethodResponse(response: DeviceMethodResponse, done?: (err?: Error, result?: any) => void): void;
-}
-
-/**
- * @private
- * @deprecated
- */
-export interface DeviceMethodReceiver extends Receiver {
   onDeviceMethod(methodName: string, callback: (message: MethodMessage) => void): void;
+  enableMethods(callback: (err?: Error) => void): void;
+  disableMethods(callback: (err?: Error) => void): void;
 }
 
 /**

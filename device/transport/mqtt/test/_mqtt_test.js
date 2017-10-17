@@ -579,26 +579,19 @@ describe('Mqtt', function () {
     });
   });
 
-  describe('getReceiver', function () {
-    it('creates the receiver on first call, then always returns the same receiver on subsequent calls', function (testCallback) {
-      /*Codes_SRS_NODE_DEVICE_MQTT_16_037: [The `getReceiver` method shall return an instance of its parent `Mqtt` object.]*/
-      var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
-      mqtt.getReceiver(function (err, recv1) {
-        mqtt.getReceiver(function (err, recv2) {
-          assert.strictEqual(recv1, recv2);
-          testCallback();
-        });
-      });
-    });
-  });
-
-
-
-  ['enableC2D', 'enableMethods'].forEach(function (enableFeatureMethod) {
-    describe('#' + enableFeatureMethod, function () {
+  [
+    {
+      methodName: 'enableC2D',
+      topicName: 'devices/' + fakeConfig.deviceId + '/messages/devicebound/#'
+     },
+     {
+      methodName: 'enableMethods',
+      topicName: '$iothub/methods/POST/#'
+     }].forEach(function (testConfig) {
+    describe('#' + testConfig.methodName, function () {
       it('connects the transport if necessary', function (testCallback) {
         var transport = new Mqtt(fakeConfig, fakeMqttBase);
-        transport[enableFeatureMethod](function (err) {
+        transport[testConfig.methodName](function (err) {
           /*Tests_SRS_NODE_DEVICE_MQTT_16_047: [`enableC2D` shall connect the MQTT connection if it is disconnected.]*/
           /*Tests_SRS_NODE_DEVICE_MQTT_16_038: [`enableMethods` shall connect the MQTT connection if it is disconnected.]*/
           assert.isTrue(fakeMqttBase.connect.calledOnce);
@@ -607,7 +600,7 @@ describe('Mqtt', function () {
           assert.isUndefined(err);
           /*Tests_SRS_NODE_DEVICE_MQTT_16_049: [`enableC2D` shall subscribe to the MQTT topic for messages.]*/
           /*Tests_SRS_NODE_DEVICE_MQTT_16_040: [`enableMethods` shall subscribe to the MQTT topic for direct methods.]*/
-          assert.isTrue(fakeMqttBase.subscribe.calledOnce);
+          assert.isTrue(fakeMqttBase.subscribe.calledWith(testConfig.topicName));
           testCallback();
         });
       });
@@ -617,7 +610,7 @@ describe('Mqtt', function () {
       it('calls its callback with an error if it fails to connect', function (testCallback) {
         var transport = new Mqtt(fakeConfig, fakeMqttBase);
         fakeMqttBase.connect = sinon.stub().callsArgWith(1, new Error('fake error'));
-        transport[enableFeatureMethod](function (err) {
+        transport[testConfig.methodName](function (err) {
           assert.isTrue(fakeMqttBase.connect.calledOnce);
           assert.instanceOf(err, Error);
           testCallback();
@@ -630,7 +623,7 @@ describe('Mqtt', function () {
         var transport = new Mqtt(fakeConfig, fakeMqttBase);
         fakeMqttBase.subscribe = sinon.stub().callsArgWith(2, new Error('fake error'));
         transport.connect(function () {
-          transport[enableFeatureMethod](function (err) {
+          transport[testConfig.methodName](function (err) {
             assert.isTrue(fakeMqttBase.subscribe.calledOnce);
             assert.instanceOf(err, Error);
             testCallback();

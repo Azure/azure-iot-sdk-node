@@ -38,16 +38,6 @@ describe('Mqtt as MqttReceiver', function () {
 
   describe('#events', function () {
     describe('#message', function() {
-      /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_003: [When a listener is added for the message event, the topic should be subscribed to.]*/
-      it('subscribes to the topic when a listener is added', function () {
-        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
-        receiver.on('message', function () { });
-        receiver.on('message', function () { });
-
-        assert(fakeMqttBase.on.calledWith('message'));
-        assert(fakeMqttBase.subscribe.calledOnce);
-      });
-
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_004: [If there is a listener for the message event, a message event shall be emitted for each message received.]*/
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_005: [When a message event is emitted, the parameter shall be of type Message]*/
       it('emits a message event with a Message object when there is a listener', function (done) {
@@ -58,23 +48,6 @@ describe('Mqtt as MqttReceiver', function () {
         });
 
         fakeMqttBase.emit('message', 'devices/foo/messages/devicebound/%24.mid=0209afa7-1e2f-4dc1-8a6f-8500efd81db3&%24.to=%2Fdevices%2Ffoo%2Fmessages%2Fdevicebound');
-      });
-
-      /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_006: [When there are no more listeners for the message event, the topic should be unsubscribed]*/
-      it('unsubscribes from the topic when there are no more listeners', function () {
-        var listener1 = function () { };
-        var listener2 = function () { };
-        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
-        receiver.on('message', listener1);
-        receiver.on('message', listener2);
-
-        assert(fakeMqttBase.subscribe.calledOnce, 'subscribe is not called once');
-        assert(fakeMqttBase.subscribe.calledWith(receiver._topicMessageSubscribe), 'subscribe is not called with' + receiver._topicMessageSubscribe);
-
-        receiver.removeListener('message', listener1);
-        assert(fakeMqttBase.unsubscribe.notCalled);
-        receiver.removeListener('message', listener2);
-        assert(fakeMqttBase.unsubscribe.calledOnce);
       });
 
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_007: [When a message is received, the receiver shall populate the generated `Message` object `properties` property with the user properties serialized in the topic.]*/
@@ -169,31 +142,7 @@ describe('Mqtt as MqttReceiver', function () {
     });
 
     describe('#method', function() {
-      // Tests_Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_13_002: [ When a listener is added for the method event, the topic should be subscribed to. ]*/
-      it('subscribes to the method topic when a listener is added', function () {
-        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
-
-        receiver.on('method_UpdateFirmware', function () { });
-        receiver.on('method_Reboot', function () { });
-        receiver.on('message', function () { });
-        receiver.on('message', function () { });
-
-        // assert
-        assert.isTrue(fakeMqttBase.on.calledThrice,
-        'fakeMqttBase.on was not called twice (error + message + close)');
-        assert.isTrue(fakeMqttBase.on.calledWith('error'),
-        'fakeMqttBase.on was not called for "error" event');
-        assert.isTrue(fakeMqttBase.on.calledWith('message'),
-          'fakeMqttBase.on was not called for "message" event');
-        assert.isTrue(fakeMqttBase.subscribe.calledTwice,
-          'fakeMqttBase.subscribe was not called twice');
-        assert.isTrue(fakeMqttBase.subscribe.firstCall.calledWith('$iothub/methods/POST/#', { qos: 0}),
-          'first call to fakeMqttBase.subscribe was not with topic $iothub/methods/POST/#');
-        assert.isTrue(fakeMqttBase.subscribe.secondCall.calledWith(receiver._topicMessageSubscribe),
-          'second call to fakeMqttBase.subscribe was not with topic _topicMessageSubscribe');
-      });
-
-      // Tests_Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_13_002: [ When a listener is added for the method event, the topic should be subscribed to. ]*/
+      // Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_13_002: [ When a listener is added for the method event, the topic should be subscribed to. ]*/
       it('does not subscribe twice to the same topic for multiple event registrations', function () {
         var receiver = new Mqtt(fakeConfig, fakeMqttBase);
         receiver.on('method_UpdateFirmware', function () { });
@@ -202,18 +151,12 @@ describe('Mqtt as MqttReceiver', function () {
         receiver.on('message', function () { });
 
         // assert
-        assert.isTrue(fakeMqttBase.on.calledThrice,
-          'mqttClient.on was not called twice (error + message + close)');
+        assert.isTrue(fakeMqttBase.on.calledTwice,
+          'mqttClient.on was not called twice (error + message)');
         assert.isTrue(fakeMqttBase.on.calledWith('message'),
           'mqttClient.on was not called for "message" event');
           assert.isTrue(fakeMqttBase.on.calledWith('error'),
             'mqttClient.on was not called for "error" event');
-        assert.isTrue(fakeMqttBase.subscribe.calledTwice,
-          'mqttClient.subscribe was not called twice');
-        assert.isTrue(fakeMqttBase.subscribe.firstCall.calledWith('$iothub/methods/POST/#', { qos: 0}),
-          'first call to mqttClient.subscribe was not with topic $iothub/methods/POST/#');
-        assert.isTrue(fakeMqttBase.subscribe.secondCall.calledWith(receiver._topicMessageSubscribe),
-          'second call to mqttClient.subscribe was not with topic _topicMessageSubscribe');
       });
 
       // Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_13_003: [ If there is a listener for the method event, a method_<METHOD NAME> event shall be emitted for each message received. ]
@@ -355,25 +298,6 @@ describe('Mqtt as MqttReceiver', function () {
           },
           body: payload
         });
-      });
-
-      // Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_13_004: [ When there are no more listeners for the method event, the topic should be unsubscribed. ]
-      it('unsubscribes from MQTT topic when there are no more listeners', function() {
-        var receiver = new Mqtt(fakeConfig, fakeMqttBase);
-        var callback = function () {};
-
-        receiver.on('method_Reboot', callback);
-        receiver.on('method_UpdateFirmware', callback);
-
-        // test
-        receiver.removeListener('method_Reboot', callback);
-        receiver.removeListener('method_UpdateFirmware', callback);
-
-        // assert
-        assert.isTrue(fakeMqttBase.unsubscribe.calledOnce,
-          'mqttClient.unsubscribe was not called');
-        assert.isTrue(fakeMqttBase.unsubscribe.calledWith('$iothub/methods/POST/#'),
-          'call to mqttClient.unsubscribe was not with topic $iothub/methods/POST/#');
       });
     });
   });

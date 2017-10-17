@@ -5,6 +5,7 @@
 
 var uuid = require('uuid');
 var assert = require('chai').assert;
+var Promise = require('bluebird');
 
 var serviceSdk = require('azure-iothub');
 var createDeviceClient = require('./testUtils.js').createDeviceClient;
@@ -12,158 +13,140 @@ var closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClie
 var eventHubClient = require('azure-event-hubs').Client;
 var Client = require('azure-iot-device').Client;
 var Message = require('azure-iot-common').Message;
-
-function waitForEventHubMessages(ehClient, deviceId, callback) {
-  var monitorStartTime = Date.now();
-  ehClient.open()
-    .then(ehClient.getPartitionIds.bind(ehClient))
-    .then(function (partitionIds) {
-      return partitionIds.map(function (partitionId) {
-        return ehClient.createReceiver('$Default', partitionId,{ 'startAfterTime' : monitorStartTime}).then(function(receiver) {
-          receiver.on('errorReceived', function(err) {
-            callback(err);
-            callback = null;
-          });
-          receiver.on('message', function (eventData) {
-            if (eventData.systemProperties['iothub-connection-device-id'] === deviceId) {
-              receiver.removeAllListeners();
-              callback(null, eventData);
-              callback = null;
-            }
-          });
-        });
-      });
-    })
-    .catch(function (error) {
-      callback(error.message);
-      callback = null;
-    });
-}
- 
+var SharedAccessSignature = require('azure-iot-device').SharedAccessSignature;
+var ConnectionString = require('azure-iot-device').ConnectionString;
 
 var runTests = function (hubConnectionString, deviceTransport, provisionedDevice) {
-  describe.skip('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication and ' + deviceTransport.name, function () {
+  describe('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication and ' + deviceTransport.name, function () {
 
-    var serviceClient, deviceClient, ehClient;
-    var oldSasRenewalInterval;
+    function createTestMessage(body) {
+      var msg = new Message(body);
+      msg.expiryTimeUtc = Date.now() + 60000; // Expire 60s from now, to reduce the chance of us hitting the 50-message limit on the IoT Hub
+      return msg;
+    }
 
-    before(function() {
-      oldSasRenewalInterval = Client.sasRenewalInterval;
-      this.timeout(500);
-    });
+    function thirtySecondsFromNow() {
+      const raw = (Date.now() / 1000) + 30;
+      return Math.ceil(raw);
+    }
 
-    beforeEach(function () {
-      this.timeout(500);
-      Client.sasRenewalInterval = 5000;
+    function createNewSas() {
+      var cs = ConnectionString.parse(provisionedDevice.connectionString)
+      var sas = SharedAccessSignature.create(cs.HostName, provisionedDevice.deviceId, cs.SharedAccessKey, thirtySecondsFromNow())
+      return sas.toString();
+    };
 
-      serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString);
-      deviceClient = createDeviceClient(deviceTransport, provisionedDevice);
-      ehClient = eventHubClient.fromConnectionString(hubConnectionString);
-    });
+    it('Renews SAS after connection and is still able to receive C2D messages', function (testCallback) {
+      this.timeout(60000);
+      var beforeUpdateSas = uuid.v4();
+      var afterUpdateSas = uuid.v4();
 
-    afterEach(function (done) {
-      this.timeout(20000);
-      
-      var closeError;
-      closeDeviceServiceClients(deviceClient, serviceClient, function(err) {
-        closeError = err;
-        if (ehClient) {
-          ehClient.close()
-            .then(function() {
-              done(closeError);
-            })
-            .catch(function(err) {
-              done(closeError || err);
-            });
-        } else {
-          done(closeError);
-        }
-      });
-     });
-
-    after(function() {
-      this.timeout(500);
-
-      Client.sasRenewalInterval = oldSasRenewalInterval;
-    });
-
-    it('Device renews SAS after connection and is still able to receive C2D', function (done) {
-      this.timeout(20000);
-      var messageToSend = new Message(uuid.v4());
-      messageToSend.expiryTimeUtc = Date.now() + 60000; // Expire 60s from now, to reduce the chance of us hitting the 50-message limit on the IoT Hub
+      var deviceClient = Client.fromSharedAccessSignature(createNewSas(), deviceTransport);
+      var serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString);
 
       deviceClient.open(function (err) {
-        if (err) return done(err);
-        // Immediately resets the interval to avoid piling on renewals
-        Client.sasRenewalInterval = oldSasRenewalInterval;
+        if (err) return testCallback(err);
 
-        var foundTheMessage;
-        
         deviceClient.on('message', function (msg) {
-            if (msg.data.toString() === messageToSend.data.toString()) {
-              foundTheMessage = true;
-              deviceClient.removeAllListeners('message');
-            }
+          deviceClient.complete(msg, function (err, result) {
+            if (err) return testCallback(err);
 
-            deviceClient.complete(msg, function (err, result) {
-              if (err) return done(err);
-              assert.equal(result.constructor.name, 'MessageCompleted');
-              if (foundTheMessage) {
-                done();
-              }
-            });
+            if (msg.data.toString() === beforeUpdateSas) {
+              deviceClient.updateSharedAccessSignature(createNewSas(), function (err) {
+                if (err) return testCallback(err);
+
+                serviceClient.send(provisionedDevice.deviceId, createTestMessage(afterUpdateSas), function (err) {
+                  if (err) return testCallback(err);
+                });
+              })
+            } else if (msg.data.toString() === afterUpdateSas) {
+              deviceClient.close(function () {
+                serviceClient.close(function () {
+                  testCallback();
+                });
+              });
+            }
+          });
         });
 
-        deviceClient.on('_sharedAccessSignatureUpdated', function() { 
-          deviceClient.removeAllListeners('_sharedAccessSignatureUpdated');
-          serviceClient.open(function (err) {
-            if (err) return done(err);
-            serviceClient.send(provisionedDevice.deviceId, messageToSend, function (err) {
-              if (err) return done(err);
-            });
+        serviceClient.open(function (err) {
+          if (err) return testCallback(err);
+          serviceClient.send(provisionedDevice.deviceId, createTestMessage(beforeUpdateSas), function (err) {
+            if (err) return testCallback(err);
           });
         });
       });
     });
 
-    it('Device renews SAS after connection and is still able to send messages', function(done) {
-      // For Amqp, the test passes, but deviceClient.sendEvent never calls it's done function
-      // and the afterEach function times out.
-      this.timeout(20000);
-      var bufferSize = 1024;
-      var buffer = new Buffer(bufferSize);
-      var uuidData = uuid.v4();
-      buffer.fill(uuidData);
+    it('Renews SAS after connection and is still able to send D2C messages', function(testCallback) {
+      this.timeout(60000);
+      var beforeSas = uuid.v4();
+      var afterSas = uuid.v4();
 
-      deviceClient.open(function (err) {
-        if (err) return done(err);
+      function createBufferTestMessage(uuidData) {
+        var bufferSize = 1024;
+        var buffer = new Buffer(bufferSize);
+        buffer.fill(uuidData);
+        return new Message(buffer);
+      }
 
-        // Immediately resets the interval to avoid piling on renewals
-        Client.sasRenewalInterval = oldSasRenewalInterval;
-        waitForEventHubMessages(ehClient, provisionedDevice.deviceId, function(err, eventData) {
-          if (err) return done(err);
-          if ((eventData.body.length === bufferSize) && (eventData.body.indexOf(uuidData) === 0)) {
-            done();
-          }
-        });
+      var deviceClient = Client.fromSharedAccessSignature(createNewSas(), deviceTransport);
+      var ehClient = eventHubClient.fromConnectionString(hubConnectionString);
 
-        deviceClient.on('_sharedAccessSignatureUpdated', function() { 
-          deviceClient.removeAllListeners('_sharedAccessSignatureUpdated');
-
-          var message = new Message(buffer);
-          deviceClient.sendEvent(message, function (sendErr) {
-            if (sendErr) {
-              done(sendErr);
-            }
+      function closeClients (err) {
+        deviceClient.close(function () {
+          ehClient.close().then(function () {
+            testCallback(err);
           });
         });
-      });
+      }
+
+      var monitorStartTime = Date.now() - 5000;
+      ehClient.open()
+        .then(ehClient.getPartitionIds.bind(ehClient))
+        .then(function (partitionIds) {
+          return Promise.map(partitionIds, function (partitionId) {
+            return new Promise(function (resolve) {
+              return ehClient.createReceiver('$Default', partitionId,{ 'startAfterTime' : monitorStartTime}).then(function(receiver) {
+                receiver.on('errorReceived', function(err) {
+                  closeClients(err);
+                });
+                receiver.on('message', function (eventData) {
+                  if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
+                    if (eventData.body.indexOf(beforeSas) === 0) {
+                      deviceClient.updateSharedAccessSignature(createNewSas(), function (err) {
+                        if (err) return closeClients(err);
+
+                        deviceClient.sendEvent(createBufferTestMessage(afterSas), function (err) {
+                          if (err) return closeClients(err);
+                        });
+                      });
+                    } else if (eventData.body.indexOf(afterSas) === 0) {
+                      closeClients();
+                    }
+                  }
+                });
+                resolve();
+              });
+            });
+          });
+        })
+        .then(function () {
+          return deviceClient.open(function (err) {
+            if (err) return closeClients(err);
+            deviceClient.sendEvent(createBufferTestMessage(beforeSas), function (sendErr) {
+              if (sendErr) return closeClients(sendErr);
+            });
+          });
+        })
+        .catch(function (err) {
+          closeClients(err);
+        });
+
     });
   });
-    
-
 };
-   
+
 module.exports = runTests;
 
 
