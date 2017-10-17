@@ -4,12 +4,9 @@
 'use strict';
 
 var uuid = require('uuid');
-var assert = require('chai').assert;
 var Promise = require('bluebird');
 
 var serviceSdk = require('azure-iothub');
-var createDeviceClient = require('./testUtils.js').createDeviceClient;
-var closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
 var eventHubClient = require('azure-event-hubs').Client;
 var Client = require('azure-iot-device').Client;
 var Message = require('azure-iot-common').Message;
@@ -26,15 +23,15 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
     }
 
     function thirtySecondsFromNow() {
-      const raw = (Date.now() / 1000) + 30;
+      var raw = (Date.now() / 1000) + 30;
       return Math.ceil(raw);
     }
 
     function createNewSas() {
-      var cs = ConnectionString.parse(provisionedDevice.connectionString)
-      var sas = SharedAccessSignature.create(cs.HostName, provisionedDevice.deviceId, cs.SharedAccessKey, thirtySecondsFromNow())
+      var cs = ConnectionString.parse(provisionedDevice.connectionString);
+      var sas = SharedAccessSignature.create(cs.HostName, provisionedDevice.deviceId, cs.SharedAccessKey, thirtySecondsFromNow());
       return sas.toString();
-    };
+    }
 
     it('Renews SAS after connection and is still able to receive C2D messages', function (testCallback) {
       this.timeout(60000);
@@ -48,7 +45,7 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
         if (err) return testCallback(err);
 
         deviceClient.on('message', function (msg) {
-          deviceClient.complete(msg, function (err, result) {
+          deviceClient.complete(msg, function (err) {
             if (err) return testCallback(err);
 
             if (msg.data.toString() === beforeUpdateSas) {
@@ -58,7 +55,7 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
                 serviceClient.send(provisionedDevice.deviceId, createTestMessage(afterUpdateSas), function (err) {
                   if (err) return testCallback(err);
                 });
-              })
+              });
             } else if (msg.data.toString() === afterUpdateSas) {
               deviceClient.close(function () {
                 serviceClient.close(function () {

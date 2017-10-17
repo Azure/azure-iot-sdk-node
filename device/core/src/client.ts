@@ -428,9 +428,9 @@ export class Client extends EventEmitter {
       throw new TypeError('callback\'s type is \'' + typeof(callback) + '\'. A function reference was expected.');
     }
 
-    // Codes_SRS_NODE_DEVICE_CLIENT_13_021: [ onDeviceMethod shall throw an Error if the underlying transport does not support device methods. ]
+    // Codes_SRS_NODE_DEVICE_CLIENT_13_021: [ onDeviceMethod shall throw an NotImplementedErrorError if the underlying transport does not support device methods. ]
     if (!((this._transport as DeviceMethodTransport).sendMethodResponse)) {
-      throw new Error('The transport for this client does not support device methods');
+      throw new errors.NotImplementedError('The transport for this client does not support device methods');
     }
 
     // Codes_SRS_NODE_DEVICE_CLIENT_13_023: [ onDeviceMethod shall throw an Error if a listener is already subscribed for a given method call. ]

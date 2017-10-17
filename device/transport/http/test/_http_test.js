@@ -377,7 +377,7 @@ describe('HttpReceiver', function () {
       var received = 0;
       receiver.on('message', function () {
         received++;
-        if (received === msgCount) {
+        if (received >= msgCount) {
           receiver.disableC2D(function () {});
           done();
         }

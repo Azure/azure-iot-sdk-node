@@ -227,7 +227,7 @@ interface DeviceMethodEventHandler {
 
 **SRS_NODE_DEVICE_CLIENT_13_023: [** `onDeviceMethod` shall throw an `Error` if a listener is already subscribed for a given method call. **]**
 
-**SRS_NODE_DEVICE_CLIENT_13_021: [** `onDeviceMethod` shall throw an `Error` if the underlying transport does not support device methods. **]**
+**SRS_NODE_DEVICE_CLIENT_13_021: [** `onDeviceMethod` shall throw a `NotImplementedErrorError` if the underlying transport does not support device methods. **]**
 
 ### Events
 #### message

@@ -621,7 +621,7 @@ describe('Client', function () {
       });
     });
 
-    // Tests_SRS_NODE_DEVICE_CLIENT_13_021: [ onDeviceMethod shall throw an Error if the underlying transport does not support device methods. ]
+    // Tests_SRS_NODE_DEVICE_CLIENT_13_021: [ onDeviceMethod shall throw an NotImplementedErrorError if the underlying transport does not support device methods. ]
     it('throws if underlying transport does not support device methods', function() {
       // setup
       var transport = new FakeTransport();
@@ -630,7 +630,7 @@ describe('Client', function () {
       // test & assert
       assert.throws(function() {
         client.onDeviceMethod('reboot', function() {});
-      });
+      }, errors.NotImplementedError);
     });
 
     it('emits an error if the transport fails to enable the methods feature', function (testCallback) {
@@ -722,8 +722,6 @@ describe('Client', function () {
         testCallback();
       })
 
-      // Calling 'on' twice to make sure it's called only once on the receiver.
-      // It works because the test will fail if the test callback is called multiple times, and it's called for every time the 'message' event is subscribed on the receiver.
       client.on('message', function () { });
       assert.isTrue(dummyTransport.enableC2D.calledOnce);
       client.removeAllListeners('message');

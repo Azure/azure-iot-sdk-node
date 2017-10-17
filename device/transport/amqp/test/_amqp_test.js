@@ -898,6 +898,9 @@ describe('Amqp', function () {
         });
       });
 
+      // This is being skipped because the error is not forwarded.
+      // Since we can reattach the link every time we send and surface the error at that time, I'm not sure it's useful to surface this to the client. it's just a transport-level thing at that point.
+      // If something is really bad and unrecoverable the failure will happen on the next sendEvent.
       it.skip('forwards errors from the D2C link', function (testCallback) {
         var fakeError = new Error('fake');
         transport.on('errorReceived', function (err) {

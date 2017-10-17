@@ -218,7 +218,6 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
             callback();
           },
           onDeviceMethod: (methodName, callback) => {
-            // TODO - confirm this is still what we want now that we have enableMethods
             /*Codes_SRS_NODE_DEVICE_AMQP_16_021: [The`onDeviceMethod` method shall connect and authenticate the transport if necessary to start receiving methods.]*/
             this._fsm.handle('connect', (err, result) => {
               if (err) {
@@ -368,12 +367,6 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
           onDeviceMethod: (methodName, methodCallback) => {
             /*Codes_SRS_NODE_DEVICE_AMQP_16_022: [The `onDeviceMethod` method shall call the `onDeviceMethod` method on the `AmqpDeviceMethodClient` object with the same arguments.]*/
             this._deviceMethodClient.onDeviceMethod(methodName, methodCallback);
-            this._fsm.handle('enableMethods', (err) => {
-              if (err) {
-                debug('error while attaching the device method client: ' + err.toString());
-                // no need to emit anything: the general error handler registered in the constructor will do that for us.
-              }
-            });
           }
         },
         disconnecting: {
