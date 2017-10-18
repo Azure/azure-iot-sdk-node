@@ -130,69 +130,6 @@ describe('Amqp', function () {
     });
 
     describe('#onDeviceMethod', function () {
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_021: [The`onDeviceMethod` method shall connect and authenticate the transport if necessary to start receiving methods.]*/
-      it('registers the callback and connects the transport if disconnected', function (testCallback) {
-        var fakeMethodRequest = {
-          requestId: 'foo',
-          payload: { key: 'value' },
-          methodName: 'fakeMethod'
-        }
-
-        transport.onDeviceMethod(fakeMethodRequest.methodName, function (methodRequest) {
-          assert.strictEqual(methodRequest, fakeMethodRequest)
-          testCallback();
-        });
-
-        transport._deviceMethodClient.emit('method_' + fakeMethodRequest.methodName, fakeMethodRequest);
-      });
-
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_021: [The`onDeviceMethod` method shall connect and authenticate the transport if necessary to start receiving methods.]*/
-      it('registers the callback and defers until connected or disconnected if called while connecting', function (testCallback) {
-        var fakeMethodRequest = {
-          requestId: 'foo',
-          payload: { key: 'value' },
-          methodName: 'fakeMethod'
-        }
-
-        var connectCallback;
-        fakeBaseClient.connect = sinon.stub().callsFake((uri, sslOptions, callback) => {
-          connectCallback = callback;
-        });
-
-        transport.connect(function () {});
-
-        transport.onDeviceMethod(fakeMethodRequest.methodName, function () {
-          testCallback();
-        });
-
-        connectCallback();
-        transport._deviceMethodClient.emit('method_' + fakeMethodRequest.methodName, fakeMethodRequest);
-      });
-
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_021: [The`onDeviceMethod` method shall connect and authenticate the transport if necessary to start receiving methods.]*/
-      it('registers the callback and connects the transport if already connected but not authenticated yet', function (testCallback) {
-        var fakeMethodRequest = {
-          requestId: 'foo',
-          payload: { key: 'value' },
-          methodName: 'fakeMethod'
-        }
-
-        var authCallback;
-        fakeBaseClient.initializeCBS = sinon.stub().callsFake((callback) => {
-          authCallback = callback;
-        });
-
-        transport.connect(function () {});
-
-        transport.onDeviceMethod(fakeMethodRequest.methodName, function () {
-          testCallback();
-        });
-
-        authCallback();
-        transport._deviceMethodClient.emit('method_' + fakeMethodRequest.methodName, fakeMethodRequest);
-      });
-
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_021: [The`onDeviceMethod` method shall connect and authenticate the transport if necessary to start receiving methods.]*/
       it('registers the callback and connects the transport if already connected and authenticated', function (testCallback) {
         var fakeMethodRequest = {
           requestId: 'foo',
@@ -204,46 +141,8 @@ describe('Amqp', function () {
           transport.onDeviceMethod(fakeMethodRequest.methodName, function () {
             testCallback();
           });
+          transport._deviceMethodClient.emit('method_' + fakeMethodRequest.methodName, fakeMethodRequest);
         });
-
-        transport._deviceMethodClient.emit('method_' + fakeMethodRequest.methodName, fakeMethodRequest);
-      });
-
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_021: [The`onDeviceMethod` method shall connect and authenticate the transport if necessary to start receiving methods.]*/
-      it('registers the callback and reconnects the transport if called while disconnecting', function (testCallback) {
-        var fakeMethodRequest = {
-          requestId: 'foo',
-          payload: { key: 'value' },
-          methodName: 'fakeMethod'
-        }
-        var disconnectCallback;
-        fakeBaseClient.disconnect = sinon.stub().callsFake((callback) => {
-          disconnectCallback = callback;
-        })
-
-        transport.connect(function () {
-          transport.disconnect(function () {});
-          assert(fakeBaseClient.connect.calledOnce);
-          transport.onDeviceMethod(fakeMethodRequest.methodName, function () {
-            assert(fakeBaseClient.connect.calledTwice);
-            testCallback();
-          });
-          disconnectCallback(null, new results.Disconnected());
-        });
-
-        transport._deviceMethodClient.emit('method_' + fakeMethodRequest.methodName, fakeMethodRequest);
-      });
-
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_023: [An `errorReceived` event shall be emitted by the Amqp object if the transport fails to connect while registering a method callback.]*/
-      it('emits an error event when it cannot connect the transport', function (testCallback) {
-        var fakeError = new Error('could not open');
-        fakeBaseClient.connect = sinon.stub().callsArgWith(2, fakeError)
-        transport.on('error', function (err) {
-          assert.strictEqual(err.amqpError, fakeError);
-          testCallback();
-        });
-
-        transport.onDeviceMethod('testMethod', function () {});
       });
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_024: [An `errorReceived` event shall be emitted by the `Amqp` object if an error is received on any of the `AmqpDeviceMethodClient` links.]*/
@@ -255,9 +154,10 @@ describe('Amqp', function () {
           testCallback();
         });
 
-        transport.onDeviceMethod('testMethod', function () {});
-
-        transport._deviceMethodClient.emit('error', fakeError);
+        transport.connect(function () {
+          transport.onDeviceMethod('testMethod', function () {});
+          transport._deviceMethodClient.emit('error', fakeError);
+        });
       });
     });
 

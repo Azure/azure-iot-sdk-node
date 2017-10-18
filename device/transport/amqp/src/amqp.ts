@@ -216,17 +216,6 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
           disableTwin: (callback) => {
             // if we are disconnected the C2D link is already detached.
             callback();
-          },
-          onDeviceMethod: (methodName, callback) => {
-            /*Codes_SRS_NODE_DEVICE_AMQP_16_021: [The`onDeviceMethod` method shall connect and authenticate the transport if necessary to start receiving methods.]*/
-            this._fsm.handle('connect', (err, result) => {
-              if (err) {
-                /*Codes_SRS_NODE_DEVICE_AMQP_16_023: [An `error` event shall be emitted by the Amqp object if the transport fails to connect while registering a method callback.]*/
-                this.emit('error', err);
-              } else {
-                this._fsm.handle('onDeviceMethod', methodName, callback);
-              }
-            });
           }
         },
         connecting: {
@@ -363,10 +352,6 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
             /*Codes_SRS_NODE_DEVICE_AMQP_16_049: [The `disableTwin` method shall call `detach` on the twin links and call its callback when these are successfully detached.]*/
             /*Codes_SRS_NODE_DEVICE_AMQP_16_050: [The `disableTwin` method shall call its `callback` with an `Error` if it fails to detach the twin links.]*/
             this._twinClient.detach(callback);
-          },
-          onDeviceMethod: (methodName, methodCallback) => {
-            /*Codes_SRS_NODE_DEVICE_AMQP_16_022: [The `onDeviceMethod` method shall call the `onDeviceMethod` method on the `AmqpDeviceMethodClient` object with the same arguments.]*/
-            this._deviceMethodClient.onDeviceMethod(methodName, methodCallback);
           }
         },
         disconnecting: {
@@ -592,7 +577,8 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
    */
   /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `AmqpDeviceMethodClient` object.]*/
   onDeviceMethod(methodName: string, methodCallback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
-    this._fsm.handle('onDeviceMethod', methodName, methodCallback);
+    /*Codes_SRS_NODE_DEVICE_AMQP_16_022: [The `onDeviceMethod` method shall call the `onDeviceMethod` method on the `AmqpDeviceMethodClient` object with the same arguments.]*/
+    this._deviceMethodClient.onDeviceMethod(methodName, methodCallback);
   }
 
   /**
