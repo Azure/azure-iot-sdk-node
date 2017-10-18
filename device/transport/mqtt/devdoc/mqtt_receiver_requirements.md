@@ -9,10 +9,6 @@ Object used to subscribe to the Cloud-to-Device messages endpoint and receive me
 
 ### Events
 
-**SRS_NODE_DEVICE_MQTT_RECEIVER_16_003: [** When a listener is added for the `message` event, the topic should be subscribed to. **]**
-
-**SRS_NODE_DEVICE_MQTT_RECEIVER_13_002: [** When a listener is added for the `method` event, the topic should be subscribed to. **]**
-
 **SRS_NODE_DEVICE_MQTT_RECEIVER_16_004: [** If there is a listener for the `message` event, a `message` event shall be emitted for each message received. **]**
 
 **SRS_NODE_DEVICE_MQTT_RECEIVER_13_003: [** If there is a listener for the `method` event, a `method_<METHOD NAME>` event shall be emitted for each message received. **]**
@@ -35,10 +31,6 @@ interface MethodMessage {
 **]**
 
 **SRS_NODE_DEVICE_MQTT_RECEIVER_16_005: [** When a `message` event is emitted, the parameter shall be of type `Message`. **]**
-
-**SRS_NODE_DEVICE_MQTT_RECEIVER_16_006: [** When there are no more listeners for the `message` event, the topic should be unsubscribed. **]**
-
-**SRS_NODE_DEVICE_MQTT_RECEIVER_13_004: [** When there are no more listeners for the `method` event, the topic should be unsubscribed. **]**
 
 **SRS_NODE_DEVICE_MQTT_RECEIVER_16_007: [** When a message is received, the receiver shall populate the generated `Message` object `properties` property with the user properties serialized in the topic. **]**
 

@@ -5,7 +5,7 @@
 import * as machina from 'machina';
 import * as async from 'async';
 import * as dbg from 'debug';
-const debug = dbg('device-amqp:amqp');
+const debug = dbg('azure-iot-device-amqp:Amqp');
 import { EventEmitter } from 'events';
 
 import { ClientConfig, DeviceMethodRequest, DeviceMethodResponse, StableConnectionTransport, Client } from 'azure-iot-device';
@@ -81,22 +81,17 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
     this._deviceMethodClient = new AmqpDeviceMethodClient(this._config, this._amqp);
     /*Codes_SRS_NODE_DEVICE_AMQP_16_041: [Any `error` event received on any of the links used for device methods shall trigger the emission of an `error` event by the transport, with an argument that is a `MethodsDetachedError` object with the `innerError` property set to that error.]*/
     this._deviceMethodClient.on('error', (err) => {
-      this.emit('errorReceived', err); // this will be removed as we switch to the 'error' event instead.
-      // disabled until the client is capable of handling those
-      // at that point the existing errorReceived events should be removed or converted to normal errors
-      // let methodsError = new errors.DeviceMethodsDetachedError('Device Methods AMQP links failed');
-      // methodsError.innerError = err;
-      // this.emit('error', methodsError);
+      let methodsError = new errors.DeviceMethodsDetachedError('Device Methods AMQP links failed');
+      methodsError.innerError = err;
+      this.emit('error', methodsError);
     });
 
     this._twinClient = new AmqpTwinClient(this._config, this._amqp);
     /*Codes_SRS_NODE_DEVICE_AMQP_16_048: [Any `error` event received on any of the links used for twin shall trigger the emission of an `error` event by the transport, with an argument that is a `TwinDetachedError` object with the `innerError` property set to that error.]*/
-    this._deviceMethodClient.on('error', (err) => {
-      // disabled until the client is capable of handling those
-      // at that point the existing errorReceived events should be removed or converted to normal errors
-      // let twinError = new errors.TwinDetachedError('Twin AMQP links failed');
-      // twinError.innerError = err;
-      // this.emit('error', twinError);
+    this._twinClient.on('error', (err) => {
+      let twinError = new errors.TwinDetachedError('Twin AMQP links failed');
+      twinError.innerError = err;
+      this.emit('error', twinError);
     });
 
     this._c2dEndpoint = endpoint.messagePath(encodeURIComponent(this._config.deviceId));
@@ -105,11 +100,9 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
     /*Codes_SRS_NODE_DEVICE_AMQP_16_034: [Any `error` event received on the C2D link shall trigger the emission of an `error` event by the transport, with an argument that is a `C2DDetachedError` object with the `innerError` property set to that error.]*/
     this._c2dErrorListener = (err) => {
       debug('Error on the C2D link: ' + err.toString());
-      // disabled until the client is capable of handling those
-      // at that point the existing errorReceived events should be removed or converted to normal errors
-      // let c2dError = new errors.CloudToDeviceDetachedError('Cloud-to-device AMQP link failed');
-      // c2dError.innerError = err;
-      // this.emit('error', c2dError);
+      let c2dError = new errors.CloudToDeviceDetachedError('Cloud-to-device AMQP link failed');
+      c2dError.innerError = err;
+      this.emit('error', c2dError);
     };
 
     this._c2dMessageListener = (msg) => {
@@ -120,39 +113,6 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
       debug('Error on the D2C link: ' + err.toString());
       // we don't really care because we can reattach the link every time we send and surface the error at that time.
     };
-
-    /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_008: [The `Amqp` object shall remove the listeners on `message` and `error` events of the underlying `ReceiverLink` when no-one is listening to its own `message` event.]*/
-    this.on('removeListener', (eventName, eventCallback) => {
-      if (eventName === 'message' && this.listeners('message').length === 0) {
-        debug('automatically detaching the link after the last message listener was removed');
-        this._fsm.handle('disableC2D', (err) => {
-          if (err) {
-            this.emit('errorReceived', err);
-          }
-        });
-      } else {
-        debug('removing listener for event: ' + eventName);
-      }
-    });
-
-    /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_003: [The `Amqp` object shall listen to the `message` and error events of the underlying `ReceiverLink` object when it has listeners on its `message` event.]*/
-    this.on('newListener', (eventName, eventCallback) => {
-      debug('registering new event handler for: ' + eventName);
-      if (eventName === 'message') {
-        if (this.listeners('message').length === 0) {
-          debug('automatically attaching the link after the first message listener was registered');
-          this._fsm.handle('enableC2D', (err) => {
-            debug('C2D link attached automatically');
-            if (err) {
-              debug('error attaching the C2D link automatically: ' + err.toString());
-              this.emit('errorReceived', err);
-            }
-          });
-        }
-      } else {
-        debug('adding listener for event: ' + eventName);
-      }
-    });
 
     this._fsm = new machina.Fsm({
       initialState: 'disconnected',
@@ -165,6 +125,8 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
               } else {
                 callback(null, new results.Disconnected());
               }
+            } else if (err) {
+              this.emit('error', err);
             }
           },
           connect: (connectCallback) => this._fsm.transition('connecting', connectCallback),
@@ -209,7 +171,6 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
           },
           /*Codes_SRS_NODE_DEVICE_AMQP_16_031: [The `enableC2D` method shall connect and authenticate the transport if it is disconnected.]*/
           enableC2D: (callback) => {
-            /*Codes_SRS_NODE_DEVICE_AMQP_16_029: [The `Amqp` object shall connect and authenticate the AMQP connection if necessary to attach the C2D `ReceiverLink` object.]*/
             this._fsm.handle('connect', (err, result) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
@@ -226,7 +187,6 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
           },
           /*Codes_SRS_NODE_DEVICE_AMQP_16_038: [The `enableMethods` method shall connect and authenticate the transport if it is disconnected.]*/
           enableMethods: (callback) => {
-            /*Codes_SRS_NODE_DEVICE_AMQP_16_029: [The `Amqp` object shall connect and authenticate the AMQP connection if necessary to attach the C2D `ReceiverLink` object.]*/
             this._fsm.handle('connect', (err, result) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_040: [The `enableMethods` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach method links.]*/
@@ -243,7 +203,6 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
           },
           /*Codes_SRS_NODE_DEVICE_AMQP_16_045: [The `enableTwin` method shall connect and authenticate the transport if it is disconnected.]*/
           enableTwin: (callback) => {
-            /*Codes_SRS_NODE_DEVICE_AMQP_16_029: [The `Amqp` object shall connect and authenticate the AMQP connection if necessary to attach the C2D `ReceiverLink` object.]*/
             this._fsm.handle('connect', (err, result) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_047: [The `enableTwin` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach twin links.]*/
@@ -257,17 +216,6 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
           disableTwin: (callback) => {
             // if we are disconnected the C2D link is already detached.
             callback();
-          },
-          onDeviceMethod: (methodName, callback) => {
-            /*Codes_SRS_NODE_DEVICE_AMQP_16_021: [The`onDeviceMethod` method shall connect and authenticate the transport if necessary to start receiving methods.]*/
-            this._fsm.handle('connect', (err, result) => {
-              if (err) {
-                /*Codes_SRS_NODE_DEVICE_AMQP_16_023: [An `errorReceived` event shall be emitted by the Amqp object if the transport fails to connect while registering a method callback.]*/
-                this.emit('errorReceived', err);
-              } else {
-                this._fsm.handle('onDeviceMethod', methodName, callback);
-              }
-            });
           }
         },
         connecting: {
@@ -365,7 +313,6 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
           },
           enableC2D: (callback) => {
             debug('attaching C2D link');
-            /*Codes_SRS_NODE_DEVICE_AMQP_16_030: [The `Amqp` object shall attach the C2D `ReceiverLink` object if necessary to start receiving messages.]*/
             this._amqp.attachReceiverLink(this._c2dEndpoint, null, (err, receiverLink) => {
               if (err) {
                 debug('error creating a C2D link: ' + err.toString());
@@ -405,16 +352,6 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
             /*Codes_SRS_NODE_DEVICE_AMQP_16_049: [The `disableTwin` method shall call `detach` on the twin links and call its callback when these are successfully detached.]*/
             /*Codes_SRS_NODE_DEVICE_AMQP_16_050: [The `disableTwin` method shall call its `callback` with an `Error` if it fails to detach the twin links.]*/
             this._twinClient.detach(callback);
-          },
-          onDeviceMethod: (methodName, methodCallback) => {
-            /*Codes_SRS_NODE_DEVICE_AMQP_16_022: [The `onDeviceMethod` method shall call the `onDeviceMethod` method on the `AmqpDeviceMethodClient` object with the same arguments.]*/
-            this._deviceMethodClient.onDeviceMethod(methodName, methodCallback);
-            this._fsm.handle('enableMethods', (err) => {
-              if (err) {
-                debug('error while attaching the device method client: ' + err.toString());
-                // no need to emit anything: the general error handler registered in the constructor will do that for us.
-              }
-            });
           }
         },
         disconnecting: {
@@ -524,18 +461,6 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   /* Codes_SRS_NODE_DEVICE_AMQP_16_004: [If sendEvent encounters an error before it can send the request, it shall invoke the done callback function and pass the standard JavaScript Error object with a text description of the error (err.message). ] */
   sendEvent(message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void {
     this._fsm.handle('sendEvent', message, done);
-  }
-
-  /**
-   * @deprecated          Deprecating the receiver pattern in order to prepare for a cleaner transport layer that accomodates retry logic. use the Amqp object directly as a receiver now. it has the same APIs.
-   * @private
-   * @method              module:azure-iot-device-amqp.Amqp#getReceiver
-   * @description         Gets the {@linkcode AmqpReceiver} object that can be used to receive messages from the IoT Hub instance and accept/reject/release them.
-   * @param {Function}  done      Callback used to return the {@linkcode AmqpReceiver} object.
-   */
-  /*Codes_SRS_NODE_DEVICE_AMQP_16_021: [The `getReceiver` method shall call the `done` callback with a first argument that is `null` and a second argument that it `this`, ie the current `Amqp` instance.]*/
-  getReceiver(done: (err?: Error, receiver?: Receiver) => void): void {
-    done(null, this);
   }
 
   /**
@@ -652,7 +577,8 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
    */
   /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `AmqpDeviceMethodClient` object.]*/
   onDeviceMethod(methodName: string, methodCallback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
-    this._fsm.handle('onDeviceMethod', methodName, methodCallback);
+    /*Codes_SRS_NODE_DEVICE_AMQP_16_022: [The `onDeviceMethod` method shall call the `onDeviceMethod` method on the `AmqpDeviceMethodClient` object with the same arguments.]*/
+    this._deviceMethodClient.onDeviceMethod(methodName, methodCallback);
   }
 
   /**
@@ -743,25 +669,30 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   private _stopC2DListener(err: Error | undefined, callback: (err?: Error) => void): void {
     const tmpC2DLink = this._c2dLink;
     this._c2dLink = undefined;
-    if (err) {
-      debug('forceDetaching C2D link');
-      tmpC2DLink.forceDetach(err);
-      // detaching listeners and getting rid of the object anyway.
-      tmpC2DLink.removeListener('error', this._c2dErrorListener);
-      tmpC2DLink.removeListener('message', this._c2dMessageListener);
-    } else {
-      tmpC2DLink.detach((err) => {
-        if (err) {
-          debug('error detaching C2D link: ' + err.toString());
-        } else {
-          debug('C2D link successfully detached');
-        }
-
+    if (tmpC2DLink) {
+      if (err) {
+        debug('forceDetaching C2D link');
+        tmpC2DLink.forceDetach(err);
         // detaching listeners and getting rid of the object anyway.
         tmpC2DLink.removeListener('error', this._c2dErrorListener);
         tmpC2DLink.removeListener('message', this._c2dMessageListener);
-        callback(err);
-      });
+      } else {
+        tmpC2DLink.detach((err) => {
+          if (err) {
+            debug('error detaching C2D link: ' + err.toString());
+          } else {
+            debug('C2D link successfully detached');
+          }
+
+          // detaching listeners and getting rid of the object anyway.
+          tmpC2DLink.removeListener('error', this._c2dErrorListener);
+          tmpC2DLink.removeListener('message', this._c2dMessageListener);
+          callback(err);
+        });
+      }
+    } else {
+      debug('No C2D Link to detach');
+      callback();
     }
   }
 }

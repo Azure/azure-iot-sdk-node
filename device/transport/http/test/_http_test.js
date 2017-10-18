@@ -214,44 +214,6 @@ describe('Http', function () {
       });
     });
   });
-
-  describe('#on(\'message\')', function () {
-    it('enables the C2D link when a subscriber is added to the message event', function (testCallback) {
-      var config = { deviceId: "deviceId", hubName: "hubName", host: "hubname.azure-devices.net", sharedAccessSignature: "sas" };
-      var fakeHttp = new FakeHttp();
-      fakeHttp.setMessageCount(1);
-      var http = new Http(config, fakeHttp);
-      var testEnv = this;
-
-      testEnv.clock = sinon.useFakeTimers();
-      http.setOptions({ interval: 5 });
-      http.on('message', function () {
-        testEnv.clock.restore();
-        testCallback();
-      });
-      testEnv.clock.tick(5001);
-    });
-  });
-
-  describe('#removeListener(\'message\')', function () {
-    it('stops the message polling timer', function (testCallback) {
-      var config = { deviceId: "deviceId", hubName: "hubName", host: "hubname.azure-devices.net", sharedAccessSignature: "sas" };
-      var fakeHttp = new FakeHttp();
-      sinon.spy(fakeHttp, 'buildRequest');
-      var http = new Http(config, fakeHttp);
-      var testEnv = this;
-      var messageListener = function () {};
-
-      testEnv.clock = sinon.useFakeTimers();
-      http.setOptions({ interval: 5 });
-      http.on('message', messageListener);
-      http.removeListener('message', messageListener);
-      testEnv.clock.tick(5001);
-      assert(fakeHttp.buildRequest.notCalled);
-      testEnv.clock.restore();
-      testCallback();
-    });
-  });
 });
 
 describe('HttpReceiver', function () {
@@ -272,6 +234,7 @@ describe('HttpReceiver', function () {
 
     /*Tests_SRS_NODE_DEVICE_HTTP_RECEIVER_16_021: [If opts.interval is set, messages should be received repeatedly at that interval]*/
     it('receives messages after the set interval', function (done) {
+      var clock = this.clock;
       var messageCount = 2;
       var messageReceivedCount = 0;
       fakeHttp.setMessageCount(messageCount);
@@ -282,15 +245,19 @@ describe('HttpReceiver', function () {
           done();
         }
       });
-      this.clock.tick(4999);
-      assert.strictEqual(messageReceivedCount, 0);
-      this.clock.tick(5000);
-      assert.strictEqual(messageReceivedCount, 1);
-      this.clock.tick(1);
+      receiver.enableC2D(function () {
+        clock.tick(4999);
+        assert.strictEqual(messageReceivedCount, 0);
+        clock.tick(5000);
+        assert.strictEqual(messageReceivedCount, 1);
+        clock.tick(1);
+        receiver.disableC2D(function () {});
+      });
     });
 
     /*Tests_SRS_NODE_DEVICE_HTTP_RECEIVER_16_003: [if opts.at is set, messages shall be received at the Date and time specified.]*/
     it('receives messages at the set time', function (done) {
+      var clock = this.clock;
       var messageReceived = false;
       fakeHttp.setMessageCount(1);
       var inFiveSeconds = new Date((new Date()).getTime() + 5000);
@@ -299,13 +266,17 @@ describe('HttpReceiver', function () {
         messageReceived = true;
         done();
       });
-      this.clock.tick(4999);
-      assert.isFalse(messageReceived);
-      this.clock.tick(1);
+      receiver.enableC2D(function () {
+        clock.tick(4999);
+        assert.isFalse(messageReceived);
+        clock.tick(1);
+        receiver.disableC2D(function () {});
+      });
     });
 
     /*Tests_SRS_NODE_DEVICE_HTTP_RECEIVER_16_020: [If opts.cron is set messages shall be received according to the schedule described by the expression.]*/
     it('receives messages as configured with a cron string', function (done) {
+      var clock = this.clock;
       var messageReceivedCount = 0;
       var messageCount = 2;
       fakeHttp.setMessageCount(messageCount);
@@ -317,11 +288,14 @@ describe('HttpReceiver', function () {
           done();
         }
       });
-      this.clock.tick(59999);
-      assert.strictEqual(messageReceivedCount, 0);
-      this.clock.tick(60000);
-      assert.strictEqual(messageReceivedCount, 1);
-      this.clock.tick(1);
+      receiver.enableC2D(function () {
+        clock.tick(59999);
+        assert.strictEqual(messageReceivedCount, 0);
+        clock.tick(60000);
+        assert.strictEqual(messageReceivedCount, 1);
+        clock.tick(1);
+        receiver.disableC2D(function () {});
+      });
     });
   });
 
@@ -403,8 +377,32 @@ describe('HttpReceiver', function () {
       var received = 0;
       receiver.on('message', function () {
         received++;
-        if (received === msgCount) done();
+        if (received >= msgCount) {
+          receiver.disableC2D(function () {});
+          done();
+        }
       });
+
+      receiver.enableC2D(function () {});
+    });
+
+    it('emits an error if the HTTP error fails', function (testCallback) {
+      var config = { deviceId: "deviceId", hubName: "hubName", host: "hubname.azure-devices.net", sharedAccessSignature: "sas" };
+      var fakeError = new Error();
+      fakeError.statusCode = 500;
+      var fakeHttp = {
+        buildRequest: function (method, path, httpHeaders, host, sslOptions, done) {
+          done(fakeError, { fake: 'response' }, 'fakeResponseBody')
+        }
+      };
+      var http = new Http(config, fakeHttp);
+      http.setOptions({ at: new Date(), drain: true });
+      http.on('error', function (err) {
+        assert.strictEqual(err, fakeError);
+        testCallback();
+      });
+
+      http.enableC2D(function () {});
     });
   });
 
@@ -483,6 +481,20 @@ describe('HttpReceiver', function () {
         var receiver = new Http();
         receiver.setOptions({ interval: null, at: new Date(), cron: "* * * * *", manualPolling: false, drain: false });
       }, ArgumentError);
+    });
+
+    it('restarts the receiver if it is running', function (testCallback) {
+      var transport = new FakeHttp();
+      var http = new Http({ deviceId: 'deviceId', sharedAccessSignature: 'sharedAccessSignature' }, transport);
+      http.setOptions({ interval: 1, at: null, cron: null, drain: false });
+      http.enableC2D(function () {
+        sinon.spy(http, 'disableC2D');
+        sinon.spy(http, 'enableC2D');
+        http.setOptions({ interval: 1, at: null, cron: null, drain: true });
+        assert.isTrue(http.disableC2D.calledOnce);
+        assert.isTrue(http.enableC2D.calledOnce);
+        testCallback();
+      })
     });
   });
 

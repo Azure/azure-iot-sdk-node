@@ -80,17 +80,11 @@ client.sendEvent(new Message('hello world'), print);
 #### sendEvent(message, sendEventCallback)
 The `sendEvent` method sends an event message to the IoT Hub as the device indicated in the constructor argument.
 
-**SRS_NODE_DEVICE_CLIENT_16_081: [** The `sendEvent` method shall throw a `NotImplementedError` if the transport doesn't have that feature. **]**
-
 **SRS_NODE_DEVICE_CLIENT_05_002: [** The `sendEvent` method shall send the event (indicated by the `message` argument) via the transport associated with the Client instance. **]**
 
 **SRS_NODE_DEVICE_CLIENT_05_003: [** When the `sendEvent` method completes, the callback function (indicated by the `sendEventCallback` argument) shall be invoked with the same arguments as the underlying transport method's callback. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_047: [** The `sendEvent` method shall not throw if the `sendEventCallback` is not passed. **]**
-
-**SRS_NODE_DEVICE_CLIENT_16_048: [** The `sendEvent` method shall automatically connect the transport if necessary. **]**
-
-**SRS_NODE_DEVICE_CLIENT_16_049: [** If the transport fails to connect, the `sendEvent` method shall call the `sendEventCallback` method with the error returned while trying to connect. **]**
 
 #### sendEventBatch(messages, sendEventBatchCallback)
 The `sendEventBatch` method sends a list of event messages to the IoT Hub as the device indicated in the constructor argument.
@@ -102,10 +96,6 @@ The `sendEventBatch` method sends a list of event messages to the IoT Hub as the
 **SRS_NODE_DEVICE_CLIENT_07_005: [** When the `sendEventBatch` method completes the callback function shall be invoked with the same arguments as the underlying transport method's callback. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_051: [** The `sendEventBatch` method shall not throw if the `sendEventBatchCallback` is not passed. **]**
-
-**SRS_NODE_DEVICE_CLIENT_16_052: [** The `sendEventBatch` method shall automatically connect the transport if necessary. **]**
-
-**SRS_NODE_DEVICE_CLIENT_16_053: [** If the transport fails to connect, the `sendEventBatch` method shall call the `sendEventBatchCallback` method with the error returned while trying to connect. **]**
 
 #### setTransportOptions(options, done)
 **`setTransportOptions` is deprecated and will be removed at the next major release.**
@@ -133,8 +123,6 @@ The `sendEventBatch` method sends a list of event messages to the IoT Hub as the
 
 **SRS_NODE_DEVICE_CLIENT_16_016: [** The `complete` method shall throw a `ReferenceError` if the `message` parameter is falsy. **]**
 
-**SRS_NODE_DEVICE_CLIENT_16_078: [** The `complete` method shall throw a `NotImplementedError` if the transport doesn't have that feature. **]**
-
 **SRS_NODE_DEVICE_CLIENT_16_007: [** The `complete` method shall call the `complete` method of the transport with the message as an argument **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_008: [** The `completeCallback` callback shall be called with a `null` error object and a `MessageCompleted` result once the transport has completed the message. **]**
@@ -143,15 +131,9 @@ The `sendEventBatch` method sends a list of event messages to the IoT Hub as the
 
 **SRS_NODE_DEVICE_CLIENT_16_067: [** The `complete` method shall not throw if the `completeCallback` is not passed. **]**
 
-**SRS_NODE_DEVICE_CLIENT_16_068: [** The `complete` method shall automatically connect the transport if necessary. **]**
-
-**SRS_NODE_DEVICE_CLIENT_16_069: [** If the transport fails to connect, the `complete` method shall call the `completeCallback` method with the error returned while trying to connect. **]**
-
 #### reject(message, rejectCallback)
 
 **SRS_NODE_DEVICE_CLIENT_16_018: [** The `reject` method shall throw a ReferenceError if the `message` parameter is falsy. **]**
-
-**SRS_NODE_DEVICE_CLIENT_16_079: [** The `reject` method shall throw a `NotImplementedError` if the transport doesn't have that feature. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_010: [** The `reject` method shall call the `reject` method of the transport with the message as an argument **]**
 
@@ -161,15 +143,9 @@ The `sendEventBatch` method sends a list of event messages to the IoT Hub as the
 
 **SRS_NODE_DEVICE_CLIENT_16_071: [** The `reject` method shall not throw if the `rejectCallback` is not passed. **]**
 
-**SRS_NODE_DEVICE_CLIENT_16_072: [** The `reject` method shall automatically connect the transport if necessary. **]**
-
-**SRS_NODE_DEVICE_CLIENT_16_073: [** If the transport fails to connect, the `reject` method shall call the `rejectCallback` method with the error returned while trying to connect. **]**
-
 #### abandon(message, abandonCallback)
 
 **SRS_NODE_DEVICE_CLIENT_16_017: [** The `abandon` method shall throw a ReferenceError if the `message` parameter is falsy. **]**
-
-**SRS_NODE_DEVICE_CLIENT_16_080: [** The `abandon` method shall throw a `NotImplementedError` if the transport doesn't have that feature. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_013: [** The `abandon` method shall call the `abandon` method of the transport with the message as an argument **]**
 
@@ -179,10 +155,6 @@ The `sendEventBatch` method sends a list of event messages to the IoT Hub as the
 
 **SRS_NODE_DEVICE_CLIENT_16_075: [** The `abandon` method shall not throw if the `abandonCallback` is not passed. **]**
 
-**SRS_NODE_DEVICE_CLIENT_16_076: [** The `abandon` method shall automatically connect the transport if necessary. **]**
-
-**SRS_NODE_DEVICE_CLIENT_16_077: [** If the transport fails to connect, the `abandon` method shall call the `abandonCallback` method with the error returned while trying to connect. **]**
-
 #### updateSharedAccessSignature(sharedAccessSignature, done)
 
 **SRS_NODE_DEVICE_CLIENT_16_031: [** The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the sharedAccessSignature parameter is falsy. **]**
@@ -190,10 +162,6 @@ The `sendEventBatch` method sends a list of event messages to the IoT Hub as the
 **SRS_NODE_DEVICE_CLIENT_06_002: [** The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the client was created using x509. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_032: [** The `updateSharedAccessSignature` method shall call the `updateSharedAccessSignature` method of the transport currently in use with the sharedAccessSignature parameter. **]**
-
-**SRS_NODE_DEVICE_CLIENT_16_033: [** The `updateSharedAccessSignature` method shall reconnect the transport to the IoTHub service if it was connected before before the method is called. **]**
-
-**SRS_NODE_DEVICE_CLIENT_16_034: [** The `updateSharedAccessSignature` method shall not reconnect when the 'needToReconnect' property of the result argument of the callback is false. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_035: [** The `updateSharedAccessSignature` method shall call the `done` callback with an error object if an error happened while renewing the token. **]**
 
@@ -259,7 +227,7 @@ interface DeviceMethodEventHandler {
 
 **SRS_NODE_DEVICE_CLIENT_13_023: [** `onDeviceMethod` shall throw an `Error` if a listener is already subscribed for a given method call. **]**
 
-**SRS_NODE_DEVICE_CLIENT_13_021: [** `onDeviceMethod` shall throw an `Error` if the underlying transport does not support device methods. **]**
+**SRS_NODE_DEVICE_CLIENT_13_021: [** `onDeviceMethod` shall throw a `NotImplementedErrorError` if the underlying transport does not support device methods. **]**
 
 ### Events
 #### message

@@ -130,69 +130,6 @@ describe('Amqp', function () {
     });
 
     describe('#onDeviceMethod', function () {
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_021: [The`onDeviceMethod` method shall connect and authenticate the transport if necessary to start receiving methods.]*/
-      it('registers the callback and connects the transport if disconnected', function (testCallback) {
-        var fakeMethodRequest = {
-          requestId: 'foo',
-          payload: { key: 'value' },
-          methodName: 'fakeMethod'
-        }
-
-        transport.onDeviceMethod(fakeMethodRequest.methodName, function (methodRequest) {
-          assert.strictEqual(methodRequest, fakeMethodRequest)
-          testCallback();
-        });
-
-        transport._deviceMethodClient.emit('method_' + fakeMethodRequest.methodName, fakeMethodRequest);
-      });
-
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_021: [The`onDeviceMethod` method shall connect and authenticate the transport if necessary to start receiving methods.]*/
-      it('registers the callback and defers until connected or disconnected if called while connecting', function (testCallback) {
-        var fakeMethodRequest = {
-          requestId: 'foo',
-          payload: { key: 'value' },
-          methodName: 'fakeMethod'
-        }
-
-        var connectCallback;
-        fakeBaseClient.connect = sinon.stub().callsFake((uri, sslOptions, callback) => {
-          connectCallback = callback;
-        });
-
-        transport.connect(function () {});
-
-        transport.onDeviceMethod(fakeMethodRequest.methodName, function () {
-          testCallback();
-        });
-
-        connectCallback();
-        transport._deviceMethodClient.emit('method_' + fakeMethodRequest.methodName, fakeMethodRequest);
-      });
-
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_021: [The`onDeviceMethod` method shall connect and authenticate the transport if necessary to start receiving methods.]*/
-      it('registers the callback and connects the transport if already connected but not authenticated yet', function (testCallback) {
-        var fakeMethodRequest = {
-          requestId: 'foo',
-          payload: { key: 'value' },
-          methodName: 'fakeMethod'
-        }
-
-        var authCallback;
-        fakeBaseClient.initializeCBS = sinon.stub().callsFake((callback) => {
-          authCallback = callback;
-        });
-
-        transport.connect(function () {});
-
-        transport.onDeviceMethod(fakeMethodRequest.methodName, function () {
-          testCallback();
-        });
-
-        authCallback();
-        transport._deviceMethodClient.emit('method_' + fakeMethodRequest.methodName, fakeMethodRequest);
-      });
-
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_021: [The`onDeviceMethod` method shall connect and authenticate the transport if necessary to start receiving methods.]*/
       it('registers the callback and connects the transport if already connected and authenticated', function (testCallback) {
         var fakeMethodRequest = {
           requestId: 'foo',
@@ -204,59 +141,23 @@ describe('Amqp', function () {
           transport.onDeviceMethod(fakeMethodRequest.methodName, function () {
             testCallback();
           });
+          transport._deviceMethodClient.emit('method_' + fakeMethodRequest.methodName, fakeMethodRequest);
         });
-
-        transport._deviceMethodClient.emit('method_' + fakeMethodRequest.methodName, fakeMethodRequest);
-      });
-
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_021: [The`onDeviceMethod` method shall connect and authenticate the transport if necessary to start receiving methods.]*/
-      it('registers the callback and reconnects the transport if called while disconnecting', function (testCallback) {
-        var fakeMethodRequest = {
-          requestId: 'foo',
-          payload: { key: 'value' },
-          methodName: 'fakeMethod'
-        }
-        var disconnectCallback;
-        fakeBaseClient.disconnect = sinon.stub().callsFake((callback) => {
-          disconnectCallback = callback;
-        })
-
-        transport.connect(function () {
-          transport.disconnect(function () {});
-          assert(fakeBaseClient.connect.calledOnce);
-          transport.onDeviceMethod(fakeMethodRequest.methodName, function () {
-            assert(fakeBaseClient.connect.calledTwice);
-            testCallback();
-          });
-          disconnectCallback(null, new results.Disconnected());
-        });
-
-        transport._deviceMethodClient.emit('method_' + fakeMethodRequest.methodName, fakeMethodRequest);
-      });
-
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_023: [An `errorReceived` event shall be emitted by the Amqp object if the transport fails to connect while registering a method callback.]*/
-      it('emits an error event when it cannot connect the transport', function (testCallback) {
-        var fakeError = new Error('could not open');
-        fakeBaseClient.connect = sinon.stub().callsArgWith(2, fakeError)
-        transport.on('errorReceived', function (err) {
-          assert.strictEqual(err.amqpError, fakeError);
-          testCallback();
-        });
-
-        transport.onDeviceMethod('testMethod', function () {});
       });
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_024: [An `errorReceived` event shall be emitted by the `Amqp` object if an error is received on any of the `AmqpDeviceMethodClient` links.]*/
       it('emits an error event when the receiver emits an errorReceived event', function (testCallback) {
         var fakeError = new Error('fake error');
-        transport.on('errorReceived', function (err) {
-          assert.strictEqual(err, fakeError);
+        transport.on('error', function (err) {
+          assert.strictEqual(err.innerError, fakeError);
+          assert.instanceOf(err, errors.DeviceMethodsDetachedError);
           testCallback();
         });
 
-        transport.onDeviceMethod('testMethod', function () {});
-
-        transport._deviceMethodClient.emit('error', fakeError);
+        transport.connect(function () {
+          transport.onDeviceMethod('testMethod', function () {});
+          transport._deviceMethodClient.emit('error', fakeError);
+        });
       });
     });
 
@@ -319,22 +220,21 @@ describe('Amqp', function () {
       });
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_040: [The `enableMethods` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach method links.]*/
-      // TODO: fix Twin code that emits error instead of calling callback.
-      it.skip('calls its callback with an Error if attaching the twin receiver link fails', function (testCallback) {
-        transport._deviceMethodClient.detach = sinon.stub().callsArgWith(0, new Error('fake failed to attach'));
+      it('calls its callback with an Error if attaching the method links fails', function (testCallback) {
+        var fakeError = new Error('fake failed to attach');
+        transport._deviceMethodClient.attach = sinon.stub().callsArgWith(0, fakeError);
         transport.connect(function () {
           assert(fakeBaseClient.attachReceiverLink.notCalled);
           transport.enableMethods(function (err) {
-            assert(fakeBaseClient.attachReceiverLink.calledWith(transport._deviceMethodClient._methodEndpoint));
-            assert.instanceOf(err, Error);
+            assert.isTrue(transport._deviceMethodClient.attach.calledOnce);
+            assert.strictEqual(err, fakeError);
             testCallback();
           });
         });
       });
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_041: [Any `error` event received on any of the links used for device methods shall trigger the emission of an `error` event by the transport, with an argument that is a `MethodsDetachedError` object with the `innerError` property set to that error.]*/
-      // disabled until the client supports it
-      it.skip('emits a DeviceMethodsDetachedError with an innerError property if the link fails after being established correctly', function (testCallback) {
+      it('emits a DeviceMethodsDetachedError with an innerError property if the link fails after being established correctly', function (testCallback) {
         var fakeError = new Error('fake twin receiver link error');
         transport.on('error', function (err) {
           assert.instanceOf(err, errors.DeviceMethodsDetachedError);
@@ -523,35 +423,6 @@ describe('Amqp', function () {
           disconnectCallback();
         });
       });
-
-      it('attaches the C2D link if a listener is registered for the \'message\' event', function (testCallback) {
-        transport.on('message', function () {});
-        transport.connect(function () {
-          assert.isTrue(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
-          testCallback();
-        });
-      });
-
-      it('subscribes to the \'message\' event on the C2D link if a listener is registered for the \'message\' event', function (testCallback) {
-        var fakeReceiverLink = new EventEmitter();
-        var fakeMessageHandler = sinon.spy();
-        var fakeMessage = new Message('foo');
-        transport.on('message', fakeMessageHandler);
-
-        transport.connect(function () {
-          receiver.emit('message', fakeMessage);
-          assert(fakeMessageHandler.calledWith(fakeMessage));
-          testCallback();
-        });
-      });
-
-      it('subscribes to the \'error\' event on the C2D link', function (testCallback) {
-        transport.connect(function () {
-          transport.on('message', function () {});
-          assert.isTrue(receiver.on.calledWith('error'));
-          testCallback();
-        })
-      });
     });
 
     describe('#disconnect', function () {
@@ -628,11 +499,13 @@ describe('Amqp', function () {
         it('detaches the C2D link if it is attached', function (testCallback) {
           transport.connect(function () {
             transport.on('message', function () {});
-            transport.disconnect(function (err, result) {
-              assert.isTrue(receiver.removeListener.calledWith('message'));
-              assert.isTrue(receiver.removeListener.calledWith('error'));
-              assert.isTrue(receiver.detach.calledOnce);
-              testCallback();
+            transport.enableC2D(function () {
+              transport.disconnect(function (err, result) {
+                assert.isTrue(receiver.removeListener.calledWith('message'));
+                assert.isTrue(receiver.removeListener.calledWith('error'));
+                assert.isTrue(receiver.detach.calledOnce);
+                testCallback();
+              });
             });
           });
         });
@@ -925,7 +798,9 @@ describe('Amqp', function () {
         });
       });
 
-      // skipping until we have the logic in the device client to handle that
+      // This is being skipped because the error is not forwarded.
+      // Since we can reattach the link every time we send and surface the error at that time, I'm not sure it's useful to surface this to the client. it's just a transport-level thing at that point.
+      // If something is really bad and unrecoverable the failure will happen on the next sendEvent.
       it.skip('forwards errors from the D2C link', function (testCallback) {
         var fakeError = new Error('fake');
         transport.on('errorReceived', function (err) {
@@ -987,208 +862,16 @@ describe('Amqp', function () {
   });
 
   describe('C2D', function () {
-    describe('#on', function () {
-      describe('newListener', function () {
-        describe('if already connected', function () {
-          it('attaches the C2D link if a message listener is added and the transport is already connected', function (testCallback) {
-            transport.connect(function () {
-              assert(fakeBaseClient.attachReceiverLink.notCalled);
-              transport.on('message', function () {});
-              assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
-              testCallback();
-            });
-          });
-
-          it('reuses the existing C2D link if it is already attached', function (testCallback) {
-            transport.connect(function () {
-              transport.on('message', function () {});
-              transport.on('message', function () {});
-              assert(fakeBaseClient.attachReceiverLink.calledOnce);
-              testCallback();
-            });
-          });
-
-          it('emits an errorReceived event if the transport is connected but the link cannot be attached', function (testCallback) {
-            var fakeError = new Error('could not attach link');
-            var errorSpy = sinon.spy();
-            fakeBaseClient.attachReceiverLink = sinon.stub().callsArgWith(2, fakeError);
-
-            transport.on('errorReceived', function (err) {
-              assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
-              assert.strictEqual(err.amqpError, fakeError);
-              testCallback();
-            });
-
-            transport.connect(function () {
-              assert(fakeBaseClient.attachReceiverLink.notCalled);
-              transport.on('message', function () {});
-            });
-          });
-        });
-
-        describe('if not connected yet', function () {
-          /*Tests_SRS_NODE_DEVICE_AMQP_16_029: [The `Amqp` object shall connect and authenticate the AMQP connection if necessary to attach the C2D `ReceiverLink` object.]*/
-          it('automatically connects the transport', function () {
-            transport.on('message', function () {});
-            assert(fakeBaseClient.connect.calledOnce);
-            assert(fakeBaseClient.initializeCBS.calledOnce);
-            assert(fakeBaseClient.putToken.calledOnce);
-            assert(fakeBaseClient.attachReceiverLink.calledOnce);
-          });
-
-          /*Tests_SRS_NODE_DEVICE_AMQP_16_030: [The `Amqp` object shall attach the C2D `ReceiverLink` object if necessary to start receiving messages.]*/
-          it('attaches the C2D link when the transport is finally connected and authenticated (from disconnected)', function (testCallback) {
-            transport.on('message', function (msg) {
-              assert.strictEqual(msg, fakeMessage);
-            });
-
-            transport.connect(function () {
-              assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
-              testCallback();
-              receiver.emit('message', fakeMessage);
-            });
-          });
-
-          it('attaches the C2D link when the transport is finally connected and authenticated (from connecting)', function (testCallback) {
-            var fakeMessage = new Message('fake');
-            var connectCallback;
-            fakeBaseClient.connect = sinon.stub().callsFake(function (uri, options, callback) {
-              connectCallback = callback;
-            });
-
-            receiver.on('newListener', function (eventName, listener) {
-              if (eventName === 'message') {
-                assert.isTrue(fakeBaseClient.attachReceiverLink.calledOnce);
-                testCallback();
-              }
-            });
-
-            transport.connect(function () {});
-
-            // now in the "connecting" state
-            transport.on('message', function () {});
-
-            connectCallback(null, new results.Connected());
-          });
-
-          it('attaches the C2D link when the transport is finally connected and authenticated (from authenticating)', function (testCallback) {
-            var fakeMessage = new Message('fake');
-            var authCallback;
-            fakeBaseClient.putToken = sinon.stub().callsFake(function (token, audience, callback) {
-              authCallback = callback;
-            });
-
-            receiver.on('newListener', function (eventName, listener) {
-              if (eventName === 'message') {
-                assert.isTrue(fakeBaseClient.attachReceiverLink.calledOnce);
-                testCallback();
-              }
-            });
-
-            transport.connect(function () {});
-
-            // now in the "authenticating" state
-            transport.on('message', function () {});
-
-            authCallback(null, new results.Connected());
-          });
-
-          it('forwards messages to the client once connected and authenticated', function (testCallback) {
-            var fakeMessage = new Message('fake');
-
-            transport.on('message', function (msg) {
-              assert.strictEqual(msg, fakeMessage);
-              testCallback();
-            });
-
-            transport.connect(function () {
-              receiver.emit('message', fakeMessage);
-            });
-          });
-
-          it.skip('forwards errors to the client once connected and authenticated', function (testCallback) {
-            transport.on('errorReceived', function (err) {
-              assert.strictEqual(err, fakeError);
-              testCallback();
-            });
-
-            transport.on('message', function () {});
-            transport.connect(function () {
-              receiver.emit('error', fakeError);
-            });
-          });
-
-          it('emits an error if attaching the transport fails to connect', function (testCallback) {
-            var fakeError = new Error('could not connect');
-            fakeBaseClient.connect = sinon.stub().callsArgWith(2, fakeError);
-
-            transport.on('errorReceived', function (err) {
-              assert.strictEqual(err.amqpError, fakeError);
-              testCallback();
-            });
-            transport.on('message', function () {});
-          });
-
-          it('emits an error if attaching the link fails to attach', function (testCallback) {
-            var fakeError = new Error('could not attach link');
-            fakeBaseClient.attachReceiverLink = sinon.stub().callsArgWith(2, fakeError);
-
-            transport.on('errorReceived', function (err) {
-              assert.strictEqual(err.amqpError, fakeError);
-              assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
-              testCallback();
-            });
-            transport.on('message', function () {});
-          });
-        });
-      });
-
-      describe('removeListener', function () {
-        it('does not crash trying to remove listener while already disconnected', function () {
-          assert.doesNotThrow(function () {
-            transport.removeListener('message', function () {});
-          })
-        })
-
-        it('detaches the C2D link if no-one is listening for messages', function (testCallback) {
-          var listener1 = function () {};
-          var listener2 = function () {};
-          transport.on('message', listener1);
-          transport.on('message', listener2);
-          transport.connect(function () {
-            assert(fakeBaseClient.attachReceiverLink.calledOnce);
-            transport.removeListener('message', listener1);
-            assert(receiver.detach.notCalled);
-            transport.removeListener('message', listener2);
-            assert(receiver.detach.calledOnce);
-            testCallback();
-          });
-        });
-
-        it('emits an error if detaching the C2D link generates an error', function (testCallback) {
-          var fakeError = new Error('fake');
-          var msgCallback = function () {};
-          receiver.detach = sinon.stub().callsArgWith(0, fakeError);
-          transport.on('errorReceived', function (err) {
-            assert.strictEqual(err, fakeError);
-            testCallback();
-          })
-          transport.on('message', msgCallback);
-          transport.connect(function () {
-            transport.removeListener('message', msgCallback);
-          });
-        });
-      });
-    });;
-
     describe('#complete', function () {
       /*Tests_SRS_NODE_DEVICE_AMQP_16_013: [The ‘complete’ method shall call the ‘complete’ method of the receiver object and pass it the message and the callback given as parameters.] */
       it('calls the receiver `complete` method', function (testCallback) {
         transport.connect(function () {
           transport.on('message', function () {});
-          transport.complete(testMessage, function () {
-            assert(receiver.complete.calledWith(testMessage));
-            testCallback();
+          transport.enableC2D(function () {
+            transport.complete(testMessage, function () {
+              assert(receiver.complete.calledWith(testMessage));
+              testCallback();
+            });
           });
         });
       });
@@ -1206,9 +889,11 @@ describe('Amqp', function () {
       it('calls the receiver `reject` method', function (testCallback) {
         transport.connect(function () {
           transport.on('message', function () {});
-          transport.reject(testMessage, function () {
-            assert(receiver.reject.calledWith(testMessage));
-            testCallback();
+          transport.enableC2D(function () {
+            transport.reject(testMessage, function () {
+              assert(receiver.reject.calledWith(testMessage));
+              testCallback();
+            });
           });
         });
       });
@@ -1226,9 +911,11 @@ describe('Amqp', function () {
       it('calls the receiver `abandon` method', function (testCallback) {
         transport.connect(function () {
           transport.on('message', function () {});
-          transport.abandon(testMessage, function () {
-            assert(receiver.abandon.calledWith(testMessage));
-            testCallback();
+          transport.enableC2D(function () {
+            transport.abandon(testMessage, function () {
+              assert(receiver.abandon.calledWith(testMessage));
+              testCallback();
+            });
           });
         });
       });
@@ -1263,6 +950,15 @@ describe('Amqp', function () {
       });
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
+      it('calls its callback with an Error if connecting the transport fails', function (testCallback) {
+        fakeBaseClient.connect = sinon.stub().callsArgWith(2, new Error('fake failed to connect'));
+        transport.enableC2D(function (err) {
+          assert(fakeBaseClient.connect.calledOnce);
+          assert.instanceOf(err, Error);
+          testCallback();
+        });
+      });
+
       it('calls its callback with an Error if attaching the C2D link fails', function (testCallback) {
         fakeBaseClient.attachReceiverLink = sinon.stub().callsArgWith(2, new Error('fake failed to attach'));
         transport.connect(function () {
@@ -1277,7 +973,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_034: [Any `error` event received on the C2D link shall trigger the emission of an `error` event by the transport, with an argument that is a `C2DDetachedError` object with the `innerError` property set to that error.]*/
       // disabled until the client supports it
-      it.skip('emits a CloudToDeviceDetachedError with an innerError property if the link fails after being established correctly', function (testCallback) {
+      it('emits a CloudToDeviceDetachedError with an innerError property if the link fails after being established correctly', function (testCallback) {
         var fakeError = new Error('fake C2D receiver link error');
         transport.on('error', function (err) {
           assert.instanceOf(err, errors.CloudToDeviceDetachedError);
@@ -1290,6 +986,21 @@ describe('Amqp', function () {
           transport.enableC2D(function () {
             assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
             receiver.emit('error', fakeError);
+          });
+        });
+      });
+
+      it('forwards messages to the client once connected and authenticated', function (testCallback) {
+        var fakeMessage = new Message('fake');
+
+        transport.on('message', function (msg) {
+          assert.strictEqual(msg, fakeMessage);
+          testCallback();
+        });
+
+        transport.connect(function () {
+          transport.enableC2D(function () {
+            receiver.emit('message', fakeMessage);
           });
         });
       });
@@ -1640,22 +1351,19 @@ describe('Amqp', function () {
         });
       });
 
-      // TODO: fix Twin code that emits error instead of calling callback.
       /*Tests_SRS_NODE_DEVICE_AMQP_16_048: [Any `error` event received on any of the links used for twin shall trigger the emission of an `error` event by the transport, with an argument that is a `TwinDetachedError` object with the `innerError` property set to that error.]*/
-      it.skip('calls its callback with an Error if attaching the twin receiver link fails', function (testCallback) {
-        transport._twinClient.detach = sinon.stub().callsArgWith(0, new Error('fake failed to attach'));
+      it('calls its callback with an Error if attaching the twin receiver link fails', function (testCallback) {
+        transport._twinClient.attach = sinon.stub().callsArgWith(0, new Error('fake failed to attach'));
         transport.connect(function () {
-          assert(fakeBaseClient.attachReceiverLink.notCalled);
           transport.enableTwin(function (err) {
-            assert(fakeBaseClient.attachReceiverLink.calledWith(transport._twinClient._endpoint));
+            assert(transport._twinClient.attach.calledOnce);
             assert.instanceOf(err, Error);
             testCallback();
           });
         });
       });
 
-      // disabled until the client supports it
-      it.skip('emits a TwinDetachedError with an innerError property if the link fails after being established correctly', function (testCallback) {
+      it('emits a TwinDetachedError with an innerError property if the link fails after being established correctly', function (testCallback) {
         var fakeError = new Error('fake twin receiver link error');
         transport.on('error', function (err) {
           assert.instanceOf(err, errors.TwinDetachedError);
@@ -1664,10 +1372,8 @@ describe('Amqp', function () {
         });
 
         transport.connect(function () {
-          assert(fakeBaseClient.attachReceiverLink.notCalled);
           transport.enableTwin(function () {
-            assert(fakeBaseClient.attachReceiverLink.calledWith(transport._twinClient._endpoint));
-            receiver.emit('error', fakeError);
+            transport._twinClient.emit('error', fakeError);
           });
         });
       });

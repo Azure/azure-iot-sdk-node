@@ -85,21 +85,6 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
     this._opts = defaultOptions;
     this._receiverStarted = false;
 
-    this.on('removeListener', () => {
-      if (this._receiverStarted && this.listeners('message').length === 0) {
-        this.disableC2D(() => {
-          debug('Http c2d message polling disabled');
-        });
-      }
-    });
-
-    this.on('newListener', (eventName) => {
-      if (!this._receiverStarted && eventName === 'message') {
-        this.enableC2D(() => {
-          debug('Http c2d message polling enabled');
-        });
-      }
-    });
   }
 
   /**
@@ -265,18 +250,6 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
   }
 
   /**
-   * @deprecated      The receiver pattern is deprecated and `Http` now implements what was `HttpReceiver`
-   * @private
-   * @method          module:azure-iot-device-http.Http#getReceiver
-   * @description     This methods gets the unique instance of the receiver that is used to asynchronously retrieve messages from the IoT Hub service.
-   *
-   * @param {Function}      done      The callback to be invoked when `getReceiver` completes execution, passing the receiver object as an argument.
-   */
-  getReceiver(done: (err?: Error, result?: Receiver) => void): void {
-    done(null, this);
-  }
-
-  /**
    * @private
    * @method          module:azure-iot-device-http.Http#setOptions
    * @description     This methods sets the HTTP specific options of the transport.
@@ -355,8 +328,7 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
         } else {
           (<any>err).response = res;
           (<any>err).responseBody = body;
-          // TODO: migrate to the `error` event when retry logic is implemented in the client.
-          this.emit('errorReceived', err);
+          this.emit('error', err);
         }
       });
       request.end();

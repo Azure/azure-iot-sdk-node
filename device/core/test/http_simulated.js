@@ -4,6 +4,7 @@
 'use strict';
 
 var EventEmitter = require('events').EventEmitter;
+var util = require('util');
 var Message = require('azure-iot-common').Message;
 var ArgumentError = require('azure-iot-common').errors.ArgumentError;
 var SharedAccessSignature = require('../lib/shared_access_signature.js');
@@ -20,6 +21,7 @@ function makeError(statusCode) {
 }
 
 function SimulatedHttp(config) {
+  EventEmitter.call(this);
   this._receiver = null;
   this.handleRequest = function (done) {
     if (this._x509) {
@@ -46,6 +48,8 @@ function SimulatedHttp(config) {
   };
 }
 
+util.inherits(SimulatedHttp, EventEmitter);
+
 SimulatedHttp.prototype.setOptions = function() {
   this._x509 = true;
 };
@@ -66,11 +70,6 @@ SimulatedHttp.prototype.receive = function (done) {
   this.handleRequest(function (err, response) {
     done(err, err ? null : new Message(''), response);
   });
-};
-
-SimulatedHttp.prototype.getReceiver = function (done) {
-  if (!this._receiver) { this._receiver = new EventEmitter(); }
-  done(null, this._receiver);
 };
 
 SimulatedHttp.prototype.sendFeedback = function (feedbackAction, message, done) {

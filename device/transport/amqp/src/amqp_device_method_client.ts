@@ -7,7 +7,7 @@ import { EventEmitter } from 'events';
 import * as machina  from 'machina';
 import * as async from 'async';
 import * as dbg from 'debug';
-const debug = dbg('azure-iot-device-amqp.AmqpDeviceMethodClient');
+const debug = dbg('azure-iot-device-amqp:AmqpDeviceMethodClient');
 
 import { Message, errors, endpoint } from 'azure-iot-common';
 import { ClientConfig, DeviceMethodRequest, DeviceMethodResponse } from 'azure-iot-device';
@@ -60,9 +60,8 @@ export class AmqpDeviceMethodClient extends EventEmitter {
             } else {
               if (err) {
                 debug('detached with error: ' + err.toString());
-                // This is the right thing to do but breaks the client until we have retry logic. deactivating for now.
                 /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_015: [The `AmqpDeviceMethodClient` object shall forward any error received on a link to any listening client in an `error` event.]*/
-                // this.emit('error', err);
+                this.emit('error', err);
               }
             }
           },
