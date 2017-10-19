@@ -20,7 +20,7 @@ You need to install the [Node.js][nodejs_lnk] JavaScript runtime environment to 
 
 ## Installation
 
-`npm install -g azure-iot-device` to get the latest version.
+`npm install azure-iot-device` to get the latest version.
 
 ## Getting Started
 
@@ -29,7 +29,7 @@ This package contains the core components of the Azure IoT device SDK, but doesn
 For example, if you want to send an event from your device to an IoT Hub _using the AMQP protocol_ you must first install the **azure-iot-device-amqp** package:
 
 ```
-npm install -g azure-iot-device-amqp
+npm install azure-iot-device-amqp
 ```
 
 Then you can use the code below to send a message to IoT Hub.
@@ -89,8 +89,8 @@ If you want to modify the module's code and/or contribute changes, you will need
 [npm_lnk]:https://docs.npmjs.com/getting-started/what-is-npm
 [lnk-setup-iot-hub]: https://aka.ms/howtocreateazureiothub
 [lnk-manage-iot-hub]: https://aka.ms/manageiothub
-[devbox-setup]: ../../doc/node-devbox-setup.md
-[device-samples]: ../samples/
+[devbox-setup]: https://github.com/Azure/azure-iot-sdk-node/blob/master/doc/node-devbox-setup.md
+[device-samples]: https://github.com/Azure/azure-iot-sdk-node/tree/master/device/samples
 [node-api-reference]: https://docs.microsoft.com/en-us/javascript/api/azure-iot-device/
 [iot-dev-center]: http://azure.com/iotdev
 [iot-hub-documentation]: https://docs.microsoft.com/en-us/azure/iot-hub/
