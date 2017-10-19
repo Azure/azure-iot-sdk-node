@@ -79,7 +79,7 @@ describe('Http', function () {
     });
 
     /*Tests_SRS_NODE_DEVICE_HTTP_16_031: [The `disconnect` method shall call its callback with a `null` first argument and a `results.Disconnected` second argument after successfully disabling the C2D receiver (if necessary).]*/
-    it.only('calls its callback with no error and a results.Disconnected if the C2D receiver is not running', function (testCallback) {
+    it('calls its callback with no error and a results.Disconnected if the C2D receiver is not running', function (testCallback) {
       var http = new Http();
       sinon.spy(http, 'disableC2D');
       http.disconnect(function (err, result) {
