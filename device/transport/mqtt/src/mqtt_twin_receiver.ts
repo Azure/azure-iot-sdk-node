@@ -78,38 +78,48 @@ export class MqttTwinReceiver extends EventEmitter {
       }
     });
 
+    const messageHandler = this._onMqttMessage.bind(this);
+
     this._fsm = new machina.Fsm({
       namespace: 'device-mqtt',
       initialState: 'unsubscribed',
       states: {
         unsubscribed: {
           _onEnter: (callback, err) => {
+            this._mqtt.removeListener('message', messageHandler);
             if (callback) {
               callback(err);
             } else if (err) {
               this.emit('error', translateError(err));
             }
           },
-          subscribe: (callback) => this._fsm.transition('subscribing', callback),
+          subscribe: (callback) => this._fsm.transition('subscribingToResponseTopic', callback),
           unsubscribe: (callback) => callback()
         },
-        subscribing: {
+        subscribingToResponseTopic: {
           _onEnter: (callback) => {
-            debug('subscribing to twin topics');
-            this._mqtt.on('message', this._onMqttMessage.bind(this));
+            debug('subscribing to response topic');
+            this._mqtt.on('message', messageHandler);
             this._mqtt.subscribe(responseTopic, { qos: 0 }, (err, responseTopicResult) => {
               if (err) {
                 this._fsm.transition('unsubscribed', callback, err);
               } else {
                 debug('subscribed to response topic');
-                this._mqtt.subscribe(postTopic, { qos: 0 }, (err, postTopicResult) => {
-                  if (err) {
-                    this._fsm.transition('unsubscribed', callback, err);
-                  } else {
-                    debug('subscribed to post topic');
-                    this._fsm.transition('subscribed', callback, responseTopicResult, postTopicResult);
-                  }
-                });
+                this._fsm.transition('subscribingToPostTopic', callback, responseTopicResult);
+              }
+            });
+          },
+          '*': () => this._fsm.deferUntilTransition()
+        },
+        subscribingToPostTopic: {
+          _onEnter: (callback, responseTopicResult) => {
+            debug('subscribed to post topic');
+            this._mqtt.subscribe(postTopic, { qos: 0 }, (err, postTopicResult) => {
+              if (err) {
+                this._fsm.transition('unsubscribingFromResponseTopic', callback, err);
+              } else {
+                debug('subscribed to post topic');
+                this._fsm.transition('subscribed', callback, responseTopicResult, postTopicResult);
               }
             });
           },
@@ -130,19 +140,23 @@ export class MqttTwinReceiver extends EventEmitter {
             callback();
           },
           subscribe: (callback) => callback(),
-          unsubscribe: (callback) => this._fsm.transition('unsubscribing', callback)
+          unsubscribe: (callback) => this._fsm.transition('unsubscribingFromPostTopic', callback)
         },
-        unsubscribing: {
+        unsubscribingFromPostTopic: {
           _onEnter: (callback) => {
+            /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_021: [** When there are no more listeners for the post event, the topic should be unsubscribed. **]** */
+            this._mqtt.unsubscribe(postTopic, (err) => {
+              this._fsm.transition('unsubscribingFromResponseTopic', callback, err);
+            });
+          },
+          '*': () => this._fsm.deferUntilTransition()
+        },
+        unsubscribingFromResponseTopic: {
+          _onEnter: (callback, previousUnsubscribeError) => {
             /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_005: [** When there are no more listeners for the `response` event, the topic should be unsubscribed **]** */
-            let unsubscribeError;
             this._mqtt.unsubscribe(responseTopic, (err) => {
-              unsubscribeError = err;
-              /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_021: [** When there are no more listeners for the post event, the topic should be unsubscribed. **]** */
-              this._mqtt.unsubscribe(postTopic, (err) => {
-                unsubscribeError = unsubscribeError || err;
-                this._fsm.transition('unsubscribed', callback, err);
-              });
+              let finalError = previousUnsubscribeError || err;
+              this._fsm.transition('unsubscribed', callback, finalError);
             });
           },
           '*': () => this._fsm.deferUntilTransition()
