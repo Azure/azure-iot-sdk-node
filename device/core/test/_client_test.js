@@ -301,15 +301,6 @@ describe('Client', function () {
       });
     });
 
-    it('doesn\'t fail if the connect method doesn\'t exist on the transport', function (done) {
-      var client = new Client(new SimulatedHttp());
-      client.open(function (err, result) {
-        assert.isNull(err);
-        assert.equal(result.constructor.name, 'Connected');
-        done();
-      });
-    });
-
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_045: [If the transport successfully establishes a connection the `open` method shall subscribe to the `disconnect` event of the transport.]*/
     it('subscribes to the \'disconnect\' event once connected', function(done) {
       var transport = new FakeTransport();
@@ -479,25 +470,18 @@ describe('Client', function () {
     });
   });
 
-  describe('#sendEventBatch', function () {
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_082: [The `sendEventBatch` method shall throw a `NotImplementedError` if the transport doesn't have that feature.]*/
-    it('throws if the method doesn\'t exist on the transport', function() {
-      var transport = new FakeTransport();
-      delete transport.sendEventBatch;
-
-      var client = new Client(transport);
-      client.open(function() {
-        assert.throws(function() {
-          client.sendEventBatch('message');
-        }, errors.NotImplementedError);
-      });
-    });
-  });
-
   describe('#onDeviceMethod', function() {
     var FakeMethodTransport = function(config) {
       EventEmitter.call(this);
       this.config = config;
+
+      this.connect = function (callback) {
+        callback(null, new results.Connected());
+      }
+
+      this.disconnect = function (callback) {
+        callback(null, new results.Disconnected());
+      }
 
       // causes a mock method event to be raised
       this.emitMethodCall = function(methodName) {
@@ -619,18 +603,6 @@ describe('Client', function () {
       assert.throws(function() {
         client.onDeviceMethod('reboot', function(){});
       });
-    });
-
-    // Tests_SRS_NODE_DEVICE_CLIENT_13_021: [ onDeviceMethod shall throw an NotImplementedErrorError if the underlying transport does not support device methods. ]
-    it('throws if underlying transport does not support device methods', function() {
-      // setup
-      var transport = new FakeTransport();
-      var client = new Client(transport);
-
-      // test & assert
-      assert.throws(function() {
-        client.onDeviceMethod('reboot', function() {});
-      }, errors.NotImplementedError);
     });
 
     it('emits an error if the transport fails to enable the methods feature', function (testCallback) {

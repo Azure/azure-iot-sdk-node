@@ -21,10 +21,14 @@ var validateSubscription = function(shortname, topic, done) {
 };
 
 var validateUnsubscription = function(shortname, topic, done) {
-  var func = function() { };
-  receiver.on(shortname, func);
+  var func1 = function() { };
+  var func2 = function() { };
+  receiver.on(shortname, func1);
+  receiver.on(shortname, func2);
   process.nextTick(function() {
-    receiver.removeListener(shortname, func);
+    receiver.removeListener(shortname, func1);
+    assert(provider.unsubscribe.withArgs(topic).notCalled);
+    receiver.removeListener(shortname, func2);
     process.nextTick(function() {
       assert(provider.unsubscribe.withArgs(topic).calledOnce);
       done();
@@ -47,7 +51,6 @@ var validateEventFires = function(shortname, topic, done) {
 };
 
 describe('MqttTwinReceiver', function () {
-
   beforeEach(function(done) {
     provider = new MqttProvider();
     receiver = new MqttTwinReceiver(provider);
@@ -55,7 +58,6 @@ describe('MqttTwinReceiver', function () {
   });
 
   describe('#constructor', function () {
-
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_001: [** The `MqttTwinReceiver` constructor shall accept a `client` object **]** */
     it ('accepts a config object', function() {
       assert.equal(receiver._mqtt, provider);
@@ -70,7 +72,6 @@ describe('MqttTwinReceiver', function () {
   });
 
   describe('response event', function() {
-
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_003: [** When a listener is added for the `response` event, the appropriate topic shall be asynchronously subscribed to. **]** */
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_009: [** The subscribed topic for `response` events shall be '$iothub/twin/res/#' **]** */
     it ('asynchronously subscribes when  a listener is added', function(done) {
@@ -80,6 +81,25 @@ describe('MqttTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_005: [** When there are no more listeners for the `response` event, the topic should be unsubscribed **]** */
     it ('unsubscribes when there are no more listeners', function(done) {
       validateUnsubscription(MqttTwinReceiver.responseEvent, '$iothub/twin/res/#', done);
+    });
+
+    it('emits an error if unsubscribing fails with an error', function (testCallback) {
+      var fakeError = new Error('fake');
+      provider.unsubscribe = sinon.stub().callsFake(function (topic, callback) {
+        callback(fakeError);
+      });
+
+      var errCallback = function (err) {
+        assert.strictEqual(err, fakeError);
+        receiver.removeListener('error', errCallback);
+        testCallback();
+      };
+
+      var fakeCallback = function () {};
+
+      receiver.on('error', errCallback);
+      receiver.on(MqttTwinReceiver.responseEvent, fakeCallback);
+      receiver.removeListener(MqttTwinReceiver.responseEvent, fakeCallback);
     });
 
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_004: [** If there is a listener for the `response` event, a `response` event shall be emitted for each response received. **]** */
@@ -132,7 +152,6 @@ describe('MqttTwinReceiver', function () {
   });
 
   describe('post event', function() {
-
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_018: [** When a listener is added to the post event, the appropriate topic shall be asynchronously subscribed to. **]** */
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_019: [** The subscribed topic for post events shall be $iothub/twin/PATCH/properties/reported/# **]** */
     it ('asynchronously subscribes when  a listener is added', function(done) {
@@ -160,7 +179,6 @@ describe('MqttTwinReceiver', function () {
   });
 
   describe('error event', function() {
-
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_023: [** If the `error` event is subscribed to, an `error` event shall be emitted if any asynchronous subscribing operations fails. **]** */
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_024: [** When the `error` event is emitted, the first parameter shall be an error object obtained via the MQTT `translateErrror` module. **]** */
     it ('emits an error if subscribing to response event fails', function(done) {
@@ -188,20 +206,25 @@ describe('MqttTwinReceiver', function () {
   });
 
   describe('subscribed event', function() {
-
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_025: [** If the `subscribed` event is subscribed to, a `subscribed` event shall be emitted after an MQTT topic is subscribed to. **]** */
     it ('emits a subscribed event after successful subscription to response event', function(done) {
-      receiver.on('subscribed', function() {
+      var evtCallback = function() {
+        receiver.removeListener('subscribed', evtCallback);
         done();
-      });
+      };
+
+      receiver.on('subscribed', evtCallback);
       receiver.on(MqttTwinReceiver.responseEvent, function() {});
     });
 
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_025: [** If the `subscribed` event is subscribed to, a `subscribed` event shall be emitted after an MQTT topic is subscribed to. **]** */
     it ('emits a subscribed event after successful subscription to post event', function(done) {
-      receiver.on('subscribed', function() {
+      var evtCallback = function() {
+        receiver.removeListener('subscribed', evtCallback);
         done();
-      });
+      };
+
+      receiver.on('subscribed', evtCallback);
       receiver.on(MqttTwinReceiver.postEvent, function() {});
     });
 
@@ -228,7 +251,47 @@ describe('MqttTwinReceiver', function () {
       });
       receiver.on(MqttTwinReceiver.postEvent, function() {});
     });
+  });
 
+  describe('#subscribe', function () {
+    it('subscribes to the response and post events', function (testCallback) {
+      receiver.subscribe(function () {
+        assert.isTrue(provider.subscribe.calledTwice);
+        assert(provider.subscribe.calledWith('$iothub/twin/res/#'));
+        assert(provider.subscribe.calledWith('$iothub/twin/PATCH/properties/desired/#'));
+        testCallback();
+      });
+    });
+
+    it('should call its callback immediately if already subscribed', function (testCallback) {
+      receiver.subscribe(function () {
+        assert.isTrue(provider.subscribe.calledTwice);
+        receiver.subscribe(function () {
+          assert.isTrue(provider.subscribe.calledTwice); // still the same number of calls - we didn't try to resubscribe
+          testCallback();
+        });
+      });
+    });
+  });
+
+  describe('#unsubscribe', function () {
+    it('unsubscribes to the response and post events', function (testCallback) {
+      receiver.subscribe(function () {
+        receiver.unsubscribe(function () {
+          assert.isTrue(provider.unsubscribe.calledTwice);
+          assert(provider.unsubscribe.calledWith('$iothub/twin/res/#'));
+          assert(provider.unsubscribe.calledWith('$iothub/twin/PATCH/properties/desired/#'));
+          testCallback();
+        });
+      });
+    });
+
+    it('should call its callback immediately if already unsubscribed', function (testCallback) {
+      receiver.unsubscribe(function () {
+        assert.isTrue(provider.unsubscribe.notCalled);
+        testCallback();
+      });
+    });
   });
 });
 

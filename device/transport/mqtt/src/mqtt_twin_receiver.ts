@@ -7,6 +7,9 @@ import { EventEmitter } from 'events';
 import { MqttBase, translateError } from 'azure-iot-mqtt-base';
 import * as querystring from 'querystring';
 import * as url from 'url';
+import * as machina from 'machina';
+import * as dbg from 'debug';
+const debug = dbg('azure-iot-device-mqtt:MqttTwinReceiver');
 
 // $iothub/twin/PATCH/properties/reported/?$rid={request id}&$version={base version}
 
@@ -36,7 +39,7 @@ export class MqttTwinReceiver extends EventEmitter {
   static subscribedEvent: string = 'subscribed';
 
   private _mqtt: MqttBase;
-  private _boundMessageHandler: (topic: string, message: any) => void;
+  private _fsm: machina.Fsm;
 
   constructor(client: MqttBase) {
     super();
@@ -47,80 +50,122 @@ export class MqttTwinReceiver extends EventEmitter {
     }
     this._mqtt = client;
 
-    this.on('newListener', this._handleNewListener.bind(this));
-    this.on('removeListener', this._handleRemoveListener.bind(this));
-    this._boundMessageHandler = this._onMqttMessage.bind(this); // need to save this so that calls to add & remove listeners can be matched by the EventEmitter.
-    this._mqtt.on('message', this._boundMessageHandler);
-  }
-
-  private _handleNewListener(eventName: string): void {
-    const self = this;
-
-    if (eventName === MqttTwinReceiver.responseEvent) {
-      if (EventEmitter.listenerCount(this, MqttTwinReceiver.responseEvent) === 0) { // array of listeners gets updated _after_ firing this event
+    this.on('newListener', (eventName) => {
+      if (eventName === MqttTwinReceiver.responseEvent || eventName === MqttTwinReceiver.postEvent) {
         /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_003: [** When a listener is added for the `response` event, the appropriate topic shall be asynchronously subscribed to. **]** */
-        process.nextTick( () => {
-          self._mqtt.subscribe(responseTopic, { qos: 0 }, (err, transportObject) => {
-            if (err) {
-              self._handleError(err);
-            } else {
-              /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_025: [** If the `subscribed` event is subscribed to, a `subscribed` event shall be emitted after an MQTT topic is subscribed to. **]** */
-              /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_028: [** When the `subscribed` event is emitted, the parameter shall be an object which contains an `eventName` field and an `transportObject` field. **]** */
-              /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_026: [** When the `subscribed` event is emitted because the response MQTT topic was subscribed, the parameter shall be the string 'response' **]**  */
-              /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_029: [** When the subscribed event is emitted, the `transportObject` field shall contain the object returned by the library in the subscription response. **]** */
-              self.emit(MqttTwinReceiver.subscribedEvent, { 'eventName' : MqttTwinReceiver.responseEvent, 'transportObject' : transportObject });
-            }
-          });
+        this._fsm.handle('subscribe', (err) => {
+          if (err) {
+            debug('error while subscribing: ' + err.toString());
+            /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_023: [** If the `error` event is subscribed to, an `error` event shall be emitted if any asynchronous subscribing operations fails. **]** */
+            /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_024: [** When the `error` event is emitted, the first parameter shall be an error object obtained via the MQTT `translateError` module. **]** */
+            this.emit(MqttTwinReceiver.errorEvent, translateError(err));
+          }
         });
       }
-    } else if (eventName === MqttTwinReceiver.postEvent) {
-      if (EventEmitter.listenerCount(this, MqttTwinReceiver.postEvent) === 0) {// array of listeners gets updated _after_ firing this event
-        /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_018: [** When a listener is added to the post event, the appropriate topic shall be asynchronously subscribed to. **]** */
-        process.nextTick(() => {
-          self._mqtt.subscribe(postTopic, { qos: 0 }, (err, transportObject) => {
+    });
+
+    this.on('removeListener', (eventName) => {
+      if (eventName === MqttTwinReceiver.responseEvent || eventName === MqttTwinReceiver.postEvent) {
+        if (this.listeners('response').length + this.listeners('post').length <= 0) {
+          this._fsm.handle('unsubscribe', (err) => {
             if (err) {
-              self._handleError(err);
-            } else {
-              /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_025: [** If the `subscribed` event is subscribed to, a `subscribed` event shall be emitted after an MQTT topic is subscribed to. **]** */
-              /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_028: [** When the `subscribed` event is emitted, the parameter shall be an object which contains an `eventName` field and an `transportObject` field. **]** */
-              /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_027: [** When the `subscribed` event is emitted because the post MQTT topic was subscribed, the `eventName` field shall be the string 'post' **]** */
-              /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_029: [** When the subscribed event is emitted, the `transportObject` field shall contain the object returned by the library in the subscription response. **]** */
-              self.emit(MqttTwinReceiver.subscribedEvent, { 'eventName' : MqttTwinReceiver.postEvent, 'transportObject' : transportObject });
+              debug('error while unsubscribing: ' + err.toString());
+              /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_024: [** When the `error` event is emitted, the first parameter shall be an error object obtained via the MQTT `translateError` module. **]** */
+              this.emit(MqttTwinReceiver.errorEvent, translateError(err));
             }
           });
-        });
+        }
       }
-    }
+    });
+
+    this._fsm = new machina.Fsm({
+      namespace: 'device-mqtt',
+      initialState: 'unsubscribed',
+      states: {
+        unsubscribed: {
+          _onEnter: (callback, err) => {
+            if (callback) {
+              callback(err);
+            } else if (err) {
+              this.emit('error', translateError(err));
+            }
+          },
+          subscribe: (callback) => this._fsm.transition('subscribing', callback),
+          unsubscribe: (callback) => callback()
+        },
+        subscribing: {
+          _onEnter: (callback) => {
+            debug('subscribing to twin topics');
+            this._mqtt.on('message', this._onMqttMessage.bind(this));
+            this._mqtt.subscribe(responseTopic, { qos: 0 }, (err, responseTopicResult) => {
+              if (err) {
+                this._fsm.transition('unsubscribed', callback, err);
+              } else {
+                debug('subscribed to response topic');
+                this._mqtt.subscribe(postTopic, { qos: 0 }, (err, postTopicResult) => {
+                  if (err) {
+                    this._fsm.transition('unsubscribed', callback, err);
+                  } else {
+                    debug('subscribed to post topic');
+                    this._fsm.transition('subscribed', callback, responseTopicResult, postTopicResult);
+                  }
+                });
+              }
+            });
+          },
+          '*': () => this._fsm.deferUntilTransition()
+        },
+        subscribed: {
+          _onEnter: (callback, responseTopicResult, postTopicResult) => {
+            /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_025: [** If the `subscribed` event is subscribed to, a `subscribed` event shall be emitted after an MQTT topic is subscribed to. **]** */
+            /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_028: [** When the `subscribed` event is emitted, the parameter shall be an object which contains an `eventName` field and an `transportObject` field. **]** */
+            /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_026: [** When the `subscribed` event is emitted because the response MQTT topic was subscribed, the parameter shall be the string 'response' **]**  */
+            /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_029: [** When the subscribed event is emitted, the `transportObject` field shall contain the object returned by the library in the subscription response. **]** */
+            this.emit(MqttTwinReceiver.subscribedEvent, { 'eventName' : MqttTwinReceiver.responseEvent, 'transportObject' : responseTopicResult });
+            /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_025: [** If the `subscribed` event is subscribed to, a `subscribed` event shall be emitted after an MQTT topic is subscribed to. **]** */
+            /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_028: [** When the `subscribed` event is emitted, the parameter shall be an object which contains an `eventName` field and an `transportObject` field. **]** */
+            /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_027: [** When the `subscribed` event is emitted because the post MQTT topic was subscribed, the `eventName` field shall be the string 'post' **]** */
+            /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_029: [** When the subscribed event is emitted, the `transportObject` field shall contain the object returned by the library in the subscription response. **]** */
+            this.emit(MqttTwinReceiver.subscribedEvent, { 'eventName' : MqttTwinReceiver.postEvent, 'transportObject' : postTopicResult });
+            callback();
+          },
+          subscribe: (callback) => callback(),
+          unsubscribe: (callback) => this._fsm.transition('unsubscribing', callback)
+        },
+        unsubscribing: {
+          _onEnter: (callback) => {
+            /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_005: [** When there are no more listeners for the `response` event, the topic should be unsubscribed **]** */
+            let unsubscribeError;
+            this._mqtt.unsubscribe(responseTopic, (err) => {
+              unsubscribeError = err;
+              /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_021: [** When there are no more listeners for the post event, the topic should be unsubscribed. **]** */
+              this._mqtt.unsubscribe(postTopic, (err) => {
+                unsubscribeError = unsubscribeError || err;
+                this._fsm.transition('unsubscribed', callback, err);
+              });
+            });
+          },
+          '*': () => this._fsm.deferUntilTransition()
+        }
+      }
+    });
   }
 
-  private _handleRemoveListener(eventName: string): void {
-    const self = this;
+  subscribe(callback: (err?: Error) => void): void {
+    this._fsm.handle('subscribe', callback);
+  }
 
-    if (eventName === MqttTwinReceiver.responseEvent) {
-      if (EventEmitter.listenerCount(this, MqttTwinReceiver.responseEvent) === 0) { // array of listeners gets updated _before_ firing this event
-        /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_005: [** When there are no more listeners for the `response` event, the topic should be unsubscribed **]** */
-        self._mqtt.unsubscribe(responseTopic, (err) => {
-          if (err) {
-            self._handleError(err);
-          }
-        });
-      }
-    } else if (eventName === MqttTwinReceiver.postEvent) {
-      if (EventEmitter.listenerCount(this, MqttTwinReceiver.postEvent) === 0) { // array of listeners gets updated _before_ firing this event
-        /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_021: [** When there are no more listeners for the post event, the topic should be unsubscribed. **]** */
-        self._mqtt.unsubscribe(postTopic, (err) => {
-          if (err) {
-            self._handleError(err);
-          }
-        });
-      }
-    }
+  unsubscribe(callback: (err?: Error) => void): void {
+    this._fsm.handle('unsubscribe', callback);
   }
 
   private _onMqttMessage(topic: string, message: any): void {
+    debug('mqtt message received');
     if (topic.indexOf('$iothub/twin/res') === 0) {
+      debug('response message received');
       this._onResponseMessage(topic, message);
     } else if (topic.indexOf('$iothub/twin/PATCH') === 0) {
+      debug('post message received');
       this._onPostMessage(topic, message);
     }
     /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_014: [** Any messages received on topics which violate the topic name formatting shall be ignored. **]** */
@@ -173,14 +218,8 @@ export class MqttTwinReceiver extends EventEmitter {
   private _onPostMessage(topic: string, message: any): void {
     /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_020: [** If there is a listener for the post event, a post event shal be emitteded for each post message received **]** */
     if (topic.indexOf('$iothub/twin/PATCH/properties/desired') === 0) {
-    /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_022: [** When a post event it emitted, the parameter shall be the body of the message **]** */
+      /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_022: [** When a post event it emitted, the parameter shall be the body of the message **]** */
       this.emit(MqttTwinReceiver.postEvent, message);
     }
-  }
-
-  private _handleError(err: Error): void {
-    /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_023: [** If the `error` event is subscribed to, an `error` event shall be emitted if any asynchronous subscribing operations fails. **]** */
-    /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_024: [** When the `error` event is emitted, the first parameter shall be an error object obtained via the MQTT `translateErrror` module. **]** */
-    this.emit(MqttTwinReceiver.errorEvent, translateError(err));
   }
 }

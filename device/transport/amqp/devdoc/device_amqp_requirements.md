@@ -102,7 +102,8 @@ The `sendEvent` method sends an event to the IoT Hub as the device indicated in 
 **SRS_NODE_DEVICE_AMQP_16_004: [**If `sendEvent` encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message). **]**
 
 ### sendEventBatch(messages, done)
-Not implemented
+
+**SRS_NODE_DEVICE_AMQP_16_052: [** The `sendEventBatch` method shall throw a `NotImplementedError`. **]**
 
 ### getReceiver(done) [deprecated]
 This method is deprecated. The `AmqpReceiver` object and pattern is going away and the `Amqp` object now implements the `Receiver` interface until we can completely get rid of it in the device client.

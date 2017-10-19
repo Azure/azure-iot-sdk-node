@@ -9,10 +9,10 @@ const debug = dbg('azure-iot-device-http:Http');
 
 import { EventEmitter } from 'events';
 import { Http as Base } from 'azure-iot-http-base';
-import { endpoint, errors, results, Message, Receiver } from 'azure-iot-common';
+import { endpoint, errors, results, Message } from 'azure-iot-common';
 import { translateError } from './http_errors.js';
 import { IncomingMessage } from 'http';
-import { Client, BatchingTransport, ClientConfig } from 'azure-iot-device';
+import { DeviceMethodResponse, Client } from 'azure-iot-device';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -63,8 +63,8 @@ and either:
 or:
 - `x509` (object) an object with 3 properties: `cert`, `key` and `passphrase`, all strings, containing the necessary information to connect to the service.
 ]*/
-export class Http extends EventEmitter implements Client.Transport, BatchingTransport, Receiver {
-  private _config: ClientConfig;
+export class Http extends EventEmitter implements Client.Transport {
+  private _config: Client.Config;
   private _http: Base;
   private _opts: HttpReceiverOptions;
   private _cronObj: any;
@@ -77,7 +77,7 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
    * @constructor
    * @param config The configuration object.
    */
-  constructor(config: ClientConfig, http?: any) {
+  constructor(config: Client.Config, http?: any) {
     super();
     this._config = config;
     this._http = http || new Base();
@@ -85,6 +85,35 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
     this._opts = defaultOptions;
     this._receiverStarted = false;
 
+  }
+
+  /**
+   * @private
+   */
+  connect(callback: (err?: Error, result?: results.Connected) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_028: [The `connect` method shall call its callback immediately with a `null` first argument and a `results.Connected` second argument.]*/
+    callback(null, new results.Connected());
+  }
+
+  /**
+   * @private
+   */
+  disconnect(callback: (err?: Error, result?: results.Disconnected) => void): void {
+    if (this._receiverStarted) {
+      /*Codes_SRS_NODE_DEVICE_HTTP_16_029: [The `disconnect` method shall disable the C2D message receiver if it is running. ]*/
+      this.disableC2D((err) => {
+        if (err) {
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_030: [The `disconnect` method shall call its callback with an `Error` if disabling the C2D message receiver generates an error. ]*/
+          callback(err);
+        } else {
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_031: [The `disconnect` method shall call its callback with a `null` first argument and a `results.Disconnected` second argument after successfully disabling the C2D receiver (if necessary). ]*/
+          callback(null, new results.Disconnected());
+        }
+      });
+    } else {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_031: [The `disconnect` method shall call its callback with a `null` first argument and a `results.Disconnected` second argument after successfully disabling the C2D receiver (if necessary). ]*/
+    callback(null, new results.Disconnected());
+    }
   }
 
   /**
@@ -445,6 +474,72 @@ export class Http extends EventEmitter implements Client.Transport, BatchingTran
       this._receiverStarted = false;
     }
     callback();
+  }
+
+  /**
+   * @private
+   */
+  getTwinReceiver(done: (err?: Error, receiver?: any) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_020: [`getTwinReceiver` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Twin is not implemented over HTTP.');
+  }
+
+  /**
+   * @private
+   */
+  sendTwinRequest(method: string, resource: string, properties: {
+      [key: string]: any;
+  }, body: any, done?: (err?: Error, result?: any) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_021: [`sendTwinRequest` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Twin is not implemented over HTTP.');
+  }
+
+  /**
+   * @private
+   */
+  enableTwin(callback: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_022: [`enableTwin` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Twin is not implemented over HTTP.');
+  }
+
+  /**
+   * @private
+   */
+  disableTwin(callback: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_023: [`disableTwin` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Twin is not implemented over HTTP.');
+  }
+
+  /**
+   * @private
+   */
+  sendMethodResponse(response: DeviceMethodResponse, done?: (err?: Error, result?: any) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_024: [`sendMethodResponse` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Direct methods are not implemented over HTTP.');
+  }
+
+  /**
+   * @private
+   */
+  onDeviceMethod(methodName: string, methodCallback: (request: Client.MethodMessage, response: DeviceMethodResponse) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_025: [`onDeviceMethod` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Direct methods are not implemented over HTTP.');
+  }
+
+  /**
+   * @private
+   */
+  enableMethods(callback: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_026: [`enableMethods` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Direct methods are not implemented over HTTP.');
+  }
+
+  /**
+   * @private
+   */
+  disableMethods(callback: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_027: [`disableMethods` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Direct methods are not implemented over HTTP.');
   }
 
   private _insertAuthHeaderIfNecessary(headers: { [key: string]: string }): void {

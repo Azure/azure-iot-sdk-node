@@ -9,7 +9,7 @@ import { Client } from '../client';
  * well-formatted response back to the service for each device method call.
  * An instance of this class is passed as the second parameter to the callback registered via {@link azure-iot-device.Client.onDeviceMethod}.
  */
-export class DeviceMethodResponse implements Client.DeviceMethodResponse {
+export class DeviceMethodResponse {
   /**
    * The request identifier supplied by the service for this device method call.
    */

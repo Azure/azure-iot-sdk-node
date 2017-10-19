@@ -7,7 +7,9 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 
 var Message = require('azure-iot-common').Message;
+var results = require('azure-iot-common').results;
 var ArgumentError = require('azure-iot-common').errors.ArgumentError;
+var NotImplementedError = require('azure-iot-common').errors.NotImplementedError;
 var Http = require('../lib/http.js').Http;
 
 var FakeHttp = function () { };
@@ -44,6 +46,69 @@ describe('Http', function () {
   afterEach(function () {
     transport = null;
     receiver = null;
+  });
+
+  describe('#connect', function () {
+    /*Tests_SRS_NODE_DEVICE_HTTP_16_028: [The `connect` method shall call its callback immediately with a `null` first argument and a `results.Connected` second argument.]*/
+    it('calls its callback immediately with a results.Connected object', function (testCallback) {
+      var http = new Http();
+      http.connect(function (err, result) {
+        assert.isNull(err);
+        assert.instanceOf(result, results.Connected);
+        testCallback();
+      });
+    });
+  });
+
+  describe('#disconnect', function () {
+    /*Tests_SRS_NODE_DEVICE_HTTP_16_031: [The `disconnect` method shall call its callback with a `null` first argument and a `results.Disconnected` second argument after successfully disabling the C2D receiver (if necessary).]*/
+    it('calls its callback with no error and a results.Disconnected after successfully stopping the C2D receiver', function (testCallback) {
+      var http = new Http();
+      sinon.spy(http, 'disableC2D');
+      http.connect(function () {
+        http.enableC2D(function () {
+          http.disconnect(function (err, result) {
+            /*Tests_SRS_NODE_DEVICE_HTTP_16_029: [The `disconnect` method shall disable the C2D message receiver if it is running.]*/
+            assert.isTrue(http.disableC2D.calledOnce);
+            assert.isNull(err);
+            assert.instanceOf(result, results.Disconnected);
+            testCallback();
+          });
+        });
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_HTTP_16_031: [The `disconnect` method shall call its callback with a `null` first argument and a `results.Disconnected` second argument after successfully disabling the C2D receiver (if necessary).]*/
+    it('calls its callback with no error and a results.Disconnected if the C2D receiver is not running', function (testCallback) {
+      var http = new Http();
+      http.disconnect(function (err, result) {
+        assert.isNull(err);
+        assert.instanceOf(result, results.Disconnected);
+        testCallback();
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_HTTP_16_030: [The `disconnect` method shall call its callback with an `Error` if disabling the C2D message receiver generates an error.]*/
+    it('calls its callback with an error if disabling the C2D receiver fails', function (testCallback) {
+      var http = new Http();
+      var fakeError = new Error('fake');
+      sinon.stub(http, 'disableC2D').callsFake(function (disableC2DCallback) {
+        disableC2DCallback(fakeError);
+      });
+      http.connect(function () {
+        http.enableC2D(function () {
+          http.disconnect(function (err) {
+            /*Tests_SRS_NODE_DEVICE_HTTP_16_029: [The `disconnect` method shall disable the C2D message receiver if it is running.]*/
+            assert.isTrue(http.disableC2D.calledOnce);
+            assert.strictEqual(err, fakeError);
+            http.disableC2D.restore();
+            http.disableC2D(function () {
+              testCallback();
+            });
+          });
+        });
+      });
+    });
   });
 
   describe('#sendEvent', function() {
@@ -564,6 +629,34 @@ describe('HttpReceiver', function () {
         assert.equal(result.constructor.name, 'MessageCompleted');
         done();
       });
+    });
+  });
+
+  /*Tests_SRS_NODE_DEVICE_HTTP_16_020: [`getTwinReceiver` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_16_021: [`sendTwinRequest` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_16_022: [`enableTwin` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_16_023: [`disableTwin` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_16_024: [`sendMethodResponse` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_16_025: [`onDeviceMethod` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_16_026: [`enableMethods` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_16_027: [`disableMethods` shall throw a `NotImplementedError`.]*/
+  [
+    'getTwinReceiver',
+    'sendTwinRequest',
+    'enableTwin',
+    'disableTwin',
+    'sendMethodResponse',
+    'onDeviceMethod',
+    'enableMethods',
+    'disableMethods'
+  ].forEach(function (methodName) {
+    describe('#' + methodName, function () {
+      it('throws a NotImplementedError', function () {
+        var http = new Http();
+        assert.throws(function () {
+          http[methodName]();
+        }, NotImplementedError);
+      })
     });
   });
 });

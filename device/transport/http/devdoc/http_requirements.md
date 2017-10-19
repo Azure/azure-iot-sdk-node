@@ -50,6 +50,18 @@ or:
 - `x509` (object) an object with 3 properties: `cert`, `key` and `passphrase`, all strings, containing the necessary information to connect to the service.
 **]**
 
+### connect(callback)
+
+**SRS_NODE_DEVICE_HTTP_16_028: [** The `connect` method shall call its callback immediately with a `null` first argument and a `results.Connected` second argument. **]**
+
+### disconnect(callback)
+
+**SRS_NODE_DEVICE_HTTP_16_029: [** The `disconnect` method shall disable the C2D message receiver if it is running. **]**
+
+**SRS_NODE_DEVICE_HTTP_16_030: [** The `disconnect` method shall call its callback with an `Error` if disabling the C2D message receiver generates an error. **]**
+
+**SRS_NODE_DEVICE_HTTP_16_031: [** The `disconnect` method shall call its callback with a `null` first argument and a `results.Disconnected` second argument after successfully disabling the C2D receiver (if necessary). **]**
+
 ### sendEvent(message, done)
 
 The `sendEvent` method sends an event to an IoT hub on behalf of the device indicated in the constructor argument.
@@ -204,6 +216,38 @@ Host: <config.host>
 **SRS_NODE_DEVICE_HTTP_16_006: [**The `updateSharedAccessSignature` method shall save the new shared access signature given as a parameter to its configuration.**]**
 
 **SRS_NODE_DEVICE_HTTP_16_007: [**The `updateSharedAccessSignature` method shall call the `done` callback with a null error object and a SharedAccessSignatureUpdated object as a result, indicating that the client does not need to reestablish the transport connection.**]**
+
+### getTwinReceiver(done: (err?: Error, receiver?: any) => void): void;
+
+**SRS_NODE_DEVICE_HTTP_16_020: [** `getTwinReceiver` shall throw a `NotImplementedError`. **]**
+
+### sendTwinRequest(method: string, resource: string, properties: { [key: string]: any;}, body: any, done?: (err?: Error, result?: any) => void): void;
+
+**SRS_NODE_DEVICE_HTTP_16_021: [** `sendTwinRequest` shall throw a `NotImplementedError`. **]**
+
+### enableTwin(callback: (err?: Error) => void): void;
+
+**SRS_NODE_DEVICE_HTTP_16_022: [** `enableTwin` shall throw a `NotImplementedError`. **]**
+
+### disableTwin(callback: (err?: Error) => void): void;
+
+**SRS_NODE_DEVICE_HTTP_16_023: [** `disableTwin` shall throw a `NotImplementedError`. **]**
+
+### sendMethodResponse(response: DeviceMethodResponse, done?: (err?: Error, result?: any) => void): void;
+
+**SRS_NODE_DEVICE_HTTP_16_024: [** `sendMethodResponse` shall throw a `NotImplementedError`. **]**
+
+### onDeviceMethod(methodName: string, methodCallback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void;
+
+**SRS_NODE_DEVICE_HTTP_16_025: [** `onDeviceMethod` shall throw a `NotImplementedError`. **]**
+
+### enableMethods(callback: (err?: Error) => void): void;
+
+**SRS_NODE_DEVICE_HTTP_16_026: [** `enableMethods` shall throw a `NotImplementedError`. **]**
+
+### disableMethods(callback: (err?: Error) => void): void;
+
+**SRS_NODE_DEVICE_HTTP_16_027: [** `disableMethods` shall throw a `NotImplementedError`. **]**
 
 ### All HTTP requests
 

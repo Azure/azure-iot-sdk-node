@@ -10,7 +10,7 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-amqp:AmqpDeviceMethodClient');
 
 import { Message, errors, endpoint } from 'azure-iot-common';
-import { ClientConfig, DeviceMethodRequest, DeviceMethodResponse } from 'azure-iot-device';
+import { Client, DeviceMethodResponse } from 'azure-iot-device';
 import { Amqp as BaseAmqpClient, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
 
 const methodMessagePropertyKeys = {
@@ -22,14 +22,14 @@ const methodMessagePropertyKeys = {
  * @private
  */
 export class AmqpDeviceMethodClient extends EventEmitter {
-  private _config: ClientConfig;
+  private _config: Client.Config;
   private _amqpClient: any;
   private _methodEndpoint: string;
   private _fsm: any;
   private _senderLink: SenderLink;
   private _receiverLink: ReceiverLink;
 
-  constructor(config: ClientConfig, amqpClient: BaseAmqpClient) {
+  constructor(config: Client.Config, amqpClient: BaseAmqpClient) {
     super();
     /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_001: [The `AmqpDeviceMethodClient` shall throw a `ReferenceError` if the `config` argument is falsy.]*/
     if (!config) {
@@ -218,7 +218,7 @@ export class AmqpDeviceMethodClient extends EventEmitter {
     this._fsm.handle('sendMethodResponse', response, callback);
   }
 
-  onDeviceMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
+  onDeviceMethod(methodName: string, callback: (request: Client.MethodMessage, response: DeviceMethodResponse) => void): void {
     if (!methodName) throw new ReferenceError('methodName cannot be \'' + methodName + '\'');
     /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_018: [The `onDeviceMethod` method shall throw an `ArgumentError` if the `methodName` argument is not a string.]*/
     if (typeof methodName !== 'string') throw new errors.ArgumentError('methodName must be a string');

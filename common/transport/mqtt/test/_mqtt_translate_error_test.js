@@ -13,7 +13,7 @@ describe('MqttTranslateError', function () {
     /* Tests_SRS_NODE_DEVICE_MQTT_ERRORS_18_001: [** Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 2 properties:
       - `message` shall contain a human-readable error message
       - `transportError` shall contain the MQTT error object **]** */
-      
+
       var transportError = new Error('Dana');
       var agnosticError = translateError(transportError);
 
@@ -72,6 +72,10 @@ describe('MqttTranslateError', function () {
     /* Tests_SRS_NODE_DEVICE_MQTT_ERRORS_18_011: [** `translateError` shall return an `Error` if none of the other string rules match **]** */
     assert(translateError(new Error('Zuul')) instanceof Error);
   });
+
+  it('returns a generic error when there is no message property on the mqtt error', function () {
+    assert(translateError(new Error()) instanceof Error);
+  })
 });
 
- 
+

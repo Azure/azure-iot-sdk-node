@@ -4,7 +4,7 @@
 'use strict';
 
 import { Amqp } from './amqp.js';
-import { ClientConfig, Client, StableConnectionTransport } from 'azure-iot-device';
+import { Client } from 'azure-iot-device';
 
 /**
  * Constructs a transport object that can be used by the device {@link azure-iot-device.Client} to send and receive messages to and from an IoT Hub instance, using the AMQP protocol over secure websockets.
@@ -12,13 +12,13 @@ import { ClientConfig, Client, StableConnectionTransport } from 'azure-iot-devic
  *
  * @augments module:azure-iot-device-amqp.Amqp
  */
-export class AmqpWs extends Amqp implements Client.Transport, StableConnectionTransport {
+export class AmqpWs extends Amqp implements Client.Transport {
   /**
    * @private
    * @constructor
    * @param {Object}  config   Configuration object generated from the connection string by the client.
    */
-  constructor(config: ClientConfig) {
+  constructor(config: Client.Config) {
     super(config);
   }
 

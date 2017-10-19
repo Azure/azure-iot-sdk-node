@@ -2,13 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-import { Client } from '../client';
 
 /**
  * Represents the data passed in from the service to the device when a device method is called from the cloud.
  * An instance of this class is passed to the callback registered via {@link azure-iot-device.Client.onDeviceMethod}.
  */
-export class DeviceMethodRequest implements Client.DeviceMethodRequest {
+export class DeviceMethodRequest {
   /**
    * The request identifier supplied by the service for this device method call.
    */

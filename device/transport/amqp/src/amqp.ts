@@ -8,9 +8,9 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-amqp:Amqp');
 import { EventEmitter } from 'events';
 
-import { ClientConfig, DeviceMethodRequest, DeviceMethodResponse, StableConnectionTransport, Client } from 'azure-iot-device';
+import { DeviceMethodResponse, Client } from 'azure-iot-device';
 import { Amqp as BaseAmqpClient, translateError, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
-import { endpoint, SharedAccessSignature, errors, results, Message, X509, Receiver } from 'azure-iot-common';
+import { endpoint, SharedAccessSignature, errors, results, Message, X509 } from 'azure-iot-common';
 import { AmqpDeviceMethodClient } from './amqp_device_method_client';
 import { AmqpTwinClient } from './amqp_twin_client';
 
@@ -47,11 +47,11 @@ deviceId – (string) the identifier of a device registered with the IoT Hub
 sharedAccessSignature – (string) the shared access signature associated with the device registration.] */
 /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_001: [The `Amqp` constructor shall implement the `Receiver` interface.]*/
 /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_002: [The `Amqp` object shall inherit from the `EventEmitter` node object.]*/
-export class Amqp extends EventEmitter implements Client.Transport, StableConnectionTransport, Receiver {
+export class Amqp extends EventEmitter implements Client.Transport {
   /**
    * @private
    */
-  protected _config: ClientConfig;
+  protected _config: Client.Config;
   private _deviceMethodClient: AmqpDeviceMethodClient;
   private _amqp: BaseAmqpClient;
   private _twinClient: AmqpTwinClient;
@@ -70,7 +70,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
   /**
    * @private
    */
-  constructor(config: ClientConfig, baseClient?: BaseAmqpClient) {
+  constructor(config: Client.Config, baseClient?: BaseAmqpClient) {
     super();
     this._config = config;
     this._amqp = baseClient || new BaseAmqpClient(false, 'azure-iot-device/' + packageJson.version);
@@ -465,6 +465,20 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
 
   /**
    * @private
+   * @method             module:azure-iot-device-amqp.Amqp#sendEventBatch
+   * @description        Not Implemented.
+   * @param {Message[]}  messages    The [messages]{@linkcode module:common/message.Message}
+   *                                 to be sent.
+   * @param {Function}   done        The callback to be invoked when `sendEventBatch`
+   *                                 completes execution.
+   */
+  sendEventBatch(messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    /*Codes_SRS_NODE_DEVICE_AMQP_16_052: [The `sendEventBatch` method shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('AMQP Transport does not support batching yet');
+  }
+
+  /**
+   * @private
    * @method              module:azure-iot-device-amqp.Amqp#complete
    * @description         Settles the message as complete and calls the done callback with the result.
    *
@@ -576,7 +590,7 @@ export class Amqp extends EventEmitter implements Client.Transport, StableConnec
    * @private
    */
   /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `AmqpDeviceMethodClient` object.]*/
-  onDeviceMethod(methodName: string, methodCallback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
+  onDeviceMethod(methodName: string, methodCallback: (request: Client.MethodMessage, response: DeviceMethodResponse) => void): void {
     /*Codes_SRS_NODE_DEVICE_AMQP_16_022: [The `onDeviceMethod` method shall call the `onDeviceMethod` method on the `AmqpDeviceMethodClient` object with the same arguments.]*/
     this._deviceMethodClient.onDeviceMethod(methodName, methodCallback);
   }

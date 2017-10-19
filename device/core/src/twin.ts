@@ -11,7 +11,6 @@ const debug = dbg('azure-iot-device:Twin');
 import { errors } from 'azure-iot-common';
 import { translateError } from './twin_errors';
 import { Client } from './client';
-import { TwinTransport } from './interfaces';
 
 /**
  * A Device Twin is document describing the state of a device that is stored by an Azure IoT hub and is available even if the device is offline.
@@ -58,7 +57,7 @@ export class Twin extends EventEmitter {
   private _connectSubscribeAndGetProperties(done: (err?: Error, result?: Twin) => void): void {
     const self = this;
     /* Codes_SRS_NODE_DEVICE_TWIN_18_004: [** `fromDeviceClient` shall call `getTwinReceiver` on the protocol object to get a twin receiver. **]**  */
-    (this._client._transport as TwinTransport).getTwinReceiver((err, receiver) => {
+    this._client._transport.getTwinReceiver((err, receiver) => {
       if (err) {
         done(err);
       } else {
@@ -186,7 +185,7 @@ export class Twin extends EventEmitter {
     }, Twin.timeout);
 
     /* Codes_SRS_NODE_DEVICE_TWIN_18_016: [** `_sendTwinRequest` shall use the `sendTwinRequest` method on the transport to send the request **]**  */
-    (this._client._transport as TwinTransport).sendTwinRequest(method, resource, propCopy, body);
+    this._client._transport.sendTwinRequest(method, resource, propCopy, body);
   }
 
 
@@ -315,16 +314,9 @@ export class Twin extends EventEmitter {
       /* Codes_SRS_NODE_DEVICE_TWIN_18_029: [** if `fromDeviceClient` is called with 2 different `client`s, it shall return 2 unique `Twin` objects **]** */
       /* Codes_SRS_NODE_DEVICE_TWIN_18_003: [** `fromDeviceClient` shall allocate a new `Twin` object **]**  */
       const twin = new Twin(client);
-
       twin.on('newListener', twin._handleNewListener.bind(twin));
-
-      /* Codes_SRS_NODE_DEVICE_TWIN_18_005: [** If the protocol does not contain a `getTwinReceiver` method, `fromDeviceClient` shall throw a `NotImplementedError` error **]**  */
-      if (!(client._transport as TwinTransport).getTwinReceiver) {
-        throw new errors.NotImplementedError('transport does not support Twin');
-      } else {
-        client._twin = twin;
-        twin._connectSubscribeAndGetProperties(done);
-      }
+      client._twin = twin;
+      twin._connectSubscribeAndGetProperties(done);
     }
   }
 }

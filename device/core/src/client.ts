@@ -8,13 +8,13 @@ import { EventEmitter } from 'events';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:Client');
 
-import { anHourFromNow, results, errors, Message, TransportConfig } from 'azure-iot-common';
+import { anHourFromNow, results, errors, Message, X509 } from 'azure-iot-common';
+import { SharedAccessSignature as CommonSharedAccessSignature } from 'azure-iot-common';
 import * as ConnectionString from './connection_string.js';
 import * as SharedAccessSignature from './shared_access_signature.js';
 import { BlobUploadClient } from './blob_upload';
 import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
 import { Twin } from './twin';
-import { StableConnectionTransport , DeviceMethodTransport, ClientConfig } from './interfaces';
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
   if (callback) callback(error, result);
@@ -134,7 +134,7 @@ export class Client extends EventEmitter {
    * @throws {TypeError}            If the `methodName` parameter is not a string
    *                                or if the `callback` is not a function.
    */
-  onDeviceMethod(methodName: string, callback: (request: Client.DeviceMethodRequest, response: Client.DeviceMethodResponse) => void): void {
+  onDeviceMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
     // validate input args
     this._validateDeviceMethodInputs(methodName, callback);
 
@@ -142,7 +142,7 @@ export class Client extends EventEmitter {
     this._addMethodCallback(methodName, callback);
 
     // Codes_SRS_NODE_DEVICE_CLIENT_13_003: [ The client shall start listening for method calls from the service whenever there is a listener subscribed for a method callback. ]
-    (this._transport as DeviceMethodTransport).enableMethods((err) => {
+    this._transport.enableMethods((err) => {
       if (err) {
         this.emit('error', err);
       }
@@ -193,15 +193,10 @@ export class Client extends EventEmitter {
    *                                 completes execution.
    */
   open(openCallback: (err?: Error, result?: results.Connected) => void): void {
-    if (this._isImplementedInTransport('connect')) {
-      (this._transport as StableConnectionTransport).connect((connectErr, connectResult) => {
-        /*Codes_SRS_NODE_DEVICE_CLIENT_16_060: [The `open` method shall call the `openCallback` callback with a null error object and a `results.Connected()` result object if the transport is already connected, doesn't need to connect or has just connected successfully.]*/
-        safeCallback(openCallback, connectErr, connectResult);
-      });
-    } else {
+    this._transport.connect((connectErr, connectResult) => {
       /*Codes_SRS_NODE_DEVICE_CLIENT_16_060: [The `open` method shall call the `openCallback` callback with a null error object and a `results.Connected()` result object if the transport is already connected, doesn't need to connect or has just connected successfully.]*/
-      safeCallback(openCallback, null, new results.Connected());
-    }
+      safeCallback(openCallback, connectErr, connectResult);
+    });
   }
 
   /**
@@ -235,15 +230,11 @@ export class Client extends EventEmitter {
    */
   sendEventBatch(messages: Message[], sendEventBatchCallback?: (err?: Error, result?: results.MessageEnqueued) => void): void {
     /*Codes_SRS_NODE_DEVICE_CLIENT_05_008: [The sendEventBatch method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance.]*/
-    if (this._transport.sendEventBatch) {
-      this._transport.sendEventBatch(messages, (err, result) => {
-        if (sendEventBatchCallback) {
-          sendEventBatchCallback(err, result);
-        }
-      });
-    } else {
-      throw new errors.NotImplementedError('Transport does not support message batching');
-    }
+    this._transport.sendEventBatch(messages, (err, result) => {
+      if (sendEventBatchCallback) {
+        sendEventBatchCallback(err, result);
+      }
+    });
   }
 
   /**
@@ -408,7 +399,7 @@ export class Client extends EventEmitter {
     (twin || require('./twin.js').Twin).fromDeviceClient(this, done);
   }
 
-  private _validateDeviceMethodInputs(methodName: string, callback: (request: Client.DeviceMethodRequest, response: Client.DeviceMethodResponse) => void): void {
+  private _validateDeviceMethodInputs(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
     // Codes_SRS_NODE_DEVICE_CLIENT_13_020: [ onDeviceMethod shall throw a ReferenceError if methodName is falsy. ]
     if (!methodName) {
       throw new ReferenceError('methodName cannot be \'' + methodName + '\'');
@@ -428,11 +419,6 @@ export class Client extends EventEmitter {
       throw new TypeError('callback\'s type is \'' + typeof(callback) + '\'. A function reference was expected.');
     }
 
-    // Codes_SRS_NODE_DEVICE_CLIENT_13_021: [ onDeviceMethod shall throw an NotImplementedErrorError if the underlying transport does not support device methods. ]
-    if (!((this._transport as DeviceMethodTransport).sendMethodResponse)) {
-      throw new errors.NotImplementedError('The transport for this client does not support device methods');
-    }
-
     // Codes_SRS_NODE_DEVICE_CLIENT_13_023: [ onDeviceMethod shall throw an Error if a listener is already subscribed for a given method call. ]
     if (!!(this._methodCallbackMap[methodName])) {
       throw new Error('A handler for this method has already been registered with the client.');
@@ -441,7 +427,7 @@ export class Client extends EventEmitter {
 
   private _addMethodCallback(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
     const self = this;
-    (this._transport as DeviceMethodTransport).onDeviceMethod(methodName, (message) => {
+    this._transport.onDeviceMethod(methodName, (message) => {
       // build the request object
       const request = new DeviceMethodRequest(
         message.requestId,
@@ -499,10 +485,6 @@ export class Client extends EventEmitter {
     });
   }
 
-  private _isImplementedInTransport(fnName: string): boolean {
-    return typeof this._transport[fnName] === 'function';
-  }
-
   private _closeTransport(closeCallback: (err?: Error, result?: any) => void): void {
     const onDisconnected = (err?: Error, result?: any): void => {
       /*Codes_SRS_NODE_DEVICE_CLIENT_16_056: [The `close` method shall not throw if the `closeCallback` is not passed.]*/
@@ -515,16 +497,12 @@ export class Client extends EventEmitter {
     }
 
     this._disableC2D(() => {
-      if (this._isImplementedInTransport('disconnect')) {
-        /*Codes_SRS_NODE_DEVICE_CLIENT_16_001: [The `close` function shall call the transport's `disconnect` function if it exists.]*/
-        (this._transport as StableConnectionTransport).disconnect((disconnectError, disconnectResult) => {
-          /*Codes_SRS_NODE_DEVICE_CLIENT_16_046: [The `close` method shall remove the listener that has been attached to the transport `disconnect` event.]*/
-          this._transport.removeListener('disconnect', this._disconnectHandler);
-          onDisconnected(disconnectError, disconnectResult);
-        });
-      } else {
-        onDisconnected(null, new results.Disconnected());
-      }
+      /*Codes_SRS_NODE_DEVICE_CLIENT_16_001: [The `close` function shall call the transport's `disconnect` function if it exists.]*/
+      this._transport.disconnect((disconnectError, disconnectResult) => {
+        /*Codes_SRS_NODE_DEVICE_CLIENT_16_046: [The `close` method shall remove the listener that has been attached to the transport `disconnect` event.]*/
+        this._transport.removeListener('disconnect', this._disconnectHandler);
+        onDisconnected(disconnectError, disconnectResult);
+      });
     });
   }
 
@@ -548,7 +526,7 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_CLIENT_05_005: [fromConnectionString shall derive and transform the needed parts from the connection string in order to create a new instance of transportCtor.]*/
     const cn = ConnectionString.parse(connStr);
 
-    let config: ClientConfig = {
+    let config: Client.Config = {
       host: cn.HostName,
       deviceId: cn.DeviceId,
       hubName: cn.HostName.split('.')[0]
@@ -583,7 +561,7 @@ export class Client extends EventEmitter {
     const sas = SharedAccessSignature.parse(sharedAccessSignature);
     const decodedUri = decodeURIComponent(sas.sr);
     const uriSegments = decodedUri.split('/');
-    const config: ClientConfig = {
+    const config: Client.Config = {
       host: uriSegments[0],
       deviceId: uriSegments[uriSegments.length - 1],
       hubName: uriSegments[0].split('.')[0],
@@ -593,24 +571,72 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_030: [The fromSharedAccessSignature method shall return a new instance of the Client object] */
     return new Client(new transportCtor(config), null, new BlobUploadClient(config));
   }
-
 }
 
 export namespace Client {
-  export interface Config extends TransportConfig {
+  /**
+   * @private
+   * Configuration parameters used to authenticate and connect a Device Client with an Azure IoT hub.
+   */
+  export interface Config {
+    /**
+     * Device unique identifier (as it exists in the device registry).
+     */
+    deviceId: string;
+    /**
+     * Hostname of the Azure IoT hub. (<IoT hub name>.azure-devices.net).
+     */
+    host: string;
+    /**
+     * Name of the Azure IoT hub. (The first section of the Azure IoT hub hostname)
+     */
     hubName: string;
+    /**
+     * If using symmetric key authentication, this is used to generate the shared access signature tokens used to authenticate the connection.
+     */
+    symmetricKey?: string;
+    /**
+     * The shared access signature token used to authenticate the connection with the Azure IoT hub.
+     */
+    sharedAccessSignature?: string | CommonSharedAccessSignature;
+    /**
+     * Structure containing the certificate and associated key used to authenticate the connection if using x509 certificates as the authentication method.
+     */
+    x509?: X509;
   }
 
   export interface Transport extends EventEmitter {
+    on(type: 'error', func: (err: Error) => void): this;
+    on(type: 'disconnect', func: (err?: Error) => void): this;
+
+    connect(done: (err?: Error, result?: results.Connected) => void): void;
+    disconnect(done: (err?: Error, result?: results.Disconnected) => void): void;
     setOptions?(options: any, done: (err?: Error, result?: results.TransportConfigured) => void): void;
     updateSharedAccessSignature(sharedAccessSignature: string, done: (err?: Error, result?: results.SharedAccessSignatureUpdated) => void): void;
+
+    // D2C
     sendEvent(message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void;
-    sendEventBatch?(messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void;
+    sendEventBatch(messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void;
+
+    // C2D
+    on(type: 'message', func: (msg: Message) => void): this;
     complete(message: Message, done: (err?: Error, result?: results.MessageCompleted) => void): void;
     reject(message: Message, done: (err?: Error, results?: results.MessageRejected) => void): void;
     abandon(message: Message, done: (err?: Error, results?: results.MessageAbandoned) => void): void;
     enableC2D(callback: (err?: Error) => void): void;
     disableC2D(callback: (err?: Error) => void): void;
+
+    // Twin
+    getTwinReceiver(done: (err?: Error, receiver?: any) => void): void;
+    sendTwinRequest(method: string, resource: string, properties: { [key: string]: any }, body: any, done?: (err?: Error, result?: any) => void): void;
+    enableTwin(callback: (err?: Error) => void): void;
+    disableTwin(callback: (err?: Error) => void): void;
+
+    // Methods
+    sendMethodResponse(response: DeviceMethodResponse, done?: (err?: Error, result?: any) => void): void;
+    onDeviceMethod(methodName: string, methodCallback: (request: MethodMessage, response: DeviceMethodResponse) => void): void;
+    enableMethods(callback: (err?: Error) => void): void;
+    disableMethods(callback: (err?: Error) => void): void;
   }
 
   export interface BlobUpload {
@@ -618,19 +644,15 @@ export namespace Client {
     updateSharedAccessSignature(sharedAccessSignature: string): void;
   }
 
-  export interface DeviceMethodRequest {
+  /**
+   * @private
+   * @deprecated
+   */
+  export interface MethodMessage {
+    methods: { methodName: string; };
     requestId: string;
-    methodName: string;
-    payload?: Buffer;
-  }
-
-  export interface DeviceMethodResponse {
-    requestId: string;
-    isResponseComplete: boolean;
-    status: number;
-    payload: any;
-
-    send(status: number, payload?: any, done?: (err?: Error) => void): void;
+    properties: { [key: string]: string; };
+    body: Buffer;
   }
 
   export type TransportCtor = new(config: Config) => Transport;

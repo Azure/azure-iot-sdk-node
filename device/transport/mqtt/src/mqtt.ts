@@ -6,8 +6,8 @@ import * as querystring from 'querystring';
 import * as URL from 'url';
 import * as machina from 'machina';
 
-import { results, errors, Message, X509, Receiver } from 'azure-iot-common';
-import { ClientConfig, DeviceMethodRequest, DeviceMethodResponse, Client, StableConnectionTransport, TwinTransport } from 'azure-iot-device';
+import { results, errors, Message, X509 } from 'azure-iot-common';
+import { DeviceMethodResponse, Client } from 'azure-iot-device';
 import { EventEmitter } from 'events';
 import * as util from 'util';
 import * as dbg from 'debug';
@@ -33,11 +33,11 @@ const TOPIC_RESPONSE_PUBLISH_FORMAT = '$iothub/%s/res/%d/?$rid=%s';
  Codes_SRS_NODE_DEVICE_MQTT_12_002: [The `Mqtt` constructor shall store the configuration structure in a member variable
  Codes_SRS_NODE_DEVICE_MQTT_12_003: [The Mqtt constructor shall create an base transport object and store it in a member variable.]
 */
-export class Mqtt extends EventEmitter implements Client.Transport, StableConnectionTransport, TwinTransport, Receiver {
+export class Mqtt extends EventEmitter implements Client.Transport {
   /**
    * @private
    */
-  protected _config: ClientConfig;
+  protected _config: Client.Config;
   private _mqtt: MqttBase;
   private _twinReceiver: MqttTwinReceiver;
   private _topicTelemetryPublish: string;
@@ -49,7 +49,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   /**
    * @private
    */
-  constructor(config: ClientConfig, provider?: any) {
+  constructor(config: Client.Config, provider?: any) {
     super();
     this._config = config;
     this._topicTelemetryPublish = 'devices/' + this._config.deviceId + '/messages/events/';
@@ -95,12 +95,13 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
       }
     };
 
+    this._twinReceiver = new MqttTwinReceiver(this._mqtt);
+
     this._fsm = new machina.Fsm({
       initialState: 'disconnected',
       states: {
         disconnected: {
           _onEnter: (disconnectedCallback, err, result) => {
-            this._twinReceiver = null;
             if (disconnectedCallback) {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_MQTT_16_019: [The `connect` method shall calls its callback with an `Error` that has been translated from the `MqttBase` error using the `translateError` method if it fails to establish a connection.]*/
@@ -176,12 +177,27 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
               }
             });
           },
+          enableTwin: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_057: [`enableTwin` shall connect the MQTT connection if it is disconnected.]*/
+            this._fsm.handle('connect', (err) => {
+              if (err) {
+                /*Codes_SRS_NODE_DEVICE_MQTT_16_058: [`enableTwin` shall calls its callback with an `Error` object if it fails to connect.]*/
+                callback(err);
+              } else {
+                this._fsm.handle('enableTwin', callback);
+              }
+            });
+          },
           disableC2D: (callback) => {
             /*Codes_SRS_NODE_DEVICE_MQTT_16_041: [`disableC2D` shall call its callback immediately if the MQTT connection is already disconnected.]*/
             callback();
           },
           disableMethods: (callback) => {
             /*Codes_SRS_NODE_DEVICE_MQTT_16_044: [`disableMethods` shall call its callback immediately if the MQTT connection is already disconnected.]*/
+            callback();
+          },
+          disableTwin: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_062: [`disableTwin` shall call its callback immediately if the MQTT connection is already disconnected.]*/
             callback();
           }
         },
@@ -278,12 +294,6 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
             });
           },
           getTwinReceiver: (callback) => {
-            /* Codes_SRS_NODE_DEVICE_MQTT_18_003: [** If a twin receiver for this endpoint doesn't exist, the `getTwinReceiver` method should create a new `MqttTwinReceiver` object. **]** */
-            /* Codes_SRS_NODE_DEVICE_MQTT_18_002: [** If a twin receiver for this endpoint has already been created, the `getTwinReceiver` method should not create a new `MqttTwinReceiver` object. **]** */
-            if (!this._twinReceiver) {
-              this._twinReceiver = new MqttTwinReceiver(this._mqtt);
-            }
-
             /* Codes_SRS_NODE_DEVICE_MQTT_18_005: [** The `getTwinReceiver` method shall call the `done` method after it completes **]** */
             /* Codes_SRS_NODE_DEVICE_MQTT_18_006: [** If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `MqttTwinReceiver` object as the second parameter of the `done` function with null as the first parameter. **]** */
             /* Codes_SRS_NODE_DEVICE_MQTT_18_007: [** If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `MqttTwinReceiver` object as the second parameter of the `done` function with null as the first parameter. **]** */
@@ -295,11 +305,19 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
           enableMethods: (callback) => {
             this._setupSubscription(this._topics.method, callback);
           },
+          enableTwin: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_059: [`enableTwin` shall subscribe to the MQTT topics for twins.]*/
+            this._twinReceiver.subscribe(callback);
+          },
           disableC2D: (callback) => {
             this._removeSubscription(this._topics.message, callback);
           },
           disableMethods: (callback) => {
             this._removeSubscription(this._topics.method, callback);
+          },
+          disableTwin: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_063: [`disableTwin` shall unsubscribe from the topics for twin messages.]*/
+            this._twinReceiver.unsubscribe(callback);
           }
         },
         disconnecting: {
@@ -384,14 +402,26 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `sendEvent` method shall use QoS level of 1.]*/
     this._fsm.handle('sendEvent', topic, message.data, { qos: 1, retain: false }, (err, puback) => {
       debug('PUBACK: ' + JSON.stringify(puback));
-      if (done) {
-        if (err) {
-          done(err);
-        } else {
-          done(null, new results.MessageEnqueued(puback));
-        }
+      if (err) {
+        done(err);
+      } else {
+        done(null, new results.MessageEnqueued(puback));
       }
     });
+  }
+
+  /**
+   * @private
+   * @method             module:azure-iot-device-mqtt.Mqtt#sendEventBatch
+   * @description        Not Implemented.
+   * @param {Message[]}  messages    The [messages]{@linkcode module:common/message.Message}
+   *                                 to be sent.
+   * @param {Function}   done        The callback to be invoked when `sendEventBatch`
+   *                                 completes execution.
+   */
+  sendEventBatch(messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_056: [The `sendEventBatch` method shall throw a `NotImplementedError`]*/
+    throw new errors.NotImplementedError('AMQP Transport does not support batching yet');
   }
 
   /**
@@ -447,7 +477,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
     /*Codes_SRS_NODE_DEVICE_MQTT_16_007: [The `updateSharedAccessSignature` method shall save the new shared access signature given as a parameter to its configuration.]*/
     this._config.sharedAccessSignature = sharedAccessSignature;
     this._fsm.handle('updateSharedAccessSignature', sharedAccessSignature, (err, result) => {
-      if (done) done(err, result);
+      done(err, result);
     });
   }
 
@@ -567,11 +597,7 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
       throw new Error('Parameter \'response.status\' is not a number');
     }
 
-    this._fsm.handle('sendMethodResponse', response, (err) => {
-      if (done) {
-        done(err);
-      }
-    });
+    this._fsm.handle('sendMethodResponse', response, done);
   }
 
   /**
@@ -595,7 +621,8 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
   /**
    * @private
    */
-  onDeviceMethod(methodName: string, callback: (methodRequest: DeviceMethodRequest, methodResponse: DeviceMethodResponse) => void): void {
+  onDeviceMethod(methodName: string, callback: (methodRequest: Client.MethodMessage, methodResponse: DeviceMethodResponse) => void): void {
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_066: [The `methodCallback` parameter shall be called whenever a `method_<methodName>` is emitted and device methods have been enabled.]*/
     this.on('method_' + methodName, callback);
   }
 
@@ -625,6 +652,20 @@ export class Mqtt extends EventEmitter implements Client.Transport, StableConnec
    */
   disableMethods(callback: (err?: Error) => void): void {
     this._fsm.handle('disableMethods', callback);
+  }
+
+  /**
+   * @private
+   */
+  enableTwin(callback: (err?: Error) => void): void {
+    this._fsm.handle('enableTwin', callback);
+  }
+
+  /**
+   * @private
+   */
+  disableTwin(callback: (err?: Error) => void): void {
+    this._fsm.handle('disableTwin', callback);
   }
 
   private _setupSubscription(topic: TopicDescription, callback: (err?: Error) => void): void {
@@ -780,7 +821,7 @@ class MethodDescription {
 /**
  * @private
  */
-class MethodMessage {
+class MethodMessage implements Client.MethodMessage {
   methods: MethodDescription;
   requestId: string;
   properties: { [key: string]: string };

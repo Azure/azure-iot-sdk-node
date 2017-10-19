@@ -50,6 +50,14 @@ function SimulatedHttp(config) {
 
 util.inherits(SimulatedHttp, EventEmitter);
 
+SimulatedHttp.prototype.connect = function (callback) {
+  callback(null, new results.Connected());
+};
+
+SimulatedHttp.prototype.disconnect = function (callback) {
+  callback(null, new results.Disconnected());
+};
+
 SimulatedHttp.prototype.setOptions = function() {
   this._x509 = true;
 };

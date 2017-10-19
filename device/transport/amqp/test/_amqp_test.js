@@ -859,6 +859,15 @@ describe('Amqp', function () {
         });
       });
     });
+
+    describe('#sendEventBatch', function () {
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_052: [The `sendEventBatch` method shall throw a `NotImplementedError`.]*/
+      it('throws an NotImplementedError', function () {
+        assert.throws(function () {
+          transport.sendEventBatch([], function() {});
+        }, errors.NotImplementedError);
+      });
+    });
   });
 
   describe('C2D', function () {
