@@ -472,7 +472,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
    * @param {String}        sharedAccessSignature  The new SAS token.
    * @param {Function}      done      The callback to be invoked when `updateSharedAccessSignature` completes.
    */
-  updateSharedAccessSignature (sharedAccessSignature: string, done?: (err?: Error, result?: any) => void): void {
+  updateSharedAccessSignature (sharedAccessSignature: string, done: (err?: Error, result?: any) => void): void {
     debug('updateSharedAccessSignature');
     /*Codes_SRS_NODE_DEVICE_MQTT_16_007: [The `updateSharedAccessSignature` method shall save the new shared access signature given as a parameter to its configuration.]*/
     this._config.sharedAccessSignature = sharedAccessSignature;

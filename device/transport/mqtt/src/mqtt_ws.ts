@@ -13,7 +13,7 @@ import { Mqtt } from './mqtt';
 /*Codes_SRS_NODE_DEVICE_MQTT_12_001: [The constructor shall accept the transport configuration structure.]*/
 /*Codes_SRS_NODE_DEVICE_MQTT_12_002: [The constructor shall store the configuration structure in a member variable.]*/
 /*Codes_SRS_NODE_DEVICE_MQTT_12_003: [The constructor shall create an base transport object and store it in a member variable.]*/
-export class MqttWs extends Mqtt implements Client.Transport {
+export class MqttWs extends Mqtt {
   /**
    * @private
    * @constructor

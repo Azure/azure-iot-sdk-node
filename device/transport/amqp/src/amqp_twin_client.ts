@@ -8,7 +8,7 @@ import machina = require('machina');
 
 import { endpoint, errors, results, Message } from 'azure-iot-common';
 import { Amqp as BaseAmqpClient, translateError, AmqpMessage } from 'azure-iot-amqp-base';
-import { ClientConfig } from 'azure-iot-device';
+import { Client } from 'azure-iot-device';
 
 import * as uuid from 'uuid';
 import * as dbg from 'debug';
@@ -47,7 +47,7 @@ export class AmqpTwinClient extends EventEmitter {
   private _eventQueue: any[];
   private _eventQueueError: Error;
 
-  constructor(config: ClientConfig, client: any) {
+  constructor(config: Client.Config, client: any) {
     super();
     /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_003: [The `AmqpTwinClient` constructor shall accept a `config` object.] */
     /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_004: [The `AmqpTwinClient` constructor shall throw `ReferenceError` if the `config` object is falsy.] */

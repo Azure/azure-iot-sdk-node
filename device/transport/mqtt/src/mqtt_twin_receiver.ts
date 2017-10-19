@@ -152,10 +152,10 @@ export class MqttTwinReceiver extends EventEmitter {
           '*': () => this._fsm.deferUntilTransition()
         },
         unsubscribingFromResponseTopic: {
-          _onEnter: (callback, previousUnsubscribeError) => {
+          _onEnter: (callback, forwardedError) => {
             /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_005: [** When there are no more listeners for the `response` event, the topic should be unsubscribed **]** */
             this._mqtt.unsubscribe(responseTopic, (err) => {
-              let finalError = previousUnsubscribeError || err;
+              let finalError = forwardedError || err;
               this._fsm.transition('unsubscribed', callback, finalError);
             });
           },

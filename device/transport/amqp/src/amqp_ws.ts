@@ -12,7 +12,7 @@ import { Client } from 'azure-iot-device';
  *
  * @augments module:azure-iot-device-amqp.Amqp
  */
-export class AmqpWs extends Amqp implements Client.Transport {
+export class AmqpWs extends Amqp {
   /**
    * @private
    * @constructor
