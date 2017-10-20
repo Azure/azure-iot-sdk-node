@@ -1,0 +1,35 @@
+{
+  "name": "azure-device-provisioning-integration",
+  "version": "0.0.1",
+  "description": "Integration tests for the Azure Device Provisioning SDK",
+  "author": "Microsoft Corporation",
+  "license": "MIT",
+  "dependencies": {
+    "azure-iot-provisioning-http": "0.0.1",
+    "azure-iot-common": "1.2.0",
+    "debug": "^3.0.1",
+    "machina": "^2.0.0",
+    "chai": "^3.5.0",
+    "istanbul": "^0.4.4",
+    "jshint": "^2.9.2",
+    "mocha": "^3.0.1",
+    "sinon": "^1.17.5",
+    "jshint": "^2.9.4"
+  },
+  "scripts": {
+    "lint": "jshint --show-non-errors .",
+    "e2e": "node node_modules/mocha/bin/_mocha -- _*.js",
+    "test": "npm -s run lint && npm -s run e2e"
+  },
+  "engines": {
+    "node": ">= 0.10"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Azure/azure-iot-sdk-node.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Azure/azure-iot-sdk-node/issues"
+  },
+  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme"
+}

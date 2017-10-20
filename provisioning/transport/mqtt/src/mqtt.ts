@@ -13,3 +13,4 @@ import { DeviceProvisioningTransport } from 'azure-device-provisioning-client';
 
 export class Mqtt extends EventEmitter { // implements DeviceProvisioningTransport.Transport {
 }
+
