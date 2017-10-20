@@ -6,7 +6,7 @@
 import * as amqp10 from 'amqp10';
 import * as machina from 'machina';
 import { AmqpMessage } from './amqp_message';
-import { results, Message } from 'azure-iot-common';
+import { errors, results, Message } from 'azure-iot-common';
 import { ClaimsBasedSecurityAgent } from './amqp_cbs';
 import { SenderLink } from './sender_link';
 import { ReceiverLink } from './receiver_link';
@@ -92,12 +92,7 @@ export class Amqp {
 
     const amqpErrorHandler = (err) => {
       debug('amqp10 client error: ' + err.toString());
-      this._fsm.handle('amqpError', err, () => {
-        if (this._disconnectHandler) {
-          debug('calling upper layer disconnect handler');
-          this._disconnectHandler(err);
-        }
-      });
+      this._fsm.handle('amqpError', err);
     };
 
     this._fsm = new machina.Fsm({
@@ -106,10 +101,15 @@ export class Amqp {
       states: {
         disconnected: {
           _onEnter: (disconnectCallback, err, result) => {
-            if (err) {
-              this._safeCallback(disconnectCallback, err);
-            } else {
-              this._safeCallback(disconnectCallback, null, new results.Disconnected());
+            if (disconnectCallback) {
+              if (err) {
+                this._safeCallback(disconnectCallback, err);
+              } else {
+                this._safeCallback(disconnectCallback, null, new results.Disconnected());
+              }
+            } else if (this._disconnectHandler) {
+              debug('calling upper layer disconnect handler');
+              this._disconnectHandler(err);
             }
           },
           amqpError: (err, callback) => {
@@ -168,6 +168,12 @@ export class Amqp {
             };
 
             this._amqp.on(_amqpClientError, connectErrorHandler);
+            this._amqp.on('disconnected', () => {
+              debug('amqp10Client disconnected while state machine is: ' + this._fsm.state);
+              if (this._fsm.state === 'connected') {
+                this._fsm.transition('disconnected', undefined, new errors.NotConnectedError('amqp10: connection closed'));
+              }
+            });
             this._amqp.connect(this.uri)
               .then((result) => {
                 debug('AMQP transport connected.');
@@ -178,9 +184,8 @@ export class Amqp {
               })
               .catch((err) => {
                 this._amqp.removeListener(_amqpClientError, connectErrorHandler);
-                this._fsm.transition('disconnected');
                 /*Codes_SRS_NODE_COMMON_AMQP_16_003: [The `connect` method shall call the `done` callback if the connection fails.] */
-                this._safeCallback(connectCallback, connectError || err);
+                this._fsm.transition('disconnected', connectCallback, connectError || err);
               });
           },
           amqpError: (err, callback) => this._fsm.transition('disconnecting', callback, err),
@@ -410,9 +415,6 @@ export class Amqp {
    */
   setDisconnectHandler(disconnectCallback: GenericAmqpBaseCallback<any>): void {
     this._disconnectHandler = disconnectCallback;
-    // this._amqp.on('connection:closed', () => {
-    //   this._disconnectHandler(new errors.NotConnectedError('amqp10: connection closed'));
-    // });
   }
 
   /**

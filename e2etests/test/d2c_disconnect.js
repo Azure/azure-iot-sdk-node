@@ -86,7 +86,7 @@ var protocolAndTermination = [
     delayInSeconds: 2
   },
   {
-    testEnabled: false,
+    testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'ShutDownAmqp',
     closeReason: ' cleanly shutdowns AMQP connection ',
