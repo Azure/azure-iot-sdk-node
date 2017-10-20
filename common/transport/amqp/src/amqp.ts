@@ -14,7 +14,7 @@ import { AmqpLink } from './amqp_link_interface';
 
 import * as dbg from 'debug';
 import * as async from 'async';
-const debug = dbg('amqp-common:amqp');
+const debug = dbg('azure-iot-amqp-base:Amqp');
 
 const _amqpClientError = 'client:errorReceived';
 
@@ -90,6 +90,16 @@ export class Amqp {
       }
     }, amqp10.Policy.EventHub));
 
+    const amqpErrorHandler = (err) => {
+      debug('amqp10 client error: ' + err.toString());
+      this._fsm.handle('amqpError', err, () => {
+        if (this._disconnectHandler) {
+          debug('calling upper layer disconnect handler');
+          this._disconnectHandler(err);
+        }
+      });
+    };
+
     this._fsm = new machina.Fsm({
       namespace: 'amqp-base',
       initialState: 'disconnected',
@@ -155,15 +165,6 @@ export class Amqp {
             let connectError = null;
             const connectErrorHandler = (err) => {
               connectError = err;
-            };
-
-            const amqpErrorHandler = (err) => {
-              debug('amqp10 client error: ' + err.toString());
-              this._fsm.handle('amqpError', err, () => {
-                if (this._disconnectHandler) {
-                  this._disconnectHandler(err);
-                }
-              });
             };
 
             this._amqp.on(_amqpClientError, connectErrorHandler);
@@ -339,7 +340,7 @@ export class Amqp {
 
               if (err) {
                 debug('forceDetaching link');
-                link.forceDetach(err);
+                link.forceDetach();
                 callback();
               } else {
                 debug('cleanly detaching link');
@@ -367,6 +368,7 @@ export class Amqp {
               async.each(remainingLinks, detachLink, () => {
                 disconnect((disconnectError) => {
                   const finalError = err || disconnectError;
+                  this._amqp.removeListener(_amqpClientError, amqpErrorHandler);
                   this._fsm.transition('disconnected', disconnectCallback, finalError);
                 });
               });
@@ -408,9 +410,9 @@ export class Amqp {
    */
   setDisconnectHandler(disconnectCallback: GenericAmqpBaseCallback<any>): void {
     this._disconnectHandler = disconnectCallback;
-    this._amqp.on('connection:closed', () => {
-      this._disconnectHandler(new Error('amqp10: connection closed'));
-    });
+    // this._amqp.on('connection:closed', () => {
+    //   this._disconnectHandler(new errors.NotConnectedError('amqp10: connection closed'));
+    // });
   }
 
   /**

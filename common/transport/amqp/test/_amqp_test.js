@@ -574,7 +574,7 @@ describe('Amqp', function () {
           });
         });
 
-        it('calls the done callback with an error if the connection fails while trying to attach the link', function(testCallback) {
+        it.only('calls the done callback with an error if the connection fails while trying to attach the link', function(testCallback) {
           var amqp = new Amqp();
           var fakeError = new Error('failed to create sender');
           sinon.stub(amqp._amqp, 'connect').resolves('connected');

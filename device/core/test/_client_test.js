@@ -864,6 +864,59 @@ describe('Client', function () {
      client.getTwin(done, fakeTwin);
     });
   });
+
+  describe('setRetryPolicy', function() {
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_083: [The `setRetryPolicy` method shall throw a `ReferenceError` if the policy object is falsy.]*/
+    [null, undefined, ''].forEach(function(badPolicy) {
+      it('throws a ReferenceError if policy is \'' + badPolicy + '\'', function() {
+        var client = new Client(new EventEmitter());
+        assert.throws(function() {
+          client.setRetryPolicy(badPolicy);
+        }, ReferenceError);
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_084: [The `setRetryPolicy` method shall throw an `ArgumentError` if the policy object doesn't have a `shouldRetry` method.]*/
+    it('throws an ArgumentError if the policy does not have a shouldRetry method', function() {
+      var client = new Client(new EventEmitter());
+      var badPolicy = {
+        nextRetryTimeout: function() {}
+      };
+      assert.throws(function() {
+        client.setRetryPolicy(badPolicy);
+      }, errors.ArgumentError);
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_085: [The `setRetryPolicy` method shall throw an `ArgumentError` if the policy object doesn't have a `nextRetryTimeout` method.]*/
+    it('throws an ArgumentError if the policy does not have a nextRetryTimeout method', function() {
+      var client = new Client(new EventEmitter());
+      var badPolicy = {
+        shouldRetry: function () {}
+      };
+      assert.throws(function() {
+        client.setRetryPolicy(badPolicy);
+      }, errors.ArgumentError);
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_086: [Any operation happening after a `setRetryPolicy` call should use the policy set during that call.]*/
+    it('uses the new retry policy for the next operation', function (testCallback) {
+      var testPolicy = {
+        shouldRetry: sinon.stub().returns(false),
+        nextRetryTimeout: sinon.stub().returns(-1)
+      };
+      var fakeTransport = new EventEmitter();
+      fakeTransport.sendEvent = sinon.stub().callsArgWith(1, new results.MessageEnqueued());
+
+      var client = new Client(fakeTransport);
+      client.setRetryPolicy(testPolicy);
+      client.sendEvent(new Message('foo'), function() {
+        assert.isTrue(testPolicy.shouldRetry.calledOnce);
+        assert.isTrue(testPolicy.nextRetryTimeout.notCalled); //shouldRetry being false...
+        assert.isTrue(fakeTransport.sendEvent.calledOnce);
+        testCallback();
+      });
+    });
+  });
 });
 
 describe('Over simulated HTTPS', function () {

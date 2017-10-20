@@ -10,6 +10,7 @@ var assert = require('chai').assert;
 var deviceAmqp = require('azure-iot-device-amqp');
 var deviceMqtt = require('azure-iot-device-mqtt');
 var Message = require('azure-iot-common').Message;
+var NoRetry = require('azure-iot-common').NoRetry;
 
 var serviceSdk = require('azure-iothub');
 var Message = require('azure-iot-common').Message;
@@ -92,7 +93,7 @@ var protocolAndTermination = [
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'ShutDownAmqp',
     closeReason: ' cleanly shutdowns AMQP connection ',
@@ -186,6 +187,7 @@ var runTests = function (hubConnectionString, provisionedDevice) {
       doConnectTest(testConfiguration.testEnabled)('Service sends a method, iothub client receives it, and' + testConfiguration.closeReason + 'which is noted by the iot hub device client', function (testCallback) {
         this.timeout(20000);
         var firstMethodSent = false;
+        deviceClient.setRetryPolicy(new NoRetry());
         var disconnectHandler = function () {
           debug('We did get a disconnect message');
           deviceClient.removeListener('disconnect', disconnectHandler);
@@ -215,7 +217,7 @@ var runTests = function (hubConnectionString, provisionedDevice) {
         });
       });
 
-      doConnectTest(false)('Service client sends 2 methods, when iot hub client receives first, it ' + testConfiguration.closeReason + 'which is not seen by the iot hub device client', function (testCallback) {
+      doConnectTest(testConfiguration.testEnabled)('Service client sends 2 methods, when iot hub client receives first, it ' + testConfiguration.closeReason + 'which is not seen by the iot hub device client', function (testCallback) {
         this.timeout(20000);
         deviceClient.on('disconnect', function () {
           testCallback(new Error('unexpected disconnect'));

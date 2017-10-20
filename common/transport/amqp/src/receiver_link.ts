@@ -5,7 +5,7 @@ import { Message, errors, results } from 'azure-iot-common';
 import { AmqpMessage } from './amqp_message';
 import { AmqpLink } from './amqp_link_interface';
 
-const debug = dbg('amqp-common:receiverlink');
+const debug = dbg('azure-iot-amqp-base:ReceiverLink');
 
 /**
  * @private
