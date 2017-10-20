@@ -19,9 +19,9 @@ import { Twin } from './twin';
 
 /**
  * @private
- * Default maximum operation timeout for client operations.
+ * Default maximum operation timeout for client operations: 4 minutes.
  */
-const MAX_OPERATION_TIMEOUT = 60000;
+const MAX_OPERATION_TIMEOUT = 240000;
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
   if (callback) callback(error, result);
@@ -42,12 +42,6 @@ export class Client extends EventEmitter {
    */
   static sasRenewalInterval: number = 2700000;
 
-  /**
-   * Maximum timeout (in milliseconds) used to consider an operation failed.
-   * The operation will be retried according to the retry policy set with {@link azure-iot-device.Client.setRetryPolicy} method (or {@link azure-iot-common.ExponentialBackoffWithJitter} by default) until this value is reached.)
-   */
-  maxOperationTimeout: number;
-
   // Can't be marked private because they are used in the Twin class.
   /**
    * @private
@@ -57,6 +51,13 @@ export class Client extends EventEmitter {
    * @private
    */
   _twin: Twin;
+
+  /**
+   * @private
+   * Maximum timeout (in milliseconds) used to consider an operation failed.
+   * The operation will be retried according to the retry policy set with {@link azure-iot-device.Client.setRetryPolicy} method (or {@link azure-iot-common.ExponentialBackoffWithJitter} by default) until this value is reached.)
+   */
+  private _maxOperationTimeout: number;
 
   private _connectionString: string;
   private _useAutomaticRenewal: boolean;
@@ -98,6 +99,8 @@ export class Client extends EventEmitter {
     });
 
     this._transport.on('error', (err) => {
+      // errors right now bubble up through the disconnect handler.
+      // ultimately we would like to get rid of that disconnect event and rely on the error event instead
       debug('Transport error: ' + err.toString());
     });
 
@@ -157,7 +160,7 @@ export class Client extends EventEmitter {
     this._transport.on('disconnect', this._disconnectHandler);
 
     this._retryPolicy = new ExponentialBackOffWithJitter();
-    this.maxOperationTimeout = MAX_OPERATION_TIMEOUT;
+    this._maxOperationTimeout = MAX_OPERATION_TIMEOUT;
   }
 
   /**
@@ -217,7 +220,7 @@ export class Client extends EventEmitter {
 
     this.blobUploadClient.updateSharedAccessSignature(sharedAccessSignature);
 
-    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       this._transport.updateSharedAccessSignature(sharedAccessSignature, opCallback);
     }, (err, result) => {
@@ -237,7 +240,7 @@ export class Client extends EventEmitter {
    *                                 completes execution.
    */
   open(openCallback: (err?: Error, result?: results.Connected) => void): void {
-    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       this._transport.connect(opCallback);
     }, (connectErr, connectResult) => {
@@ -256,7 +259,7 @@ export class Client extends EventEmitter {
    * @param {Function}                  sendEventCallback  The callback to be invoked when `sendEvent` completes execution.
    */
   sendEvent(message: Message, sendEventCallback?: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       /*Codes_SRS_NODE_DEVICE_CLIENT_05_007: [The sendEvent method shall send the event indicated by the message argument via the transport associated with the Client instance.]*/
       this._transport.sendEvent(message, opCallback);
@@ -277,7 +280,7 @@ export class Client extends EventEmitter {
    *                                                `sendEventBatch` completes execution.
    */
   sendEventBatch(messages: Message[], sendEventBatchCallback?: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       /*Codes_SRS_NODE_DEVICE_CLIENT_05_008: [The sendEventBatch method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance.]*/
       this._transport.sendEventBatch(messages, opCallback);
@@ -318,7 +321,7 @@ export class Client extends EventEmitter {
       }
     };
 
-    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       /*Codes_SRS_NODE_DEVICE_CLIENT_16_021: [The ‘setTransportOptions’ method shall call the ‘setOptions’ method on the transport object.]*/
       this._transport.setOptions(clientOptions, opCallback);
@@ -344,7 +347,8 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
     if (!options) throw new ReferenceError('options cannot be falsy.');
 
-    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    // Making this an operation that can be retried because we cannot assume the transport's behavior (whether it's going to disconnect/reconnect, etc).
+    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       this._transport.setOptions(options, opCallback);
     }, (err) => {
@@ -367,7 +371,7 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_016: [The ‘complete’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
     if (!message) throw new ReferenceError('message is \'' + message + '\'');
 
-    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       this._transport.complete(message, opCallback);
     }, (err, result) => {
@@ -387,7 +391,7 @@ export class Client extends EventEmitter {
   reject(message: Message, rejectCallback: (err?: Error, result?: results.MessageRejected) => void): void {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_018: [The reject method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
     if (!message) throw new ReferenceError('message is \'' + message + '\'');
-    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       this._transport.reject(message, opCallback);
     }, (err, result) => {
@@ -408,7 +412,7 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_017: [The abandon method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
     if (!message) throw new ReferenceError('message is \'' + message + '\'');
 
-    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       this._transport.abandon(message, opCallback);
     }, (err, result) => {
@@ -435,7 +439,7 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_039: [The `uploadToBlob` method shall throw a `ReferenceError` if `streamLength` is falsy.]*/
     if (!streamLength) throw new ReferenceError('streamLength cannot be \'' + streamLength + '\'');
 
-    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       /*Codes_SRS_NODE_DEVICE_CLIENT_16_040: [The `uploadToBlob` method shall call the `done` callback with an `Error` object if the upload fails.]*/
       /*Codes_SRS_NODE_DEVICE_CLIENT_16_041: [The `uploadToBlob` method shall call the `done` callback no parameters if the upload succeeds.]*/
@@ -525,9 +529,9 @@ export class Client extends EventEmitter {
 
   private _enableC2D(callback: (err?: Error) => void): void {
     if (!this._c2dEnabled) {
-      const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
-      this._transport.enableC2D(opCallback);
+        this._transport.enableC2D(opCallback);
       }, (err) => {
         if (!err) {
           this._c2dEnabled = true;
@@ -554,8 +558,8 @@ export class Client extends EventEmitter {
 
   private _enableMethods(callback: (err?: Error) => void): void {
     if (!this._methodsEnabled) {
-      const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
-      retryOp.retry((opCallback) => {
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+        retryOp.retry((opCallback) => {
       this._transport.enableMethods(opCallback);
       }, (err) => {
         if (!err) {
@@ -568,6 +572,7 @@ export class Client extends EventEmitter {
     }
   }
 
+  // Currently there is no code making use of this function, because there is no "removeDeviceMethod" corresponding to "onDeviceMethod"
   // private _disableMethods(callback: (err?: Error) => void): void {
   //   if (this._methodsEnabled) {
   //     this._transport.disableMethods((err) => {

@@ -15,6 +15,7 @@ var clientTests = require('./_client_common_testrun.js');
 var results = require('azure-iot-common').results;
 var errors = require('azure-iot-common').errors;
 var Message = require('azure-iot-common').Message;
+var NoRetry = require('azure-iot-common').NoRetry;
 
 describe('Client', function () {
   var sharedKeyConnectionString = 'HostName=host;DeviceId=id;SharedAccessKey=key';
@@ -702,10 +703,13 @@ describe('Client', function () {
   });
 
   describe('#on(\'error\')', function () {
-    it('forwards transport errors into a disconnect event', function (testCallback) {
+    // errors right now bubble up through the transport disconnect handler.
+    // ultimately we would like to get rid of that disconnect event and rely on the error event instead
+    it.skip('forwards transport errors into a disconnect event', function (testCallback) {
       var fakeError = new Error('fake');
       var dummyTransport = new FakeTransport();
       var client = new Client(dummyTransport);
+      client.setRetryPolicy(new NoRetry());
       client.on('disconnect', function (err) {
         assert.strictEqual(err, fakeError);
         testCallback();

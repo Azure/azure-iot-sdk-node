@@ -3,6 +3,10 @@
 
 'use strict';
 
+/**
+ * @private
+ * Associates error types with a boolean value indicating whether it can be retried (true) or if it is fatal (false)
+ */
 export interface ErrorFilter {
   ArgumentError: boolean;
   ArgumentOutOfRangeError: boolean;
@@ -33,6 +37,9 @@ export interface ErrorFilter {
 }
 
 /* tslint:disable:variable-name */
+/**
+ * @private
+ */
 export class DefaultErrorFilter implements ErrorFilter {
   ArgumentError: boolean = false;
   ArgumentOutOfRangeError: boolean = false;

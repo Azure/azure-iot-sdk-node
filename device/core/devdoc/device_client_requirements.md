@@ -237,7 +237,7 @@ interface DeviceMethodEventHandler {
 
 **SRS_NODE_DEVICE_CLIENT_16_085: [** The `setRetryPolicy` method shall throw an `ArgumentError` if the policy object doesn't have a `nextRetryTimeout` method. **]**
 
-**SRS_NODE_DEVICE_CLIENT_16_086: [** Any operation happening after a `setRetryPolicy` call should use the policy set during that call. **]**
+**SRS_NODE_DEVICE_CLIENT_16_086: [** Any operation (such as `sendEvent` or `onDeviceMethod`) happening after a `setRetryPolicy` call should use the policy set during that call. **]**
 
 ### Events
 #### message

@@ -52,7 +52,7 @@ describe('Client Retry Logic', function () {
       fakeTransport[testConfig.funcName] = sinon.stub().callsArgWith(1, new errors.TimeoutError('failed'));
 
       var client = new Client(fakeTransport, fakeConnectionString, fakeBlobClient);
-      client.maxOperationTimeout = 100;
+      client._maxOperationTimeout = 100;
       client[testConfig.funcName](new Message('foo'), function (err) {
         assert(fakeTransport[testConfig.funcName].callCount >= 2);
         testCallback();
@@ -67,7 +67,7 @@ describe('Client Retry Logic', function () {
     fakeTransport.connect = sinon.stub().callsArgWith(0, new errors.TimeoutError('failed'));
 
     var client = new Client(fakeTransport, fakeConnectionString, fakeBlobClient);
-    client.maxOperationTimeout = 100;
+    client._maxOperationTimeout = 100;
     client.open(function (err) {
       assert(fakeTransport.connect.callCount >= 2);
       testCallback();
@@ -82,7 +82,7 @@ describe('Client Retry Logic', function () {
     fakeTransport.enableMethods = sinon.stub().callsArgWith(0, new errors.TimeoutError('failed'));
 
     var client = new Client(fakeTransport, fakeConnectionString, fakeBlobClient);
-    client.maxOperationTimeout = 100;
+    client._maxOperationTimeout = 100;
     client.on('error', (err) => {
       assert(fakeTransport.onDeviceMethod.calledOnce);
       assert(fakeTransport.enableMethods.callCount >= 2);
@@ -100,7 +100,7 @@ describe('Client Retry Logic', function () {
     fakeTransport.enableC2D = sinon.stub().callsArgWith(0, new errors.TimeoutError('failed'));
 
     var client = new Client(fakeTransport, fakeConnectionString, fakeBlobClient);
-    client.maxOperationTimeout = 100;
+    client._maxOperationTimeout = 100;
     client.on('error', (err) => {
       assert(fakeTransport.enableC2D.callCount >= 2);
       testCallback();
