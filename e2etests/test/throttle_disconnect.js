@@ -13,6 +13,7 @@ var createDeviceClient = require('./testUtils.js').createDeviceClient;
 var closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubClients;
 var eventHubClient = require('azure-event-hubs').Client;
 var errors = require('azure-iot-common').errors;
+var NoRetry = require('azure-iot-common').NoRetry;
 
 var doConnectTest = function doConnectTest(doIt) {
   return doIt ? it : it.skip;
@@ -73,6 +74,7 @@ var runTests = function (hubConnectionString, provisionedDevice) {
 
       doConnectTest(testConfiguration.testEnabled)('Device client sends ' + numberOfD2CMessages + ' messages, first causes' + testConfiguration.closeReason + 'which causes next '+ (numberOfD2CMessages - 2) + ' to fail, final passes after ' + testConfiguration.durationInSeconds + ' seconds duration.', function (testCallback) {
         this.timeout(80000);
+        deviceClient.setRetryPolicy(new NoRetry());
 
         var onDisconnected = function(err) {
           debug('unexpected disconnection of the device client');

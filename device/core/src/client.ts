@@ -10,11 +10,18 @@ const debug = dbg('azure-iot-device:Client');
 
 import { anHourFromNow, results, errors, Message, X509 } from 'azure-iot-common';
 import { SharedAccessSignature as CommonSharedAccessSignature } from 'azure-iot-common';
+import { ExponentialBackOffWithJitter, RetryPolicy, RetryOperation } from 'azure-iot-common';
 import * as ConnectionString from './connection_string.js';
 import * as SharedAccessSignature from './shared_access_signature.js';
 import { BlobUploadClient } from './blob_upload';
 import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
 import { Twin } from './twin';
+
+/**
+ * @private
+ * Default maximum operation timeout for client operations.
+ */
+const MAX_OPERATION_TIMEOUT = 60000;
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
   if (callback) callback(error, result);
@@ -35,6 +42,12 @@ export class Client extends EventEmitter {
    */
   static sasRenewalInterval: number = 2700000;
 
+  /**
+   * Maximum timeout (in milliseconds) used to consider an operation failed.
+   * The operation will be retried according to the retry policy set with {@link azure-iot-device.Client.setRetryPolicy} method (or {@link azure-iot-common.ExponentialBackoffWithJitter} by default) until this value is reached.)
+   */
+  maxOperationTimeout: number;
+
   // Can't be marked private because they are used in the Twin class.
   /**
    * @private
@@ -52,6 +65,9 @@ export class Client extends EventEmitter {
   private _disconnectHandler: (err?: Error, result?: any) => void;
   private blobUploadClient: BlobUploadClient; // TODO: wrong casing/naming convention
   private _c2dEnabled: boolean;
+  private _methodsEnabled: boolean;
+
+  private _retryPolicy: RetryPolicy;
 
   /**
    * @constructor
@@ -67,6 +83,7 @@ export class Client extends EventEmitter {
 
     super();
     this._c2dEnabled = false;
+    this._methodsEnabled = false;
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_026: [The Client constructor shall accept a connection string as an optional second argument] */
     this._connectionString = connStr;
 
@@ -82,7 +99,6 @@ export class Client extends EventEmitter {
 
     this._transport.on('error', (err) => {
       debug('Transport error: ' + err.toString());
-      this.emit('disconnect', err);
     });
 
     this._methodCallbackMap = {};
@@ -112,10 +128,36 @@ export class Client extends EventEmitter {
     }
 
     this._disconnectHandler = (err) => {
-      this.emit('disconnect', new results.Disconnected(err));
+      debug('transport disconnect event: ' + (err ? err.toString() : 'no error'));
+      if (err && this._retryPolicy.shouldRetry(err)) {
+        if (this._c2dEnabled) {
+          this._c2dEnabled = false;
+          debug('re-enabling C2D link');
+          this._enableC2D((err) => {
+            if (err) {
+              this.emit('disconnect', new results.Disconnected(err));
+            }
+          });
+        }
+
+        if (this._methodsEnabled) {
+          this._methodsEnabled = false;
+          debug('re-enabling Methods link');
+          this._enableMethods((err) => {
+            if (err) {
+              this.emit('disconnect', new results.Disconnected(err));
+            }
+          });
+        }
+      } else {
+        this.emit('disconnect', new results.Disconnected(err));
+      }
     };
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_045: [If the transport successfully establishes a connection the `open` method shall subscribe to the `disconnect` event of the transport.]*/
     this._transport.on('disconnect', this._disconnectHandler);
+
+    this._retryPolicy = new ExponentialBackOffWithJitter();
+    this.maxOperationTimeout = MAX_OPERATION_TIMEOUT;
   }
 
   /**
@@ -141,8 +183,7 @@ export class Client extends EventEmitter {
     this._methodCallbackMap[methodName] = callback;
     this._addMethodCallback(methodName, callback);
 
-    // Codes_SRS_NODE_DEVICE_CLIENT_13_003: [ The client shall start listening for method calls from the service whenever there is a listener subscribed for a method callback. ]
-    this._transport.enableMethods((err) => {
+    this._enableMethods((err) => {
       if (err) {
         this.emit('error', err);
       }
@@ -176,7 +217,10 @@ export class Client extends EventEmitter {
 
     this.blobUploadClient.updateSharedAccessSignature(sharedAccessSignature);
 
-    this._transport.updateSharedAccessSignature(sharedAccessSignature, (err, result) => {
+    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      this._transport.updateSharedAccessSignature(sharedAccessSignature, opCallback);
+    }, (err, result) => {
       if (!err) {
         this.emit('_sharedAccessSignatureUpdated');
       }
@@ -193,7 +237,10 @@ export class Client extends EventEmitter {
    *                                 completes execution.
    */
   open(openCallback: (err?: Error, result?: results.Connected) => void): void {
-    this._transport.connect((connectErr, connectResult) => {
+    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      this._transport.connect(opCallback);
+    }, (connectErr, connectResult) => {
       /*Codes_SRS_NODE_DEVICE_CLIENT_16_060: [The `open` method shall call the `openCallback` callback with a null error object and a `results.Connected()` result object if the transport is already connected, doesn't need to connect or has just connected successfully.]*/
       safeCallback(openCallback, connectErr, connectResult);
     });
@@ -209,11 +256,12 @@ export class Client extends EventEmitter {
    * @param {Function}                  sendEventCallback  The callback to be invoked when `sendEvent` completes execution.
    */
   sendEvent(message: Message, sendEventCallback?: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    /*Codes_SRS_NODE_DEVICE_CLIENT_05_007: [The sendEvent method shall send the event indicated by the message argument via the transport associated with the Client instance.]*/
-    this._transport.sendEvent(message, (err, result) => {
-      if (sendEventCallback) {
-        sendEventCallback(err, result);
-      }
+    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_05_007: [The sendEvent method shall send the event indicated by the message argument via the transport associated with the Client instance.]*/
+      this._transport.sendEvent(message, opCallback);
+    }, (err, result) => {
+      safeCallback(sendEventCallback, err, result);
     });
   }
 
@@ -229,11 +277,12 @@ export class Client extends EventEmitter {
    *                                                `sendEventBatch` completes execution.
    */
   sendEventBatch(messages: Message[], sendEventBatchCallback?: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    /*Codes_SRS_NODE_DEVICE_CLIENT_05_008: [The sendEventBatch method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance.]*/
-    this._transport.sendEventBatch(messages, (err, result) => {
-      if (sendEventBatchCallback) {
-        sendEventBatchCallback(err, result);
-      }
+    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_05_008: [The sendEventBatch method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance.]*/
+      this._transport.sendEventBatch(messages, opCallback);
+    }, (err, result) => {
+      safeCallback(sendEventBatchCallback, err, result);
     });
   }
 
@@ -269,12 +318,15 @@ export class Client extends EventEmitter {
       }
     };
 
-    /*Codes_SRS_NODE_DEVICE_CLIENT_16_021: [The ‘setTransportOptions’ method shall call the ‘setOptions’ method on the transport object.]*/
-    this._transport.setOptions(clientOptions, (err) => {
+    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_16_021: [The ‘setTransportOptions’ method shall call the ‘setOptions’ method on the transport object.]*/
+      this._transport.setOptions(clientOptions, opCallback);
+    }, (err) => {
       if (err) {
-        done(err);
+        safeCallback(done, err);
       } else {
-        done(null, new results.TransportConfigured());
+        safeCallback(done, null, new results.TransportConfigured());
       }
     });
   }
@@ -292,12 +344,13 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
     if (!options) throw new ReferenceError('options cannot be falsy.');
 
-    this._transport.setOptions(options, (err) => {
+    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      this._transport.setOptions(options, opCallback);
+    }, (err) => {
       /*Codes_SRS_NODE_DEVICE_CLIENT_16_043: [The `done` callback shall be invoked no parameters when it has successfully finished setting the client and/or transport options.]*/
       /*Codes_SRS_NODE_DEVICE_CLIENT_16_044: [The `done` callback shall be invoked with a standard javascript `Error` object and no result object if the client could not be configured as requested.]*/
-      if (done) {
-        done(err);
-      }
+      safeCallback(done, err);
     });
   }
 
@@ -314,10 +367,11 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_016: [The ‘complete’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
     if (!message) throw new ReferenceError('message is \'' + message + '\'');
 
-    this._transport.complete(message, (err, result) => {
-      if (completeCallback) {
-        completeCallback(err, result);
-      }
+    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      this._transport.complete(message, opCallback);
+    }, (err, result) => {
+      safeCallback(completeCallback, err, result);
     });
   }
 
@@ -333,11 +387,11 @@ export class Client extends EventEmitter {
   reject(message: Message, rejectCallback: (err?: Error, result?: results.MessageRejected) => void): void {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_018: [The reject method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
     if (!message) throw new ReferenceError('message is \'' + message + '\'');
-
-    this._transport.reject(message, (err, result) => {
-      if (rejectCallback) {
-        rejectCallback(err, result);
-      }
+    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      this._transport.reject(message, opCallback);
+    }, (err, result) => {
+      safeCallback(rejectCallback, err, result);
     });
   }
 
@@ -354,10 +408,11 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_017: [The abandon method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
     if (!message) throw new ReferenceError('message is \'' + message + '\'');
 
-    this._transport.abandon(message, (err, result) => {
-      if (abandonCallback) {
-        abandonCallback(err, result);
-      }
+    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      this._transport.abandon(message, opCallback);
+    }, (err, result) => {
+      safeCallback(abandonCallback, err, result);
     });
   }
 
@@ -380,9 +435,14 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_039: [The `uploadToBlob` method shall throw a `ReferenceError` if `streamLength` is falsy.]*/
     if (!streamLength) throw new ReferenceError('streamLength cannot be \'' + streamLength + '\'');
 
-    /*Codes_SRS_NODE_DEVICE_CLIENT_16_040: [The `uploadToBlob` method shall call the `done` callback with an `Error` object if the upload fails.]*/
-    /*Codes_SRS_NODE_DEVICE_CLIENT_16_041: [The `uploadToBlob` method shall call the `done` callback no parameters if the upload succeeds.]*/
-    this.blobUploadClient.uploadToBlob(blobName, stream, streamLength, done);
+    const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_16_040: [The `uploadToBlob` method shall call the `done` callback with an `Error` object if the upload fails.]*/
+      /*Codes_SRS_NODE_DEVICE_CLIENT_16_041: [The `uploadToBlob` method shall call the `done` callback no parameters if the upload succeeds.]*/
+      this.blobUploadClient.uploadToBlob(blobName, stream, streamLength, opCallback);
+    }, (err, result) => {
+      safeCallback(done, err, result);
+    });
   }
 
   /**
@@ -397,6 +457,26 @@ export class Client extends EventEmitter {
     /* Codes_SRS_NODE_DEVICE_CLIENT_18_002: [** The `getTwin` method shall pass itself as the first parameter to `fromDeviceClient` and it shall pass the `done` method as the second parameter. **]**  */
     /* Codes_SRS_NODE_DEVICE_CLIENT_18_003: [** The `getTwin` method shall use the second parameter (if it is not falsy) to call `fromDeviceClient` on. **]**    */
     (twin || require('./twin.js').Twin).fromDeviceClient(this, done);
+  }
+
+  /**
+   * Sets the retry policy used by the client on all operations. The default is {@link azure-iot-common.ExponentialBackoffWithJitter|ExponentialBackoffWithJitter}.
+   * @param policy {RetryPolicy}  The retry policy that should be used for all future operations.
+   */
+  setRetryPolicy(policy: RetryPolicy): void {
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_083: [The `setRetryPolicy` method shall throw a `ReferenceError` if the policy object is falsy.]*/
+    if (!policy) {
+      throw new ReferenceError('\'policy\' cannot be \'' + policy + '\'');
+    } else {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_16_084: [The `setRetryPolicy` method shall throw an `ArgumentError` if the policy object doesn't have a `shouldRetry` method.]*/
+      /*Codes_SRS_NODE_DEVICE_CLIENT_16_085: [The `setRetryPolicy` method shall throw an `ArgumentError` if the policy object doesn't have a `nextRetryTimeout` method.]*/
+      if (typeof policy.shouldRetry !== 'function' || typeof policy.nextRetryTimeout !== 'function') {
+        throw new errors.ArgumentError('A policy object must have a maxTimeout property that is a number and a nextRetryTimeout method.');
+      }
+    }
+
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_086: [Any operation happening after a `setRetryPolicy` call should use the policy set during that call.]*/
+    this._retryPolicy = policy;
   }
 
   private _validateDeviceMethodInputs(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
@@ -445,7 +525,10 @@ export class Client extends EventEmitter {
 
   private _enableC2D(callback: (err?: Error) => void): void {
     if (!this._c2dEnabled) {
-      this._transport.enableC2D((err) => {
+      const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+      this._transport.enableC2D(opCallback);
+      }, (err) => {
         if (!err) {
           this._c2dEnabled = true;
         }
@@ -468,6 +551,35 @@ export class Client extends EventEmitter {
       callback();
     }
   }
+
+  private _enableMethods(callback: (err?: Error) => void): void {
+    if (!this._methodsEnabled) {
+      const retryOp = new RetryOperation(this._retryPolicy, this.maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+      this._transport.enableMethods(opCallback);
+      }, (err) => {
+        if (!err) {
+          this._methodsEnabled = true;
+        }
+        callback(err);
+      });
+    } else {
+      callback();
+    }
+  }
+
+  // private _disableMethods(callback: (err?: Error) => void): void {
+  //   if (this._methodsEnabled) {
+  //     this._transport.disableMethods((err) => {
+  //       if (!err) {
+  //         this._methodsEnabled = false;
+  //       }
+  //       callback(err);
+  //     });
+  //   } else {
+  //     callback();
+  //   }
+  // }
 
   private _renewSharedAccessSignature(): void {
     const cn = ConnectionString.parse(this._connectionString);

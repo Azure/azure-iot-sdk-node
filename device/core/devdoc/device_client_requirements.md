@@ -229,6 +229,16 @@ interface DeviceMethodEventHandler {
 
 **SRS_NODE_DEVICE_CLIENT_13_021: [** `onDeviceMethod` shall throw a `NotImplementedErrorError` if the underlying transport does not support device methods. **]**
 
+#### setRetryPolicy(policy)
+
+**SRS_NODE_DEVICE_CLIENT_16_083: [** The `setRetryPolicy` method shall throw a `ReferenceError` if the policy object is falsy. **]**
+
+**SRS_NODE_DEVICE_CLIENT_16_084: [** The `setRetryPolicy` method shall throw an `ArgumentError` if the policy object doesn't have a `shouldRetry` method. **]**
+
+**SRS_NODE_DEVICE_CLIENT_16_085: [** The `setRetryPolicy` method shall throw an `ArgumentError` if the policy object doesn't have a `nextRetryTimeout` method. **]**
+
+**SRS_NODE_DEVICE_CLIENT_16_086: [** Any operation happening after a `setRetryPolicy` call should use the policy set during that call. **]**
+
 ### Events
 #### message
 
@@ -251,4 +261,3 @@ interface DeviceMethodEventHandler {
 #### disconnect
 
 **SRS_NODE_DEVICE_CLIENT_16_019: [** The `disconnect` event shall be emitted when the client is disconnected from the server. **]**
-

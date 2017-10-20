@@ -8,6 +8,7 @@ var fs = require('fs');
 
 var Client = require('../lib/client.js').Client;
 var ConnectionString = require('azure-iot-common').ConnectionString;
+var NoRetry = require('azure-iot-common').NoRetry;
 
 var Message = require('azure-iot-common').Message;
 
@@ -33,6 +34,7 @@ function badConfigTests(opName, Transport, requestFn) {
 
   function makeRequestWith(connectionString, test, done) {
     var client = Client.fromConnectionString(connectionString, Transport);
+    client.setRetryPolicy(new NoRetry());
     client.open(function(err) {
       if (err) {
         test(err);

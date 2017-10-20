@@ -14,6 +14,7 @@ var serviceSdk = require('azure-iothub');
 var Message = require('azure-iot-common').Message;
 var createDeviceClient = require('./testUtils.js').createDeviceClient;
 var closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
+var NoRetry = require('azure-iot-common').NoRetry;
 
 var numberOfC2DMessages = 5;
 var sendMessageTimeout = null;
@@ -87,7 +88,7 @@ var protocolAndTermination = [
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'ShutDownAmqp',
     closeReason: ' cleanly shutdowns AMQP connection ',
@@ -128,6 +129,7 @@ var runTests = function (hubConnectionString, provisionedDevice) {
         var sendingSideDone = false;
         var uuidData = uuid.v4();
         var originalMessage = new Message(uuidData);
+        deviceClient.setRetryPolicy(new NoRetry());
         var disconnectHandler = function () {
           debug('We did get a disconnect message');
           deviceClient.removeListener('disconnect', disconnectHandler);
@@ -190,8 +192,8 @@ var runTests = function (hubConnectionString, provisionedDevice) {
         });
       });
 
-      doConnectTest(false)('Service sends ' + numberOfC2DMessages + ' C2D messages, iot hub client receives first and' + testConfiguration.closeReason + 'which is never seen by the iot hub client', function (testCallback) {
-        this.timeout(20000);
+      doConnectTest(testConfiguration.testEnabled)('Service sends ' + numberOfC2DMessages + ' C2D messages, iot hub client receives first and' + testConfiguration.closeReason + 'which is never seen by the iot hub client', function (testCallback) {
+        this.timeout(60000);
         var originalMessages = [];
         var messagesReceived = 0;
         var messagesSent = 0;
@@ -258,12 +260,12 @@ var runTests = function (hubConnectionString, provisionedDevice) {
                       deviceClient.sendEvent(terminateMessage, function (sendErr) {
                         debug('at the callback for the fault injection send, err is:' + sendErr);
                       });
-                      sendMessageTimeout = setTimeout(c2dMessageSender.bind(this), 3000);
+                      sendMessageTimeout = setTimeout(c2dMessageSender.bind(this), 5000);
                     } else {
                       if (messagesReceived === numberOfC2DMessages) {
                         testCallback();
                       } else {
-                        sendMessageTimeout = setTimeout(c2dMessageSender.bind(this), 1000);
+                        sendMessageTimeout = setTimeout(c2dMessageSender.bind(this), 3000);
                       }
                     }
                   } else {

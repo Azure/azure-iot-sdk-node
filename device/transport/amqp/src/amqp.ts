@@ -75,7 +75,10 @@ export class Amqp extends EventEmitter implements Client.Transport {
     this._config = config;
     this._amqp = baseClient || new BaseAmqpClient(false, 'azure-iot-device/' + packageJson.version);
     this._amqp.setDisconnectHandler((err) => {
-      this.emit('disconnect', err);
+      debug('disconnected event handler: ' + (err ? err.toString() : 'no error'));
+      this._fsm.handle('disconnect', () => {
+        this.emit('disconnect', getTranslatedError(err, 'AMQP client disconnected'));
+      });
     });
 
     this._deviceMethodClient = new AmqpDeviceMethodClient(this._config, this._amqp);
@@ -111,6 +114,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
 
     this._d2cErrorListener = (err) => {
       debug('Error on the D2C link: ' + err.toString());
+      this._d2cLink = null;
       // we don't really care because we can reattach the link every time we send and surface the error at that time.
     };
 
@@ -359,6 +363,25 @@ export class Amqp extends EventEmitter implements Client.Transport {
             let finalError = err;
             async.series([
               (callback) => {
+                if (err) {
+                  debug('force-detaching device methods links');
+                  this._deviceMethodClient.forceDetach();
+                  callback();
+                } else {
+                  this._deviceMethodClient.detach((detachErr) => {
+                    if (detachErr) {
+                      debug('error detaching methods links: ' + detachErr.toString());
+                      if (!finalError) {
+                        finalError = translateError('error while detaching the methods links when disconnecting', detachErr);
+                      }
+                    } else {
+                      debug('device methods links detached.');
+                    }
+                    callback();
+                  });
+                }
+              },
+              (callback) => {
                 if (this._d2cLink) {
                   let tmpD2CLink = this._d2cLink;
                   this._d2cLink = undefined;
@@ -419,6 +442,10 @@ export class Amqp extends EventEmitter implements Client.Transport {
           '*': (connectCallback) => this._fsm.deferUntilTransition()
         },
       }
+    });
+
+    this._fsm.on('transition', (data) => {
+      debug(data.fromState + ' -> ' + data.toState + ' (' + data.action + ')');
     });
   }
 

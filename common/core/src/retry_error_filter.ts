@@ -44,7 +44,7 @@ export class DefaultErrorFilter implements ErrorFilter {
   NotConnectedError: boolean = true;
   IotHubQuotaExceededError: boolean = false;
   MessageTooLargeError: boolean = false;
-  InternalServerError: boolean = false;
+  InternalServerError: boolean = true;
   ServiceUnavailableError: boolean = true;
   IotHubNotFoundError: boolean = false;
   IoTHubSuspendedError: boolean = false; // ??

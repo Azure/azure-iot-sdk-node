@@ -12,6 +12,7 @@ var Message = require('azure-iot-common').Message;
 var createDeviceClient = require('./testUtils.js').createDeviceClient;
 var closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubClients;
 var eventHubClient = require('azure-event-hubs').Client;
+var NoRetry = require('azure-iot-common').NoRetry;
 
 var doConnectTest = function doConnectTest(doIt) {
   return doIt ? it : it.skip;
@@ -85,7 +86,7 @@ var protocolAndTermination = [
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'ShutDownAmqp',
     closeReason: ' cleanly shutdowns AMQP connection ',
@@ -121,11 +122,12 @@ var runTests = function (hubConnectionString, provisionedDevice) {
       });
 
       doConnectTest(testConfiguration.testEnabled)('Device sends a message, event hub client receives it, and' + testConfiguration.closeReason + 'which is noted by the iot hub device client', function (testCallback) {
-        this.timeout(20000);
+        this.timeout(40000);
         var uuidData = uuid.v4();
         var originalMessage = new Message(uuidData);
         var messageReceived = false;
         originalMessage.messageId = uuidData;
+        deviceClient.setRetryPolicy(new NoRetry());
         var disconnectHandler = function () {
           debug('We did get a disconnect message');
           deviceClient.removeListener('disconnect', disconnectHandler);
@@ -182,8 +184,8 @@ var runTests = function (hubConnectionString, provisionedDevice) {
                 .catch(testCallback);
             });
 
-      doConnectTest(false)('Device client sends ' + numberOfD2CMessages + ' messages, when event hub client receives first, it ' + testConfiguration.closeReason + 'which is not seen by the iot hub device client', function (testCallback) {
-        this.timeout(20000);
+      doConnectTest(testConfiguration.testEnabled)('Device client sends ' + numberOfD2CMessages + ' messages, when event hub client receives first, it ' + testConfiguration.closeReason + 'which is not seen by the iot hub device client', function (testCallback) {
+        this.timeout(40000);
         var originalMessages = [];
         var messagesReceived = 0;
         var messagesSent = 0;
@@ -247,7 +249,7 @@ var runTests = function (hubConnectionString, provisionedDevice) {
                               if (messagesReceived === numberOfD2CMessages) {
                                 testCallback();
                               } else {
-                                sendMessageTimeout = setTimeout(d2cMessageSender.bind(this), 1000);
+                                sendMessageTimeout = setTimeout(d2cMessageSender.bind(this), 5000);
                               }
                             } else {
                               debug('eventData message id doesn\'t match any stored message id');
