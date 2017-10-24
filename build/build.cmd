@@ -14,13 +14,11 @@ rem ---------------------------------------------------------------------------
 
 set min-output=0
 set integration-tests=0
-set e2e-tests=0
 
 :args-loop
 if "%1" equ "" goto args-done
 if "%1" equ "--min" goto arg-min-output
 if "%1" equ "--integration-tests" goto arg-integration-tests
-if "%1" equ "--e2e-tests" goto arg-e2e-tests
 call :usage && exit /b 1
 
 :arg-min-output
@@ -29,10 +27,6 @@ goto args-continue
 
 :arg-integration-tests
 set integration-tests=1
-goto args-continue
-
-:arg-e2e-tests
-set e2e-tests=1
 goto args-continue
 
 :args-continue
@@ -108,13 +102,7 @@ if errorlevel 1 goto :cleanup
 call :lint-and-test %node-root%\provisioning\transport\mqtt
 if errorlevel 1 goto :cleanup
 
-if %e2e-tests%==1 (
-  call :lint-and-test %node-root%\e2etests
-  if errorlevel 1 goto :cleanup
-)
-
 goto :cleanup
-
 
 rem ---------------------------------------------------------------------------
 rem -- helper subroutines
@@ -125,8 +113,7 @@ echo Lint code and run tests.
 echo build.cmd [options]
 echo options:
 echo  --min                 minimize display output
-echo  --integration-tests   run integration tests too (unit tests always run)
-echo  --e2e-tests           run end-to-end tests too (unit tests always run)
+echo  --integration-tests   run integration tests too (unit tests always run)=
 goto :eof
 
 :lint-and-test

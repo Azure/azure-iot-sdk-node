@@ -15,7 +15,11 @@ build/dev-setup.sh
 [ $? -eq 0 ] || exit $?
 
 # Lint all JavaScript code and run unit + integration tests
-build/build.sh --min --integration-tests --e2e-tests
+build/build.sh --min --integration-tests
+[ $? -eq 0 ] || exit $?
+
+# Run e2e tests
+build/e2etests.sh --min
 [ $? -eq 0 ] || exit $?
 
 # No need to run dev-teardown.sh anymore since we're running of containers

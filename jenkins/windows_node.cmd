@@ -20,7 +20,11 @@ call build\dev-setup.cmd
 if errorlevel 1 goto :eof
 
 REM Lint all JavaScript code and run unit + integration tests
-call build\build.cmd --min --integration-tests --e2e-tests
+call build\build.cmd --min --integration-tests
+if errorlevel 1 goto :eof
+
+REM run e2e tests
+call build\e2etests.cmd --min
 if errorlevel 1 goto :eof
 
 REM The 'npm link' commands in this script create symlinks to tracked repo
