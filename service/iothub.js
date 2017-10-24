@@ -29,5 +29,6 @@ module.exports = {
   Amqp: require('./lib/amqp.js').Amqp,
   AmqpWs: require('./lib/amqp_ws.js').AmqpWs,
   JobClient: require('./lib/job_client.js').JobClient,
-  Device: require('./lib/device.js').Device
+  Device: require('./lib/device.js').Device,
+  Twin: require('./lib/twin.js').Twin
 };
