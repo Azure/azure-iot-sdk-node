@@ -345,7 +345,7 @@ export class Amqp {
 
               if (err) {
                 debug('forceDetaching link');
-                link.forceDetach();
+                link.forceDetach(err);
                 callback();
               } else {
                 debug('cleanly detaching link');
