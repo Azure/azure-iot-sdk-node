@@ -113,7 +113,7 @@ echo Lint code and run tests.
 echo build.cmd [options]
 echo options:
 echo  --min                 minimize display output
-echo  --integration-tests   run integration tests too (unit tests always run)=
+echo  --integration-tests   run integration tests too (unit tests always run)
 goto :eof
 
 :lint-and-test

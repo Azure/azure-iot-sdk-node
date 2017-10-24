@@ -21,8 +21,6 @@ usage ()
 process_args ()
 {
     min_output=0
-    integration_tests=0
-    e2e_tests=0
 
     for arg in $*
     do
