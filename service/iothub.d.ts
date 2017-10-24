@@ -10,3 +10,4 @@ export { AmqpWs } from './lib/amqp_ws';
 export { DeviceMethodParams } from './lib/interfaces';
 export { JobClient } from './lib/job_client';
 export { Device } from './lib/device';
+export { Twin } from './lib/twin';
