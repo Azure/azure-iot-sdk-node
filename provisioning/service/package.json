@@ -7,7 +7,7 @@
   "main": "iotprovisioningservice.js",
   "typings": "iotprovisioningservice.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.2.0",
+    "azure-iot-common": "1.2.1",
     "azure-iot-http-base": "1.2.0",
     "debug": "^2.6.3"
   },

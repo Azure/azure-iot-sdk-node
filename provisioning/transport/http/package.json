@@ -8,7 +8,7 @@
   "typings": "index.d.ts",
   "dependencies": {
     "azure-iot-http-base": "1.2.0",
-    "azure-iot-common": "1.2.0",
+    "azure-iot-common": "1.2.1",
     "debug": "^3.0.1",
     "machina": "^2.0.0"
   },
