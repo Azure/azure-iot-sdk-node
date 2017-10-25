@@ -10,5 +10,5 @@
  * @module azure-iot-provisioning-service
  */
 module.exports = {
-  DeviceEnrollment: require('./lib/enrollment.js').DeviceEnrollment
+  ProvisioningServiceClient: require('./lib/provisioningserviceclient.js').ProvisioningServiceClient
 };

@@ -79,14 +79,6 @@ export interface BulkOperationResult {
 }
 
 /**
- * Device registration.
- */
-export interface DeviceRegistration {
-    registrationId: string;
-    tpm: TpmAttestation;
-}
-
-/**
  * Device registration operation error
  */
 export interface DeviceRegistrationOperationError {

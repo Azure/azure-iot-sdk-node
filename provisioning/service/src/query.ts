@@ -8,7 +8,7 @@ import { Enrollment, EnrollmentGroup, DeviceRegistrationStatus } from './interfa
 /**
  * The query result.
  */
-export interface ProvisioningServiceQueryResult {
+export interface QueryResult {
     /**
      * The query result items, as a collection.
      */
@@ -25,15 +25,15 @@ export interface QuerySpecification {
     query: string;
 }
 
-export type ProvisioningServiceQueryCallback = (err?: Error, result?: ProvisioningServiceQueryResult, response?: any) => void;
+export type QueryCallback = (err?: Error, result?: QueryResult, response?: any) => void;
 
-export class ProvisioningServiceQuery {
+export class Query {
   continuationToken: string;
   hasMoreResults: boolean;
 
-  private _executeQueryFn: (continuationToken: string, done: ProvisioningServiceQueryCallback) => void;
+  private _executeQueryFn: (continuationToken: string, done: QueryCallback) => void;
 
-  constructor(executeQueryFn: (continuationToken: string, done: ProvisioningServiceQueryCallback) => void) {
+  constructor(executeQueryFn: (continuationToken: string, done: QueryCallback) => void) {
     if (!executeQueryFn) throw new ReferenceError('executeQueryFn cannot be \'' + executeQueryFn + '\'');
     if (typeof executeQueryFn !== 'function') throw new TypeError('executeQueryFn cannot be \'' + typeof executeQueryFn + '\'');
 
@@ -49,15 +49,15 @@ export class ProvisioningServiceQuery {
    * @param {Function}    done                 The callback that will be called with either an Error object or
    *                                           the results of the query.
    */
-  next(continuationTokenOrCallback: string | ProvisioningServiceQueryCallback, done?: ProvisioningServiceQueryCallback): void {
+  next(continuationTokenOrCallback: string | QueryCallback, done?: QueryCallback): void {
     let actualContinuationToken = this.continuationToken;
-    let actualCallback: ProvisioningServiceQueryCallback;
+    let actualCallback: QueryCallback;
 
     if (typeof continuationTokenOrCallback === 'function' && !done) {
-      actualCallback = continuationTokenOrCallback as ProvisioningServiceQueryCallback;
+      actualCallback = continuationTokenOrCallback as QueryCallback;
     } else {
       actualContinuationToken = continuationTokenOrCallback as string;
-      actualCallback = done as ProvisioningServiceQueryCallback;
+      actualCallback = done as QueryCallback;
     }
 
     this._executeQueryFn(actualContinuationToken, (err, result, response) => {
