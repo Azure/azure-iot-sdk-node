@@ -3,28 +3,29 @@
 
 'use strict';
 
-import { errors } from 'azure-iot-common';
-import { IncomingMessage } from 'http';
+import * as errors from './errors';
 
 /**
  * @private
  */
-export class HttpTransportError extends Error {
-  response?: IncomingMessage;
+export class HttpStatusError extends Error {
+  statusCode?: number;
+  response?: any;
   responseBody?: any;
 }
 
-/* Codes_SRS_NODE_DEVICE_HTTP_ERRORS_16_010: [`translateError` shall accept 3 arguments:
+/* Codes_SRS_NODE_DEVICE_HTTP_ERRORS_16_010: [`translateError` shall accept 4 arguments:
  * - A custom error message to give context to the user.
- * - the body of  the HTTP response, containing the explanation of why the request failed
- * - the HTTP response object itself]
+ * - The status code
+ * - the body of the response, containing the explanation of why the request failed
+ * - the protocol-specific response object itself]
  */
 /**
  * @private
  */
-export function translateError(message: string, body: any, response: IncomingMessage): HttpTransportError {
-  let error: HttpTransportError;
-  switch (response.statusCode) {
+export function httpTranslateError(message: string, statusCode: number, body?: any, response?: any): HttpStatusError {
+  let error: HttpStatusError;
+  switch (statusCode) {
     case 400:
       /*Codes_SRS_NODE_DEVICE_HTTP_ERRORS_16_003: [`translateError` shall return an `ArgumentError` if the HTTP response status code is `400`.]*/
       error = new errors.ArgumentError(message);
@@ -58,11 +59,13 @@ export function translateError(message: string, body: any, response: IncomingMes
       error = new Error(message);
   }
 
-/* Codes_SRS_NODE_DEVICE_HTTP_ERRORS_16_001: [Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 3 properties:
- * - `response` shall contain the `IncomingMessage` object returned by the HTTP layer.
- * - `reponseBody` shall contain the content of the HTTP response.
+/* Codes_SRS_NODE_DEVICE_HTTP_ERRORS_16_001: [Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 4 properties:
+ * - `statusCode` shall contain the http status code
+ * - `response` shall contain the protocol-specific response object itself
+ * - `responseBody` shall contain the body of the response, containing the explanation of why the request failed
  * - `message` shall contain a human-readable error message]
  */
+  error.statusCode = statusCode;
   error.response = response;
   error.responseBody = body;
   return error;

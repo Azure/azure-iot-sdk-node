@@ -1,13 +1,14 @@
-# azure-iot-device-http.translateError Requirements
+# azure-iot-common.httpTranslateError Requirements
 
 ## Overview
-`translateError` is a method that translates HTTP errors into Azure IoT Hub errors, effectively abstracting the error that is returned to the SDK user of from the transport layer.
+`httpTtranslateError` is a method that translates HTTP errors into Azure IoT Hub errors, effectively abstracting the error that is returned to the SDK user of from the transport layer.
 
 ## Requirements
 
-**SRS_NODE_DEVICE_HTTP_ERRORS_16_001: [** Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 3 properties:
-- `response` shall contain the `IncomingMessage` object returned by the HTTP layer.
-- `reponseBody` shall contain the content of the HTTP response.
+**SRS_NODE_DEVICE_HTTP_ERRORS_16_001: [** Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 4 properties:
+- `statusCode` shall contain the http status code
+- `response` shall contain the protocol-specific response object itself
+- `responseBody` shall contain the body of the response, containing the explanation of why the request failed
 - `message` shall contain a human-readable error message **]**
 
 **SRS_NODE_DEVICE_HTTP_ERRORS_16_002: [** If the HTTP error code is unknown, `translateError` should return a generic Javascript `Error` object. **]**
@@ -26,7 +27,8 @@
 
 **SRS_NODE_DEVICE_HTTP_ERRORS_16_009: [** `translateError` shall return an `ServiceUnavailableError` if the HTTP response status code is `503`. **]**
 
-**SRS_NODE_DEVICE_HTTP_ERRORS_16_010: [** `translateError` shall accept 3 arguments:
+**SRS_NODE_DEVICE_HTTP_ERRORS_16_010: [** `translateError` shall accept 4 arguments:
 - A custom error message to give context to the user.
-- the body of  the HTTP response, containing the explanation of why the request failed
-- the HTTP response object itself **]**
+- The status code
+- the body of the response, containing the explanation of why the request failed
+- the protocol-specific response object itself **]**

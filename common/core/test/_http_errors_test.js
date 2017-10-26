@@ -4,8 +4,8 @@
 'use strict';
 
 var assert = require('chai').assert;
-var errors = require('azure-iot-common').errors;
-var translateError = require('../lib/http_errors.js').translateError;
+var errors = require('../lib/errors');
+var translateError = require('../lib/http_errors.js').httpTranslateError;
 
 describe('translateError', function() {
 
@@ -33,20 +33,22 @@ describe('translateError', function() {
     };
     var fake_response_body = testParams.statusCode + ': ' + testParams.statusMessage;
 
-    /* Tests_SRS_NODE_DEVICE_HTTP_ERRORS_16_010: [`translateError` shall accept 3 arguments:
-     * - A custom error message to give context to the user.
-     * - the body of  the HTTP response, containing the explanation of why the request failed
-     * - the HTTP response object itself]
-     */
-    var err = translateError(new Error(testParams.errorMessage), fake_response_body, fake_response);
+/* Tests_SRS_NODE_DEVICE_HTTP_ERRORS_16_010: [`translateError` shall accept 4 arguments:
+ * - A custom error message to give context to the user.
+ * - The status code
+ * - the body of the response, containing the explanation of why the request failed
+ * - the protocol-specific response object itself]
+ */
+var err = translateError(new Error(testParams.errorMessage), testParams.statusCode, fake_response_body, fake_response);
     assert.instanceOf(err, testParams.expectedErrorType);
 
-    /* Tests_SRS_NODE_DEVICE_HTTP_ERRORS_16_001: [Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 3 properties:
-     * - `response` shall contain the `IncomingMessage` object returned by the HTTP layer.
-     * - `reponseBody` shall contain the content of the HTTP response.
-     * - `message` shall contain a human-readable error message]
-     */
-    assert.equal(err.message, 'Error: ' + testParams.errorMessage);
+  /* Tests_SRS_NODE_DEVICE_HTTP_ERRORS_16_001: [Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 4 properties:
+  * - `statusCode` shall contain the http status code
+  * - `response` shall contain the protocol-specific response object itself
+  * - `responseBody` shall contain the body of the response, containing the explanation of why the request failed
+  * - `message` shall contain a human-readable error message]
+  */
+  assert.equal(err.message, 'Error: ' + testParams.errorMessage);
     assert.equal(err.responseBody, fake_response_body);
     assert.equal(err.response, fake_response);
     });
