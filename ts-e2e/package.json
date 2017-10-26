@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "lint": "tslint --type-check --project . -c ../tslint.json",
+    "lint": "tslint --project . -c ../tslint.json",
     "pretest": "tsc",
     "test": "mocha ./lib/*.tests.js"
   },
