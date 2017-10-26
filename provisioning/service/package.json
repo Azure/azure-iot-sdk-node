@@ -23,7 +23,7 @@
     "@types/debug": "0.0.29"
   },
   "scripts": {
-    "lint": "tslint --exclude ./samples --type-check --project . -c ../../tslint.json",
+    "lint": "tslint --exclude ./samples --project . -c ../../tslint.json",
     "typings": "typings install",
     "build": "tsc",
     "unittest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test.js",
