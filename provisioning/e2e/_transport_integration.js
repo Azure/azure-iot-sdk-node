@@ -5,7 +5,7 @@
 
 var fs = require('fs');
 var assert = require('chai').assert;
-var debug = require('debug')('azure-device-provisioning:e2e');
+var debug = require('debug')('azure-device-provisioning-e2e');
 var util = require('util');
 var Http = require('../transport/http').Http;
 // var Mqtt = require('../transport/mqtt').Mqtt;
