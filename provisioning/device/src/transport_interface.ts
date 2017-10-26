@@ -47,7 +47,6 @@ export interface Transport {
    * Register with the provisioning service.  This represents a single back-and-forth with the service.
    * Registration may involve several calls to this function, depending on the attestation mechanism.
    */
-  // TODO: put forceRegistration after body and make it optional
   register(registrationId: string, authorization: string | X509, body: any, forceRegistration: boolean, callback: ResponseCallback): void;
   /**
    * Disconnect from the provisioning service

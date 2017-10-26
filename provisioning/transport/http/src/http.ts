@@ -14,11 +14,16 @@ const _defaultHeaders = {
   'Content-Type' : 'application/json; charset=utf-8'
 };
 
-export class Http extends Provisioning.TransportStateMachine implements Provisioning.Transport {
+
+
+class HttpTransportHandlers implements Provisioning.TransportHandlers {
+  // TODO: move to constants class
+  protected _apiVersion: string = '2017-08-31-preview';
   private _httpTimeout: number = 4000;
   private _restApiClient: RestApiClient;
   private _httpBase: Base;
   private _config: Provisioning.Config;
+
 
   /**
    * @private
@@ -30,7 +35,6 @@ export class Http extends Provisioning.TransportStateMachine implements Provisio
   - `idScope` - a string specifiying the scope of the provisioning operations,
   - `registrationId` - the registration id for the specific device ] */
   constructor(config: Provisioning.Config,  httpBase?: Base) {
-    super();
 
     if (!config.serviceHostName) config.serviceHostName = 'global.azure-devices-provisioning.net';
 
@@ -39,18 +43,18 @@ export class Http extends Provisioning.TransportStateMachine implements Provisio
   }
 
 
-/* Codes_SRS_NODE_PROVISIONING_HTTP_18_038: [ `connect` shall immediately call the `callback` with no error. ] */
-_doConnectForFsm(callback: (err?: Error) => void): void {
+  /* Codes_SRS_NODE_PROVISIONING_HTTP_18_038: [ `connect` shall immediately call the `callback` with no error. ] */
+  connect(callback: (err?: Error) => void): void {
    // nothing to do here
    callback();
   }
 
-  _doDisconnectForFsm(callback: (err?: Error) => void): void {
+  disconnect(callback: (err?: Error) => void): void {
    // nothing to do here
    callback();
   }
 
-  _doFirstRegistrationRequestForFsm(registrationId: string, authorization: SharedAccessSignature | X509 | string, requestBody: any, forceRegistration: boolean, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
+  registrationRequest(registrationId: string, authorization: SharedAccessSignature | X509 | string, requestBody: any, forceRegistration: boolean, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
 
     if ((authorization instanceof SharedAccessSignature) || (typeof authorization === 'string')) {
       this._restApiClient = new RestApiClient({ 'host' : this._config.serviceHostName , 'sharedAccessSignature' : authorization},  this._config.userAgent, this._httpBase);
@@ -92,7 +96,7 @@ _doConnectForFsm(callback: (err?: Error) => void): void {
 
   }
 
-  _doOperationStatusQueryForFsm(registrationId: string, operationId: string, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
+  queryOperationStatus(registrationId: string, operationId: string, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_022: [ operation status request polling shall be a GET operation sent to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/operations/{operationId}' ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_037: [ The operation status request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
     let path: string = '/' + this._config.idScope + '/registrations/' + registrationId + '/operations/' + operationId + '?api-version=' + this._apiVersion;
@@ -120,10 +124,20 @@ _doConnectForFsm(callback: (err?: Error) => void): void {
     });
   }
 
-  _getErrorFromResultForFsm(result: any): any {
+  getErrorResult(result: any): any {
     return new Error();
   }
 
+}
+
+export class Http extends Provisioning.TransportStateMachine {
+  constructor(config: Provisioning.Config,  httpBase?: Base) {
+    super();
+
+    let handlers = new HttpTransportHandlers(config, httpBase);
+
+    this.initialize(handlers);
+  }
 }
 
 // The following are legacy requirements.  The used to be handled by http.ts, but they've been moved into transport_state_machine.ts.

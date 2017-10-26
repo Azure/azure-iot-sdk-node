@@ -1,7 +1,7 @@
 {
-  "name": "azure-device-provisioning-integration",
+  "name": "azure-device-provisioning-e2e",
   "version": "0.0.1",
-  "description": "Integration tests for the Azure Device Provisioning SDK",
+  "description": "E2E tests for the Azure Device Provisioning SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "dependencies": {
@@ -13,8 +13,7 @@
     "istanbul": "^0.4.4",
     "jshint": "^2.9.2",
     "mocha": "^3.0.1",
-    "sinon": "^1.17.5",
-    "jshint": "^2.9.4"
+    "sinon": "^1.17.5"
   },
   "scripts": {
     "lint": "jshint --show-non-errors .",

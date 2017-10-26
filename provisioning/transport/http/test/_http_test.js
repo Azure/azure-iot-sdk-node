@@ -122,7 +122,10 @@ describe('Http', function () {
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_031: [ If `disconnect` is called while the registration request is in progress, `register` shall call the `callback` with an `OperationCancelledError` error. ] */
     it('fails if disconnected while registration request is in progress', function(testCallback) {
       var fakeBase = {};
+      var registerCallback;
+
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
+        registerCallback = done;
         return fakeRequest;
       };
 
@@ -133,6 +136,7 @@ describe('Http', function () {
       });
 
       http.disconnect(function() {});
+      registerCallback();
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_013: [ If registration response body fails to deserialize, `register` will throw an `SyntaxError` error. ] */
@@ -265,9 +269,10 @@ describe('Http', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_032: [ If `disconnect` is called while the operation status request is in progress, `register` shall call the `callback` with an `OperationCancelledError` error. ] */
-    it ('fails on cancel during operation status request', function(testCallback) {
+    it ('fails with cancel during operation status request', function(testCallback) {
       var fakeBase = {};
       var callbackCount = 0;
+
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
         callbackCount++;
         if (callbackCount === 1) {
@@ -276,6 +281,7 @@ describe('Http', function () {
           // Do not call done.  This makes it look like the HTTP request is outstanding.
           process.nextTick(function() {
             http.disconnect(function() {});
+            done();
           });
         }
         return fakeRequest;
@@ -290,13 +296,13 @@ describe('Http', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_033: [ If `disconnect` is called while the register is waiting between polls, `register` shall call the `callback` with an `OperationCancelledError` error. ] */
-    it ('fails on cancel between polls', function(testCallback) {
+    it ('fails with cancel between polls', function(testCallback) {
       var fakeBase = {};
       var callbackCount = 0;
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
         callbackCount++;
         if (callbackCount === 1) {
-          http._config.defaultPollingInterval = 2000;
+          http._transport._config.defaultPollingInterval = 2000;
           setTimeout(function() {
             http.disconnect(function() {});
           }, 10);
@@ -321,7 +327,7 @@ describe('Http', function () {
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
         callbackCount++;
         if (callbackCount === 1) {
-          http._config.defaultPollingInterval = 2000;
+          http._transport._config.defaultPollingInterval = 2000;
           setTimeout(function() {
             http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
               assert.instanceOf(err, errors.InvalidOperationError);

@@ -5,6 +5,8 @@
 
 var fs = require('fs');
 var assert = require('chai').assert;
+var debug = require('debug')('azure-device-provisioning:e2e');
+var util = require('util');
 var Http = require('../transport/http').Http;
 // var Mqtt = require('../transport/mqtt').Mqtt;
 
@@ -45,7 +47,7 @@ provisioningProtocols.forEach(function (Protocol) {
     it ('can roundtrip x509', function(callback) {
       var transport = new Protocol(transportConfig);
       transport.on('operationStatus', function(response) {
-        console.dir(response);
+        debug(util.inspect(response, {depth: null}));
       });
       transport.register(registrationId, x509, registrationBody, false, function(err, response) {
         if (err) return callback(err);
