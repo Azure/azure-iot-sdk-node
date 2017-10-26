@@ -13,6 +13,7 @@ export { Message }
 export { SharedAccessSignature } from './lib/shared_access_signature';
 export { RetryOperation } from './lib/retry_operation';
 export { RetryPolicy, NoRetry, ExponentialBackOffWithJitter } from './lib/retry_policy';
+export { httpTranslateError } from './lib/http_errors';
 
 // Typescript only, used by other modules in azure-iot-sdk
 export interface X509 {

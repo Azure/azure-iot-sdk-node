@@ -22,4 +22,5 @@ module.exports = {
   RetryPolicy: require('./lib/retry_policy.js').RetryPolicy,
   NoRetry: require('./lib/retry_policy.js').NoRetry,
   ExponentialBackOffWithJitter: require('./lib/retry_policy.js').ExponentialBackOffWithJitter,
+  httpTranslateError: require('./lib/http_errors.js').httpTranslateError
 };

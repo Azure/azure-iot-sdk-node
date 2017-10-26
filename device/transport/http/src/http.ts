@@ -10,7 +10,7 @@ const debug = dbg('azure-iot-device-http:Http');
 import { EventEmitter } from 'events';
 import { Http as Base } from 'azure-iot-http-base';
 import { endpoint, errors, results, Message } from 'azure-iot-common';
-import { translateError } from './http_errors.js';
+import { httpTranslateError as translateError } from 'azure-iot-common';
 import { IncomingMessage } from 'http';
 import { DeviceMethodResponse, Client } from 'azure-iot-device';
 
