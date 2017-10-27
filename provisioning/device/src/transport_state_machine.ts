@@ -12,7 +12,7 @@ import * as dbg from 'debug';
 const debug = dbg('azure-device-provisioning:transport-fsm');
 
 export interface TransportHandlers {
-  connect(callback: (err?: Error) => void): void;
+  connect(authorization: SharedAccessSignature | X509 | string, callback: (err?: Error) => void): void;
   disconnect(callback: (err?: Error) => void): void;
   registrationRequest(registrationId: string, authorization: SharedAccessSignature | X509 | string, requestBody: any, forceRegistration: boolean, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
   queryOperationStatus(registrationId: string, operationId: string, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
@@ -45,12 +45,12 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
               callback(err, body, result);
             }
           },
-          connect: (callback) => {
-            this._fsm.transition('connecting', callback);
+          connect: (authorization, callback) => {
+            this._fsm.transition('connecting', callback, authorization);
           },
           register: (callback, registrationId, authorization, requestBody, forceRegistration) => {
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_010: [ `register` shall connect the transport if it is not connected. ] */
-            this._fsm.handle('connect', (err) => {
+            this._fsm.handle('connect', authorization, (err) => {
               if (err) {
                 callback(err);
               } else {
@@ -65,10 +65,8 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
           }
         },
         connecting: {
-          _onEnter: (callback) => {
-            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_002: [ `connect` shall call `TransportHandlers.connect`. ] */
-            this._transport.connect((err) => {
-              /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_003: [ If `TransportHandlers.connect` fails, then `connect` shall fail. ] */
+          _onEnter: (callback, authorization) => {
+            this._transport.connect(authorization, (err) => {
               if (err) {
                 /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_011: [ `register` shall fail if the connection fails. ] */
                 this._fsm.transition('disconnecting', callback, err);
@@ -82,11 +80,6 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
         connected: {
           _onEnter: (callback, err, body, result) => {
             callback(err, body, result);
-          },
-          connect: (callback) => {
-            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_004: [ If the transport is already connected, then `connect` shall do nothing and call the `callback` immediately. ] */
-            // nothing to do.
-            callback();
           },
           disconnect: (callback) => {
             this._fsm.transition('disconnecting', callback);
@@ -107,8 +100,6 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
             });
           },
           disconnect: (callback) => this._fsm.transition('disconnecting', callback),
-          /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_006: [ If `connect` is called while the transport is executing the first registration request, it shall do nothing and call `callback` immediately. ] */
-          connect: (callback) => callback(),
           /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_024: [ If `register` is called while a different request is in progress, it shall fail with an `InvalidOperationError`. ] */
           register: (callback) => callback(new errors.InvalidOperationError('another operation is in progress'))
         },
@@ -185,8 +176,6 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
             this._pollingTimer = null;
             this._fsm.transition('disconnecting', callback, err, body);
           },
-          /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_007: [ If `connect` is called while the transport is waiting between operation status queries, it shall do nothing and call `callback` immediately. ] */
-          connect: (callback) => callback(),
           register: (callback) => callback(new errors.InvalidOperationError('another operation is in progress'))
         },
         polling: {
@@ -200,8 +189,6 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
             });
           },
           disconnect: (callback) => this._fsm.transition('disconnecting', callback),
-          /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_008: [ If `connect` is called while the transport is executing an operation status query, it shall do nothing and call `callback` immediately. ] */
-          connect: (callback) => callback(),
           /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_024: [ If `register` is called while a different request is in progress, it shall fail with an `InvalidOperationError`. ] */
           register: (callback) => callback(new errors.InvalidOperationError('another operation is in progress'))
         },
@@ -218,7 +205,6 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
               this._fsm.transition('disconnected', callback, err || disconnectErr, body, result);
             });
           },
-          /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_009: [ If `connect` is called while the transport is disconnecting, it shall wait for the disconnection to complete, then initiate the connection. ] */
           '*': () => this._fsm.deferUntilTransition()
         }
       }
@@ -227,11 +213,6 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
     this._fsm.on('transition',  (data) => {
       debug('completed transition from ' + data.fromState + ' to ' + data.toState);
     });
-  }
-
-  connect(callback: (err?: Error) => void): void {
-    debug('connect called');
-    this._fsm.handle('connect', callback);
   }
 
   register(registrationId: string, authorization: string | X509, requestBody: any, forceRegistration: boolean, callback: Provisioning.ResponseCallback): void {
