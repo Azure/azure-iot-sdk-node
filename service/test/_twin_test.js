@@ -87,7 +87,7 @@ describe('Twin', function() {
       var registry = new Registry(fakeConfig, {});
       var twin = new Twin(fakeDeviceId, registry);
 
-      sinon.stub(registry, 'getTwin', function(deviceId, callback) {
+      sinon.stub(registry, 'getTwin').callsFake(function(deviceId, callback) {
         callback(new Error('fake error'));
       });
 
@@ -110,7 +110,7 @@ describe('Twin', function() {
       var registry = new Registry(fakeConfig, {});
       var twin = new Twin(fakeDeviceId, registry);
 
-      sinon.stub(registry, 'getTwin', function(deviceId, callback) {
+      sinon.stub(registry, 'getTwin').callsFake(function(deviceId, callback) {
         callback(null, fakeTwinUpdate, fakeResponse);
       });
 
@@ -128,7 +128,7 @@ describe('Twin', function() {
       var registry = new Registry(fakeConfig, {});
       var twin = new Twin(fakeDeviceId, registry);
 
-      sinon.stub(registry, 'getTwin', function(deviceId, callback) {
+      sinon.stub(registry, 'getTwin').callsFake(function(deviceId, callback) {
         callback(null, fakeTwin, fakeResponse);
       });
 
@@ -173,7 +173,7 @@ describe('Twin', function() {
       var registry = new Registry(fakeConfig, {});
       var twin = new Twin(fakeDeviceId, registry);
 
-      sinon.stub(registry, 'updateTwin', function(deviceId, patch, etag, callback) {
+      sinon.stub(registry, 'updateTwin').callsFake(function(deviceId, patch, etag, callback) {
         callback(new Error('fake error'));
       });
 
@@ -196,7 +196,7 @@ describe('Twin', function() {
       var registry = new Registry(fakeConfig, {});
       var twin = new Twin(fakeDeviceId, registry);
 
-      sinon.stub(registry, 'updateTwin', function(deviceId, patch, etag, callback) {
+      sinon.stub(registry, 'updateTwin').callsFake(function(deviceId, patch, etag, callback) {
         callback(null, fakeTwinUpdate, fakeResponse);
       });
 
@@ -214,7 +214,7 @@ describe('Twin', function() {
       var registry = new Registry(fakeConfig, {});
       var twin = new Twin(fakeDeviceId, registry);
 
-      sinon.stub(registry, 'updateTwin', function(deviceId, patch, etag, callback) {
+      sinon.stub(registry, 'updateTwin').callsFake(function(deviceId, patch, etag, callback) {
         callback(null, fakeTwin, fakeResponse);
       });
 
