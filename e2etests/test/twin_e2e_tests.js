@@ -44,14 +44,14 @@ var runTests = function (hubConnectionString, protocols) {
   protocols.forEach(function(protocolCtor) {
     describe('Twin over ' + protocolCtor.name, function() {
 
-      this.timeout(10000);
+      this.timeout(20000);
       var deviceClient, deviceTwin;
       var serviceTwin;
 
       var deviceDescription;
 
       beforeEach(function (done) {
-        this.timeout(10000);
+        this.timeout(20000);
 
         var host = ConnectionString.parse(hubConnectionString).HostName;
         var pkey = new Buffer(uuid.v4()).toString('base64');
@@ -93,7 +93,7 @@ var runTests = function (hubConnectionString, protocols) {
       });
 
       afterEach(function (done) {
-        this.timeout(10000);
+        this.timeout(20000);
         if (deviceClient) {
           deviceClient.close(function(err) {
             if (err) return done(err);
