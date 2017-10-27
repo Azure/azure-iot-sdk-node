@@ -5,7 +5,7 @@ This module provides a generic state machine used by transports to communicate w
 
 ## Example Usage
 ``js
-  // this is effectively an abstract class that transport implements are built upon.  It is not meant to be used directly.
+  // this is effectively an abstract class that transport implementations are built upon.  It is not meant to be used directly.
 ``
 
 ## Public Interface
@@ -14,26 +14,6 @@ This module provides a generic state machine used by transports to communicate w
 The constructor creates a TransportStateMachine object
 
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_001: [** The `constructor` shall accept no arguments **]**
-
-
-### connect(callback: (err?: Error) => void): void
-Connect is used to connect the transport
-
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_002: [** `connect` shall call `TransportHandlers.connect`. **]**
-
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_003: [** If `TransportHandlers.connect` fails, then `connect` shall fail. **]**
-
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_004: [** If the transport is already connected, then `connect` shall do nothing and call the `callback` immediately. **]**
-
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_005: [** If `connect` is called while a connection is in progress, it shall wait for that connection to complete before calling `callback`. **]**
-
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_006: [** If `connect` is called while the transport is executing the first registration request, it shall do nothing and call `callback` immediately. **]**
-
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_007: [** If `connect` is called while the transport is waiting between operation status queries, it shall do nothing and call `callback` immediately. **]**
-
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_008: [** If `connect` is called while the transport is executing an operation status query, it shall do nothing and call `callback` immediately. **]**
-
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_009: [** If `connect` is called while the transport is disconnecting, it shall wait for the disconnection to complete, then initiate the connection. **]**
 
 
 ### register(registrationId: string, authorization: string | X509, requestBody: any, forceRegistration: boolean, callback: Provisioning.ResponseCallback): void

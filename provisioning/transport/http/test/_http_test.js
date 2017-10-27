@@ -39,20 +39,12 @@ describe('Http', function () {
   describe('constructor', function() {
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_001: [ The `Http` constructor shall accept the following properties:
-    - `idScope` - a string specifiying the scope of the provisioning operations,
-    - `registrationId` - the registration id for the specific device ] */
+    - `config` - a configuration object describing the connection to the service.
+    - `httpBase` - an optional test implementation of azure-iot-http-base ] */
     it ('accepts the right arguments', function() {
       var http = new Http(fakeTransportConfig, null);
     });
   });
-
-  describe('connect', function() {
-    it ('immediately calls the callback', function(testCallback) {
-      var http = new Http(fakeTransportConfig, null);
-      http.connect(testCallback);
-    });
-  });
-
 
   describe('register', function() {
     it('builds the http request correctly', function(testCallback) {

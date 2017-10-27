@@ -42,21 +42,13 @@ describe('state machine', function () {
     /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_001: [ The `constructor` shall accept no arguments ] */
     var machine = new TransportStateMachine();
     machine.initialize({
-      connect: sinon.stub().callsArg(0),
+      connect: sinon.stub().callsArg(1),
       disconnect: sinon.stub().callsArg(0),
       registrationRequest: registrationRequestReturnsAssigned(),
       queryOperationStatus: operationStatusReturnsAssigned(),
       getErrorResult:sinon.stub().callsArg(0)
     });
     return machine;
-  };
-
-  var clearTransportCallCount = function (machine) {
-    machine._transport.connect.reset();
-    machine._transport.disconnect.reset();
-    machine._transport.registrationRequest.reset();
-    machine._transport.queryOperationStatus.reset();
-    machine._transport.getErrorResult.reset();
   };
 
   var assertNoTransportFunctionsCalled = function (machine) {
@@ -76,136 +68,6 @@ describe('state machine', function () {
     machine = makeNewMachine();
   });
 
-describe('connect function', function () {
-
-    /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_002: [ `connect` shall call `TransportHandlers.connect`. ] */
-    it ('calls TransportHandlers.connect', function (testCallback) {
-      machine.connect(function (err) {
-        assert(machine._transport.connect.calledOnce);
-        assert(!err);
-        testCallback();
-      });
-    });
-
-    /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_003: [ If `TransportHandlers.connect` fails, then `connect` shall fail. ] */
-    it ('fails and disconnects if TransportHandlers.connect fails', function (testCallback) {
-      machine._transport.connect = sinon.stub().callsArgWith(0, new Error(fakeErrorText));
-      machine.connect(function (err) {
-        assert(machine._transport.connect.calledOnce);
-        assert(machine._transport.disconnect.calledOnce);
-        assert(!!err);
-        assert.equal(err.constructor.name, 'Error');
-        assert.equal(err.message, fakeErrorText);
-        testCallback();
-      });
-    });
-
-    /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_004: [ If the transport is already connected, then `connect` shall do nothing and call the `callback` immediately. ] */
-    it ('does nothing if called while connected', function (testCallback) {
-      machine.connect(function (err) {
-        assert(machine._transport.connect.calledOnce);
-        assert(!err);
-        // connect is in our stack so we can't clear the call count.  Move to the nextTick to run on a cleaner stack.
-        process.nextTick(function() {
-          clearTransportCallCount(machine);
-          machine.connect(function (err) {
-            assert(!err);
-            assertNoTransportFunctionsCalled(machine);
-            testCallback();
-          });
-        });
-      });
-    });
-
-    /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_005: [ If `connect` is called while a connection is in progress, it shall wait for that connection to complete before calling `callback`. ] */
-    it ('doesn\'t complete until connection is complete if called while connecting', function (testCallback) {
-      var firstConnectionCallback;
-      machine._transport.connect = function (callback) { firstConnectionCallback = callback; };
-
-      var firstConnectionComplete = false, secondConnectionComplete = false;
-      machine.connect(function () { firstConnectionComplete = true; });
-      machine.connect(function () { secondConnectionComplete = true; });
-      assert(!firstConnectionComplete);
-      assert(!secondConnectionComplete);
-
-      firstConnectionCallback();
-      assert(firstConnectionComplete && secondConnectionComplete);
-      testCallback();
-    });
-
-    /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_006: [ If `connect` is called while the transport is executing the first registration request, it shall do nothing and call `callback` immediately. ] */
-    it ('does nothing if called while executing first request', function (testCallback) {
-      machine._transport.registrationRequest = waitingForNetworkIo();
-      machine.register(fakeRegistrationId, fakeAuth, fakeRequestBody, false, function () {
-      });
-      assert(machine._transport.registrationRequest.calledOnce); // make sure it looks like we've started executing the first request
-      clearTransportCallCount(machine);
-      machine.connect(function (err) {
-        assert(!err);
-        assertNoTransportFunctionsCalled(machine);
-        testCallback();
-      });
-    });
-
-    /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_007: [ If `connect` is called while the transport is waiting between operation status queries, it shall do nothing and call `callback` immediately. ] */
-    it ('does nothing if called while waiting to poll', function (testCallback) {
-      machine._transport.registrationRequest = registrationRequestReturnsAssigning(1000);
-      machine._transport.queryOperationStatus = waitingForNetworkIo();
-      machine.register(fakeRegistrationId, fakeAuth, fakeRequestBody, false, function () {});
-      assert(machine._transport.registrationRequest.calledOnce);
-      assert.isFalse(machine._transport.queryOperationStatus.called);
-      clearTransportCallCount(machine);
-      machine.connect(function (err) {
-        assert(!err);
-        assertNoTransportFunctionsCalled(machine);
-        machine._transport.disconnect(function() {});
-        testCallback();
-      });
-    });
-
-    /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_008: [ If `connect` is called while the transport is executing an operation status query, it shall do nothing and call `callback` immediately. ] */
-    it ('does nothing if called while executing operationStatus request', function (testCallback) {
-      machine._transport.registrationRequest = registrationRequestReturnsAssigning();
-      machine._transport.queryOperationStatus = waitingForNetworkIo();
-      machine.register(fakeRegistrationId, fakeAuth, fakeRequestBody, false, function () {});
-      setTimeout(function() {
-        assert(machine._transport.registrationRequest.calledOnce);
-        assert(machine._transport.queryOperationStatus.calledOnce);
-        clearTransportCallCount(machine);
-        machine.connect(function (err) {
-          assert(!err);
-          assertNoTransportFunctionsCalled(machine);
-          machine._transport.disconnect(function() {
-            testCallback();
-          });
-        });
-      }, 2);
-    });
-
-    /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_009: [ If `connect` is called while the transport is disconnecting, it shall wait for the disconnection to complete, then initiate the connection. ] */
-    it ('waits for disconnect to complete and then reconnects if called while disconnecting', function (testCallback) {
-      var disconnectCallback;
-      machine._transport.disconnect = sinon.spy(function (callback) { disconnectCallback = callback; });
-      machine.connect(function (err) {
-        assert(!err);
-
-        machine.disconnect();
-        assert(machine._transport.disconnect.calledOnce);
-
-        var disconnectCompleted = false;
-        machine.connect(function (err) {
-          assert(machine._transport.connect.calledTwice);
-          assert(disconnectCompleted);
-          assert(!err);
-          testCallback();
-        });
-
-        disconnectCompleted = true;
-        disconnectCallback();
-      });
-    });
-  });
-
   describe('register function', function () {
 
     /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_010: [ `register` shall `connect` the transport if it is not connected. ] */
@@ -220,7 +82,7 @@ describe('connect function', function () {
 
     /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_011: [ `register` shall fail if the connection fails. ] */
     it ('fails if connect fails', function (testCallback) {
-      machine._transport.connect = function (callback) {
+      machine._transport.connect = function (authorization, callback) {
         callback(new Error(fakeErrorText));
       };
       callRegisterWithDefaultArgs(function (err) {
@@ -414,7 +276,9 @@ describe('connect function', function () {
 
       /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_026: [ `disconnect` shall call `disconnect` of it's called while the transport is connected. ] */
       it ('if called while connected', function (testCallback) {
-        machine.connect(function () {
+        callRegisterWithDefaultArgs(function(err) {
+          assert(!err);
+          assert(machine._transport.connect.calledOnce);
           assert.isFalse(machine._transport.disconnect.called);
           machine._transport.disconnect(function(err) {
             assert(!err);
