@@ -13,7 +13,7 @@
     "istanbul": "^0.4.4",
     "jshint": "^2.9.2",
     "mocha": "^3.0.1",
-    "sinon": "^3.2.1",
+    "sinon": "^4.0.2",
     "tslint": "^4.5.1",
     "typescript": "2.0.6"
   },

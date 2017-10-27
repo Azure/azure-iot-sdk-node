@@ -19,7 +19,7 @@
     "istanbul": "^0.4.4",
     "jshint": "^2.9.2",
     "mocha": "^3.5.3",
-    "sinon": "^4.0.1",
+    "sinon": "^4.0.2",
     "tslint": "^5.1.0",
     "typescript": "2.5.3",
     "@types/node": "^8.0.45"
