@@ -20,7 +20,13 @@ module.exports = function(hubConnectionString, protocols) {
     describe('Device Methods over ' + protocolCtor.name, function() {
       this.timeout(120000);
       var deviceClient;
-      var deviceDescription = {
+      var deviceDescription;
+
+      // create a new device for every test
+      beforeEach(function (done) {
+        this.timeout(20000);
+
+        deviceDescription = {
           deviceId:  '0000e2etest-delete-me-node-device-method-' + uuid.v4(),
           status: 'enabled',
             authentication: {
@@ -30,10 +36,6 @@ module.exports = function(hubConnectionString, protocols) {
             }
           }
         };
-
-      // create a new device for every test
-      beforeEach(function (done) {
-        this.timeout(20000);
 
         var registry = Registry.fromConnectionString(hubConnectionString);
         registry.create(deviceDescription, function (err) {
@@ -99,7 +101,7 @@ module.exports = function(hubConnectionString, protocols) {
         });
       };
 
-      var sendMethodCall = function(serviceClient, testPayload, done) {
+      var sendMethodCall = function(serviceClient, deviceId, testPayload, done) {
         setTimeout(function() {
           // make the method call via the service
           var methodParams = {
@@ -110,7 +112,7 @@ module.exports = function(hubConnectionString, protocols) {
           debug('service sending method call:');
           debug(JSON.stringify(methodParams, null, 2));
           serviceClient.invokeDeviceMethod(
-                  deviceDescription.deviceId,
+                  deviceId,
                   methodParams,
                   function(err, result) {
                     if(!err) {
@@ -129,7 +131,7 @@ module.exports = function(hubConnectionString, protocols) {
         it('makes and receives a method call with ' + JSON.stringify(testPayload), function(done) {
           setMethodHandler(testPayload);
           var serviceClient = ServiceClient.fromConnectionString(hubConnectionString);
-          sendMethodCall(serviceClient, testPayload, done);
+          sendMethodCall(serviceClient, deviceDescription.deviceId, testPayload, done);
         });
       });
 
@@ -139,7 +141,7 @@ module.exports = function(hubConnectionString, protocols) {
         var sas = SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, anHourFromNow());
         var serviceClient = ServiceClient.fromSharedAccessSignature(sas);
         setMethodHandler(testPayload);
-        sendMethodCall(serviceClient, testPayload, done);
+        sendMethodCall(serviceClient, deviceDescription.deviceId, testPayload, done);
       });
 
       it('makes and receives a method call after renewing the SAS token', function(done) {
@@ -148,7 +150,7 @@ module.exports = function(hubConnectionString, protocols) {
           deviceClient.on('_sharedAccessSignatureUpdated', function() {
           setTimeout(function() {
             var serviceClient = ServiceClient.fromConnectionString(hubConnectionString);
-            sendMethodCall(serviceClient, testPayload, done);
+            sendMethodCall(serviceClient, deviceDescription.deviceId, testPayload, done);
           }, 1000);
         });
         deviceClient.updateSharedAccessSignature(deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString());
