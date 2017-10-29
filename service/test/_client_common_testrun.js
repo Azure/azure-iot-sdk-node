@@ -46,8 +46,6 @@ function transportSpecificTests(opts) {
           }
         });
       });
-
-
     });
 
     describe('#send', function () {

@@ -7,11 +7,13 @@
   "main": "iothub.js",
   "typings": "iothub.d.ts",
   "dependencies": {
+    "async": "^2.5.0",
     "azure-iot-amqp-base": "1.2.1",
     "azure-iot-common": "1.2.1",
     "azure-iot-http-base": "1.2.0",
     "debug": "^2.6.3",
-    "lodash": "^4.15.0"
+    "lodash": "^4.15.0",
+    "machina": "^2.0.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",
@@ -36,7 +38,7 @@
     "alltest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
     "ci": "npm run typings && npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
     "test": "npm run typings && npm -s run lint && npm -s run build && npm -s run unittest",
-    "check-cover": "istanbul check-coverage --statements 94 --branches 89  --lines 95 --functions 89",
+    "check-cover": "istanbul check-coverage --statements 97 --branches 93  --lines 97 --functions 93",
     "cover": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js"
   },
   "engines": {

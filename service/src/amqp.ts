@@ -5,9 +5,11 @@
 
 import { EventEmitter } from 'events';
 import * as dbg from 'debug';
+import * as machina from 'machina';
+import * as async from 'async';
 
 import { anHourFromNow, endpoint, errors, results, SharedAccessSignature, Message } from 'azure-iot-common';
-import { Amqp as Base } from 'azure-iot-amqp-base';
+import { Amqp as Base, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
 import { translateError } from './amqp_service_errors.js';
 import { Callback } from './interfaces';
 import { Client } from './client';
@@ -15,21 +17,18 @@ import { Client } from './client';
 const UnauthorizedError = errors.UnauthorizedError;
 const DeviceNotFoundError = errors.DeviceNotFoundError;
 const NotConnectedError = errors.NotConnectedError;
-const debug = dbg('azure-iothub');
+const debug = dbg('azure-iothub:Amqp');
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
 
 function handleResult(errorMessage: string, done: Callback<any>): Callback<any> {
   return (err, result) => {
-    /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_021: [** All asynchronous instance methods shall not throw if `done` is not specified or falsy]*/
-    if (done) {
-      if (err) {
-        /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_018: [All asynchronous instance methods shall call the `done` callback with either no arguments or a first null argument and a second argument that is the result of the operation if the operation succeeded.]*/
-        done(translateError(errorMessage, err));
-      } else {
-        /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_017: [All asynchronous instance methods shall call the `done` callback with a single parameter that is derived from the standard Javascript `Error` object if the operation failed.]*/
-        done(null, result);
-      }
+    if (err) {
+      /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_018: [All asynchronous instance methods shall call the `done` callback with either no arguments or a first null argument and a second argument that is the result of the operation if the operation succeeded.]*/
+      done(translateError(errorMessage, err));
+    } else {
+      /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_017: [All asynchronous instance methods shall call the `done` callback with a single parameter that is derived from the standard Javascript `Error` object if the operation failed.]*/
+      done(null, result);
     }
   };
 }
@@ -40,7 +39,6 @@ function getTranslatedError(err: Error, message: string): Error {
   }
   return translateError(message, err);
 }
-
 
 /**
  * Transport class used by the [service client]{@link azure-iothub.Client} to connect to the Azure IoT hub using the AMQP protocol over a secure (TLS) socket.
@@ -59,6 +57,19 @@ export class Amqp extends EventEmitter implements Client.Transport {
   private _amqp: Base;
   private _renewalTimeout: number;
   private _renewalNumberOfMilliseconds: number = 2700000;
+  private _fsm: machina.Fsm;
+
+  private _c2dEndpoint: string = '/messages/devicebound';
+  private _c2dLink: SenderLink;
+  private _c2dErrorListener: (err: Error) => void;
+
+  private _feedbackEndpoint: string = '/messages/serviceBound/feedback';
+  private _feedbackReceiver: ReceiverLink;
+  private _feedbackErrorListener: (err: Error) => void;
+
+  private _fileNotificationEndpoint: string = '/messages/serviceBound/filenotifications';
+  private _fileNotificationReceiver: ReceiverLink;
+  private _fileNotificationErrorListener: (err: Error) => void;
 
   /**
    * @private
@@ -69,7 +80,331 @@ export class Amqp extends EventEmitter implements Client.Transport {
     this._config = config;
     this._renewalTimeout = null;
     this._amqp.setDisconnectHandler((err) => {
-      this.emit('disconnect', err);
+      this._fsm.handle('amqpError', err);
+    });
+
+    this._c2dErrorListener = (err) => {
+      debug('Error on the D2C link: ' + err.toString());
+      this._c2dLink = null;
+    };
+
+    this._feedbackErrorListener = (err) => {
+      debug('Error on the message feedback link: ' + err.toString());
+      this._feedbackReceiver = null;
+    };
+
+    this._fileNotificationErrorListener = (err) => {
+      debug('Error on the file notification link: ' + err.toString());
+      this._fileNotificationReceiver = null;
+    };
+
+    this._fsm = new machina.Fsm({
+      namespace: 'azure-iothub:Amqp',
+      initialState: 'disconnected',
+      states: {
+        disconnected: {
+          _onEnter: (err, callback) => {
+            if (err) {
+              if (callback) {
+                callback(err);
+              } else {
+                this.emit('disconnect', err);
+              }
+            } else {
+              if (callback) {
+                callback();
+              }
+            }
+          },
+          connect: (callback) => {
+            this._fsm.transition('connecting', callback);
+          },
+          disconnect: (callback) => callback(),
+          send: (message, deviceEndpoint, callback) => {
+            /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_025: [The `send` method shall connect and authenticate the transport if it is disconnected.]*/
+            this._fsm.handle('connect', (err) => {
+              if (err) {
+                /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_026: [The `send` method shall call its callback with an error if connecting and/or authenticating the transport fails.]*/
+                callback(err);
+              } else {
+                this._fsm.handle('send', message, deviceEndpoint, callback);
+              }
+            });
+          },
+          getFeedbackReceiver: (callback) => {
+            /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_033: [The `getFeedbackReceiver` method shall connect and authenticate the transport if it is disconnected.]*/
+            this._fsm.handle('connect', (err) => {
+              if (err) {
+                /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_034: [The `getFeedbackReceiver` method shall call its callback with an error if the transport fails to connect or authenticate.]*/
+                callback(err);
+              } else {
+                this._fsm.handle('getFeedbackReceiver', callback);
+              }
+            });
+          },
+          getFileNotificationReceiver: (callback) => {
+            /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_036: [The `getFileNotificationReceiver` method shall connect and authenticate the transport if it is disconnected.]*/
+            this._fsm.handle('connect', (err) => {
+              if (err) {
+                /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_037: [The `getFileNotificationReceiver` method shall call its callback with an error if the transport fails to connect or authenticate.]*/
+                callback(err);
+              } else {
+                this._fsm.handle('getFileNotificationReceiver', callback);
+              }
+            });
+          },
+          updateSharedAccessSignature: (updatedSAS, callback) => {
+            /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_032: [The `updateSharedAccessSignature` shall not establish a connection if the transport is disconnected, but should use the new shared access signature on the next manually initiated connection attempt.]*/
+            callback();
+          },
+          amqpError: (err) => {
+            debug('error received while disconnected. likely a bug?');
+            if (err) {
+              debug(err.toString());
+            }
+          }
+        },
+        connecting: {
+          _onEnter: (callback) => {
+            const uri = this._getConnectionUri();
+            this._amqp.connect(uri, undefined, (err, result) => {
+              if (err) {
+                debug('failed to connect' + err.toString());
+                this._fsm.transition('disconnected', err, callback);
+              } else {
+                debug('connected');
+                this._fsm.transition('authenticating', callback);
+              }
+            });
+          },
+          disconnect: (callback) => {
+            this._fsm.transition('disconnecting', null, callback);
+          },
+          amqpError: (err) => {
+            this._fsm.transition('disconnecting', err);
+          },
+          '*': () => this._fsm.deferUntilTransition()
+        },
+        authenticating: {
+          _onEnter: (callback) => {
+            /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_001: [`initializeCBS` shall be invoked.]*/
+            this._amqp.initializeCBS((err) => {
+              if (err) {
+                debug('error trying to initialize CBS: ' + err.toString());
+                /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_002: [If `initializeCBS` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
+                this._fsm.transition('disconnecting', callback);
+              } else {
+                debug('CBS initialized');
+                /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_003: [If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter audience, created from the sr of the sas signature, the next parameter of the actual sas, and a callback.]*/
+                const audience = SharedAccessSignature.parse(this._config.sharedAccessSignature.toString(), ['sr', 'sig', 'se']).sr;
+                const applicationSuppliedSas = typeof(this._config.sharedAccessSignature) === 'string';
+                const sasToken = applicationSuppliedSas ? this._config.sharedAccessSignature as string : (this._config.sharedAccessSignature as SharedAccessSignature).extend(anHourFromNow());
+                this._amqp.putToken(audience, sasToken, (err) => {
+                  if (err) {
+                    /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_004: [** If `putToken` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
+                    this._fsm.transition('disconnecting', err);
+                  } else {
+                    if (!applicationSuppliedSas) {
+                      this._renewalTimeout = setTimeout(this._handleSASRenewal.bind(this), this._renewalNumberOfMilliseconds);
+                    }
+                    this._fsm.transition('authenticated', callback);
+                  }
+                });
+              }
+            });
+          },
+          disconnect: (callback) => {
+            this._fsm.transition('disconnecting', null, callback);
+          },
+          amqpError: (err) => {
+            this._fsm.transition('disconnecting', err);
+          },
+          '*': () => this._fsm.deferUntilTransition()
+        },
+        authenticated: {
+          _onEnter: (callback) => {
+            callback(null, new results.Connected());
+          },
+          _onExit: (callback) => {
+            if (this._renewalTimeout) {
+              clearTimeout(this._renewalTimeout);
+            }
+          },
+          connect: (callback) => callback(),
+          disconnect: (callback) => this._fsm.transition('disconnecting', null, callback),
+          send: (message, deviceEndpoint, callback) => {
+            /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_002: [The `send` method shall construct an AMQP request using the message passed in argument as the body of the message.]*/
+            let amqpMessage = AmqpMessage.fromMessage(message);
+            /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_003: [The message generated by the `send` method should have its “to” field set to the device ID passed as an argument.]*/
+            amqpMessage.properties.to = deviceEndpoint;
+            if (!this._c2dLink) {
+              /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_027: [The `send` method shall attach the C2D link if necessary.]*/
+              this._amqp.attachSenderLink(this._c2dEndpoint, null, (err, link) => {
+                if (err) {
+                  /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_029: [The `send` method shall call its callback with an error if it fails to attach the C2D link.]*/
+                  callback(err);
+                } else {
+                  this._c2dLink = link;
+                  this._c2dLink.on('error', this._c2dErrorListener);
+                  /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_030: [The `send` method shall call the `send` method of the C2D link and pass it the Amqp request that it created.]*/
+                  this._c2dLink.send(amqpMessage, callback);
+                }
+              });
+            } else {
+              /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_028: [The `send` method shall reuse the C2D link if it is already attached.]*/
+              this._c2dLink.send(amqpMessage, callback);
+            }
+          },
+          getFeedbackReceiver: (callback) => {
+            if (this._feedbackReceiver) {
+              /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_035: [The `getFeedbackReceiver` method shall reuse the existing feedback receiver it if has already been attached.]*/
+              callback(null, this._feedbackReceiver);
+            } else {
+              /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_013: [The `getFeedbackReceiver` method shall request an `AmqpReceiver` object from the base AMQP transport for the `/messages/serviceBound/feedback` endpoint.]*/
+              this._amqp.attachReceiverLink(this._feedbackEndpoint, null, (err, link) => {
+                if (err) {
+                  callback(err);
+                } else {
+                  this._feedbackReceiver = link;
+                  this._feedbackReceiver.on('error', this._feedbackErrorListener);
+                  callback(null, this._feedbackReceiver);
+                }
+              });
+            }
+          },
+          getFileNotificationReceiver: (callback) => {
+            /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_038: [The `getFileNotificationReceiver` method shall reuse the existing feedback receiver it if has already been attached.]*/
+            if (this._fileNotificationReceiver) {
+              callback(null, this._fileNotificationReceiver);
+            } else {
+              /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_016: [The `getFileNotificationReceiver` method shall request an `AmqpReceiver` object from the base AMQP transport for the `/messages/serviceBound/filenotifications` endpoint.]*/
+              this._amqp.attachReceiverLink(this._fileNotificationEndpoint, null, (err, link) => {
+                if (err) {
+                  callback(err);
+                } else {
+                  this._fileNotificationReceiver = link;
+                  this._fileNotificationReceiver.on('error', this._fileNotificationErrorListener);
+                  callback(null, this._fileNotificationReceiver);
+                }
+              });
+            }
+          },
+          updateSharedAccessSignature: (updatedSAS, callback) => {
+            /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_031: [The `updateSharedAccessSignature` shall trigger a `putToken` call on the base transport if it is connected.]*/
+            const audience = SharedAccessSignature.parse(this._config.sharedAccessSignature.toString(), ['sr', 'sig', 'se']).sr;
+            this._amqp.putToken(audience, updatedSAS, callback);
+          },
+          amqpError: (err) => {
+            this._fsm.transition('disconnecting', err);
+          }
+        },
+        disconnecting: {
+          _onEnter: (err, disconnectCallback) => {
+            let finalError: Error = err;
+            async.series([
+              (callback) => {
+                /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_021: [The `disconnect` method shall detach the C2D messaging link if it is attached.]*/
+                if (this._c2dLink) {
+                  let tmpC2DLink = this._c2dLink;
+                  this._c2dLink = undefined;
+                  if (err) {
+                    debug('force-detaching c2d links');
+                    tmpC2DLink.forceDetach(err);
+                    callback();
+                  } else {
+                    tmpC2DLink.detach((detachErr) => {
+                      if (detachErr) {
+                        debug('error detaching the c2d link: ' + detachErr.toString());
+                        if (!finalError) {
+                          finalError = translateError('error while detaching the c2d link when disconnecting', detachErr);
+                        }
+                      } else {
+                        debug('c2d link detached.');
+                      }
+                      callback();
+                    });
+                  }
+                } else {
+                  callback();
+                }
+              },
+              (callback) => {
+                /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_022: [The `disconnect` method shall detach the C2D feedback receiver link if it is attached.]*/
+                if (this._feedbackReceiver) {
+                  let tmpFeedbackReceiver = this._feedbackReceiver;
+                  this._feedbackReceiver = undefined;
+
+                  if (err) {
+                    tmpFeedbackReceiver.forceDetach(err);
+                    tmpFeedbackReceiver.removeListener('error', this._feedbackErrorListener);
+                    callback();
+                  } else {
+                    tmpFeedbackReceiver.detach((detachErr) => {
+                      if (detachErr) {
+                        debug('error detaching the message feedback link: ' + detachErr.toString());
+                      } else {
+                        debug('D2C link detached');
+                      }
+                      tmpFeedbackReceiver.removeListener('error', this._feedbackErrorListener);
+                      if (!finalError && detachErr) {
+                        finalError = translateError('error while detaching the message feedback link when disconnecting', detachErr);
+                      }
+                      callback();
+                    });
+                  }
+                } else {
+                  callback();
+                }
+              },
+              /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_023: [The `disconnect` method shall detach the file notification receiver link if it is attached.]*/
+              (callback) => {
+                if (this._fileNotificationReceiver) {
+                  let tmpFileNotificationReceiver = this._fileNotificationReceiver;
+                  this._fileNotificationReceiver = undefined;
+
+                  if (err) {
+                    tmpFileNotificationReceiver.forceDetach(err);
+                    tmpFileNotificationReceiver.removeListener('error', this._fileNotificationErrorListener);
+                    callback();
+                  } else {
+                    tmpFileNotificationReceiver.detach((detachErr) => {
+                      if (detachErr) {
+                        debug('error detaching the file upload notification link: ' + detachErr.toString());
+                      } else {
+                        debug('D2C link detached');
+                      }
+                      tmpFileNotificationReceiver.removeListener('error', this._fileNotificationErrorListener);
+                      if (!finalError && detachErr) {
+                        finalError = translateError('error while detaching the file upload notification link when disconnecting', detachErr);
+                      }
+                      callback();
+                    });
+                  }
+                } else {
+                  callback();
+                }
+              },
+              (callback) => {
+                this._amqp.disconnect((disconnectErr) => {
+                  if (disconnectErr) {
+                    debug('error disconnecting the AMQP connection: ' + disconnectErr.toString());
+                  } else {
+                    debug('amqp connection successfully disconnected.');
+                  }
+                  if (!finalError && disconnectErr) {
+                    finalError = translateError('error while disconnecting the AMQP connection', disconnectErr);
+                  }
+                  callback();
+                });
+              }
+            ], () => {
+              /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_024: [Any error generated by detaching a link should be passed as the single argument of the callback of the `disconnect` method.]*/
+              this._fsm.transition('disconnected', finalError, disconnectCallback);
+            });
+          },
+          '*': () => this._fsm.deferUntilTransition()
+        }
+      }
     });
   }
 
@@ -81,39 +416,11 @@ export class Amqp extends EventEmitter implements Client.Transport {
    */
   /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_019: [The `connect` method shall call the `connect` method of the base AMQP transport and translate its result to the caller into a transport-agnostic object.]*/
   connect(done?: Client.Callback<results.Connected>): void {
-    const uri = this._getConnectionUri();
-
-    this._amqp.connect(uri, undefined, (err, connectResult) => {
+    this._fsm.handle('connect', (err) => {
       if (err) {
-        if (done) done(translateError('AMQP Transport: Could not connect', err));
+        done(translateError('AMQP Transport: Could not connect', err));
       } else {
-        /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_001: [`initializeCBS` shall be invoked.]*/
-        this._amqp.initializeCBS((err) => {
-          if (err) {
-            /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_002: [If `initializeCBS` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
-            this._amqp.disconnect(() => {
-              if (done) done(getTranslatedError(err, 'AMQP Transport: Could not initialize CBS'));
-            });
-          } else {
-            /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_003: [If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter audience, created from the sr of the sas signature, the next parameter of the actual sas, and a callback.]*/
-            const audience = SharedAccessSignature.parse(this._config.sharedAccessSignature.toString(), ['sr', 'sig', 'se']).sr;
-            const applicationSuppliedSas = typeof(this._config.sharedAccessSignature) === 'string';
-            const sasToken = applicationSuppliedSas ? this._config.sharedAccessSignature as string : (this._config.sharedAccessSignature as SharedAccessSignature).extend(anHourFromNow());
-            this._amqp.putToken(audience, sasToken, (err) => {
-              if (err) {
-                /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_004: [** If `putToken` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
-                this._amqp.disconnect(() => {
-                  if (done) done(getTranslatedError(err, 'AMQP Transport: Could not authorize with puttoken'));
-                });
-              } else {
-                if (!applicationSuppliedSas) {
-                  this._renewalTimeout = setTimeout(this._handleSASRenewal.bind(this), this._renewalNumberOfMilliseconds);
-                }
-                if (done) done(null, connectResult);
-              }
-            });
-          }
-        });
+        done(null, new results.Connected());
       }
     });
   }
@@ -126,10 +433,13 @@ export class Amqp extends EventEmitter implements Client.Transport {
    */
   /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_020: [** The `disconnect` method shall call the `disconnect` method of the base AMQP transport and translate its result to the caller into a transport-agnostic object.]*/
   disconnect(done: Client.Callback<results.Disconnected>): void {
-    if (this._renewalTimeout) {
-      clearTimeout(this._renewalTimeout);
-    }
-    this._amqp.disconnect(handleResult('AMQP Transport: Could not disconnect', done));
+    this._fsm.handle('disconnect', (err) => {
+      if (err) {
+        done(getTranslatedError(err, 'error while disconnecting'));
+      } else {
+        done(null, new results.Disconnected());
+      }
+    });
   }
 
   /**
@@ -144,21 +454,8 @@ export class Amqp extends EventEmitter implements Client.Transport {
   /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_002: [The send method shall construct an AMQP request using the message passed in argument as the body of the message.]*/
   /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_003: [The message generated by the send method should have its “to” field set to the device ID passed as an argument.]*/
   send(deviceId: string, message: Message, done: Client.Callback<results.MessageEnqueued>): void {
-    const serviceEndpoint = '/messages/devicebound';
     const deviceEndpoint = endpoint.messagePath(encodeURIComponent(deviceId));
-    this._amqp.send(message, serviceEndpoint, deviceEndpoint, handleResult('AMQP Transport: Could not send message', done));
-  }
-
-  /**
-   * @deprecated
-   * @private
-   * @method             module:azure-iothub.Amqp#getReceiver
-   * @description        Gets the {@linkcode AmqpReceiver} object that can be used to receive messages from the IoT Hub instance and accept/reject/release them.
-   * @param {Function}   done      Callback used to return the {@linkcode AmqpReceiver} object.
-   */
-  getReceiver(done: Callback<any>): void {
-    const feedbackEndpoint = '/messages/serviceBound/feedback';
-    this._amqp.getReceiver(feedbackEndpoint, handleResult('AMQP Transport: Could not get receiver', done));
+    this._fsm.handle('send', message, deviceEndpoint, handleResult('AMQP Transport: Could not send message', done));
   }
 
   /**
@@ -169,8 +466,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
    */
   /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_013: [The `getFeedbackReceiver` method shall request an `AmqpReceiver` object from the base AMQP transport for the `/messages/serviceBound/feedback` endpoint.]*/
   getFeedbackReceiver(done: Client.Callback<Client.ServiceReceiver>): void {
-    const feedbackEndpoint = '/messages/serviceBound/feedback';
-    this._amqp.getReceiver(feedbackEndpoint, handleResult('AMQP Transport: Could not get receiver', done));
+    this._fsm.handle('getFeedbackReceiver', handleResult('AMQP Transport: Could not get feedback receiver', done));
   }
 
   /**
@@ -181,8 +477,31 @@ export class Amqp extends EventEmitter implements Client.Transport {
    */
   /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_016: [The `getFeedbackReceiver` method shall request an `AmqpReceiver` object from the base AMQP transport for the `/messages/serviceBound/filenotifications` endpoint.]*/
   getFileNotificationReceiver(done: Client.Callback<Client.ServiceReceiver>): void {
-    const fileNotificationEndpoint = '/messages/serviceBound/filenotifications';
-    this._amqp.getReceiver(fileNotificationEndpoint, handleResult('AMQP Transport: Could not get file notification receiver', done));
+    this._fsm.handle('getFileNotificationReceiver', handleResult('AMQP Transport: Could not get file notification receiver', done));
+  }
+
+  /**
+   * @private
+   * Updates the shared access signature and puts a new CBS token.
+   * @param sharedAccessSignature New shared access signature used to put a new CBS token.
+   * @param callback Function called when the callback has been successfully called.
+   */
+  updateSharedAccessSignature(sharedAccessSignature: string, callback: (err?: Error, result?: results.SharedAccessSignatureUpdated) => void): void {
+    if (!sharedAccessSignature) {
+      /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_039: [The `updateSharedAccessSignature` shall throw a `ReferenceError` if the `sharedAccessSignature` argument is falsy.]*/
+      throw new ReferenceError('sharedAccessSignature cannot be \'' + sharedAccessSignature + '\'');
+    }
+
+    this._config.sharedAccessSignature = sharedAccessSignature;
+    this._fsm.handle('updateSharedAccessSignature', sharedAccessSignature, (err) => {
+      if (err) {
+        /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_017: [** All asynchronous instance methods shall call the `done` callback with a single parameter that is derived from the standard Javascript `Error` object if the operation failed.]*/
+        callback(err);
+      } else {
+        /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_018: [All asynchronous instance methods shall call the `done` callback with either no arguments or a first null argument and a second argument that is the result of the operation if the operation succeeded.]*/
+        callback(null, new results.SharedAccessSignatureUpdated(false));
+      }
+    });
   }
 
   protected _getConnectionUri(): string {
@@ -190,14 +509,10 @@ export class Amqp extends EventEmitter implements Client.Transport {
   }
 
   private _handleSASRenewal(): void {
-    this._amqp.putToken(SharedAccessSignature.parse(this._config.sharedAccessSignature.toString(), ['sr', 'sig', 'se']).sr, (this._config.sharedAccessSignature as SharedAccessSignature).extend(anHourFromNow()), (err) => {
+    const newSas = (this._config.sharedAccessSignature as SharedAccessSignature).extend(anHourFromNow());
+    this._fsm.handle('updateSharedAccessSignature', newSas, (err) => {
       if (err) {
-        debug('error from the put token' + err);
-        this._amqp.disconnect((disconnectError) => {
-          if (disconnectError) {
-            debug('error from disconnect following failed put token' + err);
-          }
-        });
+        debug('error automatically renewing the sas token: ' + err.toString());
       } else {
         this._renewalTimeout = setTimeout(this._handleSASRenewal.bind(this), this._renewalNumberOfMilliseconds);
       }

@@ -32,11 +32,11 @@ export class RetryOperation {
    * @param {(opCallback: (err?: Error, result?: any) => void) => void} operation The operation to execute.
    * @param {(err?: Error, result?: any) => void} finalCallback                   The callback to call with the final error or result, after retries if necessary.
    */
-  retry(operation: (opCallback: (err?: Error, result?: any) => void) => void, finalCallback: (err?: Error, result?: any) => void): void {
+  retry(operation: (opCallback: (err?: Error, result?: any, response?: any) => void) => void, finalCallback: (err?: Error, result?: any, response?: any) => void): void {
     const retryOperation = () => {
       this._retryCount++;
       /*Codes_SRS_NODE_COMMON_RETRY_OPERATION_16_001: [The `operation` function should be called at every retry.]*/
-      operation((err, result) => {
+      operation((err, result, response) => {
         if (err) {
           /*Codes_SRS_NODE_COMMON_RETRY_OPERATION_16_003: [If the `operation` fails with an error the `retry` method should determine whether to retry or not using the `shouldRetry` method of the policy passed to the constructor.]*/
           if (this._policy.shouldRetry(err)) {
@@ -55,7 +55,7 @@ export class RetryOperation {
           }
         } else {
           /*Codes_SRS_NODE_COMMON_RETRY_OPERATION_16_002: [If the `operation` is successful the `finalCallback` function should be called with a `null` error parameter and the result of the operation.]*/
-          finalCallback(null, result);
+          finalCallback(null, result, response);
         }
       });
     };
