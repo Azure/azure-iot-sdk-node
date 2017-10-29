@@ -45,6 +45,8 @@ export class Client extends EventEmitter {
     this._transport = transport;
 
     this._restApiClient = restApiClient;
+
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_021: [The `Client` constructor shall initialize the default retry policy to `ExponentialBackoffWithJitter` with a maximum timeout of 4 minutes.]*/
     this._retryPolicy = new ExponentialBackOffWithJitter();
   }
 
@@ -64,6 +66,7 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_IOTHUB_CLIENT_05_011: [Otherwise the argument err shall have a transport property containing implementation-specific response information for use in logging and troubleshooting.]*/
     /*Codes_SRS_NODE_IOTHUB_CLIENT_05_012: [If the connection is already open when open is called, it shall have no effect—that is, the done callback shall be invoked immediately with a null argument.]*/
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_006: [The `open` method should not throw if the `done` callback is not specified.]*/
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_022: [The `open` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to connect the transport.]*/
     const retryOp = new RetryOperation(this._retryPolicy, MAX_RETRY_TIMEOUT);
     retryOp.retry((retryCallback) => {
       this._transport.connect(retryCallback);
@@ -143,10 +146,12 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_IOTHUB_CLIENT_05_018: [Otherwise the argument err shall have a transport property containing implementation-specific response information for use in logging and troubleshooting.]*/
     /*Codes_SRS_NODE_IOTHUB_CLIENT_05_019: [If the deviceId has not been registered with the IoT Hub, send shall return an instance of DeviceNotFoundError.]*/
     /*Codes_SRS_NODE_IOTHUB_CLIENT_05_020: [If the queue which receives messages on behalf of the device is full, send shall return and instance of DeviceMaximumQueueDepthExceededError.]*/
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_023: [The `send` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to send the message.]*/
     const retryOp = new RetryOperation(this._retryPolicy, MAX_RETRY_TIMEOUT);
     retryOp.retry((retryCallback) => {
       this._transport.send(deviceId, message as Message, retryCallback);
     }, (err, result) => {
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_16_030: [The `send` method shall not throw if the `done` callback is falsy.]*/
       if (done) {
         if (err) {
           done(err);
@@ -181,6 +186,7 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_010: [The `invokeDeviceMethod` method shall use the newly created instance of `DeviceMethod` to invoke the method on the device specified with the `deviceid` argument .]*/
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_012: [The `invokeDeviceMethod` method shall call the `done` callback with a standard javascript `Error` object if the request failed.]*/
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_013: [The `invokeDeviceMethod` method shall call the `done` callback with a `null` first argument, the result of the method execution in the second argument, and the transport-specific response object as a third argument.]*/
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_026: [The `invokeDeviceMethod` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to send the method request.]*/
     const retryOp = new RetryOperation(this._retryPolicy, MAX_RETRY_TIMEOUT);
     retryOp.retry((retryCallback) => {
       method.invokeOn(deviceId, retryCallback);
@@ -213,6 +219,7 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_IOTHUB_CLIENT_05_032: [FeedbackReceiver shall expose the 'message' event, whose handler shall be called with the following arguments when a new feedback message is received from the IoT Hub:
     message – a JavaScript object containing a batch of one or more feedback records]*/
     /*Codes_SRS_NODE_IOTHUB_CLIENT_05_033: [getFeedbackReceiver shall return the same instance of Client.FeedbackReceiver every time it is called with a given instance of Client.]*/
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_024: [The `getFeedbackReceiver` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to get a feedback receiver object.]*/
     const retryOp = new RetryOperation(this._retryPolicy, MAX_RETRY_TIMEOUT);
     retryOp.retry((retryCallback) => {
       this._transport.getFeedbackReceiver(retryCallback);
@@ -239,6 +246,7 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_001: [When the `getFileNotificationReceiver` method completes, the callback function (indicated by the `done` argument) shall be invoked with the following arguments:
   - `err` - standard JavaScript `Error` object (or subclass): `null` if the operation was successful
   - `receiver` - an `AmqpReceiver` instance: `undefined` if the operation failed]*/
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_025: [The `getFileNotificationReceiver` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to send the get a feedback receiver object.]*/
     const retryOp = new RetryOperation(this._retryPolicy, MAX_RETRY_TIMEOUT);
     retryOp.retry((retryCallback) => {
       this._transport.getFileNotificationReceiver(retryCallback);
@@ -265,14 +273,17 @@ export class Client extends EventEmitter {
    *               before retrying based on the past number of attempts (retryCount) and the fact that the error is a throttling error or not.
    */
   setRetryPolicy(policy: RetryPolicy): void {
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_027: [The `setRetryPolicy` method shall throw a `ReferenceError` if the `policy` argument is falsy.]*/
     if (!policy) {
       throw new ReferenceError('policy cannot be \'' + policy + '\'');
     }
 
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_028: [The `setRetryPolicy` method shall throw an `ArgumentError` if the `policy` object does not have a `shouldRetry` method and a `nextRetryTimeout` method.]*/
     if (!(typeof policy.shouldRetry === 'function') || !(typeof policy.nextRetryTimeout === 'function')) {
       throw new errors.ArgumentError('policy should have a shouldRetry method and a nextRetryTimeout method');
     }
 
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_029: [Any operation (e.g. `send`, `getFeedbackReceiver`, etc) initiated after a call to `setRetryPolicy` shall use the policy passed as argument to retry.]*/
     this._retryPolicy = policy;
   }
 
