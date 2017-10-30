@@ -29,7 +29,7 @@
     "alltest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test*.js",
     "unittest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test.js",
     "alltest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
-    "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
+    "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min",
     "test": "npm -s run lint && npm -s run build && npm -s run unittest",
     "check-cover": "istanbul check-coverage --statements 78 --branches 57 --lines 87 --functions 71"
   },
