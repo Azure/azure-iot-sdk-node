@@ -3,11 +3,8 @@
 
 'use strict';
 
-var Mqtt = require('../lib/mqtt.js').Mqtt;
-
 describe('device client', function () {
   it ('has an empty test to satisfy npm scripts until actual tests are writtten', function(testCallback) {
-    var mqtt = new Mqtt();
     testCallback();
   });
 });
