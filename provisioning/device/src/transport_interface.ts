@@ -40,10 +40,6 @@ export interface Config {
  */
 export interface Transport {
   /**
-   * Connect to the provisioning service
-   */
-  connect(callback: (err?: Error) => void): void;
-  /**
    * Register with the provisioning service.  This represents a single back-and-forth with the service.
    * Registration may involve several calls to this function, depending on the attestation mechanism.
    */

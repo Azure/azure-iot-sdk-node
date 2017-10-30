@@ -3,43 +3,10 @@
 ## Overview
 This module provides HTTP protocol support to communicate with the Azure device provisioning service
 
-```js
-'use strict';
-
-export class Http extends EventEmitter implements DeviceProvisioningTransport.Transport {
-  api-version: string;
-  operationStatusPollingInterval: number
-    connect(callback: (err?: Error) => void): void;
-    register(authorization: string | X509, forceRegistration: boolean, body: any, callback: DeviceProvisioningTransport.ResponseCallback): void;
-    disconnect(callback: (err?: Error) => void): void;}
-```
-
 ## Example Usage
-```js
-'use strict';
-var Http = require('azure-iot-provisioning-http').Http;
-
-var http = new Http('__MYSCOPE__', '__MY_DEVICE_ID__');
-
-http.on('operationStatus', (body) => {
-  console.log('operation id ' + body.operationId + ' is currently in state ' + body.state);
-);
-
-http.register(undefined, false, function(err, body)) {
-  if (err) {
-    if (err instanceof 'UnauthorizedError') {
-      console.log('Unauthorized: ' + body.message); // expect to see 'Authorization required, resend request using supplied key'
-    } else {
-  s    console.log('unknown error: ' + err.toString());
-    }
-  } else {
-    console.log('Success: status = ' + body.status);
-  }
-}
-
-
-
-```
+``js
+  // this is an internal class that is used by the Azure provisioning service device client..  It is not meant to be used directly.
+``
 
 ## Public Interface
 
@@ -47,19 +14,14 @@ http.register(undefined, false, function(err, body)) {
 The `constructor` creates an Http transport object used to communicate with the Azure device provisioning service
 
 **SRS_NODE_PROVISIONING_HTTP_18_001: [** The `Http` constructor shall accept the following properties:
-- `idScope` - a string specifiying the scope of the provisioning operations,
-- `registrationId` - the registration id for the specific device **]**
+  - `config` - a configuration object describing the connection to the service.
+  - `httpBase` - an optional test implementation of azure-iot-http-base **]**
 
-
-### connect(callback: (err?: Error) => void): void;
-
-**SRS_NODE_PROVISIONING_HTTP_18_038: [** `connect` shall immediately call the `callback` with no error. **]**
 
 ### register(authorization: string | X509, forceRegistration: boolean, body: any, callback: DeviceProvisioningTransport.ResponseCallback): void;
 `register` calls into the service to register the given device with the provisioning service.
 
 **SRS_NODE_PROVISIONING_HTTP_18_036: [** `register` shall call the `callback` with an `InvalidOperationError` if it is called while a previous registration is in progress. **]**
-
 
 **SRS_NODE_PROVISIONING_HTTP_18_005: [** The registration request shall include the current `api-version` as a URL query string value named 'api-version'. **]**
 

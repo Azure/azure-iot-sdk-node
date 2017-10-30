@@ -30,10 +30,9 @@ class HttpTransportHandlers implements Provisioning.TransportHandlers {
    * @constructor
    * @param config The configuration object.
    */
-  // TODO: update SRS for new constructor parameters
   /* Codes_SRS_NODE_PROVISIONING_HTTP_18_001: [ The `Http` constructor shall accept the following properties:
-  - `idScope` - a string specifiying the scope of the provisioning operations,
-  - `registrationId` - the registration id for the specific device ] */
+  - `config` - a configuration object describing the connection to the service.
+  - `httpBase` - an optional test implementation of azure-iot-http-base ] */
   constructor(config: Provisioning.Config,  httpBase?: Base) {
 
     if (!config.serviceHostName) config.serviceHostName = 'global.azure-devices-provisioning.net';
@@ -43,8 +42,7 @@ class HttpTransportHandlers implements Provisioning.TransportHandlers {
   }
 
 
-  /* Codes_SRS_NODE_PROVISIONING_HTTP_18_038: [ `connect` shall immediately call the `callback` with no error. ] */
-  connect(callback: (err?: Error) => void): void {
+  connect(authorization: SharedAccessSignature | X509 | string, callback: (err?: Error) => void): void {
    // nothing to do here
    callback();
   }
