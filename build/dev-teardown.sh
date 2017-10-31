@@ -21,21 +21,21 @@ npm rm azure-iot-common
 cd $node_root/provisioning/transport/mqtt
 echo "-- Removing links for `pwd` --"
 npm rm
-npm rm azure-device-provisioning-client
+npm rm azure-iot-provisioning-device
 npm rm azure-iot-common
 npm rm azure-iot-mqtt-base
 
 cd $node_root/provisioning/transport/http
 echo "-- Removing links for `pwd` --"
 npm rm
-npm rm azure-device-provisioning-client
+npm rm azure-iot-provisioning-device
 npm rm azure-iot-common
 npm rm azure-iot-http-base
 
 cd $node_root/provisioning/transport/amqp
 echo "-- Removing links for `pwd` --"
 npm rm
-npm rm azure-device-provisioning-client
+npm rm azure-iot-provisioning-device
 npm rm azure-iot-common
 npm rm azure-iot-amqp-base
 

@@ -26,21 +26,21 @@ call npm rm azure-iot-common
 cd %node-root%\provisioning\transport\mqtt
 echo -- Removing links for %cd% --
 call npm rm
-call npm rm azure-device-provisioning-client
+call npm rm azure-iot-provisioning-device
 call npm rm azure-iot-common
 call npm rm azure-iot-mqtt-base
 
 cd %node-root%\provisioning\transport\http
 echo -- Removing links for %cd% --
 call npm rm
-call npm rm azure-device-provisioning-client
+call npm rm azure-iot-provisioning-device
 call npm rm azure-iot-common
 call npm rm azure-iot-http-base
 
 cd %node-root%\provisioning\transport\amqp
 echo -- Removing links for %cd% --
 call npm rm
-call npm rm azure-device-provisioning-client
+call npm rm azure-iot-provisioning-device
 call npm rm azure-iot-common
 call npm rm azure-iot-amqp-base
 

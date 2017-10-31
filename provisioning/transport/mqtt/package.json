@@ -1,5 +1,5 @@
 {
-  "name": "azure-iot-provisioning-mqtt",
+  "name": "azure-iot-provisioning-device-mqtt",
   "version": "0.0.1",
   "description": "MQTT transport for Azure Device Provisioning SDK",
   "author": "Microsoft Corporation",
@@ -9,6 +9,7 @@
   "dependencies": {
     "azure-iot-mqtt-base": "1.2.1",
     "azure-iot-common": "1.2.1",
+    "azure-iot-provisioning-device": "0.0.1",
     "debug": "^3.0.1",
     "machina": "^2.0.0"
   },

@@ -1,5 +1,5 @@
 {
-  "name": "azure-device-provisioning-client",
+  "name": "azure-iot-provisioning-device",
   "version": "0.0.1",
   "description": "Azure Device Provisioning SDK device client",
   "author": "Microsoft Corporation",

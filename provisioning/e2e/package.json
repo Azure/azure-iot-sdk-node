@@ -1,12 +1,15 @@
 {
-  "name": "azure-device-provisioning-e2e",
+  "name": "azure-iot-provisioning-device-e2e",
   "version": "0.0.1",
   "description": "E2E tests for the Azure Device Provisioning SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "dependencies": {
-    "azure-iot-provisioning-http": "0.0.1",
-    "azure-iot-common": "1.2.0",
+    "azure-iot-common": "1.2.1",
+    "azure-iot-provisioning-device": "0.0.1",
+    "azure-iot-provisioning-device-amqp": "0.0.1",
+    "azure-iot-provisioning-device-http": "0.0.1",
+    "azure-iot-provisioning-device-mqtt": "0.0.1",
     "debug": "^3.0.1",
     "machina": "^2.0.0",
     "chai": "^3.5.0",

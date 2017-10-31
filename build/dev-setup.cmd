@@ -95,7 +95,7 @@ echo.
 echo -- Creating links for %cd% --
 call npm link azure-iot-amqp-base
 call npm link azure-iot-common
-call npm link azure-device-provisioning-client
+call npm link azure-iot-provisioning-device
 call npm link
 call npm run build
 
@@ -104,7 +104,7 @@ echo.
 echo -- Creating links for %cd% --
 call npm link azure-iot-http-base
 call npm link azure-iot-common
-call npm link azure-device-provisioning-client
+call npm link azure-iot-provisioning-device
 call npm link
 call npm run build
 
@@ -113,7 +113,7 @@ echo.
 echo -- Creating links for %cd% --
 call npm link azure-iot-mqtt-base
 call npm link azure-iot-common
-call npm link azure-device-provisioning-client
+call npm link azure-iot-provisioning-device
 call npm link
 call npm run build
 
