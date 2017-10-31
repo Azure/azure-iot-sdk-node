@@ -7,7 +7,6 @@ import { EventEmitter } from 'events';
 import { errors, X509, SharedAccessSignature } from 'azure-iot-common';
 import * as machina from 'machina';
 import * as Provisioning from './transport_interface';
-import { OperationList } from './operation_list';
 import * as dbg from 'debug';
 const debug = dbg('azure-device-provisioning:transport-fsm');
 
@@ -23,7 +22,7 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
   private _fsm: machina.Fsm;
   private _pollingTimer: any;
   private _transport: TransportHandlers;
-  private _pendingOperations: OperationList;
+  private _currentOperationCallback: any;
 
   /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_001: [ The `constructor` shall accept no arguments ] */
   constructor() {
@@ -32,7 +31,6 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
 
   initialize(transport: TransportHandlers): void {
     this._transport = transport;
-    this._pendingOperations = new OperationList();
 
     this._fsm = new machina.Fsm({
       namespace: 'provisioning-transport',
@@ -40,6 +38,7 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
       states: {
         disconnected: {
           _onEnter: (callback, err, body, result) => {
+            this._currentOperationCallback = null;
             this._pollingTimer = null;
             if (callback) {
               callback(err, body, result);
@@ -91,11 +90,13 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
         sendingRegistrationRequest: {
           _onEnter: (callback, registrationId, authorization, requestBody, forceRegistration) => {
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_012: [ `register` shall call `TransportHandlers.registrationRequest`. ] */
-            this._pendingOperations.operationStarted(callback);
+            this._currentOperationCallback = callback;
             this._transport.registrationRequest(registrationId, authorization, requestBody, forceRegistration, (err, body, result, pollingInterval) => {
               // Check if the operation is still pending before transitioning.  We might be in a different state now and we don't want to mess that up.
-              if (this._pendingOperations.operationIsStillPending(callback)) {
+              if (this._currentOperationCallback === callback) {
                 this._fsm.transition('responseReceived', callback, err, registrationId, body, result, pollingInterval);
+              } else if (this._currentOperationCallback) {
+                debug('Unexpected: received unexpected response for cancelled operaton');
               }
             });
           },
@@ -144,7 +145,7 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
         },
         responseComplete: {
           _onEnter: (callback, body, result) => {
-            this._pendingOperations.operationEnded(callback);
+            this._currentOperationCallback = null;
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_014: [ If `TransportHandlers.registrationRequest` succeeds with status==Assigned, it shall emit an 'operationStatus' event and call `callback` with null, the response body, and the protocol-specific result. ] */
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_020: [ If `TransportHandlers.queryOperationStatus` succeeds with status==Assigned, `register` shall emit an 'operationStatus' event and complete and pass the body of the response and the protocol-spefic result to the `callback`. ] */
             this.emit('operationStatus', body);
@@ -154,7 +155,7 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
         },
         responseError: {
           _onEnter: (callback, err, body, result) => {
-            this._pendingOperations.operationEnded(callback);
+            this._currentOperationCallback = null;
             if (this._errorIsFatal(err)) {
               this._fsm.transition('disconnecting', callback, err, body, result);
             } else {
@@ -183,8 +184,10 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_018: [ When the polling interval elapses, `register` shall call `TransportHandlers.queryOperationStatus`. ] */
             this._transport.queryOperationStatus(registrationId, operationId, (err, body, result, pollingInterval) => {
               // Check if the operation is still pending before transitioning.  We might be in a different state now and we don't want to mess that up.
-              if (this._pendingOperations.operationIsStillPending(callback)) {
+              if (this._currentOperationCallback === callback) {
                 this._fsm.transition('responseReceived', callback, err, registrationId, body, result, pollingInterval);
+              } else if (this._currentOperationCallback) {
+                debug('Unexpected: received unexpected response for cancelled operation');
               }
             });
           },
@@ -195,9 +198,11 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
         disconnecting: {
           _onEnter: (callback, err, body, result) => {
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `disconnect` shall cause that registration to fail with an `OperationCancelledError`. ] */
-            this._pendingOperations.popAllPendingOperations((callback) => {
-              callback(new errors.OperationCancelledError(''));
-            });
+            if (this._currentOperationCallback) {
+              let _callback = this._currentOperationCallback;
+              this._currentOperationCallback = null;
+              _callback(new errors.OperationCancelledError(''));
+            }
             this._transport.disconnect((disconnectErr) => {
               if (disconnectErr) {
                 debug('error received from transport during disconnection:' + disconnectErr.toString());
