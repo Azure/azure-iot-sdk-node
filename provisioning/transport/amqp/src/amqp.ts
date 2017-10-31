@@ -8,7 +8,7 @@ import { EventEmitter } from 'events';
 import { Amqp as Base } from 'azure-iot-amqp-base';
 import { errors, X509 } from 'azure-iot-common';
 import * as machina from 'machina';
-import { DeviceProvisioningTransport } from 'azure-device-provisioning-client';
+import { DeviceProvisioningTransport } from 'azure-iot-provisioning-device';
 */
 
 export class Amqp extends EventEmitter { // implements DeviceProvisioningTransport.Transport {

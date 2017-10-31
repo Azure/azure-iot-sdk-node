@@ -5,7 +5,7 @@
 
 import { RestApiClient, Http as Base } from 'azure-iot-http-base';
 import { X509, SharedAccessSignature } from 'azure-iot-common';
-import * as Provisioning from 'azure-device-provisioning-client';
+import * as Provisioning from 'azure-iot-provisioning-device';
 import * as dbg from 'debug';
 const debug = dbg('azure-device-provisioning:transport-http');
 

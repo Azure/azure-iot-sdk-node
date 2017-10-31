@@ -7,9 +7,9 @@ var Interface = require('./lib/transport_interface');
 var Fsm = require('./lib/transport_state_machine');
 
 /**
- * The `azure-device-provisioning-client` module provides access to the Azure Device Provisoning Service.
+ * The `azure-iot-provisioning-device` module provides access to the Azure Device Provisoning Service.
  *
- * @module azure-device-provisioning-client
+ * @module azure-iot-provisioning-device
  * @requires module:azure-iot-common
  */
 
