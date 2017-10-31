@@ -44,6 +44,10 @@ export class Message {
    * Type of feedback requested (in case of cloud-to-device command)
    */
   ack: string;
+  /**
+   * Diagnostic data attached to the message
+   */
+  diagnosticPropertyData: any;
 
   /**
    * @private
@@ -68,6 +72,7 @@ export class Message {
     this.lockToken = '';
     this.correlationId = '';
     this.userId = '';
+    this.diagnosticPropertyData = null;
   }
 
   /**

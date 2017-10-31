@@ -16,6 +16,7 @@ import * as SharedAccessSignature from './shared_access_signature.js';
 import { BlobUploadClient } from './blob_upload';
 import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
 import { Twin } from './twin';
+import { DiagnosticClient } from './client_diagnostic';
 
 /**
  * @private
@@ -69,6 +70,7 @@ export class Client extends EventEmitter {
   private _methodsEnabled: boolean;
 
   private _retryPolicy: RetryPolicy;
+  private _diagnosticClient: DiagnosticClient;
 
   /**
    * @constructor
@@ -92,6 +94,9 @@ export class Client extends EventEmitter {
     this._useAutomaticRenewal = !!(this._connectionString && ConnectionString.parse(this._connectionString).SharedAccessKey);
 
     this.blobUploadClient = blobUploadClient;
+
+    /* Codes_SRS_NODE_DEVICE_CLIENT_26_001: [The constructor shall initialize device client diagnostic] */
+    this._diagnosticClient = new DiagnosticClient();
 
     this._transport = transport;
     this._transport.on('message', (msg) => {
@@ -259,6 +264,7 @@ export class Client extends EventEmitter {
    * @param {Function}                  sendEventCallback  The callback to be invoked when `sendEvent` completes execution.
    */
   sendEvent(message: Message, sendEventCallback?: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    this._diagnosticClient.addDiagnosticInfoIfNecessary(message);
     const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       /*Codes_SRS_NODE_DEVICE_CLIENT_05_007: [The sendEvent method shall send the event indicated by the message argument via the transport associated with the Client instance.]*/
@@ -280,6 +286,9 @@ export class Client extends EventEmitter {
    *                                                `sendEventBatch` completes execution.
    */
   sendEventBatch(messages: Message[], sendEventBatchCallback?: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    for (let message of messages) {
+      this._diagnosticClient.addDiagnosticInfoIfNecessary(message);
+    }
     const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       /*Codes_SRS_NODE_DEVICE_CLIENT_05_008: [The sendEventBatch method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance.]*/
@@ -481,6 +490,22 @@ export class Client extends EventEmitter {
 
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_086: [Any operation happening after a `setRetryPolicy` call should use the policy set during that call.]*/
     this._retryPolicy = policy;
+  }
+
+  /*
+   * @method           module:azure-iot-device.Client#setDiagnosticSamplingPercentage
+   * @description      The `setDiagnosticSamplingPercentage` method will set percentage value for diagnostic sampling
+   *
+   * @param {number} value            The value of diagnostic sampling
+   *
+   */
+  setDiagnosticSamplingPercentage(value: number): void {
+    if (value !== null && typeof value !== 'undefined') {
+      // Codes_SRS_NODE_DEVICE_CLIENT_26_002: ["SetDiagnosticSamplingPercentage" would set percentage].
+      this._diagnosticClient.setDiagSamplingPercentage(value);
+    }else {
+      throw new errors.ArgumentError('Invalid diagnostic sampling percentage value.');
+    }
   }
 
   private _validateDeviceMethodInputs(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {

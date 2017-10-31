@@ -182,6 +182,26 @@ describe('AmqpMessage', function () {
       var amqpMessage = AmqpMessage.fromMessage(new Message());
       assert.notProperty(amqpMessage, 'body');
     });
+
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_26_001: [If diagnosticPropertyData is truthy, the AmqpMessage object shall set message annotation of diagnostic properties.]*/
+    it('set annotation if message contains diagnostic property data', function () {
+      let fakeMessage = new Message();
+      fakeMessage.diagnosticPropertyData = {
+        getDiagnosticId: () => '',
+        getCorrelationContext: () => ''
+      };
+      var amqpMessage = AmqpMessage.fromMessage(fakeMessage);
+      assert.property(amqpMessage.messageAnnotations, 'Diagnostic-Id');
+      assert.property(amqpMessage.messageAnnotations, 'Correlation-Context');
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_26_002: [If diagnosticPropertyData is falsy, the AmqpMessage object shall not set message annotation of diagnostic properties.]*/
+    it('does not set annotation if message does not contain diagnostic property data', function () {
+      let fakeMessage = new Message();
+      var amqpMessage = AmqpMessage.fromMessage(fakeMessage);
+      assert.notProperty(amqpMessage.messageAnnotations, 'Diagnostic-Id');
+      assert.notProperty(amqpMessage.messageAnnotations, 'Correlation-Context');
+    });
   });
 
   describe('#toMessage', function() {

@@ -9,6 +9,7 @@ var stream = require('stream');
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 var Client = require('../lib/client.js').Client;
+var DiagnosticClient = require('../lib/client_diagnostic.js').DiagnosticClient;
 var SimulatedHttp = require('./http_simulated.js');
 var FakeTransport = require('./fake_transport.js');
 var clientTests = require('./_client_common_testrun.js');
@@ -916,6 +917,18 @@ describe('Client', function () {
         assert.isTrue(testPolicy.nextRetryTimeout.notCalled); //shouldRetry being false...
         assert.isTrue(fakeTransport.sendEvent.calledOnce);
         testCallback();
+      });
+    });
+  });
+
+  describe('#setDiagnosticSamplingPercentage', function() {
+    /*Tests_SRS_NODE_DEVICE_CLIENT_26_001: [The `setDiagnosticSamplingPercentage` method shall throw a `ArgumentError` if the percentage value is falsy.]*/
+    [null, undefined].forEach(function(value) {
+      it('throws an ArgumentError if value is \'' + value + '\'', function() {
+        var client = new Client(new EventEmitter());
+        assert.throws(function() {
+          client.setDiagnosticSamplingPercentage(value);
+        }, errors.ArgumentError);
       });
     });
   });
