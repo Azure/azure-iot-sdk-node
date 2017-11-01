@@ -7,7 +7,7 @@ import { EventEmitter } from 'events';
 import * as machina from 'machina';
 import { Client as MqttClient, IClientOptions, IClientPublishOptions, IClientSubscribeOptions } from 'mqtt';
 import * as dbg from 'debug';
-const debug = dbg('mqtt-common');
+const debug = dbg('azure-iot-mqtt-base:MqttBase');
 import { errors, results, endpoint, SharedAccessSignature, X509 } from 'azure-iot-common';
 
 /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_004: [The `MqttBase` constructor shall instanciate the default MQTT.JS library if no argument is passed to it.]*/
@@ -108,7 +108,7 @@ export class MqttBase extends EventEmitter {
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_033: [The `updateSharedAccessSignature` method shall disconnect and reconnect the mqtt client with the new `sharedAccessSignature`.]*/
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_035: [The `updateSharedAccessSignature` method shall call the `callback` argument with no parameters if the operation succeeds.]*/
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_036: [The `updateSharedAccessSignature` method shall call the `callback` argument with an `Error` if the operation fails.]*/
-            this._disconnectClient(false, () => {
+            this._disconnectClient(true, () => {
               this._connectClient((err, connack) => {
                 if (err) {
                   this._fsm.transition('disconnected', callback, err);
@@ -121,6 +121,10 @@ export class MqttBase extends EventEmitter {
           '*': () => this._fsm.deferUntilTransition()
         }
       }
+    });
+
+    this._fsm.on('transition', (data) => {
+      debug(data.fromState + ' -> ' + data.toState + ' (' + data.action + ')');
     });
   }
 
@@ -242,7 +246,7 @@ export class MqttBase extends EventEmitter {
       this._mqttClient.removeListener('disconnect', disconnectCallback);
 
       this._mqttClient.on('close', () => {
-        debug('Device connection to the server has been closed');
+        debug('close event received from mqtt.js client - no error');
         this._fsm.transition('disconnecting', undefined, new errors.NotConnectedError('Connection to the server has been closed.'));
       });
 

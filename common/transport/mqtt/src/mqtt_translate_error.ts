@@ -2,7 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-
+import * as dbg from 'debug';
+const debug = dbg('azure-iot-mqtt-base:translateError');
 import { errors } from 'azure-iot-common';
 
 /**
@@ -29,9 +30,18 @@ export class MqttTransportError extends Error {
 export function translateError(mqttError: Error): MqttTransportError {
   let err: MqttTransportError;
 
-  if (mqttError.message) {
-    /* Codes_SRS_NODE_DEVICE_MQTT_ERRORS_18_002: [** `translateError` shall return a `NotConnectedError` if the MQTT error message contains the string 'client disconnecting' **]** */
-    if (mqttError.message.indexOf('client disconnecting') > -1) {
+  debug('translating: ' + mqttError.toString());
+  if ((<any>mqttError).code) {
+    // the 'code' property denotes a socket-level error (ENOTFOUND, EAI_AGAIN, etc)
+    /*Codes_SRS_NODE_DEVICE_MQTT_ERRORS_16_001: [`translateError` shall return a `NotConnectedError` if the error object as a truthy `code` property (node socket errors)]*/
+    err = new errors.NotConnectedError(mqttError.message);
+  } else if (mqttError.message) {
+    if (mqttError.message.indexOf('premature close') > -1) {
+      // comes from end-of-stream which is a dependency of mqtt.js
+      /*Codes_SRS_NODE_DEVICE_MQTT_ERRORS_16_002: [`translateError` shall return a `NotConnectedError` if the error message contains 'premature close' (from `end-of-stream`)]*/
+      err = new errors.NotConnectedError(mqttError.message);
+    } else if (mqttError.message.indexOf('client disconnecting') > -1) {
+      /* Codes_SRS_NODE_DEVICE_MQTT_ERRORS_18_002: [** `translateError` shall return a `NotConnectedError` if the MQTT error message contains the string 'client disconnecting' **]** */
       err = new errors.NotConnectedError('mqtt.js returned ' + mqttError.message + ' error');
     } else if (mqttError.message.indexOf('Invalid topic') > -1) {
       /* Codes_SRS_NODE_DEVICE_MQTT_ERRORS_18_003: [** `translateError` shall return a `FormatError` if the MQTT error message contains the string 'Invalid topic' **]** */

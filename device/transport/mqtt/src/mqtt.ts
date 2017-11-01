@@ -336,6 +336,10 @@ export class Mqtt extends EventEmitter implements Client.Transport {
         }
       }
     });
+
+    this._fsm.on('transition', (data) => {
+      debug(data.fromState + ' -> ' + data.toState + ' (' + data.action + ')');      
+    });
   }
 
   /**
@@ -403,10 +407,11 @@ export class Mqtt extends EventEmitter implements Client.Transport {
 
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `sendEvent` method shall use QoS level of 1.]*/
     this._fsm.handle('sendEvent', topic, message.data, { qos: 1, retain: false }, (err, puback) => {
-      debug('PUBACK: ' + JSON.stringify(puback));
       if (err) {
+        debug('send error: ' + err.toString());
         done(err);
       } else {
+        debug('PUBACK: ' + JSON.stringify(puback));
         done(null, new results.MessageEnqueued(puback));
       }
     });
