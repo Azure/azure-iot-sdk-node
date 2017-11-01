@@ -1,0 +1,74 @@
+{
+  "tasks": {
+    "setup": {
+      "description": "install and build all project dependencies",
+      "command": "cd {fullpath} {perDependencyCommand} && npm ln && npm run build",
+      "perDependencyCommand": " && npm ln {dependency}"
+    },
+    "teardown": {
+      "description": "un-install all project dependencies",
+      "command": "cd {fullpath} && npm rm {perDependencyCommand}",
+      "perDependencyCommand": " && npm rm {dependency}",
+      "continueOnError": true
+    },
+    "build": {
+      "description": "compile all typescript files into javascript",
+      "command": "cd {fullpath} && npm run build"
+    },
+    "test": {
+      "description": "run all unit tests",
+      "command": "cd {fullpath} && npm run test"
+    },
+    "ci": {
+      "description": "run all unit tests, integration tests, and check code coverage",
+      "command": "cd {fullpath} && npm run ci"
+    }
+  },
+  "projects": [
+    {
+      "directory": "common/core"
+    },
+    {
+      "directory": "common/transport/mqtt"
+    },
+    {
+      "directory": "common/transport/http"
+    },
+    {
+      "directory": "common/transport/amqp"
+    },
+    {
+      "directory": "provisioning/device"
+    },
+    {
+      "directory": "provisioning/transport/amqp"
+    },
+    {
+      "directory": "provisioning/transport/http"
+    },
+    {
+      "directory": "provisioning/transport/mqtt"
+    },
+    {
+      "directory": "device/core"
+    },
+    {
+      "directory": "device/transport/mqtt"
+    },
+    {
+      "directory": "device/transport/http"
+    },
+    {
+      "directory": "device/transport/amqp"
+    },
+    {
+      "directory": "service"
+    },
+    {
+      "directory": "e2etests",
+      "build": false,
+      "test": false,
+      "ci": false
+    }
+  ]
+}

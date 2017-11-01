@@ -8,136 +8,16 @@ set node-root=%~dp0..
 REM // resolve to fully qualified path
 for %%i in ("%node-root%") do set node-root=%%~fi
 
-cd %node-root%\common\core
-echo.
-echo -- Creating links for %cd% --
-call npm link
-call npm run build
-
-cd %node-root%\common\transport\amqp
-echo.
-echo -- Creating links for %cd% --
-call npm link azure-iot-common
-call npm link
-call npm run build
-
-cd %node-root%\common\transport\http
-echo.
-echo -- Creating links for %cd% --
-call npm link azure-iot-common
-call npm link
-call npm run build
-
-cd %node-root%\common\transport\mqtt
-echo.
-echo -- Creating links for %cd% --
-call npm link azure-iot-common
-call npm link
-call npm run build
-
-cd %node-root%\device\core
-echo.
-echo -- Creating links for %cd% --
-call npm link azure-iot-http-base
-call npm link azure-iot-common
-call npm link
-call npm run build
-
-cd %node-root%\service
-echo.
-echo -- Creating links for %cd% --
-call npm link azure-iot-common
-call npm link azure-iot-amqp-base
-call npm link azure-iot-http-base
-call npm link
-call npm run typings
-call npm run build
-
-cd %node-root%\device\transport\amqp
-echo.
-echo -- Creating links for %cd% --
-call npm link azure-iot-amqp-base
-call npm link azure-iot-common
-call npm link azure-iot-device
-call npm link azure-iothub
-call npm link
-call npm run build
-
-cd %node-root%\device\transport\http
-echo.
-echo -- Creating links for %cd% --
-call npm link azure-iot-http-base
-call npm link azure-iot-common
-call npm link azure-iot-device
-call npm link azure-iothub
-call npm link
-call npm run build
-
-cd %node-root%\device\transport\mqtt
-echo.
-echo -- Creating links for %cd% --
-call npm link azure-iot-mqtt-base
-call npm link azure-iot-common
-call npm link azure-iot-device
-call npm link azure-iothub
-call npm link
-call npm run build
-
-cd %node-root%\provisioning\device
-echo.
-echo -- Creating links for %cd% --
-call npm link azure-iot-common
-call npm link
-call npm run build
-
-cd %node-root%\provisioning\transport\amqp
-echo.
-echo -- Creating links for %cd% --
-call npm link azure-iot-amqp-base
-call npm link azure-iot-common
-call npm link azure-iot-provisioning-device
-call npm link
-call npm run build
-
-cd %node-root%\provisioning\transport\http
-echo.
-echo -- Creating links for %cd% --
-call npm link azure-iot-http-base
-call npm link azure-iot-common
-call npm link azure-iot-provisioning-device
-call npm link
-call npm run build
-
-cd %node-root%\provisioning\transport\mqtt
-echo.
-echo -- Creating links for %cd% --
-call npm link azure-iot-mqtt-base
-call npm link azure-iot-common
-call npm link azure-iot-provisioning-device
-call npm link
-call npm run build
-
-cd %node-root%\e2etests
-echo.
-echo -- Creating links for %cd% --
-call npm link azure-iot-common
-call npm link azure-iot-device
-call npm link azure-iot-device-amqp
-call npm link azure-iot-device-http
-call npm link azure-iot-device-mqtt
-call npm link azure-iothub
-call npm install
-
-cd %node-root%\provisioning\service
-echo.
-echo -- Creating links for %cd% --
-call npm link azure-iot-common
-call npm link azure-iot-http-base
-call npm link
-call npm run build
-
 cd %node-root%\build\tools
-echo .
+echo.
 echo -- Setting up links for build tools --
-call npm link azure-iothub
 call npm install
+
+echo.
+echo -- setting up node_modules --
+call node build_parallel.js setup
+
+echo.
+echo -- linking build tools to azure-iothub --
+call npm link azure-iothub
+

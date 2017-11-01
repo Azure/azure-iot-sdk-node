@@ -29,6 +29,7 @@
     "mocha": "^3.0.1"
   },
   "scripts": {
+    "build": "echo \"Nothing to do\"",
     "lint": "jshint --show-non-errors .",
     "unittest-min": "echo \"No tests\"",
     "unittest": "echo \"No tests\"",

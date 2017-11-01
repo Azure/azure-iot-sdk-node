@@ -5,7 +5,6 @@
 
 min_output=
 integration_tests=
-npm_command=
 
 node_root=$(cd "$(dirname "$0")/.." && pwd)
 cd $node_root
@@ -33,28 +32,14 @@ process_args ()
             * ) usage;;
         esac
     done
-
-    case "$min_output$integration_tests" in
-        "00" ) npm_command="npm -s test";;
-        "01" ) npm_command="npm -s run lint && npm -s run alltest";;
-        "10" ) npm_command="npm -s run lint && npm -s run unittest-min";;
-        "11" ) npm_command="npm -s run ci";;
-    esac
-}
-
-lint_and_test ()
-{
-    cd "$1"
-    pwd
-    eval $npm_command
 }
 
 create_test_device()
 {
     export IOTHUB_X509_DEVICE_ID=x509device-node-$RANDOM
     node $node_root/build/tools/create_device_certs.js --connectionString $IOTHUB_CONNECTION_STRING --deviceId $IOTHUB_X509_DEVICE_ID
-    export IOTHUB_X509_CERTIFICATE=$node_root/$IOTHUB_X509_DEVICE_ID-cert.pem
-    export IOTHUB_X509_KEY=$node_root/$IOTHUB_X509_DEVICE_ID-key.pem
+    export IOTHUB_X509_CERTIFICATE=$(pwd)/$IOTHUB_X509_DEVICE_ID-cert.pem
+    export IOTHUB_X509_KEY=$(pwd)/$IOTHUB_X509_DEVICE_ID-key.pem
 }
 
 delete_test_device()
@@ -76,52 +61,19 @@ echo ""
 echo "-- create test device --"
 create_test_device
 
+pushd $node_root/build/tools
 echo ""
 if [ $integration_tests -eq 0 ]
 then
     echo "-- Linting and running unit tests --"
+    node build_parallel.js test
+    [ $? -eq 0 ] || cleanup_and_exit $?
 else
     echo "-- Linting and running unit + integration tests --"
+    node build_parallel.js ci
+    [ $? -eq 0 ] || cleanup_and_exit $?
 fi
+popd
 echo ""
-
-lint_and_test $node_root/common/core
-[ $? -eq 0 ] || cleanup_and_exit $?
-
-lint_and_test $node_root/common/transport/amqp
-[ $? -eq 0 ] || cleanup_and_exit $?
-
-lint_and_test $node_root/common/transport/http
-[ $? -eq 0 ] || cleanup_and_exit $?
-
-lint_and_test $node_root/common/transport/mqtt
-[ $? -eq 0 ] || cleanup_and_exit $?
-
-lint_and_test $node_root/device/core
-[ $? -eq 0 ] || cleanup_and_exit $?
-
-lint_and_test $node_root/device/transport/amqp
-[ $? -eq 0 ] || cleanup_and_exit $?
-
-lint_and_test $node_root/device/transport/http
-[ $? -eq 0 ] || cleanup_and_exit $?
-
-lint_and_test $node_root/device/transport/mqtt
-[ $? -eq 0 ] || cleanup_and_exit $?
-
-lint_and_test $node_root/service
-[ $? -eq 0 ] || cleanup_and_exit $?
-
-lint_and_test $node_root/provisioning/device
-[ $? -eq 0 ] || cleanup_and_exit $?
-
-lint_and_test $node_root/provisioning/transport/amqp
-[ $? -eq 0 ] || cleanup_and_exit $?
-
-lint_and_test $node_root/provisioning/transport/http
-[ $? -eq 0 ] || cleanup_and_exit $?
-
-lint_and_test $node_root/provisioning/transport/mqtt
-[ $? -eq 0 ] || cleanup_and_exit $?
 
 cleanup_and_exit $?

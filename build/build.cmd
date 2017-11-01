@@ -35,11 +35,6 @@ goto args-loop
 
 :args-done
 
-if %min-output%==0 if %integration-tests%==0 set "npm-command=npm -s test"
-if %min-output%==0 if %integration-tests%==1 set "npm-command=npm -s run lint && npm -s run alltest"
-if %min-output%==1 if %integration-tests%==0 set "npm-command=npm -s run lint && npm -s run unittest-min"
-if %min-output%==1 if %integration-tests%==1 set "npm-command=npm -s run ci"
-
 rem ---------------------------------------------------------------------------
 rem -- create x509 test device
 rem ---------------------------------------------------------------------------
@@ -51,56 +46,25 @@ if "%OPENSSL_CONF%"=="" (
 
 set IOTHUB_X509_DEVICE_ID=x509device-node-%RANDOM%
 call node %node-root%\build\tools\create_device_certs.js --connectionString %IOTHUB_CONNECTION_STRING% --deviceId %IOTHUB_X509_DEVICE_ID%
-set IOTHUB_X509_CERTIFICATE=%node-root%\%IOTHUB_X509_DEVICE_ID%-cert.pem
-set IOTHUB_X509_KEY=%node-root%\%IOTHUB_X509_DEVICE_ID%-key.pem
+set IOTHUB_X509_CERTIFICATE=%cd%\%IOTHUB_X509_DEVICE_ID%-cert.pem
+set IOTHUB_X509_KEY=%cd%\%IOTHUB_X509_DEVICE_ID%-key.pem
 
 rem ---------------------------------------------------------------------------
 rem -- lint and run tests
 rem ---------------------------------------------------------------------------
 
+pushd  "%node-root%\build\tools"
 echo.
-if %integration-tests%==0 echo -- Linting and running unit tests --
-if %integration-tests%==1 echo -- Linting and running unit + integration tests --
+if %integration-tests%==0 (
+  echo -- Linting and running unit tests --
+  call node build_parallel.js test
+)
+if %integration-tests%==1 (
+  echo -- Linting and running unit + integration tests --
+  call node build_parallel.js ci
+)
 echo.
-
-call :lint-and-test %node-root%\common\core
-if errorlevel 1 goto :cleanup
-
-call :lint-and-test %node-root%\common\transport\amqp
-if errorlevel 1 goto :cleanup
-
-call :lint-and-test %node-root%\common\transport\http
-if errorlevel 1 goto :cleanup
-
-call :lint-and-test %node-root%\common\transport\mqtt
-if errorlevel 1 goto :cleanup
-
-call :lint-and-test %node-root%\device\core
-if errorlevel 1 goto :cleanup
-
-call :lint-and-test %node-root%\device\transport\amqp
-if errorlevel 1 goto :cleanup
-
-call :lint-and-test %node-root%\device\transport\http
-if errorlevel 1 goto :cleanup
-
-call :lint-and-test %node-root%\device\transport\mqtt
-if errorlevel 1 goto :cleanup
-
-call :lint-and-test %node-root%\service
-if errorlevel 1 goto :cleanup
-
-call :lint-and-test %node-root%\provisioning\transport\device
-if errorlevel 1 goto :cleanup
-
-call :lint-and-test %node-root%\provisioning\transport\amqp
-if errorlevel 1 goto :cleanup
-
-call :lint-and-test %node-root%\provisioning\transport\http
-if errorlevel 1 goto :cleanup
-
-call :lint-and-test %node-root%\provisioning\transport\mqtt
-if errorlevel 1 goto :cleanup
+popd
 
 goto :cleanup
 
@@ -114,12 +78,6 @@ echo build.cmd [options]
 echo options:
 echo  --min                 minimize display output
 echo  --integration-tests   run integration tests too (unit tests always run)
-goto :eof
-
-:lint-and-test
-cd "%1"
-echo %cd%
-call %npm-command%
 goto :eof
 
 :cleanup
