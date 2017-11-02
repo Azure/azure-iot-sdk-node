@@ -204,10 +204,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
                     /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_004: [** If `putToken` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
                     this._fsm.transition('disconnecting', err);
                   } else {
-                    if (!applicationSuppliedSas) {
-                      this._renewalTimeout = setTimeout(this._handleSASRenewal.bind(this), this._renewalNumberOfMilliseconds);
-                    }
-                    this._fsm.transition('authenticated', callback);
+                    this._fsm.transition('authenticated', applicationSuppliedSas, callback);
                   }
                 });
               }
@@ -222,7 +219,10 @@ export class Amqp extends EventEmitter implements Client.Transport {
           '*': () => this._fsm.deferUntilTransition()
         },
         authenticated: {
-          _onEnter: (callback) => {
+          _onEnter: (applicationSuppliedSas, callback) => {
+            if (!applicationSuppliedSas) {
+              this._renewalTimeout = setTimeout(this._handleSASRenewal.bind(this), this._renewalNumberOfMilliseconds);
+            }
             callback(null, new results.Connected());
           },
           _onExit: (callback) => {

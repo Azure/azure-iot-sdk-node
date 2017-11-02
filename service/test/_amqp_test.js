@@ -134,9 +134,12 @@ describe('Amqp', function() {
     });
 
     /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_019: [The `connect` method shall call the `connect` method of the base AMQP transport and translate its result to the caller into a transport-agnostic object.]*/
-    it('calls the base transport connect method with renewable sas config', function(done) {
+    it('calls the base transport connect method with renewable sas config', function(testCallback) {
       var amqp = new Amqp(sasConfig, fakeAmqpBase);
-      amqp.connect(done);
+      amqp.connect(function () {
+        assert.isTrue(fakeAmqpBase.connect.calledOnce);
+        testCallback();
+      });
     });
 
     /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_06_001: [`initializeCBS` shall be invoked.]*/
