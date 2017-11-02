@@ -11,8 +11,11 @@ var assert = require('chai').assert;
 var uuid = require('uuid');
 var debug = require('debug')('e2etests:registry');
 var Promise = require('bluebird');
+var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+var storageConnectionString = process.env.STORAGE_CONNECTION_STRING;
 
-var runTests = function (hubConnectionString, storageConnectionString) {
+
+var runTests = function () {
   var deviceIdOnly = {
     deviceId: uuid.v4()
   };
@@ -591,4 +594,4 @@ var runTests = function (hubConnectionString, storageConnectionString) {
   });
 };
 
-module.exports = runTests;
+runTests();

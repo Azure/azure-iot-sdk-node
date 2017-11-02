@@ -20,10 +20,11 @@ var AmqpWs = require('azure-iot-device-amqp').AmqpWs;
 var Mqtt = require('azure-iot-device-mqtt').Mqtt;
 var MqttWs = require('azure-iot-device-mqtt').MqttWs;
 var Http = require('azure-iot-device-http').Http;
+var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 var transports = [Amqp, AmqpWs, Mqtt, MqttWs, Http];
 
-module.exports = function authentication_tests(hubConnectionString) {
+var runTests = function authentication_tests() {
   describe('Authentication', function() {
     this.timeout(40000);
     var hostName = ServiceConnectionString.parse(hubConnectionString).HostName;
@@ -182,3 +183,5 @@ module.exports = function authentication_tests(hubConnectionString) {
     });
   });
 };
+
+runTests();

@@ -10,8 +10,9 @@ var Amqp = require('azure-iothub').Amqp;
 var AmqpWs = require('azure-iothub').AmqpWs;
 
 var assert = require('chai').assert;
+var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
-var runTests = function (hubConnectionString) {
+var runTests = function () {
   describe('Service Client', function () {
     [Amqp, AmqpWs].forEach(function (Transport) {
       it('Service client can connect over ' + Transport.name + ' using a shared access signature', function(done) {
@@ -49,4 +50,4 @@ var runTests = function (hubConnectionString) {
   });
 };
 
-module.exports = runTests;
+runTests();

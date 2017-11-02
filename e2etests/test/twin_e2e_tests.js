@@ -12,6 +12,11 @@ var uuid = require('uuid');
 var _ = require('lodash');
 var assert = require('chai').assert;
 var async = require('async');
+var deviceAmqp = require('azure-iot-device-amqp');
+var deviceMqtt = require('azure-iot-device-mqtt');
+var protocols = [deviceAmqp.Amqp, deviceMqtt.Mqtt];
+
+var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 var newProps = {
   foo : 1,
@@ -40,7 +45,7 @@ var nullIndividualProps = {
 var nullMergeResult = JSON.parse(JSON.stringify(newProps));
 delete nullMergeResult.tweedle;
 
-var runTests = function (hubConnectionString, protocols) {
+var runTests = function () {
   protocols.forEach(function(protocolCtor) {
     describe('Twin over ' + protocolCtor.name, function() {
 
@@ -406,4 +411,4 @@ var runTests = function (hubConnectionString, protocols) {
   });
 };
 
-module.exports = runTests;
+runTests();

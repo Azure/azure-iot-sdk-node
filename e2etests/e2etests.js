@@ -11,11 +11,9 @@ var deviceMqtt = require('azure-iot-device-mqtt');
 
 var device_provision = require('./test/device_provision.js');
 var device_service_tests = require('./test/device_service.js');
-var registry_tests = require('./test/registry.js');
 var file_upload_tests = require('./test/file_upload.js');
 var device_acknowledge_tests = require('./test/device_acknowledge_tests.js');
 var sas_token_tests = require('./test/sas_token_tests.js');
-var service_client = require('./test/service.js');
 var d2c_disconnect = require('./test/d2c_disconnect.js');
 var c2d_disconnect = require('./test/c2d_disconnect.js');
 var throttle_disconnect = require('./test/throttle_disconnect.js');
@@ -23,16 +21,11 @@ var twin_disconnect = require('./test/twin_disconnect.js');
 var method_disconnect = require('./test/method_disconnect.js');
 var upload_disconnect = require('./test/upload_disconnect.js');
 var device_teardown = require('./test/device_teardown.js');
-var twin_e2e_tests = require('./test/twin_e2e_tests.js');
-var device_method = require('./test/device_method.js');
 //var job_client = require('./test/job_client.js');
-var authentication_tests = require('./test/authentication.js');
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
-var storageConnectionString = process.env.STORAGE_CONNECTION_STRING;
 var generalProtocols = [deviceHttp.Http, deviceAmqp.Amqp, deviceAmqp.AmqpWs, deviceMqtt.Mqtt];
 var acknowledgementProtocols = [deviceHttp.Http, deviceAmqp.Amqp, deviceAmqp.AmqpWs];
-var deviceMethodsProtocols = [deviceMqtt.Mqtt, deviceMqtt.MqttWs, deviceAmqp.Amqp, deviceAmqp.AmqpWs];
 var uploadDisconnectProtocols = [deviceMqtt.Mqtt, deviceMqtt.MqttWs, deviceAmqp.Amqp, deviceAmqp.AmqpWs];
 
 
@@ -89,10 +82,5 @@ device_provision(hubConnectionString, function (err, provisionedDevices) {
   run();
 });
 
-service_client(hubConnectionString);
-registry_tests(hubConnectionString, storageConnectionString);
-authentication_tests(hubConnectionString);
-twin_e2e_tests(hubConnectionString, [deviceAmqp.Amqp, deviceMqtt.Mqtt]);
-device_method(hubConnectionString, deviceMethodsProtocols);
 // job_client(hubConnectionString);
 

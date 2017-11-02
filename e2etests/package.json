@@ -19,6 +19,7 @@
     "bluebird": "^3.3.0",
     "debug": "^2.2.0",
     "lodash": "^4.15.0",
+    "npm-run-all": "^4.1.1",
     "pem": "^1.8.3",
     "uuid": "^2.0.1",
     "yargs": "^4.7.1"
@@ -31,12 +32,15 @@
   "scripts": {
     "build": "echo \"Nothing to do\"",
     "lint": "jshint --show-non-errors .",
-    "unittest-min": "echo \"No tests\"",
-    "unittest": "echo \"No tests\"",
-    "alltest-min": "mocha --delay -i -g \"Imports then exports devices|device successfully uploads\" --reporter dot e2etests.js",
-    "alltest": "mocha --delay --reporter spec e2etests.js",
-    "ci": "npm -s run lint && npm -s run alltest-min",
-    "test": "npm -s run lint && npm -s run unittest"
+    "e2e": "mocha --delay --reporter spec e2etests.js",
+    "service_client": "mocha --reporter spec test/service.js",
+    "registry_tests": "mocha  --reporter spec  test/registry.js",
+    "authentication_tests": "mocha --reporter spec test/authentication.js",
+    "twin_e2e_tests": "mocha --reporter spec test/twin_e2e_tests.js",
+    "device_method": "mocha --reporter spec test/device_method.js",
+    "alltest": "npm-run-all -p -l e2e service_client registry_tests authentication_tests twin_e2e_tests device_method",
+    "ci": "npm -s run lint && npm -s run alltest",
+    "test": "npm -s run lint && npm -s run alltest"
   },
   "engines": {
     "node": ">= 0.10"

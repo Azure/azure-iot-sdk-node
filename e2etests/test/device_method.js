@@ -14,8 +14,12 @@ var util = require('util');
 var uuid = require('uuid');
 var assert = require('chai').assert;
 var debug = require('debug')('e2etests:devicemethod');
+var deviceAmqp = require('azure-iot-device-amqp');
+var deviceMqtt = require('azure-iot-device-mqtt');
+var protocols= [deviceMqtt.Mqtt, deviceMqtt.MqttWs, deviceAmqp.Amqp, deviceAmqp.AmqpWs];
+var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
-module.exports = function(hubConnectionString, protocols) {
+var runTests = function() {
   protocols.forEach(function(protocolCtor) {
     describe('Device Methods over ' + protocolCtor.name, function() {
       this.timeout(120000);
@@ -158,3 +162,5 @@ module.exports = function(hubConnectionString, protocols) {
     });
   });
 };
+
+runTests();
