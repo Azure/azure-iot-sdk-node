@@ -338,7 +338,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
     });
 
     this._fsm.on('transition', (data) => {
-      debug(data.fromState + ' -> ' + data.toState + ' (' + data.action + ')');      
+      debug(data.fromState + ' -> ' + data.toState + ' (' + data.action + ')');
     });
   }
 
