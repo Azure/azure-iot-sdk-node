@@ -6,16 +6,50 @@
 var serviceSdk = require('azure-iothub');
 var createDeviceClient = require('./testUtils.js').createDeviceClient;
 var closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
+var DeviceIdentityHelper = require('./device_identity_helper.js');
 
 var assert = require('chai').assert;
 var debug = require('debug')('e2etests');
 var uuid = require('uuid');
 
-var runTests = function (hubConnectionString, deviceTransport, provisionedDevice) {
-  describe('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication, connected over ' + deviceTransport.name, function () {
+var deviceAmqp = require('azure-iot-device-amqp');
+var deviceHttp = require('azure-iot-device-http');
+
+var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+
+[
+  DeviceIdentityHelper.createDeviceWithSas,
+  DeviceIdentityHelper.createDeviceWithSymmetricKey,
+  DeviceIdentityHelper.createDeviceWithX509SelfSignedCert
+].forEach(function (createDeviceMethod) {
+  [
+    deviceHttp.Http,
+    deviceAmqp.Amqp,
+    deviceAmqp.AmqpWs
+  ].forEach(function (deviceTransport) {
+    device_acknowledgment_tests(deviceTransport, createDeviceMethod);
+  });
+});
+
+device_acknowledgment_tests(deviceAmqp.Amqp, DeviceIdentityHelper.createDeviceWithX509CASignedCert);
+
+function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
+  describe('Over ' + deviceTransport.name, function () {
     this.timeout(60000);
 
     var serviceClient, deviceClient;
+    var provisionedDevice;
+
+    before(function (beforeCallback) {
+      createDeviceMethod(function (err, testDeviceInfo) {
+        provisionedDevice = testDeviceInfo;
+        beforeCallback(err);
+      });
+    });
+
+    after(function (afterCallback) {
+      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+    });
 
     beforeEach(function () {
       serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString);
@@ -26,7 +60,7 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
       closeDeviceServiceClients(deviceClient, serviceClient, done);
     });
 
-    it('Service sends 1 C2D message and it is re-sent until the device completes it', function (done) {
+    it('Service sends 1 C2D message and it is re-sent until completed', function (done) {
       var guid = uuid.v4();
 
       var abandonnedOnce = false;
@@ -86,7 +120,7 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
 
     });
 
-    it('Service sends 1 C2D message and it is re-sent until the device rejects it', function (done) {
+    it('Service sends 1 C2D message and it is re-sent until rejected', function (done) {
       var guid = uuid.v4();
 
       var abandonnedOnce = false;
@@ -132,10 +166,8 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
               });
             }
           });
-       }
+        }
       });
     });
   });
-};
-
-module.exports = runTests;
+}

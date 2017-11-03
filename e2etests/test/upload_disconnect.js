@@ -7,13 +7,23 @@ var assert = require('chai').assert;
 var uuid = require('uuid');
 var debug = require('debug')('e2etests:uploaddisconnect');
 
+var deviceAmqp = require('azure-iot-device-amqp');
+var deviceMqtt = require('azure-iot-device-mqtt');
 var serviceSdk = require('azure-iothub');
 var createDeviceClient = require('./testUtils.js').createDeviceClient;
 var closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
 var Message = require('azure-iot-common').Message;
+var DeviceIdentityHelper = require('./device_identity_helper.js');
 
-var runTests = function (hubConnectionString, deviceTransport, provisionedDevice) {
-  describe.skip('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication, connected over ' + deviceTransport.name + ':', function () {
+var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+
+[
+  deviceMqtt.Mqtt,
+  deviceMqtt.MqttWs,
+  deviceAmqp.Amqp,
+  deviceAmqp.AmqpWs
+].forEach(function (deviceTransport) {
+  describe.skip('Over ' + deviceTransport.name + ':', function () {
     this.timeout(120000);
     var serviceClient, deviceClient;
     var testFilesConfig = [{
@@ -21,18 +31,25 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
       fileSizeInKb: '512000',
     }];
 
-    before(function() {
+    var provisionedDevice;
+
+    before(function (beforeCallback) {
       testFilesConfig.forEach(function(fileConfig) {
         var fileContent = new Buffer(fileConfig.fileSizeInKb * 1024);
         fileContent.fill(uuid.v4());
         fs.writeFileSync(fileConfig.fileName, fileContent);
       });
+      DeviceIdentityHelper.createDeviceWithSas(function (err, testDeviceInfo) {
+        provisionedDevice = testDeviceInfo;
+        beforeCallback(err);
+      });
     });
 
-    after(function() {
+    after(function (afterCallback) {
       testFilesConfig.forEach(function(fileConfig) {
         fs.unlinkSync(fileConfig.fileName);
       });
+      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
     });
 
     beforeEach(function () {
@@ -117,6 +134,4 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
       });
     });
   });
-};
-
-module.exports = runTests;
+});
