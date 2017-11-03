@@ -4,9 +4,12 @@
 'use strict';
 
 var assert = require('chai').assert;
+var sinon = require('sinon');
+var EventEmitter = require('events').EventEmitter;
 var Amqp = require('../lib/amqp.js').Amqp;
 var Client = require('../lib/client.js').Client;
 var Message = require('azure-iot-common').Message;
+var errors = require('azure-iot-common').errors;
 var SimulatedAmqp = require('./amqp_simulated.js');
 var transportSpecificTests = require('./_client_common_testrun.js');
 
@@ -118,6 +121,7 @@ describe('Client', function () {
       }, ReferenceError, 'message is \'undefined\'');
     });
 
+    /*Tests_SRS_NODE_IOTHUB_CLIENT_16_030: [The `send` method shall not throw if the `done` callback is falsy.]*/
     it('does not throw if done is falsy', function () {
       var simulatedAmqp = new SimulatedAmqp();
       var client = new Client(simulatedAmqp);
@@ -233,6 +237,18 @@ describe('Client', function () {
         client.open();
       });
     });
+
+    /*Tests_SRS_NODE_IOTHUB_CLIENT_05_011: [**Otherwise the argument `err` shall have an `amqpError` property containing implementation-specific response information for use in logging and troubleshooting.]*/
+    it('calls the done callback with an error if the transport fails to connect', function (testCallback) {
+      var fakeError = new errors.UnauthorizedError('will not retry');
+      var fakeTransport = new EventEmitter();
+      fakeTransport.connect = sinon.stub().callsArgWith(0, fakeError);
+      var client = new Client(fakeTransport);
+      client.open(function (err) {
+        assert.strictEqual(err, fakeError);
+        testCallback();
+      });
+    });
   });
 
   describe('#close', function() {
@@ -268,6 +284,99 @@ describe('Client', function () {
       assert.doesNotThrow(function() {
         client.close();
       });
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_CLIENT_05_024: [Otherwise the argument `err` shall have a transport property containing implementation-specific response information for use in logging and troubleshooting.]*/
+    it('calls the done callback with an error if the transport fails to disconnect', function (testCallback) {
+      var fakeError = new errors.UnauthorizedError('will not retry');
+      var fakeTransport = new EventEmitter();
+      fakeTransport.disconnect = sinon.stub().callsArgWith(0, fakeError);
+      var client = new Client(fakeTransport);
+      client.close(function (err) {
+        assert.strictEqual(err, fakeError);
+        testCallback();
+      });
+    })
+  });
+
+  /*Tests_SRS_NODE_IOTHUB_CLIENT_05_027: [When the `getFeedbackReceiver` method completes, the callback function (indicated by the `done` argument) shall be invoked with the following arguments:
+    - `err` - standard JavaScript `Error` object (or subclass): `null` if the operation was successful
+    - `receiver` - an `AmqpReceiver` instance: `undefined` if the operation failed.]*/
+  /*Tests_SRS_NODE_IOTHUB_CLIENT_16_001: [When the `getFileNotificationReceiver` method completes, the callback function (indicated by the `done` argument) shall be invoked with the following arguments:
+    - `err` - standard JavaScript `Error` object (or subclass): `null` if the operation was successful
+    - `receiver` - an `AmqpReceiver` instance: `undefined` if the operation failed.]*/
+  ['getFeedbackReceiver', 'getFileNotificationReceiver'].forEach(function (getReceiverMethod) {
+    describe(getReceiverMethod, function () {
+      it('calls ' + getReceiverMethod + ' on the transport', function (testCallback) {
+        var fakeTransport = new EventEmitter();
+        fakeTransport[getReceiverMethod] = sinon.stub().callsArgWith(0, null, new EventEmitter());
+        var client = new Client(fakeTransport);
+        client[getReceiverMethod](function (err, recv) {
+          assert.isNull(err);
+          assert.instanceOf(recv, EventEmitter);
+          testCallback();
+        });
+      });
+
+      it('calls its callback with an error if it the transport fails to provide a feedback receiver', function (testCallback) {
+        var fakeError = new errors.UnauthorizedError('will not retry');
+        var fakeTransport = new EventEmitter();
+        fakeTransport[getReceiverMethod] = sinon.stub().callsArgWith(0, fakeError);
+        var client = new Client(fakeTransport);
+        client[getReceiverMethod](function (err) {
+          assert.strictEqual(err, fakeError);
+          testCallback();
+        });
+      });
+    });
+  });
+
+  describe('setRetryPolicy', function () {
+    /*Tests_SRS_NODE_IOTHUB_CLIENT_16_027: [The `setRetryPolicy` method shall throw a `ReferenceError` if the `policy` argument is falsy.]*/
+    [null, undefined].forEach(function (badPolicy) {
+      it('throws a ReferenceError if the policy is \'' + badPolicy + '\'', function () {
+        var client = new Client(new EventEmitter());
+        assert.throws(function () {
+          client.setRetryPolicy(badPolicy);
+        }, ReferenceError);
+      });
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_CLIENT_16_028: [The `setRetryPolicy` method shall throw an `ArgumentError` if the `policy` object does not have a `shouldRetry` method and a `nextRetryTimeout` method.]*/
+    it('throws an ArgumentError if the policy does not have a shouldRetry method', function () {
+      var badPolicy = { nextRetryTimeout: function () {} };
+      var client = new Client(new EventEmitter());
+      assert.throws(function () {
+        client.setRetryPolicy(badPolicy);
+      }, errors.ArgumentError);
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_CLIENT_16_028: [The `setRetryPolicy` method shall throw an `ArgumentError` if the `policy` object does not have a `shouldRetry` method and a `nextRetryTimeout` method.]*/
+    it('throws an ArgumentError if the policy does not have a nextRetryTimeout method', function () {
+      var badPolicy = { shouldRetry: function () {} };
+      var client = new Client(new EventEmitter());
+      assert.throws(function () {
+        client.setRetryPolicy(badPolicy);
+      }, errors.ArgumentError);
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_CLIENT_16_029: [Any operation (e.g. `send`, `getFeedbackReceiver`, etc) initiated after a call to `setRetryPolicy` shall use the policy passed as argument to retry.]*/
+    it('uses the new retry policy for all subsequent calls', function (testCallback) {
+      var fakeError = new errors.UnauthorizedError('will not retry');
+      var fakeRetryPolicy = {
+        shouldRetry: sinon.stub().returns(true),
+        nextRetryTimeout: sinon.stub().returns(1)
+      };
+      var fakeTransport = new EventEmitter();
+      fakeTransport.connect = sinon.stub().onFirstCall().callsArgWith(0, fakeError)
+                                          .onSecondCall().callsFake(function () {
+                                            assert.isTrue(fakeRetryPolicy.shouldRetry.calledOnce);
+                                            assert.isTrue(fakeRetryPolicy.shouldRetry.calledOnce);
+                                            testCallback();
+                                          });
+      var client = new Client(fakeTransport);
+      client.setRetryPolicy(fakeRetryPolicy);
+      client.open(function () {});
     });
   });
 });
