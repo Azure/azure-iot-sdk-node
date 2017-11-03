@@ -5,10 +5,18 @@
 
 var assert = require('chai').assert;
 var sinon = require('sinon');
-var Http = require('../lib/http.js').Http;
+var Transport = require('../lib/http.js').Http;
 var errors = require('azure-iot-common').errors;
+var Provisioning = require('azure-iot-provisioning-device');
+
+var Http = function(config, base) {
+  return new Provisioning.ClientStateMachine(new Transport(config, base));
+}
 
 describe('Http', function () {
+  var fakeHost = "__fake_host__";
+  var fakeApiVersion = "__fake_api_version__";
+  var fakeAgent = "__fake_agent__";
   var fakeErrorString = "__fake_error__";
   var fakeScope = '__scope__';
   var fakeRegistrationId = '__registrationId__';
@@ -17,10 +25,13 @@ describe('Http', function () {
   var fakeBody = JSON.stringify({
     'fake' : 'yep'
   });
-  var fakeTransportConfig = {
+  var fakeConfig = {
     idScope: fakeScope,
-    userAgent: '__fake_agent__',
-    defaultPollingInterval: 1
+    userAgent: fakeAgent,
+    pollingInterval: 2000,
+    provisioningHost: fakeHost,
+    apiVersion: fakeApiVersion,
+    timeoutInterval: 4000
   };
 
   var fakeRequest = {
@@ -31,23 +42,15 @@ describe('Http', function () {
   };
 
   this.timeout(100);
+  var http;
 
   beforeEach(function() {
-    fakeTransportConfig.defaultPollingInterval = 1;
-  });
+    fakeConfig.pollingInterval = 1;
 
-  describe('constructor', function() {
-
-    /* Tests_SRS_NODE_PROVISIONING_HTTP_18_001: [ The `Http` constructor shall accept the following properties:
-    - `config` - a configuration object describing the connection to the service.
-    - `httpBase` - an optional test implementation of azure-iot-http-base ] */
-    it ('accepts the right arguments', function() {
-      var http = new Http(fakeTransportConfig, null);
-    });
   });
 
   describe('register', function() {
-    it('builds the http request correctly', function(testCallback) {
+    it ('builds the http request correctly', function(testCallback) {
       var fakeBase = {};
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
         /* Tests_SRS_NODE_PROVISIONING_HTTP_18_006: [ The registration request shall specify the following in the Http header:
@@ -63,15 +66,15 @@ describe('Http', function () {
         /* Tests_SRS_NODE_PROVISIONING_HTTP_18_005: [ The registration request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
         /* Tests_SRS_NODE_PROVISIONING_HTTP_18_008: [ If `forceRegistration` is specified, the registration request shall include this as a query string value named 'forceRegistration' ] */
         assert.equal(method, 'PUT');
-        assert.equal(host, 'global.azure-devices-provisioning.net')
-        assert.equal(path, '/' + fakeScope + '/registrations/' + fakeRegistrationId + '/register?api-version=2017-08-31-preview&forceRegistration=true');
+        assert.equal(host, fakeHost);
+        assert.equal(path, '/' + fakeScope + '/registrations/' + fakeRegistrationId + '/register?api-version=' + fakeApiVersion + '&forceRegistration=true');
 
         done(null, '{"status" : "Assigned" }');
 
         return fakeRequest;
       };
 
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
         assert.equal(null, err);
         testCallback();
@@ -85,7 +88,7 @@ describe('Http', function () {
         // do not call done.  do not pass go.  do not collect $200.
         return fakeRequest;
       };
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
         // should never complete because the above request function never calls done
         assert.fail();
@@ -104,7 +107,7 @@ describe('Http', function () {
         done(new Error(fakeErrorString));
         return fakeRequest;
       };
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
         assert.equal(fakeErrorString, err.message);
         testCallback();
@@ -112,19 +115,19 @@ describe('Http', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_031: [ If `disconnect` is called while the registration request is in progress, `register` shall call the `callback` with an `OperationCancelledError` error. ] */
-    it('fails if disconnected while registration request is in progress', function(testCallback) {
+    it ('fails if disconnected while registration request is in progress', function(testCallback) {
       var fakeBase = {};
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
         return fakeRequest;
       };
 
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
         assert.instanceOf(err, errors.OperationCancelledError);
         testCallback();
       });
 
-      http.disconnect(function() {});
+      http.endSession(function() {});
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_013: [ If registration response body fails to deserialize, `register` will throw an `SyntaxError` error. ] */
@@ -137,7 +140,7 @@ describe('Http', function () {
         testCallback();
       };
 
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
         // register should not complete because of assertion above
         assert.fail();
@@ -153,7 +156,7 @@ describe('Http', function () {
         return fakeRequest;
       };
 
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
         assert.instanceOf(err, Error);
         testCallback();
@@ -170,7 +173,7 @@ describe('Http', function () {
         return fakeRequest;
       };
 
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, responseBody) {
         assert.isNull(err);
         assert.equal('Assigned', responseBody.status);
@@ -186,7 +189,7 @@ describe('Http', function () {
         return fakeRequest;
       };
 
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
         assert.instanceOf(err, SyntaxError);
         testCallback();
@@ -202,11 +205,11 @@ describe('Http', function () {
         return fakeRequest;
       };
 
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       http.on('operationStatus', function(responseBody) {
         assert.equal('Assigning', responseBody.status);
         process.nextTick(function() {
-          http.disconnect(function() {
+          http.endSession(function() {
             testCallback();
           });
         });
@@ -237,11 +240,11 @@ describe('Http', function () {
           /* Tests_SRS_NODE_PROVISIONING_HTTP_18_037: [ The operation status request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
           /* Tests_SRS_NODE_PROVISIONING_HTTP_18_022: [ operation status request polling shall be a GET operation sent to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/operations/{operationId}' ] */
           assert.equal(method, 'GET');
-          assert.equal(host, 'global.azure-devices-provisioning.net')
-          assert.equal(path, '/' + fakeScope + '/registrations/' + fakeRegistrationId + '/operations/' + fakeOperationId + '?api-version=2017-08-31-preview');
+          assert.equal(host, fakeHost)
+          assert.equal(path, '/' + fakeScope + '/registrations/' + fakeRegistrationId + '/operations/' + fakeOperationId + '?api-version=' + fakeApiVersion);
 
           process.nextTick(function() {
-            http.disconnect(function() {
+            http.endSession(function() {
               testCallback();
             });
           });
@@ -250,7 +253,7 @@ describe('Http', function () {
         return fakeRequest;
       };
 
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
       });
 
@@ -268,13 +271,13 @@ describe('Http', function () {
         } else {
           // Do not call done.  This makes it look like the HTTP request is outstanding.
           process.nextTick(function() {
-            http.disconnect(function() {});
+            http.endSession(function() {});
           });
         }
         return fakeRequest;
       };
 
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
         assert.instanceOf(err, errors.OperationCancelledError);
         testCallback();
@@ -289,9 +292,9 @@ describe('Http', function () {
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
         callbackCount++;
         if (callbackCount === 1) {
-          http._transport._config.defaultPollingInterval = 2000;
+          fakeConfig.pollingInterval = 2000;
           setTimeout(function() {
-            http.disconnect(function() {});
+            http.endSession(function() {});
           }, 10);
           done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}');
         } else {
@@ -300,7 +303,7 @@ describe('Http', function () {
         return fakeRequest;
       };
 
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
         assert.instanceOf(err, errors.OperationCancelledError);
         testCallback();
@@ -314,7 +317,7 @@ describe('Http', function () {
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
         callbackCount++;
         if (callbackCount === 1) {
-          http._transport._config.defaultPollingInterval = 2000;
+          fakeConfig.pollingInterval = 2000;
           setTimeout(function() {
             http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
               assert.instanceOf(err, errors.InvalidOperationError);
@@ -326,7 +329,7 @@ describe('Http', function () {
         return fakeRequest;
       };
 
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
       });
     });
@@ -351,7 +354,7 @@ describe('Http', function () {
           return fakeRequest;
         };
 
-        var http = new Http(fakeTransportConfig, fakeBase);
+        var http = new Http(fakeConfig, fakeBase);
         http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
         });
       });
@@ -372,7 +375,7 @@ describe('Http', function () {
         return fakeRequest;
       };
 
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
         assert.instanceOf(err, SyntaxError);
         assert.equal('__FAKE_ERROR__', err.message)
@@ -397,7 +400,7 @@ describe('Http', function () {
         return fakeRequest;
       };
 
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
         });
     });
@@ -416,7 +419,7 @@ describe('Http', function () {
         return fakeRequest;
       };
 
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
         assert.instanceOf(err, errors.ArgumentError);
         testCallback();
@@ -438,7 +441,7 @@ describe('Http', function () {
         return fakeRequest;
       };
 
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
         assert.isNull(err);
         assert.equal("Assigned", result.status);
@@ -462,14 +465,14 @@ describe('Http', function () {
         return fakeRequest;
       };
 
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       var eventReceived = false;
       http.on('operationStatus', function(eventBody) {
         assert.equal("Assigning",eventBody.status);
         if (eventBody.iteration === 2) {
           eventReceived = true;
           process.nextTick(function() {
-            http.disconnect(function() {});
+            http.endSession(function() {});
           });
         };
       });
@@ -495,7 +498,7 @@ describe('Http', function () {
         return fakeRequest;
       };
 
-      var http = new Http(fakeTransportConfig, fakeBase);
+      var http = new Http(fakeConfig, fakeBase);
       http.register(fakeRegistrationId, fakeAuthorization, fakeBody, true, function(err, result) {
         assert.instanceOf(err, SyntaxError);
         testCallback();
@@ -505,8 +508,8 @@ describe('Http', function () {
 
   describe('disconnect', function() {
     it ('does nothing if disconnect is called while disconnected', function(testCallback) {
-      var http = new Http(fakeTransportConfig, null);
-      http.disconnect(function(err) {
+      var http = new Http(null);
+      http.endSession(function(err) {
         assert.isTrue(!err);
         testCallback();
       });

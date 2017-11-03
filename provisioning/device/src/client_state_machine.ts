@@ -4,32 +4,21 @@
 'use strict';
 
 import { EventEmitter } from 'events';
-import { errors, X509, SharedAccessSignature } from 'azure-iot-common';
+import { errors } from 'azure-iot-common';
 import * as machina from 'machina';
-import * as Provisioning from './transport_interface';
+import * as Provisioning from './interfaces';
 import * as dbg from 'debug';
 const debug = dbg('azure-device-provisioning:transport-fsm');
 
-export interface TransportHandlers {
-  connect(authorization: SharedAccessSignature | X509 | string, callback: (err?: Error) => void): void;
-  disconnect(callback: (err?: Error) => void): void;
-  registrationRequest(registrationId: string, authorization: SharedAccessSignature | X509 | string, requestBody: any, forceRegistration: boolean, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
-  queryOperationStatus(registrationId: string, operationId: string, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
-  getErrorResult(result: any): any;
-}
-
-export class TransportStateMachine extends EventEmitter implements Provisioning.Transport {
+export class  ClientStateMachine extends EventEmitter {
   private _fsm: machina.Fsm;
   private _pollingTimer: any;
-  private _transport: TransportHandlers;
+  private _transport: Provisioning.TransportHandlers;
   private _currentOperationCallback: any;
 
-  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_001: [ The `constructor` shall accept no arguments ] */
-  constructor() {
+  constructor(transport: Provisioning.TransportHandlers) {
     super();
-  }
 
-  initialize(transport: TransportHandlers): void {
     this._transport = transport;
 
     this._fsm = new machina.Fsm({
@@ -39,49 +28,25 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
         disconnected: {
           _onEnter: (callback, err, body, result) => {
             this._currentOperationCallback = null;
-            this._pollingTimer = null;
             if (callback) {
               callback(err, body, result);
             }
           },
-          connect: (authorization, callback) => {
-            this._fsm.transition('connecting', callback, authorization);
-          },
           register: (callback, registrationId, authorization, requestBody, forceRegistration) => {
-            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_010: [ `register` shall connect the transport if it is not connected. ] */
-            this._fsm.handle('connect', authorization, (err) => {
-              if (err) {
-                callback(err);
-              } else {
-                this._fsm.transition('sendingRegistrationRequest', callback, registrationId, authorization, requestBody, forceRegistration);
-              }
-            });
+            this._fsm.transition('sendingRegistrationRequest', callback, registrationId, authorization, requestBody, forceRegistration);
           },
-          disconnect: (callback) => {
-            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [ If `disconnect` is called while disconnected, it shall immediately call its `callback`. ] */
+          endSession: (callback) => {
+            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [ If `endSession` is called while disconnected, it shall immediately call its `callback`. ] */
             // nothing to do.
             callback();
           }
         },
-        connecting: {
-          _onEnter: (callback, authorization) => {
-            this._transport.connect(authorization, (err) => {
-              if (err) {
-                /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_011: [ `register` shall fail if the connection fails. ] */
-                this._fsm.transition('disconnecting', callback, err);
-              } else {
-                this._fsm.transition('connected', callback);
-              }
-            });
-          },
-          '*': () => this._fsm.deferUntilTransition()
-        },
-        connected: {
+        idle: {
           _onEnter: (callback, err, body, result) => {
             callback(err, body, result);
           },
-          disconnect: (callback) => {
-            this._fsm.transition('disconnecting', callback);
+          endSession: (callback) => {
+            this._fsm.transition('endingSession', callback);
           },
           register: (callback, registrationId, authorization, requestBody, forceRegistration) => {
             this._fsm.transition('sendingRegistrationRequest', callback, registrationId, authorization, requestBody, forceRegistration);
@@ -100,7 +65,7 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
               }
             });
           },
-          disconnect: (callback) => this._fsm.transition('disconnecting', callback),
+          endSession: (callback) => this._fsm.transition('endingSession', callback),
           /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_024: [ If `register` is called while a different request is in progress, it shall fail with an `InvalidOperationError`. ] */
           register: (callback) => callback(new errors.InvalidOperationError('another operation is in progress'))
         },
@@ -149,7 +114,7 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_014: [ If `TransportHandlers.registrationRequest` succeeds with status==Assigned, it shall emit an 'operationStatus' event and call `callback` with null, the response body, and the protocol-specific result. ] */
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_020: [ If `TransportHandlers.queryOperationStatus` succeeds with status==Assigned, `register` shall emit an 'operationStatus' event and complete and pass the body of the response and the protocol-spefic result to the `callback`. ] */
             this.emit('operationStatus', body);
-            this._fsm.transition('connected', callback, null, body, result);
+            this._fsm.transition('idle', callback, null, body, result);
           },
           '*': () => this._fsm.deferUntilTransition()
         },
@@ -157,9 +122,9 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
           _onEnter: (callback, err, body, result) => {
             this._currentOperationCallback = null;
             if (this._errorIsFatal(err)) {
-              this._fsm.transition('disconnecting', callback, err, body, result);
+              this._fsm.transition('endingSession', callback, err, body, result);
             } else {
-              this._fsm.transition('connected', callback, err, body, result);
+              this._fsm.transition('idle', callback, err, body, result);
             }
           },
           '*': () => this._fsm.deferUntilTransition()
@@ -171,11 +136,11 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
               this._fsm.transition('polling', callback, registrationId, operationId, pollingInterval);
             }, pollingInterval);
           },
-          disconnect: (callback, err, body) => {
-            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `disconnect` shall cause that registration to fail with an `OperationCancelledError`. ] */
+          endSession: (callback, err, body) => {
+            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `endSession` shall cause that registration to fail with an `OperationCancelledError`. ] */
             clearTimeout(this._pollingTimer);
             this._pollingTimer = null;
-            this._fsm.transition('disconnecting', callback, err, body);
+            this._fsm.transition('endingSession', callback, err, body);
           },
           register: (callback) => callback(new errors.InvalidOperationError('another operation is in progress'))
         },
@@ -191,19 +156,19 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
               }
             });
           },
-          disconnect: (callback) => this._fsm.transition('disconnecting', callback),
+          endSession: (callback) => this._fsm.transition('endingSession', callback),
           /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_024: [ If `register` is called while a different request is in progress, it shall fail with an `InvalidOperationError`. ] */
           register: (callback) => callback(new errors.InvalidOperationError('another operation is in progress'))
         },
-        disconnecting: {
+        endingSession: {
           _onEnter: (callback, err, body, result) => {
-            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `disconnect` shall cause that registration to fail with an `OperationCancelledError`. ] */
+            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `endSession` shall cause that registration to fail with an `OperationCancelledError`. ] */
             if (this._currentOperationCallback) {
               let _callback = this._currentOperationCallback;
               this._currentOperationCallback = null;
               _callback(new errors.OperationCancelledError(''));
             }
-            this._transport.disconnect((disconnectErr) => {
+            this._transport.endSession((disconnectErr) => {
               if (disconnectErr) {
                 debug('error received from transport during disconnection:' + disconnectErr.toString());
               }
@@ -220,14 +185,14 @@ export class TransportStateMachine extends EventEmitter implements Provisioning.
     });
   }
 
-  register(registrationId: string, authorization: string | X509, requestBody: any, forceRegistration: boolean, callback: Provisioning.ResponseCallback): void {
+  register(registrationId: string, authorization: Provisioning.Authentication, requestBody: any, forceRegistration: boolean, callback: Provisioning.ResponseCallback): void {
     debug('register called for registrationId "' + registrationId + '"');
     this._fsm.handle('register', callback, registrationId, authorization, requestBody, forceRegistration);
   }
 
-  disconnect(callback: (err: Error) => void): void {
-    debug('disconnect called');
-    this._fsm.handle('disconnect', callback);
+  endSession(callback: (err: Error) => void): void {
+    debug('endSession called');
+    this._fsm.handle('endSession', callback);
   }
 
   private _errorIsFatal(err: Error): boolean {

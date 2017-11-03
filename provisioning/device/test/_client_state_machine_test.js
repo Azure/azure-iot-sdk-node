@@ -3,7 +3,7 @@
 
 'use strict';
 
-var TransportStateMachine = require('../lib/transport_state_machine').TransportStateMachine;
+var ClientStateMachine = require('../lib/client_state_machine').ClientStateMachine;
 var sinon = require('sinon');
 var assert = require('chai').assert;
 
@@ -40,10 +40,8 @@ describe('state machine', function () {
 
   var makeNewMachine = function () {
     /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_001: [ The `constructor` shall accept no arguments ] */
-    var machine = new TransportStateMachine();
-    machine.initialize({
-      connect: sinon.stub().callsArg(1),
-      disconnect: sinon.stub().callsArg(0),
+    var machine = new ClientStateMachine({
+      endSession: sinon.stub().callsArg(0),
       registrationRequest: registrationRequestReturnsAssigned(),
       queryOperationStatus: operationStatusReturnsAssigned(),
       getErrorResult:sinon.stub().callsArg(0)
@@ -52,8 +50,7 @@ describe('state machine', function () {
   };
 
   var assertNoTransportFunctionsCalled = function (machine) {
-    assert.isFalse(machine._transport.connect.called);
-    assert.isFalse(machine._transport.disconnect.called);
+    assert.isFalse(machine._transport.endSession.called);
     assert.isFalse(machine._transport.registrationRequest.called);
     assert.isFalse(machine._transport.queryOperationStatus.called);
     assert.isFalse(machine._transport.getErrorResult.called);
@@ -69,29 +66,6 @@ describe('state machine', function () {
   });
 
   describe('register function', function () {
-
-    /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_010: [ `register` shall `connect` the transport if it is not connected. ] */
-    it ('connects if necessary', function (testCallback) {
-      assert.isFalse(machine._transport.connect.called);
-      callRegisterWithDefaultArgs(function (err) {
-        assert(!err);
-        assert(machine._transport.connect.called);
-        testCallback();
-      });
-    });
-
-    /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_011: [ `register` shall fail if the connection fails. ] */
-    it ('fails if connect fails', function (testCallback) {
-      machine._transport.connect = function (authorization, callback) {
-        callback(new Error(fakeErrorText));
-      };
-      callRegisterWithDefaultArgs(function (err) {
-        assert(!!err);
-        assert.equal(err.constructor.name, 'Error');
-        assert.equal(err.message, fakeErrorText);
-        testCallback();
-      });
-    });
 
     /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_012: [ `register` shall call `TransportHandlers.registrationRequest`. ] */
     describe('calls registrationRequest', function () {
@@ -260,11 +234,11 @@ describe('state machine', function () {
     });
   });
 
-  describe('disconnect function', function () {
+  describe('endSession function', function () {
 
-    /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [ If `disconnect` is called while disconnected, it shall immediately call its `callback`. ] */
+    /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [ If `endSession` is called while disconnected, it shall immediately call its `callback`. ] */
     it ('does nothing if called while disconnected', function (testCallback) {
-      machine.disconnect(function(err) {
+      machine.endSession(function(err) {
         assert(!err);
         assert(machine);
         assertNoTransportFunctionsCalled(machine);
@@ -272,23 +246,22 @@ describe('state machine', function () {
       });
     });
 
-    describe('calls disconnect', function () {
+    describe('calls endSession', function () {
 
-      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_026: [ `disconnect` shall call `disconnect` of it's called while the transport is connected. ] */
+      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_026: [ `endSession` shall call `endSession` of it's called while the transport is connected. ] */
       it ('if called while connected', function (testCallback) {
         callRegisterWithDefaultArgs(function(err) {
           assert(!err);
-          assert(machine._transport.connect.calledOnce);
-          assert.isFalse(machine._transport.disconnect.called);
-          machine._transport.disconnect(function(err) {
+          assert.isFalse(machine._transport.endSession.called);
+          machine._transport.endSession(function(err) {
             assert(!err);
-            assert(machine._transport.disconnect.calledOnce);
+            assert(machine._transport.endSession.calledOnce);
             testCallback();
           });
         });
       });
 
-      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `disconnect` shall cause that registration to fail with an `OperationCancelledError`. ] */
+      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `endSession` shall cause that registration to fail with an `OperationCancelledError`. ] */
       it ('and causes register to fail if called while sending the first request', function (testCallback) {
         var registrationErr;
         var registrationCallback;
@@ -299,21 +272,20 @@ describe('state machine', function () {
           registrationErr = err;
           assert(!!err);
           assert.equal(err.constructor.name, 'OperationCancelledError');
-          assert(machine._transport.connect.calledOnce);
           assert(machine._transport.registrationRequest.calledOnce);
           assert.isFalse(machine._transport.queryOperationStatus.calledOnce);
         });
         setTimeout(function () {
-          machine.disconnect(function() {
+          machine.endSession(function() {
             registrationCallback();
             assert(!!registrationErr);
-            assert(machine._transport.disconnect.calledOnce);
+            assert(machine._transport.endSession.calledOnce);
             testCallback();
           });
         }, 2);
       });
 
-      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `disconnect` shall cause that registration to fail with an `OperationCancelledError`. ] */
+      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `endSession` shall cause that registration to fail with an `OperationCancelledError`. ] */
       it ('and causes register to fail if called while waiting to poll', function (testCallback) {
         var registrationErr;
         machine._transport.registrationRequest = registrationRequestReturnsAssigning(1000);
@@ -321,20 +293,19 @@ describe('state machine', function () {
           registrationErr = err;
           assert(!!err);
           assert.equal(err.constructor.name, 'OperationCancelledError');
-          assert(machine._transport.connect.calledOnce);
           assert(machine._transport.registrationRequest.calledOnce);
           assert.isFalse(machine._transport.queryOperationStatus.calledOnce);
         });
         setTimeout(function () {
-          machine.disconnect(function() {
+          machine.endSession(function() {
             assert(!!registrationErr);
-            assert(machine._transport.disconnect.calledOnce);
+            assert(machine._transport.endSession.calledOnce);
             testCallback();
           });
         }, 2);
       });
 
-      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `disconnect` shall cause that registration to fail with an `OperationCancelledError`. ] */
+      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `endSession` shall cause that registration to fail with an `OperationCancelledError`. ] */
       it ('and causes register to fail if called while sending an operation status request', function (testCallback) {
         var registrationErr;
         var registrationCallback;
@@ -346,15 +317,14 @@ describe('state machine', function () {
           registrationErr = err;
           assert(!!err);
           assert.equal(err.constructor.name, 'OperationCancelledError');
-          assert(machine._transport.connect.calledOnce);
           assert(machine._transport.registrationRequest.calledOnce);
           assert(machine._transport.queryOperationStatus.calledOnce);
         });
         setTimeout(function () {
-          machine.disconnect(function() {
+          machine.endSession(function() {
             registrationCallback();
             assert(!!registrationErr);
-            assert(machine._transport.disconnect.calledOnce);
+            assert(machine._transport.endSession.calledOnce);
             testCallback();
           });
         }, 2);

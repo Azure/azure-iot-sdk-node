@@ -1,7 +1,7 @@
-# transport_state_machine Requirements
+cd ..# client_state_machine Requirements
 
 ## Overview
-This module provides a generic state machine used by transports to communicate with the Azure device provisioning service
+This module provides a state machine used by the ProvisioningDeviceClient to communicate with the Azure device provisioning service
 
 ## Example Usage
 ``js
@@ -10,16 +10,8 @@ This module provides a generic state machine used by transports to communicate w
 
 ## Public Interface
 
-### constructor()
-The constructor creates a TransportStateMachine object
-
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_001: [** The `constructor` shall accept no arguments **]**
-
-
 ### register(registrationId: string, authorization: string | X509, requestBody: any, forceRegistration: boolean, callback: Provisioning.ResponseCallback): void
 Register round-trips one step of the registration process, not returning until an error is returned or registration request reaches a status of "Assigned".  This function will emit "operationStatus" events for both "Assigning" and "Assigned" responses from the service.
-
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_010: [** `register` shall `connect` the transport if it is not connected. **]**
 
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_011: [** `register` shall fail if the connection fails. **]**
 
@@ -46,12 +38,12 @@ Register round-trips one step of the registration process, not returning until a
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_024: [** If `register` is called while a different request is in progress, it shall fail with an `InvalidOperationError`. **]**
 
 
-### disconnect(callback: (err: Error) => void): void
-Disconnect is used to disconnect the transport
+### endSession(callback: (err: Error) => void): void
+enndSession is used to end the transport session
 
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [** If `disconnect` is called while disconnected, it shall immediately call its `callback`. **]**
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [** If `endSession` is called while disconnected, it shall immediately call its `callback`. **]**
 
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_026: [** `disconnect` shall call `TransportHandlers.disconnect` of it's called while the transport is connected. **]**
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_026: [** `endSession` shall call `TransportHandlers.endSession` of it's called while the transport is connected. **]**
 
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [** If a registration is in progress, `disconnect` shall cause that registration to fail with an `OperationCancelledError`. **]**
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [** If a registration is in progress, `endSession` shall cause that registration to fail with an `OperationCancelledError`. **]**
 

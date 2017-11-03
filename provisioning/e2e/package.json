@@ -11,13 +11,17 @@
     "azure-iot-provisioning-device-amqp": "0.0.1",
     "azure-iot-provisioning-device-http": "0.0.1",
     "azure-iot-provisioning-device-mqtt": "0.0.1",
-    "debug": "^3.0.1",
-    "machina": "^2.0.0",
+    "azure-iot-provisioning-service": "0.0.1",
+    "azure-iothub": "^1.1.18",
+    "bluebird": "^3.5.1",
     "chai": "^3.5.0",
+    "debug": "^3.1.0",
     "istanbul": "^0.4.4",
     "jshint": "^2.9.2",
     "mocha": "^3.0.1",
-    "sinon": "^1.17.5"
+    "pem": "^1.8.3",
+    "sinon": "^1.17.5",
+    "uuid": "^3.1.0"
   },
   "scripts": {
     "lint": "jshint --show-non-errors .",

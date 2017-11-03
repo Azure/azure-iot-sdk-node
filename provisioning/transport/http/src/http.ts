@@ -4,7 +4,7 @@
 'use strict';
 
 import { RestApiClient, Http as Base } from 'azure-iot-http-base';
-import { X509, SharedAccessSignature } from 'azure-iot-common';
+import { SharedAccessSignature } from 'azure-iot-common';
 import * as Provisioning from 'azure-iot-provisioning-device';
 import * as dbg from 'debug';
 const debug = dbg('azure-device-provisioning:transport-http');
@@ -16,53 +16,40 @@ const _defaultHeaders = {
 
 
 
-class HttpTransportHandlers implements Provisioning.TransportHandlers {
-  // TODO: move to constants class
-  protected _apiVersion: string = '2017-08-31-preview';
-  private _httpTimeout: number = 4000;
+export class Http implements Provisioning.TransportHandlers {
+  private _config: Provisioning.ClientConfiguration;
   private _restApiClient: RestApiClient;
   private _httpBase: Base;
-  private _config: Provisioning.Config;
 
 
-  /**
-   * @private
-   * @constructor
-   * @param config The configuration object.
-   */
   /* Codes_SRS_NODE_PROVISIONING_HTTP_18_001: [ The `Http` constructor shall accept the following properties:
   - `config` - a configuration object describing the connection to the service.
   - `httpBase` - an optional test implementation of azure-iot-http-base ] */
-  constructor(config: Provisioning.Config,  httpBase?: Base) {
-
-    if (!config.serviceHostName) config.serviceHostName = 'global.azure-devices-provisioning.net';
-
+  constructor(config?: Provisioning.ClientConfiguration,  httpBase?: Base) {
     this._config = config;
     this._httpBase = httpBase || new Base();
   }
 
-
-  connect(authorization: SharedAccessSignature | X509 | string, callback: (err?: Error) => void): void {
+  endSession(callback: (err?: Error) => void): void {
    // nothing to do here
    callback();
   }
 
-  disconnect(callback: (err?: Error) => void): void {
-   // nothing to do here
-   callback();
+  setClientConfig(config: Provisioning.ClientConfiguration): void {
+    this._config = config;
   }
 
-  registrationRequest(registrationId: string, authorization: SharedAccessSignature | X509 | string, requestBody: any, forceRegistration: boolean, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
+  registrationRequest(registrationId: string, authorization: Provisioning.Authentication, requestBody: any, forceRegistration: boolean, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
 
     if ((authorization instanceof SharedAccessSignature) || (typeof authorization === 'string')) {
-      this._restApiClient = new RestApiClient({ 'host' : this._config.serviceHostName , 'sharedAccessSignature' : authorization},  this._config.userAgent, this._httpBase);
+      this._restApiClient = new RestApiClient({ 'host' : this._config.provisioningHost , 'sharedAccessSignature' : authorization},  this._config.userAgent, this._httpBase);
     } else {
-      this._restApiClient = new RestApiClient({ 'host' : this._config.serviceHostName , 'x509' : authorization}, this._config.userAgent, this._httpBase);
+      this._restApiClient = new RestApiClient({ 'host' : this._config.provisioningHost , 'x509' : authorization}, this._config.userAgent, this._httpBase);
     }
 
     /* update Codes_SRS_NODE_PROVISIONING_HTTP_18_009: [ `register` shall PUT the registration request to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/register' ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_005: [ The registration request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
-    let path: string = '/' + this._config.idScope + '/registrations/' + registrationId + '/register?api-version=' + this._apiVersion;
+    let path: string = '/' + this._config.idScope + '/registrations/' + registrationId + '/register?api-version=' + this._config.apiVersion;
 
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_008: [ If `forceRegistration` is specified, the registration request shall include this as a query string value named 'forceRegistration' ] */
     if (forceRegistration) {
@@ -81,14 +68,14 @@ class HttpTransportHandlers implements Provisioning.TransportHandlers {
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_014: [ If the registration response has a failed status code, `register` shall use `translateError` to translate this to a common error object and pass this into the `callback` function along with the deserialized body of the response. ] */
     debug('submitting PUT for ' + registrationId + ' to ' + path);
     debug(JSON.stringify(requestBody));
-    this._restApiClient.executeApiCall('PUT', path, httpHeaders, requestBody, this._httpTimeout, (err: Error, responseBody?: any, result?: any) => {
+    this._restApiClient.executeApiCall('PUT', path, httpHeaders, requestBody, this._config.timeoutInterval, (err: Error, responseBody?: any, result?: any) => {
       if (err) {
         debug('error executing PUT: ' + err.toString());
         callback(err);
       } else {
         debug('PUT response received:');
         debug(JSON.stringify(responseBody));
-        callback(null, responseBody, result, this._config.defaultPollingInterval);
+        callback(null, responseBody, result, this._config.pollingInterval);
       }
     });
 
@@ -97,7 +84,7 @@ class HttpTransportHandlers implements Provisioning.TransportHandlers {
   queryOperationStatus(registrationId: string, operationId: string, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_022: [ operation status request polling shall be a GET operation sent to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/operations/{operationId}' ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_037: [ The operation status request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
-    let path: string = '/' + this._config.idScope + '/registrations/' + registrationId + '/operations/' + operationId + '?api-version=' + this._apiVersion;
+    let path: string = '/' + this._config.idScope + '/registrations/' + registrationId + '/operations/' + operationId + '?api-version=' + this._config.apiVersion;
 
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_020: [ The operation status request shall have the following in the Http header:
       Accept: application/json
@@ -110,14 +97,14 @@ class HttpTransportHandlers implements Provisioning.TransportHandlers {
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_025: [ If the body of the operation status response fails to deserialize, `register` will throw a `SyntaxError` error. ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_026: [ If the operation status response contains a failure status code, `register` shall stop polling and call the `callback` with an error created using `translateError`. ] */
     debug('submitting status GET for ' + registrationId + ' to ' + path);
-    this._restApiClient.executeApiCall('GET', path, httpHeaders, {}, this._httpTimeout, (err: Error, responseBody?: any, result?: any) => {
+    this._restApiClient.executeApiCall('GET', path, httpHeaders, {}, this._config.timeoutInterval, (err: Error, responseBody?: any, result?: any) => {
       if (err) {
         debug('error executing GET: ' + err.toString());
         callback(err, null);
       } else {
         debug('GET response received:');
         debug(JSON.stringify(responseBody));
-        callback(null, responseBody, result, this._config.defaultPollingInterval);
+        callback(null, responseBody, result, this._config.pollingInterval);
       }
     });
   }
@@ -126,18 +113,11 @@ class HttpTransportHandlers implements Provisioning.TransportHandlers {
     return new Error();
   }
 
-}
-
-export class Http extends Provisioning.TransportStateMachine {
-  constructor(config: Provisioning.Config,  httpBase?: Base) {
-    super();
-
-    let handlers = new HttpTransportHandlers(config, httpBase);
-
-    this.initialize(handlers);
+  static createDeviceClient(idScope: string): Provisioning.ProvisioningDeviceClient {
+    return Provisioning.ProvisioningDeviceClient.create(new Http(), idScope);
   }
-}
 
+}
 // The following are legacy requirements.  The used to be handled by http.ts, but they've been moved into transport_state_machine.ts.
 // We're keeping these here mostly for the Http tests, which now overlap with the TransportStateMachine tests, but we're keeping
 // the tests here for the extra test coverage.
