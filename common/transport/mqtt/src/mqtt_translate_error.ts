@@ -33,7 +33,7 @@ export function translateError(mqttError: Error): MqttTransportError {
   debug('translating: ' + mqttError.toString());
   if ((<any>mqttError).code) {
     // the 'code' property denotes a socket-level error (ENOTFOUND, EAI_AGAIN, etc)
-    /*Codes_SRS_NODE_DEVICE_MQTT_ERRORS_16_001: [`translateError` shall return a `NotConnectedError` if the error object as a truthy `code` property (node socket errors)]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_ERRORS_16_001: [`translateError` shall return a `NotConnectedError` if the error object has a truthy `code` property (node socket errors)]*/
     err = new errors.NotConnectedError(mqttError.message);
   } else if (mqttError.message) {
     if (mqttError.message.indexOf('premature close') > -1) {

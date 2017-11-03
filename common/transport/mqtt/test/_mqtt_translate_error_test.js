@@ -77,7 +77,7 @@ describe('MqttTranslateError', function () {
     assert(translateError(new Error()) instanceof Error);
   });
 
-  /*Tests_SRS_NODE_DEVICE_MQTT_ERRORS_16_001: [`translateError` shall return a `NotConnectedError` if the error object as a truthy `code` property (node socket errors)]*/
+  /*Tests_SRS_NODE_DEVICE_MQTT_ERRORS_16_001: [`translateError` shall return a `NotConnectedError` if the error object has a truthy `code` property (node socket errors)]*/
   it('converts socket errors to NotConnectedError', function () {
     var fakeSocketError = new Error('getaddrinfo: not found');
     fakeSocketError.code = 'ENOTFOUND';

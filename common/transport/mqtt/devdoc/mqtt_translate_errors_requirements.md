@@ -28,6 +28,6 @@
 
 **SRS_NODE_DEVICE_MQTT_ERRORS_18_011: [** `translateError` shall return an `Error` if none of the other string rules match **]**
 
-**SRS_NODE_DEVICE_MQTT_ERRORS_16_001: [** `translateError` shall return a `NotConnectedError` if the error object as a truthy `code` property (node socket errors) **]**
+**SRS_NODE_DEVICE_MQTT_ERRORS_16_001: [** `translateError` shall return a `NotConnectedError` if the error object has a truthy `code` property (node socket errors) **]**
 
 **SRS_NODE_DEVICE_MQTT_ERRORS_16_002: [** `translateError` shall return a `NotConnectedError` if the error message contains 'premature close' (from `end-of-stream`) **]**
