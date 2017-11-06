@@ -6,6 +6,7 @@
   "license": "MIT",
   "dependencies": {
     "azure-iot-common": "1.2.2",
+    "azure-iot-provisioning-service": "0.0.1",
     "azure-iot-provisioning-device": "0.0.1",
     "azure-iot-provisioning-device-amqp": "0.0.1",
     "azure-iot-provisioning-device-http": "0.0.1",

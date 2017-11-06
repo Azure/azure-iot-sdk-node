@@ -36,25 +36,25 @@ var onEnrollmentGroupResults = function(err, results) {
     results.forEach(function(enrollmentGroup) {
       console.log(JSON.stringify(enrollmentGroup, null, 2));
       var alreadyPrintedSomeDeviceRegistrations = false;
-      var queryForDeviceRegistrationStatus = serviceClient.createEnrollmentGroupDeviceRegistrationStatusQuery({ "query": "*" }, enrollmentGroup.enrollmentGroupId, 10);
-      var onDeviceRegistrationStatusResults = function(err, results) {
+      var queryForDeviceRegistrationState = serviceClient.createEnrollmentGroupDeviceRegistrationStateQuery({ "query": "*" }, enrollmentGroup.enrollmentGroupId, 10);
+      var onDeviceRegistrationStateResults = function(err, results) {
         if (err) {
           console.error('Failed to fetch the results: ' + err.message);
         } else {
           // Do something with the results
-          results.forEach(function(deviceRegistrationStatus) {
+          results.forEach(function(deviceRegistrationState) {
             if (!alreadyPrintedSomeDeviceRegistrations) {
               alreadyPrintedSomeDeviceRegistrations = true;
               console.log('For ' + enrollmentGroup.enrollmentGroupId + ', all of its the Device Registrations Status objects: ')
             }
-            console.log(JSON.stringify(deviceRegistrationStatus, null, 2));
+            console.log(JSON.stringify(deviceRegistrationState, null, 2));
           });
-          if (queryForDeviceRegistrationStatus.hasMoreResults) {
-              queryForDeviceRegistrationStatus.next(onDeviceRegistrationStatus);
+          if (queryForDeviceRegistrationState.hasMoreResults) {
+              queryForDeviceRegistrationState.next(onDeviceRegistrationState);
           }
         }
       };
-      queryForDeviceRegistrationStatus.next(onDeviceRegistrationStatusResults);
+      queryForDeviceRegistrationState.next(onDeviceRegistrationStateResults);
     });
 
     if (queryForEnrollmentGroups.hasMoreResults) {

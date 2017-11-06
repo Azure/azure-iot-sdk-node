@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { Enrollment, EnrollmentGroup, DeviceRegistrationStatus } from './interfaces';
+import { IndividualEnrollment, EnrollmentGroup, DeviceRegistrationState } from './interfaces';
 
 /**
  * The query result.
@@ -12,7 +12,7 @@ export interface QueryResult {
     /**
      * The query result items, as a collection.
      */
-    items: Array<Enrollment | EnrollmentGroup | DeviceRegistrationStatus>;
+    items: Array<IndividualEnrollment | EnrollmentGroup | DeviceRegistrationState>;
 }
 
 /**
