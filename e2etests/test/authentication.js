@@ -20,168 +20,164 @@ var AmqpWs = require('azure-iot-device-amqp').AmqpWs;
 var Mqtt = require('azure-iot-device-mqtt').Mqtt;
 var MqttWs = require('azure-iot-device-mqtt').MqttWs;
 var Http = require('azure-iot-device-http').Http;
-var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 var transports = [Amqp, AmqpWs, Mqtt, MqttWs, Http];
+var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
-var runTests = function authentication_tests() {
-  describe('Authentication', function() {
-    this.timeout(40000);
-    var hostName = ServiceConnectionString.parse(hubConnectionString).HostName;
-    var testDeviceId = 'nodee2etestDeviceAuth-' + uuid.v4();
-    var testDeviceKey = '';
+describe('Authentication', function() {
+  this.timeout(40000);
+  var hostName = ServiceConnectionString.parse(hubConnectionString).HostName;
+  var testDeviceId = 'nodee2etestDeviceAuth-' + uuid.v4();
+  var testDeviceKey = '';
 
-    before('Creates a test device', function(beforeCallback) {
-      var registry = Registry.fromConnectionString(hubConnectionString);
-      registry.create({ deviceId: testDeviceId }, function(err, createdDevice) {
-        if (err) {
-          beforeCallback(err);
-        } else {
-          testDeviceKey = createdDevice.authentication.symmetricKey.primaryKey;
-          beforeCallback();
-        }
-      });
+  before('Creates a test device', function(beforeCallback) {
+    var registry = Registry.fromConnectionString(hubConnectionString);
+    registry.create({ deviceId: testDeviceId }, function(err, createdDevice) {
+      if (err) {
+        beforeCallback(err);
+      } else {
+        testDeviceKey = createdDevice.authentication.symmetricKey.primaryKey;
+        beforeCallback();
+      }
     });
+  });
 
-    after('Destroys the test device', function(afterCallback) {
-      var registry = Registry.fromConnectionString(hubConnectionString);
-      registry.delete(testDeviceId, afterCallback);
-    });
+  after('Destroys the test device', function(afterCallback) {
+    var registry = Registry.fromConnectionString(hubConnectionString);
+    registry.delete(testDeviceId, afterCallback);
+  });
 
-    describe('ConnectionString', function() {
-      transports.forEach(function (Transport) {
-        it('Gets an UnauthorizedError over ' + Transport.name + ' if the primary key is invalid', function(testCallback) {
-          var invalidPrimaryKey = new Buffer('invalidPrimaryKey').toString('base64');
-          var invalidConnectionString = DeviceConnectionString.createWithSharedAccessKey(hostName, testDeviceId, invalidPrimaryKey);
-          var deviceClient = DeviceClient.fromConnectionString(invalidConnectionString, Transport);
-          deviceClient.sendEvent(new Message('testMessage'), function(err) {
-            if(err instanceof UnauthorizedError || err instanceof NotConnectedError) {
-              testCallback();
-            } else {
-              testCallback(err);
-            }
-          });
-        });
-      });
-    });
-
-    describe('SharedAccessSignature', function() {
-      transports.forEach(function(Transport) {
-        it('Gets an UnauthorizedError over ' + Transport.name + ' if the SAS Token is expired', function(testCallback) {
-          var yesterday = Math.ceil((Date.now() / 1000) - 86400);
-          var expiredSASToken = DeviceSAS.create(hostName, testDeviceId, testDeviceKey, yesterday).toString();
-          var deviceClient = DeviceClient.fromSharedAccessSignature(expiredSASToken, Transport);
-          deviceClient.sendEvent(new Message('testMessage'), function(err) {
-            if(err instanceof UnauthorizedError || err instanceof NotConnectedError) {
-              testCallback();
-            } else {
-              testCallback(err);
-            }
-          });
-        });
-      });
-    });
-
-    describe('DeviceId', function() {
-      transports.forEach(function(Transport) {
-        [{
-          reason: 'improperly formed',
-          id: testDeviceId + '//foo'
-        },{
-          reason: 'does not exist',
-          id: testDeviceId + 'foo'
-        }].forEach(function(deviceIdConfig){
-          it('Gets an UnauthorizedError over ' + Transport.name + ' if the Device ID is ' + deviceIdConfig.reason, function(testCallback) {
-            var connectionString = DeviceConnectionString.createWithSharedAccessKey(hostName, deviceIdConfig.id, testDeviceKey);
-            var deviceClient = DeviceClient.fromConnectionString(connectionString, Transport);
-            deviceClient.sendEvent(new Message('testMessage'), function(err) {
-              if (err instanceof UnauthorizedError || err instanceof DeviceNotFoundError || err instanceof NotConnectedError) {
-                // AMQP and MQTT translate to Unauthorized but HTTP to DeviceNotFound
-                testCallback();
-              } else {
-                testCallback(err);
-              }
-            });
-          });
-        });
-      });
-    });
-
-    describe('X509', function() {
-      var x509testDeviceId = 'nodee2etestDeviceAuthx509-' + uuid.v4();
-      var x509goodCert = '';
-      var x509goodKey = '';
-      var x509badCert = '';
-      var x509badKey = '';
-      var x509testConnectionString = '';
-      before(function(beforeCallback) {
-        pem.createCertificate({ selfSigned: true, days: 1 }, function (err, certConstructionResult) {
-          if (err) {
-            beforeCallback(err);
+  describe('ConnectionString', function() {
+    transports.forEach(function (Transport) {
+      it('Gets an UnauthorizedError over ' + Transport.name + ' if the primary key is invalid', function(testCallback) {
+        var invalidPrimaryKey = new Buffer('invalidPrimaryKey').toString('base64');
+        var invalidConnectionString = DeviceConnectionString.createWithSharedAccessKey(hostName, testDeviceId, invalidPrimaryKey);
+        var deviceClient = DeviceClient.fromConnectionString(invalidConnectionString, Transport);
+        deviceClient.sendEvent(new Message('testMessage'), function(err) {
+          if(err instanceof UnauthorizedError || err instanceof NotConnectedError) {
+            testCallback();
           } else {
-            pem.getFingerprint(certConstructionResult.certificate, function (err, fingerPrintResult) {
-              if (err) {
-                beforeCallback(err);
-              } else {
-                var thumbPrint = fingerPrintResult.fingerprint.replace(/:/g, '');
-                var registry = Registry.fromConnectionString(hubConnectionString);
-                registry.create({
-                  deviceId: x509testDeviceId,
-                  status: 'enabled',
-                  authentication: {
-                    x509Thumbprint: {
-                      primaryThumbprint: thumbPrint
-                    }
-                  }
-                },
-                function(err) {
-                  if (err) {
-                    beforeCallback(err);
-                  } else {
-                    x509testConnectionString = DeviceConnectionString.createWithX509Certificate(hostName, x509testDeviceId);
-                    x509goodCert = certConstructionResult.certificate;
-                    x509goodKey = certConstructionResult.clientKey;
-
-                    // Now create a valid certificate not associated with a device.
-                    pem.createCertificate({ selfSigned: true, days: 1 }, function (err, badCertConstructionResult) {
-                      if (err) {
-                        beforeCallback(err);
-                      } else {
-                        x509badCert = badCertConstructionResult.certificate;
-                        x509badKey = badCertConstructionResult.clientKey;
-                        beforeCallback();
-                      }
-                    });
-                  }
-                });
-              }
-            });
+            testCallback(err);
           }
         });
       });
+    });
+  });
 
-      after(function(afterCallback) {
-        var registry = Registry.fromConnectionString(hubConnectionString);
-        registry.delete(x509testDeviceId, afterCallback);
+  describe('SharedAccessSignature', function() {
+    transports.forEach(function(Transport) {
+      it('Gets an UnauthorizedError over ' + Transport.name + ' if the SAS Token is expired', function(testCallback) {
+        var yesterday = Math.ceil((Date.now() / 1000) - 86400);
+        var expiredSASToken = DeviceSAS.create(hostName, testDeviceId, testDeviceKey, yesterday).toString();
+        var deviceClient = DeviceClient.fromSharedAccessSignature(expiredSASToken, Transport);
+        deviceClient.sendEvent(new Message('testMessage'), function(err) {
+          if(err instanceof UnauthorizedError || err instanceof NotConnectedError) {
+            testCallback();
+          } else {
+            testCallback(err);
+          }
+        });
       });
+    });
+  });
 
-      transports.forEach(function(Transport) {
-        it('Gets an UnauthorizedError over ' + Transport.name + ' if the certificate doesn\'t match the thumbprint', function(testCallback) {
-          var deviceClient = DeviceClient.fromConnectionString(x509testConnectionString, Transport);
-          deviceClient.setOptions({
-            cert: x509badCert,
-            key: x509badKey,
-            passphrase: undefined
-          });
+  describe('DeviceId', function() {
+    transports.forEach(function(Transport) {
+      [{
+        reason: 'improperly formed',
+        id: testDeviceId + '//foo'
+      },{
+        reason: 'does not exist',
+        id: testDeviceId + 'foo'
+      }].forEach(function(deviceIdConfig){
+        it('Gets an UnauthorizedError over ' + Transport.name + ' if the Device ID is ' + deviceIdConfig.reason, function(testCallback) {
+          var connectionString = DeviceConnectionString.createWithSharedAccessKey(hostName, deviceIdConfig.id, testDeviceKey);
+          var deviceClient = DeviceClient.fromConnectionString(connectionString, Transport);
           deviceClient.sendEvent(new Message('testMessage'), function(err) {
-            if (err instanceof UnauthorizedError) {
+            if (err instanceof UnauthorizedError || err instanceof DeviceNotFoundError || err instanceof NotConnectedError) {
+              // AMQP and MQTT translate to Unauthorized but HTTP to DeviceNotFound
               testCallback();
+            } else {
+              testCallback(err);
             }
           });
         });
       });
     });
   });
-};
 
-runTests();
+  describe('X509', function() {
+    var x509testDeviceId = 'nodee2etestDeviceAuthx509-' + uuid.v4();
+    var x509goodCert = '';
+    var x509goodKey = '';
+    var x509badCert = '';
+    var x509badKey = '';
+    var x509testConnectionString = '';
+    before(function(beforeCallback) {
+      pem.createCertificate({ selfSigned: true, days: 1 }, function (err, certConstructionResult) {
+        if (err) {
+          beforeCallback(err);
+        } else {
+          pem.getFingerprint(certConstructionResult.certificate, function (err, fingerPrintResult) {
+            if (err) {
+              beforeCallback(err);
+            } else {
+              var thumbPrint = fingerPrintResult.fingerprint.replace(/:/g, '');
+              var registry = Registry.fromConnectionString(hubConnectionString);
+              registry.create({
+                deviceId: x509testDeviceId,
+                status: 'enabled',
+                authentication: {
+                  x509Thumbprint: {
+                    primaryThumbprint: thumbPrint
+                  }
+                }
+              },
+              function(err) {
+                if (err) {
+                  beforeCallback(err);
+                } else {
+                  x509testConnectionString = DeviceConnectionString.createWithX509Certificate(hostName, x509testDeviceId);
+                  x509goodCert = certConstructionResult.certificate;
+                  x509goodKey = certConstructionResult.clientKey;
+
+                  // Now create a valid certificate not associated with a device.
+                  pem.createCertificate({ selfSigned: true, days: 1 }, function (err, badCertConstructionResult) {
+                    if (err) {
+                      beforeCallback(err);
+                    } else {
+                      x509badCert = badCertConstructionResult.certificate;
+                      x509badKey = badCertConstructionResult.clientKey;
+                      beforeCallback();
+                    }
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
+    });
+
+    after(function(afterCallback) {
+      var registry = Registry.fromConnectionString(hubConnectionString);
+      registry.delete(x509testDeviceId, afterCallback);
+    });
+
+    transports.forEach(function(Transport) {
+      it('Gets an UnauthorizedError over ' + Transport.name + ' if the certificate doesn\'t match the thumbprint', function(testCallback) {
+        var deviceClient = DeviceClient.fromConnectionString(x509testConnectionString, Transport);
+        deviceClient.setOptions({
+          cert: x509badCert,
+          key: x509badKey,
+          passphrase: undefined
+        });
+        deviceClient.sendEvent(new Message('testMessage'), function(err) {
+          if (err instanceof UnauthorizedError) {
+            testCallback();
+          }
+        });
+      });
+    });
+  });
+});

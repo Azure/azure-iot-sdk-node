@@ -8,16 +8,18 @@ set node-root=%~dp0..
 REM // resolve to fully qualified path
 for %%i in ("%node-root%") do set node-root=%%~fi
 
-cd %node-root%\build\tools
 echo.
-echo -- Setting up links for build tools --
+echo -- Setting up build_parallel tool --
+cd %node-root%\build\build_parallel
 call npm install
 
 echo.
 echo -- setting up node_modules --
 call node build_parallel.js setup
 
-echo.
-echo -- linking build tools to azure-iothub --
+echo .
+echo -- Setting up links for build tools --
+cd %node-root%\build\tools
 call npm link azure-iothub
+call npm install
 

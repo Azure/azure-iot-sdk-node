@@ -61,7 +61,7 @@ echo ""
 echo "-- create test device --"
 create_test_device
 
-pushd $node_root/build/tools
+pushd $node_root/build/build_parallel
 echo ""
 if [ $integration_tests -eq 0 ]
 then

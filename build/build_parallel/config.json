@@ -1,15 +1,16 @@
 {
   "tasks": {
     "setup": {
-      "description": "install and build all project dependencies",
+      "description": "install all project dependencies, builds, and registers the package with the cache",
       "command": "cd {fullpath} {perDependencyCommand} && npm ln && npm run build",
       "perDependencyCommand": " && npm ln {dependency}"
     },
     "teardown": {
-      "description": "un-install all project dependencies",
+      "description": "uninstall all project dependencies and deregister the package from the cache",
       "command": "cd {fullpath} && npm rm {perDependencyCommand}",
       "perDependencyCommand": " && npm rm {dependency}",
-      "continueOnError": true
+      "continueOnError": true,
+      "doConsumersFirst": true
     },
     "build": {
       "description": "compile all typescript files into javascript",
@@ -41,6 +42,9 @@
       "directory": "provisioning/device"
     },
     {
+      "directory": "provisioning/service"
+    },
+    {
       "directory": "provisioning/transport/amqp"
     },
     {
@@ -66,9 +70,9 @@
     },
     {
       "directory": "e2etests",
-      "build": false,
-      "test": false,
-      "ci": false
+      "skip_build": true,
+      "skip_test": true,
+      "skip_ci": true
     }
   ]
 }

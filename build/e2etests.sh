@@ -18,6 +18,11 @@ usage ()
     exit 1
 }
 
+cleanup_and_exit()
+{
+    exit $1
+}
+
 process_args ()
 {
     min_output=0

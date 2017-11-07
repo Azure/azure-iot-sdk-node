@@ -53,15 +53,17 @@ rem ---------------------------------------------------------------------------
 rem -- lint and run tests
 rem ---------------------------------------------------------------------------
 
-pushd  "%node-root%\build\tools"
+pushd  "%node-root%\build\build_parallel"
 echo.
 if %integration-tests%==0 (
   echo -- Linting and running unit tests --
   call node build_parallel.js test
+  if errorlevel 1 goto :cleanup
 )
 if %integration-tests%==1 (
   echo -- Linting and running unit + integration tests --
   call node build_parallel.js ci
+  if errorlevel 1 goto :cleanup
 )
 echo.
 popd
