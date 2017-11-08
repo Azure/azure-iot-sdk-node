@@ -267,14 +267,14 @@ describe('ProvisioningServiceClient', function() {
     describe('#' + methodUnderTest, function() {
       /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_015: [The `deleteIndividualEnrollment` method shall throw `ReferenceError` if the `enrollmentOrId` argument is falsy.] */
       /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_016: [The `deleteEnrollmentGroup` method shall throw `ReferenceError` if the `enrollmentGroupOrId` argument is falsy.] */
-      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_025: [The `deleteDeviceRegistrationStatus` method shall throw `ReferenceError` if the `idOrRegistrationStatus` argument is falsy.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_025: [The `deleteDeviceRegistrationState` method shall throw `ReferenceError` if the `idOrRegistrationState` argument is falsy.] */
       [undefined, null, 0, false].forEach(function(invalidFirstArgument) {
         testFalsyArg(methodUnderTest, falsyArgArgumentName, invalidFirstArgument, ReferenceError);
       });
 
       /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_040: [The `deleteIndividualEnrollment` method, if the first argument is a string, the second argument if present, must be a string or a callback, otherwise shall throw `ArgumentError`.] */
       /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_045: [The `deleteEnrollmentGroup` method, if the first argument is a string, the second argument if present, must be a string or a callback, otherwise shall throw `ArgumentError`.] */
-      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_050: [The `deleteDeviceRegistrationStatus` method, if the first argument is a string, the second argument if present, must be a string or a callback, otherwise shall throw `ArgumentError`.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_050: [The `deleteDeviceRegistrationState` method, if the first argument is a string, the second argument if present, must be a string or a callback, otherwise shall throw `ArgumentError`.] */
       it('Throws argument error if second parameter is wrong type when using a string as first argument', function() {
         var de = new ProvisioningServiceClient({ host: 'host', sharedAccessSignature: 'sas' });
         assert.throws(function() {
@@ -284,7 +284,7 @@ describe('ProvisioningServiceClient', function() {
 
       /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_041: [The `deleteIndividualEnrollment` method, if the first argument is a string and the second argument is a string, the third argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
       /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_046: [The `deleteEnrollmentGroup` method, if the first argument is a string and the second argument is a string, the third argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
-      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_051: [The `deleteDeviceRegistrationStatus` method, if the first argument is a string and the second argument is a string, the third argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_051: [The `deleteDeviceRegistrationState` method, if the first argument is a string and the second argument is a string, the third argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
       it('Throws argument error if third parameter is wrong type when using a string first argument and etag', function() {
         var de = new ProvisioningServiceClient({ host: 'host', sharedAccessSignature: 'sas' });
         assert.throws(function() {
@@ -292,9 +292,9 @@ describe('ProvisioningServiceClient', function() {
         }, errors.ArgumentError);
       });
 
-      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_042: [The `deleteIndividualEnrollment` method, if the first argument is an Enrollment object, the second argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_042: [The `deleteIndividualEnrollment` method, if the first argument is an IndividualEnrollment object, the second argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
       /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_047: [The `deleteEnrollmentGroup` method, if the first argument is an EnrollmentGroup object, the second argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
-      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_052: [The `deleteDeviceRegistrationStatus` method, if the first argument is an `DeviceRegistrationStatus` object, the second argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_052: [The `deleteDeviceRegistrationState` method, if the first argument is an `DeviceRegistrationState` object, the second argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
       it('Throws argument error if first parameter is an object and second parameter is NOT a callback', function() {
         var de = new ProvisioningServiceClient({ host: 'host', sharedAccessSignature: 'sas' });
         assert.throws(function() {
@@ -302,9 +302,9 @@ describe('ProvisioningServiceClient', function() {
         }, errors.ArgumentError);
       });
 
-      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_017: [The `deleteIndividualEnrollment` method, if the first argument is an `Enrollment` object, shall throw an `ArgumentError`, if the `registrationId` property is falsy.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_017: [The `deleteIndividualEnrollment` method, if the first argument is an `IndividualEnrollment` object, shall throw an `ArgumentError`, if the `registrationId` property is falsy.] */
       /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_018: [The `deleteEnrollmentGroup` method, if the first argument is an `EnrollmentGroup` object, shall throw an `ArgumentError`, if the `enrollmentGroupId' property is falsy.] */
-      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_026: [The `deleteDeviceRegistrationStatus` method, if the first argument is a `DeviceRegistrationStatus` object, shall throw an `ArgumentError`, if the `registrationId' property is falsy.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_026: [The `deleteDeviceRegistrationState` method, if the first argument is a `DeviceRegistrationState` object, shall throw an `ArgumentError`, if the `registrationId' property is falsy.] */
       [undefined, null].forEach(function(badId) {
         var badObject = {};
         badObject[firstArgumentObjectIdPropertyName] = badId;
@@ -340,8 +340,8 @@ describe('ProvisioningServiceClient', function() {
         DELETE /enrollmentGroups/<uri-encoded-enrollmentGroupOrId>?api-version=<version> HTTP/1.1
         Authorization: <sharedAccessSignature>
         ] */
-      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_053: [** The `deleteDeviceRegistrationStatus` method, if the first argument is a string, and the second argument is NOT a string, shall construct an HTTP request using information supplied by the caller as follows:
-        DELETE /registrations/<uri-encoded-idOrRegistrationStatus>?api-version=<version> HTTP/1.1
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_053: [** The `deleteDeviceRegistrationState` method, if the first argument is a string, and the second argument is NOT a string, shall construct an HTTP request using information supplied by the caller as follows:
+        DELETE /registrations/<uri-encoded-idOrRegistrationState>?api-version=<version> HTTP/1.1
         Authorization: <sharedAccessSignature>
         ] */
       it('Constructs a valid HTTP request for a STRING first parameter and a STRING second parameter', function(testCallback) {
@@ -361,7 +361,7 @@ describe('ProvisioningServiceClient', function() {
         de[methodUnderTest](stringIdName, etag, testCallback);
       });
 
-      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_021: [The `deleteIndividualEnrollment` method, if the first argument is an `Enrollment` object, with a non-falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_021: [The `deleteIndividualEnrollment` method, if the first argument is an `IndividualEnrollment` object, with a non-falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
         DELETE /enrollments/<uri-encoded-enrollmentOrId.registrationId>?api-version=<version> HTTP/1.1
         If-Match: enrollmentOrId.etag
         Authorization: <sharedAccessSignature>
@@ -371,9 +371,9 @@ describe('ProvisioningServiceClient', function() {
         If-Match: enrollmentParameter.etag
         Authorization: <sharedAccessSignature>
         ] */
-      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_028: [** The `deleteDeviceRegistrationStatus` method, if the first argument is a `DeviceRegistrationStatus` object, with a non-falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
-        DELETE /registrations/<uri-encoded-idOrRegistrationStatus.registrationId>?api-version=<version> HTTP/1.1
-        If-Match: idOrRegistrationStatus.etag
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_028: [** The `deleteDeviceRegistrationState` method, if the first argument is a `DeviceRegistrationState` object, with a non-falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
+        DELETE /registrations/<uri-encoded-idOrRegistrationState.registrationId>?api-version=<version> HTTP/1.1
+        If-Match: idOrRegistrationState.etag
         Authorization: <sharedAccessSignature>
         ] */
       it('constructs a valid HTTP request for ' + falsyArgArgumentName + ' parameter with etag', function(testCallback) {
@@ -392,7 +392,7 @@ describe('ProvisioningServiceClient', function() {
         de[methodUnderTest](firstArgumentObject, testCallback);
       });
 
-      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_024: [The `deleteIndividualEnrollment` method, if the first argument is an `Enrollment` object, with a falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_024: [The `deleteIndividualEnrollment` method, if the first argument is an `IndividualEnrollment` object, with a falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
         DELETE /enrollments/<uri-encoded-enrollmentParameter.registrationId>?api-version=<version> HTTP/1.1
         Authorization: <sharedAccessSignature>
         ] */
@@ -400,8 +400,8 @@ describe('ProvisioningServiceClient', function() {
         DELETE /enrollmentGroups/<uri-encoded-enrollmentGroupOrId.enrollmentGroupId>?api-version=<version> HTTP/1.1
         Authorization: <sharedAccessSignature>
         ] */
-      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_029: [** The `deleteDeviceRegistrationStatus` method, if the first argument is a `DeviceRegistrationStatus` object, with a falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
-        DELETE /registrations/<uri-encoded-idOrRegistrationStatus.registrationId>?api-version=<version> HTTP/1.1
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_029: [** The `deleteDeviceRegistrationState` method, if the first argument is a `DeviceRegistrationState` object, with a falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
+        DELETE /registrations/<uri-encoded-idOrRegistrationState.registrationId>?api-version=<version> HTTP/1.1
         Authorization: <sharedAccessSignature>
         ] */
       it('constructs a valid HTTP request for ' + falsyArgArgumentName + ' parameter without etag', function(testCallback) {
@@ -423,14 +423,14 @@ describe('ProvisioningServiceClient', function() {
 
   testDeleteAPI('deleteIndividualEnrollment', '/enrollments/', 'enrollment', fakeEnrollment, fakeEnrollmentNoEtag, 'registrationId');
   testDeleteAPI('deleteEnrollmentGroup', '/enrollmentGroups/', 'enrollmentGroup', fakeEnrollmentGroup, fakeEnrollmentGroupNoEtag, 'enrollmentGroupId');
-  testDeleteAPI('deleteDeviceRegistrationStatus', '/registrations/', 'registrationStatus', fakeRegistration, fakeRegistrationNoEtag, 'registrationId');
+  testDeleteAPI('deleteDeviceRegistrationState', '/registrations/', 'registrationState', fakeRegistration, fakeRegistrationNoEtag, 'registrationId');
 
   function testGetAPI(methodUnderTest, uriPath) {
 
     describe('#' + methodUnderTest, function() {
     /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_030: [The `getIndividualEnrollment` method shall throw `ReferenceError` if the `id` argument is falsy.] */
     /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_031: [The `getEnrollmentGroup` method shall throw `ReferenceError` if the `id` argument is falsy.] */
-    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_032: [The `getDeviceRegistrationStatus` method shall throw `ReferenceError` if the `id` argument is falsy.] */
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_032: [The `getDeviceRegistrationState` method shall throw `ReferenceError` if the `id` argument is falsy.] */
     [undefined, null, 0, false].forEach(function(id) {
         testFalsyArg(methodUnderTest, 'id', id, ReferenceError);
       });
@@ -446,7 +446,7 @@ describe('ProvisioningServiceClient', function() {
         GET /enrollmentGroups/<uri-encoded-id>?api-version=<version> HTTP/1.1
         Authorization: <sharedAccessSignature>
         ] */
-      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_035: [** The `getDeviceRegistrationStatus` method shall construct an HTTP request using information supplied by the caller as follows:
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_035: [** The `getDeviceRegistrationState` method shall construct an HTTP request using information supplied by the caller as follows:
         GET /registrations/<uri-encoded-id>?api-version=<version> HTTP/1.1
         Authorization: <sharedAccessSignature>
         ] */
@@ -471,7 +471,7 @@ describe('ProvisioningServiceClient', function() {
 
   testGetAPI('getIndividualEnrollment', '/enrollments/');
   testGetAPI('getEnrollmentGroup', '/enrollmentGroups/');
-  testGetAPI('getDeviceRegistrationStatus', '/registrations/');
+  testGetAPI('getDeviceRegistrationState', '/registrations/');
 
 
   describe('#runBulkOperation', function() {

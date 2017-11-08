@@ -69,9 +69,9 @@ The `deleteIndividualEnrollment` method deletes a device enrollment.
 
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_041: [** The `deleteIndividualEnrollment` method, if the first argument is a string and the second argument is a string, the third argument if present, must be a callback, otherwise shall throw `ArgumentError`.**]**
 
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_042: [** The `deleteIndividualEnrollment` method, if the first argument is an `Enrollment` object, the second argument if present, must be a callback, otherwise shall throw `ArgumentError`.**]**
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_042: [** The `deleteIndividualEnrollment` method, if the first argument is an `IndividualEnrollment` object, the second argument if present, must be a callback, otherwise shall throw `ArgumentError`.**]**
 
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_017: [** The `deleteIndividualEnrollment` method, if the first argument is an `Enrollment` object, shall throw an `ArgumentError`, if the `registrationId` property is falsy. **]**
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_017: [** The `deleteIndividualEnrollment` method, if the first argument is an `IndividualEnrollment` object, shall throw an `ArgumentError`, if the `registrationId` property is falsy. **]**
 
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_043: [** The `deleteIndividualEnrollment` method, if the first argument is a string, and the second argument is NOT a string, shall construct an HTTP request using information supplied by the caller as follows:
 ```
@@ -86,14 +86,14 @@ If-Match: <second argument>
 Authorization: <sharedAccessSignature>
 ``` **]**
 
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_021: [** The `deleteIndividualEnrollment` method, if the first argument is an `Enrollment` object, with a non-falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_021: [** The `deleteIndividualEnrollment` method, if the first argument is an `IndividualEnrollment` object, with a non-falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
 ```
 DELETE /enrollments/<uri-encoded-enrollmentOrId.registrationId>?api-version=<version> HTTP/1.1
 If-Match: enrollmentOrId.etag
 Authorization: <sharedAccessSignature>
 ``` **]**
 
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_024: [** The `deleteIndividualEnrollment` method, if the first argument is an `Enrollment` object, with a falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_024: [** The `deleteIndividualEnrollment` method, if the first argument is an `IndividualEnrollment` object, with a falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
 ```
 DELETE /enrollments/<uri-encoded-enrollmentParameter.registrationId>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
@@ -138,47 +138,47 @@ DELETE /enrollmentGroups/<uri-encoded-enrollmentGroupOrId.enrollmentGroupId>?api
 Authorization: <sharedAccessSignature>
 ``` **]**
 
-### deleteDeviceRegistrationStatus(idOrRegistration, deleteCallback)
-The `deleteDeviceRegistrationStatus` method deletes a registration status.
+### deleteDeviceRegistrationState(idOrRegistrationState, deleteCallback)
+The `deleteDeviceRegistrationState` method deletes a registration state.
 
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_025: [** The `deleteDeviceRegistrationStatus` method shall throw `ReferenceError` if the `idOrRegistrationStatus` argument is falsy. **]**
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_025: [** The `deleteDeviceRegistrationState` method shall throw `ReferenceError` if the `idOrRegistrationState` argument is falsy. **]**
 
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_050: [** The `deleteDeviceRegistrationStatus` method, if the first argument is a string, the second argument if present, must be a string or a callback, otherwise shall throw `ArgumentError`. **]**
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_050: [** The `deleteDeviceRegistrationState` method, if the first argument is a string, the second argument if present, must be a string or a callback, otherwise shall throw `ArgumentError`. **]**
 
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_051: [** The `deleteDeviceRegistrationStatus` method, if the first argument is a string and the second argument is a string, the third argument if present, must be a callback, otherwise shall throw `ArgumentError`. **]**
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_051: [** The `deleteDeviceRegistrationState` method, if the first argument is a string and the second argument is a string, the third argument if present, must be a callback, otherwise shall throw `ArgumentError`. **]**
 
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_052: [** The `deleteDeviceRegistrationStatus` method, if the first argument is an `DeviceRegistrationStatus` object, the second argument if present, must be a callback, otherwise shall throw `ArgumentError`. **]**
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_052: [** The `deleteDeviceRegistrationState` method, if the first argument is an `DeviceRegistrationState` object, the second argument if present, must be a callback, otherwise shall throw `ArgumentError`. **]**
 
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_026: [** The `deleteDeviceRegistrationStatus` method, if the first argument is a `DeviceRegistrationStatus` object, shall throw an `ArgumentError`, if the `registrationId' property is falsy. **]**
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_026: [** The `deleteDeviceRegistrationState` method, if the first argument is a `DeviceRegistrationState` object, shall throw an `ArgumentError`, if the `registrationId' property is falsy. **]**
 
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_053: [** The `deleteDeviceRegistrationStatus` method, if the first argument is a string, and the second argument is NOT a string, shall construct an HTTP request using information supplied by the caller as follows:
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_053: [** The `deleteDeviceRegistrationState` method, if the first argument is a string, and the second argument is NOT a string, shall construct an HTTP request using information supplied by the caller as follows:
 ```
-DELETE /registrations/<uri-encoded-idOrRegistrationStatus>?api-version=<version> HTTP/1.1
+DELETE /registrations/<uri-encoded-idOrRegistrationState>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
 ``` **]**
 
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_054: [** The `deleteDeviceRegistrationStatus` method, if the first argument is a string, and the second argument is a string, shall construct an HTTP request using information supplied by the caller as follows:
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_054: [** The `deleteDeviceRegistrationState` method, if the first argument is a string, and the second argument is a string, shall construct an HTTP request using information supplied by the caller as follows:
 ```
-DELETE /registrations/<uri-encoded-idOrRegistrationStatus>?api-version=<version> HTTP/1.1
+DELETE /registrations/<uri-encoded-idOrRegistrationState>?api-version=<version> HTTP/1.1
 If-Match: <second argument>
 Authorization: <sharedAccessSignature>
 ``` **]**
 
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_028: [** The `deleteDeviceRegistrationStatus` method, if the first argument is a `DeviceRegistrationStatus` object, with a non-falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_028: [** The `deleteDeviceRegistrationState` method, if the first argument is a `DeviceRegistrationState` object, with a non-falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
 ```
-DELETE /registrations/<uri-encoded-idOrRegistrationStatus.registrationId>?api-version=<version> HTTP/1.1
-If-Match: idOrRegistrationStatus.etag
+DELETE /registrations/<uri-encoded-idOrRegistrationState.registrationId>?api-version=<version> HTTP/1.1
+If-Match: idOrRegistrationState.etag
 Authorization: <sharedAccessSignature>
 ``` **]**
 
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_029: [** The `deleteDeviceRegistrationStatus` method, if the first argument is a `DeviceRegistrationStatus` object, with a falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_029: [** The `deleteDeviceRegistrationState` method, if the first argument is a `DeviceRegistrationState` object, with a falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
 ```
-DELETE /registrations/<uri-encoded-idOrRegistrationStatus.registrationId>?api-version=<version> HTTP/1.1
+DELETE /registrations/<uri-encoded-idOrRegistrationState.registrationId>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
 ``` **]**
 
 ### getIndividualEnrollment(id, getCallback)
-The `getIndividualEnrollment` method returns an `Enrollment` object.
+The `getIndividualEnrollment` method returns an `IndividualEnrollment` object.
 
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_030: [** The `getIndividualEnrollment` method shall throw `ReferenceError` if the `id` argument is falsy. **]**
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_033: [** The `getIndividualEnrollment` method shall construct an HTTP request using information supplied by the caller as follows:
@@ -198,18 +198,18 @@ GET /enrollmentGroups/<uri-encoded-id>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
 ``` **]**
 
-### getDeviceRegistrationStatus(id, deviceRegistrationsStatusCallback)
-The `getDeviceRegistrationStatus` returns a `DeviceRegistrationCallback`.
+### getDeviceRegistrationState(id, deviceRegistrationsStateCallback)
+The `getDeviceRegistrationState` returns a `DeviceRegistrationState`.
 
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_032: [** The `getDeviceRegistrationStatus` method shall throw `ReferenceError` if the `id` argument is falsy. **]**
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_035: [** The `getDeviceRegistrationStatus` method shall construct an HTTP request using information supplied by the caller as follows:
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_032: [** The `getDeviceRegistrationState` method shall throw `ReferenceError` if the `id` argument is falsy. **]**
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_035: [** The `getDeviceRegistrationState` method shall construct an HTTP request using information supplied by the caller as follows:
 ```
 GET /registrations/<uri-encoded-id>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
 ``` **]**
 
 ### runBulkOperation(bulkOperation, bulkOperationCallback)
-The `runBulkOperation` can perform CRUD operations on Enrollment objects in bulk.
+The `runBulkOperation` can perform CRUD operations on IndividualEnrollment objects in bulk.
 
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_038: [** The `runBulkOperation` method shall throw `ReferenceError` if the `bulkOperation` argument is falsy. **]**
 

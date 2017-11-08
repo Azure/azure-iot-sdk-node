@@ -40,7 +40,7 @@ serviceClient.createOrUpdateIndividualEnrollment(enrollment1, function(err, firs
       } else {
         console.log("enrollment record returned for second: " + JSON.stringify(secondEnrollmentResponse, null, 2));
         //
-        // deleteIndividualEnrollment can take an Enrollment object or a registrationId with optional etag.
+        // deleteIndividualEnrollment can take an IndividualEnrollment object or a registrationId with optional etag.
         // If the etag is included and it doesn't match, the delete will fail.
         //
         serviceClient.deleteIndividualEnrollment(firstEnrollmentResponse.registrationId, 'badetag', function(err) {
