@@ -32,7 +32,7 @@
   "scripts": {
     "build": "echo \"Nothing to do\"",
     "lint": "jshint --show-non-errors .",
-    "e2e": "mocha --delay --reporter spec e2etests.js",
+    "e2e": "mocha --reporter spec e2etests.js",
     "service_client": "mocha --reporter spec test/service.js",
     "registry_tests": "mocha  --reporter spec  test/registry.js",
     "authentication_tests": "mocha --reporter spec test/authentication.js",
