@@ -461,15 +461,6 @@ describe('Mqtt', function () {
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_MQTT_18_026: [When `MqttBase` fires the `close` event, the `Mqtt` object shall emit a `disconnect` event.]*/
-    it('emits a \'disconnect\' event when it receives a \'close\' event', function (testCallback) {
-      var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
-      mqtt.on('disconnect', testCallback);
-      mqtt.connect(function () {
-        fakeMqttBase.emit('close');
-      });
-    });
-
     /*Tests_SRS_NODE_DEVICE_MQTT_16_018: [The `connect` method shall call its callback immediately if `MqttBase` is already connected.]*/
     it('calls the callback immediately if already connected', function (testCallback) {
       var mqtt = new Mqtt(fakeConfig, fakeMqttBase);
