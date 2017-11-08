@@ -569,8 +569,7 @@ describe('MqttBase', function () {
       fakeMqtt.emit('connect');
     });
 
-    it('emits a NotConnectedError when the mqtt client emits an close', function (testCallback) {
-      var fakeError = new Error('fake');
+    it('emits a NotConnectedError when the mqtt client emits an close while connected', function (testCallback) {
       var fakeMqtt = new FakeMqtt();
       var mqttBase = new MqttBase('test', fakeMqtt);
       mqttBase.on('error', function (err) {
@@ -579,6 +578,25 @@ describe('MqttBase', function () {
       });
       mqttBase.connect(fakeConfig, function () {
         fakeMqtt.emit('close');
+      });
+      fakeMqtt.emit('connect');
+    });
+
+    it('swallows the close event if the client is already disconnecting', function (testCallback) {
+      var fakeMqtt = new FakeMqtt();
+      var disconnectCallback
+      fakeMqtt.end = sinon.stub().callsFake(function (force, callback) {
+        disconnectCallback = callback;
+        // blocks instead of calling its callback.
+      });
+      var mqttBase = new MqttBase('test', fakeMqtt);
+      mqttBase.on('error', function (err) {
+        assert.fail();
+      });
+      mqttBase.connect(fakeConfig, function () {
+        mqttBase.disconnect(testCallback);
+        fakeMqtt.emit('close');
+        disconnectCallback();
       });
       fakeMqtt.emit('connect');
     });

@@ -30,6 +30,11 @@ export class MqttBase extends EventEmitter {
       states: {
         disconnected: {
           _onEnter: (callback, err) => {
+            if (this._mqttClient) {
+              this._mqttClient.removeAllListeners();
+              this._mqttClient = undefined;
+            }
+
             if (callback) {
               callback(err);
             } else {
@@ -69,6 +74,10 @@ export class MqttBase extends EventEmitter {
         },
         connected: {
           _onEnter: (connectCallback, conack) => {
+            this._mqttClient.on('close', () => {
+              debug('close event received from mqtt.js client - no error');
+              this._fsm.handle('closeEvent');
+            });
             connectCallback(null, new results.Connected(conack));
           },
           connect: (callback) => callback(null, new results.Connected()),
@@ -93,6 +102,9 @@ export class MqttBase extends EventEmitter {
           },
           updateSharedAccessSignature: (callback) => {
             this._fsm.transition('reconnecting', callback);
+          },
+          closeEvent: () => {
+            this._fsm.transition('disconnected', undefined, new errors.NotConnectedError('Connection to the server has been closed.'));
           }
         },
         disconnecting: {
@@ -244,11 +256,6 @@ export class MqttBase extends EventEmitter {
       this._mqttClient.removeListener('close', closeCallback);
       this._mqttClient.removeListener('offline', offlineCallback);
       this._mqttClient.removeListener('disconnect', disconnectCallback);
-
-      this._mqttClient.on('close', () => {
-        debug('close event received from mqtt.js client - no error');
-        this._fsm.transition('disconnecting', undefined, new errors.NotConnectedError('Connection to the server has been closed.'));
-      });
 
       callback(null, connack);
     });

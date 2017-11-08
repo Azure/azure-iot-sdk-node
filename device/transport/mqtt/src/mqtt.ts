@@ -210,10 +210,6 @@ export class Mqtt extends EventEmitter implements Client.Transport {
               if (err) {
                 this._fsm.transition('disconnected', connectCallback, err);
               } else {
-                /* Codes_SRS_NODE_DEVICE_MQTT_18_026: When MqttTransport fires the close event, the Mqtt object shall emit a disconnect event */
-                this._mqtt.on('close', (err) => {
-                  this._fsm.transition('disconnected', null, err);
-                });
                 this._fsm.transition('connected', connectCallback, result);
               }
             });

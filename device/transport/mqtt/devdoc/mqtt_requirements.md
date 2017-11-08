@@ -69,7 +69,7 @@ The `connect` method initializes a connection to an IoT hub.
 
 **SRS_NODE_DEVICE_MQTT_12_004: [** The `connect` method shall call the `connect` method on `MqttBase`. **]**
 
-**SRS_NODE_DEVICE_MQTT_18_026: [** When `MqttBase` fires the `close` event, the `Mqtt` object shall emit a `disconnect` event. **]**
+**SRS_NODE_DEVICE_MQTT_18_026: [** When `MqttBase` fires the `error` event, the `Mqtt` object shall emit a `disconnect` event. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_018: [** The `connect` method shall call its callback immediately if `MqttBase` is already connected. **]**
 
