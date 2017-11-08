@@ -12,7 +12,6 @@ var deviceMqtt = require('azure-iot-device-mqtt');
 var deviceAmqp = require('azure-iot-device-amqp');
 var uuid = require('uuid');
 var assert = require('chai').assert;
-var DeviceIdentityHelper = require('./device_identity_helper.js');
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 

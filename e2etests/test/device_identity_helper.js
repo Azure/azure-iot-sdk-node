@@ -6,7 +6,6 @@
 var ConnectionString = require('azure-iothub').ConnectionString;
 var deviceSas = require('azure-iot-device').SharedAccessSignature;
 var anHourFromNow = require('azure-iot-common').anHourFromNow;
-var errors = require('azure-iot-common').errors;
 
 var uuid = require('uuid');
 
