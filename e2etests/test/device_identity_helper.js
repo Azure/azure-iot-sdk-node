@@ -194,7 +194,8 @@ module.exports = {
     createDeviceSafe('0000e2etest-delete-me-node-sas-' + uuid.v4(), createSASDevice, callback);
   },
   createDeviceWithX509CASignedCert: function (callback) {
-    createDeviceSafe('0000e2etest-delete-me-node-CACert-' + uuid.v4(), createCACertDevice, callback);
+    // max number of letters for this is
+    createDeviceSafe('00e2e-del-me-node-CACert-' + uuid.v4(), createCACertDevice, callback);
   },
   deleteDevice: deleteDevice
 };

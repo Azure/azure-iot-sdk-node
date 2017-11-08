@@ -24,15 +24,14 @@
   },
   "scripts": {
     "lint": "tslint --exclude ./samples --project . -c ../../tslint.json",
-    "typings": "typings install",
     "build": "tsc",
     "unittest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test.js",
     "alltest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test*.js",
     "unittest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test.js",
     "alltest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
-    "ci": "npm run typings && npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
-    "test": "npm run typings && npm -s run lint && npm -s run build && npm -s run unittest",
-    "check-cover": "istanbul check-coverage --statements 78 --branches 74 --lines 78 --functions 72",
+    "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
+    "test": "npm -s run lint && npm -s run build && npm -s run unittest",
+    "check-cover": "istanbul check-coverage --statements 77 --branches 72 --lines 77 --functions 72",
     "cover": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js"
   },
   "engines": {

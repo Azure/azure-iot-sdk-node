@@ -31,7 +31,7 @@
   "scripts": {
     "lint": "tslint --exclude ./samples --project . -c ../tslint.json",
     "typings": "typings install",
-    "build": "tsc",
+    "build": "npm run typings && tsc",
     "unittest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test.js",
     "alltest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test*.js",
     "unittest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test.js",
