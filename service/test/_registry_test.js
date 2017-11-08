@@ -10,9 +10,10 @@ var errors = require('azure-iot-common').errors;
 var Registry = require('../lib/registry.js').Registry;
 var Twin = require('../lib/twin.js').Twin;
 var Query = require('../lib/query.js').Query;
+var Device = require('../lib/device.js').Device;
 
 var fakeDevice = { deviceId: 'deviceId' };
-var normalizedFakeDevice = {
+var normalizedFakeSASDevice = {
   deviceId: 'deviceId',
   authentication: {
     type: 'sas',
@@ -225,14 +226,14 @@ describe('Registry', function() {
     }
     ] */
 
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request for a SAS device', function(testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.equal(method, 'PUT');
           assert.equal(path, '/devices/' + fakeDevice.deviceId + endpoint.versionQueryString());
           assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
-          assert.deepEqual(body, normalizedFakeDevice);
-          assert.notEqual(fakeDevice, normalizedFakeDevice);
+          assert.deepEqual(body, normalizedFakeSASDevice);
+          assert.notEqual(fakeDevice, normalizedFakeSASDevice);
 
           done();
         }
@@ -241,6 +242,20 @@ describe('Registry', function() {
       var registry = new Registry(fakeConfig, fakeHttpHelper);
       registry.create(fakeDevice, testCallback);
     });
+
+    it('defaults to SAS authentication when the device does not have at least one x509 thumbprint', function (testCallback) {
+      var fakeHttpHelper = {
+        executeApiCall: function (method, path, httpHeaders, body, done) {
+          assert.strictEqual(body.authentication.type, 'sas');
+          done();
+        }
+      };
+
+      var registry = new Registry(fakeConfig, fakeHttpHelper);
+      var fakeDevice = new Device(null);
+      fakeDevice.deviceId = 'fakeDevice';
+      registry.create(fakeDevice, testCallback);
+    })
   });
 
 
@@ -272,7 +287,7 @@ describe('Registry', function() {
           assert.equal(method, 'PUT');
           assert.equal(path, '/devices/' + fakeDevice.deviceId + endpoint.versionQueryString());
           assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
-          assert.deepEqual(body, normalizedFakeDevice);
+          assert.deepEqual(body, normalizedFakeSASDevice);
           done();
         }
       };
@@ -819,17 +834,17 @@ describe('Registry', function() {
       ]*/
       /* Tests_SRS_NODE_IOTHUB_REGISTRY_06_029: [** A device information with an authentication object that contains a `type` property is considered normalized.] */
       /* Tests_SRS_NODE_IOTHUB_REGISTRY_06_031: [A device information with an authentication object that doesn't contain the x509Thumbprint property will be normalized with a `type` property with value "sas".] */
-      /* Tests_SRS_NODE_IOTHUB_REGISTRY_06_030: [A device information with an authentication object that contains the x509Thumbprint property will be normalized with a `type` property with value "selfSigned".] */
+      /* Tests_SRS_NODE_IOTHUB_REGISTRY_06_030: [A device information with an authentication object that contains the x509Thumbprint property with at least one of `primaryThumbprint` or `secondaryThumbprint` sub-properties will be normalized with a `type` property with value "selfSigned".] */
       it('constructs a valid HTTP request', function(testCallback) {
         var addedDevices = [
           { deviceId: 'devicezero'},
-          { deviceId: 'deviceone', authentication: { x509Thumbprint: { primaryThumbprint: '' }}},
+          { deviceId: 'deviceone', authentication: { x509Thumbprint: { primaryThumbprint: 'abc' }}},
           { deviceId: 'devicetwo', authentication: { symmetricKey: { primaryKey: 'abc' }}},
           { deviceId: 'devicethree', authentication: { type: 'certificateAuthority' }},
         ];
         var sentBody = [
           { id: 'devicezero', importMode:'create', authentication: { type: 'sas', symmetricKey: { primaryKey: '', secondaryKey: '' }}},
-          { id: 'deviceone', importMode:'create', authentication: { type: 'selfSigned', x509Thumbprint: { primaryThumbprint: '' }}},
+          { id: 'deviceone', importMode:'create', authentication: { type: 'selfSigned', x509Thumbprint: { primaryThumbprint: 'abc' }}},
           { id: 'devicetwo', importMode:'create', authentication: { type: 'sas', symmetricKey: { primaryKey: 'abc' }}},
           { id: 'devicethree', importMode:'create', authentication: { type: 'certificateAuthority' }},
         ];

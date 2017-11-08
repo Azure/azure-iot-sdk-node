@@ -77,7 +77,7 @@ authentication : {
 
 **SRS_NODE_IOTHUB_REGISTRY_06_029: [** A device information with an authentication object that contains a `type` property is considered normalized. **]**
 
-**SRS_NODE_IOTHUB_REGISTRY_06_030: [** A device information with an authentication object that contains the x509Thumbprint property will be normalized with a `type` property with value "selfSigned". **]**
+**SRS_NODE_IOTHUB_REGISTRY_06_030: [** A device information with an authentication object that contains an `x509Thumbprint` property with at least one of `primaryThumbprint` or `secondaryThumbprint` sub-properties will be normalized with a `type` property with value "selfSigned". **]**
 
 **SRS_NODE_IOTHUB_REGISTRY_06_031: [** A device information with an authentication object that doesn't contain the x509Thumbprint property will be normalized with a `type` property with value "sas". **]**
 

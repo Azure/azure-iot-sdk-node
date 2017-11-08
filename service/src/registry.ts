@@ -715,12 +715,12 @@ export class Registry {
         };
     /* Codes_SRS_NODE_IOTHUB_REGISTRY_06_029: [** A device information with an authentication object that contains a `type` property is considered normalized.] */
     } else if (!deviceInfo.authentication.hasOwnProperty('type')) {
-      if (!deviceInfo.authentication.hasOwnProperty('x509Thumbprint')) {
+      if (deviceInfo.authentication.x509Thumbprint && (deviceInfo.authentication.x509Thumbprint.primaryThumbprint || deviceInfo.authentication.x509Thumbprint.secondaryThumbprint)) {
+        /* Codes_SRS_NODE_IOTHUB_REGISTRY_06_030: [A device information with an authentication object that contains the x509Thumbprint property with at least one of `primaryThumbprint` or `secondaryThumbprint` sub-properties will be normalized with a `type` property with value "selfSigned".] */
+        deviceInfo.authentication.type = 'selfSigned';
+      } else {
         /* Codes_SRS_NODE_IOTHUB_REGISTRY_06_031: [A device information with an authentication object that doesn't contain the x509Thumbprint property will be normalized with a `type` property with value "sas".] */
         deviceInfo.authentication.type = 'sas';
-      } else {
-        /* Codes_SRS_NODE_IOTHUB_REGISTRY_06_030: [A device information with an authentication object that contains the x509Thumbprint property will be normalized with a `type` property with value "selfSigned".] */
-        deviceInfo.authentication.type = 'selfSigned';
       }
     }
   }
