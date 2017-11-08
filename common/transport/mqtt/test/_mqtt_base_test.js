@@ -570,7 +570,6 @@ describe('MqttBase', function () {
     });
 
     it('emits a NotConnectedError when the mqtt client emits an close while connected', function (testCallback) {
-      var fakeError = new Error('fake');
       var fakeMqtt = new FakeMqtt();
       var mqttBase = new MqttBase('test', fakeMqtt);
       mqttBase.on('error', function (err) {
@@ -584,7 +583,6 @@ describe('MqttBase', function () {
     });
 
     it('swallows the close event if the client is already disconnecting', function (testCallback) {
-      var fakeError = new Error('fake');
       var fakeMqtt = new FakeMqtt();
       var disconnectCallback
       fakeMqtt.end = sinon.stub().callsFake(function (force, callback) {
