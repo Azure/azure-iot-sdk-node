@@ -32,8 +32,8 @@
     "lint": "jshint --show-non-errors .",
     "unittest-min": "echo \"No tests\"",
     "unittest": "echo \"No tests\"",
-    "alltest-min": "mocha --delay -i -g \"Imports then exports devices|device successfully uploads\" --reporter dot e2etests.js",
-    "alltest": "mocha --delay --reporter spec e2etests.js",
+    "alltest-min": "mocha -i -g \"Imports then exports devices|device successfully uploads\" --reporter dot e2etests.js",
+    "alltest": "mocha --reporter spec e2etests.js",
     "ci": "npm -s run lint && npm -s run alltest-min",
     "test": "npm -s run lint && npm -s run unittest"
   },
