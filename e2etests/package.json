@@ -50,7 +50,7 @@
     "authentication": "mocha --reporter spec test/authentication.js",
     "phase1": "npm-run-all -p -l registry file_upload sas_token_tests service d2c_disconnect c2d_disconnect throttle_disconnect twin_disconnect",
     "phase2": "npm-run-all -p -l method_disconnect upload_disconnect twin_e2e_tests device_method job_client authentication",
-    "alltest" : "npm run phase1 && npm run phase2",
+    "alltest": "npm run phase1 && npm run phase2",
     "ci": "npm -s run lint && npm -s run alltest",
     "test": "npm -s run lint && npm -s run alltest"
   },

@@ -7,12 +7,16 @@ import { ClientStateMachine } from './client_state_machine';
 import * as dbg from 'debug';
 const debug = dbg('azure-device-provisioning:device-client');
 
-export class ProvisioningDeviceClient implements Provisioning.ClientConfiguration {
+// tslint:disable-next-line:no-var-requires
+const packageJson = require('../package.json');
+
+export class ProvisioningDeviceClient implements Provisioning.ClientConfiguration {// tslint:disable-next-line:no-var-requires
+
 
   /**
    * User-Agent string passed to the service as part of communication
    */
-  userAgent: string = 'azure-iot-node-provisioning'; // TODO
+  userAgent: string = packageJson.name + '/' + packageJson.version;
 
   /**
    * Default interval for polling, to use in case service doesn't provide it to us.
