@@ -12,9 +12,32 @@ var Client = require('azure-iot-device').Client;
 var Message = require('azure-iot-common').Message;
 var SharedAccessSignature = require('azure-iot-device').SharedAccessSignature;
 var ConnectionString = require('azure-iot-device').ConnectionString;
+var DeviceIdentityHelper = require('./device_identity_helper.js');
 
-var runTests = function (hubConnectionString, deviceTransport, provisionedDevice) {
-  describe('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication and ' + deviceTransport.name, function () {
+var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+var transports  = [
+  require('azure-iot-device-amqp').Amqp,
+  require('azure-iot-device-amqp').AmqpWs,
+  require('azure-iot-device-mqtt').Mqtt,
+  require('azure-iot-device-mqtt').MqttWs,
+  require('azure-iot-device-http').Http
+];
+
+transports.forEach(function (deviceTransport) {
+  describe('Shared Access Signature renewal test over ' + deviceTransport.name, function () {
+    this.timeout(60000);
+    var provisionedDevice;
+
+    before(function (beforeCallback) {
+      DeviceIdentityHelper.createDeviceWithSymmetricKey(function (err, testDeviceInfo) {
+        provisionedDevice = testDeviceInfo;
+        beforeCallback(err);
+      });
+    });
+
+    after(function (afterCallback) {
+      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+    });
 
     function createTestMessage(body) {
       var msg = new Message(body);
@@ -34,7 +57,6 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
     }
 
     it('Renews SAS after connection and is still able to receive C2D messages', function (testCallback) {
-      this.timeout(60000);
       var beforeUpdateSas = uuid.v4();
       var afterUpdateSas = uuid.v4();
 
@@ -142,8 +164,4 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
 
     });
   });
-};
-
-module.exports = runTests;
-
-
+});

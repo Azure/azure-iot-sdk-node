@@ -13,13 +13,55 @@ var createDeviceClient = require('./testUtils.js').createDeviceClient;
 var closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
 var closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubClients;
 var eventHubClient = require('azure-event-hubs').Client;
+var DeviceIdentityHelper = require('./device_identity_helper.js');
+
+var deviceAmqp = require('azure-iot-device-amqp');
+var deviceMqtt = require('azure-iot-device-mqtt');
+var deviceHttp = require('azure-iot-device-http');
+
+var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 var maximumMessageSize = ((256*1024)-512);
 
-var runTests = function (hubConnectionString, deviceTransport, provisionedDevice) {
-  describe('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication, connected over ' + deviceTransport.name + ' using device/service clients c2d', function () {
+[
+  DeviceIdentityHelper.createDeviceWithSas,
+  DeviceIdentityHelper.createDeviceWithSymmetricKey,
+  DeviceIdentityHelper.createDeviceWithX509SelfSignedCert
+].forEach(function (createDeviceMethod) {
+  [
+    deviceHttp.Http,
+    deviceAmqp.Amqp,
+    deviceAmqp.AmqpWs,
+    deviceMqtt.Mqtt
+  ].forEach(function (deviceTransport) {
+    device_service_tests(deviceTransport, createDeviceMethod);
+  });
+});
+
+[
+  deviceAmqp.Amqp,
+  deviceMqtt.Mqtt
+].forEach(function (deviceTransport) {
+  device_service_tests(deviceTransport, DeviceIdentityHelper.createDeviceWithX509CASignedCert);
+});
+
+function device_service_tests(deviceTransport, createDeviceMethod) {
+  describe('Over ' + deviceTransport.name + ' using device/service clients c2d', function () {
+    this.timeout(20000);
 
     var serviceClient, deviceClient;
+    var provisionedDevice;
+
+    before(function (beforeCallback) {
+      createDeviceMethod(function (err, testDeviceInfo) {
+        provisionedDevice = testDeviceInfo;
+        beforeCallback(err);
+      });
+    });
+
+    after(function (afterCallback) {
+      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+    });
 
     beforeEach(function () {
       this.timeout(20000);
@@ -118,9 +160,22 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
     });
   });
 
-  describe('Device utilizing ' + provisionedDevice.authenticationDescription + ' authentication, connected over ' + deviceTransport.name + ' using device/eventhub clients - messaging', function () {
+  describe('Over ' + deviceTransport.name + ' using device/eventhub clients - messaging', function () {
+    this.timeout(20000);
 
     var deviceClient, ehClient;
+    var provisionedDevice;
+
+    before(function (beforeCallback) {
+      createDeviceMethod(function (err, testDeviceInfo) {
+        provisionedDevice = testDeviceInfo;
+        beforeCallback(err);
+      });
+    });
+
+    after(function (afterCallback) {
+      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+    });
 
     beforeEach(function () {
       this.timeout(20000);
@@ -204,6 +259,4 @@ var runTests = function (hubConnectionString, deviceTransport, provisionedDevice
               .catch(done);
           });
   });
-};
-
-module.exports = runTests;
+}

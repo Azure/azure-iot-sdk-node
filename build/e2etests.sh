@@ -42,6 +42,4 @@ cd $node_root/e2etests
 pwd
 eval $npm_command
 
-[ $? -eq 0 ] || cleanup_and_exit $?
-
 exit $?
