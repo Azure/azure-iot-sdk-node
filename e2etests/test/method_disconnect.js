@@ -120,6 +120,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
     var provisionedDevice;
 
     before(function (beforeCallback) {
+      this.timeout(20000);
       DeviceIdentityHelper.createDeviceWithSas(function (err, testDeviceInfo) {
         provisionedDevice = testDeviceInfo;
         beforeCallback(err);
@@ -127,6 +128,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     after(function (afterCallback) {
+      this.timeout(20000);
       DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
     });
 
