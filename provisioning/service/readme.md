@@ -17,7 +17,7 @@ You need to install the [Node.js][nodejs_lnk] JavaScript runtime environment to 
 
 ## Features
 
-* Create/remove/update/list enrollments and enrollment groups in your provisioning service
+* Create, update, delete, query, and get individual enrollments and enrollment groups in your provisioning service.  Additionally you can query, get and delete device registration states.
 
 ## How to use the Azure IoT Provisioning Service SDK for Node.js
 
@@ -35,8 +35,7 @@ var enrollment = {
   attestation: {
     type: 'tpm',
     tpm: {
-      endorsementKey: 'a',
-      storageRootKey: 'b'
+      endorsementKey: 'a'
     }
   }
 };

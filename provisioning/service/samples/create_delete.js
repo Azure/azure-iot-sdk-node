@@ -12,8 +12,7 @@ var enrollment1 = {
   attestation: {
     type: 'tpm',
     tpm: {
-      endorsementKey: 'a',
-      storageRootKey: 'b'
+      endorsementKey: 'a'
     }
   }
 };
@@ -23,8 +22,7 @@ var enrollment2 = {
   attestation: {
     type: 'tpm',
     tpm: {
-      endorsementKey: 'a',
-      storageRootKey: 'b'
+      endorsementKey: 'a'
     }
   }
 };
