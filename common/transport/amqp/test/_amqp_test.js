@@ -91,7 +91,7 @@ describe('Amqp', function () {
   });
 
   describe('#setDisconnectHandler', function() {
-    it('disconnect callback is called when the \'disconnected\' event is emitted', function(testCallback) {
+    it('disconnect callback is called when the \'disconnected\' event is emitted while connected', function(testCallback) {
       var amqp = new Amqp();
       sinon.stub(amqp._amqp, 'connect').resolves();
       amqp.setDisconnectHandler(function() {
@@ -99,6 +99,40 @@ describe('Amqp', function () {
       });
       amqp.connect('uri', null, function () {
         amqp._amqp.emit('disconnected');
+      });
+    });
+
+    it('ignores the disconnected event if already disconnected', function (testCallback) {
+      var amqp = new Amqp();
+      amqp.setDisconnectHandler(function() {
+        assert.fail();
+      });
+      amqp._amqp.emit('disconnected');
+      testCallback();
+    });
+
+    it('ignores the disconnected event if fired while connecting', function (testCallback) {
+      var amqp = new Amqp();
+      sinon.stub(amqp._amqp, 'connect').callsFake(function () { return new Promise(function () {}); }); // will not resolve and block in the 'connecting' state
+      amqp.setDisconnectHandler(function() {
+        assert.fail();
+      });
+      amqp.connect('uri', undefined, function() {});
+      amqp._amqp.emit('disconnected');
+      testCallback();
+    });
+
+    it('ignores the disconnected event if fired while disconnecting', function (testCallback) {
+      var amqp = new Amqp();
+      sinon.stub(amqp._amqp, 'connect').resolves();
+      sinon.stub(amqp._amqp, 'disconnect').callsFake(function () { return new Promise(function () {}); }); // will not resolve and block in the 'disconnecting' state
+      amqp.setDisconnectHandler(function() {
+        assert.fail();
+      });
+      amqp.connect('uri', undefined, function() {
+        amqp.disconnect(function () { });
+        amqp._amqp.emit('disconnected');
+        testCallback();
       });
     });
   });

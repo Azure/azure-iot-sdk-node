@@ -95,6 +95,10 @@ export class Amqp {
       this._fsm.handle('amqpError', err);
     };
 
+    this._amqp.on('disconnected', () => {
+      this._fsm.handle('amqpDisconnected');
+    });
+
     this._fsm = new machina.Fsm({
       namespace: 'amqp-base',
       initialState: 'disconnected',
@@ -116,6 +120,7 @@ export class Amqp {
             debug('received an error while disconnected: maybe a bug: ' + (!!err ? err.toString() : 'callback called but falsy error object.'));
             callback();
           },
+          amqpDisconnected: () => debug('ignoring disconnected event while disconnected'),
           connect: (connectCallback) => {
             this._fsm.transition('connecting', connectCallback);
           },
@@ -168,12 +173,6 @@ export class Amqp {
             };
 
             this._amqp.on(_amqpClientError, connectErrorHandler);
-            this._amqp.on('disconnected', () => {
-              debug('amqp10Client disconnected while state machine is: ' + this._fsm.state);
-              if (this._fsm.state === 'connected') {
-                this._fsm.transition('disconnected', undefined, new errors.NotConnectedError('amqp10: connection closed'));
-              }
-            });
             this._amqp.connect(this.uri)
               .then((result) => {
                 debug('AMQP transport connected.');
@@ -189,6 +188,7 @@ export class Amqp {
               });
           },
           amqpError: (err, callback) => this._fsm.transition('disconnecting', callback, err),
+          amqpDisconnected: () => debug('ignoring disconnected event while connecting'),
           '*': () => this._fsm.deferUntilTransition()
         },
         connected: {
@@ -197,6 +197,7 @@ export class Amqp {
             this._safeCallback(connectCallback, null, new results.Connected(result));
           },
           amqpError: (err, callback) => this._fsm.transition('disconnecting', callback, err),
+          amqpDisconnected: () => this._fsm.transition('disconnected', undefined, new errors.NotConnectedError('amqp10: connection closed')),
           connect: (callback) => callback(null, new results.Connected()),
           disconnect: (disconnectCallback) => {
             this._fsm.transition('disconnecting', disconnectCallback);
@@ -325,7 +326,6 @@ export class Amqp {
               if (err) {
                 callback();
               } else {
-                this._amqp.removeAllListeners('disconnected');
                 /*Codes_SRS_NODE_COMMON_AMQP_16_004: [The disconnect method shall call the done callback when the application/service has been successfully disconnected from the service] */
                 this._amqp.disconnect().then(() => {
                   debug('amqp10 client cleanly disconnected');
@@ -379,6 +379,7 @@ export class Amqp {
               });
             });
           },
+          amqpDisconnected: () => debug('ignoring disconnected event while disconnecting'),
           '*': () => this._fsm.deferUntilTransition('disconnected')
         }
       }
