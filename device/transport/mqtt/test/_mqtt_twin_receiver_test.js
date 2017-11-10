@@ -110,7 +110,7 @@ describe('MqttTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_006: [** When a `response` event is emitted, the parameter shall be an object which contains `status`, `requestId` and `body` members **]**  */
     it ('has a parameter with an object with the correct properties', function(done) {
       receiver.on(MqttTwinReceiver.responseEvent, function(data) {
-        assert.isDefined(data.status);
+        assert.isNumber(data.status);
         assert.isDefined(data.$rid);
         assert.isDefined(data.body);
         done();
@@ -124,9 +124,9 @@ describe('MqttTwinReceiver', function () {
     /* Tests_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_013: [** The `body` parameter of the `response` event shall be the body of the received MQTT message **]**  */
     it ('parses the topic name correctly', function(done) {
       receiver.on(MqttTwinReceiver.responseEvent, function(data) {
-        assert.equal(data.status, 200);
-        assert.equal(data.$rid, 42);
-        assert.equal(data.body, 'fake_body');
+        assert.strictEqual(data.status, 200);
+        assert.strictEqual(data.$rid, '42');
+        assert.strictEqual(data.body, 'fake_body');
         done();
       });
       provider.fakeMessageFromService('$iothub/twin/res/200/?$rid=42', 'fake_body');

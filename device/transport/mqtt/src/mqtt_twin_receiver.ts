@@ -219,7 +219,7 @@ export class MqttTwinReceiver extends EventEmitter {
       /* Codes_SRS_NODE_DEVICE_MQTT_TWIN_RECEIVER_18_013: [** The `body` parameter of the `response` event shall be the body of the received MQTT message **]**  */
       const response = {
         'topic' : topic,
-        'status' : path[3],
+        'status' : Number(path[3]),
         '$rid' : query.$rid,
         'body' : message
       };
