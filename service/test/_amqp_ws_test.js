@@ -13,7 +13,6 @@ describe('AmqpWs', function() {
     it('inherits from `Amqp`', function() {
       var amqpWs = new AmqpWs({
         host: 'host',
-        hubName: 'hubName',
         keyName: 'keyName',
         sharedAccessSignature: 'sas'
       });
@@ -26,7 +25,6 @@ describe('AmqpWs', function() {
     it('calls the connect method on the base AMQP object with the correct URL', function() {
       var testConfig = {
         host: 'host',
-        hubName: 'hubName',
         keyName: 'keyName',
         sharedAccessSignature: 'sas'
       };

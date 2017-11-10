@@ -46,7 +46,6 @@ function getTranslatedError(err: Error, message: string): Error {
  */
 /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_001: [The Amqp constructor shall accept a config object with those 4 properties:
 host – (string) the fully-qualified DNS hostname of an IoT Hub
-hubName - (string) the name of the IoT Hub instance (without suffix such as .azure-devices.net).
 keyName – (string) the name of a key that can be used to communicate with the IoT Hub instance
 sharedAccessSignature – (string) the key associated with the key name.] */
 export class Amqp extends EventEmitter implements Client.Transport {

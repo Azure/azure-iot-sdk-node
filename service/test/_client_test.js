@@ -70,7 +70,6 @@ describe('Client', function () {
     /*Tests_SRS_NODE_IOTHUB_CLIENT_16_018: [The `fromSharedAccessSignature` method shall create a new transport instance and pass it a config object formed from the connection string given as argument.]*/
     it('correctly populates the config structure', function() {
       var client = Client.fromSharedAccessSignature(token);
-      assert.equal(client._transport._config.hubName, 'hubName');
       assert.equal(client._transport._config.host, 'hubName.azure-devices.net');
       assert.equal(client._transport._config.keyName, 'keyname');
       assert.equal(client._transport._config.sharedAccessSignature, token);

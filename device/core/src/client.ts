@@ -645,8 +645,7 @@ export class Client extends EventEmitter {
 
     let config: Client.Config = {
       host: cn.HostName,
-      deviceId: cn.DeviceId,
-      hubName: cn.HostName.split('.')[0]
+      deviceId: cn.DeviceId
     };
 
     if (cn.hasOwnProperty('SharedAccessKey')) {
@@ -681,7 +680,6 @@ export class Client extends EventEmitter {
     const config: Client.Config = {
       host: uriSegments[0],
       deviceId: uriSegments[uriSegments.length - 1],
-      hubName: uriSegments[0].split('.')[0],
       sharedAccessSignature: sharedAccessSignature
     };
 
@@ -705,9 +703,10 @@ export namespace Client {
      */
     host: string;
     /**
+     * @deprecated This is not used anywhere anymore.
      * Name of the Azure IoT hub. (The first section of the Azure IoT hub hostname)
      */
-    hubName: string;
+    hubName?: string;
     /**
      * If using symmetric key authentication, this is used to generate the shared access signature tokens used to authenticate the connection.
      */

@@ -20,7 +20,6 @@ var FakeBlobUploader = function() {
 
 var fakeConfig = {
   host: 'hub.host.com',
-  hubName: 'hub',
   sharedAccessSignature: 'sas',
   deviceId: 'deviceId'
 };
@@ -48,7 +47,7 @@ describe('BlobUploadClient', function() {
 
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_003: [If specified, `BlobUploadClient` shall use the `blobUploader` passed as a parameter instead of the default one.]*/
   });
-  
+
   describe('#updateSharedAccessSignature', function() {
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_011: [`updateSharedAccessSignature` shall update the value used by the `BlobUploadClient` instance to the value passed as an argument.]*/
     it('updates the shared access signature with the new one', function() {
@@ -173,7 +172,7 @@ describe('BlobUploadClient', function() {
       fakeFileUpload.getBlobSharedAccessSignature = function(blobName, sas, callback) {
         callback(null, fakeBlobInfo);
       };
-      
+
       fakeFileUpload.notifyUploadComplete = function(correlationId, result, sharedAccessSignature, callback) {
         callback(new Error('could not notify hub'));
       };
@@ -188,7 +187,7 @@ describe('BlobUploadClient', function() {
         done();
       });
     });
-    
+
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_010: [`uploadToBlob` shall call the `done` callback with no arguments if IoT Hub was successfully notified of the blob upload outcome, regardless of the success state of the transfer itself.]*/
     it('calls the done callback with no arguments if the upload as completed successfully and IoT Hub has been notified.', function(done) {
       var fakeStream = new stream.Readable();
@@ -207,7 +206,7 @@ describe('BlobUploadClient', function() {
       fakeFileUpload.getBlobSharedAccessSignature = function(blobName, sas, callback) {
         callback(null, fakeBlobInfo);
       };
-      
+
       fakeFileUpload.notifyUploadComplete = function(correlationId, result, sharedAccessSignature, callback) {
         callback();
       };

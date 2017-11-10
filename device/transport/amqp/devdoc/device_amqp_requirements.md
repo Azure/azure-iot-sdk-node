@@ -53,7 +53,6 @@ amqp.on('errorReceived', function (err) {
 
 **SRS_NODE_DEVICE_AMQP_16_001: [**The Amqp constructor shall accept a config object with four properties:
 `host` – (string) the fully-qualified DNS hostname of an IoT Hub
-`hubName` - (string) the name of the IoT Hub instance (without suffix such as .azure-devices.net)
 `deviceId` – (string) the identifier of a device registered with the IoT Hub
 `sharedAccessSignature` – (string) the shared access signature associated with the device registration.**]**
 

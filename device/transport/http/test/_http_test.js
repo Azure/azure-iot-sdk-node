@@ -40,7 +40,7 @@ describe('Http', function () {
   var testCallback = function () { };
 
   beforeEach(function () {
-    transport = new Http({ host: 'hub.host.name', hubName: 'hub', deviceId: 'deviceId', sharedAccessSignature: 'sas.key' });
+    transport = new Http({ host: 'hub.host.name', deviceId: 'deviceId', sharedAccessSignature: 'sas.key' });
   });
 
   afterEach(function () {
@@ -251,13 +251,13 @@ describe('Http', function () {
 
     /*Tests_SRS_NODE_DEVICE_HTTP_16_005: [If `done` has been specified the `setOptions` method shall call the `done` callback with no arguments when successful.]*/
     it('calls the done callback with no arguments if successful', function(done) {
-      var transport = new Http({ host: 'hub.host.name', hubName: 'hub', deviceId: 'deviceId', sas: 'sas.key' });
+      var transport = new Http({ host: 'hub.host.name', deviceId: 'deviceId', sas: 'sas.key' });
       transport.setOptions(testOptions, done);
     });
 
     /*Tests_SRS_NODE_DEVICE_HTTP_16_010: [`setOptions` should not throw if `done` has not been specified.]*/
     it('does not throw if `done` is not specified', function() {
-      var transport = new Http({ host: 'hub.host.name', hubName: 'hub', deviceId: 'deviceId', sas: 'sas.key' });
+      var transport = new Http({ host: 'hub.host.name', deviceId: 'deviceId', sas: 'sas.key' });
       assert.doesNotThrow(function() {
         transport.setOptions({});
       });
@@ -268,7 +268,7 @@ describe('Http', function () {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_006: [The updateSharedAccessSignature method shall save the new shared access signature given as a parameter to its configuration.] */
     /*Codes_SRS_NODE_DEVICE_HTTP_16_007: [The updateSharedAccessSignature method shall call the `done` callback with a null error object and a SharedAccessSignatureUpdated object as a result, indicating that the client does not need to reestablish the transport connection.] */
     it('updates its configuration object with the new shared access signature', function(done) {
-      var transportWithoutReceiver = new Http({ host: 'hub.host.name', hubName: 'hub', deviceId: 'deviceId', sas: 'sas.key' });
+      var transportWithoutReceiver = new Http({ host: 'hub.host.name', deviceId: 'deviceId', sas: 'sas.key' });
       var newSas = 'newsas';
       transportWithoutReceiver.updateSharedAccessSignature(newSas, function(err, result) {
         if(err) {
@@ -287,7 +287,7 @@ describe('HttpReceiver', function () {
   describe('#receiveTimers', function () {
     var fakeHttp, receiver;
     beforeEach(function () {
-      var config = { deviceId: "deviceId", hubName: "hubName", host: "hubname.azure-devices.net", sharedAccessSignature: "sas" };
+      var config = { deviceId: "deviceId", host: "hubname.azure-devices.net", sharedAccessSignature: "sas" };
       fakeHttp = new FakeHttp();
       receiver = new Http(config, fakeHttp);
       this.clock = sinon.useFakeTimers();
@@ -369,7 +369,7 @@ describe('HttpReceiver', function () {
   describe('#receive', function () {
     /*Tests_SRS_NODE_DEVICE_HTTP_RECEIVER_16_023: [If opts.manualPolling is true, messages shall be received only when receive() is called]*/
     it('receives 1 message when receive() is called and drain is false', function (done) {
-      var config = { deviceId: "deviceId", hubName: "hubName", host: "hubname.azure-devices.net", sharedAccessSignature: "sas" };
+      var config = { deviceId: "deviceId", host: "hubname.azure-devices.net", sharedAccessSignature: "sas" };
       var fakeHttp = new FakeHttp();
       var receiver = new Http(config, fakeHttp);
       var msgCount = 5;
@@ -389,7 +389,7 @@ describe('HttpReceiver', function () {
     });
 
     it('receives all messages when receive() is called and drain is true', function (done) {
-      var config = { deviceId: "deviceId", hubName: "hubName", host: "hubname.azure-devices.net", sharedAccessSignature: "sas" };
+      var config = { deviceId: "deviceId", host: "hubname.azure-devices.net", sharedAccessSignature: "sas" };
       var fakeHttp = new FakeHttp();
       var receiver = new Http(config, fakeHttp);
       var msgCount = 5;
@@ -404,7 +404,7 @@ describe('HttpReceiver', function () {
     });
 
     it('emits messages only when all requests are done', function(done){
-      var config = { deviceId: "deviceId", hubName: "hubName", host: "hubname.azure-devices.net", sharedAccessSignature: "sas" };
+      var config = { deviceId: "deviceId", host: "hubname.azure-devices.net", sharedAccessSignature: "sas" };
       var fakeHttp = new FakeHttp();
       var requestsCount = 0;
       fakeHttp.buildRequest = function (method, path, httpHeaders, host, sslOptions, done) {
@@ -435,7 +435,7 @@ describe('HttpReceiver', function () {
   describe('#drain', function () {
     /*Tests_SRS_NODE_DEVICE_HTTP_RECEIVER_16_017: [If opts.drain is true all messages in the queue should be pulled at once.]*/
     it('drains the message queue', function (done) {
-      var config = { deviceId: "deviceId", hubName: "hubName", host: "hubname.azure-devices.net", sharedAccessSignature: "sas" };
+      var config = { deviceId: "deviceId", host: "hubname.azure-devices.net", sharedAccessSignature: "sas" };
       var fakeHttp = new FakeHttp();
       var receiver = new Http(config, fakeHttp);
       var msgCount = 5;
@@ -454,7 +454,7 @@ describe('HttpReceiver', function () {
     });
 
     it('emits an error if the HTTP error fails', function (testCallback) {
-      var config = { deviceId: "deviceId", hubName: "hubName", host: "hubname.azure-devices.net", sharedAccessSignature: "sas" };
+      var config = { deviceId: "deviceId", host: "hubname.azure-devices.net", sharedAccessSignature: "sas" };
       var fakeError = new Error();
       fakeError.statusCode = 500;
       var fakeHttp = {

@@ -12,7 +12,6 @@ import { Client } from './client';
  */
 /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_WS_16_001: [The `AmqpWs` constructor shall accept a config object with those four properties:
 - `host` – (string) the fully-qualified DNS hostname of an IoT Hub
-- `hubName` - (string) the name of the IoT Hub instance (without suffix such as .azure-devices.net).
 - `keyName` – (string) the name of a key that can be used to communicate with the IoT Hub instance
 - `sharedAccessSignature–` (string) the key associated with the key name.]*/
 /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_WS_16_002: [`AmqpWs` should inherit from `Amqp`.]*/

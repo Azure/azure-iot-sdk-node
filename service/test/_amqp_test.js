@@ -16,14 +16,12 @@ var AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
 
 var fakeConfig = {
   host: 'hub.host.name',
-  hubName: 'hub',
   keyName: 'keyName',
   sharedAccessSignature: 'SharedAccessSignature sr=a.hub.net&sig=1234&skn=keyName&se=1234'
 };
 
 var sasConfig = {
   host: 'hub.host.name',
-  hubName: 'hub',
   keyName: 'keyName',
   sharedAccessSignature: SharedAccessSignature.create('uri', 'name', 'key', 123)
 };
@@ -52,7 +50,6 @@ describe('Amqp', function() {
     var clock = this.clock;
     var renewingSasConfig = {
       host: 'hub.host.name',
-      hubName: 'hub',
       keyName: 'keyName',
       sharedAccessSignature: SharedAccessSignature.create('uri', 'name', 'key', 1)
     };

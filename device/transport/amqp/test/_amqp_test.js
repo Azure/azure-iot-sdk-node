@@ -23,9 +23,9 @@ describe('Amqp', function () {
   var testMessage = new Message();
   testMessage._transportObj = {};
   var testCallback = function () { };
-  var configWithSSLOptions = { host: 'hub.host.name', hubName: 'hub', deviceId: 'deviceId', x509: 'some SSL options' };
+  var configWithSSLOptions = { host: 'hub.host.name', deviceId: 'deviceId', x509: 'some SSL options' };
   var simpleSas = 'SharedAccessSignature sr=foo&sig=123&se=123';
-  var configWithSAS = { host: 'hub.host.name', hubName: 'hub', deviceId: 'deviceId', sharedAccessSignature: simpleSas};
+  var configWithSAS = { host: 'hub.host.name', deviceId: 'deviceId', sharedAccessSignature: simpleSas};
 
   beforeEach(function () {
     sender = new EventEmitter();

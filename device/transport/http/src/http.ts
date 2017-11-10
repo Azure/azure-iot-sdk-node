@@ -130,7 +130,6 @@ export class Http extends EventEmitter implements Client.Transport {
    * | Key     | Value                                                   |
    * |---------|---------------------------------------------------------|
    * | host    | The host URL of the Azure IoT Hub                       |
-   * | hubName | The name of the Azure IoT Hub                           |
    * | keyName | The identifier of the device that is being connected to |
    * | key     | The shared access key auth                              |
    *
@@ -212,7 +211,6 @@ export class Http extends EventEmitter implements Client.Transport {
    * | Key     | Value                                                   |
    * |---------|---------------------------------------------------------|
    * | host    | The host URL of the Azure IoT Hub                       |
-   * | hubName | The name of the Azure IoT Hub                           |
    * | keyName | The identifier of the device that is being connected to |
    * | key     | The shared access key auth                              |
    *

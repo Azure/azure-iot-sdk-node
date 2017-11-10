@@ -321,7 +321,6 @@ export class Client extends EventEmitter {
     const cn = ConnectionString.parse(connStr);
 
     const config: Client.TransportConfigOptions = {
-      hubName: cn.HostName.split('.', 1)[0],
       host: cn.HostName,
       keyName: cn.SharedAccessKeyName,
       sharedAccessSignature: SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, anHourFromNow())
@@ -359,7 +358,6 @@ export class Client extends EventEmitter {
 
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_018: [The `fromSharedAccessSignature` method shall create a new transport instance and pass it a config object formed from the connection string given as argument.]*/
     const config: Client.TransportConfigOptions = {
-      hubName: decodedUri.split('.', 1)[0],
       host: decodedUri,
       keyName: sas.skn,
       sharedAccessSignature: sas.toString()
@@ -374,9 +372,22 @@ export class Client extends EventEmitter {
 export namespace Client {
   export type Callback<T> = (err: Error, result?: T) => void;
   export interface TransportConfigOptions {
+    /**
+     * Hostname of the Azure IoT hub. (<IoT hub name>.azure-devices.net).
+     */
       host: string;
-      hubName: string;
+      /**
+       * @deprecated This is not used anywhere anymore.
+       * Name of the Azure IoT hub. (The first section of the Azure IoT hub hostname)
+       */
+      hubName?: string;
+      /**
+       * The name of the policy used to connect to the Azure IoT Hub service.
+       */
       keyName: string;
+      /**
+       * The shared access signature token used to authenticate the connection with the Azure IoT hub.
+       */
       sharedAccessSignature: string | SharedAccessSignature;
   }
 

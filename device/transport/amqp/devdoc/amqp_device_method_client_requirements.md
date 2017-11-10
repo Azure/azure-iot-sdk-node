@@ -14,7 +14,6 @@ var Amqp = require('azure-iot-device-amqp').Amqp;
 var config = {
   deviceId: '<deviceId>',
   host: '<host>',
-  hubName: '<hubName>',
   sharedAccessSignature: '<sas>'
 };
 

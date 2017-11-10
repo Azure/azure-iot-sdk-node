@@ -121,7 +121,6 @@ describe('Client', function () {
         this.on = function() {};
         assert.strictEqual(config.host, 'hubName.azure-devices.net');
         assert.strictEqual(config.deviceId, 'deviceId');
-        assert.strictEqual(config.hubName, 'hubName');
         assert.strictEqual(config.sharedAccessSignature, sharedAccessSignature);
       };
       Client.fromSharedAccessSignature(sharedAccessSignature, DummyTransport);
@@ -133,7 +132,6 @@ describe('Client', function () {
         this.on = function() {};
         assert.strictEqual(config.host, 'hubName.azure-devices.net');
         assert.strictEqual(config.deviceId, 'deviceId');
-        assert.strictEqual(config.hubName, 'hubName');
         assert.strictEqual(config.sharedAccessSignature, sharedAccessSignature);
       };
       Client.fromSharedAccessSignature(sharedAccessSignature, DummyTransport);
