@@ -57,6 +57,9 @@
       "directory": "device/core"
     },
     {
+      "directory": "service"
+    },
+    {
       "directory": "device/transport/mqtt"
     },
     {
@@ -64,9 +67,6 @@
     },
     {
       "directory": "device/transport/amqp"
-    },
-    {
-      "directory": "service"
     },
     {
       "directory": "e2etests",

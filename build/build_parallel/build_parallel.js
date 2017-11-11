@@ -84,15 +84,20 @@ var preprocessConfigFile = promisify(function (callback) {
     let project = config.projects[i];
     project.dependencies = [];
     project.consumers = [];
-    for (var dependency in project.packageJson.dependencies) {
-      if (project.packageJson.dependencies.hasOwnProperty(dependency)) {
-        if (!!tempProjectObject[dependency]) {
-          debug(project.name + ' depends on ' + dependency);
-          project.dependencies.push(tempProjectObject[dependency]);
-          tempProjectObject[dependency].consumers.push(project);
+    [
+      'dependencies',
+      'devDependencies'
+    ].forEach(function (dependencyList) {
+      for (var dependency in project.packageJson[dependencyList]) {
+        if (project.packageJson[dependencyList].hasOwnProperty(dependency)) {
+          if (!!tempProjectObject[dependency]) {
+            debug(project.name + ' depends on ' + dependency);
+            project.dependencies.push(tempProjectObject[dependency]);
+            tempProjectObject[dependency].consumers.push(project);
+          }
         }
       }
-    }
+    });
   }
   callback();
 });
@@ -152,7 +157,7 @@ var readyToRunTask = function (project) {
     return true;
   } else {
     // If we're not doing consumers first, we're doing dependencies first.  This is the
-    // normal case (build, teset, setup, etc).  We first do our dependencies, then we
+    // normal case (build, test, setup, etc).  We first do our dependencies, then we
     // do ourselves.
     for (let i = 0; i < project.dependencies.length; i++) {
       if (!project.dependencies[i].completed) {
