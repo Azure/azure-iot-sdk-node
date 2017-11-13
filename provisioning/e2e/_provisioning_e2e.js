@@ -12,8 +12,8 @@ var Http = require('azure-iot-provisioning-device-http').Http;
 var ProvisioningServiceClient = require('azure-iot-provisioning-service').ProvisioningServiceClient;
 var Registry = require('azure-iothub').Registry;
 
-var idScope = process.env.IOTHUB_PROVISIONING_IDSCOPE;
-var provisioningConnectionString = process.env.IOTHUB_PROVISIONING_CONNECTION_STRING;
+var idScope = process.env.IOT_PROVISIONING_IDSCOPE;
+var provisioningConnectionString = process.env.IOT_PROVISIONING_SERVICE_CONNECTION_STRING;
 var registryConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 var provisioningTransports = [ Http ];

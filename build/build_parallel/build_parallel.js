@@ -70,6 +70,8 @@ var preprocessConfigFile = promisify(function (callback) {
     project.fullpath = path.join(config.gitRoot, project.directory);
     project.packageJson = require(path.join(project.fullpath, 'package.json'));
     project.name = project.packageJson.name;
+    project.dependencies = [];
+    project.consumers = [];
     if (project['skip_' + config.task.name]) {
       project.runTask = false;
       debug('skipping ' + project.name);
@@ -82,8 +84,6 @@ var preprocessConfigFile = promisify(function (callback) {
   // In the second sweep. we build arrays of dependencies and consumers
   for (let i = 0; i < config.projects.length; i++) {
     let project = config.projects[i];
-    project.dependencies = [];
-    project.consumers = [];
     [
       'dependencies',
       'devDependencies'
@@ -270,7 +270,8 @@ initializeEnvironment()
   })
   .catch(err => {
     console.log();
-    console.log('job failed:' + err.toString());
+    console.log('job failed: ' + err.toString());
+    console.log(err.stack);
     exitCode = 1;
   })
   .then(() => {

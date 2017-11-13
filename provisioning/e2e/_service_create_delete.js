@@ -4,7 +4,6 @@
 'use strict';
 
 var assert = require('chai').assert;
-var debug = require('debug')('azure-device-provisioning-e2e');
 var uuid = require('uuid');
 
 

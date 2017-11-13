@@ -54,6 +54,12 @@
       "directory": "provisioning/transport/mqtt"
     },
     {
+      "directory": "provisioning/e2e",
+      "skip_build": true,
+      "skip_test": true,
+      "skip_ci": true
+    },
+    {
       "directory": "device/core"
     },
     {
