@@ -3,42 +3,42 @@
 
 'use strict';
 
-var TMPSecurityObject = require('../lib/tpm').TMPSecurityObject;
+var TpmSecurityClient  = require('../lib/tpm').TpmSecurityClient ;
 var assert = require('chai').assert;
 
 describe('tpm', function () {
   this.timeout(1000);
 
-  var obj = new TMPSecurityObject();
+  var obj = new TpmSecurityClient ();
 
-  describe('getEndoresementKey', function() {
+  describe('getEndorsementKey', function() {
     it ('throws', function() {
       assert.throws(function() {
-        obj.getEndoresementKey();
+        obj.getEndorsementKey();
       });
     });
   });
 
-  describe('getStorageKey', function() {
+  describe('getStorageRootKey', function() {
     it ('throws', function() {
       assert.throws(function() {
-        obj.getStorageKey();
+        obj.getStorageRootKey();
       });
     });
   });
 
-  describe('signData', function() {
+  describe('signWithIdentity', function() {
     it ('throws', function() {
       assert.throws(function() {
-        obj.signData();
+        obj.signWithIdentity();
       });
     });
   });
 
-  describe('activateSymetricIdentity', function() {
+  describe('activateSymmetricIdentity', function() {
     it ('throws', function() {
       assert.throws(function() {
-        obj.activateSymetricIdentity();
+        obj.activateSymmetricIdentity();
       });
     });
   });

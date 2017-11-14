@@ -4,20 +4,20 @@
 'use strict';
 import { errors } from 'azure-iot-common';
 
-export class TMPSecurityObject {
-  getEndoresementKey(callback: (err?: Error) => void): void {
+export class TpmSecurityClient  {
+  getEndorsementKey(callback: (err?: Error) => void): void {
     throw new errors.NotImplementedError();
   }
 
-  getStorageKey(callback: (err?: Error) => void): void {
+  getStorageRootKey(callback: (err?: Error) => void): void {
     throw new errors.NotImplementedError();
   }
 
-  signData(callback: (err?: Error) => void): void {
+  signWithIdentity(callback: (err?: Error) => void): void {
     throw new errors.NotImplementedError();
   }
 
-  activateSymetricIdentity(callback: (err?: Error) => void): void {
+  activateSymmetricIdentity(callback: (err?: Error) => void): void {
     throw new errors.NotImplementedError();
   }
 }

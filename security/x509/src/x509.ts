@@ -4,7 +4,7 @@
 'use strict';
 import { errors } from 'azure-iot-common';
 
-export class X509SecurityObject {
+export class X509SecurityClient {
   getCertificate(callback: (err?: Error, cert?: string) => void): void {
     throw new errors.NotImplementedError();
   }
