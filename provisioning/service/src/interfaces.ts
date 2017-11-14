@@ -65,6 +65,11 @@ export interface X509Attestation {
    * suitable for signing other certificates.
    */
   signingCertificates: X509Certificates;
+  /**
+   * Primary and secondary CA reference.  These will be names rather than
+   * actual certificates.
+   */
+  caReferences: X509CAReferences;
 }
 
 /**
@@ -145,10 +150,21 @@ export interface X509Certificates {
   secondary: X509CertificateWithInfo;
 }
 
+export interface X509CAReferences {
+  /**
+   * The name of the primary CA certificate.
+   */
+  primary: string;
+  /**
+   * The name of the secondary CA certificate.
+   */
+  secondary: string;
+}
+
 /**
  * Bulk operation
  */
-export interface BulkOperation {
+export interface BulkEnrollmentOperation {
   /**
    * The mode property specifies the operation that will be performed upon all
    * of the IndividualEnrollment elements in the enrollments property.
@@ -171,7 +187,7 @@ export type BulkOperationMode = 'create' | 'update' | 'updateIfMatchEtag' | 'del
 /**
  * Bulk operation result
  */
-export interface BulkOperationResult {
+export interface BulkEnrollmentOperationResult {
   /**
    * If isSuccessful is true then all CRUD operations for a bulkOperation
    * were successful.  Otherwise there will be at least one element in the
@@ -180,7 +196,7 @@ export interface BulkOperationResult {
   isSuccessful: boolean;
   /**
    * Will provide information as to why particular CRUD operations failed for
-   * a runBulkOperation invocation.  The array will be zero length if
+   * a runBulkEnrollmentOperation invocation.  The array will be zero length if
    * isSuccessful is true.
    */
   errors: Array<DeviceRegistrationOperationError>;
@@ -191,7 +207,7 @@ export interface BulkOperationResult {
  */
 export interface DeviceRegistrationOperationError {
   /**
-   * The id of the the IndividualEnrollment object that was in error during a runBulkOperation invocation.
+   * The id of the the IndividualEnrollment object that was in error during a runBulkEnrollmentOperation invocation.
    */
   registrationId: string;
   /**
@@ -284,7 +300,7 @@ export interface IndividualEnrollment {
   /**
    * The initial twin document that will be created for this device upon its provisioning.
    */
-  initialTwinState: TwinState;
+  initialTwin: InitialTwin;
   /**
    * An opaque value suitable to uniquely identify a particular generation
    * of this object for use during a CRUD operation.
@@ -332,7 +348,7 @@ export interface EnrollmentGroup {
   /**
    * The initial twin document that will be created for devices upon their provisioning.
    */
-  initialTwinState: TwinState;
+  initialTwin: InitialTwin;
   /**
    * An opaque value suitable to uniquely identify a particular generation
    * of this object for use during a CRUD operation.
@@ -372,7 +388,7 @@ export interface TwinCollection {
 /**
  * Device twin state.
  */
-export interface TwinState {
+export interface InitialTwin {
   tags: TwinCollection;
   properties: {
     desired: TwinCollection;

@@ -6,7 +6,7 @@
 import { errors, SharedAccessSignature, ConnectionString } from 'azure-iot-common';
 import { RestApiClient } from 'azure-iot-http-base';
 import { QuerySpecification, Query, QueryCallback } from './query';
-import { IndividualEnrollment, EnrollmentGroup, DeviceRegistrationState, BulkOperation, BulkOperationResult } from './interfaces';
+import { IndividualEnrollment, EnrollmentGroup, DeviceRegistrationState, BulkEnrollmentOperation, BulkEnrollmentOperationResult } from './interfaces';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -147,15 +147,15 @@ export class ProvisioningServiceClient {
   }
 
   /**
-   * @method           module:azure-iot-provisioning-service.ProvisioningServiceClient#runBulkOperation
+   * @method           module:azure-iot-provisioning-service.ProvisioningServiceClient#runBulkEnrollmentOperation
    * @description      Runs a number CRUD operations on an array of enrollment records.
-   * @param {object}   bulkOperation An object that specifies the single kind of CRUD operations on the array of IndividualEnrollment objects that are also part of the object.
+   * @param {object}   bulkEnrollmentOperation An object that specifies the single kind of CRUD operations on the array of IndividualEnrollment objects that are also part of the object.
    * @param {function} callback      Invoked upon completion of the operation.
    */
-  public runBulkOperation(bulkOperation: BulkOperation, callback?: (err: Error, bulkOperationResult?: BulkOperationResult, response?: any) => void): void {
-    /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_038: [The `runBulkOperation` method shall throw `ReferenceError` if the `bulkOperation` argument is falsy.] */
-    if (!bulkOperation) {
-      throw new ReferenceError('Required runBulkOperation property was null or undefined when calling bulkOperation.');
+  public runBulkEnrollmentOperation(bulkEnrollmentOperation: BulkEnrollmentOperation, callback?: (err: Error, bulkEnrollmentOperationResult?: BulkEnrollmentOperationResult, response?: any) => void): void {
+    /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_038: [The `runBulkEnrollmentOperation` method shall throw `ReferenceError` if the `bulkEnrollmentOperation` argument is falsy.] */
+    if (!bulkEnrollmentOperation) {
+      throw new ReferenceError('Required bulkEnrollmentOperation parameter was falsy when calling runBulkEnrollmentOperation.');
     }
 
     const path = this._enrollmentsPrefix + this._versionQueryString();
@@ -165,20 +165,20 @@ export class ProvisioningServiceClient {
       'Content-Type': 'application/json; charset=utf-8'
     };
 
-    /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_039: [** The `runBulkOperation` method shall construct an HTTP request using information supplied by the caller as follows:
+    /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_039: [** The `runBulkEnrollmentOperation` method shall construct an HTTP request using information supplied by the caller as follows:
       POST /enrollments?api-version=<version> HTTP/1.1
       Authorization: <sharedAccessSignature>
       Accept: application/json
       Content-Type: application/json; charset=utf-8
 
-      <stringified json string of the bulkOperation argument>
+      <stringified json string of the bulkEnrollmentOperation argument>
       ] */
-    this._restApiClient.executeApiCall('POST', path, httpHeaders, bulkOperation, (err, bulkOperationResult, httpResponse) => {
+    this._restApiClient.executeApiCall('POST', path, httpHeaders, bulkEnrollmentOperation, (err, bulkEnrollmentOperationResult, httpResponse) => {
       if (callback) {
         if (err) {
           callback(err);
         } else {
-          callback(null, bulkOperationResult, httpResponse);
+          callback(null, bulkEnrollmentOperationResult, httpResponse);
         }
       }
     });

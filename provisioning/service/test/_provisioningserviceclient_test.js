@@ -474,24 +474,24 @@ describe('ProvisioningServiceClient', function() {
   testGetAPI('getDeviceRegistrationState', '/registrations/');
 
 
-  describe('#runBulkOperation', function() {
-    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_038: [The `runBulkOperation` method shall throw `ReferenceError` if the `bulkOperation` argument is falsy.] */
+  describe('#runBulkEnrollmentOperation', function() {
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_038: [The `runBulkEnrollmentOperation` method shall throw `ReferenceError` if the `bulkEnrollmentOperation` argument is falsy.] */
     [undefined, null].forEach(function(bo) {
-      testFalsyArg('runBulkOperation', 'bulkOperation', bo, ReferenceError);
+      testFalsyArg('runBulkEnrollmentOperation', 'bulkEnrollmentOperation', bo, ReferenceError);
     });
 
     var fakeBo = {mode: 'update', enrollments: [fakeEnrollment]};
-    testErrorCallback('runBulkOperation', fakeBo);
+    testErrorCallback('runBulkEnrollmentOperation', fakeBo);
 
-    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_039: [** The `runBulkOperation` method shall construct an HTTP request using information supplied by the caller as follows:
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_039: [** The `runBulkEnrollmentOperation` method shall construct an HTTP request using information supplied by the caller as follows:
       POST /enrollments?api-version=<version> HTTP/1.1
       Authorization: <sharedAccessSignature>
       Accept: application/json
       Content-Type: application/json; charset=utf-8
 
-      <stringified json string of the bulkOperation argument>
+      <stringified json string of the bulkEnrollmentOperation argument>
       ] */
-    it('Constructs a valid HTTP request for bulkOperation parameter', function(testCallback) {
+    it('Constructs a valid HTTP request for bulkEnrollmentOperation parameter', function(testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.equal(method, 'POST');
@@ -505,7 +505,7 @@ describe('ProvisioningServiceClient', function() {
       };
 
       var de = new ProvisioningServiceClient({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
-      de.runBulkOperation(fakeBo, testCallback);
+      de.runBulkEnrollmentOperation(fakeBo, testCallback);
     });
   });
 });
