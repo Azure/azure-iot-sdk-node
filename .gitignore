@@ -221,6 +221,9 @@ provisioning/transport/http/lib/
 provisioning/transport/mqtt/lib/
 provisioning/device/lib/
 
+security/x509/lib
+security/tpm/lib
+
 service/lib
 
 ts-e2e/lib

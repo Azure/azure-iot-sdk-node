@@ -79,6 +79,12 @@
       "skip_build": true,
       "skip_test": true,
       "skip_ci": true
+    },
+    {
+      "directory": "security/x509"
+    },
+    {
+      "directory": "security/tpm"
     }
   ]
 }
