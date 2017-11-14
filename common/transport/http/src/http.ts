@@ -4,10 +4,15 @@
 'use strict';
 
 import { ClientRequest, IncomingMessage } from 'http';
-import { request, RequestOptions } from 'https';
+import { Agent, request, RequestOptions } from 'https';
 import { Message, X509 } from 'azure-iot-common';
 import dbg = require('debug');
 const debug = dbg('azure-iot-common.Http');
+
+/**
+ * @private
+ */
+const keepAliveAgent = new Agent({ keepAlive: true });
 
 /**
  * @private
@@ -62,7 +67,8 @@ export class Http {
       host: host,
       path: path,
       method: method,
-      headers: httpHeaders
+      headers: httpHeaders,
+      agent: keepAliveAgent
     };
 
     /*Codes_SRS_NODE_HTTP_16_001: [If `x509Options` is specified, the certificate, key and passphrase in the structure shall be used to authenticate the connection.]*/
