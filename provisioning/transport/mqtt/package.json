@@ -7,7 +7,7 @@
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-mqtt-base": "1.2.2",
+    "azure-iot-mqtt-base": "1.2.3",
     "azure-iot-common": "1.2.2",
     "azure-iot-provisioning-device": "0.0.1",
     "debug": "^3.0.1",
