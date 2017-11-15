@@ -35,7 +35,7 @@ export interface TpmAttestation {
    * security hardware, generally at the time of manufacture. This private portion of the endorsement key is never
    * released outside of the TPM. The public portion of the endorsement key helps to recognize a genuine TPM.
    *
-   * The endorsement key is a base64 encoded.
+   * The endorsement key is a base64 encoded value.
    */
   endorsementKey: string;
   /**

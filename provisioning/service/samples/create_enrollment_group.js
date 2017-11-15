@@ -9,13 +9,13 @@ var provisioningServiceClient = require('azure-iot-provisioning-service').Provis
 var serviceClient = provisioningServiceClient.fromConnectionString(process.argv[2]);
 
 var enrollment = {
-  registrationId: 'first',
+  enrollmentGroupId: 'first',
   attestation: {
     type: 'x509',
     x509: {
       signingCertificates: {
         primary: {
-          certificate: fs.readFileSync(process.argv[2], 'utf-8').toString()
+          certificate: fs.readFileSync(process.argv[3], 'utf-8').toString()
         }
       }
     }
