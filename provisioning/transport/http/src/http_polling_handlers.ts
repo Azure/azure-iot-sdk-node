@@ -5,7 +5,7 @@
 
 import { RestApiClient, Http as Base } from 'azure-iot-http-base';
 import { SharedAccessSignature } from 'azure-iot-common';
-import * as Provisioning from 'azure-iot-provisioning-device';
+import { PollingTransportHandlers, ProvisioningDeviceConstants, ProvisioningAuthentication, ProvisioningTransportOptions } from 'azure-iot-provisioning-device';
 import * as dbg from 'debug';
 const debug = dbg('azure-device-provisioning:transport-http');
 
@@ -14,20 +14,21 @@ const _defaultHeaders = {
   'Content-Type' : 'application/json; charset=utf-8'
 };
 
-
-
-export class Http implements Provisioning.TransportHandlers {
-  private _config: Provisioning.ClientConfiguration;
+export class HttpPollingHandlers implements PollingTransportHandlers {
   private _restApiClient: RestApiClient;
   private _httpBase: Base;
-
+  private _idScope: number;
+  private _config: ProvisioningTransportOptions = {};
 
   /* Codes_SRS_NODE_PROVISIONING_HTTP_18_001: [ The `Http` constructor shall accept the following properties:
-  - `config` - a configuration object describing the connection to the service.
+  - `idScope` - the ID Scope value for the provisioning service
   - `httpBase` - an optional test implementation of azure-iot-http-base ] */
-  constructor(config?: Provisioning.ClientConfiguration,  httpBase?: Base) {
-    this._config = config;
+  constructor(idScope: number, httpBase?: Base) {
+    this._idScope = idScope;
     this._httpBase = httpBase || new Base();
+    this._config.pollingInterval = ProvisioningDeviceConstants.defaultPollingInterval;
+    this._config.timeoutInterval = ProvisioningDeviceConstants.defaultTimeoutInterval;
+    this._config.provisioningHost = ProvisioningDeviceConstants.defaultProvisioningHost;
   }
 
   endSession(callback: (err?: Error) => void): void {
@@ -35,21 +36,29 @@ export class Http implements Provisioning.TransportHandlers {
    callback();
   }
 
-  setClientConfig(config: Provisioning.ClientConfiguration): void {
-    this._config = config;
+  setTransportOptions(options: ProvisioningTransportOptions): void {
+    [
+      'pollingInterval',
+      'provisioningHost',
+      'timeoutInterval'
+    ].forEach((optionName) => {
+      if (options.hasOwnProperty(optionName)) {
+        this._config[optionName] = options[optionName];
+      }
+    });
   }
 
-  registrationRequest(registrationId: string, authorization: Provisioning.Authentication, requestBody: any, forceRegistration: boolean, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
+  registrationRequest(registrationId: string, authorization: ProvisioningAuthentication, requestBody: any, forceRegistration: boolean, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
 
     if ((authorization instanceof SharedAccessSignature) || (typeof authorization === 'string')) {
-      this._restApiClient = new RestApiClient({ 'host' : this._config.provisioningHost , 'sharedAccessSignature' : authorization},  this._config.userAgent, this._httpBase);
+      this._restApiClient = new RestApiClient({ 'host' : this._config.provisioningHost , 'sharedAccessSignature' : authorization},  ProvisioningDeviceConstants.userAgent, this._httpBase);
     } else {
-      this._restApiClient = new RestApiClient({ 'host' : this._config.provisioningHost , 'x509' : authorization}, this._config.userAgent, this._httpBase);
+      this._restApiClient = new RestApiClient({ 'host' : this._config.provisioningHost , 'x509' : authorization}, ProvisioningDeviceConstants.userAgent, this._httpBase);
     }
 
     /* update Codes_SRS_NODE_PROVISIONING_HTTP_18_009: [ `register` shall PUT the registration request to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/register' ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_005: [ The registration request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
-    let path: string = '/' + this._config.idScope + '/registrations/' + registrationId + '/register?api-version=' + this._config.apiVersion;
+    let path: string = '/' + this._idScope + '/registrations/' + registrationId + '/register?api-version=' + ProvisioningDeviceConstants.apiVersion;
 
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_008: [ If `forceRegistration` is specified, the registration request shall include this as a query string value named 'forceRegistration' ] */
     if (forceRegistration) {
@@ -84,7 +93,7 @@ export class Http implements Provisioning.TransportHandlers {
   queryOperationStatus(registrationId: string, operationId: string, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_022: [ operation status request polling shall be a GET operation sent to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/operations/{operationId}' ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_037: [ The operation status request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
-    let path: string = '/' + this._config.idScope + '/registrations/' + registrationId + '/operations/' + operationId + '?api-version=' + this._config.apiVersion;
+    let path: string = '/' + this._idScope + '/registrations/' + registrationId + '/operations/' + operationId + '?api-version=' + ProvisioningDeviceConstants.apiVersion;
 
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_020: [ The operation status request shall have the following in the Http header:
       Accept: application/json
@@ -111,10 +120,6 @@ export class Http implements Provisioning.TransportHandlers {
 
   getErrorResult(result: any): any {
     return new Error();
-  }
-
-  static createDeviceClient(idScope: string): Provisioning.ProvisioningDeviceClient {
-    return Provisioning.ProvisioningDeviceClient.create(new Http(), idScope);
   }
 
 }

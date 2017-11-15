@@ -1,4 +1,4 @@
-# client_state_machine Requirements
+# polling_state_machine Requirements
 
 ## Overview
 This module provides a state machine used by the ProvisioningDeviceClient to communicate with the Azure device provisioning service

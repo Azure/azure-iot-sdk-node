@@ -6,17 +6,17 @@
 import { EventEmitter } from 'events';
 import { errors } from 'azure-iot-common';
 import * as machina from 'machina';
-import * as Provisioning from './interfaces';
+import { ProvisioningAuthentication, PollingTransportHandlers } from './interfaces';
 import * as dbg from 'debug';
 const debug = dbg('azure-device-provisioning:transport-fsm');
 
-export class  ClientStateMachine extends EventEmitter {
+export class  PollingStateMachine extends EventEmitter {
   private _fsm: machina.Fsm;
   private _pollingTimer: any;
-  private _transport: Provisioning.TransportHandlers;
+  private _transport: PollingTransportHandlers;
   private _currentOperationCallback: any;
 
-  constructor(transport: Provisioning.TransportHandlers) {
+  constructor(transport: PollingTransportHandlers) {
     super();
 
     this._transport = transport;
@@ -54,7 +54,7 @@ export class  ClientStateMachine extends EventEmitter {
         },
         sendingRegistrationRequest: {
           _onEnter: (callback, registrationId, authorization, requestBody, forceRegistration) => {
-            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_012: [ `register` shall call `TransportHandlers.registrationRequest`. ] */
+            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_012: [ `register` shall call `PollingTransportHandlers.registrationRequest`. ] */
             this._currentOperationCallback = callback;
             this._transport.registrationRequest(registrationId, authorization, requestBody, forceRegistration, (err, body, result, pollingInterval) => {
               // Check if the operation is still pending before transitioning.  We might be in a different state now and we don't want to mess that up.
@@ -72,8 +72,8 @@ export class  ClientStateMachine extends EventEmitter {
         responseReceived: {
           _onEnter: (callback, err, registrationId, body, result, pollingInterval) => {
             if (err) {
-              /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_013: [ If `TransportHandlers.registrationRequest` fails, `register` shall fail. ] */
-              /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_019: [ If `TransportHandlers.queryOperationStatus` fails, `register` shall fail. ] */
+              /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_013: [ If `PollingTransportHandlers.registrationRequest` fails, `register` shall fail. ] */
+              /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_019: [ If `PollingTransportHandlers.queryOperationStatus` fails, `register` shall fail. ] */
               this._fsm.transition('responseError', callback, err);
             } else if (body) {
               debug('received response from service:' + JSON.stringify(body));
@@ -83,15 +83,15 @@ export class  ClientStateMachine extends EventEmitter {
                   break;
                 }
                 case 'assigning': {
-                  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_015: [ If `TransportHandlers.registrationRequest` succeeds with status==Assigning, it shall emit an 'operationStatus' event and begin polling for operation status requests. ] */
-                  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_021: [ If `TransportHandlers.queryOperationStatus` succeeds with status==Assigning, `register` shall emit an 'operationStatus' event and begin polling for operation status requests. ] */
+                  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_015: [ If `PollingTransportHandlers.registrationRequest` succeeds with status==Assigning, it shall emit an 'operationStatus' event and begin polling for operation status requests. ] */
+                  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_021: [ If `PollingTransportHandlers.queryOperationStatus` succeeds with status==Assigning, `register` shall emit an 'operationStatus' event and begin polling for operation status requests. ] */
                   this.emit('operationStatus', body);
                   this._fsm.transition('waitingToPoll', callback, registrationId, body.operationId, pollingInterval);
                   break;
                 }
                 default: {
-                  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_016: [ If `TransportHandlers.registrationRequest` succeeds returns with an unknown status, `register` shall fail with a `SyntaxError` and pass the response body and the protocol-specific result to the `callback`. ] */
-                  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_022: [ If `TransportHandlers.queryOperationStatus` succeeds with an unknown status, `register` shall fail with a `SyntaxError` and pass the response body and the protocol-specific result to the `callback`. ] */
+                  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_016: [ If `PollingTransportHandlers.registrationRequest` succeeds returns with an unknown status, `register` shall fail with a `SyntaxError` and pass the response body and the protocol-specific result to the `callback`. ] */
+                  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_022: [ If `PollingTransportHandlers.queryOperationStatus` succeeds with an unknown status, `register` shall fail with a `SyntaxError` and pass the response body and the protocol-specific result to the `callback`. ] */
                   let err = new SyntaxError('status is ' + body.status);
                   (err as any).result = result;
                   (err as any).body = body;
@@ -111,8 +111,8 @@ export class  ClientStateMachine extends EventEmitter {
         responseComplete: {
           _onEnter: (callback, body, result) => {
             this._currentOperationCallback = null;
-            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_014: [ If `TransportHandlers.registrationRequest` succeeds with status==Assigned, it shall emit an 'operationStatus' event and call `callback` with null, the response body, and the protocol-specific result. ] */
-            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_020: [ If `TransportHandlers.queryOperationStatus` succeeds with status==Assigned, `register` shall emit an 'operationStatus' event and complete and pass the body of the response and the protocol-spefic result to the `callback`. ] */
+            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_014: [ If `PollingTransportHandlers.registrationRequest` succeeds with status==Assigned, it shall emit an 'operationStatus' event and call `callback` with null, the response body, and the protocol-specific result. ] */
+            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_020: [ If `PollingTransportHandlers.queryOperationStatus` succeeds with status==Assigned, `register` shall emit an 'operationStatus' event and complete and pass the body of the response and the protocol-spefic result to the `callback`. ] */
             this.emit('operationStatus', body);
             this._fsm.transition('idle', callback, null, body, result);
           },
@@ -146,7 +146,7 @@ export class  ClientStateMachine extends EventEmitter {
         },
         polling: {
           _onEnter: (callback, registrationId, operationId, pollingInterval) => {
-            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_018: [ When the polling interval elapses, `register` shall call `TransportHandlers.queryOperationStatus`. ] */
+            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_018: [ When the polling interval elapses, `register` shall call `PollingTransportHandlers.queryOperationStatus`. ] */
             this._transport.queryOperationStatus(registrationId, operationId, (err, body, result, pollingInterval) => {
               // Check if the operation is still pending before transitioning.  We might be in a different state now and we don't want to mess that up.
               if (this._currentOperationCallback === callback) {
@@ -185,7 +185,7 @@ export class  ClientStateMachine extends EventEmitter {
     });
   }
 
-  register(registrationId: string, authorization: Provisioning.Authentication, requestBody: any, forceRegistration: boolean, callback: Provisioning.ResponseCallback): void {
+  register(registrationId: string, authorization: ProvisioningAuthentication, requestBody: any, forceRegistration: boolean, callback: (err?: Error, responseBody?: any, result?: any) => void): void {
     debug('register called for registrationId "' + registrationId + '"');
     this._fsm.handle('register', callback, registrationId, authorization, requestBody, forceRegistration);
   }

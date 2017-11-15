@@ -10,11 +10,11 @@ This module provides HTTP protocol support to communicate with the Azure device 
 
 ## Public Interface
 
-### constructor(idScope: string, registrationId: string) : void
+### constructor(idScope: number, httpBase?: Base)
 The `constructor` creates an Http transport object used to communicate with the Azure device provisioning service
 
 **SRS_NODE_PROVISIONING_HTTP_18_001: [** The `Http` constructor shall accept the following properties:
-  - `config` - a configuration object describing the connection to the service.
+  - `idScope` - the ID Scope value for the provisioning service
   - `httpBase` - an optional test implementation of azure-iot-http-base **]**
 
 

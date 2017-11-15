@@ -6,52 +6,31 @@
 import { SharedAccessSignature, X509 } from 'azure-iot-common';
 
 /**
- * @private
- * Callback for responses from the previsioning service
- */
-export type ResponseCallback = (err?: Error, response?: any) => void;
-
-/**
  * type defining the types of authentication we support
  */
-export type Authentication = string | X509 | SharedAccessSignature;
+export type ProvisioningAuthentication = string | X509 | SharedAccessSignature;
 
-export interface ClientConfiguration {
-  /**
-   * User-Agent string passed to the service as part of communication
-   */
-  userAgent: string;
-
+export interface ProvisioningTransportOptions {
   /**
    * Default interval for polling, to use in case service doesn't provide it to us.
    */
-  pollingInterval: number;
+  pollingInterval?: number;
 
   /**
    * Default host for the provisioning service
    */
-  provisioningHost: string;
-
-  /**
-   * apiVersion to use while communicating with service.
-   */
-  apiVersion: string;
+  provisioningHost?: string;
 
   /**
    * default timeout to use when communicating with the service
    */
-  timeoutInterval: number;
-
-  /**
-   * idScope to use when communicating with the provisioning service
-   */
-  idScope: string;
+  timeoutInterval?: number;
 }
 
 /**
  * Device configuration returned when registration is complete
  */
-export interface DeviceConfiguration {
+export interface ProvisioningDeviceConfiguration {
   iotHubUri: string;
   deviceId: string;
 }
@@ -59,8 +38,18 @@ export interface DeviceConfiguration {
 /**
  * Interface that all provisioning transports must implement in order to support the provisioning service
  */
-export interface TransportHandlers {
-  setClientConfig(config: ClientConfiguration): void;
+
+export interface ProvisioningTransportHandlersBase {
+  setTransportOptions(options: ProvisioningTransportOptions): void;
+  endSession(callback: (err?: Error) => void): void;
+}
+
+export interface ProvisioningTransportHandlersX509 extends ProvisioningTransportHandlersBase {
+  registerX509(registrationId: string, authorization: X509, forceRegistration: boolean, callback: (err?: Error, assignedHub?: string, deviceId?: string, body?: any, result?: any) => void): void;
+}
+
+export interface PollingTransportHandlers {
+  setTransportOptions(options: ProvisioningTransportOptions): void;
   registrationRequest(registrationId: string, authorization: SharedAccessSignature | X509 | string, requestBody: any, forceRegistration: boolean, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
   queryOperationStatus(registrationId: string, operationId: string, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
   endSession(callback: (err?: Error) => void): void;

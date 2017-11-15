@@ -3,7 +3,7 @@
 
 'use strict';
 
-var ClientStateMachine = require('../lib/client_state_machine').ClientStateMachine;
+var PollingStateMachine = require('../lib/polling_state_machine').PollingStateMachine;
 var sinon = require('sinon');
 var assert = require('chai').assert;
 
@@ -40,7 +40,7 @@ describe('state machine', function () {
 
   var makeNewMachine = function () {
     /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_001: [ The `constructor` shall accept no arguments ] */
-    var machine = new ClientStateMachine({
+    var machine = new PollingStateMachine({
       endSession: sinon.stub().callsArg(0),
       registrationRequest: registrationRequestReturnsAssigned(),
       queryOperationStatus: operationStatusReturnsAssigned(),

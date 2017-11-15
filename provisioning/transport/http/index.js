@@ -3,8 +3,6 @@
 
 'use strict';
 
-var Http = require('./lib/http.js').Http;
-
 /**
  * The `azure-iot-provisioning-http` module provides support for the HTTPS protocol to the Azure Device Provisoning Service.
  *
@@ -14,5 +12,5 @@ var Http = require('./lib/http.js').Http;
  */
 
 module.exports = {
-  Http: Http
+  Http: require('./lib/http_transport.js').Http
 };

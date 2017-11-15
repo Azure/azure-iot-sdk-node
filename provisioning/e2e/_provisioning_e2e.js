@@ -9,10 +9,12 @@ var uuid = require('uuid');
 var assert = require('chai').assert;
 var debug = require('debug')('azure-device-provisioning-e2e');
 var Http = require('azure-iot-provisioning-device-http').Http;
+var ProvisioningDeviceClient = require('azure-iot-provisioning-device').ProvisioningDeviceClient;
 var ProvisioningServiceClient = require('azure-iot-provisioning-service').ProvisioningServiceClient;
+var X509SecurityClient = require('azure-iot-security-x509').X509SecurityClient;
 var Registry = require('azure-iothub').Registry;
 
-var idScope = process.env.IOT_PROVISIONING_IDSCOPE;
+var idScope = process.env.IOT_PROVISIONING_DEVICE_IDSCOPE;
 var provisioningConnectionString = process.env.IOT_PROVISIONING_SERVICE_CONNECTION_STRING;
 var registryConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
@@ -80,7 +82,7 @@ describe('IoT Provisioning', function() {
       })
       .then(function() {
         debug('deleting device');
-        registry.delete(deviceId);
+        registry.deleteAsync(deviceId);
       })
       .catch(function() {
         debug('ignoring delete error');
@@ -118,9 +120,13 @@ describe('IoT Provisioning', function() {
       })
       .then(function() {
         debug('registering device');
-        var provisioningDeviceClient = Promise.promisifyAll(Transport.createDeviceClient(idScope));
-        return provisioningDeviceClient.registerAsync(registrationId, x509cert, false)
-          .then(function() {
+        var securityClient = new X509SecurityClient(x509cert);
+        var transport = new Transport(idScope);
+        var provisioningDeviceClient = Promise.promisifyAll(ProvisioningDeviceClient.create(transport, securityClient));
+        return provisioningDeviceClient.registerX509Async(registrationId, false)
+          .then(function(result) {
+            debug('success registering device');
+            debug(JSON.stringify(result,null,'  '));
             return provisioningDeviceClient.endSessionAsync();
           });
       })

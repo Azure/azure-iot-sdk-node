@@ -3,8 +3,6 @@
 
 'use strict';
 
-var Interface = require('./lib/interfaces');
-
 /**
  * The `azure-iot-provisioning-device` module provides access to the Azure Device Provisoning Service.
  *
@@ -13,11 +11,13 @@ var Interface = require('./lib/interfaces');
  */
 
 module.exports = {
-  ResponseCallback: Interface.ResponseCallback,
-  TransportHandlers: Interface.TransportHandlers,
-  Authentication: Interface.Authentication,
-  DeviceConfiguration: Interface.DeviceConfiguration,
-  ClientConfiguration: Interface.ClientConfiguration,
-  ClientStateMachine: require('./lib/client_state_machine').ClientStateMachine,
+  PollingTransportHandlers: require('./lib/interfaces').PollingTransportHandlers,
+  ProvisioningTransportOptions: require('./lib/interfaces').ProvisioningTransportOptions,
+  ProvisioningAuthentication: require('./lib/interfaces').ProvisioningAuthentication,
+  ProvisioningDeviceConfiguration: require('./lib/interfaces').ProvisioningDeviceConfiguration,
+  ProvisioningTransportHandlersBase: require('./lib/interfaces').ProvisioningTransportHandlersBase,
+  ProvisioningTransportHandlersX509: require('./lib/interfaces').ProvisioningTransportHandlersX509,
+  PollingStateMachine: require('./lib/polling_state_machine').PollingStateMachine,
   ProvisioningDeviceClient: require('./lib/client').ProvisioningDeviceClient,
+  ProvisioningDeviceConstants: require('./lib/constants').ProvisioningDeviceConstants,
 };

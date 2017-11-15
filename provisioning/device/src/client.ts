@@ -2,74 +2,53 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-import * as Provisioning from './interfaces';
-import { ClientStateMachine } from './client_state_machine';
+import { ProvisioningTransportHandlersX509, ProvisioningTransportHandlersBase, ProvisioningDeviceConfiguration } from './interfaces';
+import { errors } from 'azure-iot-common';
 import * as dbg from 'debug';
 const debug = dbg('azure-device-provisioning:device-client');
 
-// tslint:disable-next-line:no-var-requires
-const packageJson = require('../package.json');
+export class ProvisioningDeviceClient {
 
-export class ProvisioningDeviceClient implements Provisioning.ClientConfiguration {// tslint:disable-next-line:no-var-requires
+  private _transport: ProvisioningTransportHandlersBase;
+  private _securityClient: any;
 
-
-  /**
-   * User-Agent string passed to the service as part of communication
-   */
-  userAgent: string = packageJson.name + '/' + packageJson.version;
-
-  /**
-   * Default interval for polling, to use in case service doesn't provide it to us.
-   */
-  pollingInterval: number = 2000;
-
-  /**
-   * Default host for the provisioning service
-   */
-  provisioningHost: string = 'global.azure-devices-provisioning.net';
-
-  /**
-   * apiVersion to use while communicating with service.
-   */
-  apiVersion: string = '2017-08-31-preview';
-
-  /**
-   * default timeout to use when communicating with the service
-   */
-  timeoutInterval: number = 4000;
-
-  /**
-   * idScope to use when communicating with the provisioning service
-   */
-  idScope: string;
-
-  private _stateMachine: ClientStateMachine;
-
-  private constructor(transport: Provisioning.TransportHandlers, idScope: string) {
-    this.idScope = idScope;
-    transport.setClientConfig(this);
-    this._stateMachine = new ClientStateMachine(transport);
+  private constructor(transport: ProvisioningTransportHandlersBase, securityClient: any) {
+    this._transport = transport;
+    this._securityClient = securityClient;
   }
 
-  register(registrationId: string, authentication: Provisioning.Authentication, forceRegistration: boolean, callback: (err: Error, deviceConfig?: Provisioning.DeviceConfiguration) => void): void {
-    this._stateMachine.register(registrationId, authentication, {'registrationId' : registrationId}, forceRegistration, (err, response) => {
+  registerX509(registrationId: string, forceRegistration: boolean, callback: (err: Error, deviceConfig?: ProvisioningDeviceConfiguration) => void): void {
+    if (!((this._transport as any).registerX509)) {
+      throw new errors.InvalidOperationError('Transport does not support X509 authentication');
+    }
+    if (!((this._securityClient as any).getCertificate)) {
+      throw new errors.InvalidOperationError('Security Client does not support X509 authentication');
+    }
+
+    this._securityClient.getCertificate((err, cert)  => {
       if (err) {
-        debug('_stateMachine.register returned error');
-        debug(err.toString);
+        debug('security client returned error on cert acquisition');
         callback(err);
       } else {
-        let deviceConfig: Provisioning.DeviceConfiguration = {
-          iotHubUri: response.registrationStatus.assignedHub,
-          deviceId: response.registrationStatus.deviceId
-        };
-        callback(null, deviceConfig);
+        (this._transport as ProvisioningTransportHandlersX509).registerX509(registrationId, cert, forceRegistration, (err, assignedHub, deviceId) => {
+          if (err) {
+            debug('_stateMachine.register returned error');
+            debug(err.toString);
+            callback(err);
+          } else {
+            let deviceConfig: ProvisioningDeviceConfiguration = {
+              iotHubUri: assignedHub,
+              deviceId: deviceId
+            };
+            callback(null, deviceConfig);
+          }
+        });
       }
-
     });
   }
 
   endSession(callback: (err?: Error) => void): void {
-    this._stateMachine.endSession(callback);
+    this._transport.endSession(callback);
   }
 
   /**
@@ -78,8 +57,8 @@ export class ProvisioningDeviceClient implements Provisioning.ClientConfiguratio
    * @param transport Transport instance to use
    * @param idScope Scope ID assigned to the current provisioning service instance
    */
-  static create(transport: Provisioning.TransportHandlers, idScope: string): ProvisioningDeviceClient {
-    return new ProvisioningDeviceClient(transport, idScope);
+  static create(transport: ProvisioningTransportHandlersBase, securityClient: any): ProvisioningDeviceClient {
+    return new ProvisioningDeviceClient(transport, securityClient);
   }
 }
 
