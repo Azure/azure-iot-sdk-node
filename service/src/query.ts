@@ -68,7 +68,7 @@ export class Query {
         actualCallback(err);
       } else {
         /*Codes_SRS_NODE_SERVICE_QUERY_16_006: [The `next` method shall set the `Query.continuationToken` property to the `continuationToken` value of the query result.]*/
-        this.continuationToken = response.headers['x-ms-continuation'];
+        this.continuationToken = response.headers['x-ms-continuation'] as string;
 
         /*Codes_SRS_NODE_SERVICE_QUERY_16_013: [The `next` method shall set the `Query.hasMoreResults` property to `true` if the `continuationToken` property of the result object is not `null`.]*/
         /*Codes_SRS_NODE_SERVICE_QUERY_16_014: [The `next` method shall set the `Query.hasMoreResults` property to `false` if the `continuationToken` property of the result object is `null`.]*/

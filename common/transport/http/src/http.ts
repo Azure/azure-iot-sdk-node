@@ -116,25 +116,25 @@ export class Http {
         if (item.search('iothub-') !== -1) {
           if (item.toLowerCase() === 'iothub-messageid') {
             /*Codes_SRS_NODE_HTTP_05_007: [If the HTTP response has an 'iothub-messageid' header, it shall be saved as the messageId property on the created Message.]*/
-            msg.messageId = response.headers[item];
+            msg.messageId = response.headers[item] as any;
           } else if (item.toLowerCase() === 'iothub-to') {
             /*Codes_SRS_NODE_HTTP_05_008: [If the HTTP response has an 'iothub-to' header, it shall be saved as the to property on the created Message.]*/
-            msg.to = response.headers[item];
+            msg.to = response.headers[item] as any;
           } else if (item.toLowerCase() === 'iothub-expiry') {
             /*Codes_SRS_NODE_HTTP_05_009: [If the HTTP response has an 'iothub-expiry' header, it shall be saved as the expiryTimeUtc property on the created Message.]*/
-            msg.expiryTimeUtc = response.headers[item];
+            msg.expiryTimeUtc = response.headers[item] as any;
           } else if (item.toLowerCase() === 'iothub-correlationid') {
             /*Codes_SRS_NODE_HTTP_05_010: [If the HTTP response has an 'iothub-correlationid' header, it shall be saved as the correlationId property on the created Message.]*/
-            msg.correlationId = response.headers[item];
+            msg.correlationId = response.headers[item] as any;
           } else if (item.search('iothub-app-') !== -1) {
             /*Codes_SRS_NODE_HTTP_13_001: [ If the HTTP response has a header with the prefix iothub-app- then a new property with the header name and value as the key and value shall be added to the message. ]*/
-              msg.properties.add(item, response.headers[item]);
+              msg.properties.add(item, response.headers[item] as string);
           }
         } else if (item.toLowerCase() === 'etag') {
           /*Codes_SRS_NODE_HTTP_05_011: [If the HTTP response has an 'etag' header, it shall be saved as the lockToken property on the created Message, minus any surrounding quotes.]*/
           // Need to strip the quotes from the string
           const len = response.headers[item].length;
-          msg.lockToken = response.headers[item].substring(1, len - 1);
+          msg.lockToken = (response.headers[item] as string).substring(1, len - 1);
         }
       }
     }
