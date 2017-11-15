@@ -208,19 +208,19 @@ GET /registrations/<uri-encoded-id>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
 ``` **]**
 
-### runBulkOperation(bulkOperation, bulkOperationCallback)
-The `runBulkOperation` can perform CRUD operations on IndividualEnrollment objects in bulk.
+### runBulkEnrollmentOperation(bulkEnrollmentOperation, bulkEnrollmentOperationCallback)
+The `runBulkEnrollmentOperation` can perform CRUD operations on IndividualEnrollment objects in bulk.
 
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_038: [** The `runBulkOperation` method shall throw `ReferenceError` if the `bulkOperation` argument is falsy. **]**
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_038: [** The `runBulkEnrollmentOperation` method shall throw `ReferenceError` if the `bulkEnrollmentOperation` argument is falsy. **]**
 
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_039: [** The `runBulkOperation` method shall construct an HTTP request using information supplied by the caller as follows:
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_039: [** The `runBulkEnrollmentOperation` method shall construct an HTTP request using information supplied by the caller as follows:
 ```
 POST /enrollments?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
 Accept: application/json
 Content-Type: application/json; charset=utf-8
 
-<stringified json string of the bulkOperation argument>
+<stringified json string of the bulkEnrollmentOperation argument>
 ``` **]**
 
 ### Generic HTTP Requirements

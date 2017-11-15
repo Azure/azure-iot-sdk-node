@@ -64,7 +64,7 @@ export class Query {
       if (err) {
         actualCallback(err);
       } else {
-        this.continuationToken = response.headers['x-ms-continuation'];
+        this.continuationToken = response.headers['x-ms-continuation'] as string;
         this.hasMoreResults = this.continuationToken !== undefined;
 
         /*Codes_SRS_NODE_SERVICE_QUERY_16_007: [The `next` method shall call the `done` callback with a `null` error object, the results of the query and the response of the underlying transport if the request was successful.]*/
