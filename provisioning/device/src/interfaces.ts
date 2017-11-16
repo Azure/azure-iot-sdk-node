@@ -67,6 +67,39 @@ export interface TransportHandlers {
   getErrorResult(result: any): any;
 }
 
+export interface RegistrationClient {
+  register(callback: (err?: Error) => void): void;
+  cancel(callback: (err?: Error) => void): void;
+}
 
+export interface TpmRegistrationInfo {
+  registrationId: string;
+  endorsementKey: string;
+  storageRootKey: string;
+}
 
+export interface TpmRegistrationResult {
+  deviceId: string;
+  iotHubUri: string;
+  symmetricKey: string;
+}
 
+export interface TpmProvisioningTransport {
+  getAuthenticationChallenge(registrationInfo: TpmRegistrationInfo, callback: (err: Error, tpmChallenge?: TpmChallenge) => void): void;
+  register(registrationInfo: TpmRegistrationInfo, sasToken: string, callback: (err: Error, result?: TpmRegistrationResult) => void): void;
+  cancel(callback: (err: Error) => void): void;
+}
+
+export interface TpmSecurityClient {
+  getEndorsementKey(callback: (err: Error, endorsementKey?: string) => void): void;
+  getStorageRootKey(callback: (err: Error, storageRootKey?: string) => void): void;
+  signWithIdentity(toSign: string, callback: (err: Error, signedData?: string) => void): void;
+  activateIdentityKey(key: string, callback: (err: Error) => void): void;
+  cancel(callback: (err: Error) => void): void;
+}
+
+export interface TpmChallenge {
+  message: string;
+  authenticationKey: string;
+  keyName: string;
+}
