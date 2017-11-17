@@ -12,14 +12,20 @@ echo.
 echo -- Setting up build_parallel tool --
 cd %node-root%\build\build_parallel
 call npm install
+if errorlevel 1 goto :cleanup
 
 echo.
 echo -- setting up node_modules --
 call node build_parallel.js setup
+if errorlevel 1 goto :cleanup
 
 echo .
 echo -- Setting up links for build tools --
 cd %node-root%\build\tools
 call npm link azure-iothub
+if errorlevel 1 goto :cleanup
 call npm install
+if errorlevel 1 goto :cleanup
 
+:cleanup
+exit /b %ERRORLEVEL%
