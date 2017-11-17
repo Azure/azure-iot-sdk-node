@@ -3,7 +3,7 @@
 
 'use strict';
 
-var X509SecurityClient = require('../lib/x509').X509SecurityClient;
+var X509Security = require('../lib/x509').X509Security;
 var assert = require('chai').assert;
 
 var fakeCert = "fake certificate"
@@ -11,7 +11,7 @@ var fakeCert = "fake certificate"
 describe('x509', function () {
   this.timeout(1000);
 
-  var obj = new X509SecurityClient(fakeCert);
+  var obj = new X509Security(fakeCert);
 
   describe('getCertificate', function() {
     it ('returns the cert', function(callback) {

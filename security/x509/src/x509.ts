@@ -4,7 +4,7 @@
 'use strict';
 import { errors, X509 } from 'azure-iot-common';
 
-export class X509SecurityClient {
+export class X509Security {
   private _cert: X509;
 
   constructor(cert: X509) {

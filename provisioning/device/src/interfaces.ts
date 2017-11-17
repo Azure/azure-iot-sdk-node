@@ -8,8 +8,11 @@ import { SharedAccessSignature, X509 } from 'azure-iot-common';
 /**
  * type defining the types of authentication we support
  */
-export type ProvisioningAuthentication = string | X509 | SharedAccessSignature;
+export type ProvisioningAuthentication = X509 | SharedAccessSignature;
 
+/**
+ * Configuration options for provisioning transports.  Passed into the transport's setTransportOptions function.
+ */
 export interface ProvisioningTransportOptions {
   /**
    * Default interval for polling, to use in case service doesn't provide it to us.
@@ -28,26 +31,36 @@ export interface ProvisioningTransportOptions {
 }
 
 /**
- * Device configuration returned when registration is complete
+ * Device configuration returned when registration using X509 is complete
  */
-export interface ProvisioningDeviceConfiguration {
-  iotHubUri: string;
+export interface X509RegistrationResult {
+  /**
+   * deviceId for the provisioned device
+   */
   deviceId: string;
+  /**
+   * IoT Hub where the provisioned device is located
+   */
+  assignedHub: string;
 }
 
 /**
- * Interface that all provisioning transports must implement in order to support the provisioning service
+ * @private
  */
-
-export interface ProvisioningTransportHandlersBase {
+export interface X509ProvisioningTransport {
   setTransportOptions(options: ProvisioningTransportOptions): void;
   endSession(callback: (err?: Error) => void): void;
+  registerX509(registrationId: string, auth: X509, forceRegistration: boolean, callback: (err?: Error, registrationResult?: X509RegistrationResult, body?: any, result?: any) => void): void;
 }
 
-export interface ProvisioningTransportHandlersX509 extends ProvisioningTransportHandlersBase {
-  registerX509(registrationId: string, authorization: X509, forceRegistration: boolean, callback: (err?: Error, assignedHub?: string, deviceId?: string, body?: any, result?: any) => void): void;
+export interface X509SecurityClient {
+  getCertificate(callback: (err?: Error, cert?: X509) => void): void;
+  getCertificateChain(callback: (err?: Error, cert?: string) => void): void;
 }
 
+/**
+ * @private
+ */
 export interface PollingTransportHandlers {
   setTransportOptions(options: ProvisioningTransportOptions): void;
   registrationRequest(registrationId: string, authorization: SharedAccessSignature | X509 | string, requestBody: any, forceRegistration: boolean, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
@@ -56,29 +69,50 @@ export interface PollingTransportHandlers {
   getErrorResult(result: any): any;
 }
 
+/**
+ * Public API used to access the ProvisioningDeviceClient object
+ */
 export interface RegistrationClient {
-  register(callback: (err?: Error) => void): void;
+  /**
+   * Register the device with the provisioning service
+   */
+  register(registrationId: string, forceRegistration: boolean, callback: (err?: Error, result?: any) => void): void;
+  /**
+   * Cancel the registration process if it is in progress.
+   */
   cancel(callback: (err?: Error) => void): void;
 }
 
+/**
+ * @private
+ */
 export interface TpmRegistrationInfo {
   registrationId: string;
   endorsementKey: string;
   storageRootKey: string;
 }
 
+/**
+ * Device configuration returned when registration using TPM is complete
+ */
 export interface TpmRegistrationResult {
   deviceId: string;
-  iotHubUri: string;
+  assignedHub: string;
   symmetricKey: string;
 }
 
+/**
+ * @private
+ */
 export interface TpmProvisioningTransport {
   getAuthenticationChallenge(registrationInfo: TpmRegistrationInfo, callback: (err: Error, tpmChallenge?: TpmChallenge) => void): void;
   register(registrationInfo: TpmRegistrationInfo, sasToken: string, callback: (err: Error, result?: TpmRegistrationResult) => void): void;
   cancel(callback: (err: Error) => void): void;
 }
 
+/**
+ * Public API exposed by the TPM security client object.  This is only useful if you're writing your own security client.
+ */
 export interface TpmSecurityClient {
   getEndorsementKey(callback: (err: Error, endorsementKey?: string) => void): void;
   getStorageRootKey(callback: (err: Error, storageRootKey?: string) => void): void;
@@ -87,6 +121,9 @@ export interface TpmSecurityClient {
   cancel(callback: (err: Error) => void): void;
 }
 
+/**
+ * @private
+ */
 export interface TpmChallenge {
   message: string;
   authenticationKey: string;

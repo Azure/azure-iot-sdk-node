@@ -7,8 +7,7 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 var Http = require('../lib/http_transport.js').Http;
 var errors = require('azure-iot-common').errors;
-var Provisioning = require('azure-iot-provisioning-device');
-var ProvisioningDeviceConstants = Provisioning.ProvisioningDeviceConstants;
+var ProvisioningDeviceConstants = require('azure-iot-provisioning-device').ProvisioningDeviceConstants;
 
 describe('Http', function () {
   var fakeHost = "__fake_host__";
@@ -172,11 +171,11 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, assignedHub, deviceId, responseBody) {
+      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, registrationResult, responseBody) {
         assert.isNull(err);
         assert.equal(responseBody.status, 'Assigned');
-        assert.equal(assignedHub, 'fakeHub');
-        assert.equal(deviceId, 'fakeDeviceId');
+        assert.equal(registrationResult.assignedHub, 'fakeHub');
+        assert.equal(registrationResult.deviceId, 'fakeDeviceId');
         testCallback();
       });
     });
@@ -444,11 +443,11 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, assignedHub, deviceId, result) {
+      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, registrationResult, responseBody) {
         assert.isNull(err);
-        assert.equal(result.status, 'Assigned');
-        assert.equal(assignedHub, 'fakeHub');
-        assert.equal(deviceId, 'fakeDeviceId');
+        assert.equal(responseBody.status, 'Assigned');
+        assert.equal(registrationResult.assignedHub, 'fakeHub');
+        assert.equal(registrationResult.deviceId, 'fakeDeviceId');
         testCallback();
       });
     });

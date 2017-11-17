@@ -29,7 +29,7 @@ var enrollmentGroup = {
     x509: {
       signingCertificates: {
         primary: {
-          certificate: new Buffer(process.env.IOTHUB_CA_ROOT_CERT, 'base64').toString('ascii')
+          certificate: process.env.IOTHUB_CA_ROOT_CERT
         }
       }
     }

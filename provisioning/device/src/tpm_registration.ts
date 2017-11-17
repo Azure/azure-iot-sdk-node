@@ -189,7 +189,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
     });
   }
 
-  register(callback: (err?: Error) => void): void {
+  register(registrationId: string, forceRegistration: boolean, callback: (err?: Error, result?: any) => void): void {
     this._fsm.handle('register', callback);
   }
 

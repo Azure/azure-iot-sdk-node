@@ -5,11 +5,11 @@
 
 import { EventEmitter } from 'events';
 import { X509 } from 'azure-iot-common';
-import { ProvisioningTransportOptions, ProvisioningTransportHandlersX509, PollingStateMachine } from 'azure-iot-provisioning-device';
+import { ProvisioningTransportOptions, X509ProvisioningTransport, X509RegistrationResult, PollingStateMachine } from 'azure-iot-provisioning-device';
 import { Http as Base } from 'azure-iot-http-base';
 import { HttpPollingHandlers } from './http_polling_handlers';
 
-export class Http  extends EventEmitter implements ProvisioningTransportHandlersX509 {
+export class Http  extends EventEmitter implements X509ProvisioningTransport {
   private _stateMachine: PollingStateMachine;
   private _pollingHandlers: HttpPollingHandlers;
 
@@ -31,12 +31,16 @@ export class Http  extends EventEmitter implements ProvisioningTransportHandlers
     this._pollingHandlers.setTransportOptions(options);
   }
 
-  registerX509(registrationId: string, authorization: X509, forceRegistration: boolean, callback: (err?: Error, assignedHub?: string, deviceId?: string, responseBody?: any, result?: any) => void): void {
-    this._stateMachine.register(registrationId, authorization, {'registrationId' : registrationId}, forceRegistration, (err, responseBody, result) => {
+  registerX509(registrationId: string, auth: X509, forceRegistration: boolean, callback: (err?: Error, registrationResult?: X509RegistrationResult, body?: any, result?: any) => void): void {
+     this._stateMachine.register(registrationId, auth, {'registrationId' : registrationId}, forceRegistration, (err, responseBody, result) => {
       if (err) {
-        callback(err, null, null, responseBody, result );
+        callback(err, null, responseBody, result );
       } else {
-        callback(err, responseBody.registrationStatus.assignedHub, responseBody.registrationStatus.deviceId, responseBody, result);
+        let registrationResult: X509RegistrationResult = {
+          deviceId: responseBody.registrationStatus.deviceId,
+          assignedHub: responseBody.registrationStatus.assignedHub
+        };
+        callback(err, registrationResult, responseBody, result);
      }
     });
   }
