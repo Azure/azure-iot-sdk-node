@@ -75,8 +75,8 @@ describe('state machine', function () {
         machine._transport.registrationRequest = registrationRequestReturnsFailure();
         callRegisterWithDefaultArgs(function (err) {
           assert(!!err);
-          assert.equal(err.constructor.name, 'Error');
-          assert.equal(err.message, fakeErrorText);
+          assert.strictEqual(err.constructor.name, 'Error');
+          assert.strictEqual(err.message, fakeErrorText);
           testCallback();
         });
       });
@@ -85,7 +85,7 @@ describe('state machine', function () {
       it ('and returns success if it succeeds with status===\'Assigned\'', function (testCallback) {
         callRegisterWithDefaultArgs(function (err,responseBody) {
           assert(!err);
-          assert.equal(responseBody.status, 'Assigned');
+          assert.strictEqual(responseBody.status, 'Assigned');
           testCallback();
         });
       });
@@ -109,8 +109,8 @@ describe('state machine', function () {
         machine._transport.registrationRequest = registrationRequestReturnsBadResponse();
         callRegisterWithDefaultArgs(function (err) {
           assert(!!err);
-          assert.equal(err.constructor.name, 'SyntaxError');
-          assert.equal(err.message, 'status is ' + fakeBadStatus);
+          assert.strictEqual(err.constructor.name, 'SyntaxError');
+          assert.strictEqual(err.message, 'status is ' + fakeBadStatus);
           testCallback();
         });
       });
@@ -118,7 +118,7 @@ describe('state machine', function () {
       /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_014: [ If `TransportHandlers.registrationRequest` succeeds with status==Assigned, it shall emit an 'operationStatus' event and  call `callback` with null, the response body, and the protocol-specific result. ] */
       it ('and fires an operationStatus event if it succeeds', function (testCallback) {
         machine.on('operationStatus', function (body) {
-          assert.equal(body.status, 'Assigned');
+          assert.strictEqual(body.status, 'Assigned');
           testCallback();
         });
         callRegisterWithDefaultArgs(function () { });
@@ -137,8 +137,8 @@ describe('state machine', function () {
         callRegisterWithDefaultArgs(function (err) {
           assert(machine._transport.queryOperationStatus.calledOnce);
           assert(!!err);
-          assert.equal(err.constructor.name, 'Error');
-          assert.equal(err.message, fakeErrorText);
+          assert.strictEqual(err.constructor.name, 'Error');
+          assert.strictEqual(err.message, fakeErrorText);
           testCallback();
         });
       });
@@ -147,7 +147,7 @@ describe('state machine', function () {
       it ('and returns success if it succeeds with status===\'Assigned\'', function (testCallback) {
         callRegisterWithDefaultArgs(function (err, responseBody) {
           assert(!err);
-          assert.equal(responseBody.status, 'Assigned');
+          assert.strictEqual(responseBody.status, 'Assigned');
           testCallback();
         });
       });
@@ -158,7 +158,7 @@ describe('state machine', function () {
 
         callRegisterWithDefaultArgs(function (err, responseBody) {
           assert(!err);
-          assert.equal(responseBody.status, 'Assigned');
+          assert.strictEqual(responseBody.status, 'Assigned');
           assert(machine._transport.queryOperationStatus.calledTwice);
           testCallback();
         });
@@ -169,8 +169,8 @@ describe('state machine', function () {
         machine._transport.queryOperationStatus = operationStatusReturnsBadResponse();
         callRegisterWithDefaultArgs(function (err) {
           assert(!!err);
-          assert.equal(err.constructor.name, 'SyntaxError');
-          assert.equal(err.message, 'status is ' + fakeBadStatus);
+          assert.strictEqual(err.constructor.name, 'SyntaxError');
+          assert.strictEqual(err.message, 'status is ' + fakeBadStatus);
           testCallback();
         });
       });
@@ -196,7 +196,7 @@ describe('state machine', function () {
 
       setTimeout(function() {
         callRegisterWithDefaultArgs(function(err) {
-          assert.equal(err.constructor.name, 'InvalidOperationError');
+          assert.strictEqual(err.constructor.name, 'InvalidOperationError');
           testCallback();
         });
       },10);
@@ -211,7 +211,7 @@ describe('state machine', function () {
 
       setTimeout(function() {
         callRegisterWithDefaultArgs(function(err) {
-          assert.equal(err.constructor.name, 'InvalidOperationError');
+          assert.strictEqual(err.constructor.name, 'InvalidOperationError');
           testCallback();
         });
       },10);
@@ -227,7 +227,7 @@ describe('state machine', function () {
 
       setTimeout(function() {
         callRegisterWithDefaultArgs(function(err) {
-          assert.equal(err.constructor.name, 'InvalidOperationError');
+          assert.strictEqual(err.constructor.name, 'InvalidOperationError');
           testCallback();
         });
       },10);
@@ -271,7 +271,7 @@ describe('state machine', function () {
         callRegisterWithDefaultArgs(function(err) {
           registrationErr = err;
           assert(!!err);
-          assert.equal(err.constructor.name, 'OperationCancelledError');
+          assert.strictEqual(err.constructor.name, 'OperationCancelledError');
           assert(machine._transport.registrationRequest.calledOnce);
           assert.isFalse(machine._transport.queryOperationStatus.calledOnce);
         });
@@ -292,7 +292,7 @@ describe('state machine', function () {
         callRegisterWithDefaultArgs(function(err) {
           registrationErr = err;
           assert(!!err);
-          assert.equal(err.constructor.name, 'OperationCancelledError');
+          assert.strictEqual(err.constructor.name, 'OperationCancelledError');
           assert(machine._transport.registrationRequest.calledOnce);
           assert.isFalse(machine._transport.queryOperationStatus.calledOnce);
         });
@@ -316,7 +316,7 @@ describe('state machine', function () {
         callRegisterWithDefaultArgs(function(err) {
           registrationErr = err;
           assert(!!err);
-          assert.equal(err.constructor.name, 'OperationCancelledError');
+          assert.strictEqual(err.constructor.name, 'OperationCancelledError');
           assert(machine._transport.registrationRequest.calledOnce);
           assert(machine._transport.queryOperationStatus.calledOnce);
         });

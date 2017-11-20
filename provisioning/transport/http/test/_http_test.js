@@ -53,18 +53,18 @@ describe('Http', function () {
         /* Tests_SRS_NODE_PROVISIONING_HTTP_18_006: [ The registration request shall specify the following in the Http header:
           Accept: application/json
           Content-Type: application/json; charset=utf-8 ] */
-        assert.equal(httpHeaders['Accept'], 'application/json');
-        assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8')
+        assert.strictEqual(httpHeaders['Accept'], 'application/json');
+        assert.strictEqual(httpHeaders['Content-Type'], 'application/json; charset=utf-8')
 
         /* Tests_SRS_NODE_PROVISIONING_HTTP_18_007: [ If an `authorization` string is specifed, it shall be URL encoded and included in the Http Authorization header. ] */
-        assert.equal(httpHeaders['Authorization'], fakeAuthorization);
+        assert.strictEqual(httpHeaders['Authorization'], fakeAuthorization);
 
         /* Tests_SRS_NODE_PROVISIONING_HTTP_18_009: [ `register` shall PUT the registration request to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/register' ] */
         /* Tests_SRS_NODE_PROVISIONING_HTTP_18_005: [ The registration request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
         /* Tests_SRS_NODE_PROVISIONING_HTTP_18_008: [ If `forceRegistration` is specified, the registration request shall include this as a query string value named 'forceRegistration' ] */
-        assert.equal(method, 'PUT');
-        assert.equal(host, fakeHost);
-        assert.equal(path, '/' + fakeScope + '/registrations/' + fakeRegistrationId + '/register?api-version=' + fakeApiVersion + '&forceRegistration=true');
+        assert.strictEqual(method, 'PUT');
+        assert.strictEqual(host, fakeHost);
+        assert.strictEqual(path, '/' + fakeScope + '/registrations/' + fakeRegistrationId + '/register?api-version=' + fakeApiVersion + '&forceRegistration=true');
 
         done(null, fakeAssignedResponse);
 
@@ -73,7 +73,7 @@ describe('Http', function () {
 
       var http = makeNewTransport(fakeBase);
       http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err) {
-        assert.equal(null, err);
+        assert.strictEqual(null, err);
         testCallback();
       });
     });
@@ -106,7 +106,7 @@ describe('Http', function () {
       };
       var http = makeNewTransport(fakeBase);
       http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
-        assert.equal(fakeErrorString, err.message);
+        assert.strictEqual(fakeErrorString, err.message);
         testCallback();
       });
     });
@@ -173,9 +173,9 @@ describe('Http', function () {
       var http = makeNewTransport(fakeBase);
       http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, registrationResult, responseBody) {
         assert.isNull(err);
-        assert.equal(responseBody.status, 'Assigned');
-        assert.equal(registrationResult.assignedHub, 'fakeHub');
-        assert.equal(registrationResult.deviceId, 'fakeDeviceId');
+        assert.strictEqual(responseBody.status, 'Assigned');
+        assert.strictEqual(registrationResult.assignedHub, 'fakeHub');
+        assert.strictEqual(registrationResult.deviceId, 'fakeDeviceId');
         testCallback();
       });
     });
@@ -206,7 +206,7 @@ describe('Http', function () {
 
       var http = makeNewTransport(fakeBase);
       http.on('operationStatus', function(responseBody) {
-        assert.equal('Assigning', responseBody.status);
+        assert.strictEqual('Assigning', responseBody.status);
         process.nextTick(function() {
           http.endSession(function() {
             testCallback();
@@ -230,17 +230,17 @@ describe('Http', function () {
           /* Tests_SRS_NODE_PROVISIONING_HTTP_18_020: [ The operation status request shall have the following in the Http header:
             Accept: application/json
             Content-Type: application/json; charset=utf-8 ] */
-          assert.equal(httpHeaders['Accept'], 'application/json');
-          assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8')
+          assert.strictEqual(httpHeaders['Accept'], 'application/json');
+          assert.strictEqual(httpHeaders['Content-Type'], 'application/json; charset=utf-8')
 
           /* Tests_SRS_NODE_PROVISIONING_HTTP_18_021: [ If an `authorization` string is specifed, it shall be URL encoded and included in the Http Authorization header of the operation status request. ] */
-          assert.equal(httpHeaders['Authorization'], fakeAuthorization);
+          assert.strictEqual(httpHeaders['Authorization'], fakeAuthorization);
 
           /* Tests_SRS_NODE_PROVISIONING_HTTP_18_037: [ The operation status request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
           /* Tests_SRS_NODE_PROVISIONING_HTTP_18_022: [ operation status request polling shall be a GET operation sent to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/operations/{operationId}' ] */
-          assert.equal(method, 'GET');
-          assert.equal(host, fakeHost)
-          assert.equal(path, '/' + fakeScope + '/registrations/' + fakeRegistrationId + '/operations/' + fakeOperationId + '?api-version=' + fakeApiVersion);
+          assert.strictEqual(method, 'GET');
+          assert.strictEqual(host, fakeHost)
+          assert.strictEqual(path, '/' + fakeScope + '/registrations/' + fakeRegistrationId + '/operations/' + fakeOperationId + '?api-version=' + fakeApiVersion);
 
           process.nextTick(function() {
             http.endSession(function() {
@@ -379,7 +379,7 @@ describe('Http', function () {
       var http = makeNewTransport(fakeBase);
       http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
         assert.instanceOf(err, SyntaxError);
-        assert.equal('__FAKE_ERROR__', err.message)
+        assert.strictEqual('__FAKE_ERROR__', err.message)
         testCallback();
       });
     });
@@ -445,9 +445,9 @@ describe('Http', function () {
       var http = makeNewTransport(fakeBase);
       http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, registrationResult, responseBody) {
         assert.isNull(err);
-        assert.equal(responseBody.status, 'Assigned');
-        assert.equal(registrationResult.assignedHub, 'fakeHub');
-        assert.equal(registrationResult.deviceId, 'fakeDeviceId');
+        assert.strictEqual(responseBody.status, 'Assigned');
+        assert.strictEqual(registrationResult.assignedHub, 'fakeHub');
+        assert.strictEqual(registrationResult.deviceId, 'fakeDeviceId');
         testCallback();
       });
     });
@@ -470,7 +470,7 @@ describe('Http', function () {
       var http = makeNewTransport(fakeBase);
       var eventReceived = false;
       http.on('operationStatus', function(eventBody) {
-        assert.equal("Assigning",eventBody.status);
+        assert.strictEqual("Assigning",eventBody.status);
         if (eventBody.iteration === 2) {
           eventReceived = true;
           process.nextTick(function() {

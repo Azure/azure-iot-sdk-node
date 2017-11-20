@@ -82,7 +82,7 @@ describe('IoT Provisioning', function() {
       })
       .then(function() {
         debug('deleting device');
-        registry.deleteAsync(deviceId);
+        return registry.deleteAsync(deviceId);
       })
       .catch(function() {
         debug('ignoring delete error');
@@ -96,9 +96,9 @@ describe('IoT Provisioning', function() {
   var assertRegistrationStatus = function(registrationId, expectedStatus, expectedDeviceId) {
     return provisioningServiceClient.getIndividualEnrollmentAsync(registrationId)
       .then(function(enrollment) {
-        assert.equal(enrollment.registrationStatus.status, expectedStatus);
+        assert.strictEqual(enrollment.registrationStatus.status, expectedStatus);
         if (expectedDeviceId) {
-          assert.equal(enrollment.registrationStatus.deviceId, expectedDeviceId);
+          assert.strictEqual(enrollment.registrationStatus.deviceId, expectedDeviceId);
         }
       });
   };
@@ -140,7 +140,7 @@ describe('IoT Provisioning', function() {
       })
       .then(function(twin) {
         debug('asserting twin contents');
-        assert.equal(twin.properties.desired.testProp, registrationId + ' ' + deviceId);
+        assert.strictEqual(twin.properties.desired.testProp, registrationId + ' ' + deviceId);
         callback();
       })
       .catch(function(err) {
