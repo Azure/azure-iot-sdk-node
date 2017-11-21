@@ -44,7 +44,7 @@ $ node create_individual_enrollment.js "<the connection string for the Device Pr
 
 * For creating an EnrollmentGroup:
  
-If you already have a PEM or CER file that simply give the file name below on the command line "node create_enrollment_groupd.js ...".  If you need to create a PEM file there are command scripts in this [directory](https://github.com/Azure/azure-iot-sdk-c/tree/master/tools/CACertificates) that could be useful FOR TESTING.  Please see the md file in that directory [C SDK cert tools overview.](https://github.com/Azure/azure-iot-sdk-c/blob/master/tools/CACertificates/CACertificateOverview.md)
+If you already have a PEM or CER file then simply give the file name below on the command line "node create_enrollment_groupd.js ...".  If you need to create a PEM file there are command scripts in this [directory](https://github.com/Azure/azure-iot-sdk-c/tree/master/tools/CACertificates) that could be useful FOR TESTING.  Please see the md file in that directory [C SDK cert tools overview.](https://github.com/Azure/azure-iot-sdk-c/blob/master/tools/CACertificates/CACertificateOverview.md)
 
 ```
 $ npm install
