@@ -1,6 +1,6 @@
 # Samples for the Azure IoT Device Provisioning Service SDK for Node.js
 
-This file can be found in http://github.com/azure/azure-iot-sdk-node/provisioning/service/samples
+This file can be found in https://github.com/Azure/azure-iot-sdk-node/tree/master/provisioning/service/samples
 
 This folder contains simple samples showing how to use the various features of the Microsoft Azure IoT Device Provisioning Service from an application running JavaScript code.
 
