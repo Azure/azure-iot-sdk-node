@@ -55,7 +55,7 @@ var fakeRegistrationNoEtag = {
 };
 
 function _versionQueryString() {
-  return '?api-version=2017-08-31-preview';
+  return '?api-version=2017-11-15';
 }
 
 

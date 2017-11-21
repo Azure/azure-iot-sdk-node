@@ -199,13 +199,13 @@ export interface BulkEnrollmentOperationResult {
    * a runBulkEnrollmentOperation invocation.  The array will be zero length if
    * isSuccessful is true.
    */
-  errors: Array<DeviceRegistrationOperationError>;
+  errors: Array<BulkEnrollmentOperationError>;
 }
 
 /**
- * Device registration operation error
+ * Bulk enrollment operation error
  */
-export interface DeviceRegistrationOperationError {
+export interface BulkEnrollmentOperationError {
   /**
    * The id of the the IndividualEnrollment object that was in error during a runBulkEnrollmentOperation invocation.
    */

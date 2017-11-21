@@ -5,6 +5,7 @@
 
 var assert = require('chai').assert;
 var uuid = require('uuid');
+var pem = require('pem');
 
 
 var provisioningServiceClient = require('azure-iot-provisioning-service').ProvisioningServiceClient;
@@ -16,8 +17,7 @@ var enrollment = {
   attestation: {
     type: 'tpm',
     tpm: {
-      endorsementKey: 'a',
-      storageRootKey: 'b'
+      endorsementKey: "AToAAQALAAMAsgAgg3GXZ0SEs/gakMyNRqXXJP1S124GUgtk8qHaGzMUaaoABgCAAEMAEAgAAAAAAAEAtKEADl/sNRgmYAjP6gXmbccRaJoTnVixisUaek0OwAzFGN70xt9ZOYp6fhIwfcft3fdVKOrKpXYcTe72CGNkGJGlQz5ti9n2pQ0uJhcX8aefh4Onm7lVlUCQAVp1K0r6zI8vkEXWsBIvwvxk0eMJbFaq146kbTkJHIGczb89RkFH2TX+CgXeZOG9oXQzUNwktmTUacspamune5Wywc/ce8HsDFYchyUHogFhrZ/LPnzyTDXO8sSC5z5dvsUBtUME3iRYDyKgZOfBtmRMqQewD+4iH+ZEJjtsyJiWR8hFhyKROnOuqXfNFwjd5IcNU4wtlKO0cLyXmTOfQK6Da1pr5Q=="
     }
   }
 };
@@ -36,7 +36,8 @@ var enrollmentGroup = {
   }
 };
 
-var testDescription =   [{
+var testDescription =   [
+{
   deleteFunction: serviceClient.deleteIndividualEnrollment.bind(serviceClient),
   testDescription: 'IndividualEnrollment object',
   idPropertyName: 'registrationId',
