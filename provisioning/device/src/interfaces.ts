@@ -31,9 +31,9 @@ export interface ProvisioningTransportOptions {
 }
 
 /**
- * Device configuration returned when registration using X509 is complete
+ * Device configuration returned when registration is complete
  */
-export interface X509RegistrationResult {
+export interface RegistrationResult {
   /**
    * deviceId for the provisioned device
    */
@@ -50,7 +50,7 @@ export interface X509RegistrationResult {
 export interface X509ProvisioningTransport {
   setTransportOptions(options: ProvisioningTransportOptions): void;
   endSession(callback: (err?: Error) => void): void;
-  registerX509(registrationId: string, auth: X509, forceRegistration: boolean, callback: (err?: Error, registrationResult?: X509RegistrationResult, body?: any, result?: any) => void): void;
+  registerX509(registrationId: string, auth: X509, forceRegistration: boolean, callback: (err?: Error, registrationResult?: RegistrationResult, body?: any, result?: any) => void): void;
 }
 
 /**
@@ -109,9 +109,7 @@ export interface TpmRegistrationInfo {
 /**
  * Device configuration returned when registration using TPM is complete
  */
-export interface TpmRegistrationResult {
-  deviceId: string;
-  assignedHub: string;
+export interface TpmRegistrationResult extends RegistrationResult {
   symmetricKey: string;
 }
 

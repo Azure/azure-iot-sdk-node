@@ -14,7 +14,7 @@ module.exports = {
   PollingTransportHandlers: require('./lib/interfaces').PollingTransportHandlers,
   ProvisioningTransportOptions: require('./lib/interfaces').ProvisioningTransportOptions,
   ProvisioningAuthentication: require('./lib/interfaces').ProvisioningAuthentication,
-  X509RegistrationResult: require('./lib/interfaces').X509RegistrationResult,
+  RegistrationResult: require('./lib/interfaces').RegistrationResult,
   X509ProvisioningTransport: require('./lib/interfaces').X509ProvisioningTransport,
   PollingStateMachine: require('./lib/polling_state_machine').PollingStateMachine,
   ProvisioningDeviceClient: require('./lib/client').ProvisioningDeviceClient,
