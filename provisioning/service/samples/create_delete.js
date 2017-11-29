@@ -29,12 +29,12 @@ var enrollment2 = {
 
 serviceClient.createOrUpdateIndividualEnrollment(enrollment1, function(err, firstEnrollmentResponse) {
   if (err) {
-    console.log('error creating the first enrollment: ' + JSON.stringify(err));
+    console.log('error creating the first enrollment: ' + err);
   } else {
     console.log("enrollment record returned for first: " + JSON.stringify(firstEnrollmentResponse, null, 2));
     serviceClient.createOrUpdateIndividualEnrollment(enrollment2, function(err, secondEnrollmentResponse) {
       if (err) {
-        console.log('error creating the second enrollment: ' + JSON.stringify(err));
+        console.log('error creating the second enrollment: ' + err);
       } else {
         console.log("enrollment record returned for second: " + JSON.stringify(secondEnrollmentResponse, null, 2));
         //
@@ -45,11 +45,11 @@ serviceClient.createOrUpdateIndividualEnrollment(enrollment1, function(err, firs
           if (err) {
             serviceClient.deleteIndividualEnrollment(firstEnrollmentResponse.registrationId, firstEnrollmentResponse.etag, function(err) {
               if (err) {
-                console.log('error deleting the first enrollment: ' + JSON.stringify(err, null, 2));
+                console.log('error deleting the first enrollment: ' + err);
               } else {
                 serviceClient.deleteIndividualEnrollment(secondEnrollmentResponse, function(err) {
                   if (err) {
-                    console.log('error deleting the second enrollment: ' + JSON.stringify(err, null, 2));
+                    console.log('error deleting the second enrollment: ' + err);
                   }
                 });
               }

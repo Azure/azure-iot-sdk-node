@@ -25,7 +25,7 @@ var enrollment = {
 
 serviceClient.createOrUpdateEnrollmentGroup(enrollment, function(err, enrollmentResponse) {
   if (err) {
-    console.log('error creating the group enrollment: ' + JSON.stringify(err));
+    console.log('error creating the group enrollment: ' + err);
   } else {
     console.log("enrollment record returned: " + JSON.stringify(enrollmentResponse, null, 2));
   }
