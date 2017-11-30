@@ -32,6 +32,7 @@ The `createOrUpdateIndividualEnrollment` method adds a device enrollment.
 
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_009: [** The `createOrUpdateIndividualEnrollment` method shall throw `ReferenceError` if the `enrollment` argument is falsy.  **]**
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_011: [** The `createOrUpdateIndividualEnrollment` method shall throw `ArgumentError` if the `enrollment.registrationId` property is falsy. **]**
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_056: [** If the `enrollment` object contains an `etag` property it will be added as the value of the `If-Match` header of the http request. **]**
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_010: [** The `createOrUpdateIndividualEnrollment` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
 PUT /enrollments/<uri-encoded-enrollment.registrationId>?api-version=<version> HTTP/1.1
@@ -48,6 +49,7 @@ The `createOrUpdateEnrollmentGroup` method adds a device enrollment group.
 
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_012: [** The `createOrUpdateEnrollmentGroup` method shall throw `ReferenceError` if the `EnrollmentGroup` argument is falsy. **]**
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_013: [** `createOrUpdateEnrollmentGroup` method shall throw `ArgumentError` if the `enrollmentGroup.enrollmentGroupsId` property is falsy. **]**
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_055: [** If the `enrollmentGroup` object contains an `etag` property it will be added as the value of the `If-Match` header of the http request. **]**
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_014: [** The `createOrUpdateEnrollmentGroup` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
 PUT /enrollmentGroups/<uri-encoded-enrollmentGroup.enrollmentGroupsId>?api-version=<version> HTTP/1.1

@@ -87,7 +87,7 @@ export class Query {
    * @param {Function}    done                 The callback that will be called with either an Error object or
    *                                           the results of the query.
    */
-  nextAsTwin(continuationToken: string | Callback<Twin[]>, done: Callback<Twin[]>): void {
+  nextAsTwin(continuationToken: string | Callback<Twin[]>, done?: Callback<Twin[]>): void {
     /*Codes_SRS_NODE_SERVICE_QUERY_16_016: [If `continuationToken` is a function and `done` is undefined the `next` method shall assume that `continuationToken` is actually the callback and us it as such (see requirements associated with the `done` parameter)]*/
     if (typeof continuationToken === 'function' && !done) {
       done = continuationToken;

@@ -218,6 +218,28 @@ describe('ProvisioningServiceClient', function() {
       var de = new ProvisioningServiceClient({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
       de.createOrUpdateIndividualEnrollment(fakeEnrollmentNoEtag, testCallback);
     });
+
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_056: [If the `enrollment` object contains an `etag` property it will be added as the value of the `If-Match` header of the http request.] */
+    it('Add If-Match if etag property present', function(testCallback) {
+      var fakeHttpHelper = {
+        executeApiCall: function (method, path, httpHeaders, body, done) {
+          assert.equal(method, 'PUT');
+          assert.equal(path, '/enrollments/' + encodeURIComponent(fakeRegistrationId) + _versionQueryString());
+          assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
+          assert.equal(httpHeaders['Accept'], 'application/json');
+          assert.equal(httpHeaders['If-Match'], 'etag');
+          assert.equal(Object.keys(httpHeaders).length, 3,'Should be only three headers');
+          assert.deepEqual(body, fakeEnrollment);
+
+          done();
+        }
+      };
+
+      var de = new ProvisioningServiceClient({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
+      de.createOrUpdateIndividualEnrollment(fakeEnrollment, testCallback);
+    });
+
+
   });
 
   describe('#createOrUpdateEnrollmentGroup', function(){
@@ -260,6 +282,27 @@ describe('ProvisioningServiceClient', function() {
       var de = new ProvisioningServiceClient({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
       de.createOrUpdateEnrollmentGroup(fakeEnrollmentGroupNoEtag, testCallback);
     });
+
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_055: [If the `enrollmentGroup` object contains an `etag` property it will be added as the value of the `If-Match` header of the http request.] */
+    it('Add If-Match if etag property present', function(testCallback) {
+      var fakeHttpHelper = {
+        executeApiCall: function (method, path, httpHeaders, body, done) {
+          assert.equal(method, 'PUT');
+          assert.equal(path, '/enrollmentGroups/' + encodeURIComponent(fakeGroupId) + _versionQueryString());
+          assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
+          assert.equal(httpHeaders['Accept'], 'application/json');
+          assert.equal(httpHeaders['If-Match'], 'etag');
+          assert.equal(Object.keys(httpHeaders).length, 3,'Should be only three headers');
+          assert.deepEqual(body, fakeEnrollmentGroup);
+
+          done();
+        }
+      };
+
+      var de = new ProvisioningServiceClient({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
+      de.createOrUpdateEnrollmentGroup(fakeEnrollmentGroup, testCallback);
+    });
+
   });
 
   function testDeleteAPI(methodUnderTest, uriPath, falsyArgArgumentName, firstArgumentObject, firstArgumentObjectNoEtag, firstArgumentObjectIdPropertyName) {

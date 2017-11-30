@@ -245,6 +245,12 @@ export class ProvisioningServiceClient {
       'Accept': 'application/json',
       'Content-Type': 'application/json; charset=utf-8'
     };
+
+    /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_055: [If the `enrollmentGroup` object contains an `etag` property it will be added as the value of the `If-Match` header of the http request.] */
+    /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_056: [If the `enrollment` object contains an `etag` property it will be added as the value of the `If-Match` header of the http request.] */
+    if (enrollment.etag) {
+      httpHeaders['If-Match'] = enrollment.etag;
+    }
     /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_010: [The `createOrUpdateIndividualEnrollment` method shall construct an HTTP request using information supplied by the caller, as follows:
       PUT /enrollments/<uri-encoded-enrollment.registrationId>?api-version=<version> HTTP/1.1
       Authorization: <sharedAccessSignature>

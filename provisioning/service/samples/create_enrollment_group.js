@@ -19,7 +19,8 @@ var enrollment = {
         }
       }
     }
-  }
+  },
+  provisioningStatus: 'disabled'
 };
 
 
@@ -28,5 +29,13 @@ serviceClient.createOrUpdateEnrollmentGroup(enrollment, function(err, enrollment
     console.log('error creating the group enrollment: ' + err);
   } else {
     console.log("enrollment record returned: " + JSON.stringify(enrollmentResponse, null, 2));
+    enrollmentResponse.provisioningStatus = 'enabled';
+    serviceClient.createOrUpdateEnrollmentGroup(enrollmentResponse, function(err, enrollmentResponse) {
+      if (err) {
+        console.log('error updating the group enrollment: ' + err);
+      } else {
+        console.log("updated enrollment record returned: " + JSON.stringify(enrollmentResponse, null, 2));
+      }
+    });
   }
 });
