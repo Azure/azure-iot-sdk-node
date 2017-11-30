@@ -1,11 +1,13 @@
 {
-  "name": "azure-iot-provisioning-service-samples",
+  "name": "azure-iot-provisioning-device-samples",
   "version": "0.0.1",
-  "description": "Azure IoT SDK - Provisioning Service Client samples",
+  "description": "Azure IoT SDK - Provisioning Device Client samples",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "dependencies": {
-    "azure-iot-provisioning-service": "0.0.1-preview"
+    "azure-iot-provisioning-device": "0.0.1",
+    "azure-iot-provisioning-device-http": "0.0.1",
+    "azure-iot-security-x509": "0.0.1"
   },
   "scripts" : {
     "build": "echo nothing to do"

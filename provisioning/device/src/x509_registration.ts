@@ -32,11 +32,12 @@ export class X509Registration implements RegistrationClient {
         debug('security client returned error on cert acquisition');
         callback(err);
       } else {
-        this._transport.registerX509(registrationId, cert, forceRegistration, (err, result) => {
+        this._transport.registerX509(registrationId, cert, forceRegistration, (err, result, body) => {
           if (err) {
             debug('_stateMachine.register returned error');
             debug(err.toString);
-            callback(err);
+            debug(body);
+            callback(err, result);
           } else {
             callback(null, result);
           }

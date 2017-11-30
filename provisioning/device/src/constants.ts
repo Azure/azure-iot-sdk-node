@@ -6,6 +6,9 @@
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
 
+/**
+ * @private
+ */
 export class ProvisioningDeviceConstants {
   /**
    * User-Agent string passed to the service as part of communication

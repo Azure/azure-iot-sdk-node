@@ -53,8 +53,22 @@ export interface X509ProvisioningTransport {
   registerX509(registrationId: string, auth: X509, forceRegistration: boolean, callback: (err?: Error, registrationResult?: X509RegistrationResult, body?: any, result?: any) => void): void;
 }
 
+/**
+ * Public API exposed by the X509 security client object.  This is only useful if you're writing your own security client.
+ */
 export interface X509SecurityClient {
+  /**
+   * retrieve the X509 certificate
+   *
+   * @param callback called when the operation is complete
+   */
   getCertificate(callback: (err?: Error, cert?: X509) => void): void;
+
+  /**
+   * retrieve the X509 certificate chain
+   *
+   * @param callback called when the operation is copmlete
+   */
   getCertificateChain(callback: (err?: Error, cert?: string) => void): void;
 }
 
@@ -84,7 +98,7 @@ export interface RegistrationClient {
 }
 
 /**
- * @private
+ * Device configuration returned when registration using TPM is complete
  */
 export interface TpmRegistrationInfo {
   registrationId: string;
