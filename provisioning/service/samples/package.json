@@ -5,9 +5,9 @@
   "author": "Microsoft Corporation",
   "license": "MIT",
   "dependencies": {
-    "azure-iot-provisioning-service": "0.0.1-preview"
+    "azure-iot-provisioning-service": "1.0.0"
   },
-  "scripts" : {
+  "scripts": {
     "build": "echo nothing to do"
   },
   "engines": {
