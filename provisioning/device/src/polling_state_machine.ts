@@ -89,6 +89,13 @@ export class  PollingStateMachine extends EventEmitter {
                   this._fsm.transition('waitingToPoll', callback, registrationId, body.operationId, pollingInterval);
                   break;
                 }
+                case 'failed': {
+                  let err = new Error('registration failed');
+                  (err as any).result = result;
+                  (err as any).body = body;
+                  this._fsm.transition('responseError', callback, err, body, result);
+                  break;
+                }
                 default: {
                   /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_016: [ If `PollingTransportHandlers.registrationRequest` succeeds returns with an unknown status, `register` shall fail with a `SyntaxError` and pass the response body and the protocol-specific result to the `callback`. ] */
                   /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_022: [ If `PollingTransportHandlers.queryOperationStatus` succeeds with an unknown status, `register` shall fail with a `SyntaxError` and pass the response body and the protocol-specific result to the `callback`. ] */
