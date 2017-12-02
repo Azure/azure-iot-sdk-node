@@ -46,5 +46,11 @@ process_args $*
 cd $node_root/e2etests
 pwd
 eval $npm_command
+[ $? -eq 0 ] || cleanup_and_exit $?
+        
+cd $node_root/provisioning/e2e
+pwd
+eval $npm_command
+[ $? -eq 0 ] || cleanup_and_exit $?
 
 exit $?

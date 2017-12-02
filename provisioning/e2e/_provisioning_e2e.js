@@ -138,8 +138,8 @@ var X509Group = function() {
   this.initialize = function(callback) {
     debug('creating device cert');
     self._factoryCert = {
-        cert: new Buffer(process.env.IOTHUB_CA_ROOT_CERT,"base64").toString('ascii'),
-        key: new Buffer(process.env.IOTHUB_CA_ROOT_CERT_KEY,"base64").toString('ascii'),
+        cert: new Buffer(process.env.IOT_PROVISIONING_ROOT_CERT,"base64").toString('ascii'),
+        key: new Buffer(process.env.IOT_PROVISIONING_ROOT_CERT_KEY,"base64").toString('ascii'),
       };
     var deviceCertOptions = {
       commonName: self._registrationId,

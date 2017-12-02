@@ -5,6 +5,7 @@
 
 var assert = require('chai').assert;
 var uuid = require('uuid');
+var debug = require('debug')('azure-device-provisioning-e2e');
 
 var provisioningServiceClient = require('azure-iot-provisioning-service').ProvisioningServiceClient;
 
@@ -60,6 +61,9 @@ testSpecification.forEach(function(testConfiguration) {
     var enrollmentToDelete = {};
     after(function(done) {
       testConfiguration.deleteFunction(enrollmentToDelete, function(err) {
+        if (err) {
+          debug(err);
+        }
         assert.isNull(err,'Non null response from the delete AFTER create.');
         done();
       });
@@ -67,6 +71,9 @@ testSpecification.forEach(function(testConfiguration) {
     it(testConfiguration.testDescription, function(callback) {
       enrollmentToDelete = {};
       testConfiguration.createFunction(testConfiguration.enrollmentObject, function(err, returnedEnrollment) {
+        if (err) {
+          debug(err);
+        }
         assert.isNull(err,'Should be no error from the create');
         enrollmentToDelete = returnedEnrollment;
         callback();
@@ -81,6 +88,9 @@ testSpecification.forEach(function(testConfiguration) {
     var enrollmentToDelete = {};
     before(function(done) {
       testConfiguration.createFunction(testConfiguration.enrollmentObject, function(err, returnedEnrollment) {
+        if (err) {
+          debug(err);
+        }
         assert.isNull(err,'Should be no error from the BEFORE create');
         enrollmentToDelete = returnedEnrollment;
         done();
@@ -88,6 +98,9 @@ testSpecification.forEach(function(testConfiguration) {
     });
     it(testConfiguration.testDescription, function(callback) {
       testConfiguration.deleteFunction(enrollmentToDelete[testConfiguration.idPropertyName], enrollmentToDelete.etag, function(err) {
+        if (err) {
+          debug(err);
+        }
         assert.isNull(err,'Non null response from the delete.');
         enrollmentToDelete = {};
         callback();
@@ -103,6 +116,9 @@ testSpecification.forEach(function(testConfiguration) {
     var enrollmentToUpdate = {};
     before(function(done) {
       testConfiguration.createFunction(testConfiguration.enrollmentObject, function(err, returnedEnrollment) {
+        if (err) {
+          debug(err);
+        }
         assert.isNull(err,'Should be no error from the create');
         enrollmentToUpdate = returnedEnrollment;
         done();
@@ -110,6 +126,9 @@ testSpecification.forEach(function(testConfiguration) {
     });
     after(function(done) {
       testConfiguration.deleteFunction(enrollmentToDelete, function(err) {
+        if (err) {
+          debug(err);
+        }
         assert.isNull(err,'Non null response from the delete AFTER create.');
         done();
       });
@@ -118,6 +137,9 @@ testSpecification.forEach(function(testConfiguration) {
       enrollmentToDelete = {};
       enrollmentToUpdate.provisioningStatus = 'disabled';
       testConfiguration.updateFunction(enrollmentToUpdate, function(err, updatedEnrollment) {
+        if (err) {
+          debug(err);
+        }
         assert.isNull(err);
         assert.equal(updatedEnrollment.provisioningStatus, 'disabled', 'provsioning state not disabled');
         enrollmentToDelete = updatedEnrollment;
