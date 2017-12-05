@@ -13,7 +13,7 @@ describe('Http', function () {
   var fakeApiVersion = ProvisioningDeviceConstants.apiVersion;
   var fakeAgent = ProvisioningDeviceConstants.userAgent;
   var fakeErrorString = "__fake_error__";
-  var fakeAuthorization = '__authorization__';
+  var fakeAuth = '__authentication__';
   var fakeOperationId = "__operation_id__";
   var fakeRegRequest = {
     registrationId: '__registrationId__',
@@ -58,8 +58,8 @@ describe('Http', function () {
         assert.strictEqual(httpHeaders['Accept'], 'application/json');
         assert.strictEqual(httpHeaders['Content-Type'], 'application/json; charset=utf-8')
 
-        /* Tests_SRS_NODE_PROVISIONING_HTTP_18_007: [ If an `authorization` string is specifed, it shall be URL encoded and included in the Http Authorization header. ] */
-        assert.strictEqual(httpHeaders['Authorization'], fakeAuthorization);
+        /* Tests_SRS_NODE_PROVISIONING_HTTP_18_007: [ If an `auth` string is specifed, it shall be URL encoded and included in the Http Authorization header. ] */
+        assert.strictEqual(httpHeaders['Authorization'], fakeAuth);
 
         /* Tests_SRS_NODE_PROVISIONING_HTTP_18_009: [ `register` shall PUT the registration request to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/register' ] */
         /* Tests_SRS_NODE_PROVISIONING_HTTP_18_005: [ The registration request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
@@ -74,7 +74,7 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err) {
+      http.registerX509(fakeRegRequest, fakeAuth, function(err) {
         assert.strictEqual(null, err);
         testCallback();
       });
@@ -88,12 +88,12 @@ describe('Http', function () {
         return fakeRequest;
       };
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
         // should never complete because the above request function never calls done
         assert.fail();
       });
 
-      http.registerX509(fakeRegRequest, fakeAuthorization,  function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuth,  function(err, result) {
         assert.instanceOf(err, errors.InvalidOperationError);
         testCallback();
       });
@@ -107,8 +107,8 @@ describe('Http', function () {
         return fakeRequest;
       };
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
-        assert.equal('DpsRegistrationFailedError', err.constructor.name);
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
+        assert.equal('DeviceRegistrationFailedError', err.constructor.name);
         assert.strictEqual('HTTP error executing PUT', err.message);
         assert.strictEqual(fakeErrorString, err.innerError.message);
         testCallback();
@@ -123,12 +123,12 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
         assert.instanceOf(err, errors.OperationCancelledError);
         testCallback();
       });
 
-      http.endSession(function() {});
+      http.cancel(function() {});
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_013: [ If registration response body fails to deserialize, `register` will throw an `SyntaxError` error. ] */
@@ -142,7 +142,7 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
         // register should not complete because of assertion above
         assert.fail();
       });
@@ -158,7 +158,7 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
         assert.instanceOf(err, Error);
         testCallback();
       });
@@ -175,7 +175,7 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, registrationResult, responseBody) {
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, registrationResult, responseBody) {
         assert.isNull(err);
         assert.strictEqual(responseBody.status, 'Assigned');
         assert.strictEqual(registrationResult.assignedHub, 'fakeHub');
@@ -193,7 +193,7 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
         assert.instanceOf(err, SyntaxError);
         testCallback();
       });
@@ -212,12 +212,12 @@ describe('Http', function () {
       http.on('operationStatus', function(responseBody) {
         assert.strictEqual('Assigning', responseBody.status);
         process.nextTick(function() {
-          http.endSession(function() {
+          http.cancel(function() {
             testCallback();
           });
         });
       });
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
       });
     });
 
@@ -237,8 +237,8 @@ describe('Http', function () {
           assert.strictEqual(httpHeaders['Accept'], 'application/json');
           assert.strictEqual(httpHeaders['Content-Type'], 'application/json; charset=utf-8')
 
-          /* Tests_SRS_NODE_PROVISIONING_HTTP_18_021: [ If an `authorization` string is specifed, it shall be URL encoded and included in the Http Authorization header of the operation status request. ] */
-          assert.strictEqual(httpHeaders['Authorization'], fakeAuthorization);
+          /* Tests_SRS_NODE_PROVISIONING_HTTP_18_021: [ If an `auth` string is specifed, it shall be URL encoded and included in the Http Authorization header of the operation status request. ] */
+          assert.strictEqual(httpHeaders['Authorization'], fakeAuth);
 
           /* Tests_SRS_NODE_PROVISIONING_HTTP_18_037: [ The operation status request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
           /* Tests_SRS_NODE_PROVISIONING_HTTP_18_022: [ operation status request polling shall be a GET operation sent to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/operations/{operationId}' ] */
@@ -247,7 +247,7 @@ describe('Http', function () {
           assert.strictEqual(path, '/' + fakeRegRequest.idScope + '/registrations/' + fakeRegRequest.registrationId + '/operations/' + fakeOperationId + '?api-version=' + fakeApiVersion);
 
           process.nextTick(function() {
-            http.endSession(function() {
+            http.cancel(function() {
               testCallback();
             });
           });
@@ -257,7 +257,7 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
       });
 
     });
@@ -274,14 +274,14 @@ describe('Http', function () {
         } else {
           // Do not call done.  This makes it look like the HTTP request is outstanding.
           process.nextTick(function() {
-            http.endSession(function() {});
+            http.cancel(function() {});
           });
         }
         return fakeRequest;
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
         assert.instanceOf(err, errors.OperationCancelledError);
         testCallback();
       });
@@ -298,7 +298,7 @@ describe('Http', function () {
         if (callbackCount === 1) {
           http.setTransportOptions({pollingInterval: 2000});
           setTimeout(function() {
-            http.endSession(function() {});
+            http.cancel(function() {});
           }, 10);
           done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}', { statusCode: 200 });
         } else {
@@ -308,7 +308,7 @@ describe('Http', function () {
       };
 
       http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
         assert.instanceOf(err, errors.OperationCancelledError);
         testCallback();
       });
@@ -324,7 +324,7 @@ describe('Http', function () {
         if (callbackCount === 1) {
           http.setTransportOptions({pollingInterval: 2000});
           setTimeout(function() {
-            http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+            http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
               assert.instanceOf(err, errors.InvalidOperationError);
               testCallback();
             });
@@ -335,7 +335,7 @@ describe('Http', function () {
       };
 
       http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
       });
     });
 
@@ -349,7 +349,7 @@ describe('Http', function () {
             done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}', { statusCode: 200 });
           } else {
             setTimeout(function() {
-              http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+              http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
                 assert.instanceOf(err, errors.InvalidOperationError);
                 testCallback();
               });
@@ -360,7 +360,7 @@ describe('Http', function () {
         };
 
         var http = makeNewTransport(fakeBase);
-        http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+        http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
         });
       });
 
@@ -381,8 +381,8 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
-        assert.equal('DpsRegistrationFailedError', err.constructor.name);
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
+        assert.equal('DeviceRegistrationFailedError', err.constructor.name);
         assert.equal('HTTP error executing GET', err.message);
         assert.instanceOf(err.innerError, SyntaxError);
         assert.strictEqual('__FAKE_ERROR__', err.innerError.message)
@@ -408,7 +408,7 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
         });
     });
 
@@ -427,8 +427,8 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
-        assert.equal('DpsRegistrationFailedError', err.constructor.name);
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
+        assert.equal('DeviceRegistrationFailedError', err.constructor.name);
         assert.equal('HTTP error executing GET', err.message);
         assert.instanceOf(err.innerError, errors.ArgumentError);
         testCallback();
@@ -451,7 +451,7 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, registrationResult, responseBody) {
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, registrationResult, responseBody) {
         assert.isNull(err);
         assert.strictEqual(responseBody.status, 'Assigned');
         assert.strictEqual(registrationResult.assignedHub, 'fakeHub');
@@ -482,12 +482,12 @@ describe('Http', function () {
         if (eventBody.iteration === 2) {
           eventReceived = true;
           process.nextTick(function() {
-            http.endSession(function() {});
+            http.cancel(function() {});
           });
         };
       });
 
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
         assert.isTrue(eventReceived);
         assert.instanceOf(err, errors.OperationCancelledError);
         testCallback();
@@ -509,7 +509,7 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
         assert.instanceOf(err, SyntaxError);
         testCallback();
       });
@@ -519,7 +519,7 @@ describe('Http', function () {
   describe('disconnect', function() {
     it ('does nothing if disconnect is called while disconnected', function(testCallback) {
       var http = new Http(null);
-      http.endSession(function(err) {
+      http.cancel(function(err) {
         assert.isTrue(!err);
         testCallback();
       });

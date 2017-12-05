@@ -45,7 +45,7 @@ export interface RegistrationRequest {
   idScope: string;
 
   /**
-   * true to foce re-regristation
+   * true to foce re-registration
    */
   forceRegistration?: boolean;
 }
@@ -69,7 +69,7 @@ export interface RegistrationResult {
  */
 export interface X509ProvisioningTransport {
   setTransportOptions(options: ProvisioningTransportOptions): void;
-  endSession(callback: (err?: Error) => void): void;
+  cancel(callback: (err?: Error) => void): void;
   registerX509(request: RegistrationRequest, auth: X509, callback: (err?: Error, registrationResult?: RegistrationResult, body?: any, result?: any) => void): void;
 }
 
@@ -97,7 +97,7 @@ export interface X509SecurityClient {
  */
 export interface PollingTransportHandlers {
   setTransportOptions(options: ProvisioningTransportOptions): void;
-  registrationRequest(request: RegistrationRequest, authorization: SharedAccessSignature | X509 | string, requestBody: any, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
+  registrationRequest(request: RegistrationRequest, auth: SharedAccessSignature | X509 | string, requestBody: any, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
   queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
   endSession(callback: (err?: Error) => void): void;
 }
@@ -120,7 +120,6 @@ export interface RegistrationClient {
  * Information passed between client and transport during Tpm registration
  */
 export interface TpmRegistrationInfo {
-  registrationId?: string;
   endorsementKey: string;
   storageRootKey: string;
   request: RegistrationRequest;

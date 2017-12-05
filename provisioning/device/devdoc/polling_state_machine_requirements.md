@@ -10,7 +10,7 @@ This module provides a state machine used by the ProvisioningDeviceClient to com
 
 ## Public Interface
 
-### register(registrationId: string, authorization: string | X509, requestBody: any, forceRegistration: boolean, callback: Provisioning.ResponseCallback): void
+### register(request: RegistrationRequest, auth: string | X509, requestBody: any, callback: Provisioning.ResponseCallback): void
 Register round-trips one step of the registration process, not returning until an error is returned or registration request reaches a status of "Assigned".  This function will emit "operationStatus" events for both "Assigning" and "Assigned" responses from the service.
 
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_011: [** `register` shall fail if the connection fails. **]**
@@ -25,7 +25,7 @@ Register round-trips one step of the registration process, not returning until a
 
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_016: [** If `TransportHandlers.registrationRequest` succeeds  with an unknown status, `register` shall fail with a `SyntaxError` and pass the response body and the protocol-specific result to the `callback`. **]**
 
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_028: [** If `TransportHandlers.registrationRequest` succeeds with status==Failed, it shall fail with a `DpsRegistrationFailedError` error **]**
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_028: [** If `TransportHandlers.registrationRequest` succeeds with status==Failed, it shall fail with a `ProvisioningRegistrationFailedError` error **]**
 
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_018: [** When the polling interval elapses, `register` shall call `TransportHandlers.queryOperationStatus`. **]**
 
@@ -35,7 +35,7 @@ Register round-trips one step of the registration process, not returning until a
 
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_021: [** If `TransportHandlers.queryOperationStatus` succeeds with status==Assigning, `register` shall emit an 'operationStatus' event and begin polling for operation status requests. **]**
 
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_029: [** If `TransportHandlers.queryOperationStatus` succeeds with status==Failed, it shall fail with a `DpsRegistrationFailedError` error **]**
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_029: [** If `TransportHandlers.queryOperationStatus` succeeds with status==Failed, it shall fail with a `ProvisioningRegistrationFailedError` error **]**
 
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_022: [** If `TransportHandlers.queryOperationStatus` succeeds with an unknown status, `register` shall fail with a `SyntaxError` and pass the response body and the protocol-specific result to the `callback`. **]**
 

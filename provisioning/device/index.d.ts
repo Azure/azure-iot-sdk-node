@@ -6,5 +6,5 @@ export { X509ProvisioningTransport, RegistrationRequest, RegistrationResult } fr
 export { PollingStateMachine } from './lib/polling_state_machine';
 export { ProvisioningDeviceClient } from './lib/client';
 export { ProvisioningDeviceConstants } from './lib/constants';
-export { translateError } from './lib/dps_errors';
+export { translateError } from './lib/provisioning_errors';
 

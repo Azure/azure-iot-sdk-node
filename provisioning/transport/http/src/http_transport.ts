@@ -34,7 +34,7 @@ export class Http  extends EventEmitter implements X509ProvisioningTransport {
   /**
    * @private
    */
-  endSession(callback: (err?: Error) => void): void {
+  cancel(callback: (err?: Error) => void): void {
     this._stateMachine.endSession(callback);
   }
 

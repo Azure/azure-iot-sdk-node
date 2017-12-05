@@ -27,7 +27,7 @@ var fakeResponse = {
 describe('X509Registration', function () {
   describe('#register', function () {
 
-    /* Tests_SRS_NODE_DPS_X509_REGISTRATION_18_001: [ `register` shall acquite the X509 certificate from the `X509SecurityClient` object. ] */
+    /* Tests_SRS_NODE_DPS_X509_REGISTRATION_18_001: [ `register` shall call `getCertificate` on the security object to acquire the X509 certificate. ] */
     /* Tests_SRS_NODE_DPS_X509_REGISTRATION_18_002: [ `register` shall call `registerX509` on the transport object and call it's callback with the result of the transport operation. ] */
     it ('gets an x509 cert and calls registerX509', function(callback) {
       var transport = {
@@ -77,16 +77,16 @@ describe('X509Registration', function () {
   });
 
   describe('#cancel', function () {
-    /* Tests_SRS_NODE_DPS_X509_REGISTRATION_18_003: [ `cancel` shall call `endSession` on the transport object. ] */
-    it ('calls endSession on the transport', function(callback) {
+    /* Tests_SRS_NODE_DPS_X509_REGISTRATION_18_003: [ `cancel` shall call `cancel` on the transport object. ] */
+    it ('calls cancel on the transport', function(callback) {
       var transport = {
-        endSession: sinon.stub().callsArgWith(0, null)
+        cancel: sinon.stub().callsArgWith(0, null)
       };
       var security = {};
       var clientObj = new X509Registration(transport, security);
       clientObj.cancel(function(err) {
         assert.isNotOk(err);
-        assert(transport.endSession.calledOnce);
+        assert(transport.cancel.calledOnce);
         callback();
       });
 

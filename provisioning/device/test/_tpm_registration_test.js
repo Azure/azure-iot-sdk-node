@@ -75,7 +75,7 @@ describe('TpmRegistration', function () {
         var authArg = fakeProvisioningTransport.getAuthenticationChallenge.firstCall.args[0];
         assert.strictEqual(authArg.endorsementKey, fakeEndorsementKey);
         assert.strictEqual(authArg.storageRootKey, fakeStorageRootKey);
-        assert.strictEqual(authArg.registrationId, 'fakeRegistrationId');
+        assert.strictEqual(authArg.request.registrationId, 'fakeRegistrationId');
         testCallback();
       });
     });
@@ -103,7 +103,7 @@ describe('TpmRegistration', function () {
         var authArg = fakeProvisioningTransport.getAuthenticationChallenge.firstCall.args[0];
         assert.strictEqual(authArg.endorsementKey, fakeEndorsementKey);
         assert.strictEqual(authArg.storageRootKey, fakeStorageRootKey);
-        assert.strictEqual(authArg.registrationId, 'fakeRegistrationId');
+        assert.strictEqual(authArg.request.registrationId, 'fakeRegistrationId');
 
         // TODO: SAS token format test could be improved (see SRS_NODE_DPS_TPM_REGISTRATION_16_005 and SRS_NODE_DPS_TPM_REGISTRATION_16_006)
         assert.isString(fakeProvisioningTransport.register.firstCall.args[1]);

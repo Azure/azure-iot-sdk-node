@@ -41,33 +41,33 @@ describe('ProvisioningDeviceClient', function () {
   describe('#create', function () {
 
 
-      /* Tests_SRS_PROVISIONING_CLIENT_18_001: [ If `securityClient` supports x509 security and the `transport` supports x509 authentication, then `crate` shall return an `X509Registration` object. ] */
+      /* Tests_SRS_PROVISIONING_CLIENT_18_001: [ If `securityClient` implements `X509SecurityClient` and the `transport` implements `X509ProvisioningTransport`, then `create` shall return an `X509Registration` object. ] */
       it ('correctly returns an X509Registration object', function() {
         var client = ProvisioningDeviceClient.create(fakeX509Transport, fakeX509Security);
         assert.strictEqual(client.constructor.name, 'X509Registration' )
       });
 
-      /* Tests_SRS_PROVISIONING_CLIENT_18_002: [ If `securityClient` supports x509 security and the `transport` does not support x509 authentication, then `crate` shall throw a `ArgumentError` exepction. ] */
+      /* Tests_SRS_PROVISIONING_CLIENT_18_002: [ If `securityClient` implements `X509SecurityClient` and the `transport` does not implement `X509ProvisioningTransport`, then `create` shall throw a `ArgumentError` exepction. ] */
       it ('throws when passed an x509 security object and non-x509 transport', function() {
         assert.throws(function() {
           ProvisioningDeviceClient.create(fakeX509Transport, fakeTpmSecurity);
         }, errors.ArgumentError);
       });
 
-      /* Tests_SRS_PROVISIONING_CLIENT_18_003: [ If `securityClient` supports TPM security and the `transport` supports TPM authentication, then `create` shall return a `TpmRegistration` object. ] */
+      /* Tests_SRS_PROVISIONING_CLIENT_18_003: [ If `securityClient` implements `TPMSecurityClient` and the `transport` supports TPM authentication, then `create` shall return a `TpmRegistration` object. ] */
       it ('correctly returns an TpmRegistrationObject', function() {
         var client = ProvisioningDeviceClient.create(fakeTpmTransport, fakeTpmSecurity);
         assert.equal(client.constructor.name, 'TpmRegistration' )
       });
 
-      /* Tests_SRS_PROVISIONING_CLIENT_18_004: [ If `securityClient` supports TPM security and the `transport` does not support TPM authentication, then `crate` shall throw a `ArgumentError` exepction. ] */
+      /* Tests_SRS_PROVISIONING_CLIENT_18_004: [ If `securityClient` implements `TPMSecurityClient` and the `transport` dos not implement `TPMProvisioningTransport`, then `create` shall throw a `ArgumentError` exepction. ] */
       it ('throws when passed a TPM security object and non-TPM transport', function() {
         assert.throws(function() {
           ProvisioningDeviceClient.create(fakeTpmTransport, fakeX509Security);
         }, errors.ArgumentError);
       });
 
-      /* Tests_SRS_PROVISIONING_CLIENT_18_005: [ If `securityClient` does not support X509 or TPM security, then `create` shall show an `ArgumentError` exception. ] */
+      /* Tests_SRS_PROVISIONING_CLIENT_18_005: [ If `securityClient` dos not implement `X509ProvisioningTransport` or `TPMProvisioningTransport`, then `create` shall show an `ArgumentError` exception. ] */
       it ('throws when passed an invalid securityClient object', function() {
         assert.throws(function() {
           ProvisioningDeviceClient.create(fakeTpmTransport, fakeInvalidSecurity);

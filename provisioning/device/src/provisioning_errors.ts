@@ -8,7 +8,7 @@ import { errors } from 'azure-iot-common';
 /**
  * @private
  */
-export class DpsError extends Error {
+export class ProvisioningError extends Error {
   response?: any;
   responseBody?: any;
 }
@@ -22,8 +22,8 @@ export class DpsError extends Error {
 /**
  * @private
  */
-export function translateError(message: string, status: number, body: any, response: any): DpsError {
-  let error: DpsError;
+export function translateError(message: string, status: number, body: any, response: any): ProvisioningError {
+  let error: ProvisioningError;
   switch (status) {
     case 400:
       /*Codes_SRS_NODE_DPS_ERRORS_18_002: [`translateError` shall return an `ArgumentError` if the status code is `400`.]*/

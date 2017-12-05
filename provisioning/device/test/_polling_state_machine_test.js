@@ -121,12 +121,12 @@ describe('state machine', function () {
         });
       });
 
-      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_028: [ If `TransportHandlers.registrationRequest` succeeds with status==Failed, it shall fail with a `DpsRegistrationFailedError` error ] */
+      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_028: [ If `TransportHandlers.registrationRequest` succeeds with status==Failed, it shall fail with a `DeviceRegistrationFailedError` error ] */
       it ('and returns failure if status==Failed', function (testCallback) {
         machine._transport.registrationRequest = registrationRequestReturnsFailed();
         callRegisterWithDefaultArgs(function (err) {
           assert(!!err);
-          assert.strictEqual(err.constructor.name, 'DpsRegistrationFailedError');
+          assert.strictEqual(err.constructor.name, 'DeviceRegistrationFailedError');
           testCallback();
         });
       });
@@ -196,12 +196,12 @@ describe('state machine', function () {
         machine._transport.queryOperationStatus = operationStatusReturnsFailed();
         callRegisterWithDefaultArgs(function (err) {
           assert(!!err);
-          assert.strictEqual(err.constructor.name, 'DpsRegistrationFailedError');
+          assert.strictEqual(err.constructor.name, 'DeviceRegistrationFailedError');
           testCallback();
         });
       });
 
-      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_029: [ If `TransportHandlers.queryOperationStatus` succeeds with status==Failed, it shall fail with a `DpsRegistrationFailedError` error ] */
+      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_029: [ If `TransportHandlers.queryOperationStatus` succeeds with status==Failed, it shall fail with a `DeviceRegistrationFailedError` error ] */
 
       /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_021: [ If `TransportHandlers.queryOperationStatus` succeeds with status==Assigned, `register` shall emit an 'operationStatus' event and begin polling for operation status requests. ] */
       it ('and fires an operationStatus event if it succeeds', function (testCallback) {
@@ -293,7 +293,7 @@ describe('state machine', function () {
       it ('and causes register to fail if called while sending the first request', function (testCallback) {
         var registrationErr;
         var registrationCallback;
-        machine._transport.registrationRequest = sinon.spy(function (request, authorization, requestBody, callback) {
+        machine._transport.registrationRequest = sinon.spy(function (request, auth, requestBody, callback) {
           registrationCallback = callback;
         });
         callRegisterWithDefaultArgs(function(err) {

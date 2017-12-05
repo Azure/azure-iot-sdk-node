@@ -32,8 +32,8 @@ export class  PollingStateMachine extends EventEmitter {
               callback(err, body, result);
             }
           },
-          register: (callback, request, authorization, requestBody) => {
-            this._fsm.transition('sendingRegistrationRequest', callback, request, authorization, requestBody);
+          register: (callback, request, auth, requestBody) => {
+            this._fsm.transition('sendingRegistrationRequest', callback, request, auth, requestBody);
           },
           endSession: (callback) => {
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [ If `endSession` is called while disconnected, it shall immediately call its `callback`. ] */
@@ -48,15 +48,15 @@ export class  PollingStateMachine extends EventEmitter {
           endSession: (callback) => {
             this._fsm.transition('endingSession', callback);
           },
-          register: (callback, request, authorization, requestBody) => {
-            this._fsm.transition('sendingRegistrationRequest', callback, request, authorization, requestBody);
+          register: (callback, request, auth, requestBody) => {
+            this._fsm.transition('sendingRegistrationRequest', callback, request, auth, requestBody);
           },
         },
         sendingRegistrationRequest: {
-          _onEnter: (callback, request, authorization, requestBody) => {
+          _onEnter: (callback, request, auth, requestBody) => {
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_012: [ `register` shall call `PollingTransportHandlers.registrationRequest`. ] */
             this._currentOperationCallback = callback;
-            this._transport.registrationRequest(request, authorization, requestBody, (err, body, result, pollingInterval) => {
+            this._transport.registrationRequest(request, auth, requestBody, (err, body, result, pollingInterval) => {
               // Check if the operation is still pending before transitioning.  We might be in a different state now and we don't want to mess that up.
               if (this._currentOperationCallback === callback) {
                 this._fsm.transition('responseReceived', callback, err, request, body, result, pollingInterval);
@@ -90,9 +90,9 @@ export class  PollingStateMachine extends EventEmitter {
                   break;
                 }
                 case 'failed': {
-                  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_028: [ If `TransportHandlers.registrationRequest` succeeds with status==Failed, it shall fail with a `DpsRegistrationFailedError` error ] */
-                  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_029: [ If `TransportHandlers.queryOperationStatus` succeeds with status==Failed, it shall fail with a `DpsRegistrationFailedError` error ] */
-                  let err = new errors.DpsRegistrationFailedError('registration failed');
+                  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_028: [ If `TransportHandlers.registrationRequest` succeeds with status==Failed, it shall fail with a `DeviceRegistrationFailedError` error ] */
+                  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_029: [ If `TransportHandlers.queryOperationStatus` succeeds with status==Failed, it shall fail with a `DeviceRegistrationFailedError` error ] */
+                  let err = new errors.DeviceRegistrationFailedError('registration failed');
                   (err as any).result = result;
                   (err as any).body = body;
                   this._fsm.transition('responseError', callback, err, body, result);
@@ -185,9 +185,9 @@ export class  PollingStateMachine extends EventEmitter {
     });
   }
 
-  register(request: RegistrationRequest, authorization: ProvisioningAuthentication, requestBody: any, callback: (err?: Error, responseBody?: any, result?: any) => void): void {
+  register(request: RegistrationRequest, auth: ProvisioningAuthentication, requestBody: any, callback: (err?: Error, responseBody?: any, result?: any) => void): void {
     debug('register called for registrationId "' + request.registrationId + '"');
-    this._fsm.handle('register', callback, request, authorization, requestBody);
+    this._fsm.handle('register', callback, request, auth, requestBody);
   }
 
   endSession(callback: (err: Error) => void): void {

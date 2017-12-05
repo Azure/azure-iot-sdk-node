@@ -18,7 +18,7 @@ The `constructor` creates an Http transport object used to communicate with the 
   - `httpBase` - an optional test implementation of azure-iot-http-base **]**
 
 
-### register(authorization: string | X509, forceRegistration: boolean, body: any, callback: DeviceProvisioningTransport.ResponseCallback): void;
+### register(auth: string | X509, forceRegistration: boolean, body: any, callback: DeviceProvisioningTransport.ResponseCallback): void;
 `register` calls into the service to register the given device with the provisioning service.
 
 **SRS_NODE_PROVISIONING_HTTP_18_036: [** `register` shall call the `callback` with an `InvalidOperationError` if it is called while a previous registration is in progress. **]**
@@ -29,7 +29,7 @@ The `constructor` creates an Http transport object used to communicate with the 
   Accept: application/json
   Content-Type: application/json; charset=utf-8 **]**
 
-**SRS_NODE_PROVISIONING_HTTP_18_007: [** If an `authorization` string is specifed, it shall be URL encoded and included in the Http Authorization header. **]**
+**SRS_NODE_PROVISIONING_HTTP_18_007: [** If an `auth` string is specifed, it shall be URL encoded and included in the Http Authorization header. **]**
 
 **SRS_NODE_PROVISIONING_HTTP_18_008: [** If `forceRegistration` is specified, the registration request shall include this as a query string value named 'forceRegistration' **]**
 
@@ -59,7 +59,7 @@ The `constructor` creates an Http transport object used to communicate with the 
   Accept: application/json
   Content-Type: application/json; charset=utf-8 **]**
 
-**SRS_NODE_PROVISIONING_HTTP_18_021: [** If an `authorization` string is specifed, it shall be URL encoded and included in the Http Authorization header of the operation status request. **]**
+**SRS_NODE_PROVISIONING_HTTP_18_021: [** If an `auth` string is specifed, it shall be URL encoded and included in the Http Authorization header of the operation status request. **]**
 
 **SRS_NODE_PROVISIONING_HTTP_18_022: [** operation status request polling shall be a GET operation sent to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/operations/{operationId}' **]**
 

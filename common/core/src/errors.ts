@@ -435,10 +435,10 @@ export class OperationCancelledError extends Error {
  *
  * @augments {Error}
  */
-export class DpsRegistrationFailedError extends Error {
+export class DeviceRegistrationFailedError extends Error {
   constructor(message?: string) {
     super(message);
-    this.name = 'DpsRegistrationFailedError';
+    this.name = 'ProvisioningRegistrationFailedError';
     this.message = message;
     Error.captureStackTrace(this, this.constructor);
   }

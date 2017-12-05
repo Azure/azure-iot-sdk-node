@@ -27,11 +27,13 @@ export class X509Registration implements RegistrationClient {
    */
   register(request: RegistrationRequest, callback: (err?: Error, result?: any) => void): void {
 
-    this._securityClient.getCertificate((err, cert)  => {
+      /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_001: [ `register` shall call `getCertificate` on the security object to acquire the X509 certificate. ] */
+      this._securityClient.getCertificate((err, cert)  => {
       if (err) {
         debug('security client returned error on cert acquisition');
         callback(err);
       } else {
+        /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_002: [ `register` shall call `registerX509` on the transport object and call it's callback with the result of the transport operation. ] */
         this._transport.registerX509(request, cert, (err, result, body) => {
           if (err) {
             debug('_stateMachine.register returned error');
@@ -46,16 +48,11 @@ export class X509Registration implements RegistrationClient {
     });
   }
 
+  /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_003: [ `cancel` shall call `endSession` on the transport object. ] */
   cancel(callback: (err?: Error) => void): void {
-    this.endSession(callback);
-  }
-
-  /**
-   * @private
-   */
-  endSession(callback: (err?: Error) => void): void {
-    this._transport.endSession(callback);
+    this._transport.cancel(callback);
   }
 
 }
+
 

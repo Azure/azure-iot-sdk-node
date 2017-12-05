@@ -34,7 +34,6 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
             let registrationInfo: TpmRegistrationInfo = {
               endorsementKey: undefined,
               storageRootKey: undefined,
-              registrationId: undefined,
               request: request
             };
             /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_001: [The `register` method shall get the endorsement key by calling `getEndorsementKey` on the `TpmSecurityClient` object passed to the constructor.]*/
@@ -45,7 +44,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
                 this._fsm.transition('notStarted', err, registerCallback);
               } else {
                 registrationInfo.endorsementKey = ek;
-                registrationInfo.registrationId = this._createRegistrationIdFromEndorsementKey(ek);
+                registrationInfo.request.registrationId = this._createRegistrationIdFromEndorsementKey(ek);
                 this._fsm.handle('getStorageRootKey', registrationInfo, registerCallback);
               }
             });
@@ -213,7 +212,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
     - `expiryTimeUtc` being the number of seconds since Epoch + a delay during which the initial sas token should be valid (1 hour by default).
     ]*/
     const expiryTimeUtc = Date.now() / 1000 + 3600; // 1 hour from now.
-    const audience = encodeURIComponent(registrationInfo.request.idScope + '/registrations/' + registrationInfo.registrationId);
+    const audience = encodeURIComponent(registrationInfo.request.idScope + '/registrations/' + registrationInfo.request.registrationId);
     const payload = audience + '\n' + expiryTimeUtc.toString();
 
     this._securityClient.signWithIdentity(payload, (err, signedBytes) => {

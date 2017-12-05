@@ -45,12 +45,12 @@ export class HttpPollingHandlers implements PollingTransportHandlers {
     });
   }
 
-  registrationRequest(request: RegistrationRequest, authorization: ProvisioningAuthentication, requestBody: any, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
+  registrationRequest(request: RegistrationRequest, auth: ProvisioningAuthentication, requestBody: any, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
 
-    if ((authorization instanceof SharedAccessSignature) || (typeof authorization === 'string')) {
-      this._restApiClient = new RestApiClient({ 'host' : request.provisioningHost , 'sharedAccessSignature' : authorization},  ProvisioningDeviceConstants.userAgent, this._httpBase);
+    if ((auth instanceof SharedAccessSignature) || (typeof auth === 'string')) {
+      this._restApiClient = new RestApiClient({ 'host' : request.provisioningHost , 'sharedAccessSignature' : auth},  ProvisioningDeviceConstants.userAgent, this._httpBase);
     } else {
-      this._restApiClient = new RestApiClient({ 'host' : request.provisioningHost , 'x509' : authorization}, ProvisioningDeviceConstants.userAgent, this._httpBase);
+      this._restApiClient = new RestApiClient({ 'host' : request.provisioningHost , 'x509' : auth}, ProvisioningDeviceConstants.userAgent, this._httpBase);
     }
 
     /* update Codes_SRS_NODE_PROVISIONING_HTTP_18_009: [ `register` shall PUT the registration request to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/register' ] */
@@ -67,7 +67,7 @@ export class HttpPollingHandlers implements PollingTransportHandlers {
       Content-Type: application/json; charset=utf-8 ] */
     let httpHeaders = JSON.parse(JSON.stringify(_defaultHeaders));
 
-    /* Codes_SRS_NODE_PROVISIONING_HTTP_18_007: [ If an `authorization` string is specifed, it shall be URL encoded and included in the Http Authorization header. ] */
+    /* Codes_SRS_NODE_PROVISIONING_HTTP_18_007: [ If an `auth` string is specifed, it shall be URL encoded and included in the Http Authorization header. ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_011: [ If the registration request times out, `register` shall call the `callback` with the lower level error] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_012: [ If the registration response contains a body, `register` shall deserialize this into an object. ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_013: [ If registration response body fails to deserialize, `register` will throw an `SyntaxError` error. ] */
@@ -77,7 +77,7 @@ export class HttpPollingHandlers implements PollingTransportHandlers {
     this._restApiClient.executeApiCall('PUT', path, httpHeaders, requestBody, this._config.timeoutInterval, (err: Error, responseBody?: any, result?: any) => {
       if (err) {
         debug('error executing PUT: ' + err.toString());
-        let wrappedErr: Error = new errors.DpsRegistrationFailedError('HTTP error executing PUT');
+        let wrappedErr: Error = new errors.DeviceRegistrationFailedError('HTTP error executing PUT');
         (wrappedErr as any).innerError = err;
         callback(wrappedErr);
       } else {
@@ -102,7 +102,7 @@ export class HttpPollingHandlers implements PollingTransportHandlers {
       Content-Type: application/json; charset=utf-8 ] */
     let httpHeaders = JSON.parse(JSON.stringify(_defaultHeaders));
 
-    /* Codes_SRS_NODE_PROVISIONING_HTTP_18_021: [ If an `authorization` string is specifed, it shall be URL encoded and included in the Http Authorization header of the operation status request. ] */
+    /* Codes_SRS_NODE_PROVISIONING_HTTP_18_021: [ If an `auth` string is specifed, it shall be URL encoded and included in the Http Authorization header of the operation status request. ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_023: [ If the operation status request times out, `register` shall stop polling and call the `callback` with with the lower level error ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_024: [ `register` shall deserialize the body of the operation status response into an object. ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_025: [ If the body of the operation status response fails to deserialize, `register` will throw a `SyntaxError` error. ] */
@@ -111,7 +111,7 @@ export class HttpPollingHandlers implements PollingTransportHandlers {
     this._restApiClient.executeApiCall('GET', path, httpHeaders, {}, this._config.timeoutInterval, (err: Error, responseBody?: any, result?: any) => {
       if (err) {
         debug('error executing GET: ' + err.toString());
-        let wrappedErr: Error = new errors.DpsRegistrationFailedError('HTTP error executing GET');
+        let wrappedErr: Error = new errors.DeviceRegistrationFailedError('HTTP error executing GET');
         (wrappedErr as any).innerError = err;
         callback(wrappedErr);
       } else {
