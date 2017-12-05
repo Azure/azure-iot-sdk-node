@@ -203,7 +203,7 @@ var makeTaskList = promisify(function (callback) {
 var makeTaskFunction = function (subtasks) {
   var options = {
     parallel: true,
-    continueOnError: !!config.task.continueOnError,
+    continueOnError: true,
     printLabel: true,
     stdout: process.stdout,
     stderr: process.stderr
@@ -230,7 +230,11 @@ var makeTaskFunction = function (subtasks) {
         for (let i = 0; i < err.results.length; i++) {
           console.log(err.results[i].name + ' : ' + (err.results[i].code === 0 ? 'succeeded' : 'failed'));
         }
-        done(new Error());
+        if (config.task.continueOnError) {
+          done();
+        } else {
+          done(new Error());
+        }
       });
   };
 

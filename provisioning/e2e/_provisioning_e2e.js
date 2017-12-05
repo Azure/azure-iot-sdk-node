@@ -99,9 +99,14 @@ var X509Individual = function() {
 
   this.register = function (Transport, callback) {
     var securityClient = new X509Security(self._cert);
-    var transport = new Transport(idScope);
+    var transport = new Transport();
     var provisioningDeviceClient = ProvisioningDeviceClient.create(transport, securityClient);
-    provisioningDeviceClient.register(self._registrationId, false, function (err, result) {
+    var request = {
+      registrationId: self._registrationId,
+      idScope: idScope,
+      provisioningHost: 'global.azure-devices-provisioning.net'
+    };
+    provisioningDeviceClient.register(request, function (err, result) {
       callback(err, result);
     });
   };
@@ -210,9 +215,14 @@ var X509Group = function() {
 
   this.register = function (Transport, callback) {
     var securityClient = new X509Security(self._cert);
-    var transport = new Transport(idScope);
+    var transport = new Transport();
+    var request = {
+      registrationId: self._registrationId,
+      idScope: idScope,
+      provisioningHost: 'global.azure-devices-provisioning.net'
+    };
     var provisioningDeviceClient = ProvisioningDeviceClient.create(transport, securityClient);
-    provisioningDeviceClient.register(self._registrationId, false, function (err, result) {
+    provisioningDeviceClient.register(request, function (err, result) {
       assert.isOk(result.deviceId);
       self._deviceId = result.deviceId;
       callback(err, result);

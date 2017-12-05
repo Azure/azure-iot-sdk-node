@@ -21,11 +21,6 @@ export class ProvisioningDeviceConstants {
   static defaultPollingInterval: number = 2000;
 
   /**
-   * Default host for the provisioning service
-   */
-  static defaultProvisioningHost: string = 'global.azure-devices-provisioning.net';
-
-  /**
    * apiVersion to use while communicating with service.
    */
   static apiVersion: string = '2017-08-31-preview';

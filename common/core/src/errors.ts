@@ -417,7 +417,7 @@ export class TwinDetachedError extends Error {
 }
 
 /**
- * Error thrown when ant operation (local or remote) is cancelled
+ * Error thrown when any operation (local or remote) is cancelled
  *
  * @augments {Error}
  */
@@ -430,3 +430,16 @@ export class OperationCancelledError extends Error {
   }
 }
 
+/**
+ * Error thrown when a DPS registration operation fails
+ *
+ * @augments {Error}
+ */
+export class DpsRegistrationFailedError extends Error {
+  constructor(message?: string) {
+    super(message);
+    this.name = 'DpsRegistrationFailedError';
+    this.message = message;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}

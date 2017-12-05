@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-import { RegistrationClient, X509ProvisioningTransport, X509SecurityClient } from './interfaces';
+import { RegistrationClient, RegistrationRequest, X509ProvisioningTransport, X509SecurityClient } from './interfaces';
 import * as dbg from 'debug';
 const debug = dbg('azure-device-provisioning:x509');
 
@@ -25,14 +25,14 @@ export class X509Registration implements RegistrationClient {
    * @param forceRegistration Set to true to force re-registration
    * @param callback function called when registration is complete.
    */
-  register(registrationId: string, forceRegistration: boolean, callback: (err?: Error, result?: any) => void): void {
+  register(request: RegistrationRequest, callback: (err?: Error, result?: any) => void): void {
 
     this._securityClient.getCertificate((err, cert)  => {
       if (err) {
         debug('security client returned error on cert acquisition');
         callback(err);
       } else {
-        this._transport.registerX509(registrationId, cert, forceRegistration, (err, result, body) => {
+        this._transport.registerX509(request, cert, (err, result, body) => {
           if (err) {
             debug('_stateMachine.register returned error');
             debug(err.toString);

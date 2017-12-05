@@ -6,7 +6,7 @@
 import { EventEmitter } from 'events';
 import { errors } from 'azure-iot-common';
 import * as machina from 'machina';
-import { ProvisioningAuthentication, PollingTransportHandlers } from './interfaces';
+import { ProvisioningAuthentication, PollingTransportHandlers, RegistrationRequest } from './interfaces';
 import * as dbg from 'debug';
 const debug = dbg('azure-device-provisioning:transport-fsm');
 
@@ -32,8 +32,8 @@ export class  PollingStateMachine extends EventEmitter {
               callback(err, body, result);
             }
           },
-          register: (callback, registrationId, authorization, requestBody, forceRegistration) => {
-            this._fsm.transition('sendingRegistrationRequest', callback, registrationId, authorization, requestBody, forceRegistration);
+          register: (callback, request, authorization, requestBody) => {
+            this._fsm.transition('sendingRegistrationRequest', callback, request, authorization, requestBody);
           },
           endSession: (callback) => {
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [ If `endSession` is called while disconnected, it shall immediately call its `callback`. ] */
@@ -48,18 +48,18 @@ export class  PollingStateMachine extends EventEmitter {
           endSession: (callback) => {
             this._fsm.transition('endingSession', callback);
           },
-          register: (callback, registrationId, authorization, requestBody, forceRegistration) => {
-            this._fsm.transition('sendingRegistrationRequest', callback, registrationId, authorization, requestBody, forceRegistration);
+          register: (callback, request, authorization, requestBody) => {
+            this._fsm.transition('sendingRegistrationRequest', callback, request, authorization, requestBody);
           },
         },
         sendingRegistrationRequest: {
-          _onEnter: (callback, registrationId, authorization, requestBody, forceRegistration) => {
+          _onEnter: (callback, request, authorization, requestBody) => {
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_012: [ `register` shall call `PollingTransportHandlers.registrationRequest`. ] */
             this._currentOperationCallback = callback;
-            this._transport.registrationRequest(registrationId, authorization, requestBody, forceRegistration, (err, body, result, pollingInterval) => {
+            this._transport.registrationRequest(request, authorization, requestBody, (err, body, result, pollingInterval) => {
               // Check if the operation is still pending before transitioning.  We might be in a different state now and we don't want to mess that up.
               if (this._currentOperationCallback === callback) {
-                this._fsm.transition('responseReceived', callback, err, registrationId, body, result, pollingInterval);
+                this._fsm.transition('responseReceived', callback, err, request, body, result, pollingInterval);
               } else if (this._currentOperationCallback) {
                 debug('Unexpected: received unexpected response for cancelled operaton');
               }
@@ -70,12 +70,12 @@ export class  PollingStateMachine extends EventEmitter {
           register: (callback) => callback(new errors.InvalidOperationError('another operation is in progress'))
         },
         responseReceived: {
-          _onEnter: (callback, err, registrationId, body, result, pollingInterval) => {
+          _onEnter: (callback, err, request, body, result, pollingInterval) => {
             if (err) {
               /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_013: [ If `PollingTransportHandlers.registrationRequest` fails, `register` shall fail. ] */
               /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_019: [ If `PollingTransportHandlers.queryOperationStatus` fails, `register` shall fail. ] */
               this._fsm.transition('responseError', callback, err);
-            } else if (body) {
+            } else {
               debug('received response from service:' + JSON.stringify(body));
               switch (body.status.toLowerCase()) {
                 case 'assigned': {
@@ -86,11 +86,13 @@ export class  PollingStateMachine extends EventEmitter {
                   /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_015: [ If `PollingTransportHandlers.registrationRequest` succeeds with status==Assigning, it shall emit an 'operationStatus' event and begin polling for operation status requests. ] */
                   /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_021: [ If `PollingTransportHandlers.queryOperationStatus` succeeds with status==Assigning, `register` shall emit an 'operationStatus' event and begin polling for operation status requests. ] */
                   this.emit('operationStatus', body);
-                  this._fsm.transition('waitingToPoll', callback, registrationId, body.operationId, pollingInterval);
+                  this._fsm.transition('waitingToPoll', callback, request, body.operationId, pollingInterval);
                   break;
                 }
                 case 'failed': {
-                  let err = new Error('registration failed');
+                  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_028: [ If `TransportHandlers.registrationRequest` succeeds with status==Failed, it shall fail with a `DpsRegistrationFailedError` error ] */
+                  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_029: [ If `TransportHandlers.queryOperationStatus` succeeds with status==Failed, it shall fail with a `DpsRegistrationFailedError` error ] */
+                  let err = new errors.DpsRegistrationFailedError('registration failed');
                   (err as any).result = result;
                   (err as any).body = body;
                   this._fsm.transition('responseError', callback, err, body, result);
@@ -106,11 +108,6 @@ export class  PollingStateMachine extends EventEmitter {
                   break;
                 }
               }
-            } else {  // err == null && body == null
-              let err = this._transport.getErrorResult(result);
-              (err as any).result = result;
-              (err as any).body = body;
-              this._fsm.transition('responseError', callback, err, body, result);
             }
           },
           '*': () => this._fsm.deferUntilTransition()
@@ -128,19 +125,15 @@ export class  PollingStateMachine extends EventEmitter {
         responseError: {
           _onEnter: (callback, err, body, result) => {
             this._currentOperationCallback = null;
-            if (this._errorIsFatal(err)) {
-              this._fsm.transition('endingSession', callback, err, body, result);
-            } else {
-              this._fsm.transition('idle', callback, err, body, result);
-            }
+            this._fsm.transition('endingSession', callback, err, body, result);
           },
           '*': () => this._fsm.deferUntilTransition()
         },
         waitingToPoll: {
-          _onEnter: (callback, registrationId, operationId, pollingInterval) => {
+          _onEnter: (callback, request, operationId, pollingInterval) => {
             debug('waiting for ' + pollingInterval + ' ms');
             this._pollingTimer = setTimeout(() => {
-              this._fsm.transition('polling', callback, registrationId, operationId, pollingInterval);
+              this._fsm.transition('polling', callback, request, operationId, pollingInterval);
             }, pollingInterval);
           },
           endSession: (callback, err, body) => {
@@ -152,12 +145,12 @@ export class  PollingStateMachine extends EventEmitter {
           register: (callback) => callback(new errors.InvalidOperationError('another operation is in progress'))
         },
         polling: {
-          _onEnter: (callback, registrationId, operationId, pollingInterval) => {
+          _onEnter: (callback, request, operationId, pollingInterval) => {
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_018: [ When the polling interval elapses, `register` shall call `PollingTransportHandlers.queryOperationStatus`. ] */
-            this._transport.queryOperationStatus(registrationId, operationId, (err, body, result, pollingInterval) => {
+            this._transport.queryOperationStatus(request, operationId, (err, body, result, pollingInterval) => {
               // Check if the operation is still pending before transitioning.  We might be in a different state now and we don't want to mess that up.
               if (this._currentOperationCallback === callback) {
-                this._fsm.transition('responseReceived', callback, err, registrationId, body, result, pollingInterval);
+                this._fsm.transition('responseReceived', callback, err, request, body, result, pollingInterval);
               } else if (this._currentOperationCallback) {
                 debug('Unexpected: received unexpected response for cancelled operation');
               }
@@ -192,19 +185,14 @@ export class  PollingStateMachine extends EventEmitter {
     });
   }
 
-  register(registrationId: string, authorization: ProvisioningAuthentication, requestBody: any, forceRegistration: boolean, callback: (err?: Error, responseBody?: any, result?: any) => void): void {
-    debug('register called for registrationId "' + registrationId + '"');
-    this._fsm.handle('register', callback, registrationId, authorization, requestBody, forceRegistration);
+  register(request: RegistrationRequest, authorization: ProvisioningAuthentication, requestBody: any, callback: (err?: Error, responseBody?: any, result?: any) => void): void {
+    debug('register called for registrationId "' + request.registrationId + '"');
+    this._fsm.handle('register', callback, request, authorization, requestBody);
   }
 
   endSession(callback: (err: Error) => void): void {
     debug('endSession called');
     this._fsm.handle('endSession', callback);
-  }
-
-  private _errorIsFatal(err: Error): boolean {
-    // TODO: for now, assume all errors are fatal.
-    return true;
   }
 
 }

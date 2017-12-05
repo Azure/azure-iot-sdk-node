@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'events';
 import { X509 } from 'azure-iot-common';
-import { ProvisioningTransportOptions, X509ProvisioningTransport, RegistrationResult, PollingStateMachine } from 'azure-iot-provisioning-device';
+import { ProvisioningTransportOptions, X509ProvisioningTransport, RegistrationRequest, RegistrationResult, PollingStateMachine } from 'azure-iot-provisioning-device';
 import { Http as Base } from 'azure-iot-http-base';
 import { HttpPollingHandlers } from './http_polling_handlers';
 
@@ -21,9 +21,9 @@ export class Http  extends EventEmitter implements X509ProvisioningTransport {
    * @param idScope ID Scope to use when communicating with the provisionin service
    * @param httpBase base object for testing
    */
-  constructor(idScope: number, httpBase?: Base) {
+  constructor(httpBase?: Base) {
     super();
-    this._pollingHandlers = new HttpPollingHandlers(idScope, httpBase);
+    this._pollingHandlers = new HttpPollingHandlers(httpBase);
     this._stateMachine = new PollingStateMachine(this._pollingHandlers);
 
     this._stateMachine.on('operationStatus', (eventBody) => {
@@ -48,8 +48,8 @@ export class Http  extends EventEmitter implements X509ProvisioningTransport {
   /**
    * @private
    */
-  registerX509(registrationId: string, auth: X509, forceRegistration: boolean, callback: (err?: Error, registrationResult?: RegistrationResult, body?: any, result?: any) => void): void {
-     this._stateMachine.register(registrationId, auth, {'registrationId' : registrationId}, forceRegistration, (err, responseBody, result) => {
+  registerX509(request: RegistrationRequest, auth: X509, callback: (err?: Error, registrationResult?: RegistrationResult, body?: any, result?: any) => void): void {
+     this._stateMachine.register(request, auth, {'registrationId' : request.registrationId}, (err, responseBody, result) => {
       if (err) {
         callback(err, null, responseBody, result );
       } else {

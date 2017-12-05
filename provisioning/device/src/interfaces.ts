@@ -20,14 +20,34 @@ export interface ProvisioningTransportOptions {
   pollingInterval?: number;
 
   /**
-   * Default host for the provisioning service
-   */
-  provisioningHost?: string;
-
-  /**
    * default timeout to use when communicating with the service
    */
   timeoutInterval?: number;
+}
+
+/**
+ * Information necessary to start a registration
+ */
+export interface RegistrationRequest {
+  /**
+   * registration Id for this device.  May be undefined when using Tpm registration
+   */
+  registrationId?: string;
+
+  /**
+   * global device endpoint for the provisioning service
+   */
+  provisioningHost: string;
+
+  /**
+   * ID scope for the provisioning instance
+   */
+  idScope: string;
+
+  /**
+   * true to foce re-regristation
+   */
+  forceRegistration?: boolean;
 }
 
 /**
@@ -50,7 +70,7 @@ export interface RegistrationResult {
 export interface X509ProvisioningTransport {
   setTransportOptions(options: ProvisioningTransportOptions): void;
   endSession(callback: (err?: Error) => void): void;
-  registerX509(registrationId: string, auth: X509, forceRegistration: boolean, callback: (err?: Error, registrationResult?: RegistrationResult, body?: any, result?: any) => void): void;
+  registerX509(request: RegistrationRequest, auth: X509, callback: (err?: Error, registrationResult?: RegistrationResult, body?: any, result?: any) => void): void;
 }
 
 /**
@@ -77,10 +97,9 @@ export interface X509SecurityClient {
  */
 export interface PollingTransportHandlers {
   setTransportOptions(options: ProvisioningTransportOptions): void;
-  registrationRequest(registrationId: string, authorization: SharedAccessSignature | X509 | string, requestBody: any, forceRegistration: boolean, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
-  queryOperationStatus(registrationId: string, operationId: string, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
+  registrationRequest(request: RegistrationRequest, authorization: SharedAccessSignature | X509 | string, requestBody: any, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
+  queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
   endSession(callback: (err?: Error) => void): void;
-  getErrorResult(result: any): any;
 }
 
 /**
@@ -90,7 +109,7 @@ export interface RegistrationClient {
   /**
    * Register the device with the provisioning service
    */
-  register(registrationId: string, forceRegistration: boolean, callback: (err?: Error, result?: any) => void): void;
+  register(request: RegistrationRequest, callback: (err?: Error, result?: any) => void): void;
   /**
    * Cancel the registration process if it is in progress.
    */
@@ -98,12 +117,13 @@ export interface RegistrationClient {
 }
 
 /**
- * Device configuration returned when registration using TPM is complete
+ * Information passed between client and transport during Tpm registration
  */
 export interface TpmRegistrationInfo {
-  registrationId: string;
+  registrationId?: string;
   endorsementKey: string;
   storageRootKey: string;
+  request: RegistrationRequest;
 }
 
 /**

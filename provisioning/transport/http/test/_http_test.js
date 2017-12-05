@@ -10,14 +10,17 @@ var errors = require('azure-iot-common').errors;
 var ProvisioningDeviceConstants = require('azure-iot-provisioning-device').ProvisioningDeviceConstants;
 
 describe('Http', function () {
-  var fakeHost = "__fake_host__";
   var fakeApiVersion = ProvisioningDeviceConstants.apiVersion;
   var fakeAgent = ProvisioningDeviceConstants.userAgent;
   var fakeErrorString = "__fake_error__";
-  var fakeScope = '__scope__';
-  var fakeRegistrationId = '__registrationId__';
   var fakeAuthorization = '__authorization__';
   var fakeOperationId = "__operation_id__";
+  var fakeRegRequest = {
+    registrationId: '__registrationId__',
+    provisioningHost: '__host__',
+    idScope: '__scope__',
+    forceRegistration: true
+  }
 
   var fakeRequest = {
     setTimeout: sinon.spy(),
@@ -35,10 +38,9 @@ describe('Http', function () {
   });
 
   var makeNewTransport = function(base) {
-    var http = new Http(fakeScope, base);
+    var http = new Http(base);
     http.setTransportOptions({
-      pollingInterval: 1,
-      provisioningHost: fakeHost
+      pollingInterval: 1
     });
     return http;
   };
@@ -63,16 +65,16 @@ describe('Http', function () {
         /* Tests_SRS_NODE_PROVISIONING_HTTP_18_005: [ The registration request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
         /* Tests_SRS_NODE_PROVISIONING_HTTP_18_008: [ If `forceRegistration` is specified, the registration request shall include this as a query string value named 'forceRegistration' ] */
         assert.strictEqual(method, 'PUT');
-        assert.strictEqual(host, fakeHost);
-        assert.strictEqual(path, '/' + fakeScope + '/registrations/' + fakeRegistrationId + '/register?api-version=' + fakeApiVersion + '&forceRegistration=true');
+        assert.strictEqual(host, fakeRegRequest.provisioningHost);
+        assert.strictEqual(path, '/' + fakeRegRequest.idScope + '/registrations/' + fakeRegRequest.registrationId + '/register?api-version=' + fakeApiVersion + '&forceRegistration=true');
 
-        done(null, fakeAssignedResponse);
+        done(null, fakeAssignedResponse, { statusCode: 200 });
 
         return fakeRequest;
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err) {
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err) {
         assert.strictEqual(null, err);
         testCallback();
       });
@@ -86,12 +88,12 @@ describe('Http', function () {
         return fakeRequest;
       };
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
         // should never complete because the above request function never calls done
         assert.fail();
       });
 
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true,  function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuthorization,  function(err, result) {
         assert.instanceOf(err, errors.InvalidOperationError);
         testCallback();
       });
@@ -105,8 +107,10 @@ describe('Http', function () {
         return fakeRequest;
       };
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
-        assert.strictEqual(fakeErrorString, err.message);
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+        assert.equal('DpsRegistrationFailedError', err.constructor.name);
+        assert.strictEqual('HTTP error executing PUT', err.message);
+        assert.strictEqual(fakeErrorString, err.innerError.message);
         testCallback();
       });
     });
@@ -119,7 +123,7 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
         assert.instanceOf(err, errors.OperationCancelledError);
         testCallback();
       });
@@ -138,7 +142,7 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
         // register should not complete because of assertion above
         assert.fail();
       });
@@ -154,7 +158,7 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
         assert.instanceOf(err, Error);
         testCallback();
       });
@@ -166,12 +170,12 @@ describe('Http', function () {
     it ('completes if the PUT response is Assigned', function(testCallback) {
       var fakeBase = {};
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
-        done(null, fakeAssignedResponse);
+        done(null, fakeAssignedResponse, { statusCode: 200 });
         return fakeRequest;
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, registrationResult, responseBody) {
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, registrationResult, responseBody) {
         assert.isNull(err);
         assert.strictEqual(responseBody.status, 'Assigned');
         assert.strictEqual(registrationResult.assignedHub, 'fakeHub');
@@ -184,12 +188,12 @@ describe('Http', function () {
     it ('fails on unknown status response', function(testCallback) {
       var fakeBase = {};
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
-        done(null, '{"status" : "Cheetoes" }');
+        done(null, '{"status" : "Cheetoes" }', { statusCode: 200 });
         return fakeRequest;
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
         assert.instanceOf(err, SyntaxError);
         testCallback();
       });
@@ -200,7 +204,7 @@ describe('Http', function () {
     it ('fires an operationStatus event if the PUT response is Assigning', function(testCallback) {
       var fakeBase = {};
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
-        done(null, '{"status" : "Assigning" }');
+        done(null, '{"status" : "Assigning" }', { statusCode: 200 });
         return fakeRequest;
       };
 
@@ -213,7 +217,7 @@ describe('Http', function () {
           });
         });
       });
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
       });
     });
 
@@ -225,7 +229,7 @@ describe('Http', function () {
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
         callbackCount++;
         if (callbackCount === 1) {
-          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}');
+          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}', { statusCode: 200 });
         } else {
           /* Tests_SRS_NODE_PROVISIONING_HTTP_18_020: [ The operation status request shall have the following in the Http header:
             Accept: application/json
@@ -239,8 +243,8 @@ describe('Http', function () {
           /* Tests_SRS_NODE_PROVISIONING_HTTP_18_037: [ The operation status request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
           /* Tests_SRS_NODE_PROVISIONING_HTTP_18_022: [ operation status request polling shall be a GET operation sent to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/operations/{operationId}' ] */
           assert.strictEqual(method, 'GET');
-          assert.strictEqual(host, fakeHost)
-          assert.strictEqual(path, '/' + fakeScope + '/registrations/' + fakeRegistrationId + '/operations/' + fakeOperationId + '?api-version=' + fakeApiVersion);
+          assert.strictEqual(host, fakeRegRequest.provisioningHost)
+          assert.strictEqual(path, '/' + fakeRegRequest.idScope + '/registrations/' + fakeRegRequest.registrationId + '/operations/' + fakeOperationId + '?api-version=' + fakeApiVersion);
 
           process.nextTick(function() {
             http.endSession(function() {
@@ -253,7 +257,7 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
       });
 
     });
@@ -266,7 +270,7 @@ describe('Http', function () {
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
         callbackCount++;
         if (callbackCount === 1) {
-          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}');
+          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}', { statusCode: 200 });
         } else {
           // Do not call done.  This makes it look like the HTTP request is outstanding.
           process.nextTick(function() {
@@ -277,7 +281,7 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
         assert.instanceOf(err, errors.OperationCancelledError);
         testCallback();
       });
@@ -296,7 +300,7 @@ describe('Http', function () {
           setTimeout(function() {
             http.endSession(function() {});
           }, 10);
-          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}');
+          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}', { statusCode: 200 });
         } else {
           assert.fail('operation status should not be sent because of cancellation');
         }
@@ -304,7 +308,7 @@ describe('Http', function () {
       };
 
       http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
         assert.instanceOf(err, errors.OperationCancelledError);
         testCallback();
       });
@@ -320,18 +324,18 @@ describe('Http', function () {
         if (callbackCount === 1) {
           http.setTransportOptions({pollingInterval: 2000});
           setTimeout(function() {
-            http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
+            http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
               assert.instanceOf(err, errors.InvalidOperationError);
               testCallback();
             });
           }, 10);
-          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}');
+          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}', { statusCode: 200 });
         }
         return fakeRequest;
       };
 
       http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
       });
     });
 
@@ -342,10 +346,10 @@ describe('Http', function () {
         fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
           callbackCount++;
           if (callbackCount === 1) {
-            done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}');
+            done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}', { statusCode: 200 });
           } else {
             setTimeout(function() {
-              http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
+              http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
                 assert.instanceOf(err, errors.InvalidOperationError);
                 testCallback();
               });
@@ -356,7 +360,7 @@ describe('Http', function () {
         };
 
         var http = makeNewTransport(fakeBase);
-        http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
+        http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
         });
       });
 
@@ -369,7 +373,7 @@ describe('Http', function () {
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
         callbackCount++;
         if (callbackCount === 1) {
-          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}');
+          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}', { statusCode: 200 });
         } else {
           done(new SyntaxError('__FAKE_ERROR__'));
         }
@@ -377,9 +381,11 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
-        assert.instanceOf(err, SyntaxError);
-        assert.strictEqual('__FAKE_ERROR__', err.message)
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+        assert.equal('DpsRegistrationFailedError', err.constructor.name);
+        assert.equal('HTTP error executing GET', err.message);
+        assert.instanceOf(err.innerError, SyntaxError);
+        assert.strictEqual('__FAKE_ERROR__', err.innerError.message)
         testCallback();
       });
     });
@@ -391,7 +397,7 @@ describe('Http', function () {
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
         callbackCount++;
         if (callbackCount === 1) {
-          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}');
+          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}', { statusCode: 200 });
         } else {
           assert.throws( function() {
             done(null, '}body that fails to parse{');
@@ -402,7 +408,7 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
         });
     });
 
@@ -413,7 +419,7 @@ describe('Http', function () {
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
         callbackCount++;
         if (callbackCount === 1) {
-          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}');
+          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}', { statusCode: 200 });
         } else {
           done(new Error(), '', {'statusCode' : 400});
         }
@@ -421,8 +427,10 @@ describe('Http', function () {
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
-        assert.instanceOf(err, errors.ArgumentError);
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
+        assert.equal('DpsRegistrationFailedError', err.constructor.name);
+        assert.equal('HTTP error executing GET', err.message);
+        assert.instanceOf(err.innerError, errors.ArgumentError);
         testCallback();
       });
     });
@@ -435,15 +443,15 @@ describe('Http', function () {
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
         callbackCount++;
         if (callbackCount === 1) {
-          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}');
+          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}', { statusCode: 200 });
         } else {
-        done(null, fakeAssignedResponse);
+        done(null, fakeAssignedResponse, { statusCode: 200 });
         }
         return fakeRequest;
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, registrationResult, responseBody) {
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, registrationResult, responseBody) {
         assert.isNull(err);
         assert.strictEqual(responseBody.status, 'Assigned');
         assert.strictEqual(registrationResult.assignedHub, 'fakeHub');
@@ -460,9 +468,9 @@ describe('Http', function () {
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
         callbackCount++;
         if (callbackCount === 1) {
-          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}');
+          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}', { statusCode: 200 });
         } else {
-          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '", "iteration" : ' + callbackCount + '}');
+          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '", "iteration" : ' + callbackCount + '}', { statusCode: 200 });
         }
         return fakeRequest;
       };
@@ -479,7 +487,7 @@ describe('Http', function () {
         };
       });
 
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
         assert.isTrue(eventReceived);
         assert.instanceOf(err, errors.OperationCancelledError);
         testCallback();
@@ -493,15 +501,15 @@ describe('Http', function () {
       fakeBase.buildRequest = function(method, path, httpHeaders, host, done) {
         callbackCount++;
         if (callbackCount === 1) {
-          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}');
+          done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}', { statusCode: 200 });
         } else {
-          done(null, '{"status" : "crabalocker fishwife" }');
+          done(null, '{"status" : "crabalocker fishwife" }', { statusCode: 200 });
         }
         return fakeRequest;
       };
 
       var http = makeNewTransport(fakeBase);
-      http.registerX509(fakeRegistrationId, fakeAuthorization, true, function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuthorization, function(err, result) {
         assert.instanceOf(err, SyntaxError);
         testCallback();
       });

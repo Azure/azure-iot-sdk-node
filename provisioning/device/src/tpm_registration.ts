@@ -2,17 +2,15 @@ import { EventEmitter } from 'events';
 import * as machina from 'machina';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-provisioning-device:TpmRegistration');
-import { RegistrationClient, TpmProvisioningTransport, TpmSecurityClient, TpmRegistrationInfo } from './interfaces';
+import { RegistrationClient, RegistrationRequest, TpmProvisioningTransport, TpmSecurityClient, TpmRegistrationInfo } from './interfaces';
 
 export class TpmRegistration extends EventEmitter implements RegistrationClient {
   private _fsm: machina.Fsm;
   private _transport: TpmProvisioningTransport;
   private _securityClient: TpmSecurityClient;
-  private _idScope: string;
 
-  constructor(idScope: string, transport: TpmProvisioningTransport, securityClient: TpmSecurityClient) {
+  constructor(transport: TpmProvisioningTransport, securityClient: TpmSecurityClient) {
     super();
-    this._idScope = idScope;
     this._transport = transport;
     this._securityClient = securityClient;
 
@@ -28,15 +26,16 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
               this.emit('error', err);
             }
           },
-          register: (callback) => this._fsm.transition('authenticating', callback),
+          register: (request, callback) => this._fsm.transition('authenticating', request, callback),
           cancel: (callback) => callback()
         },
         authenticating: {
-          _onEnter: (registerCallback) => {
+          _onEnter: (request, registerCallback) => {
             let registrationInfo: TpmRegistrationInfo = {
               endorsementKey: undefined,
               storageRootKey: undefined,
-              registrationId: undefined
+              registrationId: undefined,
+              request: request
             };
             /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_001: [The `register` method shall get the endorsement key by calling `getEndorsementKey` on the `TpmSecurityClient` object passed to the constructor.]*/
             this._securityClient.getEndorsementKey((err, ek) => {
@@ -95,7 +94,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
             });
           },
           createRegistrationSas: (registrationInfo, registerCallback) => {
-            this._createRegistrationSas(registrationInfo.registrationId, (err, sasToken) => {
+            this._createRegistrationSas(registrationInfo, (err, sasToken) => {
               if (err) {
                 debug('failed to get sign the initial authentication payload with the sessionKey: ' + err.toString());
                 /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_010: [If any of the calls the the `TpmSecurityClient` or the `TpmProvisioningTransport` fails, the `register` method shall call its callback with the error resulting from the failure.]*/
@@ -189,8 +188,8 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
     });
   }
 
-  register(registrationId: string, forceRegistration: boolean, callback: (err?: Error, result?: any) => void): void {
-    this._fsm.handle('register', callback);
+  register(request: RegistrationRequest, callback: (err?: Error, result?: any) => void): void {
+    this._fsm.handle('register', request, callback);
   }
 
   cancel(callback: (err?: Error) => void): void {
@@ -202,7 +201,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
     return 'fakeRegistrationId';
   }
 
-  private _createRegistrationSas(registrationId: string, callback: (err: Error, sasToken?: string) => void): void {
+  private _createRegistrationSas(registrationInfo: TpmRegistrationInfo, callback: (err: Error, sasToken?: string) => void): void {
 
     /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_005: [The `register` method shall create a signature for the initial SAS token by signing the following payload with the session key and the `TpmSecurityClient`:
     ```
@@ -214,7 +213,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
     - `expiryTimeUtc` being the number of seconds since Epoch + a delay during which the initial sas token should be valid (1 hour by default).
     ]*/
     const expiryTimeUtc = Date.now() / 1000 + 3600; // 1 hour from now.
-    const audience = encodeURIComponent(this._idScope + '/registrations/' + registrationId);
+    const audience = encodeURIComponent(registrationInfo.request.idScope + '/registrations/' + registrationInfo.registrationId);
     const payload = audience + '\n' + expiryTimeUtc.toString();
 
     this._securityClient.signWithIdentity(payload, (err, signedBytes) => {
