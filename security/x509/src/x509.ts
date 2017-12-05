@@ -9,14 +9,16 @@ import { errors, X509 } from 'azure-iot-common';
  */
 export class X509Security {
   private _cert: X509;
+  private _registrationId: string;
 
   /**
    * Construct a new X509 security object
    *
    * @param cert certificate to use
    */
-  constructor(cert: X509) {
+  constructor(registrationId: string, cert: X509) {
     this._cert = cert;
+    this._registrationId = registrationId;
   }
 
   /**
@@ -27,6 +29,14 @@ export class X509Security {
   getCertificate(callback: (err?: Error, cert?: X509) => void): void {
     callback(null, this._cert);
   }
+
+  /**
+   * return the registration Id for the device
+   */
+  getRegistrationId(): string {
+    return this._registrationId;
+  }
+
 
   /**
    * return the X509 certificate chain

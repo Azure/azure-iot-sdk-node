@@ -14,7 +14,7 @@ export class ProvisioningDeviceClient {
    * @param transport Transport instance to use
    * @param securityClient: Security client object which can provide access to the necessary secrets and/or encryption functions
    */
-  static create(transport: X509ProvisioningTransport | TpmProvisioningTransport, securityClient: X509SecurityClient | TpmSecurityClient): RegistrationClient {
+  static create(provisioningHost: string, idScope: string, transport: X509ProvisioningTransport | TpmProvisioningTransport, securityClient: X509SecurityClient | TpmSecurityClient): RegistrationClient {
     const isX509Security: boolean = ((securityClient as X509SecurityClient).getCertificate !== undefined);
     const isX509Transport: boolean = ((transport as X509ProvisioningTransport).registerX509 !== undefined);
     const isTpmSecurity: boolean = ((securityClient as TpmSecurityClient).getEndorsementKey !== undefined);
@@ -23,7 +23,7 @@ export class ProvisioningDeviceClient {
     if (isX509Security) {
       if (isX509Transport) {
         /* Codes_SRS_PROVISIONING_CLIENT_18_001: [ If `securityClient` implements `X509SecurityClient` and the `transport` implements `X509ProvisioningTransport`, then `create` shall return an `X509Registration` object. ] */
-        return new X509Registration(transport as X509ProvisioningTransport, securityClient as X509SecurityClient);
+        return new X509Registration(provisioningHost, idScope, transport as X509ProvisioningTransport, securityClient as X509SecurityClient);
       } else {
         /* Codes_SRS_PROVISIONING_CLIENT_18_002: [ If `securityClient` implements `X509SecurityClient` and the `transport` does not implement `X509ProvisioningTransport`, then `create` shall throw a `ArgumentError` exepction. ] */
         throw new errors.ArgumentError('Transport does not support X509 authentication');
@@ -31,7 +31,7 @@ export class ProvisioningDeviceClient {
     } else if (isTpmSecurity) {
       if (isTpmTransport) {
         /* Codes_SRS_PROVISIONING_CLIENT_18_003: [ If `securityClient` implements `TPMSecurityClient` and the `transport` supports TPM authentication, then `create` shall return a `TpmRegistration` object. ] */
-        return new TpmRegistration(transport as TpmProvisioningTransport, securityClient as TpmSecurityClient);
+        return new TpmRegistration(provisioningHost, idScope, transport as TpmProvisioningTransport, securityClient as TpmSecurityClient);
       } else {
         /* Codes_SRS_PROVISIONING_CLIENT_18_004: [ If `securityClient` implements `TPMSecurityClient` and the `transport` dos not implement `TPMProvisioningTransport`, then `create` shall throw a `ArgumentError` exepction. ] */
         throw new errors.ArgumentError('Transport does not support TPM authentication');

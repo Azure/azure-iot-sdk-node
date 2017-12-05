@@ -8,6 +8,7 @@ var Http = require('azure-iot-provisioning-device-http').Http;
 var X509Security = require('azure-iot-security-x509').X509Security;
 var ProvisioningDeviceClient = require('azure-iot-provisioning-device').ProvisioningDeviceClient;
 
+var provisioningHost = '[provisioning host]';
 var idScope = '[id scope]';
 var registrationId = '[registration id]';
 var deviceCert = {
@@ -15,12 +16,12 @@ var deviceCert = {
   key: fs.readFileSync('[key filename]').toString()
 };
 
-var transport = new Http(idScope);
-var securityClient = new X509Security(deviceCert);
-var deviceClient = ProvisioningDeviceClient.create(transport, securityClient);
+var transport = new Http();
+var securityClient = new X509Security(registrationId, deviceCert);
+var deviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
 
 // Register the device.  Do not force a re-registration.
-deviceClient.register(registrationId, false, function(err, result) {
+deviceClient.register(function(err, result) {
   if (err) {
     console.log("error registering device: " + JSON.stringify(err));
   } else {

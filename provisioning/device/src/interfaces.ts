@@ -90,6 +90,12 @@ export interface X509SecurityClient {
    * @param callback called when the operation is copmlete
    */
   getCertificateChain(callback: (err?: Error, cert?: string) => void): void;
+
+  /**
+   * return the registration Id for the device
+   */
+  getRegistrationId(): string;
+
 }
 
 /**
@@ -109,7 +115,7 @@ export interface RegistrationClient {
   /**
    * Register the device with the provisioning service
    */
-  register(request: RegistrationRequest, callback: (err?: Error, result?: any) => void): void;
+  register(callback: (err?: Error, result?: any) => void): void;
   /**
    * Cancel the registration process if it is in progress.
    */

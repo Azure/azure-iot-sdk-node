@@ -17,7 +17,7 @@ var Registry = require('azure-iothub').Registry;
 var idScope = process.env.IOT_PROVISIONING_DEVICE_IDSCOPE;
 var provisioningConnectionString = process.env.IOT_PROVISIONING_SERVICE_CONNECTION_STRING;
 var registryConnectionString = process.env.IOTHUB_CONNECTION_STRING;
-
+var provisioningHost = 'global.azure-devices-provisioning.net';
 
 var provisioningServiceClient = ProvisioningServiceClient.fromConnectionString(provisioningConnectionString);
 var registry = Registry.fromConnectionString(registryConnectionString);
@@ -98,15 +98,10 @@ var X509Individual = function() {
   };
 
   this.register = function (Transport, callback) {
-    var securityClient = new X509Security(self._cert);
+    var securityClient = new X509Security(self._registrationId, self._cert);
     var transport = new Transport();
-    var provisioningDeviceClient = ProvisioningDeviceClient.create(transport, securityClient);
-    var request = {
-      registrationId: self._registrationId,
-      idScope: idScope,
-      provisioningHost: 'global.azure-devices-provisioning.net'
-    };
-    provisioningDeviceClient.register(request, function (err, result) {
+    var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
+    provisioningDeviceClient.register(function (err, result) {
       callback(err, result);
     });
   };
@@ -214,15 +209,10 @@ var X509Group = function() {
   };
 
   this.register = function (Transport, callback) {
-    var securityClient = new X509Security(self._cert);
+    var securityClient = new X509Security(self._registrationId, self._cert);
     var transport = new Transport();
-    var request = {
-      registrationId: self._registrationId,
-      idScope: idScope,
-      provisioningHost: 'global.azure-devices-provisioning.net'
-    };
-    var provisioningDeviceClient = ProvisioningDeviceClient.create(transport, securityClient);
-    provisioningDeviceClient.register(request, function (err, result) {
+    var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
+    provisioningDeviceClient.register(function (err, result) {
       assert.isOk(result.deviceId);
       self._deviceId = result.deviceId;
       callback(err, result);
