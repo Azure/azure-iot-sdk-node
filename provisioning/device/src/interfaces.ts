@@ -102,8 +102,7 @@ export interface X509SecurityClient {
  * @private
  */
 export interface PollingTransportHandlers {
-  setTransportOptions(options: ProvisioningTransportOptions): void;
-  registrationRequest(request: RegistrationRequest, auth: SharedAccessSignature | X509 | string, requestBody: any, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
+  registrationRequest(request: RegistrationRequest, requestBody: any, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
   queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
   endSession(callback: (err?: Error) => void): void;
 }

@@ -3,9 +3,13 @@
 
 'use strict';
 
+import { EventEmitter } from 'events';
 import { RestApiClient, Http as Base } from 'azure-iot-http-base';
-import { errors, SharedAccessSignature } from 'azure-iot-common';
-import { PollingTransportHandlers, ProvisioningDeviceConstants, ProvisioningAuthentication, ProvisioningTransportOptions, RegistrationRequest } from 'azure-iot-provisioning-device';
+import { errors, X509 } from 'azure-iot-common';
+import { X509ProvisioningTransport } from 'azure-iot-provisioning-device';
+import { PollingStateMachine, PollingTransportHandlers } from 'azure-iot-provisioning-device';
+import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure-iot-provisioning-device';
+import { RegistrationRequest, RegistrationResult } from 'azure-iot-provisioning-device';
 import { translateError } from 'azure-iot-provisioning-device';
 import * as dbg from 'debug';
 const debug = dbg('azure-device-provisioning:transport-http');
@@ -15,25 +19,52 @@ const _defaultHeaders = {
   'Content-Type' : 'application/json; charset=utf-8'
 };
 
-export class HttpPollingHandlers implements PollingTransportHandlers {
+export class Http extends EventEmitter implements PollingTransportHandlers, X509ProvisioningTransport {
   private _restApiClient: RestApiClient;
   private _httpBase: Base;
   private _config: ProvisioningTransportOptions = {};
+  private _stateMachine: PollingStateMachine;
 
   /* Codes_SRS_NODE_PROVISIONING_HTTP_18_001: [ The `Http` constructor shall accept the following properties:
   - `idScope` - the ID Scope value for the provisioning service
   - `httpBase` - an optional test implementation of azure-iot-http-base ] */
   constructor(httpBase?: Base) {
+    super();
     this._httpBase = httpBase || new Base();
     this._config.pollingInterval = ProvisioningDeviceConstants.defaultPollingInterval;
     this._config.timeoutInterval = ProvisioningDeviceConstants.defaultTimeoutInterval;
+    this._stateMachine = new PollingStateMachine(this);
+
+    this._stateMachine.on('operationStatus', (eventBody) => {
+      this.emit('operationStatus', eventBody);
+    });
   }
 
-  endSession(callback: (err?: Error) => void): void {
-   // nothing to do here
-   callback();
+  /**
+   * @private
+   */
+  registerX509(request: RegistrationRequest, auth: X509, callback: (err?: Error, registrationResult?: RegistrationResult, body?: any, result?: any) => void): void {
+    this._restApiClient = new RestApiClient({ 'host' : request.provisioningHost , 'x509' : auth}, ProvisioningDeviceConstants.userAgent, this._httpBase);
+    this._stateMachine.register(request, {'registrationId' : request.registrationId}, (err, responseBody, result) => {
+      if (err) {
+        callback(err, null, responseBody, result );
+      } else {
+        callback(err, responseBody.registrationStatus, responseBody, result);
+     }
+    });
   }
 
+  /**
+   * @private
+   */
+  cancel(callback: (err?: Error) => void): void {
+    this._stateMachine.endSession(callback);
+  }
+
+  /**
+   * @private
+   *
+   */
   setTransportOptions(options: ProvisioningTransportOptions): void {
     [
       'pollingInterval',
@@ -45,13 +76,20 @@ export class HttpPollingHandlers implements PollingTransportHandlers {
     });
   }
 
-  registrationRequest(request: RegistrationRequest, auth: ProvisioningAuthentication, requestBody: any, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
+  /**
+   * private
+   * called by _stateMachine via the PollingTransportHandlers interface
+   */
+  endSession(callback: (err?: Error) => void): void {
+    // Nothing to do.
+    callback();
+  }
 
-    if ((auth instanceof SharedAccessSignature) || (typeof auth === 'string')) {
-      this._restApiClient = new RestApiClient({ 'host' : request.provisioningHost , 'sharedAccessSignature' : auth},  ProvisioningDeviceConstants.userAgent, this._httpBase);
-    } else {
-      this._restApiClient = new RestApiClient({ 'host' : request.provisioningHost , 'x509' : auth}, ProvisioningDeviceConstants.userAgent, this._httpBase);
-    }
+  /**
+   * private
+   * called by _stateMachine via the PollingTransportHandlers interface
+   */
+  registrationRequest(request: RegistrationRequest, requestBody: any, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
 
     /* update Codes_SRS_NODE_PROVISIONING_HTTP_18_009: [ `register` shall PUT the registration request to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/register' ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_005: [ The registration request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
@@ -92,6 +130,10 @@ export class HttpPollingHandlers implements PollingTransportHandlers {
     });
   }
 
+  /**
+   * private
+   * called by _stateMachine via the PollingTransportHandlers interface
+   */
   queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_022: [ operation status request polling shall be a GET operation sent to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/operations/{operationId}' ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_037: [ The operation status request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
