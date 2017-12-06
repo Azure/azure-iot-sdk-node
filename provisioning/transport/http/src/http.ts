@@ -7,9 +7,8 @@ import { EventEmitter } from 'events';
 import { RestApiClient, Http as Base } from 'azure-iot-http-base';
 import { errors, X509 } from 'azure-iot-common';
 import { X509ProvisioningTransport } from 'azure-iot-provisioning-device';
-import { PollingStateMachine, PollingTransportHandlers } from 'azure-iot-provisioning-device';
+import { RegistrationRequest } from 'azure-iot-provisioning-device';
 import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure-iot-provisioning-device';
-import { RegistrationRequest, RegistrationResult } from 'azure-iot-provisioning-device';
 import { translateError } from 'azure-iot-provisioning-device';
 import * as dbg from 'debug';
 const debug = dbg('azure-device-provisioning-http:Http');
@@ -19,11 +18,11 @@ const _defaultHeaders = {
   'Content-Type' : 'application/json; charset=utf-8'
 };
 
-export class Http extends EventEmitter implements PollingTransportHandlers, X509ProvisioningTransport {
+export class Http extends EventEmitter implements X509ProvisioningTransport {
   private _restApiClient: RestApiClient;
   private _httpBase: Base;
   private _config: ProvisioningTransportOptions = {};
-  private _stateMachine: PollingStateMachine;
+  private _auth: X509;
 
   /* Codes_SRS_NODE_PROVISIONING_HTTP_18_001: [ The `Http` constructor shall accept the following properties:
   - `idScope` - the ID Scope value for the provisioning service
@@ -33,32 +32,10 @@ export class Http extends EventEmitter implements PollingTransportHandlers, X509
     this._httpBase = httpBase || new Base();
     this._config.pollingInterval = ProvisioningDeviceConstants.defaultPollingInterval;
     this._config.timeoutInterval = ProvisioningDeviceConstants.defaultTimeoutInterval;
-    this._stateMachine = new PollingStateMachine(this);
-
-    this._stateMachine.on('operationStatus', (eventBody) => {
-      this.emit('operationStatus', eventBody);
-    });
   }
 
-  /**
-   * @private
-   */
-  registerX509(request: RegistrationRequest, auth: X509, callback: (err?: Error, registrationResult?: RegistrationResult, body?: any, result?: any) => void): void {
-    this._restApiClient = new RestApiClient({ 'host' : request.provisioningHost , 'x509' : auth}, ProvisioningDeviceConstants.userAgent, this._httpBase);
-    this._stateMachine.register(request, {'registrationId' : request.registrationId}, (err, responseBody, result) => {
-      if (err) {
-        callback(err, null, responseBody, result );
-      } else {
-        callback(err, responseBody.registrationStatus, responseBody, result);
-     }
-    });
-  }
-
-  /**
-   * @private
-   */
-  cancel(callback: (err?: Error) => void): void {
-    this._stateMachine.cancel(callback);
+  setAuthentication(auth: X509): void {
+    this._auth = auth;
   }
 
   /**
@@ -78,18 +55,18 @@ export class Http extends EventEmitter implements PollingTransportHandlers, X509
 
   /**
    * private
-   * called by _stateMachine via the PollingTransportHandlers interface
    */
-  endSession(callback: (err?: Error) => void): void {
+  cancel(callback: (err?: Error) => void): void {
     // Nothing to do.
     callback();
   }
 
   /**
    * private
-   * called by _stateMachine via the PollingTransportHandlers interface
    */
   registrationRequest(request: RegistrationRequest, requestBody: any, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
+
+    this._restApiClient = new RestApiClient({ 'host' : request.provisioningHost , 'x509' : this._auth}, ProvisioningDeviceConstants.userAgent, this._httpBase);
 
     /* update Codes_SRS_NODE_PROVISIONING_HTTP_18_009: [ `register` shall PUT the registration request to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/register' ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_005: [ The registration request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
@@ -132,7 +109,6 @@ export class Http extends EventEmitter implements PollingTransportHandlers, X509
 
   /**
    * private
-   * called by _stateMachine via the PollingTransportHandlers interface
    */
   queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_022: [ operation status request polling shall be a GET operation sent to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/operations/{operationId}' ] */

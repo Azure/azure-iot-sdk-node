@@ -3,12 +3,7 @@
 
 'use strict';
 
-import { SharedAccessSignature, X509 } from 'azure-iot-common';
-
-/**
- * type defining the types of authentication we support
- */
-export type ProvisioningAuthentication = X509 | SharedAccessSignature;
+import { X509 } from 'azure-iot-common';
 
 /**
  * Configuration options for provisioning transports.  Passed into the transport's setTransportOptions function.
@@ -67,10 +62,18 @@ export interface RegistrationResult {
 /**
  * @private
  */
-export interface X509ProvisioningTransport {
-  setTransportOptions(options: ProvisioningTransportOptions): void;
+export interface PollingTransportHandlers {
+  registrationRequest(request: RegistrationRequest, requestBody: any, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
+  queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
   cancel(callback: (err?: Error) => void): void;
-  registerX509(request: RegistrationRequest, auth: X509, callback: (err?: Error, registrationResult?: RegistrationResult, body?: any, result?: any) => void): void;
+}
+
+/**
+ * @private
+ */
+export interface X509ProvisioningTransport extends PollingTransportHandlers {
+  setAuthentication(auth: X509): void;
+  setTransportOptions(options: ProvisioningTransportOptions): void;
 }
 
 /**
@@ -96,15 +99,6 @@ export interface X509SecurityClient {
    */
   getRegistrationId(): string;
 
-}
-
-/**
- * @private
- */
-export interface PollingTransportHandlers {
-  registrationRequest(request: RegistrationRequest, requestBody: any, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
-  queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
-  endSession(callback: (err?: Error) => void): void;
 }
 
 /**
@@ -140,10 +134,8 @@ export interface TpmRegistrationResult extends RegistrationResult {
 /**
  * @private
  */
-export interface TpmProvisioningTransport {
+export interface TpmProvisioningTransport extends PollingTransportHandlers {
   getAuthenticationChallenge(registrationInfo: TpmRegistrationInfo, callback: (err: Error, tpmChallenge?: TpmChallenge) => void): void;
-  register(registrationInfo: TpmRegistrationInfo, sasToken: string, callback: (err: Error, result?: TpmRegistrationResult) => void): void;
-  cancel(callback: (err: Error) => void): void;
 }
 
 /**

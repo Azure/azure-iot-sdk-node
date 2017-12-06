@@ -16,7 +16,7 @@ export class ProvisioningDeviceClient {
    */
   static create(provisioningHost: string, idScope: string, transport: X509ProvisioningTransport | TpmProvisioningTransport, securityClient: X509SecurityClient | TpmSecurityClient): RegistrationClient {
     const isX509Security: boolean = ((securityClient as X509SecurityClient).getCertificate !== undefined);
-    const isX509Transport: boolean = ((transport as X509ProvisioningTransport).registerX509 !== undefined);
+    const isX509Transport: boolean = ((transport as X509ProvisioningTransport).setAuthentication !== undefined);
     const isTpmSecurity: boolean = ((securityClient as TpmSecurityClient).getEndorsementKey !== undefined);
     const isTpmTransport: boolean = ((transport as TpmProvisioningTransport).getAuthenticationChallenge !== undefined);
 

@@ -11,12 +11,10 @@ import * as async from 'async';
 const debug = dbg('azure-device-provisioning-amqp:Amqp');
 
 // tslint:disable-next-line:no-var-requires
-const CLIENT_VERSION = 'azure-iot-provisioning-device/' + require('../package.json').version;
-const API_VERSION = '2017-11-15';
-
+// TODO: use apiVersion and userAgent from constants.ts
 import { X509 } from 'azure-iot-common';
-import { ProvisioningTransportOptions, X509ProvisioningTransport, RegistrationRequest, RegistrationResult, PollingStateMachine, PollingTransportHandlers, ProvisioningDeviceConstants } from 'azure-iot-provisioning-device';
-import { TpmProvisioningTransport, TpmRegistrationInfo, TpmRegistrationResult, TpmChallenge } from 'azure-iot-provisioning-device';
+import { ProvisioningTransportOptions, X509ProvisioningTransport, RegistrationRequest, RegistrationResult, ProvisioningDeviceConstants } from 'azure-iot-provisioning-device';
+import { TpmProvisioningTransport, TpmRegistrationInfo, TpmChallenge } from 'azure-iot-provisioning-device';
 import { Amqp as Base, SenderLink, ReceiverLink, AmqpMessage } from 'azure-iot-amqp-base';
 
 class MessagePropertyNames {
@@ -36,12 +34,11 @@ class DeviceOperations {
     // tslint:enable:variable-name
 }
 
-export class Amqp extends EventEmitter implements X509ProvisioningTransport, TpmProvisioningTransport, PollingTransportHandlers {
+export class Amqp extends EventEmitter implements X509ProvisioningTransport, TpmProvisioningTransport  {
   private _amqpBase: Base;
-  private _idScope: string;
   private _config: ProvisioningTransportOptions = {};
-  private _registrationStateMachine: PollingStateMachine;
   private _amqpStateMachine: machina.Fsm;
+  private _x509Auth: X509;
 
   // AMQP links used during registration.
   private _receiverLink: ReceiverLink;
@@ -53,15 +50,9 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
 
   constructor(amqpBase?: Base) {
     super();
-    this._amqpBase = amqpBase || new Base(true, CLIENT_VERSION);
+    this._amqpBase = amqpBase || new Base(true, ProvisioningDeviceConstants.userAgent);
     this._config.pollingInterval = ProvisioningDeviceConstants.defaultPollingInterval;
     this._config.timeoutInterval = ProvisioningDeviceConstants.defaultTimeoutInterval;
-
-    this._registrationStateMachine = new PollingStateMachine(this);
-
-    this._registrationStateMachine.on('operationStatus', (eventBody) => {
-      this.emit('operationStatus', eventBody);
-    });
 
     const amqpErrorListener = (err) => this._amqpStateMachine.handle('amqpError', err);
 
@@ -87,68 +78,57 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
               this.emit('error', err);
             }
           },
-          registerX509: (request, authentication, callback) => {
-            this._amqpStateMachine.transition('connecting', request, authentication, (err) => {
-              if (err) {
-                callback(err);
-              } else {
-                this._amqpStateMachine.handle('registerX509', request, authentication, callback);
-              }
-            });
-          },
           getAuthenticationChallenge: () => {
             // TODO
           },
           registrationRequest: (request, requestBody, callback) => {
             // TODO: this only works for x509
-            this._amqpStateMachine.transition('connecting', (err) => {
-              if (err) {
-                this._amqpStateMachine.transition('disconnected', err, null, callback);
-              } else {
+            this._amqpStateMachine.transition('connecting', request, (err) => {
+              if (!err) {
                 this._amqpStateMachine.handle('registrationRequest', request, requestBody, callback);
               }
             });
           },
           queryOperationStatus: (request, operationId, callback) => {
             // TODO: this only works for x509
-            this._amqpStateMachine.transition('connecting', (err) => {
-              if (err) {
-                this._amqpStateMachine.transition('disconnected', err, null, callback);
-              } else {
+            this._amqpStateMachine.transition('connecting', request, (err) => {
+              if (!err) {
                 this._amqpStateMachine.handle('queryOperationStatus', request, operationId, callback);
               }
             });
           },
-          sendMessage: (requestMessage, callback) => {
+          sendMessage: (request, requestMessage, callback) => {
             // TODO: this only works for x509
-            this._amqpStateMachine.transition('connecting', (err) => {
-              if (err) {
-                this._amqpStateMachine.transition('disconnected', err, null, callback);
-              } else {
-                this._amqpStateMachine.handle('sendMessage', requestMessage, callback);
+            this._amqpStateMachine.transition('connecting', request, (err) => {
+              if (!err) {
+                this._amqpStateMachine.handle('sendMessage', request, requestMessage, callback);
               }
             });
           },
           cancel: (callback) => callback()
         },
         connecting: {
-          _onEnter: (request, authentication, callback) => {
-            this._amqpBase.connect('amqps://' + request.provisioningHost, authentication, (err) => {
+          _onEnter: (request, callback) => {
+            this._amqpBase.connect('amqps://' + request.provisioningHost, this._x509Auth, (err) => {
               if (err) {
+                debug('_amqpBase.connect failed');
+                debug(err);
                 this._amqpStateMachine.transition('disconnected', err, null, callback);
               } else {
-                const linkEndpoint = this._idScope + '/registrations/' + request.registrationId;
+                const linkEndpoint = request.idScope + '/registrations/' + request.registrationId;
                 const linkOptions = {
                   attach: {
                     properties: {
-                      'com.microsoft:api-version' : API_VERSION,
-                      'com.microsoft:client-version': CLIENT_VERSION
+                      'com.microsoft:api-version' : ProvisioningDeviceConstants.apiVersion,
+                      'com.microsoft:client-version': ProvisioningDeviceConstants.userAgent
                     }
                   }
                 };
 
                 this._amqpBase.attachReceiverLink(linkEndpoint, linkOptions, (err, receiverLink) => {
                   if (err) {
+                    debug('_amqpBase.attachReceiverLink failed');
+                    debug(err);
                     this._amqpStateMachine.transition('disconnecting', err, null, callback);
                   } else {
                     this._receiverLink = receiverLink;
@@ -156,6 +136,8 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
                     this._receiverLink.on('message', responseHandler);
                     this._amqpBase.attachSenderLink(linkEndpoint, linkOptions, (err, senderLink) => {
                       if (err) {
+                        debug('_amqpBase.attachSenderLink failed');
+                        debug(err);
                         this._amqpStateMachine.transition('disconnecting', err, null, callback);
                       } else {
                         this._senderLink = senderLink;
@@ -173,15 +155,6 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
         },
         connected: {
           _onEnter: (callback) => callback(),
-          registerX509: (request, authentication, callback) => this._amqpStateMachine.transition('registering', request, authentication, callback),
-          cancel: (callback) => this._amqpStateMachine.transition('disconnecting', null, null, callback)
-        },
-        registering: {
-          _onEnter: (request, authentication, callback) => {
-            this._registrationStateMachine.register(request, { 'registrationId' : request.registrationId }, (err, registrationResult) => {
-              this._amqpStateMachine.transition('disconnecting', err, registrationResult, callback);
-            });
-          },
           registrationRequest: (request, requestBody, callback) => {
             let requestMessage = new AmqpMessage();
             requestMessage.body = '';
@@ -193,7 +166,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
 
             debug('initial registration request: ' + JSON.stringify(requestMessage));
 
-            this._amqpStateMachine.handle('sendMessage', requestMessage, callback);
+            this._amqpStateMachine.handle('sendMessage', request, requestMessage, callback);
           },
           queryOperationStatus: (request, operationId, callback) => {
             let requestMessage = new AmqpMessage();
@@ -206,9 +179,9 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
 
             debug('registration status request: ' + JSON.stringify(requestMessage));
 
-            this._amqpStateMachine.handle('sendMessage', requestMessage, callback);
+            this._amqpStateMachine.handle('sendMessage', request, requestMessage, callback);
           },
-          sendMessage: (requestMessage, callback) => {
+          sendMessage: (request, requestMessage, callback) => {
             debug('saving requestMessage with correlationId: ' + requestMessage.properties.correlationId);
             this._operations[requestMessage.properties.correlationId] = callback;
 
@@ -223,11 +196,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
           amqpError: (err) => {
             this._amqpStateMachine.transition('disconnecting', err);
           },
-          cancel: (callback) => {
-            this._registrationStateMachine.cancel((err) => {
-              this._amqpStateMachine.transition('disconnecting', err, null, callback);
-            });
-          }
+          cancel: (callback) => this._amqpStateMachine.transition('disconnecting', null, null, callback),
         },
         disconnecting: {
           _onEnter: (err, registrationResult, callback) => {
@@ -296,7 +265,6 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
   setTransportOptions(options: ProvisioningTransportOptions): void {
     [
       'pollingInterval',
-      'provisioningHost',
       'timeoutInterval'
     ].forEach((optionName) => {
       if (options.hasOwnProperty(optionName)) {
@@ -306,19 +274,13 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
   }
 
   /* X509ProvisioningTransport implementation */
-  registerX509(request: RegistrationRequest, auth: X509, callback: (err?: Error, registrationResult?: RegistrationResult, body?: any, result?: any) => void): void {
-    this._idScope = request.idScope;
-    this._amqpStateMachine.handle('registerX509', request, auth, callback);
+  setAuthentication(auth: X509): void {
+    this._x509Auth = auth;
   }
-
 
   /* TpmProvisioningTransport implementation */
   getAuthenticationChallenge(registrationInfo: TpmRegistrationInfo, callback: (err?: Error, tpmChallenge?: TpmChallenge) => void): void {
     this._amqpStateMachine.handle('getAuthenticationChallenge', registrationInfo, callback);
-  }
-
-  register(registrationInfo: TpmRegistrationInfo, sasToken: string, callback: (err?: Error, result?: TpmRegistrationResult) => void): void {
-    this._amqpStateMachine.handle('registerTPM', registrationInfo, sasToken, callback);
   }
 
   cancel(callback: (err?: Error) => void): void {
@@ -334,7 +296,4 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
     this._amqpStateMachine.handle('queryOperationStatus', request, operationId, callback);
   }
 
-  endSession(callback: (err?: Error) => void): void {
-    this._amqpStateMachine.handle('cancel', callback);
-  }
 }

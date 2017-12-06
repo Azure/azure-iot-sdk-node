@@ -9,6 +9,7 @@ var uuid = require('uuid');
 var assert = require('chai').assert;
 var debug = require('debug')('azure-device-provisioning-e2e');
 var Http = require('azure-iot-provisioning-device-http').Http;
+var Amqp = require('azure-iot-provisioning-device-amqp').Amqp;
 var ProvisioningDeviceClient = require('azure-iot-provisioning-device').ProvisioningDeviceClient;
 var ProvisioningServiceClient = require('azure-iot-provisioning-service').ProvisioningServiceClient;
 var X509Security = require('azure-iot-security-x509').X509Security;
@@ -41,7 +42,7 @@ var X509Individual = function() {
   var self = this;
 
   this.testDescription = 'x509 individual device enrollment';
-  this.transports = [ Http ];
+  this.transports = [ Amqp, Http ];
   var id = uuid.v4();
 
   this._deviceId = 'deleteme_provisioning_node_e2e_' + id;
@@ -102,6 +103,7 @@ var X509Individual = function() {
     var transport = new Transport();
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
     provisioningDeviceClient.register(function (err, result) {
+      debug(result);
       callback(err, result);
     });
   };
@@ -129,7 +131,7 @@ var X509Group = function() {
   var self = this;
 
   this.testDescription = 'x509 group device enrollment';
-  this.transports = [ Http ];
+  this.transports = [ Amqp, Http ];
   var id = uuid.v4();
 
   this._registrationId = 'reg-' + id;
@@ -213,6 +215,7 @@ var X509Group = function() {
     var transport = new Transport();
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
     provisioningDeviceClient.register(function (err, result) {
+      debug(result);
       assert.isOk(result.deviceId);
       self._deviceId = result.deviceId;
       callback(err, result);
