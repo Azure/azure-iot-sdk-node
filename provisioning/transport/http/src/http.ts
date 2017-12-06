@@ -12,7 +12,7 @@ import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure
 import { RegistrationRequest, RegistrationResult } from 'azure-iot-provisioning-device';
 import { translateError } from 'azure-iot-provisioning-device';
 import * as dbg from 'debug';
-const debug = dbg('azure-device-provisioning:transport-http');
+const debug = dbg('azure-device-provisioning-http:Http');
 
 const _defaultHeaders = {
   'Accept' : 'application/json',
@@ -58,7 +58,7 @@ export class Http extends EventEmitter implements PollingTransportHandlers, X509
    * @private
    */
   cancel(callback: (err?: Error) => void): void {
-    this._stateMachine.endSession(callback);
+    this._stateMachine.cancel(callback);
   }
 
   /**

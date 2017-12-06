@@ -62,7 +62,6 @@ export class X509Registration implements RegistrationClient {
   cancel(callback: (err?: Error) => void): void {
     this._transport.cancel(callback);
   }
-
 }
 
 

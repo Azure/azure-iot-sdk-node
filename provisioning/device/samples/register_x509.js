@@ -4,7 +4,8 @@
 'use strict';
 
 var fs = require('fs');
-var Http = require('azure-iot-provisioning-device-http').Http;
+var Transport = require('azure-iot-provisioning-device-http').Http;
+// var Transport = require('azure-iot-provisioning-device-amqp').Amqp;
 var X509Security = require('azure-iot-security-x509').X509Security;
 var ProvisioningDeviceClient = require('azure-iot-provisioning-device').ProvisioningDeviceClient;
 
@@ -16,7 +17,7 @@ var deviceCert = {
   key: fs.readFileSync('[key filename]').toString()
 };
 
-var transport = new Http();
+var transport = new Transport();
 var securityClient = new X509Security(registrationId, deviceCert);
 var deviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
 

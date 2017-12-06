@@ -42,12 +42,12 @@ Register round-trips one step of the registration process, not returning until a
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_024: [** If `register` is called while a different request is in progress, it shall fail with an `InvalidOperationError`. **]**
 
 
-### endSession(callback: (err: Error) => void): void
-enndSession is used to end the transport session
+### cancel(callback: (err: Error) => void): void
+`cancel` is used to end the transport session
 
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [** If `endSession` is called while disconnected, it shall immediately call its `callback`. **]**
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [** If `cancel` is called while disconnected, it shall immediately call its `callback`. **]**
 
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_026: [** `endSession` shall call `TransportHandlers.endSession` of it's called while the transport is connected. **]**
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_026: [** `cancel` shall call `TransportHandlers.endSession` of it's called while the transport is connected. **]**
 
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [** If a registration is in progress, `endSession` shall cause that registration to fail with an `OperationCancelledError`. **]**
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [** If a registration is in progress, `cancel` shall cause that registration to fail with an `OperationCancelledError`. **]**
 

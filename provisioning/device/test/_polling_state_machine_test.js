@@ -259,11 +259,11 @@ describe('state machine', function () {
     });
   });
 
-  describe('endSession function', function () {
+  describe('cancel function', function () {
 
-    /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [ If `endSession` is called while disconnected, it shall immediately call its `callback`. ] */
+    /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [ If `cancel` is called while disconnected, it shall immediately call its `callback`. ] */
     it ('does nothing if called while disconnected', function (testCallback) {
-      machine.endSession(function(err) {
+      machine.cancel(function(err) {
         assert(!err);
         assert(machine);
         assertNoTransportFunctionsCalled(machine);
@@ -273,12 +273,12 @@ describe('state machine', function () {
 
     describe('calls endSession', function () {
 
-      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_026: [ `endSession` shall call `endSession` of it's called while the transport is connected. ] */
+      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_026: [ `cancel` shall call `endSession` of it's called while the transport is connected. ] */
       it ('if called while connected', function (testCallback) {
         callRegisterWithDefaultArgs(function(err) {
           assert(!err);
           assert.isFalse(machine._transport.endSession.called);
-          machine._transport.endSession(function(err) {
+          machine.cancel(function(err) {
             assert(!err);
             assert(machine._transport.endSession.calledOnce);
             testCallback();
@@ -286,7 +286,7 @@ describe('state machine', function () {
         });
       });
 
-      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `endSession` shall cause that registration to fail with an `OperationCancelledError`. ] */
+      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `cancel` shall cause that registration to fail with an `OperationCancelledError`. ] */
       it ('and causes register to fail if called while sending the first request', function (testCallback) {
         var registrationErr;
         var registrationCallback;
@@ -301,7 +301,7 @@ describe('state machine', function () {
           assert.isFalse(machine._transport.queryOperationStatus.calledOnce);
         });
         setTimeout(function () {
-          machine.endSession(function() {
+          machine.cancel(function() {
             registrationCallback();
             assert(!!registrationErr);
             assert(machine._transport.endSession.calledOnce);
@@ -310,7 +310,7 @@ describe('state machine', function () {
         }, 2);
       });
 
-      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `endSession` shall cause that registration to fail with an `OperationCancelledError`. ] */
+      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `cancel` shall cause that registration to fail with an `OperationCancelledError`. ] */
       it ('and causes register to fail if called while waiting to poll', function (testCallback) {
         var registrationErr;
         machine._transport.registrationRequest = registrationRequestReturnsAssigning(1000);
@@ -322,7 +322,7 @@ describe('state machine', function () {
           assert.isFalse(machine._transport.queryOperationStatus.calledOnce);
         });
         setTimeout(function () {
-          machine.endSession(function() {
+          machine.cancel(function() {
             assert(!!registrationErr);
             assert(machine._transport.endSession.calledOnce);
             testCallback();
@@ -330,7 +330,7 @@ describe('state machine', function () {
         }, 2);
       });
 
-      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `endSession` shall cause that registration to fail with an `OperationCancelledError`. ] */
+      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `cancel` shall cause that registration to fail with an `OperationCancelledError`. ] */
       it ('and causes register to fail if called while sending an operation status request', function (testCallback) {
         var registrationErr;
         var registrationCallback;
@@ -346,7 +346,7 @@ describe('state machine', function () {
           assert(machine._transport.queryOperationStatus.calledOnce);
         });
         setTimeout(function () {
-          machine.endSession(function() {
+          machine.cancel(function() {
             registrationCallback();
             assert(!!registrationErr);
             assert(machine._transport.endSession.calledOnce);

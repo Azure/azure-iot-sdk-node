@@ -52,7 +52,7 @@ describe('Http', function () {
   var http;
 
   describe('register', function() {
-    it ('builds the http request correctly', function(testCallback) {
+    it('builds the http request correctly', function(testCallback) {
       var fakeBase = {};
       fakeBase.buildRequest = function(method, path, httpHeaders, host, auth, done) {
         /* Tests_SRS_NODE_PROVISIONING_HTTP_18_006: [ The registration request shall specify the following in the Http header:
@@ -85,7 +85,7 @@ describe('Http', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_036: [ `register` shall call the `callback` with an `InvalidOperationError` if it is called while a previous registration is in progress. ] */
-    it ('fails if a registration is in progress', function(testCallback) {
+    it('fails if a registration is in progress', function(testCallback) {
       var fakeBase = {};
       fakeBase.buildRequest = function(method, path, httpHeaders, host, auth, done) {
         // do not call done.  do not pass go.  do not collect $200.
@@ -97,14 +97,14 @@ describe('Http', function () {
         assert.fail();
       });
 
-      http.registerX509(fakeRegRequest, fakeAuth,  function(err, result) {
+      http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
         assert.instanceOf(err, errors.InvalidOperationError);
         testCallback();
       });
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_011: [ If the registration request times out, `register` shall call the `callback` with the lower level error ] */
-    it ('fails on timeout', function(testCallback) {
+    it('fails on timeout', function(testCallback) {
       var fakeBase = {};
       fakeBase.buildRequest = function(method, path, httpHeaders, host, auth, done) {
         done(new Error(fakeErrorString));
@@ -120,7 +120,7 @@ describe('Http', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_031: [ If `disconnect` is called while the registration request is in progress, `register` shall call the `callback` with an `OperationCancelledError` error. ] */
-    it ('fails if disconnected while registration request is in progress', function(testCallback) {
+    it('fails if disconnected while registration request is in progress', function(testCallback) {
       var fakeBase = {};
       fakeBase.buildRequest = function(method, path, httpHeaders, host, auth, done) {
         return fakeRequest;
@@ -136,7 +136,7 @@ describe('Http', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_013: [ If registration response body fails to deserialize, `register` will throw an `SyntaxError` error. ] */
-    it ('throws if PUT response body fails to parse', function(testCallback) {
+    it('throws if PUT response body fails to parse', function(testCallback) {
       var fakeBase = {};
       fakeBase.buildRequest = function(method, path, httpHeaders, host, auth, done) {
         assert.throws( function() {
@@ -154,7 +154,7 @@ describe('Http', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_014: [ If the registration response has a failed status code, `register` shall use `translateError` to translate this to a common error object and pass this into the `callback` function along with the deserialized body of the response. ] */
-    it ('fails correctly if the PUT response fails', function(testCallback) {
+    it('fails correctly if the PUT response fails', function(testCallback) {
       var fakeBase = {};
       fakeBase.buildRequest = function(method, path, httpHeaders, host, auth, done) {
         done(new Error(), '{}');
@@ -171,7 +171,7 @@ describe('Http', function () {
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_012: [ If the registration response contains a body, `register` shall deserialize this into an object. ] */
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_015: [ If the registration response has a success code with a 'status' of 'Assigned', `register` call the `callback` with `err` == `null` and result `containing` the deserialized body ] */
-    it ('completes if the PUT response is Assigned', function(testCallback) {
+    it('completes if the PUT response is Assigned', function(testCallback) {
       var fakeBase = {};
       fakeBase.buildRequest = function(method, path, httpHeaders, host, auth, done) {
         done(null, fakeAssignedResponse, { statusCode: 200 });
@@ -189,7 +189,7 @@ describe('Http', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_029: [ If the registration response has a success code with a 'status' that is any other value', `register` shall call the callback with a `SyntaxError` error. ] */
-    it ('fails on unknown status response', function(testCallback) {
+    it('fails on unknown status response', function(testCallback) {
       var fakeBase = {};
       fakeBase.buildRequest = function(method, path, httpHeaders, host, auth, done) {
         done(null, '{"status" : "Cheetoes" }', { statusCode: 200 });
@@ -205,7 +205,7 @@ describe('Http', function () {
 
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_016: [ If the registration response has a success code with a 'status' of 'Assigning', `register` shall fire an `operationStatus` event with the deserialized body ] */
-    it ('fires an operationStatus event if the PUT response is Assigning', function(testCallback) {
+    it('fires an operationStatus event if the PUT response is Assigning', function(testCallback) {
       var fakeBase = {};
       fakeBase.buildRequest = function(method, path, httpHeaders, host, auth, done) {
         done(null, '{"status" : "Assigning" }', { statusCode: 200 });
@@ -227,7 +227,7 @@ describe('Http', function () {
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_017: [ If the registration response has a success code wit.skiph a 'status' of 'Assigning', `register` shall start polling for operation updates ] */
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_018: [ `register` shall poll for operation status every `operationStatusPollingInterval` milliseconds ] */
-    it ('uses the right headers for operation status request', function(testCallback) {
+    it('uses the right headers for operation status request', function(testCallback) {
       var fakeBase = {};
       var callbackCount = 0;
       fakeBase.buildRequest = function(method, path, httpHeaders, host, auth, done) {
@@ -268,7 +268,7 @@ describe('Http', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_032: [ If `disconnect` is called while the operation status request is in progress, `register` shall call the `callback` with an `OperationCancelledError` error. ] */
-    it ('fails with cancel during operation status request', function(testCallback) {
+    it('fails with cancel during operation status request', function(testCallback) {
       var fakeBase = {};
       var callbackCount = 0;
 
@@ -294,7 +294,7 @@ describe('Http', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_033: [ If `disconnect` is called while the register is waiting between polls, `register` shall call the `callback` with an `OperationCancelledError` error. ] */
-    it ('fails with cancel between polls', function(testCallback) {
+    it('fails with cancel between polls', function(testCallback) {
       var fakeBase = {};
       var callbackCount = 0;
       var http;
@@ -320,7 +320,7 @@ describe('Http', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_036: [ `register` shall call the `callback` with an `InvalidOperationError` if it is called while a previous registration is in progress. ] */
-    it ('fails if called while previous registration is waiting to poll', function(testCallback) {
+    it('fails if called while previous registration is waiting to poll', function(testCallback) {
       var http;
       var fakeBase = {};
       var callbackCount = 0;
@@ -345,7 +345,7 @@ describe('Http', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_036: [ `register` shall call the `callback` with an `InvalidOperationError` if it is called while a previous registration is in progress. ] */
-    it ('fails if called while previous registration is querying status', function(testCallback) {
+    it('fails if called while previous registration is querying status', function(testCallback) {
       var fakeBase = {};
       var callbackCount = 0;
       fakeBase.buildRequest = function(method, path, httpHeaders, host, auth, done) {
@@ -370,7 +370,7 @@ describe('Http', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_023: [ If the operation status request times out, `register` shall stop polling and call the `callback` with with the lower level error. ] */
-    it ('failes on operation status timeout', function(testCallback) {
+    it('fails on operation status timeout', function(testCallback) {
       var fakeBase = {};
       var callbackCount = 0;
       fakeBase.buildRequest = function(method, path, httpHeaders, host, auth, done) {
@@ -394,7 +394,7 @@ describe('Http', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_025: [ If the body of the operation status response fails to deserialize, `register` will throw a `SyntaxError` error. ] */
-    it ('returns error for bad operation status JSON', function(testCallback) {
+    it('returns error for bad operation status JSON', function(testCallback) {
       var fakeBase = {};
       var callbackCount = 0;
       fakeBase.buildRequest = function(method, path, httpHeaders, host, auth, done) {
@@ -416,7 +416,7 @@ describe('Http', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_026: [ If the operation status response contains a failure status code, `register` shall stop polling and call the `callback` with an error created using `translateError`. ] */
-    it ('returns error on operation status HTTP error',function(testCallback) {
+    it('returns error on operation status HTTP error',function(testCallback) {
       var fakeBase = {};
       var callbackCount = 0;
       fakeBase.buildRequest = function(method, path, httpHeaders, host, auth, done) {
@@ -440,7 +440,7 @@ describe('Http', function () {
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_024: [ `register` shall deserialize the body of the operation status response into an object. ] */
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_027: [ If the operation status response contains a success status code with a 'status' of 'Assigned', `register` shall stop polling and call the `callback` with `err` == null and the body containing the deserialized body. ] */
-    it ('stops polling when status is assinged', function(testCallback) {
+    it('stops polling when status is assinged', function(testCallback) {
       var fakeBase = {};
       var callbackCount = 0;
       fakeBase.buildRequest = function(method, path, httpHeaders, host, auth, done) {
@@ -465,7 +465,7 @@ describe('Http', function () {
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_028: [ If the operation status response contains a success status code with a 'status' that is 'Assigning', `register` shall fire an `operationStatus` event with the deserialized body and continue polling. ] */
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_035: [ disconnect will cause polling to cease ] */
-    it ('fires an operationStatus on operation status response', function(testCallback) {
+    it('fires an operationStatus on operation status response', function(testCallback) {
       var fakeBase = {};
       var callbackCount = 0;
       fakeBase.buildRequest = function(method, path, httpHeaders, host, auth, done) {
@@ -498,7 +498,7 @@ describe('Http', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_030: [ If the operation status response has a success code with a 'status' that is any other value, `register` shall call the callback with a `SyntaxError` error and stop polling. ] */
-    it ('returns an error on invalid status value', function(testCallback) {
+    it('returns an error on invalid status value', function(testCallback) {
       var fakeBase = {};
       var callbackCount = 0;
       fakeBase.buildRequest = function(method, path, httpHeaders, host, auth, done) {
@@ -520,7 +520,7 @@ describe('Http', function () {
   });
 
   describe('disconnect', function() {
-    it ('does nothing if disconnect is called while disconnected', function(testCallback) {
+    it('does nothing if disconnect is called while disconnected', function(testCallback) {
       var http = new Http(null);
       http.cancel(function(err) {
         assert.isTrue(!err);

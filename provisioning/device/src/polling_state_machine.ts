@@ -35,8 +35,8 @@ export class  PollingStateMachine extends EventEmitter {
           register: (request, requestBody, callback) => {
             this._fsm.transition('sendingRegistrationRequest', request, requestBody, callback);
           },
-          endSession: (err, body, result, callback) => {
-            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [ If `endSession` is called while disconnected, it shall immediately call its `callback`. ] */
+          cancel: (err, body, result, callback) => {
+            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [ If `cancel` is called while disconnected, it shall immediately call its `callback`. ] */
             // nothing to do.
             callback();
           }
@@ -45,8 +45,8 @@ export class  PollingStateMachine extends EventEmitter {
           _onEnter: (err, body, result, callback) => {
             callback(err, body, result);
           },
-          endSession: (err, body, result, callback) => {
-            this._fsm.transition('endingSession', err, body, result, callback);
+          cancel: (err, body, result, callback) => {
+            this._fsm.transition('cancelling', err, body, result, callback);
           },
           register: (request, requestBody, callback) => {
             this._fsm.transition('sendingRegistrationRequest', request, requestBody, callback);
@@ -61,11 +61,11 @@ export class  PollingStateMachine extends EventEmitter {
               if (this._currentOperationCallback === callback) {
                 this._fsm.transition('responseReceived', err, request, body, result, pollingInterval, callback);
               } else if (this._currentOperationCallback) {
-                debug('Unexpected: received unexpected response for cancelled operaton');
+                debug('Unexpected: received unexpected response for cancelled operation');
               }
             });
           },
-          endSession: (err, body, result, callback) => this._fsm.transition('endingSession', err, body, result, callback),
+          cancel: (err, body, result, callback) => this._fsm.transition('cancelling', err, body, result, callback),
           /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_024: [ If `register` is called while a different request is in progress, it shall fail with an `InvalidOperationError`. ] */
           register: (request, requestBody, callback) => callback(new errors.InvalidOperationError('another operation is in progress'))
         },
@@ -125,7 +125,7 @@ export class  PollingStateMachine extends EventEmitter {
         responseError: {
           _onEnter: (err, body, result, callback) => {
             this._currentOperationCallback = null;
-            this._fsm.transition('endingSession', err, body, result, callback);
+            this._fsm.transition('cancelling', err, body, result, callback);
           },
           '*': () => this._fsm.deferUntilTransition()
         },
@@ -136,11 +136,11 @@ export class  PollingStateMachine extends EventEmitter {
               this._fsm.transition('polling', request, operationId, pollingInterval, callback);
             }, pollingInterval);
           },
-          endSession: (err, body, result, callback) => {
-            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `endSession` shall cause that registration to fail with an `OperationCancelledError`. ] */
+          cancel: (err, body, result, callback) => {
+            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `cancel` shall cause that registration to fail with an `OperationCancelledError`. ] */
             clearTimeout(this._pollingTimer);
             this._pollingTimer = null;
-            this._fsm.transition('endingSession', err, body, result, callback);
+            this._fsm.transition('cancelling', err, body, result, callback);
           },
           register: (request, requestBody, callback) => callback(new errors.InvalidOperationError('another operation is in progress'))
         },
@@ -156,13 +156,13 @@ export class  PollingStateMachine extends EventEmitter {
               }
             });
           },
-          endSession: (err, body, result, callback) => this._fsm.transition('endingSession', err, body, result, callback),
+          cancel: (err, body, result, callback) => this._fsm.transition('cancelling', err, body, result, callback),
           /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_024: [ If `register` is called while a different request is in progress, it shall fail with an `InvalidOperationError`. ] */
           register: (request, requestBody, callback) => callback(new errors.InvalidOperationError('another operation is in progress'))
         },
-        endingSession: {
+        cancelling: {
           _onEnter: (err, body, result, callback) => {
-            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `endSession` shall cause that registration to fail with an `OperationCancelledError`. ] */
+            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `cancel` shall cause that registration to fail with an `OperationCancelledError`. ] */
             if (this._currentOperationCallback) {
               let _callback = this._currentOperationCallback;
               this._currentOperationCallback = null;
@@ -190,10 +190,8 @@ export class  PollingStateMachine extends EventEmitter {
     this._fsm.handle('register', request, requestBody, callback);
   }
 
-  endSession(callback: (err: Error) => void): void {
-    debug('endSession called');
-    this._fsm.handle('endSession', null, null, null, callback);
+  cancel(callback: (err: Error) => void): void {
+    debug('cancel called');
+    this._fsm.handle('cancel', null, null, null, callback);
   }
-
 }
-
