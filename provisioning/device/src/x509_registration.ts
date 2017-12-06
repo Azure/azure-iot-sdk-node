@@ -13,8 +13,12 @@ export class X509Registration implements RegistrationClient {
 
   private _transport: X509ProvisioningTransport;
   private _securityClient: X509SecurityClient;
+  private _provisioningHost: string;
+  private _idScope: string;
 
-  constructor(transport: X509ProvisioningTransport, securityClient: X509SecurityClient) {
+  constructor(provisioningHost: string, idScope: string, transport: X509ProvisioningTransport, securityClient: X509SecurityClient) {
+    this._provisioningHost = provisioningHost;
+    this._idScope = idScope;
     this._transport = transport;
     this._securityClient = securityClient;
   }
@@ -25,7 +29,7 @@ export class X509Registration implements RegistrationClient {
    * @param forceRegistration Set to true to force re-registration
    * @param callback function called when registration is complete.
    */
-  register(request: RegistrationRequest, callback: (err?: Error, result?: any) => void): void {
+  register(callback: (err?: Error, result?: any) => void): void {
 
       /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_001: [ `register` shall call `getCertificate` on the security object to acquire the X509 certificate. ] */
       this._securityClient.getCertificate((err, cert)  => {
@@ -33,6 +37,12 @@ export class X509Registration implements RegistrationClient {
         debug('security client returned error on cert acquisition');
         callback(err);
       } else {
+        let registrationId: string = this._securityClient.getRegistrationId();
+        let request: RegistrationRequest = {
+          registrationId: registrationId,
+          provisioningHost: this._provisioningHost,
+          idScope: this._idScope
+        };
         /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_002: [ `register` shall call `registerX509` on the transport object and call it's callback with the result of the transport operation. ] */
         this._transport.registerX509(request, cert, (err, result, body) => {
           if (err) {

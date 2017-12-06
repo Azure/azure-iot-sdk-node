@@ -13,11 +13,9 @@ var fakeX509Cert = {
   key: 'fake_key'
 };
 
-var fakeRequest = {
-  requestId: 'fakeRegistrationId',
-  provisioningHost: 'fakeHost',
-  idScope: 'fakeIdScope'
-};
+var fakeProvisioningHost = 'fakeHost';
+var fakeIdScope = 'fakeIdScope';
+var fakeRegistrationId = 'fakeRegistrationId';
 
 var fakeResponse = {
   assignedHub: 'fakeHub',
@@ -31,17 +29,21 @@ describe('X509Registration', function () {
     /* Tests_SRS_NODE_DPS_X509_REGISTRATION_18_002: [ `register` shall call `registerX509` on the transport object and call it's callback with the result of the transport operation. ] */
     it ('gets an x509 cert and calls registerX509', function(callback) {
       var transport = {
-        registerX509: sinon.spy(function(request, auth, callback) { callback(null, fakeResponse); })
+        registerX509: sinon.spy(function(request, auth, callback) { callback(null, fakeResponse); }),
+        getRegistrationId: function() { return fakeRegistrationId; }
       };
       var security = {
-        getCertificate: sinon.spy(function(callback) { callback(null, fakeX509Cert); })
+        getCertificate: sinon.spy(function(callback) { callback(null, fakeX509Cert); }),
+        getRegistrationId: function() { return fakeRegistrationId; }
       };
-      var clientObj = new X509Registration(transport, security);
-      clientObj.register(fakeRequest, function(err, response) {
+      var clientObj = new X509Registration(fakeProvisioningHost, fakeIdScope, transport, security);
+      clientObj.register(function(err, response) {
         assert.isNotOk(err);
         assert.strictEqual(response, fakeResponse);
         assert(security.getCertificate.calledOnce);
-        assert.strictEqual(transport.registerX509.getCall(0).args[0], fakeRequest);
+        assert.strictEqual(transport.registerX509.getCall(0).args[0].provisioningHost, fakeProvisioningHost);
+        assert.strictEqual(transport.registerX509.getCall(0).args[0].idScope, fakeIdScope);
+        assert.strictEqual(transport.registerX509.getCall(0).args[0].registrationId, fakeRegistrationId);
         assert.strictEqual(transport.registerX509.getCall(0).args[1], fakeX509Cert);
         callback();
       });
@@ -49,10 +51,11 @@ describe('X509Registration', function () {
 
     it ('fails if getCertificate fails', function(callback) {
       var security = {
-        getCertificate: sinon.spy(function(callback) { callback(new Error()); })
+        getCertificate: sinon.spy(function(callback) { callback(new Error()); }),
+        getRegistrationId: function() { return fakeRegistrationId; }
       };
-      var clientObj = new X509Registration({}, security);
-      clientObj.register(fakeRequest, function(err, response) {
+      var clientObj = new X509Registration(fakeProvisioningHost, fakeIdScope, {}, security);
+      clientObj.register(function(err, response) {
         assert(security.getCertificate.calledOnce);
         assert.isOk(err);
         callback();
@@ -64,10 +67,11 @@ describe('X509Registration', function () {
         registerX509: sinon.spy(function(request, auth, callback) { callback(new Error()); })
       };
       var security = {
-        getCertificate: sinon.spy(function(callback) { callback(null, fakeX509Cert); })
+        getCertificate: sinon.spy(function(callback) { callback(null, fakeX509Cert); }),
+        getRegistrationId: function() { return fakeRegistrationId; }
       };
-      var clientObj = new X509Registration(transport, security);
-      clientObj.register(fakeRequest, function(err, response) {
+      var clientObj = new X509Registration(fakeProvisioningHost, fakeIdScope, transport, security);
+      clientObj.register(function(err, response) {
         assert(security.getCertificate.calledOnce);
         assert(transport.registerX509.calledOnce);
         assert.isOk(err);
@@ -83,7 +87,7 @@ describe('X509Registration', function () {
         cancel: sinon.stub().callsArgWith(0, null)
       };
       var security = {};
-      var clientObj = new X509Registration(transport, security);
+      var clientObj = new X509Registration(fakeProvisioningHost, fakeIdScope, transport, security);
       clientObj.cancel(function(err) {
         assert.isNotOk(err);
         assert(transport.cancel.calledOnce);

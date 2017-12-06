@@ -12,5 +12,5 @@
  */
 
 module.exports = {
-  Http: require('./lib/http_transport.js').Http
+  Http: require('./lib/http').Http
 };

@@ -2,14 +2,16 @@ import { EventEmitter } from 'events';
 import * as machina from 'machina';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-provisioning-device:TpmRegistration');
-import { RegistrationClient, RegistrationRequest, TpmProvisioningTransport, TpmSecurityClient, TpmRegistrationInfo } from './interfaces';
+import { RegistrationClient, TpmProvisioningTransport, TpmSecurityClient, TpmRegistrationInfo } from './interfaces';
 
 export class TpmRegistration extends EventEmitter implements RegistrationClient {
   private _fsm: machina.Fsm;
   private _transport: TpmProvisioningTransport;
   private _securityClient: TpmSecurityClient;
+  private _provisioningHost: string;
+  private _idScope: string;
 
-  constructor(transport: TpmProvisioningTransport, securityClient: TpmSecurityClient) {
+  constructor(provisioningHost: string, idScope: string, transport: TpmProvisioningTransport, securityClient: TpmSecurityClient) {
     super();
     this._transport = transport;
     this._securityClient = securityClient;
@@ -30,12 +32,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
           cancel: (callback) => callback()
         },
         authenticating: {
-          _onEnter: (request, registerCallback) => {
-            let registrationInfo: TpmRegistrationInfo = {
-              endorsementKey: undefined,
-              storageRootKey: undefined,
-              request: request
-            };
+          _onEnter: (registrationInfo, registerCallback) => {
             /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_001: [The `register` method shall get the endorsement key by calling `getEndorsementKey` on the `TpmSecurityClient` object passed to the constructor.]*/
             this._securityClient.getEndorsementKey((err, ek) => {
               if (err) {
@@ -187,8 +184,18 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
     });
   }
 
-  register(request: RegistrationRequest, callback: (err?: Error, result?: any) => void): void {
-    this._fsm.handle('register', request, callback);
+  register(callback: (err?: Error, result?: any) => void): void {
+    let registrationInfo: TpmRegistrationInfo = {
+      endorsementKey: undefined,
+      storageRootKey: undefined,
+      request: {
+        registrationId: null,
+        idScope: this._idScope,
+        provisioningHost: this._provisioningHost
+      }
+    };
+
+    this._fsm.handle('register', registrationInfo, callback);
   }
 
   cancel(callback: (err?: Error) => void): void {

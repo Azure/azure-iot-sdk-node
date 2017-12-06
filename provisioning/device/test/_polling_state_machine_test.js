@@ -8,7 +8,6 @@ var sinon = require('sinon');
 var assert = require('chai').assert;
 
 var fakeErrorText = '__FAKE_ERROR__';
-var fakeAuth = '__FAKE_AUTH__';
 var fakeRequestBody = { fake: true };
 var fakeBadStatus = '__FAKE_BAD_STATUS__';
 var fakeRequest = {
@@ -18,11 +17,11 @@ var fakeRequest = {
 }
 
 var waitingForNetworkIo = function () { return sinon.spy(function () { }); };
-var registrationRequestReturnsAssigning = function (pollingInterval) { return sinon.spy(function (request, auth, body, callback) { callback(null, { status: 'Assigning' }, null, pollingInterval || 0); }); };
-var registrationRequestReturnsAssigned = function () { return sinon.spy(function (request, auth, body, callback) { callback(null, { status: 'Assigned' }); }); };
-var registrationRequestReturnsFailed = function () { return sinon.spy(function (request, auth, body, callback) { callback(null, { status: 'Failed' }); }); };
-var registrationRequestReturnsFailure = function () { return sinon.spy(function (request, auth, body, callback) { callback(new Error(fakeErrorText)); }); };
-var registrationRequestReturnsBadResponse = function () { return sinon.spy(function (request, auth, body, callback) { callback(null, { status: fakeBadStatus }); }); };
+var registrationRequestReturnsAssigning = function (pollingInterval) { return sinon.spy(function (request, body, callback) { callback(null, { status: 'Assigning' }, null, pollingInterval || 0); }); };
+var registrationRequestReturnsAssigned = function () { return sinon.spy(function (request, body, callback) { callback(null, { status: 'Assigned' }); }); };
+var registrationRequestReturnsFailed = function () { return sinon.spy(function (request, body, callback) { callback(null, { status: 'Failed' }); }); };
+var registrationRequestReturnsFailure = function () { return sinon.spy(function (request, body, callback) { callback(new Error(fakeErrorText)); }); };
+var registrationRequestReturnsBadResponse = function () { return sinon.spy(function (request, body, callback) { callback(null, { status: fakeBadStatus }); }); };
 var operationStatusReturnsAssigned = function () { return sinon.spy(function (request, operationId, callback) { callback(null, { status: 'Assigned' } ); }); };
 var operationStatusReturnsFailed = function () { return sinon.spy(function (request, operationId, callback) { callback(null, { status: 'Failed' } ); }); };
 var operationStatusReturnsFailure = function () { return sinon.spy(function (request, operationId, callback) { callback(new Error(fakeErrorText)); }); };
@@ -63,7 +62,7 @@ describe('state machine', function () {
   };
 
   var callRegisterWithDefaultArgs = function (callback) {
-    machine.register(fakeRequest, fakeAuth, fakeRequestBody, callback);
+    machine.register(fakeRequest, fakeRequestBody, callback);
   };
 
   var machine;
@@ -233,9 +232,7 @@ describe('state machine', function () {
     /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_024: [ If `register` is called while a different request is in progress, it shall fail with an `InvalidOperationError`. ] */
     it ('fails if called while waiting to poll', function (testCallback) {
       machine._transport.registrationRequest = registrationRequestReturnsAssigning(1000);
-      callRegisterWithDefaultArgs(function() {
-        assert(false, 'register should never complete in this test');
-      });
+      callRegisterWithDefaultArgs(function() {});
 
       setTimeout(function() {
         callRegisterWithDefaultArgs(function(err) {
@@ -293,7 +290,7 @@ describe('state machine', function () {
       it ('and causes register to fail if called while sending the first request', function (testCallback) {
         var registrationErr;
         var registrationCallback;
-        machine._transport.registrationRequest = sinon.spy(function (request, auth, requestBody, callback) {
+        machine._transport.registrationRequest = sinon.spy(function (request, requestBody, callback) {
           registrationCallback = callback;
         });
         callRegisterWithDefaultArgs(function(err) {

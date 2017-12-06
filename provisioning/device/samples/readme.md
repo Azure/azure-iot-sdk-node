@@ -78,7 +78,7 @@ When you have the device cert and key, you can proceeed to create an individual 
 ```
 2. Alternatively, You can use the Azure portal.  Instructions to accomplish this are [here][c-sdk-create-individual-enrollment], starting with the step labeled 'Add enrollment list entry'.
 
- After enrolling the device with the provisioning service, you can use [register_x509.js][register-x509] to register the device.  When running this sample, you'll need to replace the '[id scope]', '[registration id'], '[cert filename]', and '[key filename]' values in the code with your specific values.
+ After enrolling the device with the provisioning service, you can use [register_x509.js][register-x509] to register the device.  When running this sample, you'll need to replace the '[provisioning host]' '[id scope]', '[registration id'], '[cert filename]', and '[key filename]' values in the code with your specific values.
 
  If the registration succeeds, you should see the device Id and the assigned hub in the console output.  You should be able to connect to this hub with this device ID using the device cert and private key you created above.
 
