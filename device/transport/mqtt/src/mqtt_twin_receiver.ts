@@ -194,7 +194,7 @@ export class MqttTwinReceiver extends EventEmitter {
     try {
       urlObject = url.parse(topic);
       path = urlObject.path.split('/');
-      query = querystring.parse(urlObject.query);
+      query = querystring.parse(urlObject.query as string);
     } catch (err) {
       return;
     }

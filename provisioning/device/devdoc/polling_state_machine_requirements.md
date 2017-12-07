@@ -47,7 +47,7 @@ Register round-trips one step of the registration process, not returning until a
 
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [** If `cancel` is called while disconnected, it shall immediately call its `callback`. **]**
 
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_026: [** `cancel` shall call `TransportHandlers.endSession` of it's called while the transport is connected. **]**
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_026: [** `cancel` shall call `TransportHandlers.cancel` of it's called while the transport is connected. **]**
 
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [** If a registration is in progress, `cancel` shall cause that registration to fail with an `OperationCancelledError`. **]**
 

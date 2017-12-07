@@ -26,25 +26,28 @@ describe('X509Registration', function () {
   describe('#register', function () {
 
     /* Tests_SRS_NODE_DPS_X509_REGISTRATION_18_001: [ `register` shall call `getCertificate` on the security object to acquire the X509 certificate. ] */
-    /* Tests_SRS_NODE_DPS_X509_REGISTRATION_18_002: [ `register` shall call `registerX509` on the transport object and call it's callback with the result of the transport operation. ] */
+    /* Tests_SRS_NODE_DPS_X509_REGISTRATION_18_002: [ `register` shall call `register` on the pollingStateMachine and call `callback` with the result. ] */
+    /* Tests_SRS_NODE_DPS_X509_REGISTRATION_18_004: [ `register` shall pass the certificate into the `setAuthentication` method on the transport ] */
     it ('gets an x509 cert and calls registerX509', function(callback) {
       var transport = {
-        registerX509: sinon.spy(function(request, auth, callback) { callback(null, fakeResponse); }),
-        getRegistrationId: function() { return fakeRegistrationId; }
+        setAuthentication: sinon.spy(),
       };
       var security = {
         getCertificate: sinon.spy(function(callback) { callback(null, fakeX509Cert); }),
         getRegistrationId: function() { return fakeRegistrationId; }
       };
       var clientObj = new X509Registration(fakeProvisioningHost, fakeIdScope, transport, security);
+      clientObj._pollingStateMachine.register = sinon.spy(function(request, callback) { callback(null, { registrationState: fakeResponse }); });
       clientObj.register(function(err, response) {
         assert.isNotOk(err);
         assert.strictEqual(response, fakeResponse);
+        assert(clientObj._pollingStateMachine.register.calledOnce);
+        assert.strictEqual(clientObj._pollingStateMachine.register.getCall(0).args[0].provisioningHost, fakeProvisioningHost);
+        assert.strictEqual(clientObj._pollingStateMachine.register.getCall(0).args[0].idScope, fakeIdScope);
+        assert.strictEqual(clientObj._pollingStateMachine.register.getCall(0).args[0].registrationId, fakeRegistrationId);
         assert(security.getCertificate.calledOnce);
-        assert.strictEqual(transport.registerX509.getCall(0).args[0].provisioningHost, fakeProvisioningHost);
-        assert.strictEqual(transport.registerX509.getCall(0).args[0].idScope, fakeIdScope);
-        assert.strictEqual(transport.registerX509.getCall(0).args[0].registrationId, fakeRegistrationId);
-        assert.strictEqual(transport.registerX509.getCall(0).args[1], fakeX509Cert);
+        assert(transport.setAuthentication.calledOnce);
+        assert.strictEqual(transport.setAuthentication.getCall(0).args[0], fakeX509Cert);
         callback();
       });
     });
@@ -54,7 +57,11 @@ describe('X509Registration', function () {
         getCertificate: sinon.spy(function(callback) { callback(new Error()); }),
         getRegistrationId: function() { return fakeRegistrationId; }
       };
-      var clientObj = new X509Registration(fakeProvisioningHost, fakeIdScope, {}, security);
+      var transport = {
+        setAuthentication: function() {}
+      };
+
+      var clientObj = new X509Registration(fakeProvisioningHost, fakeIdScope, transport, security);
       clientObj.register(function(err, response) {
         assert(security.getCertificate.calledOnce);
         assert.isOk(err);
@@ -64,16 +71,17 @@ describe('X509Registration', function () {
 
     it ('fails if registerX509 fails', function(callback) {
       var transport = {
-        registerX509: sinon.spy(function(request, auth, callback) { callback(new Error()); })
+        setAuthentication: function() {}
       };
       var security = {
         getCertificate: sinon.spy(function(callback) { callback(null, fakeX509Cert); }),
         getRegistrationId: function() { return fakeRegistrationId; }
       };
       var clientObj = new X509Registration(fakeProvisioningHost, fakeIdScope, transport, security);
+      clientObj._pollingStateMachine.register = sinon.spy(function(request, callback) { callback( new Error()); });
       clientObj.register(function(err, response) {
         assert(security.getCertificate.calledOnce);
-        assert(transport.registerX509.calledOnce);
+        assert(clientObj._pollingStateMachine.register.calledOnce);
         assert.isOk(err);
         callback();
       });

@@ -8,6 +8,7 @@ var sinon = require('sinon');
 var Http = require('../lib/http.js').Http;
 var errors = require('azure-iot-common').errors;
 var ProvisioningDeviceConstants = require('azure-iot-provisioning-device').ProvisioningDeviceConstants;
+var PollingStateMachine = require('azure-iot-provisioning-device').PollingStateMachine;
 
 describe('Http', function () {
   var fakeApiVersion = ProvisioningDeviceConstants.apiVersion;
@@ -34,7 +35,7 @@ describe('Http', function () {
 
   var fakeAssignedResponse = JSON.stringify({
     status: 'Assigned',
-    registrationStatus: {
+    registrationState: {
       assignedHub: 'fakeHub',
       deviceId: 'fakeDeviceId'
     }
@@ -45,7 +46,25 @@ describe('Http', function () {
     http.setTransportOptions({
       pollingInterval: 1
     });
-    return http;
+
+    var pollingStateMachine = new PollingStateMachine(http);
+
+    pollingStateMachine.registerX509 = function(request, auth, callback) {
+      http.setAuthentication(auth);
+      pollingStateMachine.register(request, function(err, body, result) {
+        if (err) {
+          callback(err);
+        } else {
+          callback(null, body.registrationState, body);
+        }
+      });
+    };
+
+    pollingStateMachine.setTransportOptions = function(options) {
+      http.setTransportOptions(options);
+    }
+
+    return pollingStateMachine;
   };
 
   this.timeout(100);
@@ -440,7 +459,7 @@ describe('Http', function () {
 
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_024: [ `register` shall deserialize the body of the operation status response into an object. ] */
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_027: [ If the operation status response contains a success status code with a 'status' of 'Assigned', `register` shall stop polling and call the `callback` with `err` == null and the body containing the deserialized body. ] */
-    it('stops polling when status is assinged', function(testCallback) {
+    it('stops polling when status is assigned', function(testCallback) {
       var fakeBase = {};
       var callbackCount = 0;
       fakeBase.buildRequest = function(method, path, httpHeaders, host, auth, done) {
@@ -448,7 +467,7 @@ describe('Http', function () {
         if (callbackCount === 1) {
           done(null, '{"status" : "Assigning", "operationId" : "' + fakeOperationId + '"}', { statusCode: 200 });
         } else {
-        done(null, fakeAssignedResponse, { statusCode: 200 });
+          done(null, fakeAssignedResponse, { statusCode: 200 });
         }
         return fakeRequest;
       };

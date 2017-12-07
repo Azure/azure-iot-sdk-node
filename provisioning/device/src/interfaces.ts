@@ -63,7 +63,7 @@ export interface RegistrationResult {
  * @private
  */
 export interface PollingTransportHandlers {
-  registrationRequest(request: RegistrationRequest, requestBody: any, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
+  registrationRequest(request: RegistrationRequest, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
   queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
   cancel(callback: (err?: Error) => void): void;
 }
@@ -135,6 +135,7 @@ export interface TpmRegistrationResult extends RegistrationResult {
  * @private
  */
 export interface TpmProvisioningTransport extends PollingTransportHandlers {
+  setSasToken(sasToken: string): void;
   getAuthenticationChallenge(registrationInfo: TpmRegistrationInfo, callback: (err: Error, tpmChallenge?: TpmChallenge) => void): void;
 }
 

@@ -8,7 +8,6 @@ var sinon = require('sinon');
 var assert = require('chai').assert;
 
 var fakeErrorText = '__FAKE_ERROR__';
-var fakeRequestBody = { fake: true };
 var fakeBadStatus = '__FAKE_BAD_STATUS__';
 var fakeRequest = {
   requestId: '__FAKE_REGISTRATION_ID__',
@@ -17,11 +16,11 @@ var fakeRequest = {
 }
 
 var waitingForNetworkIo = function () { return sinon.spy(function () { }); };
-var registrationRequestReturnsAssigning = function (pollingInterval) { return sinon.spy(function (request, body, callback) { callback(null, { status: 'Assigning' }, null, pollingInterval || 0); }); };
-var registrationRequestReturnsAssigned = function () { return sinon.spy(function (request, body, callback) { callback(null, { status: 'Assigned' }); }); };
-var registrationRequestReturnsFailed = function () { return sinon.spy(function (request, body, callback) { callback(null, { status: 'Failed' }); }); };
-var registrationRequestReturnsFailure = function () { return sinon.spy(function (request, body, callback) { callback(new Error(fakeErrorText)); }); };
-var registrationRequestReturnsBadResponse = function () { return sinon.spy(function (request, body, callback) { callback(null, { status: fakeBadStatus }); }); };
+var registrationRequestReturnsAssigning = function (pollingInterval) { return sinon.spy(function (request, callback) { callback(null, { status: 'Assigning' }, null, pollingInterval || 0); }); };
+var registrationRequestReturnsAssigned = function () { return sinon.spy(function (request, callback) { callback(null, { status: 'Assigned' }); }); };
+var registrationRequestReturnsFailed = function () { return sinon.spy(function (request, callback) { callback(null, { status: 'Failed' }); }); };
+var registrationRequestReturnsFailure = function () { return sinon.spy(function (request, callback) { callback(new Error(fakeErrorText)); }); };
+var registrationRequestReturnsBadResponse = function () { return sinon.spy(function (request, callback) { callback(null, { status: fakeBadStatus }); }); };
 var operationStatusReturnsAssigned = function () { return sinon.spy(function (request, operationId, callback) { callback(null, { status: 'Assigned' } ); }); };
 var operationStatusReturnsFailed = function () { return sinon.spy(function (request, operationId, callback) { callback(null, { status: 'Failed' } ); }); };
 var operationStatusReturnsFailure = function () { return sinon.spy(function (request, operationId, callback) { callback(new Error(fakeErrorText)); }); };
@@ -46,7 +45,7 @@ describe('state machine', function () {
   var makeNewMachine = function () {
     /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_001: [ The `constructor` shall accept no arguments ] */
     var machine = new PollingStateMachine({
-      endSession: sinon.stub().callsArg(0),
+      cancel: sinon.stub().callsArg(0),
       registrationRequest: registrationRequestReturnsAssigned(),
       queryOperationStatus: operationStatusReturnsAssigned(),
       getErrorResult:sinon.stub().callsArg(0)
@@ -55,14 +54,14 @@ describe('state machine', function () {
   };
 
   var assertNoTransportFunctionsCalled = function (machine) {
-    assert.isFalse(machine._transport.endSession.called);
+    assert.isFalse(machine._transport.cancel.called);
     assert.isFalse(machine._transport.registrationRequest.called);
     assert.isFalse(machine._transport.queryOperationStatus.called);
     assert.isFalse(machine._transport.getErrorResult.called);
   };
 
   var callRegisterWithDefaultArgs = function (callback) {
-    machine.register(fakeRequest, fakeRequestBody, callback);
+    machine.register(fakeRequest, callback);
   };
 
   var machine;
@@ -271,16 +270,16 @@ describe('state machine', function () {
       });
     });
 
-    describe('calls endSession', function () {
+    describe('calls cancel', function () {
 
-      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_026: [ `cancel` shall call `endSession` of it's called while the transport is connected. ] */
+      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_026: [ `cancel` shall call `cancel` of it's called while the transport is connected. ] */
       it ('if called while connected', function (testCallback) {
         callRegisterWithDefaultArgs(function(err) {
           assert(!err);
-          assert.isFalse(machine._transport.endSession.called);
+          assert.isFalse(machine._transport.cancel.called);
           machine.cancel(function(err) {
             assert(!err);
-            assert(machine._transport.endSession.calledOnce);
+            assert(machine._transport.cancel.calledOnce);
             testCallback();
           });
         });
@@ -290,7 +289,7 @@ describe('state machine', function () {
       it ('and causes register to fail if called while sending the first request', function (testCallback) {
         var registrationErr;
         var registrationCallback;
-        machine._transport.registrationRequest = sinon.spy(function (request, requestBody, callback) {
+        machine._transport.registrationRequest = sinon.spy(function (request, callback) {
           registrationCallback = callback;
         });
         callRegisterWithDefaultArgs(function(err) {
@@ -304,7 +303,7 @@ describe('state machine', function () {
           machine.cancel(function() {
             registrationCallback();
             assert(!!registrationErr);
-            assert(machine._transport.endSession.calledOnce);
+            assert(machine._transport.cancel.calledOnce);
             testCallback();
           });
         }, 2);
@@ -324,7 +323,7 @@ describe('state machine', function () {
         setTimeout(function () {
           machine.cancel(function() {
             assert(!!registrationErr);
-            assert(machine._transport.endSession.calledOnce);
+            assert(machine._transport.cancel.calledOnce);
             testCallback();
           });
         }, 2);
@@ -349,7 +348,7 @@ describe('state machine', function () {
           machine.cancel(function() {
             registrationCallback();
             assert(!!registrationErr);
-            assert(machine._transport.endSession.calledOnce);
+            assert(machine._transport.cancel.calledOnce);
             testCallback();
           });
         }, 2);

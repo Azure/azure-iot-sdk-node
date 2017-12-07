@@ -103,7 +103,6 @@ var X509Individual = function() {
     var transport = new Transport();
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
     provisioningDeviceClient.register(function (err, result) {
-      debug(result);
       callback(err, result);
     });
   };
@@ -215,7 +214,6 @@ var X509Group = function() {
     var transport = new Transport();
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
     provisioningDeviceClient.register(function (err, result) {
-      debug(result);
       assert.isOk(result.deviceId);
       self._deviceId = result.deviceId;
       callback(err, result);

@@ -838,7 +838,7 @@ function _parseMessage(topic: string, body: any): MethodMessage {
   try {
     url = URL.parse(topic);
     path = url.path.split('/');
-    query = querystring.parse(url.query);
+    query = querystring.parse(url.query as string);
   } catch (err) {
     debug('could not parse topic for received message: ' + topic);
     return undefined;

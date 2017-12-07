@@ -26,15 +26,15 @@ var fakeTpmSecurity = {
 var fakeInvalidSecurity = {};
 
 var fakeX509Transport = {
-  setTransportOptions: function() {},
-  endSession: function() {},
-  registerX509: function() {}
+  registrationRequest: function() {},
+  queryOperationStatus: function() {},
+  cancel: function() {},
+  setAuthentication: function() {},
+  setTransportOptions: function() {}
 };
 
 var fakeTpmTransport = {
   getAuthenticationChallenge: function() {},
-  register: function() {},
-  cancel: function() {}
 };
 
 var fakeProvisioningHost = 'fake_host';
