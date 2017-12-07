@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import * as machina from 'machina';
 import * as dbg from 'debug';
-const debug = dbg('azure-device-provisioning:TPM');
+const debug = dbg('azure-iot-provisioning-device:TpmRegistration');
 import { RegistrationClient, TpmProvisioningTransport, TpmSecurityClient, TpmRegistrationInfo } from './interfaces';
 import { PollingStateMachine } from './polling_state_machine';
 

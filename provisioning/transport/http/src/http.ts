@@ -11,7 +11,7 @@ import { RegistrationRequest } from 'azure-iot-provisioning-device';
 import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure-iot-provisioning-device';
 import { translateError } from 'azure-iot-provisioning-device';
 import * as dbg from 'debug';
-const debug = dbg('azure-device-provisioning-http:Http');
+const debug = dbg('azure-iot-provisioning-device-http:Http');
 
 const _defaultHeaders = {
   'Accept' : 'application/json',

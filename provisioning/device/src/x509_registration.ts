@@ -5,7 +5,7 @@
 import { RegistrationClient, RegistrationRequest, X509ProvisioningTransport, X509SecurityClient } from './interfaces';
 import { PollingStateMachine } from './polling_state_machine';
 import * as dbg from 'debug';
-const debug = dbg('azure-device-provisioning:x509');
+const debug = dbg('azure-iot-provisioning-device:X509Registration');
 
 /**
  * @private
@@ -37,6 +37,7 @@ export class X509Registration implements RegistrationClient {
       /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_001: [ `register` shall call `getCertificate` on the security object to acquire the X509 certificate. ] */
       this._securityClient.getCertificate((err, cert)  => {
       if (err) {
+        /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_006: [ If `getCertificate`fails, `register` shall call `callback` with the error ] */
         debug('security client returned error on cert acquisition');
         callback(err);
       } else {
@@ -51,6 +52,7 @@ export class X509Registration implements RegistrationClient {
         /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_002: [ `register` shall call `registerX509` on the transport object and call it's callback with the result of the transport operation. ] */
         this._pollingStateMachine.register(request, (err, response) => {
           if (err) {
+            /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_005: [ If `register` on the pollingStateMachine fails, `register` shall call `callback` with the error ] */
             callback(err, response);
           } else {
             callback(err, response.registrationState);

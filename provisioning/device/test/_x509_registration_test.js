@@ -33,29 +33,30 @@ describe('X509Registration', function () {
         setAuthentication: sinon.spy(),
       };
       var security = {
-        getCertificate: sinon.spy(function(callback) { callback(null, fakeX509Cert); }),
-        getRegistrationId: function() { return fakeRegistrationId; }
+        getCertificate: sinon.stub().callsArgWith(0, null, fakeX509Cert),
+        getRegistrationId: sinon.stub().returns(fakeRegistrationId)
       };
       var clientObj = new X509Registration(fakeProvisioningHost, fakeIdScope, transport, security);
-      clientObj._pollingStateMachine.register = sinon.spy(function(request, callback) { callback(null, { registrationState: fakeResponse }); });
+      clientObj._pollingStateMachine.register = sinon.stub().callsArgWith(1, null, { registrationState: fakeResponse } );
       clientObj.register(function(err, response) {
         assert.isNotOk(err);
         assert.strictEqual(response, fakeResponse);
         assert(clientObj._pollingStateMachine.register.calledOnce);
-        assert.strictEqual(clientObj._pollingStateMachine.register.getCall(0).args[0].provisioningHost, fakeProvisioningHost);
-        assert.strictEqual(clientObj._pollingStateMachine.register.getCall(0).args[0].idScope, fakeIdScope);
-        assert.strictEqual(clientObj._pollingStateMachine.register.getCall(0).args[0].registrationId, fakeRegistrationId);
+        assert.strictEqual(clientObj._pollingStateMachine.register.firstCall.args[0].provisioningHost, fakeProvisioningHost);
+        assert.strictEqual(clientObj._pollingStateMachine.register.firstCall.args[0].idScope, fakeIdScope);
+        assert.strictEqual(clientObj._pollingStateMachine.register.firstCall.args[0].registrationId, fakeRegistrationId);
         assert(security.getCertificate.calledOnce);
         assert(transport.setAuthentication.calledOnce);
-        assert.strictEqual(transport.setAuthentication.getCall(0).args[0], fakeX509Cert);
+        assert.strictEqual(transport.setAuthentication.firstCall.args[0], fakeX509Cert);
         callback();
       });
     });
 
+    /* Tests_SRS_NODE_DPS_X509_REGISTRATION_18_006: [ If `getCertificate`fails, `register` shall call `callback` with the error ] */
     it ('fails if getCertificate fails', function(callback) {
       var security = {
-        getCertificate: sinon.spy(function(callback) { callback(new Error()); }),
-        getRegistrationId: function() { return fakeRegistrationId; }
+        getCertificate: sinon.stub().callsArgWith(0, new Error()),
+        getRegistrationId: sinon.stub().returns(fakeRegistrationId)
       };
       var transport = {
         setAuthentication: function() {}
@@ -69,16 +70,17 @@ describe('X509Registration', function () {
       });
     });
 
-    it ('fails if registerX509 fails', function(callback) {
+    /* Tests_SRS_NODE_DPS_X509_REGISTRATION_18_005: [ If `register` on the pollingStateMachine fails, `register` shall call `callback` with the error ] */
+    it ('fails if register fails', function(callback) {
       var transport = {
         setAuthentication: function() {}
       };
       var security = {
-        getCertificate: sinon.spy(function(callback) { callback(null, fakeX509Cert); }),
-        getRegistrationId: function() { return fakeRegistrationId; }
+        getCertificate: sinon.stub().callsArgWith(0, null, fakeX509Cert),
+        getRegistrationId: sinon.stub().returns(fakeRegistrationId)
       };
       var clientObj = new X509Registration(fakeProvisioningHost, fakeIdScope, transport, security);
-      clientObj._pollingStateMachine.register = sinon.spy(function(request, callback) { callback( new Error()); });
+      clientObj._pollingStateMachine.register = sinon.stub().callsArgWith(1, new Error());
       clientObj.register(function(err, response) {
         assert(security.getCertificate.calledOnce);
         assert(clientObj._pollingStateMachine.register.calledOnce);

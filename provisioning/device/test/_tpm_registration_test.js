@@ -49,7 +49,7 @@ describe('TpmRegistration', function () {
       };
 
       tpmReg = new TpmRegistration(fakeProvisioningHost, fakeIdScope, fakeProvisioningTransport, fakeSecurityClient);
-      tpmReg._pollingStateMachine.register = sinon.spy(function(request, callback) { callback(null, fakeTpmRegistrationResult); });
+      tpmReg._pollingStateMachine.register = sinon.stub().callsArgWith(1, null, fakeTpmRegistrationResult);
     });
 
     /*Tests_SRS_NODE_DPS_TPM_REGISTRATION_16_001: [The `register` method shall get the endorsement key by calling `getEndorsementKey` on the `TpmSecurityClient` object passed to the constructor.]*/

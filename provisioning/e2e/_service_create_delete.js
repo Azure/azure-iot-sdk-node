@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 var uuid = require('uuid');
-var debug = require('debug')('azure-device-provisioning-e2e');
+var debug = require('debug')('azure-iot-provisioning-device-e2e');
 
 var provisioningServiceClient = require('azure-iot-provisioning-service').ProvisioningServiceClient;
 
