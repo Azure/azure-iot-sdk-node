@@ -7,21 +7,23 @@
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
+    "async": "^2.6.0",
     "azure-iot-amqp-base": "1.2.3",
     "azure-iot-common": "1.2.2",
     "azure-iot-provisioning-device": "0.0.1",
     "debug": "^3.0.1",
-    "machina": "^2.0.0"
+    "machina": "^2.0.0",
+    "uuid": "^3.1.0"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
+    "chai": "^4.1.2",
     "istanbul": "^0.4.4",
     "jshint": "^2.9.2",
-    "mocha": "^3.0.1",
-    "sinon": "^1.17.5",
+    "mocha": "^4.0.1",
+    "sinon": "^4.1.2",
     "tslint": "^5.1.0",
-    "typescript": "2.2.2",
-    "@types/node": "^7.0.5"
+    "typescript": "2.6.2",
+    "@types/node": "^8.0.55"
   },
   "scripts": {
     "lint": "tslint --project . -c ../../../tslint.json",

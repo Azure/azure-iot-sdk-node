@@ -3,6 +3,7 @@
 
 'use strict';
 import { RegistrationClient, RegistrationRequest, X509ProvisioningTransport, X509SecurityClient } from './interfaces';
+import { PollingStateMachine } from './polling_state_machine';
 import * as dbg from 'debug';
 const debug = dbg('azure-device-provisioning:x509');
 
@@ -15,12 +16,14 @@ export class X509Registration implements RegistrationClient {
   private _securityClient: X509SecurityClient;
   private _provisioningHost: string;
   private _idScope: string;
+  private _pollingStateMachine: PollingStateMachine;
 
   constructor(provisioningHost: string, idScope: string, transport: X509ProvisioningTransport, securityClient: X509SecurityClient) {
     this._provisioningHost = provisioningHost;
     this._idScope = idScope;
     this._transport = transport;
     this._securityClient = securityClient;
+    this._pollingStateMachine = new PollingStateMachine(this._transport);
   }
 
   /**
@@ -43,16 +46,14 @@ export class X509Registration implements RegistrationClient {
           provisioningHost: this._provisioningHost,
           idScope: this._idScope
         };
+        this._transport.setAuthentication(cert);
         /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_002: [ `register` shall call `registerX509` on the transport object and call it's callback with the result of the transport operation. ] */
-        this._transport.registerX509(request, cert, (err, result, body) => {
+        this._pollingStateMachine.register(request, {'registrationId' : request.registrationId}, (err, response) => {
           if (err) {
-            debug('_stateMachine.register returned error');
-            debug(err.toString);
-            debug(body);
-            callback(err, result);
+            callback(err, response);
           } else {
-            callback(null, result);
-          }
+            callback(err, response.registrationState);
+         }
         });
       }
     });

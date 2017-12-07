@@ -168,7 +168,7 @@ export class  PollingStateMachine extends EventEmitter {
               this._currentOperationCallback = null;
               _callback(new errors.OperationCancelledError(''));
             }
-            this._transport.endSession((disconnectErr) => {
+            this._transport.cancel((disconnectErr) => {
               if (disconnectErr) {
                 debug('error received from transport during disconnection:' + disconnectErr.toString());
               }
