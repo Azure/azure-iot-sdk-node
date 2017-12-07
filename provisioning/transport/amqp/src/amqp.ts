@@ -57,7 +57,9 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
       /*Codes_SRS_NODE_PROVISIONING_AMQP_16_017: [The `queryOperationStatus` method shall call its callback with a `RegistrationResult` object parsed from the body of the response message which `correlationId` matches the `correlationId` of the request message sent on the sender link.]*/
       const registrationResult = JSON.parse(msg.data);
       if (this._operations[msg.correlationId]) {
-        this._operations[msg.correlationId](null, registrationResult, msg, this._config.pollingInterval);
+        const requestCallback = this._operations[msg.correlationId];
+        delete this._operations[msg.correlationId];
+        requestCallback(null, registrationResult, msg, this._config.pollingInterval);
       } else {
         debug('ignoring message with unknown correlationId');
       }
@@ -198,7 +200,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
             this._operations[requestMessage.properties.correlationId] = callback;
             this._senderLink.send(requestMessage, (err) => {
               if (err) {
-                this._operations[requestMessage.properties.correlationId] = undefined;
+                delete this._operations[requestMessage.properties.correlationId];
                 /*Codes_SRS_NODE_PROVISIONING_AMQP_16_011: [The `registrationRequest` method shall call its callback with an error if the transport fails to send the request message.]*/
                 callback(err, null, null, this._config.pollingInterval);
               } else {
