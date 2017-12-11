@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'events';
 import { RestApiClient, Http as Base } from 'azure-iot-http-base';
-import { errors, X509 } from 'azure-iot-common';
+import { X509 } from 'azure-iot-common';
 import { X509ProvisioningTransport } from 'azure-iot-provisioning-device';
 import { RegistrationRequest } from 'azure-iot-provisioning-device';
 import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure-iot-provisioning-device';
@@ -64,7 +64,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
   /**
    * private
    */
-  registrationRequest(request: RegistrationRequest, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
+  registrationRequest(request: RegistrationRequest, callback: (err?: Error, result?: any, response?: any, pollingInterval?: number) => void): void {
 
     this._restApiClient = new RestApiClient({ 'host' : request.provisioningHost , 'x509' : this._auth}, ProvisioningDeviceConstants.userAgent, this._httpBase);
 
@@ -91,19 +91,17 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_014: [ If the registration response has a failed status code, `register` shall use `translateError` to translate this to a common error object and pass this into the `callback` function along with the deserialized body of the response. ] */
     debug('submitting PUT for ' + request.registrationId + ' to ' + path);
     debug(JSON.stringify(requestBody));
-    this._restApiClient.executeApiCall('PUT', path, httpHeaders, requestBody, this._config.timeoutInterval, (err: Error, responseBody?: any, result?: any) => {
+    this._restApiClient.executeApiCall('PUT', path, httpHeaders, requestBody, this._config.timeoutInterval, (err: Error, result?: any, response?: any) => {
       if (err) {
         debug('error executing PUT: ' + err.toString());
-        let wrappedErr: Error = new errors.DeviceRegistrationFailedError('HTTP error executing PUT');
-        (wrappedErr as any).innerError = err;
-        callback(wrappedErr);
+        callback(err, result, response);
       } else {
         debug('PUT response received:');
-        debug(JSON.stringify(responseBody));
-        if (result.statusCode < 300) {
-          callback(null, responseBody, result, this._config.pollingInterval);
+        debug(JSON.stringify(result));
+        if (response.statusCode < 300) {
+          callback(null, result, response, this._config.pollingInterval);
         } else {
-          callback(translateError('PUT operation returned failure', result.statusCode, responseBody, result));
+          callback(translateError('PUT operation returned failure', response.statusCode, result, response));
         }
       }
     });
@@ -112,7 +110,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
   /**
    * private
    */
-  queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
+  queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, result?: any, response?: any, pollingInterval?: number) => void): void {
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_022: [ operation status request polling shall be a GET operation sent to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/operations/{operationId}' ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_037: [ The operation status request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
     let path: string = '/' + request.idScope + '/registrations/' + request.registrationId + '/operations/' + operationId + '?api-version=' + ProvisioningDeviceConstants.apiVersion;
@@ -128,19 +126,17 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_025: [ If the body of the operation status response fails to deserialize, `register` will throw a `SyntaxError` error. ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_026: [ If the operation status response contains a failure status code, `register` shall stop polling and call the `callback` with an error created using `translateError`. ] */
     debug('submitting status GET for ' + request.registrationId + ' to ' + path);
-    this._restApiClient.executeApiCall('GET', path, httpHeaders, {}, this._config.timeoutInterval, (err: Error, responseBody?: any, result?: any) => {
+    this._restApiClient.executeApiCall('GET', path, httpHeaders, {}, this._config.timeoutInterval, (err: Error, result?: any, response?: any) => {
       if (err) {
         debug('error executing GET: ' + err.toString());
-        let wrappedErr: Error = new errors.DeviceRegistrationFailedError('HTTP error executing GET');
-        (wrappedErr as any).innerError = err;
-        callback(wrappedErr);
+        callback(err, result, response);
       } else {
         debug('GET response received:');
-        debug(JSON.stringify(responseBody));
-        if (result.statusCode < 300) {
-          callback(null, responseBody, result, this._config.pollingInterval);
+        debug(JSON.stringify(result));
+        if (response.statusCode < 300) {
+          callback(null, result, response, this._config.pollingInterval);
         } else {
-          callback(translateError('GET operation returned failure', result.statusCode, responseBody, result));
+          callback(translateError('GET operation returned failure', response.statusCode, result, response));
         }
       }
     });

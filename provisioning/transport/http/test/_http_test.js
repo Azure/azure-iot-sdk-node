@@ -131,9 +131,8 @@ describe('Http', function () {
       };
       var http = makeNewTransport(fakeBase);
       http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
-        assert.equal('DeviceRegistrationFailedError', err.constructor.name);
-        assert.strictEqual('HTTP error executing PUT', err.message);
-        assert.strictEqual(fakeErrorString, err.innerError.message);
+        assert.equal('Error', err.constructor.name);
+        assert.strictEqual(fakeErrorString, err.message);
         testCallback();
       });
     });
@@ -404,10 +403,8 @@ describe('Http', function () {
 
       var http = makeNewTransport(fakeBase);
       http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
-        assert.equal('DeviceRegistrationFailedError', err.constructor.name);
-        assert.equal('HTTP error executing GET', err.message);
-        assert.instanceOf(err.innerError, SyntaxError);
-        assert.strictEqual('__FAKE_ERROR__', err.innerError.message)
+        assert.instanceOf(err, SyntaxError);
+        assert.strictEqual('__FAKE_ERROR__', err.message)
         testCallback();
       });
     });
@@ -450,9 +447,7 @@ describe('Http', function () {
 
       var http = makeNewTransport(fakeBase);
       http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
-        assert.equal('DeviceRegistrationFailedError', err.constructor.name);
-        assert.equal('HTTP error executing GET', err.message);
-        assert.instanceOf(err.innerError, errors.ArgumentError);
+        assert.instanceOf(err, errors.ArgumentError);
         testCallback();
       });
     });

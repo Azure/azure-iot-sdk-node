@@ -63,8 +63,8 @@ export interface RegistrationResult {
  * @private
  */
 export interface PollingTransport {
-  registrationRequest(request: RegistrationRequest, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
-  queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, body?: any, result?: any, pollingInterval?: number) => void): void;
+  registrationRequest(request: RegistrationRequest, callback: (err?: Error, result?: any, response?: any, pollingInterval?: number) => void): void;
+  queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, result?: any, response?: any, pollingInterval?: number) => void): void;
   cancel(callback: (err?: Error) => void): void;
 }
 

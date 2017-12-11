@@ -443,3 +443,16 @@ export class DeviceRegistrationFailedError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 }
+
+export class TransportSpecificError extends Error {
+  transportError: Error;
+  transportObject: any;
+  constructor(message?: string, transportError?: Error, transportObject?: any) {
+    super(message);
+    this.name = 'TransportSpecificError';
+    this.message = message;
+    this.transportError = transportError;
+    this.transportObject = transportObject;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}

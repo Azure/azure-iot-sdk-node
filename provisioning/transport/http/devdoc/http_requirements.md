@@ -1,4 +1,4 @@
-# azure-iot-provisioning-http Requirements
+# azure-iot-provisioning-device-http Requirements
 
 ## Overview
 This module provides HTTP protocol support to communicate with the Azure device provisioning service

@@ -50,12 +50,12 @@ export class X509Registration implements RegistrationClient {
         /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_004: [ `register` shall pass the certificate into the `setAuthentication` method on the transport ] */
         this._transport.setAuthentication(cert);
         /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_002: [ `register` shall call `registerX509` on the transport object and call it's callback with the result of the transport operation. ] */
-        this._pollingStateMachine.register(request, (err, response) => {
+        this._pollingStateMachine.register(request, (err, result) => {
           if (err) {
             /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_005: [ If `register` on the pollingStateMachine fails, `register` shall call `callback` with the error ] */
-            callback(err, response);
+            callback(err, result);
           } else {
-            callback(err, response.registrationState);
+            callback(err, result.registrationState);
          }
         });
       }

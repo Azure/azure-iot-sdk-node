@@ -3,16 +3,15 @@
 
 'use strict';
 
-var Mqtt = require('./lib/mqtt.js').Mqtt;
-
 /**
- * The `azure-iot-provisioning-mqtt` module provides support for the MQTT protocol to the Azure Device Provisoning Service.
+ * The `azure-iot-provisioning-device-mqtt` module provides support for the MQTT protocol to the Azure Device Provisoning Service.
  *
- * @module azure-iot-provisioning-mqtt
+ * @module azure-iot-provisioning-device-mqtt
  * @requires module:azure-iot-mqtt-base
  * @requires module:azure-iot-common
  */
 
 module.exports = {
-  Mqtt: Mqtt
+  Mqtt: require('./lib/mqtt.js').Mqtt,
+  MqttWs: require('./lib/mqtt_ws.js').MqttWs
 };

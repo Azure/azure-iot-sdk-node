@@ -9,12 +9,11 @@
  - A custom error message to give context to the user.
  - the status code that initiated the error
  - the response body
- - the response object itself **]**
-
+ - the transport object that is associated with this error **]**
 
 ** SRS_NODE_DPS_ERRORS_18_008: [** Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 3 properties:
- - `response` shall contain the `IncomingMessage` object returned by the HTTP layer.
- - `reponseBody` shall contain the content of the HTTP response.
+ - `responseBody` shall contain the body of the response
+ - `transportObject` shall contain the transport object that is associated with this error
  - `message` shall contain a human-readable error message **]**
 
 ** SRS_NODE_DPS_ERRORS_18_002: [** `translateError` shall return an `ArgumentError` if the status code is `400`. **]**

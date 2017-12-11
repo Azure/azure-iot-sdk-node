@@ -204,12 +204,13 @@ export class MqttBase extends EventEmitter {
     let options: IClientOptions = {
       protocolId: 'MQTT',
       protocolVersion: 4,
-      clean: false,
+      clean: this._config.clean || false,
       clientId: this._config.deviceId,
       rejectUnauthorized: true,
-      username: this._config.host + '/' + this._config.deviceId +
+      username: this._config.username ||
+                (this._config.host + '/' + this._config.deviceId +
                 '/DeviceClientType=' + this._sdkVersionString +
-                '&' + endpoint.versionQueryString().substr(1),
+                '&' + endpoint.versionQueryString().substr(1)),
       reconnectPeriod: 0,  // Client will handle reconnection at the higher level.
       /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_016: [The `connect` method shall configure the `keepalive` ping interval to 3 minutes by default since the Azure Load Balancer TCP Idle timeout default is 4 minutes.]*/
       keepalive: 180,
@@ -274,6 +275,8 @@ export namespace MqttBase {
     sharedAccessSignature?: string | SharedAccessSignature;
     deviceId: string;
     x509?: X509;
+    username?: string;
+    clean?: boolean;
   }
 }
 

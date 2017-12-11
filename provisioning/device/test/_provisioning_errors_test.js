@@ -23,30 +23,30 @@ describe('translateError', function() {
     { statusCode: 500, statusMessage: 'Internal Server Error', errorMessage: 'Fake internal server error', expectedErrorType: errors.InternalServerError },
     { statusCode: 999, statusMessage: 'Unknown status code', errorMessage: 'fake unknown status error', expectedErrorType: Error },
   ].forEach(function(testParams) {
-    it('returns an \'' + testParams.expectedErrorType.name + '\' if the response status code is \'' + testParams.statusCode + '\'', function(){
-      var fake_response = {
-      statusCode: testParams.statusCode,
-      statusMessage: testParams.statusMessage,
-    };
-    var fake_response_body = testParams.statusCode + ': ' + testParams.statusMessage;
+    it ('returns an \'' + testParams.expectedErrorType.name + '\' if the response status code is \'' + testParams.statusCode + '\'', function() {
+      var fakeTransportObject = {
+        statusCode: testParams.statusCode,
+        statusMessage: testParams.statusMessage,
+      };
+      var fakeResposneBody = testParams.statusCode + ': ' + testParams.statusMessage;
 
-    /* Tests_SRS_NODE_DPS_ERRORS_18_001: [`translateError` shall accept 4 arguments:
-    * - A custom error message to give context to the user.
-    * - the status code that initiated the error
-    * - the response body
-    * - the response object itself]
-    */
-    var err = translateError(new Error(testParams.errorMessage), fake_response.statusCode, fake_response_body, fake_response);
-    assert.instanceOf(err, testParams.expectedErrorType);
+      /* Tests_SRS_NODE_DPS_ERRORS_18_001: [`translateError` shall accept 4 arguments:
+      * - A custom error message to give context to the user.
+      * - the status code that initiated the error
+      * - the response body
+      * - the transport object that is associated with this error]
+      */
+      var err = translateError(testParams.errorMessage, fakeTransportObject.statusCode, fakeResposneBody, fakeTransportObject);
+      assert.instanceOf(err, testParams.expectedErrorType);
 
-    /* Tests_SRS_NODE_DPS_ERRORS_18_008: [Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 3 properties:
-    * - `response` shall contain the `IncomingMessage` object returned by the HTTP layer.
-    * - `reponseBody` shall contain the content of the HTTP response.
-    * - `message` shall contain a human-readable error message]
-    */
-    assert.equal(err.message, 'Error: ' + testParams.errorMessage);
-    assert.equal(err.responseBody, fake_response_body);
-    assert.equal(err.response, fake_response);
+      /* Tests_SRS_NODE_DPS_ERRORS_18_008: [Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 3 properties:
+      * - `responseBody` shall contain the body of the response
+      * - `transportObject` shall contain the transport object that is associated with this error
+      * - `message` shall contain a human-readable error message]
+      */
+      assert.strictEqual(err.message, testParams.errorMessage);
+      assert.strictEqual(err.responseBody, fakeResposneBody);
+      assert.strictEqual(err.transportObject, fakeTransportObject);
     });
   });
 });
