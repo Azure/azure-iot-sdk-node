@@ -231,7 +231,7 @@ describe('Mqtt', function () {
       });
     });
 
-    /*Tests_SRS_NODE_COMMON_MQTT_BASE_26_001: [The `sendEvent` method shall serialize the `diagnosticPropertyData` property of the message as a key-value pair on the topic with the key `$.diagId` and `$.diagctx`.]*/
+    /*Tests_SRS_NODE_COMMON_MQTT_BASE_26_001: [The `sendEvent` method shall serialize the `diagnostics` property of the message as a key-value pair on the topic with the key `$.diagId` and `$.diagctx`.]*/
     it('serializes Message.diagnosticPropertyData as $.diagid and $.diagctx on the topic', function (done) {
       var config = {
         host: "host.name",
@@ -240,9 +240,9 @@ describe('Mqtt', function () {
       };
 
       var testMessage = new Message('message');
-      testMessage.diagnosticPropertyData = {
-        getDiagnosticId: () => 'fakeDiagnosticId',
-        getCorrelationContext: () => 'fakeCorrelationContext'
+      testMessage.diagnostics = {
+        id: 'fakeDiagnosticId',
+        getEncodedCorrelationContext: () => 'fakeCorrelationContext'
       };
       testMessage.properties.add('fakeKey', 'fakeValue');
 

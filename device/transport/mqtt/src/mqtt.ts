@@ -389,10 +389,11 @@ export class Mqtt extends EventEmitter implements Client.Transport {
       const expiryString = message.expiryTimeUtc instanceof Date ? message.expiryTimeUtc.toISOString() : message.expiryTimeUtc;
       systemProperties['$.exp'] = (expiryString || undefined);
     }
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_26_001: [The `sendEvent` method shall add diagnostic information as MQTT system properties.]*/
-    if (message.diagnosticPropertyData) {
-      systemProperties['$.diagid'] = message.diagnosticPropertyData.getDiagnosticId();
-      systemProperties['$.diagctx'] = message.diagnosticPropertyData.getCorrelationContext();
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_26_001: [The `sendEvent` method shall add diagnostic id as MQTT system properties.]*/
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_26_002: [The `sendEvent` method shall add diagnostic context as MQTT system properties.]*/
+    if (message.diagnostics) {
+      systemProperties['$.diagid'] = message.diagnostics.id;
+      systemProperties['$.diagctx'] = message.diagnostics.getEncodedCorrelationContext();
     }
 
     const sysPropString = querystring.stringify(systemProperties);

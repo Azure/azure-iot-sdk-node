@@ -7,7 +7,7 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 var Client = require('../lib/client.js').Client;
 var DiagnosticClient = require('../lib/client_diagnostic.js').DiagnosticClient;
-var DiagnosticPropertyData = require('../lib/client_diagnostic.js').DiagnosticPropertyData;
+var Diagnostics = require('../lib/client_diagnostic.js').Diagnostics;
 var errors = require('azure-iot-common').errors;
 var Message = require('azure-iot-common').Message;
 
@@ -84,7 +84,7 @@ describe('DiagnosticClient', function () {
       sinon.stub(clientDiagnostic, 'shouldAddDiagnosticInfo').returns(true);
       let message = new Message();
       clientDiagnostic.addDiagnosticInfoIfNecessary(message);
-      assert.instanceOf(message.diagnosticPropertyData, DiagnosticPropertyData);
+      assert.instanceOf(message.diagnostics, Diagnostics);
     });
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_DIAGNOSTIC_01_007: [The addDiagnosticInfoIfNecessary shall not add property to message if shouldAddDiagnosticInfo return false.]*/
@@ -93,49 +93,7 @@ describe('DiagnosticClient', function () {
       sinon.stub(clientDiagnostic, 'shouldAddDiagnosticInfo').returns(false);
       let message = new Message();
       clientDiagnostic.addDiagnosticInfoIfNecessary(message);
-      assert.isNull(message.diagnosticPropertyData);
-    });
-  });
-});
-
-describe('DiagnosticPropertyData', function () {
-  let fakeDiagnosticId = '12345678';
-  let fakeDiagnosticTime = '1234567890.123';
-  describe('#constructor', function () {
-    /*Tests_SRS_NODE_DEVICE_CLIENT_DIAGNOSTIC_02_001: [The DiagnosticPropertyData constructor throws if diagnosticId or diagnosticCreationTimeUtc is not valid.]*/
-    it('throws if diagnosticId or diagnosticCreationTimeUtc is not valid', function () {
-      let invalidValues = [null, undefined, ''];
-      for (let value of invalidValues) {
-        assert.throws(function () {
-          new DiagnosticPropertyData(value, value);
-        }, errors.ArgumentError);
-      }
-    });
-  });
-
-  describe('#setDiagnosticId', function () {
-    /*Tests_SRS_NODE_DEVICE_CLIENT_DIAGNOSTIC_02_002: [The setDiagnosticId shall throw if value is invalid.]*/
-    it('throw if value is invalid', function () {
-      let property = new DiagnosticPropertyData(fakeDiagnosticId, fakeDiagnosticTime);
-      let invalidValues = [null, undefined, ''];
-      for (let value of invalidValues) {
-        assert.throws(function () {
-          property.setDiagnosticId(value);
-        }, errors.ArgumentError);
-      }
-    });
-  });
-
-  describe('#setDiagnosticCreationTimeUtc', function () {
-    /*Tests_SRS_NODE_DEVICE_CLIENT_DIAGNOSTIC_02_003: [The setDiagnosticCreationTimeUtc shall throw if value is invalid.]*/
-    it('throw if value is invalid', function () {
-      let property = new DiagnosticPropertyData(fakeDiagnosticId, fakeDiagnosticTime);
-      let invalidValues = [null, undefined, ''];
-      for (let value of invalidValues) {
-        assert.throws(function () {
-          property.setDiagnosticCreationTimeUtc(value);
-        }, errors.ArgumentError);
-      }
+      assert.isNull(message.diagnostics);
     });
   });
 });

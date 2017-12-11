@@ -50,6 +50,8 @@ client.sendEvent(new Message('hello world'), print);
 
 **SRS_NODE_DEVICE_CLIENT_16_027: [** If a connection string argument is provided and is using SharedAccessKey authentication, the `Client` shall automatically generate and renew SAS tokens. **]**
 
+**SRS_NODE_DEVICE_CLIENT_26_001: [** The constructor shall initialize device client diagnostic. **]**
+
 ### Public Methods
 
 #### open(openCallback)

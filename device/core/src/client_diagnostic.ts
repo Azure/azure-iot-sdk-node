@@ -8,88 +8,46 @@ import { Message, errors } from 'azure-iot-common';
 /**
  * Data structure to store diagnostic property data
  */
-export class DiagnosticPropertyData {
-  // Key of creation time in diagnostic context.
-  static DIAGNOSTIC_CONTEXT_CREATION_TIME_UTC_PROPERTY: string = 'creationtimeutc';
+export class Diagnostics {
+  // Key of properties in diagnostic context.
+  static DIAGNOSTIC_CONTEXT_PROPERTY: any = {
+    creationTimeUtc: 'creationtimeutc'
+  };
   // Equal symbol in diagnostic context.
   static DIAGNOSTIC_CONTEXT_SYMBOL_EQUAL: string = '=';
   // And symbol in diagnostic context.
   static DIAGNOSTIC_CONTEXT_SYMBOL_AND: string = '&';
 
-  private diagnosticId: string;
-  private diagnosticCreationTimeUtc: string;
+  public id: string;
+  public correlationContext: any;
 
   /**
    * @constructor
    */
-  constructor(diagnosticId: string, diagnosticCreationTimeUtc: string) {
-    /* Codes_SRS_DIAGNOSTICPROPERTYDATA_01_001: [If the diagnosticId or diagnosticCreationTimeUtc is null, the constructor shall throw an IllegalArgumentException.] */
-    if (!diagnosticId || !diagnosticCreationTimeUtc) {
-      throw new errors.ArgumentError('The diagnosticId or diagnosticCreationTimeUtc cannot be null or empty.');
-    }
-
-    /* Codes_SRS_DIAGNOSTICPROPERTYDATA_01_002: [The constructor shall save the message body.] */
-    this.diagnosticId = diagnosticId;
-    this.diagnosticCreationTimeUtc = diagnosticCreationTimeUtc;
+  constructor(id: string, creationTimeUtc: string) {
+    /* Codes_SRS_DIAGNOSTICPROPERTYDATA_01_001: [The constructor shall save the message body.] */
+    this.id = id;
+    this.correlationContext = {
+      creationTimeUtc
+    };
   }
 
   /**
-   * @method            module:azure-iot-device.DiagnosticPropertyData.getDiagnosticId
-   * @description       get the diagnostic id.
-   *
-   * @returns {string}
-   */
-  getDiagnosticId(): string {
-    return this.diagnosticId;
-  }
-
-  /**
-   * @method            module:azure-iot-device.DiagnosticPropertyData.setDiagnosticId
-   * @description       set the diagnostic id.
-   * @param {string}    diagnosticId   The value of diagnostic id.
-   * @throws {ArgumentError}    If value is invalid
-   */
-  setDiagnosticId(diagnosticId: string): void {
-    /* Codes_SRS_DIAGNOSTICPROPERTYDATA_01_003: [A valid diagnosticId shall not be null or empty.] */
-    if (!diagnosticId) {
-      throw new errors.ArgumentError('The diagnosticId cannot be null or empty.');
-    }
-    this.diagnosticId = diagnosticId;
-  }
-
-  /**
-   * @method            module:azure-iot-device.DiagnosticPropertyData.getDiagnosticCreationTimeUtc
-   * @description       get the diagnostic creation timestamp.
-   *
-   * @returns {string}
-   */
-  getDiagnosticCreationTimeUtc(): string {
-    return this.diagnosticCreationTimeUtc;
-  }
-
-  /**
-   * @method            module:azure-iot-device.DiagnosticPropertyData.setDiagnosticCreationTimeUtc
-   * @description       set the diagnostic creation timestamp.
-   * @param {string}    diagnosticId   The value of diagnostic creation timestamp.
-   * @throws {ArgumentError}    If value is invalid
-   */
-  setDiagnosticCreationTimeUtc(diagnosticCreationTimeUtc: string): void {
-    /* Codes_SRS_DIAGNOSTICPROPERTYDATA_01_004: [A valid diagnosticCreationTimeUtc shall not be null or empty.] */
-    if (!diagnosticCreationTimeUtc) {
-      throw new errors.ArgumentError('The diagnosticCreationTimeUtc cannot be null or empty.');
-    }
-    this.diagnosticCreationTimeUtc = diagnosticCreationTimeUtc;
-  }
-
-  /**
-   * @method            module:azure-iot-device.DiagnosticPropertyData.getCorrelationContext
+   * @method            module:azure-iot-device.Diagnostics.getEncodedCorrelationContext
    * @description       get the diagnostic correlation context..
    *
    * @returns {string}
    */
   /* Codes_SRS_DIAGNOSTICPROPERTYDATA_01_005: [The function shall return concat string of all correlation contexts.] */
-  public getCorrelationContext(): string {
-    return DiagnosticPropertyData.DIAGNOSTIC_CONTEXT_CREATION_TIME_UTC_PROPERTY + DiagnosticPropertyData.DIAGNOSTIC_CONTEXT_SYMBOL_EQUAL + this.diagnosticCreationTimeUtc;
+  public getEncodedCorrelationContext(): string {
+    let encodedCorrelationContext = '';
+    for (let key in this.correlationContext) {
+      if (encodedCorrelationContext !== '') {
+        encodedCorrelationContext += Diagnostics.DIAGNOSTIC_CONTEXT_SYMBOL_AND;
+      }
+      encodedCorrelationContext += (Diagnostics.DIAGNOSTIC_CONTEXT_PROPERTY[key] + Diagnostics.DIAGNOSTIC_CONTEXT_SYMBOL_EQUAL + this.correlationContext[key]);
+    }
+    return encodedCorrelationContext;
   }
 }
 
@@ -131,9 +89,6 @@ export class DiagnosticClient {
    * @throws {ArgumentError}     If value < 0 or value > 100.
    */
   setDiagSamplingPercentage(diagSamplingPercentage: number): void {
-    if (typeof diagSamplingPercentage !== 'number') {
-      throw new errors.ArgumentError('Sampling percentage only accept number');
-    }
     if (diagSamplingPercentage % 1 !== 0) {
       throw new errors.ArgumentError('Sampling percentage should be integer');
     }
@@ -154,8 +109,8 @@ export class DiagnosticClient {
    */
   addDiagnosticInfoIfNecessary(message: Message): void {
     if (this.shouldAddDiagnosticInfo()) {
-      let diagnosticPropertyData: DiagnosticPropertyData = new DiagnosticPropertyData(this.generateEightRandomCharacters(), this.getCurrentTimeUtc());
-      message.diagnosticPropertyData = diagnosticPropertyData;
+      let diagnostics: Diagnostics = new Diagnostics(this.generateEightRandomCharacters(), this.getCurrentTimeUtc());
+      message.diagnostics = diagnostics;
     }
   }
 

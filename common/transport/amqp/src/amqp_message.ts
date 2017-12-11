@@ -89,10 +89,11 @@ export class AmqpMessage {
       amqpMessage.applicationProperties['iothub-ack'] = message.ack;
     }
 
-    if (message.diagnosticPropertyData) {
-      // Codes_SRS_NODE_IOTHUB_AMQPMSG_26_001: [If message.diagnosticPropertyData is truthy, the function shall add diagnostic information as AMQP message annotation.]
-        amqpMessage.messageAnnotations['Diagnostic-Id'] = message.diagnosticPropertyData.getDiagnosticId();
-        amqpMessage.messageAnnotations['Correlation-Context'] = message.diagnosticPropertyData.getCorrelationContext();
+    if (message.diagnostics) {
+      // Codes_SRS_NODE_IOTHUB_AMQPMSG_26_001: [If message.diagnostics is truthy, the function shall add diagnostic id as AMQP message annotation.]
+      amqpMessage.messageAnnotations['Diagnostic-Id'] = message.diagnostics.id;
+      // Codes_SRS_NODE_IOTHUB_AMQPMSG_26_002: [If message.diagnostics is truthy, the function shall add diagnostic context as AMQP message annotation.]
+      amqpMessage.messageAnnotations['Correlation-Context'] = message.diagnostics.getEncodedCorrelationContext();
     }
 
     /*Codes_SRS_NODE_IOTHUB_AMQPMSG_13_001: [ If message.properties is truthy, then all the properties in it shall be copied to the applicationProperties property of the AmqpMessage object. ]*/

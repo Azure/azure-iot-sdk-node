@@ -503,7 +503,7 @@ export class Client extends EventEmitter {
     if (value !== null && typeof value !== 'undefined') {
       // Codes_SRS_NODE_DEVICE_CLIENT_26_002: ["SetDiagnosticSamplingPercentage" would set percentage].
       this._diagnosticClient.setDiagSamplingPercentage(value);
-    }else {
+    } else {
       throw new errors.ArgumentError('Invalid diagnostic sampling percentage value.');
     }
   }

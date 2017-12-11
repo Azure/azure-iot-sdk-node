@@ -47,7 +47,7 @@ export class Message {
   /**
    * Diagnostic data attached to the message
    */
-  diagnosticPropertyData: any;
+  diagnostics: any;
 
   /**
    * @private
@@ -72,7 +72,7 @@ export class Message {
     this.lockToken = '';
     this.correlationId = '';
     this.userId = '';
-    this.diagnosticPropertyData = null;
+    this.diagnostics = null;
   }
 
   /**
