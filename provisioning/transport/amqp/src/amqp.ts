@@ -11,7 +11,6 @@ import * as async from 'async';
 const debug = dbg('azure-device-provisioning-amqp:Amqp');
 
 // tslint:disable-next-line:no-var-requires
-// TODO: use apiVersion and userAgent from constants.ts
 import { X509 } from 'azure-iot-common';
 import { ProvisioningTransportOptions, X509ProvisioningTransport, RegistrationRequest, RegistrationResult, ProvisioningDeviceConstants } from 'azure-iot-provisioning-device';
 import { Amqp as Base, SenderLink, ReceiverLink, AmqpMessage } from 'azure-iot-amqp-base';
@@ -104,7 +103,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
           _onEnter: (request, callback) => {
             /*Codes_SRS_NODE_PROVISIONING_AMQP_16_002: [The `registrationRequest` method shall connect the AMQP client with the certificate and key given in the `auth` parameter of the previously called `setAuthentication` method.]*/
             /*Codes_SRS_NODE_PROVISIONING_AMQP_16_012: [The `queryOperationStatus` method shall connect the AMQP client with the certificate and key given in the `auth` parameter of the previously called `setAuthentication` method. **]**]*/
-            this._amqpBase.connect('amqps://' + request.provisioningHost, this._x509Auth, (err) => {
+            this._amqpBase.connect(this._getConnectionUri(request), this._x509Auth, (err) => {
               if (err) {
                 debug('_amqpBase.connect failed');
                 debug(err);
@@ -332,4 +331,9 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
   cancel(callback: (err?: Error) => void): void {
     this._amqpStateMachine.handle('cancel', callback);
   }
+
+  protected _getConnectionUri(request: RegistrationRequest): string {
+    return 'amqps://' + request.provisioningHost;
+  }
+
 }

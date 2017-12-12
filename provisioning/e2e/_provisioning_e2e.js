@@ -10,6 +10,7 @@ var assert = require('chai').assert;
 var debug = require('debug')('azure-iot-provisioning-device-e2e');
 var Http = require('azure-iot-provisioning-device-http').Http;
 var Amqp = require('azure-iot-provisioning-device-amqp').Amqp;
+var AmqpWs = require('azure-iot-provisioning-device-amqp').AmqpWs;
 var Mqtt = require('azure-iot-provisioning-device-mqtt').Mqtt;
 var MqttWs = require('azure-iot-provisioning-device-mqtt').MqttWs;
 var ProvisioningDeviceClient = require('azure-iot-provisioning-device').ProvisioningDeviceClient;
@@ -25,8 +26,8 @@ var provisioningHost = 'global.azure-devices-provisioning.net';
 var provisioningServiceClient = ProvisioningServiceClient.fromConnectionString(provisioningConnectionString);
 var registry = Registry.fromConnectionString(registryConnectionString);
 
-var X509IndividualTransports = [ Http, Amqp, Mqtt, MqttWs ];
-var X509GroupTransports = [ Http, Amqp, Mqtt, MqttWs ];
+var X509IndividualTransports = [ Http, Amqp, AmqpWs, Mqtt, MqttWs ];
+var X509GroupTransports = [ Http, Amqp, AmqpWs, Mqtt, MqttWs ];
 
 var createX509Certificate = function (certOptions, callback) {
   pem.createCertificate(certOptions, function (err, result) {

@@ -7,7 +7,7 @@ import { EventEmitter } from 'events';
 import { RestApiClient, Http as Base } from 'azure-iot-http-base';
 import { X509 } from 'azure-iot-common';
 import { X509ProvisioningTransport } from 'azure-iot-provisioning-device';
-import { RegistrationRequest } from 'azure-iot-provisioning-device';
+import { RegistrationRequest, DeviceRegistrationResult } from 'azure-iot-provisioning-device';
 import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure-iot-provisioning-device';
 import { translateError } from 'azure-iot-provisioning-device';
 import * as dbg from 'debug';
@@ -64,7 +64,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
   /**
    * private
    */
-  registrationRequest(request: RegistrationRequest, callback: (err?: Error, result?: any, response?: any, pollingInterval?: number) => void): void {
+  registrationRequest(request: RegistrationRequest, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void {
 
     this._restApiClient = new RestApiClient({ 'host' : request.provisioningHost , 'x509' : this._auth}, ProvisioningDeviceConstants.userAgent, this._httpBase);
 
@@ -110,7 +110,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
   /**
    * private
    */
-  queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, result?: any, response?: any, pollingInterval?: number) => void): void {
+  queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void {
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_022: [ operation status request polling shall be a GET operation sent to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/operations/{operationId}' ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_037: [ The operation status request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
     let path: string = '/' + request.idScope + '/registrations/' + request.registrationId + '/operations/' + operationId + '?api-version=' + ProvisioningDeviceConstants.apiVersion;

@@ -131,7 +131,7 @@ describe('Http', function () {
       };
       var http = makeNewTransport(fakeBase);
       http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
-        assert.equal('Error', err.constructor.name);
+        assert.instanceOf(err, Error);
         assert.strictEqual(fakeErrorString, err.message);
         testCallback();
       });

@@ -12,7 +12,7 @@
  - the transport object that is associated with this error **]**
 
 ** SRS_NODE_DPS_ERRORS_18_008: [** Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 3 properties:
- - `responseBody` shall contain the body of the response
+ - `result` shall contain the body of the response
  - `transportObject` shall contain the transport object that is associated with this error
  - `message` shall contain a human-readable error message **]**
 

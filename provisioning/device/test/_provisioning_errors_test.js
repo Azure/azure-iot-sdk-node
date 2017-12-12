@@ -28,7 +28,7 @@ describe('translateError', function() {
         statusCode: testParams.statusCode,
         statusMessage: testParams.statusMessage,
       };
-      var fakeResposneBody = testParams.statusCode + ': ' + testParams.statusMessage;
+      var fakeResponseBody = testParams.statusCode + ': ' + testParams.statusMessage;
 
       /* Tests_SRS_NODE_DPS_ERRORS_18_001: [`translateError` shall accept 4 arguments:
       * - A custom error message to give context to the user.
@@ -36,16 +36,16 @@ describe('translateError', function() {
       * - the response body
       * - the transport object that is associated with this error]
       */
-      var err = translateError(testParams.errorMessage, fakeTransportObject.statusCode, fakeResposneBody, fakeTransportObject);
+      var err = translateError(testParams.errorMessage, fakeTransportObject.statusCode, fakeResponseBody, fakeTransportObject);
       assert.instanceOf(err, testParams.expectedErrorType);
 
       /* Tests_SRS_NODE_DPS_ERRORS_18_008: [Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 3 properties:
-      * - `responseBody` shall contain the body of the response
+      * - `result` shall contain the body of the response
       * - `transportObject` shall contain the transport object that is associated with this error
       * - `message` shall contain a human-readable error message]
       */
       assert.strictEqual(err.message, testParams.errorMessage);
-      assert.strictEqual(err.responseBody, fakeResposneBody);
+      assert.strictEqual(err.result, fakeResponseBody);
       assert.strictEqual(err.transportObject, fakeTransportObject);
     });
   });

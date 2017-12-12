@@ -16,7 +16,7 @@ These methods are used by the other objects of the SDK but are not public API fo
 
 **SRS_NODE_PROVISIONING_MQTT_18_003: [** `registrationRequest` shall publish to '$dps/registrations/PUT/iotdps-register/?$rid<rid>'. **]**
 
-**SRS_NODE_PROVISIONING_MQTT_18_004: [** If the publish fails, `registrationRequest` shall wrap the error in a `TransportSpecificError` and call `callback` passing the wrapped error back. **]**
+**SRS_NODE_PROVISIONING_MQTT_18_004: [** If the publish fails, `registrationRequest` shall call `callback` passing in the error. **]**
 
 **SRS_NODE_PROVISIONING_MQTT_18_005: [** If the publish fails, `registrationRequest` shall disconnect the transport. **]**
 
@@ -26,11 +26,9 @@ These methods are used by the other objects of the SDK but are not public API fo
 
 **SRS_NODE_PROVISIONING_MQTT_18_008: [** When `registrationRequest` times out, it shall disconnect the transport. **]**
 
-**SRS_NODE_PROVISIONING_MQTT_18_009: [** When `registrationRequest` times out, it shall call callback passing in a ServiceUnavailableError. **]**
+**SRS_NODE_PROVISIONING_MQTT_18_009: [** When `registrationRequest` times out, it shall call `callback` passing in a TimeoutError. **]**
 
 **SRS_NODE_PROVISIONING_MQTT_18_010: [** When waiting for responses, `registrationRequest` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>. **]**
-
-**SRS_NODE_PROVISIONING_MQTT_18_011: [** When waiting for responses, `registrationRequest` shall ignore any messages that don't match the required topic format. **]**
 
 **SRS_NODE_PROVISIONING_MQTT_18_012: [** If `registrationRequest` receives a response with status >= 300, it shall consider the request failed and create an error using `translateError`. **]**
 
@@ -47,7 +45,7 @@ These methods are used by the other objects of the SDK but are not public API fo
 
 **SRS_NODE_PROVISIONING_MQTT_18_017: [** `queryOperationStatus` shall publish to $dps/registrations/GET/iotdps-get-operationstatus/?$rid=<rid>&operationId=<operationId>. **]**
 
-**SRS_NODE_PROVISIONING_MQTT_18_018: [** If the publish fails, `queryOperationStatus` shall wrap the error in a `TransportSpecificError` and call callback passing the wrapped error back. **]**
+**SRS_NODE_PROVISIONING_MQTT_18_018: [** If the publish fails, `queryOperationStatus` shall call `callback` passing the error. **]**
 
 **SRS_NODE_PROVISIONING_MQTT_18_019: [** If the publish fails, `queryOperationStatus` shall disconnect the transport. **]**
 
@@ -57,15 +55,13 @@ These methods are used by the other objects of the SDK but are not public API fo
 
 **SRS_NODE_PROVISIONING_MQTT_18_022: [** When `queryOperationStatus` times out, it shall disconnect the transport. **]**
 
-**SRS_NODE_PROVISIONING_MQTT_18_023: [** When `queryOperationStatus` times out, it shall call callback passing in a ServiceUnavailableError. **]**
+**SRS_NODE_PROVISIONING_MQTT_18_023: [** When `queryOperationStatus` times out, it shall call `callback` passing in a TimeoutError. **]**
 
 **SRS_NODE_PROVISIONING_MQTT_18_024: [** When waiting for responses, `queryOperationStatus` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>. **]**
 
-**SRS_NODE_PROVISIONING_MQTT_18_025: [** When waiting for responses, `queryOperationStatus` shall ignore any messages that don't match the required topic format. **]**
-
 **SRS_NODE_PROVISIONING_MQTT_18_026: [** If `queryOperationStatus` receives a response with status >= 300, it shall consider the query failed and create an error using `translateError`. **]**
 
-**SRS_NODE_PROVISIONING_MQTT_18_027: [** When `queryOperationStatus` receives a successful response from the service, it shall call callback passing in null and the response. **]**
+**SRS_NODE_PROVISIONING_MQTT_18_027: [** When `queryOperationStatus` receives a successful response from the service, it shall call `callback` passing in null and the response. **]**
 
 **SRS_NODE_PROVISIONING_MQTT_18_028: [** When `queryOperationStatus` receives an error from the service, it shall disconnect the transport. **]**
 
@@ -74,7 +70,7 @@ These methods are used by the other objects of the SDK but are not public API fo
 
 ## cancel(callback: (err?: Error) => void): void
 
-**SRS_NODE_PROVISIONING_MQTT_18_030: [** If `cancel` is called while the transport is disconnected, nothing will be done. **]**
+**SRS_NODE_PROVISIONING_MQTT_18_030: [** If `cancel` is called while the transport is disconnected, `mqtt` will call `callback` immediately. **]**
 
 **SRS_NODE_PROVISIONING_MQTT_18_031: [** If `cancel` is called while the transport is in the process of connecting, it shall wait until the connection is complete and then disconnect the transport. **]**
 
@@ -102,11 +98,11 @@ These requirements apply whenever the transport connection is established
 
 **SRS_NODE_PROVISIONING_MQTT_18_040: [** When connecting, `Mqtt` shall call `_mqttBase.connect`. **]**
 
-**SRS_NODE_PROVISIONING_MQTT_18_041: [** If an error is returned from `_mqttBase.connect`, `Mqtt` shell wrap it in a `TransportSpecificError` object and pass it to the caller using `callback`. **]**
+**SRS_NODE_PROVISIONING_MQTT_18_041: [** If an error is returned from `_mqttBase.connect`, `Mqtt`  shall call `callback` passing the error. **]**
 
 **SRS_NODE_PROVISIONING_MQTT_18_042: [** After connecting the transport, `Mqtt` will subscribe to '$dps/registrations/res/#' by calling `_mqttBase.subscribe`. **]**
 
-**SRS_NODE_PROVISIONING_MQTT_18_043: [** If an error is returned from _mqttBase.subscribe, `Mqtt` shell wrap it in a `TransportSpecificError` object and pass it to the caller using `callback`. **]**
+**SRS_NODE_PROVISIONING_MQTT_18_043: [** If an error is returned from _mqttBase.subscribe, `Mqtt` shall call `callback` passing in the error.. **]**
 
 
 ## transport disconnection
@@ -115,10 +111,6 @@ These requirements apply whenever the transport is disonnected.
 **SRS_NODE_PROVISIONING_MQTT_18_044: [** When Disconnecting, `Mqtt` shall call _`mqttBase.unsubscribe`. **]**
 
 **SRS_NODE_PROVISIONING_MQTT_18_045: [** When Disconnecting, `Mqtt` shall call `_mqttBase.disconnect`. **]**
-
-**SRS_NODE_PROVISIONING_MQTT_18_046: [** If `_mqttBase.unscribe` fails, `Mqtt` shall wrap the error in a `TransportSpecificError` object. **]**
-
-**SRS_NODE_PROVISIONING_MQTT_18_047: [** If `_mqttBase.disconnect` fails, `Mqtt` shall wrap the error in a `TransportSpecificError` object. **]**
 
 **SRS_NODE_PROVISIONING_MQTT_18_048: [** If either `_mqttBase.unsubscribe` or `_mqttBase.disconnect` fails, `Mqtt` shall call the disconnect `callback` with the failing error, giving preference to the disconnect error. **]**
 

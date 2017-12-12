@@ -2,7 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-import { RegistrationClient, RegistrationRequest, X509ProvisioningTransport, X509SecurityClient } from './interfaces';
+import { RegistrationClient, RegistrationRequest, RegistrationResult, DeviceRegistrationResult } from './interfaces';
+import { X509ProvisioningTransport, X509SecurityClient } from './interfaces';
 import { PollingStateMachine } from './polling_state_machine';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-provisioning-device:X509Registration');
@@ -32,7 +33,7 @@ export class X509Registration implements RegistrationClient {
    * @param forceRegistration Set to true to force re-registration
    * @param callback function called when registration is complete.
    */
-  register(callback: (err?: Error, result?: any) => void): void {
+  register(callback: (err?: Error, result?: RegistrationResult) => void): void {
 
       /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_001: [ `register` shall call `getCertificate` on the security object to acquire the X509 certificate. ] */
       this._securityClient.getCertificate((err, cert)  => {
@@ -50,10 +51,10 @@ export class X509Registration implements RegistrationClient {
         /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_004: [ `register` shall pass the certificate into the `setAuthentication` method on the transport ] */
         this._transport.setAuthentication(cert);
         /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_002: [ `register` shall call `registerX509` on the transport object and call it's callback with the result of the transport operation. ] */
-        this._pollingStateMachine.register(request, (err, result) => {
+        this._pollingStateMachine.register(request, (err?: Error, result?: DeviceRegistrationResult) => {
           if (err) {
             /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_005: [ If `register` on the pollingStateMachine fails, `register` shall call `callback` with the error ] */
-            callback(err, result);
+            callback(err);
           } else {
             callback(err, result.registrationState);
          }

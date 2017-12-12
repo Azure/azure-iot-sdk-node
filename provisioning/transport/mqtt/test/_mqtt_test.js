@@ -59,14 +59,6 @@ describe('Mqtt', function () {
     fakeBase.emit('message', '$dps/registrations/res/' + status + '/?$rid=' + rid, JSON.stringify(fakeResponse));
   };
 
-  var assertWrappedError = function(err) {
-    assert.isOk(err);
-    assert.instanceOf(err, errors.TransportSpecificError);
-    assert.isOk(err.transportError);
-    assert.instanceOf(err.transportError, Error);
-    assert.strictEqual(err.transportError.message, fakeErrorText);
-  };
-
   var twoCallsRequired = function(callback) {
     var count = 0;
     var newCallback = function() {
@@ -95,7 +87,6 @@ describe('Mqtt', function () {
         assert.strictEqual(config.x509, fakeX509);
         /* Tests_SRS_NODE_PROVISIONING_MQTT_18_050: [ When connecting, `Mqtt` shall set `host` in the base `TransportConfig` object to the `provisioningDeviceHost`.] */
         assert.strictEqual(config.host, fakeHost);
-        assert.isNotOk(config.uri);
         /* Tests_SRS_NODE_PROVISIONING_MQTT_18_035: [ When connecting, `Mqtt` shall set `clientId` in the base `registrationRequest` object to the registrationId.] */
         assert.strictEqual(config.deviceId, fakeRequest.registrationId);
         /* Tests_SRS_NODE_PROVISIONING_MQTT_18_036: [ When connecting, `Mqtt` shall set the `clean` flag in the base `TransportConfig` object to true.] */
@@ -119,20 +110,24 @@ describe('Mqtt', function () {
       respond(fakeBase.publish.firstCall);
     });
 
-    /* Tests_SRS_NODE_PROVISIONING_MQTT_18_041: [ If an error is returned from `_mqttBase.connect`, `Mqtt` shell wrap it in a `TransportSpecificError` object and pass it to the caller using `callback`.] */
+    /* Tests_SRS_NODE_PROVISIONING_MQTT_18_041: [ If an error is returned from `_mqttBase.connect`, `Mqtt` shall call `callback` passing in the error..] */
     it ('returns _mqttBase.connect failure', function(callback) {
       fakeBase.connect = sinon.stub().callsArgWith(1, new Error(fakeErrorText));
       mqtt.registrationRequest(fakeRequest, function(err) {
-        assertWrappedError(err);
+        assert.isOk(err);
+        assert.instanceOf(err, Error);
+        assert.strictEqual(err.message, fakeErrorText);
         callback();
       });
     });
 
-    /* Tests_SRS_NODE_PROVISIONING_MQTT_18_043: [ If an error is returned from _mqttBase.subscribe, `Mqtt` shell wrap it in a `TransportSpecificError` object and pass it to the caller using `callback`.] */
+    /* Tests_SRS_NODE_PROVISIONING_MQTT_18_043: [ If an error is returned from _mqttBase.subscribe, `Mqtt` shall call `callback` passing in the error..] */
     it ('returns _mqttBase.subscribe failure', function(callback) {
       fakeBase.subscribe = sinon.stub().callsArgWith(2, new Error(fakeErrorText));
       mqtt.registrationRequest(fakeRequest, function(err) {
-        assertWrappedError(err);
+        assert.isOk(err);
+        assert.instanceOf(err, Error);
+        assert.strictEqual(err.message, fakeErrorText);
         callback();
       });
     });
@@ -140,12 +135,14 @@ describe('Mqtt', function () {
 
   describe('#registrationRequest', function() {
 
-    /* Tests_SRS_NODE_PROVISIONING_MQTT_18_004: [ If the publish fails, `registrationRequest` shall wrap the error in a `TransportSpecificError` and call `callback` passing the wrapped error back.] */
+    /* Tests_SRS_NODE_PROVISIONING_MQTT_18_004: [ If the publish fails, `registrationRequest` shall call `callback` passing in the error..] */
     /* Tests_SRS_NODE_PROVISIONING_MQTT_18_005: [ If the publish fails, `registrationRequest` shall disconnect the transport.] */
     it ('returns mqttBase.publish failure', function(callback) {
       fakeBase.publish = sinon.stub().callsArgWith(3, new Error(fakeErrorText));
       mqtt.registrationRequest(fakeRequest, function(err) {
-        assertWrappedError(err);
+        assert.isOk(err);
+        assert.instanceOf(err, Error);
+        assert.strictEqual(err.message, fakeErrorText);
         assert(fakeBase.disconnect.calledOnce);
         assert(fakeBase.unsubscribe.calledOnce);
         callback();
@@ -156,24 +153,13 @@ describe('Mqtt', function () {
     it ('times out when server doesn\'t send response', function(callback) {
       mqtt.registrationRequest(fakeRequest, function(err) {
         assert.isOk(err);
-        /* Tests_SRS_NODE_PROVISIONING_MQTT_18_009: [ When `registrationRequest` times out, it shall call callback passing in a ServiceUnavailableError.] */
-        assert.instanceOf(err, errors.ServiceUnavailableError);
+        /* Tests_SRS_NODE_PROVISIONING_MQTT_18_009: [ When `registrationRequest` times out, it shall call `callback` passing in a TimeoutError.] */
+        assert.instanceOf(err, errors.TimeoutError);
         /* Tests_SRS_NODE_PROVISIONING_MQTT_18_008: [ When `registrationRequest` times out, it shall disconnect the transport.] */
         assert(fakeBase.disconnect.calledOnce);
         assert(fakeBase.unsubscribe.calledOnce);
         callback();
       });
-    });
-
-    /* Tests_SRS_NODE_PROVISIONING_MQTT_18_011: [ When waiting for responses, `registrationRequest` shall ignore any messages that don't match the required topic format.] */
-    it ('ignores messages from invalid topics', function(callback) {
-      mqtt.registrationRequest(fakeRequest, function(err) {
-        assert.isOk(err);
-        // this should time out.
-        assert.instanceOf(err, errors.ServiceUnavailableError);
-        callback();
-      });
-      fakeBase.emit('message', 'bogus topic', ' ');
     });
 
     it ('translates errors based on status code', function(callback) {
@@ -208,7 +194,7 @@ describe('Mqtt', function () {
       mqtt.queryOperationStatus(fakeRequest, fakeOperationId, function(err, result) {
         /* Tests_SRS_NODE_PROVISIONING_MQTT_18_016: [ If the transport is not connected, `queryOperationStatus` shall connect it and subscribe to the response topic.] */
         assert(fakeBase.connect.calledOnce);
-        /* Tests_SRS_NODE_PROVISIONING_MQTT_18_027: [ When `queryOperationStatus` receives a successful response from the service, it shall call callback passing in null and the response.] */
+        /* Tests_SRS_NODE_PROVISIONING_MQTT_18_027: [ When `queryOperationStatus` receives a successful response from the service, it shall call `callback` passing in null and the response.] */
         assert.isNotOk(err);
         assert.deepEqual(result, fakeResponse);
       });
@@ -237,8 +223,10 @@ describe('Mqtt', function () {
     it ('returns failure if publish faile', function(callback) {
       fakeBase.publish = sinon.stub().callsArgWith(3, new Error(fakeErrorText));
       mqtt.queryOperationStatus(fakeRequest, fakeOperationId, function(err) {
-        /* Tests_SRS_NODE_PROVISIONING_MQTT_18_018: [ If the publish fails, `queryOperationStatus` shall wrap the error in a `TransportSpecificError` and call callback passing the wrapped error back.] */
-        assertWrappedError(err);
+        /* Tests_SRS_NODE_PROVISIONING_MQTT_18_018: [ If the publish fails, `queryOperationStatus` shall call `callback` passing in the error.] */
+        assert.isOk(err);
+        assert.instanceOf(err, Error);
+        assert.strictEqual(err.message, fakeErrorText);
         /* Tests_SRS_NODE_PROVISIONING_MQTT_18_019: [ If the publish fails, `queryOperationStatus` shall disconnect the transport.] */
         assert(fakeBase.disconnect.calledOnce);
         assert(fakeBase.unsubscribe.calledOnce);
@@ -250,19 +238,17 @@ describe('Mqtt', function () {
     it ('times out if nothing is received back from the service', function(callback) {
       mqtt.queryOperationStatus(fakeRequest, fakeOperationId, function(err) {
         assert.isOk(err);
-        /* Tests_SRS_NODE_PROVISIONING_MQTT_18_023: [ When `queryOperationStatus` times out, it shall call callback passing in a ServiceUnavailableError.] */
-        assert.instanceOf(err, errors.ServiceUnavailableError);
+        /* Tests_SRS_NODE_PROVISIONING_MQTT_18_023: [ When `queryOperationStatus` times out, it shall call `callback` passing in a TimeoutError.] */
+        assert.instanceOf(err, errors.TimeoutError);
         /* Tests_SRS_NODE_PROVISIONING_MQTT_18_022: [ When `queryOperationStatus` times out, it shall disconnect the transport.] */
         assert(fakeBase.disconnect.calledOnce);
         callback();
       });
-      /* Tests_SRS_NODE_PROVISIONING_MQTT_18_025: [ When waiting for responses, `queryOperationStatus` shall ignore any messages that don't match the required topic format.] */
-      fakeBase.emit('message', 'bogus topic', ' ');
     });
   });
 
   describe('#cancel', function() {
-    /* Tests_SRS_NODE_PROVISIONING_MQTT_18_030: [ If `cancel` is called while the transport is disconnected, nothing will be done.] */
+    /* Tests_SRS_NODE_PROVISIONING_MQTT_18_030: [ If `cancel` is called while the transport is disconnected, `mqtt` will call `callback` immediately.] */
     it ('does nothing if called while disconnected', function(callback) {
       mqtt.cancel(function(err) {
         assert.isNotOk(err);
@@ -353,32 +339,36 @@ describe('Mqtt', function () {
     });
   });
 
-  /* Tests_SRS_NODE_PROVISIONING_MQTT_18_046: [ If `_mqttBase.unscribe` fails, `Mqtt` shall wrap the error in a `TransportSpecificError` object.] */
-  it ('wraps unsubscribe error', function(callback) {
+  /* Tests_SRS_NODE_PROVISIONING_MQTT_18_048: [ If either `_mqttBase.unsubscribe` or `_mqttBase.disconnect` fails, `Mqtt` shall call the disconnect `callback` with the failing error, giving preference to the disconnect error.] */
+  it ('returns unsubscribe error', function(callback) {
     fakeBase.unsubscribe = sinon.stub().callsArgWith(1, new Error(fakeErrorText));
     mqtt.registrationRequest(fakeRequest, function(err) {
       assert.isNotOk(err);
       mqtt.cancel(function(err) {
         assert.isOk(err);
-        assert.instanceOf(err, errors.TransportSpecificError);
-        assert.instanceOf(err.transportError, Error);
-        assert.strictEqual(err.transportError.message, fakeErrorText);
+        assert.instanceOf(err, Error);
+        assert.strictEqual(err.message, fakeErrorText);
+        assert(fakeBase.disconnect.calledOnce);
+        assert(fakeBase.unsubscribe.calledOnce);
         callback();
       });
     });
     respond(fakeBase.publish.firstCall);
   });
 
-  /* Tests_SRS_NODE_PROVISIONING_MQTT_18_047: [ If `_mqttBase.disconnect` fails, `Mqtt` shall wrap the error in a `TransportSpecificError` object.] */
-  it ('wraps disconnect error', function(callback) {
+  /* Tests_SRS_NODE_PROVISIONING_MQTT_18_048: [ If either `_mqttBase.unsubscribe` or `_mqttBase.disconnect` fails, `Mqtt` shall call the disconnect `callback` with the failing error, giving preference to the disconnect error.] */
+  it ('returns disconnect error', function(callback) {
     fakeBase.disconnect = sinon.stub().callsArgWith(0, new Error(fakeErrorText));
     mqtt.registrationRequest(fakeRequest, function(err) {
       assert.isNotOk(err);
       mqtt.cancel(function(err) {
+        assert(fakeBase.disconnect.calledOnce);
+        assert(fakeBase.unsubscribe.calledOnce);
         assert.isOk(err);
-        assert.instanceOf(err, errors.TransportSpecificError);
-        assert.instanceOf(err.transportError, Error);
-        assert.strictEqual(err.transportError.message, fakeErrorText);
+        assert.instanceOf(err, Error);
+        assert.strictEqual(err.message, fakeErrorText);
+        assert(fakeBase.disconnect.calledOnce);
+        assert(fakeBase.unsubscribe.calledOnce);
         callback();
       });
     });
@@ -393,9 +383,10 @@ describe('Mqtt', function () {
       assert.isNotOk(err);
       mqtt.cancel(function(err) {
         assert.isOk(err);
-        assert.instanceOf(err, errors.TransportSpecificError);
-        assert.instanceOf(err.transportError, Error);
-        assert.strictEqual(err.transportError.message, 'disconnect');
+        assert.instanceOf(err, Error);
+        assert.strictEqual(err.message, 'disconnect');
+        assert(fakeBase.disconnect.calledOnce);
+        assert(fakeBase.unsubscribe.calledOnce);
         callback();
       });
     });

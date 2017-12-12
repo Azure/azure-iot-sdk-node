@@ -13,7 +13,7 @@ import { MqttBase } from 'azure-iot-mqtt-base';
 import { errors, X509 } from 'azure-iot-common';
 import { X509ProvisioningTransport } from 'azure-iot-provisioning-device';
 import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure-iot-provisioning-device';
-import { RegistrationRequest } from 'azure-iot-provisioning-device';
+import { RegistrationRequest, DeviceRegistrationResult } from 'azure-iot-provisioning-device';
 import { translateError } from 'azure-iot-provisioning-device';
 
 
@@ -27,6 +27,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
   private _config: ProvisioningTransportOptions = {};
   private _fsm: machina.Fsm;
   private _auth: X509;
+  private _subscribed: boolean;
 
   private _operations: {
     [key: string]: (err?: Error, payload?: any) => void;
@@ -47,8 +48,6 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_024: [ When waiting for responses, `queryOperationStatus` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>.] */
     let match = topic.match(/^\$dps\/registrations\/res\/(.*)\/\?\$rid=(.*)$/);
 
-    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_011: [ When waiting for responses, `registrationRequest` shall ignore any messages that don't match the required topic format.] */
-    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_025: [ When waiting for responses, `queryOperationStatus` shall ignore any messages that don't match the required topic format.] */
     if (!!match && match.length === 3) {
         let status: number = Number(match[1]);
         let rid: string = match[2];
@@ -69,7 +68,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
 
     const errorHandler = (err: Error) => {
       /* tslint:disable:no-empty */
-      this._fsm.handle('disconnect', err, () => { });
+      this._fsm.handle('disconnect', err);
     };
 
     this._mqttBase.on('message', responseHandler);
@@ -108,8 +107,8 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
             });
           },
           connect: (request, callback) => this._fsm.transition('connecting', request, callback),
-          /* Codes_SRS_NODE_PROVISIONING_MQTT_18_030: [ If `cancel` is called while the transport is disconnected, nothing will be done.] */
           disconnect: (err, callback) => callback(err),
+          /* Codes_SRS_NODE_PROVISIONING_MQTT_18_030: [ If `cancel` is called while the transport is disconnected,  `mqtt` will call `callback` immediately.] */
           cancel: (callback) => callback()
         },
         connecting: {
@@ -206,7 +205,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
   /**
    * private
    */
-  registrationRequest(request: RegistrationRequest, callback: (err?: Error, result?: any, response?: any, pollingInterval?: number) => void): void {
+  registrationRequest(request: RegistrationRequest, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void {
 
     this._fsm.handle('registrationRequest', request, (err, result) => {
       if (err) {
@@ -220,7 +219,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
   /**
    * private
    */
-  queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, result?: any, response?: any, pollingInterval?: number) => void): void {
+  queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void {
 
     this._fsm.handle('queryOperationStatus', request, operationId, (err, result) => {
       if (err) {
@@ -249,6 +248,10 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
     this._auth = auth;
   }
 
+  protected _getConnectionUri(request: RegistrationRequest): string {
+    return 'mqtts://' + request.provisioningHost;
+  }
+
   private _connect(request: RegistrationRequest, callback: (err?: Error) => void): void {
 
   /* Codes_SRS_NODE_PROVISIONING_MQTT_18_037: [ When connecting, `Mqtt` shall pass in the `X509` certificate that was passed into `setAuthentication` in the base `TransportConfig` object.] */
@@ -265,25 +268,23 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
     };
 
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_039: [ If a uri is specified in the request object, `Mqtt` shall set it in the base `TransportConfig` object.] */
-    let uri: string = (<any>request).uri;
-    if (uri && uri.indexOf('wss://') === 0) {
-      (<any>baseConfig).uri = uri;
-    }
+    (<any>baseConfig).uri = this._getConnectionUri(request);
 
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_040: [ When connecting, `Mqtt` shall call `_mqttBase.connect`.] */
     this._mqttBase.connect(baseConfig, (err) => {
       if (err) {
-        /* Codes_SRS_NODE_PROVISIONING_MQTT_18_041: [ If an error is returned from `_mqttBase.connect`, `Mqtt` shell wrap it in a `TransportSpecificError` object and pass it to the caller using `callback`.] */
+        /* Codes_SRS_NODE_PROVISIONING_MQTT_18_041: [ If an error is returned from `_mqttBase.connect`, `Mqtt` shall call `callback` passing in the error.] */
         debug('connect error: ' + err.toString());
-        callback(new errors.TransportSpecificError('connect error', err));
+        callback(err);
       } else {
         /* Codes_SRS_NODE_PROVISIONING_MQTT_18_042: [ After connecting the transport, `Mqtt` will subscribe to '$dps/registrations/res/#'  by calling `_mqttBase.subscribe`.] */
         this._mqttBase.subscribe(responseTopic, { qos: 1 }, (err) => {
           if (err) {
-            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_043: [ If an error is returned from _mqttBase.subscribe, `Mqtt` shell wrap it in a `TransportSpecificError` object and pass it to the caller using `callback`.] */
+            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_043: [ If an error is returned from _mqttBase.subscribe, `Mqtt` shall call `callback` passing in the error.] */
             debug('subscribe error: ' + err.toString());
-            callback(new errors.TransportSpecificError('subscribe error',err));
+            callback(err);
           } else {
+            this._subscribed = true;
             debug('connected and subscribed successfully');
             callback();
           }
@@ -294,26 +295,29 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
 
   private _disconnect(callback: (err?: Error) => void): void {
 
-    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_044: [ When Disconnecting, `Mqtt` shall call _`mqttBase.unsubscribe`.] */
-    this._mqttBase.unsubscribe(responseTopic, (unsubscribeError) => {
-      if (unsubscribeError) {
-        debug('error unsubscribing: ' + unsubscribeError.toString());
-        /* Codes_SRS_NODE_PROVISIONING_MQTT_18_046: [ If `_mqttBase.unscribe` fails, `Mqtt` shall wrap the error in a `TransportSpecificError` object.] */
-        unsubscribeError = new errors.TransportSpecificError('unsubscribe error', unsubscribeError);
-      }
-
-    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_045: [ When Disconnecting, `Mqtt` shall call `_mqttBase.disconnect`.] */
-    this._mqttBase.disconnect((disconnectError) => {
+    let disconnect = (unsubscribeError?) => {
+      /* Codes_SRS_NODE_PROVISIONING_MQTT_18_045: [ When Disconnecting, `Mqtt` shall call `_mqttBase.disconnect`.] */
+      this._mqttBase.disconnect((disconnectError) => {
         if (disconnectError) {
-          debug('error disconecting: ' + disconnectError.toString());
-          /* Codes_SRS_NODE_PROVISIONING_MQTT_18_047: [ If `_mqttBase.disconnect` fails, `Mqtt` shall wrap the error in a `TransportSpecificError` object.] */
-          disconnectError = new errors.TransportSpecificError('disconnect error', disconnectError);
+          debug('error disconnecting: ' + disconnectError.toString());
         }
         /* Codes_SRS_NODE_PROVISIONING_MQTT_18_048: [ If either `_mqttBase.unsubscribe` or `_mqttBase.disconnect` fails, `Mqtt` shall call the disconnect `callback` with the failing error, giving preference to the disconnect error.] */
         callback(disconnectError || unsubscribeError);
       });
+    };
 
-    });
+    if (this._subscribed) {
+      /* Codes_SRS_NODE_PROVISIONING_MQTT_18_044: [ When Disconnecting, `Mqtt` shall call _`mqttBase.unsubscribe`.] */
+      this._mqttBase.unsubscribe(responseTopic, (unsubscribeError) => {
+        this._subscribed = false;
+        if (unsubscribeError) {
+          debug('error unsubscribing: ' + unsubscribeError.toString());
+        }
+        disconnect(unsubscribeError);
+      });
+    } else {
+      disconnect();
+    }
   }
 
   private _sendRegistrationRequest(request: RegistrationRequest, callback: (err?: Error, result?: any) => void): void {
@@ -321,7 +325,6 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
 
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_006: [ `registrationRequest` shall wait for a response with a matching rid.] */
     this._operations[rid] = (err, result) => {
-      delete this._operations[rid];
       if (err) {
         /* Codes_SRS_NODE_PROVISIONING_MQTT_18_015: [ When `registrationRequest` receives an error from the service, it shall call `callback` passing in the error.] */
         callback(err);
@@ -333,10 +336,10 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
 
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_003: [ `registrationRequest` shall publish to '$dps/registrations/PUT/iotdps-register/?$rid<rid>'.] */
     this._mqttBase.publish('$dps/registrations/PUT/iotdps-register/?$rid=' + rid, ' ', { qos: 1 } , (err) => {
-      /* Codes_SRS_NODE_PROVISIONING_MQTT_18_004: [ If the publish fails, `registrationRequest` shall wrap the error in a `TransportSpecificError` and call `callback` passing the wrapped error back.] */
+      /* Codes_SRS_NODE_PROVISIONING_MQTT_18_004: [ If the publish fails, `registrationRequest` shall call `callback` passing in the error.] */
       if (err) {
         delete this._operations[rid];
-        callback(new errors.TransportSpecificError('publish error', err));
+        callback(err);
       }
     });
 
@@ -349,12 +352,11 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
 
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_020: [ `queryOperationStatus` shall wait for a response with a matching rid.] */
     this._operations[rid] = (err, result) => {
-      delete this._operations[rid];
       if (err) {
         /* Codes_SRS_NODE_PROVISIONING_MQTT_18_029: [ When `queryOperationStatus` receives an error from the service, it shall call `callback` passing in the error.] */
         callback(err);
       } else {
-        /* Codes_SRS_NODE_PROVISIONING_MQTT_18_027: [ When `queryOperationStatus` receives a successful response from the service, it shall call callback passing in null and the response.] */
+        /* Codes_SRS_NODE_PROVISIONING_MQTT_18_027: [ When `queryOperationStatus` receives a successful response from the service, it shall call `callback` passing in null and the response.] */
         callback(null, result);
       }
     };
@@ -362,9 +364,9 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_017: [ `queryOperationStatus` shall publish to $dps/registrations/GET/iotdps-get-operationstatus/?$rid=<rid>&operationId=<operationId>.] */
     this._mqttBase.publish('$dps/registrations/GET/iotdps-get-operationstatus/?$rid=' + rid + '&operationId=' + operationId, ' ', { qos: 1 }, (err) => {
       if (err) {
-        /* Codes_SRS_NODE_PROVISIONING_MQTT_18_018: [ If the publish fails, `queryOperationStatus` shall wrap the error in a `TransportSpecificError` and call callback passing the wrapped error back.] */
+        /* Codes_SRS_NODE_PROVISIONING_MQTT_18_018: [ If the publish fails, `queryOperationStatus` shall call `callback` passing in the error */
         delete this._operations[rid];
-        callback(new errors.TransportSpecificError('publish error', err));
+        callback(err);
       }
     });
 
@@ -385,9 +387,9 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
           if (err) {
             debug('error cancelling: ' + err.toString());
           }
-          /* Codes_SRS_NODE_PROVISIONING_MQTT_18_009: [ When `registrationRequest` times out, it shall call callback passing in a ServiceUnavailableError.] */
-          /* Codes_SRS_NODE_PROVISIONING_MQTT_18_023: [ When `queryOperationStatus` times out, it shall call callback passing in a ServiceUnavailableError.] */
-          cancelledOperationCallback(new errors.ServiceUnavailableError('timeout waiting for response from provisioning service'));
+          /* Codes_SRS_NODE_PROVISIONING_MQTT_18_009: [ When `registrationRequest` times out, it shall call `callback` passing in a TimeoutError.] */
+          /* Codes_SRS_NODE_PROVISIONING_MQTT_18_023: [ When `queryOperationStatus` times out, it shall call `callback` passing in a TimeoutError.] */
+          cancelledOperationCallback(new errors.TimeoutError('timeout waiting for response from provisioning service'));
         });
       }
     }, this._config.timeoutInterval);

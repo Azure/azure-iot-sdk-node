@@ -2,7 +2,8 @@ import { EventEmitter } from 'events';
 import * as machina from 'machina';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-provisioning-device:TpmRegistration');
-import { RegistrationClient, TpmProvisioningTransport, TpmSecurityClient, TpmRegistrationInfo } from './interfaces';
+import { RegistrationClient, RegistrationResult } from './interfaces';
+import { TpmProvisioningTransport, TpmSecurityClient, TpmRegistrationInfo } from './interfaces';
 import { PollingStateMachine } from './polling_state_machine';
 
 export class TpmRegistration extends EventEmitter implements RegistrationClient {
@@ -191,7 +192,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
 
   }
 
-  register(callback: (err?: Error, result?: any) => void): void {
+  register(callback: (err?: Error, result?: RegistrationResult) => void): void {
     let registrationInfo: TpmRegistrationInfo = {
       endorsementKey: undefined,
       storageRootKey: undefined,

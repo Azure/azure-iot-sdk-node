@@ -3,8 +3,6 @@
 
 'use strict';
 
-var Amqp = require('./lib/amqp.js').Amqp;
-
 /**
  * The `azure-iot-provisioning-amqp` module provides support for the AMQP protocol to the Azure Device Provisoning Service.
  *
@@ -14,5 +12,6 @@ var Amqp = require('./lib/amqp.js').Amqp;
  */
 
 module.exports = {
-  Amqp: Amqp
+  Amqp: require('./lib/amqp.js').Amqp,
+  AmqpWs: require('./lib/amqp_ws.js').AmqpWs,
 };

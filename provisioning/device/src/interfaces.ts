@@ -46,9 +46,14 @@ export interface RegistrationRequest {
 }
 
 /**
- * Device configuration returned when registration is complete
+ * Possible registration status codes returned from the provisioning service
  */
-export interface RegistrationResult {
+export type RegistrationStatus = 'unassigned' | 'assigning' | 'assigned' | 'failed' | 'disabled';
+
+/**
+ * structure returned from the provisioning service
+ */
+export interface DeviceRegistrationState {
   /**
    * deviceId for the provisioned device
    */
@@ -57,14 +62,50 @@ export interface RegistrationResult {
    * IoT Hub where the provisioned device is located
    */
   assignedHub: string;
+  /**
+   * registration status
+   */
+  status: RegistrationStatus;
+  /**
+   * other values returned by the provisioning service
+   */
+  [key: string]: any;
+}
+
+/**
+ * structure returned from the provisioning service is response to a registrationRequest or queryRegistrationStatus operation
+ */
+export interface DeviceRegistrationResult {
+  /**
+   * ID of the current operation
+   */
+  operationId: string;
+
+  /**
+   * registration status
+   */
+  status: RegistrationStatus;
+
+  /**
+   * details on the completed registration operation
+   */
+  registrationState?: DeviceRegistrationState;
+}
+
+
+/**
+ * Device configuration returned when registration is complete
+ */
+export interface RegistrationResult extends DeviceRegistrationState {
+
 }
 
 /**
  * @private
  */
 export interface PollingTransport {
-  registrationRequest(request: RegistrationRequest, callback: (err?: Error, result?: any, response?: any, pollingInterval?: number) => void): void;
-  queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, result?: any, response?: any, pollingInterval?: number) => void): void;
+  registrationRequest(request: RegistrationRequest, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void;
+  queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void;
   cancel(callback: (err?: Error) => void): void;
 }
 
@@ -108,7 +149,7 @@ export interface RegistrationClient {
   /**
    * Register the device with the provisioning service
    */
-  register(callback: (err?: Error, result?: any) => void): void;
+  register(callback: (err?: Error, result?: RegistrationResult) => void): void;
   /**
    * Cancel the registration process if it is in progress.
    */
