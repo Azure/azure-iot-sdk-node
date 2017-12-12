@@ -37,21 +37,29 @@ If you don't have PEM or CER files for your device along with the associated pri
 When creating certificates, it is important that the commonName (CN) field matches the registrationId for the device you are enrolling.  Registration will fail if this field is not set correctly.
 
 ```
-  var registrationId = '[registration id]';
+  var pem = require('pem');
+  var fs = require('fs');
+
+  var registrationId = process.argv[2].toLowerCase();
+
+  // make sure directory exists
+  var certPath = __dirname + "\\cert\\";
+
   var certOptions = {
-    commonName: registrationId;
+    commonName: registrationId,
     selfSigned: true,
     days: 10
   };
 
   pem.createCertificate(certOptions, function (err, result) {
     if (err) {
-      done(err);
+      console.log (err);
     } else {
-      fs.writeFileSync(registrationId + '-cert.pem', result.certificate);
-      fs.writeFileSync(registrationId + '-key.pem', result.clientKey);
+      fs.writeFileSync(certPath + registrationId + '-cert.pem', result.certificate);
+      fs.writeFileSync(certPath + registrationId + '-key.pem', result.clientKey);
     }
   });
+
 ```
 
 2. Alternately, you can use the Azure IoT C sdk, as documented [here][c-sdk-create-individual-enrollment]
