@@ -96,4 +96,51 @@ describe('DiagnosticClient', function () {
       assert.isNull(message.diagnostics);
     });
   });
+
+  describe('#onDesiredTwinUpdate', function () {
+    it('shall set sampling rate', function () {
+      let clientDiagnostic = new DiagnosticClient();
+      let fakeTwin = {
+        properties: {
+          reported: {
+            update: sinon.spy()
+          }
+        }
+      }
+      clientDiagnostic.onDesiredTwinUpdate(fakeTwin, 50);
+      assert.equal(clientDiagnostic.diagSamplingPercentage, 50);
+    });
+
+    it('shall report updated settings', function () {
+      let clientDiagnostic = new DiagnosticClient();
+      let fakeTwin = {
+        properties: {
+          reported: {
+            update: sinon.spy()
+          }
+        }
+      }
+      clientDiagnostic.onDesiredTwinUpdate(fakeTwin, 50);
+      assert.isTrue(fakeTwin.properties.reported.update.calledWith({
+        _diag_sample_rate: 50,
+        _diag_info: ''
+      }));
+    });
+
+    it('shall report error if desired twin is invalid', function () {
+      let clientDiagnostic = new DiagnosticClient();
+      let fakeTwin = {
+        properties: {
+          reported: {
+            update: sinon.spy()
+          }
+        }
+      }
+      clientDiagnostic.onDesiredTwinUpdate(fakeTwin, 101);
+      assert.deepEqual(fakeTwin.properties.reported.update.args[0][0], {
+        _diag_sample_rate: 0,
+        _diag_info: 'Value of _diag_sample_rate is invalid:Sampling percentage should be [0,100] '
+      });
+    });
+  });
 });

@@ -921,14 +921,41 @@ describe('Client', function () {
     });
   });
 
-  describe('#setDiagnosticSamplingPercentage', function() {
-    /*Tests_SRS_NODE_DEVICE_CLIENT_26_001: [The `setDiagnosticSamplingPercentage` method shall throw a `ArgumentError` if the percentage value is falsy.]*/
-    [null, undefined].forEach(function(value) {
-      it('throws an ArgumentError if value is \'' + value + '\'', function() {
+  describe('#enableDiagnostics', function () {
+    ['string', 101].forEach(function (value) {
+      it('throws an ArgumentError if value is \'' + value + '\'', function () {
         var client = new Client(new EventEmitter());
-        assert.throws(function() {
-          client.setDiagnosticSamplingPercentage(value);
+        assert.throws(function () {
+          client.enableDiagnostics(value);
         }, errors.ArgumentError);
+      });
+    });
+
+    it('calls getTwin to fetch settings from cloud if percentage is not set', function () {
+      var dummyTransport = new FakeTransport();
+      var client = new Client(dummyTransport);
+      client.getTwin = sinon.spy();
+      client.enableDiagnostics();
+      assert.isTrue(client.getTwin.calledOnce);
+    });
+
+    it('does not call getTwin to fetch settings from cloud if percentage is set', function () {
+      var dummyTransport = new FakeTransport();
+      var client = new Client(dummyTransport);
+      client.getTwin = sinon.spy();
+      client.enableDiagnostics(1);
+      assert.isTrue(client.getTwin.notCalled);
+    });
+
+    it('returns an InvalidOperationError if called twice', function () {
+      var dummyTransport = new FakeTransport();
+      var client = new Client(dummyTransport);
+      client.getTwin = sinon.spy();
+      assert.isUndefined(client._diagnosticClient);
+      client.enableDiagnostics(1);
+      assert.exists(client._diagnosticClient);
+      client.enableDiagnostics(1, (err) => {
+        assert.instanceOf(err, errors.InvalidOperationError);
       });
     });
   });
