@@ -71,6 +71,8 @@ export class Client extends EventEmitter {
 
   private _retryPolicy: RetryPolicy;
   private _diagnosticClient: DiagnosticClient;
+  // A flag to make sure enableDiagnostics only be called once.
+  private _diagnosticAlreadySet: boolean;
 
   /**
    * @constructor
@@ -97,6 +99,7 @@ export class Client extends EventEmitter {
 
     /* Codes_SRS_NODE_DEVICE_CLIENT_26_001: [The constructor shall initialize device client diagnostic] */
     this._diagnosticClient = new DiagnosticClient();
+    this._diagnosticAlreadySet = false;
 
     this._transport = transport;
     this._transport.on('message', (msg) => {
@@ -264,6 +267,7 @@ export class Client extends EventEmitter {
    * @param {Function}                  sendEventCallback  The callback to be invoked when `sendEvent` completes execution.
    */
   sendEvent(message: Message, sendEventCallback?: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    /* Codes_SRS_NODE_DEVICE_CLIENT_26_002: [The sendEvent method shall add diagnostic information if necessary.] */
     this._diagnosticClient.addDiagnosticInfoIfNecessary(message);
     const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
@@ -286,6 +290,7 @@ export class Client extends EventEmitter {
    *                                                `sendEventBatch` completes execution.
    */
   sendEventBatch(messages: Message[], sendEventBatchCallback?: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    /* Codes_SRS_NODE_DEVICE_CLIENT_26_003: [The sendEventBatch method shall add diagnostic information to all messages if necessary.] */
     for (let message of messages) {
       this._diagnosticClient.addDiagnosticInfoIfNecessary(message);
     }
@@ -492,19 +497,31 @@ export class Client extends EventEmitter {
     this._retryPolicy = policy;
   }
 
-  /*
-   * @method           module:azure-iot-device.Client#setDiagnosticSamplingPercentage
-   * @description      The `setDiagnosticSamplingPercentage` method will set percentage value for diagnostic sampling
+  /**
+   * @method           module:azure-iot-device.Client#enableDiagnostics
+   * @description      The `enableDiagnostics` method will set percentage value for diagnostic sampling
    *
-   * @param {number} value            The value of diagnostic sampling
-   *
+   * @param {number}    percentage                            The value of diagnostic sampling rate.If not provided, will fetch from device twin.
+   * @param {Function}  enableDiagnosticsCallback             The callback to call when enabled diagnostics.
    */
-  setDiagnosticSamplingPercentage(value: number): void {
-    if (value !== null && typeof value !== 'undefined') {
-      // Codes_SRS_NODE_DEVICE_CLIENT_26_002: ["SetDiagnosticSamplingPercentage" would set percentage].
-      this._diagnosticClient.setDiagSamplingPercentage(value);
+  enableDiagnostics(percentage?: number, enableDiagnosticsCallback?: (err?: Error) => void): void {
+    // Codes_SRS_NODE_DEVICE_CLIENT_26_004: [The enableDiagnostics method shall throw an InvalidOperationError if the method is called twice.]
+    if (this._diagnosticAlreadySet) {
+      safeCallback(enableDiagnosticsCallback, new errors.InvalidOperationError('enableDiagnostics only allowed to be called once.'));
+      return;
+    }
+    this._diagnosticAlreadySet = true;
+    if (percentage !== null && typeof percentage !== 'undefined') {
+      // Codes_SRS_NODE_DEVICE_CLIENT_26_005: [The enableDiagnostics method shall set percentage of diagnosticClient if percentage is provided.]
+      this._diagnosticClient.setDiagSamplingPercentage(percentage);
+      this._diagnosticClient.diagEnabled = true;
+      safeCallback(enableDiagnosticsCallback);
     } else {
-      throw new errors.ArgumentError('Invalid diagnostic sampling percentage value.');
+      // Codes_SRS_NODE_DEVICE_CLIENT_26_006: [The enableDiagnostics method shall fetch cloud settings if percentage is not provided.]
+      this.getTwin((error, twin) => {
+        twin.on('properties.desired', this._diagnosticClient.onDesiredTwinUpdate.bind(this._diagnosticClient, twin));
+        safeCallback(enableDiagnosticsCallback);
+      });
     }
   }
 

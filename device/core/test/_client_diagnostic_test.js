@@ -47,6 +47,7 @@ describe('DiagnosticClient', function () {
     it('return true if diagSamplingPercentage set to 100', function () {
       let clientDiagnostic = new DiagnosticClient();
       clientDiagnostic.setDiagSamplingPercentage(100);
+      clientDiagnostic.diagEnabled = true;
       let result = 0;
       for (let i = 0; i < 5; i++) {
         result += clientDiagnostic.shouldAddDiagnosticInfo() ? 1 : 0;
@@ -54,10 +55,22 @@ describe('DiagnosticClient', function () {
       assert.equal(result, 5);
     });
 
+    /*Tests_SRS_NODE_DEVICE_CLIENT_DIAGNOSTIC_01_008: [The shouldAddDiagnosticInfo shall always return false if diagEnabled is set to false.]*/
+    it('return false if diagEnabled set to false', function () {
+      let clientDiagnostic = new DiagnosticClient();
+      clientDiagnostic.setDiagSamplingPercentage(0);
+      let result = 0;
+      for (let i = 0; i < 5; i++) {
+        result += clientDiagnostic.shouldAddDiagnosticInfo() ? 1 : 0;
+      }
+      assert.equal(result, 0);
+    });
+
     /*Tests_SRS_NODE_DEVICE_CLIENT_DIAGNOSTIC_01_004: [The shouldAddDiagnosticInfo shall always return false if diagSamplingPercentage is set to 0.]*/
     it('return false if diagSamplingPercentage set to 0', function () {
       let clientDiagnostic = new DiagnosticClient();
       clientDiagnostic.setDiagSamplingPercentage(0);
+      clientDiagnostic.diagEnabled = true;
       let result = 0;
       for (let i = 0; i < 5; i++) {
         result += clientDiagnostic.shouldAddDiagnosticInfo() ? 1 : 0;
@@ -69,6 +82,7 @@ describe('DiagnosticClient', function () {
     it('return value related to diagSamplingPercentage', function () {
       let clientDiagnostic = new DiagnosticClient();
       clientDiagnostic.setDiagSamplingPercentage(50);
+      clientDiagnostic.diagEnabled = true;
       let result = 0;
       for (let i = 0; i < 10; i++) {
         result += clientDiagnostic.shouldAddDiagnosticInfo() ? 1 : 0;
@@ -94,6 +108,82 @@ describe('DiagnosticClient', function () {
       let message = new Message();
       clientDiagnostic.addDiagnosticInfoIfNecessary(message);
       assert.isNull(message.diagnostics);
+    });
+  });
+
+  describe('#onDesiredTwinUpdate', function () {
+    it('shall set diagEnabled and sampling rate', function () {
+      let clientDiagnostic = new DiagnosticClient();
+      let fakeTwin = {
+        properties: {
+          reported: {
+            update: sinon.spy()
+          }
+        }
+      }
+      clientDiagnostic.onDesiredTwinUpdate(fakeTwin, {
+        diag_enable: 'true',
+        diag_sample_rate: 50,
+      });
+      assert.equal(clientDiagnostic.diagEnabled, true);
+      assert.equal(clientDiagnostic.diagSamplingPercentage, 50);
+    });
+
+    it('shall report updated settings', function () {
+      let clientDiagnostic = new DiagnosticClient();
+      let fakeTwin = {
+        properties: {
+          reported: {
+            update: sinon.spy()
+          }
+        }
+      }
+      clientDiagnostic.onDesiredTwinUpdate(fakeTwin, {
+        diag_enable: 'true',
+        diag_sample_rate: 50,
+      });
+      assert.isTrue(fakeTwin.properties.reported.update.calledWith({
+        diag_enable: true,
+        diag_sample_rate: 50,
+        diag_error: ''
+      }));
+    });
+
+    it('shall not change settings or report if desired twin does not contain diagnostic keys', function () {
+      let clientDiagnostic = new DiagnosticClient();
+      let fakeTwin = {
+        properties: {
+          reported: {
+            update: sinon.spy()
+          }
+        }
+      }
+      clientDiagnostic.onDesiredTwinUpdate(fakeTwin, {
+        otherthings: 'abcde'
+      });
+      assert.equal(clientDiagnostic.diagEnabled, false);
+      assert.equal(clientDiagnostic.diagSamplingPercentage, 0);
+      assert.isTrue(fakeTwin.properties.reported.update.notCalled);
+    });
+
+    it('shall report error if desired twin is invalid', function () {
+      let clientDiagnostic = new DiagnosticClient();
+      let fakeTwin = {
+        properties: {
+          reported: {
+            update: sinon.spy()
+          }
+        }
+      }
+      clientDiagnostic.onDesiredTwinUpdate(fakeTwin, {
+        diag_enable: 'true',
+        diag_sample_rate: 101,
+      });
+      assert.deepEqual(fakeTwin.properties.reported.update.args[0][0], {
+        diag_enable: true,
+        diag_sample_rate: 0,
+        diag_error: 'Value of diag_sample_rate is invalid:Sampling percentage should be [0,100] '
+      });
     });
   });
 });

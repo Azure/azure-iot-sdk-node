@@ -88,6 +88,8 @@ The `sendEvent` method sends an event message to the IoT Hub as the device indic
 
 **SRS_NODE_DEVICE_CLIENT_16_047: [** The `sendEvent` method shall not throw if the `sendEventCallback` is not passed. **]**
 
+**SRS_NODE_DEVICE_CLIENT_26_002: [** The `sendEvent` method shall add diagnostic information if necessary. **]**
+
 #### sendEventBatch(messages, sendEventBatchCallback)
 The `sendEventBatch` method sends a list of event messages to the IoT Hub as the device indicated in the constructor argument.
 
@@ -98,6 +100,8 @@ The `sendEventBatch` method sends a list of event messages to the IoT Hub as the
 **SRS_NODE_DEVICE_CLIENT_07_005: [** When the `sendEventBatch` method completes the callback function shall be invoked with the same arguments as the underlying transport method's callback. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_051: [** The `sendEventBatch` method shall not throw if the `sendEventBatchCallback` is not passed. **]**
+
+**SRS_NODE_DEVICE_CLIENT_26_003: [** The `sendEventBatch` method shall add diagnostic information to all messages if necessary. **]**
 
 #### setTransportOptions(options, done)
 **`setTransportOptions` is deprecated and will be removed at the next major release.**
@@ -240,6 +244,14 @@ interface DeviceMethodEventHandler {
 **SRS_NODE_DEVICE_CLIENT_16_085: [** The `setRetryPolicy` method shall throw an `ArgumentError` if the policy object doesn't have a `nextRetryTimeout` method. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_086: [** Any operation (such as `sendEvent` or `onDeviceMethod`) happening after a `setRetryPolicy` call should use the policy set during that call. **]**
+
+#### enableDiagnostics(percentage)
+
+**SRS_NODE_DEVICE_CLIENT_26_004: [** The `enableDiagnostics` method shall throw an `InvalidOperationError` if the method is called twice. **]**
+
+**SRS_NODE_DEVICE_CLIENT_26_005: [** The `enableDiagnostics` method shall set percentage of diagnosticClient if percentage is provided. **]**
+
+**SRS_NODE_DEVICE_CLIENT_26_006: [** The `enableDiagnostics` method shall fetch cloud settings if percentage is not provided. **]**
 
 ### Events
 #### message
