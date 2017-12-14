@@ -49,5 +49,8 @@ module.exports = {
   Message: common.Message,
   SharedAccessSignature: require('./lib/shared_access_signature.js'),
   DeviceMethodRequest: require('./lib/device_method').DeviceMethodRequest,
-  DeviceMethodResponse: require('./lib/device_method').DeviceMethodResponse
+  DeviceMethodResponse: require('./lib/device_method').DeviceMethodResponse,
+  X509AuthenticationProvider: require('./lib/x509_authentication_provider').X509AuthenticationProvider,
+  SharedAccessSignatureAuthenticationProvider: require('./lib/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider,
+  SharedAccessKeyAuthenticationProvider: require('./lib/sak_authentication_provider').SharedAccessKeyAuthenticationProvider,
 };

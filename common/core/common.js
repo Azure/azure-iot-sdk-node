@@ -22,4 +22,7 @@ module.exports = {
   RetryPolicy: require('./lib/retry_policy.js').RetryPolicy,
   NoRetry: require('./lib/retry_policy.js').NoRetry,
   ExponentialBackOffWithJitter: require('./lib/retry_policy.js').ExponentialBackOffWithJitter,
+  TokenAuthenticationProvider: require('./lib/authentication_provider').TokenAuthenticationProvider,
+  AuthenticationProvider: require('./lib/authentication_provider').X509AuthenticationProvider,
+  AuthenticationType: require('./lib/authentication_provider').AuthenticationType
 };

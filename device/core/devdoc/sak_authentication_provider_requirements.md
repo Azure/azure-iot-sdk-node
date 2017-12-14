@@ -1,0 +1,64 @@
+# SharedAccessKeyAuthenticationProvider Requirements
+
+# Overview
+
+The `SharedAccessKeyAuthenticationProvider` class is used to provide credentials to transports when the user wants the device to authenticate using security tokens, typically generated from shared access key that is passed as part of a connection string.
+
+The `SharedAccessKeyAuthenticationProvider` class implements the `TokenAuthenticationProvider` interface from `azure-iot-common`.
+
+# Example Usage
+```js
+var sakAuthProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString('<connectionstring>');
+// whenever a new token is needed:
+sakAuthProvider.getCredentials(function (err, credentials) {
+  // do something with the credentials
+});
+
+// to monitor for new tokens:
+sakAuthProvider.on('newTokenAvailable', function () {
+  sakAuthProvider.getCredentials(function (err, credentials) {
+    // do something with the credentials
+  });
+});
+```
+
+# Public API
+
+# constructor(credentials: DeviceCredentials, tokenValidTimeInSeconds?, tokenRenewalMarginInSeconds?: number)
+
+**SRS_NODE_SAK_AUTH_PROVIDER_16_001: [** The `constructor` shall create the initial token value using the `credentials` parameter. **]**
+
+**SRS_NODE_SAK_AUTH_PROVIDER_16_002: [** The `constructor` shall start a timer that will automatically renew the token every (`tokenValidTimeInSeconds` - `tokenRenewalMarginInSeconds`) seconds if specified, or 45 minutes by default. **]**
+
+## getDeviceCredentials(callback: (err: Error, credentials: DeviceCredentials) => void): void
+
+**SRS_NODE_SAK_AUTH_PROVIDER_16_003: [** The `getDeviceCredentials` should call its callback with a `null` first parameter and a `DeviceCredentials` object as a second parameter, containing the latest valid token it generated. **]**
+
+## updateSharedAccessSignature(sharedAccessSignature: string): void
+
+**SRS_NODE_SAK_AUTH_PROVIDER_16_004: [** The `updateSharedAccessSignature` method shall save the `sharedAccessSignature` passed as a parameter and return it when `getDeviceCredentials` is called, until it gets renewed. **]**
+
+## newTokenAvailable event
+
+**SRS_NODE_SAK_AUTH_PROVIDER_16_005: [** Every time a new token is created, the `newTokenAvailable` event shall be fired with no arguments. **]**
+
+## fromConnectionString(connectionString: string, tokenValidTimeInSeconds?, tokenRenewalMarginInSeconds?: number): SharedAccessKeyAuthenticationProvider [static]
+
+**SRS_NODE_SAK_AUTH_PROVIDER_16_006: [** The `fromConnectionString` method shall throw a `ReferenceError` if the `connectionString` parameter is falsy. **]**
+
+**SRS_NODE_SAK_AUTH_PROVIDER_16_007: [** The `fromConnectionString` method shall throw an `errors.ArgumentError` if the `connectionString` does not have a SharedAccessKey parameter. **]**
+
+**SRS_NODE_SAK_AUTH_PROVIDER_16_008: [** The `fromConnectionString` method shall extract the credentials from the `connectionString` argument and create a new `SharedAccessKeyAuthenticationProvider` that uses these credentials to generate security tokens. **]**
+
+# Generated Security Token
+
+**SRS_NODE_SAK_AUTH_PROVIDER_16_009: [** Every token shall be created with a validity period of `tokenValidTimeInSeconds` if specified when the constructor was called, or 1 hour by default. **]**
+
+**SRS_NODE_SAK_AUTH_PROVIDER_16_010: [** Every token shall be created using the `azure-iot-common.SharedAccessSignature.create` method and then serialized as a string, with the arguments to the create methods being:
+```
+resourceUri: <IoT hub host>/devices/<deviceId>
+keyName: the `SharedAccessKeyName` parameter of the connection string or `null`
+key: the `SharedAccessKey` parameter of the connection string
+expiry: the expiration time of the token, which is now + the token validity time, formatted as the number of seconds since Epoch (Jan 1st, 1970, 00:00 UTC).
+```
+**]**

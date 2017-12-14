@@ -38,3 +38,22 @@ export function hmacHash(password: string, stringToSign: string): string {
   hmac.update(stringToSign);
   return hmac.digest('base64');
 }
+
+
+export interface DeviceCredentials {
+  host: string;
+  deviceId: string;
+  sharedAccessSignature?: string;
+  sharedAccessKeyName?: string;
+  sharedAccessKey?: string;
+  x509?: X509;
+}
+
+export interface X509 {
+  // https://nodejs.org/api/tls.html#tls_tls_connect_options_callback
+  cert?: string | string[] | Buffer | Buffer[];
+  key?: string | Buffer;
+  passphrase?: string;
+  certFile?: string;
+  keyFile?: string;
+}

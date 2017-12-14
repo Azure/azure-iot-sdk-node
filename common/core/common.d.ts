@@ -13,16 +13,7 @@ export { Message }
 export { SharedAccessSignature } from './lib/shared_access_signature';
 export { RetryOperation } from './lib/retry_operation';
 export { RetryPolicy, NoRetry, ExponentialBackOffWithJitter } from './lib/retry_policy';
-
-// Typescript only, used by other modules in azure-iot-sdk
-export interface X509 {
-    // https://nodejs.org/api/tls.html#tls_tls_connect_options_callback
-    cert?: string | string[] | Buffer | Buffer[];
-    key?: string | Buffer;
-    passphrase?: string;
-    certFile?: string;
-    keyFile?: string;
-}
+export { TokenAuthenticationProvider, AuthenticationProvider, AuthenticationType } from './lib/authentication_provider';
 
 export interface Receiver extends EventEmitter {
     on(type: 'message', func: (msg: Message) => void): this;
@@ -31,9 +22,5 @@ export interface Receiver extends EventEmitter {
     on(type: string, func: Function): this;
 }
 
-export interface TransportConfig {
-    host: string;
-    deviceId: string;
-    sharedAccessSignature?: string;
-    x509?: X509;
-}
+export { DeviceCredentials, X509 } from './lib/authorization';
+export { DeviceCredentials as TransportConfig } from './lib/authorization';
