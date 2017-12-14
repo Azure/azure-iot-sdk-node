@@ -31,9 +31,11 @@ client.sendEvent(new Message('hello world'), print);
 #### fromConnectionString
 **SRS_NODE_DEVICE_CLIENT_05_003: [** The `fromConnectionString` method shall throw ReferenceError if the connStr argument is falsy. **]**
 
-**SRS_NODE_DEVICE_CLIENT_05_005: [** `fromConnectionString` shall derive and transform the needed parts from the connection string in order to create a new instance of Transport. **]**
-
 **SRS_NODE_DEVICE_CLIENT_05_006: [** The `fromConnectionString` method shall return a new instance of the `Client` object, as by a call to `new Client(new Transport(...))`. **]**
+
+**SRS_NODE_DEVICE_CLIENT_16_087: [** The `fromConnectionString` method shall create a new `SharedAccessKeyAuthorizationProvider` object with the connection string passed as argument if it contains a SharedAccessKey parameter and pass this object to the transport constructor. **]**
+
+**SRS_NODE_DEVICE_CLIENT_16_093: [** The `fromConnectionString` method shall create a new `X509AuthorizationProvider` object with the connection string passed as argument if it contains an X509 parameter and pass this object to the transport constructor. **]**
 
 #### fromSharedAccessSignature
 
@@ -41,14 +43,25 @@ client.sendEvent(new Message('hello world'), print);
 
 **SRS_NODE_DEVICE_CLIENT_16_030: [** The `fromSharedAccessSignature` method shall return a new instance of the `Client` object **]**
 
+**SRS_NODE_DEVICE_CLIENT_16_088: [** The `fromSharedAccessSignature` method shall create a new `SharedAccessSignatureAuthorizationProvider` object with the shared access signature passed as argument, and pass this object to the transport constructor. **]**
+
+#### fromAuthenticationProvider
+
+**SRS_NODE_DEVICE_CLIENT_16_089: [** The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `authenticationProvider` argument is falsy. **]**
+
+**SRS_NODE_DEVICE_CLIENT_16_092: [** The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `transportCtor` argument is falsy. **]**
+
+**SRS_NODE_DEVICE_CLIENT_16_090: [** The `fromAuthenticationProvider` method shall pass the `authenticationProvider` object passed as argument to the transport constructor. **]**
+
+**SRS_NODE_DEVICE_CLIENT_16_091: [** The `fromAuthenticationProvider` method shall return a `Client` object configured with a new instance of a transport created using the `transportCtor` argument. **]**
+
+
 ### Constructors
 #### Client(transport, connectionString) constructor
 
 **SRS_NODE_DEVICE_CLIENT_05_001: [** The `Client` constructor shall accept a transport object **]**  , e.g. `azure-iot-device-http.Http`.
 
 **SRS_NODE_DEVICE_CLIENT_16_026: [** The `Client` constructor shall accept a connection string as an optional second argument **]**
-
-**SRS_NODE_DEVICE_CLIENT_16_027: [** If a connection string argument is provided and is using SharedAccessKey authentication, the `Client` shall automatically generate and renew SAS tokens. **]**
 
 ### Public Methods
 
@@ -158,8 +171,6 @@ The `sendEventBatch` method sends a list of event messages to the IoT Hub as the
 #### updateSharedAccessSignature(sharedAccessSignature, done)
 
 **SRS_NODE_DEVICE_CLIENT_16_031: [** The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the sharedAccessSignature parameter is falsy. **]**
-
-**SRS_NODE_DEVICE_CLIENT_06_002: [** The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the client was created using x509. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_032: [** The `updateSharedAccessSignature` method shall call the `updateSharedAccessSignature` method of the transport currently in use with the sharedAccessSignature parameter. **]**
 

@@ -24,6 +24,12 @@ var fakeConfig = {
   deviceId: 'deviceId'
 };
 
+var fakeAuthenticationProvider = {
+  getDeviceCredentials: function (callback) {
+    callback(null, fakeConfig);
+  }
+};
+
 describe('BlobUploadClient', function() {
   describe('#constructor', function() {
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_001: [`BlobUploadClient` shall throw a `ReferenceError` if `config` is falsy.]*/
@@ -48,24 +54,6 @@ describe('BlobUploadClient', function() {
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_003: [If specified, `BlobUploadClient` shall use the `blobUploader` passed as a parameter instead of the default one.]*/
   });
 
-  describe('#updateSharedAccessSignature', function() {
-    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_011: [`updateSharedAccessSignature` shall update the value used by the `BlobUploadClient` instance to the value passed as an argument.]*/
-    it('updates the shared access signature with the new one', function() {
-      var newSas = 'newSas';
-      var fakeStream = new stream.Readable();
-      var fakeFileUpload = new FakeFileUploadApi();
-      var fakeBlobUploader = new FakeBlobUploader();
-      var fakeBlobName = 'blobName';
-
-      var client = new BlobUploadClient(fakeConfig, fakeFileUpload, fakeBlobUploader);
-      client.uploadToBlob(fakeBlobName, fakeStream, 42, function() {});
-      assert(fakeFileUpload.getBlobSharedAccessSignature.calledWith(fakeBlobName, fakeConfig.sharedAccessSignature));
-      client.updateSharedAccessSignature(newSas);
-      client.uploadToBlob(fakeBlobName, fakeStream, 42, function() {});
-      assert(fakeFileUpload.getBlobSharedAccessSignature.calledWith(fakeBlobName, newSas));
-    });
-  });
-
   describe('#uploadToBlob', function() {
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_004: [`uploadToBlob` shall obtain a blob SAS token using the IoT Hub service file upload API endpoint.]*/
     it('gets the Blob SAS token from the File Upload API', function() {
@@ -84,7 +72,7 @@ describe('BlobUploadClient', function() {
       var fakeFileUpload = new FakeFileUploadApi();
       var fakeBlobUploader = new FakeBlobUploader();
       var fakeBlobName = 'blobName';
-      fakeFileUpload.getBlobSharedAccessSignature = function(blobName, sas, callback) {
+      fakeFileUpload.getBlobSharedAccessSignature = function(blobName, callback) {
         var error = new Error('fake error');
         callback(error);
       };
@@ -111,7 +99,7 @@ describe('BlobUploadClient', function() {
         sasToken: 'sasToken'
       };
 
-      fakeFileUpload.getBlobSharedAccessSignature = function(blobName, sas, callback) {
+      fakeFileUpload.getBlobSharedAccessSignature = function(blobName, callback) {
         callback(null, fakeBlobInfo);
       };
 
@@ -141,7 +129,7 @@ describe('BlobUploadClient', function() {
         sasToken: 'sasToken'
       };
 
-      fakeFileUpload.getBlobSharedAccessSignature = function(blobName, sas, callback) {
+      fakeFileUpload.getBlobSharedAccessSignature = function(blobName, callback) {
         callback(null, fakeBlobInfo);
       };
 
@@ -169,11 +157,11 @@ describe('BlobUploadClient', function() {
         sasToken: 'sasToken'
       };
 
-      fakeFileUpload.getBlobSharedAccessSignature = function(blobName, sas, callback) {
+      fakeFileUpload.getBlobSharedAccessSignature = function(blobName, callback) {
         callback(null, fakeBlobInfo);
       };
 
-      fakeFileUpload.notifyUploadComplete = function(correlationId, result, sharedAccessSignature, callback) {
+      fakeFileUpload.notifyUploadComplete = function(correlationId, result, callback) {
         callback(new Error('could not notify hub'));
       };
 
@@ -203,11 +191,11 @@ describe('BlobUploadClient', function() {
         sasToken: 'sasToken'
       };
 
-      fakeFileUpload.getBlobSharedAccessSignature = function(blobName, sas, callback) {
+      fakeFileUpload.getBlobSharedAccessSignature = function(blobName, callback) {
         callback(null, fakeBlobInfo);
       };
 
-      fakeFileUpload.notifyUploadComplete = function(correlationId, result, sharedAccessSignature, callback) {
+      fakeFileUpload.notifyUploadComplete = function(correlationId, result, callback) {
         callback();
       };
 

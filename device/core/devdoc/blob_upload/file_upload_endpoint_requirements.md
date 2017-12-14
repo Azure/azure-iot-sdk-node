@@ -6,19 +6,15 @@ The `FileUploadApi` class provide methods to get an Azure Storage blob SAS URI f
 ## Usage
 
 ## Public API
-### FileUploadApi(deviceId, hostname, transport) [constructor]
+### FileUploadApi(authenticationProvider, transport) [constructor]
 
-**SRS_NODE_FILE_UPLOAD_ENDPOINT_16_002: [** `FileUploadApi` shall throw a `ReferenceError` if `deviceId` is falsy. **]**
-
-**SRS_NODE_FILE_UPLOAD_ENDPOINT_16_003: [** `FileUploadApi` shall throw a `ReferenceError` if `hostname` is falsy. **]**
+**SRS_NODE_FILE_UPLOAD_ENDPOINT_16_019: [** `FileUploadApi` shall throw a `ReferenceError` if `authenticationProvider` is falsy. **]**
 
 **SRS_NODE_FILE_UPLOAD_ENDPOINT_16_018: [** `FileUploadApi` shall instantiate the default `azure-iot-http-base.Http` transport if `transport` is not specified, otherwise it shall use the specified transport. **]**
 
 ### getBlobSharedAccessSignature(blobName, iotHubSas, done)
 
 **SRS_NODE_FILE_UPLOAD_ENDPOINT_16_004: [** `getBlobSharedAccessSignature` shall throw a `ReferenceError` if `blobName` is falsy. **]**
-
-**SRS_NODE_FILE_UPLOAD_ENDPOINT_16_005: [** `getBlobSharedAccessSignature` shall throw a `ReferenceError` if `auth` is falsy. **]**
 
 **SRS_NODE_FILE_UPLOAD_ENDPOINT_16_006: [** `getBlobSharedAccessSignature` shall create a `POST` HTTP request to a path formatted as the following:
 `/devices/<deviceId>/files?api-version=<api-version>`
@@ -52,10 +48,8 @@ The `POST` HTTP request shall have the following body:
 }
  **]**
 
-### notifyUploadComplete(correlationId, sharedAccessSignature, uploadResult, done)
+### notifyUploadComplete(correlationId, uploadResult, done)
 **SRS_NODE_FILE_UPLOAD_ENDPOINT_16_010: [** `notifyUploadComplete` shall throw a `ReferenceError` if `correlationId` is falsy. **]**
-
-**SRS_NODE_FILE_UPLOAD_ENDPOINT_16_011: [** `notifyUploadComplete` shall throw a `ReferenceError` if `auth` is falsy. **]**
 
 **SRS_NODE_FILE_UPLOAD_ENDPOINT_16_012: [** `notifyUploadComplete` shall throw a `ReferenceError` if `uploadResult` is falsy. **]**
 
@@ -70,7 +64,7 @@ Authorization: <sharedAccessSignature>,
 'Content-Type': 'application/json; charset=utf-8',
 'Content-Length': <content length>,
 'iothub-name': <hub name>
-``` 
+```
 **]**
 
 **SRS_NODE_FILE_UPLOAD_ENDPOINT_16_015: [** The `POST` HTTP request shall have the following body:
