@@ -16,6 +16,9 @@ var results = require('azure-iot-common').results;
 var errors = require('azure-iot-common').errors;
 var Message = require('azure-iot-common').Message;
 var NoRetry = require('azure-iot-common').NoRetry;
+var SharedAccessKeyAuthenticationProvider = require('../lib/sak_authentication_provider').SharedAccessKeyAuthenticationProvider;
+var SharedAccessSignatureAuthenticationProvider = require('../lib/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider;
+var X509AuthenticationProvider = require('../lib/x509_authentication_provider').X509AuthenticationProvider;
 
 describe('Client', function () {
   var sharedKeyConnectionString = 'HostName=host;DeviceId=id;SharedAccessKey=key';
@@ -47,38 +50,6 @@ describe('Client', function () {
       assert.instanceOf(client, Client);
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_027: [If a connection string argument is provided and is using SharedAccessKey authentication, the Client shall automatically generate and renew SAS tokens.] */
-    it('automatically renews the SAS token before it expires', function (testCallback) {
-      this.clock = sinon.useFakeTimers();
-      var clock = this.clock;
-      var tick = 0;
-      var firstTick = 1800000;
-      var secondTick = 1200000;
-      var sasUpdated = false;
-
-      var client = Client.fromConnectionString(sharedKeyConnectionString, FakeTransport);
-      sinon.stub(client._transport, 'updateSharedAccessSignature').callsFake(function () {
-        sasUpdated = true;
-        assert.equal(tick, secondTick);
-        clock.restore();
-        testCallback();
-      });
-
-      assert.instanceOf(client, Client);
-      client.open(function (err) {
-        if (err) {
-          testCallback(err);
-        } else {
-          client.sasRenewalInterval = 2700000;
-          tick = firstTick;
-          this.clock.tick(tick); // 30 minutes. shouldn't have updated yet.
-          assert.isFalse(sasUpdated);
-          tick = secondTick;
-          this.clock.tick(tick); // +20 => 50 minutes. should've updated so the callback will be called and the test will terminate.
-        }
-      }.bind(this));
-    });
-
     it('doesn\'t try to renew the SAS token when using x509', function (testCallback) {
       this.clock = sinon.useFakeTimers();
       var clock = this.clock;
@@ -96,9 +67,27 @@ describe('Client', function () {
       clock.restore();
       testCallback();
     });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_087: [The `fromConnectionString` method shall create a new `SharedAccessKeyAuthorizationProvider` object with the connection string passed as argument if it contains a SharedAccessKey parameter and pass this object to the transport constructor. ]*/
+    it('creates a SharedAccessKeyAuthorizationProvider and passes it to the transport', function (testCallback) {
+      var client = Client.fromConnectionString(sharedKeyConnectionString, function (authProvider) {
+        assert.instanceOf(authProvider, SharedAccessKeyAuthenticationProvider);
+        testCallback();
+      })
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_093: [The `fromConnectionString` method shall create a new `X509AuthorizationProvider` object with the connection string passed as argument if it contains an X509 parameter and pass this object to the transport constructor.]*/
+    it('creates a X509AuthenticationProvider and passes it to the transport', function (testCallback) {
+      var x509ConnectionString = 'HostName=host;DeviceId=id;x509=true';
+      var client = Client.fromConnectionString(x509ConnectionString, function (authProvider) {
+        assert.instanceOf(authProvider, X509AuthenticationProvider);
+        testCallback();
+      })
+    });
   });
 
   describe('#fromSharedAccessSignature', function () {
+    var sharedAccessSignature = '"SharedAccessSignature sr=hubName.azure-devices.net/devices/deviceId&sig=s1gn4tur3&se=1454204843"';
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_029: [The fromSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature argument is falsy.] */
     it('throws if sharedAccessSignature arg is falsy', function () {
       [null, undefined, '', 0].forEach(function (value) {
@@ -110,32 +99,50 @@ describe('Client', function () {
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_030: [The fromSharedAccessSignature method shall return a new instance of the Client object] */
     it('returns an instance of Client', function () {
-      var sharedAccessSignature = '"SharedAccessSignature sr=hubName.azure-devices.net/devices/deviceId&sig=s1gn4tur3&se=1454204843"';
       var client = Client.fromSharedAccessSignature(sharedAccessSignature, FakeTransport);
       assert.instanceOf(client, Client);
     });
 
-    it('create a correct config when sr is not URI-encoded', function () {
-      var sharedAccessSignature = '"SharedAccessSignature sr=hubName.azure-devices.net/devices/deviceId&sig=s1gn4tur3&se=1454204843"';
-      var DummyTransport = function (config) {
-        this.on = function() {};
-        assert.strictEqual(config.host, 'hubName.azure-devices.net');
-        assert.strictEqual(config.deviceId, 'deviceId');
-        assert.strictEqual(config.sharedAccessSignature, sharedAccessSignature);
-      };
-      Client.fromSharedAccessSignature(sharedAccessSignature, DummyTransport);
+    it('creates a SharedAccessSignatureAuthorizationProvider and passes it to the transport', function (testCallback) {
+      var client = Client.fromSharedAccessSignature(sharedAccessSignature, function (authProvider) {
+        assert.instanceOf(authProvider, SharedAccessSignatureAuthenticationProvider);
+        testCallback();
+      });
+    });
+  });
+
+  describe('#fromAuthenticationProvider', function () {
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_089: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `authenticationProvider` argument is falsy.]*/
+    [null, undefined].forEach(function (badAuthProvider) {
+      it('throws if the authenticationProvider is falsy', function () {
+        assert.throws(function () {
+          return Client.fromAuthenticationProvider(badAuthProvider, function () {});
+        }, ReferenceError);
+      });
     });
 
-    it('create a correct config when sr is URI-encoded', function () {
-      var sharedAccessSignature = '"SharedAccessSignature sr=hubName.azure-devices.net%2Fdevices%2FdeviceId&sig=s1gn4tur3&se=1454204843"';
-      var DummyTransport = function (config) {
-        this.on = function() {};
-        assert.strictEqual(config.host, 'hubName.azure-devices.net');
-        assert.strictEqual(config.deviceId, 'deviceId');
-        assert.strictEqual(config.sharedAccessSignature, sharedAccessSignature);
-      };
-      Client.fromSharedAccessSignature(sharedAccessSignature, DummyTransport);
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_092: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `transportCtor` argument is falsy.]*/
+    [null, undefined].forEach(function (badTransportCtor) {
+      it('throws if the transportCtor is falsy', function () {
+        assert.throws(function () {
+          return Client.fromAuthenticationProvider({}, badTransportCtor);
+        }, ReferenceError);
+      });
     });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_090: [The `fromAuthenticationProvider` method shall pass the `authenticationProvider` object passed as argument to the transport constructor.]*/
+    it('passes the authenticationProvider to the transport', function () {
+      var fakeAuthProvider = {};
+      var fakeTransportCtor = sinon.stub().returns(new EventEmitter());
+      return Client.fromAuthenticationProvider(fakeAuthProvider, fakeTransportCtor);
+      assert.isTrue(fakeTransportCtor.calledWith(fakeAuthProvider));
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_091: [The `fromAuthenticationProvider` method shall return a `Client` object configured with a new instance of a transport created using the `transportCtor` argument.]*/
+    it('returns an instance of Client', function () {
+      var client = Client.fromAuthenticationProvider({}, FakeTransport);
+      assert.instanceOf(client, Client);
+    })
   });
 
   describe('#setTransportOptions', function () {
@@ -347,34 +354,6 @@ describe('Client', function () {
       var client = new Client(transport);
       assert.doesNotThrow(function() {
         client.open();
-      });
-    });
-
-    [true, false].forEach( function(doReconnect) {
-      it('should invoke the renew path with a reconnect of ' + doReconnect.toString(), function(testCallback){
-        this.clock = sinon.useFakeTimers();
-        var dummyTransport = new FakeTransport();
-        sinon.stub(dummyTransport, 'updateSharedAccessSignature').callsFake(function(newSas, callback) {
-          callback(null, new results.SharedAccessSignatureUpdated(doReconnect));
-        });
-
-        var client = new Client(dummyTransport, sharedKeyConnectionString);
-        client.blobUploadClient = { updateSharedAccessSignature: function() {} };
-        var renewalInterval = Client.sasRenewalInterval;
-        client.open(function(err, res) {
-          if (err) {
-            testCallback(err);
-          } else {
-            assert.strictEqual(res.constructor.name, 'Connected');
-            assert(dummyTransport.updateSharedAccessSignature.notCalled);
-            this.clock.tick(renewalInterval + 1);
-            process.nextTick(function () {
-              assert(dummyTransport.updateSharedAccessSignature.calledOnce);
-              this.clock.restore();
-              testCallback();
-            }.bind(this));
-          }
-        }.bind(this));
       });
     });
   });
@@ -798,15 +777,6 @@ describe('Client', function () {
         }, ReferenceError);
       });
     });
-
-    /*Tests_SRS_NODE_DEVICE_CLIENT_06_002: [The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the client was created using x509.]*/
-    it('throws a ReferenceError if client created using x509', function () {
-      var client = new Client(new FakeTransport(), 'HostName=host;DeviceId=id;x509=true');
-      assert.throws(function () {
-        client.updateSharedAccessSignature('sas', function () { });
-      }, ReferenceError);
-    });
-
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_032: [The updateSharedAccessSignature method shall call the updateSharedAccessSignature method of the transport currently in use with the sharedAccessSignature parameter.]*/
     it('calls the transport `updateSharedAccessSignature` method with the sharedAccessSignature parameter', function () {

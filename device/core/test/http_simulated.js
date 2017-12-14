@@ -20,31 +20,33 @@ function makeError(statusCode) {
   return err;
 }
 
-function SimulatedHttp(config) {
+function SimulatedHttp(authProvider) {
   EventEmitter.call(this);
   this._receiver = null;
   this.handleRequest = function (done) {
-    if (this._x509) {
+    authProvider.getDeviceCredentials(function (err, config) {
+      if (this._x509) {
         done(null, new results.MessageEnqueued(new Response(204)));
-    } else {
-      var sig = SharedAccessSignature.parse(config.sharedAccessSignature);
+      } else {
+        var sig = SharedAccessSignature.parse(config.sharedAccessSignature);
 
-      if (config.host.indexOf('bad') >= 0) {                      // bad host
-        done(new Error('getaddrinfo ENOTFOUND bad'));
-      }
-      else if (config.deviceId.indexOf('bad') >= 0) {             // bad policy
-        done(makeError(404));
-      }
-      else {
-        var cmpSig = (SharedAccessSignature.create(config.host, config.deviceId, 'bad', sig.se)).toString();
-        if (config.sharedAccessSignature === cmpSig) {  // bad key
-          done(makeError(401));
+        if (config.host.indexOf('bad') >= 0) {                      // bad host
+          done(new Error('getaddrinfo ENOTFOUND bad'));
+        }
+        else if (config.deviceId.indexOf('bad') >= 0) {             // bad policy
+          done(makeError(404));
         }
         else {
-          done(null, new results.MessageEnqueued(new Response(204)));
+          var cmpSig = (SharedAccessSignature.create(config.host, config.deviceId, 'bad', sig.se)).toString();
+          if (config.sharedAccessSignature === cmpSig) {  // bad key
+            done(makeError(401));
+          }
+          else {
+            done(null, new results.MessageEnqueued(new Response(204)));
+          }
         }
       }
-    }
+    }.bind(this));
   };
 }
 

@@ -77,7 +77,7 @@ describe('SharedAccessSignatureAuthenticationProvider', function () {
     });
 
     /*Tests_SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_006: [The `fromSharedAccessSignature` shall return a new `SharedAccessSignatureAuthenticationProvider` object initialized with the credentials parsed from the `sharedAccessSignature` argument.]*/
-    it('creates a SharedAccessSignatureAuthenticationProvider initialized with credentiasl from the shared access signature passed as argument', function (testCallback) {
+    it('creates a SharedAccessSignatureAuthenticationProvider initialized with credentials from the shared access signature passed as argument', function (testCallback) {
       var fakeCredentials = {
         host: 'host.name',
         deviceId: 'deviceId',
@@ -91,6 +91,28 @@ describe('SharedAccessSignatureAuthenticationProvider', function () {
         assert.strictEqual(creds.deviceId, fakeCredentials.deviceId);
         assert.isUndefined(creds.sharedAccessKey);
         assert.strictEqual(creds.sharedAccessSignature, fakeSas);
+        testCallback();
+      });
+    });
+
+    it('create a correct config when sr is not URI-encoded', function (testCallback) {
+      var sharedAccessSignature = '"SharedAccessSignature sr=hubName.azure-devices.net/devices/deviceId&sig=s1gn4tur3&se=1454204843"';
+      var sasAuthProvider = SharedAccessSignatureAuthenticationProvider.fromSharedAccessSignature(sharedAccessSignature);
+      sasAuthProvider.getDeviceCredentials(function (err, creds) {
+        assert.strictEqual(creds.host, 'hubName.azure-devices.net');
+        assert.strictEqual(creds.deviceId, 'deviceId');
+        assert.strictEqual(creds.sharedAccessSignature, sharedAccessSignature);
+        testCallback();
+      });
+    });
+
+    it('create a correct config when sr is URI-encoded', function (testCallback) {
+      var sharedAccessSignature = '"SharedAccessSignature sr=hubName.azure-devices.net%2Fdevices%2FdeviceId&sig=s1gn4tur3&se=1454204843"';
+      var sasAuthProvider = SharedAccessSignatureAuthenticationProvider.fromSharedAccessSignature(sharedAccessSignature);
+      sasAuthProvider.getDeviceCredentials(function (err, creds) {
+        assert.strictEqual(creds.host, 'hubName.azure-devices.net');
+        assert.strictEqual(creds.deviceId, 'deviceId');
+        assert.strictEqual(creds.sharedAccessSignature, sharedAccessSignature);
         testCallback();
       });
     });

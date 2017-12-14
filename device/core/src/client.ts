@@ -8,14 +8,16 @@ import { EventEmitter } from 'events';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:Client');
 
-import { anHourFromNow, results, errors, Message, X509 } from 'azure-iot-common';
+import { results, errors, Message, X509, AuthenticationProvider } from 'azure-iot-common';
 import { SharedAccessSignature as CommonSharedAccessSignature } from 'azure-iot-common';
 import { ExponentialBackOffWithJitter, RetryPolicy, RetryOperation } from 'azure-iot-common';
 import * as ConnectionString from './connection_string.js';
-import * as SharedAccessSignature from './shared_access_signature.js';
 import { BlobUploadClient } from './blob_upload';
 import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
 import { Twin } from './twin';
+import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
+import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
+import { X509AuthenticationProvider } from './x509_authentication_provider';
 
 /**
  * @private
@@ -58,10 +60,6 @@ export class Client extends EventEmitter {
    * The operation will be retried according to the retry policy set with {@link azure-iot-device.Client.setRetryPolicy} method (or {@link azure-iot-common.ExponentialBackoffWithJitter} by default) until this value is reached.)
    */
   private _maxOperationTimeout: number;
-
-  private _connectionString: string;
-  private _useAutomaticRenewal: boolean;
-  private _sasRenewalTimeout: number;
   private _methodCallbackMap: any;
   private _disconnectHandler: (err?: Error, result?: any) => void;
   private blobUploadClient: BlobUploadClient; // TODO: wrong casing/naming convention
@@ -78,19 +76,13 @@ export class Client extends EventEmitter {
    * @param {string}  connStr           A connection string (optional: when not provided, updateSharedAccessSignature must be called to set the SharedAccessSignature token directly).
    * @param {Object}  blobUploadClient  An object that is capable of uploading a stream to a blob.
    */
-  constructor(transport: Client.Transport, connStr?: string, blobUploadClient?: BlobUploadClient) {
+  constructor(transport: Client.Transport, authentication?: string | AuthenticationProvider, blobUploadClient?: BlobUploadClient) {
     /*Codes_SRS_NODE_DEVICE_CLIENT_05_001: [The Client constructor shall throw ReferenceError if the transport argument is falsy.]*/
     if (!transport) throw new ReferenceError('transport is \'' + transport + '\'');
 
     super();
     this._c2dEnabled = false;
     this._methodsEnabled = false;
-    /*Codes_SRS_NODE_DEVICE_CLIENT_16_026: [The Client constructor shall accept a connection string as an optional second argument] */
-    this._connectionString = connStr;
-
-    /*Codes_SRS_NODE_DEVICE_CLIENT_16_027: [If a connection string argument is provided and is using SharedAccessKey authentication, the Client shall automatically generate and renew SAS tokens.] */
-    this._useAutomaticRenewal = !!(this._connectionString && ConnectionString.parse(this._connectionString).SharedAccessKey);
-
     this.blobUploadClient = blobUploadClient;
 
     this._transport = transport;
@@ -125,10 +117,6 @@ export class Client extends EventEmitter {
         });
       }
     });
-
-    if (this._useAutomaticRenewal) {
-      this._sasRenewalTimeout = setTimeout(this._renewSharedAccessSignature.bind(this), Client.sasRenewalInterval);
-    }
 
     this._disconnectHandler = (err) => {
       debug('transport disconnect event: ' + (err ? err.toString() : 'no error'));
@@ -213,12 +201,6 @@ export class Client extends EventEmitter {
   updateSharedAccessSignature(sharedAccessSignature: string, updateSasCallback?: (err?: Error, result?: results.SharedAccessSignatureUpdated) => void): void {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_031: [The updateSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature parameter is falsy.]*/
     if (!sharedAccessSignature) throw new ReferenceError('sharedAccessSignature is falsy');
-    if (this._useAutomaticRenewal) debug('calling updateSharedAccessSignature while using automatic sas renewal');
-    /*Codes_SRS_NODE_DEVICE_CLIENT_06_002: [The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the client was created using x509.]*/
-    if (this._connectionString && ConnectionString.parse(this._connectionString).x509) throw new ReferenceError('client uses x509');
-
-
-    this.blobUploadClient.updateSharedAccessSignature(sharedAccessSignature);
 
     const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
@@ -586,32 +568,12 @@ export class Client extends EventEmitter {
   //   }
   // }
 
-  private _renewSharedAccessSignature(): void {
-    const cn = ConnectionString.parse(this._connectionString);
-    const sas = SharedAccessSignature.create(cn.HostName, cn.DeviceId, cn.SharedAccessKey, anHourFromNow());
-    this.updateSharedAccessSignature(sas.toString(), (err) => {
-      if (this._useAutomaticRenewal) {
-        this._sasRenewalTimeout = setTimeout(this._renewSharedAccessSignature.bind(this), Client.sasRenewalInterval);
-      }
-      if (err) {
-        /*Codes_SRS_NODE_DEVICE_CLIENT_16_006: [The ‘error’ event shall be emitted when an error occurred within the client code.] */
-        this.emit('error', err);
-      } else {
-        this.emit('_sharedAccessSignatureUpdated');
-      }
-    });
-  }
-
   private _closeTransport(closeCallback: (err?: Error, result?: any) => void): void {
     const onDisconnected = (err?: Error, result?: any): void => {
       /*Codes_SRS_NODE_DEVICE_CLIENT_16_056: [The `close` method shall not throw if the `closeCallback` is not passed.]*/
       /*Codes_SRS_NODE_DEVICE_CLIENT_16_055: [The `close` method shall call the `closeCallback` function when done with either a single Error object if it failed or null and a results.Disconnected object if successful.]*/
       safeCallback(closeCallback, err, result);
     };
-
-    if (this._sasRenewalTimeout) {
-      clearTimeout(this._sasRenewalTimeout);
-    }
 
     this._disableC2D(() => {
       /*Codes_SRS_NODE_DEVICE_CLIENT_16_001: [The `close` function shall call the transport's `disconnect` function if it exists.]*/
@@ -640,21 +602,23 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_CLIENT_05_003: [The fromConnectionString method shall throw ReferenceError if the connStr argument is falsy.]*/
     if (!connStr) throw new ReferenceError('connStr is \'' + connStr + '\'');
 
-    /*Codes_SRS_NODE_DEVICE_CLIENT_05_005: [fromConnectionString shall derive and transform the needed parts from the connection string in order to create a new instance of transportCtor.]*/
     const cn = ConnectionString.parse(connStr);
 
-    let config: Client.Config = {
-      host: cn.HostName,
-      deviceId: cn.DeviceId
-    };
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_087: [The `fromConnectionString` method shall create a new `SharedAccessKeyAuthorizationProvider` object with the connection string passed as argument if it contains a SharedAccessKey parameter and pass this object to the transport constructor.]*/
+    let authenticationProvider: AuthenticationProvider;
 
-    if (cn.hasOwnProperty('SharedAccessKey')) {
-      const sas = SharedAccessSignature.create(cn.HostName, cn.DeviceId, cn.SharedAccessKey, anHourFromNow());
-      config.sharedAccessSignature = sas.toString();
+    if (cn.SharedAccessKey) {
+      authenticationProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString(connStr);
+    } else {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_16_093: [The `fromConnectionString` method shall create a new `X509AuthorizationProvider` object with the connection string passed as argument if it contains an X509 parameter and pass this object to the transport constructor.]*/
+      authenticationProvider = new X509AuthenticationProvider({
+        host: cn.HostName,
+        deviceId: cn.DeviceId
+      });
     }
 
     /*Codes_SRS_NODE_DEVICE_CLIENT_05_006: [The fromConnectionString method shall return a new instance of the Client object, as by a call to new Client(new transportCtor(...)).]*/
-    return new Client(new transportCtor(config), connStr, new BlobUploadClient(config));
+    return new Client(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider));
   }
 
   /**
@@ -674,17 +638,33 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_029: [The fromSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature argument is falsy.] */
     if (!sharedAccessSignature) throw new ReferenceError('sharedAccessSignature is \'' + sharedAccessSignature + '\'');
 
-    const sas = SharedAccessSignature.parse(sharedAccessSignature);
-    const decodedUri = decodeURIComponent(sas.sr);
-    const uriSegments = decodedUri.split('/');
-    const config: Client.Config = {
-      host: uriSegments[0],
-      deviceId: uriSegments[uriSegments.length - 1],
-      sharedAccessSignature: sharedAccessSignature
-    };
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_088: [The `fromSharedAccessSignature` method shall create a new `SharedAccessSignatureAuthorizationProvider` object with the shared access signature passed as argument, and pass this object to the transport constructor.]*/
+    const authenticationProvider = SharedAccessSignatureAuthenticationProvider.fromSharedAccessSignature(sharedAccessSignature);
 
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_030: [The fromSharedAccessSignature method shall return a new instance of the Client object] */
-    return new Client(new transportCtor(config), null, new BlobUploadClient(config));
+    return new Client(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider));
+  }
+
+  /**
+   * @method                        module:azure-iot-device.Client.fromAuthenticationMethod
+   * @description                   Creates an IoT Hub device client from the given authentication method and using the given transport type.
+   * @param authenticationProvider  Object used to obtain the authentication parameters for the IoT hub.
+   * @param transportCtor           Transport protocol used to connect to IoT hub.
+   */
+  static fromAuthenticationProvider(authenticationProvider: AuthenticationProvider, transportCtor: any): Client {
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_089: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `authenticationProvider` argument is falsy.]*/
+    if (!authenticationProvider) {
+      throw new ReferenceError('authenticationMethod cannot be \'' + authenticationProvider + '\'');
+    }
+
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_092: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `transportCtor` argument is falsy.]*/
+    if (!transportCtor) {
+      throw new ReferenceError('transportCtor cannot be \'' + transportCtor + '\'');
+    }
+
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_090: [The `fromAuthenticationProvider` method shall pass the `authenticationProvider` object passed as argument to the transport constructor.]*/
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_091: [The `fromAuthenticationProvider` method shall return a `Client` object configured with a new instance of a transport created using the `transportCtor` argument.]*/
+    return new Client(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider));
   }
 }
 

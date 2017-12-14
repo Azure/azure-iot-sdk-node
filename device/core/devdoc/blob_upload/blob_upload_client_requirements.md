@@ -14,11 +14,6 @@ Initializes a new instance of the `BlobUploadClient` class.
 
 **SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_003: [** If specified, `BlobUploadClient` shall use the `blobUploader` passed as a parameter instead of the default one. **]**
 
-## updateSharedAccessSignature(sharedAccessSignature)
-Updates the current value shared access signature.
-
-**SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_011: [** `updateSharedAccessSignature` shall update the value used by the `BlobUploadClient` instance to the value passed as an argument. **]**
-
 ## uploadToBlob(blobName, stream, streamLength, done)
 Uploads the specified stream to the specified blob.
 
