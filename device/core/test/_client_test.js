@@ -9,6 +9,7 @@ var stream = require('stream');
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 var Client = require('../lib/client.js').Client;
+var DiagnosticClient = require('../lib/client_diagnostic.js').DiagnosticClient;
 var SimulatedHttp = require('./http_simulated.js');
 var FakeTransport = require('./fake_transport.js');
 var clientTests = require('./_client_common_testrun.js');
@@ -916,6 +917,44 @@ describe('Client', function () {
         assert.isTrue(testPolicy.nextRetryTimeout.notCalled); //shouldRetry being false...
         assert.isTrue(fakeTransport.sendEvent.calledOnce);
         testCallback();
+      });
+    });
+  });
+
+  describe('#enableDiagnostics', function () {
+    ['string', 101].forEach(function (value) {
+      it('throws an ArgumentError if value is \'' + value + '\'', function () {
+        var client = new Client(new EventEmitter());
+        assert.throws(function () {
+          client.enableDiagnostics(value);
+        }, errors.ArgumentError);
+      });
+    });
+
+    it('calls getTwin to fetch settings from cloud if percentage is not set', function () {
+      var dummyTransport = new FakeTransport();
+      var client = new Client(dummyTransport);
+      client.getTwin = sinon.spy();
+      client.enableDiagnostics();
+      assert.isTrue(client.getTwin.calledOnce);
+    });
+
+    it('does not call getTwin to fetch settings from cloud if percentage is set', function () {
+      var dummyTransport = new FakeTransport();
+      var client = new Client(dummyTransport);
+      client.getTwin = sinon.spy();
+      client.enableDiagnostics(1);
+      assert.isTrue(client.getTwin.notCalled);
+    });
+
+    it('returns an InvalidOperationError if called twice', function () {
+      var dummyTransport = new FakeTransport();
+      var client = new Client(dummyTransport);
+      client.getTwin = sinon.spy();
+      client.enableDiagnostics(1);
+      assert.equal(client._diagnosticAlreadySet, true);
+      client.enableDiagnostics(1, (err) => {
+        assert.instanceOf(err, errors.InvalidOperationError);
       });
     });
   });

@@ -208,8 +208,8 @@ describe('Mqtt', function () {
       /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_015: [The `sendEvent` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`.]*/
       { propName: 'expiryTimeUtc', serializedAs: '%24.exp', fakeValue: 'fakeDateString' },
       { propName: 'expiryTimeUtc', serializedAs: '%24.exp', fakeValue: new Date(1970, 1, 1), fakeSerializedValue: encodeURIComponent(new Date(1970, 1, 1).toISOString()) }
-    ].forEach(function(testProperty) {
-      it('serializes Message.' + testProperty.propName + ' as ' + decodeURIComponent(testProperty.serializedAs) + ' on the topic', function(done) {
+    ].forEach(function (testProperty) {
+      it('serializes Message.' + testProperty.propName + ' as ' + decodeURIComponent(testProperty.serializedAs) + ' on the topic', function (done) {
         var config = {
           host: "host.name",
           deviceId: "deviceId",
@@ -222,11 +222,35 @@ describe('Mqtt', function () {
 
         var transport = new Mqtt(config, fakeMqttBase);
         transport.connect(function () {
-          transport.sendEvent(testMessage, function() {
+          transport.sendEvent(testMessage, function () {
             var serializedPropertyValue = testProperty.fakeSerializedValue || testProperty.fakeValue;
             assert(fakeMqttBase.publish.calledWith('devices/deviceId/messages/events/' + testProperty.serializedAs + '=' + serializedPropertyValue + '&fakeKey=fakeValue'));
             done();
           });
+        });
+      });
+    });
+
+    /*Tests_SRS_NODE_COMMON_MQTT_BASE_26_001: [The `sendEvent` method shall serialize the `diagnostics` property of the message as a key-value pair on the topic with the key `$.diagId` and `$.diagctx`.]*/
+    it('serializes Message.diagnosticPropertyData as $.diagid and $.diagctx on the topic', function (done) {
+      var config = {
+        host: "host.name",
+        deviceId: "deviceId",
+        sharedAccessSignature: "sasToken"
+      };
+
+      var testMessage = new Message('message');
+      testMessage.diagnostics = {
+        id: 'fakeDiagnosticId',
+        getEncodedCorrelationContext: () => 'fakeCorrelationContext'
+      };
+      testMessage.properties.add('fakeKey', 'fakeValue');
+
+      var transport = new Mqtt(config, fakeMqttBase);
+      transport.connect(function () {
+        transport.sendEvent(testMessage, function () {
+          assert(fakeMqttBase.publish.calledWith('devices/deviceId/messages/events/%24.diagid=fakeDiagnosticId&%24.diagctx=fakeCorrelationContext&fakeKey=fakeValue'));
+          done();
         });
       });
     });

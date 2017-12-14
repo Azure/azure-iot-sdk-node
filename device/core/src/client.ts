@@ -16,6 +16,7 @@ import * as SharedAccessSignature from './shared_access_signature.js';
 import { BlobUploadClient } from './blob_upload';
 import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
 import { Twin } from './twin';
+import { DiagnosticClient } from './client_diagnostic';
 
 /**
  * @private
@@ -69,6 +70,9 @@ export class Client extends EventEmitter {
   private _methodsEnabled: boolean;
 
   private _retryPolicy: RetryPolicy;
+  private _diagnosticClient: DiagnosticClient;
+  // A flag to make sure enableDiagnostics only be called once.
+  private _diagnosticAlreadySet: boolean;
 
   /**
    * @constructor
@@ -92,6 +96,10 @@ export class Client extends EventEmitter {
     this._useAutomaticRenewal = !!(this._connectionString && ConnectionString.parse(this._connectionString).SharedAccessKey);
 
     this.blobUploadClient = blobUploadClient;
+
+    /* Codes_SRS_NODE_DEVICE_CLIENT_26_001: [The constructor shall initialize device client diagnostic] */
+    this._diagnosticClient = new DiagnosticClient();
+    this._diagnosticAlreadySet = false;
 
     this._transport = transport;
     this._transport.on('message', (msg) => {
@@ -259,6 +267,8 @@ export class Client extends EventEmitter {
    * @param {Function}                  sendEventCallback  The callback to be invoked when `sendEvent` completes execution.
    */
   sendEvent(message: Message, sendEventCallback?: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    /* Codes_SRS_NODE_DEVICE_CLIENT_26_002: [The sendEvent method shall add diagnostic information if necessary.] */
+    this._diagnosticClient.addDiagnosticInfoIfNecessary(message);
     const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       /*Codes_SRS_NODE_DEVICE_CLIENT_05_007: [The sendEvent method shall send the event indicated by the message argument via the transport associated with the Client instance.]*/
@@ -280,6 +290,10 @@ export class Client extends EventEmitter {
    *                                                `sendEventBatch` completes execution.
    */
   sendEventBatch(messages: Message[], sendEventBatchCallback?: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    /* Codes_SRS_NODE_DEVICE_CLIENT_26_003: [The sendEventBatch method shall add diagnostic information to all messages if necessary.] */
+    for (let message of messages) {
+      this._diagnosticClient.addDiagnosticInfoIfNecessary(message);
+    }
     const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       /*Codes_SRS_NODE_DEVICE_CLIENT_05_008: [The sendEventBatch method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance.]*/
@@ -481,6 +495,34 @@ export class Client extends EventEmitter {
 
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_086: [Any operation happening after a `setRetryPolicy` call should use the policy set during that call.]*/
     this._retryPolicy = policy;
+  }
+
+  /**
+   * @method           module:azure-iot-device.Client#enableDiagnostics
+   * @description      The `enableDiagnostics` method will set percentage value for diagnostic sampling
+   *
+   * @param {number}    percentage                            The value of diagnostic sampling rate.If not provided, will fetch from device twin.
+   * @param {Function}  enableDiagnosticsCallback             The callback to call when enabled diagnostics.
+   */
+  enableDiagnostics(percentage?: number, enableDiagnosticsCallback?: (err?: Error) => void): void {
+    // Codes_SRS_NODE_DEVICE_CLIENT_26_004: [The enableDiagnostics method shall throw an InvalidOperationError if the method is called twice.]
+    if (this._diagnosticAlreadySet) {
+      safeCallback(enableDiagnosticsCallback, new errors.InvalidOperationError('enableDiagnostics only allowed to be called once.'));
+      return;
+    }
+    this._diagnosticAlreadySet = true;
+    if (percentage !== null && typeof percentage !== 'undefined') {
+      // Codes_SRS_NODE_DEVICE_CLIENT_26_005: [The enableDiagnostics method shall set percentage of diagnosticClient if percentage is provided.]
+      this._diagnosticClient.setDiagSamplingPercentage(percentage);
+      this._diagnosticClient.diagEnabled = true;
+      safeCallback(enableDiagnosticsCallback);
+    } else {
+      // Codes_SRS_NODE_DEVICE_CLIENT_26_006: [The enableDiagnostics method shall fetch cloud settings if percentage is not provided.]
+      this.getTwin((error, twin) => {
+        twin.on('properties.desired', this._diagnosticClient.onDesiredTwinUpdate.bind(this._diagnosticClient, twin));
+        safeCallback(enableDiagnosticsCallback);
+      });
+    }
   }
 
   private _validateDeviceMethodInputs(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {

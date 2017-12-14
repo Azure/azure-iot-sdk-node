@@ -58,6 +58,10 @@ As this is an internal API, the input argument message can be assumed to be of t
 
 **SRS_NODE_IOTHUB_AMQPMSG_05_009: [** If the `message` argument has an `ack` property, the `applicationProperties` property of the `AmqpMessage` object shall have a property named `iothub-ack` with the same value. **]**
 
+**SRS_NODE_IOTHUB_AMQPMSG_26_001: [** If `message.diagnostics` is truthy, the function shall add diagnostic id as AMQP message annotation. **]**
+
+**SRS_NODE_IOTHUB_AMQPMSG_26_002: [** If `message.diagnostics` is truthy, the function shall add diagnostic context as AMQP message annotation. **]**
+
 **SRS_NODE_IOTHUB_AMQPMSG_13_001: [** If `message.properties` is truthy, then all the properties in it shall be copied to the `applicationProperties` property of the `AmqpMessage` object. **]**
 
 **SRS_NODE_IOTHUB_AMQPMSG_16_013: [** If one of the property key is `IoThub-status`, this property is reserved and shall be forced to an `int` AMQP type. **]**
