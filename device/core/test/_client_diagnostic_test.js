@@ -122,7 +122,7 @@ describe('DiagnosticClient', function () {
         }
       }
       clientDiagnostic.onDesiredTwinUpdate(fakeTwin, {
-        diag_enable: 'true',
+        diag_enable: true,
         diag_sample_rate: 50,
       });
       assert.equal(clientDiagnostic.diagEnabled, true);
@@ -139,7 +139,7 @@ describe('DiagnosticClient', function () {
         }
       }
       clientDiagnostic.onDesiredTwinUpdate(fakeTwin, {
-        diag_enable: 'true',
+        diag_enable: true,
         diag_sample_rate: 50,
       });
       assert.isTrue(fakeTwin.properties.reported.update.calledWith({
@@ -176,7 +176,7 @@ describe('DiagnosticClient', function () {
         }
       }
       clientDiagnostic.onDesiredTwinUpdate(fakeTwin, {
-        diag_enable: 'true',
+        diag_enable: true,
         diag_sample_rate: 101,
       });
       assert.deepEqual(fakeTwin.properties.reported.update.args[0][0], {

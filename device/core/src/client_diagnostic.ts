@@ -65,8 +65,6 @@ export class DiagnosticClient {
   static DIAGNOSTIC_TWIN_KEY_ENABLED: string = 'diag_enable';
   static DIAGNOSTIC_TWIN_KEY_SAMPLING_PERCENTAGE: string = 'diag_sample_rate';
   static DIAGNOSTIC_TWIN_KEY_ERROR_MSG: string = 'diag_error';
-  static DIAGNOSTIC_TWIN_ENABLED_VALUE_TRUE: string = 'true';
-  static DIAGNOSTIC_TWIN_ENABLED_VALUE_FALSE: string = 'false';
 
   public diagEnabled: boolean;
   private diagSamplingPercentage: number;
@@ -144,22 +142,20 @@ export class DiagnosticClient {
     }
     let errMsg = '';
     /* Codes_SRS_NODE_DEVICE_DIAGNOSTICCLIENT_01_008: [The onDesiredTwinUpdate function shall set the diagEnabled switch.] */
-    if (desiredTwin[DiagnosticClient.DIAGNOSTIC_TWIN_KEY_ENABLED]) {
-      if (desiredTwin[DiagnosticClient.DIAGNOSTIC_TWIN_KEY_ENABLED] === DiagnosticClient.DIAGNOSTIC_TWIN_ENABLED_VALUE_TRUE) {
-        this.diagEnabled = true;
-      } else if (desiredTwin[DiagnosticClient.DIAGNOSTIC_TWIN_KEY_ENABLED] === DiagnosticClient.DIAGNOSTIC_TWIN_ENABLED_VALUE_FALSE) {
-        this.diagEnabled = false;
-      } else {
-        errMsg += `Value of ${DiagnosticClient.DIAGNOSTIC_TWIN_KEY_ENABLED} is invalid:${desiredTwin[DiagnosticClient.DIAGNOSTIC_TWIN_KEY_ENABLED]} `;
-      }
+    if (typeof desiredTwin[DiagnosticClient.DIAGNOSTIC_TWIN_KEY_ENABLED] === 'boolean') {
+      this.diagEnabled = desiredTwin[DiagnosticClient.DIAGNOSTIC_TWIN_KEY_ENABLED];
+    } else if (typeof desiredTwin[DiagnosticClient.DIAGNOSTIC_TWIN_KEY_ENABLED] !== 'undefined'){
+      errMsg += `Value of ${DiagnosticClient.DIAGNOSTIC_TWIN_KEY_ENABLED} is invalid:${desiredTwin[DiagnosticClient.DIAGNOSTIC_TWIN_KEY_ENABLED]}(check if it is boolean) `;
     }
     /* Codes_SRS_NODE_DEVICE_DIAGNOSTICCLIENT_01_009: [The onDesiredTwinUpdate function shall set the sampling percentage.] */
-    if (desiredTwin[DiagnosticClient.DIAGNOSTIC_TWIN_KEY_SAMPLING_PERCENTAGE]) {
+    if (typeof desiredTwin[DiagnosticClient.DIAGNOSTIC_TWIN_KEY_SAMPLING_PERCENTAGE] === 'number') {
       try {
-        this.setDiagSamplingPercentage(+desiredTwin[DiagnosticClient.DIAGNOSTIC_TWIN_KEY_SAMPLING_PERCENTAGE]);
+        this.setDiagSamplingPercentage(desiredTwin[DiagnosticClient.DIAGNOSTIC_TWIN_KEY_SAMPLING_PERCENTAGE]);
       } catch (e) {
         errMsg += `Value of ${DiagnosticClient.DIAGNOSTIC_TWIN_KEY_SAMPLING_PERCENTAGE} is invalid:${e.message} `;
       }
+    } else if (typeof desiredTwin[DiagnosticClient.DIAGNOSTIC_TWIN_KEY_SAMPLING_PERCENTAGE] !== 'undefined'){
+      errMsg += `Value of ${DiagnosticClient.DIAGNOSTIC_TWIN_KEY_SAMPLING_PERCENTAGE} is invalid:${desiredTwin[DiagnosticClient.DIAGNOSTIC_TWIN_KEY_SAMPLING_PERCENTAGE]}(check if it is number) `;
     }
     /* Codes_SRS_NODE_DEVICE_DIAGNOSTICCLIENT_01_010: [The onDesiredTwinUpdate function shall send a reported twin to give feedback to diagnostic update.] */
     twin.properties.reported.update({
