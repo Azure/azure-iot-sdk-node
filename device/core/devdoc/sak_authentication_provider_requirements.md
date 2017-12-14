@@ -15,32 +15,28 @@ sakAuthProvider.getCredentials(function (err, credentials) {
 });
 
 // to monitor for new tokens:
-sakAuthProvider.on('newTokenAvailable', function () {
-  sakAuthProvider.getCredentials(function (err, credentials) {
-    // do something with the credentials
-  });
+sakAuthProvider.on('newTokenAvailable', function (credentials) {
+  // do something with the credentials
 });
 ```
 
 # Public API
 
-# constructor(credentials: DeviceCredentials, tokenValidTimeInSeconds?, tokenRenewalMarginInSeconds?: number)
+# constructor(credentials: TransportConfig, tokenValidTimeInSeconds?, tokenRenewalMarginInSeconds?: number)
 
 **SRS_NODE_SAK_AUTH_PROVIDER_16_001: [** The `constructor` shall create the initial token value using the `credentials` parameter. **]**
 
 **SRS_NODE_SAK_AUTH_PROVIDER_16_002: [** The `constructor` shall start a timer that will automatically renew the token every (`tokenValidTimeInSeconds` - `tokenRenewalMarginInSeconds`) seconds if specified, or 45 minutes by default. **]**
 
-## getDeviceCredentials(callback: (err: Error, credentials: DeviceCredentials) => void): void
+**SRS_NODE_SAK_AUTH_PROVIDER_16_011: [** The `constructor` shall throw an `ArgumentError` if the `tokenRenewalMarginInSeconds` is less than or equal `tokenValidTimeInSeconds`. **]**
 
-**SRS_NODE_SAK_AUTH_PROVIDER_16_003: [** The `getDeviceCredentials` should call its callback with a `null` first parameter and a `DeviceCredentials` object as a second parameter, containing the latest valid token it generated. **]**
+## getDeviceCredentials(callback: (err: Error, credentials: TransportConfig) => void): void
 
-## updateSharedAccessSignature(sharedAccessSignature: string): void
-
-**SRS_NODE_SAK_AUTH_PROVIDER_16_004: [** The `updateSharedAccessSignature` method shall save the `sharedAccessSignature` passed as a parameter and return it when `getDeviceCredentials` is called, until it gets renewed. **]**
+**SRS_NODE_SAK_AUTH_PROVIDER_16_003: [** The `getDeviceCredentials` should call its callback with a `null` first parameter and a `TransportConfig` object as a second parameter, containing the latest valid token it generated. **]**
 
 ## newTokenAvailable event
 
-**SRS_NODE_SAK_AUTH_PROVIDER_16_005: [** Every time a new token is created, the `newTokenAvailable` event shall be fired with no arguments. **]**
+**SRS_NODE_SAK_AUTH_PROVIDER_16_005: [** Every time a new token is created, the `newTokenAvailable` event shall be fired with the updated credentials. **]**
 
 ## fromConnectionString(connectionString: string, tokenValidTimeInSeconds?, tokenRenewalMarginInSeconds?: number): SharedAccessKeyAuthenticationProvider [static]
 

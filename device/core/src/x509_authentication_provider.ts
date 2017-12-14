@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { AuthenticationProvider, AuthenticationType, errors, DeviceCredentials, X509 } from 'azure-iot-common';
+import { AuthenticationProvider, AuthenticationType, errors, TransportConfig, X509 } from 'azure-iot-common';
 
 export class X509AuthenticationProvider implements AuthenticationProvider {
   type: AuthenticationType = AuthenticationType.X509;
-  private _credentials: DeviceCredentials;
+  private _credentials: TransportConfig;
 
-  constructor(credentials: DeviceCredentials) {
+  constructor(credentials: TransportConfig) {
     /*Codes_SRS_NODE_X509_AUTHENTICATION_PROVIDER_16_001: [The `constructor` shall store the credentials passed as argument.]*/
     this._credentials = credentials;
   }
 
-  getDeviceCredentials(callback: (err: Error, credentials?: DeviceCredentials) => void): void {
+  getDeviceCredentials(callback: (err: Error, credentials?: TransportConfig) => void): void {
     /*Codes_SRS_NODE_X509_AUTHENTICATION_PROVIDER_16_002: [The `getDeviceCredentials` method shall call its callback with a `null` error object and the stored device credentials as a second argument.]*/
     callback(null, this._credentials);
   }

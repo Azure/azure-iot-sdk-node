@@ -20,11 +20,11 @@ x509AuthProvider.setX509Options({ cert: 'new cert', key: 'new key' });
 
 ## Public API
 
-### constructor(credentials: DeviceCredentials)
+### constructor(credentials: TransportConfig)
 
 **SRS_NODE_X509_AUTHENTICATION_PROVIDER_16_001: [** The `constructor` shall store the credentials passed as argument. **]**
 
-### getDeviceCredentials(callback: (err: Error, credentials?: DeviceCredentials) => void): void
+### getDeviceCredentials(callback: (err: Error, credentials?: TransportConfig) => void): void
 
 **SRS_NODE_X509_AUTHENTICATION_PROVIDER_16_002: [** The `getDeviceCredentials` method shall call its callback with a `null` error object and the stored device credentials as a second argument. **]**
 

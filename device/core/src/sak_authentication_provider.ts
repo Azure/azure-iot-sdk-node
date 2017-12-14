@@ -1,15 +1,11 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as dbg from 'debug';
-const debug = dbg('azure-iot-device:SAKTokenAuthenticationProvider');
-
 import { EventEmitter } from 'events';
-import { TokenAuthenticationProvider, AuthenticationType, ConnectionString, SharedAccessSignature, errors, DeviceCredentials, encodeUriComponentStrict } from 'azure-iot-common';
+import { AuthenticationProvider, AuthenticationType, ConnectionString, SharedAccessSignature, errors, TransportConfig, encodeUriComponentStrict } from 'azure-iot-common';
 
-export class SharedAccessKeyAuthenticationProvider extends EventEmitter implements TokenAuthenticationProvider {
+export class SharedAccessKeyAuthenticationProvider extends EventEmitter implements AuthenticationProvider {
   type: AuthenticationType = AuthenticationType.Token;
-  automaticRenewal: boolean = true;
 
   private _tokenValidTimeInSeconds: number = 3600;   // 1 hour
   private _tokenRenewalMarginInSeconds: number = 900; // 15 minutes
@@ -17,7 +13,7 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
   private _currentTokenExpiryTimeInSeconds: number;
   private _renewalTimeout: NodeJS.Timer;
 
-  private _credentials: DeviceCredentials;
+  private _credentials: TransportConfig;
 
   /**
    * @private
@@ -28,7 +24,7 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
    * @param tokenValidTimeInSeconds        [optional] The number of seconds for which a token is supposed to be valid.
    * @param tokenRenewalMarginInSeconds    [optional] The number of seconds before the end of the validity period during which the `SharedAccessKeyAuthenticationProvider` should renew the token.
    */
-  constructor(credentials: DeviceCredentials, tokenValidTimeInSeconds?: number, tokenRenewalMarginInSeconds?: number) {
+  constructor(credentials: TransportConfig, tokenValidTimeInSeconds?: number, tokenRenewalMarginInSeconds?: number) {
     super();
     /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_001: [The `constructor` shall create the initial token value using the `credentials` parameter.]*/
     this._credentials  = credentials;
@@ -36,34 +32,27 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
     if (tokenValidTimeInSeconds) this._tokenValidTimeInSeconds = tokenValidTimeInSeconds;
     if (tokenRenewalMarginInSeconds) this._tokenRenewalMarginInSeconds = tokenRenewalMarginInSeconds;
 
+    /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_011: [The `constructor` shall throw an `ArgumentError` if the `tokenRenewalMarginInSeconds` is less than or equal `tokenValidTimeInSeconds`.]*/
+    if (this._tokenValidTimeInSeconds <= this._tokenRenewalMarginInSeconds) {
+      throw new errors.ArgumentError('tokenRenewalMarginInSeconds must be less than tokenValidTimeInSeconds');
+    }
+
     /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_002: [The `constructor` shall start a timer that will automatically renew the token every (`tokenValidTimeInSeconds` - `tokenRenewalMarginInSeconds`) seconds if specified, or 45 minutes by default.]*/
     this._renewToken();
   }
 
   /**
-   * Gets the current device credentials that are valid and were generated from the connectiom string.
+   * Gets the current device credentials that are valid and were generated from the connection string.
    *
    * @param callback function that will be called with either an error or a set of device credentials that can be used to authenticate with the IoT hub.
    */
-  getDeviceCredentials(callback: (err: Error, credentials: DeviceCredentials) => void): void {
+  getDeviceCredentials(callback: (err: Error, credentials: TransportConfig) => void): void {
     if (this._shouldRenewToken()) {
       this._renewToken();
     }
 
-    /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_003: [The `getDeviceCredentials` should call its callback with a `null` first parameter and a `DeviceCredentials` object as a second parameter, containing the latest valid token it generated.]*/
+    /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_003: [The `getDeviceCredentials` should call its callback with a `null` first parameter and a `TransportConfig` object as a second parameter, containing the latest valid token it generated.]*/
     callback(null, this._credentials);
-  }
-
-  /**
-   * Sets the current security token for the device. Note that it will be overwritten by the timer that is running in the background.
-   * If you're looking for an AuthenticationProvider where you maintain the lifecycle of the token yourself, you should look at the `SharedAccessSignatureAuthorizationProvider` class.
-   *
-   * @param sharedAccessSignature shared access signature that should be stored.
-   */
-  updateSharedAccessSignature(sharedAccessSignature: string): void {
-    /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_004: [The `updateSharedAccessSignature` method shall save the `sharedAccessSignature` passed as a parameter and return it when `getDeviceCredentials` is called, until it gets renewed.]*/
-    debug('Manually replacing a shared access signature when automatic renewal is active');
-    this._credentials.sharedAccessSignature = sharedAccessSignature;
   }
 
   private _shouldRenewToken(): boolean {
@@ -91,11 +80,9 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
     this._credentials.sharedAccessSignature = sas.toString();
 
     const nextRenewalTimeout = (this._tokenValidTimeInSeconds - this._tokenRenewalMarginInSeconds) * 1000;
-    if (this.automaticRenewal) {
-      this._renewalTimeout = setTimeout(() => this._renewToken(), nextRenewalTimeout);
-    }
-    /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_005: [Every time a new token is created, the `newTokenAvailable` event shall be fired with no arguments.]*/
-    this.emit('newTokenAvailable');
+    this._renewalTimeout = setTimeout(() => this._renewToken(), nextRenewalTimeout);
+    /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_005: [Every time a new token is created, the `newTokenAvailable` event shall be fired with the updated credentials.]*/
+    this.emit('newTokenAvailable', this._credentials);
   }
 
   /**
@@ -111,14 +98,11 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
       throw new ReferenceError('connectionString cannot be \'' + connectionString + '\'');
     }
 
-    const cs = ConnectionString.parse(connectionString);
-    if (!cs.SharedAccessKey) {
-      /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_007: [The `fromConnectionString` method shall throw an `errors.ArgumentError` if the `connectionString` does not have a SharedAccessKey parameter.]*/
-      throw new errors.ArgumentError('Connection string is missing a shared access key');
-    }
+    /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_007: [The `fromConnectionString` method shall throw an `errors.ArgumentError` if the `connectionString` does not have a SharedAccessKey parameter.]*/
+    const cs: ConnectionString = ConnectionString.parse(connectionString, ['DeviceId', 'HostName', 'SharedAccessKey']);
 
-      /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_008: [The `fromConnectionString` method shall extract the credentials from the `connectionString` argument and create a new `SharedAccessKeyAuthenticationProvider` that uses these credentials to generate security tokens.]*/
-      const credentials: DeviceCredentials = {
+    /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_008: [The `fromConnectionString` method shall extract the credentials from the `connectionString` argument and create a new `SharedAccessKeyAuthenticationProvider` that uses these credentials to generate security tokens.]*/
+    const credentials: TransportConfig = {
       host: cs.HostName,
       deviceId: cs.DeviceId,
       sharedAccessKeyName: cs.SharedAccessKeyName,

@@ -53,7 +53,7 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
       var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
       var eventSpy = sinon.spy();
       sakAuthProvider.on('newTokenAvailable', eventSpy);
-      /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_003: [The `getDeviceCredentials` should call its callback with a `null` first parameter and a `DeviceCredentials` object as a second parameter, containing the latest valid token it generated.]*/
+      /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_003: [The `getDeviceCredentials` should call its callback with a `null` first parameter and a `TransportConfig` object as a second parameter, containing the latest valid token it generated.]*/
       sakAuthProvider.getDeviceCredentials(function (err, creds) {
         assert.isNull(err);
         token = creds.sharedAccessSignature;
@@ -71,6 +71,17 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
           });
         });
       });
+    });
+
+    /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_011: [The `constructor` shall throw an `ArgumentError` if the `tokenValidTimeInSeconds` is less than or equal `tokenRenewalMarginInSeconds`.]*/
+    it('throws ArgumentError if the tokenValidTimeInSeconds is less than or equal tokenRenewalMarginInSeconds', function () {
+      assert.throw(function () {
+        return new SharedAccessKeyAuthenticationProvider({
+          deviceId: 'fakeDeviceId',
+          host: 'fake.host.name',
+          sharedAccessKey: 'fakeKey'
+        }, 100, 200);
+      }, errors.ArgumentError);
     });
   });
 
@@ -101,35 +112,12 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
       };
       var fakeConnectionString = 'DeviceId=' + fakeCredentials.deviceId + ';HostName=' + fakeCredentials.host + ';SharedAccessKey=' + fakeCredentials.sharedAccessKey;
 
-      var sakAuthProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString(fakeConnectionString, 1, 1);
-      sakAuthProvider.automaticRenewal = false;
+      var sakAuthProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString(fakeConnectionString, 2, 1);
       sakAuthProvider.getDeviceCredentials(function (err, creds) {
         assert.strictEqual(creds.deviceId, fakeCredentials.deviceId);
         assert.strictEqual(creds.host, fakeCredentials.host);
         assert.strictEqual(creds.sharedAccessKey, fakeCredentials.sharedAccessKey);
         testCallback();
-      });
-    });
-  });
-
-  describe('updateSharedAccessSignature', function () {
-    /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_004: [The `updateSharedAccessSignature` method shall save the `sharedAccessSignature` passed as a parameter and return it when `getDeviceCredentials` is called, until it gets renewed.]*/
-    it('updates the shared access signature', function (testCallback) {
-      var newSas = 'newSas';
-      var fakeCredentials = {
-        deviceId: 'fakeDeviceId',
-        host: 'fake.host.name',
-        sharedAccessKey: 'fakeKey'
-      };
-      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials);
-      sakAuthProvider.automaticRenewal = false;
-      sakAuthProvider.getDeviceCredentials(function (err, creds) {
-        assert.notEqual(creds.sharedAccessSignature, newSas);
-        sakAuthProvider.updateSharedAccessSignature(newSas);
-        sakAuthProvider.getDeviceCredentials(function (err, newCreds) {
-          assert.strictEqual(newCreds.sharedAccessSignature, newSas);
-          testCallback();
-        });
       });
     });
   });

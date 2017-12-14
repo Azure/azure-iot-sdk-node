@@ -40,7 +40,7 @@ export function hmacHash(password: string, stringToSign: string): string {
 }
 
 
-export interface DeviceCredentials {
+export interface TransportConfig {
   host: string;
   deviceId: string;
   sharedAccessSignature?: string;

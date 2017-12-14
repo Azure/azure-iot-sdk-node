@@ -13,7 +13,7 @@ export { Message }
 export { SharedAccessSignature } from './lib/shared_access_signature';
 export { RetryOperation } from './lib/retry_operation';
 export { RetryPolicy, NoRetry, ExponentialBackOffWithJitter } from './lib/retry_policy';
-export { TokenAuthenticationProvider, AuthenticationProvider, AuthenticationType } from './lib/authentication_provider';
+export { AuthenticationProvider, AuthenticationType } from './lib/authentication_provider';
 
 export interface Receiver extends EventEmitter {
     on(type: 'message', func: (msg: Message) => void): this;
@@ -22,5 +22,4 @@ export interface Receiver extends EventEmitter {
     on(type: string, func: Function): this;
 }
 
-export { DeviceCredentials, X509 } from './lib/authorization';
-export { DeviceCredentials as TransportConfig } from './lib/authorization';
+export { TransportConfig, X509 } from './lib/authorization';

@@ -16,20 +16,18 @@ sasAuthProvider.getCredentials(function (err, credentials) {
 sasAuthProvider.updateSharedAccessSignature('<new shared access signature>');
 
 // to monitor for new tokens:
-sasAuthProvider.on('newTokenAvailable', function () {
-  sasAuthProvider.getCredentials(function (err, credentials) {
-    // do something with the credentials
-  });
+sasAuthProvider.on('newTokenAvailable', function (credentials) {
+  // do something with the credentials
 });
 ```
 
 ## Public API
 
-### constructor(credentials: DeviceCredentials)
+### constructor(credentials: TransportConfig)
 
 **SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_001: [** The `constructor` shall store the credentials passed in the `credentials` argument. **]**
 
-### getDeviceCredentials(callback: (err: Error, credentials: DeviceCredentials) => void): void
+### getDeviceCredentials(callback: (err: Error, credentials: TransportConfig) => void): void
 
 **SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_002: [** The `getDeviceCredentials` method shall call its callback with a `null` error parameter and the stored `credentials` object containing the current device credentials. **]**
 
@@ -37,7 +35,7 @@ sasAuthProvider.on('newTokenAvailable', function () {
 
 **SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_003: [** The `updateSharedAccessSignature` method shall update the stored credentials with the new `sharedAccessSignature` value passed as an argument.**]**
 
-**SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_004: [** The `updateSharedAccessSignature` method shall emit a `newTokenAvailable` event with no arguments. **]**
+**SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_004: [** The `updateSharedAccessSignature` method shall emit a `newTokenAvailable` event with the updated credentials. **]**
 
 ### static fromSharedAccessSignature(sharedAccessSignature: string): SharedAccessSignatureAuthenticationProvider
 

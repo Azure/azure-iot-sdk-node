@@ -56,9 +56,13 @@ describe('SharedAccessSignatureAuthenticationProvider', function () {
         deviceId: 'deviceId',
         sharedAccessSignature: 'sas'
       };
+      var newSas = 'new shared access signature';
       var sasAuthProvider = new SharedAccessSignatureAuthenticationProvider(fakeCredentials);
-      sasAuthProvider.on('newTokenAvailable', testCallback);
-      sasAuthProvider.updateSharedAccessSignature('newSas');
+      sasAuthProvider.on('newTokenAvailable', function (creds) {
+        assert.strictEqual(creds.sharedAccessSignature, newSas);
+        testCallback();
+      });
+      sasAuthProvider.updateSharedAccessSignature(newSas);
     });
   });
 
