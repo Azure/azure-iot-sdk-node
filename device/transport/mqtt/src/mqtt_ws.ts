@@ -3,8 +3,8 @@
 
 'use strict';
 
-import { Client } from 'azure-iot-device';
 import { Mqtt } from './mqtt';
+import { AuthenticationProvider, TransportConfig } from 'azure-iot-common';
 
 /**
  * Provides MQTT over WebSockets transport for the device [client]{@link module:azure-iot-device.Client} class.
@@ -19,9 +19,13 @@ export class MqttWs extends Mqtt {
    * @constructor
    * @param   {Object}    config  Configuration object derived from the connection string by the client.
    */
-  constructor(config: Client.Config) {
-    super(config);
+  constructor(authenticationProvider: AuthenticationProvider) {
+    super(authenticationProvider);
     /*Codes_SRS_NODE_DEVICE_MQTT_16_017: [The `MqttWs` constructor shall initialize the `uri` property of the `config` object to `wss://<host>:443/$iothub/websocket`.]*/
-    (this._config as any).uri  = 'wss://' + config.host + ':443/$iothub/websocket';
+  }
+
+  protected _configureEndpoints(credentials: TransportConfig): void {
+    super._configureEndpoints(credentials);
+    (credentials as any).uri  = 'wss://' + credentials.host + ':443/$iothub/websocket';
   }
 }

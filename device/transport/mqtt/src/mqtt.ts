@@ -6,14 +6,15 @@ import * as querystring from 'querystring';
 import * as URL from 'url';
 import * as machina from 'machina';
 
-import { results, errors, Message, X509 } from 'azure-iot-common';
-import { DeviceMethodResponse, Client } from 'azure-iot-device';
+import { results, errors, Message, X509, AuthenticationProvider, TransportConfig } from 'azure-iot-common';
+import { DeviceMethodResponse, Client, X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
 import { EventEmitter } from 'events';
 import * as util from 'util';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-mqtt:Mqtt');
 import { MqttBase, translateError } from 'azure-iot-mqtt-base';
 import { MqttTwinReceiver } from './mqtt_twin_receiver';
+import { AuthenticationType } from '../../../../common/core/lib/authentication_provider';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -37,7 +38,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
   /**
    * @private
    */
-  protected _config: Client.Config;
+  protected _authenticationProvider: AuthenticationProvider;
   private _mqtt: MqttBase;
   private _twinReceiver: MqttTwinReceiver;
   private _topicTelemetryPublish: string;
@@ -49,22 +50,28 @@ export class Mqtt extends EventEmitter implements Client.Transport {
   /**
    * @private
    */
-  constructor(config: Client.Config, provider?: any) {
+  constructor(authenticationProvider: AuthenticationProvider, mqttBase?: any) {
     super();
-    this._config = config;
-    this._topicTelemetryPublish = 'devices/' + this._config.deviceId + '/messages/events/';
-    this._topicMessageSubscribe = 'devices/' + this._config.deviceId + '/messages/devicebound/#';
-    this._topicMethodSucbscribe = '$iothub/methods/POST/#';
-
-    debug('topic publish: ' + this._topicTelemetryPublish);
-    debug('topic subscribe: ' + this._topicMessageSubscribe);
     const sdkVersionString = encodeURIComponent('azure-iot-device/' + packageJson.version);
 
-    /*Codes_SRS_NODE_DEVICE_MQTT_16_016: [The Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
-    (this._config as any).uri = 'mqtts://' + config.host;
-    /* Codes_SRS_NODE_DEVICE_MQTT_18_025: [ If the Mqtt constructor receives a second parameter, it shall be used as a provider in place of mqtt.js ]*/
-    if (provider) {
-      this._mqtt = provider;
+    this._authenticationProvider = authenticationProvider;
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_071: [The constructor shall subscribe to the `newTokenAvailable` event of the `authenticationProvider` passed as an argument if it uses tokens for authentication.]*/
+    if (this._authenticationProvider.type === AuthenticationType.Token) {
+      (<any>this._authenticationProvider).on('newTokenAvailable', (newCredentials) => {
+        /*Codes_SRS_NODE_DEVICE_MQTT_16_072: [If the `newTokenAvailable` event is fired, the `Mqtt` object shall do nothing if it isn't connected.]*/
+        /*Codes_SRS_NODE_DEVICE_MQTT_16_073: [If the `newTokenAvailable` event is fired, the `Mqtt` object shall call `updateSharedAccessSignature` on the `mqttBase` object if it is connected.]*/
+        this._fsm.handle('updateSharedAccessSignature', newCredentials.sharedAccessSignature, (err) => {
+          /*Codes_SRS_NODE_DEVICE_MQTT_16_074: [If updating the shared access signature fails when the `newTokenAvailable` event is fired, the `Mqtt` state machine shall fire a `disconnect` event.]*/
+          if (err) {
+            this.emit('disconnect', err);
+          }
+        });
+      });
+    }
+
+    /* Codes_SRS_NODE_DEVICE_MQTT_18_025: [ If the Mqtt constructor receives a second parameter, it shall be used as a mqttBase in place of mqtt.js ]*/
+    if (mqttBase) {
+      this._mqtt = mqttBase;
     } else {
       this._mqtt = new MqttBase(sdkVersionString);
     }
@@ -78,24 +85,6 @@ export class Mqtt extends EventEmitter implements Client.Transport {
     });
 
     this._mqtt.on('message', this._dispatchMqttMessage.bind(this));
-
-    // MQTT topics to subscribe to
-    this._topics = {
-      'message': {
-        name: this._topicMessageSubscribe,
-        subscribeInProgress: false,
-        subscribed: false,
-        topicMatchRegex: /^devices\/.*\/messages\/devicebound\/.*$/g,
-        handler: this._onC2DMessage.bind(this)
-      },
-      'method': {
-        name: this._topicMethodSucbscribe,
-        subscribeInProgress: false,
-        subscribed: false,
-        topicMatchRegex: /^\$iothub\/methods\/POST\/.*$/g,
-        handler: this._onDeviceMethod.bind(this)
-      }
-    };
 
     this._twinReceiver = new MqttTwinReceiver(this._mqtt);
 
@@ -205,12 +194,21 @@ export class Mqtt extends EventEmitter implements Client.Transport {
         },
         connecting: {
           _onEnter: (connectCallback) => {
-            this._mqtt.connect(this._config, (err, result) => {
-              debug('connect');
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_067: [The `connect` method shall call the `getDeviceCredentials` method of the `AuthenticationProvider` object passed to the constructor to obtain the credentials of the device.]*/
+            this._authenticationProvider.getDeviceCredentials((err, credentials) => {
               if (err) {
+                /*Codes_SRS_NODE_DEVICE_MQTT_16_068: [The `connect` method shall call its callback with the error returned by `getDeviceCredentials` if it fails to return the device credentials.]*/
                 this._fsm.transition('disconnected', connectCallback, err);
               } else {
-                this._fsm.transition('connected', connectCallback, result);
+                this._configureEndpoints(credentials);
+                this._mqtt.connect(credentials, (err, result) => {
+                  debug('connect');
+                  if (err) {
+                    this._fsm.transition('disconnected', connectCallback, err);
+                  } else {
+                    this._fsm.transition('connected', connectCallback, result);
+                  }
+                });
               }
             });
           },
@@ -478,7 +476,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
   updateSharedAccessSignature (sharedAccessSignature: string, done: (err?: Error, result?: any) => void): void {
     debug('updateSharedAccessSignature');
     /*Codes_SRS_NODE_DEVICE_MQTT_16_007: [The `updateSharedAccessSignature` method shall save the new shared access signature given as a parameter to its configuration.]*/
-    this._config.sharedAccessSignature = sharedAccessSignature;
+    (this._authenticationProvider as SharedAccessSignatureAuthenticationProvider).updateSharedAccessSignature(sharedAccessSignature);
     this._fsm.handle('updateSharedAccessSignature', sharedAccessSignature, (err, result) => {
       done(err, result);
     });
@@ -495,19 +493,23 @@ export class Mqtt extends EventEmitter implements Client.Transport {
   setOptions(options: X509, done?: (err?: Error, result?: any) => void): void {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_011: [The `setOptions` method shall throw a `ReferenceError` if the `options` argument is falsy]*/
     if (!options) throw new ReferenceError('The options parameter can not be \'' + options + '\'');
+
     /*Codes_SRS_NODE_DEVICE_MQTT_16_015: [The `setOptions` method shall throw an `ArgumentError` if the `cert` property is populated but the device uses symmetric key authentication.]*/
-    if (this._config.sharedAccessSignature && options.cert) throw new errors.ArgumentError('Cannot set x509 options on a device that uses symmetric key authentication.');
+    if (this._authenticationProvider.type === AuthenticationType.Token && options.cert) throw new errors.ArgumentError('Cannot set x509 options on a device that uses token authentication.');
 
-    /*Codes_SRS_NODE_DEVICE_MQTT_16_012: [The `setOptions` method shall update the existing configuration of the MQTT transport with the content of the `options` object.]*/
-    this._config.x509 = {
-      cert: options.cert,
-      key: options.key,
-      passphrase: options.passphrase
-    };
-
-    /*Codes_SRS_NODE_DEVICE_MQTT_16_013: [If a `done` callback function is passed as a argument, the `setOptions` method shall call it when finished with no arguments.]*/
-    /*Codes_SRS_NODE_DEVICE_MQTT_16_014: [The `setOptions` method shall not throw if the `done` argument is not passed.]*/
-    if (done) done(null);
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_069: [The `setOptions` method shall obtain the current credentials by calling `getDeviceCredentials` on the `AuthenticationProvider` passed to the constructor as an argument.]*/
+    this._authenticationProvider.getDeviceCredentials((err, credentials) => {
+      if (err) {
+        /*Codes_SRS_NODE_DEVICE_MQTT_16_070: [The `setOptions` method shall call its callback with the error returned by `getDeviceCredentials` if it fails to return the credentials.]*/
+        if (done) done(err);
+      } else {
+        /*Codes_SRS_NODE_DEVICE_MQTT_16_012: [The `setOptions` method shall update the existing configuration of the MQTT transport with the content of the `options` object.]*/
+        (this._authenticationProvider as X509AuthenticationProvider).setX509Options(options);
+        /*Codes_SRS_NODE_DEVICE_MQTT_16_013: [If a `done` callback function is passed as a argument, the `setOptions` method shall call it when finished with no arguments.]*/
+        /*Codes_SRS_NODE_DEVICE_MQTT_16_014: [The `setOptions` method shall not throw if the `done` argument is not passed.]*/
+        if (done) done(null);
+      }
+    });
   }
 
   /**
@@ -669,6 +671,36 @@ export class Mqtt extends EventEmitter implements Client.Transport {
    */
   disableTwin(callback: (err?: Error) => void): void {
     this._fsm.handle('disableTwin', callback);
+  }
+
+  protected _configureEndpoints(credentials: TransportConfig): void {
+    this._topicTelemetryPublish = 'devices/' + credentials.deviceId + '/messages/events/';
+    this._topicMessageSubscribe = 'devices/' + credentials.deviceId + '/messages/devicebound/#';
+    this._topicMethodSucbscribe = '$iothub/methods/POST/#';
+
+    debug('topic publish: ' + this._topicTelemetryPublish);
+    debug('topic subscribe: ' + this._topicMessageSubscribe);
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_016: [The Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
+    (credentials as any).uri = 'mqtts://' + credentials.host;
+
+    // MQTT topics to subscribe to
+    this._topics = {
+      'message': {
+        name: this._topicMessageSubscribe,
+        subscribeInProgress: false,
+        subscribed: false,
+        topicMatchRegex: /^devices\/.*\/messages\/devicebound\/.*$/g,
+        handler: this._onC2DMessage.bind(this)
+      },
+      'method': {
+        name: this._topicMethodSucbscribe,
+        subscribeInProgress: false,
+        subscribed: false,
+        topicMatchRegex: /^\$iothub\/methods\/POST\/.*$/g,
+        handler: this._onDeviceMethod.bind(this)
+      }
+    };
+
   }
 
   private _setupSubscription(topic: TopicDescription, callback: (err?: Error) => void): void {

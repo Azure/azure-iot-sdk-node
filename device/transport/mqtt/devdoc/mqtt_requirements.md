@@ -51,9 +51,13 @@ client.connect(function (err) {
 ### Mqtt constructor
 The `Mqtt` and `MqttWs` constructors initialize a new instance of the MQTT transport.
 
-**SRS_NODE_DEVICE_MQTT_12_001: [** The constructor shall accept the transport configuration structure.**]**
+**SRS_NODE_DEVICE_MQTT_16_071: [** The constructor shall subscribe to the `newTokenAvailable` event of the `authenticationProvider` passed as an argument if it uses tokens for authentication. **]**
 
-**SRS_NODE_DEVICE_MQTT_12_002: [** The constructor shall store the configuration structure in a member variable.**]**
+**SRS_NODE_DEVICE_MQTT_16_072: [** If the `newTokenAvailable` event is fired, the `Mqtt` object shall do nothing if it isn't connected. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_073: [** If the `newTokenAvailable` event is fired, the `Mqtt` object shall call `updateSharedAccessSignature` on the `mqttBase` object if it is connected. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_074: [** If updating the shared access signature fails when the `newTokenAvailable` event is fired, the `Mqtt` state machine shall fire a `disconnect` event. **]**
 
 **SRS_NODE_DEVICE_MQTT_12_003: [** The constructor shall create an MqttBase object and store it in a member variable.**]**
 
@@ -76,6 +80,10 @@ The `connect` method initializes a connection to an IoT hub.
 **SRS_NODE_DEVICE_MQTT_16_019: [** The `connect` method shall calls its callback with an `Error` that has been translated from the `MqttBase` error using the `translateError` method if it fails to establish a connection. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_020: [** The `connect` method shall call its callback with a `null` error parameter and a `results.Connected` response if `MqttBase` successfully connects. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_067: [** The `connect` method shall call the `getDeviceCredentials` method of the `AuthenticationProvider` object passed to the constructor to obtain the credentials of the device. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_068: [** The `connect` method shall call its callback with the error returned by `getDeviceCredentials` if it fails to return the device credentials. **]**
 
 ### disconnect(done)
 
@@ -164,6 +172,10 @@ The `reject` method is there for compatibility purposes with other transports bu
 **SRS_NODE_DEVICE_MQTT_16_013: [** If a `done` callback function is passed as a argument, the `setOptions` method shall call it when finished with no arguments. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_014: [** The `setOptions` method shall not throw if the `done` argument is not passed. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_069: [** The `setOptions` method shall obtain the current credentials by calling `getDeviceCredentials` on the `AuthenticationProvider` passed to the constructor as an argument. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_070: [** The `setOptions` method shall call its callback with the error returned by `getDeviceCredentials` if it fails to return the credentials. **]**
 
 ### onDeviceMethod(methodName, methodCallback)
 
