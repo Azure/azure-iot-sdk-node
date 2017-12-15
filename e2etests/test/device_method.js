@@ -10,7 +10,6 @@ var SharedAccessSignature = require('azure-iothub').SharedAccessSignature;
 var deviceSas = require('azure-iot-device').SharedAccessSignature;
 var deviceSdk = require('azure-iot-device');
 var anHourFromNow = require('azure-iot-common').anHourFromNow;
-var util = require('util');
 var uuid = require('uuid');
 var assert = require('chai').assert;
 var debug = require('debug')('e2etests:devicemethod');
@@ -50,13 +49,8 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
         if (err) return done(err);
         debug('created test device: ' + deviceDescription.deviceId);
         var host = ConnectionString.parse(hubConnectionString).HostName;
-        deviceClient = deviceSdk.Client.fromConnectionString(
-          util.format('HostName=%s;DeviceId=%s;SharedAccessKey=%s',
-            host, deviceDescription.deviceId,
-            deviceDescription.authentication.symmetricKey.primaryKey
-          ),
-          protocolCtor
-        );
+        var sas = deviceSas.create(host, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
+        deviceClient = deviceSdk.Client.fromSharedAccessSignature(sas, protocolCtor);
         deviceClient.open(done);
       });
     });
