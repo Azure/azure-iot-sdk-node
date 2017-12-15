@@ -24,8 +24,9 @@ function SimulatedHttp(authProvider) {
   EventEmitter.call(this);
   this._receiver = null;
   this.handleRequest = function (done) {
+    var self = this;
     authProvider.getDeviceCredentials(function (err, config) {
-      if (this._x509) {
+      if (self._x509) {
         done(null, new results.MessageEnqueued(new Response(204)));
       } else {
         var sig = SharedAccessSignature.parse(config.sharedAccessSignature);
@@ -46,7 +47,7 @@ function SimulatedHttp(authProvider) {
           }
         }
       }
-    }.bind(this));
+    });
   };
 }
 

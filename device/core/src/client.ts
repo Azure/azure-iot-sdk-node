@@ -76,7 +76,7 @@ export class Client extends EventEmitter {
    * @param {string}  connStr           A connection string (optional: when not provided, updateSharedAccessSignature must be called to set the SharedAccessSignature token directly).
    * @param {Object}  blobUploadClient  An object that is capable of uploading a stream to a blob.
    */
-  constructor(transport: Client.Transport, authentication?: string | AuthenticationProvider, blobUploadClient?: BlobUploadClient) {
+  constructor(transport: Client.Transport, connStr?: string, blobUploadClient?: BlobUploadClient) {
     /*Codes_SRS_NODE_DEVICE_CLIENT_05_001: [The Client constructor shall throw ReferenceError if the transport argument is falsy.]*/
     if (!transport) throw new ReferenceError('transport is \'' + transport + '\'');
 
@@ -84,6 +84,10 @@ export class Client extends EventEmitter {
     this._c2dEnabled = false;
     this._methodsEnabled = false;
     this.blobUploadClient = blobUploadClient;
+
+    if (connStr) {
+      throw new errors.InvalidOperationError('the connectionString parameter of the constructor is not used - users of the SDK should be using the `fromConnectionString` factory method.');
+    }
 
     this._transport = transport;
     this._transport.on('message', (msg) => {

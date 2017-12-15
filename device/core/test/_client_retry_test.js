@@ -46,12 +46,11 @@ describe('Client Retry Logic', function () {
     }
   ].forEach(function (testConfig) {
     it('retries to ' + testConfig.funcName, function(testCallback) {
-      var fakeConnectionString = 'HostName=host;DeviceId=id;SharedAccessKey=key';
       var fakeTransport = new EventEmitter();
       var fakeBlobClient = { updateSharedAccessSignature: function () {} };
       fakeTransport[testConfig.funcName] = sinon.stub().callsArgWith(1, new errors.TimeoutError('failed'));
 
-      var client = new Client(fakeTransport, fakeConnectionString, fakeBlobClient);
+      var client = new Client(fakeTransport, null, fakeBlobClient);
       client._maxOperationTimeout = 100;
       client[testConfig.funcName](new Message('foo'), function (err) {
         assert(fakeTransport[testConfig.funcName].callCount >= 2);
@@ -61,12 +60,11 @@ describe('Client Retry Logic', function () {
   });
 
   it('retries to open/connect', function(testCallback) {
-    var fakeConnectionString = 'HostName=host;DeviceId=id;SharedAccessKey=key';
     var fakeTransport = new EventEmitter();
     var fakeBlobClient = { updateSharedAccessSignature: function () {} };
     fakeTransport.connect = sinon.stub().callsArgWith(0, new errors.TimeoutError('failed'));
 
-    var client = new Client(fakeTransport, fakeConnectionString, fakeBlobClient);
+    var client = new Client(fakeTransport, null, fakeBlobClient);
     client._maxOperationTimeout = 100;
     client.open(function (err) {
       assert(fakeTransport.connect.callCount >= 2);
@@ -75,13 +73,12 @@ describe('Client Retry Logic', function () {
   });
 
   it('retries to enable device methods', function(testCallback) {
-    var fakeConnectionString = 'HostName=host;DeviceId=id;SharedAccessKey=key';
     var fakeTransport = new EventEmitter();
     var fakeBlobClient = { updateSharedAccessSignature: function () {} };
     fakeTransport.onDeviceMethod = sinon.stub();
     fakeTransport.enableMethods = sinon.stub().callsArgWith(0, new errors.TimeoutError('failed'));
 
-    var client = new Client(fakeTransport, fakeConnectionString, fakeBlobClient);
+    var client = new Client(fakeTransport, null, fakeBlobClient);
     client._maxOperationTimeout = 100;
     client.on('error', (err) => {
       assert(fakeTransport.onDeviceMethod.calledOnce);
@@ -93,13 +90,12 @@ describe('Client Retry Logic', function () {
 
 
   it('retries to receive cloud-to-device message', function(testCallback) {
-    var fakeConnectionString = 'HostName=host;DeviceId=id;SharedAccessKey=key';
     var fakeTransport = new EventEmitter();
     var fakeBlobClient = { updateSharedAccessSignature: function () {} };
     sinon.spy(fakeTransport, 'on');
     fakeTransport.enableC2D = sinon.stub().callsArgWith(0, new errors.TimeoutError('failed'));
 
-    var client = new Client(fakeTransport, fakeConnectionString, fakeBlobClient);
+    var client = new Client(fakeTransport, null, fakeBlobClient);
     client._maxOperationTimeout = 100;
     client.on('error', (err) => {
       assert(fakeTransport.enableC2D.callCount >= 2);

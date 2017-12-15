@@ -31,6 +31,12 @@ describe('Client', function () {
         }, ReferenceError, 'transport is \'' + transport + '\'');
       });
     });
+
+    it('throws if a connection string is passed', function () {
+      assert.throws(function () {
+        return new Client(EventEmitter, 'fakeconnectionstring');
+      }, errors.InvalidOperationError);
+    })
   });
 
   describe('#fromConnectionString', function () {
