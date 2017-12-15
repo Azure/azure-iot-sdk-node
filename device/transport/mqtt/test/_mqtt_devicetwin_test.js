@@ -15,12 +15,18 @@ var config = {
   'deviceId' : 'mock_deviceId',
   'sharedAccessSignature' : 'mock_sharedAccessSignature'
 };
-
+var fakeAuthenticationProvider;
 var fakeMqttBase;
 var transport;
 
 describe('Mqtt: Device Twin', function () {
   beforeEach(function() {
+    fakeAuthenticationProvider = {
+      getDeviceCredentials: sinon.stub().callsFake(function (callback) {
+        callback(null, config);
+      })
+    };
+
     fakeMqttBase = new EventEmitter();
     fakeMqttBase.connect = sinon.stub().callsArg(1);
     fakeMqttBase.disconnect = sinon.stub().callsArg(0);
@@ -29,7 +35,7 @@ describe('Mqtt: Device Twin', function () {
     fakeMqttBase.unsubscribe = sinon.stub().callsArg(1);
     fakeMqttBase.updateSharedAccessSignature = sinon.stub().callsArg(1);
 
-    transport = new Mqtt(config, fakeMqttBase);
+    transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
   });
 
   describe('#sendTwinRequest', function () {
