@@ -10,9 +10,10 @@ import { EventEmitter } from 'events';
 
 import { DeviceMethodResponse, Client } from 'azure-iot-device';
 import { Amqp as BaseAmqpClient, translateError, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
-import { endpoint, SharedAccessSignature, errors, results, Message, X509 } from 'azure-iot-common';
+import { endpoint, SharedAccessSignature, errors, results, Message, X509, AuthenticationProvider, AuthenticationType } from 'azure-iot-common';
 import { AmqpDeviceMethodClient } from './amqp_device_method_client';
 import { AmqpTwinClient } from './amqp_twin_client';
+import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -50,7 +51,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
   /**
    * @private
    */
-  protected _config: Client.Config;
+  protected _authenticationProvider: AuthenticationProvider;
   private _deviceMethodClient: AmqpDeviceMethodClient;
   private _amqp: BaseAmqpClient;
   private _twinClient: AmqpTwinClient;
@@ -69,9 +70,25 @@ export class Amqp extends EventEmitter implements Client.Transport {
   /**
    * @private
    */
-  constructor(config: Client.Config, baseClient?: BaseAmqpClient) {
+  constructor(authenticationProvider: AuthenticationProvider, baseClient?: BaseAmqpClient) {
     super();
-    this._config = config;
+    this._authenticationProvider = authenticationProvider;
+
+    /*Codes_SRS_NODE_DEVICE_AMQP_16_056: [If the `authenticationProvider` object passed to the `Amqp` constructor has a `type` property which value is set to `AuthenticationType.Token` the `Amqp` constructor shall subscribe to the `newTokenAvailable` event of the `authenticationProvider` object.]*/
+    if (this._authenticationProvider.type === AuthenticationType.Token) {
+      (<any>this._authenticationProvider).on('newTokenAvailable', (newCredentials) => {
+        /*Codes_SRS_NODE_DEVICE_AMQP_16_057: [If a `newTokenAvailable` event is emitted by the `authenticationProvider` object passed as an argument to the constructor, a `putToken` operation shall be initiated with the new shared access signature if the amqp connection is already connected.]*/
+        this._fsm.handle('updateSharedAccessSignature', newCredentials.sharedAccessSignature, (err) => {
+          if (err) {
+            /*Codes_SRS_NODE_DEVICE_AMQP_16_058: [If the `putToken` operation initiated upon receiving a `newTokenAvailable` event fails, a `disconnect` event shall be emitted with the error from the failed `putToken` operation.]*/
+            this._fsm.handle('disconnect', () => {
+              this.emit('disconnect', err);
+            });
+          }
+        });
+      });
+    }
+
     this._amqp = baseClient || new BaseAmqpClient(false, 'azure-iot-device/' + packageJson.version);
     this._amqp.setDisconnectHandler((err) => {
       debug('disconnected event handler: ' + (err ? err.toString() : 'no error'));
@@ -80,7 +97,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
       });
     });
 
-    this._deviceMethodClient = new AmqpDeviceMethodClient(this._config, this._amqp);
+    this._deviceMethodClient = new AmqpDeviceMethodClient(this._authenticationProvider, this._amqp);
     /*Codes_SRS_NODE_DEVICE_AMQP_16_041: [Any `error` event received on any of the links used for device methods shall trigger the emission of an `error` event by the transport, with an argument that is a `MethodsDetachedError` object with the `innerError` property set to that error.]*/
     this._deviceMethodClient.on('error', (err) => {
       let methodsError = new errors.DeviceMethodsDetachedError('Device Methods AMQP links failed');
@@ -88,16 +105,13 @@ export class Amqp extends EventEmitter implements Client.Transport {
       this.emit('error', methodsError);
     });
 
-    this._twinClient = new AmqpTwinClient(this._config, this._amqp);
+    this._twinClient = new AmqpTwinClient(this._authenticationProvider, this._amqp);
     /*Codes_SRS_NODE_DEVICE_AMQP_16_048: [Any `error` event received on any of the links used for twin shall trigger the emission of an `error` event by the transport, with an argument that is a `TwinDetachedError` object with the `innerError` property set to that error.]*/
     this._twinClient.on('error', (err) => {
       let twinError = new errors.TwinDetachedError('Twin AMQP links failed');
       twinError.innerError = err;
       this.emit('error', twinError);
     });
-
-    this._c2dEndpoint = endpoint.messagePath(encodeURIComponent(this._config.deviceId));
-    this._d2cEndpoint = endpoint.eventPath(this._config.deviceId);
 
     /*Codes_SRS_NODE_DEVICE_AMQP_16_034: [Any `error` event received on the C2D link shall trigger the emission of an `error` event by the transport, with an argument that is a `C2DDetachedError` object with the `innerError` property set to that error.]*/
     this._c2dErrorListener = (err) => {
@@ -223,25 +237,36 @@ export class Amqp extends EventEmitter implements Client.Transport {
         },
         connecting: {
           _onEnter: (connectCallback) => {
-            const uri = this._getConnectionUri();
-            this._amqp.connect(uri, this._config.x509, (err, connectResult) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_16_054: [The `connect` method shall get the current credentials by calling `getDeviceCredentials` on the `AuthenticationProvider` object passed to the constructor as an argument.]*/
+            this._authenticationProvider.getDeviceCredentials((err, credentials) => {
               if (err) {
-                this._fsm.transition('disconnected', connectCallback, translateError('AMQP Transport: Could not connect', err));
+                /*Codes_SRS_NODE_DEVICE_AMQP_16_055: [The `connect` method shall call its callback with an error if the callback passed to the `getDeviceCredentials` method is called with an error.]*/
+                this._fsm.transition('disconnected', connectCallback, translateError('AMQP Transport: Could not get credentials', err));
               } else {
-                this._fsm.transition('authenticating', connectCallback, connectResult);
+                this._c2dEndpoint = endpoint.messagePath(encodeURIComponent(credentials.deviceId));
+                this._d2cEndpoint = endpoint.eventPath(credentials.deviceId);
+
+                const uri = this._getConnectionUri(credentials.host);
+                this._amqp.connect(uri, credentials.x509, (err, connectResult) => {
+                  if (err) {
+                    this._fsm.transition('disconnected', connectCallback, translateError('AMQP Transport: Could not connect', err));
+                  } else {
+                    this._fsm.transition('authenticating', connectCallback, connectResult);
+                  }
+                });
               }
+
             });
           },
           disconnect: (disconnectCallback, err) => this._fsm.transition('disconnecting', disconnectCallback, err),
           updateSharedAccessSignature: (token, callback) => {
-            // nothing to do here: the SAS has been updated in the config object and putToken will be done when authenticating.
             callback(null, new results.SharedAccessSignatureUpdated(false));
           },
           '*': () => this._fsm.deferUntilTransition()
         },
         authenticating: {
           _onEnter: (connectCallback, connectResult) => {
-            if (this._config.x509) {
+            if (this._authenticationProvider.type === AuthenticationType.X509) {
               /*Codes_SRS_NODE_DEVICE_AMQP_06_005: [If x509 authentication is NOT being utilized then `initializeCBS` shall be invoked.]*/
               this._fsm.transition('authenticated', connectCallback, connectResult);
             } else {
@@ -250,14 +275,19 @@ export class Amqp extends EventEmitter implements Client.Transport {
                   /*Codes_SRS_NODE_DEVICE_AMQP_06_008: [If `initializeCBS` is not successful then the client will be disconnected.]*/
                   this._fsm.transition('disconnecting', connectCallback, getTranslatedError(err, 'AMQP Transport: Could not initialize CBS'));
                 } else {
-                  /*Codes_SRS_NODE_DEVICE_AMQP_06_006: [If `initializeCBS` is successful, `putToken` shall be invoked If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter `audience`, created from the `sr` of the shared access signature, the actual shared access signature, and a callback.]*/
-                  const sasString = this._config.sharedAccessSignature.toString();
-                  this._amqp.putToken(SharedAccessSignature.parse(sasString, ['sr', 'sig', 'se']).sr, sasString, (err) => {
+                  this._authenticationProvider.getDeviceCredentials((err, credentials) => {
                     if (err) {
-                      /*Codes_SRS_NODE_DEVICE_AMQP_06_009: [If `putToken` is not successful then the client will be disconnected.]*/
-                      this._fsm.transition('disconnecting', connectCallback, getTranslatedError(err, 'AMQP Transport: Could not authorize with puttoken'));
+                      this._fsm.transition('disconnecting', connectCallback, getTranslatedError(err, 'AMQP Transport: Could not get credentials from AuthenticationProvider'));
                     } else {
-                      this._fsm.transition('authenticated', connectCallback, connectResult);
+                      /*Codes_SRS_NODE_DEVICE_AMQP_06_006: [If `initializeCBS` is successful, `putToken` shall be invoked If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter `audience`, created from the `sr` of the shared access signature, the actual shared access signature, and a callback.]*/
+                      this._amqp.putToken(SharedAccessSignature.parse(credentials.sharedAccessSignature, ['sr', 'sig', 'se']).sr, credentials.sharedAccessSignature, (err) => {
+                        if (err) {
+                          /*Codes_SRS_NODE_DEVICE_AMQP_06_009: [If `putToken` is not successful then the client will be disconnected.]*/
+                          this._fsm.transition('disconnecting', connectCallback, getTranslatedError(err, 'AMQP Transport: Could not authorize with puttoken'));
+                        } else {
+                          this._fsm.transition('authenticated', connectCallback, connectResult);
+                        }
+                      });
                     }
                   });
                 }
@@ -565,7 +595,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
    */
   updateSharedAccessSignature(sharedAccessSignature: string, done?: (err?: Error, result?: results.SharedAccessSignatureUpdated) => void): void {
     /*Codes_SRS_NODE_DEVICE_AMQP_16_015: [The updateSharedAccessSignature method shall save the new shared access signature given as a parameter to its configuration.] */
-    this._config.sharedAccessSignature = sharedAccessSignature;
+    (this._authenticationProvider as SharedAccessSignatureAuthenticationProvider).updateSharedAccessSignature(sharedAccessSignature);
     this._fsm.handle('updateSharedAccessSignature', sharedAccessSignature, done);
   }
 
@@ -580,22 +610,16 @@ export class Amqp extends EventEmitter implements Client.Transport {
   setOptions(options: X509, done?: () => void): void {
   /*Codes_SRS_NODE_DEVICE_AMQP_06_001: [The `setOptions` method shall throw a ReferenceError if the `options` parameter has not been supplied.]*/
     if (!options) throw new ReferenceError('The options parameter can not be \'' + options + '\'');
-    if (options.hasOwnProperty('cert')) {
-      this._config.x509 = {
-        cert: options.cert,
-        key: options.key,
-        passphrase: options.passphrase
-      };
-    } else if (options.hasOwnProperty('certFile')) {
-      this._config.x509 = {
-        certFile: options.certFile,
-        keyFile: options.keyFile,
-      };
-    }
-    /*Codes_SRS_NODE_DEVICE_AMQP_06_002: [If `done` has been specified the `setOptions` method shall call the `done` callback with no arguments.]*/
-    if (done) {
-      /*Codes_SRS_NODE_DEVICE_AMQP_06_003: [`setOptions` should not throw if `done` has not been specified.]*/
-      done();
+    if (this._authenticationProvider.type === AuthenticationType.X509) {
+      (this._authenticationProvider as X509AuthenticationProvider).setX509Options(options);
+      /*Codes_SRS_NODE_DEVICE_AMQP_06_002: [If `done` has been specified the `setOptions` method shall call the `done` callback with no arguments.]*/
+      if (done) {
+        /*Codes_SRS_NODE_DEVICE_AMQP_06_003: [`setOptions` should not throw if `done` has not been specified.]*/
+        done();
+      }
+    } else {
+      /*Codes_SRS_NODE_DEVICE_AMQP_16_053: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called while using token-based authentication.]*/
+      throw new errors.InvalidOperationError('cannot set X509 options when using token-based authentication');
     }
   }
 
@@ -702,8 +726,8 @@ export class Amqp extends EventEmitter implements Client.Transport {
     this._fsm.handle('disableTwin', callback);
   }
 
-  protected _getConnectionUri(): string {
-    return 'amqps://' + this._config.host;
+  protected _getConnectionUri(host: string): string {
+    return 'amqps://' + host;
   }
 
   private _stopC2DListener(err: Error | undefined, callback: (err?: Error) => void): void {

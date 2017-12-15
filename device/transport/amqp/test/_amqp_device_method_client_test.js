@@ -9,30 +9,20 @@ var endpoint = require('azure-iot-common').endpoint;
 
 var AmqpDeviceMethodClient = require('../lib/amqp_device_method_client.js').AmqpDeviceMethodClient;
 
-var fakeConfig = {
-  deviceId: 'deviceId'
-};
-
 describe('AmqpDeviceMethodClient', function () {
+  var fakeConfig = {
+    deviceId: 'deviceId'
+  };
+
+  var fakeAuthenticationProvider;
+
+  beforeEach(function () {
+    fakeAuthenticationProvider = {
+      getDeviceCredentials: sinon.stub().callsArgWith(0, null, fakeConfig)
+    };
+  });
+
   describe('#constructor', function () {
-    /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_001: [The `AmqpDeviceMethodClient` shall throw a `ReferenceError` if the `config` argument is falsy.]*/
-    [undefined, null].forEach(function (badConfig) {
-      it('throws a ReferenceError if \'config\' is \'' + badConfig + '\'', function () {
-        assert.throws(function () {
-          return new AmqpDeviceMethodClient(badConfig, {});
-        }, ReferenceError);
-      });
-    });
-
-    /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_002: [The `AmqpDeviceMethodClient` shall throw a `ReferenceError` if the `amqpClient` argument is falsy.]*/
-    [undefined, null].forEach(function (badClient) {
-      it('throws a ReferenceError if \'amqpClient\' is \'' + badClient + '\'', function () {
-        assert.throws(function () {
-          return new AmqpDeviceMethodClient({}, badClient);
-        }, ReferenceError);
-      });
-    });
-
     /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_003: [The `AmqpDeviceMethodClient` shall inherit from the `EventEmitter` class.]*/
     it('inherits from EventEmitter', function () {
       var client = new AmqpDeviceMethodClient({}, {});
@@ -44,7 +34,7 @@ describe('AmqpDeviceMethodClient', function () {
     /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_004: [The `onDeviceMethod` method shall throw a `ReferenceError` if the `methodName` argument is falsy.]*/
     [undefined, null, ''].forEach(function(badMethodName) {
       it('throws a ReferenceError if the \'methodName\' parameter is \'' + badMethodName + '\'', function() {
-        var client = new AmqpDeviceMethodClient(fakeConfig, {});
+        var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, {});
         assert.throws(function() {
           client.onDeviceMethod(badMethodName, function() {});
         }, ReferenceError);
@@ -54,7 +44,7 @@ describe('AmqpDeviceMethodClient', function () {
     /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_018: [The `onDeviceMethod` method shall throw an `ArgumentError` if the `methodName` argument is not a string.]*/
     [42, function() {}, {}].forEach(function(badMethodName) {
       it('throws an ArgumentError if the \'methodName\' parameter is \'' + JSON.stringify(badMethodName) + '\'', function() {
-        var client = new AmqpDeviceMethodClient(fakeConfig, {});
+        var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, {});
         assert.throws(function() {
           client.onDeviceMethod(badMethodName, function() {});
         }, errors.ArgumentError);
@@ -88,7 +78,7 @@ describe('AmqpDeviceMethodClient', function () {
         }
       };
 
-      var client = new AmqpDeviceMethodClient(fakeConfig, fakeAmqpClient);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
       client.attach(function () {
         client.onDeviceMethod(fakeMethodName, function(methodRequest) {
           /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_016: [When a message is received on the method endpoint, a new object describing the method request shall be created with the following properties:
@@ -116,7 +106,7 @@ describe('AmqpDeviceMethodClient', function () {
         attachReceiverLink: sinon.stub().callsArgWith(2, null, fakeAmqpReceiver)
       };
 
-      var client = new AmqpDeviceMethodClient(fakeConfig, fakeAmqpClient);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
       client.onDeviceMethod(fakeMethodName, function(methodRequest) {
         /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_016: [When a message is received on the method endpoint, a new object describing the method request shall be created with the following properties:
         - `requestId`: a UUID that uniquely identifies this method name and is stored as the correlationId in the incoming message
@@ -147,7 +137,7 @@ describe('AmqpDeviceMethodClient', function () {
         attachReceiverLink: sinon.stub().callsArgWith(2, null, fakeAmqpReceiver)
       };
 
-      var client = new AmqpDeviceMethodClient(fakeConfig, fakeAmqpClient);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
       client.attach(function () {
         fakeAmqpReceiver.emit('message', fakeMethodRequest);
       });
@@ -168,7 +158,7 @@ describe('AmqpDeviceMethodClient', function () {
     /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_007: [The `sendMethodResponse` method shall throw a `ReferenceError` if the `methodResponse` object is falsy.]*/
     [undefined, null].forEach(function(badMethodResponse) {
       it('throws a ReferenceError when \'methodResponse\' is \'' + badMethodResponse + '\'', function() {
-        var client = new AmqpDeviceMethodClient(fakeConfig, {});
+        var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, {});
         assert.throws(function(){
           client.sendMethodResponse(badMethodResponse, function() {});
         }, ReferenceError);
@@ -178,7 +168,7 @@ describe('AmqpDeviceMethodClient', function () {
     /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_008: [The `sendMethodResponse` method shall throw an `ArgumentError` if the `methodResponse.status` property is `null` or `undefined`.]*/
     [null, undefined].forEach(function(badStatus) {
       it('throws an ArgumentError when \'methodResponse.status\' is \'' + badStatus + '\'', function() {
-        var client = new AmqpDeviceMethodClient(fakeConfig, {});
+        var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, {});
         assert.throws(function(){
           client.sendMethodResponse({ status: badStatus }, function() {});
         }, errors.ArgumentError);
@@ -188,7 +178,7 @@ describe('AmqpDeviceMethodClient', function () {
     /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_009: [The `sendMethodResponse` method shall throw an `ArgumentError` if the `methodResponse.requestId` property is falsy.]*/
     [null, undefined, 0, ''].forEach(function(badRequestId) {
       it('throws an ArgumentError when \'methodResponse.requestId\' is \'' + badRequestId + '\'', function() {
-        var client = new AmqpDeviceMethodClient(fakeConfig, {});
+        var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, {});
         assert.throws(function(){
           client.sendMethodResponse({ status: 200, requestId: badRequestId }, function() {});
         }, errors.ArgumentError);
@@ -233,7 +223,7 @@ describe('AmqpDeviceMethodClient', function () {
         }
       };
 
-      var client = new AmqpDeviceMethodClient(fakeConfig, fakeAmqpClient);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
       client.attach(function () {
         client.sendMethodResponse(fakeMethodResponse, testCallback);
       });
@@ -246,7 +236,7 @@ describe('AmqpDeviceMethodClient', function () {
         status: 42,
         payload: 'fakePayload'
       };
-      var client = new AmqpDeviceMethodClient(fakeConfig, {});
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, {});
       client.sendMethodResponse(fakeMethodResponse, function (err) {
         assert.instanceOf(err, errors.NotConnectedError);
         testCallback();
@@ -268,7 +258,7 @@ describe('AmqpDeviceMethodClient', function () {
         attachReceiverLink: sinon.stub(),
       };
 
-      var client = new AmqpDeviceMethodClient(fakeConfig, fakeAmqpClient);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
       client.attach(); // will block in 'attaching'
       client.sendMethodResponse(fakeMethodResponse, function (err) {
         assert.instanceOf(err, errors.NotConnectedError);
@@ -278,6 +268,36 @@ describe('AmqpDeviceMethodClient', function () {
   });
 
   describe('#attach', function () {
+    /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_027: [The `attach` method shall call the `getDeviceCredentials` method on the `authenticationProvider` object passed as an argument to the constructor to retrieve the device id.]*/
+    it('calls getDeviceCredentials on the authenticationProvider', function (testCallback) {
+      var fakeAmqpClient = {
+        attachSenderLink: sinon.stub().callsArgWith(2, null, new EventEmitter()),
+        attachReceiverLink: sinon.stub().callsArgWith(2, null, new EventEmitter())
+      };
+
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
+      client.attach(function () {
+        assert.isTrue(fakeAuthenticationProvider.getDeviceCredentials.calledOnce);
+        testCallback();
+      });
+    });
+
+    /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_028: [The `attach` method shall call its callback with an error if the call to `getDeviceCredentials` fails with an error.]*/
+    it('calls its callback with an error if the call to getDeviceCredentials fails with an error', function (testCallback) {
+      var fakeError = new Error('fake');
+      var fakeAmqpClient = {
+        attachSenderLink: sinon.stub().callsArgWith(2, null, new EventEmitter()),
+        attachReceiverLink: sinon.stub().callsArgWith(2, null, new EventEmitter())
+      };
+      fakeAuthenticationProvider.getDeviceCredentials = sinon.stub().callsArgWith(0, fakeError);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
+      client.attach(function (err) {
+        assert.isTrue(fakeAuthenticationProvider.getDeviceCredentials.calledOnce);
+        assert.strictEqual(err, fakeError);
+        testCallback();
+      });
+    });
+
     /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_019: [The `attach` method shall create a SenderLink and a ReceiverLink and attach them.]*/
     it('attaches the sender and receiver links', function (testCallback) {
       var fakeAmqpClient = {
@@ -285,7 +305,7 @@ describe('AmqpDeviceMethodClient', function () {
         attachReceiverLink: sinon.stub().callsArgWith(2, null, new EventEmitter())
       };
 
-      var client = new AmqpDeviceMethodClient(fakeConfig, fakeAmqpClient);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
       client.attach(function (err) {
         assert.isUndefined(err);
         assert.isTrue(fakeAmqpClient.attachReceiverLink.calledOnce);
@@ -301,7 +321,7 @@ describe('AmqpDeviceMethodClient', function () {
         attachReceiverLink: sinon.stub().callsArgWith(2, null, new EventEmitter())
       };
 
-      var client = new AmqpDeviceMethodClient(fakeConfig, fakeAmqpClient);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
       client.attach(function (err) {
         assert.strictEqual(err, fakeError);
         testCallback();
@@ -318,7 +338,7 @@ describe('AmqpDeviceMethodClient', function () {
         attachReceiverLink: sinon.stub().callsArgWith(2, fakeError)
       };
 
-      var client = new AmqpDeviceMethodClient(fakeConfig, fakeAmqpClient);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
       client.attach(function (err) {
         assert.isTrue(fakeSender.detach.calledOnce);
         assert.strictEqual(err, fakeError);
@@ -336,7 +356,7 @@ describe('AmqpDeviceMethodClient', function () {
         attachReceiverLink: sinon.stub().callsArgWith(2, fakeError)
       };
 
-      var client = new AmqpDeviceMethodClient(fakeConfig, fakeAmqpClient);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
 
       client.on('error', function(err) {
         assert.strictEqual(err, fakeError);
@@ -360,7 +380,7 @@ describe('AmqpDeviceMethodClient', function () {
         detachReceiverLink: sinon.stub().callsArg(1)
       };
 
-      var client = new AmqpDeviceMethodClient(fakeConfig, fakeAmqpClient);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
       client.on('error', function(err) {
         assert.strictEqual(err, fakeError);
         testCallback();
@@ -377,7 +397,7 @@ describe('AmqpDeviceMethodClient', function () {
         attachReceiverLink: sinon.stub().callsArgWith(2, null, new EventEmitter())
       };
 
-      var client = new AmqpDeviceMethodClient(fakeConfig, fakeAmqpClient);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
       client.attach(function () {
         client.attach(function (err) {
           assert.isUndefined(err);
@@ -398,7 +418,7 @@ describe('AmqpDeviceMethodClient', function () {
         attachReceiverLink: sinon.stub().callsArgWith(2, null, fakeAmqpReceiver)
       };
 
-      var client = new AmqpDeviceMethodClient(fakeConfig, fakeAmqpClient);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
       client.attach(function() {
         assert(fakeAmqpReceiver.on.calledWith('message'));
         assert(fakeAmqpReceiver.on.calledWith('error'));
@@ -420,7 +440,7 @@ describe('AmqpDeviceMethodClient', function () {
         attachReceiverLink: sinon.stub().callsArgWith(2, null, fakeReceiverLink)
       };
 
-      var client = new AmqpDeviceMethodClient(fakeConfig, fakeAmqpClient);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
       client.attach(function () {
         client.detach(function () {
           assert.isTrue(fakeSenderLink.detach.calledOnce);
@@ -446,7 +466,7 @@ describe('AmqpDeviceMethodClient', function () {
         attachReceiverLink: sinon.stub().callsArgWith(2, null, fakeReceiverLink)
       };
 
-      var client = new AmqpDeviceMethodClient(fakeConfig, fakeAmqpClient);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
       client.attach(function () {
         client.detach(function () {
           assert.isTrue(fakeSenderLink.detach.calledOnce);
@@ -469,7 +489,7 @@ describe('AmqpDeviceMethodClient', function () {
         attachReceiverLink: sinon.stub().callsArgWith(2, null, fakeReceiverLink)
       };
 
-      var client = new AmqpDeviceMethodClient(fakeConfig, fakeAmqpClient);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
       client.attach(function () {
         assert.isTrue(fakeAmqpClient.attachReceiverLink.calledOnce);
         assert.isTrue(fakeAmqpClient.attachSenderLink.calledOnce);
@@ -490,7 +510,7 @@ describe('AmqpDeviceMethodClient', function () {
   describe('#forceDetach', function () {
     /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_025: The `forceDetach` method shall immediately return if all links are already detached.]*/
     it('immediately returns if the links are already detached', function () {
-      var client = new AmqpDeviceMethodClient(fakeConfig, {});
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, {});
       assert.doesNotThrow(function () {
         client.forceDetach();
       });
@@ -508,7 +528,7 @@ describe('AmqpDeviceMethodClient', function () {
         attachReceiverLink: sinon.stub().callsArgWith(2, null, fakeReceiverLink)
       };
 
-      var client = new AmqpDeviceMethodClient(fakeConfig, fakeAmqpClient);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
       sinon.stub(fakeReceiverLink, "on").callsFake(function (eventName) {
         if (eventName === 'message') {
           // sender is attached, receiver is attaching since we're registering for messages. good time to trigger a fake forceDetach
@@ -535,7 +555,7 @@ describe('AmqpDeviceMethodClient', function () {
         attachReceiverLink: sinon.stub()
       };
 
-      var client = new AmqpDeviceMethodClient(fakeConfig, fakeAmqpClient);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
       client.attach(function () {});
       assert.doesNotThrow(function () {
         client.forceDetach();
@@ -553,7 +573,7 @@ describe('AmqpDeviceMethodClient', function () {
         attachReceiverLink: sinon.stub().callsArgWith(2, null, fakeReceiverLink)
       };
 
-      var client = new AmqpDeviceMethodClient(fakeConfig, fakeAmqpClient);
+      var client = new AmqpDeviceMethodClient(fakeAuthenticationProvider, fakeAmqpClient);
       client.attach(function () {
         client.forceDetach();
         assert.isTrue(fakeSenderLink.forceDetach.calledOnce);

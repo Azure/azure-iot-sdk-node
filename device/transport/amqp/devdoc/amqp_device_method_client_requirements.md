@@ -41,13 +41,13 @@ client.attach(function (err) {
 
 ### AmqpDeviceMethodClient(config, amqpClient) [constructor]
 
-**SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_001: [** The `AmqpDeviceMethodClient` shall throw a `ReferenceError` if the `config` argument is falsy. **]**
-
-**SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_002: [** The `AmqpDeviceMethodClient` shall throw a `ReferenceError` if the `amqpClient` argument is falsy. **]**
-
 **SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_003: [** The `AmqpDeviceMethodClient` shall inherit from the `EventEmitter` class. **]**
 
 ### attach(callback)
+
+**SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_027: [** The `attach` method shall call the `getDeviceCredentials` method on the `authenticationProvider` object passed as an argument to the constructor to retrieve the device id. **]**
+
+**SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_028: [** The `attach` method shall call its callback with an error if the call to `getDeviceCredentials` fails with an error. **]**
 
 **SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_014: [** The `AmqpDeviceMethodClient` object shall set 2 properties of any AMQP link that it create:
 - `com.microsoft:api-version` shall be set to the current API version in use.

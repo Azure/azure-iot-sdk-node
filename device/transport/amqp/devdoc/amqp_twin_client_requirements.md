@@ -99,6 +99,10 @@ The endpoints and link options are as for the response event.
 
 **SRS_NODE_DEVICE_AMQP_TWIN_16_003: [** The `attach` method shall call its `callback` immediately if the links are already attached. **]**
 
+**SRS_NODE_DEVICE_AMQP_TWIN_16_007: [** The `attach` method shall call the `getDeviceCredentials` method on the `authenticationProvider` object passed as an argument to the constructor to retrieve the device id. **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_008: [** The `attach` method shall call its callback with an error if the call to `getDeviceCredentials` fails with an error. **]**
+
 ### detach(callback)
 
 **SRS_NODE_DEVICE_AMQP_TWIN_16_004: [** The `detach` method shall call its `callback` immediately if the links are already detached. **]**
