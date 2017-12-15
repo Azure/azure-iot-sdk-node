@@ -251,6 +251,10 @@ Host: <config.host>
 
 ### All HTTP requests
 
+**SRS_NODE_DEVICE_HTTP_16_032: [** All HTTP requests shall obtain the credentials necessary to execute the request by calling `getDeviceCredentials` on the `AuthenticationProvider` object passed to the `Http` constructor. **]**
+
+ **SRS_NODE_DEVICE_HTTP_16_033: [** if the `getDeviceCredentials` fails with an error, the Http request shall call its callback with that error **]**
+
 **SRS_NODE_DEVICE_HTTP_05_008: [**If any Http method encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message).**]**
 
 **SRS_NODE_DEVICE_HTTP_05_009: [**When any Http method receives an HTTP response with a status code >= 300, it shall invoke the `done` callback function with the following arguments:
