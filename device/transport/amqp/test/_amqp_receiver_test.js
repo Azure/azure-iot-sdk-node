@@ -19,12 +19,20 @@ describe('AmqpReceiver', function () {
   };
 
   var fakeMethodClient;
+  var fakeAuthenticationProvider;
 
   beforeEach(function() {
     fakeMethodClient = {
       on: sinon.spy(),
       onDeviceMethod: sinon.spy(),
       attach: sinon.stub().callsArg(0)
+    };
+
+    fakeAuthenticationProvider = {
+      getDeviceCredentials: function (callback) {
+        callback(null, fakeConfig);
+      },
+      updateSharedAccessSignature: sinon.stub()
     };
   });
 
@@ -37,23 +45,26 @@ describe('AmqpReceiver', function () {
     /*Tests_SRS_NODE_DEVICE_AMQP_RECEIVER_16_002: [The `Amqp` object shall inherit from the `EventEmitter` node object.]*/
     it('Initializes a new instance of an AmqpReceiver object', function() {
       assert.doesNotThrow(function() {
-        var recv = new AmqpReceiver(fakeConfig);
+        var recv = new AmqpReceiver(fakeAuthenticationProvider);
         assert.instanceOf(recv, AmqpReceiver);
         assert.instanceOf(recv, EventEmitter);
       });
     });
 
     it('forwards the errorReceived event if an error is received from a device method link', function(testCallback) {
+      this.timeout(10000);
       var fakeMethodClient = new EventEmitter();
-      var recv = new AmqpReceiver(fakeConfig);
+      var recv = new AmqpReceiver(fakeAuthenticationProvider);
       var fakeError = new Error('fake error');
       var fakeCallback = function(err) {
         assert.strictEqual(err.innerError, fakeError);
         assert.instanceOf(err, errors.DeviceMethodsDetachedError);
         testCallback();
       };
-      recv.on('error', fakeCallback);
-      recv._deviceMethodClient.emit('error', fakeError);
+      recv.connect(function () {
+        recv.on('error', fakeCallback);
+        recv._deviceMethodClient.emit('error', fakeError);
+      });
     });
   });
 
@@ -63,7 +74,7 @@ describe('AmqpReceiver', function () {
       var recv1messageReceived = false;
       var recv2messageReceived = false;
       var testMessage = new Message('foo');
-      var recv = new AmqpReceiver(fakeConfig);
+      var recv = new AmqpReceiver(fakeAuthenticationProvider);
       var fakeReceiverLink = new EventEmitter();
       recv._amqp = new FakeAmqp();
       sinon.stub(recv._amqp, 'attachReceiverLink').callsArgWith(2, null, fakeReceiverLink);
@@ -89,7 +100,7 @@ describe('AmqpReceiver', function () {
 
     it('emits an errorReceived event if an error is received on the C2D link', function (testCallback) {
       var testError = new Error('test');
-      var recv = new AmqpReceiver(fakeConfig);
+      var recv = new AmqpReceiver(fakeAuthenticationProvider);
       var fakeReceiverLink = new EventEmitter();
       recv._amqp = new FakeAmqp();
       sinon.stub(recv._amqp, 'attachReceiverLink').callsArgWith(2, null, fakeReceiverLink);
@@ -108,7 +119,7 @@ describe('AmqpReceiver', function () {
 
   describe('#on(<others>, callback)', function () {
     it('does not forward event listeners other than message and errorReceived of the message event to the underlying AMQP receiver', function () {
-      var recv = new AmqpReceiver(fakeConfig);
+      var recv = new AmqpReceiver(fakeAuthenticationProvider);
       var fakeReceiverLink = new EventEmitter();
       sinon.spy(fakeReceiverLink, 'on');
       recv._amqp = new FakeAmqp();
@@ -125,7 +136,7 @@ describe('AmqpReceiver', function () {
   ['complete', 'abandon', 'reject'].forEach(function (methodName) {
     describe('#' + methodName, function () {
       it('calls the underlying message receiver settlement method with the message argument', function(testCallback) {
-        var recv = new AmqpReceiver(fakeConfig);
+        var recv = new AmqpReceiver(fakeAuthenticationProvider);
         var fakeReceiverLink = new EventEmitter();
         fakeReceiverLink[methodName] = sinon.stub().callsArg(1);
         sinon.stub(fakeReceiverLink, 'removeListener');
@@ -146,12 +157,12 @@ describe('AmqpReceiver', function () {
   /*Tests_SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `AmqpDeviceMethodClient` object.]*/
   describe('#onDeviceMethod', function() {
     it('forwards the message and callback arguments to the underlying message receiver', function(testCallback) {
-      var recv = new AmqpReceiver(fakeConfig);
+      var recv = new AmqpReceiver(fakeAuthenticationProvider);
       recv._amqp = new FakeAmqp();
-      sinon.spy(recv._deviceMethodClient, 'onDeviceMethod');
       var fakeCallback = function() {};
       var fakeMethodName = 'fakeMethodName';
-      recv.connect(() => {
+      recv.connect(function () {
+        sinon.spy(recv._deviceMethodClient, 'onDeviceMethod');
         recv.onDeviceMethod(fakeMethodName, fakeCallback);
         assert(recv._deviceMethodClient.onDeviceMethod.calledWith(fakeMethodName, fakeCallback));
         testCallback();
@@ -159,11 +170,10 @@ describe('AmqpReceiver', function () {
     });
 
     it('emits an error event with the error if the links fail to connect initially', function (testCallback) {
+      this.timeout(10000);
       var fakeMethodClient = new EventEmitter();
       var fakeError = new Error('fake error');
-      var recv = new AmqpReceiver(fakeConfig);
-      sinon.stub(recv._deviceMethodClient, 'onDeviceMethod');
-      sinon.stub(recv._deviceMethodClient, 'attach').callsArgWith(0, fakeError);
+      var recv = new AmqpReceiver(fakeAuthenticationProvider);
 
       var errorCallback = function (err) {
         assert.strictEqual(err.innerError, fakeError);
@@ -172,9 +182,13 @@ describe('AmqpReceiver', function () {
         testCallback();
       };
 
-      recv.on('error', errorCallback);
-      recv.onDeviceMethod('fakeMethod', function () {});
-      recv._deviceMethodClient.emit('error', fakeError);
+      recv.connect(function () {
+        sinon.stub(recv._deviceMethodClient, 'onDeviceMethod');
+        sinon.stub(recv._deviceMethodClient, 'attach').callsArgWith(0, fakeError);
+        recv.on('error', errorCallback);
+        recv.onDeviceMethod('fakeMethod', function () {});
+        recv._deviceMethodClient.emit('error', fakeError);
+      });
     });
   });
 });

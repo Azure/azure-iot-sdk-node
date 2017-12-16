@@ -6,9 +6,8 @@
 import { EventEmitter } from 'events';
 import machina = require('machina');
 
-import { endpoint, errors, results, Message } from 'azure-iot-common';
+import { endpoint, errors, results, Message, AuthenticationProvider } from 'azure-iot-common';
 import { Amqp as BaseAmqpClient, translateError, AmqpMessage } from 'azure-iot-amqp-base';
-import { Client } from 'azure-iot-device';
 
 import * as uuid from 'uuid';
 import * as dbg from 'debug';
@@ -38,6 +37,7 @@ export class AmqpTwinClient extends EventEmitter {
   static subscribedEvent: string = 'subscribed';
 
   private _client: BaseAmqpClient;
+  private _authenticationProvider: AuthenticationProvider;
   private _boundMessageHandler: Function;
   private _endpoint: string;
   private _upstreamAmqpLink: any;
@@ -47,37 +47,22 @@ export class AmqpTwinClient extends EventEmitter {
   private _eventQueue: any[];
   private _eventQueueError: Error;
 
-  constructor(config: Client.Config, client: any) {
+  constructor(authenticationProvider: AuthenticationProvider, client: any) {
     super();
-    /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_003: [The `AmqpTwinClient` constructor shall accept a `config` object.] */
-    /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_004: [The `AmqpTwinClient` constructor shall throw `ReferenceError` if the `config` object is falsy.] */
-    if (!config) {
-      throw new ReferenceError('required parameter is missing');
-    }
-
-    /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_001: [The `AmqpTwinClient` constructor shall accept a `client` object.] */
-    /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_002: [** The `AmqpTwinClient` constructor shall throw `ReferenceError` if the `client` object is falsy. **] */
-    if (!client) {
-      throw new ReferenceError('required parameter is missing');
-    }
-
     this._client = client;
+    this._authenticationProvider = authenticationProvider;
     this._internalOperations = {};
     this._upstreamAmqpLink = null;
     this._downstreamAmqpLink = null;
     this._eventQueue = [];
     this._eventQueueError = null;
 
-    /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_007: [The endpoint argument for attacheReceiverLink shall be `/device/<deviceId>/twin`.] */
-    /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_009: [The endpoint argument for attacheSenderLink shall be `/device/<deviceId>/twin`.] */
-    this._endpoint = endpoint.devicePath(config.deviceId) + '/twin';
-
     this._fsm = new machina.Fsm({
       namespace: 'amqp-twin-receiver',
       initialState: 'detached',
       states: {
         'detached': {
-          _onEnter: (detachCallback) => {
+          _onEnter: (err, detachCallback) => {
             let headEvent: any[];
             while (headEvent = this._eventQueue.shift()) {
               if (headEvent.shift() === 'actual_sendTwinRequest') {
@@ -90,7 +75,7 @@ export class AmqpTwinClient extends EventEmitter {
               /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_002: [The `attach` method shall call its `callback` with an `Error` if attaching either link fails.]*/
               /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_006: [The `detach` method shall call its `callback` with an `Error` if detaching either of the links fail.]*/
               // TODO: refactoring needed: requirement not met for now...
-              detachCallback();
+              detachCallback(err);
             }
           },
           handleNewListener: (eventName) => {
@@ -123,26 +108,37 @@ export class AmqpTwinClient extends EventEmitter {
         },
         'attaching': {
           _onEnter: (attachCallback) => {
-            /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_006: [When a listener is added for the `response` event, and the `post` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLink`.] */
-            /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_012: [When a listener is added for the `post` event, and the `response` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLine`.] */
-            const linkCorrelationId: string  = uuid.v4().toString();
-            this._client.attachReceiverLink( this._endpoint, this._generateTwinLinkProperties(linkCorrelationId), (receiverLinkError?: Error, receiverTransportObject?: any): void => {
-              if (receiverLinkError) {
-                /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_022: [If an error occurs on establishing the upstream or downstream link then the `error` event shall be emitted.] */
-                this._fsm.handle('handleErrorEmit', receiverLinkError);
+            /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_007: [The `attach` method shall call the `getDeviceCredentials` method on the `authenticationProvider` object passed as an argument to the constructor to retrieve the device id.]*/
+            this._authenticationProvider.getDeviceCredentials((err, credentials) => {
+              if (err) {
+                /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_008: [The `attach` method shall call its callback with an error if the call to `getDeviceCredentials` fails with an error.]*/
+                this._fsm.transition('detached', err, attachCallback);
               } else {
-                this._downstreamAmqpLink = receiverTransportObject;
-                this._downstreamAmqpLink.on('detached', this._onAmqpDetached.bind(this));
-                this._downstreamAmqpLink.on('error', this._handleError.bind(this));
-                this._client.attachSenderLink( this._endpoint, this._generateTwinLinkProperties(linkCorrelationId), (senderLinkError?: Error, senderTransportObject?: any): void => {
-                  if (senderLinkError) {
-                    this._fsm.handle('handleErrorEmit', senderLinkError);
-                  } else {
-                    this._upstreamAmqpLink = senderTransportObject;
-                    this._upstreamAmqpLink.on('detached', this._onAmqpDetached.bind(this));
-                    this._upstreamAmqpLink.on('error', this._handleError.bind(this));
-                    this._fsm.transition('attached', attachCallback);
-                  }
+                  /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_007: [The endpoint argument for attacheReceiverLink shall be `/device/<deviceId>/twin`.] */
+                  /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_009: [The endpoint argument for attacheSenderLink shall be `/device/<deviceId>/twin`.] */
+                  this._endpoint = endpoint.devicePath(credentials.deviceId) + '/twin';
+                  /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_006: [When a listener is added for the `response` event, and the `post` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLink`.] */
+                  /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_012: [When a listener is added for the `post` event, and the `response` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLine`.] */
+                  const linkCorrelationId: string  = uuid.v4().toString();
+                  this._client.attachReceiverLink( this._endpoint, this._generateTwinLinkProperties(linkCorrelationId), (receiverLinkError?: Error, receiverTransportObject?: any): void => {
+                    if (receiverLinkError) {
+                      /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_022: [If an error occurs on establishing the upstream or downstream link then the `error` event shall be emitted.] */
+                      this._fsm.handle('handleErrorEmit', receiverLinkError);
+                    } else {
+                      this._downstreamAmqpLink = receiverTransportObject;
+                      this._downstreamAmqpLink.on('detached', this._onAmqpDetached.bind(this));
+                      this._downstreamAmqpLink.on('error', this._handleError.bind(this));
+                      this._client.attachSenderLink( this._endpoint, this._generateTwinLinkProperties(linkCorrelationId), (senderLinkError?: Error, senderTransportObject?: any): void => {
+                        if (senderLinkError) {
+                          this._fsm.handle('handleErrorEmit', senderLinkError);
+                        } else {
+                          this._upstreamAmqpLink = senderTransportObject;
+                          this._upstreamAmqpLink.on('detached', this._onAmqpDetached.bind(this));
+                          this._upstreamAmqpLink.on('error', this._handleError.bind(this));
+                          this._fsm.transition('attached', attachCallback);
+                        }
+                      });
+                    }
                 });
               }
             });
@@ -257,7 +253,7 @@ export class AmqpTwinClient extends EventEmitter {
                 if (possibleError) {
                   this._fsm.handle('handleErrorEmit', possibleError);
                 }
-                this._fsm.transition('detached', detachCallback);
+                this._fsm.transition('detached', null, detachCallback);
               });
             });
           },

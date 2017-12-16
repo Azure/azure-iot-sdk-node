@@ -14,12 +14,16 @@ var AmqpTwinClient = require('../lib/amqp_twin_client.js').AmqpTwinClient;
 var errors = require('azure-iot-common').errors;
 var results = require('azure-iot-common').results;
 var endpoint = require('azure-iot-common').endpoint;
+var AuthenticationType = require('azure-iot-common').AuthenticationType;
 
 describe('Amqp', function () {
   var transport = null;
   var receiver = null;
   var sender = null;
   var fakeBaseClient = null;
+  var fakeTokenAuthenticationProvider = null;
+  var fakeX509AuthenticationProvider = null;
+
   var testMessage = new Message();
   testMessage._transportObj = {};
   var testCallback = function () { };
@@ -58,7 +62,21 @@ describe('Amqp', function () {
       send: sinon.stub().callsArgWith(3, null, new results.MessageEnqueued())
     };
 
-    transport = new Amqp(configWithSAS, fakeBaseClient);
+    fakeTokenAuthenticationProvider = new EventEmitter();
+    fakeTokenAuthenticationProvider.type = AuthenticationType.Token;
+    fakeTokenAuthenticationProvider.getDeviceCredentials = sinon.stub().callsArgWith(0, null, configWithSAS);
+    fakeTokenAuthenticationProvider.updateSharedAccessSignature = sinon.stub();
+    sinon.spy(fakeTokenAuthenticationProvider, 'on');
+
+    fakeX509AuthenticationProvider = {
+      type: AuthenticationType.X509,
+      getDeviceCredentials: function (callback) {
+        callback(null, configWithSSLOptions);
+      },
+      setX509Options: sinon.stub()
+    };
+
+    transport = new Amqp(fakeTokenAuthenticationProvider, fakeBaseClient);
   });
 
   afterEach(function () {
@@ -66,6 +84,46 @@ describe('Amqp', function () {
     receiver = null;
     sender = null;
     fakeBaseClient = null;
+  });
+
+  describe('#constructor', function () {
+    /*Codes_SRS_NODE_DEVICE_AMQP_16_056: [If the `authenticationProvider` object passed to the `Amqp` constructor has a `type` property which value is set to `AuthenticationType.Token` the `Amqp` constructor shall subscribe to the `newTokenAvailable` event of the `authenticationProvider` object.]*/
+    it('subscribes to the newTokenAvailable event if the AuthenticationProvider has its type property set to AuthenticationType.Token', function () {
+      assert.isTrue(fakeTokenAuthenticationProvider.on.calledOnce);
+    });
+
+    it('does not subscribe to the newTokenAvailable event if the authenticationProvider is x509', function () {
+      fakeX509AuthenticationProvider.on = sinon.stub();
+      var amqp = new Amqp(fakeX509AuthenticationProvider, fakeBaseClient);
+      assert.isTrue(fakeX509AuthenticationProvider.on.notCalled);
+    });
+
+    /*Tests_SRS_NODE_DEVICE_AMQP_16_057: [If a `newTokenAvailable` event is emitted by the `authenticationProvider` object passed as an argument to the constructor, a `putToken` operation shall be initiated with the new shared access signature if the amqp connection is already connected.]*/
+    it('initiates a putToken when a newTokenAvailable event is received', function (testCallback) {
+      var newSas = 'SharedAccessSignature sr=new&sig=456&se=456';
+      transport.connect(function () {
+        assert.isTrue(fakeBaseClient.putToken.calledOnce)
+        fakeTokenAuthenticationProvider.emit('newTokenAvailable', { sharedAccessSignature: newSas });
+        assert.isTrue(fakeBaseClient.putToken.calledTwice);
+        assert.strictEqual(fakeBaseClient.putToken.secondCall.args[1], newSas);
+        testCallback();
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_AMQP_16_058: [If the `putToken` operation initiated upon receiving a `newTokenAvailable` event fails, a `disconnect` event shall be emitted with the error from the failed `putToken` operation.]*/
+    it('emits a disconnect event if the putToken operation initiated from a newTokenAvailable event fails', function (testCallback) {
+      var newSas = 'SharedAccessSignature sr=new&sig=456&se=456';
+      var fakeError = new Error('fake');
+      transport.on('disconnect', function (err) {
+        assert.isTrue(fakeBaseClient.putToken.calledOnce);
+        assert.strictEqual(err.amqpError, fakeError);
+        testCallback();
+      });
+      transport.connect(function () {
+        fakeBaseClient.putToken = sinon.stub().callsArgWith(2, fakeError);
+        fakeTokenAuthenticationProvider.emit('newTokenAvailable', { sharedAccessSignature: newSas });
+      });
+    })
   });
 
   describe('Direct Methods', function () {
@@ -299,9 +357,28 @@ describe('Amqp', function () {
 
   describe('Connectivity', function () {
     describe('#connect', function () {
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_054: [The `connect` method shall get the current credentials by calling `getDeviceCredentials` on the `AuthenticationProvider` object passed to the constructor as an argument.]*/
+      it('calls getCredentials on the AuthenticationProvider', function (testCallback) {
+        transport.connect(function () {
+          assert.isTrue(fakeTokenAuthenticationProvider.getDeviceCredentials.called);
+          testCallback();
+        });
+      });
+
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_055: [The `connect` method shall call its callback with an error if the callback passed to the `getDeviceCredentials` method is called with an error.]*/
+      it('calls getCredentials on the AuthenticationProvider', function (testCallback) {
+        var fakeError = new Error('fake');
+        fakeTokenAuthenticationProvider.getDeviceCredentials = sinon.stub().callsArgWith(0, fakeError);
+        transport.connect(function (err) {
+          assert.isTrue(fakeTokenAuthenticationProvider.getDeviceCredentials.calledOnce);
+          assert.strictEqual(err.amqpError, fakeError);
+          testCallback();
+        });
+      });
+
       /*Tests_SRS_NODE_DEVICE_AMQP_16_008: [The `done` callback method passed in argument shall be called if the connection is established]*/
       it('calls done if connection established using SSL', function () {
-        var transport = new Amqp(configWithSSLOptions);
+        var transport = new Amqp(fakeX509AuthenticationProvider);
         sinon.stub(transport._amqp,'connect').callsArgWith(2,null);
         transport.connect(function(err) {
           assert.isNotOk(err);
@@ -310,7 +387,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_009: [The `done` callback method passed in argument shall be called with an error object if the connection fails]*/
       it('calls done with an error if connection failed', function () {
-        var transport = new Amqp(configWithSSLOptions);
+        var transport = new Amqp(fakeX509AuthenticationProvider);
         sinon.stub(transport._amqp,'connect').callsArgWith(2,new errors.UnauthorizedError('cryptic'));
         transport.connect(function(err) {
           assert.isOk(err);
@@ -594,7 +671,7 @@ describe('Amqp', function () {
       it('saves sharedAccessSignature and trigger a putToken operation that succeeds and does not require reconnecting', function (testCallback) {
         transport.connect(function () {
           transport.updateSharedAccessSignature(simpleSas, function (err, result) {
-            assert.equal(transport._config.sharedAccessSignature, simpleSas);
+            assert.isTrue(fakeTokenAuthenticationProvider.updateSharedAccessSignature.calledWith(simpleSas));
             assert.isNotOk(err);
             assert.isFalse(result.needToReconnect);
             testCallback();
@@ -636,7 +713,7 @@ describe('Amqp', function () {
         // now blocked in "connecting" state
 
         transport.updateSharedAccessSignature(simpleSas, function (err, result) {
-          assert.equal(transport._config.sharedAccessSignature, simpleSas);
+          assert.isTrue(fakeTokenAuthenticationProvider.updateSharedAccessSignature.calledWith(simpleSas));
           assert.isNotOk(err);
           assert.isFalse(result.needToReconnect);
         });
@@ -657,7 +734,7 @@ describe('Amqp', function () {
         // now blocked in "authenticating" state
 
         transport.updateSharedAccessSignature(simpleSas, function (err, result) {
-          assert.equal(transport._config.sharedAccessSignature, simpleSas);
+          assert.isTrue(fakeTokenAuthenticationProvider.updateSharedAccessSignature.calledWith(simpleSas));
           assert.isNotOk(err);
           assert.isFalse(result.needToReconnect);
           assert(fakeBaseClient.putToken.calledOnce);
@@ -677,7 +754,7 @@ describe('Amqp', function () {
           assert(fakeBaseClient.connect.calledOnce);
           transport.disconnect(function () {});
           transport.updateSharedAccessSignature(simpleSas, function (err, result) {
-            assert.equal(transport._config.sharedAccessSignature, simpleSas);
+            assert.isTrue(fakeTokenAuthenticationProvider.updateSharedAccessSignature.calledWith(simpleSas));
             assert.isNotOk(err);
             assert.isFalse(result.needToReconnect);
             assert(fakeBaseClient.connect.calledOnce);
@@ -689,7 +766,7 @@ describe('Amqp', function () {
 
       it('updates the shared access signature but does not try to connect if called while disconnected', function (testCallback) {
         transport.updateSharedAccessSignature(simpleSas, function (err, result) {
-          assert.equal(transport._config.sharedAccessSignature, simpleSas);
+          assert.isTrue(fakeTokenAuthenticationProvider.updateSharedAccessSignature.calledWith(simpleSas));
           assert.isNotOk(err);
           assert.isFalse(result.needToReconnect);
           assert.isTrue(fakeBaseClient.initializeCBS.notCalled);
@@ -700,11 +777,6 @@ describe('Amqp', function () {
     });
 
     describe('#setOptions', function () {
-      var testOptions = {
-        http: {
-          receivePolicy: {interval: 1}
-        }
-      };
       /*Tests_SRS_NODE_DEVICE_AMQP_06_001: [The `setOptions` method shall throw a ReferenceError if the `options` parameter has not been supplied.]*/
       [undefined, null, ''].forEach(function (badOptions){
         it('throws if options is \'' + badOptions +'\'', function () {
@@ -716,14 +788,23 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_06_002: [If `done` has been specified the `setOptions` method shall call the `done` callback with no arguments when successful.]*/
       it('calls the done callback with no arguments', function (done) {
-        transport.setOptions(testOptions, done);
+        var x509transport = new Amqp(fakeX509AuthenticationProvider, fakeBaseClient);
+        x509transport.setOptions({cert: 'cert', key: 'key' }, done);
       });
 
       /*Tests_SRS_NODE_DEVICE_AMQP_06_003: [`setOptions` should not throw if `done` has not been specified.]*/
       it('does not throw if `done` is not specified', function () {
         assert.doesNotThrow(function () {
-          transport.setOptions({});
+        var x509transport = new Amqp(fakeX509AuthenticationProvider, fakeBaseClient);
+        x509transport.setOptions({});
         });
+      });
+
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_053: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called while using token-based authentication.]*/
+      it('throws an InvalidOperationError if called on an transport using token-based authentication', function () {
+        assert.throws(function () {
+          transport.setOptions({ cert: 'cert' });
+        }, errors.InvalidOperationError);
       });
     });
   });

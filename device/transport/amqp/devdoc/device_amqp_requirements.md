@@ -51,17 +51,22 @@ amqp.on('errorReceived', function (err) {
 ## Public Interface
 ### Amqp constructor
 
-**SRS_NODE_DEVICE_AMQP_16_001: [**The Amqp constructor shall accept a config object with four properties:
-`host` – (string) the fully-qualified DNS hostname of an IoT Hub
-`deviceId` – (string) the identifier of a device registered with the IoT Hub
-`sharedAccessSignature` – (string) the shared access signature associated with the device registration.**]**
+**SRS_NODE_DEVICE_AMQP_16_056: [** If the `authenticationProvider` object passed to the `Amqp` constructor has a `type` property which value is set to `AuthenticationType.Token` the `Amqp` constructor shall subscribe to the `newTokenAvailable` event of the `authenticationProvider` object. **]**
 
 **SRS_NODE_DEVICE_AMQP_RECEIVER_16_001: [** The `Amqp` constructor shall implement the `Receiver` object. **]**
 
 **SRS_NODE_DEVICE_AMQP_RECEIVER_16_002: [** The `Amqp` object shall inherit from the `EventEmitter` node object. **]**
 
+**SRS_NODE_DEVICE_AMQP_16_057: [** If a `newTokenAvailable` event is emitted by the `authenticationProvider` object passed as an argument to the constructor, a `putToken` operation shall be initiated with the new shared access signature if the amqp connection is already connected. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_058: [** If the `putToken` operation initiated upon receiving a `newTokenAvailable` event fails, a `disconnect` event shall be emitted with the error from the failed `putToken` operation. **]**
+
 ### connect(done)
 The `connect` method establishes a connection with the Azure IoT Hub instance.
+
+**SRS_NODE_DEVICE_AMQP_16_054: [** The `connect` method shall get the current credentials by calling `getDeviceCredentials` on the `AuthenticationProvider` object passed to the constructor as an argument. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_055: [** The `connect` method shall call its callback with an error if the callback passed to the `getDeviceCredentials` method is called with an error. **]**
 
 **SRS_NODE_DEVICE_AMQP_16_008: [**The `done` callback method passed in argument shall be called if the connection is established and authenticated. **]**
 
@@ -119,6 +124,7 @@ This method is deprecated. The `AmqpReceiver` object and pattern is going away a
 
 **SRS_NODE_DEVICE_AMQP_06_004: [** The AMQP transport should use the x509 settings passed in the `options` object to connect to the service if present.**]**
 
+**SRS_NODE_DEVICE_AMQP_16_053: [** The `setOptions` method shall throw an `InvalidOperationError` if the method is called while using token-based authentication. **]**
 
 ### abandon(message, done)
 

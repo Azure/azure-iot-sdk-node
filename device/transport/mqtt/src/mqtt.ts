@@ -6,7 +6,7 @@ import * as querystring from 'querystring';
 import * as URL from 'url';
 import * as machina from 'machina';
 
-import { results, errors, Message, X509, AuthenticationProvider, TransportConfig } from 'azure-iot-common';
+import { results, errors, Message, X509, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
 import { DeviceMethodResponse, Client, X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
 import { EventEmitter } from 'events';
 import * as util from 'util';
@@ -14,7 +14,6 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-mqtt:Mqtt');
 import { MqttBase, translateError } from 'azure-iot-mqtt-base';
 import { MqttTwinReceiver } from './mqtt_twin_receiver';
-import { AuthenticationType } from '../../../../common/core/lib/authentication_provider';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');

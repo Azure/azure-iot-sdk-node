@@ -9,7 +9,7 @@ import * as async from 'async';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-amqp:AmqpDeviceMethodClient');
 
-import { Message, errors, endpoint } from 'azure-iot-common';
+import { Message, errors, endpoint, AuthenticationProvider } from 'azure-iot-common';
 import { Client, DeviceMethodResponse } from 'azure-iot-device';
 import { Amqp as BaseAmqpClient, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
 
@@ -22,30 +22,19 @@ const methodMessagePropertyKeys = {
  * @private
  */
 export class AmqpDeviceMethodClient extends EventEmitter {
-  private _config: Client.Config;
+  private _authenticationProvider: AuthenticationProvider;
   private _amqpClient: any;
   private _methodEndpoint: string;
   private _fsm: any;
   private _senderLink: SenderLink;
   private _receiverLink: ReceiverLink;
 
-  constructor(config: Client.Config, amqpClient: BaseAmqpClient) {
+  constructor(authenticationProvider: AuthenticationProvider, amqpClient: BaseAmqpClient) {
     super();
-    /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_001: [The `AmqpDeviceMethodClient` shall throw a `ReferenceError` if the `config` argument is falsy.]*/
-    if (!config) {
-      throw new ReferenceError('\'config\' cannot be \'' + config + '\'');
-    }
-
-    /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_002: [The `AmqpDeviceMethodClient` shall throw a `ReferenceError` if the `amqpClient` argument is falsy.]*/
-    if (!amqpClient) {
-      throw new ReferenceError('\'amqpClient\' cannot be \'' + amqpClient + '\'');
-    }
 
     /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_003: [The `AmqpDeviceMethodClient` shall inherit from the `EventEmitter` class.]*/
-    this._config = config;
+    this._authenticationProvider = authenticationProvider;
     this._amqpClient = amqpClient;
-    /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_017: [The endpoint used to for the sender and receiver link shall be `/devices/<device-id>/methods/devicebound`.]*/
-    this._methodEndpoint = endpoint.devicePath(encodeURIComponent(this._config.deviceId)) + '/methods/devicebound';
 
     this._fsm = new machina.Fsm({
       namespace: 'amqp-device-method-client',
@@ -82,49 +71,60 @@ export class AmqpDeviceMethodClient extends EventEmitter {
         },
         attaching: {
           _onEnter: (attachCallback) => {
-            /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_014: [** The `AmqpDeviceMethodClient` object shall set 2 properties of any AMQP link that it create:
-            - `com.microsoft:api-version` shall be set to the current API version in use.
-            - `com.microsoft:channel-correlation-id` shall be set to the identifier of the device (also often referred to as `deviceId`).]*/
-            const linkOptions = {
-              attach: {
-                properties: {
-                  'com.microsoft:api-version': endpoint.apiVersion,
-                  'com.microsoft:channel-correlation-id': this._config.deviceId
-                }
-              }
-            };
-
-            /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_019: [The `attach` method shall create a SenderLink and a ReceiverLink and attach them.]*/
-            this._amqpClient.attachSenderLink(this._methodEndpoint, linkOptions, (err, senderLink) => {
+            /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_027: [The `attach` method shall call the `getDeviceCredentials` method on the `authenticationProvider` object passed as an argument to the constructor to retrieve the device id.]*/
+            this._authenticationProvider.getDeviceCredentials((err, credentials) => {
               if (err) {
-                this._fsm.transition('detaching', attachCallback, err);
+                /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_028: [The `attach` method shall call its callback with an error if the call to `getDeviceCredentials` fails with an error.]*/
+                this._fsm.transition('detached', attachCallback, err);
               } else {
-                this._senderLink = senderLink;
-                this._amqpClient.attachReceiverLink(this._methodEndpoint, linkOptions, (err, receiverLink) => {
+                /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_017: [The endpoint used to for the sender and receiver link shall be `/devices/<device-id>/methods/devicebound`.]*/
+                this._methodEndpoint = endpoint.devicePath(encodeURIComponent(credentials.deviceId)) + '/methods/devicebound';
+
+                /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_014: [** The `AmqpDeviceMethodClient` object shall set 2 properties of any AMQP link that it create:
+                - `com.microsoft:api-version` shall be set to the current API version in use.
+                - `com.microsoft:channel-correlation-id` shall be set to the identifier of the device (also often referred to as `deviceId`).]*/
+                const linkOptions = {
+                  attach: {
+                    properties: {
+                      'com.microsoft:api-version': endpoint.apiVersion,
+                      'com.microsoft:channel-correlation-id': credentials.deviceId
+                    }
+                  }
+                };
+
+                /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_019: [The `attach` method shall create a SenderLink and a ReceiverLink and attach them.]*/
+                this._amqpClient.attachSenderLink(this._methodEndpoint, linkOptions, (err, senderLink) => {
                   if (err) {
                     this._fsm.transition('detaching', attachCallback, err);
                   } else {
-                    this._receiverLink = receiverLink;
-                    /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_021: [The `attach` method shall subscribe to the `message` and `error` events on the `ReceiverLink` object associated with the method endpoint.]*/
-                    this._receiverLink.on('message', (msg) => {
-                      debug('got method request');
-                      debug(JSON.stringify(msg, null, 2));
-                      const methodName = msg.properties.getValue(methodMessagePropertyKeys.methodName);
-                      const methodRequest = {
-                        methods: { methodName: methodName },
-                        requestId: msg.correlationId,
-                        body: msg.getData()
-                      };
+                    this._senderLink = senderLink;
+                    this._amqpClient.attachReceiverLink(this._methodEndpoint, linkOptions, (err, receiverLink) => {
+                      if (err) {
+                        this._fsm.transition('detaching', attachCallback, err);
+                      } else {
+                        this._receiverLink = receiverLink;
+                        /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_021: [The `attach` method shall subscribe to the `message` and `error` events on the `ReceiverLink` object associated with the method endpoint.]*/
+                        this._receiverLink.on('message', (msg) => {
+                          debug('got method request');
+                          debug(JSON.stringify(msg, null, 2));
+                          const methodName = msg.properties.getValue(methodMessagePropertyKeys.methodName);
+                          const methodRequest = {
+                            methods: { methodName: methodName },
+                            requestId: msg.correlationId,
+                            body: msg.getData()
+                          };
 
-                      debug(JSON.stringify(methodRequest, null, 2));
-                      this.emit('method_' + methodName, methodRequest);
+                          debug(JSON.stringify(methodRequest, null, 2));
+                          this.emit('method_' + methodName, methodRequest);
+                        });
+
+                        this._receiverLink.on('error', (err) => {
+                          this._fsm.transition('detaching', undefined, err);
+                        });
+
+                        this._fsm.transition('attached', attachCallback);
+                      }
                     });
-
-                    this._receiverLink.on('error', (err) => {
-                      this._fsm.transition('detaching', undefined, err);
-                    });
-
-                    this._fsm.transition('attached', attachCallback);
                   }
                 });
               }

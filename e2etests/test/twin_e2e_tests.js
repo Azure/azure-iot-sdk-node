@@ -81,7 +81,8 @@ delete nullMergeResult.tweedle;
       registry.create(deviceDescription, function (err) {
         if (err) return done(err);
 
-        deviceClient = deviceSdk.Client.fromConnectionString(deviceDescription.connectionString, protocolCtor);
+        var sas = deviceSas.create(host, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
+        deviceClient = deviceSdk.Client.fromSharedAccessSignature(sas, protocolCtor);
 
         deviceClient.open(function(err) {
           if (err) return done(err);
