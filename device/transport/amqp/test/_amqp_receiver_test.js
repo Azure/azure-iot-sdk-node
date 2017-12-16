@@ -52,6 +52,7 @@ describe('AmqpReceiver', function () {
     });
 
     it('forwards the errorReceived event if an error is received from a device method link', function(testCallback) {
+      this.timeout(10000);
       var fakeMethodClient = new EventEmitter();
       var recv = new AmqpReceiver(fakeAuthenticationProvider);
       var fakeError = new Error('fake error');
@@ -169,6 +170,7 @@ describe('AmqpReceiver', function () {
     });
 
     it('emits an error event with the error if the links fail to connect initially', function (testCallback) {
+      this.timeout(10000);
       var fakeMethodClient = new EventEmitter();
       var fakeError = new Error('fake error');
       var recv = new AmqpReceiver(fakeAuthenticationProvider);
