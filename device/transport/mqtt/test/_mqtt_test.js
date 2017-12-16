@@ -502,10 +502,11 @@ describe('Mqtt', function () {
     });
 
     /*Tests_SRS_NODE_DEVICE_MQTT_16_016: [The `Mqtt` constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
-    it('sets the uri property to \'mqtts://<host>\'', function () {
-      var mqtt = new Mqtt(fakeAuthenticationProvider);
+    it('sets the uri property to \'mqtts://<host>\'', function (testCallback) {
+      var mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
       mqtt.connect(function () {
-        assert.strictEqual(mqtt._config.uri, 'mqtts://' + fakeConfig.host);
+        assert.strictEqual(fakeMqttBase.connect.firstCall.args[0].uri, 'mqtts://' + fakeConfig.host);
+        testCallback();
       });
     });
 

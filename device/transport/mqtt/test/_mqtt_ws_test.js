@@ -3,7 +3,9 @@
 
 'use strict';
 
+var EventEmitter = require('events').EventEmitter;
 var assert = require('chai').assert;
+var sinon = require('sinon');
 var MqttWs = require('../lib/mqtt_ws.js').MqttWs;
 
 describe('MqttWs', function () {
@@ -18,6 +20,14 @@ describe('MqttWs', function () {
       callback(null, fakeConfig);
     }
   };
+
+  var fakeMqttBase = new EventEmitter();
+  fakeMqttBase.connect = sinon.stub().callsArg(1);
+  fakeMqttBase.disconnect = sinon.stub().callsArg(0);
+  fakeMqttBase.publish = sinon.stub().callsArg(3);
+  fakeMqttBase.subscribe = sinon.stub().callsArg(2);
+  fakeMqttBase.unsubscribe = sinon.stub().callsArg(1);
+  fakeMqttBase.updateSharedAccessSignature = sinon.stub().callsArg(1);
 
   describe('#constructor', function () {
     /* Tests_SRS_NODE_DEVICE_MQTT_12_001: [The `Mqtt` constructor shall accept the transport configuration structure */
@@ -35,7 +45,8 @@ describe('MqttWs', function () {
     it('sets the uri property to \'wss://<host>:443/$iothub/websocket\'', function () {
       var mqttWs = new MqttWs(fakeAuthenticationProvider);
       mqttWs.connect(function () {
-        assert.equal(mqttWs._config.uri, 'wss://' + fakeConfig.host + ':443/$iothub/websocket');
+        assert.strictEqual(fakeMqttBase.connect.firstCall.args[0].uri, 'mqtts://' + fakeConfig.host);
+        testCallback();
       });
     });
   })
