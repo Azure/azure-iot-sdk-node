@@ -6,6 +6,9 @@ import { RegistrationClient, RegistrationResult } from './interfaces';
 import { TpmProvisioningTransport, TpmSecurityClient, TpmRegistrationInfo } from './interfaces';
 import { PollingStateMachine } from './polling_state_machine';
 
+/**
+ * @private
+ */
 export class TpmRegistration extends EventEmitter implements RegistrationClient {
   private _fsm: machina.Fsm;
   private _transport: TpmProvisioningTransport;

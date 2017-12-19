@@ -7,6 +7,8 @@
   "dependencies": {
     "azure-iot-provisioning-device": "0.0.1",
     "azure-iot-provisioning-device-http": "0.0.1",
+    "azure-iot-provisioning-device-amqp": "0.0.1",
+    "azure-iot-provisioning-device-mqtt": "0.0.1",
     "azure-iot-security-x509": "0.0.1"
   },
   "scripts" : {

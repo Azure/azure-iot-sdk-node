@@ -2,7 +2,7 @@
 
 This file can be found in https://github.com/Azure/azure-iot-sdk-node/tree/master/provisioning/device/samples
 
-This folder contains simple samples showing how to use the various features of the Microsoft Azure IoT Device Provisioning Service from an application running JavaScript code.
+This folder contains simple samples showing how to use the various features of the Microsoft Azure IoT Device Provisioning Service from an application running JavaScript or TypeScript code.
 
 ## List of samples
 
@@ -16,7 +16,7 @@ The [end-to-end tests][provisioning-e2e] for device provisioning also accomplish
 In order to run the device samples you will first need the following prerequisites:
 * Node.js v4 or above on your target device. (Check out [Nodejs.org](https://nodejs.org/) for more info)
 * [Setup Azure IoT Device Provisioning ][lnk-setup-iot-provisioning] Stop before executing the the Create and provision a simulated device section.
-* For X509 provisioning, you will need a device cert.  If you are doing group provisioning, you will also need a CA cert.
+* For X509 provisioning, you will need a device certificate.  If you are doing group provisioning, you will also need a CA certificate.
 
 Get the following files from the current folder:
 * [package.json][package-json]
