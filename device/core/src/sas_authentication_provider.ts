@@ -4,6 +4,14 @@
 import { EventEmitter } from 'events';
 import { AuthenticationProvider, AuthenticationType, SharedAccessSignature, TransportConfig } from 'azure-iot-common';
 
+/**
+ * Provides an `AuthenticationProvider` object that can be created simply with a shared access signature and is then used by the device client and transports to authenticate
+ * with the Azure IoT hub instance.
+ *
+ * The `SharedAccessSignatureAuthenticationProvider` object does not renew the shared access signature token automatically, so the user needs to feed non-expired shared access signature
+ * tokens to it using the `updateSharedAccessSignature` method. For each call to this method, the `SharedAccessSignatureAuthenticationProvider` will emit a `newTokenAvailable` event that
+ * transports will use to authenticate with the Azure IoT hub instance.
+ */
 export class SharedAccessSignatureAuthenticationProvider extends EventEmitter implements AuthenticationProvider {
   type: AuthenticationType = AuthenticationType.Token;
   private _credentials: TransportConfig;
@@ -11,7 +19,7 @@ export class SharedAccessSignatureAuthenticationProvider extends EventEmitter im
   /**
    * @private
    *
-   * Initializes a new instance of the TokenAuthenticationProvider - users should only use the factory methods though.
+   * Initializes a new instance of the SharedAccessSignatureAuthenticationProvider - users should only use the factory methods though.
    *
    * @param credentials       Credentials to be used by the device to connect to the IoT hub.
    * @param securityProvider  Object used to sign the tokens that are going to be used during authentication.
@@ -22,11 +30,22 @@ export class SharedAccessSignatureAuthenticationProvider extends EventEmitter im
     this._credentials  = credentials;
   }
 
+  /**
+   * This method is used by the transports to gets the most current device credentials in the form of a `TransportConfig` object.
+   *
+   * @param callback function that will be called with either an error or a set of device credentials that can be used to authenticate with the IoT hub.
+   */
   getDeviceCredentials(callback: (err: Error, credentials: TransportConfig) => void): void {
     /*Codes_SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_002: [The `getDeviceCredentials` method shall call its callback with a `null` error parameter and the stored `credentials` object containing the current device credentials.]*/
     callback(null, this._credentials);
   }
 
+  /**
+   * Updates the shared access signature token that transports should use to authenticate. When called, the `SharedAccessSignatureAuthenticationProvider` will emit
+   * a `newTokenAvailable` event that the transports can then use to authenticate with the Azure IoT hub instance.
+   *
+   * @param sharedAccessSignature         A shared access signature string containing the required parameters for authentication with the IoT hub.
+   */
   updateSharedAccessSignature(sharedAccessSignature: string): void {
     /*Codes_SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_003: [The `updateSharedAccessSignature` method shall update the stored credentials with the new `sharedAccessSignature` value passed as an argument.]*/
     this._credentials.sharedAccessSignature = sharedAccessSignature;
@@ -34,6 +53,11 @@ export class SharedAccessSignatureAuthenticationProvider extends EventEmitter im
     this.emit('newTokenAvailable', this._credentials);
   }
 
+  /**
+   * Creates a new `SharedAccessSignatureAuthenticationProvider` from a connection string
+   *
+   * @param sharedAccessSignature         A shared access signature string containing the required parameters for authentication with the IoT hub.
+   */
   static fromSharedAccessSignature(sharedAccessSignature: string): SharedAccessSignatureAuthenticationProvider {
     if (!sharedAccessSignature) {
       /*Codes_SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_005: [The `fromSharedAccessSignature` method shall throw a `ReferenceError` if the `sharedAccessSignature` argument is falsy.]*/

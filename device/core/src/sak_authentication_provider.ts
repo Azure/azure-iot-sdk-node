@@ -4,6 +4,13 @@
 import { EventEmitter } from 'events';
 import { AuthenticationProvider, AuthenticationType, ConnectionString, SharedAccessSignature, errors, TransportConfig, encodeUriComponentStrict } from 'azure-iot-common';
 
+/**
+ * Provides an `AuthenticationProvider` object that can be created simply with a connection string and is then used by the device client and transports to authenticate
+ * with the Azure IoT hub instance.
+ *
+ * The `SharedAccessKeyAuthenticationProvider` object takes care of creating shared access signature tokens on a regular cadence and emits the `newTokenAvailable` event for the transports
+ * to renew their credentials with the Azure IoT hub instance and stay connected.
+ */
 export class SharedAccessKeyAuthenticationProvider extends EventEmitter implements AuthenticationProvider {
   type: AuthenticationType = AuthenticationType.Token;
 
@@ -42,7 +49,7 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
   }
 
   /**
-   * Gets the current device credentials that are valid and were generated from the connection string.
+   * This method is used by the transports to gets the most current device credentials in the form of a `TransportConfig` object.
    *
    * @param callback function that will be called with either an error or a set of device credentials that can be used to authenticate with the IoT hub.
    */

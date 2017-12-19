@@ -9,7 +9,7 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-provisioning-device:X509Registration');
 
 /**
- * @private
+ * Client used to run the registration of a device using X509 authentication.
  */
 export class X509Registration implements RegistrationClient {
 
@@ -28,7 +28,8 @@ export class X509Registration implements RegistrationClient {
   }
 
   /**
-   * Register the device with the provisioning service
+   * Register the device with the provisioning service.
+   *
    * @param registrationId The registration Id for the device
    * @param forceRegistration Set to true to force re-registration
    * @param callback function called when registration is complete.
@@ -63,6 +64,11 @@ export class X509Registration implements RegistrationClient {
     });
   }
 
+  /**
+   * Cancels the current registration process.
+   *
+   * @param callback function called when the registration has already been canceled.
+   */
   /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_003: [ `cancel` shall call `endSession` on the transport object. ] */
   cancel(callback: (err?: Error) => void): void {
     this._transport.cancel(callback);

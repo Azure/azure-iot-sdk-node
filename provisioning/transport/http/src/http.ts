@@ -18,12 +18,18 @@ const _defaultHeaders = {
   'Content-Type' : 'application/json; charset=utf-8'
 };
 
+/**
+ * Transport used to provision a device over HTTP.
+ */
 export class Http extends EventEmitter implements X509ProvisioningTransport {
   private _restApiClient: RestApiClient;
   private _httpBase: Base;
   private _config: ProvisioningTransportOptions = {};
   private _auth: X509;
 
+  /**
+   * @private
+   */
   /* Codes_SRS_NODE_PROVISIONING_HTTP_18_001: [ The `Http` constructor shall accept the following properties:
   - `idScope` - the ID Scope value for the provisioning service
   - `httpBase` - an optional test implementation of azure-iot-http-base ] */
@@ -160,7 +166,3 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
 /* Codes_SRS_NODE_PROVISIONING_HTTP_18_035: [ disconnect will cause polling to cease ] */
 /* Codes_SRS_NODE_PROVISIONING_HTTP_18_031: [ If `disconnect` is called while the registration request is in progress, `register` shall call the `callback` with an `OperationCancelledError` error. ] */
 /* Codes_SRS_NODE_PROVISIONING_HTTP_18_033: [ If `disconnect` is called while the register is waiting between polls, `register` shall call the `callback` with an `OperationCancelledError` error. ] */
-
-
-
-

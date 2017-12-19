@@ -3,11 +3,24 @@
 
 import { TransportConfig } from './authorization';
 
+/**
+ * Designate the type of authentication used by an `AuthenticationProvider`.
+ */
 export enum AuthenticationType {
+  /**
+   * X509 authentication uses X509 certificate and key pairs.
+   */
   X509,
+  /**
+   * Token-based authentication uses shared access signature security tokens, generated and signed with a secret key.
+   */
   Token
 }
 
+/**
+ * Interface that must be implemented by objects that are used to provide credentials to the transports used by the device client
+ * to authenticate with an Azure IoT hub instance.
+ */
 export interface AuthenticationProvider {
   type: AuthenticationType;
   getDeviceCredentials(callback: (err: Error, credentials: TransportConfig) => void): void;

@@ -166,6 +166,7 @@ export interface TpmRegistrationInfo {
 }
 
 /**
+ * @private
  * Device configuration returned when registration using TPM is complete
  */
 export interface TpmRegistrationResult extends RegistrationResult {
@@ -181,6 +182,7 @@ export interface TpmProvisioningTransport extends PollingTransport {
 }
 
 /**
+ * @private
  * Public API exposed by the TPM security client object.  This is only useful if you're writing your own security client.
  */
 export interface TpmSecurityClient {

@@ -10,6 +10,9 @@ import { PollingTransport, RegistrationRequest } from './interfaces';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-provisioning-device:PollingStateMachine');
 
+/**
+ * @private
+ */
 export class  PollingStateMachine extends EventEmitter {
   private _fsm: machina.Fsm;
   private _pollingTimer: any;

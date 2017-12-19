@@ -29,8 +29,4 @@ export class ProvisioningDeviceConstants {
    * default timeout to use when communicating with the service
    */
   static defaultTimeoutInterval: number = 4000;
-
-
-
-
 }

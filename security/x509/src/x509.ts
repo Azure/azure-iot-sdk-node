@@ -5,6 +5,7 @@
 import { errors, X509 } from 'azure-iot-common';
 
 /**
+ * @private
  * X509 security client using user-generated cert for Azure IoT
  */
 export class X509Security {

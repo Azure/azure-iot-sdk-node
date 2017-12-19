@@ -702,26 +702,44 @@ export class Amqp extends EventEmitter implements Client.Transport {
     this._fsm.handle('getTwinReceiver', done);
   }
 
+  /**
+   * @private
+   */
   enableC2D(callback: (err?: Error) => void): void {
     this._fsm.handle('enableC2D', callback);
   }
 
+  /**
+   * @private
+   */
   disableC2D(callback: (err?: Error) => void): void {
     this._fsm.handle('disableC2D', callback);
   }
 
+  /**
+   * @private
+   */
   enableMethods(callback: (err?: Error) => void): void {
     this._fsm.handle('enableMethods', callback);
   }
 
+  /**
+   * @private
+   */
   disableMethods(callback: (err?: Error) => void): void {
     this._fsm.handle('disableMethods', callback);
   }
 
+  /**
+   * @private
+   */
   enableTwin(callback: (err?: Error) => void): void {
     this._fsm.handle('enableTwin', callback);
   }
 
+  /**
+   * @private
+   */
   disableTwin(callback: (err?: Error) => void): void {
     this._fsm.handle('disableTwin', callback);
   }

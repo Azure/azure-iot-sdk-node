@@ -15,6 +15,9 @@ import { X509 } from 'azure-iot-common';
 import { ProvisioningTransportOptions, X509ProvisioningTransport, RegistrationRequest, RegistrationResult, ProvisioningDeviceConstants } from 'azure-iot-provisioning-device';
 import { Amqp as Base, SenderLink, ReceiverLink, AmqpMessage } from 'azure-iot-amqp-base';
 
+/**
+ * @private
+ */
 enum MessagePropertyNames {
     OperationType = 'iotdps-operation-type',
     OperationId = 'iotdps-operation-id',
@@ -22,12 +25,18 @@ enum MessagePropertyNames {
     ForceRegistration = 'iotdps-forceRegistration'
 }
 
+/**
+ * @private
+ */
 enum DeviceOperations {
     Register = 'iotdps-register',
     GetRegistration = 'iotdps-get-registration',
     GetOperationStatus = 'iotdps-get-operationstatus'
 }
 
+/**
+ * Transport used to provision a device over AMQP.
+ */
 export class Amqp extends EventEmitter implements X509ProvisioningTransport {
   private _amqpBase: Base;
   private _config: ProvisioningTransportOptions = {};
@@ -42,6 +51,9 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
     [key: string]: (err?: Error, result?: RegistrationResult, transportResponse?: AmqpMessage, pollingInterval?: number) => void;
   } = {};
 
+  /**
+   * @private
+   */
   constructor(amqpBase?: Base) {
     super();
     this._amqpBase = amqpBase || new Base(true, ProvisioningDeviceConstants.userAgent);
@@ -304,6 +316,9 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
     this._amqpStateMachine.on('transition', (data) => debug('AMQP State Machine: ' + data.fromState + ' -> ' + data.toState + ' (' + data.action + ')'));
   }
 
+  /**
+   * @private
+   */
   setTransportOptions(options: ProvisioningTransportOptions): void {
     [
       'pollingInterval',
@@ -315,25 +330,39 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
     });
   }
 
+  /**
+   * @private
+   */
   setAuthentication(auth: X509): void {
     /*Codes_SRS_NODE_PROVISIONING_AMQP_16_001: [The certificate and key passed as properties of the `auth` argument shall be used to connect to the Device Provisioning Service endpoint, when a registration request or registration operation status request are made.]*/
     this._x509Auth = auth;
   }
 
+  /**
+   * @private
+   */
   registrationRequest(request: RegistrationRequest, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
     this._amqpStateMachine.handle('registrationRequest', request, callback);
   }
 
+  /**
+   * @private
+   */
   queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
     this._amqpStateMachine.handle('queryOperationStatus', request, operationId, callback);
   }
 
+  /**
+   * @private
+   */
   cancel(callback: (err?: Error) => void): void {
     this._amqpStateMachine.handle('cancel', callback);
   }
 
+  /**
+   * @private
+   */
   protected _getConnectionUri(request: RegistrationRequest): string {
     return 'amqps://' + request.provisioningHost;
   }
-
 }

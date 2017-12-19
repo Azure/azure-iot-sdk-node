@@ -4,6 +4,9 @@
 'use strict';
 import { errors } from 'azure-iot-common';
 
+/**
+ * @private
+ */
 export class TpmSecurityClient  {
   getEndorsementKey(callback: (err?: Error) => void): void {
     throw new errors.NotImplementedError();

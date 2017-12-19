@@ -39,21 +39,64 @@ export function hmacHash(password: string, stringToSign: string): string {
   return hmac.digest('base64');
 }
 
-
+/**
+ * Configuration structure used by transports and `AuthenticationProvider` objects to store and exchange credentials.
+ *
+ */
 export interface TransportConfig {
+  /**
+   * Hostname of the Azure IoT hub instance.
+   */
   host: string;
+  /**
+   * Device unique identifier.
+   */
   deviceId: string;
+  /**
+   * Shared access signature security token used to authenticate a device when token-based authentication is used.
+   */
   sharedAccessSignature?: string;
+  /**
+   * Name of the policy which shared access key is used to sign security tokens.
+   */
   sharedAccessKeyName?: string;
+  /**
+   * Shared access key is used to sign security tokens.
+   */
   sharedAccessKey?: string;
+  /**
+   * Object containing the certificate and key used by the device to connect and authenticate with the Azure IoT hub instance.
+   */
   x509?: X509;
 }
 
+/**
+ * Object used to store an X509 certificate and key for transports to use.
+ *
+ * This is passed directly down to the low-level objects used by Node.js to connect the TLS socket.
+ * https://nodejs.org/api/tls.html#tls_tls_connect_options_callback
+ */
 export interface X509 {
-  // https://nodejs.org/api/tls.html#tls_tls_connect_options_callback
+  /**
+   * X509 Certificate.
+   */
   cert?: string | string[] | Buffer | Buffer[];
+
+  /**
+   * Key associated with the X509 certificate.
+   */
   key?: string | Buffer;
+
+  /**
+   * Passphrase used to decode the key associated with the X509 certificate.
+   */
   passphrase?: string;
+  /**
+   * @private
+   */
   certFile?: string;
+  /**
+   * @private
+   */
   keyFile?: string;
 }

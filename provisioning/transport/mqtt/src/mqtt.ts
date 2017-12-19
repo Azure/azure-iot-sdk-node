@@ -22,6 +22,9 @@ import { translateError } from 'azure-iot-provisioning-device';
  */
 const responseTopic: string = '$dps/registrations/res/#';
 
+/**
+ * Transport used to provision a device over MQTT.
+ */
 export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
   private _mqttBase: MqttBase;
   private _config: ProvisioningTransportOptions = {};
@@ -33,6 +36,9 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
     [key: string]: (err?: Error, payload?: any) => void;
   } = {};
 
+  /**
+   * @private
+   */
   constructor(mqttBase?: MqttBase) {
     super();
     this._mqttBase = mqttBase || new MqttBase(ProvisioningDeviceConstants.apiVersion);

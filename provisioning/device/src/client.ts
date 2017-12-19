@@ -7,6 +7,9 @@ import { TpmRegistration } from './tpm_registration';
 import { RegistrationClient, X509ProvisioningTransport, TpmProvisioningTransport, X509SecurityClient, TpmSecurityClient } from './interfaces';
 import { errors } from 'azure-iot-common';
 
+/**
+ * Client object used to communicate with the Azure IoT Hub Device Provisioning Service.
+ */
 export class ProvisioningDeviceClient {
   /**
    * Factory method to use to create a DeviceClient object.
