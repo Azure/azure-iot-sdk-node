@@ -89,7 +89,6 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
             }
           },
           registrationRequest: (request, callback) => {
-            // TODO: this only works for x509
             this._amqpStateMachine.transition('connecting', request, (err) => {
               if (err) {
                 callback(err);
@@ -99,7 +98,6 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
             });
           },
           queryOperationStatus: (request, operationId, callback) => {
-            // TODO: this only works for x509
             this._amqpStateMachine.transition('connecting', request, (err) => {
               if (err) {
                 callback(err);

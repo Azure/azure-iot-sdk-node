@@ -2,7 +2,7 @@
 
 This file can be found in https://github.com/Azure/azure-iot-sdk-node/tree/master/provisioning/device/samples
 
-This folder contains simple samples showing how to use the various features of the Microsoft Azure IoT Device Provisioning Service from an application running JavaScript or TypeScript code.
+This folder contains simple samples showing how to use the various features of the Microsoft Azure IoT Hub Device Provisioning Service from an application running JavaScript or TypeScript code.
 
 ## List of samples
 

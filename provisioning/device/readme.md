@@ -5,7 +5,7 @@ This package (**azure-iot-provisioning-device**) provides the device client that
 ## Install
 
 There are at least 3 different packages involved when writing code to take advantage of the Azure IoT Hub Device Provisioning Service:
-- The "client" package that will be used to create a provisioning client. This is this package.
+- The "client" package that will be used to create a provisioning client. (This package).
 - the "transport" package that will decide which protocol will be used to communicate with the provisioning service. One of **azure-iot-provisioning-device-amqp**, **azure-iot-provisioning-device-mqtt**, or **azure-iot-provisioning-device-http**. Please note that X509 authentication is supported with all protocols but TPM authentication is supported only with AMQP and HTTP.
 - The "security client" package that will be used to interface with whatever type of security (x509 or TPM) is used to authenticate the device.
 

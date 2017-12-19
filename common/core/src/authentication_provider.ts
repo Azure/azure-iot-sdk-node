@@ -8,7 +8,7 @@ import { TransportConfig } from './authorization';
  */
 export enum AuthenticationType {
   /**
-   * X509 authentication uses X509 certificate and key pairs.
+   * X509 Certificate based authentication.
    */
   X509,
   /**
