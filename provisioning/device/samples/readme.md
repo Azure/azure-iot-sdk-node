@@ -65,7 +65,6 @@ When creating certificates, it is important that the commonName (CN) field match
 2. Alternately, you can use the Azure IoT C sdk, as documented [here][c-sdk-create-individual-enrollment]
 
 ### Registering a device using an X509 individual enrollment
-
 When you have the device cert and key, you can proceeed to create an individual enrollment for your device.  You have a few options:
 1. You can use the [create_individual_enrollment][service-sample-create-individual-enrollment] sample in the [provisioning service SDK samples][service-samples] to enroll with the service.  To use your x509 key, you need to update the enrollment object to contain your cert.  If your cert comes from a CER file, it needs to be base64 encoded.
 ```
@@ -86,7 +85,7 @@ When you have the device cert and key, you can proceeed to create an individual 
 ```
 2. Alternatively, You can use the Azure portal.  Instructions to accomplish this are [here][c-sdk-create-individual-enrollment], starting with the step labeled 'Add enrollment list entry'.
 
- After enrolling the device with the provisioning service, you can use [register_x509.js][register-x509] to register the device.  When running this sample, you'll need to replace the '[provisioning host]' '[id scope]', '[registration id'], '[cert filename]', and '[key filename]' values in the code with your specific values.
+ After enrolling the device with the provisioning service, you can use [register_x509.js][register-x509] to register the device.  When running this sample, you'll need to replace the '[provisioning host]' '[id scope]', '[registration id'], '[cert filename]', and '[key filename]' values in the code with your specific values. More information on Device Provisioning Concepts can be found [here][lnk-dps-concepts]
 
  If the registration succeeds, you should see the device Id and the assigned hub in the console output.  You should be able to connect to this hub with this device ID using the device cert and private key you created above.
 
@@ -109,3 +108,4 @@ For more information on how to use this library refer to the documents below:
 [pem-npm]: https://www.npmjs.com/package/pem
 [provisioning-e2e]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/e2e
 [c-sdk-create-individual-enrollment]: https://docs.microsoft.com/en-us/azure/iot-dps/quick-create-simulated-device-x509
+[lnk-dps-concepts]: https://docs.microsoft.com/en-us/azure/iot-dps/concepts-service 
