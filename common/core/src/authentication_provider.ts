@@ -23,5 +23,5 @@ export enum AuthenticationType {
  */
 export interface AuthenticationProvider {
   type: AuthenticationType;
-  getDeviceCredentials(callback: (err: Error, credentials: TransportConfig) => void): void;
+  getDeviceCredentials(callback: (err: Error, credentials?: TransportConfig) => void): void;
 }
