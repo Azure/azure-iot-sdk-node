@@ -4,9 +4,9 @@
 'use strict';
 
 import { EventEmitter } from 'events';
-import { RestApiClient, Http as Base } from 'azure-iot-http-base';
-import { X509 } from 'azure-iot-common';
-import { X509ProvisioningTransport } from 'azure-iot-provisioning-device';
+import { HttpTransportError, RestApiClient, Http as Base } from 'azure-iot-http-base';
+import { X509, errors } from 'azure-iot-common';
+import { X509ProvisioningTransport, TpmProvisioningTransport } from 'azure-iot-provisioning-device';
 import { RegistrationRequest, DeviceRegistrationResult } from 'azure-iot-provisioning-device';
 import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure-iot-provisioning-device';
 import { translateError } from 'azure-iot-provisioning-device';
@@ -21,11 +21,16 @@ const _defaultHeaders = {
 /**
  * Transport used to provision a device over HTTP.
  */
-export class Http extends EventEmitter implements X509ProvisioningTransport {
+export class Http extends EventEmitter implements X509ProvisioningTransport, TpmProvisioningTransport {
   private _restApiClient: RestApiClient;
   private _httpBase: Base;
   private _config: ProvisioningTransportOptions = {};
   private _auth: X509;
+  private _sasToken: string;
+  private _tpmPublicKeys: {
+    endorsementKey: string,
+    storageRootKey: string
+  };
 
   /**
    * @private
@@ -36,6 +41,65 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
     super();
     this._httpBase = httpBase || new Base();
     this._config.pollingInterval = ProvisioningDeviceConstants.defaultPollingInterval;
+    this._config.timeoutInterval = ProvisioningDeviceConstants.defaultTimeoutInterval;
+  }
+
+  /**
+   * @private
+   *
+   */
+  setSasToken(sasToken: string): void {
+    this._sasToken = sasToken;
+  }
+
+  /**
+   * @private
+   *
+   */
+  setTpmInformation(endorsementKey: Buffer, storageRootKey: Buffer): void {
+    /*Codes_SRS_NODE_PROVISIONING_HTTP_06_001: [The `endorsementKey` will be saved into the class as a string.] */
+    /*Codes_SRS_NODE_PROVISIONING_HTTP_06_002: [The `storageRootKey` will be saved into the class as a string.] */
+    this._tpmPublicKeys = { endorsementKey: endorsementKey.toString('base64'), storageRootKey: storageRootKey.toString('base64') };
+  }
+
+  /**
+   * @private
+   *
+   */
+  getAuthenticationChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: Buffer) => void): void {
+    /*Codes_SRS_NODE_PROVISIONING_HTTP_06_003: [The getAuthenticationChallenge will perform a request that contains the endorsementKey, the storageRootKey, and the registrationId as the body of the request.] */
+    this.registrationRequest(request, (err: HttpTransportError, result?: any, response?: any) => {
+      /*Codes_SRS_NODE_PROVISIONING_HTTP_06_004: [The request will actually generate a 401 error since there is actually no authentication for the request.] */
+      if (err && err.response && (err.response.statusCode === 401))  {
+
+        //
+        // This request had no actual authentication.  Therefore, it is correct for us to get the 401 error.  Parse the response body and pull out the message, authenticationKey and the keyName.
+        //
+        let authenticationResponse;
+        try {
+          authenticationResponse = JSON.parse(err.responseBody);
+        } catch (parseError) {
+          debug('challenge could not be parsed: ' + err);
+          callback(new errors.FormatError('The server did NOT respond with an appropriately formatted authentication blob.'));
+          return;
+        }
+
+        /*Codes_SRS_NODE_PROVISIONING_HTTP_06_005: [** The request response will contain an activation blob which will be provided as the result of the callback for this function. **] */
+        if (typeof authenticationResponse.authenticationKey === 'string') {
+          callback(null, Buffer.from(authenticationResponse.authenticationKey, 'base64'));
+        } else {
+          debug('Invalid formatted challenge received: ' + err.responseBody);
+          callback(new errors.FormatError('The server did NOT respond with an appropriately formatted authentication blob.'));
+        }
+      } else {
+        //
+        // We should ALWAYS get an error for the un-authenticated request we just made.  The server is sending back something we
+        // have no real context to interpret.
+        //
+        debug('Invalid response back from the authentication challenge: ' + err);
+        callback(new errors.InvalidOperationError('The server did NOT respond with an unauthorized error.  For a TPM challenge this is incorrect.'));
+      }
+    });
   }
 
   setAuthentication(auth: X509): void {
@@ -82,6 +146,10 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
 
     let requestBody: any = { registrationId : request.registrationId };
 
+    if (this._tpmPublicKeys) {
+      requestBody.tpm = this._tpmPublicKeys;
+    }
+
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_005: [ `registrationRequest` shall include the current `api-version` as a URL query string value named 'api-version'. ] */
     let path: string = '/' + request.idScope + '/registrations/' + request.registrationId + '/register?api-version=' + ProvisioningDeviceConstants.apiVersion;
 
@@ -94,6 +162,10 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
       Accept: application/json
       Content-Type: application/json; charset=utf-8 ] */
     let httpHeaders = JSON.parse(JSON.stringify(_defaultHeaders));
+
+    if (this._sasToken) {
+      httpHeaders.Authorization = this._sasToken;
+    }
 
     debug('submitting PUT for ' + request.registrationId + ' to ' + path);
     debug(JSON.stringify(requestBody));
@@ -132,6 +204,10 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
       Accept: application/json
       Content-Type: application/json; charset=utf-8 ] */
     let httpHeaders = JSON.parse(JSON.stringify(_defaultHeaders));
+
+    if (this._sasToken) {
+      httpHeaders.Authorization = this._sasToken;
+    }
 
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_022: [ `queryOperationStatus` shall send a GET operation sent to 'https://{provisioningHost}/{idScope}/registrations/{registrationId}/operations/{operationId}'  ] */
     debug('submitting status GET for ' + request.registrationId + ' to ' + path);

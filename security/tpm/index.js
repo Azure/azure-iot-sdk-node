@@ -4,5 +4,6 @@
 'use strict';
 
 module.exports = {
-  TpmSecurityClient : require('./lib/tpm').TpmSecurityClient
+  TpmSecurityClient : require('./lib/tpm').TpmSecurityClient,
+  TpmAuthenticationProvider: require('./lib/tpm_authentication_provider').TpmAuthenticationProvider
 };

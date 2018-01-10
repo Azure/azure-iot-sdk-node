@@ -23,13 +23,13 @@ The `register` method completes the authentication and registration flow for the
 
 **SRS_NODE_DPS_TPM_REGISTRATION_16_003: [** The `register` method shall initiate the authentication flow with the device provisioning service by calling the `getAuthenticationChallenge` method of the `TpmProvisioningTransport` object passed to the constructor with an object with the following properties:
 - `registrationId`: a unique identifier computed from the endorsement key
-- `endorsementKey`: the `endorsementKey` value obtained from the `TpmSecurityClient` object
-- `storageRootKey`: the `storageRootKey` value obtained from the `TpmSecurityClient` object
-- a callback that will handle either an error or a `TpmChallenge` object containing a session key to be used later in the authentication process.
+- `provisioningHost`: the host address of the dps instance
+- `idScope`: the `idscope` value obtained from the azure portal for this instance.
+- a callback that will handle either an error or a `Buffer` object containing a session key to be used later in the authentication process.
 **]**
 
 **SRS_NODE_DPS_TPM_REGISTRATION_16_004: [** The `register` method shall store the session key in the TPM by calling the `activateIdentityKey` method of the `TpmSecurityClient` object passed to the constructor with the following arguments:
-- `sessionKey`: the session key property of the `TpmChallenge` object returned by the previous call to `TpmProvisioningTransport.getAuthenticationChallenge`
+- `sessionKey`: the session key returned by the previous call to `TpmProvisioningTransport.getAuthenticationChallenge`
 - a callback that will handle an optional error if the operation fails.
 **]**
 
@@ -60,7 +60,7 @@ With the following fields:
 **]**
 
 **SRS_NODE_DPS_TPM_REGISTRATION_16_008: [** When the callback for the registration process is called, the `register` method shall store the symmetric key within the TPM by calling the `activateIdentityKey` method of the `TpmSecurityClient` object passed to the constructor with the following arguments:
-- `symmetricKey`: the symmetric key property of the `TpmChallenge` object returned by the previous call to `TpmProvisioningTransport.getAuthenticationChallenge`
+- `symmetricKey`: the symmetric key returned by the previous call to `TpmProvisioningTransport.getAuthenticationChallenge`
 - a callback that will handle an optional error if the operation fails.
 
 **]**
