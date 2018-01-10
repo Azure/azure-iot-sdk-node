@@ -443,3 +443,17 @@ export class DeviceRegistrationFailedError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 }
+
+/**
+ * Error thrown when a low level security device/driver fails.
+ *
+ * @augments {Error}
+ */
+export class SecurityDeviceError extends Error {
+  constructor(message?: string) {
+    super(message);
+    this.name = 'SecurityDeviceError';
+    this.message = message;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}

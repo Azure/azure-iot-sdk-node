@@ -115,6 +115,22 @@ export class SharedAccessSignature {
     return sas;
   };
 
+
+  static createWithSigningFunction(credentials: authorization.TransportConfig, expiry: string | number, signingFunction: Function, callback: (err: Error, sas?: SharedAccessSignature) => void): void {
+    let sas = new SharedAccessSignature();
+    sas.sr = authorization.encodeUriComponentStrict(credentials.host + '/devices/' + credentials.deviceId);
+    if (credentials.sharedAccessKeyName) sas.skn = authorization.encodeUriComponentStrict(credentials.sharedAccessKeyName);
+    sas.se = expiry;
+    signingFunction(Buffer.from(authorization.stringToSign(sas.sr, sas.se.toString())), (err, signed) => {
+      if (err) {
+        callback(err);
+      } else {
+        sas.sig = authorization.encodeUriComponentStrict(signed.toString('base64'));
+        callback(null, sas);
+      }
+    });
+  }
+
 /**
  * @method          module:azure-iot-common.SharedAccessSignature.parse
  * @description     Instantiate a SharedAccessSignature token from a string.
