@@ -89,7 +89,7 @@ export class AmqpTwinClient extends EventEmitter {
             this._fsm.transition('attaching');
           },
           handleErrorEmit: (err: Error) => {
-            debug('_handleError: error is: ' + JSON.stringify(err));
+            debug('_handleError: error is: ' + err);
             this.emit(AmqpTwinClient.errorEvent, translateError('received an error from the amqp transport: ', err));
           },
           handleLinkDetach: (detachObject: any) => {

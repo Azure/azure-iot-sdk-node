@@ -30,7 +30,7 @@ var deviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, tr
 // Register the device.  Do not force a re-registration.
 deviceClient.register(function(err, result) {
   if (err) {
-    console.log("error registering device: " + JSON.stringify(err));
+    console.log("error registering device: " + err);
   } else {
     console.log('registration succeeded');
     console.log('assigned hub=' + result.assignedHub);

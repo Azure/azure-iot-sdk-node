@@ -40,7 +40,7 @@ export interface RegistrationRequest {
   idScope: string;
 
   /**
-   * true to foce re-registration
+   * true to force re-registration
    */
   forceRegistration?: boolean;
 }
@@ -131,7 +131,7 @@ export interface X509SecurityClient {
   /**
    * retrieve the X509 certificate chain
    *
-   * @param callback called when the operation is copmlete
+   * @param callback called when the operation is complete
    */
   getCertificateChain(callback: (err?: Error, cert?: string) => void): void;
 

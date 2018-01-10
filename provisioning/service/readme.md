@@ -42,7 +42,7 @@ var enrollment = {
 
 serviceClient.createOrUpdateIndividualEnrollment(enrollment, function(err, enrollmentResponse) {
   if (err) {
-    console.log('error creating the enrollment: ' + JSON.stringify(err));
+    console.log('error creating the enrollment: ' + err);
   } else {
     console.log("enrollment record returned: " + JSON.stringify(enrollmentResponse, null, 2))
   }
