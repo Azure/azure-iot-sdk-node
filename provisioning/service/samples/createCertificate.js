@@ -3,11 +3,11 @@
 'use strict';
 var pem = require('pem');
 var fs = require('fs');
-var certPath = __dirname + "\\cert\\";
+const path = require('path');
 
 var deviceID = process.argv[2].toLowerCase();
-var cert = certPath + deviceID + '-cert.pem';
-var key = certPath + deviceID + '-key.pem'
+var certFile = path.join(__dirname,"cert",deviceID +'-cert.pem');
+var keyFile = path.join(__dirname,"cert",deviceID +'-key.pem');
 
 var certOptions = {
     commonName: deviceID,
