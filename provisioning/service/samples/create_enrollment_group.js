@@ -6,7 +6,25 @@ var fs = require('fs');
 
 var provisioningServiceClient = require('azure-iot-provisioning-service').ProvisioningServiceClient;
 
-var serviceClient = provisioningServiceClient.fromConnectionString(process.argv[2]);
+var argv = require('yargs')
+  .usage('Usage: $0 --connectionString <DEVICE PROVISIONING CONNECTION STRING> --certificagte <PATH TO CERTIFICATE> ')
+  .option('connectionstring', {
+    alias: 'c',
+    describe: 'The connection string for the Device Provisioning instance',
+    type: 'string',
+    demandOption: true
+  })
+  .option('certificate', {
+    alias: 'ce',
+    describe: 'certificated used for group enrollment',
+    type: 'string',
+    demandOption: true
+  })
+  .argv;
+
+var connectionString = argv.connectionString;
+var certificate = argv.certificate;
+var serviceClient = provisioningServiceClient.fromConnectionString(connectionString);
 
 var enrollment = {
   enrollmentGroupId: 'first',
@@ -15,7 +33,7 @@ var enrollment = {
     x509: {
       signingCertificates: {
         primary: {
-          certificate: fs.readFileSync(process.argv[3], 'utf-8').toString()
+          certificate: fs.readFileSync(certificate, 'utf-8').toString()
         }
       }
     }
@@ -23,14 +41,13 @@ var enrollment = {
   provisioningStatus: 'disabled'
 };
 
-
-serviceClient.createOrUpdateEnrollmentGroup(enrollment, function(err, enrollmentResponse) {
+serviceClient.createOrUpdateEnrollmentGroup(enrollment, function (err, enrollmentResponse) {
   if (err) {
     console.log('error creating the group enrollment: ' + err);
   } else {
     console.log("enrollment record returned: " + JSON.stringify(enrollmentResponse, null, 2));
     enrollmentResponse.provisioningStatus = 'enabled';
-    serviceClient.createOrUpdateEnrollmentGroup(enrollmentResponse, function(err, enrollmentResponse) {
+    serviceClient.createOrUpdateEnrollmentGroup(enrollmentResponse, function (err, enrollmentResponse) {
       if (err) {
         console.log('error updating the group enrollment: ' + err);
       } else {
