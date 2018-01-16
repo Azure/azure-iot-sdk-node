@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-import { errors, X509 } from 'azure-iot-common';
+import { X509 } from 'azure-iot-common';
 
 /**
  * @private
@@ -38,14 +38,5 @@ export class X509Security {
     return this._registrationId;
   }
 
-
-  /**
-   * return the X509 certificate chain
-   *
-   * @param callback called when the operation is copmlete
-   */
-  getCertificateChain(callback: (err?: Error, cert?: string) => void): void {
-    throw new errors.NotImplementedError();
-  }
 }
 

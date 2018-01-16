@@ -24,14 +24,6 @@ describe('x509', function () {
     });
   });
 
-  describe('getCertificateChain', function() {
-    it ('throws', function() {
-      assert.throws(function() {
-        obj.getCertificateChain();
-      });
-    });
-  });
-
   describe('getRegistrationId', function() {
     it ('returns the registrationId', function(callback) {
       var registrationId = obj.getRegistrationId();

@@ -118,7 +118,9 @@ export class Amqp {
           },
           amqpError: (err, callback) => {
             debug('received an error while disconnected: maybe a bug: ' + (!!err ? err.toString() : 'callback called but falsy error object.'));
-            callback();
+            if (callback) {
+              callback();
+            }
           },
           amqpDisconnected: () => debug('ignoring disconnected event while disconnected'),
           connect: (connectCallback) => {

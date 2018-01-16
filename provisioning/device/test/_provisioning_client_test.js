@@ -11,7 +11,6 @@ var ProvisioningDeviceClient = require('../index.js').ProvisioningDeviceClient;
 
 var fakeX509Security = {
   getCertificate: function() {},
-  getCertificateChain: function() {},
   getRegistrationId: function() {}
 };
 

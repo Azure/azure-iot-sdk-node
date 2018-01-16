@@ -29,7 +29,12 @@ var registry = Registry.fromConnectionString(registryConnectionString);
 var X509IndividualTransports = [ Http, Amqp, AmqpWs, Mqtt, MqttWs ];
 var X509GroupTransports = [ Http, Amqp, AmqpWs, Mqtt, MqttWs ];
 
-var createX509Certificate = function (certOptions, callback) {
+var createSelfSignedCert = function(registrationId, callback) {
+  var certOptions = {
+    commonName: registrationId,
+    selfSigned: true,
+    days: 10
+  };
   pem.createCertificate(certOptions, function (err, result) {
     if (err) {
       callback(err);
@@ -43,11 +48,71 @@ var createX509Certificate = function (certOptions, callback) {
   });
 };
 
+var createIntermediateCaCert = function(authorityName, parentCert, callback) {
+  var certOptions = {
+    commonName: authorityName,
+    serviceKey: parentCert.key,
+    serviceCertificate: parentCert.cert,
+    serial: Math.floor(Math.random() * 1000000000),
+    days: 1,
+    config: [
+      '[req]',
+      'req_extensions = v3_req',
+      'distinguished_name = req_distinguished_name',
+      'x509_extensions = v3_ca',
+      '[req_distinguished_name]',
+      'commonName = ' + authorityName,
+      '[v3_req]',
+      'basicConstraints = critical, CA:true'
+    ].join('\n')
+  };
+  pem.createCertificate(certOptions, function(err, cert) {
+    if (err) {
+      callback(err);
+    } else {
+      var x509 = {
+        key: cert.clientKey,
+        cert: cert.certificate
+      };
+      callback(null, x509);
+    }
+  });
+};
+
+var createDeviceCert = function(registrationId, parentCert, callback) {
+  var deviceCertOptions = {
+    commonName: registrationId,
+    serviceKey: parentCert.key,
+    serviceCertificate: parentCert.cert,
+    serial: Math.floor(Math.random() * 1000000000),
+    days: 1,
+    config: [
+      '[req]',
+      'req_extensions = v3_req',
+      'distinguished_name = req_distinguished_name',
+      '[req_distinguished_name]',
+      'commonName = ' + registrationId,
+      '[v3_req]',
+      'extendedKeyUsage = critical,clientAuth'
+    ].join('\n')
+  };
+  pem.createCertificate(deviceCertOptions, function(err, cert) {
+    if (err) {
+      callback(err);
+    } else {
+      var x509 = {
+        key: cert.clientKey,
+        cert: cert.certificate
+      };
+      callback(null, x509);
+    }
+  });
+};
+
 var X509Individual = function() {
 
   var self = this;
 
-  this.testDescription = 'x509 individual device enrollment';
   this.transports = X509IndividualTransports;
   var id = uuid.v4();
 
@@ -55,13 +120,8 @@ var X509Individual = function() {
   this._registrationId = 'reg-' + id;
 
   this.initialize = function (callback) {
-    var certOptions = {
-      commonName: self._registrationId,
-      selfSigned: true,
-      days: 10
-    };
     debug('creating x509 cert');
-    createX509Certificate(certOptions, function(err, cert) {
+    createSelfSignedCert(this._registrationId, function(err, cert) {
       if (err) {
         callback(err);
       } else {
@@ -131,11 +191,52 @@ var X509Individual = function() {
   };
 };
 
-var X509Group = function() {
+var createCertWithoutChain = function(registrationId, callback) {
+  var rootCert = {
+    cert: new Buffer(process.env.IOT_PROVISIONING_ROOT_CERT,"base64").toString('ascii'),
+    key: new Buffer(process.env.IOT_PROVISIONING_ROOT_CERT_KEY,"base64").toString('ascii'),
+  };
+  debug('creating device cert');
+  createDeviceCert(registrationId, rootCert, function(err, cert) {
+    callback(err, rootCert, cert);
+  });
+};
+
+var createCertWithChain = function(registrationId, callback) {
+  var rootCert = {
+    cert: new Buffer(process.env.IOT_PROVISIONING_ROOT_CERT,"base64").toString('ascii'),
+    key: new Buffer(process.env.IOT_PROVISIONING_ROOT_CERT_KEY,"base64").toString('ascii'),
+  };
+  debug('creating intermediate CA cert #1');
+  createIntermediateCaCert('Intermediate CA 1', rootCert, function(err, intermediateCert1) {
+    if (err) {
+      callback(err);
+    } else {
+      debug('creating intermediate CA cert #2');
+      createIntermediateCaCert('Intermediate CA 2', intermediateCert1, function(err, intermediateCert2) {
+        if (err) {
+          callback(err);
+        } else {
+          debug('creating device cert');
+          createDeviceCert(registrationId, intermediateCert2, function(err, cert) {
+            if (err) {
+              callback(err);
+            } else {
+              cert.cert = cert.cert + '\n' + intermediateCert2.cert + '\n' + intermediateCert1.cert;
+              callback(err, intermediateCert2, cert);
+            }
+          });
+        }
+      });
+    }
+  });
+};
+
+
+var X509Group = function(certFactory) {
 
   var self = this;
 
-  this.testDescription = 'x509 group device enrollment';
   this.transports = X509GroupTransports;
   var id = uuid.v4();
 
@@ -143,36 +244,12 @@ var X509Group = function() {
   this._groupId = 'testgroup';
 
   this.initialize = function(callback) {
-    debug('creating device cert');
-    self._factoryCert = {
-        cert: new Buffer(process.env.IOT_PROVISIONING_ROOT_CERT,"base64").toString('ascii'),
-        key: new Buffer(process.env.IOT_PROVISIONING_ROOT_CERT_KEY,"base64").toString('ascii'),
-      };
-    var deviceCertOptions = {
-      commonName: self._registrationId,
-      serviceKey: self._factoryCert.key,
-      serviceCertificate: self._factoryCert.cert,
-      serviceKeyPassword: '123',
-      serial: Math.floor(Math.random() * 1000000000),
-      days: 1,
-      config: [
-        '[req]',
-        'req_extensions = v3_req',
-        'distinguished_name = req_distinguished_name',
-        '[req_distinguished_name]',
-        'commonName = ' + self._registrationId,
-        '[v3_req]',
-        'extendedKeyUsage = critical,clientAuth'
-      ].join('\n')
-    };
-    pem.createCertificate(deviceCertOptions, function(err, cert) {
+    certFactory(this._registrationId, function(err, enrollmentCert, deviceCert) {
       if (err) {
         callback(err);
       } else {
-        self._cert = {
-          key: cert.clientKey,
-          cert: cert.certificate
-        };
+        self._enrollmentCert = enrollmentCert;
+        self._cert = deviceCert;
         callback();
       }
     });
@@ -188,7 +265,7 @@ var X509Group = function() {
         x509: {
           signingCertificates: {
             primary: {
-              certificate: new Buffer(self._factoryCert.cert).toString('base64')
+              certificate: new Buffer(self._enrollmentCert.cert).toString('base64')
             }
           }
         }
@@ -201,7 +278,6 @@ var X509Group = function() {
         }
       }
     };
-
 
     provisioningServiceClient.deleteEnrollmentGroup(enrollmentGroup.enrollmentGroupId, function() {
       // ignore delete error.  We're just cleaning up from a previous run.
@@ -220,6 +296,7 @@ var X509Group = function() {
     var transport = new Transport();
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
     provisioningDeviceClient.register(function (err, result) {
+      assert.isNotOk(err);
       assert.isOk(result.deviceId);
       self._deviceId = result.deviceId;
       callback(err, result);
@@ -246,44 +323,54 @@ var X509Group = function() {
 
 describe('IoT Provisioning', function() {
   [
-    new X509Individual(),
-    new X509Group()
+    {
+      testName: 'x509 individual enrollment with Self Signed Certificate',
+      testObj: new X509Individual()
+    },
+    {
+      testName: 'x509 group enrollment without cert chain',
+      testObj: new X509Group(createCertWithoutChain)
+    },
+    {
+      testName: 'x509 group enrollment with cert chain',
+      testObj: new X509Group(createCertWithChain)
+    }
   ].forEach(function(config) {
 
-    describe(config.testDescription, function() {
+    describe(config.testName, function() {
       this.timeout(120000);
 
       afterEach(function(callback) {
-        config.cleanup(callback);
+        config.testObj.cleanup(callback);
       });
 
-      config.transports.forEach(function (Transport) {
+      config.testObj.transports.forEach(function (Transport) {
         it ('can create an enrollment, register it using ' + Transport.name + ', and verify twin contents', function(callback) {
 
           async.waterfall([
             function(callback) {
               debug('initializing');
-              config.initialize(callback);
+              config.testObj.initialize(callback);
             },
             function(callback) {
               debug('enrolling');
-              config.enroll(callback);
+              config.testObj.enroll(callback);
             },
             function(callback) {
               debug('registering device');
-              config.register(Transport, callback);
+              config.testObj.register(Transport, callback);
             },
             function(result, callback) {
               debug('success registering device');
               debug(JSON.stringify(result,null,'  '));
               debug('getting twin');
-              registry.getTwin(config._deviceId,function(err, twin) {
+              registry.getTwin(config.testObj._deviceId,function(err, twin) {
                 callback(err, twin);
               });
             },
             function(twin, callback) {
               debug('asserting twin contents');
-              assert.strictEqual(twin.properties.desired.testProp, config._testProp);
+              assert.strictEqual(twin.properties.desired.testProp, config.testObj._testProp);
               callback();
             }
           ], callback);

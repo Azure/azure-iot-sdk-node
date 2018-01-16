@@ -129,13 +129,6 @@ export interface X509SecurityClient {
   getCertificate(callback: (err?: Error, cert?: X509) => void): void;
 
   /**
-   * retrieve the X509 certificate chain
-   *
-   * @param callback called when the operation is complete
-   */
-  getCertificateChain(callback: (err?: Error, cert?: string) => void): void;
-
-  /**
    * return the registration Id for the device
    */
   getRegistrationId(): string;
