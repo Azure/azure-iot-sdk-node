@@ -6,6 +6,7 @@
 var assert = require('chai').assert;
 var uuid = require('uuid');
 var debug = require('debug')('azure-iot-provisioning-device-e2e');
+var certHelper = require('./cert_helper');
 
 var provisioningServiceClient = require('azure-iot-provisioning-service').ProvisioningServiceClient;
 
@@ -29,7 +30,7 @@ var enrollmentGroup = {
     x509: {
       signingCertificates: {
         primary: {
-          certificate: new Buffer(process.env.IOTHUB_CA_ROOT_CERT, 'base64').toString('ascii')
+          certificate: ''
         }
       }
     }
@@ -37,113 +38,127 @@ var enrollmentGroup = {
   provisioningStatus: "enabled"
 };
 
-var testSpecification = [
-  {
-    deleteFunction: serviceClient.deleteIndividualEnrollment.bind(serviceClient),
-    testDescription: 'IndividualEnrollment object',
-    idPropertyName: 'registrationId',
-    createFunction: serviceClient.createOrUpdateIndividualEnrollment.bind(serviceClient),
-    updateFunction: serviceClient.createOrUpdateIndividualEnrollment.bind(serviceClient),
-    enrollmentObject: enrollment
-  },
-  {
-    deleteFunction: serviceClient.deleteEnrollmentGroup.bind(serviceClient),
-    testDescription: 'EnrollmentGroup object',
-    idPropertyName: 'enrollmentGroupId',
-    createFunction: serviceClient.createOrUpdateEnrollmentGroup.bind(serviceClient),
-    updateFunction: serviceClient.createOrUpdateEnrollmentGroup.bind(serviceClient),
-    enrollmentObject: enrollmentGroup
-  }
-];
-testSpecification.forEach(function(testConfiguration) {
-  describe('#Create', function() {
-    this.timeout(5000);
-    var enrollmentToDelete = {};
-    after(function(done) {
-      testConfiguration.deleteFunction(enrollmentToDelete, function(err) {
-        if (err) {
-          debug(err);
-        }
-        assert.isNull(err,'Non null response from the delete AFTER create.');
+describe('provisioning service client', function () {
+  before(function(done) {
+    this.timeout(60000);
+    certHelper.createIntermediateCaCert('test cert', null, function(err, cert) {
+      if (err) {
+        done(err);
+      } else {
+        enrollmentGroup.attestation.x509.signingCertificates.primary.certificate = cert.cert;
         done();
-      });
-    });
-    it(testConfiguration.testDescription, function(callback) {
-      enrollmentToDelete = {};
-      testConfiguration.createFunction(testConfiguration.enrollmentObject, function(err, returnedEnrollment) {
-        if (err) {
-          debug(err);
-        }
-        assert.isNull(err,'Should be no error from the create');
-        enrollmentToDelete = returnedEnrollment;
-        callback();
-      });
+      }
     });
   });
-});
 
-testSpecification.forEach(function(testConfiguration) {
-  describe('#Delete', function() {
-    this.timeout(5000);
-    var enrollmentToDelete = {};
-    before(function(done) {
-      testConfiguration.createFunction(testConfiguration.enrollmentObject, function(err, returnedEnrollment) {
-        if (err) {
-          debug(err);
-        }
-        assert.isNull(err,'Should be no error from the BEFORE create');
-        enrollmentToDelete = returnedEnrollment;
-        done();
+  var testSpecification = [
+    {
+      deleteFunction: serviceClient.deleteIndividualEnrollment.bind(serviceClient),
+      testDescription: 'IndividualEnrollment object',
+      idPropertyName: 'registrationId',
+      createFunction: serviceClient.createOrUpdateIndividualEnrollment.bind(serviceClient),
+      updateFunction: serviceClient.createOrUpdateIndividualEnrollment.bind(serviceClient),
+      enrollmentObject: enrollment
+    },
+    {
+      deleteFunction: serviceClient.deleteEnrollmentGroup.bind(serviceClient),
+      testDescription: 'EnrollmentGroup object',
+      idPropertyName: 'enrollmentGroupId',
+      createFunction: serviceClient.createOrUpdateEnrollmentGroup.bind(serviceClient),
+      updateFunction: serviceClient.createOrUpdateEnrollmentGroup.bind(serviceClient),
+      enrollmentObject: enrollmentGroup
+    }
+  ];
+  testSpecification.forEach(function(testConfiguration) {
+    describe('#Create', function() {
+      this.timeout(5000);
+      var enrollmentToDelete = {};
+      after(function(done) {
+        testConfiguration.deleteFunction(enrollmentToDelete, function(err) {
+          if (err) {
+            debug(err);
+          }
+          assert.isNull(err,'Non null response from the delete AFTER create.');
+          done();
+        });
       });
-    });
-    it(testConfiguration.testDescription, function(callback) {
-      testConfiguration.deleteFunction(enrollmentToDelete[testConfiguration.idPropertyName], enrollmentToDelete.etag, function(err) {
-        if (err) {
-          debug(err);
-        }
-        assert.isNull(err,'Non null response from the delete.');
+      it(testConfiguration.testDescription, function(callback) {
         enrollmentToDelete = {};
-        callback();
+        testConfiguration.createFunction(testConfiguration.enrollmentObject, function(err, returnedEnrollment) {
+          if (err) {
+            debug(err);
+          }
+          assert.isNull(err,'Should be no error from the create');
+          enrollmentToDelete = returnedEnrollment;
+          callback();
+        });
       });
     });
   });
-});
 
-testSpecification.forEach(function(testConfiguration) {
-  describe('#Update', function() {
-    this.timeout(10000);
-    var enrollmentToDelete = {};
-    var enrollmentToUpdate = {};
-    before(function(done) {
-      testConfiguration.createFunction(testConfiguration.enrollmentObject, function(err, returnedEnrollment) {
-        if (err) {
-          debug(err);
-        }
-        assert.isNull(err,'Should be no error from the create');
-        enrollmentToUpdate = returnedEnrollment;
-        done();
+  testSpecification.forEach(function(testConfiguration) {
+    describe('#Delete', function() {
+      this.timeout(5000);
+      var enrollmentToDelete = {};
+      before(function(done) {
+        testConfiguration.createFunction(testConfiguration.enrollmentObject, function(err, returnedEnrollment) {
+          if (err) {
+            debug(err);
+          }
+          assert.isNull(err,'Should be no error from the BEFORE create');
+          enrollmentToDelete = returnedEnrollment;
+          done();
+        });
+      });
+      it(testConfiguration.testDescription, function(callback) {
+        testConfiguration.deleteFunction(enrollmentToDelete[testConfiguration.idPropertyName], enrollmentToDelete.etag, function(err) {
+          if (err) {
+            debug(err);
+          }
+          assert.isNull(err,'Non null response from the delete.');
+          enrollmentToDelete = {};
+          callback();
+        });
       });
     });
-    after(function(done) {
-      testConfiguration.deleteFunction(enrollmentToDelete, function(err) {
-        if (err) {
-          debug(err);
-        }
-        assert.isNull(err,'Non null response from the delete AFTER create.');
-        done();
+  });
+
+  testSpecification.forEach(function(testConfiguration) {
+    describe('#Update', function() {
+      this.timeout(10000);
+      var enrollmentToDelete = {};
+      var enrollmentToUpdate = {};
+      before(function(done) {
+        testConfiguration.createFunction(testConfiguration.enrollmentObject, function(err, returnedEnrollment) {
+          if (err) {
+            debug(err);
+          }
+          assert.isNull(err,'Should be no error from the create');
+          enrollmentToUpdate = returnedEnrollment;
+          done();
+        });
       });
-    });
-    it(testConfiguration.testDescription, function(callback) {
-      enrollmentToDelete = {};
-      enrollmentToUpdate.provisioningStatus = 'disabled';
-      testConfiguration.updateFunction(enrollmentToUpdate, function(err, updatedEnrollment) {
-        if (err) {
-          debug(err);
-        }
-        assert.isNull(err);
-        assert.equal(updatedEnrollment.provisioningStatus, 'disabled', 'provsioning state not disabled');
-        enrollmentToDelete = updatedEnrollment;
-        callback();
+      after(function(done) {
+        testConfiguration.deleteFunction(enrollmentToDelete, function(err) {
+          if (err) {
+            debug(err);
+          }
+          assert.isNull(err,'Non null response from the delete AFTER create.');
+          done();
+        });
+      });
+      it(testConfiguration.testDescription, function(callback) {
+        enrollmentToDelete = {};
+        enrollmentToUpdate.provisioningStatus = 'disabled';
+        testConfiguration.updateFunction(enrollmentToUpdate, function(err, updatedEnrollment) {
+          if (err) {
+            debug(err);
+          }
+          assert.isNull(err);
+          assert.equal(updatedEnrollment.provisioningStatus, 'disabled', 'provsioning state not disabled');
+          enrollmentToDelete = updatedEnrollment;
+          callback();
+        });
       });
     });
   });
