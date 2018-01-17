@@ -5,22 +5,37 @@
 
 var provisioningServiceClient = require('azure-iot-provisioning-service').ProvisioningServiceClient;
 
-var serviceClient = provisioningServiceClient.fromConnectionString(process.argv[2]);
+var argv = require('yargs')
+  .usage('Usage: $0 --connectionstring <DEVICE PROVISIONING CONNECTION STRING> ')
+  .option('connectionstring', {
+    alias: 'c',
+    describe: 'The connection string for the Device Provisioning instance',
+    type: 'string',
+    demandOption: true
+  })
+  .argv;
 
-var queryForEnrollments = serviceClient.createIndividualEnrollmentQuery({ "query": "*" }, 10);
-var queryForEnrollmentGroups = serviceClient.createEnrollmentGroupQuery({ "query": "*" }, 10);
+var connectionString = argv.connectionString;
+var serviceClient = provisioningServiceClient.fromConnectionString(connectionString);
 
-var onEnrollmentResults = function(err, results) {
+var queryForEnrollments = serviceClient.createIndividualEnrollmentQuery({
+  "query": "*"
+}, 10);
+var queryForEnrollmentGroups = serviceClient.createEnrollmentGroupQuery({
+  "query": "*"
+}, 10);
+
+var onEnrollmentResults = function (err, results) {
   if (err) {
     console.error('Failed to fetch the results: ' + err.message);
   } else {
     // Do something with the results
-    results.forEach(function(enrollment) {
+    results.forEach(function (enrollment) {
       console.log(JSON.stringify(enrollment, null, 2));
     });
 
     if (queryForEnrollments.hasMoreResults) {
-        queryForEnrollments.next(onEnrollmentResults);
+      queryForEnrollments.next(onEnrollmentResults);
     } else {
       console.log('Querying for the Enrollment Groups');
       queryForEnrollmentGroups.next(onEnrollmentGroupResults);
@@ -28,21 +43,23 @@ var onEnrollmentResults = function(err, results) {
   }
 };
 
-var onEnrollmentGroupResults = function(err, results) {
+var onEnrollmentGroupResults = function (err, results) {
   if (err) {
     console.error('Failed to fetch the results: ' + err.message);
   } else {
     // Do something with the results
-    results.forEach(function(enrollmentGroup) {
+    results.forEach(function (enrollmentGroup) {
       console.log(JSON.stringify(enrollmentGroup, null, 2));
       var alreadyPrintedSomeDeviceRegistrations = false;
-      var queryForDeviceRegistrationState = serviceClient.createEnrollmentGroupDeviceRegistrationStateQuery({ "query": "*" }, enrollmentGroup.enrollmentGroupId, 10);
-      var onDeviceRegistrationStateResults = function(err, results) {
+      var queryForDeviceRegistrationState = serviceClient.createEnrollmentGroupDeviceRegistrationStateQuery({
+        "query": "*"
+      }, enrollmentGroup.enrollmentGroupId, 10);
+      var onDeviceRegistrationStateResults = function (err, results) {
         if (err) {
           console.error('Failed to fetch the results: ' + err.message);
         } else {
           // Do something with the results
-          results.forEach(function(deviceRegistrationState) {
+          results.forEach(function (deviceRegistrationState) {
             if (!alreadyPrintedSomeDeviceRegistrations) {
               alreadyPrintedSomeDeviceRegistrations = true;
               console.log('For ' + enrollmentGroup.enrollmentGroupId + ', all of its the Device Registrations Status objects: ')
@@ -50,7 +67,7 @@ var onEnrollmentGroupResults = function(err, results) {
             console.log(JSON.stringify(deviceRegistrationState, null, 2));
           });
           if (queryForDeviceRegistrationState.hasMoreResults) {
-              queryForDeviceRegistrationState.next(onDeviceRegistrationState);
+            queryForDeviceRegistrationState.next(onDeviceRegistrationState);
           }
         }
       };
