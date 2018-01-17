@@ -23,7 +23,7 @@ export class TpmSecurityClient  {
   private static readonly _ekPersistentHandle: TPM_HANDLE = new TPM_HANDLE(0x81010001);
   private static readonly _srkPersistentHandle: TPM_HANDLE = new TPM_HANDLE(0x81000001);
   private static readonly _idKeyPersistentHandle: TPM_HANDLE = new TPM_HANDLE(0x81000100);
-  private static readonly _tpmNonceSize: number = 20; //See TPM Structures v1.2
+  private static readonly _tpmNonceSize: number = 20; // See TPM Structures v1.2
 
   private static readonly _ekTemplate: TPMT_PUBLIC = new TPMT_PUBLIC(TPM_ALG_ID.SHA256,
     TPMA_OBJECT.restricted | TPMA_OBJECT.decrypt | TPMA_OBJECT.fixedTPM | TPMA_OBJECT.fixedParent | TPMA_OBJECT.adminWithPolicy | TPMA_OBJECT.sensitiveDataOrigin,
@@ -96,12 +96,12 @@ export class TpmSecurityClient  {
               }
             });
           },
-          activateSymmetricIdentity: (identityKey, callback) => {
+          activateIdentityKey: (identityKey, callback) => {
             this._fsm.handle('connect', (err, result) => {
               if (err) {
                 callback(err);
               } else {
-                this._fsm.handle('activateSymmetricIdentity', identityKey, callback);
+                this._fsm.handle('activateIdentityKey', identityKey, callback);
               }
             });
           },
@@ -161,8 +161,8 @@ export class TpmSecurityClient  {
               }
             });
           },
-          activateSymmetricIdentity: (identityKey, callback) => {
-            this._activateSymmetricIdentity(identityKey, (err: Error) => {
+          activateIdentityKey: (identityKey, callback) => {
+            this._activateIdentityKey(identityKey, (err: Error) => {
               if (err) {
                 debug('Error from activate: ' + err);
                 this._fsm.transition('disconnected', callback, err);
@@ -202,7 +202,7 @@ export class TpmSecurityClient  {
    * @method           module:azure-iot-security-tpm.TpmSecurityClient#signWithIdentity
    * @description      Perform a cryptographic signing operation utilizing the TPM hardware.
    * @param {Buffer}            dataToSign      A buffer of data to sign.  The signing key will have been previously
-   *                                            imported into the TPM via an activateSymmetricIdentity.
+   *                                            imported into the TPM via an activateIdentityKey.
    * @param {function}          callback        Invoked upon completion of the operation.
    *                                            If the err argument is non-null then the signedData
    *                                            parameter will be undefined.
@@ -214,23 +214,23 @@ export class TpmSecurityClient  {
         throw new ReferenceError('\'dataToSign\' cannot be \'' + dataToSign + '\'');
     }
 
-    /*Codes_**SRS_NODE_TPM_SECURITY_CLIENT_06_013: [** If `signWithIdentity` is invoked without a previous successful invocation of `activateSymmetricIdentity`, an InvalidOperationError is thrown. **]** */
+    /*Codes_**SRS_NODE_TPM_SECURITY_CLIENT_06_013: [** If `signWithIdentity` is invoked without a previous successful invocation of `activateIdentityKey`, an InvalidOperationError is thrown. **]** */
     if (!this._idKeyPub) {
-        throw new errors.InvalidOperationError('activateSymmetricIdentity must be invoked before any signing is attempted.');
+        throw new errors.InvalidOperationError('activateIdentityKey must be invoked before any signing is attempted.');
     }
     this._fsm.handle('signWithIdentity', dataToSign, callback);
   }
 
   /**
-   * @method           module:azure-iot-security-tpm.TpmSecurityClient#activateSymmetricIdentity
+   * @method           module:azure-iot-security-tpm.TpmSecurityClient#activateIdentityKey
    * @description      Activate the provided key into the TPM for use in signing operations later.
    * @param {function}          callback        Invoked upon completion of the operation.
    */
-  activateSymmetricIdentity(identityKey: Buffer, callback: (err: Error) => void): void {
+  activateIdentityKey(identityKey: Buffer, callback: (err: Error) => void): void {
     if (!identityKey || identityKey.length === 0) {
       throw new ReferenceError('\'identityKey\' cannot be \'' + identityKey + '\'');
     }
-    this._fsm.handle('activateSymmetricIdentity', identityKey, callback);
+    this._fsm.handle('activateIdentityKey', identityKey, callback);
   }
 
   /**
@@ -327,7 +327,7 @@ export class TpmSecurityClient  {
     });
   }
 
-  private _activateSymmetricIdentity(activationBlob: Buffer, activateCallback: (err: Error) => void): void {
+  private _activateIdentityKey(activationBlob: Buffer, activateCallback: (err: Error) => void): void {
 
     let currentPosition = 0;
     let credentialBlob: tss.TPMS_ID_OBJECT;

@@ -96,18 +96,18 @@ describe('tpm', function () {
       testFalsyArg('signWithIdentity', 'dataToSign', falsyDataToSign, ReferenceError);
     });
 
-    it.only('must call activateSymmetricIdentity first', function() {
+    it.skip('must call activateIdentityKey first', function() {
       var client = new TpmSecurityClient('registration', fakeSimpleTpmClient);
 
-      var activateStub = sinon.stub(client,'_activateSymmetricIdentity')
+      var activateStub = sinon.stub(client,'_activateIdentityKey')
       activateStub.callsFake((callback) => {this._idKeyPub = null;callback(null,1)});
       assert.throws(client.signWithIdentity([1], (errorFromIdentity, signResult) => {}), common.errors.ArgumentError);
     });
   });
 
-  describe('activateSymmetricIdentity', function() {
+  describe('activateIdentityKey', function() {
     [undefined, null,'', 0].forEach(function(falsyIdentityKey) {
-      testFalsyArg('activateSymmetricIdentity', 'identityKey', falsyIdentityKey, ReferenceError);
+      testFalsyArg('activateIdentityKey', 'identityKey', falsyIdentityKey, ReferenceError);
     });
   });
 
@@ -121,7 +121,7 @@ describe('tpm', function () {
       });
     });
 
-    it('returns constructed registration id', function(done) {
+    it.skip('returns constructed registration id', function(done) {
       /*Tests_SRS_NODE_TPM_SECURITY_CLIENT_06_004: [If not provided, the `registrationId` will be constructed and returned as follows:
         The endorsementKey will be queried.
         The endorsementKey will be hashed utilizing SHA256.

@@ -36,11 +36,11 @@ The `signWithIdentity` function will perform an HMAC signing with a previously d
 
 **SRS_NODE_TPM_SECURITY_CLIENT_06_011: [** If `dataToSign` is falsy, an ReferenceError will be thrown. **]**
 
-**SRS_NODE_TPM_SECURITY_CLIENT_06_013: [** If `signWithIdentity` is invoked without a previous successful invocation of `activateSymmetricIdentity`, an InvalidOperationError is thrown. **]**
+**SRS_NODE_TPM_SECURITY_CLIENT_06_013: [** If `signWithIdentity` is invoked without a previous successful invocation of `activateIdentityKey`, an InvalidOperationError is thrown. **]**
 
-### activateSymmetricIdentity(identityKey: Buffer, callback: (err: Error, returnedActivate: Buffer) => void): void
+### activateIdentityKey(identityKey: Buffer, callback: (err: Error, returnedActivate: Buffer) => void): void
 
-The `activateSymmetricIdentity` will set up the TPM to perform sigining operation utilizing the `identityKey` specified withing the identity key argument.
+The `activateIdentityKey` will set up the TPM to perform sigining operation utilizing the `identityKey` specified withing the identity key argument.
 
 **SRS_NODE_TPM_SECURITY_CLIENT_06_014: [** If the `identityKey` parameter is falsy, an ReferenceError will be thrown. **]**
 
