@@ -6,7 +6,7 @@ var provisioningServiceClient = require('azure-iot-provisioning-service').Provis
 const path = require('path');
 
 var argv = require('yargs')
-  .usage('Usage: $0 --deviceid <DEVICE ID> --connectionString <DEVICE PROVISIONING CONNECTION STRING> ')
+  .usage('Usage: $0 --deviceid <DEVICE ID> --connectionstring <DEVICE PROVISIONING CONNECTION STRING> ')
   .option('deviceid', {
     alias: 'd',
     describe: 'Unique identifier for the device that shall be created',

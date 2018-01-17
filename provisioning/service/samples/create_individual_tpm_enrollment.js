@@ -6,7 +6,7 @@ var provisioningServiceClient = require('azure-iot-provisioning-service').Provis
 const path = require('path');
 
 var argv = require('yargs')
-  .usage('Usage: $0 --endorsementkey <ENDORSMENT KEY> --connectionString <DEVICE PROVISIONING CONNECTION STRING> ')
+  .usage('Usage: $0 --endorsementkey <ENDORSMENT KEY> --connectionstring <DEVICE PROVISIONING CONNECTION STRING> ')
   .option('endorsementKey', {
     alias: 'e',
     describe: 'Endorsment key for TPM',
