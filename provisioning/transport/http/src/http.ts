@@ -5,12 +5,14 @@
 
 import { EventEmitter } from 'events';
 import { RestApiClient, Http as Base } from 'azure-iot-http-base';
-import { X509 } from 'azure-iot-common';
-import { X509ProvisioningTransport } from 'azure-iot-provisioning-device';
+import { X509, errors } from 'azure-iot-common';
+import { X509ProvisioningTransport, TpmProvisioningTransport } from 'azure-iot-provisioning-device';
 import { RegistrationRequest, DeviceRegistrationResult } from 'azure-iot-provisioning-device';
 import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure-iot-provisioning-device';
+import { TpmChallenge } from 'azure-iot-provisioning-device';
 import { translateError } from 'azure-iot-provisioning-device';
 import * as dbg from 'debug';
+import { HttpTransportError } from '../../../../common/transport/http/lib/rest_api_client';
 const debug = dbg('azure-iot-provisioning-device-http:Http');
 
 const _defaultHeaders = {
@@ -21,11 +23,13 @@ const _defaultHeaders = {
 /**
  * Transport used to provision a device over HTTP.
  */
-export class Http extends EventEmitter implements X509ProvisioningTransport {
+export class Http extends EventEmitter implements X509ProvisioningTransport, TpmProvisioningTransport {
   private _restApiClient: RestApiClient;
   private _httpBase: Base;
   private _config: ProvisioningTransportOptions = {};
   private _auth: X509;
+  private _sasToken: string;
+  private _tpm: {};
 
   /**
    * @private
@@ -38,6 +42,61 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
     this._httpBase = httpBase || new Base();
     this._config.pollingInterval = ProvisioningDeviceConstants.defaultPollingInterval;
     this._config.timeoutInterval = ProvisioningDeviceConstants.defaultTimeoutInterval;
+  }
+
+  /**
+   * @private
+   *
+   */
+  setSasToken(sasToken: string): void {
+    this._sasToken = sasToken;
+  }
+
+  /**
+   * @private
+   *
+   */
+  setTpmInformation(ek: Buffer, srk: Buffer): void {
+    this._tpm = { endorsementKey: ek.toString('base64'), storageRootKey: srk.toString('base64') };
+  }
+
+  /**
+   * @private
+   *
+   */
+  getAuthenticationChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: TpmChallenge) => void): void {
+    let simpleRegistrationRequest: RegistrationRequest = {registrationId: request.registrationId, provisioningHost: request.provisioningHost, idScope: request.idScope};
+    this.registrationRequest(simpleRegistrationRequest, (err: HttpTransportError, result?: any, response?: any) => {
+      if (err && err.response && (err.response.statusCode === 401))  {
+
+        //
+        // So far so bad.  Parse the response body and pull out the message, authenticationKey and the keyName.
+        //
+        let authenticationResponse;
+        try {
+          authenticationResponse = JSON.parse(err.responseBody);
+        } catch (parseError) {
+          debug('inappropriate challenge received: ' + err);
+          callback(new errors.InternalServerError('The server did NOT respond with an appropriately formatted authentication blob.'));
+          return;
+        }
+
+        if (authenticationResponse.authenticationKey && authenticationResponse.keyName && (typeof authenticationResponse.authenticationKey === 'string') &&  (typeof authenticationResponse.keyName === 'string')) {
+          callback(null, { message: authenticationResponse.message, authenticationKey: authenticationResponse.authenticationKey, keyName: authenticationResponse.keyName });
+        } else {
+          debug('inadequate challenge response received: ' + err.responseBody);
+          callback(new errors.InternalServerError('The server did NOT respond with an appropriately formatted authentication blob.'));
+        }
+      } else {
+        //
+        // We should ALWAYS get an error for the un-authenticated request we just made.  The server is sending back something we
+        // have no real context to interpret.
+        //
+        callback(new errors.InternalServerError('The server did NOT respond with an unauthorized error.  For a TPM challenge this is incorrect.'));
+        debug('PUT response received:');
+        debug(err);
+      }
+    });
   }
 
   setAuthentication(auth: X509): void {
@@ -76,6 +135,10 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
 
     let requestBody: any = { registrationId : request.registrationId };
 
+    if (this._tpm) {
+      requestBody.tpm = this._tpm;
+    }
+
     /* update Codes_SRS_NODE_PROVISIONING_HTTP_18_009: [ `register` shall PUT the registration request to 'https://global.azure-devices-provisioning.net/{idScope}/registrations/{registrationId}/register' ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_005: [ The registration request shall include the current `api-version` as a URL query string value named 'api-version'. ] */
     let path: string = '/' + request.idScope + '/registrations/' + request.registrationId + '/register?api-version=' + ProvisioningDeviceConstants.apiVersion;
@@ -90,7 +153,11 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
       Content-Type: application/json; charset=utf-8 ] */
     let httpHeaders = JSON.parse(JSON.stringify(_defaultHeaders));
 
-    /* Codes_SRS_NODE_PROVISIONING_HTTP_18_007: [ If an `auth` string is specifed, it shall be URL encoded and included in the Http Authorization header. ] */
+    if (this._sasToken) {
+      httpHeaders.Authorization = this._sasToken;
+    }
+
+    /* Codes_SRS_NODE_PROVISIONING_HTTP_18_007: [ If an `auth` string is specified, it shall be URL encoded and included in the Http Authorization header. ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_011: [ If the registration request times out, `register` shall call the `callback` with the lower level error] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_012: [ If the registration response contains a body, `register` shall deserialize this into an object. ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_013: [ If registration response body fails to deserialize, `register` will throw an `SyntaxError` error. ] */
@@ -126,7 +193,11 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
       Content-Type: application/json; charset=utf-8 ] */
     let httpHeaders = JSON.parse(JSON.stringify(_defaultHeaders));
 
-    /* Codes_SRS_NODE_PROVISIONING_HTTP_18_021: [ If an `auth` string is specifed, it shall be URL encoded and included in the Http Authorization header of the operation status request. ] */
+    if (this._sasToken) {
+      httpHeaders.Authorization = this._sasToken;
+    }
+
+    /* Codes_SRS_NODE_PROVISIONING_HTTP_18_021: [ If an `auth` string is specified, it shall be URL encoded and included in the Http Authorization header of the operation status request. ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_023: [ If the operation status request times out, `register` shall stop polling and call the `callback` with with the lower level error ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_024: [ `register` shall deserialize the body of the operation status response into an object. ] */
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_025: [ If the body of the operation status response fails to deserialize, `register` will throw a `SyntaxError` error. ] */

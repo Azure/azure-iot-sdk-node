@@ -160,8 +160,8 @@ export interface RegistrationClient {
  * Information passed between client and transport during Tpm registration
  */
 export interface TpmRegistrationInfo {
-  endorsementKey: string;
-  storageRootKey: string;
+  endorsementKey: Buffer;
+  storageRootKey: Buffer;
   request: RegistrationRequest;
 }
 
@@ -177,8 +177,9 @@ export interface TpmRegistrationResult extends RegistrationResult {
  * @private
  */
 export interface TpmProvisioningTransport extends PollingTransport {
+  setTpmInformation(ek: Buffer, srk: Buffer): void;
   setSasToken(sasToken: string): void;
-  getAuthenticationChallenge(registrationInfo: TpmRegistrationInfo, callback: (err: Error, tpmChallenge?: TpmChallenge) => void): void;
+  getAuthenticationChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: TpmChallenge) => void): void;
 }
 
 /**
@@ -186,11 +187,11 @@ export interface TpmProvisioningTransport extends PollingTransport {
  * Public API exposed by the TPM security client object.  This is only useful if you're writing your own security client.
  */
 export interface TpmSecurityClient {
-  getEndorsementKey(callback: (err: Error, endorsementKey?: string) => void): void;
-  getStorageRootKey(callback: (err: Error, storageRootKey?: string) => void): void;
-  signWithIdentity(toSign: string, callback: (err: Error, signedData?: string) => void): void;
-  activateIdentityKey(key: string, callback: (err: Error) => void): void;
-  cancel(callback: (err: Error) => void): void;
+  getEndorsementKey(callback: (err: Error, endorsementKey?: Buffer) => void): void;
+  getStorageRootKey(callback: (err: Error, storageRootKey?: Buffer) => void): void;
+  signWithIdentity(toSign: Buffer, callback: (err: Error, signedData?: Buffer) => void): void;
+  activateIdentityKey(key: Buffer, callback: (err: Error) => void): void;
+  getRegistrationId(callback: (err: Error, registrationId?: string) => void): void;
 }
 
 /**

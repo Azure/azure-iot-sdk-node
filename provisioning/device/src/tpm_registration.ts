@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 import * as machina from 'machina';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-provisioning-device:TpmRegistration');
+import { anHourFromNow } from 'azure-iot-common';
 import { RegistrationClient, RegistrationResult } from './interfaces';
 import { TpmProvisioningTransport, TpmSecurityClient, TpmRegistrationInfo } from './interfaces';
 import { PollingStateMachine } from './polling_state_machine';
@@ -21,6 +22,8 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
     super();
     this._transport = transport;
     this._securityClient = securityClient;
+    this._provisioningHost = provisioningHost;
+    this._idScope = idScope;
     this._pollingStateMachine = new PollingStateMachine(transport);
 
     this._fsm = new machina.Fsm({
@@ -48,8 +51,15 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
                 this._fsm.transition('notStarted', err, registerCallback);
               } else {
                 registrationInfo.endorsementKey = ek;
-                registrationInfo.request.registrationId = this._createRegistrationIdFromEndorsementKey(ek);
-                this._fsm.handle('getStorageRootKey', registrationInfo, registerCallback);
+                this._securityClient.getRegistrationId((err, registrationId) => {
+                  if (err) {
+                    debug('failed to get registrationId from TPM security client: ' + err.toString());
+                    this._fsm.transition('notStarted', err, registerCallback);
+                  } else {
+                    registrationInfo.request.registrationId = registrationId;
+                    this._fsm.handle('getStorageRootKey', registrationInfo, registerCallback);
+                  }
+                });
               }
             });
           },
@@ -67,12 +77,14 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
             });
           },
           getTpmChallenge: (registrationInfo, registerCallback) => {
+
+            this._transport.setTpmInformation(registrationInfo.endorsementKey, registrationInfo.storageRootKey);
             /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_003: [The `register` method shall initiate the authentication flow with the device provisioning service by calling the `getAuthenticationChallenge` method of the `TpmProvisioningTransport` object passed to the constructor with an object with the following properties:
             - `registrationId`: a unique identifier computed from the endorsement key
             - `endorsementKey`: the `endorsementKey` value obtained from the `TpmSecurityClient` object
             - `storageRootKey`: the `storageRootKey` value obtained from the `TpmSecurityClient` object
             - a callback that will handle either an error or a `TpmChallenge` object containing a session key to be used later in the authentication process.]*/
-            this._transport.getAuthenticationChallenge(registrationInfo, (err, tpmChallenge) => {
+            this._transport.getAuthenticationChallenge(registrationInfo.request, (err, tpmChallenge) => {
               if (err) {
                 debug('failed to get sessionKey from provisioning service: ' + err.toString());
                 /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_010: [If any of the calls the the `TpmSecurityClient` or the `TpmProvisioningTransport` fails, the `register` method shall call its callback with the error resulting from the failure.]*/
@@ -86,7 +98,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
             /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_004: [The `register` method shall store the session key in the TPM by calling the `activateIdentityKey` method of the `TpmSecurityClient` object passed to the constructor with the following arguments:
             - `sessionKey`: the session key property of the `TpmChallenge` object returned by the previous call to `TpmProvisioningTransport.getAuthenticationChallenge`
             - a callback that will handle an optional error if the operation fails.]*/
-            this._securityClient.activateIdentityKey(tpmChallenge.authenticationKey, (err) => {
+            this._securityClient.activateIdentityKey(Buffer.from(tpmChallenge.authenticationKey, 'base64') , (err) => {
               if (err) {
                 debug('failed to activate the sessionKey: ' + err.toString());
                 /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_010: [If any of the calls the the `TpmSecurityClient` or the `TpmProvisioningTransport` fails, the `register` method shall call its callback with the error resulting from the failure.]*/
@@ -113,12 +125,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
               if (err) {
                 debug('failed to stop provisioning transport: ' + err.toString());
               }
-              this._securityClient.cancel((err) => {
-                if (err) {
-                  debug('failed to stop provisioning transport: ' + err.toString());
-                }
-                this._fsm.transition('notStarted', err, callback);
-              });
+              this._fsm.transition('notStarted', err, callback);
             });
           },
           '*': () => this._fsm.deferUntilTransition()
@@ -130,7 +137,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
             - `registrationInfo`: an object with the following properties `endorsementKey`, `storageRootKey`, `registrationId` and their previously set values.
             - a callback that will handle an optional error and a `result` object containing the IoT hub name, device id and symmetric key for this device.]*/
             this._transport.setSasToken(sasToken);
-            this._pollingStateMachine.register(registrationInfo, (err, result) => {
+            this._pollingStateMachine.register(registrationInfo.request, (err, result) => {
               if (err) {
                 debug('failed to register with provisioning transport: ' + err.toString());
                 /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_010: [If any of the calls the the `TpmSecurityClient` or the `TpmProvisioningTransport` fails, the `register` method shall call its callback with the error resulting from the failure.]*/
@@ -157,7 +164,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
             - `symmetricKey`: the symmetric key property of the `TpmChallenge` object returned by the previous call to `TpmProvisioningTransport.getAuthenticationChallenge`
             - a callback that will handle an optional error if the operation fails.
             ]*/
-            this._securityClient.activateIdentityKey(registrationResult.symmetricKey, (err) => {
+            this._securityClient.activateIdentityKey(Buffer.from(registrationResult.registrationState.tpm.authenticationKey,'base64'), (err) => {
               if (err) {
                 debug('failed to stop provisioning transport: ' + err.toString());
                 /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_010: [If any of the calls the the `TpmSecurityClient` or the `TpmProvisioningTransport` fails, the `register` method shall call its callback with the error resulting from the failure.]*/
@@ -169,12 +176,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
           },
           cancel: (callback) => {
             /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_011: [The `cancel` method shall interrupt the ongoing registration process.]*/
-            this._securityClient.cancel((err) => {
-              if (err) {
-                debug('failed to stop provisioning transport: ' + err.toString());
-              }
-              this._fsm.transition('notStarted', err, callback);
-            });
+              this._fsm.transition('notStarted', null, callback);
           },
            '*': () => this._fsm.deferUntilTransition()
         },
@@ -213,11 +215,6 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
     this._fsm.handle('cancel', callback);
   }
 
-  private _createRegistrationIdFromEndorsementKey(endorsementKey: string): string {
-    // figure out encoding of EK or if user should set it
-    return 'fakeRegistrationId';
-  }
-
   private _createRegistrationSas(registrationInfo: TpmRegistrationInfo, callback: (err: Error, sasToken?: string) => void): void {
 
     /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_005: [The `register` method shall create a signature for the initial SAS token by signing the following payload with the session key and the `TpmSecurityClient`:
@@ -229,16 +226,16 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
     - `registrationId` being the previously computed registration id.
     - `expiryTimeUtc` being the number of seconds since Epoch + a delay during which the initial sas token should be valid (1 hour by default).
     ]*/
-    const expiryTimeUtc = Date.now() / 1000 + 3600; // 1 hour from now.
+    const expiryTimeUtc = anHourFromNow();
     const audience = encodeURIComponent(registrationInfo.request.idScope + '/registrations/' + registrationInfo.request.registrationId);
-    const payload = audience + '\n' + expiryTimeUtc.toString();
+    const payload = new Buffer(audience + '\n' + expiryTimeUtc.toString());
 
     this._securityClient.signWithIdentity(payload, (err, signedBytes) => {
-      const signature = new Buffer(payload).toString('base64');
       if (err) {
         debug('failed to sign the initial authentication payload with sessionKey: ' + err.toString());
         callback(err);
       } else {
+        const signature = encodeURIComponent(signedBytes.toString('base64'));
         /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_006: [The `register` method shall create a SAS token to be used to get the actual registration result as follows:
         ```
         SharedAccessSignature sr=<audience>&sig=<signature>&se=<expiryTimeUtc>&skn=registration
