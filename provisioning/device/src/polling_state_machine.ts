@@ -6,7 +6,8 @@
 import { EventEmitter } from 'events';
 import { errors } from 'azure-iot-common';
 import * as machina from 'machina';
-import { PollingTransport, RegistrationRequest } from './interfaces';
+import { ProvisioningDeviceConstants } from './constants';
+import { PollingTransport, RegistrationRequest, DeviceRegistrationResult } from './interfaces';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-provisioning-device:PollingStateMachine');
 
@@ -25,41 +26,43 @@ export class  PollingStateMachine extends EventEmitter {
     this._transport = transport;
 
     this._fsm = new machina.Fsm({
-      namespace: 'provisioning-transport',
+      namespace: 'provisioning-client-polling',
       initialState: 'disconnected',
       states: {
         disconnected: {
           _onEnter: (err, result, response, callback) => {
-            this._currentOperationCallback = null;
             if (callback) {
               callback(err, result, response);
             }
           },
-          register: (request, callback) => {
-            this._fsm.transition('sendingRegistrationRequest', request, callback);
-          },
-          cancel: (err, result, response, callback) => {
-            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [ If `cancel` is called while disconnected, it shall immediately call its `callback`. ] */
-            // nothing to do.
-            callback();
-          }
+          register: (request, callback) => this._fsm.transition('sendingRegistrationRequest', request, callback),
+          /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [ If `cancel` is called while disconnected, it shall immediately call its `callback`. ] */
+          cancel: (cancelledOpErr, callback) => callback(),
+          /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_031: [ If `disconnect` is called while disconnected, it shall immediately call its `callback`. ] */
+          disconnect: (callback) => callback()
         },
         idle: {
-          _onEnter: (err, result, response, callback) => {
-            callback(err, result, response);
-          },
-          cancel: (err, result, response, callback) => {
-            this._fsm.transition('cancelling', err, result, response, callback);
-          },
-          register: (request, callback) => {
-            this._fsm.transition('sendingRegistrationRequest', request, callback);
-          },
+          _onEnter: (err, result, response, callback) => callback(err, result, response),
+          /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_030: [ If `cancel` is called while the transport is connected but idle, it shall immediately call its `callback`. ] */
+          cancel: (cancelledOpErr, callback) => callback(),
+          /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_032: [ If `disconnect` is called while while the transport is connected but idle, it shall call `PollingTransport.disconnect` and call it's `callback` passing the results of the transport operation. ] */
+          disconnect: (callback) => this._fsm.transition('disconnecting', callback),
+          register: (request, callback) => this._fsm.transition('sendingRegistrationRequest', request, callback)
         },
         sendingRegistrationRequest: {
           _onEnter: (request, callback) => {
+            let timeoutTimer = setTimeout(() => {
+              /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_036: [ If `PollingTransport.registrationRequest` does not call its callback within `ProvisioningDeviceConstants.defaultTimeoutInterval` ms, register shall with with a `TimeoutError` error. ] */
+              if (this._currentOperationCallback === callback) {
+                  debug('timeout while sending request');
+                  /* tslint:disable:no-empty */
+                  this._fsm.handle('cancel', new errors.TimeoutError(), () => {} );
+                }
+              }, ProvisioningDeviceConstants.defaultTimeoutInterval);
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_012: [ `register` shall call `PollingTransport.registrationRequest`. ] */
             this._currentOperationCallback = callback;
             this._transport.registrationRequest(request, (err, result, response, pollingInterval) => {
+              clearTimeout(timeoutTimer);
               // Check if the operation is still pending before transitioning.  We might be in a different state now and we don't want to mess that up.
               if (this._currentOperationCallback === callback) {
                 this._fsm.transition('responseReceived', err, request, result, response, pollingInterval, callback);
@@ -68,7 +71,13 @@ export class  PollingStateMachine extends EventEmitter {
               }
             });
           },
-          cancel: (err, result, response, callback) => this._fsm.transition('cancelling', err, result, response, callback),
+          cancel: (cancelledOpErr, callback) => this._fsm.transition('cancelling', cancelledOpErr, callback),
+          /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_033: [ If `disconnect` is called while in the middle of a `registrationRequest` operation, the operation shall be cancelled and the transport shall be disconnected. ] */
+          disconnect: (callback) => {
+            this._fsm.handle('cancel', new errors.OperationCancelledError(''), (err) => {
+              this._fsm.handle('disconnect', callback);
+            });
+          },
           /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_024: [ If `register` is called while a different request is in progress, it shall fail with an `InvalidOperationError`. ] */
           register: (request, callback) => callback(new errors.InvalidOperationError('another operation is in progress'))
         },
@@ -128,7 +137,7 @@ export class  PollingStateMachine extends EventEmitter {
         responseError: {
           _onEnter: (err, result, response, callback) => {
             this._currentOperationCallback = null;
-            this._fsm.transition('cancelling', err, result, response, callback);
+            this._fsm.transition('idle', err, result, response, callback);
           },
           '*': () => this._fsm.deferUntilTransition()
         },
@@ -139,18 +148,33 @@ export class  PollingStateMachine extends EventEmitter {
               this._fsm.transition('polling', request, operationId, pollingInterval, callback);
             }, pollingInterval);
           },
-          cancel: (err, result, response, callback) => {
+          cancel: (cancelledOpErr, callback) => {
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `cancel` shall cause that registration to fail with an `OperationCancelledError`. ] */
             clearTimeout(this._pollingTimer);
             this._pollingTimer = null;
-            this._fsm.transition('cancelling', err, result, response, callback);
+            this._fsm.transition('cancelling', cancelledOpErr, callback);
+          },
+          /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_034: [ If `disconnect` is called while the state machine is waiting to poll, the current operation shall be cancelled and the transport shall be disconnected. ] */
+          disconnect: (callback) => {
+            this._fsm.handle('cancel', new errors.OperationCancelledError(''), (err) => {
+              this._fsm.handle('disconnect', callback);
+            });
           },
           register: (request, callback) => callback(new errors.InvalidOperationError('another operation is in progress'))
         },
         polling: {
           _onEnter: (request, operationId, pollingInterval, callback) => {
+            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_037: [ If `PollingTransport.queryOperationStatus` does not call its callback within `ProvisioningDeviceConstants.defaultTimeoutInterval` ms, register shall with with a `TimeoutError` error. ] */
+            let timeoutTimer: any = setTimeout(() => {
+              debug('timeout while query');
+              if (this._currentOperationCallback === callback) {
+                /* tslint:disable:no-empty */
+                this._fsm.handle('cancel', new errors.TimeoutError(), () => {} );
+              }
+            }, ProvisioningDeviceConstants.defaultTimeoutInterval);
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_018: [ When the polling interval elapses, `register` shall call `PollingTransport.queryOperationStatus`. ] */
             this._transport.queryOperationStatus(request, operationId, (err, result, response, pollingInterval) => {
+              clearTimeout(timeoutTimer);
               // Check if the operation is still pending before transitioning.  We might be in a different state now and we don't want to mess that up.
               if (this._currentOperationCallback === callback) {
                 this._fsm.transition('responseReceived', err, request, result, response, pollingInterval, callback);
@@ -159,23 +183,37 @@ export class  PollingStateMachine extends EventEmitter {
               }
             });
           },
-          cancel: (err, result, response, callback) => this._fsm.transition('cancelling', err, result, response, callback),
+          cancel: (cancelledOpErr, callback) => this._fsm.transition('cancelling', cancelledOpErr, callback),
+          /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_035: [ If `disconnect` is called while in the middle of a `queryOperationStatus` operation, the operation shall be cancelled and the transport shall be disconnected. ] */
+          disconnect: (callback) => {
+            this._fsm.handle('cancel', new errors.OperationCancelledError(''), (err) => {
+              this._fsm.handle('disconnect', callback);
+            });
+          },
           /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_024: [ If `register` is called while a different request is in progress, it shall fail with an `InvalidOperationError`. ] */
           register: (request, callback) => callback(new errors.InvalidOperationError('another operation is in progress'))
         },
         cancelling: {
-          _onEnter: (err, result, response, callback) => {
+          _onEnter: (cancelledOpErr, callback) => {
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `cancel` shall cause that registration to fail with an `OperationCancelledError`. ] */
             if (this._currentOperationCallback) {
               let _callback = this._currentOperationCallback;
               this._currentOperationCallback = null;
-              _callback(new errors.OperationCancelledError(''));
+              process.nextTick(() => _callback(cancelledOpErr));
             }
-            this._transport.cancel((disconnectErr) => {
-              if (disconnectErr) {
-                debug('error received from transport during disconnection:' + disconnectErr.toString());
+            this._transport.cancel((cancelErr) => {
+              if (cancelErr) {
+                debug('error received from transport during cancel:' + cancelErr.toString());
               }
-              this._fsm.transition('disconnected', err || disconnectErr, result, response, callback);
+              this._fsm.transition('idle', cancelErr, null, null, callback);
+            });
+          },
+          '*': () => this._fsm.deferUntilTransition()
+        },
+        disconnecting: {
+          _onEnter: (callback) => {
+            this._transport.disconnect((err) => {
+              this._fsm.transition('disconnected', err, null, null, callback);
             });
           },
           '*': () => this._fsm.deferUntilTransition()
@@ -188,13 +226,20 @@ export class  PollingStateMachine extends EventEmitter {
     });
   }
 
-  register(request: RegistrationRequest, callback: (err?: Error, result?: any, response?: any) => void): void {
+  register(request: RegistrationRequest, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any) => void): void {
     debug('register called for registrationId "' + request.registrationId + '"');
     this._fsm.handle('register', request, callback);
   }
 
   cancel(callback: (err: Error) => void): void {
     debug('cancel called');
-    this._fsm.handle('cancel', null, null, null, callback);
+    this._fsm.handle('cancel', new errors.OperationCancelledError(''), callback);
+  }
+
+  disconnect(callback: (err: Error) => void): void {
+    debug('disconnect called');
+    this._fsm.handle('disconnect', callback);
   }
 }
+
+

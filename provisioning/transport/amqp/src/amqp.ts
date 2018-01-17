@@ -10,8 +10,7 @@ import * as uuid from 'uuid';
 import * as async from 'async';
 const debug = dbg('azure-device-provisioning-amqp:Amqp');
 
-// tslint:disable-next-line:no-var-requires
-import { X509 } from 'azure-iot-common';
+import { X509, errors } from 'azure-iot-common';
 import { ProvisioningTransportOptions, X509ProvisioningTransport, RegistrationRequest, RegistrationResult, ProvisioningDeviceConstants } from 'azure-iot-provisioning-device';
 import { Amqp as Base, SenderLink, ReceiverLink, AmqpMessage } from 'azure-iot-amqp-base';
 
@@ -58,7 +57,6 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
     super();
     this._amqpBase = amqpBase || new Base(true, ProvisioningDeviceConstants.userAgent);
     this._config.pollingInterval = ProvisioningDeviceConstants.defaultPollingInterval;
-    this._config.timeoutInterval = ProvisioningDeviceConstants.defaultTimeoutInterval;
 
     const amqpErrorListener = (err) => this._amqpStateMachine.handle('amqpError', err);
 
@@ -88,26 +86,31 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
               this.emit('error', err);
             }
           },
-          registrationRequest: (request, callback) => {
+          registrationRequest: (request, correlationId, callback) => {
+            this._operations[correlationId] = callback;
             this._amqpStateMachine.transition('connecting', request, (err) => {
               if (err) {
                 callback(err);
               } else {
-                this._amqpStateMachine.handle('registrationRequest', request, callback);
+                this._amqpStateMachine.handle('registrationRequest', request, correlationId, callback);
               }
             });
           },
-          queryOperationStatus: (request, operationId, callback) => {
+          queryOperationStatus: (request, correlationId, operationId, callback) => {
+            this._operations[correlationId] = callback;
             this._amqpStateMachine.transition('connecting', request, (err) => {
               if (err) {
                 callback(err);
               } else {
-                this._amqpStateMachine.handle('queryOperationStatus', request, operationId, callback);
+                this._amqpStateMachine.handle('queryOperationStatus', request, correlationId, operationId, callback);
               }
             });
           },
-          /*Codes_SRS_NODE_PROVISIONING_AMQP_16_022: [`cancel` shall call its callback immediately if the AMQP connection is disconnected.]*/
-          cancel: (callback) => callback()
+          /*Codes_SRS_NODE_PROVISIONING_AMQP_18_003: [ `cancel` shall call its callback immediately if the AMQP connection is disconnected. ] */
+          cancel: (callback) => callback(),
+          /*Codes_SRS_NODE_PROVISIONING_AMQP_16_022: [`disconnect` shall call its callback immediately if the AMQP connection is disconnected.]*/
+          disconnect: (callback) => callback()
+
         },
         connecting: {
           _onEnter: (request, callback) => {
@@ -183,13 +186,21 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
               }
             });
           },
-          /*Codes_SRS_NODE_PROVISIONING_AMQP_16_023: [`cancel` shall detach the sender and receiver links and disconnect the AMQP connection.]*/
-          cancel: (callback) => this._amqpStateMachine.transition('disconnecting', null, null, callback),
+          /*Codes_SRS_NODE_PROVISIONING_AMQP_18_005: [ `cancel` shall disconnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. ] */
+          cancel: (callback) => {
+            this._cancelAllOperations();
+            this._amqpStateMachine.transition('disconnecting', null, null, callback);
+          },
+          /*Codes_SRS_NODE_PROVISIONING_AMQP_18_009: [ `disconnect` shall disonnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. ] */
+          disconnect: (callback) => {
+            this._cancelAllOperations();
+            this._amqpStateMachine.transition('disconnecting', null, null, callback);
+          },
           '*': () => this._amqpStateMachine.deferUntilTransition()
         },
         connected: {
           _onEnter: (callback) => callback(),
-          registrationRequest: (request, callback) => {
+          registrationRequest: (request, correlationId, callback) => {
 
             /*Codes_SRS_NODE_PROVISIONING_AMQP_16_005: [The `registrationRequest` method shall send a message on the previously attached sender link with a `correlationId` set to a newly generated UUID and the following application properties:
             ```
@@ -203,7 +214,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
             requestMessage.properties = {};
             requestMessage.applicationProperties[MessagePropertyNames.OperationType] = DeviceOperations.Register;
             requestMessage.applicationProperties[MessagePropertyNames.ForceRegistration] = !!request.forceRegistration;
-            requestMessage.properties.correlationId = uuid.v4();
+            requestMessage.properties.correlationId = correlationId;
 
             debug('initial registration request: ' + JSON.stringify(requestMessage));
             this._operations[requestMessage.properties.correlationId] = callback;
@@ -211,13 +222,14 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
               if (err) {
                 delete this._operations[requestMessage.properties.correlationId];
                 /*Codes_SRS_NODE_PROVISIONING_AMQP_16_011: [The `registrationRequest` method shall call its callback with an error if the transport fails to send the request message.]*/
-                callback(err, null, null, this._config.pollingInterval);
+                callback(err);
               } else {
                 debug('registration request sent with correlationId: ' + requestMessage.properties.correlationId);
               }
             });
           },
-          queryOperationStatus: (request, operationId, callback) => {
+          queryOperationStatus: (request, correlationId, operationId, callback) => {
+
             /*Codes_SRS_NODE_PROVISIONING_AMQP_16_015: [The `queryOperationStatus` method shall send a message on the pre-attached sender link with a `correlationId` set to a newly generated UUID and the following application properties:
             ```
             iotdps-operation-type: iotdps-get-operationstatus;
@@ -229,15 +241,15 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
             requestMessage.properties = {};
             requestMessage.applicationProperties[MessagePropertyNames.OperationType] = DeviceOperations.GetOperationStatus;
             requestMessage.applicationProperties[MessagePropertyNames.OperationId] = operationId;
-            requestMessage.properties.correlationId = uuid.v4();
+            requestMessage.properties.correlationId = correlationId;
 
             debug('registration status request: ' + JSON.stringify(requestMessage));
             this._operations[requestMessage.properties.correlationId] = callback;
             this._senderLink.send(requestMessage, (err) => {
               if (err) {
-                this._operations[requestMessage.properties.correlationId] = undefined;
+                delete this._operations[requestMessage.properties.correlationId];
                 /*Codes_SRS_NODE_PROVISIONING_AMQP_16_021: [The `queryOperationStatus` method shall call its callback with an error if the transport fails to send the request message.]*/
-                callback(err, null, null, this._config.pollingInterval);
+                callback(err);
               } else {
                 debug('registration status request sent with correlationId: ' + requestMessage.properties.correlationId);
               }
@@ -246,10 +258,24 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
           amqpError: (err) => {
             this._amqpStateMachine.transition('disconnecting', err);
           },
-          cancel: (callback) => this._amqpStateMachine.transition('disconnecting', null, null, callback),
+          cancel: (callback) => {
+            /*Codes_SRS_NODE_PROVISIONING_AMQP_18_004: [ `cancel` shall call its callback immediately if the AMQP connection is connected but idle. ] */
+            /*Codes_SRS_NODE_PROVISIONING_AMQP_18_006: [ `cancel` shall cause a `registrationRequest` operation that is in progress to call its callback passing an `OperationCancelledError` object. ] */
+            /*Codes_SRS_NODE_PROVISIONING_AMQP_18_007: [ `cancel` shall cause a `queryOperationStatus` operation that is in progress to call its callback passing an `OperationCancelledError` object. ] */
+            /*Codes_SRS_NODE_PROVISIONING_AMQP_18_008: [ `cancel` shall not disconnect the AMQP transport. ] */
+            this._cancelAllOperations();
+            callback();
+          },
+          disconnect: (callback) => {
+            /*Codes_SRS_NODE_PROVISIONING_AMQP_18_001: [ `disconnect` shall cause a `registrationRequest` operation that is in progress to call its callback passing an `OperationCancelledError` object. ] */
+            /*Codes_SRS_NODE_PROVISIONING_AMQP_18_002: [ `disconnect` shall cause a `queryOperationStatus` operation that is in progress to call its callback passing an `OperationCancelledError` object. ] */
+            this._cancelAllOperations();
+            this._amqpStateMachine.transition('disconnecting', null, null, callback);
+          }
         },
         disconnecting: {
           _onEnter: (err, registrationResult, callback) => {
+            /*Codes_SRS_NODE_PROVISIONING_AMQP_16_023: [`disconnect` shall detach the sender and receiver links and disconnect the AMQP connection.]*/
             let finalError = err;
             async.series([
               (callback) => {
@@ -301,8 +327,8 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
                 });
               }
             ], () => {
-              /*Codes_SRS_NODE_PROVISIONING_AMQP_16_024: [`cancel` shall call its callback with no arguments if all detach/disconnect operations were successful.]*/
-              /*Codes_SRS_NODE_PROVISIONING_AMQP_16_025: [`cancel` shall call its callback with the error passed from the first unsuccessful detach/disconnect operation if one of those fail.]*/
+              /*Codes_SRS_NODE_PROVISIONING_AMQP_16_024: [`disconnect` shall call its callback with no arguments if all detach/disconnect operations were successful.]*/
+              /*Codes_SRS_NODE_PROVISIONING_AMQP_16_025: [`disconnect` shall call its callback with the error passed from the first unsuccessful detach/disconnect operation if one of those fail.]*/
               this._amqpStateMachine.transition('disconnected', finalError, registrationResult, callback);
             });
           },
@@ -319,8 +345,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
    */
   setTransportOptions(options: ProvisioningTransportOptions): void {
     [
-      'pollingInterval',
-      'timeoutInterval'
+      'pollingInterval'
     ].forEach((optionName) => {
       if (options.hasOwnProperty(optionName)) {
         this._config[optionName] = options[optionName];
@@ -340,14 +365,16 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
    * @private
    */
   registrationRequest(request: RegistrationRequest, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
-    this._amqpStateMachine.handle('registrationRequest', request, callback);
+    let correlationId: string = uuid.v4();
+    this._amqpStateMachine.handle('registrationRequest', request, correlationId, callback);
   }
 
   /**
    * @private
    */
   queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void {
-    this._amqpStateMachine.handle('queryOperationStatus', request, operationId, callback);
+    let correlationId: string = uuid.v4();
+    this._amqpStateMachine.handle('queryOperationStatus', request, correlationId, operationId, callback);
   }
 
   /**
@@ -360,7 +387,31 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
   /**
    * @private
    */
+  disconnect(callback: (err?: Error) => void): void {
+    this._amqpStateMachine.handle('disconnect', callback);
+  }
+
+  /**
+   * @private
+   */
   protected _getConnectionUri(request: RegistrationRequest): string {
     return 'amqps://' + request.provisioningHost;
   }
+
+  /**
+   * @private
+   */
+  private _cancelAllOperations(): void {
+    debug('cancelling all operations');
+    for (let op in this._operations) {
+      debug('cancelling ' + op);
+      let callback = this._operations[op];
+      delete this._operations[op];
+      process.nextTick(() => {
+        callback(new errors.OperationCancelledError());
+      });
+    }
+  }
+
 }
+

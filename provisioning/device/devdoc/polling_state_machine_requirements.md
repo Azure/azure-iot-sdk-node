@@ -27,6 +27,8 @@ Register round-trips one step of the registration process, not returning until a
 
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_028: [** If `PollingTransport.registrationRequest` succeeds with status==Failed, it shall fail with a `ProvisioningRegistrationFailedError` error **]**
 
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_036: [** If `PollingTransport.registrationRequest` does not call its callback within `ProvisioningDeviceConstants.defaultTimeoutInterval` ms, register shall with with a `TimeoutError` error. **]**
+
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_018: [** When the polling interval elapses, `register` shall call `PollingTransport.queryOperationStatus`. **]**
 
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_019: [** If `PollingTransport.queryOperationStatus` fails, `register` shall fail. **]**
@@ -39,15 +41,31 @@ Register round-trips one step of the registration process, not returning until a
 
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_022: [** If `PollingTransport.queryOperationStatus` succeeds with an unknown status, `register` shall fail with a `SyntaxError` and pass the response body and the protocol-specific result to the `callback`. **]**
 
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_037: [** If `PollingTransport.queryOperationStatus` does not call its callback within `ProvisioningDeviceConstants.defaultTimeoutInterval` ms, register shall with with a `TimeoutError` error. **]**
+
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_024: [** If `register` is called while a different request is in progress, it shall fail with an `InvalidOperationError`. **]**
 
 
 ### cancel(callback: (err: Error) => void): void
-`cancel` is used to end the transport session
+`cancel` is used to cancel the current operation
 
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [** If `cancel` is called while disconnected, it shall immediately call its `callback`. **]**
 
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_026: [** `cancel` shall call `PollingTransport.cancel` of it's called while the transport is connected. **]**
-
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [** If a registration is in progress, `cancel` shall cause that registration to fail with an `OperationCancelledError`. **]**
+
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_030: [** If `cancel` is called while the transport is connected but idle, it shall immediately call its `callback`. **]**
+
+
+### disconnect(callback: (err: Error) => void): void
+`disconnect` is used to end the current transport session
+
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_031: [** If `disconnect` is called while disconnected, it shall immediately call its `callback`. **]**
+
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_032: [** If `disconnect` is called while while the transport is connected but idle, it shall call `PollingTransport.disconnect` and call it's `callback` passing the results of the transport operation. **]**
+
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_033: [** If `disconnect` is called while in the middle of a `registrationRequest` operation, the operation shall be cancelled and the transport shall be disconnected. **]**
+
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_034: [** If `disconnect` is called while the state machine is waiting to poll, the current operation shall be cancelled and the transport shall be disconnected. **]**
+
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_035: [** If `disconnect` is called while in the middle of a `queryOperationStatus` operation, the operation shall be cancelled and the transport shall be disconnected. **]**
 

@@ -107,6 +107,7 @@ export interface PollingTransport {
   registrationRequest(request: RegistrationRequest, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void;
   queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void;
   cancel(callback: (err?: Error) => void): void;
+  disconnect(callback: (err?: Error) => void): void;
 }
 
 /**

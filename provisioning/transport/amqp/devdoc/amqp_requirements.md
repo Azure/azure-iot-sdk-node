@@ -84,12 +84,34 @@ iotdps-operation-id: <operationId>;
 
 **SRS_NODE_PROVISIONING_AMQP_16_021: [** The `queryOperationStatus` method shall call its callback with an error if the transport fails to send the request message. **]**
 
+## disconnect(callback: (err?: Error) => void): void
+
+**SRS_NODE_PROVISIONING_AMQP_16_022: [** `disconnect` shall call its callback immediately if the AMQP connection is disconnected. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_16_023: [** `disconnect` shall detach the sender and receiver links and disconnect the AMQP connection. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_16_024: [** `disconnect` shall call its callback with no arguments if all detach/disconnect operations were successful. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_16_025: [** `disconnect` shall call its callback with the error passed from the first unsuccessful detach/disconnect operation if one of those fail. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_18_009: [** `disconnect` shall disonnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_18_001: [** `disconnect` shall cause a `registrationRequest` operation that is in progress to call its callback passing an `OperationCancelledError` object. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_18_002: [** `disconnect` shall cause a `queryOperationStatus` operation that is in progress to call its callback passing an `OperationCancelledError` object. **]**
+
 ## cancel(callback: (err?: Error) => void): void
 
-**SRS_NODE_PROVISIONING_AMQP_16_022: [** `cancel` shall call its callback immediately if the AMQP connection is disconnected. **]**
+**SRS_NODE_PROVISIONING_AMQP_18_003: [** `cancel` shall call its callback immediately if the AMQP connection is disconnected. **]**
 
-**SRS_NODE_PROVISIONING_AMQP_16_023: [** `cancel` shall detach the sender and receiver links and disconnect the AMQP connection. **]**
+**SRS_NODE_PROVISIONING_AMQP_18_004: [** `cancel` shall call its callback immediately if the AMQP connection is connected but idle. **]**
 
-**SRS_NODE_PROVISIONING_AMQP_16_024: [** `cancel` shall call its callback with no arguments if all detach/disconnect operations were successful. **]**
+**SRS_NODE_PROVISIONING_AMQP_18_005: [** `cancel` shall disconnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. **]**
 
-**SRS_NODE_PROVISIONING_AMQP_16_025: [** `cancel` shall call its callback with the error passed from the first unsuccessful detach/disconnect operation if one of those fail. **]**
+**SRS_NODE_PROVISIONING_AMQP_18_006: [** `cancel` shall cause a `registrationRequest` operation that is in progress to call its callback passing an `OperationCancelledError` object. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_18_007: [** `cancel` shall cause a `queryOperationStatus` operation that is in progress to call its callback passing an `OperationCancelledError` object. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_18_008: [** `cancel` shall not disconnect the AMQP transport. **]**
+
+

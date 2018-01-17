@@ -285,7 +285,7 @@ describe('Http', function () {
 
     });
 
-    /* Tests_SRS_NODE_PROVISIONING_HTTP_18_032: [ If `disconnect` is called while the operation status request is in progress, `register` shall call the `callback` with an `OperationCancelledError` error. ] */
+   /* Tests_SRS_NODE_PROVISIONING_HTTP_18_032: [ If `disconnect` is called while the operation status request is in progress, `register` shall call the `callback` with an `OperationCancelledError` error. ] */
     it('fails with cancel during operation status request', function(testCallback) {
       var fakeBase = {};
       var callbackCount = 0;
@@ -528,16 +528,6 @@ describe('Http', function () {
       var http = makeNewTransport(fakeBase);
       http.registerX509(fakeRegRequest, fakeAuth, function(err, result) {
         assert.instanceOf(err, SyntaxError);
-        testCallback();
-      });
-    });
-  });
-
-  describe('disconnect', function() {
-    it('does nothing if disconnect is called while disconnected', function(testCallback) {
-      var http = new Http(null);
-      http.cancel(function(err) {
-        assert.isTrue(!err);
         testCallback();
       });
     });

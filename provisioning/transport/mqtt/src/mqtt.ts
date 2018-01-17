@@ -43,18 +43,17 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
     super();
     this._mqttBase = mqttBase || new MqttBase(ProvisioningDeviceConstants.apiVersion);
     this._config.pollingInterval = ProvisioningDeviceConstants.defaultPollingInterval;
-    this._config.timeoutInterval = ProvisioningDeviceConstants.defaultTimeoutInterval;
 
     const responseHandler = (topic: string, payload: any) => {
       let payloadString: string = payload.toString('ascii');
       debug('message received on ' + topic);
       debug(payloadString);
 
-    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_010: [ When waiting for responses, `registrationRequest` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>.] */
-    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_024: [ When waiting for responses, `queryOperationStatus` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>.] */
-    let match = topic.match(/^\$dps\/registrations\/res\/(.*)\/\?\$rid=(.*)$/);
+      /* Codes_SRS_NODE_PROVISIONING_MQTT_18_010: [ When waiting for responses, `registrationRequest` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>.] */
+      /* Codes_SRS_NODE_PROVISIONING_MQTT_18_024: [ When waiting for responses, `queryOperationStatus` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>.] */
+      let match = topic.match(/^\$dps\/registrations\/res\/(.*)\/\?\$rid=(.*)$/);
 
-    if (!!match && match.length === 3) {
+      if (!!match && match.length === 3) {
         let status: number = Number(match[1]);
         let rid: string = match[2];
         if (this._operations[rid]) {
@@ -62,10 +61,14 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
           let handler = this._operations[rid];
           delete this._operations[rid];
           if (status < 300) {
+            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_013: [ When `registrationRequest` receives a successful response from the service, it shall call `callback` passing in null and the response.] */
+            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_027: [ When `queryOperationStatus` receives a successful response from the service, it shall call `callback` passing in null and the response.] */
             handler(null, payloadJson);
           } else {
             /* Codes_SRS_NODE_PROVISIONING_MQTT_18_012: [ If `registrationRequest` receives a response with status >= 300, it shall consider the request failed and create an error using `translateError`.] */
+            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_015: [ When `registrationRequest` receives an error from the service, it shall call `callback` passing in the error.] */
             /* Codes_SRS_NODE_PROVISIONING_MQTT_18_026: [ If `queryOperationStatus` receives a response with status >= 300, it shall consider the query failed and create an error using `translateError`.] */
+            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_029: [ When `queryOperationStatus` receives an error from the service, it shall call `callback` passing in the error.] */
             handler(translateError('incoming message failure', status, payloadJson, { topic: topic, payload: payloadJson }));
           }
         }
@@ -73,7 +76,6 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
     };
 
     const errorHandler = (err: Error) => {
-      /* tslint:disable:no-empty */
       this._fsm.handle('disconnect', err);
     };
 
@@ -92,92 +94,85 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
               this.emit('error', err);
             }
           },
-          registrationRequest: (request, callback) => {
+          registrationRequest: (request, rid, callback) => {
+            this._operations[rid] = callback;
+
             /* Codes_SRS_NODE_PROVISIONING_MQTT_18_002: [ If the transport is not connected, `registrationRequest` shall connect it and subscribe to the response topic.] */
             this._fsm.handle('connect', request, (err) => {
               if (err) {
                 callback(err);
               } else {
-                this._fsm.transition('sendingRegistrationRequest', request, callback);
+                this._fsm.handle('registrationRequest', rid, request, callback);
               }
             });
           },
-          queryOperationStatus: (request, operationId, callback) => {
+          queryOperationStatus: (request, rid, operationId, callback) => {
+            this._operations[rid] = callback;
+
             /* Codes_SRS_NODE_PROVISIONING_MQTT_18_016: [ If the transport is not connected, `queryOperationStatus` shall connect it and subscribe to the response topic.] */
             this._fsm.handle('connect', request, (err) => {
               if (err) {
                 callback(err);
               } else {
-                this._fsm.transition('sendingOperationStatusQuery', request, operationId, callback);
+                this._fsm.handle('queryOperationStatus', request, rid, operationId, callback);
               }
             });
           },
           connect: (request, callback) => this._fsm.transition('connecting', request, callback),
+          /* Codes_SRS_NODE_PROVISIONING_MQTT_18_052: [ If `disconnect` is called while the transport is disconnected, it will call `callback` immediately. ] */
           disconnect: (err, callback) => callback(err),
-          /* Codes_SRS_NODE_PROVISIONING_MQTT_18_030: [ If `cancel` is called while the transport is disconnected,  `mqtt` will call `callback` immediately.] */
+          /* Codes_SRS_NODE_PROVISIONING_MQTT_18_030: [ If `cancel` is called while the transport is disconnected, it will call `callback` immediately.] */
           cancel: (callback) => callback()
         },
         connecting: {
           _onEnter: (request, callback) => {
             this._connect(request, (err) => {
               if (err) {
-                this._fsm.handle('disconnect', err, callback);
+                /* Codes_SRS_NODE_PROVISIONING_MQTT_18_051: [ If either `_mqttBase.connect` or `_mqttBase.subscribe` fails, `mqtt` will disconnect the transport. ] */
+                this._fsm.transition('disconnecting', err, callback);
               } else {
-                this._fsm.transition('connected', request, null, callback);
+                this._fsm.transition('connected', null, request, null, callback);
               }
             });
           },
-          disconnect: (err, callback) => this._fsm.transition('disconnecting', err, callback),
-          /* Codes_SRS_NODE_PROVISIONING_MQTT_18_031: [ If `cancel` is called while the transport is in the process of connecting, it shall wait until the connection is complete and then disconnect the transport.] */
+          cancel: (callback) => {
+            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_062: [ If `cancel` is called while the transport is in the process of connecting, it shell disconnect transport and cancel the operation that initiated the connection. ] */
+            this._cancelAllOperations();
+            this._fsm.transition('disconnecting', null, callback);
+          },
+          disconnect: (err, callback) => {
+            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_061: [ If `disconnect` is called while the transport is in the process of connecting, it shell disconnect connection and cancel the operation that initiated the connection. ] */
+            this._cancelAllOperations();
+            this._fsm.transition('disconnecting', err, callback);
+          },
           '*': () => this._fsm.deferUntilTransition()
         },
         connected: {
-          _onEnter: (request, result, callback) => {
-            if (this._deferredCancelInQueue()) {
-              debug('connect operation cancelled');
-              callback(new errors.OperationCancelledError());
-            } else {
-              callback(null, result);
-            }
-          },
-          registrationRequest: (request, callback) => this._fsm.transition('sendingRegistrationRequest', request, callback),
-          queryOperationStatus: (request, operationId, callback) => this._fsm.transition('sendingOperationStatusQuery', request, operationId, callback),
-          /* Codes_SRS_NODE_PROVISIONING_MQTT_18_032: [ If `cancel` is called while the transport is connected and idle, it will disconnect the transport.] */
-          cancel: (callback) => this._fsm.handle('disconnect', null, callback),
-          disconnect: (err, callback) => this._fsm.transition('disconnecting', err, callback),
-          '*': () => this._fsm.deferUntilTransition()
-        },
-        sendingRegistrationRequest: {
-          _onEnter:  (request, callback) => {
-            this._sendRegistrationRequest(request, (err, result) => {
-              if (err) {
-                /* Codes_SRS_NODE_PROVISIONING_MQTT_18_005: [ If the publish fails, `registrationRequest` shall disconnect the transport.] */
-                /* Codes_SRS_NODE_PROVISIONING_MQTT_18_014: [ When `registrationRequest` receives an error from the service, it shall disconnect the transport.] */
-                this._fsm.handle('disconnect', err, callback);
-              } else {
-                this._fsm.transition('connected', request, result, callback);
-              }
+          _onEnter: (err, request, result, callback) => callback(err, result, request),
+          registrationRequest: (request, rid, callback) => {
+            this._sendRegistrationRequest(request, rid, (err, result) => {
+              callback(err, result, request);
             });
           },
-          cancel: (callback) => this._fsm.handle('disconnect', null, callback),
-          disconnect: (err, callback) => this._fsm.transition('disconnecting', err, callback),
-          '*': () => this._fsm.deferUntilTransition()
-        },
-        sendingOperationStatusQuery: {
-          _onEnter: (request, operationId, callback) => {
-            this._sendOperationStatusQuery(request, operationId, (err, result) => {
-              if (err) {
-                /* Codes_SRS_NODE_PROVISIONING_MQTT_18_028: [ When `queryOperationStatus` receives an error from the service, it shall disconnect the transport.] */
-                /* Codes_SRS_NODE_PROVISIONING_MQTT_18_019: [ If the publish fails, `queryOperationStatus` shall disconnect the transport.] */
-                this._fsm.handle('disconnect', err, callback);
-              } else {
-                this._fsm.transition('connected', request, result, callback);
-              }
+          queryOperationStatus: (request, rid, operationId, callback) => {
+            this._sendOperationStatusQuery(request, rid, operationId, (err, result) => {
+              callback(err, result, request);
             });
           },
-          cancel: (callback) => this._fsm.handle('disconnect', null, callback),
-          disconnect: (err, callback) => this._fsm.transition('disconnecting', err, callback),
-          '*': () => this._fsm.deferUntilTransition()
+          cancel: (callback) => {
+            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_032: [ If `cancel` is called while the transport is connected and idle, it will call `callback` immediately.] */
+            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_033: [ If `cancel` is called while the transport is in the middle of a `registrationRequest` operation, it will stop listening for a response and cause `registrationRequest` call it's `callback` passing an `OperationCancelledError` error.] */
+            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_034: [ If `cancel` is called while the transport is in the middle of a `queryOperationStatus` operation, it will stop listening for a response and cause `registrationRequest` call it's `callback` passing an `OperationCancelledError` error.] */
+            this._cancelAllOperations();
+            callback();
+          },
+          /* Codes_SRS_NODE_PROVISIONING_MQTT_18_054: [ If `disconnect` is called while the transport is connected and idle, it shall disconnect. ] */
+          /* Codes_SRS_NODE_PROVISIONING_MQTT_18_055: [ If `disconnect` is called while the transport is in the middle of a `registrationRequest` operation, it shall cancel the `registrationRequest` operation and disconnect the transport. ] */
+          /* Codes_SRS_NODE_PROVISIONING_MQTT_18_056: [ If `disconnect` is called while the transport is in the middle of a `queryOperationStatus` operation, it shall cancel the `queryOperationStatus` operation and disconnect the transport. ] */
+          disconnect: (err, callback) => {
+            this._cancelAllOperations();
+            this._fsm.transition('disconnecting', err, callback);
+          }
         },
         disconnecting: {
           _onEnter: (err, callback) => {
@@ -197,10 +192,8 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
    *
    */
   setTransportOptions(options: ProvisioningTransportOptions): void {
-
     [
       'pollingInterval',
-      'timeoutInterval'
     ].forEach((optionName) => {
       if (options.hasOwnProperty(optionName)) {
         this._config[optionName] = options[optionName];
@@ -212,8 +205,9 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
    * private
    */
   registrationRequest(request: RegistrationRequest, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void {
+    let rid = uuid.v4();
 
-    this._fsm.handle('registrationRequest', request, (err, result) => {
+    this._fsm.handle('registrationRequest', request, rid, (err, result) => {
       if (err) {
         callback(err);
       } else {
@@ -226,8 +220,9 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
    * private
    */
   queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void {
+    let rid = uuid.v4();
 
-    this._fsm.handle('queryOperationStatus', request, operationId, (err, result) => {
+    this._fsm.handle('queryOperationStatus', request, rid, operationId, (err, result) => {
       if (err) {
         callback(err);
       } else {
@@ -240,10 +235,14 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
    * @private
    */
   cancel(callback: (err?: Error) => void): void {
-    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_033: [ If `cancel` is called while the transport is in the middle of a `registrationRequest` operation, it will disconnect the transport and indirectly cause `registrationRequest` call it's `callback` passing an error.] */
-    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_034: [ If `cancel` is called while the transport is in the middle of a `queryOperationStatus` operation, it will disconnect the transport and indirectly cause `registrationRequest` call it's `callback` passing an error.] */
-    this._cancelAllOperations();
     this._fsm.handle('cancel', callback);
+  }
+
+  /**
+   * @private
+   */
+  disconnect(callback: (err?: Error) => void): void {
+    this._fsm.handle('disconnect', null, callback);
   }
 
   /**
@@ -260,12 +259,12 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
 
   private _connect(request: RegistrationRequest, callback: (err?: Error) => void): void {
 
-  /* Codes_SRS_NODE_PROVISIONING_MQTT_18_037: [ When connecting, `Mqtt` shall pass in the `X509` certificate that was passed into `setAuthentication` in the base `TransportConfig` object.] */
-  /* Codes_SRS_NODE_PROVISIONING_MQTT_18_050: [ When connecting, `Mqtt` shall set `host` in the base `TransportConfig` object to the `provisioningDeviceHost`.] */
-  /* Codes_SRS_NODE_PROVISIONING_MQTT_18_035: [ When connecting, `Mqtt` shall set `clientId` in the base `registrationRequest` object to the registrationId.] */
-  /* Codes_SRS_NODE_PROVISIONING_MQTT_18_036: [ When connecting, `Mqtt` shall set the `clean` flag in the base `TransportConfig` object to true.] */
-  /* Codes_SRS_NODE_PROVISIONING_MQTT_18_038: [ When connecting, `Mqtt` shall set the `username` in the base `TransportConfig` object to '<idScope>/registrations/<registrationId>/api-version=<apiVersion>&clientVersion=<UrlEncode<userAgent>>'.] */
-  let baseConfig: MqttBase.TransportConfig = {
+    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_037: [ When connecting, `Mqtt` shall pass in the `X509` certificate that was passed into `setAuthentication` in the base `TransportConfig` object.] */
+    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_050: [ When connecting, `Mqtt` shall set `host` in the base `TransportConfig` object to the `provisioningDeviceHost`.] */
+    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_035: [ When connecting, `Mqtt` shall set `clientId` in the base `registrationRequest` object to the registrationId.] */
+    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_036: [ When connecting, `Mqtt` shall set the `clean` flag in the base `TransportConfig` object to true.] */
+    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_038: [ When connecting, `Mqtt` shall set the `username` in the base `TransportConfig` object to '<idScope>/registrations/<registrationId>/api-version=<apiVersion>&clientVersion=<UrlEncode<userAgent>>'.] */
+    let baseConfig: MqttBase.TransportConfig = {
       host: request.provisioningHost,
       deviceId: request.registrationId,
       clean: true,
@@ -326,19 +325,8 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
     }
   }
 
-  private _sendRegistrationRequest(request: RegistrationRequest, callback: (err?: Error, result?: any) => void): void {
-    let rid: string  = uuid.v4();
-
-    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_006: [ `registrationRequest` shall wait for a response with a matching rid.] */
-    this._operations[rid] = (err, result) => {
-      if (err) {
-        /* Codes_SRS_NODE_PROVISIONING_MQTT_18_015: [ When `registrationRequest` receives an error from the service, it shall call `callback` passing in the error.] */
-        callback(err);
-      } else {
-        /* Codes_SRS_NODE_PROVISIONING_MQTT_18_013: [ When `registrationRequest` receives a successful response from the service, it shall call `callback` passing in null and the response.] */
-        callback(null, result);
-      }
-    };
+  private _sendRegistrationRequest(request: RegistrationRequest, rid: string, callback: (err?: Error, result?: any) => void): void {
+    this._operations[rid] = callback;
 
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_003: [ `registrationRequest` shall publish to '$dps/registrations/PUT/iotdps-register/?$rid<rid>'.] */
     this._mqttBase.publish('$dps/registrations/PUT/iotdps-register/?$rid=' + rid, ' ', { qos: 1 } , (err) => {
@@ -348,24 +336,10 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
         callback(err);
       }
     });
+ }
 
-    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_007: [ `registrationRequest` shall wait for a response for `timeoutInterval` milliseconds.  After that shall be considered a timeout.] */
-    this._setTimeoutTimer(rid, callback);
-  }
-
-  private _sendOperationStatusQuery(request: RegistrationRequest, operationId: string, callback: (err?: Error, result?: any) => void): void {
-    let rid: string  = uuid.v4();
-
-    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_020: [ `queryOperationStatus` shall wait for a response with a matching rid.] */
-    this._operations[rid] = (err, result) => {
-      if (err) {
-        /* Codes_SRS_NODE_PROVISIONING_MQTT_18_029: [ When `queryOperationStatus` receives an error from the service, it shall call `callback` passing in the error.] */
-        callback(err);
-      } else {
-        /* Codes_SRS_NODE_PROVISIONING_MQTT_18_027: [ When `queryOperationStatus` receives a successful response from the service, it shall call `callback` passing in null and the response.] */
-        callback(null, result);
-      }
-    };
+  private _sendOperationStatusQuery(request: RegistrationRequest, rid: string, operationId: string, callback: (err?: Error, result?: any) => void): void {
+    this._operations[rid] = callback;
 
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_017: [ `queryOperationStatus` shall publish to $dps/registrations/GET/iotdps-get-operationstatus/?$rid=<rid>&operationId=<operationId>.] */
     this._mqttBase.publish('$dps/registrations/GET/iotdps-get-operationstatus/?$rid=' + rid + '&operationId=' + operationId, ' ', { qos: 1 }, (err) => {
@@ -375,47 +349,19 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
         callback(err);
       }
     });
-
-    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_021: [ `queryOperationStatus` shall wait for a response for `timeoutInterval` milliseconds.  After that shall be considered a timeout.] */
-    this._setTimeoutTimer(rid, callback);
   }
 
-  private _setTimeoutTimer(rid: string, cancelledOperationCallback: (err?: Error, result?: any) => void): void {
-
-    setTimeout(() => {
-      if (!!this._operations[rid]) {
-        debug('timeout on rid ' + rid + ': cancelling');
-        delete this._operations[rid];
-        /* Codes_SRS_NODE_PROVISIONING_MQTT_18_008: [ When `registrationRequest` times out, it shall disconnect the transport.] */
-        /* Codes_SRS_NODE_PROVISIONING_MQTT_18_022: [ When `queryOperationStatus` times out, it shall disconnect the transport.] */
-        this.cancel((err) => {
-          debug('cancel complete');
-          if (err) {
-            debug('error cancelling: ' + err.toString());
-          }
-          /* Codes_SRS_NODE_PROVISIONING_MQTT_18_009: [ When `registrationRequest` times out, it shall call `callback` passing in a TimeoutError.] */
-          /* Codes_SRS_NODE_PROVISIONING_MQTT_18_023: [ When `queryOperationStatus` times out, it shall call `callback` passing in a TimeoutError.] */
-          cancelledOperationCallback(new errors.TimeoutError('timeout waiting for response from provisioning service'));
-        });
-      }
-    }, this._config.timeoutInterval);
-  }
-
-  private _deferredCancelInQueue(): boolean {
-    for (let i = 0; i < this._fsm.inputQueue.length; i++) {
-      if (this._fsm.inputQueue[0].args.length > 0 && this._fsm.inputQueue[0].args[0].inputType === 'cancel') {
-        return true;
-      }
-    }
-    return false;
-  }
-
+  /**
+   * @private
+   */
   private _cancelAllOperations(): void {
     for (let op in this._operations) {
       debug('cancelling ' + op);
       let callback = this._operations[op];
       delete this._operations[op];
-      process.nextTick(callback, new errors.OperationCancelledError());
+      process.nextTick(() => {
+        callback(new errors.OperationCancelledError());
+      });
     }
   }
 }

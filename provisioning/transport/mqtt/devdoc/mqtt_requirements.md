@@ -18,23 +18,11 @@ These methods are used by the other objects of the SDK but are not public API fo
 
 **SRS_NODE_PROVISIONING_MQTT_18_004: [** If the publish fails, `registrationRequest` shall call `callback` passing in the error. **]**
 
-**SRS_NODE_PROVISIONING_MQTT_18_005: [** If the publish fails, `registrationRequest` shall disconnect the transport. **]**
-
-**SRS_NODE_PROVISIONING_MQTT_18_006: [** `registrationRequest` shall wait for a response with a matching rid. **]**
-
-**SRS_NODE_PROVISIONING_MQTT_18_007: [** `registrationRequest` shall wait for a response for `timeoutInterval` milliseconds.  After that shall be considered a timeout. **]**
-
-**SRS_NODE_PROVISIONING_MQTT_18_008: [** When `registrationRequest` times out, it shall disconnect the transport. **]**
-
-**SRS_NODE_PROVISIONING_MQTT_18_009: [** When `registrationRequest` times out, it shall call `callback` passing in a TimeoutError. **]**
-
 **SRS_NODE_PROVISIONING_MQTT_18_010: [** When waiting for responses, `registrationRequest` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>. **]**
 
 **SRS_NODE_PROVISIONING_MQTT_18_012: [** If `registrationRequest` receives a response with status >= 300, it shall consider the request failed and create an error using `translateError`. **]**
 
 **SRS_NODE_PROVISIONING_MQTT_18_013: [** When `registrationRequest` receives a successful response from the service, it shall call `callback` passing in null and the response. **]**
-
-**SRS_NODE_PROVISIONING_MQTT_18_014: [** When `registrationRequest` receives an error from the service, it shall disconnect the transport. **]**
 
 **SRS_NODE_PROVISIONING_MQTT_18_015: [** When `registrationRequest` receives an error from the service, it shall call `callback` passing in the error. **]**
 
@@ -47,38 +35,39 @@ These methods are used by the other objects of the SDK but are not public API fo
 
 **SRS_NODE_PROVISIONING_MQTT_18_018: [** If the publish fails, `queryOperationStatus` shall call `callback` passing the error. **]**
 
-**SRS_NODE_PROVISIONING_MQTT_18_019: [** If the publish fails, `queryOperationStatus` shall disconnect the transport. **]**
-
-**SRS_NODE_PROVISIONING_MQTT_18_020: [** `queryOperationStatus` shall wait for a response with a matching rid. **]**
-
-**SRS_NODE_PROVISIONING_MQTT_18_021: [** `queryOperationStatus` shall wait for a response for `timeoutInterval` milliseconds.  After that shall be considered a timeout. **]**
-
-**SRS_NODE_PROVISIONING_MQTT_18_022: [** When `queryOperationStatus` times out, it shall disconnect the transport. **]**
-
-**SRS_NODE_PROVISIONING_MQTT_18_023: [** When `queryOperationStatus` times out, it shall call `callback` passing in a TimeoutError. **]**
-
 **SRS_NODE_PROVISIONING_MQTT_18_024: [** When waiting for responses, `queryOperationStatus` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>. **]**
 
 **SRS_NODE_PROVISIONING_MQTT_18_026: [** If `queryOperationStatus` receives a response with status >= 300, it shall consider the query failed and create an error using `translateError`. **]**
 
 **SRS_NODE_PROVISIONING_MQTT_18_027: [** When `queryOperationStatus` receives a successful response from the service, it shall call `callback` passing in null and the response. **]**
 
-**SRS_NODE_PROVISIONING_MQTT_18_028: [** When `queryOperationStatus` receives an error from the service, it shall disconnect the transport. **]**
-
 **SRS_NODE_PROVISIONING_MQTT_18_029: [** When `queryOperationStatus` receives an error from the service, it shall call `callback` passing in the error. **]**
 
 
 ## cancel(callback: (err?: Error) => void): void
 
-**SRS_NODE_PROVISIONING_MQTT_18_030: [** If `cancel` is called while the transport is disconnected, `mqtt` will call `callback` immediately. **]**
+**SRS_NODE_PROVISIONING_MQTT_18_030: [** If `cancel` is called while the transport is disconnected, it will call `callback` immediately. **]**
 
-**SRS_NODE_PROVISIONING_MQTT_18_031: [** If `cancel` is called while the transport is in the process of connecting, it shall wait until the connection is complete and then disconnect the transport. **]**
+**SRS_NODE_PROVISIONING_MQTT_18_062: [** If `cancel` is called while the transport is in the process of connecting, it shell disconnect transport and cancel the operation that initiated the connection. **]**
 
-**SRS_NODE_PROVISIONING_MQTT_18_032: [** If `cancel` is called while the transport is connected and idle, it will disconnect the transport. **]**
+**SRS_NODE_PROVISIONING_MQTT_18_032: [** If `cancel` is called while the transport is connected and idle, it will call `callback` immediately. **]**
 
-**SRS_NODE_PROVISIONING_MQTT_18_033: [** If `cancel` is called while the transport is in the middle of a `registrationRequest` operation, it will disconnect the transport and indirectly cause `registrationRequest` call it's `callback` passing an error. **]**
+**SRS_NODE_PROVISIONING_MQTT_18_033: [** If `cancel` is called while the transport is in the middle of a `registrationRequest` operation, it will stop listening for a response and cause `registrationRequest` call it's `callback` passing an `OperationCancelledError` error. **]**
 
-**SRS_NODE_PROVISIONING_MQTT_18_034: [** If `cancel` is called while the transport is in the middle of a `queryOperationStatus` operation, it will disconnect the transport and indirectly cause `registrationRequest` call it's `callback` passing an error. **]**
+**SRS_NODE_PROVISIONING_MQTT_18_034: [** If `cancel` is called while the transport is in the middle of a `queryOperationStatus` operation, it will stop listening for a response and cause `registrationRequest` call it's `callback` passing an `OperationCancelledError` error. **]**
+
+
+## disconnect(callback: (err?: Error) => void): void
+
+**SRS_NODE_PROVISIONING_MQTT_18_052: [** If `disconnect` is called while the transport is disconnected, it will call `callback` immediately. **]**
+
+**SRS_NODE_PROVISIONING_MQTT_18_061: [** If `disconnect` is called while the transport is in the process of connecting, it shell disconnect connection and cancel the operation that initiated the connection. **]**
+
+**SRS_NODE_PROVISIONING_MQTT_18_054: [** If `disconnect` is called while the transport is connected and idle, it shall disconnect. **]**
+
+**SRS_NODE_PROVISIONING_MQTT_18_055: [** If `disconnect` is called while the transport is in the middle of a `registrationRequest` operation, it shall cancel the `registrationRequest` operation and disconnect the transport. **]**
+
+**SRS_NODE_PROVISIONING_MQTT_18_056: [** If `disconnect` is called while the transport is in the middle of a `queryOperationStatus` operation, it shall cancel the `queryOperationStatus` operation and disconnect the transport. **]**
 
 
 ## transport connection
@@ -114,6 +103,9 @@ These requirements apply whenever the transport is disonnected.
 
 **SRS_NODE_PROVISIONING_MQTT_18_048: [** If either `_mqttBase.unsubscribe` or `_mqttBase.disconnect` fails, `Mqtt` shall call the disconnect `callback` with the failing error, giving preference to the disconnect error. **]**
 
+**SRS_NODE_PROVISIONING_MQTT_18_051: [** If either `_mqttBase.connect` or `_mqttBase.subscribe` fails, `mqtt` will disconnect the transport. **]**
+
 ## Websockets operation
 
 **SRS_NODE_PROVISIONING_MQTT_18_049: [** When connecting using websockets, `Mqtt`Ws shall set the uri passed into the transport to 'wss://<host>:443/$iothub/websocket'. **]**
+
