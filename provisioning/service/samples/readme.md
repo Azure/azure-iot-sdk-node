@@ -22,6 +22,7 @@ This folder contains simple samples showing how to use the various features of t
 
 ## How to run the samples
 
+
 In order to run the device samples you will first need the following prerequisites:
 * Node.js v4 or above on your target device. (Check out [Nodejs.org](https://nodejs.org/) for more info)
 * [Setup Azure IoT Device Provisioning ][lnk-setup-iot-provisioning] Stop before executing the the Create and provision a simulated device section.  The samples below will perform these steps.
@@ -74,6 +75,7 @@ For more information on how to use this library refer to the documents below:
 - [Setup IoT Hub][lnk-setup-iot-hub]
 - [Provision devices][lnk-manage-iot-hub]
 - [Node API reference][node-api-reference]
+- [Device Provisioning Service Concepts][dps-service-concepts]
 
 [lnk-setup-iot-provisioning]: https://docs.microsoft.com/en-us/azure/iot-dps/quick-setup-auto-provision
 [lnk-setup-iot-hub]: https://aka.ms/howtocreateazureiothub
@@ -83,6 +85,7 @@ For more information on how to use this library refer to the documents below:
 [create-individual-tpm-enrollment]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/service/samples/create_individual_tpm_enrollment.js
 [create-individual-x509-enrollment]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/service/samples/create_individual_x509_enrollment.js
 [create-enrollment-group]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/service/samples/create_enrollment_group.js
+[dps-service-concepts]: https://docs.microsoft.com/en-us/azure/iot-dps/concepts-service
 [create-delete]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/service/samples/create_delete.js
 [query-link]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/service/samples/query.js
 [run-bulk-operation]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/service/samples/query.js
