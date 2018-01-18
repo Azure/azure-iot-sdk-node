@@ -121,12 +121,11 @@ export class SharedAccessSignature {
     sas.sr = authorization.encodeUriComponentStrict(credentials.host + '/devices/' + credentials.deviceId);
     if (credentials.sharedAccessKeyName) sas.skn = authorization.encodeUriComponentStrict(credentials.sharedAccessKeyName);
     sas.se = expiry;
-    const toSign = authorization.stringToSign(sas.sr, sas.se.toString());
-    signingFunction(toSign, (err, signed) => {
+    signingFunction(Buffer.from(authorization.stringToSign(sas.sr, sas.se.toString())), (err, signed) => {
       if (err) {
         callback(err);
       } else {
-        sas.sig = authorization.encodeUriComponentStrict(signed);
+        sas.sig = authorization.encodeUriComponentStrict(signed.toString('base64'));
         callback(null, sas);
       }
     });
