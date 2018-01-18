@@ -29,33 +29,84 @@ var registry = Registry.fromConnectionString(registryConnectionString);
 var X509IndividualTransports = [ Http, Amqp, AmqpWs, Mqtt, MqttWs ];
 var X509GroupTransports = [ Http, Amqp, AmqpWs, Mqtt, MqttWs ];
 
+var rootCert = {
+  cert: new Buffer(process.env.IOT_PROVISIONING_ROOT_CERT,"base64").toString('ascii'),
+  key: new Buffer(process.env.IOT_PROVISIONING_ROOT_CERT_KEY,"base64").toString('ascii'),
+};
+var selfSignedCert;
+var certWithoutChain;
+var intermediateCert1;
+var intermediateCert2;
+var certWithChain;
+var deviceId;
+var registrationId;
+
+
+var createAllCerts = function(callback) {
+  var id = uuid.v4();
+  deviceId = 'deleteme_provisioning_node_e2e_' + id;
+  registrationId = 'reg-' + id;
+
+  async.waterfall([
+    function(callback) {
+      debug('creating self-signed cert');
+      certHelper.createSelfSignedCert(registrationId, function(err, cert) {
+        selfSignedCert = cert;
+        callback(err);
+      });
+    },
+    function(callback) {
+      debug('creating cert without chain');
+      certHelper.createDeviceCert(registrationId, rootCert, function(err, cert) {
+        certWithoutChain = cert;
+        callback(err);
+      });
+    },
+    function(callback) {
+      debug('creating intermediate CA cert #1');
+      certHelper.createIntermediateCaCert('Intermediate CA 1', rootCert, function(err, cert) {
+        intermediateCert1 = cert;
+        callback(err);
+      });
+    },
+    function(callback) {
+      debug('creating intermediate CA cert #2');
+      certHelper.createIntermediateCaCert('Intermediate CA 2', intermediateCert1, function(err, cert) {
+        intermediateCert2 = cert;
+        callback(err);
+      });
+    },
+    function(callback) {
+      debug('creating cert with chain');
+      certHelper.createDeviceCert(registrationId, intermediateCert2, function(err, cert) {
+        cert.cert = cert.cert + '\n' + intermediateCert2.cert + '\n' + intermediateCert1.cert;
+        certWithChain = cert;
+        callback(err);
+      });
+    },
+    function(callback) {
+      debug('sleeping to account for clock skew');
+      setTimeout(callback, 60000);
+    }
+  ], callback);
+};
+
 var X509Individual = function() {
 
   var self = this;
 
   this.transports = X509IndividualTransports;
-  var id = uuid.v4();
-
-  this._deviceId = 'deleteme_provisioning_node_e2e_' + id;
-  this._registrationId = 'reg-' + id;
 
   this.initialize = function (callback) {
-    debug('creating x509 cert');
-    certHelper.createSelfSignedCert(this._registrationId, function(err, cert) {
-      if (err) {
-        callback(err);
-      } else {
-        self._cert = cert;
-        callback();
-      }
-    });
+    self._cert = selfSignedCert;
+    callback();
   };
 
   this.enroll = function (callback) {
-    self._testProp = self._registrationId + ' ' + self._deviceId;
+    self._testProp = uuid.v4();
     var enrollment = {
-      registrationId: self._registrationId,
-      deviceId: self._deviceId,
+      registrationId: registrationId,
+      deviceId: deviceId,
       attestation: {
         type: 'x509',
         x509: {
@@ -85,7 +136,7 @@ var X509Individual = function() {
   };
 
   this.register = function (Transport, callback) {
-    var securityClient = new X509Security(self._registrationId, self._cert);
+    var securityClient = new X509Security(registrationId, self._cert);
     var transport = new Transport();
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
     provisioningDeviceClient.register(function (err, result) {
@@ -95,12 +146,12 @@ var X509Individual = function() {
 
   this.cleanup = function (callback) {
     debug('deleting enrollment');
-    provisioningServiceClient.deleteIndividualEnrollment(self._registrationId, function (err) {
+    provisioningServiceClient.deleteIndividualEnrollment(registrationId, function (err) {
       if (err) {
         debug('ignoring deleteIndividualEnrollment error');
       }
       debug('deleting device');
-      registry.delete(self._deviceId, function (err) {
+      registry.delete(deviceId, function (err) {
         if (err) {
           debug('ignoring delete error');
         }
@@ -111,60 +162,24 @@ var X509Individual = function() {
   };
 };
 
-var createCertWithoutChain = function(registrationId, callback) {
-  var rootCert = {
-    cert: new Buffer(process.env.IOT_PROVISIONING_ROOT_CERT,"base64").toString('ascii'),
-    key: new Buffer(process.env.IOT_PROVISIONING_ROOT_CERT_KEY,"base64").toString('ascii'),
-  };
-  debug('creating device cert');
-  certHelper.createDeviceCert(registrationId, rootCert, function(err, cert) {
-    callback(err, rootCert, cert);
-  });
+var createCertWithoutChain = function(callback) {
+  callback(null, rootCert, certWithoutChain);
 };
 
-var createCertWithChain = function(registrationId, callback) {
-  var rootCert = {
-    cert: new Buffer(process.env.IOT_PROVISIONING_ROOT_CERT,"base64").toString('ascii'),
-    key: new Buffer(process.env.IOT_PROVISIONING_ROOT_CERT_KEY,"base64").toString('ascii'),
-  };
-  debug('creating intermediate CA cert #1');
-  certHelper.createIntermediateCaCert('Intermediate CA 1', rootCert, function(err, intermediateCert1) {
-    if (err) {
-      callback(err);
-    } else {
-      debug('creating intermediate CA cert #2');
-      certHelper.createIntermediateCaCert('Intermediate CA 2', intermediateCert1, function(err, intermediateCert2) {
-        if (err) {
-          callback(err);
-        } else {
-          debug('creating device cert');
-          certHelper.createDeviceCert(registrationId, intermediateCert2, function(err, cert) {
-            if (err) {
-              callback(err);
-            } else {
-              cert.cert = cert.cert + '\n' + intermediateCert2.cert + '\n' + intermediateCert1.cert;
-              callback(err, intermediateCert2, cert);
-            }
-          });
-        }
-      });
-    }
-  });
+var createCertWithChain = function(callback) {
+  callback(null, intermediateCert2, certWithChain);
 };
-
 
 var X509Group = function(certFactory) {
 
   var self = this;
 
   this.transports = X509GroupTransports;
-  var id = uuid.v4();
 
-  this._registrationId = 'reg-' + id;
   this._groupId = 'testgroup';
 
   this.initialize = function(callback) {
-    certFactory(this._registrationId, function(err, enrollmentCert, deviceCert) {
+    certFactory(function(err, enrollmentCert, deviceCert) {
       if (err) {
         callback(err);
       } else {
@@ -177,7 +192,7 @@ var X509Group = function(certFactory) {
 
   this.enroll = function(callback) {
 
-    self._testProp = self._registrationId;
+    self._testProp = uuid.v4();
     var enrollmentGroup = {
       enrollmentGroupId: self._groupId,
       attestation: {
@@ -212,20 +227,20 @@ var X509Group = function(certFactory) {
   };
 
   this.register = function (Transport, callback) {
-    var securityClient = new X509Security(self._registrationId, self._cert);
+    var securityClient = new X509Security(registrationId, self._cert);
     var transport = new Transport();
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
     provisioningDeviceClient.register(function (err, result) {
       assert.isNotOk(err);
       assert.isOk(result.deviceId);
-      self._deviceId = result.deviceId;
+      deviceId = result.deviceId;
       callback(err, result);
     });
   };
 
   this.cleanup = function (callback) {
     debug('deleting device');
-    registry.delete(self._deviceId, function (err) {
+    registry.delete(deviceId, function (err) {
       if (err) {
         debug('ignoring delete error');
       }
@@ -242,6 +257,9 @@ var X509Group = function(certFactory) {
 };
 
 describe('IoT Provisioning', function() {
+  this.timeout(120000);
+  before(createAllCerts);
+
   [
     {
       testName: 'x509 individual enrollment with Self Signed Certificate',
@@ -284,7 +302,7 @@ describe('IoT Provisioning', function() {
               debug('success registering device');
               debug(JSON.stringify(result,null,'  '));
               debug('getting twin');
-              registry.getTwin(config.testObj._deviceId,function(err, twin) {
+              registry.getTwin(deviceId,function(err, twin) {
                 callback(err, twin);
               });
             },

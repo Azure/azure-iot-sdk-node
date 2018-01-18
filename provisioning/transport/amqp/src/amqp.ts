@@ -8,7 +8,7 @@ import * as machina from 'machina';
 import * as dbg from 'debug';
 import * as uuid from 'uuid';
 import * as async from 'async';
-const debug = dbg('azure-device-provisioning-amqp:Amqp');
+const debug = dbg('azure-iot-provisioning-device-amqp:Amqp');
 
 import { X509, errors } from 'azure-iot-common';
 import { ProvisioningTransportOptions, X509ProvisioningTransport, RegistrationRequest, RegistrationResult, ProvisioningDeviceConstants } from 'azure-iot-provisioning-device';
