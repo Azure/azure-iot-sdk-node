@@ -64,6 +64,9 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
     callback();
   }
 
+  /**
+   * private
+   */
   disconnect(callback: (err?: Error) => void): void {
     // nothing to do
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_040: [ `disconnect` shall immediately call `callback` passing null. ] */
@@ -74,10 +77,8 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
    * private
    */
   registrationRequest(request: RegistrationRequest, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void {
-
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_007: [ If an X509 cert if provided, `registrationRequest` shall include it in the Http authorization header. ] */
-    /* Codes_SRS_NODE_PROVISIONING_HTTP_18_021: [ If an X509 cert if provided, `queryOperationStatus` shall include it in the Http authorization header. ] */
-    this._restApiClient = new RestApiClient({ 'host' : request.provisioningHost , 'x509' : this._auth}, ProvisioningDeviceConstants.userAgent, this._httpBase);
+    this._ensureRestApiClient(request);
 
     let requestBody: any = { registrationId : request.registrationId };
 
@@ -100,7 +101,6 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
     this._restApiClient.executeApiCall('PUT', path, httpHeaders, requestBody, (err: Error, result?: any, response?: any) => {
       if (err) {
         /* Codes_SRS_NODE_PROVISIONING_HTTP_18_044: [ If the Http request fails for any reason, `registrationRequest` shall call `callback`, passing the error along with the `result` and `response` objects. ] */
-        /* Codes_SRS_NODE_PROVISIONING_HTTP_18_043: [ If `cancel` is called while the registration request is in progress, `register` shall call the `callback` with an `OperationCancelledError` error. ] */
         debug('error executing PUT: ' + err.toString());
         callback(err, result, response);
       } else {
@@ -122,6 +122,9 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
    * private
    */
   queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void {
+    /* Codes_SRS_NODE_PROVISIONING_HTTP_18_021: [ If an X509 cert if provided, `queryOperationStatus` shall include it in the Http authorization header. ] */
+    this._ensureRestApiClient(request);
+
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_037: [ `queryOperationStatus` shall include the current `api-version` as a URL query string value named 'api-version'. ] */
     let path: string = '/' + request.idScope + '/registrations/' + request.registrationId + '/operations/' + operationId + '?api-version=' + ProvisioningDeviceConstants.apiVersion;
 
@@ -135,7 +138,6 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
     this._restApiClient.executeApiCall('GET', path, httpHeaders, {}, (err: Error, result?: any, response?: any) => {
       if (err) {
         /* Codes_SRS_NODE_PROVISIONING_HTTP_18_038: [ If the Http request fails for any reason, `queryOperationStatus` shall call `callback`, passing the error along with the `result` and `response` objects. ] */
-        /* Codes_SRS_NODE_PROVISIONING_HTTP_18_042: [ If `cancel` is called while the operation status request is in progress, `queryOperationStatus` shall call the `callback` with an `OperationCancelledError` error. ] */
         debug('error executing GET: ' + err.toString());
         callback(err, result, response);
       } else {
@@ -152,5 +154,15 @@ export class Http extends EventEmitter implements X509ProvisioningTransport {
       }
     });
   }
+
+  /**
+   * private
+   */
+  private _ensureRestApiClient(request: RegistrationRequest): void {
+    if (!this._restApiClient) {
+      this._restApiClient = new RestApiClient({ 'host' : request.provisioningHost , 'x509' : this._auth}, ProvisioningDeviceConstants.userAgent, this._httpBase);
+    }
+  }
+
 }
 
