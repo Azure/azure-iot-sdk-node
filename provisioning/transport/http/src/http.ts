@@ -82,7 +82,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
         }
 
         if (authenticationResponse.authenticationKey && authenticationResponse.keyName && (typeof authenticationResponse.authenticationKey === 'string') &&  (typeof authenticationResponse.keyName === 'string')) {
-          callback(null, { message: authenticationResponse.message, authenticationKey: authenticationResponse.authenticationKey, keyName: authenticationResponse.keyName });
+          callback(null, { message: authenticationResponse.message, authenticationKey: Buffer.from(authenticationResponse.authenticationKey, 'base64'), keyName: authenticationResponse.keyName });
         } else {
           debug('inadequate challenge response received: ' + err.responseBody);
           callback(new errors.InternalServerError('The server did NOT respond with an appropriately formatted authentication blob.'));

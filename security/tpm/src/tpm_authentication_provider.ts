@@ -11,6 +11,8 @@ import { TpmSecurityClient } from './tpm';
 export class TPMAuthenticationProvider extends EventEmitter implements AuthenticationProvider {
   private _tokenExpirationInSeconds: number = 3600;
   private _tokenRenewalIntervalInSeconds: number = 2700;
+  private _currentTokenExpiryTimeInSeconds: number = 0;
+
   private _renewalTimeout: NodeJS.Timer;
 
   private _credentials: TransportConfig;
@@ -31,9 +33,19 @@ export class TPMAuthenticationProvider extends EventEmitter implements Authentic
     this._tpmSecurityClient = tpmSecurityClient;
   }
 
-  getDeviceCredentials(): TransportConfig {
-    return this._credentials;
+  getDeviceCredentials(callback: (err: Error, credentials?: TransportConfig) => void): void {
+    if (this._shouldRenewToken()) {
+      this._renewToken();
+    }
+
+    callback(null, this._credentials);
   }
+
+  private _shouldRenewToken(): boolean {
+    const currentTimeInSeconds = Math.floor(Date.now() / 1000);
+    return (this._currentTokenExpiryTimeInSeconds - currentTimeInSeconds) < this._tokenRenewalIntervalInSeconds;
+  }
+
 
   updateSharedAccessSignature(sharedAccessSignature: string): void {
     throw new errors.InvalidOperationError('cannot update a shared access signature when using TPM');

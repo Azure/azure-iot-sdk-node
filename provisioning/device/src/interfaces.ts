@@ -199,6 +199,6 @@ export interface TpmSecurityClient {
  */
 export interface TpmChallenge {
   message: string;
-  authenticationKey: string;
+  authenticationKey: Buffer;
   keyName: string;
 }

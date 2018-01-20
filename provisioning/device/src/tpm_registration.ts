@@ -98,7 +98,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
             /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_004: [The `register` method shall store the session key in the TPM by calling the `activateIdentityKey` method of the `TpmSecurityClient` object passed to the constructor with the following arguments:
             - `sessionKey`: the session key property of the `TpmChallenge` object returned by the previous call to `TpmProvisioningTransport.getAuthenticationChallenge`
             - a callback that will handle an optional error if the operation fails.]*/
-            this._securityClient.activateIdentityKey(Buffer.from(tpmChallenge.authenticationKey, 'base64') , (err) => {
+            this._securityClient.activateIdentityKey(tpmChallenge.authenticationKey, (err) => {
               if (err) {
                 debug('failed to activate the sessionKey: ' + err.toString());
                 /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_010: [If any of the calls the the `TpmSecurityClient` or the `TpmProvisioningTransport` fails, the `register` method shall call its callback with the error resulting from the failure.]*/
