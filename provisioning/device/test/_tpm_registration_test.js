@@ -44,7 +44,7 @@ describe('TpmRegistration', function () {
 
       fakeProvisioningTransport = {
         getAuthenticationChallenge: sinon.stub().callsArgWith(1, null, fakeTpmChallenge),
-        setSasToken: sinon.stub(),
+        respondToAuthenticationChallenge: sinon.stub().callsArgWith(2, null),
         cancel: sinon.stub().callsArg(0)
       };
 
@@ -108,7 +108,7 @@ describe('TpmRegistration', function () {
         assert.strictEqual(authArg.request.registrationId, 'fakeRegistrationId');
 
         // TODO: SAS token format test could be improved (see SRS_NODE_DPS_TPM_REGISTRATION_16_005 and SRS_NODE_DPS_TPM_REGISTRATION_16_006)
-        assert.isString(fakeProvisioningTransport.setSasToken.firstCall.args[0]);
+        assert.isString(fakeProvisioningTransport.respondToAuthenticationChallenge.firstCall.args[1]);
         testCallback();
       });
     });
@@ -159,7 +159,8 @@ describe('TpmRegistration', function () {
     });
 
     [
-      { methodName: 'getAuthenticationChallenge', stub: sinon.stub().callsArgWith(1, new Error('failed')) }
+      { methodName: 'getAuthenticationChallenge', stub: sinon.stub().callsArgWith(1, new Error('failed')) },
+      { methodName: 'respondToAuthenticationChallenge', stub: sinon.stub().callsArgWith(2, new Error('failed')) }
    ].forEach(function (testConfig) {
      it('calls the register callback with an error if TpmProvisioningTransport.' + testConfig.methodName + ' fails', function (testCallback) {
        fakeProvisioningTransport[testConfig.methodName] = testConfig.stub;

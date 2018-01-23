@@ -88,8 +88,9 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
           },
           registrationRequest: (request, correlationId, callback) => {
             this._operations[correlationId] = callback;
-            this._amqpStateMachine.transition('connecting', request, (err) => {
+            this._amqpStateMachine.transition('connectingX509', request, (err) => {
               if (err) {
+                delete this._operations[correlationId];
                 callback(err);
               } else {
                 this._amqpStateMachine.handle('registrationRequest', request, correlationId, callback);
@@ -98,8 +99,9 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
           },
           queryOperationStatus: (request, correlationId, operationId, callback) => {
             this._operations[correlationId] = callback;
-            this._amqpStateMachine.transition('connecting', request, (err) => {
+            this._amqpStateMachine.transition('connectingX509', request, (err) => {
               if (err) {
+                delete this._operations[correlationId];
                 callback(err);
               } else {
                 this._amqpStateMachine.handle('queryOperationStatus', request, correlationId, operationId, callback);
@@ -112,7 +114,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
           disconnect: (callback) => callback()
 
         },
-        connecting: {
+        connectingX509: {
           _onEnter: (request, callback) => {
             /*Codes_SRS_NODE_PROVISIONING_AMQP_16_002: [The `registrationRequest` method shall connect the AMQP client with the certificate and key given in the `auth` parameter of the previously called `setAuthentication` method.]*/
             /*Codes_SRS_NODE_PROVISIONING_AMQP_16_012: [The `queryOperationStatus` method shall connect the AMQP client with the certificate and key given in the `auth` parameter of the previously called `setAuthentication` method. **]**]*/
@@ -124,63 +126,80 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
                 /*Codes_SRS_NODE_PROVISIONING_AMQP_16_018: [The `queryOperationStatus` method shall call its callback with an error if the transport fails to connect.]*/
                 this._amqpStateMachine.transition('disconnected', err, null, callback);
               } else {
-                const linkEndpoint = request.idScope + '/registrations/' + request.registrationId;
-                const linkOptions = {
-                  attach: {
-                    properties: {
-                      'com.microsoft:api-version' : ProvisioningDeviceConstants.apiVersion,
-                      'com.microsoft:client-version': ProvisioningDeviceConstants.userAgent
-                    }
-                  }
-                };
+                this._amqpStateMachine.transition('attachingLinks', request, callback);
+              }
+            });
+          },
+          /*Codes_SRS_NODE_PROVISIONING_AMQP_18_005: [ `cancel` shall disconnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. ] */
+          cancel: (callback) => {
+            this._cancelAllOperations();
+            this._amqpStateMachine.transition('disconnecting', null, null, callback);
+          },
+          /*Codes_SRS_NODE_PROVISIONING_AMQP_18_009: [ `disconnect` shall disonnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. ] */
+          disconnect: (callback) => {
+            this._cancelAllOperations();
+            this._amqpStateMachine.transition('disconnecting', null, null, callback);
+          },
+          '*': () => this._amqpStateMachine.deferUntilTransition()
+        },
 
-                /*Codes_SRS_NODE_PROVISIONING_AMQP_16_004: [The `registrationRequest` method shall attach a receiver link on the `<idScope>/registrations/<registrationId>` endpoint with the following properties:
+        attachingLinks: {
+          _onEnter: (request, callback) => {
+            const linkEndpoint = request.idScope + '/registrations/' + request.registrationId;
+            const linkOptions = {
+              attach: {
+                properties: {
+                  'com.microsoft:api-version' : ProvisioningDeviceConstants.apiVersion,
+                  'com.microsoft:client-version': ProvisioningDeviceConstants.userAgent
+                }
+              }
+            };
+
+            /*Codes_SRS_NODE_PROVISIONING_AMQP_16_004: [The `registrationRequest` method shall attach a receiver link on the `<idScope>/registrations/<registrationId>` endpoint with the following properties:
+            ```
+            com.microsoft:api-version: <API_VERSION>
+            com.microsoft:client-version: <CLIENT_VERSION>
+            ```]*/
+            /*Codes_SRS_NODE_PROVISIONING_AMQP_16_014: [The `queryOperationStatus` method shall attach a receiver link on the `<idScope>/registrations/<registrationId>` endpoint with the following properties:
+            ```
+            com.microsoft:api-version: <API_VERSION>
+            com.microsoft:client-version: <CLIENT_VERSION>
+            ```*/
+            this._amqpBase.attachReceiverLink(linkEndpoint, linkOptions, (err, receiverLink) => {
+              if (err) {
+                debug('_amqpBase.attachReceiverLink failed');
+                debug(err);
+                /*Codes_SRS_NODE_PROVISIONING_AMQP_16_010: [The `registrationRequest` method shall call its callback with an error if the transport fails to attach the receiver link.]*/
+                /*Codes_SRS_NODE_PROVISIONING_AMQP_16_020: [The `queryOperationStatus` method shall call its callback with an error if the transport fails to attach the receiver link.]*/
+                this._amqpStateMachine.transition('disconnecting', err, null, callback);
+              } else {
+                this._receiverLink = receiverLink;
+                this._receiverLink.on('error', amqpErrorListener);
+                /*Codes_SRS_NODE_PROVISIONING_AMQP_16_006: [The `registrationRequest` method shall listen for the response on the receiver link and accept it when it comes.]*/
+                /*Codes_SRS_NODE_PROVISIONING_AMQP_16_016: [The `queryOperationStatus` method shall listen for the response on the receiver link and accept it when it comes.]*/
+                this._receiverLink.on('message', responseHandler);
+
+                /*Codes_SRS_NODE_PROVISIONING_AMQP_16_003: [The `registrationRequest` method shall attach a sender link on the `<idScope>/registrations/<registrationId>` endpoint with the following properties:
                 ```
                 com.microsoft:api-version: <API_VERSION>
                 com.microsoft:client-version: <CLIENT_VERSION>
                 ```]*/
-                /*Codes_SRS_NODE_PROVISIONING_AMQP_16_014: [The `queryOperationStatus` method shall attach a receiver link on the `<idScope>/registrations/<registrationId>` endpoint with the following properties:
+                /*Codes_SRS_NODE_PROVISIONING_AMQP_16_013: [The `queryOperationStatus` method shall attach a sender link on the `<idScope>/registrations/<registrationId>` endpoint with the following properties:
                 ```
                 com.microsoft:api-version: <API_VERSION>
                 com.microsoft:client-version: <CLIENT_VERSION>
                 ```*/
-                this._amqpBase.attachReceiverLink(linkEndpoint, linkOptions, (err, receiverLink) => {
+                this._amqpBase.attachSenderLink(linkEndpoint, linkOptions, (err, senderLink) => {
                   if (err) {
-                    debug('_amqpBase.attachReceiverLink failed');
+                    debug('_amqpBase.attachSenderLink failed');
                     debug(err);
-                    /*Codes_SRS_NODE_PROVISIONING_AMQP_16_010: [The `registrationRequest` method shall call its callback with an error if the transport fails to attach the receiver link.]*/
-                    /*Codes_SRS_NODE_PROVISIONING_AMQP_16_020: [The `queryOperationStatus` method shall call its callback with an error if the transport fails to attach the receiver link.]*/
+                    /*Codes_SRS_NODE_PROVISIONING_AMQP_16_009: [The `registrationRequest` method shall call its callback with an error if the transport fails to attach the sender link.]*/
+                    /*Codes_SRS_NODE_PROVISIONING_AMQP_16_019: [The `queryOperationStatus` method shall call its callback with an error if the transport fails to attach the sender link.]*/
                     this._amqpStateMachine.transition('disconnecting', err, null, callback);
                   } else {
-                    this._receiverLink = receiverLink;
-                    this._receiverLink.on('error', amqpErrorListener);
-                    /*Codes_SRS_NODE_PROVISIONING_AMQP_16_006: [The `registrationRequest` method shall listen for the response on the receiver link and accept it when it comes.]*/
-                    /*Codes_SRS_NODE_PROVISIONING_AMQP_16_016: [The `queryOperationStatus` method shall listen for the response on the receiver link and accept it when it comes.]*/
-                    this._receiverLink.on('message', responseHandler);
-
-                    /*Codes_SRS_NODE_PROVISIONING_AMQP_16_003: [The `registrationRequest` method shall attach a sender link on the `<idScope>/registrations/<registrationId>` endpoint with the following properties:
-                    ```
-                    com.microsoft:api-version: <API_VERSION>
-                    com.microsoft:client-version: <CLIENT_VERSION>
-                    ```]*/
-                    /*Codes_SRS_NODE_PROVISIONING_AMQP_16_013: [The `queryOperationStatus` method shall attach a sender link on the `<idScope>/registrations/<registrationId>` endpoint with the following properties:
-                    ```
-                    com.microsoft:api-version: <API_VERSION>
-                    com.microsoft:client-version: <CLIENT_VERSION>
-                    ```*/
-                    this._amqpBase.attachSenderLink(linkEndpoint, linkOptions, (err, senderLink) => {
-                      if (err) {
-                        debug('_amqpBase.attachSenderLink failed');
-                        debug(err);
-                        /*Codes_SRS_NODE_PROVISIONING_AMQP_16_009: [The `registrationRequest` method shall call its callback with an error if the transport fails to attach the sender link.]*/
-                        /*Codes_SRS_NODE_PROVISIONING_AMQP_16_019: [The `queryOperationStatus` method shall call its callback with an error if the transport fails to attach the sender link.]*/
-                        this._amqpStateMachine.transition('disconnecting', err, null, callback);
-                      } else {
-                        this._senderLink = senderLink;
-                        this._senderLink.on('error', amqpErrorListener);
-                        this._amqpStateMachine.transition('connected', callback);
-                      }
-                    });
+                    this._senderLink = senderLink;
+                    this._senderLink.on('error', amqpErrorListener);
+                    this._amqpStateMachine.transition('connected', callback);
                   }
                 });
               }
@@ -414,4 +433,6 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
   }
 
 }
+
+
 
