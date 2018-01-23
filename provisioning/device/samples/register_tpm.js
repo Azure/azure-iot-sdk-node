@@ -5,7 +5,7 @@
 
 var fs = require('fs');
 var Transport = require('azure-iot-provisioning-device-http').Http;
-var iotHubTransport = require('azure-iot-device-amqp').Amqp;
+var iotHubTransport = require('azure-iot-device-mqtt').Mqtt;
 var Client = require('azure-iot-device').Client;
 var Message = require('azure-iot-device').Message;
 

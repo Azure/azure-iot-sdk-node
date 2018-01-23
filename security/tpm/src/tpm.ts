@@ -109,7 +109,7 @@ export class TpmSecurityClient  {
             if (callback) {
               callback();
             }
-           }
+          }
         },
         connecting: {
           _onEnter: (callback) => {

@@ -2,6 +2,7 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:TPMAuthenticationProvider');
 
 import { EventEmitter } from 'events';
+import * as machina from 'machina';
 import { AuthenticationType, SharedAccessSignature, errors, TransportConfig, AuthenticationProvider } from 'azure-iot-common';
 import { TpmSecurityClient } from './tpm';
 
@@ -12,9 +13,9 @@ export class TPMAuthenticationProvider extends EventEmitter implements Authentic
   type: AuthenticationType = AuthenticationType.Token;
   automaticRenewal: boolean = true;
   private _tokenValidTimeInSeconds: number = 3600;   // 1 hour
-  private _tokenRenewalMarginInSeconds: number = 900; // 15 minutes
-  private _currentTokenExpiryTimeInSeconds: number = 0;
+  private _tokenRenewalMarginInSeconds: number = 9git00; // 15 minutes
   private _renewalTimeout: NodeJS.Timer;
+  private _fsm: machina.Fsm;
 
   private _credentials: TransportConfig;
   private _tpmSecurityClient: TpmSecurityClient;
@@ -30,26 +31,64 @@ export class TPMAuthenticationProvider extends EventEmitter implements Authentic
     super();
     this._credentials  = credentials;
     this._tpmSecurityClient = tpmSecurityClient;
+    this._fsm = new machina.Fsm({
+      initialState: 'inactive',
+      states: {
+        inactive: {
+          _onEnter: (callback, err) => {
+            if (this._renewalTimeout) {
+              clearTimeout(this._renewalTimeout);
+            }
+          },
+          activating: (activatingCallback) => this._fsm.transition('activating', activatingCallback),
+          getDeviceCredentials: (callback) => {
+            this._fsm.handle('activating', (err, result) => {
+              if (err) {
+                callback(err);
+              } else {
+                this._fsm.handle('getDeviceCredentials', callback);
+              }
+            });
+          }
+        },
+        activating: {
+          _onEnter: (callback, err) => {
+            const newExpiry =  Math.floor(Date.now() / 1000) + this._tokenValidTimeInSeconds;
+            SharedAccessSignature.createWithSigningFunction(this._credentials, newExpiry, this._tpmSecurityClient.signWithIdentity.bind(this._tpmSecurityClient), (err, newSas) => {
+              if (err) {
+                console.log('Unable to create a new SAS token! - ' + err);
+                callback(err);
+                this._fsm.transition('inactive');
+              } else {
+                this._credentials.sharedAccessSignature = newSas.toString();
+                this._renewalTimeout = setTimeout(() => this._renewToken(), (this._tokenValidTimeInSeconds - this._tokenRenewalMarginInSeconds) * 1000);
+                debug('Created a new sas token.');
+                this.emit('newTokenAvailable', this._credentials);
+                callback(null, this._credentials);
+                this._fsm.transition('active');
+              }
+            });
+          },
+          '*': () => this._fsm.deferUntilTransition()
+        },
+        active: {
+          getDeviceCredentials: (callback) => {
+            callback(null, this._credentials);
+          }
+        }
+      }
+    });
   }
 
   getDeviceCredentials(callback: (err: Error, credentials?: TransportConfig) => void): void {
-    if (this._shouldRenewToken()) {
-      this._renewToken(callback);
-    } else {
-      callback(null, this._credentials);
-    }
+    this._fsm.handle('getDeviceCredentials', callback);
   }
 
   updateSharedAccessSignature(sharedAccessSignature: string): void {
     throw new errors.InvalidOperationError('cannot update a shared access signature when using TPM');
   }
 
-  private _shouldRenewToken(): boolean {
-    const currentTimeInSeconds = Math.floor(Date.now() / 1000);
-    return (this._currentTokenExpiryTimeInSeconds - currentTimeInSeconds) < this._tokenRenewalMarginInSeconds;
-  }
-
-  private _renewToken(getCredentialCallback?: (err: Error, credentials?: TransportConfig) => void): void {
+  private _renewToken(): void {
     if (this._renewalTimeout) {
       clearTimeout(this._renewalTimeout);
     }
@@ -57,22 +96,17 @@ export class TPMAuthenticationProvider extends EventEmitter implements Authentic
     SharedAccessSignature.createWithSigningFunction(this._credentials, newExpiry, this._tpmSecurityClient.signWithIdentity.bind(this._tpmSecurityClient), (err, newSas) => {
       if (err) {
         console.log('Unable to create a new SAS token! - ' + err);
-        if (getCredentialCallback) {
-          getCredentialCallback(err);
-        }
+        this._fsm.transition('inactive');
       } else {
         this._credentials.sharedAccessSignature = newSas.toString();
         this._renewalTimeout = setTimeout(() => this._renewToken(), (this._tokenValidTimeInSeconds - this._tokenRenewalMarginInSeconds) * 1000);
         debug('Created a new sas token.');
-        if (getCredentialCallback) {
-          getCredentialCallback(null, this._credentials);
-        }
         this.emit('newTokenAvailable', this._credentials);
       }
     });
   }
 
-  static fromTpmSecurity(deviceId: string, iotHubHostname: string, tpmSecurityClient: TpmSecurityClient) {
+  static fromTpmSecurity(deviceId: string, iotHubHostname: string, tpmSecurityClient: TpmSecurityClient): TPMAuthenticationProvider {
     if (!deviceId) {
       throw new ReferenceError('deviceId cannot be \'' + deviceId + '\'');
     }
