@@ -173,8 +173,8 @@ export interface TpmRegistrationResult extends RegistrationResult {
  */
 export interface TpmProvisioningTransport extends PollingTransport {
   setTpmInformation(endorsementKey: Buffer, storageRootKey: Buffer): void;
-  setSasToken(sasToken: string): void;
   getAuthenticationChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: Buffer) => void): void;
+  respondToAuthenticationChallenge(request: RegistrationRequest, sasToken: string, callback: (err?: Error) => void): void;
 }
 
 /**

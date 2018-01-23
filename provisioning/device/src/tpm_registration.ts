@@ -113,9 +113,31 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
               if (err) {
                 debug('failed to get sign the initial authentication payload with the sessionKey: ' + err.toString());
                 /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_010: [If any of the calls the the `TpmSecurityClient` or the `TpmProvisioningTransport` fails, the `register` method shall call its callback with the error resulting from the failure.]*/
-                  this._fsm.transition('notStarted', err, registerCallback);
-                } else {
-                this._fsm.transition('registrationInProgress', registrationInfo, sasToken, registerCallback);
+                this._fsm.transition('notStarted', err, registerCallback);
+              } else {
+                this._fsm.transition('respondToAuthenticationChallenge', registrationInfo, sasToken, registerCallback);
+              }
+            });
+          },
+          cancel: (callback) => {
+            /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_011: [The `cancel` method shall interrupt the ongoing registration process.]*/
+            this._transport.cancel((err) => {
+              if (err) {
+                debug('failed to stop provisioning transport: ' + err.toString());
+              }
+              this._fsm.transition('notStarted', err, callback);
+            });
+          },
+          '*': () => this._fsm.deferUntilTransition()
+        },
+        respondToAuthenticationChallenge: {
+          _onEnter: (registrationInfo, sasToken, registerCallback) => {
+            this._transport.respondToAuthenticationChallenge(registrationInfo, sasToken, (err) => {
+              if (err) {
+                // TODO: verify that the transport is disconnected here.  Maybe add SRS in transport
+                this._fsm.transition('notStarted', err, registerCallback);
+              } else {
+                this._fsm.transition('registrationInProgress', sasToken, registerCallback);
               }
             });
           },
@@ -131,12 +153,11 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
           '*': () => this._fsm.deferUntilTransition()
         },
         registrationInProgress: {
-          _onEnter: (registrationInfo, sasToken, registerCallback) => {
+          _onEnter: (registrationInfo, registerCallback) => {
             /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_007: [The `register` method shall start the actual registration process by calling the `register` method on the `TpmProvisioningTransport` object passed to the constructor with the following parameters:
             - `sasToken`: the SAS token generated according to `SRS_NODE_DPS_TPM_REGISTRATION_16_006`
             - `registrationInfo`: an object with the following properties `endorsementKey`, `storageRootKey`, `registrationId` and their previously set values.
             - a callback that will handle an optional error and a `result` object containing the IoT hub name, device id and symmetric key for this device.]*/
-            this._transport.setSasToken(sasToken);
             this._pollingStateMachine.register(registrationInfo.request, (err, result) => {
               if (err) {
                 debug('failed to register with provisioning transport: ' + err.toString());
