@@ -13,7 +13,7 @@ export class TPMAuthenticationProvider extends EventEmitter implements Authentic
   type: AuthenticationType = AuthenticationType.Token;
   automaticRenewal: boolean = true;
   private _tokenValidTimeInSeconds: number = 3600;   // 1 hour
-  private _tokenRenewalMarginInSeconds: number = 9git00; // 15 minutes
+  private _tokenRenewalMarginInSeconds: number = 900; // 15 minutes
   private _renewalTimeout: NodeJS.Timer;
   private _fsm: machina.Fsm;
 
