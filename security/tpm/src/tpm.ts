@@ -214,7 +214,7 @@ export class TpmSecurityClient  {
         throw new ReferenceError('\'dataToSign\' cannot be \'' + dataToSign + '\'');
     }
 
-    /*Codes_**SRS_NODE_TPM_SECURITY_CLIENT_06_013: [** If `signWithIdentity` is invoked without a previous successful invocation of `activateIdentityKey`, an InvalidOperationError is thrown. **]** */
+    /*Codes_SRS_NODE_TPM_SECURITY_CLIENT_06_013: [If `signWithIdentity` is invoked without a previous successful invocation of `activateIdentityKey`, an InvalidOperationError is thrown.] */
     if (!this._idKeyPub) {
         throw new errors.InvalidOperationError('activateIdentityKey must be invoked before any signing is attempted.');
     }
@@ -293,6 +293,7 @@ export class TpmSecurityClient  {
     this._tpm.GetCapability(tss.TPM_CAP.TPM_PROPERTIES, TPM_PT.INPUT_BUFFER, 1, (caps: tss.GetCapabilityResponse) => {
       const props = <tss.TPML_TAGGED_TPM_PROPERTY>caps.capabilityData;
       if (props.tpmProperty.length !== 1 || props.tpmProperty[0].property !== TPM_PT.INPUT_BUFFER) {
+        /*Codes_SRS_NODE_TPM_SECURITY_CLIENT_06_015: [If the tpm device is not properly configured, the callback will be invoked with `err` of `SecurityDeviceError`.] */
         callback(new errors.SecurityDeviceError('Unexpected result of TPM2_GetCapability(TPM_PT.INPUT_BUFFER)'), null);
       } else {
         const maxInputBuffer: number = props.tpmProperty[0].value;
@@ -357,6 +358,7 @@ export class TpmSecurityClient  {
       this._tpm.StartAuthSession(null, null, nonce, null, tss.TPM_SE.POLICY, tss.NullSymDef, TPM_ALG_ID.SHA256, (resp: tss.StartAuthSessionResponse) => {
         debug('StartAuthSession(POLICY_SESS) returned ' + TPM_RC[this._tpm.getLastResponseCode()] + '; sess handle: ' + resp.handle.handle.toString(16));
         if (this._tpm.getLastResponseCode() !== TPM_RC.SUCCESS) {
+          /*Codes_SRS_NODE_TPM_SECURITY_CLIENT_06_016: [If an error is encountered activating the identity key, the callback with be invoked with an `Error` of `SecurityDeviceError`.] */
           activateCallback(new errors.SecurityDeviceError('Authorization session unable to be created.  RC value: ' + TPM_RC[this._tpm.getLastResponseCode()].toString()));
         } else {
           let policySession = new tss.Session(resp.handle, resp.nonceTPM);
@@ -368,6 +370,7 @@ export class TpmSecurityClient  {
           this._tpm.withSession(tss.NullPwSession).PolicySecret(tss.Endorsement, policySession.SessIn.sessionHandle, null, null, null, 0, (resp: tss.PolicySecretResponse) => {
             debug('PolicySecret() returned ' + TPM_RC[this._tpm.getLastResponseCode()]);
             if (this._tpm.getLastResponseCode() !== TPM_RC.SUCCESS) {
+              /*Codes_SRS_NODE_TPM_SECURITY_CLIENT_06_016: [If an error is encountered activating the identity key, the callback with be invoked with an `Error` of `SecurityDeviceError`.] */
               activateCallback(new errors.SecurityDeviceError('Unable to apply the necessary policy to authorize the EK.  RC value: ' + TPM_RC[this._tpm.getLastResponseCode()].toString()));
             } else {
 
@@ -379,6 +382,7 @@ export class TpmSecurityClient  {
               this._tpm.withSessions(tss.NullPwSession, policySession).ActivateCredential(TpmSecurityClient._srkPersistentHandle, TpmSecurityClient._ekPersistentHandle, credentialBlob, encodedSecret.secret, (innerWrapKey: Buffer) => {
                 debug('ActivateCredential() returned ' + TPM_RC[this._tpm.getLastResponseCode()] + '; innerWrapKey size ' + innerWrapKey.length);
                 if (this._tpm.getLastResponseCode() !== TPM_RC.SUCCESS) {
+                  /*Codes_SRS_NODE_TPM_SECURITY_CLIENT_06_016: [If an error is encountered activating the identity key, the callback with be invoked with an `Error` of `SecurityDeviceError`.] */
                   activateCallback(new errors.SecurityDeviceError('Unable to decrypt the symmetric key used to protect duplication blob.  RC value: ' + TPM_RC[this._tpm.getLastResponseCode()].toString()));
                 } else {
 
@@ -395,7 +399,8 @@ export class TpmSecurityClient  {
                   this._tpm.withSession(tss.NullPwSession).Import(TpmSecurityClient._srkPersistentHandle, innerWrapKey, this._idKeyPub, idKeyDupBlob, encWrapKey.secret, symDef, (idKeyPrivate: TPM2B_PRIVATE) => {
                     debug('Import() returned ' + TPM_RC[this._tpm.getLastResponseCode()] + '; idKeyPrivate size ' + idKeyPrivate.buffer.length);
                     if (this._tpm.getLastResponseCode() !== TPM_RC.SUCCESS) {
-                      activateCallback(new errors.SecurityDeviceError('Unable to import the device id key into the TPM.  RC value: ' + TPM_RC[this._tpm.getLastResponseCode()].toString()));
+                        /*Codes_SRS_NODE_TPM_SECURITY_CLIENT_06_016: [If an error is encountered activating the identity key, the callback with be invoked with an `Error` of `SecurityDeviceError`.] */
+                        activateCallback(new errors.SecurityDeviceError('Unable to import the device id key into the TPM.  RC value: ' + TPM_RC[this._tpm.getLastResponseCode()].toString()));
                     } else {
 
                       //
@@ -405,6 +410,7 @@ export class TpmSecurityClient  {
                       this._tpm.withSession(tss.NullPwSession).Load(TpmSecurityClient._srkPersistentHandle, idKeyPrivate, this._idKeyPub, (hIdKey: TPM_HANDLE) => {
                         debug('Load() returned ' + TPM_RC[this._tpm.getLastResponseCode()] + '; ID key handle: 0x' + hIdKey.handle.toString(16));
                         if (this._tpm.getLastResponseCode() !== TPM_RC.SUCCESS) {
+                          /*Codes_SRS_NODE_TPM_SECURITY_CLIENT_06_016: [If an error is encountered activating the identity key, the callback with be invoked with an `Error` of `SecurityDeviceError`.] */
                           activateCallback(new errors.SecurityDeviceError('Unable to load the device id key into the TPM.  RC value: ' + TPM_RC[this._tpm.getLastResponseCode()].toString()));
                         } else {
 
@@ -421,6 +427,7 @@ export class TpmSecurityClient  {
                             this._tpm.withSession(tss.NullPwSession).EvictControl(tss.Owner, hIdKey, TpmSecurityClient._idKeyPersistentHandle, () => {
                               console.log('EvictControl(0x' + hIdKey.handle.toString(16) + ', 0x' + TpmSecurityClient._idKeyPersistentHandle.handle.toString(16) + ') returned ' + TPM_RC[this._tpm.getLastResponseCode()]);
                               if (this._tpm.getLastResponseCode() !== TPM_RC.SUCCESS) {
+                                /*Codes_SRS_NODE_TPM_SECURITY_CLIENT_06_016: [If an error is encountered activating the identity key, the callback with be invoked with an `Error` of `SecurityDeviceError`.] */
                                 activateCallback(new errors.SecurityDeviceError('Unable to persist the device id key into the TPM.  RC value: ' + TPM_RC[this._tpm.getLastResponseCode()].toString()));
                               } else {
 

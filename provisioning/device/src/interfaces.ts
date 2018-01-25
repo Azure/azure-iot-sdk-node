@@ -151,6 +151,7 @@ export interface RegistrationClient {
 }
 
 /**
+ * @private
  * Information passed between client and transport during Tpm registration
  */
 export interface TpmRegistrationInfo {
@@ -171,7 +172,7 @@ export interface TpmRegistrationResult extends RegistrationResult {
  * @private
  */
 export interface TpmProvisioningTransport extends PollingTransport {
-  setTpmInformation(ek: Buffer, srk: Buffer): void;
+  setTpmInformation(endorsementKey: Buffer, storageRootKey: Buffer): void;
   setSasToken(sasToken: string): void;
   getAuthenticationChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: TpmChallenge) => void): void;
 }

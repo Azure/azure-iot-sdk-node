@@ -4,7 +4,7 @@
 'use strict';
 
 import { EventEmitter } from 'events';
-import { RestApiClient, Http as Base } from 'azure-iot-http-base';
+import { HttpTransportError, RestApiClient, Http as Base } from 'azure-iot-http-base';
 import { X509, errors } from 'azure-iot-common';
 import { X509ProvisioningTransport, TpmProvisioningTransport } from 'azure-iot-provisioning-device';
 import { RegistrationRequest, DeviceRegistrationResult } from 'azure-iot-provisioning-device';
@@ -12,7 +12,6 @@ import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure
 import { TpmChallenge } from 'azure-iot-provisioning-device';
 import { translateError } from 'azure-iot-provisioning-device';
 import * as dbg from 'debug';
-import { HttpTransportError } from '../../../../common/transport/http/lib/rest_api_client';
 const debug = dbg('azure-iot-provisioning-device-http:Http');
 
 const _defaultHeaders = {
@@ -29,7 +28,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
   private _config: ProvisioningTransportOptions = {};
   private _auth: X509;
   private _sasToken: string;
-  private _tpm: {};
+  private _tpmPublicKeys: {};
 
   /**
    * @private
@@ -55,8 +54,8 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
    * @private
    *
    */
-  setTpmInformation(ek: Buffer, srk: Buffer): void {
-    this._tpm = { endorsementKey: ek.toString('base64'), storageRootKey: srk.toString('base64') };
+  setTpmInformation(endorsementKey: Buffer, storageRootKey: Buffer): void {
+    this._tpmPublicKeys = { endorsementKey: endorsementKey.toString('base64'), storageRootKey: storageRootKey.toString('base64') };
   }
 
   /**
@@ -64,36 +63,43 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
    *
    */
   getAuthenticationChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: TpmChallenge) => void): void {
-    let simpleRegistrationRequest: RegistrationRequest = {registrationId: request.registrationId, provisioningHost: request.provisioningHost, idScope: request.idScope};
+    let simpleRegistrationRequest: RegistrationRequest = {
+      registrationId: request.registrationId,
+      provisioningHost: request.provisioningHost,
+      idScope: request.idScope
+    };
     this.registrationRequest(simpleRegistrationRequest, (err: HttpTransportError, result?: any, response?: any) => {
       if (err && err.response && (err.response.statusCode === 401))  {
 
         //
-        // So far so bad.  Parse the response body and pull out the message, authenticationKey and the keyName.
+        // This request had no actual authentication.  Therefore, it is correct for us to get the 401 error.  Parse the response body and pull out the message, authenticationKey and the keyName.
         //
         let authenticationResponse;
         try {
           authenticationResponse = JSON.parse(err.responseBody);
         } catch (parseError) {
-          debug('inappropriate challenge received: ' + err);
-          callback(new errors.InternalServerError('The server did NOT respond with an appropriately formatted authentication blob.'));
+          debug('challenge could not be parsed: ' + err);
+          callback(new errors.FormatError('The server did NOT respond with an appropriately formatted authentication blob.'));
           return;
         }
 
-        if (authenticationResponse.authenticationKey && authenticationResponse.keyName && (typeof authenticationResponse.authenticationKey === 'string') &&  (typeof authenticationResponse.keyName === 'string')) {
-          callback(null, { message: authenticationResponse.message, authenticationKey: Buffer.from(authenticationResponse.authenticationKey, 'base64'), keyName: authenticationResponse.keyName });
+        if ((typeof authenticationResponse.authenticationKey === 'string') &&  (typeof authenticationResponse.keyName === 'string')) {
+          callback(null, {
+            message: authenticationResponse.message,
+            authenticationKey: Buffer.from(authenticationResponse.authenticationKey, 'base64'),
+            keyName: authenticationResponse.keyName
+          });
         } else {
-          debug('inadequate challenge response received: ' + err.responseBody);
-          callback(new errors.InternalServerError('The server did NOT respond with an appropriately formatted authentication blob.'));
+          debug('Invalid formatted challenge received: ' + err.responseBody);
+          callback(new errors.FormatError('The server did NOT respond with an appropriately formatted authentication blob.'));
         }
       } else {
         //
         // We should ALWAYS get an error for the un-authenticated request we just made.  The server is sending back something we
         // have no real context to interpret.
         //
-        callback(new errors.InternalServerError('The server did NOT respond with an unauthorized error.  For a TPM challenge this is incorrect.'));
-        debug('PUT response received:');
-        debug(err);
+        debug('Invalid response back from the authentication challenge: ' + err);
+        callback(new errors.InvalidOperationError('The server did NOT respond with an unauthorized error.  For a TPM challenge this is incorrect.'));
       }
     });
   }
@@ -142,8 +148,8 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
 
     let requestBody: any = { registrationId : request.registrationId };
 
-    if (this._tpm) {
-      requestBody.tpm = this._tpm;
+    if (this._tpmPublicKeys) {
+      requestBody.tpm = this._tpmPublicKeys;
     }
 
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_005: [ `registrationRequest` shall include the current `api-version` as a URL query string value named 'api-version'. ] */

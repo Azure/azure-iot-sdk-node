@@ -5,5 +5,5 @@
 
 module.exports = {
   TpmSecurityClient : require('./lib/tpm').TpmSecurityClient,
-  TPMAuthenticationProvider: require('./lib/tpm_authentication_provider').TPMAuthenticationProvider
+  TpmAuthenticationProvider: require('./lib/tpm_authentication_provider').TpmAuthenticationProvider
 };

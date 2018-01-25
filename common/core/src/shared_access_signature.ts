@@ -116,10 +116,15 @@ export class SharedAccessSignature {
   };
 
 
-  static createWithSigningFunction(credentials: authorization.TransportConfig, expiry: string | number, signingFunction: Function, callback: (err: Error, sas?: SharedAccessSignature) => void): void {
+/**
+ * @private
+ */
+static createWithSigningFunction(credentials: authorization.TransportConfig, expiry: string | number, signingFunction: Function, callback: (err: Error, sas?: SharedAccessSignature) => void): void {
     let sas = new SharedAccessSignature();
     sas.sr = authorization.encodeUriComponentStrict(credentials.host + '/devices/' + credentials.deviceId);
-    if (credentials.sharedAccessKeyName) sas.skn = authorization.encodeUriComponentStrict(credentials.sharedAccessKeyName);
+    if (credentials.sharedAccessKeyName) {
+      sas.skn = authorization.encodeUriComponentStrict(credentials.sharedAccessKeyName);
+    }
     sas.se = expiry;
     signingFunction(Buffer.from(authorization.stringToSign(sas.sr, sas.se.toString())), (err, signed) => {
       if (err) {

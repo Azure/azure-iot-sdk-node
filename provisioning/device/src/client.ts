@@ -38,7 +38,7 @@ export class ProvisioningDeviceClient {
         /* Codes_SRS_PROVISIONING_CLIENT_18_001: [ If `securityClient` implements `X509SecurityClient` and the `transport` implements `X509ProvisioningTransport`, then `create` shall return an `X509Registration` object. ] */
         return new X509Registration(provisioningHost, idScope, transport as X509ProvisioningTransport, securityClient as X509SecurityClient);
       } else {
-        /* Codes_SRS_PROVISIONING_CLIENT_18_002: [ If `securityClient` implements `X509SecurityClient` and the `transport` does not implement `X509ProvisioningTransport`, then `create` shall throw a `ArgumentError` expectation. ] */
+        /* Codes_SRS_PROVISIONING_CLIENT_18_002: [ If `securityClient` implements `X509SecurityClient` and the `transport` does not implement `X509ProvisioningTransport`, then `create` shall throw an `ArgumentError` exception. ] */
         throw new errors.ArgumentError('Transport does not support X509 authentication');
       }
     } else if (isTpmSecurity) {
@@ -46,7 +46,7 @@ export class ProvisioningDeviceClient {
         /* Codes_SRS_PROVISIONING_CLIENT_18_003: [ If `securityClient` implements `TPMSecurityClient` and the `transport` supports TPM authentication, then `create` shall return a `TpmRegistration` object. ] */
         return new TpmRegistration(provisioningHost, idScope, transport as TpmProvisioningTransport, securityClient as TpmSecurityClient);
       } else {
-        /* Codes_SRS_PROVISIONING_CLIENT_18_004: [ If `securityClient` implements `TPMSecurityClient` and the `transport` dos not implement `TPMProvisioningTransport`, then `create` shall throw a `ArgumentError` expectation. ] */
+        /* Codes_SRS_PROVISIONING_CLIENT_18_004: [ If `securityClient` implements `TPMSecurityClient` and the `transport` dos not implement `TPMProvisioningTransport`, then `create` shall throw an `ArgumentError` exception. ] */
         throw new errors.ArgumentError('Transport does not support TPM authentication');
       }
     } else {

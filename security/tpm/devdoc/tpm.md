@@ -1,10 +1,12 @@
 # azure-iot-security-tpm.TpmSecurityClient Requirements
 
 ## Overview
-`TpmSecurityClient` provides query and key operations for the device registration client.
+`TpmSecurityClient` provides query operations for TPM entities and key manipulation operations for the device registration client.
 
 ## Example usage
-TBD
+
+var securityClient = new tpmSecurity.TpmSecurityClient();
+var provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new provisioningTransport(), securityClient);
 
 ### TpmSecurityClient(registrationId?: string, customTpm?: any) [constructor]
 
@@ -28,7 +30,7 @@ Queries and returns the public portion of the storage root key in the TPM hardwa
 
 **SRS_NODE_TPM_SECURITY_CLIENT_06_008: [** The `getStorageRootKey` function shall query the TPM hardware and return the `storageRootKey` in the callback. **]**
 
-**SRS_NODE_TPM_SECURITY_CLIENT_06_009: [** Any errors from interacting with the TPM hardware will cause in SecurityDeviceError to be returned in the err parameter of the callback. **]**
+**SRS_NODE_TPM_SECURITY_CLIENT_06_009: [** Any errors from interacting with the TPM hardware will cause in `SecurityDeviceError` to be returned in the err parameter of the callback. **]**
 
 ### signWithIdentity(dataToSign: Buffer, callback: (err: Error, signedData: Buffer) => void): void
 
@@ -38,11 +40,15 @@ The `signWithIdentity` function will perform an HMAC signing with a previously d
 
 **SRS_NODE_TPM_SECURITY_CLIENT_06_013: [** If `signWithIdentity` is invoked without a previous successful invocation of `activateIdentityKey`, an InvalidOperationError is thrown. **]**
 
+**SRS_NODE_TPM_SECURITY_CLIENT_06_015: [** If the tpm device is not properly configured, the callback will be invoked with `err` of `SecurityDeviceError`. **]**
+
 ### activateIdentityKey(identityKey: Buffer, callback: (err: Error, returnedActivate: Buffer) => void): void
 
-The `activateIdentityKey` will set up the TPM to perform sigining operation utilizing the `identityKey` specified withing the identity key argument.
+The `activateIdentityKey` will set up the TPM to perform signing operation utilizing the `identityKey` specified withing the identity key argument.
 
 **SRS_NODE_TPM_SECURITY_CLIENT_06_014: [** If the `identityKey` parameter is falsy, an ReferenceError will be thrown. **]**
+
+**SRS_NODE_TPM_SECURITY_CLIENT_06_016: [** If an error is encountered activating the identity key, the callback with be invoked with an `Error` of `SecurityDeviceError`. **]**
 
 ### getRegistrationId(callback: (err: Error, registrationId: string) => void): void
 

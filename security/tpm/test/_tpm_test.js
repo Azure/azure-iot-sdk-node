@@ -92,16 +92,15 @@ describe('tpm', function () {
   });
 
   describe('signWithIdentity', function() {
+    /*Tests_SRS_NODE_TPM_SECURITY_CLIENT_06_011: [If `dataToSign` is falsy, an ReferenceError will be thrown.] */
     [undefined, null,'', 0].forEach(function(falsyDataToSign) {
       testFalsyArg('signWithIdentity', 'dataToSign', falsyDataToSign, ReferenceError);
     });
 
-    it.skip('must call activateIdentityKey first', function() {
+    it('must call activateIdentityKey first', function() {
+      /*Tests_SRS_NODE_TPM_SECURITY_CLIENT_06_013: [If `signWithIdentity` is invoked without a previous successful invocation of `activateIdentityKey`, an InvalidOperationError is thrown.] */
       var client = new TpmSecurityClient('registration', fakeSimpleTpmClient);
-
-      var activateStub = sinon.stub(client,'_activateIdentityKey')
-      activateStub.callsFake((callback) => {this._idKeyPub = null;callback(null,1)});
-      assert.throws(client.signWithIdentity([1], (errorFromIdentity, signResult) => {}), common.errors.ArgumentError);
+      assert.throws(function () {client.signWithIdentity([1], (errorFromIdentity, signResult) => {})}, common.errors.InvalidOperationError);
     });
   });
 
