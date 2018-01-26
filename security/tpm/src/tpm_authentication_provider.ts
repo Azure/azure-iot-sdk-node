@@ -36,7 +36,7 @@ export class TpmAuthenticationProvider extends EventEmitter implements Authentic
       initialState: 'inactive',
       states: {
         inactive: {
-          _onEnter: (callback, err) => {
+          _onEnter: () => {
             if (this._renewalTimeout) {
               clearTimeout(this._renewalTimeout);
             }
