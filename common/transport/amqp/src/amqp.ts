@@ -123,12 +123,12 @@ export class Amqp {
             }
           },
           amqpDisconnected: () => debug('ignoring disconnected event while disconnected'),
-          connect: (connectCallback) => {
-            this._fsm.transition('connecting', connectCallback);
+          connect: (policyOverride, connectCallback) => {
+            this._fsm.transition('connecting', policyOverride, connectCallback);
           },
           disconnect: (callback) => callback(null, new results.Disconnected()),
           attachSenderLink: (endpoint, linkOptions, callback) => {
-            this._fsm.handle('connect', (err) => {
+            this._fsm.handle('connect', null, (err) => {
               if (err) {
                 callback(err);
               } else {
@@ -137,7 +137,7 @@ export class Amqp {
             });
           },
           attachReceiverLink: (endpoint, linkOptions, callback) => {
-            this._fsm.handle('connect', (err) => {
+            this._fsm.handle('connect', null, (err) => {
               if (err) {
                 callback(err);
               } else {
@@ -148,7 +148,7 @@ export class Amqp {
           detachSenderLink: (endpoint, callback) => this._safeCallback(callback),
           detachReceiverLink: (endpoint, callback) => this._safeCallback(callback),
           initializeCBS: (callback) => {
-            this._fsm.handle('connect', (err) => {
+            this._fsm.handle('connect', null, (err) => {
               if (err) {
                 callback(err);
               } else {
@@ -168,14 +168,14 @@ export class Amqp {
           '*': () => this._fsm.deferUntilTransition('connected')
         },
         connecting: {
-          _onEnter: (connectCallback) => {
+          _onEnter: (policyOverride, connectCallback) => {
             let connectError = null;
             const connectErrorHandler = (err) => {
               connectError = err;
             };
 
             this._amqp.on(_amqpClientError, connectErrorHandler);
-            this._amqp.connect(this.uri)
+            this._amqp.connect(this.uri, policyOverride)
               .then((result) => {
                 debug('AMQP transport connected.');
                 this._amqp.on(_amqpClientError, amqpErrorHandler);
@@ -200,7 +200,7 @@ export class Amqp {
           },
           amqpError: (err, callback) => this._fsm.transition('disconnecting', callback, err),
           amqpDisconnected: () => this._fsm.transition('disconnected', undefined, new errors.NotConnectedError('amqp10: connection closed')),
-          connect: (callback) => callback(null, new results.Connected()),
+          connect: (policyOverride, callback) => callback(null, new results.Connected()),
           disconnect: (disconnectCallback) => {
             this._fsm.transition('disconnecting', disconnectCallback);
           },
@@ -400,15 +400,30 @@ export class Amqp {
    * @param {Function}   done          Callback called when the connection is established or if an error happened.
    */
   connect(uri: string, sslOptions: any, done: GenericAmqpBaseCallback<any>): void {
-    /*Codes_SRS_NODE_COMMON_AMQP_06_002: [The `connect` method shall throw a ReferenceError if the uri parameter has not been supplied.] */
-    if (!uri) throw new ReferenceError('The uri parameter can not be \'' + uri + '\'');
-    this.uri = uri;
-    if (this.uri.substring(0, 3) === 'wss') {
-      const wsTransport = require('amqp10-transport-ws');
-      wsTransport.register(amqp10.TransportProvider);
-    }
-    this._amqp.policy.connect.options.sslOptions = sslOptions;
-    this._fsm.handle('connect', done);
+    this._setUri(uri);
+    let policyOverride = {
+      options: {
+        sslOptions: sslOptions
+      }
+    };
+    this._fsm.handle('connect', policyOverride, done);
+  }
+
+  /**
+   * @method             module:azure-iot-amqp-base.Amqp#connectWithCustomSasl
+   * @description        Establishes a connection with an Amqp service using a custom SASL mechanism
+   * @param {String}     uri           The uri to connect with.
+   * @param {String}     mechanismName The name of the SASL mechanism
+   * @param {Object}     mechanism     SASL mechanism object
+   * @param {Function}   done          Callback called when the connection is established or if an error happened.
+   */
+  connectWithCustomSasl(uri: string, mechanismName: string, mechanism: any, done: GenericAmqpBaseCallback<any>): void {
+    this._setUri(uri);
+    let policyOverride = {
+      saslMechanism: mechanismName
+    };
+    this._amqp.registerSaslMechanism(mechanismName, mechanism);
+    this._fsm.handle('connect', policyOverride, done);
   }
 
   /**
@@ -551,4 +566,16 @@ export class Amqp {
       process.nextTick(() => callback(error, result));
     }
   }
+
+  private _setUri(uri: string): void {
+    /*Codes_SRS_NODE_COMMON_AMQP_06_002: [The `connect` method shall throw a ReferenceError if the uri parameter has not been supplied.] */
+    if (!uri) throw new ReferenceError('The uri parameter can not be \'' + uri + '\'');
+    this.uri = uri;
+    if (this.uri.substring(0, 3) === 'wss') {
+      const wsTransport = require('amqp10-transport-ws');
+      wsTransport.register(amqp10.TransportProvider);
+    }
+  }
+
+
 }

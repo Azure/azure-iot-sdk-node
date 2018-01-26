@@ -17,6 +17,8 @@ var ProvisioningServiceClient = require('azure-iot-provisioning-service').Provis
 var X509Security = require('azure-iot-security-x509').X509Security;
 var Registry = require('azure-iothub').Registry;
 var certHelper = require('./cert_helper');
+var TpmSecurityClient = require('azure-iot-security-tpm').TpmSecurityClient;
+var TssJs = require("tss.js");
 
 var idScope = process.env.IOT_PROVISIONING_DEVICE_IDSCOPE;
 var provisioningConnectionString = process.env.IOT_PROVISIONING_SERVICE_CONNECTION_STRING;
@@ -26,8 +28,12 @@ var provisioningHost = 'global.azure-devices-provisioning.net';
 var provisioningServiceClient = ProvisioningServiceClient.fromConnectionString(provisioningConnectionString);
 var registry = Registry.fromConnectionString(registryConnectionString);
 
+// avoid unused object warning when commenting out tests
+/* exported X509Individual, createCertWithoutChain, createCertWithChain, X509Group, TpmIndividual, createAllCerts */
+
 var X509IndividualTransports = [ Http, Amqp, AmqpWs, Mqtt, MqttWs ];
 var X509GroupTransports = [ Http, Amqp, AmqpWs, Mqtt, MqttWs ];
+var TpmIndividualTransports = [ Http, Amqp, AmqpWs ];
 
 var rootCert = {
   cert: new Buffer(process.env.IOT_PROVISIONING_ROOT_CERT,"base64").toString('ascii'),
@@ -38,26 +44,26 @@ var certWithoutChain;
 var intermediateCert1;
 var intermediateCert2;
 var certWithChain;
-var deviceId;
-var registrationId;
+var x509DeviceId;
+var x509RegistrationId;
 
 
 var createAllCerts = function(callback) {
   var id = uuid.v4();
-  deviceId = 'deleteme_provisioning_node_e2e_' + id;
-  registrationId = 'reg-' + id;
+  x509DeviceId = 'deleteme_provisioning_node_e2e_' + id;
+  x509RegistrationId = 'reg-' + id;
 
   async.waterfall([
     function(callback) {
       debug('creating self-signed cert');
-      certHelper.createSelfSignedCert(registrationId, function(err, cert) {
+      certHelper.createSelfSignedCert(x509RegistrationId, function(err, cert) {
         selfSignedCert = cert;
         callback(err);
       });
     },
     function(callback) {
       debug('creating cert without chain');
-      certHelper.createDeviceCert(registrationId, rootCert, function(err, cert) {
+      certHelper.createDeviceCert(x509RegistrationId, rootCert, function(err, cert) {
         certWithoutChain = cert;
         callback(err);
       });
@@ -78,7 +84,7 @@ var createAllCerts = function(callback) {
     },
     function(callback) {
       debug('creating cert with chain');
-      certHelper.createDeviceCert(registrationId, intermediateCert2, function(err, cert) {
+      certHelper.createDeviceCert(x509RegistrationId, intermediateCert2, function(err, cert) {
         cert.cert = cert.cert + '\n' + intermediateCert2.cert + '\n' + intermediateCert1.cert;
         certWithChain = cert;
         callback(err);
@@ -99,14 +105,16 @@ var X509Individual = function() {
 
   this.initialize = function (callback) {
     self._cert = selfSignedCert;
+    self.deviceId = x509DeviceId;
+    self.registrationId = x509RegistrationId;
     callback();
   };
 
   this.enroll = function (callback) {
     self._testProp = uuid.v4();
     var enrollment = {
-      registrationId: registrationId,
-      deviceId: deviceId,
+      registrationId: self.registrationId,
+      deviceId: self.deviceId,
       attestation: {
         type: 'x509',
         x509: {
@@ -136,7 +144,7 @@ var X509Individual = function() {
   };
 
   this.register = function (Transport, callback) {
-    var securityClient = new X509Security(registrationId, self._cert);
+    var securityClient = new X509Security(this.registrationId, self._cert);
     var transport = new Transport();
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
     provisioningDeviceClient.register(function (err, result) {
@@ -146,12 +154,12 @@ var X509Individual = function() {
 
   this.cleanup = function (callback) {
     debug('deleting enrollment');
-    provisioningServiceClient.deleteIndividualEnrollment(registrationId, function (err) {
+    provisioningServiceClient.deleteIndividualEnrollment(this.registrationId, function (err) {
       if (err) {
         debug('ignoring deleteIndividualEnrollment error');
       }
       debug('deleting device');
-      registry.delete(deviceId, function (err) {
+      registry.delete(self.deviceId, function (err) {
         if (err) {
           debug('ignoring delete error');
         }
@@ -175,10 +183,10 @@ var X509Group = function(certFactory) {
   var self = this;
 
   this.transports = X509GroupTransports;
-
   this._groupId = 'testgroup';
 
   this.initialize = function(callback) {
+    self.registrationId = x509RegistrationId;
     certFactory(function(err, enrollmentCert, deviceCert) {
       if (err) {
         callback(err);
@@ -227,24 +235,24 @@ var X509Group = function(certFactory) {
   };
 
   this.register = function (Transport, callback) {
-    var securityClient = new X509Security(registrationId, self._cert);
+    var securityClient = new X509Security(self.registrationId, self._cert);
     var transport = new Transport();
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
     provisioningDeviceClient.register(function (err, result) {
       assert.isNotOk(err);
       assert.isOk(result.deviceId);
-      deviceId = result.deviceId;
+      self.deviceId = result.deviceId;
       callback(err, result);
     });
   };
 
   this.cleanup = function (callback) {
     debug('deleting device');
-    registry.delete(deviceId, function (err) {
+    registry.delete(self.deviceId, function (err) {
       if (err) {
         debug('ignoring delete error');
       }
-      debug('deleting enrollment group');
+      debug('deletingchenrollment group');
       provisioningServiceClient.deleteEnrollmentGroup(self._groupId, function(err) {
         if (err) {
           debug('ignoring deleteEnrollmentGroup error');
@@ -256,11 +264,100 @@ var X509Group = function(certFactory) {
   };
 };
 
+var tpm = null;
+var TpmIndividual = function() {
+
+  var self = this;
+  var ek;
+  var securityClient;
+
+  this.transports = TpmIndividualTransports;
+
+  this.initialize = function (callback) {
+    var id = uuid.v4();
+    self.deviceId = 'deleteme_provisioning_node_e2e_' + id;
+    self.registrationId = 'reg-' + id;
+      if (!tpm) {
+      tpm = new TssJs.Tpm(false);
+    }
+    securityClient = new TpmSecurityClient(self.registrationId, tpm);
+    securityClient.getEndorsementKey(function(err, endorsementKey) {
+      if (err) {
+        callback(err);
+      } else {
+        ek = endorsementKey.toString('base64');
+        callback();
+      }
+    });
+  };
+
+  this.enroll = function (callback) {
+    self._testProp = uuid.v4();
+    var enrollment = {
+      registrationId: self.registrationId,
+      deviceId: self.deviceId,
+      attestation: {
+        type: 'tpm',
+        tpm: {
+          endorsementKey: ek
+        }
+      },
+      provisioningStatus: "enabled",
+      initialTwin: {
+        properties: {
+          desired: {
+            testProp: self._testProp
+          }
+        }
+      }
+    };
+
+    provisioningServiceClient.createOrUpdateIndividualEnrollment(enrollment, function (err) {
+      if (err) {
+        callback(err);
+      } else {
+        callback();
+      }
+    });
+  };
+
+  this.register = function (Transport, callback) {
+    var transport = new Transport();
+    var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
+    provisioningDeviceClient.register(function (err, result) {
+      callback(err, result);
+    });
+  };
+
+  this.cleanup = function (callback) {
+    debug('deleting enrollment');
+    provisioningServiceClient.deleteIndividualEnrollment(self.registrationId, function (err) {
+      if (err) {
+        debug('ignoring deleteIndividualEnrollment error');
+      }
+      debug('deleting device');
+      registry.delete(self.deviceId, function (err) {
+        if (err) {
+          debug('ignoring delete error');
+        }
+        debug('done with TPM individual cleanup');
+        callback();
+      });
+    });
+  };
+};
+
 describe('IoT Provisioning', function() {
   this.timeout(120000);
   before(createAllCerts);
 
   [
+    /*
+    {
+      testName: 'TPM Individual Enrollment',
+      testObj: new TpmIndividual()
+    },
+    */
     {
       testName: 'x509 individual enrollment with Self Signed Certificate',
       testObj: new X509Individual()
@@ -302,7 +399,7 @@ describe('IoT Provisioning', function() {
               debug('success registering device');
               debug(JSON.stringify(result,null,'  '));
               debug('getting twin');
-              registry.getTwin(deviceId,function(err, twin) {
+              registry.getTwin(config.testObj.deviceId,function(err, twin) {
                 callback(err, twin);
               });
             },

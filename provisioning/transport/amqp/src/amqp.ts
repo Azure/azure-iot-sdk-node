@@ -8,11 +8,13 @@ import * as machina from 'machina';
 import * as dbg from 'debug';
 import * as uuid from 'uuid';
 import * as async from 'async';
+import * as Builder from 'buffer-builder';
 const debug = dbg('azure-iot-provisioning-device-amqp:Amqp');
 
 import { X509, errors } from 'azure-iot-common';
-import { ProvisioningTransportOptions, X509ProvisioningTransport, RegistrationRequest, RegistrationResult, ProvisioningDeviceConstants } from 'azure-iot-provisioning-device';
+import { ProvisioningTransportOptions, X509ProvisioningTransport, TpmProvisioningTransport, RegistrationRequest, RegistrationResult, ProvisioningDeviceConstants, TpmChallenge } from 'azure-iot-provisioning-device';
 import { Amqp as Base, SenderLink, ReceiverLink, AmqpMessage } from 'azure-iot-amqp-base';
+import { ChallengeResponseCallback, SaslTpm } from './sasl_tpm';
 
 /**
  * @private
@@ -36,11 +38,15 @@ enum DeviceOperations {
 /**
  * Transport used to provision a device over AMQP.
  */
-export class Amqp extends EventEmitter implements X509ProvisioningTransport {
+export class Amqp extends EventEmitter implements X509ProvisioningTransport, TpmProvisioningTransport {
   private _amqpBase: Base;
   private _config: ProvisioningTransportOptions = {};
   private _amqpStateMachine: machina.Fsm;
   private _x509Auth: X509;
+  private _ek: Buffer;
+  private _srk: Buffer;
+  private _customSaslMechanism: SaslTpm;
+  private _challengeResponseCallback: ChallengeResponseCallback;
 
   // AMQP links used during registration.
   private _receiverLink: ReceiverLink;
@@ -108,11 +114,12 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
               }
             });
           },
+          getAuthenticationChallenge: (request, callback) => this._amqpStateMachine.transition('connectingTpm', request, callback),
+          respondToAuthenticationChallenge: (request, sasToken, callback) => callback(new errors.InvalidOperationError('Cannot respond to challenge while disconnected.')),
           /*Codes_SRS_NODE_PROVISIONING_AMQP_18_003: [ `cancel` shall call its callback immediately if the AMQP connection is disconnected. ] */
           cancel: (callback) => callback(),
           /*Codes_SRS_NODE_PROVISIONING_AMQP_16_022: [`disconnect` shall call its callback immediately if the AMQP connection is disconnected.]*/
           disconnect: (callback) => callback()
-
         },
         connectingX509: {
           _onEnter: (request, callback) => {
@@ -130,6 +137,39 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
               }
             });
           },
+          /*Codes_SRS_NODE_PROVISIONING_AMQP_18_005: [ `cancel` shall disconnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. ] */
+          cancel: (callback) => {
+            this._cancelAllOperations();
+            this._amqpStateMachine.transition('disconnecting', null, null, callback);
+          },
+          /*Codes_SRS_NODE_PROVISIONING_AMQP_18_009: [ `disconnect` shall disonnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. ] */
+          disconnect: (callback) => {
+            this._cancelAllOperations();
+            this._amqpStateMachine.transition('disconnecting', null, null, callback);
+          },
+          '*': () => this._amqpStateMachine.deferUntilTransition()
+        },
+
+        connectingTpm: {
+          _onEnter: (request, callback) => this._getAuthChallenge(request, callback),
+
+          respondToAuthenticationChallenge: (request, sasToken, callback) => {
+            let completionCompleteHandler = this._amqpStateMachine.on('tpmConnectionComplete', (err) => {
+              this._amqpStateMachine.off(completionCompleteHandler);
+              if (err) {
+                this._amqpStateMachine.transition('disconnected', err, null, callback);
+              } else {
+                this._amqpStateMachine.transition('attachingLinks', request, callback);
+              }
+            });
+
+            this._respondToAuthChallenge(sasToken);
+          },
+
+          tpmConnectionComplete: (err) => {
+            this._amqpStateMachine.emit('tpmConnectionComplete', err);
+          },
+
           /*Codes_SRS_NODE_PROVISIONING_AMQP_18_005: [ `cancel` shall disconnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. ] */
           cancel: (callback) => {
             this._cancelAllOperations();
@@ -357,6 +397,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
     });
 
     this._amqpStateMachine.on('transition', (data) => debug('AMQP State Machine: ' + data.fromState + ' -> ' + data.toState + ' (' + data.action + ')'));
+    this._amqpStateMachine.on('handling', (data) => debug('AMQP State Machine: handling ' + data.inputType));
   }
 
   /**
@@ -399,6 +440,28 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
   /**
    * @private
    */
+  setTpmInformation(ek: Buffer, srk: Buffer): void {
+    this._ek = ek;
+    this._srk = srk;
+  }
+
+  /**
+   * @private
+   */
+  getAuthenticationChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: TpmChallenge) => void): void {
+    this._amqpStateMachine.handle('getAuthenticationChallenge', request, callback);
+  }
+
+  /**
+   * @private
+   */
+  respondToAuthenticationChallenge(request: RegistrationRequest, sasToken: string, callback: (err?: Error) => void): void {
+    this._amqpStateMachine.handle('respondToAuthenticationChallenge', request, sasToken, callback);
+  }
+
+  /**
+   * @private
+   */
   cancel(callback: (err?: Error) => void): void {
     this._amqpStateMachine.handle('cancel', callback);
   }
@@ -432,6 +495,44 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport {
     }
   }
 
+  private _getAuthChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: TpmChallenge) => void): void {
+    let hostname: string = request.idScope + '/registrations/' + request.registrationId;
+    let init: Buffer = new Builder()
+      .appendUInt8(0)
+      .appendString(request.idScope)
+      .appendUInt8(0)
+      .appendString(request.registrationId)
+      .appendUInt8(0)
+      .appendBuffer(this._ek)
+      .get();
+    let firstResponse: Buffer = new Builder()
+      .appendUInt8(0)
+      .appendBuffer(this._srk)
+      .get();
+
+    this._customSaslMechanism = new SaslTpm(hostname, init, firstResponse, (challenge, challengeResponseCallback) => {
+      let tpmChallenge: TpmChallenge = {
+        message: null,
+        authenticationKey: challenge,
+        keyName: null
+      };
+
+      this._challengeResponseCallback = challengeResponseCallback;
+      callback(null, tpmChallenge);
+    });
+
+    this._amqpBase.connectWithCustomSasl(this._getConnectionUri(request), this._customSaslMechanism.name, this._customSaslMechanism, (err) => {
+      this._amqpStateMachine.handle('tpmConnectionComplete', err);
+    });
+  }
+
+  private _respondToAuthChallenge(sasToken: string): void {
+    let responseBuffer: Buffer = new Builder()
+      .appendUInt8(0)
+      .appendString(sasToken)
+      .get();
+    this._challengeResponseCallback(null, responseBuffer);
+  }
 }
 
 
