@@ -174,7 +174,7 @@ export interface TpmRegistrationResult extends RegistrationResult {
 export interface TpmProvisioningTransport extends PollingTransport {
   setTpmInformation(endorsementKey: Buffer, storageRootKey: Buffer): void;
   setSasToken(sasToken: string): void;
-  getAuthenticationChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: TpmChallenge) => void): void;
+  getAuthenticationChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: Buffer) => void): void;
 }
 
 /**
@@ -187,13 +187,4 @@ export interface TpmSecurityClient {
   signWithIdentity(toSign: Buffer, callback: (err: Error, signedData?: Buffer) => void): void;
   activateIdentityKey(key: Buffer, callback: (err: Error) => void): void;
   getRegistrationId(callback: (err: Error, registrationId?: string) => void): void;
-}
-
-/**
- * @private
- */
-export interface TpmChallenge {
-  message: string;
-  authenticationKey: Buffer;
-  keyName: string;
 }

@@ -38,7 +38,7 @@ provisioningClient.register(function(err, result) {
     console.log('registration succeeded');
     console.log('assigned hub=' + result.registrationState.assignedHub);
     console.log('deviceId=' + result.registrationState.deviceId);
-    var tpmAuthenticationProvider = tpmSecurity.fromTpmSecurity(result.registrationState.deviceId, result.registrationState.assignedHub, securityClient);
+    var tpmAuthenticationProvider = tpmSecurity.TpmAuthenticationProvider.fromTpmSecurityClient(result.registrationState.deviceId, result.registrationState.assignedHub, securityClient);
     var hubClient = Client.fromAuthenticationProvider(tpmAuthenticationProvider, iotHubTransport);
 
     var connectCallback = function (err) {

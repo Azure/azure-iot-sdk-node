@@ -23,9 +23,7 @@ describe('TpmRegistration', function () {
       idScope: 'fakeIdScope'
     }
 
-    var fakeTpmChallenge = {
-      authenticationKey: 'fakeSessionKey'
-    };
+    var fakeTpmChallenge = Buffer.from('fakeSessionKey','base64');
 
     var fakeTpmRegistrationResult = {
       symmetricKey: 'fakeSymmetricKey'
@@ -72,7 +70,7 @@ describe('TpmRegistration', function () {
     - `registrationId`: a unique identifier computed from the endorsement key
     - `endorsementKey`: the `endorsementKey` value obtained from the `TpmSecurityClient` object
     - `storageRootKey`: the `storageRootKey` value obtained from the `TpmSecurityClient` object
-    - a callback that will handle either an error or a `TpmChallenge` object containing a session key to be used later in the authentication process.]*/
+    - a callback that will handle either an error or a `Buffer` object containing a session key to be used later in the authentication process.]*/
     it('calls getAuthenticationChallenge on the TpmProvisioningTransport', function (testCallback) {
       tpmReg.register(function () {
         assert.isTrue(fakeProvisioningTransport.getAuthenticationChallenge.calledOnce);
@@ -85,7 +83,7 @@ describe('TpmRegistration', function () {
     });
 
     /*Tests_SRS_NODE_DPS_TPM_REGISTRATION_16_004: [The `register` method shall store the session key in the TPM by calling the `activateIdentityKey` method of the `TpmSecurityClient` object passed to the constructor with the following arguments:
-    - `sessionKey`: the session key property of the `TpmChallenge` object returned by the previous call to `TpmProvisioningTransport.getAuthenticationChallenge`
+    - `sessionKey`: the session key returned by the previous call to `TpmProvisioningTransport.getAuthenticationChallenge`
     - a callback that will handle an optional error if the operation fails.]*/
     it('calls activateIdentityKey on the TpmSecurityClient with the session key', function (testCallback) {
       tpmReg.register(function () {
@@ -122,7 +120,7 @@ describe('TpmRegistration', function () {
     });
 
     /*Tests_SRS_NODE_DPS_TPM_REGISTRATION_16_008: [When the callback for the registration process is called, the `register` method shall store the symmetric key within the TPM by calling the `activateIdentityKey` method of the `TpmSecurityClient` object passed to the constructor with the following arguments:
-    - `symmetricKey`: the symmetric key property of the `TpmChallenge` object returned by the previous call to `TpmProvisioningTransport.getAuthenticationChallenge`
+    - `symmetricKey`: the symmetric key returned by the previous call to `TpmProvisioningTransport.getAuthenticationChallenge`
     - a callback that will handle an optional error if the operation fails.]*/
     it('calls the activateIdentityKey method on the TpmSecurityClient with the actual symmetric key when the registration is successful', function (testCallback) {
       tpmReg.register(function () {

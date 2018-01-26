@@ -23,9 +23,10 @@ export class TpmAuthenticationProvider extends EventEmitter implements Authentic
   /**
    * @private
    *
-   * Initializes a new instance of the TokenAuthenticationProvider - users should only use the factory methods though.
+   * Initializes a new instance of the TpmAuthenticationProvider - users should only use the factory methods though.
    *
    * @param credentials       Credentials to be used by the device to connect to the IoT hub.
+   * @param tpmSecurityClient That client that provides the signingFunction.
    */
   constructor(credentials: TransportConfig, tpmSecurityClient: TpmSecurityClient) {
     super();
@@ -63,17 +64,28 @@ export class TpmAuthenticationProvider extends EventEmitter implements Authentic
                 this._credentials.sharedAccessSignature = newSas.toString();
                 this._renewalTimeout = setTimeout(() => this._renewToken(), (this._tokenValidTimeInSeconds - this._tokenRenewalMarginInSeconds) * 1000);
                 debug('Created a new sas token.');
-                this.emit('newTokenAvailable', this._credentials);
-                callback(null, this._credentials);
-                this._fsm.transition('active');
+                this._fsm.transition('active', callback);
               }
             });
           },
           '*': () => this._fsm.deferUntilTransition()
         },
         active: {
+          _onEnter: (callback) => {
+            this.emit('newTokenAvailable', this._credentials);
+            callback(null, this._credentials);
+          },
           getDeviceCredentials: (callback) => {
             callback(null, this._credentials);
+          },
+          signingError: (err) => {
+            debug('Unable to create a new SAS token! - ' + err);
+            this.emit('error', err);
+            this._fsm.transition('inactive');
+          },
+          signingSuccessful: () => {
+            debug('Created a new sas token.');
+            this.emit('newTokenAvailable', this._credentials);
           }
         }
       }
@@ -95,25 +107,23 @@ export class TpmAuthenticationProvider extends EventEmitter implements Authentic
     const newExpiry =  Math.floor(Date.now() / 1000) + this._tokenValidTimeInSeconds;
     SharedAccessSignature.createWithSigningFunction(this._credentials, newExpiry, this._tpmSecurityClient.signWithIdentity.bind(this._tpmSecurityClient), (err, newSas) => {
       if (err) {
-        debug('Unable to create a new SAS token! - ' + err);
-        this._fsm.transition('inactive');
+        this._fsm.handle('signingError', err);
       } else {
         this._credentials.sharedAccessSignature = newSas.toString();
         this._renewalTimeout = setTimeout(() => this._renewToken(), (this._tokenValidTimeInSeconds - this._tokenRenewalMarginInSeconds) * 1000);
-        debug('Created a new sas token.');
-        this.emit('newTokenAvailable', this._credentials);
+        this._fsm.handle('signingSuccessful');
       }
     });
   }
 
   /**
-   * @method           module:azure-iot-security-tpm.TpmSecurityClient#fromTpmSecurity
+   * @method           module:azure-iot-security-tpm.TpmSecurityClient#fromTpmSecurityClient
    * @description      Returns an authentication provider.
    * @param {string}            deviceId          The device id for the client to be created.
    * @param {string}            iotHubHostname    The name of the IoT hub to be utilized.
    * @param {TpmSecurityClient} tpmSecurityClient The client which provides the tpm security interface. (Signing, activating, etc.)
    */
-  static fromTpmSecurity(deviceId: string, iotHubHostname: string, tpmSecurityClient: TpmSecurityClient): TpmAuthenticationProvider {
+  static fromTpmSecurityClient(deviceId: string, iotHubHostname: string, tpmSecurityClient: TpmSecurityClient): TpmAuthenticationProvider {
     if (!deviceId) {
       throw new ReferenceError('deviceId cannot be \'' + deviceId + '\'');
     }

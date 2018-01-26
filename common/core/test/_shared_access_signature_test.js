@@ -94,6 +94,8 @@ describe('SharedAccessSignature', function () {
         assert.notProperty(sas, 'skn');
       });
     });
+
+
   });
 
   describe('#extend', function () {

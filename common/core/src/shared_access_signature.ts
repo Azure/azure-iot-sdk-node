@@ -119,22 +119,29 @@ export class SharedAccessSignature {
 /**
  * @private
  */
-static createWithSigningFunction(credentials: authorization.TransportConfig, expiry: string | number, signingFunction: Function, callback: (err: Error, sas?: SharedAccessSignature) => void): void {
-    let sas = new SharedAccessSignature();
-    sas.sr = authorization.encodeUriComponentStrict(credentials.host + '/devices/' + credentials.deviceId);
-    if (credentials.sharedAccessKeyName) {
-      sas.skn = authorization.encodeUriComponentStrict(credentials.sharedAccessKeyName);
-    }
-    sas.se = expiry;
-    signingFunction(Buffer.from(authorization.stringToSign(sas.sr, sas.se.toString())), (err, signed) => {
-      if (err) {
-        callback(err);
-      } else {
-        sas.sig = authorization.encodeUriComponentStrict(signed.toString('base64'));
-        callback(null, sas);
-      }
-    });
+static createWithSigningFunction(credentials: authorization.TransportConfig, expiry: number, signingFunction: Function, callback: (err: Error, sas?: SharedAccessSignature) => void): void {
+  function throwRef(name: string, value: any): void {
+    throw new ReferenceError('Argument \'' + name + '\' is ' + value);
   }
+
+  if (!credentials) throwRef('credentials', credentials);
+  if (!expiry) throwRef('expiry', expiry);
+  if (!signingFunction) throwRef('signingFunction', signingFunction);
+  let sas = new SharedAccessSignature();
+  sas.sr = authorization.encodeUriComponentStrict(credentials.host + '/devices/' + credentials.deviceId);
+  if (credentials.sharedAccessKeyName) {
+    sas.skn = authorization.encodeUriComponentStrict(credentials.sharedAccessKeyName);
+  }
+  sas.se = expiry;
+  signingFunction(Buffer.from(authorization.stringToSign(sas.sr, sas.se.toString())), (err, signed) => {
+    if (err) {
+      callback(err);
+    } else {
+      sas.sig = authorization.encodeUriComponentStrict(signed.toString('base64'));
+      callback(null, sas);
+    }
+  });
+}
 
 /**
  * @method          module:azure-iot-common.SharedAccessSignature.parse

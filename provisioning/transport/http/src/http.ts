@@ -9,7 +9,6 @@ import { X509, errors } from 'azure-iot-common';
 import { X509ProvisioningTransport, TpmProvisioningTransport } from 'azure-iot-provisioning-device';
 import { RegistrationRequest, DeviceRegistrationResult } from 'azure-iot-provisioning-device';
 import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure-iot-provisioning-device';
-import { TpmChallenge } from 'azure-iot-provisioning-device';
 import { translateError } from 'azure-iot-provisioning-device';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-provisioning-device-http:Http');
@@ -28,7 +27,10 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
   private _config: ProvisioningTransportOptions = {};
   private _auth: X509;
   private _sasToken: string;
-  private _tpmPublicKeys: {};
+  private _tpmPublicKeys: {
+    endorsementKey: string,
+    storageRootKey: string
+  };
 
   /**
    * @private
@@ -62,7 +64,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
    * @private
    *
    */
-  getAuthenticationChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: TpmChallenge) => void): void {
+  getAuthenticationChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: Buffer) => void): void {
     let simpleRegistrationRequest: RegistrationRequest = {
       registrationId: request.registrationId,
       provisioningHost: request.provisioningHost,
@@ -83,12 +85,8 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
           return;
         }
 
-        if ((typeof authenticationResponse.authenticationKey === 'string') &&  (typeof authenticationResponse.keyName === 'string')) {
-          callback(null, {
-            message: authenticationResponse.message,
-            authenticationKey: Buffer.from(authenticationResponse.authenticationKey, 'base64'),
-            keyName: authenticationResponse.keyName
-          });
+        if (typeof authenticationResponse.authenticationKey === 'string') {
+          callback(null, Buffer.from(authenticationResponse.authenticationKey, 'base64'));
         } else {
           debug('Invalid formatted challenge received: ' + err.responseBody);
           callback(new errors.FormatError('The server did NOT respond with an appropriately formatted authentication blob.'));
