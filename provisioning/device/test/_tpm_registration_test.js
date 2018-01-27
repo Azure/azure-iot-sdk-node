@@ -17,6 +17,7 @@ describe('TpmRegistration', function () {
     var fakeEndorsementKey = 'fakeEndorsementKey';
     var fakeStorageRootKey = 'fakeStorageRootKey';
     var fakeSignedData = 'fakeSignedData';
+    var fakeRegistrationId = 'fakeRegistrationId';
     var fakeRequest = {
       requestId: 'fakeRegistrationId',
       provisioningHost: 'fakeHost',
@@ -37,11 +38,13 @@ describe('TpmRegistration', function () {
         getStorageRootKey: sinon.stub().callsArgWith(0, null, fakeStorageRootKey),
         signWithIdentity: sinon.stub().callsArgWith(1, null, fakeSignedData),
         activateIdentityKey: sinon.stub().callsArg(1),
+        getRegistrationId: sinon.stub().callsArgWith(0, null, fakeRegistrationId),
         cancel: sinon.stub().callsArg(0)
       };
 
       fakeProvisioningTransport = {
         getAuthenticationChallenge: sinon.stub().callsArgWith(1, null, fakeTpmChallenge),
+        setTpmInformation: sinon.stub(),
         setSasToken: sinon.stub(),
         cancel: sinon.stub().callsArg(0)
       };
@@ -51,7 +54,8 @@ describe('TpmRegistration', function () {
     });
 
     /*Tests_SRS_NODE_DPS_TPM_REGISTRATION_16_001: [The `register` method shall get the endorsement key by calling `getEndorsementKey` on the `TpmSecurityClient` object passed to the constructor.]*/
-    it('calls getEndorsementKey on the TpmSecurityClient', function (testCallback) {
+    it.only('calls getEndorsementKey on the TpmSecurityClient', function (testCallback) {
+      this.timeout(1000000);
       tpmReg.register(function () {
         assert.isTrue(fakeSecurityClient.getEndorsementKey.calledOnce);
         testCallback();

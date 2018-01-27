@@ -28,7 +28,6 @@ var provisioningHost = '<replace with provisioning host entry point>';
 var idScope = '<the id scope for your dps instance>';
 
 var securityClient = new tpmSecurity.TpmSecurityClient();
-var provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new provisioningTransport(), securityClient);
 
 // Register the device.  Do not force a re-registration.
 provisioningClient.register(function(err, result) {
@@ -46,6 +45,7 @@ provisioningClient.register(function(err, result) {
         console.error('Could not connect: ' + err.message);
       } else {
         console.log('Client connected');
+        var message = new Message('Hello world');
         hubClient.sendEvent(message, printResultFor('send'));
       }
     };

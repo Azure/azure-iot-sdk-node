@@ -425,7 +425,6 @@ export class TpmSecurityClient  {
                             //
 
                             this._tpm.withSession(tss.NullPwSession).EvictControl(tss.Owner, hIdKey, TpmSecurityClient._idKeyPersistentHandle, () => {
-                              console.log('EvictControl(0x' + hIdKey.handle.toString(16) + ', 0x' + TpmSecurityClient._idKeyPersistentHandle.handle.toString(16) + ') returned ' + TPM_RC[this._tpm.getLastResponseCode()]);
                               if (this._tpm.getLastResponseCode() !== TPM_RC.SUCCESS) {
                                 /*Codes_SRS_NODE_TPM_SECURITY_CLIENT_06_016: [If an error is encountered activating the identity key, the callback with be invoked with an `Error` of `SecurityDeviceError`.] */
                                 activateCallback(new errors.SecurityDeviceError('Unable to persist the device id key into the TPM.  RC value: ' + TPM_RC[this._tpm.getLastResponseCode()].toString()));

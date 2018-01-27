@@ -36,7 +36,12 @@ export class TpmAuthenticationProvider extends EventEmitter implements Authentic
       initialState: 'inactive',
       states: {
         inactive: {
-          _onEnter: () => {
+          _onEnter: (err, callback) => {
+            if (callback) {
+              callback(err);
+            } else if (err) {
+              this.emit('error', err);
+            }
             if (this._renewalTimeout) {
               clearTimeout(this._renewalTimeout);
             }
@@ -80,8 +85,7 @@ export class TpmAuthenticationProvider extends EventEmitter implements Authentic
           },
           signingError: (err) => {
             debug('Unable to create a new SAS token! - ' + err);
-            this.emit('error', err);
-            this._fsm.transition('inactive');
+            this._fsm.transition('inactive', err);
           },
           signingSuccessful: () => {
             debug('Created a new sas token.');

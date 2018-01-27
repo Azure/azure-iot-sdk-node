@@ -65,12 +65,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
    *
    */
   getAuthenticationChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: Buffer) => void): void {
-    let simpleRegistrationRequest: RegistrationRequest = {
-      registrationId: request.registrationId,
-      provisioningHost: request.provisioningHost,
-      idScope: request.idScope
-    };
-    this.registrationRequest(simpleRegistrationRequest, (err: HttpTransportError, result?: any, response?: any) => {
+    this.registrationRequest(request, (err: HttpTransportError, result?: any, response?: any) => {
       if (err && err.response && (err.response.statusCode === 401))  {
 
         //
