@@ -81,8 +81,8 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
             this._transport.setTpmInformation(registrationInfo.endorsementKey, registrationInfo.storageRootKey);
             /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_003: [The `register` method shall initiate the authentication flow with the device provisioning service by calling the `getAuthenticationChallenge` method of the `TpmProvisioningTransport` object passed to the constructor with an object with the following properties:
             - `registrationId`: a unique identifier computed from the endorsement key
-            - `endorsementKey`: the `endorsementKey` value obtained from the `TpmSecurityClient` object
-            - `storageRootKey`: the `storageRootKey` value obtained from the `TpmSecurityClient` object
+            - `provisioningHost`: the host address of the dps instance
+            - `idScope`: the `idscope` value obtained from the azure portal for this instance.
             - a callback that will handle either an error or a `Buffer` object containing a session key to be used later in the authentication process.]*/
             this._transport.getAuthenticationChallenge(registrationInfo.request, (err, tpmChallenge) => {
               if (err) {

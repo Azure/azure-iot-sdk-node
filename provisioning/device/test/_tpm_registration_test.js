@@ -19,15 +19,19 @@ describe('TpmRegistration', function () {
     var fakeSignedData = 'fakeSignedData';
     var fakeRegistrationId = 'fakeRegistrationId';
     var fakeRequest = {
-      requestId: 'fakeRegistrationId',
-      provisioningHost: 'fakeHost',
-      idScope: 'fakeIdScope'
+      requestId: fakeRegistrationId,
+      provisioningHost: fakeProvisioningHost,
+      idScope: fakeIdScope
     }
 
     var fakeTpmChallenge = Buffer.from('fakeSessionKey','base64');
 
     var fakeTpmRegistrationResult = {
-      symmetricKey: 'fakeSymmetricKey'
+      registrationState: {
+        tpm: {
+          authenticationKey: 'fakeSymmetricKey'
+        }
+      }
     };
 
     var tpmReg;
@@ -54,8 +58,7 @@ describe('TpmRegistration', function () {
     });
 
     /*Tests_SRS_NODE_DPS_TPM_REGISTRATION_16_001: [The `register` method shall get the endorsement key by calling `getEndorsementKey` on the `TpmSecurityClient` object passed to the constructor.]*/
-    it.only('calls getEndorsementKey on the TpmSecurityClient', function (testCallback) {
-      this.timeout(1000000);
+    it('calls getEndorsementKey on the TpmSecurityClient', function (testCallback) {
       tpmReg.register(function () {
         assert.isTrue(fakeSecurityClient.getEndorsementKey.calledOnce);
         testCallback();
@@ -72,16 +75,16 @@ describe('TpmRegistration', function () {
 
     /*Tests_SRS_NODE_DPS_TPM_REGISTRATION_16_003: [The `register` method shall initiate the authentication flow with the device provisioning service by calling the `getAuthenticationChallenge` method of the `TpmProvisioningTransport` object passed to the constructor with an object with the following properties:
     - `registrationId`: a unique identifier computed from the endorsement key
-    - `endorsementKey`: the `endorsementKey` value obtained from the `TpmSecurityClient` object
-    - `storageRootKey`: the `storageRootKey` value obtained from the `TpmSecurityClient` object
+    - `provisioningHost`: the host address of the dps instance
+    - `idScope`: the `idscope` value obtained from the azure portal for this instance.
     - a callback that will handle either an error or a `Buffer` object containing a session key to be used later in the authentication process.]*/
     it('calls getAuthenticationChallenge on the TpmProvisioningTransport', function (testCallback) {
       tpmReg.register(function () {
         assert.isTrue(fakeProvisioningTransport.getAuthenticationChallenge.calledOnce);
         var authArg = fakeProvisioningTransport.getAuthenticationChallenge.firstCall.args[0];
-        assert.strictEqual(authArg.endorsementKey, fakeEndorsementKey);
-        assert.strictEqual(authArg.storageRootKey, fakeStorageRootKey);
-        assert.strictEqual(authArg.request.registrationId, 'fakeRegistrationId');
+        assert.strictEqual(authArg.idScope, fakeIdScope);
+        assert.strictEqual(authArg.provisioningHost, fakeProvisioningHost);
+        assert.strictEqual(authArg.registrationId, fakeRegistrationId);
         testCallback();
       });
     });
@@ -92,7 +95,7 @@ describe('TpmRegistration', function () {
     it('calls activateIdentityKey on the TpmSecurityClient with the session key', function (testCallback) {
       tpmReg.register(function () {
         assert.isTrue(fakeSecurityClient.activateIdentityKey.calledTwice);
-        assert.strictEqual(fakeSecurityClient.activateIdentityKey.firstCall.args[0], fakeTpmChallenge.authenticationKey);
+        assert.strictEqual(fakeSecurityClient.activateIdentityKey.firstCall.args[0], fakeTpmChallenge);
         testCallback();
       });
     });
@@ -101,13 +104,13 @@ describe('TpmRegistration', function () {
     - `sasToken`: the SAS token generated according to `SRS_NODE_DPS_TPM_REGISTRATION_16_006`
     - `registrationInfo`: an object with the following properties `endorsementKey`, `storageRootKey`, `registrationId` and their previously set values.
     - a callback that will handle an optional error and a `result` object containing the IoT hub name, device id and symmetric key for this device.]*/
-    it ('calls register on the TpmProvisioningTransport', function (testCallback) {
+    it('calls register on the TpmProvisioningTransport', function (testCallback) {
       tpmReg.register(function () {
         assert.isTrue(tpmReg._pollingStateMachine.register.calledOnce);
         var authArg = fakeProvisioningTransport.getAuthenticationChallenge.firstCall.args[0];
-        assert.strictEqual(authArg.endorsementKey, fakeEndorsementKey);
-        assert.strictEqual(authArg.storageRootKey, fakeStorageRootKey);
-        assert.strictEqual(authArg.request.registrationId, 'fakeRegistrationId');
+        assert.strictEqual(authArg.idScope, fakeIdScope);
+        assert.strictEqual(authArg.provisioningHost, fakeProvisioningHost);
+        assert.strictEqual(authArg.registrationId, fakeRegistrationId);
 
         // TODO: SAS token format test could be improved (see SRS_NODE_DPS_TPM_REGISTRATION_16_005 and SRS_NODE_DPS_TPM_REGISTRATION_16_006)
         assert.isString(fakeProvisioningTransport.setSasToken.firstCall.args[0]);
@@ -129,7 +132,7 @@ describe('TpmRegistration', function () {
     it('calls the activateIdentityKey method on the TpmSecurityClient with the actual symmetric key when the registration is successful', function (testCallback) {
       tpmReg.register(function () {
         assert.isTrue(fakeSecurityClient.activateIdentityKey.calledTwice);
-        assert.strictEqual(fakeSecurityClient.activateIdentityKey.secondCall.args[0], fakeTpmRegistrationResult.symmetricKey);
+        assert.deepEqual(fakeSecurityClient.activateIdentityKey.secondCall.args[0], Buffer.from(fakeTpmRegistrationResult.registrationState.tpm.authenticationKey, 'base64'));
         testCallback();
       });
     });
