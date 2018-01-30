@@ -57,6 +57,8 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
    *
    */
   setTpmInformation(endorsementKey: Buffer, storageRootKey: Buffer): void {
+    /*Codes_SRS_NODE_PROVISIONING_HTTP_06_001: [The `endorsementKey` will be saved into the class as a string.] */
+    /*Codes_SRS_NODE_PROVISIONING_HTTP_06_002: [The `storageRootKey` will be saved into the class as a string.] */
     this._tpmPublicKeys = { endorsementKey: endorsementKey.toString('base64'), storageRootKey: storageRootKey.toString('base64') };
   }
 
@@ -65,7 +67,9 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
    *
    */
   getAuthenticationChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: Buffer) => void): void {
+    /*Codes_SRS_NODE_PROVISIONING_HTTP_06_003: [The getAuthenticationChallenge will perform a request that contains the endorsementKey, the storageRootKey, and the registrationId as the body of the request.] */
     this.registrationRequest(request, (err: HttpTransportError, result?: any, response?: any) => {
+      /*Codes_SRS_NODE_PROVISIONING_HTTP_06_004: [The request will actually generate a 401 error since there is actually no authentication for the request.] */
       if (err && err.response && (err.response.statusCode === 401))  {
 
         //
@@ -80,6 +84,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
           return;
         }
 
+        /*Codes_SRS_NODE_PROVISIONING_HTTP_06_005: [** The request response will contain an activation blob which will be provided as the result of the callback for this function. **] */
         if (typeof authenticationResponse.authenticationKey === 'string') {
           callback(null, Buffer.from(authenticationResponse.authenticationKey, 'base64'));
         } else {

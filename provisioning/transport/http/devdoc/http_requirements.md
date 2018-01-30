@@ -16,6 +16,18 @@ The `constructor` creates an Http transport object used to communicate with the 
 **SRS_NODE_PROVISIONING_HTTP_18_001: [** The `Http` constructor shall accept the following properties:
   - `httpBase` - an optional test implementation of azure-iot-http-base **]**
 
+### setTpmInformation(endorsementKey: Buffer, storageRootKey: Buffer)
+The setTpmInformation will store set the tpm information into the  http class.
+
+**SRS_NODE_PROVISIONING_HTTP_06_001: [** The `endorsementKey` will be saved into the class as a string. **]**
+**SRS_NODE_PROVISIONING_HTTP_06_002: [** The `storageRootKey` will be saved into the class as a string. **]**
+
+### getAuthenticationChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: Buffer))
+Queries the dps to obtain a buffer that may be used as a symmetric key to perform further registration tasks.
+
+**SRS_NODE_PROVISIONING_HTTP_06_003: [** The getAuthenticationChallenge will perform a request that contains the endorsementKey, the storageRootKey, and the registrationId as the body of the request. **]**
+**SRS_NODE_PROVISIONING_HTTP_06_004: [** The request will actually generate a 401 error since there is actually no authentication for the request. **]**
+**SRS_NODE_PROVISIONING_HTTP_06_005: [** The request response will contain an activation blob which will be provided as the result of the callback for this function. **]**
 
 ### registrationRequest(request: RegistrationRequest, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void;
 

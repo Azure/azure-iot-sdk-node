@@ -12,15 +12,16 @@ var ProvisioningDeviceConstants = require('azure-iot-provisioning-device').Provi
 describe('Http', function() {
   var http;
   var fakeBase;
+  var fakeHttpRequest;
 
   var fakeHost = 'fakeHost';
-  var fakeRequestId = 'fakeRequestId';
+  var fakeRegistrationId = 'fakeRegistrationId';
   var fakeIdScope = 'fakeIdScope';
   var fakeOperationId = 'fakeOperationId';
 
   var fakeRequest = {
     provisioningHost: fakeHost,
-    requestId: fakeRequestId,
+    registrationId: fakeRegistrationId,
     idScope: fakeIdScope
   };
   var fakeX509 = {
@@ -30,12 +31,12 @@ describe('Http', function() {
   var fakeErrorText = 'fake error text';
   var fakeError = new Error(fakeErrorText);
 
-  var fakeHttpRequest = {
-    setTimeout: sinon.spy(),
-    write:  sinon.spy(),
-    end: sinon.spy(),
-    abort: sinon.spy()
-  };
+  // var fakeHttpRequest = {
+  //   setTimeout: sinon.spy(),
+  //   write:  sinon.spy(),
+  //   end: sinon.spy(),
+  //   abort: sinon.spy()
+  // };
 
   var fakeAssignedResponse = {
     status: 'Assigned',
@@ -61,9 +62,16 @@ describe('Http', function() {
   this.timeout(100);
 
   beforeEach(function() {
+    fakeHttpRequest = {
+      setTimeout: sinon.spy(),
+      write:  sinon.spy(),
+      end: sinon.spy(),
+      abort: sinon.spy()
+    };
     fakeBase = {
       buildRequest: sinon.spy(function() { return fakeHttpRequest; })
     };
+
     http = new Http(fakeBase);
   });
 
@@ -76,12 +84,108 @@ describe('Http', function() {
     }
   };
 
+  var respond_tpm = function(err, body, statusCode) {
+    var done = fakeBase.buildRequest.firstCall.args[4];
+    if (err) {
+      err.response = {statusCode: 401};
+      err.responseBody = JSON.stringify({authenticationKey: 'fakeAuthenticationKey'});
+      done(err, err.responseBody, err.response);
+    } else {
+      done(null, JSON.stringify(body), { statusCode: statusCode });
+    }
+  };
+
+  var respond_bad_json_tpm = function(err, body, statusCode) {
+    var done = fakeBase.buildRequest.firstCall.args[4];
+    if (err) {
+      err.response = {statusCode: 401};
+      err.responseBody = {hello: 'goodbye'};
+      done(err, err.responseBody, err.response);
+    } else {
+      done(null, JSON.stringify(body), { statusCode: statusCode });
+    }
+  };
+
+  var respond_bad_type_tpm = function(err, body, statusCode) {
+    var done = fakeBase.buildRequest.firstCall.args[4];
+    if (err) {
+      err.response = {statusCode: 401};
+      err.responseBody = JSON.stringify({authenticationKey: 1});
+      done(err, err.responseBody, err.response);
+    } else {
+      done(null, JSON.stringify(body), { statusCode: statusCode });
+    }
+  };
+
   describe('#constructor', function() {
     /* Tests_SRS_NODE_PROVISIONING_HTTP_18_001: [ The `Http` constructor shall accept the following properties:
        - `httpBase` - an optional test implementation of azure-iot-http-base ] */
     it ('accepts the right arguments', function(callback) {
       assert.strictEqual(fakeBase, http._httpBase);
       callback();
+    });
+  });
+
+  describe('#setTpmInformation', function() {
+    /*Tests_SRS_NODE_PROVISIONING_HTTP_06_001: [The `endorsementKey` will be saved into the class as a string.] */
+    /*Tests_SRS_NODE_PROVISIONING_HTTP_06_002: [The `storageRootKey` will be saved into the class as a string.] */
+    it('stores endorsementKey and storageRootKey as strings', function(callback) {
+      http.setTpmInformation(Buffer.from('fakeEndorsementKey'), Buffer.from('fakeStorageRootKey'));
+      assert(typeof http._tpmPublicKeys.endorsementKey === 'string', 'endorsementKey is incorrect type');
+      assert(typeof http._tpmPublicKeys.storageRootKey === 'string', 'storageRootKey is incorrect type');
+      assert.equal(http._tpmPublicKeys.endorsementKey, Buffer.from('fakeEndorsementKey').toString('base64'), 'invalid saved endorsementKey');
+      assert.equal(http._tpmPublicKeys.storageRootKey, Buffer.from('fakeStorageRootKey').toString('base64'), 'invalid saved storageRootKey');
+      callback();
+    });
+  });
+
+  describe('#getAuthenticationChallenge', function() {
+    /*Tests_SRS_NODE_PROVISIONING_HTTP_06_003: [The getAuthenticationChallenge will perform a request that contains the endorsementKey, the storageRootKey, and the registrationId as the body of the request.] */
+    it('body will contain the endorsement, storageRoot and the registrationId', function(callback) {
+      http.setTpmInformation(Buffer.from('fakeEndorsementKey'), Buffer.from('fakeStorageRootKey'));
+      http.getAuthenticationChallenge(fakeRequest, function() {
+        var body = fakeHttpRequest.write.firstCall.args[0];
+        assert.equal(body, JSON.stringify(
+          {
+            registrationId: 'fakeRegistrationId',
+            tpm: {
+              endorsementKey: Buffer.from('fakeEndorsementKey').toString('base64'),
+              storageRootKey: Buffer.from('fakeStorageRootKey').toString('base64')
+            }
+          }
+        ), 'invalid body passed to dps request');
+        callback();
+      });
+      respond_tpm(new errors.UnauthorizedError('fake error text'), {authenticationKey: 'fakeAuthenticationKey'}, 401);
+    });
+
+    /*Tests_SRS_NODE_PROVISIONING_HTTP_06_004: [The request will actually generate a 401 error since there is actually no authentication for the request.] */
+    /*Tests_SRS_NODE_PROVISIONING_HTTP_06_005: [** The request response will contain an activation blob which will be provided as the result of the callback for this function. **] */
+    it('request generates a 401 status', function(callback) {
+      http.setTpmInformation(Buffer.from('fakeEndorsementKey'), Buffer.from('fakeStorageRootKey'));
+      http.getAuthenticationChallenge(fakeRequest, function(err, result) {
+        assert.deepEqual(result, Buffer.from('fakeAuthenticationKey', 'base64'), 'invalid authentication key returned');
+        callback();
+      });
+      respond_tpm(new errors.UnauthorizedError('fake error text'), {authenticationKey: 'fakeAuthenticationKey'}, 401);
+    });
+
+    it('request fails if bad json returned', function(callback) {
+      http.setTpmInformation(Buffer.from('fakeEndorsementKey'), Buffer.from('fakeStorageRootKey'));
+      http.getAuthenticationChallenge(fakeRequest, function(err) {
+        assert.deepEqual(err, new errors.FormatError('The server did NOT respond with an appropriately formatted authentication blob.'), 'Invalid error returned in callback');
+        callback();
+      });
+      respond_bad_json_tpm(new errors.UnauthorizedError('fake error text'), 1, 401);
+    });
+
+    it('request fails if authentication challenge incorrect type', function(callback) {
+      http.setTpmInformation(Buffer.from('fakeEndorsementKey'), Buffer.from('fakeStorageRootKey'));
+      http.getAuthenticationChallenge(fakeRequest, function(err) {
+        assert.deepEqual(err, new errors.FormatError('The server did NOT respond with an appropriately formatted authentication blob.'), 'Invalid error returned in callback');
+        callback();
+      });
+      respond_bad_type_tpm(new errors.UnauthorizedError('fake error text'), 1, 401);
     });
   });
 
@@ -126,6 +230,7 @@ describe('Http', function() {
       });
       respond_x509(null, fakeAssignedResponse, 200);
     });
+
   });
 
   [
@@ -200,6 +305,28 @@ describe('Http', function() {
       });
     });
   });
+
+  describe('use sas token in request', function() {
+    it('registrationRequest', function(callback) {
+      http.setSasToken('a fake SasToken');
+      http.registrationRequest(fakeRequest, function() {
+        var headers = fakeBase.buildRequest.firstCall.args[2];
+        assert.strictEqual(headers.Authorization, 'a fake SasToken', 'Invalid SasToken Used');
+        callback();
+      });
+      respond_tpm(null, fakeAssignedResponse, 200);
+    });
+    it('queryOperationStatus', function(callback) {
+      http.setSasToken('a fake SasToken');
+      http.queryOperationStatus(fakeRequest, 'fakeOperationId', function() {
+        var headers = fakeBase.buildRequest.firstCall.args[2];
+        assert.strictEqual(headers.Authorization, 'a fake SasToken', 'Invalid SasToken Used');
+        callback();
+      });
+      respond_tpm(null, fakeAssignedResponse, 200);
+    });
+  });
+
 });
 
 
