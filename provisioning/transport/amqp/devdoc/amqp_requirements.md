@@ -6,11 +6,15 @@ The `Amqp` class provides the Provisioning Device SDK with a transport for TPM a
 
 These methods are used by the other objects of the SDK but are not public API for the SDK user to call.
 
+
  ## setAuthentication(auth: X509): void
+ ---
 
 **SRS_NODE_PROVISIONING_AMQP_16_001: [** The certificate and key passed as properties of the `auth` argument shall be used to connect to the Device Provisioning Service endpoint, when a registration request or registration operation status request are made. **]**
 
+
 ## registrationRequest(request: RegistrationRequest, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void
+---
 
 **SRS_NODE_PROVISIONING_AMQP_16_002: [** The `registrationRequest` method shall connect the AMQP client with the certificate and key given in the `auth` parameter of the previously called `setAuthentication` method. **]**
 
@@ -47,7 +51,9 @@ iotdps-forceRegistration: <true or false>;
 
 **SRS_NODE_PROVISIONING_AMQP_16_011: [** The `registrationRequest` method shall call its callback with an error if the transport fails to send the request message. **]**
 
+
 ## queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void
+---
 
 **SRS_NODE_PROVISIONING_AMQP_16_012: [** The `queryOperationStatus` method shall connect the AMQP client with the certificate and key given in the `auth` parameter of the previously called `setAuthentication` method. **]** **]**
 
@@ -84,7 +90,9 @@ iotdps-operation-id: <operationId>;
 
 **SRS_NODE_PROVISIONING_AMQP_16_021: [** The `queryOperationStatus` method shall call its callback with an error if the transport fails to send the request message. **]**
 
+
 ## disconnect(callback: (err?: Error) => void): void
+---
 
 **SRS_NODE_PROVISIONING_AMQP_16_022: [** `disconnect` shall call its callback immediately if the AMQP connection is disconnected. **]**
 
@@ -100,7 +108,9 @@ iotdps-operation-id: <operationId>;
 
 **SRS_NODE_PROVISIONING_AMQP_18_002: [** `disconnect` shall cause a `queryOperationStatus` operation that is in progress to call its callback passing an `OperationCancelledError` object. **]**
 
+
 ## cancel(callback: (err?: Error) => void): void
+---
 
 **SRS_NODE_PROVISIONING_AMQP_18_003: [** `cancel` shall call its callback immediately if the AMQP connection is disconnected. **]**
 
@@ -115,3 +125,41 @@ iotdps-operation-id: <operationId>;
 **SRS_NODE_PROVISIONING_AMQP_18_008: [** `cancel` shall not disconnect the AMQP transport. **]**
 
 
+## setTpmInformation(endorsementKey: Buffer, storageRootKey: Buffer): void;
+---
+
+**SRS_NODE_PROVISIONING_AMQP_18_010: [** The `endorsmentKey` and `storageRootKey` passed into `setTpmInformation` shall be used when getting the athentication challenge from the AMQP service. **]**
+
+
+## getAuthenticationChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: TpmChallenge) => void): void;
+---
+
+**SRS_NODE_PROVISIONING_AMQP_18_011: [** `getAuthenticationChallenge` shall initiate connection with the AMQP client using the TPM SASL mechanism. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_18_012: [** `getAuthenticationChallenge` shall send the challenge to the AMQP service using a hostname of "<idScope>/registrations/<registrationId>". **]**
+
+**SRS_NODE_PROVISIONING_AMQP_18_013: [** `getAuthenticationChallenge` shall send the initial buffer for the authentication challenge in the form "<0><idScope><0><registrationId><0><endorsementKey>" where <0> is a zero byte. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_18_014: [** `getAuthenticationChallenge` shall send the initial response to the AMQP service in the form  "<0><storageRootKey>" where <0> is a zero byte. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_18_015: [** `getAuthenticationChallenge` shall call `callback` passing `null` and the challenge buffer after the challenge has been received from the service. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_18_016: [** `getAuthenticationChallenge` shall call `callback` passing an `Error` object if there is an error while getting the authentication challenge from the service. **]**
+
+
+## respondToAuthenticationChallenge(request: RegistrationRequest, sasToken: string, callback: (err?: Error) => void): void;
+---
+
+**SRS_NODE_PROVISIONING_AMQP_18_017: [** `respondToAuthenticationChallenge` shall call `callback` with an `InvalidOperationError` if called before calling `getAthenticationChallenge`. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_18_018: [** `respondToAuthenticationChallenge` shall respond to the auth challenge to the service in the form "<0><sasToken>" where <0> is a zero byte. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_18_019: [** `respondToAuthenticationChallenge` shall call `callback` with an Error object if the connection has a failure. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_18_020: [** `respondToAuthenticationChallenge` shall attach sender and receiver links if the connection completes successfully. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_18_021: [** `respondToAuthenticationChallenge` shall call its callback passing an `Error` object if the transport fails to attach the sender link. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_18_022: [** `respondToAuthenticationChallenge` shall call its callback passing an `Error` object if the transport fails to attach the receiver link. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_18_023: [** `respondToAuthenticationChallenge` shall call its callback passing `null` if the AMQP connection is established and links are attached. **]**
