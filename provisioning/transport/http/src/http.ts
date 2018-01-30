@@ -48,8 +48,9 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
    * @private
    *
    */
-  setSasToken(sasToken: string): void {
-    this._sasToken = sasToken;
+  respondToAuthenticationChallenge(request: RegistrationRequest, sasToken: string, callback: (err?: Error) => void): void {
+      this._sasToken = sasToken;
+      callback();
   }
 
   /**

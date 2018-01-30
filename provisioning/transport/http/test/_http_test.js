@@ -308,22 +308,24 @@ describe('Http', function() {
 
   describe('use sas token in request', function() {
     it('registrationRequest', function(callback) {
-      http.setSasToken('a fake SasToken');
-      http.registrationRequest(fakeRequest, function() {
-        var headers = fakeBase.buildRequest.firstCall.args[2];
-        assert.strictEqual(headers.Authorization, 'a fake SasToken', 'Invalid SasToken Used');
-        callback();
+      http.respondToAuthenticationChallenge(fakeRequest, 'a fake SasToken', function() {
+        http.registrationRequest(fakeRequest, function() {
+          var headers = fakeBase.buildRequest.firstCall.args[2];
+          assert.strictEqual(headers.Authorization, 'a fake SasToken', 'Invalid SasToken Used');
+          callback();
+        });
+        respond_tpm(null, fakeAssignedResponse, 200);
       });
-      respond_tpm(null, fakeAssignedResponse, 200);
     });
     it('queryOperationStatus', function(callback) {
-      http.setSasToken('a fake SasToken');
-      http.queryOperationStatus(fakeRequest, 'fakeOperationId', function() {
-        var headers = fakeBase.buildRequest.firstCall.args[2];
-        assert.strictEqual(headers.Authorization, 'a fake SasToken', 'Invalid SasToken Used');
-        callback();
+      http.respondToAuthenticationChallenge(fakeRequest, 'a fake SasToken', function() {
+        http.queryOperationStatus(fakeRequest, 'fakeOperationId', function() {
+          var headers = fakeBase.buildRequest.firstCall.args[2];
+          assert.strictEqual(headers.Authorization, 'a fake SasToken', 'Invalid SasToken Used');
+          callback();
+        });
+        respond_tpm(null, fakeAssignedResponse, 200);
       });
-      respond_tpm(null, fakeAssignedResponse, 200);
     });
   });
 
