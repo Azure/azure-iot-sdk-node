@@ -174,6 +174,8 @@ export class TpmSecurityClient  {
         }
       }
     });
+    this._fsm.on('transition', (data) => debug('TPM security State Machine: ' + data.fromState + ' -> ' + data.toState + ' (' + data.action + ')'));
+    this._fsm.on('handling', (data) => debug('TPM security State Machine: handling ' + data.inputType));
   }
 
   /**

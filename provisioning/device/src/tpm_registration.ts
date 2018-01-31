@@ -132,12 +132,12 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
         },
         respondToAuthenticationChallenge: {
           _onEnter: (registrationInfo, sasToken, registerCallback) => {
-            this._transport.respondToAuthenticationChallenge(registrationInfo, sasToken, (err) => {
+            this._transport.respondToAuthenticationChallenge(registrationInfo.request, sasToken, (err) => {
               if (err) {
                 // TODO: verify that the transport is disconnected here.  Maybe add SRS in transport
                 this._fsm.transition('notStarted', err, registerCallback);
               } else {
-                this._fsm.transition('registrationInProgress', sasToken, registerCallback);
+                this._fsm.transition('registrationInProgress', registrationInfo, registerCallback);
               }
             });
           },
@@ -203,8 +203,13 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
         },
         completed: {
           _onEnter: (registrationResult, registerCallback) => {
-            /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_009: [Once the symmetric key has been stored, the `register` method shall call its own callback with a `null` error object and a `TpmRegistrationResult` object containing the information that the `TpmProvisioningTransport` returned once the registration was successful.]*/
-            registerCallback(null, registrationResult);
+            this._transport.disconnect((err) => {
+              if (err) {
+                debug('disconnect err.  ignoring. ' + err);
+              }
+              /*Codes_SRS_NODE_DPS_TPM_REGISTRATION_16_009: [Once the symmetric key has been stored, the `register` method shall call its own callback with a `null` error object and a `TpmRegistrationResult` object containing the information that the `TpmProvisioningTransport` returned once the registration was successful.]*/
+              registerCallback(null, registrationResult);
+            });
           },
           cancel: (callback) => {
             // TODO: is this weird? also what type of error?
@@ -215,6 +220,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
     });
 
     this._fsm.on('transition', (data) => debug('TPM State Machine: ' + data.fromState + ' -> ' + data.toState + ' (' + data.action + ')'));
+    this._fsm.on('handling', (data) => debug('TPM State Machine: handling ' + data.inputType));
 
   }
 

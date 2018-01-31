@@ -50,6 +50,7 @@ describe('TpmRegistration', function () {
         getAuthenticationChallenge: sinon.stub().callsArgWith(1, null, fakeTpmChallenge),
         setTpmInformation: sinon.stub(),
         respondToAuthenticationChallenge: sinon.stub().callsArgWith(2, null),
+        disconnect: sinon.stub().callsArg(0),
         cancel: sinon.stub().callsArg(0)
       };
 
