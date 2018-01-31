@@ -8,13 +8,12 @@ import * as machina from 'machina';
 import * as dbg from 'debug';
 import * as uuid from 'uuid';
 import * as async from 'async';
-import * as Builder from 'buffer-builder';
 const debug = dbg('azure-iot-provisioning-device-amqp:Amqp');
 
 import { X509, errors } from 'azure-iot-common';
 import { ProvisioningTransportOptions, X509ProvisioningTransport, TpmProvisioningTransport, RegistrationRequest, RegistrationResult, ProvisioningDeviceConstants } from 'azure-iot-provisioning-device';
 import { Amqp as Base, SenderLink, ReceiverLink, AmqpMessage } from 'azure-iot-amqp-base';
-import { ChallengeResponseCallback, SaslTpm } from './sasl_tpm';
+import { GetSasTokenCallback, SaslTpm } from './sasl_tpm';
 
 /**
  * @private
@@ -46,7 +45,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
   private _endorsementKey: Buffer;
   private _storageRootKey: Buffer;
   private _customSaslMechanism: SaslTpm;
-  private _challengeResponseCallback: ChallengeResponseCallback;
+  private _getSasTokenCallback: GetSasTokenCallback;
 
   // AMQP links used during registration.
   private _receiverLink: ReceiverLink;
@@ -504,25 +503,11 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
 
   private _getAuthChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: Buffer) => void): void {
     /*Codes_SRS_NODE_PROVISIONING_AMQP_18_012: [ `getAuthenticationChallenge` shall send the challenge to the AMQP service using a hostname of "<idScope>/registrations/<registrationId>". ]*/
-    let hostname: string = request.idScope + '/registrations/' + request.registrationId;
     /*Codes_SRS_NODE_PROVISIONING_AMQP_18_013: [ `getAuthenticationChallenge` shall send the initial buffer for the authentication challenge in the form "<0><idScope><0><registrationId><0><endorsementKey>" where <0> is a zero byte. ]*/
-    let init: Buffer = new Builder()
-      .appendUInt8(0)
-      .appendString(request.idScope)
-      .appendUInt8(0)
-      .appendString(request.registrationId)
-      .appendUInt8(0)
-      .appendBuffer(this._endorsementKey)
-      .get();
     /*Codes_SRS_NODE_PROVISIONING_AMQP_18_014: [ `getAuthenticationChallenge` shall send the initial response to the AMQP service in the form  "<0><storageRootKey>" where <0> is a zero byte. ]*/
-    let firstResponse: Buffer = new Builder()
-      .appendUInt8(0)
-      .appendBuffer(this._storageRootKey)
-      .get();
-
     /*Codes_SRS_NODE_PROVISIONING_AMQP_18_011: [ `getAuthenticationChallenge` shall initiate connection with the AMQP client using the TPM SASL mechanism. ]*/
-    this._customSaslMechanism = new SaslTpm(hostname, init, firstResponse, (challenge, challengeResponseCallback) => {
-      this._challengeResponseCallback = challengeResponseCallback;
+    this._customSaslMechanism = new SaslTpm(request.idScope, request.registrationId, this._endorsementKey, this._storageRootKey, (challenge, getSasTokenCallback) => {
+      this._getSasTokenCallback = getSasTokenCallback;
       /*Codes_SRS_NODE_PROVISIONING_AMQP_18_015: [ `getAuthenticationChallenge` shall call `callback` passing `null` and the challenge buffer after the challenge has been received from the service. ]*/
       callback(null, challenge);
     });
@@ -534,11 +519,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
 
   private _respondToAuthChallenge(sasToken: string): void {
     /*Codes_SRS_NODE_PROVISIONING_AMQP_18_018: [ `respondToAuthenticationChallenge` shall respond to the auth challenge to the service in the form "<0><sasToken>" where <0> is a zero byte. ]*/
-    let responseBuffer: Buffer = new Builder()
-      .appendUInt8(0)
-      .appendString(sasToken)
-      .get();
-    this._challengeResponseCallback(null, responseBuffer);
+    this._getSasTokenCallback(null, sasToken);
   }
 }
 

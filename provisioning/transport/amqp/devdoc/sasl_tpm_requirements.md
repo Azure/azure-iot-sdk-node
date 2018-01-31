@@ -6,13 +6,14 @@ The `SaslTpm` class provides TPM sasl functionality for the AMQP transport.
 
 These methods are used by the other objects of the SDK but are not public API for the SDK user to call.
 
-## constructor(hostName: string, init: Buffer, firstResponse: Buffer, getResponseFromChallenge: GetResponseFromChallenge);
+## constructor(idScope: string, registrationId: string, endorsementKey: Buffer, storageRootKey: Buffer, getSasToken: GetSasToken);
 
 **SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_001: [** The `SaslTpm` constructor shall accept the following parameters:
-  `hostName` - The hostName value to be returned when getInitFrame is called
-  `init` - The initial frame contents to be returned when getInitFrame is called
-  `firstResponse` - The response to return on the first call to getResponseFrame
-  `getResponseFromChallenge` - The callback to call when the challenge has been completed and the caller needs to formulate the response. **]**
+  `idScope` - the idScope for the provisioning service instance
+  `registrationId` - the registrationId for the device being registered
+  `endorsementKey` - the endorsement key which was acquired from the TPM
+  `storageRootKey` - the storage root key which was acquired from the TPM
+  `getSasToken` - The callback to call when the challenge has been completed and the caller needs to formulate the response. **]**
 
 
 ## getInitFrame(): Promise<any>;
@@ -23,7 +24,7 @@ These methods are used by the other objects of the SDK but are not public API fo
   `hostname` - the hostName **]**
 
 
-## getResponseFrame(challenge: any): Promise<Buffer>;
+## getResponseFrame(challenge: any): Promise<SaslResponseFrame>;
 
 **SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_003: [** If `getResponseFrame` is called with a 1 byte challenge, it shall resolve with the the initial response that was passed into the constructor. **]**
 

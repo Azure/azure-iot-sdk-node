@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
+/*jshint esversion: 6 */
 
 var EventEmitter = require('events').EventEmitter;
 var assert = require('chai').assert;
@@ -11,7 +12,6 @@ var errors = require('azure-iot-common').errors;
 var ProvisioningDeviceConstants = require('azure-iot-provisioning-device').ProvisioningDeviceConstants;
 var Amqp = require('../lib/amqp.js').Amqp;
 var Builder = require('buffer-builder');
-
 
 describe('Amqp', function () {
   var fakeSenderLink, fakeReceiverLink, fakeAmqpBase, amqp;
@@ -60,7 +60,7 @@ describe('Amqp', function () {
 
       process.nextTick(() => {
         fakeReceiverLink.emit ('message', fakeResponse);
-      })
+      });
       callback();
     });
 
@@ -271,7 +271,7 @@ describe('Amqp', function () {
       ```]*/
       it ('sends a properly formatted message', function (testCallback) {
 
-        amqp.queryOperationStatus(fakeRequest, fakeOperationId, function (err) {
+        amqp.queryOperationStatus(fakeRequest, fakeOperationId, function () {
           assert.isTrue(fakeSenderLink.send.calledOnce);
           var sentMessage = fakeSenderLink.send.firstCall.args[0];
           assert.strictEqual(sentMessage.applicationProperties['iotdps-operation-type'], 'iotdps-get-operationstatus');
@@ -304,7 +304,7 @@ describe('Amqp', function () {
           assert.isTrue(fakeReceiverLink.forceDetach.calledOnce);
           assert.isTrue(fakeSenderLink.forceDetach.calledOnce);
           testCallback();
-        })
+        });
 
         amqp.registrationRequest({ registrationId: 'fakeRegistrationId' }, function () {});
       });
@@ -494,7 +494,7 @@ describe('Amqp', function () {
       SaslTpm.prototype.getResponseFrame.restore();
       SaslTpm.restore();
       SaslTpm = null;
-    })
+    });
 
     beforeEach(function() {
       SaslTpm.resetHistory();
@@ -511,26 +511,10 @@ describe('Amqp', function () {
         assert(SaslTpm.calledOnce);
 
         /*Tests_SRS_NODE_PROVISIONING_AMQP_18_012: [ `getAuthenticationChallenge` shall send the challenge to the AMQP service using a hostname of "<idScope>/registrations/<registrationId>". ]*/
-        assert.strictEqual(SaslTpm.firstCall.args[0], 'fakeScope/registrations/fakeRegistrationId');
-
-        /*Tests_SRS_NODE_PROVISIONING_AMQP_18_010: [ The `endorsmentKey` and `storageRootKey` passed into `setTpmInformation` shall be used when getting the athentication challenge from the AMQP service. ]*/
-        /*Tests_SRS_NODE_PROVISIONING_AMQP_18_013: [ `getAuthenticationChallenge` shall send the initial buffer for the authentication challenge in the form "<0><idScope><0><registrationId><0><endorsementKey>" where <0> is a zero byte. ]*/
-        assert.deepEqual(SaslTpm.firstCall.args[1], new Builder()
-          .appendUInt8(0)
-          .appendString('fakeScope')
-          .appendUInt8(0)
-          .appendString('fakeRegistrationId')
-          .appendUInt8(0)
-          .appendBuffer(fakeEndorsementKey)
-          .get()
-        );
-
-        /*Tests_SRS_NODE_PROVISIONING_AMQP_18_014: [ `getAuthenticationChallenge` shall send the initial response to the AMQP service in the form  "<0><storageRootKey>" where <0> is a zero byte. ]*/
-        assert.deepEqual(SaslTpm.firstCall.args[2], new Builder()
-          .appendUInt8(0)
-          .appendBuffer(fakeStorageRootKey)
-          .get()
-        );
+        assert.strictEqual(SaslTpm.firstCall.args[0], 'fakeScope');
+        assert.strictEqual(SaslTpm.firstCall.args[1], 'fakeRegistrationId');
+        assert.deepEqual(SaslTpm.firstCall.args[2], fakeEndorsementKey);
+        assert.deepEqual(SaslTpm.firstCall.args[3], fakeStorageRootKey);
 
         callback();
       });
@@ -543,7 +527,7 @@ describe('Amqp', function () {
           callback();
         });
 
-        var challengeCallback = SaslTpm.firstCall.args[3];
+        var challengeCallback = SaslTpm.firstCall.args[4];
         challengeCallback(fakeAuthenticationKey);
       });
 
@@ -566,20 +550,16 @@ describe('Amqp', function () {
           amqp.respondToAuthenticationChallenge(fakeRequest, fakeSasToken, function() {});
         });
 
-        var challengeCallback = SaslTpm.firstCall.args[3];
+        var challengeCallback = SaslTpm.firstCall.args[4];
         // return the auth key to the transport, verify that it responds with the sas token above.
         challengeCallback(fakeAuthenticationKey, function(err, challengeResponse) {
-          assert.deepEqual(challengeResponse, new Builder()
-            .appendUInt8(0)
-            .appendString(fakeSasToken)
-            .get()
-          );
+          assert.strictEqual(challengeResponse, fakeSasToken);
           callback();
         });
       });
 
       var respondToAuthChallengeCorrectly = function() {
-        var challengeCallback = SaslTpm.firstCall.args[3];
+        var challengeCallback = SaslTpm.firstCall.args[4];
         // return the auth key to the transport.  When it sends us the SAS token, complete the connection.
         challengeCallback(fakeAuthenticationKey, function() {
           var connectionComplete = fakeAmqpBase.connectWithCustomSasl.firstCall.args[3];
