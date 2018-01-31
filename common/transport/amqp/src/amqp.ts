@@ -48,7 +48,18 @@ export class Amqp {
     const autoSettleMode = autoSettleMessages ? amqp10.Constants.receiverSettleMode.autoSettle : amqp10.Constants.receiverSettleMode.settleOnDisposition;
     // node-amqp10 has an automatic reconnection/link re-attach feature that is enabled by default.
     // In our case we want to control the reconnection flow ourselves, so we need to disable it.
+
+    /*Codes_SRS_NODE_COMMON_AMQP_16_042: [The Amqp constructor shall create a new `amqp10.Client` instance and configure it to:
+    - not reconnect on failure
+    - not reattach sender and receiver links on failure
+    - not reestablish sessions on failure]*/
     this._amqp = new amqp10.Client(amqp10.Policy.merge(<any>{
+      session: {
+        reestablish: {
+          retries: 0,
+          forever: false
+        }
+      },
       senderLink: {
         attach: {
           properties: {

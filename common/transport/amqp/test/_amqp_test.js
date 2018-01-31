@@ -14,11 +14,50 @@ var errors = require('azure-iot-common').errors;
 var Message = require('azure-iot-common').Message;
 var EventEmitter = require('events').EventEmitter;
 var uuid = require('uuid');
+var amqp10 = require('amqp10');
 
 var cbsReceiveEndpoint = '$cbs';
 var cbsSendEndpoint = '$cbs';
 
 describe('Amqp', function () {
+  /*Tests_SRS_NODE_COMMON_AMQP_16_042: [The Amqp constructor shall create a new `amqp10.Client` instance and configure it to:
+  - not reconnect on failure
+  - not reattach sender and receiver links on failure
+  - not reestablish sessions on failure]*/
+  describe('#policies', function () {
+    before(function () {
+      sinon.spy(amqp10, 'Client');
+    });
+
+    it('sets the session policy to not reestablish on failure', function () {
+      var amqp = new Amqp();
+      assert.isFalse(amqp10.Client.firstCall.args[0].session.reestablish.forever);
+      assert.strictEqual(amqp10.Client.firstCall.args[0].session.reestablish.retries, 0);
+    });
+
+    it('sets the sender link to not reattach on failure', function () {
+      var amqp = new Amqp();
+      assert.isFalse(amqp10.Client.firstCall.args[0].senderLink.reattach.forever);
+      assert.strictEqual(amqp10.Client.firstCall.args[0].senderLink.reattach.retries, 0);
+    });
+
+    it('sets the receiver link to not reattach on failure', function () {
+      var amqp = new Amqp();
+      assert.isFalse(amqp10.Client.firstCall.args[0].receiverLink.reattach.forever);
+      assert.strictEqual(amqp10.Client.firstCall.args[0].receiverLink.reattach.retries, 0);
+    });
+
+    it('sets the connection to not reconnect on failure', function () {
+      var amqp = new Amqp();
+      assert.isFalse(amqp10.Client.firstCall.args[0].reconnect.forever);
+      assert.strictEqual(amqp10.Client.firstCall.args[0].reconnect.retries, 0);
+    });
+
+    after(function () {
+      amqp10.Client.restore();
+    });
+  });
+
   describe('#connect', function () {
     /* Tests_SRS_NODE_COMMON_AMQP_06_002: [The connect method shall throw a ReferenceError if the uri parameter has not been supplied.] */
     [undefined, null, ''].forEach(function (badUri){
