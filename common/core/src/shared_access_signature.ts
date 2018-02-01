@@ -124,19 +124,26 @@ static createWithSigningFunction(credentials: authorization.TransportConfig, exp
     throw new ReferenceError('Argument \'' + name + '\' is ' + value);
   }
 
+  /*Codes_SRS_NODE_COMMON_SAS_06_001: [If `credentials`, `expiry`, `signingFunction`, or `callback` are falsy, `createWithSigningFunction` shall throw `ReferenceError`.] */
   if (!credentials) throwRef('credentials', credentials);
   if (!expiry) throwRef('expiry', expiry);
   if (!signingFunction) throwRef('signingFunction', signingFunction);
+  if (!callback) throwRef('callback', callback);
   let sas = new SharedAccessSignature();
+  /*Codes_SRS_NODE_COMMON_SAS_06_002: [The `createWithSigningFunction` shall create a `SharedAccessSignature` object with an `sr` property formed by url encoding `credentials.host` + `/devices/` + `credentials.deviceId`.] */
   sas.sr = authorization.encodeUriComponentStrict(credentials.host + '/devices/' + credentials.deviceId);
+  /*Codes_SRS_NODE_COMMON_SAS_06_003: [** The `createWithSigningFunction` shall create a `SharedAccessSignature` object with an `se` property containing the value of the parameter `expiry`.] */
+  sas.se = expiry;
+  /*Codes_SRS_NODE_COMMON_SAS_06_004: [The `createWithSigningFunction` shall create a `SharedAccessSignature` object with an optional property `skn`, if the `credentials.sharedAccessKeyName` is not falsy,  The value of the `skn` property will be the url encoded value of `credentials.sharedAccessKeyName`.] */
   if (credentials.sharedAccessKeyName) {
     sas.skn = authorization.encodeUriComponentStrict(credentials.sharedAccessKeyName);
   }
-  sas.se = expiry;
   signingFunction(Buffer.from(authorization.stringToSign(sas.sr, sas.se.toString())), (err, signed) => {
     if (err) {
+      /*Codes_SRS_NODE_COMMON_SAS_06_006: [** The `createWithSigningFunction` will invoke the `callback` function with an error value if an error occurred during the signing. **] */
       callback(err);
     } else {
+      /*Codes_SRS_NODE_COMMON_SAS_06_005: [The `createWithSigningFunction` shall create a `SharedAccessSignature` object with a `sig` property with the SHA256 hash of the string sr + `\n` + se.  The `sig` value will first be base64 encoded THEN url encoded.] */
       sas.sig = authorization.encodeUriComponentStrict(signed.toString('base64'));
       callback(null, sas);
     }
