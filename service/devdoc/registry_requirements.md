@@ -88,7 +88,7 @@ The `create` method creates a device with the given device properties.
 **SRS_NODE_IOTHUB_REGISTRY_07_001: [** The `create` method shall throw `ArgumentError` if the `deviceInfo` argument does not contain a `deviceId` property. **]**
 **SRS_NODE_IOTHUB_REGISTRY_16_026: [** The `create` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
-PUT /devices/<deviceInfo.deviceId>?api-version=<version> HTTP/1.1
+PUT /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
 Content-Type: application/json; charset=utf-8
 Request-Id: <guid>
@@ -131,7 +131,7 @@ The `update` method updates an existing device identity with the given device pr
 **SRS_NODE_IOTHUB_REGISTRY_07_003: [** The `update` method shall throw `ArgumentError` if the first argument does not contain a `deviceId` property. **]**
 **SRS_NODE_IOTHUB_REGISTRY_16_027: [** The `update` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
-PUT /devices/<deviceInfo.deviceId>?api-version=<version> HTTP/1.1
+PUT /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
 Authorization: <config.sharedAccessSignature>
 Content-Type: application/json; charset=utf-8
 Request-Id: <guid>
@@ -169,7 +169,7 @@ The `get` method requests information about the device with the given ID.
 **SRS_NODE_IOTHUB_REGISTRY_05_006: [** The `get` method shall throw `ReferenceError` if the supplied deviceId is falsy. **]**
 **SRS_NODE_IOTHUB_REGISTRY_16_028: [** The `get` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
-GET /devices/<deviceInfo.deviceId>?api-version=<version> HTTP/1.1
+GET /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
 Authorization: <config.sharedAccessSignature>
 Request-Id: <guid>
 ```
@@ -193,7 +193,7 @@ The `delete` method removes a device with the given ID.
 **SRS_NODE_IOTHUB_REGISTRY_07_007: [** The `delete` method shall throw `ReferenceError` if the supplied deviceId is falsy. **]**
 **SRS_NODE_IOTHUB_REGISTRY_16_030: [** The `delete` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
-DELETE /devices/<deviceInfo.deviceId>?api-version=<version> HTTP/1.1
+DELETE /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
 Authorization: <config.sharedAccessSignature>
 If-Match: *
 Request-Id: <guid>
@@ -306,7 +306,7 @@ The `getTwin` method retrieves the latest Device Twin state in the device regist
 **SRS_NODE_IOTHUB_REGISTRY_16_036: [** The `getTwin` method shall call the `done` callback with a `twin` object updated with the latest property values stored in the IoT Hub service. **]**
 **SRS_NODE_IOTHUB_REGISTRY_16_049: [** The `getTwin` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
-GET /twins/<twin.deviceId>?api-version=<version> HTTP/1.1
+GET /twins/<encodeURIComponent(twin.deviceId)>?api-version=<version> HTTP/1.1
 Authorization: <config.sharedAccessSignature>
 Request-Id: <guid>
 ``` **]**
@@ -320,7 +320,7 @@ The `updateDeviceTwin` method updates the device twin identified with the `devic
 **SRS_NODE_IOTHUB_REGISTRY_16_050: [** The `updateDeviceTwin` method shall call the `done` callback with a `twin` object updated with the latest property values stored in the IoT Hub service. **]**
 **SRS_NODE_IOTHUB_REGISTRY_16_048: [** The `updateDeviceTwin` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
-PATCH /twins/<deviceId>?api-version=<version> HTTP/1.1
+PATCH /twins/<encodeURIComponent(deviceId)>?api-version=<version> HTTP/1.1
 Authorization: <config.sharedAccessSignature>
 Content-Type: application/json; charset=utf-8
 Request-Id: <guid>
