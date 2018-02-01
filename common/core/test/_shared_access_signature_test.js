@@ -4,6 +4,7 @@
 'use strict';
 
 var assert = require('chai').assert;
+var sinon = require('sinon');
 var ArgumentError = require('../lib/errors.js').ArgumentError;
 var FormatError = require('../lib/errors.js').FormatError;
 var SharedAccessSignature = require('../lib/shared_access_signature.js').SharedAccessSignature;
@@ -174,6 +175,122 @@ describe('SharedAccessSignature', function () {
       var sas = SharedAccessSignature.create('uri', null, key, 12345);
       assert.equal(expect, sas.toString());
     });
+  });
+
+  describe('#createWithSigningFunction', function () {
+    /*Tests_SRS_NODE_COMMON_SAS_06_001: [If `credentials`, `expiry`, `signingFunction`, or `callback` are falsy, `createWithSigningFunction` shall throw `ReferenceError`.] */
+    it('throws when \'credentials\' is falsy', function () {
+      throwsWhenFalsy('credentials');
+    });
+
+    /*Tests_SRS_NODE_COMMON_SAS_06_001: [If `credentials`, `expiry`, `signingFunction`, or `callback` are falsy, `createWithSigningFunction` shall throw `ReferenceError`.] */
+    it('throws when \'expiry\' is falsy', function () {
+      throwsWhenFalsy('expiry');
+    });
+
+    /*Tests_SRS_NODE_COMMON_SAS_06_001: [If `credentials`, `expiry`, `signingFunction`, or `callback` are falsy, `createWithSigningFunction` shall throw `ReferenceError`.] */
+    it('throws when \'signingFunction\' is falsy', function () {
+      throwsWhenFalsy('signingFunction');
+    });
+
+    /*Tests_SRS_NODE_COMMON_SAS_06_001: [If `credentials`, `expiry`, `signingFunction`, or `callback` are falsy, `createWithSigningFunction` shall throw `ReferenceError`.] */
+    it('throws when \'callback\' is falsy', function () {
+      throwsWhenFalsy('callback');
+    });
+
+    function throwsWhenFalsy(argName) {
+      var args = {
+        credentials: {a: 'b'},
+        expiry: 1,
+        signingFunction: () => {},
+        callback: () => {}
+      };
+
+      function _createWithSigningFunction() {
+        return SharedAccessSignature.createWithSigningFunction(args.credentials, args.expiry, args.signingFunction, args.callback);
+      }
+
+      function throws(element) {
+        args[argName] = element;
+        var messageMatch = new RegExp('^Argument \'' + argName + '\' is ' + element);
+        assert.throws(_createWithSigningFunction, ReferenceError, messageMatch);
+      }
+
+      [undefined, null, '', 0].forEach(throws);
+    }
+
+    /*Tests_SRS_NODE_COMMON_SAS_06_002: [The `createWithSigningFunction` shall create a `SharedAccessSignature` object with an `sr` property formed by url encoding `credentials.host` + `/devices/` + `credentials.deviceId`.] */
+    it('creates a valid sr value', function(callback) {
+      var fakeCredentials = {
+        host: 'fakeHostName',
+        deviceId: 'fakeDeviceId'
+      };
+      var fakeSignedValue = Buffer.from('abcd');
+      var fakeSigningFunction = sinon.stub().callsArgWith(1, null, fakeSignedValue);
+      SharedAccessSignature.createWithSigningFunction(fakeCredentials, 1, fakeSigningFunction, (err, newSas) => {
+        assert.strictEqual(newSas.sr, 'fakeHostName%2Fdevices%2FfakeDeviceId', 'Invalid scope create for sas token');
+        assert.isUndefined(newSas.skn, 'Skn is improperly included');
+        callback();
+      });
+    });
+
+    /*Tests_SRS_NODE_COMMON_SAS_06_003: [** The `createWithSigningFunction` shall create a `SharedAccessSignature` object with an `se` property containing the value of the parameter `expiry`.] */
+    it('creates a valid se value', function(callback) {
+      var fakeCredentials = {
+        host: 'fakeHostName',
+        deviceId: 'fakeDeviceId'
+      };
+      var fakeSignedValue = Buffer.from('abcd');
+      var fakeSigningFunction = sinon.stub().callsArgWith(1, null, fakeSignedValue);
+      SharedAccessSignature.createWithSigningFunction(fakeCredentials, 1, fakeSigningFunction, (err, newSas) => {
+        assert.strictEqual(newSas.se, 1, 'Invalid expiry create for sas token');
+        callback();
+      });
+    });
+
+    /*Tests_SRS_NODE_COMMON_SAS_06_004: [The `createWithSigningFunction` shall create a `SharedAccessSignature` object with an optional property `skn`, if the `credentials.sharedAccessKeyName` is not falsy,  The value of the `skn` property will be the url encoded value of `credentials.sharedAccessKeyName`.] */
+    it('creates a valid skn value', function(callback) {
+      var fakeCredentials = {
+        host: 'fakeHostName',
+        deviceId: 'fakeDeviceId',
+        sharedAccessKeyName: 'fakeKeyName('
+      };
+      var fakeSignedValue = Buffer.from('abcd');
+      var fakeSigningFunction = sinon.stub().callsArgWith(1, null, fakeSignedValue);
+      SharedAccessSignature.createWithSigningFunction(fakeCredentials, 1, fakeSigningFunction, (err, newSas) => {
+        assert.strictEqual(newSas.skn, 'fakeKeyName%28', 'improperly encoded key name');
+        callback();
+      });
+    });
+
+    /*Tests_SRS_NODE_COMMON_SAS_06_006: [** The `createWithSigningFunction` will invoke the `callback` function with an error value if an error occurred during the signing. **] */
+    it('Passes through an error from the signing function', function(callback) {
+      var fakeCredentials = {
+        host: 'fakeHostName',
+        deviceId: 'fakeDeviceId',
+      };
+      var fakeSignedValue = Buffer.from('abcd');
+      var fakeSigningFunction = sinon.stub().callsArgWith(1, new FormatError(), fakeSignedValue);
+      SharedAccessSignature.createWithSigningFunction(fakeCredentials, 1, fakeSigningFunction, (err, newSas) => {
+        assert.instanceOf(err, FormatError, 'Invalid Error returned');
+        callback();
+      });
+    });
+
+    /*Tests_SRS_NODE_COMMON_SAS_06_005: [The `createWithSigningFunction` shall create a `SharedAccessSignature` object with a `sig` property with the SHA256 hash of the string sr + `\n` + se.  The `sig` value will first be base64 encoded THEN url encoded.] */
+    it('Utilizes the signature value propagated by the signing function', function(callback) {
+      var fakeCredentials = {
+        host: 'fakeHostName',
+        deviceId: 'fakeDeviceId',
+      };
+      var fakeSignedValue = Buffer.from('abcd');
+      var fakeSigningFunction = sinon.stub().callsArgWith(1, null, fakeSignedValue);
+      SharedAccessSignature.createWithSigningFunction(fakeCredentials, 1, fakeSigningFunction, (err, newSas) => {
+        assert.strictEqual(newSas.sig, 'YWJjZA%3D%3D', 'invalid signature calculated');
+        callback();
+      });
+    });
+
   });
 });
 
