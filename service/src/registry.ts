@@ -77,7 +77,7 @@ export class Registry {
 
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_026: [The `create` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
-    PUT /devices/<deviceInfo.deviceId>?api-version=<version> HTTP/1.1
+    PUT /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
     Authorization: <sharedAccessSignature>
     Content-Type: application/json; charset=utf-8
     If-Match: *
@@ -85,7 +85,7 @@ export class Registry {
 
     <deviceInfo>
     ```]*/
-    const path = endpoint.devicePath(deviceInfo.deviceId) + endpoint.versionQueryString();
+    const path = endpoint.devicePath(encodeURIComponent(deviceInfo.deviceId)) + endpoint.versionQueryString();
     const httpHeaders = {
       'Content-Type': 'application/json; charset=utf-8'
     };
@@ -127,14 +127,14 @@ export class Registry {
 
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_027: [The `update` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
-    PUT /devices/<deviceInfo.deviceId>?api-version=<version> HTTP/1.1
+    PUT /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
     Authorization: <config.sharedAccessSignature>
     Content-Type: application/json; charset=utf-8
     Request-Id: <guid>
 
     <deviceInfo>
     ```]*/
-    const path = endpoint.devicePath(deviceInfo.deviceId) + endpoint.versionQueryString();
+    const path = endpoint.devicePath(encodeURIComponent(deviceInfo.deviceId)) + endpoint.versionQueryString();
     const httpHeaders = {
       'Content-Type': 'application/json; charset=utf-8',
       'If-Match': '*'
@@ -172,11 +172,11 @@ export class Registry {
 
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_028: [The `get` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
-    GET /devices/<deviceInfo.deviceId>?api-version=<version> HTTP/1.1
+    GET /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
     Authorization: <config.sharedAccessSignature>
     Request-Id: <guid>
     ```]*/
-    const path = endpoint.devicePath(deviceId) + endpoint.versionQueryString();
+    const path = endpoint.devicePath(encodeURIComponent(deviceId)) + endpoint.versionQueryString();
 
     this._restApiClient.executeApiCall('GET', path, null, null, (err, device, httpResponse) => {
       if (err) {
@@ -238,12 +238,12 @@ export class Registry {
 
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_030: [The `delete` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
-    DELETE /devices/<deviceInfo.deviceId>?api-version=<version> HTTP/1.1
+    DELETE /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
     Authorization: <config.sharedAccessSignature>
     If-Match: *
     Request-Id: <guid>
     ```]*/
-    const path = endpoint.devicePath(deviceId) + endpoint.versionQueryString();
+    const path = endpoint.devicePath(encodeURIComponent(deviceId)) + endpoint.versionQueryString();
     const httpHeaders = {
       'If-Match': '*'
     };
@@ -464,11 +464,11 @@ export class Registry {
 
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_049: [The `getTwin` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
-    GET /twins/<deviceId>?api-version=<version> HTTP/1.1
+    GET /twins/<encodeURIComponent(deviceId)>?api-version=<version> HTTP/1.1
     Authorization: <config.sharedAccessSignature>
     Request-Id: <guid>
     ```]*/
-    const path = '/twins/' + deviceId + endpoint.versionQueryString();
+    const path = '/twins/' + encodeURIComponent(deviceId) + endpoint.versionQueryString();
     this._restApiClient.executeApiCall('GET', path, null, null, (err, newTwin, response) => {
       if (err) {
         done(err);
@@ -499,7 +499,7 @@ export class Registry {
 
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_048: [The `updateTwin` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
-    PATCH /twins/<deviceId>?api-version=<version> HTTP/1.1
+    PATCH /twins/<encodeURIComponent(deviceId)>?api-version=<version> HTTP/1.1
     Authorization: <config.sharedAccessSignature>
     Content-Type: application/json; charset=utf-8
     Request-Id: <guid>
@@ -507,7 +507,7 @@ export class Registry {
 
     <patch>
     ```]*/
-    const path = '/twins/' + deviceId + endpoint.versionQueryString();
+    const path = '/twins/' + encodeURIComponent(deviceId) + endpoint.versionQueryString();
     const headers = {
       'Content-Type': 'application/json; charset=utf-8',
       'If-Match': etag

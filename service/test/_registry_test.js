@@ -69,6 +69,20 @@ function testWrongLengthArg(methodUnderTest, argName, argValue, ExpectedErrorTyp
   });
 }
 
+function testUriEncoding(methodUnderTest, deviceArg, expected) {
+  it('uri-encodes the device id', function (testCallback) {
+    var fakeHttpHelper = {
+      executeApiCall: function (method, path, httpHeaders, body, done) {
+        assert.isAtLeast(path.indexOf(expected), 0);
+        done(null, { deviceId: 'fakeDeviceId' });
+      }
+    };
+
+    var registry = new Registry(fakeConfig, fakeHttpHelper);
+    registry[methodUnderTest](deviceArg, testCallback);
+  });
+}
+
 function testErrorCallback(methodUnderTest, arg1, arg2, arg3) {
   /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_035: [** When any registry operation method receives an HTTP response with a status code >= 300, it shall invoke the `done` callback function with an error translated using the requirements detailed in `registry_http_errors_requirements.md`]*/
   it('calls the done callback with a proper error if an HTTP error occurs', function(testCallback) {
@@ -209,7 +223,7 @@ describe('Registry', function() {
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_026: [** The `create` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
-    PUT /devices/<deviceInfo.deviceId>?api-version=<version> HTTP/1.1
+    PUT /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
     Authorization: <sharedAccessSignature>
     Content-Type: application/json; charset=utf-8
     Request-Id: <guid>
@@ -255,7 +269,9 @@ describe('Registry', function() {
       var fakeDevice = new Device(null);
       fakeDevice.deviceId = 'fakeDevice';
       registry.create(fakeDevice, testCallback);
-    })
+    });
+
+    testUriEncoding('create', { deviceId: 'test#' }, encodeURIComponent('test#'));
   });
 
 
@@ -274,7 +290,7 @@ describe('Registry', function() {
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_027: [** The `update` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
-    PUT /devices/<deviceInfo.deviceId>?api-version=<version> HTTP/1.1
+    PUT /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
     Authorization: <config.sharedAccessSignature>
     Content-Type: application/json; charset=utf-8
     Request-Id: <guid>
@@ -295,6 +311,8 @@ describe('Registry', function() {
       var registry = new Registry(fakeConfig, fakeHttpHelper);
       registry.update(fakeDevice, testCallback);
     });
+
+    testUriEncoding('update', { deviceId: 'test#' }, encodeURIComponent('test#'));
   });
 
   describe('#get', function(){
@@ -307,7 +325,7 @@ describe('Registry', function() {
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_028: [** The `get` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
-    GET /devices/<deviceInfo.deviceId>?api-version=<version> HTTP/1.1
+    GET /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
     Authorization: <config.sharedAccessSignature>
     Request-Id: <guid>
     ```]*/
@@ -323,6 +341,8 @@ describe('Registry', function() {
       var registry = new Registry(fakeConfig, fakeHttpHelper);
       registry.get(fakeDevice.deviceId, testCallback);
     });
+
+    testUriEncoding('get', 'test#', encodeURIComponent('test#'));
   });
 
   describe('#list', function() {
@@ -358,7 +378,7 @@ describe('Registry', function() {
 
     /**SRS_NODE_IOTHUB_REGISTRY_16_030: [** The `delete` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
-    DELETE /devices/<deviceInfo.deviceId>?api-version=<version> HTTP/1.1
+    DELETE /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
     Authorization: <config.sharedAccessSignature>
     If-Match: *
     Request-Id: <guid>
@@ -376,6 +396,8 @@ describe('Registry', function() {
       var registry = new Registry(fakeConfig, fakeHttpHelper);
       registry.delete(fakeDevice.deviceId, testCallback);
     });
+
+    testUriEncoding('delete', 'test#', encodeURIComponent('test#'));
   });
 
   describe('#getTwin', function () {
@@ -409,6 +431,8 @@ describe('Registry', function() {
         testCallback();
       });
     });
+
+    testUriEncoding('getTwin', 'test#', encodeURIComponent('test#'));
   });
 
   describe('updateTwin', function() {
@@ -444,7 +468,7 @@ describe('Registry', function() {
 
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_048: [The `updateTwin` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
-    PATCH /twins/<deviceId>?api-version=<version> HTTP/1.1
+    PATCH /twins/<encodeURIComponent(deviceId)>?api-version=<version> HTTP/1.1
     Authorization: <config.sharedAccessSignature>
     Content-Type: application/json; charset=utf-8
     Request-Id: <guid>
@@ -492,6 +516,20 @@ describe('Registry', function() {
     });
 
     testErrorCallback('updateTwin', 'deviceId', {}, 'etag==');
+
+    it('uri-encodes the device id', function (testCallback) {
+      var fakeDeviceId = 'test#';
+
+      var fakeHttpHelper = {
+        executeApiCall: function (method, path, httpHeaders, body, done) {
+          assert.isAtLeast(path.indexOf(encodeURIComponent(fakeDeviceId)), 0);
+          done(null, { deviceId: fakeDeviceId });
+        }
+      };
+
+      var registry = new Registry(fakeConfig, fakeHttpHelper);
+      registry.updateTwin(fakeDeviceId, { tags: { key: 'val' } }, 'etag==', testCallback);
+    });
   });
 
   describe('importDevicesFromBlob', function() {
