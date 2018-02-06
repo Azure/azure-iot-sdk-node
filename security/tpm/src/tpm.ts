@@ -104,11 +104,6 @@ export class TpmSecurityClient  {
                 this._fsm.handle('activateIdentityKey', identityKey, callback);
               }
             });
-          },
-          disconnect: (callback) => {
-            if (callback) {
-              callback();
-            }
           }
         },
         connecting: {
@@ -129,7 +124,14 @@ export class TpmSecurityClient  {
                       } else {
                         /*Codes_SRS_NODE_TPM_SECURITY_CLIENT_06_008: [The `getStorageRootKey` function shall query the TPM hardware and return the `storageRootKey` in the callback.] */
                         this._srk = srkPublicKey;
-                        this._fsm.transition('connected', callback);
+                        this._readPersistentPrimary('IDENTITY', TpmSecurityClient._idKeyPersistentHandle, (readIdErr: Error, idkPublicKey: TPMT_PUBLIC) => {
+                          //
+                          // Not any kind of fatal error if we can't retrieve the identity public portion.  This device might not have ever been provisioned.
+                          // If there is a signing operation attempted before an activate is attempted, an error will occur.
+                          //
+                          this._idKeyPub = idkPublicKey;
+                          this._fsm.transition('connected', callback);
+                        });
                       }
                     });
                   }
@@ -215,13 +217,8 @@ export class TpmSecurityClient  {
     if (!dataToSign || dataToSign.length === 0) {
         throw new ReferenceError('\'dataToSign\' cannot be \'' + dataToSign + '\'');
     }
-
-    /*Codes_SRS_NODE_TPM_SECURITY_CLIENT_06_013: [If `signWithIdentity` is invoked without a previous successful invocation of `activateIdentityKey`, an InvalidOperationError is thrown.] */
-    if (!this._idKeyPub) {
-        throw new errors.InvalidOperationError('activateIdentityKey must be invoked before any signing is attempted.');
-    }
     this._fsm.handle('signWithIdentity', dataToSign, callback);
-  }
+}
 
   /**
    * @method           module:azure-iot-security-tpm.TpmSecurityClient#activateIdentityKey
@@ -288,7 +285,26 @@ export class TpmSecurityClient  {
     });
   }
 
-  private _signData(dataToSign: Buffer, callback: (err: Error, signedData: Buffer) => void): void {
+  private _readPersistentPrimary(name: string, handle: TPM_HANDLE, callback: (err: Error, resultPublicKey: TPMT_PUBLIC) => void): void {
+    this._tpm.allowErrors().ReadPublic(handle, (resp: tss.ReadPublicResponse) => {
+      let rc = this._tpm.getLastResponseCode();
+      debug('ReadPublic(' + name + ') returned ' + TPM_RC[rc] +  (rc === TPM_RC.SUCCESS ? '; PUB: ' + resp.outPublic.toString() : ''));
+      if (rc !== TPM_RC.SUCCESS) {
+        debug('readPersistentPrimary failed for: ' + name);
+        callback(new errors.SecurityDeviceError('Authorization unable to find a persistent identity key.  RC value: ' + TPM_RC[this._tpm.getLastResponseCode()].toString()), null);
+      } else {
+        callback(null, resp.outPublic);
+      }
+    });
+  }
+
+
+  private _signData(dataToSign: Buffer, callback: (err: Error, signedData?: Buffer) => void): void {
+
+    /*Codes_SRS_NODE_TPM_SECURITY_CLIENT_06_013: [If `signWithIdentity` is invoked without a previous successful invocation of `activateIdentityKey`, the callback will be invoked with `err` of `InvalidOperationError`] */
+    if (!this._idKeyPub) {
+      return callback(new errors.InvalidOperationError('activateIdentityKey must be invoked before any signing is attempted.'));
+    }
 
     const idKeyHashAlg: TPM_ALG_ID = (<tss.TPMS_SCHEME_HMAC>(<tss.TPMS_KEYEDHASH_PARMS>this._idKeyPub.parameters).scheme).hashAlg;
 
