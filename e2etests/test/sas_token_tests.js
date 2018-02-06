@@ -13,6 +13,7 @@ var Message = require('azure-iot-common').Message;
 var SharedAccessSignature = require('azure-iot-device').SharedAccessSignature;
 var ConnectionString = require('azure-iot-device').ConnectionString;
 var DeviceIdentityHelper = require('./device_identity_helper.js');
+var debug = require('debug')('e2etests:sas_token_tests');
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 var transports  = [
@@ -30,12 +31,14 @@ transports.forEach(function (deviceTransport) {
 
     before(function (beforeCallback) {
       DeviceIdentityHelper.createDeviceWithSymmetricKey(function (err, testDeviceInfo) {
+        debug('created test device: ' + testDeviceInfo.deviceId);
         provisionedDevice = testDeviceInfo;
         beforeCallback(err);
       });
     });
 
     after(function (afterCallback) {
+      debug('deleting test device: ' + provisionedDevice.deviceId);      
       DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
     });
 
@@ -103,9 +106,7 @@ transports.forEach(function (deviceTransport) {
       var afterSas = uuid.v4();
 
       function createBufferTestMessage(uuidData) {
-        var bufferSize = 1024;
-        var buffer = new Buffer(bufferSize);
-        buffer.fill(uuidData);
+        var buffer = new Buffer(uuidData);
         return new Message(buffer);
       }
 
@@ -117,44 +118,71 @@ transports.forEach(function (deviceTransport) {
           ehClient.close().then(function () {
             testCallback(err);
           });
-        });
+        }); 
       }
 
-      var monitorStartTime = Date.now() - 5000;
+      var ehReceivers = [];
+
+      debug('opening event hubs client');
+      var monitorStartTime = new Date(Date.now() - 30000);
       ehClient.open()
         .then(ehClient.getPartitionIds.bind(ehClient))
         .then(function (partitionIds) {
+          debug('partition ids: ' + partitionIds.join(', '));
           return Promise.map(partitionIds, function (partitionId) {
+            debug('creating receiver for partition id: ' + partitionId);
             return new Promise(function (resolve) {
               return ehClient.createReceiver('$Default', partitionId,{ 'startAfterTime' : monitorStartTime}).then(function(receiver) {
+                debug('receiver created for partition id: ' + partitionId);
+                ehReceivers.push(receiver);
                 receiver.on('errorReceived', function(err) {
+                  debug('error received on event hubs client: ' + err.toString());
                   closeClients(err);
                 });
                 receiver.on('message', function (eventData) {
+                  debug('event hubs client: message received from device: \'' + eventData.annotations['iothub-connection-device-id'] + '\'');
+                  debug('event hubs client: message is: ' + eventData.body.toString());
                   if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
                     if (eventData.body.indexOf(beforeSas) === 0) {
+                      debug('event hubs client: first message received: ' + eventData.body.toString());
+                      debug('device client: updating shared access signature');
                       deviceClient.updateSharedAccessSignature(createNewSas(), function (err) {
                         if (err) return closeClients(err);
 
+                        debug('device client: SAS renewal successful - sending second message: ' + afterSas);
                         deviceClient.sendEvent(createBufferTestMessage(afterSas), function (err) {
-                          if (err) return closeClients(err);
+                          debug('second message sent successfully');
+                          Promise.map(ehReceivers, function (recvToClose) {
+                            debug('closing receiver');
+                            return recvToClose.close();
+                          }).then(function () {
+                            debug('receivers closed. closing the clients.');
+                            if (err) return closeClients(err);
+                          });
                         });
                       });
                     } else if (eventData.body.indexOf(afterSas) === 0) {
+                      debug('second message received: ' + eventData.body.toString());
                       closeClients();
                     }
+                  } else {
+                    debug('not a message from the test device');
                   }
                 });
+                debug('receiver event handlers configured for partition: ' + partitionId);
                 resolve();
               });
             });
           });
         })
         .then(function () {
+          debug('opening device client');
           return deviceClient.open(function (err) {
             if (err) return closeClients(err);
+            debug('device client opened - sending first message: ' + beforeSas);
             deviceClient.sendEvent(createBufferTestMessage(beforeSas), function (sendErr) {
               if (sendErr) return closeClients(sendErr);
+              debug('device client: first message sent: ' + beforeSas);
             });
           });
         })
