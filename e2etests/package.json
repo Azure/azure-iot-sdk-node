@@ -48,9 +48,10 @@
     "device_method": "mocha --reporter spec test/device_method.js",
     "job_client": "mocha --reporter spec test/job_client.js",
     "authentication": "mocha --reporter spec test/authentication.js",
-    "phase1": "npm-run-all -p -l device_service device_acknowledge_tests registry sas_token_tests service d2c_disconnect c2d_disconnect twin_disconnect",
-    "phase2": "npm-run-all -p -l method_disconnect upload_disconnect twin_e2e_tests device_method job_client authentication",
-    "alltest": "npm run phase1 && npm run phase2",
+    "provisioning": "cd ../provisioning/e2e && npm run ci && cd ../../e2etests",
+    "phase1_fast": "npm-run-all -p -l twin_disconnect service registry device_acknowledge_tests upload_disconnect authentication job_client",
+    "phase2_slow": "npm-run-all -p -l method_disconnect device_method twin_e2e_tests sas_token_tests device_service c2d_disconnect d2c_disconnect provisioning",
+    "alltest": "npm run phase1_fast && npm run phase2_slow",
     "ci": "npm -s run lint && npm -s run alltest",
     "test": "npm -s run lint && npm -s run alltest"
   },
@@ -73,3 +74,7 @@
   },
   "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme"
 }
+
+
+
+
