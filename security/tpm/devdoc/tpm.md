@@ -22,6 +22,8 @@ Queries and returns the public portion of the endorsement key in the TPM hardwar
 
 **SRS_NODE_TPM_SECURITY_CLIENT_06_006: [** The `getEndorsementKey` function shall query the TPM hardware and return the `endorsementKey` in the callback. **]**
 
+**SRS_NODE_TPM_SECURITY_CLIENT_06_017: [** If the endorsement key does NOT exist, a new key will be created. **]**
+
 **SRS_NODE_TPM_SECURITY_CLIENT_06_007: [** Any errors from interacting with the TPM hardware will cause a `SecurityDeviceError` to be returned in the `err` parameter of the callback. **]**
 
 ### getStorageRootKey(callback: (err: Error, storageKey: string) => void): void
@@ -29,6 +31,8 @@ Queries and returns the public portion of the endorsement key in the TPM hardwar
 Queries and returns the public portion of the storage root key in the TPM hardware.
 
 **SRS_NODE_TPM_SECURITY_CLIENT_06_008: [** The `getStorageRootKey` function shall query the TPM hardware and return the `storageRootKey` in the callback. **]**
+
+**SRS_NODE_TPM_SECURITY_CLIENT_06_018: [** If the storage root key does NOT exist, a new key will be created. **]**
 
 **SRS_NODE_TPM_SECURITY_CLIENT_06_009: [** Any errors from interacting with the TPM hardware will cause in `SecurityDeviceError` to be returned in the err parameter of the callback. **]**
 
