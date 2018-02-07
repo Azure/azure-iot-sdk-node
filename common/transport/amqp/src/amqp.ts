@@ -127,11 +127,8 @@ export class Amqp {
               this._disconnectHandler(err);
             }
           },
-          amqpError: (err, callback) => {
-            debug('received an error while disconnected: maybe a bug: ' + (!!err ? err.toString() : 'callback called but falsy error object.'));
-            if (callback) {
-              callback();
-            }
+          amqpError: (err) => {
+            debug('received an error while disconnected: maybe a bug: ' + (!!err ? err.toString() : 'falsy error object.'));
           },
           amqpDisconnected: () => debug('ignoring disconnected event while disconnected'),
           connect: (policyOverride, connectCallback) => {
@@ -200,7 +197,7 @@ export class Amqp {
                 this._fsm.transition('disconnected', connectCallback, connectError || err);
               });
           },
-          amqpError: (err, callback) => this._fsm.transition('disconnecting', callback, err),
+          amqpError: (err) => this._fsm.transition('disconnecting', null, err),
           amqpDisconnected: () => debug('ignoring disconnected event while connecting'),
           '*': () => this._fsm.deferUntilTransition()
         },
@@ -209,7 +206,7 @@ export class Amqp {
             /*Codes_SRS_NODE_COMMON_AMQP_16_002: [The `connect` method shall establish a connection with the IoT hub instance and if given as argument call the `done` callback with a null error object in the case of success and a `results.Connected` object.]*/
             this._safeCallback(connectCallback, null, new results.Connected(result));
           },
-          amqpError: (err, callback) => this._fsm.transition('disconnecting', callback, err),
+          amqpError: (err) => this._fsm.transition('disconnecting', null, err),
           amqpDisconnected: () => this._fsm.transition('disconnected', undefined, new errors.NotConnectedError('amqp10: connection closed')),
           connect: (policyOverride, callback) => callback(null, new results.Connected()),
           disconnect: (disconnectCallback) => {
@@ -392,6 +389,7 @@ export class Amqp {
               });
             });
           },
+          amqpError: (err) => debug('ignoring error event while disconnecting: ' + (!!err) ? err.toString() : 'falsy error object'),
           amqpDisconnected: () => debug('ignoring disconnected event while disconnecting'),
           '*': () => this._fsm.deferUntilTransition('disconnected')
         }

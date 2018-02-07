@@ -266,6 +266,49 @@ describe('Amqp', function () {
         testCallback();
       });
     });
+
+    it('ignores client errors emitted while disconnecting', function (testCallback) {
+      var amqp = new Amqp();
+      sinon.stub(amqp._amqp, 'connect').resolves();
+      sinon.stub(amqp._amqp, 'disconnect').callsFake(function () { return new Promise(function () {}); }); // will not resolve and block in the 'disconnecting' state
+      
+      amqp.setDisconnectHandler(function() {
+        assert.fail();
+      });
+      amqp.connect('uri', null, function() {
+        amqp.disconnect(function() {});
+        amqp._amqp.emit('client:errorReceived', new Error('should be ignored'));
+        testCallback();
+      });
+    });
+  });
+
+  describe('#connectWithCustomSasl', function() {
+    it('sets the saslMechanism property in the policyOverride object', function (testCallback) {
+      var amqp = new Amqp();
+      var connectStub = sinon.stub(amqp._amqp, 'connect').resolves();
+      var fakeSaslName = 'FAKE';
+      var fakeSaslMechanism = { getInitFrame: function () {}, getResponseFrame: function () {}};
+
+      amqp.connectWithCustomSasl('uri', fakeSaslName, fakeSaslMechanism, function () {
+        assert.strictEqual(connectStub.firstCall.args[1].saslMechanism, fakeSaslName);
+        testCallback();
+      });
+    });
+
+    it('calls registerSaslMechanism on the amqp10 client', function (testCallback) {
+      var amqp = new Amqp();
+      sinon.stub(amqp._amqp, 'connect').resolves();
+      var registerSaslMechanismStub = sinon.stub(amqp._amqp, 'registerSaslMechanism');
+      var fakeSaslName = 'FAKE';
+      var fakeSaslMechanism = { getInitFrame: function () {}, getResponseFrame: function () {}};
+
+      amqp.connectWithCustomSasl('uri', fakeSaslName, fakeSaslMechanism, function () {
+        assert.strictEqual(registerSaslMechanismStub.firstCall.args[0], fakeSaslName);
+        assert.strictEqual(registerSaslMechanismStub.firstCall.args[1], fakeSaslMechanism);
+        testCallback();
+      });
+    });
   });
 
   describe('#send', function() {
