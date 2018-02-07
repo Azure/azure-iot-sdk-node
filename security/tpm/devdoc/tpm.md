@@ -38,7 +38,7 @@ The `signWithIdentity` function will perform an HMAC signing with a previously d
 
 **SRS_NODE_TPM_SECURITY_CLIENT_06_011: [** If `dataToSign` is falsy, an ReferenceError will be thrown. **]**
 
-**SRS_NODE_TPM_SECURITY_CLIENT_06_013: [** If `signWithIdentity` is invoked without a previous successful invocation of `activateIdentityKey`, an InvalidOperationError is thrown. **]**
+**SRS_NODE_TPM_SECURITY_CLIENT_06_013: [** If `signWithIdentity` is invoked without a previous successful invocation of `activateIdentityKey`, the callback will be invoked with `err` of `InvalidOperationError`. **]**
 
 **SRS_NODE_TPM_SECURITY_CLIENT_06_015: [** If the tpm device is not properly configured, the callback will be invoked with `err` of `SecurityDeviceError`. **]**
 

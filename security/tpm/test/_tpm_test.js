@@ -6,7 +6,6 @@ var common = require("azure-iot-common");
 var TpmSecurityClient  = require('../lib/tpm').TpmSecurityClient ;
 var tss = require("tss.js");
 var sinon = require('sinon');
-
 var assert = require('chai').assert;
 
 var fakeSimpleTpmClient = {
@@ -38,9 +37,11 @@ describe('tpm', function () {
     it('returns the endorsement key', function(done) {
       /*Tests_SRS_NODE_TPM_SECURITY_CLIENT_06_006: [The `getEndorsementKey` function shall query the TPM hardware and return the `endorsementKey` in the callback.] */
       var client = new TpmSecurityClient(undefined, fakeSimpleTpmClient );
-      var persistStub = sinon.stub(client,'_createPersistentPrimary');
-      persistStub.withArgs('EK').callsArgWith(4, null, TpmSecurityClient._ekTemplate);
-      persistStub.withArgs('SRK').callsArgWith(4, null, TpmSecurityClient._srkTemplate);
+      var createPersistStub = sinon.stub(client,'_createPersistentPrimary');
+      var readPersistStub = sinon.stub(client,'_readPersistentPrimary');
+      createPersistStub.withArgs('EK').callsArgWith(4, null, TpmSecurityClient._ekTemplate);
+      createPersistStub.withArgs('SRK').callsArgWith(4, null, TpmSecurityClient._srkTemplate);
+      readPersistStub.withArgs('IDENTITY').callsArgWith(2, null, TpmSecurityClient._srkTemplate)
       client.getEndorsementKey((err, localEk) => {
         assert.deepEqual(localEk, TpmSecurityClient._ekTemplate.asTpm2B(), 'Invalid endorsement key returned.');
         done();
@@ -51,25 +52,25 @@ describe('tpm', function () {
       /*Tests_SRS_NODE_TPM_SECURITY_CLIENT_06_007: [Any errors from interacting with the TPM hardware will cause in SecurityDeviceError to be returned in the err parameter of the callback.] */
       var client = new TpmSecurityClient(undefined, fakeSimpleTpmClient );
       var deviceError = new common.errors.SecurityDeviceError('A device Error');
-      var persistStub = sinon.stub(client,'_createPersistentPrimary');
-      persistStub.withArgs('EK').callsArgWith(4, deviceError);
+      var createPersistStub = sinon.stub(client,'_createPersistentPrimary');
+      createPersistStub.withArgs('EK').callsArgWith(4, deviceError);
       client.getEndorsementKey((err, localEk) => {
         assert.isNotOk(localEk, 'Invalid endorsement key returned.');
         assert.strictEqual(deviceError, err, 'improper error returned.')
         done();
       });
     });
-
-
   });
 
   describe('getStorageRootKey', function() {
     it('returns the storage root key', function(done) {
       /*Tests_SRS_NODE_TPM_SECURITY_CLIENT_06_008: [The `getStorageRootKey` function shall query the TPM hardware and return the `storageRootKey` in the callback.] */
       var client = new TpmSecurityClient(undefined, fakeSimpleTpmClient );
-      var persistStub = sinon.stub(client,'_createPersistentPrimary');
-      persistStub.withArgs('EK').callsArgWith(4, null, TpmSecurityClient._ekTemplate);
-      persistStub.withArgs('SRK').callsArgWith(4, null, TpmSecurityClient._srkTemplate);
+      var createPersistStub = sinon.stub(client,'_createPersistentPrimary');
+      var readPersistStub = sinon.stub(client,'_readPersistentPrimary');
+      createPersistStub.withArgs('EK').callsArgWith(4, null, TpmSecurityClient._ekTemplate);
+      createPersistStub.withArgs('SRK').callsArgWith(4, null, TpmSecurityClient._srkTemplate);
+      readPersistStub.withArgs('IDENTITY').callsArgWith(2, null, TpmSecurityClient._srkTemplate)
       client.getStorageRootKey((err, localSrk) => {
         assert.deepEqual(localSrk, TpmSecurityClient._srkTemplate.asTpm2B(), 'Invalid storage root key returned.');
         done();
@@ -80,9 +81,11 @@ describe('tpm', function () {
       /*Tests_SRS_NODE_TPM_SECURITY_CLIENT_06_009: [Any errors from interacting with the TPM hardware will cause in SecurityDeviceError to be returned in the err parameter of the callback.] */
       var client = new TpmSecurityClient(undefined, fakeSimpleTpmClient );
       var deviceError = new common.errors.SecurityDeviceError('A device Error');
-      var persistStub = sinon.stub(client,'_createPersistentPrimary');
-      persistStub.withArgs('EK').callsArgWith(4, null, TpmSecurityClient._ekTemplate);
-      persistStub.withArgs('SRK').callsArgWith(4, deviceError);
+      var createPersistStub = sinon.stub(client,'_createPersistentPrimary');
+      var readPersistStub = sinon.stub(client,'_readPersistentPrimary');
+      createPersistStub.withArgs('EK').callsArgWith(4, null, TpmSecurityClient._ekTemplate);
+      createPersistStub.withArgs('SRK').callsArgWith(4, deviceError);
+      readPersistStub.withArgs('IDENTITY').callsArgWith(2, null, TpmSecurityClient._srkTemplate)
       client.getStorageRootKey((err, localSrk) => {
         assert.isNotOk(localSrk, 'Invalid storage root key returned.');
         assert.strictEqual(deviceError, err, 'improper error returned.')
@@ -97,11 +100,30 @@ describe('tpm', function () {
       testFalsyArg('signWithIdentity', 'dataToSign', falsyDataToSign, ReferenceError);
     });
 
-    it('must call activateIdentityKey first', function() {
-      /*Tests_SRS_NODE_TPM_SECURITY_CLIENT_06_013: [If `signWithIdentity` is invoked without a previous successful invocation of `activateIdentityKey`, an InvalidOperationError is thrown.] */
+    it('must call activateIdentityKey first', function(done) {
+      /*Tests_SRS_NODE_TPM_SECURITY_CLIENT_06_013: [If `signWithIdentity` is invoked without a previous successful invocation of `activateIdentityKey`, the callback will be invoked with `err` of `InvalidOperationError`.] */
       var client = new TpmSecurityClient('registration', fakeSimpleTpmClient);
-      assert.throws(function () {client.signWithIdentity([1], (errorFromIdentity, signResult) => {})}, common.errors.InvalidOperationError);
+      var createPersistStub = sinon.stub(client,'_createPersistentPrimary');
+      var readPersistStub = sinon.stub(client,'_readPersistentPrimary');
+      createPersistStub.withArgs('EK').callsArgWith(4, null, TpmSecurityClient._ekTemplate);
+      createPersistStub.withArgs('SRK').callsArgWith(4, null, TpmSecurityClient._srkTemplate);
+      readPersistStub.withArgs('IDENTITY').callsArgWith(2, null, null);
+      client.signWithIdentity([1], (err, signResult) => {
+        assert.instanceOf(err, common.errors.InvalidOperationError, 'should indicate invalid operation if active not called first.');
+        done();
+      });
     });
+
+    it('correctly deals with error during tpm connection', function(done) {
+      /*Tests_SRS_NODE_TPM_SECURITY_CLIENT_06_013: [If `signWithIdentity` is invoked without a previous successful invocation of `activateIdentityKey`, the callback will be invoked with `err` of `InvalidOperationError`.] */
+      var client = new TpmSecurityClient('registration', fakeSimpleTpmClient);
+      client.signWithIdentity([1], (err, signResult) => {
+        assert.isOk(err, 'should be an error from the connection portion of starting the tpm');
+        done();
+      });
+    });
+
+
   });
 
   describe('activateIdentityKey', function() {
@@ -120,16 +142,16 @@ describe('tpm', function () {
       });
     });
 
-    it.skip('returns constructed registration id', function(done) {
+    it('returns constructed registration id', function(done) {
       /*Tests_SRS_NODE_TPM_SECURITY_CLIENT_06_004: [If not provided, the `registrationId` will be constructed and returned as follows:
         The endorsementKey will be queried.
         The endorsementKey will be hashed utilizing SHA256.
         The resultant digest will be base 32 encoded in conformance with the `RFC4648` specification.
         The resultant string will have terminating `=` characters removed.] */
       var providedRegistrationClient = new TpmSecurityClient(undefined, fakeSimpleTpmClient );
-      sinon.stub(providedRegistrationClient,'getEndorsementKey').callsArgWith(0, null, 'registration');
+      sinon.stub(providedRegistrationClient,'getEndorsementKey').callsArgWith(0, null, Buffer.from('registration'));
       providedRegistrationClient.getRegistrationId((err, id) => {
-        assert.strictEqual(id, 'vfn2bxtbqwc3pcflozty5reiunt5qm4ztk4ulrszujmqj3zbei2a', 'Incorrect registration Id.' );
+        assert.strictEqual(id, 'fhe4gdqgarivz3mywpiu7wehkguprzfzxru5ja5gpisxyfflph5q', 'Incorrect registration Id.' );
         done();
       });
     });
@@ -144,8 +166,6 @@ describe('tpm', function () {
         done();
       });
     });
-
   });
-
 });
 

@@ -3,7 +3,7 @@
 
 'use strict';
 
-var provisioningTransport = require('azure-iot-provisioning-device-http').Http;
+var ProvisioningTransport = require('azure-iot-provisioning-device-http').Http;
 var iotHubTransport = require('azure-iot-device-mqtt').Mqtt;
 var Client = require('azure-iot-device').Client;
 var Message = require('azure-iot-device').Message;
@@ -29,6 +29,7 @@ var idScope = '<the id scope for your dps instance>';
 
 var securityClient = new tpmSecurity.TpmSecurityClient();
 
+var provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvisioningTransport(), securityClient);
 // Register the device.  Do not force a re-registration.
 provisioningClient.register(function(err, result) {
   if (err) {
