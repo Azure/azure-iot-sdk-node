@@ -85,10 +85,6 @@ The endpoints and link options are as for the response event.
 
 **SRS_NODE_DEVICE_AMQP_TWIN_06_022: [** If an error occurs on establishing the upstream or downstream link then the `error` event shall be emitted. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_023: [** If a detach with error occurs on the upstream or the downstream link then the `error` event shall be emitted. **]**
-
-**SRS_NODE_DEVICE_AMQP_TWIN_06_024: [** If any detach occurs the other link will also be detached by the twin receiver. **]**
-
 **SRS_NODE_DEVICE_AMQP_TWIN_06_025: [** When the `error` event is emitted, the first parameter shall be an error object obtained via the amqp `translateError` module. **]**
 
 ### attach(callback)

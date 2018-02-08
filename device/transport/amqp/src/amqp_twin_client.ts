@@ -92,11 +92,6 @@ export class AmqpTwinClient extends EventEmitter {
             debug('_handleError: error is: ' + err);
             this.emit(AmqpTwinClient.errorEvent, translateError('received an error from the amqp transport: ', err));
           },
-          handleLinkDetach: (detachObject: any) => {
-            if (detachObject && detachObject.error) {
-              this.emit(AmqpTwinClient.errorEvent, translateError('received an error from the amqp transport: ', detachObject.error));
-            }
-          },
           attach: (callback) => {
             /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_001: [The `attach` method shall attach both sender and receiver links and calls its `callback` with no argument if successful.]*/
             this._fsm.transition('attaching', callback);
@@ -126,14 +121,12 @@ export class AmqpTwinClient extends EventEmitter {
                       this._fsm.handle('handleErrorEmit', receiverLinkError);
                     } else {
                       this._downstreamAmqpLink = receiverTransportObject;
-                      this._downstreamAmqpLink.on('detached', this._onAmqpDetached.bind(this));
                       this._downstreamAmqpLink.on('error', this._handleError.bind(this));
                       this._client.attachSenderLink( this._endpoint, this._generateTwinLinkProperties(linkCorrelationId), (senderLinkError?: Error, senderTransportObject?: any): void => {
                         if (senderLinkError) {
                           this._fsm.handle('handleErrorEmit', senderLinkError);
                         } else {
                           this._upstreamAmqpLink = senderTransportObject;
-                          this._upstreamAmqpLink.on('detached', this._onAmqpDetached.bind(this));
                           this._upstreamAmqpLink.on('error', this._handleError.bind(this));
                           this._fsm.transition('attached', attachCallback);
                         }
@@ -218,13 +211,6 @@ export class AmqpTwinClient extends EventEmitter {
             this._AppendOrHandleEvent();
           },
           handleErrorEmit: () => {
-            this._fsm.deferUntilTransition('detached');
-            this._fsm.transition('detaching');
-          },
-          handleLinkDetach: (detachObject) => {
-            /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_023: [If a detach with error occurs on the upstream or the downstream link then the `error` event shall be emitted.] */
-            /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_024: [If any detach occurs the other link will also be detached by the twin receiver.] */
-            this._eventQueueError = (detachObject) ? detachObject.error : null;
             this._fsm.deferUntilTransition('detached');
             this._fsm.transition('detaching');
           },
@@ -394,10 +380,6 @@ export class AmqpTwinClient extends EventEmitter {
     /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_020: [If there is a listener for the `post` event, a `post` event shall be emitted for each amqp message received on the downstream link that does NOT contain a correlation id, the parameter of the emit will be is the data of the amqp message.] */
     debug('onPostMessage: The downstream message is: ' + JSON.stringify(message));
     this.emit(AmqpTwinClient.postEvent, message.data);
-  }
-
-  private _onAmqpDetached(detachObject: any): void {
-    this._fsm.handle('handleLinkDetach', detachObject);
   }
 
   private _handleError(err: Error): void {

@@ -20,6 +20,12 @@ describe('AmqpReceiver', function () {
 
   var fakeMethodClient;
   var fakeAuthenticationProvider;
+  var fakeAmqpBaseClient = {
+    connect: sinon.stub().callsArg(2),
+    setDisconnectHandler: sinon.stub(),
+    initializeCBS: sinon.stub().callsArg(0),
+    putToken: sinon.stub().callsArg(2)
+  };
 
   beforeEach(function() {
     fakeMethodClient = {
@@ -52,9 +58,8 @@ describe('AmqpReceiver', function () {
     });
 
     it('forwards the errorReceived event if an error is received from a device method link', function(testCallback) {
-      this.timeout(10000);
       var fakeMethodClient = new EventEmitter();
-      var recv = new AmqpReceiver(fakeAuthenticationProvider);
+      var recv = new AmqpReceiver(fakeAuthenticationProvider, fakeAmqpBaseClient);
       var fakeError = new Error('fake error');
       var fakeCallback = function(err) {
         assert.strictEqual(err.innerError, fakeError);
@@ -170,10 +175,9 @@ describe('AmqpReceiver', function () {
     });
 
     it('emits an error event with the error if the links fail to connect initially', function (testCallback) {
-      this.timeout(10000);
       var fakeMethodClient = new EventEmitter();
       var fakeError = new Error('fake error');
-      var recv = new AmqpReceiver(fakeAuthenticationProvider);
+      var recv = new AmqpReceiver(fakeAuthenticationProvider, fakeAmqpBaseClient);
 
       var errorCallback = function (err) {
         assert.strictEqual(err.innerError, fakeError);

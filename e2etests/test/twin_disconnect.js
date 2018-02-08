@@ -12,6 +12,7 @@ var deviceMqtt = require('azure-iot-device-mqtt');
 var deviceAmqp = require('azure-iot-device-amqp');
 var uuid = require('uuid');
 var assert = require('chai').assert;
+var NoRetry = require('azure-iot-common').NoRetry;
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
@@ -36,29 +37,29 @@ var protocolAndTermination = [
     closeReason: ' severs the TCP connection ',
     delayInSeconds: 2
   },
-  { // !!!!!!!!!!!!!!!!! Functionality does not yet exist.
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpTwinLinkReq',
     closeReason: ' severs AMQP TWIN request link ',
     delayInSeconds: 2
   },
-  { // !!!!!!!!!!!!!!!!! Functionality does not yet exist.
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpTwinLinkResp',
     closeReason: ' severs AMQP TWIN response link ',
     delayInSeconds: 2
   },
-  { // !!!!!!!!!!!!!!!!! Functionality does not yet exist.
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.AmqpWs,
     operationType: 'KillAmqpTwinLinkReq',
     closeReason: ' severs AMQP TWIN request link ',
     delayInSeconds: 2
   },
-  { // !!!!!!!!!!!!!!!!! Functionality does not yet exist.
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.AmqpWs,
     operationType: 'KillAmqpTwinLinkResp',
     closeReason: ' severs AMQP TWIN response link ',
@@ -78,15 +79,15 @@ var protocolAndTermination = [
     closeReason: ' cleanly shutdowns MQTT connection ',
     delayInSeconds: 2
   },
-  { // No twin AMQP yet
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.Amqp,
     operationType: 'ShutDownAmqp',
     closeReason: ' cleanly shutdowns AMQP connection ',
     delayInSeconds: 2
   },
-  { // No twin AMQP yet
-    testEnabled: false,
+  {
+    testEnabled: true,
     transport: deviceAmqp.AmqpWs,
     operationType: 'ShutDownAmqp',
     closeReason: ' cleanly shutdowns AMQP connection ',
@@ -115,16 +116,16 @@ var nullMergeResult = JSON.parse(JSON.stringify(newProps));
 delete nullMergeResult.tweedle;
 
 protocolAndTermination.forEach( function (testConfiguration) {
-  describe.skip(testConfiguration.transport.name + ' using device/service clients - disconnect twin', function () {
+  describe(testConfiguration.transport.name + ' using device/service clients - disconnect twin', function () {
 
-    this.timeout(10000);
+    this.timeout(30000);
     var deviceClient, deviceTwin;
     var serviceTwin;
 
     var deviceDescription;
 
     beforeEach(function (done) {
-      this.timeout(10000);
+      this.timeout(30000);
       setTwinMoreNewPropsTimeout = null;
       var host = ConnectionString.parse(hubConnectionString).HostName;
       var pkey = new Buffer(uuid.v4()).toString('base64');
@@ -148,6 +149,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
         if (err) return done(err);
 
         deviceClient = deviceSdk.Client.fromConnectionString(deviceDescription.connectionString, testConfiguration.transport);
+        deviceClient.setRetryPolicy(new NoRetry());
 
         deviceClient.open(function(err) {
           if (err) return done(err);
@@ -166,7 +168,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     afterEach(function (done) {
-      this.timeout(10000);
+      this.timeout(30000);
       if (setTwinMoreNewPropsTimeout) clearTimeout(setTwinMoreNewPropsTimeout);
       if (deviceClient) {
         deviceClient.close(function(err) {
@@ -184,7 +186,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     doConnectTest(testConfiguration.testEnabled)('Simple twin update: device receives it, and' + testConfiguration.closeReason + 'which is noted by the iot hub client', function(testCallback) {
-      this.timeout(20000);
+      this.timeout(120000);
       debug('about to connect a disconnect listener.');
       deviceClient.on('disconnect', function () {
         debug('We did get a disconnect message');
@@ -199,7 +201,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
         if (err) return testCallback(err);
         deviceTwin.on('properties.desired', function() {
           if (deviceTwin.properties.desired.$version === 2) {
-            var terminateMessage = new Message('');
+            var terminateMessage = new Message(' ');
             terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
             terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
             terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
@@ -214,7 +216,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     doConnectTest(false)('Simple twin update: device receives it, and' + testConfiguration.closeReason + 'which is NOT noted by the iot hub client', function(testCallback) {
-      this.timeout(20000);
+      this.timeout(120000);
       debug('about to connect a disconnect listener.');
       deviceClient.on('disconnect', function () {
         debug('We did get a disconnect message');

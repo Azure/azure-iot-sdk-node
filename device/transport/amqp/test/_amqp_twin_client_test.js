@@ -459,36 +459,6 @@ describe('AmqpTwinClient', function () {
         newTwinReceiver.removeListener('response', dummyResponseHandler)
       });
     });
-
-    /* Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_024: [If any detach occurs the other link will also be detached by the twin receiver.] */
-    /* Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_023: [If a detach with error occurs on the upstream or the downstream link then the `error` event shall be emitted.] */
-    [
-      'fakeSenderLink',
-      'fakeReceiverLink'
-    ].forEach(function (whichLink) {
-      it('twin receiver detaches all links when a detach is emitted on ' + whichLink, function(testDone) {
-        var amqpClient = new AmqpProvider();
-        var detachSender = sinon.spy(amqpClient, 'detachSenderLink');
-        var detachReceiver = sinon.spy(amqpClient, 'detachReceiverLink');
-        var newTwinReceiver = new AmqpTwinClient(fakeAuthenticationProvider, amqpClient);
-        newTwinReceiver.on('subscribed', function(event) {
-          if (event.eventName === 'response') {
-            var linkError = new Error();
-            linkError.condition = 'amqp:internal-error';
-            var detachError = {closed: false, error: linkError};
-            amqpClient[whichLink].emit('detached', detachError);
-            var newDeleteResult = new Message();
-          }
-        });
-        newTwinReceiver.on('error', function(err) {
-          assert(detachSender.calledOnce);
-          assert(detachReceiver.calledOnce);
-          assert.equal(err.constructor.name, 'InternalServerError');
-          testDone();
-        });
-        newTwinReceiver.on('response', function() {});
-      });
-    });
   });
 
   describe('sendTwinRequest', function () {
