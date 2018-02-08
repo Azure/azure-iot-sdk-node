@@ -91,18 +91,26 @@ client.sendEvent(new Message('hello world'), print);
 **SRS_NODE_DEVICE_CLIENT_16_058: [** The `close` method shall immediately call the `closeCallback` function if provided and the transport is already disconnected. **]**
 
 #### sendEvent(message, sendEventCallback)
+#### sendEvent(outputName, message, sendEventCallback)
 The `sendEvent` method sends an event message to the IoT Hub as the device indicated in the constructor argument.
+If an ouptut name is provided then the message is routed to the given output.
 
 **SRS_NODE_DEVICE_CLIENT_05_002: [** The `sendEvent` method shall send the event (indicated by the `message` argument) via the transport associated with the Client instance. **]**
+
+**SRS_NODE_DEVICE_CLIENT_18_010: [** if `outputName` is provided, `sendEvent` shall populate `message.outputName` with this name before possing it to the transport. **]**
 
 **SRS_NODE_DEVICE_CLIENT_05_003: [** When the `sendEvent` method completes, the callback function (indicated by the `sendEventCallback` argument) shall be invoked with the same arguments as the underlying transport method's callback. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_047: [** The `sendEvent` method shall not throw if the `sendEventCallback` is not passed. **]**
 
 #### sendEventBatch(messages, sendEventBatchCallback)
+#### sendEventBatch(outputName, messages, sendEventBatchCallback)
 The `sendEventBatch` method sends a list of event messages to the IoT Hub as the device indicated in the constructor argument.
+If an ouptut name is provided then the message is routed to the given output.
 
 **SRS_NODE_DEVICE_CLIENT_16_082: [** The `sendEventBatch` method shall throw a `NotImplementedError` if the transport doesn't have that feature. **]**
+
+**SRS_NODE_DEVICE_CLIENT_18_011: [** if `outputName` is provided, `sendEventBatch` shall populate all of `messages` `outputName` fields with this name before possing it to the transport. **]**
 
 **SRS_NODE_DEVICE_CLIENT_07_004: [** The `sendEventBatch` method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance. **]**
 
@@ -264,6 +272,20 @@ interface DeviceMethodEventHandler {
 **SRS_NODE_DEVICE_CLIENT_16_065: [** The client shall connect the transport if needed in order to receive messages. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_066: [** The client shall emit an error if connecting the transport fails while subscribing to message events **]**
+
+#### inputMessage
+
+**SRS_NODE_DEVICE_CLIENT_18_004: [** The `inputMessage` event shall be emitted when a module message is received. **]**
+
+**SRS_NODE_DEVICE_CLIENT_18_005: [** The `inputMessage` event parameter shall be a `message` object. **]**
+
+**SRS_NODE_DEVICE_CLIENT_18_006: [** The client shall start listening for messages from the service whenever there is a listener subscribed to the `inputMessage` event. **]**
+
+**SRS_NODE_DEVICE_CLIENT_18_007: [** The client shall stop listening for messages from the service whenever the last listener unsubscribes from the `inputMessage` event. **]**
+
+**SRS_NODE_DEVICE_CLIENT_18_008: [** The client shall connect the transport if needed in order to receive `inputMessage` events. **]**
+
+**SRS_NODE_DEVICE_CLIENT_18_009: [** The client shall emit an error if connecting the transport fails while subscribing to `inputMessage` events. **]**
 
 #### error
 

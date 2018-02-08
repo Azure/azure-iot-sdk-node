@@ -44,6 +44,14 @@ export class Message {
    * Type of feedback requested (in case of cloud-to-device command)
    */
   ack: string;
+  /**
+   * Name of input channel for message
+   */
+  inputName: string;
+  /**
+   * Name of output channel for message
+   */
+  outputName: string;
 
   /**
    * @private

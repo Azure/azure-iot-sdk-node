@@ -112,6 +112,7 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
     const credentials: TransportConfig = {
       host: cs.HostName,
       deviceId: cs.DeviceId,
+      moduleId: cs.ModuleId,
       sharedAccessKeyName: cs.SharedAccessKeyName,
       sharedAccessKey: cs.SharedAccessKey
     };
