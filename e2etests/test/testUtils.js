@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-
+var Promise = require('bluebird');
 var deviceSdk = require('azure-iot-device');
 
 function createDeviceClient(deviceTransport, provisionedDevice) {
@@ -46,10 +46,15 @@ function closeDeviceServiceClients(deviceClient, serviceClient, done) {
   });
 }
 
-function closeDeviceEventHubClients(deviceClient, eventHubClient, done) {
+function closeDeviceEventHubClients(deviceClient, eventHubClient, ehReceivers, done) {
   var eventHubErr = null;
   var deviceErr = null;
-  eventHubClient.close().then(function () {
+  Promise.map(ehReceivers, function (recvToClose) {
+    recvToClose.removeAllListeners();
+    return recvToClose.close();
+  }).then(function () {
+    return eventHubClient.close();
+  }).then(function () {
     eventHubErr = deviceErr;
     eventHubClient = null;
     if (!deviceClient) {

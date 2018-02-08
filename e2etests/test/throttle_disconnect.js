@@ -59,8 +59,7 @@ var protocolAndTermination = [
 protocolAndTermination.forEach( function (testConfiguration) {
   describe(testConfiguration.transport.name + ' using device/eventhub clients - disconnect d2c', function () {
     this.timeout(20000);
-    var deviceClient, ehClient, senderInterval;
-    var provisionedDevice;
+    var deviceClient, ehClient, senderInterval, ehReceivers, provisionedDevice;
 
     before(function (beforeCallback) {
       DeviceIdentityHelper.createDeviceWithSas(function (err, testDeviceInfo) {
@@ -78,11 +77,12 @@ protocolAndTermination.forEach( function (testConfiguration) {
       ehClient = eventHubClient.fromConnectionString(hubConnectionString);
       deviceClient = createDeviceClient(testConfiguration.transport, provisionedDevice);
       senderInterval = null;
+      ehReceivers = [];
     });
 
     afterEach(function (testCallback) {
       this.timeout(20000);
-      closeDeviceEventHubClients(deviceClient, ehClient, testCallback);
+      closeDeviceEventHubClients(deviceClient, ehClient, ehReceivers, testCallback);
       if (sendMessageTimeout !== null) clearTimeout(sendMessageTimeout);
     });
 
@@ -196,6 +196,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
               .then(function (partitionIds) {
                 return partitionIds.map(function (partitionId) {
                   return ehClient.createReceiver('$Default', partitionId, { 'startAfterTime' : Date.now() }).then(function (receiver) {
+                    ehReceivers.push(receiver);
                     receiver.on('errorReceived', function(err) {
                       testCallback(err);
                     });
