@@ -163,8 +163,7 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
   describe('Over ' + deviceTransport.name + ' using device/eventhub clients - messaging', function () {
     this.timeout(20000);
 
-    var deviceClient, ehClient;
-    var provisionedDevice;
+    var deviceClient, ehClient, ehReceivers, provisionedDevice;
 
     before(function (beforeCallback) {
       createDeviceMethod(function (err, testDeviceInfo) {
@@ -181,11 +180,12 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
       this.timeout(20000);
       ehClient = eventHubClient.fromConnectionString(hubConnectionString);
       deviceClient = createDeviceClient(deviceTransport, provisionedDevice);
+      ehReceivers = [];
     });
 
     afterEach(function (done) {
       this.timeout(20000);
-      closeDeviceEventHubClients(deviceClient, ehClient, done);
+      closeDeviceEventHubClients(deviceClient, ehClient, ehReceivers, done);
     });
 
     it('Device sends a message of maximum size and it is received by the service', function (done) {
@@ -219,6 +219,7 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
               .then(function (partitionIds) {
                 return partitionIds.map(function (partitionId) {
                   return ehClient.createReceiver('$Default', partitionId,{ 'startAfterTime' : Date.now()}).then(function(receiver) {
+                    ehReceivers.push(receiver);
                     receiver.on('errorReceived', function(err) {
                       done(err);
                     });
