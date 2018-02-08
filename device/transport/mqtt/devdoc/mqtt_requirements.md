@@ -4,49 +4,6 @@
 `Mqtt` and `MqttWs` provide a standard transport interface between the generic device Client and the specific MQTT transport implementation.
 `MqttWs` will connect over secure websockets whereas `Mqtt` connects over secure TCP sockets.
 
-## Example usage
-```js
-'use strict';
-var Mqtt = require('azure-iot-device-mqtt').Mqtt; // Or require('azure-iot-device-mqtt').MqttWs
-var Message = require('azure-iot-device-mqtt').Message;
-
-var config = {
-  gatewayHostName: /* ... */,
-  deviceId: /* ... */,
-  sharedAccessSignature: /* ... */,
-  x509: {
-    cert: /* ... */,
-    key: /* ... */
-  }
-};
-
-var mqtt = new Mqtt(config);
-client.connect(function (err) {
-  if (err) {
-    console.error(err.message);
-  } else {
-    var message = new Message(data);
-    mqtt.sendEvent(message, function () {
-      if (err) {
-        console.error(err.message);
-      } else {
-        console.log('sent message: ' + message.getData());
-      }
-    });
-
-    mqtt.getReceiver(function (err, receiver) {
-      receiver.on('message', function(msg) {
-        console.log('received: ' + msg.getData());
-      });
-
-      receiver.on('error', function(err) {
-        console.error(err.message);
-      });
-    });
-  }
-});
-```
-
 ## Public Interface
 ### Mqtt constructor
 The `Mqtt` and `MqttWs` constructors initialize a new instance of the MQTT transport.
@@ -72,6 +29,14 @@ The `Mqtt` and `MqttWs` constructors initialize a new instance of the MQTT trans
 The `connect` method initializes a connection to an IoT hub.
 
 **SRS_NODE_DEVICE_MQTT_12_004: [** The `connect` method shall call the `connect` method on `MqttBase`. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_029: [** If a `moduleId` is not specified, the `connect` method shall use a `clientId` of "<deviceId>" when connecting to the MQTT service. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_030: [** If a `moduleId` is not specified, the `connect` method shall use a `username` of "<host>/<deviceId>/DeviceClientType=<userAgent>&apiVersion=<apiVersion>". **]**
+
+**SRS_NODE_DEVICE_MQTT_18_031: [** If a `moduleId` is specified, The `connect` method shall use a `clientId` of "<deviceId>/<moduleId>" when connecting to the MQTT service. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_032: [** If a `moduleId` is specified, the `connect` method shall use a `username` of "<host>/<deviceId>/<moduleId>/DeviceClientType=<userAgent>&apiVersion=<apiVersion>". **]**
 
 **SRS_NODE_DEVICE_MQTT_18_026: [** When `MqttBase` fires the `error` event, the `Mqtt` object shall emit a `disconnect` event. **]**
 
@@ -101,7 +66,9 @@ The `sendEvent` method sends an event to an IoT hub on behalf of the device indi
 
 **SRS_NODE_DEVICE_MQTT_12_005: [** The `sendEvent` method shall call the publish method on `MqttBase`. **]**
 
-**SRS_NODE_COMMON_MQTT_BASE_16_008: [** The `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`. **]**
+**SRS_NODE_COMMON_MQTT_BASE_16_008: [** If a moduleId was not specified in the transport connection, the `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_027: [** If a moduleId was specified in the transport connection, the `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/modules/<moduleId>/messages/events/`. **]**
 
 **SRS_NODE_COMMON_MQTT_BASE_16_009: [** If the message has properties, the property keys and values shall be uri-encoded, then serialized and appended at the end of the topic with the following convention: `<key>=<value>&<key2>=<value2>&<key3>=<value3>(...)`. **]**
 
@@ -116,6 +83,10 @@ The `sendEvent` method sends an event to an IoT hub on behalf of the device indi
 **SRS_NODE_COMMON_MQTT_BASE_16_014: [** The `sendEvent` method shall serialize the `to` property of the message as a key-value pair on the topic with the key `$.to`. **]**
 
 **SRS_NODE_COMMON_MQTT_BASE_16_015: [** The `sendEvent` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_028: [** The `sendEvent` method shall serialize the `outputName` property of the message as a key-value pair on the topic with the key `$.on`. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_027: [** The `sendEvent` method shall serialize the `outputName` property of the message as a key-value pair on the topic with the key `$.on`. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_023: [** The `sendEvent` method shall connect the Mqtt connection if it is disconnected. **]**
 
@@ -341,3 +312,67 @@ The `getTwinReceiver` method creates a `MqttTwinReceiver` object for the twin re
 **SRS_NODE_DEVICE_MQTT_16_064: [** `disableTwin` shall call its callback with no arguments when the `UNSUBACK` packet is received. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_065: [** `disableTwin` shall call its callback with an `Error` if an error is received while unsubscribing. **]**
+
+### message Event
+
+**SRS_NODE_DEVICE_MQTT_RECEIVER_16_004: [** If there is a listener for the `message` event, a `message` event shall be emitted for each message received. **]**
+
+**SRS_NODE_DEVICE_MQTT_RECEIVER_16_005: [** When a `message` event is emitted, the parameter shall be of type `Message`. **]**
+
+**SRS_NODE_DEVICE_MQTT_RECEIVER_16_007: [** When a message is received, the receiver shall populate the generated `Message` object `properties` property with the user properties serialized in the topic. **]**
+
+**SRS_NODE_DEVICE_MQTT_RECEIVER_16_008: [** When a message is received, the receiver shall populate the generated `Message` object `messageId` with the value of the property `$.mid` serialized in the topic, if present. **]**
+
+**SRS_NODE_DEVICE_MQTT_RECEIVER_16_009: [** When a message is received, the receiver shall populate the generated `Message` object `to` with the value of the property `$.to` serialized in the topic, if present. **]**
+
+**SRS_NODE_DEVICE_MQTT_RECEIVER_16_010: [** When a message is received, the receiver shall populate the generated `Message` object `expiryTimeUtc` with the value of the property `$.exp` serialized in the topic, if present. **]**
+
+**SRS_NODE_DEVICE_MQTT_RECEIVER_16_011: [** When a message is received, the receiver shall populate the generated `Message` object `correlationId` with the value of the property `$.cid` serialized in the topic, if present. **]**
+
+**SRS_NODE_DEVICE_MQTT_RECEIVER_16_012: [** When a message is received, the receiver shall populate the generated `Message` object `userId` with the value of the property `$.uid` serialized in the topic, if present. **]**
+
+### method Event
+
+**SRS_NODE_DEVICE_MQTT_RECEIVER_13_003: [** If there is a listener for the `method` event, a `method_<METHOD NAME>` event shall be emitted for each message received. **]**
+
+**SRS_NODE_DEVICE_MQTT_RECEIVER_13_005: [** When a `method_<METHOD NAME>` event is emitted the parameter shall conform to the shape as defined by the interface specified below:
+
+```
+interface StringMap {
+    [key: string]: string;
+}
+
+interface MethodMessage {
+    methods: { methodName: string; };
+    requestId: string;
+    properties: StringMap;
+    body: any;
+    verb: string;
+}
+```
+**]**
+
+### inputMessage event
+
+**SRS_NODE_DEVICE_MQTT_18_033: [** When the `inputMessage` event is subscribed to, if no `moduleId` was specified through the `constructor`, `Mqtt` shall throw an `InvalidOperationError` exception. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_034: [** When the `inputMessage` event is subscribed to, `Mqtt` shall subscribe to the "devices/<deviceId>/modules/<moduleId>/#" topic **]**
+
+**SRS_NODE_DEVICE_MQTT_18_035: [** When an `inputMessage` event is emitted, the parameter shall be of type `Message`. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_036: [** When an `inputMessage` is received, the topic shall be parsed as "devices/<deviceId>/modules/<moduleId>/inputs/<inputName>/<queryString>" **]**
+
+**SRS_NODE_DEVICE_MQTT_18_037: [** When an `inputMessage` is received, the receiver shall populated the generated `Message` object `inputName` property from the inputName in the topic name. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_038: [** When an `inputMessage` is received, the receiver shall populate the generated `Message` object `properties` property with the user properties serialized in the topic. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_039: [** When an `inputMessage` is received, the receiver shall populate the generated `Message` object `messageId` with the value of the property `$.mid` serialized in the topic, if present. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_040: [** When an `inputMessage` is received, the receiver shall populate the generated `Message` object `to` with the value of the property `$.to` serialized in the topic, if present. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_041: [** When an `inputMessage` is received, the receiver shall populate the generated `Message` object `expiryTimeUtc` with the value of the property `$.exp` serialized in the topic, if present. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_042: [** When an `inputMessage` is received, the receiver shall populate the generated `Message` object `correlationId` with the value of the property `$.cid` serialized in the topic, if present. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_043: [** When an `inputMessage` is received, the receiver shall populate the generated `Message` object `userId` with the value of the property `$.uid` serialized in the topic, if present. **]**
+

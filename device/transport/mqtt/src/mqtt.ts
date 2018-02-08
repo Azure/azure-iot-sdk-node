@@ -421,7 +421,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
    */
   sendEventBatch(messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_056: [The `sendEventBatch` method shall throw a `NotImplementedError`]*/
-    throw new errors.NotImplementedError('AMQP Transport does not support batching yet');
+    throw new errors.NotImplementedError('MQTT Transport does not support batching yet');
   }
 
   /**

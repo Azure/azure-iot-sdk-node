@@ -107,14 +107,16 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
     it('initializes the credentials from the connection string', function (testCallback) {
       var fakeCredentials = {
         deviceId: 'fakeDeviceId',
+        moduleId: 'fakeModuleId',
         host: 'fake.host.name',
         sharedAccessKey: 'fakeKey'
       };
-      var fakeConnectionString = 'DeviceId=' + fakeCredentials.deviceId + ';HostName=' + fakeCredentials.host + ';SharedAccessKey=' + fakeCredentials.sharedAccessKey;
+      var fakeConnectionString = 'DeviceId=' + fakeCredentials.deviceId + ';ModuleId=' + fakeCredentials.moduleId + ';HostName=' + fakeCredentials.host + ';SharedAccessKey=' + fakeCredentials.sharedAccessKey;
 
       var sakAuthProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString(fakeConnectionString, 2, 1);
       sakAuthProvider.getDeviceCredentials(function (err, creds) {
         assert.strictEqual(creds.deviceId, fakeCredentials.deviceId);
+        assert.strictEqual(creds.moduleId, fakeCredentials.moduleId);
         assert.strictEqual(creds.host, fakeCredentials.host);
         assert.strictEqual(creds.sharedAccessKey, fakeCredentials.sharedAccessKey);
         testCallback();
