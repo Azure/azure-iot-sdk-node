@@ -269,8 +269,10 @@ export class TpmSecurityClient  {
       let rc = this._tpm.getLastResponseCode();
       debug('ReadPublic(' + name + ') returned ' + TPM_RC[rc] +  (rc === TPM_RC.SUCCESS ? '; PUB: ' + resp.outPublic.toString() : ''));
       if (rc !== TPM_RC.SUCCESS) {
+        /*Codes_SRS_NODE_TPM_SECURITY_CLIENT_06_017: [If the endorsement key does NOT exist, a new key will be created.] */
+        /*Codes_SRS_NODE_TPM_SECURITY_CLIENT_06_018: [If the storage root key does NOT exist, a new key will be created.] */
         this._tpm.withSession(tss.NullPwSession).CreatePrimary(hierarchy, new tss.TPMS_SENSITIVE_CREATE(), template, null, null, (resp: tss.CreatePrimaryResponse) => {
-          debug('CreatePrimary(' + name + ') returned ' + TPM_RC[this._tpm.getLastResponseCode()] + '; pub size: ' + (resp.outPublic.unique as tss.TPM2B_PUBLIC_KEY_RSA).buffer.length);
+          debug('CreatePrimary(' + name + ') returned ' + TPM_RC[this._tpm.getLastResponseCode()]);
           this._tpm.withSession(tss.NullPwSession).EvictControl(tss.Owner, resp.handle, handle, () => {
             debug('EvictControl(0x' + resp.handle.handle.toString(16) + ', 0x' + handle.handle.toString(16) + ') returned ' + TPM_RC[this._tpm.getLastResponseCode()]);
             this._tpm.FlushContext(resp.handle, () => {
@@ -291,13 +293,21 @@ export class TpmSecurityClient  {
       debug('ReadPublic(' + name + ') returned ' + TPM_RC[rc] +  (rc === TPM_RC.SUCCESS ? '; PUB: ' + resp.outPublic.toString() : ''));
       if (rc !== TPM_RC.SUCCESS) {
         debug('readPersistentPrimary failed for: ' + name);
-        callback(new errors.SecurityDeviceError('Authorization unable to find a persistent identity key.  RC value: ' + TPM_RC[this._tpm.getLastResponseCode()].toString()), null);
+        callback(new errors.SecurityDeviceError('Authorization unable to find a persistent identity key.'), null);
       } else {
         callback(null, resp.outPublic);
       }
     });
   }
 
+  private _getPropsAndHashAlg( callback: (algorithm: TPM_ALG_ID, properties: tss.TPML_TAGGED_TPM_PROPERTY) => void): void {
+    const idKeyHashAlg: TPM_ALG_ID = (<tss.TPMS_SCHEME_HMAC>(<tss.TPMS_KEYEDHASH_PARMS>this._idKeyPub.parameters).scheme).hashAlg;
+
+    this._tpm.GetCapability(tss.TPM_CAP.TPM_PROPERTIES, TPM_PT.INPUT_BUFFER, 1, (caps: tss.GetCapabilityResponse) => {
+      const props = <tss.TPML_TAGGED_TPM_PROPERTY>caps.capabilityData;
+      callback(idKeyHashAlg, props);
+    });
+  }
 
   private _signData(dataToSign: Buffer, callback: (err: Error, signedData?: Buffer) => void): void {
 
@@ -306,13 +316,10 @@ export class TpmSecurityClient  {
       return callback(new errors.InvalidOperationError('activateIdentityKey must be invoked before any signing is attempted.'));
     }
 
-    const idKeyHashAlg: TPM_ALG_ID = (<tss.TPMS_SCHEME_HMAC>(<tss.TPMS_KEYEDHASH_PARMS>this._idKeyPub.parameters).scheme).hashAlg;
-
-    this._tpm.GetCapability(tss.TPM_CAP.TPM_PROPERTIES, TPM_PT.INPUT_BUFFER, 1, (caps: tss.GetCapabilityResponse) => {
-      const props = <tss.TPML_TAGGED_TPM_PROPERTY>caps.capabilityData;
+    this._getPropsAndHashAlg((idKeyHashAlg, props) => {
       if (props.tpmProperty.length !== 1 || props.tpmProperty[0].property !== TPM_PT.INPUT_BUFFER) {
         /*Codes_SRS_NODE_TPM_SECURITY_CLIENT_06_015: [If the tpm device is not properly configured, the callback will be invoked with `err` of `SecurityDeviceError`.] */
-        callback(new errors.SecurityDeviceError('Unexpected result of TPM2_GetCapability(TPM_PT.INPUT_BUFFER)'), null);
+        callback(new errors.SecurityDeviceError('Unexpected result of TPM2_GetCapability(TPM_PT.INPUT_BUFFER)'));
       } else {
         const maxInputBuffer: number = props.tpmProperty[0].value;
         if (dataToSign.length <= maxInputBuffer) {
@@ -323,21 +330,19 @@ export class TpmSecurityClient  {
           let curPos: number = 0;
           let bytesLeft: number = dataToSign.length;
           let hSequence: TPM_HANDLE = null;
-          let signature = new Buffer(0);
           let loopFn = () => {
             if (bytesLeft > maxInputBuffer) {
-                this._tpm.withSession(tss.NullPwSession).SequenceUpdate(hSequence, dataToSign.slice(curPos, curPos + maxInputBuffer), loopFn);
-                console.log('SequenceUpdate() invoked for slice [' + curPos + ', ' + (curPos + maxInputBuffer) + ']');
-                bytesLeft -= maxInputBuffer;
-                curPos += maxInputBuffer;
+              let sliceCurPos = curPos;
+              bytesLeft -= maxInputBuffer;
+              curPos += maxInputBuffer;
+              this._tpm.withSession(tss.NullPwSession).SequenceUpdate(hSequence, dataToSign.slice(sliceCurPos, sliceCurPos + maxInputBuffer), loopFn);
             } else {
               this._tpm.withSession(tss.NullPwSession).SequenceComplete(hSequence, dataToSign.slice(curPos, curPos + bytesLeft), new TPM_HANDLE(tss.TPM_RH.NULL), (resp: tss.SequenceCompleteResponse) => {
-                console.log('SequenceComplete() succeeded; signature size ' + signature.length);
+                callback(null, resp.result);
               });
             }
           };
-          this._tpm.withSession(tss.NullPwSession).HMAC_Start(TpmSecurityClient._idKeyPersistentHandle, signature, idKeyHashAlg, (hSeq: TPM_HANDLE) => {
-            console.log('HMAC_Start() returned ' + TPM_RC[this._tpm.getLastResponseCode()]);
+          this._tpm.withSession(tss.NullPwSession).HMAC_Start(TpmSecurityClient._idKeyPersistentHandle, new Buffer(0), idKeyHashAlg, (hSeq: TPM_HANDLE) => {
             hSequence = hSeq;
             loopFn();
           });
