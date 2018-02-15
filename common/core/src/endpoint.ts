@@ -4,7 +4,7 @@
 
 'use strict';
 
-export const apiVersion = '2017-06-30';
+export const apiVersion = '2018-01-16';
 
 export function devicePath(id: string): string {
   return '/devices/' + id;
