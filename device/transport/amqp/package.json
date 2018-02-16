@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-device-amqp",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "AMQP transport for Azure IoT device SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
@@ -8,15 +8,15 @@
   "typings": "index.d.ts",
   "dependencies": {
     "async": "^2.5.0",
-    "azure-iot-amqp-base": "1.4.0",
-    "azure-iot-common": "1.4.0",
-    "azure-iot-device": "1.3.1",
+    "azure-iot-amqp-base": "1.4.1",
+    "azure-iot-common": "1.4.1",
+    "azure-iot-device": "1.3.2",
     "debug": "^3.0.1",
     "machina": "^2.0.1",
     "uuid": "^3.0.1"
   },
   "devDependencies": {
-    "azure-iothub": "1.2.4",
+    "azure-iothub": "1.2.5",
     "bluebird": "^3.5.0",
     "chai": "^4.1.2",
     "istanbul": "^0.4.5",
