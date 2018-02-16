@@ -22,7 +22,7 @@ You need to install the [Node.js][nodejs_lnk] JavaScript runtime environment to 
 
 ## How to use the Azure IoT service SDK for Node.js
 
-Once you have installed the package as indicated above, you can start using the features of the Service SDK in your code. Below is a code snippet showing how to add a new device in the Azuyre IoT Hub device registry:
+Once you have installed the package as indicated above, you can start using the features of the Service SDK in your code. Below is a code snippet showing how to add a new device in the Azure IoT Hub device registry:
 
 Note that for this sample to work, you will need to [setup your IoT hub][lnk-setup-iot-hub] and retrieve credentials for the service app. Utilize the '[IoT Connection String]', in quotes, on the command line invoking the sample.
 
