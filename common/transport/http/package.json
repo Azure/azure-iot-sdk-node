@@ -8,8 +8,8 @@
   "typings": "index.d.ts",
   "dependencies": {
     "azure-iot-common": "1.4.0",
-    "debug": "^2.2.0",
-    "uuid": "^2.0.1"
+    "debug": "^3.1.0",
+    "uuid": "^3.2.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",

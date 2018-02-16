@@ -9,8 +9,8 @@
   "dependencies": {
     "azure-iot-common": "1.4.0",
     "debug": "^3.1.0",
-    "machina": "^2.0.0",
-    "mqtt": "^2.15.1"
+    "machina": "^2.0.1",
+    "mqtt": "^2.15.2"
   },
   "devDependencies": {
     "@types/node": "^8.0.28",

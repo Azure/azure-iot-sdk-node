@@ -11,7 +11,7 @@
     "azure-iot-common": "1.4.0",
     "azure-iot-provisioning-device": "1.1.0",
     "debug": "^3.0.1",
-    "machina": "^2.0.0"
+    "machina": "^2.0.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",
