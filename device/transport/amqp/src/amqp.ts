@@ -647,6 +647,14 @@ export class Amqp extends EventEmitter implements Client.Transport {
 
   /**
    * @private
+   */
+  onInputMessage(inputName: string, callback: (msg: Message) => void): this {
+    throw new errors.NotImplementedError('Module events are not implemented over AMQP.');
+  }
+
+
+  /**
+   * @private
    * The `sendMethodResponse` method sends a direct method response to the IoT Hub
    * @param {Object}     methodResponse   Object describing the device method response.
    * @param {Function}   callback         The callback to be invoked when

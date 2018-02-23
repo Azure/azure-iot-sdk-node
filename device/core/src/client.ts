@@ -469,6 +469,40 @@ export class Client extends EventEmitter {
     this._retryPolicy = policy;
   }
 
+  onInputMessage(inputName: string, func: (msg: Message) => void): void {
+    this._transport.onInputMessage(inputName, func);
+
+    this._enableC2D((err) => {
+      if (err) {
+        this.emit('error', err);
+      }
+    });
+  }
+
+  removeInputMessageListener(inputName: string, func: (msg: Message) => void): void {
+    this._transport.removeInputMessageListener(inputName, func);
+  }
+
+  sendOutputEvent(outputName: string, message: Message, callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_05_007: [The sendEvent method shall send the event indicated by the message argument via the transport associated with the Client instance.]*/
+      this._transport.sendOutputEvent(outputName, message, opCallback);
+    }, (err, result) => {
+      safeCallback(callback, err, result);
+    });
+  }
+
+  sendOutputEventBatch(outputName: string, messages: Message[], callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_05_008: [The sendEventBatch method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance.]*/
+      this._transport.sendOutputEventBatch(outputName, messages, opCallback);
+    }, (err, result) => {
+      safeCallback(callback, err, result);
+    });
+  }
+
   private _validateDeviceMethodInputs(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
     // Codes_SRS_NODE_DEVICE_CLIENT_13_020: [ onDeviceMethod shall throw a ReferenceError if methodName is falsy. ]
     if (!methodName) {
@@ -737,6 +771,15 @@ export namespace Client {
     onDeviceMethod(methodName: string, methodCallback: (request: MethodMessage, response: DeviceMethodResponse) => void): void;
     enableMethods(callback: (err?: Error) => void): void;
     disableMethods(callback: (err?: Error) => void): void;
+
+    // Input messages
+    onInputMessage(inputName: string, func: (msg: Message) => void): this;
+    removeInputMessageListener(inputName: string, func: (msg: Message) => void): this;
+
+    // Output events
+    sendOutputEvent(outputName: string, message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void;
+    sendOutputEventBatch(outputName: string, messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void;
+
   }
 
   export interface BlobUpload {

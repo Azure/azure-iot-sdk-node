@@ -549,6 +549,14 @@ export class Http extends EventEmitter implements Client.Transport {
   /**
    * @private
    */
+  onInputMessage(inputName: string, callback: (msg: Message) => void): this {
+    throw new errors.NotImplementedError('Module events are not implemented over HTTP.');
+  }
+
+
+  /**
+   * @private
+   */
   enableMethods(callback: (err?: Error) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_026: [`enableMethods` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Direct methods are not implemented over HTTP.');

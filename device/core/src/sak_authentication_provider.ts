@@ -82,7 +82,11 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
     key: the `SharedAccessKey` parameter of the connection string
     expiry: the expiration time of the token, which is now + the token validity time, formatted as the number of seconds since Epoch (Jan 1st, 1970, 00:00 UTC).
     ```]*/
-    const resourceUri = encodeUriComponentStrict(this._credentials.host + '/devices/' + this._credentials.deviceId);
+    let resourceString = this._credentials.host + '/devices/' + this._credentials.deviceId;
+    if (this._credentials.moduleId) {
+      resourceString += '/modules/' + this._credentials.moduleId;
+    }
+    const resourceUri = encodeUriComponentStrict(resourceString);
     const sas = SharedAccessSignature.create(resourceUri, this._credentials.sharedAccessKeyName, this._credentials.sharedAccessKey, newExpiry);
     this._credentials.sharedAccessSignature = sas.toString();
 
@@ -111,6 +115,7 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
     /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_008: [The `fromConnectionString` method shall extract the credentials from the `connectionString` argument and create a new `SharedAccessKeyAuthenticationProvider` that uses these credentials to generate security tokens.]*/
     const credentials: TransportConfig = {
       host: cs.HostName,
+      gatewayHostName: cs.GatewayHostName,
       deviceId: cs.DeviceId,
       moduleId: cs.ModuleId,
       sharedAccessKeyName: cs.SharedAccessKeyName,
