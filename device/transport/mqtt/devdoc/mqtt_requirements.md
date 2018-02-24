@@ -67,6 +67,8 @@ The `Mqtt` and `MqttWs` constructors initialize a new instance of the MQTT trans
 
 **SRS_NODE_DEVICE_MQTT_18_025: [** If the `Mqtt` constructor receives a second parameter, it shall be used as a provider in place of mqtt.js **]**
 
+**SRS_NODE_DEVICE_MQTT_16_081: [** The `Mqtt` constructor shall subscribe to the `MqttTwinClient` `twinDesiredPropertiesUpdates` and reemit them. **]**
+
 ### connect(done)
 
 The `connect` method initializes a connection to an IoT hub.
@@ -214,67 +216,25 @@ interface DeviceMethodResponse {
 
 **SRS_NODE_DEVICE_MQTT_16_034: [** The `sendMethodResponse` method shall fail with a `NotConnectedError` if the `MqttBase` object is not connected. **]**
 
-### sendTwinRequest(method, resource, properties, body, done)
+### getTwin(done)
 
-The `sendTwinRequest` method sends the given body to the given endpoint on an IoT hub on behalf of the device indicated in the constructor argument.
+The `getTwin` method is used to retrieve the device twin.
 
-**SRS_NODE_DEVICE_MQTT_18_001: [** The `sendTwinRequest` method shall call the publish method on `MqttBase`. **]**
+**SRS_NODE_DEVICE_MQTT_16_075: [** `getTwin` shall establish the MQTT connection by calling `connect` on the `MqttBase` object if it is disconnected. **]**
 
-**SRS_NODE_DEVICE_MQTT_18_008: [** The `sendTwinRequest` method shall not throw if the `done` callback is falsy. **]**
+**SRS_NODE_DEVICE_MQTT_16_076: [** `getTwin` shall call its callback with an error if it fails to connect the transport **]**
 
-**SRS_NODE_DEVICE_MQTT_18_009: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `method` argument is falsy. **]**
+**SRS_NODE_DEVICE_MQTT_16_077: [** `getTwin` shall call the `getTwin` method on the `MqttTwinClient` object and pass it its callback. **]**
 
-**SRS_NODE_DEVICE_MQTT_18_010: [** The `sendTwinRequest` method shall throw an `ArgumentError` if the `method` argument is not a string. **]**
+### updateTwinReportedProperties
 
-**SRS_NODE_DEVICE_MQTT_18_019: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `resource` argument is falsy. **]**
+The `updateTwinReportedProperties` method is used to retrieve the device twin.
 
-**SRS_NODE_DEVICE_MQTT_18_020: [** The `sendTwinRequest` method shall throw an `ArgumentError` if the `resource` argument is not a string. **]**
+**SRS_NODE_DEVICE_MQTT_16_078: [** `updateTwinReportedProperties` shall establish the MQTT connection by calling `connect` on the `MqttBase` object if it is disconnected. **]**
 
-**SRS_NODE_DEVICE_MQTT_18_011: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `properties` argument is falsy. **]**
+**SRS_NODE_DEVICE_MQTT_16_079: [** `updateTwinReportedProperties` shall call its callback with an error if it fails to connect the transport **]**
 
-**SRS_NODE_DEVICE_MQTT_18_012: [** The `sendTwinRequest` method shall throw an `ArgumentError` if the `properties` argument is not a an object. **]**
-
-**SRS_NODE_DEVICE_MQTT_18_018: [** The `sendTwinRequest` method shall throw an `ArgumentError` if any members of the `properties` object fails to serialize to a string **]**
-
-**SRS_NODE_DEVICE_MQTT_18_013: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `body` argument is falsy. **]**
-
-**SRS_NODE_DEVICE_MQTT_18_022: [** The `propertyQuery` string shall be constructed from the `properties` object. **]**
-
-**SRS_NODE_DEVICE_MQTT_18_023: [** Each member of the `properties` object shall add another 'name=value&' pair to the `propertyQuery` string. **]**
-
-**SRS_NODE_DEVICE_MQTT_18_004: [** If a `done` callback is passed as an argument, The `sendTwinRequest` method shall call `done` after the body has been published. **]**
-
-**SRS_NODE_DEVICE_MQTT_18_021: [** The topic name passed to the publish method shall be $iothub/twin/`method`/`resource`/?`propertyQuery` **]**
-
-**SRS_NODE_DEVICE_MQTT_18_015: [** The `sendTwinRequest` shall publish the request with QOS=0, DUP=0, and Retain=0 **]**
-
-**SRS_NODE_DEVICE_MQTT_18_016: [** If an error occurs in the `sendTwinRequest` method, the `done` callback shall be called with the error as the first parameter. **]**
-
-**SRS_NODE_DEVICE_MQTT_18_024: [** If an error occurs, the `sendTwinRequest` shall use the MQTT `translateError` module to convert the mqtt-specific error to a transport agnostic error before passing it into the `done` callback. **]**
-
-**SRS_NODE_DEVICE_MQTT_18_017: [** If the `sendTwinRequest` method is successful, the first parameter to the `done` callback shall be null and the second parameter shall be a MessageEnqueued object. **]**
-
-**SRS_NODE_DEVICE_MQTT_16_029: [** The `sendTwinRequest` method shall connect the Mqtt connection if it is disconnected. **]**
-
-**SRS_NODE_DEVICE_MQTT_16_031: [** If `sendTwinRequest` is called while `MqttBase` is establishing the connection, it shall wait until the connection is established and then send the twin request. **]**
-
-**SRS_NODE_DEVICE_MQTT_16_036: [** If `sendTwinRequest` is called while `MqttBase` is establishing the connection, and `MqttBase` fails to establish the connection, then `sendTwinRequest` shall fail. **]**
-
-**SRS_NODE_DEVICE_MQTT_16_032: [** If `sendTwinRequest` is called while `MqttBase` is disconnecting, it shall wait until the disconnection is complete and then try to connect again and send the twin request. **]**
-
-**SRS_NODE_DEVICE_MQTT_16_033: [** The `sendTwinRequest` method shall call its callback with an error translated using `translateError` if `MqttBase` fails to connect. **]**
-
-### getTwinReceiver(done)
-
-The `getTwinReceiver` method creates a `MqttTwinReceiver` object for the twin response endpoint and returns it, or returns the existing instance.
-
-**SRS_NODE_DEVICE_MQTT_18_014: [** The `getTwinReceiver` method shall throw an `ReferenceError` if done is falsy **]**
-
-**SRS_NODE_DEVICE_MQTT_18_005: [** The `getTwinReceiver` method shall call the `done` method after it completes **]**
-
-**SRS_NODE_DEVICE_MQTT_18_006: [** If a twin receiver for this endpoint did not previously exist, the `getTwinReceiver` method should return the a new `MqttTwinReceiver` object as the second parameter of the `done` function with null as the first parameter. **]**
-
-**SRS_NODE_DEVICE_MQTT_18_007: [** If a twin receiver for this endpoint previously existed, the `getTwinReceiver` method should return the preexisting `MqttTwinReceiver` object as the second parameter of the `done` function with null as the first parameter. **]**
+**SRS_NODE_DEVICE_MQTT_16_080: [** `updateTwinReportedProperties` shall call the `updateTwinReportedProperties` method on the `MqttTwinClient` object and pass it its callback. **]**
 
 ### enableC2D
 
@@ -300,17 +260,17 @@ The `getTwinReceiver` method creates a `MqttTwinReceiver` object for the twin re
 
 **SRS_NODE_DEVICE_MQTT_16_053: [** `enableMethods` shall call its callback with an `Error` if subscribing to the topic fails. **]**
 
-### enableTwin
+### enableTwinDesiredPropertiesUpdates
 
-**SRS_NODE_DEVICE_MQTT_16_057: [** `enableTwin` shall connect the MQTT connection if it is disconnected. **]**
+**SRS_NODE_DEVICE_MQTT_16_057: [** `enableTwinDesiredPropertiesUpdates` shall connect the MQTT connection if it is disconnected. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_058: [** `enableTwin` shall calls its callback with an `Error` object if it fails to connect. **]**
+**SRS_NODE_DEVICE_MQTT_16_058: [** `enableTwinDesiredPropertiesUpdates` shall calls its callback with an `Error` object if it fails to connect. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_059: [** `enableTwin` shall subscribe to the MQTT topics for twins. **]**
+**SRS_NODE_DEVICE_MQTT_16_059: [** `enableTwinDesiredPropertiesUpdates` shall subscribe to the MQTT topics for twins. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_060: [** `enableTwin` shall call its callback with no arguments when the `SUBACK` packet is received. **]**
+**SRS_NODE_DEVICE_MQTT_16_060: [** `enableTwinDesiredPropertiesUpdates` shall call its callback with no arguments when the `SUBACK` packet is received. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_061: [** `enableTwin` shall call its callback with an `Error` if subscribing to the topics fails. **]**
+**SRS_NODE_DEVICE_MQTT_16_061: [** `enableTwinDesiredPropertiesUpdates` shall call its callback with an `Error` if subscribing to the topics fails. **]**
 
 ### disableC2D
 
@@ -332,12 +292,12 @@ The `getTwinReceiver` method creates a `MqttTwinReceiver` object for the twin re
 
 **SRS_NODE_DEVICE_MQTT_16_046: [** `disableMethods` shall call its callback with an `Error` if an error is received while unsubscribing. **]**
 
-### disableTwin
+### disableTwinDesiredPropertiesUpdates
 
-**SRS_NODE_DEVICE_MQTT_16_062: [** `disableTwin` shall call its callback immediately if the MQTT connection is already disconnected. **]**
+**SRS_NODE_DEVICE_MQTT_16_062: [** `disableTwinDesiredPropertiesUpdates` shall call its callback immediately if the MQTT connection is already disconnected. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_063: [** `disableTwin` shall unsubscribe from the topics for twin messages. **]**
+**SRS_NODE_DEVICE_MQTT_16_063: [** `disableTwinDesiredPropertiesUpdates` shall unsubscribe from the topics for twin messages. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_064: [** `disableTwin` shall call its callback with no arguments when the `UNSUBACK` packet is received. **]**
+**SRS_NODE_DEVICE_MQTT_16_064: [** `disableTwinDesiredPropertiesUpdates` shall call its callback with no arguments when the `UNSUBACK` packet is received. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_065: [** `disableTwin` shall call its callback with an `Error` if an error is received while unsubscribing. **]**
+**SRS_NODE_DEVICE_MQTT_16_065: [** `disableTwinDesiredPropertiesUpdates` shall call its callback with an `Error` if an error is received while unsubscribing. **]**
