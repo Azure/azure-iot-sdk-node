@@ -139,18 +139,18 @@ delete nullMergeResult.tweedle;
 
     it('relies on $version starting at 1 and incrementing by 1 each time', function(done) {
       assert.equal(deviceTwin.properties.desired.$version,1);
+      deviceTwin.on('properties.desired', function() {
+        if (deviceTwin.properties.desired.$version === 1) {
+          // ignore $update === 1.  assert needed to make jshint happy
+          assert(true);
+        } else if (deviceTwin.properties.desired.$version === 2) {
+          done();
+        } else  {
+          done(new Error('incorrect property version received - ' + deviceTwin.properties.desired.$version));
+        }
+      });
       serviceTwin.update( { properties : { desired : newProps } }, function(err) {
         if (err) return done(err);
-        deviceTwin.on('properties.desired', function() {
-          if (deviceTwin.properties.desired.$version === 1) {
-            // ignore $update === 1.  assert needed to make jshint happy
-            assert(true);
-          } else if (deviceTwin.properties.desired.$version === 2) {
-            done();
-          } else  {
-            done(new Error('incorrect property version received - ' + deviceTwin.properties.desired.$version));
-          }
-        });
       });
     });
 
@@ -190,27 +190,38 @@ delete nullMergeResult.tweedle;
 
     var sendsAndReceivesDesiredProperties = function(done) {
       assertObjectIsEmpty(deviceTwin.properties.desired);
+      deviceTwin.on('properties.desired', function(props) {
+        if (props.$version === 1) {
+          // ignore
+          assert(true);
+        } else if (props.$version === 2) {
+          assertObjectsAreEqual(newProps, deviceTwin.properties.desired);
+          done();
+        } else {
+          done(new Error('incorrect property version received - ' + props.$version));
+        }
+      });
 
       serviceTwin.update( { properties : { desired : newProps } }, function(err) {
         if (err) return done(err);
-
-        deviceTwin.on('properties.desired', function(props) {
-          if (props.$version === 1) {
-            // ignore
-            assert(true);
-          } else if (props.$version === 2) {
-            assertObjectsAreEqual(newProps, deviceTwin.properties.desired);
-            done();
-          } else {
-            done(new Error('incorrect property version received - ' + props.$version));
-          }
-        });
       });
     };
 
     it('sends and receives desired properties', sendsAndReceivesDesiredProperties);
 
     var mergeDesiredProperties = function(first, second, newEtag, result, done) {
+      deviceTwin.on('properties.desired', function(props) {
+        if (props.$version === 1 || props.$version === 2) {
+          // ignore
+          assert(true);
+        } else if (props.$version === 3) {
+          assertObjectsAreEqual(deviceTwin.properties.desired, result);
+          done();
+        } else {
+          done(new Error('incorrect property version received - ' + props.$version));
+        }
+      });
+
       serviceTwin.update( { properties : { desired : first } }, function(err) {
         if (err) return done(err);
 
@@ -222,18 +233,6 @@ delete nullMergeResult.tweedle;
 
         serviceTwin.update( { properties : { desired : second } }, function(err) {
           if (err) return done(err);
-
-          deviceTwin.on('properties.desired', function(props) {
-            if (props.$verion === 1 || props.$version === 2) {
-              // ignore
-              assert(true);
-            } else if (props.$version === 3) {
-              assertObjectsAreEqual(deviceTwin.properties.desired, result);
-              done();
-            } else {
-              done(new Error('incorrect property version received - ' + props.$version));
-            }
-          });
         });
       });
     };

@@ -163,7 +163,8 @@ describe('Mqtt as MqttReceiver', function () {
     });
 
     describe('#method', function() {
-      // Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_13_002: [ When a listener is added for the method event, the topic should be subscribed to. ]*/
+      /* Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_13_002: [ When a listener is added for the method event, the topic should be subscribed to. ]*/
+      // note: that test really does not test this requirement. Not since we introduced the enable/disable methods
       it('does not subscribe twice to the same topic for multiple event registrations', function () {
         var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
         receiver.connect(function () {
@@ -173,8 +174,8 @@ describe('Mqtt as MqttReceiver', function () {
           receiver.on('message', function () { });
 
           // assert
-          assert.isTrue(fakeMqttBase.on.calledTwice,
-            'mqttClient.on was not called twice (error + message)');
+          assert.isTrue(fakeMqttBase.on.calledThrice,
+            'mqttClient.on was not called thrice (error + message * 2 (c2d + twin)');
           assert.isTrue(fakeMqttBase.on.calledWith('message'),
             'mqttClient.on was not called for "message" event');
             assert.isTrue(fakeMqttBase.on.calledWith('error'),
