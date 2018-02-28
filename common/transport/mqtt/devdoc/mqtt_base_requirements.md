@@ -38,7 +38,7 @@ The `Mqtt` constructor receives the configuration parameters to configure the MQ
 
 ### MqttBase.connect(config, done)
 The `connect` method establishes a connection with the server using the config object passed in the arguments.
-**SRS_NODE_COMMON_MQTT_BASE_16_006: [** The `connect` method shall throw a ReferenceError if the config argument is falsy, or if one of the following properties of the config argument is falsy: deviceId, host, and one of sharedAccessSignature or x509.cert and x509.key. **]**
+**SRS_NODE_COMMON_MQTT_BASE_16_006: [** The `connect` method shall throw a ReferenceError if the config argument is falsy, or if one of the following properties of the config argument is falsy: uri, clientId, username, and one of sharedAccessSignature or x509.cert and x509.key. **]**
 
 **SRS_NODE_COMMON_MQTT_BASE_16_002: [** The `connect` method shall use the authentication parameters contained in the `config` argument to connect to the server. **]**
 

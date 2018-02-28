@@ -253,7 +253,7 @@ Host: <config.host>
 
 **SRS_NODE_DEVICE_HTTP_16_032: [** All HTTP requests shall obtain the credentials necessary to execute the request by calling `getDeviceCredentials` on the `AuthenticationProvider` object passed to the `Http` constructor. **]**
 
- **SRS_NODE_DEVICE_HTTP_16_033: [** if the `getDeviceCredentials` fails with an error, the Http request shall call its callback with that error **]**
+**SRS_NODE_DEVICE_HTTP_16_033: [** if the `getDeviceCredentials` fails with an error, the Http request shall call its callback with that error **]**
 
 **SRS_NODE_DEVICE_HTTP_05_008: [**If any Http method encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message).**]**
 
@@ -272,3 +272,19 @@ Authorization: <config.sharedAccessSignature>
 **]**
 
 **SRS_NODE_DEVICE_HTTP_16_013: [** If using x509 authentication the `Authorization` header shall not be set and the x509 parameters shall instead be passed to the underlying transpoort. **]**
+
+### enableInputMessages(callback: (err?: Error) => void): void;
+
+**SRS_NODE_DEVICE_HTTP_18_001: [** `enableInputMessages` shall throw a `NotImplementedError`. **]**
+
+### disableInputMessages(callback: (err?: Error) => void): void;
+
+**SRS_NODE_DEVICE_HTTP_18_002: [** `disableInputMessages` shall throw a `NotImplementedError`. **]**
+
+### sendOutputEvent(outputName: string, message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void;
+
+**SRS_NODE_DEVICE_HTTP_18_003: [** `sendOutputEvent` shall throw a `NotImplementedError`. **]**
+
+### sendOutputEventBatch(outputName: string, messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void;
+
+**SRS_NODE_DEVICE_HTTP_18_004: [** `sendOutputEventBatch` shall throw a `NotImplementedError`. **]**

@@ -14,9 +14,24 @@ var Message = require('azure-iot-common').Message;
 var endpoint = require('azure-iot-common').endpoint;
 var errors = require('azure-iot-common').errors;
 
+
+
+
+
 describe('MqttBase', function () {
+  var fakeConfig;
+
+  beforeEach(function() {
+    fakeConfig = {
+      uri: 'uri',
+      clientId: 'clientId',
+      username: 'username',
+      sharedAccessSignature: "sasToken"
+    }
+  });
+
   describe('#connect', function () {
-    /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_006: [The `connect` method shall throw a ReferenceError if the config argument is falsy, or if one of the following properties of the config argument is falsy: deviceId, host, and one of sharedAccessSignature or x509.cert and x509.key.]*/
+    /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_006: [The `connect` method shall throw a ReferenceError if the config argument is falsy, or if one of the following properties of the config argument is falsy: uri, clientId, username, and one of sharedAccessSignature or x509.cert and x509.key.]*/
     it('throws if config structure is falsy', function () {
       [null, undefined, '', 0].forEach(function (config) {
         var mqtt = new MqttBase('test', new FakeMqtt());
@@ -26,31 +41,15 @@ describe('MqttBase', function () {
       });
     });
 
-    it('throws if host is falsy', function () {
-      [null, undefined].forEach(function (hostname) {
-        var config = {
-          host: hostname,
-          deviceId: "deviceId",
-          sharedAccessSignature: "sasToken"
-        };
-        var mqtt = new MqttBase(config, 'test', new FakeMqtt());
-        assert.throws(function () {
-          mqtt.connect(config, function () {});
-        }, ReferenceError, 'Invalid transport configuration');
-      });
-    });
-
-    it('throws if deviceId is falsy', function () {
-      [null, undefined].forEach(function (deviceId) {
-        var config = {
-          host: "host.name",
-          deviceId: deviceId,
-          sharedAccessSignature: "sasToken"
-        };
-        var mqtt = new MqttBase(config, 'test', new FakeMqtt());
-        assert.throws(function () {
-          mqtt.connect(config, function () {});
-        }, ReferenceError, 'Invalid transport configuration');
+    ['uri', 'clientId', 'username'].forEach(function(falsyProperty) {
+      [null, undefined].forEach(function (falsyValue) {
+        it('throws if ' + falsyProperty + ' is ' + falsyValue , function () {
+          fakeConfig[falsyProperty] = falsyValue;
+          var mqtt = new MqttBase(fakeConfig, 'test', new FakeMqtt());
+          assert.throws(function () {
+            mqtt.connect(fakeConfig, function () {});
+          }, ReferenceError, 'Invalid transport configuration');
+        });
       });
     });
 
@@ -66,12 +65,9 @@ describe('MqttBase', function () {
         { cert: 'cert', key: '' }
       ].forEach(function (x509) {
         it('throws if sharedAccessSignature is \'' + sas + '\' and x509 options are \'' + JSON.stringify(x509) + '\'', function () {
-          var config = {
-            host: "host.name",
-            deviceId: "deviceId",
-            sharedAccessSignature: sas,
-            x509: x509
-          };
+          var config = fakeConfig;
+          config.sharedAccessSignature = sas;
+          config.x509 = x509;
           var mqtt = new MqttBase(config, 'test', new FakeMqtt());
           assert.throws(function () {
             mqtt.connect(config, function () {});
@@ -82,22 +78,14 @@ describe('MqttBase', function () {
 
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_002: [The `connect` method shall use the authentication parameters contained in the `config` argument to connect to the server.]*/
     it('uses the authentication parameters contained in the config structure (SharedAccessSignature)', function () {
-      var config = {
-        host: "host.name",
-        deviceId: "deviceId",
-        sharedAccessSignature: "sasToken"
-      };
+      var config = fakeConfig;
       var fakeSdkVersionString = 'test';
       var fakemqtt = new FakeMqtt();
       var transport = new MqttBase(fakeSdkVersionString, fakemqtt);
 
       fakemqtt.connect = function(host, options) {
-        assert.strictEqual(options.clientId, config.deviceId);
-        assert.strictEqual(options.username, config.host + '/' +
-                                       config.deviceId +
-                                       '/DeviceClientType=' +
-                                       fakeSdkVersionString +
-                                       '&' + endpoint.versionQueryString().substr(1));
+        assert.strictEqual(options.clientId, config.clientId);
+        assert.strictEqual(options.username, config.username);
         assert.strictEqual(options.password.toString(), config.sharedAccessSignature);
 
         assert.strictEqual(options.protocolId, 'MQTT');
@@ -115,8 +103,9 @@ describe('MqttBase', function () {
 
     it('uses the authentication parameters contained in the config structure (x509)', function () {
       var config = {
-        host: "host.name",
-        deviceId: "deviceId",
+        uri: 'uri',
+        clientId: 'clientId',
+        username: 'username',
         x509: {
           cert: 'cert',
           key: 'key',
@@ -129,12 +118,8 @@ describe('MqttBase', function () {
       var transport = new MqttBase(fakeSdkVersionString, fakemqtt);
 
       fakemqtt.connect = function(host, options) {
-        assert.strictEqual(options.clientId, config.deviceId);
-        assert.strictEqual(options.username, config.host + '/' +
-                                       config.deviceId +
-                                       '/DeviceClientType=' +
-                                       fakeSdkVersionString +
-                                       '&' + endpoint.versionQueryString().substr(1));
+        assert.strictEqual(options.clientId, config.clientId);
+        assert.strictEqual(options.username, config.username);
         assert.strictEqual(options.cert, config.x509.cert);
         assert.strictEqual(options.key, config.x509.key);
         assert.strictEqual(options.passphrase, config.x509.passphrase);
@@ -152,28 +137,10 @@ describe('MqttBase', function () {
       transport.connect(config, function () {});
     });
 
-    it('uses mqtts as a protocol by default', function () {
-      var config = {
-        host: "host.name",
-        deviceId: "deviceId",
-        sharedAccessSignature: "sasToken"
-      };
-
-      var fakemqtt = new FakeMqtt();
-      var transport = new MqttBase('test', fakemqtt);
-
-      fakemqtt.connect = function(host) {
-        assert.strictEqual(host, 'mqtts://' + config.host);
-        return new EventEmitter();
-      };
-
-      transport.connect(config, function () {});
-    });
-
     it('uses the uri specified by the config object', function () {
       var config = {
-        host: "host.name",
-        deviceId: "deviceId",
+        clientId: 'clientId',
+        username: 'username',
         sharedAccessSignature: "sasToken",
         uri: 'wss://host.name:443/$iothub/websocket'
       };
@@ -191,15 +158,9 @@ describe('MqttBase', function () {
 
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_12_005: [The `connect` method shall call connect on MQTT.JS  library and call the `done` callback with a `null` error object and the result as a second argument.]*/
     it('calls the done callback once successfully connected to the server', function(done) {
-      var config = {
-        host: "host.name",
-        deviceId: "deviceId",
-        sharedAccessSignature: "sasToken"
-      };
-
       var fakemqtt = new FakeMqtt();
       var transport = new MqttBase('test', fakemqtt);
-      transport.connect(config, function(err) {
+      transport.connect(fakeConfig, function(err) {
         if(err) {
           done(err);
         } else {
@@ -213,15 +174,9 @@ describe('MqttBase', function () {
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_003: [The `connect` method shall call the `done` callback with a standard javascript `Error` object if the connection failed.]*/
     ['close', 'offline', 'error', 'disconnect'].forEach(function(event) {
       it('calls the done callback with an error if we get the \'' + event + '\' event before connect', function(done) {
-        var config = {
-          host: "host.name",
-          deviceId: "deviceId",
-          sharedAccessSignature: "sasToken"
-        };
-
         var fakemqtt = new FakeMqtt();
         var transport = new MqttBase('test', fakemqtt);
-        transport.connect(config, function(err) {
+        transport.connect(fakeConfig, function(err) {
           assert.isNotNull(err);
           done();
         });
@@ -231,17 +186,11 @@ describe('MqttBase', function () {
     });
 
     it('calls the done callback with an error only and exactly once even if multiple events are received', function(done) {
-        var config = {
-          host: "host.name",
-          deviceId: "deviceId",
-          sharedAccessSignature: "sasToken"
-        };
-
         var callbackCounter = 0;
 
         var fakemqtt = new FakeMqtt();
         var transport = new MqttBase('test', fakemqtt);
-        transport.connect(config, function(err) {
+        transport.connect(fakeConfig, function(err) {
           callbackCounter++;
           assert.equal(callbackCounter, 1);
           assert.isNotNull(err);
@@ -254,13 +203,6 @@ describe('MqttBase', function () {
 
     it('calls the callback immediately if already connected', function (testCallback) {
       var fakeMqtt = new FakeMqtt();
-
-      var fakeConfig = {
-        host: "host.name",
-        deviceId: "deviceId",
-        sharedAccessSignature: "sasToken"
-      };
-
       var mqttBase = new MqttBase('test', fakeMqtt);
       mqttBase.connect(fakeConfig, function () {
         mqttBase.connect(fakeConfig, function() {
@@ -273,12 +215,6 @@ describe('MqttBase', function () {
   });
 
   describe('#disconnect', function () {
-    var fakeConfig = {
-      host: "host.name",
-      deviceId: "deviceId",
-      sharedAccessSignature: "sasToken"
-    };
-
     it('calls the callback immediately if already disconnected', function (testCallback) {
       var fakeMqtt = new FakeMqtt();
       var mqttBase = new MqttBase('test', fakeMqtt);
@@ -303,12 +239,6 @@ describe('MqttBase', function () {
   });
 
   describe('#publish', function () {
-    var fakeConfig = {
-      host: "host.name",
-      deviceId: "deviceId",
-      sharedAccessSignature: "sasToken"
-    };
-
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_018: [The `publish` method shall throw a `ReferenceError` if the topic is falsy.]*/
     [null, undefined, ''].forEach(function (topic) {
       it('throws if topic is \'' + topic + '\'', function () {
@@ -368,12 +298,6 @@ describe('MqttBase', function () {
   });
 
   describe('#subscribe', function () {
-    var fakeConfig = {
-      host: "host.name",
-      deviceId: "deviceId",
-      sharedAccessSignature: "sasToken"
-    };
-
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_026: [The `subscribe` method shall call the callback with a `NotConnectedError` if the connection hasn't been established prior to calling `publish`.]*/
     it('fails with a NotConnectedError if the MQTT connection is not active', function (testCallback) {
       var transport = new MqttBase('test', new FakeMqtt());
@@ -430,12 +354,6 @@ describe('MqttBase', function () {
 
 
   describe('#unsubscribe', function () {
-    var fakeConfig = {
-      host: "host.name",
-      deviceId: "deviceId",
-      sharedAccessSignature: "sasToken"
-    };
-
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_027: [The `unsubscribe` method shall call the callback with a `NotConnectedError` if the connection hasn't been established prior to calling `publish`.]*/
     it('fails with a NotConnectedError if the MQTT connection is not active', function (testCallback) {
       var transport = new MqttBase('test', new FakeMqtt());
@@ -473,12 +391,6 @@ describe('MqttBase', function () {
   });
 
   describe('#updateSharedAccessSignature', function () {
-    var fakeConfig = {
-      host: "host.name",
-      deviceId: "deviceId",
-      sharedAccessSignature: "sasToken"
-    };
-
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_032: [The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the `sharedAccessSignature` argument is falsy.]*/
     [null, undefined, ''].forEach(function (badSas) {
       it('throws if the new shared access signature is \'' + badSas + '\'', function () {
@@ -547,12 +459,6 @@ describe('MqttBase', function () {
   });
 
   describe('#events', function () {
-    var fakeConfig = {
-      host: "host.name",
-      deviceId: "deviceId",
-      sharedAccessSignature: "sasToken"
-    };
-
     it('emits a message when the mqtt client emits a message', function (testCallback) {
       var fakeTopic = 'topic';
       var fakePayload = 'payload';

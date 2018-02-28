@@ -104,22 +104,36 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
     });
 
     /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_008: [The `fromConnectionString` method shall extract the credentials from the `connectionString` argument and create a new `SharedAccessKeyAuthenticationProvider` that uses these credentials to generate security tokens.]*/
-    it('initializes the credentials from the connection string', function (testCallback) {
-      var fakeCredentials = {
-        deviceId: 'fakeDeviceId',
-        moduleId: 'fakeModuleId',
-        host: 'fake.host.name',
-        sharedAccessKey: 'fakeKey'
-      };
-      var fakeConnectionString = 'DeviceId=' + fakeCredentials.deviceId + ';ModuleId=' + fakeCredentials.moduleId + ';HostName=' + fakeCredentials.host + ';SharedAccessKey=' + fakeCredentials.sharedAccessKey;
-
-      var sakAuthProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString(fakeConnectionString, 2, 1);
-      sakAuthProvider.getDeviceCredentials(function (err, creds) {
-        assert.strictEqual(creds.deviceId, fakeCredentials.deviceId);
-        assert.strictEqual(creds.moduleId, fakeCredentials.moduleId);
-        assert.strictEqual(creds.host, fakeCredentials.host);
-        assert.strictEqual(creds.sharedAccessKey, fakeCredentials.sharedAccessKey);
-        testCallback();
+    [
+      {
+        name: 'without moduleId',
+        connectionString: 'DeviceId=fakeDeviceId;HostName=fake.host.name;SharedAccessKey=fakeKey',
+        credentials: {
+          deviceId: 'fakeDeviceId',
+          host: 'fake.host.name',
+          sharedAccessKey: 'fakeKey'
+        }
+      },
+      {
+        name: 'with moduleId',
+        connectionString: 'DeviceId=fakeDeviceId;ModuleId=fakeModuleId;HostName=fake.host.name;SharedAccessKey=fakeKey',
+        credentials: {
+          deviceId: 'fakeDeviceId',
+          moduleId: 'fakeModuleId',
+          host: 'fake.host.name',
+          sharedAccessKey: 'fakeKey'
+        }
+      }
+    ].forEach(function(testConfig) {
+      it('initializes the credentials from the connection string ' + testConfig.name, function (testCallback) {
+        var sakAuthProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString(testConfig.connectionString, 2, 1);
+        sakAuthProvider.getDeviceCredentials(function (err, creds) {
+          assert.strictEqual(creds.deviceId, testConfig.credentials.deviceId);
+          assert.strictEqual(creds.moduleId, testConfig.credentials.moduleId);
+          assert.strictEqual(creds.host, testConfig.credentials.host);
+          assert.strictEqual(creds.sharedAccessKey, testConfig.credentials.sharedAccessKey);
+          testCallback();
+        });
       });
     });
   });

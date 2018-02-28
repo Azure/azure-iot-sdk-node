@@ -266,3 +266,21 @@ An new Amqp message shall be instantiated.
 **SRS_NODE_DEVICE_AMQP_16_050: [** The `disableTwin` method shall call its `callback` with an `Error` if it fails to detach the twin links. **]**
 
 **SRS_NODE_DEVICE_AMQP_16_051: [** The `disableTwin` method shall call its `callback` immediately if the transport is already disconnected. **]**
+
+###   enableInputMessages(callback: (err?: Error) => void): void;
+
+**SRS_NODE_DEVICE_AMQP_18_001: [** `enableInputMessages` shall throw a `NotImplementedError`. **]**
+
+###   disableInputMessages(callback: (err?: Error) => void): void;
+
+**SRS_NODE_DEVICE_AMQP_18_002: [** `disableInputMessages` shall throw a `NotImplementedError`. **]**
+
+### sendOutputEvent(outputName: string, message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void;
+
+**SRS_NODE_DEVICE_AMQP_18_003: [** `sendOutputEvent` shall throw a `NotImplementedError`. **]**
+
+### sendOutputEventBatch(outputName: string, messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void;
+
+**SRS_NODE_DEVICE_AMQP_18_004: [** `sendOutputEventBatch` shall throw a `NotImplementedError`. **]**
+
+

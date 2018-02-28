@@ -435,13 +435,15 @@ describe('Client', function () {
     });
   });
 
-  ['sendEvent', 'sendEventBatch', 'complete', 'reject', 'abandon'].forEach(function(funcName) {
+  ['sendEvent', 'sendEventBatch', 'complete', 'reject', 'abandon', 'sendOutputEvent', 'sendOutputEventBatch'].forEach(function(funcName) {
     describe('#' + funcName, function() {
       /*Tests_SRS_NODE_DEVICE_CLIENT_16_051: [The `sendEventBatch` method shall not throw if the `sendEventBatchCallback` is not passed.]*/
       /*Tests_SRS_NODE_DEVICE_CLIENT_16_047: [The `sendEvent` method shall not throw if the `sendEventCallback` is not passed.]*/
       /*Tests_SRS_NODE_DEVICE_CLIENT_16_067: [The `complete` method shall not throw if the `completeCallback` is not passed.]*/
       /*Tests_SRS_NODE_DEVICE_CLIENT_16_071: [The `reject` method shall not throw if the `rejectCallback` is not passed.]*/
       /*Tests_SRS_NODE_DEVICE_CLIENT_16_075: [The `abandon` method shall not throw if the `abandonCallback` is not passed.]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_18_019: [The `sendOutputEvent` method shall not throw if the `callback` is not passed. ]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_18_022: [The `sendOutputEventBatch` method shall not throw if the `callback` is not passed. ]*/
       it('doesn\'t throw if no callback is given and the method exists on the transport', function() {
         var transport = new FakeTransport();
         var client = new Client(transport);
@@ -607,7 +609,7 @@ describe('Client', function () {
     it('emits a message event when a message is received', function (done) {
       var dummyTransport = new FakeTransport();
       var client = new Client(dummyTransport);
-      client.on('message', function (msg) {
+      client.on('message', function(msg) {
         /*Tests_SRS_NODE_DEVICE_CLIENT_16_003: [The ‘message’ event parameter shall be a ‘Message’ object.]*/
         assert.equal(msg.constructor.name, 'Message');
         done();
@@ -615,73 +617,112 @@ describe('Client', function () {
 
       dummyTransport.emit('message', new Message());
     });
+  });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_004: [The client shall start listening for messages from the service whenever there is a listener subscribed to the ‘message’ event.]*/
-    it('starts listening for messages when a listener subscribes to the message event', function () {
+  describe('#on(\'inputMessage\')', function () {
+    /*Tests_SRS_NODE_DEVICE_CLIENT_18_012: [ The `inputMessage` event shall be emitted when an inputMessage is received from the IoT Hub service. ]*/
+    it('emits a message event when a message is received', function (done) {
       var dummyTransport = new FakeTransport();
-      sinon.spy(dummyTransport, 'enableC2D');
       var client = new Client(dummyTransport);
-
-      // Calling 'on' twice to make sure it's called only once on the receiver.
-      // It works because the test will fail if the test callback is called multiple times, and it's called for every time the 'message' event is subscribed on the receiver.
-      client.on('message', function () { });
-      client.on('message', function () { });
-      assert.isTrue(dummyTransport.enableC2D.calledOnce);
-    });
-
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_005: [The client shall stop listening for messages from the service whenever the last listener unsubscribes from the ‘message’ event.]*/
-    it('stops listening for messages when the last listener has unsubscribed', function (testCallback) {
-      var dummyTransport = new FakeTransport();
-      sinon.spy(dummyTransport, 'enableC2D');
-      sinon.spy(dummyTransport, 'disableC2D');
-      sinon.spy(dummyTransport, 'removeAllListeners');
-
-      var client = new Client(dummyTransport);
-      var listener1 = function () { };
-      var listener2 = function () { };
-      client.on('message', listener1);
-      client.on('message', listener2);
-
-      process.nextTick(function() {
-        client.removeListener('message', listener1);
-        assert.isTrue(dummyTransport.disableC2D.notCalled);
-        client.removeListener('message', listener2);
-        assert(dummyTransport.disableC2D.calledOnce);
-        testCallback();
+      client.on('inputMessage', function(inputName,msg) {
+        /*Tests_SRS_NODE_DEVICE_CLIENT_18_013: [ The `inputMessage` event parameters shall be the inputName for the message and a `Message` object. ]*/
+        assert.strictEqual(inputName, 'fakeInputName');
+        assert.strictEqual(msg.constructor.name, 'Message');
+        done();
       });
+
+      dummyTransport.emit('inputMessage', 'fakeInputName', new Message());
     });
+  });
 
-    it('emits an error if it fails to start listening for messages', function (testCallback) {
-      var dummyTransport = new FakeTransport();
-      var fakeError = new Error('fake');
-      sinon.stub(dummyTransport, 'enableC2D').callsFake(function (callback) { callback(fakeError); });
-      var client = new Client(dummyTransport);
-      client.on('error', function (err) {
-        assert.strictEqual(err, fakeError);
-        testCallback();
-      })
 
-      // Calling 'on' twice to make sure it's called only once on the receiver.
-      // It works because the test will fail if the test callback is called multiple times, and it's called for every time the 'message' event is subscribed on the receiver.
-      client.on('message', function () { });
-      assert.isTrue(dummyTransport.enableC2D.calledOnce);
-    });
+  [
+    {
+      eventName: 'message',
+      enableFunc: 'enableC2D',
+      disableFunc: 'disableC2D'
+    },
+    {
+      eventName: 'inputMessage',
+      enableFunc: 'enableInputMessages',
+      disableFunc: 'disableInputMessages'
+    }
+  ].forEach(function(testConfig) {
+    describe('#on(\'' + testConfig.eventName + '\')', function () {
 
-    it('emits an error if it fails to stop listening for messages', function (testCallback) {
-      var dummyTransport = new FakeTransport();
-      var fakeError = new Error('fake');
-      sinon.spy(dummyTransport, 'enableC2D');
-      sinon.stub(dummyTransport, 'disableC2D').callsFake(function (callback) { callback(fakeError); });
-      var client = new Client(dummyTransport);
-      client.on('error', function (err) {
-        assert.strictEqual(err, fakeError);
-        testCallback();
-      })
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_004: [The client shall start listening for messages from the service whenever there is a listener subscribed to the ‘message’ event.]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_18_014: [ The client shall start listening for messages from the service whenever there is a listener subscribed to the `inputMessage` event. ]*/
+      it('starts listening for messages when a listener subscribes to the message event', function () {
+        var dummyTransport = new FakeTransport();
+        sinon.spy(dummyTransport, testConfig.enableFunc);
+        var client = new Client(dummyTransport);
 
-      client.on('message', function () { });
-      assert.isTrue(dummyTransport.enableC2D.calledOnce);
-      client.removeAllListeners('message');
-      assert.isTrue(dummyTransport.disableC2D.calledOnce);
+        // Calling 'on' twice to make sure it's called only once on the receiver.
+        // It works because the test will fail if the test callback is called multiple times, and it's called for every time the testConfig.eventName event is subscribed on the receiver.
+        client.on(testConfig.eventName, function () { });
+        client.on(testConfig.eventName, function () { });
+        assert.isTrue(dummyTransport[testConfig.enableFunc].calledOnce);
+      });
+
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_005: [The client shall stop listening for messages from the service whenever the last listener unsubscribes from the ‘message’ event.]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_18_015: [ The client shall stop listening for messages from the service whenever the last listener unsubscribes from the `inputMessage` event. ]*/
+      it('stops listening for messages when the last listener has unsubscribed', function (testCallback) {
+        var dummyTransport = new FakeTransport();
+        sinon.spy(dummyTransport, testConfig.enableFunc);
+        sinon.spy(dummyTransport, testConfig.disableFunc);
+        sinon.spy(dummyTransport, 'removeAllListeners');
+
+        var client = new Client(dummyTransport);
+        var listener1 = function () { };
+        var listener2 = function () { };
+        client.on(testConfig.eventName, listener1);
+        client.on(testConfig.eventName, listener2);
+
+        process.nextTick(function() {
+          client.removeListener(testConfig.eventName, listener1);
+          assert.isTrue(dummyTransport[testConfig.disableFunc].notCalled);
+          client.removeListener(testConfig.eventName, listener2);
+          assert(dummyTransport[testConfig.disableFunc].calledOnce);
+          testCallback();
+        });
+      });
+
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_066: [ The client shall emit an error if connecting the transport fails while subscribing to message events ]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_18_017: [ The client shall emit an `error` if connecting the transport fails while subscribing to `inputMessage` events. ]*/
+      it('emits an error if it fails to start listening for messages', function (testCallback) {
+        var dummyTransport = new FakeTransport();
+        var fakeError = new Error('fake');
+        sinon.stub(dummyTransport, testConfig.enableFunc).callsFake(function (callback) { callback(fakeError); });
+        var client = new Client(dummyTransport);
+        client.on('error', function (err) {
+          assert.strictEqual(err, fakeError);
+          testCallback();
+        })
+
+        // Calling 'on' twice to make sure it's called only once on the receiver.
+        // It works because the test will fail if the test callback is called multiple times, and it's called for every time the testConfig.eventName event is subscribed on the receiver.
+        client.on(testConfig.eventName, function () { });
+        assert.isTrue(dummyTransport[testConfig.enableFunc].calledOnce);
+      });
+
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_066: [ The client shall emit an error if connecting the transport fails while subscribing to message events ]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_18_017: [ The client shall emit an `error` if connecting the transport fails while subscribing to `inputMessage` events. ]*/
+      it('emits an error if it fails to stop listening for messages', function (testCallback) {
+        var dummyTransport = new FakeTransport();
+        var fakeError = new Error('fake');
+        sinon.spy(dummyTransport, testConfig.enableFunc);
+        sinon.stub(dummyTransport, testConfig.disableFunc).callsFake(function (callback) { callback(fakeError); });
+        var client = new Client(dummyTransport);
+        client.on('error', function (err) {
+          assert.strictEqual(err, fakeError);
+          testCallback();
+        })
+
+        client.on(testConfig.eventName, function () { });
+        assert.isTrue(dummyTransport[testConfig.enableFunc].calledOnce);
+        client.removeAllListeners(testConfig.eventName);
+        assert.isTrue(dummyTransport[testConfig.disableFunc].calledOnce);
+      });
     });
   });
 
@@ -708,9 +749,9 @@ describe('Client', function () {
     { methodName: 'abandon', expectedResultCtor: 'MessageAbandoned' }
   ].forEach(function(testConfig) {
     describe('#' + testConfig.methodName, function () {
-      /*Codes_SRS_NODE_DEVICE_CLIENT_16_016: [The ‘complete’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
-      /*Codes_SRS_NODE_DEVICE_CLIENT_16_018: [The ‘reject’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
-      /*Codes_SRS_NODE_DEVICE_CLIENT_16_017: [The ‘abandon’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_016: [The ‘complete’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_018: [The ‘reject’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_017: [The ‘abandon’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
       [undefined, null, '', 0].forEach(function (message) {
         it('throws if message is \'' + message + '\'', function () {
           var client = new Client(new FakeTransport());
@@ -720,9 +761,9 @@ describe('Client', function () {
         });
       });
 
-      /*Codes_SRS_NODE_DEVICE_CLIENT_16_007: [The ‘complete’ method shall call the ‘complete’ method of the transport with the message as an argument]*/
-      /*Codes_SRS_NODE_DEVICE_CLIENT_16_010: [The ‘reject’ method shall call the ‘reject’ method of the transport with the message as an argument]*/
-      /*Codes_SRS_NODE_DEVICE_CLIENT_16_013: [The ‘abandon’ method shall call the ‘abandon’ method of the transport with the message as an argument]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_007: [The ‘complete’ method shall call the ‘complete’ method of the transport with the message as an argument]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_010: [The ‘reject’ method shall call the ‘reject’ method of the transport with the message as an argument]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_013: [The ‘abandon’ method shall call the ‘abandon’ method of the transport with the message as an argument]*/
       it('calls the ' + testConfig.methodName + ' method on the transport with the message as an argument', function () {
         var dummyTransport = new FakeTransport();
         sinon.spy(dummyTransport, testConfig.methodName);
@@ -734,9 +775,9 @@ describe('Client', function () {
         assert(client._transport[testConfig.methodName].calledWith(message));
       });
 
-      /*Codes_SRS_NODE_DEVICE_CLIENT_16_008: [The ‘done’ callback shall be called with a null error object and a ‘MessageCompleted’ result once the transport has completed the message.]*/
-      /*Codes_SRS_NODE_DEVICE_CLIENT_16_011: [The ‘done’ callback shall be called with a null error object and a ‘MessageRejected’ result once the transport has rejected the message.]*/
-      /*Codes_SRS_NODE_DEVICE_CLIENT_16_014: [The ‘done’ callback shall be called with a null error object and a ‘Messageabandoned’ result once the transport has abandoned the message.]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_008: [The ‘done’ callback shall be called with a null error object and a ‘MessageCompleted’ result once the transport has completed the message.]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_011: [The ‘done’ callback shall be called with a null error object and a ‘MessageRejected’ result once the transport has rejected the message.]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_014: [The ‘done’ callback shall be called with a null error object and a ‘Messageabandoned’ result once the transport has abandoned the message.]*/
       it('calls the done callback with a null error object and a result', function (done) {
         var client = new Client(new FakeTransport());
         var message = new Message();
@@ -750,9 +791,9 @@ describe('Client', function () {
         });
       });
 
-      /*Codes_SRS_NODE_DEVICE_CLIENT_16_009: [The ‘done’ callback shall be called with a standard javascript Error object and no result object if the transport could not complete the message.]*/
-      /*Codes_SRS_NODE_DEVICE_CLIENT_16_012: [The ‘done’ callback shall be called with a standard javascript Error object and no result object if the transport could not reject the message.]*/
-      /*Codes_SRS_NODE_DEVICE_CLIENT_16_015: [The ‘done’ callback shall be called with a standard javascript Error object and no result object if the transport could not abandon the message.]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_009: [The ‘done’ callback shall be called with a standard javascript Error object and no result object if the transport could not complete the message.]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_012: [The ‘done’ callback shall be called with a standard javascript Error object and no result object if the transport could not reject the message.]*/
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_015: [The ‘done’ callback shall be called with a standard javascript Error object and no result object if the transport could not abandon the message.]*/
       it('calls the done callback with an error if the transport fails to complete the message', function (done) {
         var testError = new Error('fake error');
         var dummyTransport = new FakeTransport();
@@ -914,4 +955,7 @@ describe('Over simulated HTTPS', function () {
 
   clientTests.sendEventTests(SimulatedHttp, registry);
   clientTests.sendEventBatchTests(SimulatedHttp, registry);
+  clientTests.sendOutputEventTests(SimulatedHttp, registry);
+  clientTests.sendOutputEventBatchTests(SimulatedHttp, registry);
 });
+

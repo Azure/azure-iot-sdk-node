@@ -77,6 +77,18 @@ SimulatedHttp.prototype.sendEventBatch = function (message, done) {
   });
 };
 
+SimulatedHttp.prototype.sendOutputEvent = function (outputName, message, done) {
+  this.handleRequest(function (err, response) {
+    done(err, response);
+  });
+};
+
+SimulatedHttp.prototype.sendOutputEventBatch = function (outputName, message, done) {
+  this.handleRequest(function (err, response) {
+    done(err, response);
+  });
+};
+
 SimulatedHttp.prototype.receive = function (done) {
   this.handleRequest(function (err, response) {
     done(err, err ? null : new Message(''), response);

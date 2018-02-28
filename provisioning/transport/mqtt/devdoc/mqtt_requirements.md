@@ -81,7 +81,7 @@ These requirements apply whenever the transport connection is established
 
 **SRS_NODE_PROVISIONING_MQTT_18_038: [** When connecting, `Mqtt` shall set the `username` in the base `TransportConfig` object to '<idScope>/registrations/<registrationId>/api-version=<apiVersion>&clientVersion=<UrlEncode<userAgent>>'. **]**
 
-**SRS_NODE_PROVISIONING_MQTT_18_050: [** When connecting, `Mqtt` shall set `host` in the base `TransportConfig` object to the `provisioningDeviceHost`. **]**
+**SRS_NODE_PROVISIONING_MQTT_18_050: [** When connecting, `Mqtt` shall set `uri` in the base `TransportConfig` object to the 'mqtts://' + `provisioningDeviceHost`. **]**
 
 **SRS_NODE_PROVISIONING_MQTT_18_039: [** If a uri is specified in the request object, `Mqtt` shall set it in the base `TransportConfig` object. **]**
 

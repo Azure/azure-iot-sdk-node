@@ -65,6 +65,7 @@ export class Client extends EventEmitter {
   private blobUploadClient: BlobUploadClient; // TODO: wrong casing/naming convention
   private _c2dEnabled: boolean;
   private _methodsEnabled: boolean;
+  private _inputMessagesEnabled: boolean;
 
   private _retryPolicy: RetryPolicy;
 
@@ -83,6 +84,7 @@ export class Client extends EventEmitter {
     super();
     this._c2dEnabled = false;
     this._methodsEnabled = false;
+    this._inputMessagesEnabled = false;
     this.blobUploadClient = blobUploadClient;
 
     if (connStr) {
@@ -92,6 +94,12 @@ export class Client extends EventEmitter {
     this._transport = transport;
     this._transport.on('message', (msg) => {
       this.emit('message', msg);
+    });
+
+    /* Codes_SRS_NODE_DEVICE_CLIENT_18_012: [ The `inputMessage` event shall be emitted when an inputMessage is received from the IoT Hub service. ]*/
+    /* Codes_SRS_NODE_DEVICE_CLIENT_18_013: [ The `inputMessage` event parameters shall be the inputName for the message and a `Message` object. ]*/
+    this._transport.on('inputMessage', (inputName, msg) => {
+      this.emit('inputMessage', inputName, msg);
     });
 
     this._transport.on('error', (err) => {
@@ -109,12 +117,26 @@ export class Client extends EventEmitter {
             this.emit('error', err);
           }
         });
+      } else if (eventName === 'inputMessage' && this.listeners('inputMessage').length === 0) {
+        /* Codes_SRS_NODE_DEVICE_CLIENT_18_015: [ The client shall stop listening for messages from the service whenever the last listener unsubscribes from the `inputMessage` event. ]*/
+        this._disableInputMessages((err) => {
+          if (err) {
+            this.emit('error', err);
+          }
+        });
       }
     });
 
     this.on('newListener', (eventName) => {
       if (eventName === 'message') {
         this._enableC2D((err) => {
+          if (err) {
+            this.emit('error', err);
+          }
+        });
+      } else if (eventName === 'inputMessage') {
+        /* Codes_SRS_NODE_DEVICE_CLIENT_18_014: [ The client shall start listening for messages from the service whenever there is a listener subscribed to the `inputMessage` event. ]*/
+        this._enableInputMessages((err) => {
           if (err) {
             this.emit('error', err);
           }
@@ -130,6 +152,17 @@ export class Client extends EventEmitter {
           debug('re-enabling C2D link');
           this._enableC2D((err) => {
             if (err) {
+              this.emit('disconnect', new results.Disconnected(err));
+            }
+          });
+        }
+
+        if (this._inputMessagesEnabled) {
+          this._inputMessagesEnabled = false;
+          debug('re-enabling input message link');
+          this._enableInputMessages((err) => {
+            if (err) {
+              /* Codes_SRS_NODE_DEVICE_CLIENT_18_017: [ The client shall emit an `error` if connecting the transport fails while subscribing to `inputMessage` events. ]*/
               this.emit('disconnect', new results.Disconnected(err));
             }
           });
@@ -469,26 +502,16 @@ export class Client extends EventEmitter {
     this._retryPolicy = policy;
   }
 
-  onInputMessage(inputName: string, func: (msg: Message) => void): void {
-    this._transport.onInputMessage(inputName, func);
 
-    this._enableC2D((err) => {
-      if (err) {
-        this.emit('error', err);
-      }
-    });
-  }
-
-  removeInputMessageListener(inputName: string, func: (msg: Message) => void): void {
-    this._transport.removeInputMessageListener(inputName, func);
-  }
 
   sendOutputEvent(outputName: string, message: Message, callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
     const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
-      /*Codes_SRS_NODE_DEVICE_CLIENT_05_007: [The sendEvent method shall send the event indicated by the message argument via the transport associated with the Client instance.]*/
+      /* Codes_SRS_NODE_DEVICE_CLIENT_18_010: [ The `sendOutputEvent` method shall send the event indicated by the `message` argument via the transport associated with the Client instance. ]*/
       this._transport.sendOutputEvent(outputName, message, opCallback);
     }, (err, result) => {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_18_018: [ When the `sendOutputEvent` method completes, the `callback` function shall be invoked with the same arguments as the underlying transport method's callback. ]*/
+      /*Codes_SRS_NODE_DEVICE_CLIENT_18_019: [ The `sendOutputEvent` method shall not throw if the `callback` is not passed. ]*/
       safeCallback(callback, err, result);
     });
   }
@@ -496,9 +519,11 @@ export class Client extends EventEmitter {
   sendOutputEventBatch(outputName: string, messages: Message[], callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
     const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
-      /*Codes_SRS_NODE_DEVICE_CLIENT_05_008: [The sendEventBatch method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance.]*/
+      /* Codes_SRS_NODE_DEVICE_CLIENT_18_011: [ The `sendOutputEventBatch` method shall send the list of events (indicated by the `messages` argument) via the transport associated with the Client instance. ]*/
       this._transport.sendOutputEventBatch(outputName, messages, opCallback);
     }, (err, result) => {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_18_021: [ When the `sendOutputEventBatch` method completes the `callback` function shall be invoked with the same arguments as the underlying transport method's callback. ]*/
+      /*Codes_SRS_NODE_DEVICE_CLIENT_18_022: [ The `sendOutputEventBatch` method shall not throw if the `callback` is not passed. ]*/
       safeCallback(callback, err, result);
     });
   }
@@ -555,6 +580,36 @@ export class Client extends EventEmitter {
       }, (err) => {
         if (!err) {
           this._c2dEnabled = true;
+        }
+        callback(err);
+      });
+    } else {
+      callback();
+    }
+  }
+
+  private _disableInputMessages(callback: (err?: Error) => void): void {
+    if (this._inputMessagesEnabled) {
+      this._transport.disableInputMessages((err) => {
+        if (!err) {
+          this._inputMessagesEnabled = false;
+        }
+        callback(err);
+      });
+    } else {
+      callback();
+    }
+  }
+
+  private _enableInputMessages(callback: (err?: Error) => void): void {
+    if (!this._inputMessagesEnabled) {
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+        /* Codes_SRS_NODE_DEVICE_CLIENT_18_016: [ The client shall connect the transport if needed in order to receive inputMessages. ]*/
+        this._transport.enableInputMessages(opCallback);
+      }, (err) => {
+        if (!err) {
+          this._inputMessagesEnabled = true;
         }
         callback(err);
       });
@@ -773,8 +828,9 @@ export namespace Client {
     disableMethods(callback: (err?: Error) => void): void;
 
     // Input messages
-    onInputMessage(inputName: string, func: (msg: Message) => void): this;
-    removeInputMessageListener(inputName: string, func: (msg: Message) => void): this;
+    enableInputMessages(callback: (err?: Error) => void): void;
+    disableInputMessages(callback: (err?: Error) => void): void;
+    on(type: 'inputMessage', func: (inputName: string, msg: Message) => void): this;
 
     // Output events
     sendOutputEvent(outputName: string, message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void;
@@ -800,3 +856,4 @@ export namespace Client {
 
   export type TransportCtor = new(config: Config) => Transport;
 }
+

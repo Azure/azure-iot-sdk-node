@@ -25,6 +25,14 @@ function FakeTransport() {
     callback(null, new results.MessageEnqueued());
   };
 
+  this.sendOutputEvent = function (outputName, msg, callback) {
+    callback(null, new results.MessageEnqueued());
+  };
+
+  this.sendOutputEventBatch = function (outputName, msg, callback) {
+    callback(null, new results.MessageEnqueued());
+  };
+
   this.complete = function (msg, callback) {
     callback(null, new results.MessageCompleted());
   };
@@ -50,6 +58,14 @@ function FakeTransport() {
   };
 
   this.disableC2D = function (callback) {
+    callback();
+  };
+
+  this.enableInputMessages = function (callback) {
+    callback();
+  };
+
+  this.disableInputMessages = function (callback) {
     callback();
   };
 }

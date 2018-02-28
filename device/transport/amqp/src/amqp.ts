@@ -647,14 +647,6 @@ export class Amqp extends EventEmitter implements Client.Transport {
 
   /**
    * @private
-   */
-  onInputMessage(inputName: string, callback: (msg: Message) => void): this {
-    throw new errors.NotImplementedError('Module events are not implemented over AMQP.');
-  }
-
-
-  /**
-   * @private
    * The `sendMethodResponse` method sends a direct method response to the IoT Hub
    * @param {Object}     methodResponse   Object describing the device method response.
    * @param {Function}   callback         The callback to be invoked when
@@ -750,6 +742,38 @@ export class Amqp extends EventEmitter implements Client.Transport {
    */
   disableTwin(callback: (err?: Error) => void): void {
     this._fsm.handle('disableTwin', callback);
+  }
+
+  /**
+   * @private
+   */
+  enableInputMessages(callback: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_DEVICE_AMQP_18_001: [`enableInputMessages` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Input messages are not implemented over AMQP.');
+  }
+
+  /**
+   * @private
+   */
+  disableInputMessages(callback: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_DEVICE_AMQP_18_002: [`disableInputMessages` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Input messages are not implemented over AMQP.');
+  }
+
+  /**
+   * @private
+   */
+  sendOutputEvent(outputName: string, message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    /*Codes_SRS_NODE_DEVICE_AMQP_18_003: [`sendOutputEvent` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Output events are not implemented over AMQP.');
+  }
+
+  /**
+   * @private
+   */
+  sendOutputEventBatch(outputName: string, messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    /*Codes_SRS_NODE_DEVICE_AMQP_18_004: [`sendOutputEventBatch` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Output events are not implemented over AMQP.');
   }
 
   protected _getConnectionUri(host: string): string {

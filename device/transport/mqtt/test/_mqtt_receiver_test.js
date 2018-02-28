@@ -12,11 +12,7 @@ var Mqtt = require('../lib/mqtt.js').Mqtt;
 var Message = require('azure-iot-common').Message;
 
 describe('Mqtt as MqttReceiver', function () {
-  var fakeConfig = {
-    host: 'host.name',
-    deviceId: 'deviceId',
-    sharedAccessSignature: 'sas'
-  };
+  var fakeConfig;
 
   var fakeMqttBase, fakeAuthenticationProvider;
 
@@ -25,6 +21,11 @@ describe('Mqtt as MqttReceiver', function () {
       getDeviceCredentials: sinon.stub().callsFake(function (callback) {
         callback(null, fakeConfig);
       })
+    };
+    fakeConfig = {
+      host: 'host.name',
+      deviceId: 'deviceId',
+      sharedAccessSignature: 'sas'
     };
 
     fakeMqttBase = new EventEmitter();
@@ -328,6 +329,25 @@ describe('Mqtt as MqttReceiver', function () {
           });
         });
       });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_18_057: [ If there is a listener for the `inputMessage` event, a `inputMessage` event shall be emitted for each message received. ]*/
+    /*Tests_SRS_NODE_DEVICE_MQTT_18_058: [ When an `inputMessage` event is received, Mqtt shall extract the inputName from the topic according to the following convention: 'devices/<deviceId>/modules/<moduleId>/inputs/<inputName>' ]*/
+    /*Tests_SRS_NODE_DEVICE_MQTT_18_056: [ When an `inputMessage` event is emitted, the first parameter shall be the inputName and the second parameter shall be of type `Message`. ]*/
+    describe('#inputMessage', function() {
+        it('emits an inputMessage event with a Message object when there is a listener', function (done) {
+          fakeConfig.moduleId = 'moduleId';
+          var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+          receiver.connect(function () {
+            receiver.on('inputMessage', function (inputName, msg) {
+              assert.strictEqual(inputName, 'fakeInputName')
+              assert.instanceOf(msg, Message);
+              done();
+            });
+            fakeMqttBase.emit('message', 'devices/foo/modules/moduleId/inputs/fakeInputName/');
+          });
+        });
+
     });
   });
 });

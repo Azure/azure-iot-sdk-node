@@ -3,8 +3,6 @@
 
 'use strict';
 
-process.env.DEBUG='azure-iot-*';
-
 var async = require('async');
 var uuid = require('uuid');
 var DeviceClient = require('azure-iot-device').Client;
@@ -12,8 +10,8 @@ var Message = require('azure-iot-device').Message;
 var Mqtt = require('azure-iot-device-mqtt').Mqtt;
 
 var sendingModuleConnectionString = process.env.IOT_MODULES_SENDING_MODULE;
-var sendingMoudleOutputChannel = 'sendChannel';
-var receivingModuleConnectionstring = process.env.IOT_MODULES_RECEIVING_MODULE;
+var sendingModuleOutputChannel = 'sendChannel';
+var receivingModuleConnectionString = process.env.IOT_MODULES_RECEIVING_MODULE;
 var receivingModuleInputChannel = 'receiveChannel';
 
 var edgeModuleEventTransports = [ Mqtt] ;
@@ -27,7 +25,7 @@ edgeModuleEventTransports.forEach(function(Transport) {
 
     beforeEach(function(callback) {
       sendingClient = DeviceClient.fromConnectionString(sendingModuleConnectionString, Transport);
-      receivingClient = DeviceClient.fromConnectionString(receivingModuleConnectionstring, Transport);
+      receivingClient = DeviceClient.fromConnectionString(receivingModuleConnectionString, Transport);
       sendingClient.open(function(err) {
         if (err) {
           callback(err);
@@ -63,14 +61,19 @@ edgeModuleEventTransports.forEach(function(Transport) {
       var testString = uuid.v4().toString();
       var testMessage = new Message(testString);
 
-      receivingClient.onInputMessage(receivingModuleInputChannel, function(message) {
-        if (message.data.toString('ascii') === testString) {
-          callback();
-        }
-        receivingClient.complete(message);
+      receivingClient.on('inputMessage', function(inputName, message) {
+        receivingClient.complete(message, function(err) {
+          if (err) {
+            callback(err);
+          } else {
+            if (inputName === receivingModuleInputChannel && message.data.toString('ascii') === testString) {
+              callback();
+            }
+          }
+        });
       });
 
-      sendingClient.sendOutputEvent(sendingMoudleOutputChannel, testMessage, function(err) {
+      sendingClient.sendOutputEvent(sendingModuleOutputChannel, testMessage, function(err) {
         if (err) {
           callback(err);
         }

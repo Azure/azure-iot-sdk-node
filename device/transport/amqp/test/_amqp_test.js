@@ -940,15 +940,6 @@ describe('Amqp', function () {
         });
       });
     });
-
-    describe('#sendEventBatch', function () {
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_052: [The `sendEventBatch` method shall throw a `NotImplementedError`.]*/
-      it('throws an NotImplementedError', function () {
-        assert.throws(function () {
-          transport.sendEventBatch([], function() {});
-        }, errors.NotImplementedError);
-      });
-    });
   });
 
   describe('C2D', function () {
@@ -1511,6 +1502,27 @@ describe('Amqp', function () {
           });
         });
       });
+    });
+  });
+
+  /*Tests_SRS_NODE_DEVICE_AMQP_16_052: [The `sendEventBatch` method shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_AMQP_18_001: [`enableInputMessages` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_AMQP_18_002: [`disableInputMessages` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_AMQP_18_003: [`sendOutputEvent` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_AMQP_18_004: [`sendOutputEventBatch` shall throw a `NotImplementedError`.]*/
+  [
+    'sendEventBatch',
+    'enableInputMessages',
+    'disableInputMessages',
+    'sendOutputEvent',
+    'sendOutputEventBatch'
+  ].forEach(function (methodName) {
+    describe('#' + methodName, function () {
+      it('throws a NotImplementedError', function () {
+        assert.throws(function () {
+          transport[methodName]();
+        }, errors.NotImplementedError);
+      })
     });
   });
 });

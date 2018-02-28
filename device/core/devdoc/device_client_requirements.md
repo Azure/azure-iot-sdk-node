@@ -248,7 +248,24 @@ interface DeviceMethodEventHandler {
 
 **SRS_NODE_DEVICE_CLIENT_16_085: [** The `setRetryPolicy` method shall throw an `ArgumentError` if the policy object doesn't have a `nextRetryTimeout` method. **]**
 
-**SRS_NODE_DEVICE_CLIENT_16_086: [** Any operation (such as `sendEvent` or `onDeviceMethod`) happening after a `setRetryPolicy` call should use the policy set during that call. **]**
+**SRS_NODE_DEVICE_CLIENT_16_086: [** Any operation (such as `sendEvent` or `onDeviceMethod`) happening after a `setRetryPolicy` call should use the policy set during that call. **]*
+
+#### sendOutputEvent(outputName: string, message: Message, callback: (err?: Error, result?: results.MessageEnqueued) => void): void;
+
+**SRS_NODE_DEVICE_CLIENT_18_010: [** The `sendOutputEvent` method shall send the event indicated by the `message` argument via the transport associated with the Client instance. **]**
+
+**SRS_NODE_DEVICE_CLIENT_18_018: [** When the `sendOutputEvent` method completes, the `callback` function shall be invoked with the same arguments as the underlying transport method's callback. **]**
+
+**SRS_NODE_DEVICE_CLIENT_18_019: [** The `sendOutputEvent` method shall not throw if the `callback` is not passed. **]**
+
+#### sendOutputEventBatch(outputName: string, messages: Message[], callback: (err?: Error, result?: results.MessageEnqueued) => void): void
+
+**SRS_NODE_DEVICE_CLIENT_18_011: [** The `sendOutputEventBatch` method shall send the list of events (indicated by the `messages` argument) via the transport associated with the Client instance. **]**
+
+**SRS_NODE_DEVICE_CLIENT_18_021: [** When the `sendOutputEventBatch` method completes the `callback` function shall be invoked with the same arguments as the underlying transport method's callback. **]**
+
+**SRS_NODE_DEVICE_CLIENT_18_022: [** The `sendOutputEventBatch` method shall not throw if the `callback` is not passed. **]**
+
 
 ### Events
 #### message
@@ -265,6 +282,20 @@ interface DeviceMethodEventHandler {
 
 **SRS_NODE_DEVICE_CLIENT_16_066: [** The client shall emit an error if connecting the transport fails while subscribing to message events **]**
 
+#### inputMessage
+
+**SRS_NODE_DEVICE_CLIENT_18_012: [** The `inputMessage` event shall be emitted when an inputMessage is received from the IoT Hub service. **]**
+
+**SRS_NODE_DEVICE_CLIENT_18_013: [** The `inputMessage` event parameters shall be the inputName for the message and a `Message` object. **]**
+
+**SRS_NODE_DEVICE_CLIENT_18_014: [** The client shall start listening for messages from the service whenever there is a listener subscribed to the `inputMessage` event. **]**
+
+**SRS_NODE_DEVICE_CLIENT_18_015: [** The client shall stop listening for messages from the service whenever the last listener unsubscribes from the `inputMessage` event. **]**
+
+**SRS_NODE_DEVICE_CLIENT_18_016: [** The client shall connect the transport if needed in order to receive inputMessages. **]**
+
+**SRS_NODE_DEVICE_CLIENT_18_017: [** The client shall emit an `error` if connecting the transport fails while subscribing to `inputMessage` events. **]**
+
 #### error
 
 **SRS_NODE_DEVICE_CLIENT_16_006: [** The `error` event shall be emitted when an error occurred within the client code. **]**
@@ -272,3 +303,4 @@ interface DeviceMethodEventHandler {
 #### disconnect
 
 **SRS_NODE_DEVICE_CLIENT_16_019: [** The `disconnect` event shall be emitted when the client is disconnected from the server. **]**
+

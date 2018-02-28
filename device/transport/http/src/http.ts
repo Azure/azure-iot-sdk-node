@@ -549,14 +549,6 @@ export class Http extends EventEmitter implements Client.Transport {
   /**
    * @private
    */
-  onInputMessage(inputName: string, callback: (msg: Message) => void): this {
-    throw new errors.NotImplementedError('Module events are not implemented over HTTP.');
-  }
-
-
-  /**
-   * @private
-   */
   enableMethods(callback: (err?: Error) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_026: [`enableMethods` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Direct methods are not implemented over HTTP.');
@@ -569,6 +561,40 @@ export class Http extends EventEmitter implements Client.Transport {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_027: [`disableMethods` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Direct methods are not implemented over HTTP.');
   }
+
+  /**
+   * @private
+   */
+  enableInputMessages(callback: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_18_001: [`enableInputMessages` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Input messages are not implemented over HTTP.');
+  }
+
+  /**
+   * @private
+   */
+  disableInputMessages(callback: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_18_002: [`disableInputMessages` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Input messages are not implemented over HTTP.');
+  }
+
+  /**
+   * @private
+   */
+  sendOutputEvent(outputName: string, message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_18_003: [`sendOutputEvent` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Output events are not implemented over HTTP.');
+  }
+
+  /**
+   * @private
+   */
+  sendOutputEventBatch(outputName: string, messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_18_004: [`sendOutputEventBatch` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Output events are not implemented over HTTP.');
+  }
+
+
 
   private _insertAuthHeaderIfNecessary(headers: { [key: string]: string }, credentials: TransportConfig): void {
     if (this._authenticationProvider.type === AuthenticationType.Token) {

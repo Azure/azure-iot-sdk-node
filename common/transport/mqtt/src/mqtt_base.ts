@@ -141,7 +141,7 @@ export class MqttBase extends EventEmitter {
   }
 
   connect(config: MqttBaseTransportConfig, done: (err?: Error, result?: any) => void): void {
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_006: [The `connect` method shall throw a ReferenceError if the config argument is falsy, or if one of the following properties of the config argument is falsy: deviceId, host, and one of sharedAccessSignature or x509.cert and x509.key.]*/
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_006: [The `connect` method shall throw a ReferenceError if the config argument is falsy, or if one of the following properties of the config argument is falsy: uri, clientId, username, and one of sharedAccessSignature or x509.cert and x509.key.]*/
     if ((!config) ||
       (!config.uri) ||
       (!config.clientId) ||
@@ -206,7 +206,7 @@ export class MqttBase extends EventEmitter {
       protocolVersion: 4,
       clean: this._config.clean || false,
       clientId: this._config.clientId,
-      rejectUnauthorized: false,
+      rejectUnauthorized: true,
       username: this._config.username,
       reconnectPeriod: 0,  // Client will handle reconnection at the higher level.
       /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_016: [The `connect` method shall configure the `keepalive` ping interval to 3 minutes by default since the Azure Load Balancer TCP Idle timeout default is 4 minutes.]*/

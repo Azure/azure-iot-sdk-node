@@ -18,7 +18,15 @@ The `Mqtt` and `MqttWs` constructors initialize a new instance of the MQTT trans
 
 **SRS_NODE_DEVICE_MQTT_12_003: [** The constructor shall create an MqttBase object and store it in a member variable.**]**
 
-**SRS_NODE_DEVICE_MQTT_16_016: [** The `Mqtt` constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`. **]**
+**SRS_NODE_DEVICE_MQTT_16_016: [** If the connection string does not specify a `gatewayHostName` value, the `Mqtt` constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_054: [** If a `gatewayHostName` is specified in the connection string, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<gatewayhostname>`. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_052: [** If a `moduleId` is specified in the connection string, the Mqtt constructor shall initialize the `clientId` property of the `config` object to '<deviceId>/<moduleId>'. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_053: [** If a `moduleId` is not specified in the connection string, the Mqtt constructor shall initialize the `clientId` property of the `config` object to '<deviceId>'. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_055: [** The Mqtt constructor shall initialize the `username` property of the `config` object to '<host>/<clientId>/api-version=<version>&DeviceClientType=<agentString>'. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_017: [** The `MqttWs` constructor shall initialize the `uri` property of the `config` object to `wss://<host>:443/$iothub/websocket`. **]**
 
@@ -66,9 +74,9 @@ The `sendEvent` method sends an event to an IoT hub on behalf of the device indi
 
 **SRS_NODE_DEVICE_MQTT_12_005: [** The `sendEvent` method shall call the publish method on `MqttBase`. **]**
 
-**SRS_NODE_COMMON_MQTT_BASE_16_008: [** If a moduleId was not specified in the transport connection, the `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`. **]**
+**SRS_NODE_COMMON_MQTT_BASE_16_008: [** The `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`. **]**
 
-**SRS_NODE_DEVICE_MQTT_18_027: [** If a moduleId was specified in the transport connection, the `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/modules/<moduleId>/messages/events/`. **]**
+**SRS_NODE_DEVICE_MQTT_18_034: [** If the connection string specifies a `moduleId` value, the `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/<moduleId>/messages/events/` **]**
 
 **SRS_NODE_COMMON_MQTT_BASE_16_009: [** If the message has properties, the property keys and values shall be uri-encoded, then serialized and appended at the end of the topic with the following convention: `<key>=<value>&<key2>=<value2>&<key3>=<value3>(...)`. **]**
 
@@ -99,6 +107,45 @@ The `sendEvent` method sends an event to an IoT hub on behalf of the device indi
 ### sendEventBatch(messages, done)
 **SRS_NODE_DEVICE_MQTT_16_056: [** The `sendEventBatch` method shall throw a `NotImplementedError` **]**
 
+### sendOutputEvent(outputName: string, message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void;
+
+**SRS_NODE_DEVICE_MQTT_18_035: [** The `sendOutputEvent` method shall call the publish method on `MqttBase`. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_036: [** If a `moduleId` was not specified in the transport connection, the `sendOutputEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_037: [** If a `moduleId` was specified in the transport connection, the `sendOutputEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/<moduleId>/messages/events/`. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_038: [** If the outputEvent message has properties, the property keys and values shall be uri-encoded, then serialized and appended at the end of the topic with the following convention: `<key>=<value>&<key2>=<value2>&<key3>=<value3>(...)`. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_039: [** The `sendOutputEvent` method shall use QoS level of 1. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_040: [** The `sendOutputEvent` method shall serialize the `messageId` property of the message as a key-value pair on the topic with the key `$.mid`. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_041: [** The `sendOutputEvent` method shall serialize the `correlationId` property of the message as a key-value pair on the topic with the key `$.cid`. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_042: [** The `sendOutputEvent` method shall serialize the `userId` property of the message as a key-value pair on the topic with the key `$.uid`. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_043: [** The `sendOutputEvent` method shall serialize the `to` property of the message as a key-value pair on the topic with the key `$.to`. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_044: [** The `sendOutputEvent` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_045: [** The `sendOutputEvent` method shall connect the Mqtt connection if it is disconnected. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_046: [** The `sendOutputEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to establish a connection. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_047: [** If `sendOutputEvent` is called while `MqttBase` is establishing the connection, it shall wait until the connection is established and then send the event. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_048: [** If `sendOutputEvent` is called while `MqttBase` is establishing the connection, and `MqttBase` fails to establish the connection, then sendEvent shall fail. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_049: [** If `sendOutputEvent` is called while `MqttBase` is disconnecting, it shall wait until the disconnection is complete and then try to connect again and send the event. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_050: [** The `sendOutputEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to publish the message. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_068: [** The `sendOutputEvent` method shall serialize the `outputName` property of the message as a key-value pair on the topic with the key `$.on`. **]**
+
+### sendOutputEventBatch(outputName: string, messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+
+**SRS_NODE_DEVICE_MQTT_18_051: [** `sendOutputEventBatch` shall throw a `NotImplementedError` exception. **]**
 
 ### abandon(message, done)
 
@@ -279,6 +326,18 @@ The `getTwinReceiver` method creates a `MqttTwinReceiver` object for the twin re
 
 **SRS_NODE_DEVICE_MQTT_16_061: [** `enableTwin` shall call its callback with an `Error` if subscribing to the topics fails. **]**
 
+### enableInputMessages(callback: (err?: Error) => void): void;
+
+**SRS_NODE_DEVICE_MQTT_18_059: [** `enableInputMessages` shall connect the MQTT connection if it is disconnected. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_060: [** `enableInputMessages` shall calls its callback with an `Error` object if it fails to connect. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_061: [** `enableInputMessages` shall subscribe to the MQTT topic for inputMessages. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_062: [** `enableInputMessages` shall call its callback with no arguments when the `SUBACK` packet is received. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_063: [** `enableInputMessages` shall call its callback with an `Error` if subscribing to the topic fails. **]**
+
 ### disableC2D
 
 **SRS_NODE_DEVICE_MQTT_16_041: [** `disableC2D` shall call its callback immediately if the MQTT connection is already disconnected. **]**
@@ -308,6 +367,16 @@ The `getTwinReceiver` method creates a `MqttTwinReceiver` object for the twin re
 **SRS_NODE_DEVICE_MQTT_16_064: [** `disableTwin` shall call its callback with no arguments when the `UNSUBACK` packet is received. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_065: [** `disableTwin` shall call its callback with an `Error` if an error is received while unsubscribing. **]**
+
+### disableInputMessages(callback: (err?: Error) => void): void;
+
+**SRS_NODE_DEVICE_MQTT_18_064: [** `disableInputMessages` shall call its callback immediately if the MQTT connection is already disconnected. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_065: [** `disableInputMessages` shall unsubscribe from the topic for inputMessages. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_066: [** `disableInputMessages` shall call its callback with no arguments when the `UNSUBACK` packet is received. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_067: [** `disableInputMessages` shall call its callback with an `Error` if an error is received while unsubscribing. **]**
 
 ### message Event
 
@@ -347,4 +416,23 @@ interface MethodMessage {
 }
 ```
 **]**
+
+### inputMessage event
+
+**SRS_NODE_DEVICE_MQTT_18_057: [** If there is a listener for the `inputMessage` event, a `inputMessage` event shall be emitted for each message received. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_058: [** When an `inputMessage` event is received, Mqtt shall extract the inputName from the topic according to the following convention: 'devices/<deviceId>/modules/<moduleId>/inputs/<inputName>' **]**
+
+**SRS_NODE_DEVICE_MQTT_18_056: [** When an `inputMessage` event is emitted, the first parameter shall be the inputName and the second parameter shall be of type `Message`. **]**
+
+
+
+
+
+
+
+
+
+
+
 
