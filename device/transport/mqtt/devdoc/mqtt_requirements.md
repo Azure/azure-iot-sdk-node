@@ -419,20 +419,9 @@ interface MethodMessage {
 
 ### inputMessage event
 
-**SRS_NODE_DEVICE_MQTT_18_057: [** If there is a listener for the `inputMessage` event, a `inputMessage` event shall be emitted for each message received. **]**
+**SRS_NODE_DEVICE_MQTT_18_057: [** An `inputMessage` event shall be emitted for each message received. **]**
 
 **SRS_NODE_DEVICE_MQTT_18_058: [** When an `inputMessage` event is received, Mqtt shall extract the inputName from the topic according to the following convention: 'devices/<deviceId>/modules/<moduleId>/inputs/<inputName>' **]**
 
 **SRS_NODE_DEVICE_MQTT_18_056: [** When an `inputMessage` event is emitted, the first parameter shall be the inputName and the second parameter shall be of type `Message`. **]**
-
-
-
-
-
-
-
-
-
-
-
 

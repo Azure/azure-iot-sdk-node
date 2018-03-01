@@ -14,10 +14,6 @@ var Message = require('azure-iot-common').Message;
 var endpoint = require('azure-iot-common').endpoint;
 var errors = require('azure-iot-common').errors;
 
-
-
-
-
 describe('MqttBase', function () {
   var fakeConfig;
 
@@ -42,7 +38,7 @@ describe('MqttBase', function () {
     });
 
     ['uri', 'clientId', 'username'].forEach(function(falsyProperty) {
-      [null, undefined].forEach(function (falsyValue) {
+      [null, undefined, ''].forEach(function (falsyValue) {
         it('throws if ' + falsyProperty + ' is ' + falsyValue , function () {
           fakeConfig[falsyProperty] = falsyValue;
           var mqtt = new MqttBase(fakeConfig, 'test', new FakeMqtt());
@@ -53,7 +49,7 @@ describe('MqttBase', function () {
       });
     });
 
-    [null, undefined].forEach(function (sas) {
+    [null, undefined, ''].forEach(function (sas) {
       [
         null,
         undefined,

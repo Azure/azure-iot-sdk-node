@@ -907,7 +907,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
     }
     let inputName: string = topicParts[5];
 
-    /*Codes_SRS_NODE_DEVICE_MQTT_18_057: [ If there is a listener for the `inputMessage` event, a `inputMessage` event shall be emitted for each message received. ]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_057: [ An `inputMessage` event shall be emitted for each message received. ]*/
     this.emit('inputMessage', inputName, msg);
   }
 
@@ -1078,8 +1078,4 @@ function _parseMessage(topic: string, body: any): MethodMessage {
 
   return undefined;
 }
-
-
-
-
 
