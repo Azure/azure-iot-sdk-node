@@ -67,7 +67,9 @@ The `Mqtt` and `MqttWs` constructors initialize a new instance of the MQTT trans
 
 **SRS_NODE_DEVICE_MQTT_18_025: [** If the `Mqtt` constructor receives a second parameter, it shall be used as a provider in place of mqtt.js **]**
 
-**SRS_NODE_DEVICE_MQTT_16_081: [** The `Mqtt` constructor shall subscribe to the `MqttTwinClient` `twinDesiredPropertiesUpdates` and reemit them. **]**
+**SRS_NODE_DEVICE_MQTT_16_081: [** The `Mqtt` constructor shall subscribe to the `MqttTwinClient` `twinDesiredPropertiesUpdates`. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_082: [** A `twinDesiredPropertiesUpdates` shall be emitted by the `Mqtt` object for each `twinDesiredPropertiesUpdates` event received from the `MqttTwinClient` with the same payload. **]**
 
 ### connect(done)
 
@@ -266,11 +268,7 @@ The `updateTwinReportedProperties` method is used to retrieve the device twin.
 
 **SRS_NODE_DEVICE_MQTT_16_058: [** `enableTwinDesiredPropertiesUpdates` shall calls its callback with an `Error` object if it fails to connect. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_059: [** `enableTwinDesiredPropertiesUpdates` shall subscribe to the MQTT topics for twins. **]**
-
-**SRS_NODE_DEVICE_MQTT_16_060: [** `enableTwinDesiredPropertiesUpdates` shall call its callback with no arguments when the `SUBACK` packet is received. **]**
-
-**SRS_NODE_DEVICE_MQTT_16_061: [** `enableTwinDesiredPropertiesUpdates` shall call its callback with an `Error` if subscribing to the topics fails. **]**
+**SRS_NODE_DEVICE_MQTT_16_059: [** `enableTwinDesiredPropertiesUpdates` shall call the `enableTwinDesiredPropertiesUpdates` on the `MqttTwinClient` object created by the constructor and pass it its callback. **]**
 
 ### disableC2D
 
@@ -296,8 +294,5 @@ The `updateTwinReportedProperties` method is used to retrieve the device twin.
 
 **SRS_NODE_DEVICE_MQTT_16_062: [** `disableTwinDesiredPropertiesUpdates` shall call its callback immediately if the MQTT connection is already disconnected. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_063: [** `disableTwinDesiredPropertiesUpdates` shall unsubscribe from the topics for twin messages. **]**
+**SRS_NODE_DEVICE_MQTT_16_083: [** `disableTwinDesiredPropertiesUpdates` shall call the `disableTwinDesiredPropertiesUpdates` on the `MqttTwinClient` object created by the constructor and pass it its callback. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_064: [** `disableTwinDesiredPropertiesUpdates` shall call its callback with no arguments when the `UNSUBACK` packet is received. **]**
-
-**SRS_NODE_DEVICE_MQTT_16_065: [** `disableTwinDesiredPropertiesUpdates` shall call its callback with an `Error` if an error is received while unsubscribing. **]**

@@ -43,7 +43,7 @@ The `getTwin` method retrieves the device twin by publishing a twin request on a
 
 **SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_004: [** The `getTwin` method shall publish the request message with QoS=0, DUP=0 and Retain=0. **]**
 
-**SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_005: [** The `requestId` property in the topic querystring should be set to a random unique integer that will be used to identify the response later on. **]**
+**SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_005: [** The `requestId` property in the topic querystring should be set to a unique identifier that will be used to identify the response later on. **]**
 
 **SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_006: [** The request message published by the `getTwin` method shall have an empty body. **]**
 
@@ -63,7 +63,7 @@ The `updateTwinReportedProperties` publishes an update to the reported propertie
 
 **SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_014: [** The `updateTwinReportedProperties` method shall publish the request message with QoS=0, DUP=0 and Retain=0. **]**
 
-**SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_015: [** The `requestId` property in the topic querystring should be set to a random unique integer that will be used to identify the response later on. **]**
+**SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_015: [** The `requestId` property in the topic querystring should be set to a unique identifier that will be used to identify the response later on. **]**
 
 **SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_016: [** The body of the request message published by the `updateTwinReportedProperties` method shall be a JSON string of the reported properties patch. **]**
 

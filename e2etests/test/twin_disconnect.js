@@ -197,21 +197,21 @@ protocolAndTermination.forEach( function (testConfiguration) {
         }
       });
       assert.equal(deviceTwin.properties.desired.$version, 1);
+      deviceTwin.on('properties.desired', function() {
+        if (deviceTwin.properties.desired.$version === 2) {
+          var terminateMessage = new Message(' ');
+          terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
+          terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
+          terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
+          deviceClient.sendEvent(terminateMessage, function (sendErr) {
+            debug('at the callback for the fault injection send, err is:' + sendErr);
+          });
+        } else if (deviceTwin.properties.desired.$version >= 2) {
+          testCallback(new Error('incorrect property version received - ' + deviceTwin.properties.desired.$version));
+        }
+      });
       serviceTwin.update( { properties : { desired : newProps } }, function(err) {
         if (err) return testCallback(err);
-        deviceTwin.on('properties.desired', function() {
-          if (deviceTwin.properties.desired.$version === 2) {
-            var terminateMessage = new Message(' ');
-            terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
-            terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
-            terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
-            deviceClient.sendEvent(terminateMessage, function (sendErr) {
-              debug('at the callback for the fault injection send, err is:' + sendErr);
-            });
-          } else if (deviceTwin.properties.desired.$version >= 2) {
-            testCallback(new Error('incorrect property version received - ' + deviceTwin.properties.desired.$version));
-          }
-        });
       });
     });
 
