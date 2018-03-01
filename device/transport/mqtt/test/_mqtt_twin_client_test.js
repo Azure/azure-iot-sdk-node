@@ -135,15 +135,13 @@ describe('MqttTwinClient', function () {
       assert.strictEqual(fakeMqttBase.publish.firstCall.args[2].retain, false);
     });
 
-    /*Tests_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_005: [The `requestId` property in the topic querystring should be set to a random unique integer that will be used to identify the response later on.]*/
-    it('publishes the request with an integer that is a requestId', function () {
+    /*Tests_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_005: [The `requestId` property in the topic querystring should be set to a unique identifier that will be used to identify the response later on.]*/
+    it('publishes the request with a uuid  that is a requestId', function () {
       var twinClient = new MqttTwinClient(fakeMqttBase);
       twinClient.getTwin(function () {});
       var firstRequestId = fakeMqttBase.publish.firstCall.args[0].split('=')[1];
-      assert.isNumber(parseInt(firstRequestId));
       twinClient.getTwin(function () {});
       var secondRequestId = fakeMqttBase.publish.secondCall.args[0].split('=')[1];
-      assert.isNumber(parseInt(secondRequestId));
       assert.notEqual(firstRequestId, secondRequestId);
     });
 
@@ -161,7 +159,7 @@ describe('MqttTwinClient', function () {
       };
 
       fakeMqttBase.publish = sinon.stub().callsFake(function (topic, body, options, callback) {
-        var requestId = parseInt(topic.split('=')[1]);
+        var requestId = topic.split('=')[1];
         var fakeResponseTopic = '$iothub/twin/res/200?$rid=' + requestId;
         callback();
         fakeMqttBase.emit('message', fakeResponseTopic, JSON.stringify(fakeTwin));
@@ -250,15 +248,13 @@ describe('MqttTwinClient', function () {
       assert.strictEqual(fakeMqttBase.publish.firstCall.args[2].retain, false);
     });
 
-    /*Tests_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_015: [The `requestId` property in the topic querystring should be set to a random unique integer that will be used to identify the response later on.]*/
-    it('publishes the request with an integer that is a requestId', function () {
+    /*Tests_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_015: [The `requestId` property in the topic querystring should be set to a unique identifier that will be used to identify the response later on.]*/
+    it('publishes the request with a uuid that is a requestId', function () {
       var twinClient = new MqttTwinClient(fakeMqttBase);
       twinClient.updateTwinReportedProperties({ fake: 'patch' }, function () {});
       var firstRequestId = fakeMqttBase.publish.firstCall.args[0].split('=')[1];
-      assert.isNumber(parseInt(firstRequestId));
       twinClient.updateTwinReportedProperties({ fake: 'patch' }, function () {});
       var secondRequestId = fakeMqttBase.publish.secondCall.args[0].split('=')[1];
-      assert.isNumber(parseInt(secondRequestId));
       assert.notEqual(firstRequestId, secondRequestId);
     });
 
@@ -277,7 +273,7 @@ describe('MqttTwinClient', function () {
       };
 
       fakeMqttBase.publish = sinon.stub().callsFake(function (topic, body, options, callback) {
-        var requestId = parseInt(topic.split('=')[1]);
+        var requestId = topic.split('=')[1];
         var fakeResponseTopic = '$iothub/twin/res/200?$rid=' + requestId;
         callback();
         fakeMqttBase.emit('message', fakeResponseTopic, JSON.stringify(fakeTwin));

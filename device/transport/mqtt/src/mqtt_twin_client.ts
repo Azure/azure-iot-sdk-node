@@ -8,6 +8,7 @@ import { TwinProperties } from 'azure-iot-device';
 import { MqttBase, translateError } from 'azure-iot-mqtt-base';
 import * as querystring from 'querystring';
 import * as url from 'url';
+import * as uuid from 'uuid';
 import * as machina from 'machina';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-mqtt:MqttTwinClient');
@@ -61,63 +62,63 @@ export class MqttTwinClient extends EventEmitter {
       initialState: 'unsubscribed',
       states: {
         unsubscribed: {
-          _onEnter: function (client: TopicSubscription, err: Error, callback: (err?: Error) => void): void {
+          _onEnter: function (topicSubscription: TopicSubscription, err: Error, callback: (err?: Error) => void): void {
             if (callback) {
               callback(err);
             }
           },
-          subscribe: function (client: TopicSubscription, callback: (err?: Error) => void): void {
-            this.transition(client, 'subscribing', callback);
+          subscribe: function (topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
+            this.transition(topicSubscription, 'subscribing', callback);
           },
-          unsubscribe: function (client: TopicSubscription, callback: (err?: Error) => void): void {
+          unsubscribe: function (topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
             // not entirely sure about that. if subscription are restored because cleanSession is false, it means technically a user may want to unsubscribe
             // even though subscribe hasn't been called yet.
             callback();
           }
         },
         subscribing: {
-          _onEnter: function (client: TopicSubscription, callback: (err?: Error) => void): void {
-            client.mqttClient.subscribe(client.topic, { qos: 0 }, (err, result) => {
+          _onEnter: function (topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
+            topicSubscription.mqttClient.subscribe(topicSubscription.topic, { qos: 0 }, (err, result) => {
               if (err) {
-                this.transition(client, 'unsubscribed', err, callback);
+                this.transition(topicSubscription, 'unsubscribed', err, callback);
               } else {
                 debug('subscribed to response topic: ' + JSON.stringify(result));
-                this.transition(client, 'subscribed', callback);
+                this.transition(topicSubscription, 'subscribed', callback);
               }
             });
           },
-          '*': function (client: TopicSubscription): void { this.deferUntilTransition(client); }
+          '*': function (topicSubscription: TopicSubscription): void { this.deferUntilTransition(topicSubscription); }
         },
         subscribed: {
-          _onEnter: function (client: TopicSubscription, callback: (err?: Error) => void): void {
+          _onEnter: function (topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
             callback();
           },
-          subscribe: function (client: TopicSubscription, callback: (err?: Error) => void): void {
+          subscribe: function (topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
             callback();
           },
-          unsubscribe: function (client: TopicSubscription, callback: (err?: Error) => void): void {
-            this.transition(client, 'unsubscribing', callback);
+          unsubscribe: function (topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
+            this.transition(topicSubscription, 'unsubscribing', callback);
           }
         },
         unsubscribing: {
-          _onEnter: function (client: TopicSubscription, callback: (err?: Error) => void): void {
-            client.mqttClient.unsubscribe(client.topic, (err, result) => {
+          _onEnter: function (topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
+            topicSubscription.mqttClient.unsubscribe(topicSubscription.topic, (err, result) => {
               if (err) {
                 debug('failed to unsubscribe: ' + err.toString());
               } else {
-                debug('unsubscribed from: ' + client.topic);
+                debug('unsubscribed from: ' + topicSubscription.topic);
               }
-              this.transition(client, 'unsubscribed', err, callback);
+              this.transition(topicSubscription, 'unsubscribed', err, callback);
             });
           },
-          '*': function (client: TopicSubscription): void { this.deferUntilTransition(client); }
+          '*': function (topicSubscription: TopicSubscription): void { this.deferUntilTransition(topicSubscription); }
         }
       },
-      subscribe: function (client: TopicSubscription, callback: (err?: Error) => void): void {
-        this.handle(client, 'subscribe', callback);
+      subscribe: function (topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
+        this.handle(topicSubscription, 'subscribe', callback);
       },
-      unsubscribe: function (client: TopicSubscription, callback: (err?: Error) => void): void {
-        this.handle(client, 'unsubscribe', callback);
+      unsubscribe: function (topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
+        this.handle(topicSubscription, 'unsubscribe', callback);
       }
     });
 
@@ -191,9 +192,9 @@ export class MqttTwinClient extends EventEmitter {
   }
 
   private _sendTwinRequest(method: string, resource: string, body: any, callback?: (err?: Error, result?: any) => void): void {
-    /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_005: [The `requestId` property in the topic querystring should be set to a random unique integer that will be used to identify the response later on.]*/
-    /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_015: [The `requestId` property in the topic querystring should be set to a random unique integer that will be used to identify the response later on.]*/
-    const requestId = Math.ceil(Math.random() * 10000).toString();
+    /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_005: [The `requestId` property in the topic querystring should be set to a unique identifier that will be used to identify the response later on.]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_015: [The `requestId` property in the topic querystring should be set to a unique identifier that will be used to identify the response later on.]*/
+    const requestId = uuid.v4();
     let propString = '?$rid=' + requestId;
 
     const topic = '$iothub/twin/' + method + resource + propString;

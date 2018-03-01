@@ -678,11 +678,7 @@ describe('Mqtt', function () {
      {
       methodName: 'enableMethods',
       topicName: '$iothub/methods/POST/#'
-     },
-    {
-      methodName: 'enableTwinDesiredPropertiesUpdates',
-      topicName: '$iothub/twin/PATCH/properties/desired/#'
-    }
+     }
   ].forEach(function (testConfig) {
     describe('#' + testConfig.methodName, function () {
       it('connects the transport if necessary', function (testCallback) {
@@ -694,11 +690,9 @@ describe('Mqtt', function () {
           assert.isTrue(fakeMqttBase.connect.calledOnce);
           /*Tests_SRS_NODE_DEVICE_MQTT_16_050: [`enableC2D` shall call its callback with no arguments when the `SUBACK` packet is received.]*/
           /*Tests_SRS_NODE_DEVICE_MQTT_16_051: [`enableMethods` shall call its callback with no arguments when the `SUBACK` packet is received.]*/
-          /*Tests_SRS_NODE_DEVICE_MQTT_16_060: [`enableTwinDesiredPropertiesUpdates` shall call its callback with no arguments when the `SUBACK` packet is received.]*/
           assert.isUndefined(err);
           /*Tests_SRS_NODE_DEVICE_MQTT_16_049: [`enableC2D` shall subscribe to the MQTT topic for messages.]*/
           /*Tests_SRS_NODE_DEVICE_MQTT_16_040: [`enableMethods` shall subscribe to the MQTT topic for direct methods.]*/
-          /*Tests_SRS_NODE_DEVICE_MQTT_16_059: [`enableTwinDesiredPropertiesUpdates` shall subscribe to the MQTT topics for twins.]*/
           assert.isTrue(fakeMqttBase.subscribe.calledWith(testConfig.topicName));
           testCallback();
         });
@@ -859,9 +853,58 @@ describe('Mqtt', function () {
     });
   });
 
+  describe('#enableTwinDesiredPropertiesUpdates', function () {
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_057: [`enableTwinDesiredPropertiesUpdates` shall connect the MQTT connection if it is disconnected.]*/
+    it('connects the transport if necessary', function (testCallback) {
+      var transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      transport.enableTwinDesiredPropertiesUpdates(function () {
+        assert.isTrue(fakeMqttBase.connect.calledOnce);
+        testCallback();
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_058: [`enableTwinDesiredPropertiesUpdates` shall calls its callback with an `Error` object if it fails to connect.]*/
+    it('calls its callback with an error if connecting the transport fails', function (testCallback) {
+      var fakeError = new Error('fake');
+      var transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      fakeMqttBase.connect = sinon.stub().callsArgWith(1, fakeError);
+      transport.enableTwinDesiredPropertiesUpdates(function (err) {
+        assert.strictEqual(err, fakeError);
+        testCallback();
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_059: [`enableTwinDesiredPropertiesUpdates` shall call the `enableTwinDesiredPropertiesUpdates` on the `MqttTwinClient` object created by the constructor and pass it its callback.]*/
+    it('calls \'enableTwinDesiredPropertiesUpdates\' on the MqttTwinClient and passes its callback', function () {
+      var transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      sinon.spy(transport._twinClient, 'enableTwinDesiredPropertiesUpdates');
+      transport.connect(function () {
+        var callback = function () {};
+        transport.enableTwinDesiredPropertiesUpdates(callback);
+        assert.isTrue(transport._twinClient.enableTwinDesiredPropertiesUpdates.calledOnce);
+        assert.isTrue(transport._twinClient.enableTwinDesiredPropertiesUpdates.calledWith(callback));
+      });
+    });
+  });
+
+  describe('#disableTwinDesiredPropertiesUpdates', function () {
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_083: [`disableTwinDesiredPropertiesUpdates` shall call the `disableTwinDesiredPropertiesUpdates` on the `MqttTwinClient` object created by the constructor and pass it its callback.]*/
+    it('calls \'disableTwinDesiredPropertiesUpdates\' on the MqttTwinClient and passes its callback', function () {
+      var transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      sinon.spy(transport._twinClient, 'disableTwinDesiredPropertiesUpdates');
+      transport.connect(function () {
+        var callback = function () {};
+        transport.disableTwinDesiredPropertiesUpdates(callback);
+        assert.isTrue(transport._twinClient.disableTwinDesiredPropertiesUpdates.calledOnce);
+        assert.isTrue(transport._twinClient.disableTwinDesiredPropertiesUpdates.calledWith(callback));
+      });
+    });
+  });
+
   describe('#on(\'twinDesiredPropertiesUpdate\'', function () {
-    /*Tests_SRS_NODE_DEVICE_MQTT_16_081: [The `Mqtt` constructor shall subscribe to the `MqttTwinClient` `twinDesiredPropertiesUpdates` and reemit them.]*/
-    it('reemits events emitted by the twin client', function (testCallback) {
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_081: [The `Mqtt` constructor shall subscribe to the `MqttTwinClient` `twinDesiredPropertiesUpdates`.]*/
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_082: [A `twinDesiredPropertiesUpdates` shall be emitted by the `Mqtt` object for each `twinDesiredPropertiesUpdates` event received from the `MqttTwinClient` with the same payload. **/
+    it('re-emits events \'twinDesiredPropertiesUpdate\' emitted by the twin client', function (testCallback) {
       var fakePatch = {
         fake: 'patch'
       };
