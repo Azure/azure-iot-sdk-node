@@ -149,7 +149,6 @@ protocolAndTermination.forEach( function (testConfiguration) {
         if (err) return done(err);
 
         deviceClient = deviceSdk.Client.fromConnectionString(deviceDescription.connectionString, testConfiguration.transport);
-        deviceClient.setRetryPolicy(new NoRetry());
 
         deviceClient.open(function(err) {
           if (err) return done(err);
@@ -187,6 +186,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
 
     doConnectTest(testConfiguration.testEnabled)('Simple twin update: device receives it, and' + testConfiguration.closeReason + 'which is noted by the iot hub client', function(testCallback) {
       this.timeout(120000);
+      deviceClient.setRetryPolicy(new NoRetry());
       debug('about to connect a disconnect listener.');
       deviceClient.on('disconnect', function () {
         debug('We did get a disconnect message');
@@ -215,7 +215,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
       });
     });
 
-    doConnectTest(false)('Simple twin update: device receives it, and' + testConfiguration.closeReason + 'which is NOT noted by the iot hub client', function(testCallback) {
+    doConnectTest(testConfiguration.testEnabled)('Simple twin update: device receives it, and' + testConfiguration.closeReason + 'which is NOT noted by the iot hub client', function(testCallback) {
       this.timeout(120000);
       debug('about to connect a disconnect listener.');
       deviceClient.on('disconnect', function () {
@@ -229,27 +229,27 @@ protocolAndTermination.forEach( function (testConfiguration) {
         });
       };
       assert.equal(deviceTwin.properties.desired.$version,1);
+      deviceTwin.on('properties.desired', function() {
+        if (deviceTwin.properties.desired.$version === 1) {
+          // ignore $update === 1.  assert needed to make jshint happy
+          assert(true);
+        } else if (deviceTwin.properties.desired.$version === 2) {
+          var terminateMessage = new Message(' ');
+          terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
+          terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
+          terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
+          deviceClient.sendEvent(terminateMessage, function (sendErr) {
+            debug('at the callback for the fault injection send, err is:' + sendErr);
+          });
+          setTwinMoreNewPropsTimeout = setTimeout(setTwinMoreNewProps, (testConfiguration.delayInSeconds + 5) * 1000);
+        } else if (deviceTwin.properties.desired.$version === 3) {
+          testCallback();
+        } else {
+          testCallback(new Error('incorrect property version received - ' + deviceTwin.properties.desired.$version));
+        }
+      });
       serviceTwin.update( { properties : { desired : newProps } }, function(err) {
         if (err) return testCallback(err);
-        deviceTwin.on('properties.desired', function() {
-          if (deviceTwin.properties.desired.$version === 1) {
-            // ignore $update === 1.  assert needed to make jshint happy
-            assert(true);
-          } else if (deviceTwin.properties.desired.$version === 2) {
-            var terminateMessage = new Message('');
-            terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
-            terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
-            terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
-            deviceClient.sendEvent(terminateMessage, function (sendErr) {
-              debug('at the callback for the fault injection send, err is:' + sendErr);
-            });
-            setTwinMoreNewPropsTimeout = setTimeout(setTwinMoreNewProps.bind(this), testConfiguration.delayInSeconds + 1000);
-          } else if (deviceTwin.properties.desired.$version === 3) {
-            testCallback();
-          } else {
-            testCallback(new Error('incorrect property version received - ' + deviceTwin.properties.desired.$version));
-          }
-        });
       });
     });
   });
