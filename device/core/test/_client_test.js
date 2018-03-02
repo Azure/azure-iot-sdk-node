@@ -19,6 +19,7 @@ var NoRetry = require('azure-iot-common').NoRetry;
 var SharedAccessKeyAuthenticationProvider = require('../lib/sak_authentication_provider').SharedAccessKeyAuthenticationProvider;
 var SharedAccessSignatureAuthenticationProvider = require('../lib/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider;
 var X509AuthenticationProvider = require('../lib/x509_authentication_provider').X509AuthenticationProvider;
+var Twin = require('../lib/twin').Twin;
 
 describe('Client', function () {
   var sharedKeyConnectionString = 'HostName=host;DeviceId=id;SharedAccessKey=key';
@@ -825,21 +826,38 @@ describe('Client', function () {
   });
 
   describe('getTwin', function() {
-    it('creates the device twin correctly', function(done) {
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_094: [If this is the first call to `getTwin` the method shall instantiate a new `Twin` object  and pass it the transport currently in use.]*/
+    it('creates the device twin correctly', function(testCallback) {
+      var transport = new FakeTransport();
+      sinon.spy(transport, 'getTwin');
+      var client = new Client(transport);
+      client.getTwin(function (err, twin) {
+        assert.instanceOf(twin, Twin);
+        assert.isTrue(transport.getTwin.calledOnce);
+        testCallback();
+      });
+    });
+
+    it('reuses the existing twin', function (testCallback) {
       var client = new Client(new FakeTransport());
+      client.getTwin(function (err, firstTwin) {
+        client.getTwin(function (err, secondTwin) {
+          assert.strictEqual(firstTwin, secondTwin);
+          testCallback();
+        });
+      });
+    });
 
-      /* Tests_SRS_NODE_DEVICE_CLIENT_18_001: [** The `getTwin` method shall call the `azure-iot-device-core!Twin.fromDeviceClient` method to create the device client object. **]** */
-      var fakeTwin = {
-        fromDeviceClient: function(obj, innerDone) {
-          /* Tests_SRS_NODE_DEVICE_CLIENT_18_002: [** The `getTwin` method shall pass itself as the first parameter to `fromDeviceClient` and it shall pass the `done` method as the second parameter. **]**  */
-          assert.equal(obj, client);
-          assert.equal(innerDone, done);
-          done();
-        }
-      };
-
-      /* Tests_SRS_NODE_DEVICE_CLIENT_18_003: [** The `getTwin` method shall use the second parameter (if it is not falsy) to call `fromDeviceClient` on. **]**    */
-     client.getTwin(done, fakeTwin);
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_095: [The `getTwin` method shall call the `get()` method on the `Twin` object currently in use and pass it its `done` argument for a callback.]*/
+    it('Calls the get() method on the Twin', function (testCallback) {
+      var client = new Client(new FakeTransport());
+      client.getTwin(function (err, twin) {
+        sinon.spy(twin, 'get');
+        client.getTwin(function () {
+          assert.isTrue(twin.get.calledOnce);
+          testCallback();
+        });
+      });
     });
   });
 

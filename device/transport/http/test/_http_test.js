@@ -779,19 +779,19 @@ describe('HttpReceiver', function () {
     });
   });
 
-  /*Tests_SRS_NODE_DEVICE_HTTP_16_020: [`getTwinReceiver` shall throw a `NotImplementedError`.]*/
-  /*Tests_SRS_NODE_DEVICE_HTTP_16_021: [`sendTwinRequest` shall throw a `NotImplementedError`.]*/
-  /*Tests_SRS_NODE_DEVICE_HTTP_16_022: [`enableTwin` shall throw a `NotImplementedError`.]*/
-  /*Tests_SRS_NODE_DEVICE_HTTP_16_023: [`disableTwin` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_16_020: [`getTwin` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_16_034: [`updateTwinReportedProperties` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_16_035: [`enableTwinDesiredPropertiesUpdates` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_16_036: [`disableTwinDesiredPropertiesUpdates` shall throw a `NotImplementedError`.]*/
   /*Tests_SRS_NODE_DEVICE_HTTP_16_024: [`sendMethodResponse` shall throw a `NotImplementedError`.]*/
   /*Tests_SRS_NODE_DEVICE_HTTP_16_025: [`onDeviceMethod` shall throw a `NotImplementedError`.]*/
   /*Tests_SRS_NODE_DEVICE_HTTP_16_026: [`enableMethods` shall throw a `NotImplementedError`.]*/
   /*Tests_SRS_NODE_DEVICE_HTTP_16_027: [`disableMethods` shall throw a `NotImplementedError`.]*/
   [
-    'getTwinReceiver',
-    'sendTwinRequest',
-    'enableTwin',
-    'disableTwin',
+    'getTwin',
+    'updateTwinReportedProperties',
+    'enableTwinDesiredPropertiesUpdates',
+    'disableTwinDesiredPropertiesUpdates',
     'sendMethodResponse',
     'onDeviceMethod',
     'enableMethods',

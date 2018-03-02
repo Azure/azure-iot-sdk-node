@@ -192,11 +192,9 @@ The `sendEventBatch` method sends a list of event messages to the IoT Hub as the
 
 #### getTwin(done)
 
-**SRS_NODE_DEVICE_CLIENT_18_001: [** The `getTwin` method shall call the `azure-iot-device-core!Twin.fromDeviceClient` method to create the device twin object. **]**
+**SRS_NODE_DEVICE_CLIENT_16_094: [** If this is the first call to `getTwin` the method shall instantiate a new `Twin` object  and pass it the transport currently in use. **]**
 
-**SRS_NODE_DEVICE_CLIENT_18_002: [** The `getTwin` method shall pass itself as the first parameter to `fromDeviceClient` and it shall pass the `done` method as the second parameter. **]**
-
-**SRS_NODE_DEVICE_CLIENT_18_003: [** The `getTwin` method shall use the second parameter (if it is not falsy) to call `fromDeviceClient` on. **]**
+**SRS_NODE_DEVICE_CLIENT_16_095: [** The `getTwin` method shall call the `get()` method on the `Twin` object currently in use and pass it its `done` argument for a callback. **]**
 
 #### onDeviceMethod(methodName, callback)
 
