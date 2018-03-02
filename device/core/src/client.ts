@@ -125,21 +125,36 @@ export class Client extends EventEmitter {
     this._disconnectHandler = (err) => {
       debug('transport disconnect event: ' + (err ? err.toString() : 'no error'));
       if (err && this._retryPolicy.shouldRetry(err)) {
+        /*Codes_SRS_NODE_DEVICE_CLIENT_16_097: [If the transport emits a `disconnect` event the client while subscribed to C2D messages the retry policy shall try to re-enable the C2D functionality using the transport `enableC2D` method.]*/
         if (this._c2dEnabled) {
           this._c2dEnabled = false;
           debug('re-enabling C2D link');
           this._enableC2D((err) => {
             if (err) {
+              /*Codes_SRS_NODE_DEVICE_CLIENT_16_102: [If the retry policy fails to reestablish the C2D functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
               this.emit('disconnect', new results.Disconnected(err));
             }
           });
         }
 
+        /*Codes_SRS_NODE_DEVICE_CLIENT_16_098: [If the transport emits a `disconnect` event the client while subscribed to direct methods the retry policy shall try to re-enable the direct methods functionality using the transport `enableMethods` method.]*/
         if (this._methodsEnabled) {
           this._methodsEnabled = false;
           debug('re-enabling Methods link');
           this._enableMethods((err) => {
             if (err) {
+              /*Codes_SRS_NODE_DEVICE_CLIENT_16_100: [If the retry policy fails to reestablish the direct methods functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
+              this.emit('disconnect', new results.Disconnected(err));
+            }
+          });
+        }
+
+        /*Codes_SRS_NODE_DEVICE_CLIENT_16_099: [If the transport emits a `disconnect` event the client while subscribed to desired properties updates the retry policy shall try to re-enable the twin desired properties updates using the transport `enableTwinDesiredPropertiesUpdates` method.]*/
+        if (this._twin && this._twin.desiredPropertiesUpdatesEnabled) {
+          debug('re-enabling Twin');
+          this._twin.enableTwinDesiredPropertiesUpdates((err) => {
+            if (err) {
+              /*Codes_SRS_NODE_DEVICE_CLIENT_16_101: [If the retry policy fails to reestablish the twin desired properties updates functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
               this.emit('disconnect', new results.Disconnected(err));
             }
           });
@@ -445,7 +460,7 @@ export class Client extends EventEmitter {
   getTwin(done: (err?: Error, twin?: Twin) => void, twin?: Twin): void {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_094: [If this is the first call to `getTwin` the method shall instantiate a new `Twin` object  and pass it the transport currently in use.]*/
     if (!this._twin) {
-      this._twin = new Twin(this._transport);
+      this._twin = new Twin(this._transport, this._retryPolicy, this._maxOperationTimeout);
     }
 
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_095: [The `getTwin` method shall call the `get()` method on the `Twin` object currently in use and pass it its `done` argument for a callback.]*/
@@ -470,6 +485,11 @@ export class Client extends EventEmitter {
 
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_086: [Any operation happening after a `setRetryPolicy` call should use the policy set during that call.]*/
     this._retryPolicy = policy;
+
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_096: [The `setRetryPolicy` method shall call the `setRetryPolicy` method on the twin if it is set and pass it the `policy` object.]*/
+    if (this._twin) {
+      this._twin.setRetryPolicy(policy);
+    }
   }
 
   private _validateDeviceMethodInputs(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {

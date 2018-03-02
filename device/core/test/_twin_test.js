@@ -12,7 +12,7 @@ var sinon = require('sinon');
 var _ = require('lodash');
 
 describe('Twin', function () {
-  var fakeTransport, fakeTwin;
+  var fakeTransport, fakeTwin, fakeRetryPolicy;
 
   beforeEach(function () {
     fakeTwin = {
@@ -22,6 +22,11 @@ describe('Twin', function () {
       reported: {
         key: 'value'
       }
+    };
+
+    fakeRetryPolicy = {
+      shouldRetry: function () { return false; },
+      getNextRetryTimeout: function () { return 0; }
     };
 
     fakeTransport = new EventEmitter();
@@ -43,7 +48,7 @@ describe('Twin', function () {
   describe('#get', function () {
     /*Tests_SRS_NODE_DEVICE_TWIN_16_002: [The `get` method shall call the `getTwin` method of the `Transport` object with a callback.]*/
     it('calls getTwin on the transpport', function () {
-      var twin = new Twin(fakeTransport);
+      var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
       twin.get(function () {});
       assert.isTrue(fakeTransport.getTwin.calledOnce);
     });
@@ -51,7 +56,7 @@ describe('Twin', function () {
     /*Tests_SRS_NODE_DEVICE_TWIN_16_004: [If the callback passed to the `getTwin` method is called with no error and a `TwinProperties` object, these properties shall be merged with the current instance properties.]*/
     /*Tests_SRS_NODE_DEVICE_TWIN_16_005: [Once the properties have been merged the `callback` method passed to the call to `get` shall be called with a first argument that is `null` and a second argument that is the current `Twin` instance (`this`).]*/
     it('calls its callback with the twin after it is merged', function (testCallback) {
-      var twin = new Twin(fakeTransport);
+      var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
       twin.get(function (err, twin) {
         assert.deepEqual(twin.properties.desired, fakeTwin.desired);
         assert.deepEqual(twin.properties.reported.key, fakeTwin.reported.key);
@@ -63,7 +68,7 @@ describe('Twin', function () {
     it('calls its callback with an error if the transport encounters an error', function (testCallback) {
       var fakeError = new Error('fake');
       fakeTransport.getTwin = sinon.stub().callsArgWith(0, fakeError);
-      var twin = new Twin(fakeTransport);
+      var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
       twin.get(function (err) {
         assert.strictEqual(err, fakeError);
         testCallback();
@@ -72,7 +77,7 @@ describe('Twin', function () {
 
     /*Tests_SRS_NODE_DEVICE_TWIN_16_006: [For each desired property that is part of the `TwinProperties` object received, an event named after the path to this property shall be fired.]*/
     it('fires events for the new properties that have been merged', function (testCallback) {
-      var twin = new Twin(fakeTransport);
+      var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
       var genericEventReceived = false;
       var specificEventReceived = false;
       twin.on('properties.desired', function (delta) {
@@ -97,7 +102,7 @@ describe('Twin', function () {
   describe('properties.reported.update', function () {
     /*Tests_SRS_NODE_DEVICE_TWIN_16_007: [The `update` method shall call the `updateReportedProperties` method of the `Transport` object and pass it the patch object and a callback accepting an error as argument.]*/
     it('calls updateTwinReportedProperties on the transport', function (testCallback) {
-      var twin = new Twin(fakeTransport);
+      var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
       var fakePatch = { key: 'value' };
       twin.get(function () {
         twin.properties.reported.update(fakePatch, function () {});
@@ -112,7 +117,7 @@ describe('Twin', function () {
       var fakeError = new Error('fake');
       fakeTransport.updateTwinReportedProperties = sinon.stub().callsArgWith(1, fakeError);
 
-      var twin = new Twin(fakeTransport);
+      var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
       twin.get(function () {
         twin.properties.reported.update({ reported: 'fake' }, function (err) {
           assert.strictEqual(err, fakeError);
@@ -123,10 +128,10 @@ describe('Twin', function () {
 
     /*Tests_SRS_NODE_DEVICE_TWIN_16_009: [Once the properties have been merged the `callback` argument of the `update` method shall be called with no argument.]*/
     it('calls its callback with no arguments if the update succeeds', function (testCallback) {
-      var twin = new Twin(fakeTransport);
+      var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
       twin.get(function () {
         twin.properties.reported.update({ reported: 'fake' }, function (err) {
-          assert.isUndefined(err);
+          assert.isNull(err);
           testCallback();
         });
       });
@@ -134,7 +139,7 @@ describe('Twin', function () {
 
     /*Tests_SRS_NODE_DEVICE_TWIN_18_031: [If the callback passed to the transport is called with no error, the  `properties.reported.update` shall merge the contents of the patch object into `properties.reported`]*/
     it('merges the patch in the reported properties', function (testCallback) {
-      var twin = new Twin(fakeTransport);
+      var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
       var fakePatch = { key: 'fake' };
       twin.get(function () {
         twin.properties.reported.update(fakePatch, function (err) {
@@ -163,7 +168,7 @@ describe('Twin', function () {
   describe('on(\'properties.desired[.path]\'', function () {
     /*Tests_SRS_NODE_DEVICE_TWIN_16_010: [When a listener is added for an event name starting with `properties.desired` the `enableTwinDesiredPropertiesUpdates` method of the `Transport` object shall be called with a callback function accepting an optional error argument.]*/
     it('calls enableTwinDesiredPropertiesUpdates on the transport', function () {
-      var twin = new Twin(fakeTransport);
+      var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
       twin.on('properties.desired', function () {});
       assert.isTrue(fakeTransport.enableTwinDesiredPropertiesUpdates.calledOnce);
     });
@@ -172,14 +177,13 @@ describe('Twin', function () {
     it('emits an error if the call to enableTwinDesiredPropertiesUpdates fails', function (testCallback) {
       var fakeError = new Error('fake');
       fakeTransport.enableTwinDesiredPropertiesUpdates = sinon.stub().callsArgWith(0, fakeError);
-      var twin = new Twin(fakeTransport);
+      var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
       twin.on('error', function (err) {
         assert.strictEqual(err, fakeError);
         testCallback();
       });
       twin.on('properties.desired', function () {});
     });
-
 
     /*Tests_SRS_NODE_DEVICE_TWIN_18_045: [If a property is already set when a handler is added for that property, the `Twin` object shall fire a property changed event for the property.]*/
     /*Tests_SRS_NODE_DEVICE_TWIN_16_012: [When a `twinDesiredPropertiesUpdates` event is emitted by the transport, the property patch passed as argument to the event handler shall be merged with the current desired properties.]*/
@@ -204,7 +208,7 @@ describe('Twin', function () {
         }
       }
 
-      var twin = new Twin(fakeTransport);
+      var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
       twin.get(function () {
         twin.on('properties.desired', function (delta) {
           assert.deepEqual(delta.prop1, fakePatch.prop1);
@@ -232,6 +236,26 @@ describe('Twin', function () {
         });
 
         fakeTransport.emit('twinDesiredPropertiesUpdate', fakePatch);
+      });
+    });
+  });
+
+  describe('#setRetryPolicy', function () {
+    /*Tests_SRS_NODE_DEVICE_TWIN_16_014: [the `retryPolicy` object passed to the `setRetryPolicy` method shall be used to retry any subsequent operation.]*/
+    it('uses the retry policy passed as an argument in the subsequent calls', function (testCallback) {
+      var testPolicy = {
+        shouldRetry: sinon.stub().returns(false),
+        nextRetryTimeout: sinon.stub().returns(-1)
+      };
+      fakeTransport.getTwin = sinon.stub().callsArgWith(0, new Error('fake'));
+
+      var twin = new Twin(fakeTransport, fakeRetryPolicy);
+      twin.setRetryPolicy(testPolicy);
+      twin.get(function() {
+        assert.isTrue(testPolicy.shouldRetry.calledOnce);
+        assert.isTrue(testPolicy.nextRetryTimeout.notCalled); //shouldRetry being false, nextRetryTimeout should not have been called.
+        assert.isTrue(fakeTransport.getTwin.calledOnce);
+        testCallback();
       });
     });
   });

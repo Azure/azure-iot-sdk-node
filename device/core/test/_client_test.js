@@ -912,6 +912,131 @@ describe('Client', function () {
         testCallback();
       });
     });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_096: [The `setRetryPolicy` method shall call the `setRetryPolicy` method on the twin if it is set and pass it the `policy` object.]*/
+    it('updates the twin retry policy', function (testCallback) {
+      var newPolicy = {
+        shouldRetry: function () {},
+        nextRetryTimeout: function () {}
+      };
+
+      var fakeTransport = new EventEmitter();
+      fakeTransport.getTwin = sinon.stub().callsArgWith(0, null, new Twin(fakeTransport, {}, 0));
+
+      var client = new Client(fakeTransport);
+      client.getTwin(function (err, twin) {
+        sinon.spy(twin, 'setRetryPolicy');
+        client.setRetryPolicy(newPolicy);
+        assert.isTrue(twin.setRetryPolicy.calledOnce);
+        assert.isTrue(twin.setRetryPolicy.calledWith(newPolicy));
+        testCallback();
+      });
+    });
+  });
+
+  describe('transport.on(\'disconnect\') handler', function () {
+    var fakeTransport, fakeRetryPolicy;
+    beforeEach(function () {
+      fakeRetryPolicy = {
+        shouldRetry: function () { return true; },
+        nextRetryTimeout: function () { return 1; }
+      };
+
+      fakeTransport = new EventEmitter();
+      fakeTransport.enableC2D = sinon.stub().callsArg(0);
+      fakeTransport.enableTwinDesiredPropertiesUpdates = sinon.stub().callsArg(0);
+      fakeTransport.enableMethods = sinon.stub().callsArg(0);
+      fakeTransport.onDeviceMethod = sinon.stub();
+      fakeTransport.getTwin = sinon.stub().callsArgWith(0, null, new Twin(fakeTransport, fakeRetryPolicy));
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_097: [If the transport emits a `disconnect` event the client while subscribed to C2D messages the retry policy shall try to re-enable the C2D functionality using the transport `enableC2D` method.]*/
+    it('reenables C2D after being disconnected if C2D was enabled', function () {
+      var client = new Client(fakeTransport);
+      client.setRetryPolicy(fakeRetryPolicy);
+      client.on('message', function () {});
+      assert.isTrue(fakeTransport.enableC2D.calledOnce);
+      fakeTransport.emit('disconnect', new errors.TimeoutError()); // timeouts can be retried
+      assert.isTrue(fakeTransport.enableC2D.calledTwice);
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_102: [If the retry policy fails to reestablish the C2D functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
+    it('emits a disconnect event if reenabling C2D fails', function (testCallback) {
+      var fakeError = new Error('fake');
+      var client = new Client(fakeTransport);
+      client.on('disconnect', function (err) {
+        assert.instanceOf(err, results.Disconnected);
+        assert.strictEqual(err.transportObj, fakeError);
+        testCallback();
+      });
+
+      client.setRetryPolicy(fakeRetryPolicy);
+      client._maxOperationTimeout = 1;
+      client.on('message', function () {});
+      assert.isTrue(fakeTransport.enableC2D.calledOnce);
+      fakeTransport.enableC2D = sinon.stub().callsArgWith(0, fakeError);
+      fakeTransport.emit('disconnect', new errors.TimeoutError()); // timeouts can be retried
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_099: [If the transport emits a `disconnect` event the client while subscribed to desired properties updates the retry policy shall try to re-enable the twin desired properties updates using the transport `enableTwinDesiredPropertiesUpdates` method.]*/
+    it('reenables device methods after being disconnected if methods were enabled', function () {
+      var client = new Client(fakeTransport);
+      client.setRetryPolicy(fakeRetryPolicy);
+      client.onDeviceMethod('method', function () {});
+      assert.isTrue(fakeTransport.enableMethods.calledOnce);
+      fakeTransport.emit('disconnect', new errors.TimeoutError()); // timeouts can be retried
+      assert.isTrue(fakeTransport.enableMethods.calledTwice);
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_100: [If the retry policy fails to reestablish the direct methods functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
+    it('emits a disconnect event if reenabling methods fails', function (testCallback) {
+      var fakeError = new Error('fake');
+      var client = new Client(fakeTransport);
+      client.on('disconnect', function (err) {
+        assert.instanceOf(err, results.Disconnected);
+        assert.strictEqual(err.transportObj, fakeError);
+        testCallback();
+      });
+
+      client.setRetryPolicy(fakeRetryPolicy);
+      client._maxOperationTimeout = 1;
+      client.onDeviceMethod('method', function () {});
+      assert.isTrue(fakeTransport.enableMethods.calledOnce);
+      fakeTransport.enableMethods = sinon.stub().callsArgWith(0, fakeError);
+      fakeTransport.emit('disconnect', new errors.TimeoutError()); // timeouts can be retried
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_098: [If the transport emits a `disconnect` event the client while subscribed to direct methods the retry policy shall try to re-enable the direct methods functionality using the transport `enableMethods` method.]*/
+    it('reenables device methods after being disconnected if Twin desired properties updates were enabled', function () {
+      var client = new Client(fakeTransport);
+      client.setRetryPolicy(fakeRetryPolicy);
+      client.getTwin(function (err, twin) {
+        twin.on('properties.desired', function () {});
+        assert.isTrue(fakeTransport.enableTwinDesiredPropertiesUpdates.calledOnce);
+        fakeTransport.emit('disconnect', new errors.TimeoutError()); // timeouts can be retried
+        assert.isTrue(fakeTransport.enableTwinDesiredPropertiesUpdates.calledTwice);
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_101: [If the retry policy fails to reestablish the twin desired properties updates functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
+    it('emits a disconnect event if reenabling twin desired properties updates fails', function (testCallback) {
+      var fakeError = new Error('fake');
+      var client = new Client(fakeTransport);
+      client.on('disconnect', function (err) {
+        assert.instanceOf(err, results.Disconnected);
+        assert.strictEqual(err.transportObj, fakeError);
+        testCallback();
+      });
+
+      client.setRetryPolicy(fakeRetryPolicy);
+      client.getTwin(function (err, twin) {
+        twin.on('properties.desired', function () {});
+        client._twin._maxOperationTimeout = 1;
+        assert.isTrue(fakeTransport.enableTwinDesiredPropertiesUpdates.calledOnce);
+        fakeTransport.enableTwinDesiredPropertiesUpdates = sinon.stub().callsArgWith(0, fakeError);
+        fakeTransport.emit('disconnect', new errors.TimeoutError()); // timeouts can be retried
+      });
+    });
   });
 });
 

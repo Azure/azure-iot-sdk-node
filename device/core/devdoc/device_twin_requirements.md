@@ -7,7 +7,7 @@ azure-iot-device.Twin provides access to the Device Twin functionaliy of IoTHub.
 
 ```typescript
 class Twin extends EventEmitter {
-  constructor(transport: Client.Transport);
+  constructor(transport: Client.Transport, retryPolicy: RetryPolicy, maxOperationTimeout: number);
   get(callback: (err: Error, twin?: Twin) => void): void;
   properties: {
     reported: {
@@ -61,6 +61,16 @@ class Twin extends EventEmitter {
 **SRS_NODE_DEVICE_TWIN_16_012: [** When a `twinDesiredPropertiesUpdates` event is emitted by the transport, the property patch passed as argument to the event handler shall be merged with the current desired properties. **]**
 
 **SRS_NODE_DEVICE_TWIN_16_013: [** Recursively for each desired property that is part of the patch received, an event named using the convention `properties.desired[.path]` shall be fired with an argument containing the value of the property. **]**
+
+**SRS_NODE_DEVICE_TWIN_18_045: [** If a property is already set when a handler is added for that property, the `Twin` object shall fire a property changed event for the property. **]**
+
+**SRS_NODE_DEVICE_TWIN_16_012: [** When a `twinDesiredPropertiesUpdates` event is emitted by the transport, the property patch passed as argument to the event handler shall be merged with the current desired properties. **]**
+
+**SRS_NODE_DEVICE_TWIN_16_013: [** Recursively for each desired property that is part of the patch received, an event named using the convention `properties.desired[.path]` shall be fired with an argument containing the value of the property. **]**
+
+### setRetryPolicy(retryPolicy: RetryPolicy): void
+
+**SRS_NODE_DEVICE_TWIN_16_014: [** the `retryPolicy` object passed to the `setRetryPolicy` method shall be used to retry any subsequent operation.  **]**
 
 
 ## Implementation notes
