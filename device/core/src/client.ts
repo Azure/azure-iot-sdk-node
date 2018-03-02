@@ -14,7 +14,7 @@ import { ExponentialBackOffWithJitter, RetryPolicy, RetryOperation } from 'azure
 import * as ConnectionString from './connection_string.js';
 import { BlobUploadClient } from './blob_upload';
 import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
-import { Twin } from './twin';
+import { Twin, TwinProperties } from './twin';
 import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
 import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
 import { X509AuthenticationProvider } from './x509_authentication_provider';
@@ -443,10 +443,13 @@ export class Client extends EventEmitter {
    *
    */
   getTwin(done: (err?: Error, twin?: Twin) => void, twin?: Twin): void {
-    /* Codes_SRS_NODE_DEVICE_CLIENT_18_001: [** The `getTwin` method shall call the `azure-iot-device-core!Twin.fromDeviceClient` method to create the device client object. **]** */
-    /* Codes_SRS_NODE_DEVICE_CLIENT_18_002: [** The `getTwin` method shall pass itself as the first parameter to `fromDeviceClient` and it shall pass the `done` method as the second parameter. **]**  */
-    /* Codes_SRS_NODE_DEVICE_CLIENT_18_003: [** The `getTwin` method shall use the second parameter (if it is not falsy) to call `fromDeviceClient` on. **]**    */
-    (twin || require('./twin.js').Twin).fromDeviceClient(this, done);
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_094: [If this is the first call to `getTwin` the method shall instantiate a new `Twin` object  and pass it the transport currently in use.]*/
+    if (!this._twin) {
+      this._twin = new Twin(this._transport);
+    }
+
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_095: [The `getTwin` method shall call the `get()` method on the `Twin` object currently in use and pass it its `done` argument for a callback.]*/
+    this._twin.get(done);
   }
 
   /**
@@ -727,10 +730,11 @@ export namespace Client {
     disableC2D(callback: (err?: Error) => void): void;
 
     // Twin
-    getTwinReceiver(done: (err?: Error, receiver?: any) => void): void;
-    sendTwinRequest(method: string, resource: string, properties: { [key: string]: any }, body: any, done?: (err?: Error, result?: any) => void): void;
-    enableTwin(callback: (err?: Error) => void): void;
-    disableTwin(callback: (err?: Error) => void): void;
+    on(type: 'twinDesiredPropertiesUpdate', func: (desiredProps: any) => void): this;
+    getTwin(callback: (err?: Error, twin?: TwinProperties) => void): void;
+    updateTwinReportedProperties(patch: any, callback: (err?: Error) => void): void;
+    enableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void;
+    disableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void;
 
     // Methods
     sendMethodResponse(response: DeviceMethodResponse, done?: (err?: Error, result?: any) => void): void;

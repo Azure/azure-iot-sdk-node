@@ -52,6 +52,10 @@ function FakeTransport() {
   this.disableC2D = function (callback) {
     callback();
   };
+
+  this.getTwin = function (callback) {
+    callback(null, { desired: {}, reported: {} });
+  };
 }
 
 util.inherits(FakeTransport, EventEmitter);

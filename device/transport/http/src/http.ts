@@ -12,7 +12,7 @@ import { Http as Base } from 'azure-iot-http-base';
 import { endpoint, errors, results, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
 import { translateError } from './http_errors.js';
 import { IncomingMessage } from 'http';
-import { DeviceMethodResponse, Client, X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
+import { DeviceMethodResponse, Client, X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider, TwinProperties } from 'azure-iot-device';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -499,34 +499,32 @@ export class Http extends EventEmitter implements Client.Transport {
   /**
    * @private
    */
-  getTwinReceiver(done: (err?: Error, receiver?: any) => void): void {
-    /*Codes_SRS_NODE_DEVICE_HTTP_16_020: [`getTwinReceiver` shall throw a `NotImplementedError`.]*/
+  getTwin(done: (err?: Error, twin?: TwinProperties) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_020: [`getTwin` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Twin is not implemented over HTTP.');
   }
 
   /**
    * @private
    */
-  sendTwinRequest(method: string, resource: string, properties: {
-      [key: string]: any;
-  }, body: any, done?: (err?: Error, result?: any) => void): void {
-    /*Codes_SRS_NODE_DEVICE_HTTP_16_021: [`sendTwinRequest` shall throw a `NotImplementedError`.]*/
+  updateTwinReportedProperties(done: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_034: [`updateTwinReportedProperties` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Twin is not implemented over HTTP.');
   }
 
   /**
    * @private
    */
-  enableTwin(callback: (err?: Error) => void): void {
-    /*Codes_SRS_NODE_DEVICE_HTTP_16_022: [`enableTwin` shall throw a `NotImplementedError`.]*/
+  enableTwinDesiredPropertiesUpdates(done: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_035: [`enableTwinDesiredPropertiesUpdates` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Twin is not implemented over HTTP.');
   }
 
   /**
    * @private
    */
-  disableTwin(callback: (err?: Error) => void): void {
-    /*Codes_SRS_NODE_DEVICE_HTTP_16_023: [`disableTwin` shall throw a `NotImplementedError`.]*/
+  disableTwinDesiredPropertiesUpdates(done: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_036: [`disableTwinDesiredPropertiesUpdates` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Twin is not implemented over HTTP.');
   }
 
