@@ -45,7 +45,7 @@ describe('AmqpTwinClient', function () {
   });
 
   describe('#constructor', function () {
-    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_005: [The `AmqpDeviceMethodClient` shall inherit from the `EventEmitter` class.] */
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_005: [The `AmqpTwinClient` shall inherit from the `EventEmitter` class.] */
     it('inherits from EventEmitter', function() {
       var client = new AmqpTwinClient({}, {});
       assert.instanceOf(client, EventEmitter);
@@ -87,8 +87,8 @@ describe('AmqpTwinClient', function () {
       assert.isTrue(fakeAmqpClient.attachReceiverLink.calledOnce);
     });
 
-    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_007: [The endpoint argument for attacheReceiverLink shall be `/devices/<deviceId>/twin`.] */
-    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_009: [The endpoint argument for attacheSenderLink shall be `/devices/<deviceId>/twin`.] */
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06v_007: [The endpoint argument for attachReceiverLink shall be `/devices/<deviceId>/twin`.] */
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_009: [The endpoint argument for attachSenderLink shall be `/devices/<deviceId>/twin`.] */
     it('attaches sender and receiver links to the `/devices/<deviceId>/twin` endpoint.', function() {
       methodUnderTest();
       assert.isTrue(fakeAmqpClient.attachSenderLink.calledWith('/devices/' + fakeConfig.deviceId + '/twin'));
@@ -115,15 +115,18 @@ describe('AmqpTwinClient', function () {
               } ] */
     it('configures link options for the sender and receiver links', function() {
       methodUnderTest();
-      assert.equal(fakeAmqpClient.attachSenderLink.firstCall.args[1].attach.sndSettleMode, 1, ' sender send settle mode not set appropriately' );
-      assert.equal(fakeAmqpClient.attachSenderLink.firstCall.args[1].attach.rcvSettleMode, 0, ' sender rcv settle mode not set appropriately' );
-      assert.equal(fakeAmqpClient.attachReceiverLink.firstCall.args[1].attach.sndSettleMode, 1, ' receiver send settle mode not set appropriately' );
-      assert.equal(fakeAmqpClient.attachReceiverLink.firstCall.args[1].attach.rcvSettleMode, 0, ' receiver rcv settle mode not set appropriately' );
-      assert.equal(fakeAmqpClient.attachSenderLink.firstCall.args[1].attach.properties['com.microsoft:api-version'], endpoint.apiVersion, ' sender api version not set appropriately');
-      assert.equal(fakeAmqpClient.attachReceiverLink.firstCall.args[1].attach.properties['com.microsoft:api-version'], endpoint.apiVersion, ' receiver api version not set appropriately');
-      assert.equal(fakeAmqpClient.attachReceiverLink.firstCall.args[1].attach.properties['com.microsoft:channel-correlation-id'], fakeAmqpClient.attachSenderLink.firstCall.args[1].attach.properties['com.microsoft:channel-correlation-id'], ' send and receiver correlation not equal');
-      assert(fakeAmqpClient.attachReceiverLink.firstCall.args[1].attach.properties['com.microsoft:channel-correlation-id'].length, 41); // 32 hex digits + 4 dashes + twin:
-      assert(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(fakeAmqpClient.attachSenderLink.firstCall.args[1].attach.properties['com.microsoft:channel-correlation-id'].substr(5, 36)), 'correlationId does not contains a uuid');
+      var senderLinkOptions = fakeAmqpClient.attachSenderLink.firstCall.args[1];
+      var receiverLinkOptions = fakeAmqpClient.attachReceiverLink.firstCall.args[1];
+      assert.equal(senderLinkOptions.attach.sndSettleMode, 1, ' sender send settle mode not set appropriately' );
+      assert.equal(senderLinkOptions.attach.rcvSettleMode, 0, ' sender rcv settle mode not set appropriately' );
+      assert.equal(receiverLinkOptions.attach.sndSettleMode, 1, ' receiver send settle mode not set appropriately' );
+      assert.equal(receiverLinkOptions.attach.rcvSettleMode, 0, ' receiver rcv settle mode not set appropriately' );
+      assert.equal(senderLinkOptions.attach.properties['com.microsoft:api-version'], endpoint.apiVersion, ' sender api version not set appropriately');
+      assert.equal(receiverLinkOptions.attach.properties['com.microsoft:api-version'], endpoint.apiVersion, ' receiver api version not set appropriately');
+      /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_036: [The same correlationId shall be used for both the sender and receiver links.]*/
+      assert.equal(receiverLinkOptions.attach.properties['com.microsoft:channel-correlation-id'], senderLinkOptions.attach.properties['com.microsoft:channel-correlation-id'], ' send and receiver correlation not equal');
+      assert(receiverLinkOptions.attach.properties['com.microsoft:channel-correlation-id'].length, 41); // 32 hex digits + 4 dashes + twin:
+      assert(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(senderLinkOptions.attach.properties['com.microsoft:channel-correlation-id'].substr(5, 36)), 'correlationId does not contains a uuid');
     });
 
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_008: [If attaching the sender link fails, the `getTwin` method shall call its callback with the error that caused the failure.]*/
@@ -152,9 +155,9 @@ describe('AmqpTwinClient', function () {
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_012: [If the `SenderLink.send` call fails the `getTwin` method shall call its callback with the error that caused the failure.]*/
-    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_020: [If the `SenderLink.send` call fails the `updateTwinReportedProperties` method shall call its callback with the error that caused the failure.]*/
-    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_028: [If the `SenderLink.send` call fails the `enableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure.]*/
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_012: [If the `SenderLink.send` call fails, the `getTwin` method shall call its callback with the error that caused the failure.]*/
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_020: [If the `SenderLink.send` call fails, the `updateTwinReportedProperties` method shall call its callback with the error that caused the failure.]*/
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_028: [If the `SenderLink.send` call fails, the `enableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure.]*/
     it('calls its callback with an error if it fails to send the message', function (testCallback) {
       var fakeError = new Error('fake');
       fakeSenderLink.send = sinon.stub().callsArgWith(1, fakeError);
@@ -170,7 +173,7 @@ describe('AmqpTwinClient', function () {
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_008: [If attaching the sender link fails, the `getTwin` method shall call its callback with the error that caused the failure.]*/
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_009: [THe `getTwin` method shall attach the receiver link if it's not already attached.]*/
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_010: [If attaching the receiver link fails, the `getTwin` method shall call its callback with the error that caused the failure.]*/
-    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_012: [If the `SenderLink.send` call fails the `getTwin` method shall call its callback with the error that caused the failure.]*/
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_012: [If the `SenderLink.send` call fails, the `getTwin` method shall call its callback with the error that caused the failure.]*/
     testStateMachine(function (callback) {
       twinClient.getTwin(callback);
     });
@@ -178,31 +181,18 @@ describe('AmqpTwinClient', function () {
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_011: [** The `getTwin` method shall send an `AmqpMessage` using the `SenderLink.send` method with the following annotations and properties:
     - `operation` annotation set to `GET`.
     - `resource` annotation set to `undefined`
-    - `correlationId` property set to a random integer
+    - `correlationId` property set to a uuid
     - `body` set to ` `.]*/
-    it('sends a message with the operation annotation set to GET', function () {
+    it('sends a message with the correct annotations, properties and body', function () {
       twinClient.getTwin(function () {});
-      assert.strictEqual(fakeSenderLink.send.firstCall.args[0].messageAnnotations.operation, 'GET');
+      var amqpMessage = fakeSenderLink.send.firstCall.args[0];
+      assert.strictEqual(amqpMessage.messageAnnotations.operation, 'GET');
+      assert.isUndefined(amqpMessage.messageAnnotations.resource);
+      assert.isString(amqpMessage.properties.correlationId);
+      assert.strictEqual(amqpMessage.body, ' ');
     });
 
-    it('sends a message with no resource annotation', function () {
-      twinClient.getTwin(function () {});
-      assert.isUndefined(fakeSenderLink.send.firstCall.args[0].messageAnnotations.resource);
-    });
-
-    it('sends a message with a correlation id that is an integer', function () {
-      twinClient.getTwin(function () {});
-      var correlationId = parseInt(fakeSenderLink.send.firstCall.args[0].properties.correlationId);
-      assert.isNumber(correlationId);
-      assert.isNotNaN(correlationId);
-    });
-
-    it('sends a message with an empty body', function () {
-      twinClient.getTwin(function () {});
-      assert.strictEqual(fakeSenderLink.send.firstCall.args[0].body, ' ');
-    });
-
-    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_013: [The `getTwin` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler and until a message with the same `correlationId` as the one that was sent is received.]*/
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_013: [The `getTwin` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received.]*/
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_014: [The `getTwin` method shall parse the body of the received message and call its callback with a `null` error object and the parsed object as a result.]*/
     it('parses the response from the body of the corresponding response message', function (testCallback) {
       var fakeTwin = { fake : 'twin' };
@@ -231,29 +221,16 @@ describe('AmqpTwinClient', function () {
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_019: [The `updateTwinReportedProperties` method shall send an `AmqpMessage` using the `SenderLink.send` method with the following annotations and properties:
     - `operation` annotation set to `PATCH`.
     - `resource` annotation set to `/properties/reported`
-    - `correlationId` property set to a random integer
+    - `correlationId` property set to a uuid
     - `body` set to the stringified patch object.]*/
-    it('sends a message with the operation annotation set to PATCH', function () {
-      twinClient.updateTwinReportedProperties({ fake: 'patch' }, function () {});
-      assert.strictEqual(fakeSenderLink.send.firstCall.args[0].messageAnnotations.operation, 'PATCH');
-    });
-
-    it('sends a message with the resource annotation set to /properties/reported', function () {
-      twinClient.updateTwinReportedProperties({ fake: 'patch' }, function () {});
-      assert.strictEqual(fakeSenderLink.send.firstCall.args[0].messageAnnotations.resource, '/properties/reported');
-    });
-
-    it('sends a message with a correlation id that is an integer', function () {
-      twinClient.updateTwinReportedProperties({ fake: 'patch' }, function () {});
-      var correlationId = parseInt(fakeSenderLink.send.firstCall.args[0].properties.correlationId);
-      assert.isNumber(correlationId);
-      assert.isNotNaN(correlationId);
-    });
-
-    it('sends a message with the body set to the stringified patch content', function () {
+    it('sends a message with the correct annotations, properties and body', function () {
       var fakePatch = { fake: 'patch' };
       twinClient.updateTwinReportedProperties(fakePatch, function () {});
-      assert.strictEqual(fakeSenderLink.send.firstCall.args[0].body, JSON.stringify(fakePatch));
+      var amqpMessage = fakeSenderLink.send.firstCall.args[0];
+      assert.strictEqual(amqpMessage.messageAnnotations.operation, 'PATCH');
+      assert.strictEqual(amqpMessage.messageAnnotations.resource, '/properties/reported');
+      assert.isString(amqpMessage.properties.correlationId);
+      assert.strictEqual(amqpMessage.body, JSON.stringify(fakePatch));
     });
   });
 
@@ -270,28 +247,15 @@ describe('AmqpTwinClient', function () {
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_027: [The `enableTwinDesiredPropertiesUpdates` method shall send an `AmqpMessage` using the `SenderLink.send` method with the following annotations and properties:
     - `operation` annotation set to `PUT`.
     - `resource` annotation set to `/notifications/twin/properties/desired`
-    - `correlationId` property set to a random integer
+    - `correlationId` property set to a uuid
     - `body` set to `undefined`.]*/
-    it('sends a message with the operation annotation set to PUT', function () {
+    it('sends a message with the correct annotations, properties and body', function () {
       twinClient.enableTwinDesiredPropertiesUpdates(function () {});
-      assert.strictEqual(fakeSenderLink.send.firstCall.args[0].messageAnnotations.operation, 'PUT');
-    });
-
-    it('sends a message with the resource annotation set to /notifications/twin/properties/desired', function () {
-      twinClient.enableTwinDesiredPropertiesUpdates(function () {});
-      assert.strictEqual(fakeSenderLink.send.firstCall.args[0].messageAnnotations.resource, '/notifications/twin/properties/desired');
-    });
-
-    it('sends a message with a correlation id that is an integer', function () {
-      twinClient.enableTwinDesiredPropertiesUpdates(function () {});
-      var correlationId = parseInt(fakeSenderLink.send.firstCall.args[0].properties.correlationId);
-      assert.isNumber(correlationId);
-      assert.isNotNaN(correlationId);
-    });
-
-    it('sends a message with an empty body', function () {
-      twinClient.enableTwinDesiredPropertiesUpdates(function () {});
-      assert.strictEqual(fakeSenderLink.send.firstCall.args[0].body, ' ');
+      var amqpMessage = fakeSenderLink.send.firstCall.args[0];
+      assert.strictEqual(amqpMessage.messageAnnotations.operation, 'PUT');
+      assert.strictEqual(amqpMessage.messageAnnotations.resource, '/notifications/twin/properties/desired');
+      assert.isString(amqpMessage.properties.correlationId);
+      assert.strictEqual(amqpMessage.body, ' ');
     });
   });
 
@@ -308,7 +272,7 @@ describe('AmqpTwinClient', function () {
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_032: [The `disableTwinDesiredPropertiesUpdates` method shall send an `AmqpMessage` using the `SenderLink.send` method with the following annotations and properties:
     - `operation` annotation set to `DELETE`.
     - `resource` annotation set to `/notifications/twin/properties/desired`
-    - `correlationId` property set to a random integer
+    - `correlationId` property set to a uuid
     - `body` set to `undefined`.]*/
     it('sends a message with the operation annotation set to DELETE', function (testCallback) {
       twinClient.enableTwinDesiredPropertiesUpdates(function () {
@@ -325,7 +289,7 @@ describe('AmqpTwinClient', function () {
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_033: [If the `SenderLink.send` call fails the `disableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure.]*/
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_033: [If the `SenderLink.send` call fails, the `disableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure.]*/
     it('calls its callback with an error if it fails to send the message', function (testCallback) {
       var fakeError = new Error('fake');
       fakeSenderLink.send = sinon.stub().callsArgWith(1, fakeError);
@@ -360,12 +324,10 @@ describe('AmqpTwinClient', function () {
       });
     });
 
-    it('sends a message with a correlation id that is an integer', function (testCallback) {
+    it('sends a message with a correlation id that is a uuid', function (testCallback) {
       twinClient.enableTwinDesiredPropertiesUpdates(function () {
         twinClient.disableTwinDesiredPropertiesUpdates(function () {});
-        var correlationId = parseInt(fakeSenderLink.send.secondCall.args[0].properties.correlationId);
-        assert.isNumber(correlationId);
-        assert.isNotNaN(correlationId);
+        assert.isString(fakeSenderLink.send.secondCall.args[0].properties.correlationId);
         testCallback();
       });
       fakeReceiverLink.emit('message', {
