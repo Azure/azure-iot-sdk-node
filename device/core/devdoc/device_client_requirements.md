@@ -273,14 +273,14 @@ interface DeviceMethodEventHandler {
 
 **SRS_NODE_DEVICE_CLIENT_16_019: [** The `disconnect` event shall be emitted when the client is disconnected from the server. **]**
 
-**SRS_NODE_DEVICE_CLIENT_16_097: [** If the transport emits a `disconnect` event the client while subscribed to C2D messages the retry policy shall try to re-enable the C2D functionality using the transport `enableC2D` method. **]**
+**SRS_NODE_DEVICE_CLIENT_16_097: [** If the transport emits a `disconnect` event event while the client is subscribed to c2d messages the retry policy shall be used to reconnect and re-enable the feature using the transport `enableC2D` method. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_102: [** If the retry policy fails to reestablish the C2D functionality a `disconnect` event shall be emitted with a `results.Disconnected` object. **]**
 
-**SRS_NODE_DEVICE_CLIENT_16_098: [** If the transport emits a `disconnect` event the client while subscribed to direct methods the retry policy shall try to re-enable the direct methods functionality using the transport `enableMethods` method. **]**
+**SRS_NODE_DEVICE_CLIENT_16_098: [** If the transport emits a `disconnect` event while the client is subscribed to direct methods the retry policy shall be used to reconnect and re-enable the feature using the transport `enableMethods` method. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_100: [** If the retry policy fails to reestablish the direct methods functionality a `disconnect` event shall be emitted with a `results.Disconnected` object. **]**
 
-**SRS_NODE_DEVICE_CLIENT_16_099: [** If the transport emits a `disconnect` event the client while subscribed to desired properties updates the retry policy shall try to re-enable the twin desired properties updates using the transport `enableTwinDesiredPropertiesUpdates` method. **]**
+**SRS_NODE_DEVICE_CLIENT_16_099: [** If the transport emits a `disconnect` event while the client is subscribed to desired properties updates the retry policy shall be used to reconnect and re-enable the feature using the transport `enableTwinDesiredPropertiesUpdates` method. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_101: [** If the retry policy fails to reestablish the twin desired properties updates functionality a `disconnect` event shall be emitted with a `results.Disconnected` object. **]**

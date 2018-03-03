@@ -23,7 +23,7 @@ class Twin extends EventEmitter {
 
 ### constructor(transport: Client.Transport);
 
-**SRS_NODE_DEVICE_TWIN_16_001: [** The `Twin` constructor shall subscribe to the `onDesiredPropertiesUpdate` event off the `transport` object. **]**
+**SRS_NODE_DEVICE_TWIN_16_001: [** The `Twin` constructor shall subscribe to the `twinDesiredPropertiesUpdate` event off the `transport` object. **]**
 
 ### get(callback: (err: Error, twin?: Twin) => void): void;
 
@@ -35,7 +35,7 @@ class Twin extends EventEmitter {
 
 **SRS_NODE_DEVICE_TWIN_16_005: [** Once the properties have been merged the `callback` method passed to the call to `get` shall be called with a first argument that is `null` and a second argument that is the current `Twin` instance (`this`). **]**
 
-**SRS_NODE_DEVICE_TWIN_16_006: [** For each desired property that is part of the `TwinProperties` object received, an event named after the path to this property shall be fired. **]**
+**SRS_NODE_DEVICE_TWIN_16_006: [** For each desired property that is part of the `TwinProperties` object received, an event named after the path to this property shall be fired and passed the property value as argument. **]**
 
 ### properties.reported.update(state: any, done: (err?: null) => void): void;
 `update` is a method which application developers use to send reported state to the service.
@@ -52,7 +52,7 @@ class Twin extends EventEmitter {
 
 ### on('properties.desired[.path])
 
-**SRS_NODE_DEVICE_TWIN_16_010: [** When a listener is added for an event name starting with `properties.desired` the `enableTwinDesiredPropertiesUpdates` method of the `Transport` object shall be called with a callback function accepting an optional error argument. **]**
+**SRS_NODE_DEVICE_TWIN_16_010: [** When a listener is added for the first time on an event which name starts with `properties.desired`, the twin shall call the `enableTwinDesiredPropertiesUpdates` method of the `Transport` object. **]**
 
 **SRS_NODE_DEVICE_TWIN_16_011: [** If the callback passed to the transport is called with an error, that error shall be emitted by the Twin object. **]**
 
@@ -70,7 +70,7 @@ class Twin extends EventEmitter {
 
 ### setRetryPolicy(retryPolicy: RetryPolicy): void
 
-**SRS_NODE_DEVICE_TWIN_16_014: [** the `retryPolicy` object passed to the `setRetryPolicy` method shall be used to retry any subsequent operation.  **]**
+**SRS_NODE_DEVICE_TWIN_16_014: [** the `retryPolicy` object passed to the `setRetryPolicy` method shall be used to retry any subsequent operation (`get`, `properties.reported.update` or `enableTwinDesiredPropertiesUpdates`).  **]**
 
 
 ## Implementation notes

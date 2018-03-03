@@ -37,7 +37,7 @@ describe('Twin', function () {
   });
 
   describe('#constructor', function () {
-    /*Tests_SRS_NODE_DEVICE_TWIN_16_001: [The `Twin` constructor shall subscribe to the `onDesiredPropertiesUpdate` event off the `transport` object.]*/
+    /*Tests_SRS_NODE_DEVICE_TWIN_16_001: [The `Twin` constructor shall subscribe to the `twinDesiredPropertiesUpdate` event off the `transport` object.]*/
     it('subscribes to the twinDesiredPropertiesUpdate event on the transport', function () {
       var twin = new Twin(fakeTransport);
       assert.isTrue(fakeTransport.on.calledOnce);
@@ -75,7 +75,7 @@ describe('Twin', function () {
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_TWIN_16_006: [For each desired property that is part of the `TwinProperties` object received, an event named after the path to this property shall be fired.]*/
+    /*Tests_SRS_NODE_DEVICE_TWIN_16_006: [For each desired property that is part of the `TwinProperties` object received, an event named after the path to this property shall be fired and passed the property value as argument.]*/
     it('fires events for the new properties that have been merged', function (testCallback) {
       var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
       var genericEventReceived = false;
@@ -166,7 +166,7 @@ describe('Twin', function () {
   });
 
   describe('on(\'properties.desired[.path]\'', function () {
-    /*Tests_SRS_NODE_DEVICE_TWIN_16_010: [When a listener is added for an event name starting with `properties.desired` the `enableTwinDesiredPropertiesUpdates` method of the `Transport` object shall be called with a callback function accepting an optional error argument.]*/
+    /*Tests_SRS_NODE_DEVICE_TWIN_16_010: [When a listener is added for the first time on an event which name starts with `properties.desired`, the twin shall call the `enableTwinDesiredPropertiesUpdates` method of the `Transport` object.]*/
     it('calls enableTwinDesiredPropertiesUpdates on the transport', function () {
       var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
       twin.on('properties.desired', function () {});
@@ -241,7 +241,7 @@ describe('Twin', function () {
   });
 
   describe('#setRetryPolicy', function () {
-    /*Tests_SRS_NODE_DEVICE_TWIN_16_014: [the `retryPolicy` object passed to the `setRetryPolicy` method shall be used to retry any subsequent operation.]*/
+    /*Tests_SRS_NODE_DEVICE_TWIN_16_014: [the `retryPolicy` object passed to the `setRetryPolicy` method shall be used to retry any subsequent operation (`get`, `properties.reported.update` or `enableTwinDesiredPropertiesUpdates`).]*/
     it('uses the retry policy passed as an argument in the subsequent calls', function (testCallback) {
       var testPolicy = {
         shouldRetry: sinon.stub().returns(false),

@@ -31,10 +31,19 @@ export interface TwinProperties {
  *
  * For more information see {@link https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins|Understanding Device Twins}.
  *
+ *  @fires Twin#properties.desired[.path]
+ *
  */
 export class Twin extends EventEmitter {
   static errorEvent: string = 'error';
   static desiredPath: string = 'properties.desired';
+
+  /**
+   * properties.desired events.
+   *
+   * @event Twin#properties.desired[.path]
+   * @type {object}
+   */
 
   /**
    * The desired and reported properties dictionnaries (respectively in `properties.desired` and `properties.reported`).
@@ -49,7 +58,9 @@ export class Twin extends EventEmitter {
    * The constructor should not be used directly and instead the SDK user should use the {@link Client#getTwin} method to obtain a valid `Twin` object.
    * @constructor
    * @private
-   * @param client The device client to use in order to communicate with the Azure IoT hub.
+   * @param transport    The transport to use in order to communicate with the Azure IoT hub.
+   * @param retryPolicy  The retry policy to apply when encountering an error.
+   * @param maxTimeout   The maximum time allowed for the twin to retry before the operation is considered failed.
    */
   constructor(transport: Client.Transport, retryPolicy: RetryPolicy, maxTimeout: number) {
     super();
@@ -58,7 +69,7 @@ export class Twin extends EventEmitter {
     this._maxOperationTimeout = maxTimeout;
     this.desiredPropertiesUpdatesEnabled = false;
     this.on('newListener', this._handleNewListener.bind(this));
-    /*Codes_SRS_NODE_DEVICE_TWIN_16_001: [The `Twin` constructor shall subscribe to the `onDesiredPropertiesUpdate` event off the `transport` object.]*/
+    /*Codes_SRS_NODE_DEVICE_TWIN_16_001: [The `Twin` constructor shall subscribe to the `twinDesiredPropertiesUpdate` event off the `transport` object.]*/
     this._transport.on('twinDesiredPropertiesUpdate', this._onDesiredPropertiesUpdate.bind(this));
   }
 
@@ -80,7 +91,7 @@ export class Twin extends EventEmitter {
           /*Codes_SRS_NODE_DEVICE_TWIN_16_004: [If the callback passed to the `getTwin` method is called with no error and a `TwinProperties` object, these properties shall be merged with the current instance properties.]*/
           this._mergePatch(this.properties.desired, twinProperties.desired);
           this._mergePatch(this.properties.reported, twinProperties.reported);
-          /*Codes_SRS_NODE_DEVICE_TWIN_16_006: [For each desired property that is part of the `TwinProperties` object received, an event named after the path to this property shall be fired.]*/
+          /*Codes_SRS_NODE_DEVICE_TWIN_16_006: [For each desired property that is part of the `TwinProperties` object received, an event named after the path to this property shall be fired and passed the property value as argument.]*/
           this._fireChangeEvents(this.properties.desired);
           /*Codes_SRS_NODE_DEVICE_TWIN_16_005: [Once the properties have been merged the `callback` method passed to the call to `get` shall be called with a first argument that is `null` and a second argument that is the current `Twin` instance (`this`).]*/
           opCallback(null, this);
@@ -93,7 +104,7 @@ export class Twin extends EventEmitter {
    * @private
    */
   setRetryPolicy(policy: RetryPolicy): void {
-    /*Codes_SRS_NODE_DEVICE_TWIN_16_014: [the `retryPolicy` object passed to the `setRetryPolicy` method shall be used to retry any subsequent operation.]*/
+    /*Codes_SRS_NODE_DEVICE_TWIN_16_014: [the `retryPolicy` object passed to the `setRetryPolicy` method shall be used to retry any subsequent operation (`get`, `properties.reported.update` or `enableTwinDesiredPropertiesUpdates`).]*/
     this._retryPolicy = policy;
   }
 
@@ -194,7 +205,7 @@ export class Twin extends EventEmitter {
         });
       }
 
-      /*Codes_SRS_NODE_DEVICE_TWIN_16_010: [When a listener is added for an event name starting with `properties.desired` the `enableTwinDesiredPropertiesUpdates` method of the `Transport` object shall be called with a callback function accepting an optional error argument.]*/
+      /*Codes_SRS_NODE_DEVICE_TWIN_16_010: [When a listener is added for the first time on an event which name starts with `properties.desired`, the twin shall call the `enableTwinDesiredPropertiesUpdates` method of the `Transport` object.]*/
       this.enableTwinDesiredPropertiesUpdates((err) => {
         if (err) {
           debug('error enabling desired properties updates: ' + err.toString());

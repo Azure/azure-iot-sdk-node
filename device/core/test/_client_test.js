@@ -950,7 +950,7 @@ describe('Client', function () {
       fakeTransport.getTwin = sinon.stub().callsArgWith(0, null, new Twin(fakeTransport, fakeRetryPolicy));
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_097: [If the transport emits a `disconnect` event the client while subscribed to C2D messages the retry policy shall try to re-enable the C2D functionality using the transport `enableC2D` method.]*/
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_097: [If the transport emits a `disconnect` event while the client is subscribed to c2d messages updates the retry policy shall be used to reconnect and re-enable the feature using the transport `enableC2D` method.]*/
     it('reenables C2D after being disconnected if C2D was enabled', function () {
       var client = new Client(fakeTransport);
       client.setRetryPolicy(fakeRetryPolicy);
@@ -978,7 +978,7 @@ describe('Client', function () {
       fakeTransport.emit('disconnect', new errors.TimeoutError()); // timeouts can be retried
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_099: [If the transport emits a `disconnect` event the client while subscribed to desired properties updates the retry policy shall try to re-enable the twin desired properties updates using the transport `enableTwinDesiredPropertiesUpdates` method.]*/
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_099: [If the transport emits a `disconnect` event while the client is subscribed to direct methods the retry policy shall be used to reconnect and re-enable the feature using the transport `enableTwinDesiredPropertiesUpdates` method.]*/
     it('reenables device methods after being disconnected if methods were enabled', function () {
       var client = new Client(fakeTransport);
       client.setRetryPolicy(fakeRetryPolicy);
@@ -1006,7 +1006,7 @@ describe('Client', function () {
       fakeTransport.emit('disconnect', new errors.TimeoutError()); // timeouts can be retried
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_098: [If the transport emits a `disconnect` event the client while subscribed to direct methods the retry policy shall try to re-enable the direct methods functionality using the transport `enableMethods` method.]*/
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_098: [If the transport emits a `disconnect` event while the client is subscribed to desired properties updates the retry policy shall be used to reconnect and re-enable the feature using the transport `enableMethods` method.]*/
     it('reenables device methods after being disconnected if Twin desired properties updates were enabled', function () {
       var client = new Client(fakeTransport);
       client.setRetryPolicy(fakeRetryPolicy);
