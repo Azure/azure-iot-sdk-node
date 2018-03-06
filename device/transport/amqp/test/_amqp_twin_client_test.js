@@ -9,7 +9,7 @@ var sinon = require('sinon');
 
 var AmqpTwinClient = require('../lib/amqp_twin_client.js').AmqpTwinClient;
 var Amqp = require('../lib/amqp').Amqp;
-var Message = require('azure-iot-common').Message;
+var AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
 var errors = require('azure-iot-common').errors;
 var endpoint = require('azure-iot-common').endpoint;
 
@@ -202,8 +202,10 @@ describe('AmqpTwinClient', function () {
       });
 
       fakeReceiverLink.emit('message', {
-        correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
-        data: new Buffer(JSON.stringify(fakeTwin))
+        properties: {
+          correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
+        },
+        body: new Buffer(JSON.stringify(fakeTwin))
       });
     });
   });
@@ -280,12 +282,15 @@ describe('AmqpTwinClient', function () {
         assert.strictEqual(fakeSenderLink.send.secondCall.args[0].messageAnnotations.operation, 'DELETE');
         testCallback();
       });
+
       fakeReceiverLink.emit('message', {
-        correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
+        properties: {
+          correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
+        },
         messageAnnotations: {
           status: 200
         },
-        data: undefined
+        body: undefined
       });
     });
 
@@ -301,7 +306,9 @@ describe('AmqpTwinClient', function () {
       });
 
       fakeReceiverLink.emit('message', {
-        correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
+        properties: {
+          correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId
+        },
         messageAnnotations: {
           status: 200
         },
@@ -316,7 +323,9 @@ describe('AmqpTwinClient', function () {
         testCallback();
       });
       fakeReceiverLink.emit('message', {
-        correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
+        properties: {
+          correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId
+        },
         messageAnnotations: {
           status: 200
         },
@@ -331,7 +340,9 @@ describe('AmqpTwinClient', function () {
         testCallback();
       });
       fakeReceiverLink.emit('message', {
-        correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
+        properties: {
+          correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId
+        },
         messageAnnotations: {
           status: 200
         },
@@ -346,7 +357,9 @@ describe('AmqpTwinClient', function () {
         testCallback();
       });
       fakeReceiverLink.emit('message', {
-        correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
+        properties: {
+          correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId
+        },
         messageAnnotations: {
           status: 200
         },
@@ -377,7 +390,9 @@ describe('AmqpTwinClient', function () {
         });
       });
       fakeReceiverLink.emit('message', {
-        correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
+        properties: {
+          correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId
+        },
         messageAnnotations: {
           status: 200
         },
@@ -400,7 +415,9 @@ describe('AmqpTwinClient', function () {
         });
       });
       fakeReceiverLink.emit('message', {
-        correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
+        properties: {
+          correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId
+        },
         messageAnnotations: {
           status: 200
         },
@@ -423,7 +440,9 @@ describe('AmqpTwinClient', function () {
         });
       });
       fakeReceiverLink.emit('message', {
-        correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
+        properties: {
+          correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId
+        },
         messageAnnotations: {
           status: 200
         },
@@ -445,15 +464,17 @@ describe('AmqpTwinClient', function () {
 
         twinClient.enableTwinDesiredPropertiesUpdates(function () {
           fakeReceiverLink.emit('message', {
-            data: JSON.stringify(desiredPropDelta)
+            body: JSON.stringify(desiredPropDelta)
           });
         });
         fakeReceiverLink.emit('message', {
-          correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
+          properties: {
+            correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId
+          },
           messageAnnotations: {
             status: 200
           },
-          data: undefined
+          body: undefined
         });
       });
 
@@ -469,7 +490,9 @@ describe('AmqpTwinClient', function () {
           fakeReceiverLink.emit('message', {});
         });
         fakeReceiverLink.emit('message', {
-          correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
+          properties: {
+            correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId
+          },
           messageAnnotations: {
             status: 200
           },
@@ -491,7 +514,9 @@ describe('AmqpTwinClient', function () {
           fakeSenderLink.emit('error', fakeError);
         });
         fakeReceiverLink.emit('message', {
-          correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
+          properties: {
+            correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId
+          },
           messageAnnotations: {
             status: 200
           },
@@ -511,7 +536,9 @@ describe('AmqpTwinClient', function () {
           fakeReceiverLink.emit('error', fakeError);
         });
         fakeReceiverLink.emit('message', {
-          correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
+          properties: {
+            correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId
+          },
           messageAnnotations: {
             status: 200
           },

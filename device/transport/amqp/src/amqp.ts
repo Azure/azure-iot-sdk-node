@@ -61,7 +61,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
   private _d2cLink: SenderLink;
 
   private _c2dErrorListener: (err: Error) => void;
-  private _c2dMessageListener: (msg: Message) => void;
+  private _c2dMessageListener: (msg: AmqpMessage) => void;
 
   private _d2cErrorListener: (err: Error) => void;
 
@@ -124,7 +124,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
     };
 
     this._c2dMessageListener = (msg) => {
-      this.emit('message', msg);
+      this.emit('message', AmqpMessage.toMessage(msg));
     };
 
     this._d2cErrorListener = (err) => {
@@ -559,7 +559,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
   /*Codes_SRS_NODE_DEVICE_AMQP_16_013: [The ‘complete’ method shall call the ‘complete’ method of the C2D `ReceiverLink` object and pass it the message and the callback given as parameters.] */
   complete(message: Message, done?: (err?: Error, result?: results.MessageCompleted) => void): void {
     if (this._c2dLink) {
-      this._c2dLink.complete(message, done);
+      this._c2dLink.complete(message.transportObj, done);
     } else {
       done(new errors.DeviceMessageLockLostError('No active C2D link'));
     }
@@ -576,7 +576,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
   /*Codes_SRS_NODE_DEVICE_AMQP_16_014: [The ‘reject’ method shall call the ‘reject’ method of the C2D `ReceiverLink` object and pass it the message and the callback given as parameters.] */
   reject(message: Message, done?: (err?: Error, result?: results.MessageRejected) => void): void {
     if (this._c2dLink) {
-      this._c2dLink.reject(message, done);
+      this._c2dLink.reject(message.transportObj, done);
     } else {
       done(new errors.DeviceMessageLockLostError('No active C2D link'));
     }
@@ -593,7 +593,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
   /*Codes_SRS_NODE_DEVICE_AMQP_16_012: [The ‘abandon’ method shall call the ‘abandon’ method of the C2D `ReceiverLink` object and pass it the message and the callback given as parameters.] */
   abandon(message: Message, done?: (err?: Error, result?: results.MessageAbandoned) => void): void {
     if (this._c2dLink) {
-      this._c2dLink.abandon(message, done);
+      this._c2dLink.abandon(message.transportObj, done);
     } else {
       done(new errors.DeviceMessageLockLostError('No active C2D link'));
     }

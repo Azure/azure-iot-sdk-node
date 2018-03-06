@@ -58,7 +58,7 @@ describe('ReceiverLink', function() {
         var link = new ReceiverLink('link', {}, fakeAmqp10Client);
         link.attach(function() {
           link[testConfig.recvLinkMethod](fakeMessage, function() {
-            assert(fakeLinkObj[testConfig.amqp10LinkMethod].calledWith(fakeMessage.transportObj));
+            assert(fakeLinkObj[testConfig.amqp10LinkMethod].calledWith(fakeMessage));
             testCallback();
           });
         });
@@ -196,7 +196,7 @@ describe('ReceiverLink', function() {
         var link = new ReceiverLink('link', {}, fakeAmqp10Client);
         link.attach(function() {
           link.on('message', function(msg) {
-            assert.strictEqual(msg.transportObj, amqpMessage);
+            assert.strictEqual(msg, amqpMessage);
             testCallback();
           });
           fakeLinkObj.emit('message', amqpMessage);

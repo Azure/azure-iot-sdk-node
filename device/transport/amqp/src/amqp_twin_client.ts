@@ -6,7 +6,7 @@
 import { EventEmitter } from 'events';
 import machina = require('machina');
 
-import { endpoint, Message, AuthenticationProvider } from 'azure-iot-common';
+import { endpoint, AuthenticationProvider } from 'azure-iot-common';
 import { Amqp as BaseAmqpClient, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
 import { TwinProperties } from 'azure-iot-device';
 
@@ -43,7 +43,7 @@ export class AmqpTwinClient extends EventEmitter {
   private _fsm: any;
   private _pendingTwinRequests: { [key: string]: (err: Error, twinProperties?: any) => void };
 
-  private _messageHandler: (message: Message) => void;
+  private _messageHandler: (message: AmqpMessage) => void;
   private _errorHandler: (err: Error) => void;
 
   constructor(authenticationProvider: AuthenticationProvider, client: any) {
@@ -54,14 +54,14 @@ export class AmqpTwinClient extends EventEmitter {
     this._receiverLink = null;
     this._pendingTwinRequests = {};
 
-    this._messageHandler = (message: Message): void => {
+    this._messageHandler = (message: AmqpMessage): void => {
       //
       // The ONLY time we should see a message on the receiver link without a correlationId is if the message is a desired property delta update.
       //
-      const correlationId: string = message.correlationId;
+      const correlationId: string = message.properties ? message.properties.correlationId : undefined;
       if (correlationId) {
         this._onResponseMessage(message);
-      } else if (message.hasOwnProperty('data')) {
+      } else if (message.hasOwnProperty('body')) {
         this._onDesiredPropertyDelta(message);
       } else {
         //
@@ -289,17 +289,17 @@ export class AmqpTwinClient extends EventEmitter {
     };
   }
 
-  private _onResponseMessage(message: Message): void {
+  private _onResponseMessage(message: AmqpMessage): void {
     debug('onResponseMessage: The downstream message is: ' + JSON.stringify(message));
     /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_013: [The `getTwin` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received.]*/
     /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_021: [The `updateTwinReportedProperties` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received.]*/
     /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_029: [The `enableTwinDesiredPropertiesUpdates` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received.]*/
     /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_034: [The `disableTwinDesiredPropertiesUpdates` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received.]*/
-    if (this._pendingTwinRequests[message.correlationId]) {
-      const pendingRequestCallback = this._pendingTwinRequests[message.correlationId];
-      delete this._pendingTwinRequests[message.correlationId];
+    if (this._pendingTwinRequests[message.properties.correlationId]) {
+      const pendingRequestCallback = this._pendingTwinRequests[message.properties.correlationId];
+      delete this._pendingTwinRequests[message.properties.correlationId];
       // TODO: Test resource property and status code?
-      let result = message.data ? JSON.parse(message.data) : undefined;
+      let result = message.body ? JSON.parse(message.body) : undefined;
       /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_014: [The `getTwin` method shall parse the body of the received message and call its callback with a `null` error object and the parsed object as a result.]*/
       /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_022: [The `updateTwinReportedProperties` method shall call its callback with no argument when a response is received]*/
       /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_030: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with no argument when a response is received]*/
@@ -310,9 +310,9 @@ export class AmqpTwinClient extends EventEmitter {
     }
   }
 
-  private _onDesiredPropertyDelta(message: Message): void {
+  private _onDesiredPropertyDelta(message: AmqpMessage): void {
     debug('onDesiredPropertyDelta: The message is: ' + JSON.stringify(message));
-    this.emit('twinDesiredPropertiesUpdate', JSON.parse(message.data));
+    this.emit('twinDesiredPropertiesUpdate', JSON.parse(message.body));
   }
 
   private _sendTwinRequest(method: TwinMethod, resource: string, body: string, callback: (err?: Error) => void): void {

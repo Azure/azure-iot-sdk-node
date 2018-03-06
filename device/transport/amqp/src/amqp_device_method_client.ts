@@ -107,11 +107,11 @@ export class AmqpDeviceMethodClient extends EventEmitter {
                         this._receiverLink.on('message', (msg) => {
                           debug('got method request');
                           debug(JSON.stringify(msg, null, 2));
-                          const methodName = msg.properties.getValue(methodMessagePropertyKeys.methodName);
+                          const methodName = msg.applicationProperties[methodMessagePropertyKeys.methodName];
                           const methodRequest = {
                             methods: { methodName: methodName },
-                            requestId: msg.correlationId,
-                            body: msg.getData()
+                            requestId: msg.properties.correlationId,
+                            body: msg.body
                           };
 
                           debug(JSON.stringify(methodRequest, null, 2));

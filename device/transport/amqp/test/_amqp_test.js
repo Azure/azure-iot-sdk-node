@@ -8,6 +8,7 @@ var uuid = require('uuid');
 var assert = require('chai').assert;
 var sinon = require('sinon');
 
+var AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
 var Message = require('azure-iot-common').Message;
 var Amqp = require('../lib/amqp.js').Amqp;
 var AmqpTwinClient = require('../lib/amqp_twin_client.js').AmqpTwinClient;
@@ -25,7 +26,7 @@ describe('Amqp', function () {
   var fakeX509AuthenticationProvider = null;
 
   var testMessage = new Message();
-  testMessage._transportObj = {};
+  testMessage.transportObj = {};
   var testCallback = function () { };
   var configWithSSLOptions = { host: 'hub.host.name', deviceId: 'deviceId', x509: 'some SSL options' };
   var simpleSas = 'SharedAccessSignature sr=foo&sig=123&se=123';
@@ -982,7 +983,7 @@ describe('Amqp', function () {
           transport.on('message', function () {});
           transport.enableC2D(function () {
             transport.complete(testMessage, function () {
-              assert(receiver.complete.calledWith(testMessage));
+              assert(receiver.complete.calledWith(testMessage.transportObj));
               testCallback();
             });
           });
@@ -1004,7 +1005,7 @@ describe('Amqp', function () {
           transport.on('message', function () {});
           transport.enableC2D(function () {
             transport.reject(testMessage, function () {
-              assert(receiver.reject.calledWith(testMessage));
+              assert(receiver.reject.calledWith(testMessage.transportObj));
               testCallback();
             });
           });
@@ -1026,7 +1027,7 @@ describe('Amqp', function () {
           transport.on('message', function () {});
           transport.enableC2D(function () {
             transport.abandon(testMessage, function () {
-              assert(receiver.abandon.calledWith(testMessage));
+              assert(receiver.abandon.calledWith(testMessage.transportObj));
               testCallback();
             });
           });
@@ -1104,10 +1105,11 @@ describe('Amqp', function () {
       });
 
       it('forwards messages to the client once connected and authenticated', function (testCallback) {
-        var fakeMessage = new Message('fake');
+        var fakeMessage = new AmqpMessage();
 
         transport.on('message', function (msg) {
-          assert.strictEqual(msg, fakeMessage);
+          assert.instanceOf(msg, Message);
+          assert.strictEqual(msg.transportObj, fakeMessage);
           testCallback();
         });
 

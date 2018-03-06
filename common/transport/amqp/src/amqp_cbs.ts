@@ -136,15 +136,15 @@ export class ClaimsBasedSecurityAgent {
                       /*Codes_SRS_NODE_AMQP_CBS_16_020: [All responses shall be accepted.]*/
                       this._receiverLink.accept(msg);
                       for (let i = 0; i < this._putToken.outstandingPutTokens.length; i++) {
-                        if (msg.correlationId === this._putToken.outstandingPutTokens[i].correlationId) {
+                        if (msg.properties.correlationId === this._putToken.outstandingPutTokens[i].correlationId) {
                           const completedPutToken = this._putToken.outstandingPutTokens[i];
                           this._putToken.outstandingPutTokens.splice(i, 1);
                           if (completedPutToken.putTokenCallback) {
                             /*Codes_SRS_NODE_AMQP_CBS_16_019: [A put token response of 200 will invoke `putTokenCallback` with null parameters.]*/
                             let error = null;
-                            if (msg.properties.getValue('status-code') !== 200) {
+                            if (msg.applicationProperties['status-code'] !== 200) {
                               /*Codes_SRS_NODE_AMQP_CBS_16_018: [A put token response not equal to 200 will invoke `putTokenCallback` with an error object of UnauthorizedError.]*/
-                              error = new errors.UnauthorizedError(msg.properties.getValue('status-description'));
+                              error = new errors.UnauthorizedError(msg.applicationProperties['status-description']);
                             }
                             completedPutToken.putTokenCallback(error);
                           }

@@ -9,10 +9,11 @@ import * as machina from 'machina';
 import * as async from 'async';
 
 import { anHourFromNow, endpoint, errors, results, SharedAccessSignature, Message } from 'azure-iot-common';
-import { Amqp as Base, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
+import { Amqp as Base, AmqpMessage, SenderLink } from 'azure-iot-amqp-base';
 import { translateError } from './amqp_service_errors.js';
 import { Callback } from './interfaces';
 import { Client } from './client';
+import { ServiceReceiver } from './service_receiver.js';
 
 const UnauthorizedError = errors.UnauthorizedError;
 const DeviceNotFoundError = errors.DeviceNotFoundError;
@@ -63,11 +64,11 @@ export class Amqp extends EventEmitter implements Client.Transport {
   private _c2dErrorListener: (err: Error) => void;
 
   private _feedbackEndpoint: string = '/messages/serviceBound/feedback';
-  private _feedbackReceiver: ReceiverLink;
+  private _feedbackReceiver: ServiceReceiver;
   private _feedbackErrorListener: (err: Error) => void;
 
   private _fileNotificationEndpoint: string = '/messages/serviceBound/filenotifications';
-  private _fileNotificationReceiver: ReceiverLink;
+  private _fileNotificationReceiver: ServiceReceiver;
   private _fileNotificationErrorListener: (err: Error) => void;
 
   /**
@@ -264,7 +265,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
                 if (err) {
                   callback(err);
                 } else {
-                  this._feedbackReceiver = link;
+                  this._feedbackReceiver = new ServiceReceiver(link);
                   this._feedbackReceiver.on('error', this._feedbackErrorListener);
                   callback(null, this._feedbackReceiver);
                 }
@@ -281,7 +282,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
                 if (err) {
                   callback(err);
                 } else {
-                  this._fileNotificationReceiver = link;
+                  this._fileNotificationReceiver = new ServiceReceiver(link);
                   this._fileNotificationReceiver.on('error', this._fileNotificationErrorListener);
                   callback(null, this._fileNotificationReceiver);
                 }

@@ -7,6 +7,7 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 var EventEmitter = require('events').EventEmitter;
 var AmqpReceiver = require('../lib/amqp.js').Amqp;
+var AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
 var Message = require('azure-iot-common').Message;
 var errors = require('azure-iot-common').errors;
 
@@ -78,20 +79,22 @@ describe('AmqpReceiver', function () {
     it('forwards \'message\' events to all listeners once set up', function (testCallback) {
       var recv1messageReceived = false;
       var recv2messageReceived = false;
-      var testMessage = new Message('foo');
+      var testMessage = new AmqpMessage();
       var recv = new AmqpReceiver(fakeAuthenticationProvider);
       var fakeReceiverLink = new EventEmitter();
       recv._amqp = new FakeAmqp();
       sinon.stub(recv._amqp, 'attachReceiverLink').callsArgWith(2, null, fakeReceiverLink);
       recv.on('message', function (msg) {
-        assert.strictEqual(msg, testMessage);
+        assert.instanceOf(msg, Message);
+        assert.strictEqual(msg.transportObj, testMessage);
         recv1messageReceived = true;
         if (recv1messageReceived && recv2messageReceived) {
           testCallback();
         }
       });
       recv.on('message', function (msg) {
-        assert.strictEqual(msg, testMessage);
+        assert.instanceOf(msg, Message);
+        assert.strictEqual(msg.transportObj, testMessage);
         recv2messageReceived = true;
         if (recv1messageReceived && recv2messageReceived) {
           testCallback();
@@ -148,10 +151,11 @@ describe('AmqpReceiver', function () {
         recv._amqp = new FakeAmqp();
         sinon.stub(recv._amqp, 'attachReceiverLink').callsArgWith(2, null, fakeReceiverLink);
         var fakeMessage = new Message('foo');
+        fakeMessage.transportObj = {};
         recv.on('message', function () {});
         recv.enableC2D(function () {
           recv[methodName](fakeMessage, function () {
-            assert(fakeReceiverLink[methodName].calledWith(fakeMessage));
+            assert(fakeReceiverLink[methodName].calledWith(fakeMessage.transportObj));
             testCallback();
           });
         });
