@@ -737,7 +737,8 @@ export class Mqtt extends EventEmitter implements Client.Transport {
         '&DeviceClientType=' + this._sdkVersionString,
       clientId: clientId,
       sharedAccessSignature: credentials.sharedAccessSignature,
-      x509: credentials.x509
+      x509: credentials.x509,
+      ca: credentials.ca
     };
     return baseConfig;
   }

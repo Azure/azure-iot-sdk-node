@@ -97,6 +97,12 @@
     },
     {
       "directory": "security/tpm"
+    },
+    {
+      "directory": "device/edge-sample",
+      "skip_build": true,
+      "skip_test": true,
+      "skip_ci": true
     }
   ]
 }

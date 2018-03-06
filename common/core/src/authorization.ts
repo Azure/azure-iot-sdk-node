@@ -76,6 +76,10 @@ export interface TransportConfig {
    * IP address or internet name of the host machine working as a device or protocol gateway.  Used when communicating with Azure Edge devices.
    */
   gatewayHostName?: string;
+  /**
+   * Public certificate for the CA to use when validating the connection to the server
+  */
+  ca?: string;
 }
 
 /**
@@ -109,4 +113,5 @@ export interface X509 {
    * @private
    */
   keyFile?: string;
+
 }
