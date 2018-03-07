@@ -52,6 +52,10 @@ As this is an internal API, the input argument message can be assumed to be of t
 
 **SRS_NODE_IOTHUB_AMQPMSG_16_010: [** If the `message` argument has a `correlationId` property, the `properties` property of the `AmqpMessage` object shall have a property named `correlationId` with the same value. **]**
 
+**SRS_NODE_IOTHUB_AMQPMSG_16_014: [** If the `message` argument has a `contentEncoding` property, the `properties` property of the `AmqpMessage` object shall have a property named `contentEncoding` with the same value. **]**
+
+**SRS_NODE_IOTHUB_AMQPMSG_16_015: [** If the `message` argument has a `contentType` property, the `properties` property of the `AmqpMessage` object shall have a property named `contentType` with the same value. **]**
+
 **SRS_NODE_IOTHUB_AMQPMSG_16_012: [** If the `Message.correlationId` property is a UUID, the AMQP type of the `AmqpMessage.properties.correlationId` property shall be forced to UUID. **]**
 
 **SRS_NODE_IOTHUB_AMQPMSG_05_008: [** If needed, the created `AmqpMessage` object shall have a property of type `Object` named `applicationProperties`. **]**
@@ -80,6 +84,10 @@ The `toMessage` static method takes an AMQP message from the underlying library 
 **SRS_NODE_IOTHUB_AMQPMSG_16_005: [** The `toMessage` method shall set the `Message.to` property to the `AmqpMessage.properties.to` value if it is present. **]**
 
 **SRS_NODE_IOTHUB_AMQPMSG_16_006: [** The `toMessage` method shall set the `Message.expiryTimeUtc` property to the `AmqpMessage.properties.absoluteExpiryTime` value if it is present. **]**
+
+**SRS_NODE_IOTHUB_AMQPMSG_16_016: [** The `toMessage` method shall set the `Message.contentType` property to the `AmqpMessage.properties.contentType` value if it is present.  **]**
+
+**SRS_NODE_IOTHUB_AMQPMSG_16_017: [** The `toMessage` method shall set the `Message.contentEncoding` property to the `AmqpMessage.properties.contentEncoding` value if it is present.  **]**
 
 **SRS_NODE_IOTHUB_AMQPMSG_16_007: [** The `toMessage` method shall convert the user-defined `AmqpMessage.applicationProperties` to a `Properties` collection stored in `Message.applicationProperties`. **]**
 

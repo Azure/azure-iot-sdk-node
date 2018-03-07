@@ -91,6 +91,10 @@ Host: <config.host>
 
 **SRS_NODE_DEVICE_HTTP_16_019: [** If the `message` object has a `ack` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Ack`. **]**
 
+**SRS_NODE_DEVICE_HTTP_16_037: [** If the `message` object has a `contentType` property, the value of the property shall be inserted in the headers of the HTTP request with the key `iothub-contenttype`. **]**
+
+**SRS_NODE_DEVICE_HTTP_16_038: [** If the `message` object has a `contentEncoding` property, the value of the property shall be inserted in the headers of the HTTP request with the key `iothub-contentencoding`. **]**
+
 ### sendEventBatch(messages, done)
 
 The sendEventBatch method sends a list of events to an IoT hub on behalf of the device indicated in the constructor argument.

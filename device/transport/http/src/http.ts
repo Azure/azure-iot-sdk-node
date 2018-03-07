@@ -166,33 +166,43 @@ export class Http extends EventEmitter implements Client.Transport {
         }
 
         if (message.messageId) {
-            /*Codes_SRS_NODE_DEVICE_HTTP_16_014: [If the `message` object has a `messageId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-MessageId`.]*/
-            httpHeaders['IoTHub-MessageId'] = message.messageId;
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_014: [If the `message` object has a `messageId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-MessageId`.]*/
+          httpHeaders['IoTHub-MessageId'] = message.messageId;
         }
 
         if (message.correlationId) {
-            /*Codes_SRS_NODE_DEVICE_HTTP_16_015: [If the `message` object has a `correlationId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-CorrelationId`.]*/
-            httpHeaders['IoTHub-CorrelationId'] = message.correlationId;
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_015: [If the `message` object has a `correlationId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-CorrelationId`.]*/
+          httpHeaders['IoTHub-CorrelationId'] = message.correlationId;
         }
 
         if (message.userId) {
-            /*Codes_SRS_NODE_DEVICE_HTTP_16_016: [If the `message` object has a `userId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-UserId`.]*/
-            httpHeaders['IoTHub-UserId'] = message.userId;
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_016: [If the `message` object has a `userId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-UserId`.]*/
+          httpHeaders['IoTHub-UserId'] = message.userId;
         }
 
         if (message.to) {
-            /*Codes_SRS_NODE_DEVICE_HTTP_16_017: [If the `message` object has a `to` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-To`.]*/
-            httpHeaders['IoTHub-To'] = message.to;
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_017: [If the `message` object has a `to` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-To`.]*/
+          httpHeaders['IoTHub-To'] = message.to;
         }
 
         if (message.expiryTimeUtc) {
-            /*Codes_SRS_NODE_DEVICE_HTTP_16_018: [If the `message` object has a `expiryTimeUtc` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Expiry`.]*/
-            httpHeaders['IoTHub-Expiry'] = message.expiryTimeUtc;
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_018: [If the `message` object has a `expiryTimeUtc` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Expiry`.]*/
+          httpHeaders['IoTHub-Expiry'] = message.expiryTimeUtc;
         }
 
         if (message.ack) {
-            /*Codes_SRS_NODE_DEVICE_HTTP_16_019: [If the `message` object has a `ack` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Ack`.]*/
-            httpHeaders['IoTHub-Ack'] = message.ack;
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_019: [If the `message` object has a `ack` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Ack`.]*/
+          httpHeaders['IoTHub-Ack'] = message.ack;
+        }
+
+        if (message.contentType) {
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_037: [If the `message` object has a `contentType` property, the value of the property shall be inserted in the headers of the HTTP request with the key `iothub-contenttype`.]*/
+          httpHeaders['iothub-contenttype'] = message.contentType;
+        }
+
+        if (message.contentEncoding) {
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_038: [If the `message` object has a `contentEncoding` property, the value of the property shall be inserted in the headers of the HTTP request with the key `iothub-contentencoding`.]*/
+          httpHeaders['iothub-contentencoding'] = message.contentEncoding;
         }
 
         /*Codes_SRS_NODE_DEVICE_HTTP_16_013: [If using x509 authentication the `Authorization` header shall not be set and the x509 parameters shall instead be passed to the underlying transpoort.]*/

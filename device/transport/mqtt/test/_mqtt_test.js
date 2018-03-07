@@ -237,7 +237,11 @@ describe('Mqtt', function () {
       { propName: 'to', serializedAs: '%24.to', fakeValue: 'fakeTo' },
       /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_015: [The `sendEvent` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`.]*/
       { propName: 'expiryTimeUtc', serializedAs: '%24.exp', fakeValue: 'fakeDateString' },
-      { propName: 'expiryTimeUtc', serializedAs: '%24.exp', fakeValue: new Date(1970, 1, 1), fakeSerializedValue: encodeURIComponent(new Date(1970, 1, 1).toISOString()) }
+      { propName: 'expiryTimeUtc', serializedAs: '%24.exp', fakeValue: new Date(1970, 1, 1), fakeSerializedValue: encodeURIComponent(new Date(1970, 1, 1).toISOString()) },
+      /*Tests_SRS_NODE_DEVICE_MQTT_16_083: [The `sendEvent` method shall serialize the `contentEncoding` property of the message as a key-value pair on the topic with the key `$.ce`.]*/
+      { propName: 'contentEncoding', serializedAs: '%24.ce', fakeValue: 'utf-8' },
+      /*Tests_SRS_NODE_DEVICE_MQTT_16_084: [The `sendEvent` method shall serialize the `contentType` property of the message as a key-value pair on the topic with the key `$.ct`.]*/
+      { propName: 'contentType', serializedAs: '%24.ct', fakeValue: 'application/json', fakeSerializedValue: encodeURIComponent('application/json') }
     ].forEach(function(testProperty) {
       it('serializes Message.' + testProperty.propName + ' as ' + decodeURIComponent(testProperty.serializedAs) + ' on the topic', function(done) {
         var testMessage = new Message('message');

@@ -43,3 +43,7 @@ interface MethodMessage {
 **SRS_NODE_DEVICE_MQTT_RECEIVER_16_011: [** When a message is received, the receiver shall populate the generated `Message` object `correlationId` with the value of the property `$.cid` serialized in the topic, if present. **]**
 
 **SRS_NODE_DEVICE_MQTT_RECEIVER_16_012: [** When a message is received, the receiver shall populate the generated `Message` object `userId` with the value of the property `$.uid` serialized in the topic, if present. **]**
+
+**SRS_NODE_DEVICE_MQTT_RECEIVER_16_013: [** When a message is received, the receiver shall populate the generated `Message` object `contentType` with the value of the property `$.ct` serialized in the topic, if present. **]**
+
+**SRS_NODE_DEVICE_MQTT_RECEIVER_16_014: [** When a message is received, the receiver shall populate the generated `Message` object `contentEncoding` with the value of the property `$.ce` serialized in the topic, if present. **]**

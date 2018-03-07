@@ -103,6 +103,22 @@ describe('AmqpMessage', function () {
       assert.notNestedProperty(amqpMessage, 'properties.messageId');
     });
 
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_014: [If the `message` argument has a `contentEncoding` property, the `properties` property of the `AmqpMessage` object shall have a property named `contentEncoding` with the same value.]*/
+    it('maps message.contentEncoding to amqpMessage.properties.contentEncoding', function () {
+      var message = new Message();
+      message.contentEncoding = 'utf-8';
+      var amqpMessage = AmqpMessage.fromMessage(message);
+      assert.equal(amqpMessage.properties.contentEncoding, message.contentEncoding);
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_015: [If the `message` argument has a `contentType` property, the `properties` property of the `AmqpMessage` object shall have a property named `contentType` with the same value.]*/
+    it('maps message.contentType to amqpMessage.properties.contentType', function () {
+      var message = new Message();
+      message.contentType = 'utf-8';
+      var amqpMessage = AmqpMessage.fromMessage(message);
+      assert.equal(amqpMessage.properties.contentType, message.contentType);
+    });
+
     /*Tests_SRS_NODE_IOTHUB_AMQPMSG_05_008: [If needed, the created AmqpMessage object shall have a property of type Object named applicationProperties.]*/
     it('does not create amqpMessage.applicationProperties object if the are no application properties', function () {
       var amqpMessage = AmqpMessage.fromMessage(new Message());
@@ -246,6 +262,30 @@ describe('AmqpMessage', function () {
 
       var convertedMessage = AmqpMessage.toMessage(testAmqpMessage);
       assert.strictEqual(convertedMessage.expiryTimeUtc, testAmqpMessage.properties.absoluteExpiryTime);
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_017: [The `toMessage` method shall set the `Message.contentEncoding` property to the `AmqpMessage.properties.contentEncoding` value if it is present. ]*/
+    it('sets the contentEncoding property', function() {
+      var testAmqpMessage = {
+        properties: {
+          contentEncoding: 'utf-8'
+        }
+      };
+
+      var convertedMessage = AmqpMessage.toMessage(testAmqpMessage);
+      assert.strictEqual(convertedMessage.contentEncoding, testAmqpMessage.properties.contentEncoding);
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_016: [The `toMessage` method shall set the `Message.contentType` property to the `AmqpMessage.properties.contentType` value if it is present. ]*/
+    it('sets the contentType property', function() {
+      var testAmqpMessage = {
+        properties: {
+          contentType: 'utf-8'
+        }
+      };
+
+      var convertedMessage = AmqpMessage.toMessage(testAmqpMessage);
+      assert.strictEqual(convertedMessage.contentType, testAmqpMessage.properties.contentType);
     });
 
     /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_008: [The `toMessage` method shall set the `Message.ack` property to the `AmqpMessage.applicationProperties['iothub-ack']` value if it is present.]*/
