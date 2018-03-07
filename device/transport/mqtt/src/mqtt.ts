@@ -365,6 +365,10 @@ export class Mqtt extends EventEmitter implements Client.Transport {
       const expiryString = message.expiryTimeUtc instanceof Date ? message.expiryTimeUtc.toISOString() : message.expiryTimeUtc;
       systemProperties['$.exp'] = (expiryString || undefined);
     }
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_084: [The `sendEvent` method shall serialize the `contentType` property of the message as a key-value pair on the topic with the key `$.ct`.]*/
+    if (message.contentType) systemProperties['$.ct'] = <string>message.contentType;
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_083: [The `sendEvent` method shall serialize the `contentEncoding` property of the message as a key-value pair on the topic with the key `$.ce`.]*/
+    if (message.contentEncoding) systemProperties['$.ce'] = <string>message.contentEncoding;
 
     const sysPropString = querystring.stringify(systemProperties);
     topic += sysPropString;
@@ -709,6 +713,14 @@ export class Mqtt extends EventEmitter implements Client.Transport {
           case '$.uid':
             /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_012: [When a message is received, the receiver shall populate the generated `Message` object `userId` with the value of the property `$.uid` serialized in the topic, if present.]*/
             msg.userId = v;
+            break;
+          case '$.ct':
+            /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_013: [When a message is received, the receiver shall populate the generated `Message` object `contentType` with the value of the property `$.ct` serialized in the topic, if present.]*/
+            msg.contentType = <any>v;
+            break;
+          case '$.ce':
+            /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_014: [When a message is received, the receiver shall populate the generated `Message` object `contentEncoding` with the value of the property `$.ce` serialized in the topic, if present.]*/
+            msg.contentEncoding = <any>v;
             break;
           default:
             /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_007: [When a message is received, the receiver shall populate the generated `Message` object `properties` property with the user properties serialized in the topic.]*/

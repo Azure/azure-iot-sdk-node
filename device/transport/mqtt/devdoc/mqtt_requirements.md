@@ -121,6 +121,10 @@ The `sendEvent` method sends an event to an IoT hub on behalf of the device indi
 
 **SRS_NODE_COMMON_MQTT_BASE_16_015: [** The `sendEvent` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`. **]**
 
+**SRS_NODE_DEVICE_MQTT_16_083: [** The `sendEvent` method shall serialize the `contentEncoding` property of the message as a key-value pair on the topic with the key `$.ce`. **]**
+
+**SRS_NODE_DEVICE_MQTT_16_084: [** The `sendEvent` method shall serialize the `contentType` property of the message as a key-value pair on the topic with the key `$.ct`. **]**
+
 **SRS_NODE_DEVICE_MQTT_16_023: [** The `sendEvent` method shall connect the Mqtt connection if it is disconnected. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_024: [** The `sendEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to establish a connection. **]**

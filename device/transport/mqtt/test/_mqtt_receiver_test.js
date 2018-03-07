@@ -148,6 +148,38 @@ describe('Mqtt as MqttReceiver', function () {
         });
       });
 
+      /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_013: [When a message is received, the receiver shall populate the generated `Message` object `contentType` with the value of the property `$.ct` serialized in the topic, if present.]*/
+      it('populates Message.contentType from the topic', function (done) {
+        var contentType = 'application/json';
+        var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        receiver.connect(function () {
+          receiver.on('message', function (msg) {
+            assert.equal(msg.constructor.name, 'Message');
+            assert.equal(msg.contentType, contentType);
+            done();
+          });
+
+          fakeMqttBase.emit('message', 'devices/foo/messages/devicebound/%24.ct=' + encodeURIComponent(contentType));
+        });
+      });
+
+      /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_014: [When a message is received, the receiver shall populate the generated `Message` object `contentEncoding` with the value of the property `$.ce` serialized in the topic, if present.]*/
+      it('populates Message.contentEncoding from the topic', function (done) {
+        var contentEncoding = 'utf-8';
+        var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        receiver.connect(function () {
+          receiver.on('message', function (msg) {
+            assert.equal(msg.constructor.name, 'Message');
+            assert.equal(msg.contentEncoding, contentEncoding);
+            done();
+          });
+
+          fakeMqttBase.emit('message', 'devices/foo/messages/devicebound/%24.ce=' + contentEncoding);
+        });
+      });
+
+
+
 
       it('creates a message even if the properties topic segment is empty', function(done) {
         var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);

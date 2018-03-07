@@ -30,6 +30,8 @@ export class AmqpMessage {
     messageId?: string;
     correlationId?: string;
     reply_to?: string;
+    contentType?: undefined | 'application/json';
+    contentEncoding?: undefined | 'utf-8' | 'utf-16' | 'utf-32';
   };
 
   body: any;
@@ -73,6 +75,16 @@ export class AmqpMessage {
     if (message.correlationId) {
       /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_012: [If the `Message.correlationId` property is a UUID, the AMQP type of the `AmqpMessage.properties.correlationId` property shall be forced to UUID.]*/
       amqpMessage.properties.correlationId = encodeUuid(message.correlationId);
+    }
+
+    /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_014: [If the `message` argument has a `contentEncoding` property, the `properties` property of the `AmqpMessage` object shall have a property named `contentEncoding` with the same value.]*/
+    if (message.contentEncoding) {
+      amqpMessage.properties.contentEncoding = message.contentEncoding;
+    }
+
+    /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_015: [If the `message` argument has a `contentType` property, the `properties` property of the `AmqpMessage` object shall have a property named `contentType` with the same value.]*/
+    if (message.contentType) {
+      amqpMessage.properties.contentType = message.contentType;
     }
 
     /*Codes_SRS_NODE_IOTHUB_AMQPMSG_05_008: [If needed, the created AmqpMessage object shall have a property of type Object named applicationProperties.]*/
@@ -151,6 +163,16 @@ export class AmqpMessage {
       /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_003: [The `toMessage` method shall set the `Message.correlationId` property to the `AmqpMessage.properties.correlationId` value if it is present.]*/
       if (amqpMessage.properties.correlationId) {
         msg.correlationId = amqpMessage.properties.correlationId;
+      }
+
+      /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_016: [The `toMessage` method shall set the `Message.contentType` property to the `AmqpMessage.properties.contentType` value if it is present. ]*/
+      if (amqpMessage.properties.contentType) {
+        msg.contentType = amqpMessage.properties.contentType;
+      }
+
+      /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_017: [The `toMessage` method shall set the `Message.contentEncoding` property to the `AmqpMessage.properties.contentEncoding` value if it is present. ]*/
+      if (amqpMessage.properties.contentEncoding) {
+        msg.contentEncoding = amqpMessage.properties.contentEncoding;
       }
     }
 
