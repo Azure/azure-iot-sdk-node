@@ -38,25 +38,32 @@ registry.create({deviceId: 'dev1'}, function (err, dev) {
 The `Registry` constructor initializes a new instance of a `Registry` object that is used to conduct operations on the device registry.
 
 **SRS_NODE_IOTHUB_REGISTRY_16_023: [** The `Registry` constructor shall throw a `ReferenceError` if the `config` object is falsy. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_05_001: [** The `Registry` constructor shall throw an `ArgumentError` if the `config` object is missing one or more of the following properties:
 - `host`: the IoT Hub hostname
 - `sharedAccessSignature`: shared access signature with the permissions for the desired operations.
  **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_024: [** The `Registry` constructor shall use the `restApiClient` provided as a second argument if it is provided. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_025: [** The `Registry` constructor shall use `azure-iothub.RestApiClient` if no `restApiClient` argument is provided. **]**
 
 ### fromConnectionString(value) [static]
 The `fromConnectionString` static method returns a new instance of the `Registry` object.
 
 **SRS_NODE_IOTHUB_REGISTRY_05_008: [** The `fromConnectionString` method shall throw `ReferenceError` if the value argument is falsy. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_05_009: [** The `fromConnectionString` method shall derive and transform the needed parts from the connection string in order to create a `config` object for the constructor (see `SRS_NODE_IOTHUB_REGISTRY_05_001`). **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_05_010: [** The `fromConnectionString` method shall return a new instance of the `Registry` object. **]**
 
 ### fromSharedAccessSignature(value) [static]
 The `fromSharedAccessSignature` static method returns a new instance of the `Registry` object.
 
 **SRS_NODE_IOTHUB_REGISTRY_05_011: [** The `fromSharedAccessSignature` method shall throw `ReferenceError` if the value argument is falsy. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_05_012: [** The `fromSharedAccessSignature` method shall derive and transform the needed parts from the shared access signature in order to create a `config` object for the constructor (see `SRS_NODE_IOTHUB_REGISTRY_05_001`). **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_05_013: [** The `fromSharedAccessSignature` method shall return a new instance of the `Registry` object. **]**
 
 ## CRUD operation for the device registry
@@ -73,7 +80,8 @@ authentication : {
     secondaryKey: ''
   }
 }
-``` **]**
+```
+**]**
 
 **SRS_NODE_IOTHUB_REGISTRY_06_029: [** A device information with an authentication object that contains a `type` property is considered normalized. **]**
 
@@ -85,7 +93,9 @@ authentication : {
 The `create` method creates a device with the given device properties.
 
 **SRS_NODE_IOTHUB_REGISTRY_07_001: [** The `create` method shall throw `ReferenceError` if the `deviceInfo` argument is falsy. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_07_001: [** The `create` method shall throw `ArgumentError` if the `deviceInfo` argument does not contain a `deviceId` property. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_026: [** The `create` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
 PUT /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
@@ -101,10 +111,15 @@ Request-Id: <guid>
 The `addDevices` method adds an array of devices with the given device properties.
 
 **SRS_NODE_IOTHUB_REGISTRY_06_004: [** The `addDevices` method shall throw `ReferenceError` if the `devices` argument is falsy. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_021: [** The `addDevices` method shall throw `ArgumentError` if devices is NOT an array. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_009: [** The `addDevices` method shall utilize an importMode = `create`. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_010: [** The `addDevices` method shall throw `ArgumentError` if any elements of devices do NOT contain a `deviceId` property. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_014: [** The `addDevices` method shall throw `ArgumentError` if devices.length == 0  or is greater than 100. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_011: [** The `addDevices` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
 POST /devices?api-version=<version> HTTP/1.1
@@ -128,7 +143,9 @@ As an example of the content for two simple devices we would get:
 The `update` method updates an existing device identity with the given device properties.
 
 **SRS_NODE_IOTHUB_REGISTRY_16_043: [** The `update` method shall throw `ReferenceError` if the `deviceInfo` argument is falsy. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_07_003: [** The `update` method shall throw `ArgumentError` if the first argument does not contain a `deviceId` property. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_027: [** The `update` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
 PUT /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
@@ -146,12 +163,19 @@ If-Match: <deviceInfo.eTag>
 The `updateDevices` method updates existing devices with the given device properties.
 
 **SRS_NODE_IOTHUB_REGISTRY_06_025: [** The `updateDevices` method shall throw `ReferenceError` if the `devices` argument is falsy. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_020: [** The `updateDevices` method shall throw `ArgumentError` if devices is NOT an array. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_024: [** The `updateDevices` method shall throw `ReferenceError` if the `forceUpdate` parameter is NOT typeof boolean. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_026: [** The `updateDevices` method shall throw `ReferenceError` if the `forceUpdate` parameter is null or undefined. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_008: [** If the `forceUpdate` parameter is true importMode will be set to `Update` otherwise it will be set to `UpdateIfMatchETag`. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_015: [** The `updateDevices` method shall throw `ArgumentError` if devices.length == 0  or is greater than 100. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_012: [** The `updateDevices` method shall throw `ArgumentError` if any elements of devices do NOT contain a `deviceId` property. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_013: [** The `updateDevices` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
 POST /devices?api-version=<version> HTTP/1.1
@@ -167,6 +191,7 @@ Request-Id: <guid>
 The `get` method requests information about the device with the given ID.
 
 **SRS_NODE_IOTHUB_REGISTRY_05_006: [** The `get` method shall throw `ReferenceError` if the supplied deviceId is falsy. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_028: [** The `get` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
 GET /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
@@ -191,6 +216,7 @@ Request-Id: <guid>
 The `delete` method removes a device with the given ID.
 
 **SRS_NODE_IOTHUB_REGISTRY_07_007: [** The `delete` method shall throw `ReferenceError` if the supplied deviceId is falsy. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_030: [** The `delete` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
 DELETE /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
@@ -204,12 +230,19 @@ Request-Id: <guid>
 The `removeDevices` method will take an array of devices and delete them from the hub.  If forceRemove is true the devices will be removed irrespective of any eTag.
 
 **SRS_NODE_IOTHUB_REGISTRY_06_006: [** The `removeDevices` method shall throw `ReferenceError` if the deviceInfo is falsy. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_019: [** The `removeDevices` method shall throw `ArgumentError` if devices is NOT an array. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_023: [** The `removeDevices` method shall throw `ReferenceError` if the `forceRemove` parameter is NOT typeof boolean. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_027: [** The `removeDevices` method shall throw `ReferenceError` if the `forceRemove` parameter is null or undefined. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_007: [** If the `forceRemove` parameter is true then importMode will be set to `Delete` otherwise it will be set to `DeleteIfMatchETag`. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_016: [** The `removeDevices` method shall throw `ArgumentError` if devices.length == 0  or is greater than 100. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_017: [** The `removeDevices` method shall throw `ArgumentError` if any elements of devices do NOT contain a `deviceId` property. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_06_018: [** The `removeDevices` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
 POST /devices?api-version=<version> HTTP/1.1
@@ -218,7 +251,8 @@ Content-Type: application/json; charset=utf-8
 Request-Id: <guid>
 
 <stringified array supplied by the argument devices annotated with importMode property and deviceId property replaced by id>
-```**]**
+```
+**]**
 
 ## Bulk Import/Export of devices
 
@@ -226,7 +260,9 @@ Request-Id: <guid>
 The `importDevicesFromBlob` imports a list of devices from a blob named devices.txt found at the input URI given as a parameter, and output logs from the import job in a blob at found at the output URI given as a parameter.
 
 **SRS_NODE_IOTHUB_REGISTRY_16_001: [** A `ReferenceError` shall be thrown if `inputBlobContainerUri` is falsy **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_002: [** A `ReferenceError` shall be thrown if `outputBlobContainerUri` is falsy **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_031: [** The `importDeviceFromBlob` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
 POST /jobs/create?api-version=<version> HTTP/1.1
@@ -246,6 +282,7 @@ Request-Id: <guid>
 The `exportDevicesToBlob` exports a list of devices in a blob named devices.txt and logs from the export job at the output URI given as a parameter given as a parameter the export will contain security keys if the excludeKeys is false.
 
 **SRS_NODE_IOTHUB_REGISTRY_16_004: [** A `ReferenceError` shall be thrown if outputBlobContainerUri is falsy **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_032: [** The `exportDeviceToBlob` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
 POST /jobs/create?api-version=<version> HTTP/1.1
@@ -276,6 +313,7 @@ Request-Id: <guid>
 The `getJob` method will obtain status information of the bulk import/export job identified by the `jobId` parameter.
 
 **SRS_NODE_IOTHUB_REGISTRY_16_006: [** A `ReferenceError` shall be thrown if jobId is falsy **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_038: [** The `getJob` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
 GET /jobs/<jobId>?api-version=<version> HTTP/1.1
@@ -288,13 +326,14 @@ Request-Id: <guid>
 The `cancelJob` method will cancel the bulk import/export job identified by the `jobId` parameter.
 
 **SRS_NODE_IOTHUB_REGISTRY_16_012: [** A `ReferenceError` shall be thrown if the jobId is falsy **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_039: [** The `cancelJob` method shall construct an HTTP request using information supplied by the caller as follows:
 ```
 DELETE /jobs/<jobId>?api-version=<version> HTTP/1.1
 Authorization: <config.sharedAccessSignature>
 Request-Id: <guid>
 ```
- **]**
+**]**
 
 ## Device Twin operations
 
@@ -302,22 +341,30 @@ Request-Id: <guid>
 The `getTwin` method retrieves the latest Device Twin state in the device registry.
 
 **SRS_NODE_IOTHUB_REGISTRY_16_019: [** The `getTwin` method shall throw a `ReferenceError` if the `deviceId` parameter is falsy. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_020: [** The `getTwin` method shall throw a `ReferenceError` if the `done` parameter is falsy. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_036: [** The `getTwin` method shall call the `done` callback with a `twin` object updated with the latest property values stored in the IoT Hub service. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_049: [** The `getTwin` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
 GET /twins/<encodeURIComponent(twin.deviceId)>?api-version=<version> HTTP/1.1
 Authorization: <config.sharedAccessSignature>
 Request-Id: <guid>
-``` **]**
+```
+**]**
 
 ### updateDeviceTwin(deviceId, patch, etag, done)
 The `updateDeviceTwin` method updates the device twin identified with the `deviceId` argument with the properties and tags contained in the `patch` object.
 
 **SRS_NODE_IOTHUB_REGISTRY_16_044: [** The `updateDeviceTwin` method shall throw a `ReferenceError` if the `deviceId` argument is `undefined`, `null` or an empty string. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_045: [** The `updateDeviceTwin` method shall throw a `ReferenceError` if the `patch` argument is falsy. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_046: [** The `updateDeviceTwin` method shall throw a `ReferenceError` if the `etag` argument is falsy. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_050: [** The `updateDeviceTwin` method shall call the `done` callback with a `twin` object updated with the latest property values stored in the IoT Hub service. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_048: [** The `updateDeviceTwin` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
 PATCH /twins/<encodeURIComponent(deviceId)>?api-version=<version> HTTP/1.1
@@ -375,10 +422,15 @@ Request-Id: <guid>
 All HTTP requests to the registry API should implement the following requirements:
 
 **SRS_NODE_IOTHUB_REGISTRY_16_040: [** All requests shall contain a `User-Agent` header that uniquely identifies the SDK and SDK version used. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_041: [** All requests shall contain a `Request-Id` header that uniquely identifies the request and allows tracing of requests/responses in the logs. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_042: [** All requests shall contain a `Authorization` header that contains a valid shared access key. **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_033: [** If any registry operation method encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript `Error` object with a text description of the error (err.message). **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_035: [** When any registry operation method receives an HTTP response with a status code >= 300, it shall invoke the `done` callback function with an error translated using the requirements detailed in `registry_http_errors_requirements.md` **]**
+
 **SRS_NODE_IOTHUB_REGISTRY_16_034: [** When any registry operation receives an HTTP response with a status code < 300, it shall invoke the `done` callback function with the following arguments:
 - `err`: `null`
 - `result`: A javascript object parsed from the body of the HTTP response
