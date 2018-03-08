@@ -41,6 +41,8 @@ class AmqpTwinClient extends EventEmitter {
 
 **SRS_NODE_DEVICE_AMQP_TWIN_16_014: [** The `getTwin` method shall parse the body of the received message and call its callback with a `null` error object and the parsed object as a result. **]**
 
+**SRS_NODE_DEVICE_AMQP_TWIN_16_038: [** The `getTwin` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the `status` message annotation is `> 300`. **]**
+
 ### updateTwinReportedProperties(patch: any, callback: (err?: Error) => void): void;
 
 **SRS_NODE_DEVICE_AMQP_TWIN_16_015: [** The `updateTwinReportedProperties` method shall attach the sender link if it's not already attached. **]**
@@ -61,9 +63,9 @@ class AmqpTwinClient extends EventEmitter {
 
 **SRS_NODE_DEVICE_AMQP_TWIN_16_021: [** The `updateTwinReportedProperties` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_16_022: [** The `updateTwinReportedProperties` method shall call its callback with no argument when a response is received **]**
-// TODO: we need to check error codes!
+**SRS_NODE_DEVICE_AMQP_TWIN_16_022: [** The `updateTwinReportedProperties` method shall call its callback with no argument when a response is received and the `status` message annotation code is `>= 200` or `< 300` **]**
 
+**SRS_NODE_DEVICE_AMQP_TWIN_16_039: [** The `updateTwinReportedProperties` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the `status` message annotation is `> 300`. **]**
 
 ### enableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void;
 
@@ -86,7 +88,8 @@ class AmqpTwinClient extends EventEmitter {
 **SRS_NODE_DEVICE_AMQP_TWIN_16_029: [** The `enableTwinDesiredPropertiesUpdates` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received. **]**
 
 **SRS_NODE_DEVICE_AMQP_TWIN_16_030: [** The `enableTwinDesiredPropertiesUpdates` method shall call its callback with no argument when a response is received **]**
-// TODO: we need to check error codes!
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_040: [** The `enableTwinDesiredPropertiesUpdates` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the status message annotation is `> 300`. **]**
 
 ### disableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void;
 
@@ -103,7 +106,8 @@ class AmqpTwinClient extends EventEmitter {
 **SRS_NODE_DEVICE_AMQP_TWIN_16_034: [** The `disableTwinDesiredPropertiesUpdates` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received. **]**
 
 **SRS_NODE_DEVICE_AMQP_TWIN_16_035: [** The `disableTwinDesiredPropertiesUpdates` method shall call its callback with no argument when a response is received **]**
-// TODO: we need to check error codes!
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_041: [** The `disableTwinDesiredPropertiesUpdates` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the status message annotation is `> 300`. **]**
 
 ### detach(callback: (err?: Error) => void): void;
 
@@ -141,3 +145,32 @@ class AmqpTwinClient extends EventEmitter {
       } **]**
 
 **SRS_NODE_DEVICE_AMQP_TWIN_16_036: [** The same correlationId shall be used for both the sender and receiver links. **]**
+
+### Errors
+
+There are 2 failure modes for Twin requests:
+- the initial request is rejected: in that case, the error shall be translated using the usual `azure-iot-amqp-base.translateError` function
+- the request is accepted but contains an invalid payload and leads to an error: in that case, the response sent on the receiver link will have a status code > 300 and shall be translated using **SRS_NODE_DEVICE_AMQP_TWIN_16_037**:
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_037: [** The responses containing errors received on the receiver link shall be translated according to the following table:
+| statusCode | ErrorType               |
+| ---------- | ------------------------|
+| 400        | FormatError             |
+| 401        | UnauthorizedError       |
+| 403        | InvalidOperationError   |
+| 404        | DeviceNotFoundError     |
+| 429        | ThrottlingError         |
+| 500        | InternalServerError     |
+| 503        | ServiceUnavailableError |
+| 504        | TimeoutError            |
+| others     | TwinRequestError        |
+**]**
+
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_038: [** The `getTwin` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the `status` message annotation is `> 300`. **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_039: [** The `updateTwinReportedProperties` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the `status` message annotation is `> 300`. **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_040: [** The `enableTwinDesiredPropertiesUpdates` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the status message annotation is `> 300`. **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_041: [** The `disableTwinDesiredPropertiesUpdates` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the status message annotation is `> 300`. **]**

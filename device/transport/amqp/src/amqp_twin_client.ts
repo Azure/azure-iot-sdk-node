@@ -6,8 +6,8 @@
 import { EventEmitter } from 'events';
 import machina = require('machina');
 
-import { endpoint, AuthenticationProvider } from 'azure-iot-common';
-import { Amqp as BaseAmqpClient, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
+import { errors, endpoint, AuthenticationProvider } from 'azure-iot-common';
+import { Amqp as BaseAmqpClient, AmqpMessage, SenderLink, ReceiverLink, AmqpTransportError } from 'azure-iot-amqp-base';
 import { TwinProperties } from 'azure-iot-device';
 
 import * as uuid from 'uuid';
@@ -298,13 +298,20 @@ export class AmqpTwinClient extends EventEmitter {
     if (this._pendingTwinRequests[message.properties.correlationId]) {
       const pendingRequestCallback = this._pendingTwinRequests[message.properties.correlationId];
       delete this._pendingTwinRequests[message.properties.correlationId];
-      // TODO: Test resource property and status code?
-      let result = message.body ? JSON.parse(message.body) : undefined;
-      /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_014: [The `getTwin` method shall parse the body of the received message and call its callback with a `null` error object and the parsed object as a result.]*/
-      /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_022: [The `updateTwinReportedProperties` method shall call its callback with no argument when a response is received]*/
-      /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_030: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with no argument when a response is received]*/
-      /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_035: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback with no argument when a response is received]*/
-      pendingRequestCallback(null, result);
+      if (message.messageAnnotations.status >= 200 && message.messageAnnotations.status <= 300) {
+        /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_014: [The `getTwin` method shall parse the body of the received message and call its callback with a `null` error object and the parsed object as a result.]*/
+        /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_022: [The `updateTwinReportedProperties` method shall call its callback with no argument when a response is received]*/
+        /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_030: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with no argument when a response is received]*/
+        /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_035: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback with no argument when a response is received]*/
+        let result = message.body ? JSON.parse(message.body) : undefined;
+        pendingRequestCallback(null, result);
+      } else {
+        /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_038: [The `getTwin` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the `status` message annotation is `> 300`.]*/
+        /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_039: [The `updateTwinReportedProperties` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the `status` message annotation is `> 300`.]*/
+        /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_040: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the status message annotation is `> 300`.]*/
+        /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_041: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the status message annotation is `> 300`.]*/
+        pendingRequestCallback(this._translateErrorResponse(message));
+      }
     } else {
       debug('received a response for an unknown request: ' + JSON.stringify(message));
     }
@@ -344,8 +351,68 @@ export class AmqpTwinClient extends EventEmitter {
         delete this._pendingTwinRequests[correlationId];
         callback(err);
       } else {
-        debug('getTwin request sent with correlationId: ' + correlationId);
+        debug(method + ' request sent with correlationId: ' + correlationId);
       }
     });
+  }
+
+  /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_037: [The responses containing errors received on the receiver link shall be translated according to the following table:
+    | statusCode | ErrorType               |
+    | ---------- | ------------------------|
+    | 400        | FormatError             |
+    | 401        | UnauthorizedError       |
+    | 403        | InvalidOperationError   |
+    | 404        | DeviceNotFoundError     |
+    | 429        | ThrottlingError         |
+    | 500        | InternalServerError     |
+    | 503        | ServiceUnavailableError |
+    | 504        | TimeoutError            |
+    | others     | TwinRequestError        |
+  ]*/
+  private _translateErrorResponse(amqpMessage: AmqpMessage): Error {
+    let err: AmqpTransportError;
+    let statusCode: number;
+    let errorMessage: string = 'Twin operation failed';
+
+    if (amqpMessage.messageAnnotations) {
+      statusCode = amqpMessage.messageAnnotations.status;
+    }
+
+    if (amqpMessage.body) {
+      errorMessage = JSON.parse(amqpMessage.body);
+    }
+
+    switch (statusCode) {
+      case 400:
+        err = new errors.FormatError(errorMessage);
+        break;
+      case 401:
+        err = new errors.UnauthorizedError(errorMessage);
+        break;
+      case 403:
+        err = new errors.InvalidOperationError(errorMessage);
+        break;
+      case 404:
+        err = new errors.DeviceNotFoundError(errorMessage);
+        break;
+      case 429:
+        err = new errors.ThrottlingError(errorMessage);
+        break;
+      case 500:
+        err = new errors.InternalServerError(errorMessage);
+        break;
+      case 503:
+        err = new errors.ServiceUnavailableError(errorMessage);
+        break;
+      case 504:
+        err = new errors.TimeoutError(errorMessage);
+        break;
+      default:
+        err = new errors.TwinRequestError(errorMessage);
+    }
+
+    err.amqpError = <any>amqpMessage;
+
+    return err;
   }
 }

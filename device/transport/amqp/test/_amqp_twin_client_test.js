@@ -202,10 +202,34 @@ describe('AmqpTwinClient', function () {
       });
 
       fakeReceiverLink.emit('message', {
+        messageAnnotations: {
+          status: 200
+        },
         properties: {
           correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
         },
         body: new Buffer(JSON.stringify(fakeTwin))
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_038: [The `getTwin` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the `status` message annotation is `> 300`.]*/
+    it('parses a response containing an error and translates it', function (testCallback) {
+      twinClient.getTwin(function (err) {
+        assert.instanceOf(err, Error);
+        testCallback();
+      });
+
+      fakeReceiverLink.emit('message', {
+        properties: {
+          correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
+        },
+        messageAnnotations: {
+          status: 400
+        },
+        body: JSON.stringify({
+          message: 'fake message',
+          errorCode: 400
+        })
       });
     });
   });
@@ -234,6 +258,27 @@ describe('AmqpTwinClient', function () {
       assert.isString(amqpMessage.properties.correlationId);
       assert.strictEqual(amqpMessage.body, JSON.stringify(fakePatch));
     });
+
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_039: [The `updateTwinReportedProperties` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the `status` message annotation is `> 300`.]*/
+    it('parses a response containing an error and translates it', function (testCallback) {
+      twinClient.updateTwinReportedProperties({ fake: 'patch' }, function (err) {
+        assert.instanceOf(err, Error);
+        testCallback();
+      });
+
+      fakeReceiverLink.emit('message', {
+        properties: {
+          correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
+        },
+        messageAnnotations: {
+          status: 400
+        },
+        body: JSON.stringify({
+          message: 'fake message',
+          errorCode: 400
+        })
+      });
+    });
   });
 
   describe('#enableTwinDesiredPropertiesUpdates', function () {
@@ -258,6 +303,27 @@ describe('AmqpTwinClient', function () {
       assert.strictEqual(amqpMessage.messageAnnotations.resource, '/notifications/twin/properties/desired');
       assert.isString(amqpMessage.properties.correlationId);
       assert.strictEqual(amqpMessage.body, ' ');
+    });
+
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_040: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the status message annotation is `> 300`.]*/
+    it('parses a response containing an error and translates it', function (testCallback) {
+      twinClient.enableTwinDesiredPropertiesUpdates(function (err) {
+        assert.instanceOf(err, Error);
+        testCallback();
+      });
+
+      fakeReceiverLink.emit('message', {
+        properties: {
+          correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
+        },
+        messageAnnotations: {
+          status: 400
+        },
+        body: JSON.stringify({
+          message: 'fake message',
+          errorCode: 400
+        })
+      });
     });
   });
 
@@ -355,6 +421,38 @@ describe('AmqpTwinClient', function () {
         twinClient.disableTwinDesiredPropertiesUpdates(function () {});
         assert.strictEqual(fakeSenderLink.send.firstCall.args[0].body, ' ');
         testCallback();
+      });
+      fakeReceiverLink.emit('message', {
+        properties: {
+          correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId
+        },
+        messageAnnotations: {
+          status: 200
+        },
+        data: undefined
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_041: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the status message annotation is `> 300`.]*/
+    it('parses a response containing an error and translates it', function (testCallback) {
+      twinClient.enableTwinDesiredPropertiesUpdates(function () {
+        twinClient.disableTwinDesiredPropertiesUpdates(function (err) {
+          assert.instanceOf(err, Error);
+          testCallback();
+        });
+
+        fakeReceiverLink.emit('message', {
+          properties: {
+            correlationId: fakeSenderLink.send.secondCall.args[0].properties.correlationId,
+          },
+          messageAnnotations: {
+            status: 400
+          },
+          body: JSON.stringify({
+            message: 'fake message',
+            errorCode: 400
+          })
+        });
       });
       fakeReceiverLink.emit('message', {
         properties: {
@@ -543,6 +641,53 @@ describe('AmqpTwinClient', function () {
             status: 200
           },
           data: undefined
+        });
+      });
+    });
+  });
+
+  describe('error translation', function () {
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_037: [The responses containing errors received on the receiver link shall be translated according to the following table:
+      | statusCode | ErrorType               |
+      | ---------- | ------------------------|
+      | 400        | FormatError             |
+      | 401        | UnauthorizedError       |
+      | 403        | InvalidOperationError   |
+      | 404        | DeviceNotFoundError     |
+      | 429        | ThrottlingError         |
+      | 500        | InternalServerError     |
+      | 503        | ServiceUnavailableError |
+      | 504        | TimeoutError            |
+      | others     | TwinRequestError        |
+    ]*/
+    [
+      { statusCode: 400, expectedErrorType: errors.FormatError },
+      { statusCode: 401, expectedErrorType: errors.UnauthorizedError },
+      { statusCode: 403, expectedErrorType: errors.InvalidOperationError },
+      { statusCode: 404, expectedErrorType: errors.DeviceNotFoundError },
+      { statusCode: 429, expectedErrorType: errors.ThrottlingError },
+      { statusCode: 500, expectedErrorType: errors.InternalServerError },
+      { statusCode: 503, expectedErrorType: errors.ServiceUnavailableError },
+      { statusCode: 504, expectedErrorType: errors.TimeoutError },
+      { statusCode: 999, expectedErrorType: errors.TwinRequestError }
+    ].forEach(function (testConfig) {
+      it('translates an response with a status of ' + testConfig.statusCode + ' to a ' + testConfig.expectedErrorType.name, function (testCallback) {
+        twinClient.getTwin(function (err) {
+          assert.instanceOf(err, testConfig.expectedErrorType);
+          testCallback();
+        });
+
+        fakeReceiverLink.emit('message', {
+          properties: {
+            correlationId: fakeSenderLink.send.firstCall.args[0].properties.correlationId,
+          },
+          messageAnnotations: {
+            status: testConfig.statusCode
+          },
+          body: JSON.stringify({
+            message: 'fake message',
+            errorCode: testConfig.statusCode
+          })
         });
       });
     });

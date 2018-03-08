@@ -417,6 +417,21 @@ export class TwinDetachedError extends Error {
 }
 
 /**
+ * Generic error thrown when a twin request fails with an unknown error code.
+ *
+ * @augments {Error}
+ */
+export class TwinRequestError extends Error {
+  transportError: any;
+  constructor(message?: string) {
+    super(message);
+    this.name = 'TwinRequestError';
+    this.message = message;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+/**
  * Error thrown when any operation (local or remote) is cancelled
  *
  * @augments {Error}

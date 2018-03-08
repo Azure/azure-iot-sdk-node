@@ -34,6 +34,7 @@ export interface ErrorFilter {
   BadDeviceResponseError: boolean;
   GatewayTimeoutError: boolean; // ??
   DeviceTimeoutError: boolean;// ??
+  TwinRequestError?: boolean;
 }
 
 /* tslint:disable:variable-name */
@@ -67,5 +68,6 @@ export class DefaultErrorFilter implements ErrorFilter {
   BadDeviceResponseError: boolean = false;
   GatewayTimeoutError: boolean = false; // ??
   DeviceTimeoutError: boolean = false;// ??
+  TwinRequestError?: boolean = false;
 }
 /* tslint:enable:variable-name */
