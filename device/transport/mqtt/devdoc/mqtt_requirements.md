@@ -248,7 +248,7 @@ The `updateTwinReportedProperties` method is used to retrieve the device twin.
 
 **SRS_NODE_DEVICE_MQTT_16_048: [** `enableC2D` shall calls its callback with an `Error` object if it fails to connect. **]**
 
-**SRS_NODE_DEVICE_MQTT_16_049: [** `enableC2D` shall subscribe to the MQTT topic for messages. **]**
+**SRS_NODE_DEVICE_MQTT_16_049: [** `enableC2D` shall subscribe to the MQTT topic for messages with a QoS of `1`. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_050: [** `enableC2D` shall call its callback with no arguments when the `SUBACK` packet is received. **]**
 

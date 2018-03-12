@@ -677,11 +677,13 @@ describe('Mqtt', function () {
   [
     {
       methodName: 'enableC2D',
-      topicName: 'devices/deviceId/messages/devicebound/#'
+      topicName: 'devices/deviceId/messages/devicebound/#',
+      qos: 1
      },
      {
       methodName: 'enableMethods',
-      topicName: '$iothub/methods/POST/#'
+      topicName: '$iothub/methods/POST/#',
+      qos: 0
      }
   ].forEach(function (testConfig) {
     describe('#' + testConfig.methodName, function () {
@@ -695,9 +697,10 @@ describe('Mqtt', function () {
           /*Tests_SRS_NODE_DEVICE_MQTT_16_050: [`enableC2D` shall call its callback with no arguments when the `SUBACK` packet is received.]*/
           /*Tests_SRS_NODE_DEVICE_MQTT_16_051: [`enableMethods` shall call its callback with no arguments when the `SUBACK` packet is received.]*/
           assert.isUndefined(err);
-          /*Tests_SRS_NODE_DEVICE_MQTT_16_049: [`enableC2D` shall subscribe to the MQTT topic for messages.]*/
+          /*Tests_SRS_NODE_DEVICE_MQTT_16_049: [`enableC2D` shall subscribe to the MQTT topic for messages with a QoS of `1`.]*/
           /*Tests_SRS_NODE_DEVICE_MQTT_16_040: [`enableMethods` shall subscribe to the MQTT topic for direct methods.]*/
           assert.isTrue(fakeMqttBase.subscribe.calledWith(testConfig.topicName));
+          assert.strictEqual(fakeMqttBase.subscribe.firstCall.args[1].qos, testConfig.qos);
           testCallback();
         });
       });

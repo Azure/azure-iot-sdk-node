@@ -275,10 +275,10 @@ export class Mqtt extends EventEmitter implements Client.Transport {
             });
           },
           enableC2D: (callback) => {
-            this._setupSubscription(this._topics.message, callback);
+            this._setupSubscription(this._topics.message, 1, callback);
           },
           enableMethods: (callback) => {
-            this._setupSubscription(this._topics.method, callback);
+            this._setupSubscription(this._topics.method, 0, callback);
           },
           disableC2D: (callback) => {
             this._removeSubscription(this._topics.message, callback);
@@ -623,13 +623,13 @@ export class Mqtt extends EventEmitter implements Client.Transport {
 
   }
 
-  private _setupSubscription(topic: TopicDescription, callback: (err?: Error) => void): void {
+  private _setupSubscription(topic: TopicDescription, qos: 0 | 1, callback: (err?: Error) => void): void {
     debug('subscribe: ' + JSON.stringify(topic));
     topic.subscribeInProgress = true;
 
-    /*Codes_SRS_NODE_DEVICE_MQTT_16_049: [`enableC2D` shall subscribe to the MQTT topic for messages.]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_049: [`enableC2D` shall subscribe to the MQTT topic for messages with a QoS of `1`.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_16_040: [`enableMethods` shall subscribe to the MQTT topic for direct methods.]*/
-    this._mqtt.subscribe(topic.name, { qos: 0 }, (err) => {
+    this._mqtt.subscribe(topic.name, { qos: qos }, (err) => {
       topic.subscribeInProgress = false;
       topic.subscribed = true;
       /*Codes_SRS_NODE_DEVICE_MQTT_16_050: [`enableC2D` shall call its callback with no arguments when the `SUBACK` packet is received.]*/
