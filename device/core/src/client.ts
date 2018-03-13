@@ -602,13 +602,11 @@ export class Client extends EventEmitter {
       safeCallback(closeCallback, err, result);
     };
 
-    this._disableC2D(() => {
-      /*Codes_SRS_NODE_DEVICE_CLIENT_16_001: [The `close` function shall call the transport's `disconnect` function if it exists.]*/
-      this._transport.disconnect((disconnectError, disconnectResult) => {
-        /*Codes_SRS_NODE_DEVICE_CLIENT_16_046: [The `close` method shall remove the listener that has been attached to the transport `disconnect` event.]*/
-        this._transport.removeListener('disconnect', this._disconnectHandler);
-        onDisconnected(disconnectError, disconnectResult);
-      });
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_046: [The `close` method shall remove the listener that has been attached to the transport `disconnect` event.]*/
+    this._transport.removeListener('disconnect', this._disconnectHandler);
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_001: [The `close` function shall call the transport's `disconnect` function if it exists.]*/
+    this._transport.disconnect((disconnectError, disconnectResult) => {
+      onDisconnected(disconnectError, disconnectResult);
     });
   }
 
