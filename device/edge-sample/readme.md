@@ -33,38 +33,18 @@ root@2e1c0a98438e:/azure-iot-sdk-node# curl -sSL https://get.docker.com/ | sh
 <-- snip -->
 ```
 
-If you haven't already done so, clone the repo. 
+If you haven't already done so, clone the repo and run dev-setup.sh
 ```
-root@88bd7a1e504f:/# git clone https://www.github.com/Azure/azure-iot-sdk-node
+root@88bd7a1e504f:/# git clone https://www.github.com/Azure/azure-iot-sdk-node -b modules-docker && cd azure-iot-sdk-node && build/dev-setup.sh
 Cloning into 'azure-iot-sdk-node'...
 
-<--snip-->
-```
+<-- snip -->
 
-Switch to the appropriate branch (again, you may need to change the branch name if necessary)
-```
-root@88bd7a1e504f:/# cd azure-iot-sdk-node
-root@88bd7a1e504f:/azure-iot-sdk-node# git checkout module_docker
-Branch module_docker set up to track remote branch module_docker from origin.
-Switched to a new branch 'module_docker'
-```
-
-Then run build/dev-setup.sh to install and link all dependencies.
-```
-
-root@88bd7a1e504f:/azure-iot-sdk-node# build/dev-setup.sh
-
--- Setting up build_parallel tool --
-iothub-buildparallel@0.0.1 /azure-iot-sdk-node/build/build_parallel
-
-<--snip-->
-```
 
 Finally, build the base image.  If you're inside of a Docker container at this point, you will be using the Docker daemon from the host.
 
 ```
-root@aa2532356264:/azure-iot-sdk-node# cd device/edge-sample
-root@aa2532356264:/azure-iot-sdk-node/device/edge-sample# ./build_base_image.sh
+root@aa2532356264:/azure-iot-sdk-node# cd device/edge-sample && ./build_base_image.sh
 Sending build context to Docker daemon  52.27MB
 Step 1/4 : FROM node:6-alpine
 
