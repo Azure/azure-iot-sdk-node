@@ -1,9 +1,7 @@
-FROM node:6
+FROM iot-hub-module-base:latest
 
-ARG EXE_DIR=.
+COPY edge_sample_module.js /APP
+WORKDIR /APP
+EXPOSE 9229
 
-WORKDIR /app
-
-COPY $EXE_DIR/ ./
-
-CMD ["node", "edge_sample_module.js"]
+CMD ["node", "--inspect", "edge_sample_module.js"]

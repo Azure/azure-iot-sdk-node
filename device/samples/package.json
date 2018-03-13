@@ -18,6 +18,7 @@
   },
   "scripts": {
     "lint": "jshint --show-non-errors .",
-    "test": "npm -s run lint"
+    "test": "npm -s run lint",
+    "build": "echo nothing to build"
   }
 }

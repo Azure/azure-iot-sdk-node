@@ -53,7 +53,7 @@ setInterval(function () {
   var temperatureAlert = (temperature > 28) ? 'true' : 'false';
   var data = JSON.stringify({ deviceId: 'myFirstDevice', temperature: temperature, temperatureAlert: temperatureAlert });
   var message = new Message(data);
-  console.log('Sending message: ' + message.getData());
+  console.log('XXX Sending message: ' + message.getData());
   client.sendOutputEvent('temperature', message, printResultFor('sendOutputEvent'));
 }, 2000);
 
