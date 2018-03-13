@@ -20,8 +20,6 @@ These steps will not work on a Windows device.  You need to run these steps with
 
 ## one-time setup
 
-If you haven't already done so, clone this repo and run build/dev-setup.sh.
-
 If you're running inside of a docker container, make sure to use node:6, and make sure to launch with -v to map the docker daemon socket into your container.  This is necessary to use the host docker instance to build an image from inside of your container.  You will also need to install Docker CE to get access to the docker CLI.
 
 ```
@@ -39,7 +37,7 @@ root@88bd7a1e504f:/# git clone https://www.github.com/Azure/azure-iot-sdk-node -
 Cloning into 'azure-iot-sdk-node'...
 
 <-- snip -->
-
+```
 
 Finally, build the base image.  If you're inside of a Docker container at this point, you will be using the Docker daemon from the host.
 
