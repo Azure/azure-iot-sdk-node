@@ -78,7 +78,7 @@ export interface TransportConfig {
   gatewayHostName?: string;
   /**
    * Public certificate for the CA to use when validating the connection to the server
-  */
+   */
   ca?: string;
 }
 

@@ -6,18 +6,28 @@
 var Protocol = require('azure-iot-device-mqtt').Mqtt;
 var Client = require('azure-iot-device').Client;
 var Message = require('azure-iot-device').Message;
+var SharedAccessKeyAuthenticationProvider = require('azure-iot-device').SharedAccessKeyAuthenticationProvider;
+var fs = require('fs');
 
-// String containing Hostname, Device Id, ModuleId, & Shared Access Key in the following formats:
-//  "HostName=<iothub_host_name>;DeviceId=<device_id>;ModuleId=<module_id?;SharedAccessKey=<device_key>;GatewayHostName=<edge_ip>"
-var connectionString = '[IoT module connection string]';
+var connectionString = process.env.EdgeHubConnectionString;
 
-// fromConnectionString must specify a transport constructor, coming from any transport package.
-var client = Client.fromConnectionString(connectionString, Protocol);
+var authProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString(connectionString);
+authProvider.getDeviceCredentials(function(err, credentials) {
+  if (err) {
+    throw new Error('unexpected: getDeviceCredentials failure');
+  } else {
+    credentials.ca = fs.readFileSync(process.env.EdgeModuleCACertificateFile).toString('ascii');
+  }
+});
+
+var client = Client.fromAuthenticationProvider(authProvider, Protocol);
+console.log('got client');
 
 client.on('error', function (err) {
   console.error(err.message);
 });
 
+// connect to the edge instance
 client.open(function (err) {
   if (err) {
     console.error('Could not connect: ' + err.message);
