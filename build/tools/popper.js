@@ -8,7 +8,7 @@ var pem = require('pem');
 var chalk = require('chalk');
 
 var argv = require('yargs')
-           .usage('Usage: $0  --ca <root cert pem file name> --key <root cert key pem file name> --nonce <nonce>')
+           .usage('Usage: $0  --ca <root cert pem file name> --key <root cert key pem file name> --nonce <nonce>  NOT FOR PRODUCTION USE!!!!')
            .demand(['ca', 'key', 'nonce'])
            .describe('ca', 'pem file name of the root')
            .describe('key', 'pem file name of the key')
@@ -37,7 +37,7 @@ function createCACertDevice(nonce, done) {
           if (err) {
             done(err);
           } else {
-            fs.writeFileSync(nonce + '-key.pem', certConstructionResult.certificate);
+            fs.writeFileSync(nonce + '-cert.pem', certConstructionResult.certificate);
             done();
           }
       })
