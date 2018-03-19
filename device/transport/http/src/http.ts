@@ -12,7 +12,7 @@ import { Http as Base } from 'azure-iot-http-base';
 import { endpoint, errors, results, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
 import { translateError } from './http_errors.js';
 import { IncomingMessage } from 'http';
-import { DeviceMethodResponse, Client, X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
+import { DeviceMethodResponse, Client, X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider, TwinProperties } from 'azure-iot-device';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -166,33 +166,43 @@ export class Http extends EventEmitter implements Client.Transport {
         }
 
         if (message.messageId) {
-            /*Codes_SRS_NODE_DEVICE_HTTP_16_014: [If the `message` object has a `messageId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-MessageId`.]*/
-            httpHeaders['IoTHub-MessageId'] = message.messageId;
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_014: [If the `message` object has a `messageId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-MessageId`.]*/
+          httpHeaders['IoTHub-MessageId'] = message.messageId;
         }
 
         if (message.correlationId) {
-            /*Codes_SRS_NODE_DEVICE_HTTP_16_015: [If the `message` object has a `correlationId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-CorrelationId`.]*/
-            httpHeaders['IoTHub-CorrelationId'] = message.correlationId;
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_015: [If the `message` object has a `correlationId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-CorrelationId`.]*/
+          httpHeaders['IoTHub-CorrelationId'] = message.correlationId;
         }
 
         if (message.userId) {
-            /*Codes_SRS_NODE_DEVICE_HTTP_16_016: [If the `message` object has a `userId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-UserId`.]*/
-            httpHeaders['IoTHub-UserId'] = message.userId;
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_016: [If the `message` object has a `userId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-UserId`.]*/
+          httpHeaders['IoTHub-UserId'] = message.userId;
         }
 
         if (message.to) {
-            /*Codes_SRS_NODE_DEVICE_HTTP_16_017: [If the `message` object has a `to` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-To`.]*/
-            httpHeaders['IoTHub-To'] = message.to;
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_017: [If the `message` object has a `to` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-To`.]*/
+          httpHeaders['IoTHub-To'] = message.to;
         }
 
         if (message.expiryTimeUtc) {
-            /*Codes_SRS_NODE_DEVICE_HTTP_16_018: [If the `message` object has a `expiryTimeUtc` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Expiry`.]*/
-            httpHeaders['IoTHub-Expiry'] = message.expiryTimeUtc;
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_018: [If the `message` object has a `expiryTimeUtc` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Expiry`.]*/
+          httpHeaders['IoTHub-Expiry'] = message.expiryTimeUtc;
         }
 
         if (message.ack) {
-            /*Codes_SRS_NODE_DEVICE_HTTP_16_019: [If the `message` object has a `ack` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Ack`.]*/
-            httpHeaders['IoTHub-Ack'] = message.ack;
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_019: [If the `message` object has a `ack` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Ack`.]*/
+          httpHeaders['IoTHub-Ack'] = message.ack;
+        }
+
+        if (message.contentType) {
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_037: [If the `message` object has a `contentType` property, the value of the property shall be inserted in the headers of the HTTP request with the key `iothub-contenttype`.]*/
+          httpHeaders['iothub-contenttype'] = message.contentType;
+        }
+
+        if (message.contentEncoding) {
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_038: [If the `message` object has a `contentEncoding` property, the value of the property shall be inserted in the headers of the HTTP request with the key `iothub-contentencoding`.]*/
+          httpHeaders['iothub-contentencoding'] = message.contentEncoding;
         }
 
         /*Codes_SRS_NODE_DEVICE_HTTP_16_013: [If using x509 authentication the `Authorization` header shall not be set and the x509 parameters shall instead be passed to the underlying transpoort.]*/
@@ -499,34 +509,32 @@ export class Http extends EventEmitter implements Client.Transport {
   /**
    * @private
    */
-  getTwinReceiver(done: (err?: Error, receiver?: any) => void): void {
-    /*Codes_SRS_NODE_DEVICE_HTTP_16_020: [`getTwinReceiver` shall throw a `NotImplementedError`.]*/
+  getTwin(done: (err?: Error, twin?: TwinProperties) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_020: [`getTwin` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Twin is not implemented over HTTP.');
   }
 
   /**
    * @private
    */
-  sendTwinRequest(method: string, resource: string, properties: {
-      [key: string]: any;
-  }, body: any, done?: (err?: Error, result?: any) => void): void {
-    /*Codes_SRS_NODE_DEVICE_HTTP_16_021: [`sendTwinRequest` shall throw a `NotImplementedError`.]*/
+  updateTwinReportedProperties(done: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_034: [`updateTwinReportedProperties` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Twin is not implemented over HTTP.');
   }
 
   /**
    * @private
    */
-  enableTwin(callback: (err?: Error) => void): void {
-    /*Codes_SRS_NODE_DEVICE_HTTP_16_022: [`enableTwin` shall throw a `NotImplementedError`.]*/
+  enableTwinDesiredPropertiesUpdates(done: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_035: [`enableTwinDesiredPropertiesUpdates` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Twin is not implemented over HTTP.');
   }
 
   /**
    * @private
    */
-  disableTwin(callback: (err?: Error) => void): void {
-    /*Codes_SRS_NODE_DEVICE_HTTP_16_023: [`disableTwin` shall throw a `NotImplementedError`.]*/
+  disableTwinDesiredPropertiesUpdates(done: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_036: [`disableTwinDesiredPropertiesUpdates` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Twin is not implemented over HTTP.');
   }
 

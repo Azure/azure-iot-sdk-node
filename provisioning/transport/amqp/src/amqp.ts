@@ -66,13 +66,13 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
     const amqpErrorListener = (err) => this._amqpStateMachine.handle('amqpError', err);
 
     const responseHandler = (msg) => {
-      debug('got message with correlationId: ' + msg.correlationId);
+      debug('got message with correlationId: ' + msg.properties.correlationId);
       /*Codes_SRS_NODE_PROVISIONING_AMQP_16_007: [The `registrationRequest` method shall call its callback with a `RegistrationResult` object parsed from the body of the response message which `correlationId` matches the `correlationId` of the request message sent on the sender link.]*/
       /*Codes_SRS_NODE_PROVISIONING_AMQP_16_017: [The `queryOperationStatus` method shall call its callback with a `RegistrationResult` object parsed from the body of the response message which `correlationId` matches the `correlationId` of the request message sent on the sender link.]*/
-      const registrationResult = JSON.parse(msg.data);
-      if (this._operations[msg.correlationId]) {
-        const requestCallback = this._operations[msg.correlationId];
-        delete this._operations[msg.correlationId];
+      const registrationResult = JSON.parse(msg.body);
+      if (this._operations[msg.properties.correlationId]) {
+        const requestCallback = this._operations[msg.properties.correlationId];
+        delete this._operations[msg.properties.correlationId];
         requestCallback(null, registrationResult, msg, this._config.pollingInterval);
       } else {
         debug('ignoring message with unknown correlationId');

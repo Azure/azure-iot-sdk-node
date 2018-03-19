@@ -7,7 +7,7 @@
 var EventEmitter = require('events').EventEmitter;
 var assert = require('chai').assert;
 var sinon = require('sinon');
-var Message = require('azure-iot-common').Message;
+var AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
 var errors = require('azure-iot-common').errors;
 var ProvisioningDeviceConstants = require('azure-iot-provisioning-device').ProvisioningDeviceConstants;
 var Amqp = require('../lib/amqp.js').Amqp;
@@ -44,18 +44,24 @@ describe('Amqp', function () {
     fakeSenderLink.send = sinon.stub().callsFake((message, callback) => {
       var fakeResponse;
       if (message.applicationProperties['iotdps-operation-type'] === 'iotdps-register') {
-        fakeResponse = new Message(JSON.stringify({
+        fakeResponse = new AmqpMessage();
+        fakeResponse.body = JSON.stringify({
           operationId: 'fakeOpId',
           status: 'assigning'
-        }));
-        fakeResponse.correlationId = message.properties.correlationId;
+        });
+        fakeResponse.properties = {
+          correlationId: message.properties.correlationId
+        };
       } else {
-        fakeResponse = new Message(JSON.stringify({
+        fakeResponse = new AmqpMessage();
+        fakeResponse.body = JSON.stringify({
           operationId: message.applicationProperties['iotdps-operation-id'],
           status: 'assigned',
           registrationState: {}
-        }));
-        fakeResponse.correlationId = message.properties.correlationId;
+        });
+        fakeResponse.properties = {
+          correlationId: message.properties.correlationId
+        };
       }
 
       process.nextTick(() => {

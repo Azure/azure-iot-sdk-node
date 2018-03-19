@@ -3,7 +3,7 @@
 var assert = require('chai').assert;
 var sinon = require('sinon');
 var EventEmitter = require('events').EventEmitter;
-var Message = require('azure-iot-common').Message;
+var AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
 var errors = require('azure-iot-common').errors;
 var endpoint = require('azure-iot-common').endpoint;
 
@@ -55,9 +55,14 @@ describe('AmqpDeviceMethodClient', function () {
     it('saves the callback argument and calls it with a DeviceMethodRequest when a method request message is received', function(testCallback) {
       var fakeAmqpReceiver = new EventEmitter();
       var fakeMethodName = 'testMethod';
-      var fakeMethodRequest = new Message('payload');
-      fakeMethodRequest.correlationId = 'fakeCorrelationId';
-      fakeMethodRequest.properties.add('IoThub-methodname', fakeMethodName);
+      var fakeMethodRequest = new AmqpMessage();
+      fakeMethodRequest.body = 'payload';
+      fakeMethodRequest.properties = {
+        correlationId: 'fakeCorrelationId'
+      };
+      fakeMethodRequest.applicationProperties = {
+        'IoThub-methodname': fakeMethodName
+      };
       var fakeAmqpClient = {
         /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_014: [The `AmqpDeviceMethodClient` object shall set 2 properties of any AMQP link that it create:
         - `com.microsoft:api-version` shall be set to the current API version in use.
@@ -86,8 +91,8 @@ describe('AmqpDeviceMethodClient', function () {
           - `body`: the payload of the message received, which is also the payload of the method request
           - `methods`: an object with a `methodName` property containing the name of the method that is being called, extracted from the incoming message's application property named `IoThub-methodname`.]*/
           assert.strictEqual(methodRequest.methods.methodName, fakeMethodName);
-          assert.strictEqual(methodRequest.requestId, fakeMethodRequest.correlationId);
-          assert.strictEqual(methodRequest.body, fakeMethodRequest.getData());
+          assert.strictEqual(methodRequest.requestId, fakeMethodRequest.properties.correlationId);
+          assert.strictEqual(methodRequest.body, fakeMethodRequest.body);
           testCallback();
         });
 
@@ -98,9 +103,14 @@ describe('AmqpDeviceMethodClient', function () {
     it('saves the callback for the method even though it is detached and works when attached', function (testCallback) {
       var fakeAmqpReceiver = new EventEmitter();
       var fakeMethodName = 'testMethod';
-      var fakeMethodRequest = new Message('payload');
-      fakeMethodRequest.correlationId = 'fakeCorrelationId';
-      fakeMethodRequest.properties.add('IoThub-methodname', fakeMethodName);
+      var fakeMethodRequest = new AmqpMessage();
+      fakeMethodRequest.body = 'payload';
+      fakeMethodRequest.properties = {
+        correlationId: 'fakeCorrelationId'
+      };
+      fakeMethodRequest.applicationProperties = {
+        'IoThub-methodname': fakeMethodName
+      };
       var fakeAmqpClient = {
         attachSenderLink: sinon.stub().callsArgWith(2, null, new EventEmitter()),
         attachReceiverLink: sinon.stub().callsArgWith(2, null, fakeAmqpReceiver)
@@ -113,8 +123,8 @@ describe('AmqpDeviceMethodClient', function () {
         - `body`: the payload of the message received, which is also the payload of the method request
         - `methods`: an object with a `methodName` property containing the name of the method that is being called, extracted from the incoming message's application property named `IoThub-methodname`.]*/
         assert.strictEqual(methodRequest.methods.methodName, fakeMethodName);
-        assert.strictEqual(methodRequest.requestId, fakeMethodRequest.correlationId);
-        assert.strictEqual(methodRequest.body, fakeMethodRequest.getData());
+        assert.strictEqual(methodRequest.requestId, fakeMethodRequest.properties.correlationId);
+        assert.strictEqual(methodRequest.body, fakeMethodRequest.body);
         testCallback();
       });
 
@@ -126,9 +136,14 @@ describe('AmqpDeviceMethodClient', function () {
     it('saves the callback for the method even though it is attaching and works when attached', function (testCallback) {
       var fakeAmqpReceiver = new EventEmitter();
       var fakeMethodName = 'testMethod';
-      var fakeMethodRequest = new Message('payload');
-      fakeMethodRequest.correlationId = 'fakeCorrelationId';
-      fakeMethodRequest.properties.add('IoThub-methodname', fakeMethodName);
+      var fakeMethodRequest = new AmqpMessage();
+      fakeMethodRequest.body = 'payload';
+      fakeMethodRequest.properties = {
+        correlationId: 'fakeCorrelationId'
+      };
+      fakeMethodRequest.applicationProperties = {
+        'IoThub-methodname': fakeMethodName
+      };
       var attachCallback;
       var fakeAmqpClient = {
         attachSenderLink: sinon.stub().callsFake(function (endpoint, linkOptions, callback) {
@@ -144,8 +159,8 @@ describe('AmqpDeviceMethodClient', function () {
       // now blocked in the 'attaching' state
       client.onDeviceMethod(fakeMethodName, function(methodRequest) {
         assert.strictEqual(methodRequest.methods.methodName, fakeMethodName);
-        assert.strictEqual(methodRequest.requestId, fakeMethodRequest.correlationId);
-        assert.strictEqual(methodRequest.body, fakeMethodRequest.getData());
+        assert.strictEqual(methodRequest.requestId, fakeMethodRequest.properties.correlationId);
+        assert.strictEqual(methodRequest.body, fakeMethodRequest.body);
         testCallback();
       });
 

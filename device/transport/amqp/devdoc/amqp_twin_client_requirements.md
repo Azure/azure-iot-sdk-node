@@ -3,106 +3,174 @@
 ## Overview
 Object used to subscribe to the Cloud-to-Device messages for Twin
 
-## Example
-```javascript
-var receiver = new AmqpTwinClient(config: ClientConfig, client: any);
-receiver.on('response', function(response) {
-    console.log('Response received for request ' + response.requestId);
-    console.log('  status = " + response.status);
-    console.log(response.body);
-});
-```
-
 ## Public API
 
-### Constructor
+```typescript
+class AmqpTwinClient extends EventEmitter {
+  constructor(authenticationProvider: AuthenticationProvider, client: any) {
+  getTwin(callback: (err: Error, twin?: TwinProperties) => void): void;
+  updateTwinReportedProperties(patch: any, callback: (err?: Error) => void): void;
+  enableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void;
+  disableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void;
+  detach(callback: (err?: Error) => void): void;
+}
+```
+### constructor(authenticationProvider: AuthenticationProvider, client: any) {
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_004: [** The `AmqpTwinClient` constructor shall throw `ReferenceError` if the `config` object is falsy. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_06_005: [** The `AmqpTwinClient` shall inherit from the `EventEmitter` class. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_002: [** The `AmqpTwinClient` constructor shall throw `ReferenceError` if the `client` object is falsy. **]**
+### getTwin(callback: (err: Error, twin?: TwinProperties) => void): void;
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_005: [** The `AmqpDeviceMethodClient` shall inherit from the `EventEmitter` class. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_007: [** The `getTwin` method shall attach the sender link if it's not already attached. **]**
 
-### response event
+**SRS_NODE_DEVICE_AMQP_TWIN_16_008: [** If attaching the sender link fails, the `getTwin` method shall call its callback with the error that caused the failure. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_006: [** When a listener is added for the `response` event, and the `post` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLink`. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_009: [** THe `getTwin` method shall attach the receiver link if it's not already attached. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_007: [** The endpoint argument for attacheReceiverLink shall be `/devices/<deviceId>/twin`. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_010: [** If attaching the receiver link fails, the `getTwin` method shall call its callback with the error that caused the failure. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_008: [** The link options argument for attachReceiverLink shall be:
- attach: {
-        properties: {
-          'com.microsoft:channel-correlation-id' : 'twin:<correlationId>',
-          'com.microsoft:api-version' : endpoint.apiVersion
-        },
-        sndSettleMode: 1,
-        rcvSettleMode: 0
-      } **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_011: [** The `getTwin` method shall send an `AmqpMessage` using the `SenderLink.send` method with the following annotations and properties:
+- `operation` annotation set to `GET`.
+- `resource` annotation set to `undefined`
+- `correlationId` property set to a uuid
+- `body` set to ` `. **]**
 
+**SRS_NODE_DEVICE_AMQP_TWIN_16_012: [** If the `SenderLink.send` call fails, the `getTwin` method shall call its callback with the error that caused the failure. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_009: [** The endpoint argument for attacheSenderLink shall be `/device/<deviceId>/twin`. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_013: [** The `getTwin` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_010: [** The link options argument for attachSenderLink shall be:
- attach: {
-        properties: {
-          'com.microsoft:channel-correlation-id' : 'twin:<correlationId>',
-          'com.microsoft:api-version' : endpoint.apiVersion
-        },
-        sndSettleMode: 1,
-        rcvSettleMode: 0
-      } **]**
-.
+**SRS_NODE_DEVICE_AMQP_TWIN_16_014: [** The `getTwin` method shall parse the body of the received message and call its callback with a `null` error object and the parsed object as a result. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_011: [** Upon successfully establishing the upstream and downstream links the `subscribed` event shall be emitted from the twin receiver, with an argument object of {eventName: "response", transportObject: <object>}. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_038: [** The `getTwin` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the `status` message annotation is `> 300`. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_015: [** If there is a listener for the `response` event, a `response` event shall be emitted for each response received for requests initiated by SendTwinRequest. **]**
+### updateTwinReportedProperties(patch: any, callback: (err?: Error) => void): void;
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_014: [** When there are no more listeners for the `response` AND the `post` event, the upstream and downstream amqp links shall be closed via calls to `detachReceiverLink` and `detachSenderLink`. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_015: [** The `updateTwinReportedProperties` method shall attach the sender link if it's not already attached. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_016: [** When a `response` event is emitted, the parameter shall be an object which contains `status`, `requestId` and `body` members. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_016: [** If attaching the sender link fails, the `updateTwinReportedProperties` method shall call its callback with the error that caused the failure. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_017: [** The `requestId` value is acquired from the amqp message correlationId property in the response amqp message. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_017: [** THe `updateTwinReportedProperties` method shall attach the receiver link if it's not already attached. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_026: [** The `status` value is acquired from the amqp message status message annotation. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_018: [** If attaching the receiver link fails, the `updateTwinReportedProperties` method shall call its callback with the error that caused the failure. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_018: [** The `body` parameter of the `response` event shall be the data of the received amqp message. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_019: [** The `updateTwinReportedProperties` method shall send an `AmqpMessage` using the `SenderLink.send` method with the following annotations and properties:
+- `operation` annotation set to `PATCH`.
+- `resource` annotation set to `/properties/reported`
+- `correlationId` property set to a uuid
+- `body` set to the stringified patch object. **]**
 
-#### post event
+**SRS_NODE_DEVICE_AMQP_TWIN_16_020: [** If the `SenderLink.send` call fails, the `updateTwinReportedProperties` method shall call its callback with the error that caused the failure. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_012: [** When a listener is added for the `post` event, and the `response` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLine`. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_021: [** The `updateTwinReportedProperties` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received. **]**
 
-The endpoints and link options are as for the response event.
+**SRS_NODE_DEVICE_AMQP_TWIN_16_022: [** The `updateTwinReportedProperties` method shall call its callback with no argument when a response is received and the `status` message annotation code is `>= 200` or `< 300` **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_019: [** Upon successfully establishing the upstream and downstream links, a `PUT` request shall be sent on the upstream link with a correlationId set in the properties of the amqp message. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_039: [** The `updateTwinReportedProperties` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the `status` message annotation is `> 300`. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_013: [** Upon receiving a successful response message with the correlationId of the `PUT`, the `subscribed` event shall be emitted from the twin receiver, with an argument object of {eventName: "post", transportObject: <object>}. **]**
+### enableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void;
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_020: [** If there is a listener for the `post` event, a `post` event shall be emitted for each amqp message received on the downstream link that does NOT contain a correlation id, the parameter of the emit will be is the data of the amqp message. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_023: [** The `enableTwinDesiredPropertiesUpdates` method shall attach the sender link if it's not already attached. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_021: [** When there is no more listeners for the `post` event, a `DELETE` request shall be sent on the upstream link with a correlationId set in the properties of the amqp message. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_024: [** If attaching the sender link fails, the `enableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure. **]**
 
-### error
+**SRS_NODE_DEVICE_AMQP_TWIN_16_025: [** THe `enableTwinDesiredPropertiesUpdates` method shall attach the receiver link if it's not already attached. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_022: [** If an error occurs on establishing the upstream or downstream link then the `error` event shall be emitted. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_026: [** If attaching the receiver link fails, the `enableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_06_025: [** When the `error` event is emitted, the first parameter shall be an error object obtained via the amqp `translateError` module. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_027: [** The `enableTwinDesiredPropertiesUpdates` method shall send an `AmqpMessage` using the `SenderLink.send` method with the following annotations and properties:
+- `operation` annotation set to `PUT`.
+- `resource` annotation set to `/notifications/twin/properties/desired`
+- `correlationId` property set to a uuid
+- `body` set to `undefined`. **]**
 
-### attach(callback)
+**SRS_NODE_DEVICE_AMQP_TWIN_16_028: [** If the `SenderLink.send` call fails, the `enableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_16_001: [** The `attach` method shall attach both sender and receiver links and calls its `callback` with no argument if successful. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_029: [** The `enableTwinDesiredPropertiesUpdates` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_16_002: [** The `attach` method shall call its `callback` with an `Error` if attaching either link fails. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_030: [** The `enableTwinDesiredPropertiesUpdates` method shall call its callback with no argument when a response is received **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_16_003: [** The `attach` method shall call its `callback` immediately if the links are already attached. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_040: [** The `enableTwinDesiredPropertiesUpdates` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the status message annotation is `> 300`. **]**
 
-**SRS_NODE_DEVICE_AMQP_TWIN_16_007: [** The `attach` method shall call the `getDeviceCredentials` method on the `authenticationProvider` object passed as an argument to the constructor to retrieve the device id. **]**
+### disableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void;
 
-**SRS_NODE_DEVICE_AMQP_TWIN_16_008: [** The `attach` method shall call its callback with an error if the call to `getDeviceCredentials` fails with an error. **]**
+**SRS_NODE_DEVICE_AMQP_TWIN_16_031: [** The `disableTwinDesiredPropertiesUpdates` method shall call its callback immediately and with no arguments if the links are detached. **]**
 
-### detach(callback)
+**SRS_NODE_DEVICE_AMQP_TWIN_16_032: [** The `disableTwinDesiredPropertiesUpdates` method shall send an `AmqpMessage` using the `SenderLink.send` method with the following annotations and properties:
+- `operation` annotation set to `DELETE`.
+- `resource` annotation set to `/notifications/twin/properties/desired`
+- `correlationId` property set to a uuid
+- `body` set to `undefined`. **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_033: [** If the `SenderLink.send` call fails, the `disableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure. **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_034: [** The `disableTwinDesiredPropertiesUpdates` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received. **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_035: [** The `disableTwinDesiredPropertiesUpdates` method shall call its callback with no argument when a response is received **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_041: [** The `disableTwinDesiredPropertiesUpdates` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the status message annotation is `> 300`. **]**
+
+### detach(callback: (err?: Error) => void): void;
 
 **SRS_NODE_DEVICE_AMQP_TWIN_16_004: [** The `detach` method shall call its `callback` immediately if the links are already detached. **]**
 
 **SRS_NODE_DEVICE_AMQP_TWIN_16_005: [** The `detach` method shall detach the links and call its `callback` with no arguments if the links are successfully detached. **]**
 
 **SRS_NODE_DEVICE_AMQP_TWIN_16_006: [** The `detach` method shall call its `callback` with an `Error` if detaching either of the links fail. **]**
+
+### Links
+
+**SRS_NODE_DEVICE_AMQP_TWIN_06_007: [** The endpoint argument for `attachReceiverLink` shall be `/devices/<deviceId>/twin`. **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_06_008: [** The link options argument for `attachReceiverLink` shall be:
+ attach: {
+        properties: {
+          'com.microsoft:channel-correlation-id' : 'twin:<correlationId>',
+          'com.microsoft:api-version' : endpoint.apiVersion
+        },
+        sndSettleMode: 1,
+        rcvSettleMode: 0
+      } **]**
+
+
+**SRS_NODE_DEVICE_AMQP_TWIN_06_009: [** The endpoint argument for `attachSenderLink` shall be `/device/<deviceId>/twin`. **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_06_010: [** The link options argument for `attachSenderLink` shall be:
+ attach: {
+        properties: {
+          'com.microsoft:channel-correlation-id' : 'twin:<correlationId>',
+          'com.microsoft:api-version' : endpoint.apiVersion
+        },
+        sndSettleMode: 1,
+        rcvSettleMode: 0
+      } **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_036: [** The same correlationId shall be used for both the sender and receiver links. **]**
+
+### Errors
+
+There are 2 failure modes for Twin requests:
+- the initial request is rejected: in that case, the error shall be translated using the usual `azure-iot-amqp-base.translateError` function
+- the request is accepted but contains an invalid payload and leads to an error: in that case, the response sent on the receiver link will have a status code > 300 and shall be translated using **SRS_NODE_DEVICE_AMQP_TWIN_16_037**:
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_037: [** The responses containing errors received on the receiver link shall be translated according to the following table:
+| statusCode | ErrorType               |
+| ---------- | ------------------------|
+| 400        | FormatError             |
+| 401        | UnauthorizedError       |
+| 403        | InvalidOperationError   |
+| 404        | DeviceNotFoundError     |
+| 429        | ThrottlingError         |
+| 500        | InternalServerError     |
+| 503        | ServiceUnavailableError |
+| 504        | TimeoutError            |
+| others     | TwinRequestError        |
+**]**
+
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_038: [** The `getTwin` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the `status` message annotation is `> 300`. **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_039: [** The `updateTwinReportedProperties` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the `status` message annotation is `> 300`. **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_040: [** The `enableTwinDesiredPropertiesUpdates` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the status message annotation is `> 300`. **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_16_041: [** The `disableTwinDesiredPropertiesUpdates` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the status message annotation is `> 300`. **]**

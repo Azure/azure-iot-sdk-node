@@ -1,7 +1,7 @@
 import * as machina from 'machina';
 import * as dbg from 'debug';
 import { EventEmitter } from 'events';
-import { Message, errors, results } from 'azure-iot-common';
+import { errors, results } from 'azure-iot-common';
 import { AmqpMessage } from './amqp_message';
 import { AmqpLink } from './amqp_link_interface';
 
@@ -13,6 +13,9 @@ const debug = dbg('azure-iot-amqp-base:ReceiverLink');
  *
  * @extends {EventEmitter}
  * @implements {AmqpLink}
+ *
+ * @fires ReceiverLink#message
+ * @fires ReceiverLink#error
  */
 /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_002: [** The `ReceiverLink` class shall inherit from `EventEmitter`.]*/
 /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_003: [** The `ReceiverLink` class shall implement the `AmqpLink` interface.]*/
@@ -44,7 +47,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
 
     /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_012: [If a `message` event is emitted by the `amqp10` link object, the `ReceiverLink` object shall emit a `message` event with the same content.]*/
     this._messageHandler = (message: AmqpMessage): void => {
-      this.emit('message', AmqpMessage.toMessage(message));
+      this.emit('message', message);
     };
 
     this._fsm = new machina.Fsm({
@@ -196,30 +199,30 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
     this._fsm.handle('attach', callback);
   }
 
-  accept(message: Message, callback?: (err?: Error, result?: results.MessageCompleted) => void): void {
+  accept(message: AmqpMessage, callback?: (err?: Error, result?: results.MessageCompleted) => void): void {
     /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_021: [The `accept` method shall throw if the `message` argument is falsy.]*/
     if (!message) { throw new ReferenceError('Invalid message object.'); }
-    this._fsm.handle('accept', message.transportObj, callback);
+    this._fsm.handle('accept', message, callback);
   }
 
   /**
    * @deprecated Use accept(message, callback) instead (to adhere more closely to the AMQP10 lingo).
    */
-  complete(message: Message, callback?: (err?: Error, result?: results.MessageCompleted) => void): void {
+  complete(message: AmqpMessage, callback?: (err?: Error, result?: results.MessageCompleted) => void): void {
     /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_015: [The `complete` method shall call the `accept` method with the same arguments (it is here for backward compatibility purposes only).]*/
     this.accept(message, callback);
   }
 
-  reject(message: Message, callback?: (err?: Error, result?: results.MessageRejected) => void): void {
+  reject(message: AmqpMessage, callback?: (err?: Error, result?: results.MessageRejected) => void): void {
     /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_021: [The `reject` method shall throw if the `message` argument is falsy.]*/
     if (!message) { throw new ReferenceError('Invalid message object.'); }
-    this._fsm.handle('reject', message.transportObj, callback);
+    this._fsm.handle('reject', message, callback);
   }
 
-  abandon(message: Message, callback?: (err?: Error, result?: results.MessageAbandoned) => void): void {
+  abandon(message: AmqpMessage, callback?: (err?: Error, result?: results.MessageAbandoned) => void): void {
     /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_021: [The `abandon` method shall throw if the `message` argument is falsy.]*/
     if (!message) { throw new ReferenceError('Invalid message object.'); }
-    this._fsm.handle('abandon', message.transportObj, callback);
+    this._fsm.handle('abandon', message, callback);
   }
 
   private _removeListeners(): void {

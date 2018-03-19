@@ -152,61 +152,6 @@ This method is deprecated. The `AmqpReceiver` object and pattern is going away a
 
 **SRS_NODE_DEVICE_AMQP_16_020: [** The `sendMethodResponse` response shall call the `AmqpDeviceMethodClient.sendMethodResponse` method with the arguments that were given to it. **]**
 
-### sendTwinRequest(method, resource, properties, body, done)
-
-**SRS_NODE_DEVICE_AMQP_06_012: [** The `sendTwinRequest` method shall not throw `ReferenceError` if the `done` callback is falsy. **]**
-
-**SRS_NODE_DEVICE_AMQP_06_013: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `method` argument is falsy. **]**
-
-**SRS_NODE_DEVICE_AMQP_06_014: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `resource` argument is falsy. **]**
-
-**SRS_NODE_DEVICE_AMQP_06_015: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `properties` argument is falsy. **]**
-
-**SRS_NODE_DEVICE_AMQP_06_016: [** The `sendTwinRequest` method shall throw an `ReferenceError` if the `body` argument is falsy. **]**
-
-**SRS_NODE_DEVICE_AMQP_06_017: [** The `sendTwinRequest` method shall throw an `ArgumentError` if the `method` argument is not a string. **]**
-
-**SRS_NODE_DEVICE_AMQP_06_018: [** The `sendTwinRequest` method shall throw an `ArgumentError` if the `resource` argument is not a string. **]**
-
-**SRS_NODE_DEVICE_AMQP_06_019: [** The `sendTwinRequest` method shall throw an `ArgumentError` if the `properties` argument is not a an object. **]**
-
-An new Amqp message shall be instantiated.
-
-**SRS_NODE_DEVICE_AMQP_06_020: [** The `method` argument shall be the value of the amqp message `operation` annotation. **]**
-
-**SRS_NODE_DEVICE_AMQP_06_021: [** The `resource` argument shall be the value of the amqp message `resource` annotation. **]**
-
-**SRS_NODE_DEVICE_AMQP_06_031: [** If the `resource` argument terminates in a slash, the slash shall be removed from the annotation. **]**
-
-**SRS_NODE_DEVICE_AMQP_06_039: [** If the `resource` argument length is zero (after terminating slash removal), the resource annotation shall not be set. **]**
-
-**SRS_NODE_DEVICE_AMQP_06_028: [** The `sendTwinRequest` method shall throw an `ArgumentError` if any members of the `properties` object fails to serialize to a string. **]**
-
-**SRS_NODE_DEVICE_AMQP_06_022: [** All properties, except $rid, shall be set as the part of the properties map of the amqp message. **]**
-
-**SRS_NODE_DEVICE_AMQP_06_023: [** The $rid property shall be set as the `correlationId` in the properties map of the amqp message. **]**
-
-**SRS_NODE_DEVICE_AMQP_06_024: [** The `body` shall be value of the body of the amqp message. **]**
-
-**SRS_NODE_DEVICE_AMQP_06_025: [** The amqp message will be sent upstream to the IoT Hub via the amqp client `send`. **]**
-
-**SRS_NODE_DEVICE_AMQP_06_040: [** If an error occurs in the `sendTwinRequest` method, the `done` callback shall be called with the error as the first parameter. **]**
-
-**SRS_NODE_DEVICE_AMQP_06_041: [** If an error occurs, the `sendTwinRequest` shall use the AMQP `translateError` module to convert the amqp-specific error to a transport agnostic error before passing it into the `done` callback. **]**
-
-**SRS_NODE_DEVICE_AMQP_06_042: [** If the `sendTwinRequest` method is successful, the first parameter to the `done` callback shall be null and the second parameter shall be a MessageEnqueued object. **]**
-
-### getTwinReceiver(done)
-
-**SRS_NODE_DEVICE_AMQP_06_033: [** The `getTwinReceiver` method shall throw an `ReferenceError` if done is falsy **]**
-
-**SRS_NODE_DEVICE_AMQP_16_026: [** The `getTwinReceiver` method shall call the `done` callback with a `null` error argument and the `AmqpTwinClient` instance created when the `Amqp` object was instantiated. **]**
-
-**SRS_NODE_DEVICE_AMQP_16_027: [** The `getTwinReceiver` method shall connect and authenticate the AMQP connection if necessary. **]**
-
-**SRS_NODE_DEVICE_AMQP_16_028: [** The `getTwinReceiver` method shall call the `done` callback with the corresponding error if the transport fails connect or authenticate the AMQP connection. **]**
-
-
 ### onDeviceMethod(methodName, methodCallback)
 
 **SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [** The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `AmqpDeviceMethodClient` object. **]**
@@ -249,23 +194,56 @@ An new Amqp message shall be instantiated.
 **SRS_NODE_DEVICE_AMQP_16_044: [** The `disableMethods` method shall call its `callback` immediately if the transport is already disconnected. **]**
 
 
-### enableTwin(callback)
+### getTwin(callback: (err?: Error, twin?: TwinProperties) => void): void;
 
-**SRS_NODE_DEVICE_AMQP_16_045: [** The `enableTwin` method shall connect and authenticate the transport if it is disconnected. **]**
+**SRS_NODE_DEVICE_AMQP_16_059: [** The `getTwin` method shall connect and authenticate the transport if it is disconnected. **]**
 
-**SRS_NODE_DEVICE_AMQP_16_046: [** The `enableTwin` method shall attach the twin links and call its `callback` once these are successfully attached. **]**
+**SRS_NODE_DEVICE_AMQP_16_060: [** The `getTwin` method shall call its callback with an error if connecting fails. **]**
 
-**SRS_NODE_DEVICE_AMQP_16_047: [** The `enableTwin` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach twin links. **]**
+**SRS_NODE_DEVICE_AMQP_16_061: [** The `getTwin` method shall call its callback with an error if authenticating fails. **]**
 
-**SRS_NODE_DEVICE_AMQP_16_048: [** Any `error` event received on any of the links used for twin shall trigger the emission of an `error` event by the transport, with an argument that is a `TwinDetachedError` object with the `innerError` property set to that error. **]**
+**SRS_NODE_DEVICE_AMQP_16_062: [** The `getTwin` method shall call the `getTwin` method on the `AmqpTwinClient` instance created by the constructor. **]**
 
-### disableTwin(callback)
+**SRS_NODE_DEVICE_AMQP_16_063: [** The `getTwin` method shall call its callback with and error if the call to `AmqpTwinClient.getTwin` fails. **]**
 
-**SRS_NODE_DEVICE_AMQP_16_049: [** The `disableTwin` method shall call `detach` on the twin links and call its callback when these are successfully detached. **]**
+**SRS_NODE_DEVICE_AMQP_16_064: [** The `getTwin` method shall call its callback with a `null` error parameter and the result of the `AmqpTwinClient.getTwin` method if it succeeds. **]**
 
-**SRS_NODE_DEVICE_AMQP_16_050: [** The `disableTwin` method shall call its `callback` with an `Error` if it fails to detach the twin links. **]**
 
-**SRS_NODE_DEVICE_AMQP_16_051: [** The `disableTwin` method shall call its `callback` immediately if the transport is already disconnected. **]**
+### updateTwinReportedProperties(patch: any, callback: (err?: Error) => void): void;
+
+**SRS_NODE_DEVICE_AMQP_16_065: [** The `updateTwinReportedProperties` method shall connect and authenticate the transport if it is disconnected. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_066: [** The `updateTwinReportedProperties` method shall call its callback with an error if connecting fails. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_067: [** The `updateTwinReportedProperties` method shall call its callback with an error if authenticating fails. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_068: [** The `updateTwinReportedProperties` method shall call the `updateTwinReportedProperties` method on the `AmqpTwinClient` instance created by the constructor. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_069: [** The `updateTwinReportedProperties` method shall call its callback with and error if the call to `AmqpTwinClient.updateTwinReportedProperties` fails. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_070: [** The `updateTwinReportedProperties` method shall call its callback with a `null` error parameter and the result of the `AmqpTwinClient.updateTwinReportedProperties` method if it succeeds. **]**
+
+### enableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void;
+
+**SRS_NODE_DEVICE_AMQP_16_071: [** The `enableTwinDesiredPropertiesUpdates` method shall connect and authenticate the transport if it is disconnected. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_072: [** The `enableTwinDesiredPropertiesUpdates` method shall call its callback with an error if connecting fails. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_073: [** The `enableTwinDesiredPropertiesUpdates` method shall call its callback with an error if authenticating fails. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_074: [** The `enableTwinDesiredPropertiesUpdates` method shall call the `enableTwinDesiredPropertiesUpdates` method on the `AmqpTwinClient` instance created by the constructor. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_075: [** The `enableTwinDesiredPropertiesUpdates` method shall call its callback with and error if the call to `AmqpTwinClient.enableTwinDesiredPropertiesUpdates` fails. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_076: [** The `enableTwinDesiredPropertiesUpdates` method shall call its callback with no arguments if the call to `AmqpTwinClient.enableTwinDesiredPropertiesUpdates` succeeds. **]**
+
+### disableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void;
+
+**SRS_NODE_DEVICE_AMQP_16_077: [** The `disableTwinDesiredPropertiesUpdates` method shall call the `disableTwinDesiredPropertiesUpdates` method on the `AmqpTwinClient` instance created by the constructor. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_078: [** The `disableTwinDesiredPropertiesUpdates` method shall call its callback with and error if the call to `AmqpTwinClient.disableTwinDesiredPropertiesUpdates` fails. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_079: [** The `disableTwinDesiredPropertiesUpdates` method shall call its callback no arguments if the call to `AmqpTwinClient.disableTwinDesiredPropertiesUpdates` succeeds. **]**
 
 ###   enableInputMessages(callback: (err?: Error) => void): void;
 

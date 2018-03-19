@@ -6,102 +6,132 @@
 import { EventEmitter } from 'events';
 import machina = require('machina');
 
-import { endpoint, errors, results, Message, AuthenticationProvider } from 'azure-iot-common';
-import { Amqp as BaseAmqpClient, translateError, AmqpMessage } from 'azure-iot-amqp-base';
+import { errors, endpoint, AuthenticationProvider } from 'azure-iot-common';
+import { Amqp as BaseAmqpClient, AmqpMessage, SenderLink, ReceiverLink, AmqpTransportError } from 'azure-iot-amqp-base';
+import { TwinProperties } from 'azure-iot-device';
 
 import * as uuid from 'uuid';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-amqp:AmqpTwinClient');
 
-const responseTopic = '$iothub/twin/res';
+enum TwinMethod {
+  GET = 'GET',
+  PATCH = 'PATCH',
+  PUT = 'PUT',
+  DELETE = 'DELETE'
+}
 
 /**
  * @private
  * @class        module:azure-iot-device-amqp.AmqpTwinClient
- * @classdesc    Acts as a receiver for device-twin traffic
+ * @classdesc    Acts as a client for device-twin traffic
  *
- * @param {Object} config   configuration object
- * @fires AmqpTwinClient#subscribed   an response or post event has been set up for listening.
- * @fires AmqpTwinClient#error    an error has occurred
- * @fires AmqpTwinClient#response   a response message has been received from the service
- * @fires AmqpTwinClient#post a post message has been received from the service
- * @throws {ReferenceError} If client parameter is falsy.
+ * @param {Object} config                        configuration object
+ * @fires AmqpTwinClient#error                   an error has occurred
+ * @fires AmqpTwinClient#desiredPropertyUpdate   a desired property has been updated
+ * @throws {ReferenceError}                      If client parameter is falsy.
  *
  */
 
 /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_005: [The `AmqpTwinClient` shall inherit from the `EventEmitter` class.] */
 export class AmqpTwinClient extends EventEmitter {
-  static errorEvent: string = 'error';
-  static responseEvent: string = 'response';
-  static postEvent: string = 'post';
-  static subscribedEvent: string = 'subscribed';
-
   private _client: BaseAmqpClient;
   private _authenticationProvider: AuthenticationProvider;
-  private _boundMessageHandler: Function;
   private _endpoint: string;
-  private _upstreamAmqpLink: any;
-  private _downstreamAmqpLink: any;
+  private _senderLink: SenderLink;
+  private _receiverLink: ReceiverLink;
   private _fsm: any;
-  private _internalOperations: { [key: string]: () => void };
-  private _eventQueue: any[];
-  private _eventQueueError: Error;
+  private _pendingTwinRequests: { [key: string]: (err: Error, twinProperties?: any) => void };
+
+  private _messageHandler: (message: AmqpMessage) => void;
+  private _errorHandler: (err: Error) => void;
 
   constructor(authenticationProvider: AuthenticationProvider, client: any) {
     super();
     this._client = client;
     this._authenticationProvider = authenticationProvider;
-    this._internalOperations = {};
-    this._upstreamAmqpLink = null;
-    this._downstreamAmqpLink = null;
-    this._eventQueue = [];
-    this._eventQueueError = null;
+    this._senderLink = null;
+    this._receiverLink = null;
+    this._pendingTwinRequests = {};
+
+    this._messageHandler = (message: AmqpMessage): void => {
+      //
+      // The ONLY time we should see a message on the receiver link without a correlationId is if the message is a desired property delta update.
+      //
+      const correlationId: string = message.properties ? message.properties.correlationId : undefined;
+      if (correlationId) {
+        this._onResponseMessage(message);
+      } else if (message.hasOwnProperty('body')) {
+        this._onDesiredPropertyDelta(message);
+      } else {
+        //
+        // Can't be any message we know what to do with.  Just drop it on the floor.
+        //
+        debug('malformed response message received from service: ' + JSON.stringify(message));
+      }
+    };
+
+    this._errorHandler = (err: Error): void => this._fsm.handle('handleLinkError', err);
 
     this._fsm = new machina.Fsm({
-      namespace: 'amqp-twin-receiver',
+      namespace: 'amqp-twin-client',
       initialState: 'detached',
       states: {
-        'detached': {
+        detached: {
           _onEnter: (err, detachCallback) => {
-            let headEvent: any[];
-            while (headEvent = this._eventQueue.shift()) {
-              if (headEvent.shift() === 'actual_sendTwinRequest') {
-                this._rundown_sendTwinRequest.apply(this, headEvent);
+            if (detachCallback) {
+                detachCallback(err);
+            } else {
+              if (err) {
+                this.emit('error', err);
               }
             }
-            this._eventQueueError = null;
-            if (detachCallback) {
-              /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_005: [The `detach` method shall detach the links and call its `callback` with no arguments if the links are successfully detached.]*/
-              /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_002: [The `attach` method shall call its `callback` with an `Error` if attaching either link fails.]*/
-              /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_006: [The `detach` method shall call its `callback` with an `Error` if detaching either of the links fail.]*/
-              // TODO: refactoring needed: requirement not met for now...
-              detachCallback(err);
-            }
           },
-          handleNewListener: (eventName) => {
-            if ((eventName === AmqpTwinClient.responseEvent) || (eventName === AmqpTwinClient.postEvent)) {
-              this._appendEventQueue();
-              this._fsm.transition('attaching');
-            }
+          getTwin: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_007: [The `getTwin` method shall attach the sender link if it's not already attached.]*/
+            /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_009: [THe `getTwin` method shall attach the receiver link if it's not already attached.]*/
+            this._fsm.transition('attaching', (err) => {
+              if (err) {
+                /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_008: [If attaching the sender link fails, the `getTwin` method shall call its callback with the error that caused the failure.]*/
+                /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_010: [If attaching the receiver link fails, the `getTwin` method shall call its callback with the error that caused the failure.]*/
+                callback(err);
+              } else {
+                this._fsm.handle('getTwin', callback);
+              }
+            });
           },
-          sendTwinRequest: () => {
-            this._appendEventQueue();
-            this._fsm.transition('attaching');
+          updateTwinReportedProperties: (patch, callback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_015: [The `updateTwinReportedProperties` method shall attach the sender link if it's not already attached.]*/
+            /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_017: [THe `updateTwinReportedProperties` method shall attach the receiver link if it's not already attached.]*/
+            this._fsm.transition('attaching', (err) => {
+              if (err) {
+                /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_016: [If attaching the sender link fails, the `updateTwinReportedProperties` method shall call its callback with the error that caused the failure.]*/
+                /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_018: [If attaching the receiver link fails, the `updateTwinReportedProperties` method shall call its callback with the error that caused the failure.]*/
+                callback(err);
+              } else {
+                this._fsm.handle('updateTwinReportedProperties', patch, callback);
+              }
+            });
           },
-          handleErrorEmit: (err: Error) => {
-            debug('_handleError: error is: ' + err);
-            this.emit(AmqpTwinClient.errorEvent, translateError('received an error from the amqp transport: ', err));
+          enableTwinDesiredPropertiesUpdates: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_023: [The `enableTwinDesiredPropertiesUpdates` method shall attach the sender link if it's not already attached.]*/
+            /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_025: [The `enableTwinDesiredPropertiesUpdates` method shall attach the receiver link if it's not already attached.]*/
+            this._fsm.transition('attaching', (err) => {
+              if (err) {
+                /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_024: [If attaching the sender link fails, the `enableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure.]*/
+                /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_026: [If attaching the receiver link fails, the `enableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure.]*/
+                callback(err);
+              } else {
+                this._fsm.handle('enableTwinDesiredPropertiesUpdates', callback);
+              }
+            });
           },
-          attach: (callback) => {
-            /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_001: [The `attach` method shall attach both sender and receiver links and calls its `callback` with no argument if successful.]*/
-            this._fsm.transition('attaching', callback);
-          },
-          detach: (callback) => {
-            /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_004: [The `detach` method shall call its `callback` immediately if the links are already detached.]*/
-            callback();
-          }
+          /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_031: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback immediately and with no arguments if the links are detached.]*/
+          disableTwinDesiredPropertiesUpdates: (callback) => callback(),
+          /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_004: [The `detach` method shall call its `callback` immediately if the links are already detached.]*/
+          detach: (callback) => callback()
         },
-        'attaching': {
+        attaching: {
           _onEnter: (attachCallback) => {
             /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_007: [The `attach` method shall call the `getDeviceCredentials` method on the `authenticationProvider` object passed as an argument to the constructor to retrieve the device id.]*/
             this._authenticationProvider.getDeviceCredentials((err, credentials) => {
@@ -109,25 +139,27 @@ export class AmqpTwinClient extends EventEmitter {
                 /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_008: [The `attach` method shall call its callback with an error if the call to `getDeviceCredentials` fails with an error.]*/
                 this._fsm.transition('detached', err, attachCallback);
               } else {
-                  /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_007: [The endpoint argument for attacheReceiverLink shall be `/device/<deviceId>/twin`.] */
-                  /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_009: [The endpoint argument for attacheSenderLink shall be `/device/<deviceId>/twin`.] */
+                  /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_007: [The endpoint argument for attachReceiverLink shall be `/device/<deviceId>/twin`.] */
+                  /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_009: [The endpoint argument for attachSenderLink shall be `/device/<deviceId>/twin`.] */
                   this._endpoint = endpoint.devicePath(credentials.deviceId) + '/twin';
-                  /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_006: [When a listener is added for the `response` event, and the `post` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLink`.] */
-                  /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_012: [When a listener is added for the `post` event, and the `response` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLine`.] */
+                  /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_006: [When a listener is added for the `response` event, and the `post` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLink`.] */
+                  /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_012: [When a listener is added for the `post` event, and the `response` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLine`.] */
+                  /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_036: [The same correlationId shall be used for both the sender and receiver links.]*/
                   const linkCorrelationId: string  = uuid.v4().toString();
                   this._client.attachReceiverLink( this._endpoint, this._generateTwinLinkProperties(linkCorrelationId), (receiverLinkError?: Error, receiverTransportObject?: any): void => {
                     if (receiverLinkError) {
                       /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_022: [If an error occurs on establishing the upstream or downstream link then the `error` event shall be emitted.] */
-                      this._fsm.handle('handleErrorEmit', receiverLinkError);
+                      this._fsm.transition('detached', receiverLinkError, attachCallback);
                     } else {
-                      this._downstreamAmqpLink = receiverTransportObject;
-                      this._downstreamAmqpLink.on('error', this._handleError.bind(this));
+                      this._receiverLink = receiverTransportObject;
+                      this._receiverLink.on('message', this._messageHandler);
+                      this._receiverLink.on('error', this._errorHandler);
                       this._client.attachSenderLink( this._endpoint, this._generateTwinLinkProperties(linkCorrelationId), (senderLinkError?: Error, senderTransportObject?: any): void => {
                         if (senderLinkError) {
-                          this._fsm.handle('handleErrorEmit', senderLinkError);
+                          this._fsm.transition('detached', senderLinkError, attachCallback);
                         } else {
-                          this._upstreamAmqpLink = senderTransportObject;
-                          this._upstreamAmqpLink.on('error', this._handleError.bind(this));
+                          this._senderLink = senderTransportObject;
+                          this._senderLink.on('error', this._errorHandler);
                           this._fsm.transition('attached', attachCallback);
                         }
                       });
@@ -136,161 +168,92 @@ export class AmqpTwinClient extends EventEmitter {
               }
             });
           },
-          handleErrorEmit: () => {
-            this._fsm.deferUntilTransition('detached');
-            this._fsm.transition('detaching');
-          },
-          handleNewListener: () => {
-            this._appendEventQueue();
-          },
-          handleRemoveListener: () => {
-            this._appendEventQueue();
-          },
-          sendTwinRequest: () => {
-            this._appendEventQueue();
-          },
+          handleLinkError: (err, callback) => this._fsm.transition('detaching', err, callback),
+          detach: (callback) => this._fsm.transition('detaching', null, callback),
           '*': () => this._fsm.deferUntilTransition()
         },
-        'attached': {
-          _onEnter: (attachCallback) => {
-            this._downstreamAmqpLink.on('message', this._boundMessageHandler);
-            this._handleHeadOfEventQueue();
-            if (attachCallback) {
-              /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_001: [The `attach` method shall attach both sender and receiver links and calls its `callback` with no argument if successful.]*/
-              attachCallback();
-            }
-          },
-          actual_handleNewListener: (eventName) => {
-            if (eventName === AmqpTwinClient.responseEvent) {
-              /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_011: [** Upon successfully establishing the upstream and downstream links the `subscribed` event shall be emitted from the twin receiver, with an argument object of {eventName: "response", transportObject: <object>}.] */
-              this.emit(AmqpTwinClient.subscribedEvent, { 'eventName' : AmqpTwinClient.responseEvent, 'transportObject' : this._upstreamAmqpLink });
-            } else if (eventName === AmqpTwinClient.postEvent) {
-              //
-              // We need to send a PUT request upstream to enable notification of desired property changes
-              // from the cloud. Then we have to wait for the (hopefully) successful response to this request.
-              //
-              // Only at this point can we emit an successful subscribe to the agnostic twin code that is utilizing this receiver.
-              //
-              const correlationId = uuid.v4().toString();
-              /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_013: [Upon receiving a successful response message with the correlationId of the `PUT`, the `subscribed` event shall be emitted from the twin receiver, with an argument object of {eventName: "post", transportObject: <object>}.] */
-              this._internalOperations[correlationId] = () => {
-                this.emit(AmqpTwinClient.subscribedEvent, { 'eventName' : AmqpTwinClient.postEvent, 'transportObject' : this._upstreamAmqpLink });
-              };
-              /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_019: [Upon successfully establishing the upstream and downstream links, a `PUT` request shall be sent on the upstream link with a correlationId set in the properties of the amqp message.] */
-              this._sendTwinRequest('PUT', '/notifications/twin/properties/desired', { $rid: correlationId }, ' ');
-            }
-            this._handleHeadOfEventQueue();
-          },
-          actual_handleRemoveListener: (eventName) => {
-            if ((eventName === AmqpTwinClient.postEvent) && EventEmitter.listenerCount(this, AmqpTwinClient.postEvent) === 0) {
-              /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_021: [When there is no more listeners for the `post` event, a `DELETE` request shall be sent on the upstream link with a correlationId set in the properties of the amqp message.] */
-              const correlationId = uuid.v4().toString();
-              this._internalOperations[correlationId] = () => {
-                debug('Turned off desired property notification');
-              };
-              this._sendTwinRequest('DELETE', '/notifications/twin/properties/desired', { $rid: correlationId }, ' ');
-            }
-            if ((EventEmitter.listenerCount(this, AmqpTwinClient.postEvent) + EventEmitter.listenerCount(this, AmqpTwinClient.responseEvent)) === 0) {
-              /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_014: [When there are no more listeners for the `response` AND the `post` event, the upstream and downstream amqp links shall be closed via calls to `detachReceiverLink` and `detachSenderLink`.] */
-              this._fsm.transition('detaching');
-            } else {
-              this._handleHeadOfEventQueue();
-            }
-          },
-          actual_sendTwinRequest: (method, resource, properties, body, done) => {
-            this._sendTwinRequest(method, resource, properties, body, done);
-            this._handleHeadOfEventQueue();
-          },
-          handleNewListener: () => {
-            this._AppendOrHandleEvent();
-          },
-          handleRemoveListener: () => {
-            this._AppendOrHandleEvent();
-          },
-          sendTwinRequest: () => {
-            this._AppendOrHandleEvent();
-          },
-          handleErrorEmit: () => {
-            this._fsm.deferUntilTransition('detached');
-            this._fsm.transition('detaching');
-          },
-          attach: (callback) => {
-            /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_003: [The `attach` method shall call its `callback` immediately if the links are already attached.]*/
+        attached: {
+          _onEnter: (callback) => {
             callback();
           },
-          detach: (callback) => {
-            this._fsm.transition('detaching', callback);
+          handleLinkError: (err) => {
+            this._fsm.transition('detaching', err);
           },
-          _onExit: () => {
-            this._downstreamAmqpLink.removeListener('message', this._boundMessageHandler);
-          }
+          /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_011: [** The `getTwin` method shall send an `AmqpMessage` using the `SenderLink.send` method with the following annotations and properties:
+          - `operation` annotation set to `GET`.
+          - `resource` annotation set to `undefined`
+          - `correlationId` property set to a uuid
+          - `body` set to ` `.]*/
+          getTwin: (callback) => this._sendTwinRequest(TwinMethod.GET, undefined, ' ', callback),
+          /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_019: [The `updateTwinReportedProperties` method shall send an `AmqpMessage` using the `SenderLink.send` method with the following annotations and properties:
+          - `operation` annotation set to `PATCH`.
+          - `resource` annotation set to `/properties/reported`
+          - `correlationId` property set to a uuid
+          - `body` set to the stringified patch object.]*/
+          updateTwinReportedProperties: (patch, callback) => this._sendTwinRequest(TwinMethod.PATCH, '/properties/reported', JSON.stringify(patch), callback),
+          /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_027: [The `enableTwinDesiredPropertiesUpdates` method shall send an `AmqpMessage` using the `SenderLink.send` method with the following annotations and properties:
+          - `operation` annotation set to `PUT`.
+          - `resource` annotation set to `/notifications/twin/properties/desired`
+          - `correlationId` property set to a uuid
+          - `body` set to `undefined`.]*/
+          enableTwinDesiredPropertiesUpdates: (callback) => this._sendTwinRequest(TwinMethod.PUT, '/notifications/twin/properties/desired', ' ', callback),
+          /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_032: [The `disableTwinDesiredPropertiesUpdates` method shall send an `AmqpMessage` using the `SenderLink.send` method with the following annotations and properties:
+          - `operation` annotation set to `DELETE`.
+          - `resource` annotation set to `/notifications/twin/properties/desired`
+          - `correlationId` property set to a uuid
+          - `body` set to `undefined`.]*/
+          disableTwinDesiredPropertiesUpdates: (callback) => this._sendTwinRequest(TwinMethod.DELETE, '/notifications/twin/properties/desired', ' ', callback),
+          detach: (callback) => this._fsm.transition('detaching', null, callback)
         },
-        'detaching': {
-          _onEnter: (detachCallback) => {
-            this._client.detachSenderLink( this._endpoint, (detachSenderError: Error, result?: any) => {
+        detaching: {
+          _onEnter: (err, detachCallback) => {
+            const senderLink = this._senderLink;
+            const receiverLink = this._receiverLink;
+            /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_005: [The `detach` method shall detach the links and call its `callback` with no arguments if the links are successfully detached.]*/
+            this._client.detachSenderLink(this._endpoint, (detachSenderError: Error, result?: any) => {
+              senderLink.removeListener('error', this._errorHandler);
               if (detachSenderError) {
                 debug('we received an error for the detach of the upstream link during the disconnect.  Moving on to the downstream link.');
               }
               this._client.detachReceiverLink(this._endpoint,  (detachReceiverError: Error, result?: any) => {
+                receiverLink.removeListener('message', this._messageHandler);
+                receiverLink.removeListener('error', this._errorHandler);
                 if (detachReceiverError) {
                   debug('we received an error for the detach of the downstream link during the disconnect.');
                 }
-                let possibleError = detachSenderError || detachReceiverError;
-                if (possibleError) {
-                  this._fsm.handle('handleErrorEmit', possibleError);
-                }
-                this._fsm.transition('detached', null, detachCallback);
+                /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_006: [The `detach` method shall call its `callback` with an `Error` if detaching either of the links fail.]*/
+                let possibleError = err || detachSenderError || detachReceiverError;
+                this._fsm.transition('detached', possibleError, detachCallback);
               });
             });
           },
-          handleErrorEmit: () => {
-            this._fsm.deferUntilTransition('detached');
-          },
-          handleNewListener: () => {
-            this._appendEventQueue();
-          },
-          handleRemoveListener: () => {
-            this._appendEventQueue();
-          },
-          sendTwinRequest: () => {
-            this._appendEventQueue();
-          }
+          '*': () => this._fsm.deferUntilTransition()
         }
       }
     });
+  }
 
-    this._fsm.on('transition', (transition) => {
-      debug(transition.fromState + ' -> ' + transition.toState + ' (action:' + transition.action + ')');
-    });
+  getTwin(callback: (err: Error, twin?: TwinProperties) => void): void {
+    this._fsm.handle('getTwin', callback);
+  }
 
-    this.on('newListener', this._handleNewListener.bind(this));
-    this.on('removeListener', this._handleRemoveListener.bind(this));
-    this._boundMessageHandler = this._onAmqpMessage.bind(this); // need to save this so that calls to add & remove listeners can be matched by the EventEmitter.
+  updateTwinReportedProperties(patch: any, callback: (err?: Error) => void): void {
+    this._fsm.handle('updateTwinReportedProperties', patch, callback);
+  }
 
+  enableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void {
+    this._fsm.handle('enableTwinDesiredPropertiesUpdates', callback);
+  }
+
+  disableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void {
+    this._fsm.handle('disableTwinDesiredPropertiesUpdates', callback);
   }
 
   /**
-   * @method          module:azure-iot-device-amqp.Amqp#sendTwinRequest
-   * @description     Send a device-twin specific message to the IoT Hub instance
-   *
-   * @param {String}        method    name of the method to invoke ('PUSH', 'PATCH', etc)
-   * @param {String}        resource  name of the resource to act on (e.g. '/properties/reported/') with beginning and ending slashes
-   * @param {Object}        properties  object containing name value pairs for request properties (e.g. { 'rid' : 10, 'index' : 17 })
-   * @param {String}        body  body of request
-   * @param {Function}      done  the callback to be invoked when this function completes.
-   *
-   * @throws {ReferenceError}   One of the required parameters is falsy
-   * @throws {ArgumentError}  One of the parameters is an incorrect type
+   * Necessary for the client to be able to properly detach twin links
+   * attach() isn't necessary because it's done by the FSM automatically when one of the APIs is called.
    */
-  sendTwinRequest(method: string, resource: string, properties: { [key: string]: string }, body: any, done?: (err?: Error, result?: any) => void): void {
-    this._fsm.handle('sendTwinRequest', method, resource, properties, body, done);
-  }
-
-  attach(callback: (err: Error) => void): void {
-    this._fsm.handle('attach', callback);
-  }
-
-  detach(callback: (err: Error) => void): void {
+  detach(callback: (err?: Error) => void): void {
     this._fsm.handle('detach', callback);
   }
 
@@ -326,195 +289,130 @@ export class AmqpTwinClient extends EventEmitter {
     };
   }
 
-  private _handleNewListener(eventName: string): void {
-    this._fsm.handle('handleNewListener', eventName);
-  }
-
-  private _handleRemoveListener(eventName: string): void {
-    this._fsm.handle('handleRemoveListener', eventName);
-  }
-
-  private _onAmqpMessage(message: Message): void {
-    //
-    // The ONLY time we should see a message on the downstream link without a correlationId is if the message is a desired property delta update.
-    //
-    const correlationId: string = message.correlationId;
-    if (correlationId) {
-      this._onResponseMessage(message);
-    } else if (message.hasOwnProperty('data')) {
-      this._onDesiredPropertyDelta(message);
-    } else {
-      //
-      // Can't be any message we know what to do with.  Just drop it on the floor.
-      //
-      debug('malformed response message received from service: ' + JSON.stringify(message));
-    }
-  }
-
-  private _onResponseMessage(message: Message): void {
+  private _onResponseMessage(message: AmqpMessage): void {
     debug('onResponseMessage: The downstream message is: ' + JSON.stringify(message));
-    if (this._internalOperations[message.correlationId]) {
-      const callback = this._internalOperations[message.correlationId];
-      delete this._internalOperations[message.correlationId];
-      callback();
+    /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_013: [The `getTwin` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received.]*/
+    /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_021: [The `updateTwinReportedProperties` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received.]*/
+    /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_029: [The `enableTwinDesiredPropertiesUpdates` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received.]*/
+    /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_034: [The `disableTwinDesiredPropertiesUpdates` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received.]*/
+    if (this._pendingTwinRequests[message.properties.correlationId]) {
+      const pendingRequestCallback = this._pendingTwinRequests[message.properties.correlationId];
+      delete this._pendingTwinRequests[message.properties.correlationId];
+      if (message.messageAnnotations.status >= 200 && message.messageAnnotations.status <= 300) {
+        /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_014: [The `getTwin` method shall parse the body of the received message and call its callback with a `null` error object and the parsed object as a result.]*/
+        /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_022: [The `updateTwinReportedProperties` method shall call its callback with no argument when a response is received]*/
+        /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_030: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with no argument when a response is received]*/
+        /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_035: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback with no argument when a response is received]*/
+        let result = message.body ? JSON.parse(message.body) : undefined;
+        pendingRequestCallback(null, result);
+      } else {
+        /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_038: [The `getTwin` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the `status` message annotation is `> 300`.]*/
+        /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_039: [The `updateTwinReportedProperties` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the `status` message annotation is `> 300`.]*/
+        /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_040: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the status message annotation is `> 300`.]*/
+        /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_041: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the status message annotation is `> 300`.]*/
+        pendingRequestCallback(this._translateErrorResponse(message));
+      }
     } else {
-      //
-      // The service sending back any response is an implied success.  Set status to 200.
-      //
-      /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_016: [When a `response` event is emitted, the parameter shall be an object which contains `status`, `requestId` and `body` members.] */
-      /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_026: [The `status` value is acquired from the amqp message status message annotation.] */
-      /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_017: [The `requestId` value is acquired from the amqp message correlationId property in the response amqp message.] */
-      /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_018: [the `body` parameter of the `response` event shall be the data of the received amqp message.] */
-      const response = {
-        'topic': responseTopic,
-        'status': message.transportObj.messageAnnotations.status,
-        '$rid': message.correlationId,
-        'body': message.data
-      };
-
-      this.emit(AmqpTwinClient.responseEvent, response);
+      debug('received a response for an unknown request: ' + JSON.stringify(message));
     }
   }
 
-  private _onDesiredPropertyDelta(message: Message): void {
-    /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_020: [If there is a listener for the `post` event, a `post` event shall be emitted for each amqp message received on the downstream link that does NOT contain a correlation id, the parameter of the emit will be is the data of the amqp message.] */
-    debug('onPostMessage: The downstream message is: ' + JSON.stringify(message));
-    this.emit(AmqpTwinClient.postEvent, message.data);
+  private _onDesiredPropertyDelta(message: AmqpMessage): void {
+    debug('onDesiredPropertyDelta: The message is: ' + JSON.stringify(message));
+    this.emit('twinDesiredPropertiesUpdate', JSON.parse(message.body));
   }
 
-  private _handleError(err: Error): void {
-    this._fsm.handle('handleErrorEmit', err);
-  }
-
-
-  private _safeCallback(callback: (err: Error | null, result?: any) => void, error?: Error | null, result?: any): void {
-    if (callback) {
-      process.nextTick(() => callback(error, result));
-    }
-  }
-
-  private _appendEventQueue(): void {
-    let argArray: any[] = [];
-    argArray.push('actual_' + this._fsm.currentActionArgs[0].inputType);
-    let i = 1;
-    for ( ; i <= this._fsm.currentActionArgs.length - 1 ; i++) {
-      argArray.push(this._fsm.currentActionArgs[i]);
-    }
-    this._eventQueue.push(argArray);
-  }
-
-  private _handleHeadOfEventQueue(): void {
-    let head: any[] = this._eventQueue.shift();
-    if (head) {
-      this._fsm.handle.apply(this._fsm, head);
-    }
-  }
-
-  private _AppendOrHandleEvent(): void {
-    this._appendEventQueue();
-    if (this._eventQueue.length === 1) {
-      this._handleHeadOfEventQueue();
-    }
-  }
-
-
-  private _isString(obj: any): boolean {
-    return (typeof obj === 'string');
-  }
-
-  private _isNumber(obj: any): boolean {
-    return (typeof obj === 'number');
-  }
-
-  private _isBoolean(obj: any): boolean {
-    return (typeof obj === 'boolean');
-  }
-
-  private _rundown_sendTwinRequest(method: string, resource: string, properties: { [key: string]: string }, body: any, done?: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    if (!!done && (typeof done === 'function' )) {
-      done(this._eventQueueError || new Error('Link Detached'));
-    }
-  }
-
-  private _sendTwinRequest(method: string, resource: string, properties: { [key: string]: string }, body: any, done?: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    /* Codes_SRS_NODE_DEVICE_AMQP_06_012: [The `sendTwinRequest` method shall not throw `ReferenceError` if the `done` callback is falsy.] */
-    /* Codes_SRS_NODE_DEVICE_AMQP_06_013: [The `sendTwinRequest` method shall throw an `ReferenceError` if the `method` argument is falsy.] */
-    /* Codes_SRS_NODE_DEVICE_AMQP_06_014: [The `sendTwinRequest` method shall throw an `ReferenceError` if the `resource` argument is falsy.] */
-    /* Codes_SRS_NODE_DEVICE_AMQP_06_015: [The `sendTwinRequest` method shall throw an `ReferenceError` if the `properties` argument is falsy.] */
-    /* Codes_SRS_NODE_DEVICE_AMQP_06_016: [The `sendTwinRequest` method shall throw an `ReferenceError` if the `body` argument is falsy.] */
-    if (!method || !resource || !properties || !body) {
-      throw new ReferenceError('required parameter is missing');
-    }
-
-    /* Codes_SRS_NODE_DEVICE_AMQP_06_017: [The `sendTwinRequest` method shall throw an `ArgumentError` if the `method` argument is not a string.] */
-    /* Codes_SRS_NODE_DEVICE_AMQP_06_018: [The `sendTwinRequest` method shall throw an `ArgumentError` if the `resource` argument is not a string.] */
-    if (!this._isString(method) || !this._isString(resource)) {
-      throw new errors.ArgumentError('required string parameter is not a string');
-    }
-
-    /* Codes_SRS_NODE_DEVICE_AMQP_06_019: [The `sendTwinRequest` method shall throw an `ArgumentError` if the `properties` argument is not a an object.] */
-    if (!(properties instanceof Object)) {
-      throw new errors.ArgumentError('required properties parameter is not an object');
-    }
-
+  private _sendTwinRequest(method: TwinMethod, resource: string, body: string, callback: (err?: Error) => void): void {
     let amqpMessage = new AmqpMessage();
-    amqpMessage.messageAnnotations = {};
-    amqpMessage.properties = {};
 
-    //
-    // Amqp requires that the resource designation NOT be terminated by a slash.  The agnostic twin client was terminating the
-    // resources with a slash which worked just dandy for MQTT.
-    //
-    // We need to cut off a terminating slash.  If we cut off a terminating slash and the length of resource is zero then simply
-    // don't specify a resource.
-    //
-    // What if the caller specifies a "//" resource?  Don't do that.
-    //
-    // So you'll note that in this case "/" sent down will be turned into an empty string.  So why not
-    // simply send down "" to begin with?  Because you can't send a falsy parameter.
-    //
-    /* Codes_SRS_NODE_DEVICE_AMQP_06_020: [The `method` argument shall be the value of the amqp message `operation` annotation.] */
-    amqpMessage.messageAnnotations.operation = method;
-    let localResource: string = resource;
-    /* Codes_SRS_NODE_DEVICE_AMQP_06_031: [If the `resource` argument terminates in a slash, the slash shall be removed from the annotation.] */
-    if (localResource.substr(localResource.length - 1, 1) === '/') {
-      localResource = localResource.slice(0, localResource.length - 1);
-    }
-    /* Codes_SRS_NODE_DEVICE_AMQP_06_039: [If the `resource` argument length is zero (after terminating slash removal), the resource annotation shall not be set.] */
-    if (localResource.length > 0) {
-      /* Codes_SRS_NODE_DEVICE_AMQP_06_021: [The `resource` argument shall be the value of the amqp message `resource` annotation.] */
-      amqpMessage.messageAnnotations.resource = localResource;
+    amqpMessage.messageAnnotations = {
+      operation: method
+    };
+
+    if (resource) {
+      amqpMessage.messageAnnotations.resource = resource;
     }
 
-    Object.keys(properties).forEach((key) => {
-      /* Codes_SRS_NODE_DEVICE_AMQP_06_028: [The `sendTwinRequest` method shall throw an `ArgumentError` if any members of the `properties` object fails to serialize to a string.] */
-      if (!this._isString(properties[key]) && !this._isNumber(properties[key]) && !this._isBoolean(properties[key])) {
-        throw new errors.ArgumentError('required properties object has non-string properties');
-      }
+    const correlationId = uuid.v4();
+    amqpMessage.properties = {
+      correlationId: correlationId
+    };
 
-      /* Codes_SRS_NODE_DEVICE_AMQP_06_022: [All properties, except $rid, shall be set as the part of the properties map of the amqp message.] */
-      /* Codes_SRS_NODE_DEVICE_AMQP_06_023: [The $rid property shall be set as the `correlationId` in the properties map of the amqp message.] */
-      if (key === '$rid') {
-        amqpMessage.properties.correlationId = properties[key].toString();
-      } else {
-        amqpMessage.properties[key] = properties[key];
-      }
-    });
+    amqpMessage.body = body;
 
-    /* Codes_SRS_NODE_DEVICE_AMQP_06_024: [The `body` shall be value of the body of the amqp message.] */
-    amqpMessage.body = body.toString();
-
-    /* Codes_SRS_NODE_DEVICE_AMQP_06_025: [The amqp message will be sent upstream to the IoT Hub via the amqp client `send`.]*/
-    this._upstreamAmqpLink.send(amqpMessage, (err, state) => {
+    this._pendingTwinRequests[correlationId] = callback;
+    this._senderLink.send(amqpMessage, (err) => {
+      /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_012: [If the `SenderLink.send` call fails, the `getTwin` method shall call its callback with the error that caused the failure.]*/
+      /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_020: [If the `SenderLink.send` call fails, the `updateTwinReportedProperties` method shall call its callback with the error that caused the failure.]*/
+      /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_028: [If the `SenderLink.send` call fails, the `enableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure.]*/
+      /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_033: [If the `SenderLink.send` call fails, the `disableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure.]*/
       if (err) {
-        debug(' amqp-twin-receiver: Bad disposition on the amqp message send: ' + err);
-        this._safeCallback(done, translateError('Unable to send Twin message', err));
+        debug('could not get twin: ' + err.toString());
+        delete this._pendingTwinRequests[correlationId];
+        callback(err);
       } else {
-        debug(' amqp-twin-receiver: Good disposition on the amqp message send: ' + JSON.stringify(state));
-        this._safeCallback(done, null, new results.MessageEnqueued(state));
-        return null;
+        debug(method + ' request sent with correlationId: ' + correlationId);
       }
     });
   }
 
+  /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_037: [The responses containing errors received on the receiver link shall be translated according to the following table:
+    | statusCode | ErrorType               |
+    | ---------- | ------------------------|
+    | 400        | FormatError             |
+    | 401        | UnauthorizedError       |
+    | 403        | InvalidOperationError   |
+    | 404        | DeviceNotFoundError     |
+    | 429        | ThrottlingError         |
+    | 500        | InternalServerError     |
+    | 503        | ServiceUnavailableError |
+    | 504        | TimeoutError            |
+    | others     | TwinRequestError        |
+  ]*/
+  private _translateErrorResponse(amqpMessage: AmqpMessage): Error {
+    let err: AmqpTransportError;
+    let statusCode: number;
+    let errorMessage: string = 'Twin operation failed';
+
+    if (amqpMessage.messageAnnotations) {
+      statusCode = amqpMessage.messageAnnotations.status;
+    }
+
+    if (amqpMessage.body) {
+      errorMessage = JSON.parse(amqpMessage.body);
+    }
+
+    switch (statusCode) {
+      case 400:
+        err = new errors.FormatError(errorMessage);
+        break;
+      case 401:
+        err = new errors.UnauthorizedError(errorMessage);
+        break;
+      case 403:
+        err = new errors.InvalidOperationError(errorMessage);
+        break;
+      case 404:
+        err = new errors.DeviceNotFoundError(errorMessage);
+        break;
+      case 429:
+        err = new errors.ThrottlingError(errorMessage);
+        break;
+      case 500:
+        err = new errors.InternalServerError(errorMessage);
+        break;
+      case 503:
+        err = new errors.ServiceUnavailableError(errorMessage);
+        break;
+      case 504:
+        err = new errors.TimeoutError(errorMessage);
+        break;
+      default:
+        err = new errors.TwinRequestError(errorMessage);
+    }
+
+    err.amqpError = <any>amqpMessage;
+
+    return err;
+  }
 }
