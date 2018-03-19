@@ -137,6 +137,10 @@ The `sendEvent` method sends an event to an IoT hub on behalf of the device indi
 
 **SRS_NODE_DEVICE_MQTT_18_044: [** The `sendOutputEvent` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`. **]**
 
+**SRS_NODE_DEVICE_MQTT_18_069: [** The `sendOutputEvent` method shall serialize the `contentType` property of the message as a key-value pair on the topic with the key `$.ct` **]**
+
+**SRS_NODE_DEVICE_MQTT_18_070: [** The `sendOutputEvent` method shall serialize the `contentEncoding` property of the message as a key-value pair on the topic with the key `$.ce`. **]**
+
 **SRS_NODE_DEVICE_MQTT_18_045: [** The `sendOutputEvent` method shall connect the Mqtt connection if it is disconnected. **]**
 
 **SRS_NODE_DEVICE_MQTT_18_046: [** The `sendOutputEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to establish a connection. **]**
@@ -298,7 +302,7 @@ The `updateTwinReportedProperties` method is used to retrieve the device twin.
 
 **SRS_NODE_DEVICE_MQTT_18_060: [** `enableInputMessages` shall calls its callback with an `Error` object if it fails to connect. **]**
 
-**SRS_NODE_DEVICE_MQTT_18_061: [** `enableInputMessages` shall subscribe to the MQTT topic for inputMessages. **]**
+**SRS_NODE_DEVICE_MQTT_18_061: [** `enableInputMessages` shall subscribe to the MQTT topic for inputMessages with a QOS of 1. **]**
 
 **SRS_NODE_DEVICE_MQTT_18_062: [** `enableInputMessages` shall call its callback with no arguments when the `SUBACK` packet is received. **]**
 

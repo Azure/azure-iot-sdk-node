@@ -203,6 +203,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
               }
             });
           },
+          disableTwinDesiredPropertiesUpdates: (callback) => callback(),
           disableInputMessages: (callback) => {
             /*Codes_SRS_NODE_DEVICE_MQTT_18_064: [ `disableInputMessages` shall call its callback immediately if the MQTT connection is already disconnected. ]*/
             callback();
@@ -299,7 +300,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
             this._setupSubscription(this._topics.method, 0, callback);
           },
           enableInputMessages: (callback) => {
-            this._setupSubscription(this._topics.inputMessage, callback);
+            this._setupSubscription(this._topics.inputMessage, 1, callback);
           },
           disableC2D: (callback) => {
             this._removeSubscription(this._topics.message, callback);
@@ -375,10 +376,6 @@ export class Mqtt extends EventEmitter implements Client.Transport {
     debug('sendEvent ' + JSON.stringify(message));
 
     let topic = this._getEventTopicFromMessage(message);
-    /*Codes_SRS_NODE_DEVICE_MQTT_16_084: [The `sendEvent` method shall serialize the `contentType` property of the message as a key-value pair on the topic with the key `$.ct`.]*/
-    if (message.contentType) systemProperties['$.ct'] = <string>message.contentType;
-    /*Codes_SRS_NODE_DEVICE_MQTT_16_083: [The `sendEvent` method shall serialize the `contentEncoding` property of the message as a key-value pair on the topic with the key `$.ce`.]*/
-    if (message.contentEncoding) systemProperties['$.ce'] = <string>message.contentEncoding;
 
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `sendEvent` method shall use QoS level of 1.]*/
     this._fsm.handle('sendEvent', topic, message.data, { qos: 1, retain: false }, (err, puback) => {
@@ -709,7 +706,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
 
     /*Codes_SRS_NODE_DEVICE_MQTT_16_049: [`enableC2D` shall subscribe to the MQTT topic for messages with a QoS of `1`.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_16_040: [`enableMethods` shall subscribe to the MQTT topic for direct methods.]*/
-    /*Codes_SRS_NODE_DEVICE_MQTT_18_061: [`enableInputMessages` shall subscribe to the MQTT topic for inputMessages. ]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_061: [`enableInputMessages` shall subscribe to the MQTT topic for inputMessages with a QOS of 1. ]*/
     this._mqtt.subscribe(topic.name, { qos: qos }, (err) => {
       topic.subscribeInProgress = false;
       topic.subscribed = true;
@@ -889,6 +886,13 @@ export class Mqtt extends EventEmitter implements Client.Transport {
     if (message.to) systemProperties['$.to'] = message.to;
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_015: [The `sendEvent` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_044: [ The `sendOutputEvent` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`. ]*/
+    if (message.expiryTimeUtc) systemProperties['$.exp'] = message.to;
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_084: [The `sendEvent` method shall serialize the `contentType` property of the message as a key-value pair on the topic with the key `$.ct`.]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_069: [The `sendOutputEvent` method shall serialize the `contentType` property of the message as a key-value pair on the topic with the key `$.ct`.]*/
+    if (message.contentType) systemProperties['$.ct'] = <string>message.contentType;
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_083: [The `sendEvent` method shall serialize the `contentEncoding` property of the message as a key-value pair on the topic with the key `$.ce`.]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_070: [The `sendOutputEvent` method shall serialize the `contentEncoding` property of the message as a key-value pair on the topic with the key `$.ce`.]*/
+    if (message.contentEncoding) systemProperties['$.ce'] = <string>message.contentEncoding;
 
     if (message.expiryTimeUtc) {
       const expiryString = message.expiryTimeUtc instanceof Date ? message.expiryTimeUtc.toISOString() : message.expiryTimeUtc;
