@@ -244,3 +244,11 @@ This method is deprecated. The `AmqpReceiver` object and pattern is going away a
 **SRS_NODE_DEVICE_AMQP_16_078: [** The `disableTwinDesiredPropertiesUpdates` method shall call its callback with and error if the call to `AmqpTwinClient.disableTwinDesiredPropertiesUpdates` fails. **]**
 
 **SRS_NODE_DEVICE_AMQP_16_079: [** The `disableTwinDesiredPropertiesUpdates` method shall call its callback no arguments if the call to `AmqpTwinClient.disableTwinDesiredPropertiesUpdates` succeeds. **]**
+
+### Errors
+
+**SRS_NODE_DEVICE_AMQP_16_080: [** if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is disconnected, the call shall be ignored. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_081: [** if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connecting or authenticating, the connection shall be stopped and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error. **]**
+
+**SRS_NODE_DEVICE_AMQP_16_082: [** if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connected, the connection shall be disconnected and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error. **]**

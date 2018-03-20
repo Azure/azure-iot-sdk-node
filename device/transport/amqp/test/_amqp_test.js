@@ -22,6 +22,7 @@ describe('Amqp', function () {
   var receiver = null;
   var sender = null;
   var fakeBaseClient = null;
+  var disconnectHandler = null;
   var fakeTokenAuthenticationProvider = null;
   var fakeX509AuthenticationProvider = null;
 
@@ -59,7 +60,7 @@ describe('Amqp', function () {
       attachReceiverLink: sinon.stub().callsArgWith(2, null, receiver),
       detachSenderLink: sinon.stub().callsArg(1),
       detachReceiverLink: sinon.stub().callsArg(1),
-      setDisconnectHandler: sinon.stub(),
+      setDisconnectHandler: sinon.stub().callsFake(function (handler) { disconnectHandler = handler; }),
       send: sinon.stub().callsArgWith(3, null, new results.MessageEnqueued())
     };
 
@@ -829,6 +830,64 @@ describe('Amqp', function () {
         assert.throws(function () {
           transport.setOptions({ cert: 'cert' });
         }, errors.InvalidOperationError);
+      });
+    });
+
+    describe('on(\'disconnect\')', function () {
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_080: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is disconnected, the call shall be ignored.]*/
+      it('ignores the event if already disconnected', function () {
+        transport.on('error', function () {
+          assert.fail();
+        });
+
+        disconnectHandler(new Error());
+      });
+
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_081: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connecting or authenticating, the connection shall be stopped and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error.]*/
+      it('emits a disconnect event if called while connecting', function (testCallback) {
+        var fakeError = new Error('disconnected');
+        fakeBaseClient.connect = sinon.stub();
+
+        transport.on('disconnect', function (err) {
+          assert.strictEqual(err.amqpError, fakeError);
+          assert(fakeBaseClient.connect.calledOnce);
+          assert(fakeBaseClient.disconnect.calledOnce);
+          testCallback();
+        });
+        transport.connect(function () {});
+
+        disconnectHandler(fakeError);
+      });
+
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_081: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connecting or authenticating, the connection shall be stopped and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error.]*/
+      it('emits an error event if called while authenticating', function (testCallback) {
+        var fakeError = new Error('disconnected');
+        fakeBaseClient.putToken = sinon.stub();
+
+        transport.on('disconnect', function (err) {
+          assert.strictEqual(err.amqpError, fakeError);
+          assert(fakeBaseClient.connect.calledOnce);
+          assert(fakeBaseClient.disconnect.calledOnce);
+          testCallback();
+        });
+        transport.connect(function () {});
+
+        disconnectHandler(fakeError);
+      });
+
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_082: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connected, the connection shall be disconnected and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error.]*/
+      it('emits an error event if called while connected and authenticated', function (testCallback) {
+        var fakeError = new Error('disconnected');
+        transport.on('disconnect', function (err) {
+          assert.strictEqual(err.amqpError, fakeError);
+          assert(fakeBaseClient.connect.calledOnce);
+          assert(fakeBaseClient.disconnect.calledOnce);
+          testCallback();
+        });
+
+        transport.connect(function () {});
+
+        disconnectHandler(fakeError);
       });
     });
   });

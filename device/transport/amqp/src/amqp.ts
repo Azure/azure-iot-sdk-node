@@ -92,7 +92,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
     this._amqp = baseClient || new BaseAmqpClient(false, 'azure-iot-device/' + packageJson.version);
     this._amqp.setDisconnectHandler((err) => {
       debug('disconnected event handler: ' + (err ? err.toString() : 'no error'));
-      this._fsm.handle('disconnect', () => {
+      this._fsm.handle('disconnectError', err, () => {
         this.emit('disconnect', getTranslatedError(err, 'AMQP client disconnected'));
       });
     });
@@ -137,7 +137,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
       initialState: 'disconnected',
       states: {
         disconnected: {
-          _onEnter: (callback, err) => {
+          _onEnter: (err, callback) => {
             if (callback) {
               if (err) {
                 callback(err);
@@ -236,6 +236,11 @@ export class Amqp extends EventEmitter implements Client.Transport {
           disableMethods: (callback) => {
             // if we are disconnected the C2D link is already detached.
             callback();
+          },
+          disconnectError: (err, callback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_16_080: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is disconnected, the call shall be ignored.]*/
+            debug('ignoring disconnectError because already disconnected: ' + err.toString());
+            callback();
           }
         },
         connecting: {
@@ -244,7 +249,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
             this._authenticationProvider.getDeviceCredentials((err, credentials) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_055: [The `connect` method shall call its callback with an error if the callback passed to the `getDeviceCredentials` method is called with an error.]*/
-                this._fsm.transition('disconnected', connectCallback, translateError('AMQP Transport: Could not get credentials', err));
+                this._fsm.transition('disconnected', translateError('AMQP Transport: Could not get credentials', err), connectCallback);
               } else {
                 this._c2dEndpoint = endpoint.messagePath(encodeURIComponent(credentials.deviceId));
                 this._d2cEndpoint = endpoint.eventPath(credentials.deviceId);
@@ -252,43 +257,44 @@ export class Amqp extends EventEmitter implements Client.Transport {
                 const uri = this._getConnectionUri(credentials.host);
                 this._amqp.connect(uri, credentials.x509, (err, connectResult) => {
                   if (err) {
-                    this._fsm.transition('disconnected', connectCallback, translateError('AMQP Transport: Could not connect', err));
+                    this._fsm.transition('disconnected', translateError('AMQP Transport: Could not connect', err), connectCallback);
                   } else {
-                    this._fsm.transition('authenticating', connectCallback, connectResult);
+                    this._fsm.transition('authenticating', connectResult, connectCallback);
                   }
                 });
               }
-
             });
           },
-          disconnect: (disconnectCallback, err) => this._fsm.transition('disconnecting', disconnectCallback, err),
+          disconnect: (disconnectCallback) => this._fsm.transition('disconnecting', null, disconnectCallback),
           updateSharedAccessSignature: (token, callback) => {
             callback(null, new results.SharedAccessSignatureUpdated(false));
           },
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_081: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connecting or authenticating, the connection shall be stopped and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error.]*/
+          disconnectError: (err, callback) => this._fsm.transition('disconnecting', err, callback),
           '*': () => this._fsm.deferUntilTransition()
         },
         authenticating: {
-          _onEnter: (connectCallback, connectResult) => {
+          _onEnter: (connectResult, connectCallback) => {
             if (this._authenticationProvider.type === AuthenticationType.X509) {
               /*Codes_SRS_NODE_DEVICE_AMQP_06_005: [If x509 authentication is NOT being utilized then `initializeCBS` shall be invoked.]*/
-              this._fsm.transition('authenticated', connectCallback, connectResult);
+              this._fsm.transition('authenticated', connectResult, connectCallback);
             } else {
               this._amqp.initializeCBS((err) => {
                 if (err) {
                   /*Codes_SRS_NODE_DEVICE_AMQP_06_008: [If `initializeCBS` is not successful then the client will be disconnected.]*/
-                  this._fsm.transition('disconnecting', connectCallback, getTranslatedError(err, 'AMQP Transport: Could not initialize CBS'));
+                  this._fsm.transition('disconnecting', getTranslatedError(err, 'AMQP Transport: Could not initialize CBS'), connectCallback);
                 } else {
                   this._authenticationProvider.getDeviceCredentials((err, credentials) => {
                     if (err) {
-                      this._fsm.transition('disconnecting', connectCallback, getTranslatedError(err, 'AMQP Transport: Could not get credentials from AuthenticationProvider'));
+                      this._fsm.transition('disconnecting', getTranslatedError(err, 'AMQP Transport: Could not get credentials from AuthenticationProvider'), connectCallback);
                     } else {
                       /*Codes_SRS_NODE_DEVICE_AMQP_06_006: [If `initializeCBS` is successful, `putToken` shall be invoked If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter `audience`, created from the `sr` of the shared access signature, the actual shared access signature, and a callback.]*/
                       this._amqp.putToken(SharedAccessSignature.parse(credentials.sharedAccessSignature, ['sr', 'sig', 'se']).sr, credentials.sharedAccessSignature, (err) => {
                         if (err) {
                           /*Codes_SRS_NODE_DEVICE_AMQP_06_009: [If `putToken` is not successful then the client will be disconnected.]*/
-                          this._fsm.transition('disconnecting', connectCallback, getTranslatedError(err, 'AMQP Transport: Could not authorize with puttoken'));
+                          this._fsm.transition('disconnecting', getTranslatedError(err, 'AMQP Transport: Could not authorize with puttoken'), connectCallback);
                         } else {
-                          this._fsm.transition('authenticated', connectCallback, connectResult);
+                          this._fsm.transition('authenticated', connectResult, connectCallback);
                         }
                       });
                     }
@@ -297,15 +303,17 @@ export class Amqp extends EventEmitter implements Client.Transport {
               });
             }
           },
-          disconnect: (disconnectCallback) => this._fsm.transition('disconnecting', disconnectCallback),
+          disconnect: (disconnectCallback) => this._fsm.transition('disconnecting', null, disconnectCallback),
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_081: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connecting or authenticating, the connection shall be stopped and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error.]*/
+          disconnectError: (err, callback) => this._fsm.transition('disconnecting', err, callback),
           '*': () => this._fsm.deferUntilTransition()
         },
         authenticated: {
-          _onEnter: (connectCallback, connectResult) => {
+          _onEnter: (connectResult, connectCallback) => {
             connectCallback(null, connectResult);
           },
           connect: (connectCallback) => connectCallback(null, new results.Connected()),
-          disconnect: (disconnectCallback) => this._fsm.transition('disconnecting', disconnectCallback),
+          disconnect: (disconnectCallback) => this._fsm.transition('disconnecting', null, disconnectCallback),
           sendEvent: (message, sendCallback) => {
             let amqpMessage = AmqpMessage.fromMessage(message);
             amqpMessage.properties.to = this._d2cEndpoint;
@@ -387,10 +395,12 @@ export class Amqp extends EventEmitter implements Client.Transport {
             /*Codes_SRS_NODE_DEVICE_AMQP_16_042: [The `disableMethods` method shall call `detach` on the device method links and call its callback when these are successfully detached.]*/
             /*Codes_SRS_NODE_DEVICE_AMQP_16_043: [The `disableMethods` method shall call its `callback` with an `Error` if it fails to detach the device method links.]*/
             this._deviceMethodClient.detach(callback);
-          }
+          },
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_082: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connected, the connection shall be disconnected and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error.]*/
+          disconnectError: (err, callback) => this._fsm.transition('disconnecting', err, callback)
         },
         disconnecting: {
-          _onEnter: (disconnectCallback, err) => {
+          _onEnter: (err, disconnectCallback) => {
             let finalError = err;
             async.series([
               (callback) => {
@@ -480,7 +490,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
             ], () => {
               /*Codes_SRS_NODE_DEVICE_AMQP_16_010: [The `done` callback method passed in argument shall be called when disconnected.]*/
               /*Codes_SRS_NODE_DEVICE_AMQP_16_011: [The `done` callback method passed in argument shall be called with an error object if disconnecting fails.]*/
-              this._fsm.transition('disconnected', disconnectCallback, finalError);
+              this._fsm.transition('disconnected', finalError, disconnectCallback);
             });
           },
           '*': (connectCallback) => this._fsm.deferUntilTransition()
@@ -750,6 +760,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
         // detaching listeners and getting rid of the object anyway.
         tmpC2DLink.removeListener('error', this._c2dErrorListener);
         tmpC2DLink.removeListener('message', this._c2dMessageListener);
+        callback();
       } else {
         tmpC2DLink.detach((err) => {
           if (err) {
