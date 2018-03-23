@@ -162,6 +162,21 @@ The `invokeDeviceMethod` method calls a device method on a specific device and c
 
 **SRS_NODE_IOTHUB_CLIENT_16_026: [** The `invokeDeviceMethod` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to send the method request. **]**
 
+### invokeModuleMethod(deviceId: string, moduleId: string, methodParams: DeviceMethodParams, done?: Callback<any>): void;
+
+**SRS_NODE_IOTHUB_CLIENT_18_001: [** The `invokeModuleMethod` shall throw a `ReferenceError` if `deviceId` or `moduleId`   is falsy. **]**
+
+**SRS_NODE_IOTHUB_CLIENT_18_002: [** The `invokeModuleMethod` method shall initialize a new `DeviceMethod` instance with `methodParams` values passed in the arguments. **]**
+
+**SRS_NODE_IOTHUB_CLIENT_18_003: [** The `invokeModuleMethod` method shall call `invokeOnModule` on the new `DeviceMethod` instance. **]**
+
+**SRS_NODE_IOTHUB_CLIENT_18_004: [** The `invokeModuleMethod` method shall call the `done` callback with a standard javascript `Error` object if the request failed. **]**
+
+**SRS_NODE_IOTHUB_CLIENT_18_005: [** The `invokeModuleMethod` method shall call the `done` callback with a `null` first argument, the result of the method execution in the second argument, and the transport-specific response object as a third argument. **]**
+
+**SRS_NODE_IOTHUB_CLIENT_18_006: [** The `invokeModuleMethod` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to send the method request. **]**
+
+
 ### setRetryPolicy(policy)
 
 **SRS_NODE_IOTHUB_CLIENT_16_027: [** The `setRetryPolicy` method shall throw a `ReferenceError` if the `policy` argument is falsy. **]**
