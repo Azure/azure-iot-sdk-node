@@ -202,6 +202,47 @@ export class Client extends EventEmitter {
   }
 
   /**
+   * @method            module:azure-iothub.Client#invokeModuleMethod
+   * @description       Invokes a method on a particular module.
+   * @param {String}    deviceId            The identifier of an existing device identity.
+   * @param {String}    moduleId            The identifier of an existing module identity.
+   * @param {Object}    params              An object describing the method and shall have the following properties:
+   *                                        - methodName          The name of the method that shall be invoked.
+   *                                        - payload             [optional] The payload to use for the method call.
+   *                                        - timeoutInSeconds    [optional] The number of seconds IoT Hub shall wait for the device
+   *                                                              to send a response before deeming the method execution a failure.
+   * @param {Function}  done                The callback to call with the result of the method execution.
+   *
+   * @throws {ReferenceError}  If one of the required parameters is null, undefined or empty.
+   * @throws {TypeError}       If one of the parameters is of the wrong type.
+   */
+  invokeModuleMethod(deviceId: string, moduleId: string, methodParams: DeviceMethodParams, done?: Callback<any>): void {
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_18_001: [The `invokeModuleMethod` shall throw a `ReferenceError` if `deviceId` or `moduleId` is falsy. ]*/
+    if (!deviceId) throw new ReferenceError('deviceId cannot be \'' + deviceId + '\'');
+    if (!moduleId) throw new ReferenceError('moduleId cannot be \'' + moduleId + '\'');
+
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_18_002: [The `invokeModuleMethod` method shall initialize a new `DeviceMethod` instance with `methodParams` values passed in the arguments. ]*/
+    const method = new DeviceMethod(methodParams, this._restApiClient);
+
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_18_003: [The `invokeModuleMethod` method shall call `invokeOnModule` on the new `DeviceMethod` instance. ]*/
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_18_004: [The `invokeModuleMethod` method shall call the `done` callback with a standard javascript `Error` object if the request failed. ]*/
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_18_005: [The `invokeModuleMethod` method shall call the `done` callback with a `null` first argument, the result of the method execution in the second argument, and the transport-specific response object as a third argument. ]*/
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_18_006: [The `invokeModuleMethod` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to send the method request. ]*/
+    const retryOp = new RetryOperation(this._retryPolicy, MAX_RETRY_TIMEOUT);
+    retryOp.retry((retryCallback) => {
+      method.invokeOnModule(deviceId, moduleId, retryCallback);
+    }, (err, result, response) => {
+      if (done) {
+        if (err) {
+          done(err);
+        } else {
+          done(null, result, response);
+        }
+      }
+    });
+  }
+
+  /**
    * @method            module:azure-iothub.Client#getFeedbackReceiver
    * @description       Returns a AmqpReceiver object which emits events when new feedback messages are received by the client.
    * @param {Function}  done      The function to call when the operation is
