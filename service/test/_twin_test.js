@@ -67,7 +67,7 @@ describe('Twin', function() {
   });
 
   describe('get', function() {
-    /*Tests_SRS_NODE_IOTHUB_TWIN_16_020: [The `get` method shall call the `getTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+    /*Tests_SRS_NODE_IOTHUB_TWIN_16_020: [If `this.moduleId` is `null`, The `get` method shall call the `getTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
     - `this.deviceId`
     - `done`]*/
     it('calls the getTwin method on the Registry', function() {
@@ -79,6 +79,23 @@ describe('Twin', function() {
 
       twin.get(function() {});
       assert(registry.getTwin.calledWith(fakeDeviceId));
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_TWIN_18_001: [If `this.moduleId` is not `null`, the `get` method shall call the `getModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+    - `this.deviceId`
+    - `this.moduleId`
+    - `done`]*/
+    it('calls the getModuleTwin method on the Registry', function() {
+      var fakeDeviceId = 'deviceId';
+      var fakeModuleId = 'moduleId';
+      var registry = new Registry(fakeConfig, {});
+      var twin = new Twin(fakeDeviceId, registry);
+      twin.moduleId = fakeModuleId;
+
+      sinon.stub(registry, 'getModuleTwin');
+
+      twin.get(function() {});
+      assert(registry.getModuleTwin.calledWith(fakeDeviceId, fakeModuleId));
     });
 
     /*Tests_SRS_NODE_IOTHUB_TWIN_16_021: [The method shall copy properties, tags, and etag in the twin returned in the callback of the `Registry` method call into its parent object.]*/
@@ -120,7 +137,7 @@ describe('Twin', function() {
       });
     });
 
-    /*Tests_SRS_NODE_IOTHUB_TWIN_16_023: [The method shall call the `done` callback with a `null` error object, its parent instance as a second argument and the transport `response` object as a third argument if the request succeede**/
+    /*Tests_SRS_NODE_IOTHUB_TWIN_16_023: [The method shall call the `done` callback with a `null` error object, its parent instance as a second argument and the transport `response` object as a third argument if the request succeeds**/
     it('calls the done callback with a null error object, a twin and a response', function(testCallback) {
       var fakeDeviceId = 'deviceId';
       var fakeTwin = { deviceId: fakeDeviceId };
@@ -142,7 +159,7 @@ describe('Twin', function() {
   });
 
   describe('update', function() {
-    /*Tests_SRS_NODE_IOTHUB_TWIN_16_019: [The `update` method shall call the `updateTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+    /*Tests_SRS_NODE_IOTHUB_TWIN_16_019: [If `this.moduleId` is `null`, The `update` method shall call the `updateTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
     - `this.deviceId`
     - `patch`
     - `this.etag`
@@ -166,6 +183,32 @@ describe('Twin', function() {
       assert(registry.updateTwin.calledWith(fakeDeviceId, fakePatch, fakeEtag));
     });
 
+    /*Tests_SRS_NODE_IOTHUB_TWIN_18_002: [If `this.moduleId` is not `null`, the `update` method shall call the `updateModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+    - `this.deviceId`
+    - `this.moduleId`
+    - `patch`
+    - `this.etag`
+    - `done`]*/
+    it('calls the updateModuleTwin method on the Registry', function() {
+      var fakeDeviceId = 'deviceId';
+      var fakeModuleId = 'moduleId';
+      var fakeEtag = 'etag==';
+      var fakePatch = {
+        tags: {
+          fake: 'fake'
+        }
+      };
+
+      var registry = new Registry(fakeConfig, {});
+      var twin = new Twin(fakeDeviceId, registry);
+      twin.moduleId = fakeModuleId;
+
+      sinon.stub(registry, 'updateModuleTwin');
+
+      twin.etag = fakeEtag;
+      twin.update(fakePatch, function() {});
+      assert(registry.updateModuleTwin.calledWith(fakeDeviceId, fakeModuleId, fakePatch, fakeEtag));
+    });
 
     /*Tests_SRS_NODE_IOTHUB_TWIN_16_021: [The method shall copy properties, tags, and etag in the twin returned in the callback of the `Registry` method call into its parent object.]*/
     it('copy the result of the updateTwin call into the current instance', function(testCallback) {

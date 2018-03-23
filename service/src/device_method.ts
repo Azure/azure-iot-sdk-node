@@ -52,12 +52,11 @@ export class DeviceMethod {
    * @description       Invokes the method on the specified device with the specified payload.
    * @param {String}    deviceId    Identifier of the device on which the method will run.
    * @param {Function}  done        The function to call when the operation is
-   *                                complete. `done` will be called with three
-   *                                arguments: an Error object (can be null), a
-   *                                {@link module:azure-iothub.Twin|Twin}
-   *                                object representing the created device
-   *                                identity, and a transport-specific response
-   *                                object useful for logging or debugging.
+   *                                complete. done` will be called with three
+   *                                arguments: an Error object (can be null), the
+   *                                body of the response, and a transport-specific
+   *                                response object useful for logging or
+   *                                debugging.
    */
   invokeOn(deviceId: string, done: DeviceMethod.ResponseCallback): void {
     /*Codes_SRS_NODE_IOTHUB_DEVICE_METHOD_16_008: [The `invokeOn` method shall throw a `ReferenceError` if `deviceId` is `null`, `undefined` or an empty string.]*/
@@ -82,6 +81,49 @@ export class DeviceMethod {
     ```]*/
     /*Codes_SRS_NODE_IOTHUB_DEVICE_METHOD_16_009: [The `invokeOn` method shall invoke the `done` callback with an standard javascript `Error` object if the method execution failed.]*/
     /*Codes_SRS_NODE_IOTHUB_DEVICE_METHOD_16_010: [The `invokeOn` method shall invoke the `done` callback with a `null` first argument, a result second argument and a transport-specific response third argument if the method execution succeede**/
+    const totalTimeout = (this.params.responseTimeoutInSeconds + this.params.connectTimeoutInSeconds) * 1000;
+    this._client.executeApiCall('POST', path, headers, this.params, totalTimeout, done);
+  }
+
+
+  /**
+   * @method            module:azure-iothub.DeviceMethod.invokeOnModule
+   * @description       Invokes the method on the specified module with the specified payload.
+   * @param {String}    deviceId    Identifier of the device on which the method will run.
+   * @param {String}    moduleId    Identifier of the module on which the method will run.
+   * @param {Function}  done        The function to call when the operation is
+   *                                complete. done` will be called with three
+   *                                arguments: an Error object (can be null), the
+   *                                body of the response, and a transport-specific
+   *                                response object useful for logging or
+   *                                debugging.
+   */
+  invokeOnModule(deviceId: string, moduleId: string, done: DeviceMethod.ResponseCallback): void {
+    /*Codes_SRS_NODE_IOTHUB_DEVICE_METHOD_18_001: [The `invokeOnModule` method shall throw a `ReferenceError` if `deviceId` or `moduleId` is falsy. ]*/
+    if (!deviceId) throw new ReferenceError('deviceId cannot be \'' + deviceId + '\'');
+    if (!moduleId) throw new ReferenceError('moduleId cannot be \'' + moduleId + '\'');
+
+    const path = '/twins/' + deviceId + '/modules/' + moduleId + '/methods' + endpoint.versionQueryString();
+    const headers = {
+      'Content-Type': 'application/json; charset=utf-8'
+    };
+
+    /*Codes_SRS_NODE_IOTHUB_DEVICE_METHOD_18_002: [The `invokeOnModule` method shall construct an HTTP request using information supplied by the caller, as follows:
+    ```
+    POST /twins/<deviceId>/modules/<moduleId>/methods?api-version=<version> HTTP/1.1
+    Authorization: <config.sharedAccessSignature>
+    Content-Type: application/json; charset=utf-8
+    Request-Id: <guid>
+    {
+      "methodName": <DeviceMethod.params.methodName>,
+      "timeoutInSeconds": <DeviceMethod.params.timeoutInSeconds>,
+      "payload": <DeviceMethod.params.payload>
+    }
+    ```
+    ]*/
+
+    /*Codes_SRS_NODE_IOTHUB_DEVICE_METHOD_18_003: [The `invokeOnModule` method shall invoke the `done` callback with an standard javascript `Error` object if the method execution failed. ]*/
+    /*Codes_SRS_NODE_IOTHUB_DEVICE_METHOD_18_004: [The `invokeOnModule` method shall invoke the `done` callback with a `null` first argument, a result second argument and a transport-specific response third argument if the method execution succeeds. ]*/
     const totalTimeout = (this.params.responseTimeoutInSeconds + this.params.connectTimeoutInSeconds) * 1000;
     this._client.executeApiCall('POST', path, headers, this.params, totalTimeout, done);
   }

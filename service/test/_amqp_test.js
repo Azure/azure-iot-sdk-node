@@ -4,7 +4,6 @@
 'use strict';
 var sinon = require('sinon');
 var EventEmitter = require('events').EventEmitter;
-var util = require('util');
 var Amqp = require('../lib/amqp.js').Amqp;
 var assert = require('chai').assert;
 var SharedAccessSignature = require('azure-iot-common').SharedAccessSignature;
@@ -668,7 +667,7 @@ describe('Amqp', function() {
           assert.strictEqual(fakeAmqpBase.putToken.secondCall.args[1], fakeSas);
           testCallback();
         });
-      })
+      });
     });
 
     /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_017: [All asynchronous instance methods shall call the `done` callback with a single parameter that is derived from the standard Javascript `Error` object if the operation failed.]*/
@@ -681,7 +680,7 @@ describe('Amqp', function() {
           assert.instanceOf(err, Error);
           testCallback();
         });
-      })
+      });
     });
 
     /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_032: [The `updateSharedAccessSignature` shall not establish a connection if the transport is disconnected, but should use the new shared access signature on the next manually initiated connection attempt. **]*/
