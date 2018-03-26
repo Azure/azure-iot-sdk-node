@@ -3,8 +3,6 @@
 
 'use strict';
 
-export const currentConfigurationSchemaVersion = '1.0';
-
 /**
  * The Configuration object represents the configuration of a single device or it can represent a deployment which can be applied as a configuration to devices based on the targetCondition.
  */

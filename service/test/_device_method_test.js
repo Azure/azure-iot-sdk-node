@@ -161,25 +161,27 @@ describe('DeviceMethod', function() {
 
       /*Tests_SRS_NODE_IOTHUB_DEVICE_METHOD_16_011: [The `invokeOn` method shall construct an HTTP request using information supplied by the caller, as follows:
       ```
-      POST /twins/<deviceId>/methods?api-version=<version> HTTP/1.1
+      POST /twins/<encodeUriComponent(deviceId>)/methods?api-version=<version> HTTP/1.1
       Authorization: <config.sharedAccessSignature>
       Content-Type: application/json; charset=utf-8
       Request-Id: <guid>
       {
-        "methodName": <DeviceMethod.name>,
-        "responseTimeoutInSeconds": <DeviceMethod.timeout>,
-        "payload": <payload>
+        "methodName": <DeviceMethod.params.name>,
+        "responseTimeoutInSeconds": <DeviceMethod.params.responseTimeoutInSeconds>,
+        "connectTimeoutInSeconds": <DeviceMethod.params.connectTimeoutInSeconds>,
+        "payload": <DeviceMethod.params.payload>
       }
       ```]*/
       /*Tests_SRS_NODE_IOTHUB_DEVICE_METHOD_18_002: [The `invokeOnModule` method shall construct an HTTP request using information supplied by the caller, as follows:
       ```
-      POST /twins/<deviceId>/modules/<moduleId>/methods?api-version=<version> HTTP/1.1
+      POST /twins/<encodeUriComponent(deviceId)>/modules/<encodeUriComponent(moduleId)>/methods?api-version=<version> HTTP/1.1
       Authorization: <config.sharedAccessSignature>
       Content-Type: application/json; charset=utf-8
       Request-Id: <guid>
       {
-        "methodName": <DeviceMethod.params.methodName>,
-        "timeoutInSeconds": <DeviceMethod.params.timeoutInSeconds>,
+        "methodName": <DeviceMethod.params.name>,
+        "responseTimeoutInSeconds": <DeviceMethod.params.responseTimeoutInSeconds>,
+        "connectTimeoutInSeconds": <DeviceMethod.params.connectTimeoutInSeconds>,
         "payload": <DeviceMethod.params.payload>
       }
       ```
@@ -188,7 +190,8 @@ describe('DeviceMethod', function() {
         var fakeMethodParams = {
           methodName: 'method',
           payload: { foo: 'bar' },
-          responseTimeoutInSeconds: 42
+          responseTimeoutInSeconds: 42,
+          connectTimeoutInSeconds: 43
         };
 
         var fakeRestClient = {
@@ -198,8 +201,9 @@ describe('DeviceMethod', function() {
             assert.equal(headers['Content-Type'], 'application/json; charset=utf-8');
             assert.equal(body.methodName, fakeMethodParams.methodName);
             assert.equal(body.responseTimeoutInSeconds, fakeMethodParams.responseTimeoutInSeconds);
+            assert.equal(body.connectTimeoutInSeconds, fakeMethodParams.connectTimeoutInSeconds);
             assert.equal(body.payload, fakeMethodParams.payload);
-            assert.equal(timeout, fakeMethodParams.responseTimeoutInSeconds * 1000);
+            assert.equal(timeout, (fakeMethodParams.responseTimeoutInSeconds + fakeMethodParams.connectTimeoutInSeconds) * 1000);
             callback();
           }
         };
@@ -223,8 +227,9 @@ describe('DeviceMethod', function() {
               assert.equal(headers['Content-Type'], 'application/json; charset=utf-8');
               assert.equal(body.methodName, fakeMethodParams.methodName);
               assert.equal(body.responseTimeoutInSeconds, fakeMethodParams.responseTimeoutInSeconds);
+              assert.equal(body.connectTimeoutInSeconds, fakeMethodParams.connectTimeoutInSeconds);
               assert.equal(body.payload, fakeMethodParams.payload);
-              assert.equal(timeout, fakeMethodParams.responseTimeoutInSeconds * 1000);
+              assert.equal(timeout, (fakeMethodParams.responseTimeoutInSeconds + fakeMethodParams.connectTimeoutInSeconds) * 1000);
               callback();
             }
           };

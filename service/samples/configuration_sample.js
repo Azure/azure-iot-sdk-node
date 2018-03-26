@@ -46,7 +46,7 @@ var getAllConfigurations = function(done) {
       });
 
       if (configurations.length >= 1) {
-        getConfigurationByName(configurations[0].id,done);
+        getConfigurationById(configurations[0].id,done);
       } else {
         done();
       }
@@ -54,12 +54,12 @@ var getAllConfigurations = function(done) {
   });
 };
 
-var getConfigurationByName = function(id, done) {
+var getConfigurationById = function(id, done) {
   console.log();
   console.log('getting details for config ' + id);
   registry.getConfiguration(id, function(err, config) {
     if (err) {
-      console.log('getConfigurationByName failed: ' + err);
+      console.log('getConfigurationById failed: ' + err);
       done();
     } else {
       printJson(config);

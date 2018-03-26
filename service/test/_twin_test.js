@@ -67,21 +67,24 @@ describe('Twin', function() {
   });
 
   describe('get', function() {
-    /*Tests_SRS_NODE_IOTHUB_TWIN_16_020: [If `this.moduleId` is `null`, The `get` method shall call the `getTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+    /*Tests_SRS_NODE_IOTHUB_TWIN_16_020: [If `this.moduleId` is falsy, The `get` method shall call the `getTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
     - `this.deviceId`
     - `done`]*/
-    it('calls the getTwin method on the Registry', function() {
-      var fakeDeviceId = 'deviceId';
-      var registry = new Registry(fakeConfig, {});
-      var twin = new Twin(fakeDeviceId, registry);
+    [undefined, null, '', 0].forEach(function(falsyValue) {
+      it('calls the getTwin method on the Registry when moduleId is ' + falsyValue, function() {
+        var fakeDeviceId = 'deviceId';
+        var registry = new Registry(fakeConfig, {});
+        var twin = new Twin(fakeDeviceId, registry);
+        twin.moduleId = falsyValue;
 
-      sinon.stub(registry, 'getTwin');
+        sinon.stub(registry, 'getTwin');
 
-      twin.get(function() {});
-      assert(registry.getTwin.calledWith(fakeDeviceId));
+        twin.get(function() {});
+        assert(registry.getTwin.calledWith(fakeDeviceId));
+      });
     });
 
-    /*Tests_SRS_NODE_IOTHUB_TWIN_18_001: [If `this.moduleId` is not `null`, the `get` method shall call the `getModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+    /*Tests_SRS_NODE_IOTHUB_TWIN_18_001: [If `this.moduleId` is not falsy, the `get` method shall call the `getModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
     - `this.deviceId`
     - `this.moduleId`
     - `done`]*/
@@ -159,31 +162,34 @@ describe('Twin', function() {
   });
 
   describe('update', function() {
-    /*Tests_SRS_NODE_IOTHUB_TWIN_16_019: [If `this.moduleId` is `null`, The `update` method shall call the `updateTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+    /*Tests_SRS_NODE_IOTHUB_TWIN_16_019: [If `this.moduleId` is falsy, The `update` method shall call the `updateTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
     - `this.deviceId`
     - `patch`
     - `this.etag`
     - `done`]*/
-    it('calls the updateTwin method on the Registry', function() {
-      var fakeDeviceId = 'deviceId';
-      var fakeEtag = 'etag==';
-      var fakePatch = {
-        tags: {
-          fake: 'fake'
-        }
-      };
+    [undefined, null, '', 0].forEach(function(falsyValue) {
+      it('calls the updateTwin method on the Registry when moduleId is ' + falsyValue, function() {
+        var fakeDeviceId = 'deviceId';
+        var fakeEtag = 'etag==';
+        var fakePatch = {
+          tags: {
+            fake: 'fake'
+          }
+        };
 
-      var registry = new Registry(fakeConfig, {});
-      var twin = new Twin(fakeDeviceId, registry);
+        var registry = new Registry(fakeConfig, {});
+        var twin = new Twin(fakeDeviceId, registry);
+        twin.moduleId = falsyValue;
 
-      sinon.stub(registry, 'updateTwin');
+        sinon.stub(registry, 'updateTwin');
 
-      twin.etag = fakeEtag;
-      twin.update(fakePatch, function() {});
-      assert(registry.updateTwin.calledWith(fakeDeviceId, fakePatch, fakeEtag));
+        twin.etag = fakeEtag;
+        twin.update(fakePatch, function() {});
+        assert(registry.updateTwin.calledWith(fakeDeviceId, fakePatch, fakeEtag));
+      });
     });
 
-    /*Tests_SRS_NODE_IOTHUB_TWIN_18_002: [If `this.moduleId` is not `null`, the `update` method shall call the `updateModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+    /*Tests_SRS_NODE_IOTHUB_TWIN_18_002: [If `this.moduleId` is not falsy, the `update` method shall call the `updateModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
     - `this.deviceId`
     - `this.moduleId`
     - `patch`

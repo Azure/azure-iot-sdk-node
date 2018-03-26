@@ -372,7 +372,7 @@ Request-Id: <guid>
 
 ## Module Twins
 
-### getModuleTwin(deviceId: string, moduleId: string, done: Registry.ResponseCallback): void;
+### getModuleTwin(deviceId: string, moduleId: string, done: (err: Error, twin?: Twin, response?: any) => void): void;
 
 **SRS_NODE_IOTHUB_REGISTRY_18_001: [** The `getModuleTwin` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, or `done` is falsy. **]**
 
@@ -392,7 +392,7 @@ Request-Id: <guid>
 
 **SRS_NODE_IOTHUB_REGISTRY_18_005: [** The `updateModuleTwin` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
-PATCH /twins/<encodeURIComponent(deviceId)/modules/<encodeURIComponent(moduleId)>>?api-version=<version> HTTP/1.1
+PATCH /twins/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
 Authorization: <config.sharedAccessSignature>
 Content-Type: application/json; charset=utf-8
 Request-Id: <guid>
@@ -410,7 +410,8 @@ If-Match: <etag>
 **SRS_NODE_IOTHUB_REGISTRY_18_007: [** The `addConfiguration` method shall throw a `ReferenceError` exception if `configuration` or `done` is falsy. **]**
 
 **SRS_NODE_IOTHUB_REGISTRY_18_008: [** The `addConfiguration` method shall throw an `ArgumentError` exception if `configuration.id` is falsy. **]**
-**SRS_NODE_IOTHUB_REGISTRY_18_009: [** The `addConfiguration` method shall set `configuration.schemaVersion` to the constant `currentConfigurationSchemaVersion` if it is not already set. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_009: [** The `addConfiguration` method shall set `configuration.schemaVersion` to '1.0' if it is not already set. **]**
 
 **SRS_NODE_IOTHUB_REGISTRY_18_010: [** The `addConfiguration` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
@@ -457,7 +458,7 @@ Request-Id: <guid>
 
 **SRS_NODE_IOTHUB_REGISTRY_18_017: [** The `updateConfiguration` method shall throw an `ArgumentError` exception if `configuration.id` is falsy. **]**
 
-**SRS_NODE_IOTHUB_REGISTRY_18_018: [** The `updateConfiguration` method shall set ``configuration.schemaVersion` to the constant `currentConfigurationSchemaVersion` if it is not already set. **]**
+**SRS_NODE_IOTHUB_REGISTRY_18_018: [** The `updateConfiguration` method shall set ``configuration.schemaVersion` to '1.0' if it is not already set. **]**
 
 **SRS_NODE_IOTHUB_REGISTRY_18_020: [** If `forceUpdate` is not truthy, the `updateConfigurationMethod` shall put the `etag` parameter into the `If-Match` header value. **]**
 
@@ -512,7 +513,7 @@ Request-Id: <guid>
 
 **SRS_NODE_IOTHUB_REGISTRY_18_028: [** The `addModule` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
-PUT /devices/<encodeURIComponent(module.deviceId)/modules/<encodeURIComponent(module.moduleId)>>?api-version=<version> HTTP/1.1
+PUT /devices/<encodeURIComponent(module.deviceId)>/modules/<encodeURIComponent(module.moduleId)>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
 Content-Type: application/json; charset=utf-8
 Request-Id: <guid>
@@ -521,7 +522,7 @@ Request-Id: <guid>
 ```
 **]**
 
-### getModulesOnDevice(deviceId: string, done: Registry.ResponseCallback): void;
+### getModulesOnDevice(deviceId: string, done: (err: Error, modules?: Module[], response?: any) => void): void;
 
 **SRS_NODE_IOTHUB_REGISTRY_18_029: [** The `getModulesOnDevice` method shall throw a `ReferenceError` exception if `deviceId` or `done` is falsy. **]**
 
@@ -533,7 +534,7 @@ Request-Id: <guid>
 ```
 **]**
 
-### getModule(deviceId: string, moduleId: string, done: Registry.ResponseCallback): void;
+### getModule(deviceId: string, moduleId: string, done: (err: Error, module?: Module, response?: any) => void): void;
 
 **SRS_NODE_IOTHUB_REGISTRY_18_031: [** The `getModule` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, or `done` is falsy. **]**
 
@@ -565,7 +566,7 @@ PUT /devices/<encodeURIComponent(module.deviceId)>/modules/<encodeURIComponent(m
 Authorization: <sharedAccessSignature>
 Content-Type: application/json; charset=utf-8
 If-Match: <etag | *
-Request-Id: <guid>>
+Request-Id: <guid>
 
 <module>
 ```
@@ -577,7 +578,7 @@ Request-Id: <guid>>
 
 **SRS_NODE_IOTHUB_REGISTRY_18_040: [** The `removeModule` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
-DELETE /devices/<encodeURIComponent(deviceId)/modules/<encodeURIComponent(moduleId)>>?api-version=<version> HTTP/1.1
+DELETE /devices/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
 Request-Id: <guid>
 ```

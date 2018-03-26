@@ -29,7 +29,6 @@ export interface Module {
   /**
    * Whether the module is 'connected' or 'disconnected'. It is not recommended to use this property to determine if the module is actually connected right now though,
    * since the module connection may have timed out and the IoT hub may not have detected it.
-   * If you have a need to monitor device connections, the recommended way is to use the [operations monitoring]{@link https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-operations-monitoring} feature of your hub.
    */
   connectionState?: Device.ConnectionState;
 

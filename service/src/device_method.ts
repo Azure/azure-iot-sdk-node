@@ -62,7 +62,7 @@ export class DeviceMethod {
     /*Codes_SRS_NODE_IOTHUB_DEVICE_METHOD_16_008: [The `invokeOn` method shall throw a `ReferenceError` if `deviceId` is `null`, `undefined` or an empty string.]*/
     if (deviceId === null || deviceId === undefined || deviceId === '') throw new ReferenceError('deviceId cannot be \'' + deviceId + '\'');
 
-    const path = '/twins/' + deviceId + '/methods' + endpoint.versionQueryString();
+    const path = '/twins/' + encodeURIComponent(deviceId) + '/methods' + endpoint.versionQueryString();
     const headers = {
       'Content-Type': 'application/json; charset=utf-8'
     };
@@ -74,8 +74,9 @@ export class DeviceMethod {
     Content-Type: application/json; charset=utf-8
     Request-Id: <guid>
     {
-      "methodName": <DeviceMethod.params.methodName>,
-      "timeoutInSeconds": <DeviceMethod.params.timeoutInSeconds>,
+      "methodName": <DeviceMethod.params.name>,
+      "responseTimeoutInSeconds": <DeviceMethod.params.responseTimeoutInSeconds>,
+      "connectTimeoutInSeconds": <DeviceMethod.params.connectTimeoutInSeconds>,
       "payload": <DeviceMethod.params.payload>
     }
     ```]*/
@@ -103,20 +104,21 @@ export class DeviceMethod {
     if (!deviceId) throw new ReferenceError('deviceId cannot be \'' + deviceId + '\'');
     if (!moduleId) throw new ReferenceError('moduleId cannot be \'' + moduleId + '\'');
 
-    const path = '/twins/' + deviceId + '/modules/' + moduleId + '/methods' + endpoint.versionQueryString();
+    const path = '/twins/' + encodeURIComponent(deviceId) + '/modules/' + encodeURIComponent(moduleId) + '/methods' + endpoint.versionQueryString();
     const headers = {
       'Content-Type': 'application/json; charset=utf-8'
     };
 
     /*Codes_SRS_NODE_IOTHUB_DEVICE_METHOD_18_002: [The `invokeOnModule` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
-    POST /twins/<deviceId>/modules/<moduleId>/methods?api-version=<version> HTTP/1.1
+    POST /twins/<encodeUriComponent(deviceId)>/modules/<encodeUriComponent(moduleId)>/methods?api-version=<version> HTTP/1.1
     Authorization: <config.sharedAccessSignature>
     Content-Type: application/json; charset=utf-8
     Request-Id: <guid>
     {
-      "methodName": <DeviceMethod.params.methodName>,
-      "timeoutInSeconds": <DeviceMethod.params.timeoutInSeconds>,
+      "methodName": <DeviceMethod.params.name>,
+      "responseTimeoutInSeconds": <DeviceMethod.params.responseTimeoutInSeconds>,
+      "connectTimeoutInSeconds": <DeviceMethod.params.connectTimeoutInSeconds>,
       "payload": <DeviceMethod.params.payload>
     }
     ```

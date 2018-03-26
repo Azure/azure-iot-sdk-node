@@ -103,12 +103,12 @@ having to get it first which can be useful in some high performance scenarios.
 ### get(done)
 The `get` method is used to refresh the `Twin` instance with the latest values from the IoT Hub Registry.
 
-**SRS_NODE_IOTHUB_TWIN_16_020: [** If `this.moduleId` is `null`, The `get` method shall call the `getTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+**SRS_NODE_IOTHUB_TWIN_16_020: [** If `this.moduleId` is falsy, The `get` method shall call the `getTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
 - `this.deviceId`
 - `done`
 **]**
 
-**SRS_NODE_IOTHUB_TWIN_18_001: [** If `this.moduleId` is not `null`, the `get` method shall call the `getModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+**SRS_NODE_IOTHUB_TWIN_18_001: [** If `this.moduleId` is not falsy, the `get` method shall call the `getModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
   - `this.deviceId`
   - `this.moduleId`
   - `done`
@@ -118,14 +118,14 @@ The `get` method is used to refresh the `Twin` instance with the latest values f
 The `update` method is used to update any part of the device twin stored in the IoT Hub registry with the values passed as a patch argument.
 To satisfy optimistic concurrency requirements, the HTTP request `If-Match` header will be populated with the `Twin.eTag` field if defined. If not defined, `*` will be used.
 
-**SRS_NODE_IOTHUB_TWIN_16_019: [** If `this.moduleId` is `null`, The `update` method shall call the `updateTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+**SRS_NODE_IOTHUB_TWIN_16_019: [** If `this.moduleId` is falsy, The `update` method shall call the `updateTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
 - `this.deviceId`
 - `patch`
 - `this.etag`
 - `done`
 **]**
 
-**SRS_NODE_IOTHUB_TWIN_18_002: [** If `this.moduleId` is not `null`, the `update` method shall call the `updateModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+**SRS_NODE_IOTHUB_TWIN_18_002: [** If `this.moduleId` is not falsy, the `update` method shall call the `updateModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
   - `this.deviceId`
   - `this.moduleId`
   - `patch`
@@ -142,5 +142,3 @@ To satisfy optimistic concurrency requirements, the HTTP request `If-Match` head
 The `toJSON` method is called when calling `JSON.stringify()` on a `Twin` object.
 
 **SRS_NODE_IOTHUB_TWIN_16_015: [** The `toJSON` method shall return a copy of the `Twin` object that doesn't contain the `_registry` private property. **]**
-
-

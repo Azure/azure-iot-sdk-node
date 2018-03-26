@@ -1111,7 +1111,7 @@ describe('Registry', function() {
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_005: [The `updateModuleTwin` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
-    PATCH /twins/<encodeURIComponent(deviceId)/modules/<encodeURIComponent(moduleId)>>?api-version=<version> HTTP/1.1
+    PATCH /twins/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
     Authorization: <config.sharedAccessSignature>
     Content-Type: application/json; charset=utf-8
     Request-Id: <guid>
@@ -1181,7 +1181,7 @@ describe('Registry', function() {
     <configuration>
     ```
     ]*/
-    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_009: [The `addConfiguration` method shall set `configuration.schemaVersion` to the constant `currentConfigurationSchemaVersion` if it is not already set. ]*/
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_009: [The `addConfiguration` method shall set `configuration.schemaVersion` to '1.0' if it is not already set. ]*/
     it('constructs a valid HTTP request', function(testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
@@ -1297,7 +1297,7 @@ describe('Registry', function() {
     ```
     ]*/
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_020: [If `forceUpdate` is not truthy, the `updateConfigurationMethod` shall put the `etag` parameter into the `If-Match` header value. ]*/
-    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_018: [The `updateConfiguration` method shall set ``configuration.schemaVersion` to the constant `currentConfigurationSchemaVersion` if it is not already set. ]*/
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_018: [The `updateConfiguration` method shall set ``configuration.schemaVersion` to '1.0' if it is not already set. ]*/
     it('constructs a valid HTTP request', function(testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
@@ -1404,7 +1404,7 @@ describe('Registry', function() {
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_028: [The `addModule` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
-    PUT /devices/<encodeURIComponent(module.deviceId)/modules/<encodeURIComponent(module.moduleId)>>?api-version=<version> HTTP/1.1
+    PUT /devices/<encodeURIComponent(module.deviceId)>/modules/<encodeURIComponent(module.moduleId)>?api-version=<version> HTTP/1.1
     Authorization: <sharedAccessSignature>
     Content-Type: application/json; charset=utf-8
     Request-Id: <guid>
@@ -1523,7 +1523,7 @@ describe('Registry', function() {
     Authorization: <sharedAccessSignature>
     Content-Type: application/json; charset=utf-8
     If-Match: <etag | *
-    Request-Id: <guid>>
+    Request-Id: <guid>
 
     <module>
     ```
@@ -1558,7 +1558,7 @@ describe('Registry', function() {
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_040: [The `removeModule` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
-    DELETE /devices/<encodeURIComponent(deviceId)/modules/<encodeURIComponent(moduleId)>>?api-version=<version> HTTP/1.1
+    DELETE /devices/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
     Authorization: <sharedAccessSignature>
     Request-Id: <guid>
     ```

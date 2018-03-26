@@ -91,7 +91,6 @@ getModulesOnDevice(function() {
   addNewModule(function() {
     updateModule(function() {
       removeModule(function() {
-        // BKTODO: why does this not exit?
       });
     });
   });

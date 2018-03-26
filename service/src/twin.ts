@@ -125,10 +125,10 @@ export class Twin implements TwinData {
    *                                object useful for logging or debugging.
    */
   get(done: Callback<Twin>): void {
-    /*Codes_SRS_NODE_IOTHUB_TWIN_16_020: [If `this.moduleId` is `null`, the `get` method shall call the `getTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+    /*Codes_SRS_NODE_IOTHUB_TWIN_16_020: [If `this.moduleId` is falsy, the `get` method shall call the `getTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
     - `this.deviceId`
     - `done`]*/
-    /*Codes_SRS_NODE_IOTHUB_TWIN_18_001: [If `this.moduleId` is not `null`, the `get` method shall call the `getModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+    /*Codes_SRS_NODE_IOTHUB_TWIN_18_001: [If `this.moduleId` is not falsy, the `get` method shall call the `getModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
     - `this.deviceId`
     - `this.moduleId`
     - `done`]*/
@@ -168,12 +168,12 @@ export class Twin implements TwinData {
    *                                object useful for logging or debugging.
    */
   update(patch: any, done: Callback<Twin>): void {
-    /*Codes_SRS_NODE_IOTHUB_TWIN_16_019: [If `this.moduleId` is `null`, The `update` method shall call the `updateTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+    /*Codes_SRS_NODE_IOTHUB_TWIN_16_019: [If `this.moduleId` is falsy, The `update` method shall call the `updateTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
     - `this.deviceId`
     - `patch`
     - `this.etag`
     - `done`]*/
-    /*Codes_SRS_NODE_IOTHUB_TWIN_18_002: [If `this.moduleId` is not `null`, the `update` method shall call the `updateModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+    /*Codes_SRS_NODE_IOTHUB_TWIN_18_002: [If `this.moduleId` is not falsy, the `update` method shall call the `updateModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
     - `this.deviceId`
     - `this.moduleId`
     - `patch`
