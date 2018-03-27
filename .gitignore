@@ -228,5 +228,7 @@ service/lib
 
 ts-e2e/lib
 
+longhaultests/lib
+
 # Build artifacts
 build/build_parallel/temp
