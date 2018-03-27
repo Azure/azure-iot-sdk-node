@@ -105,8 +105,11 @@ createDevice((err, deviceConnectionString) => {
     });
 
     const endTimeout = setTimeout(() => {
+      debug('end timeout: test completed successfully');
       stopSender(() => {
+        debug('sender stopped. deleting device');
         deleteDevice(() => {
+          debug('test device deleted from registry. Exiting.');
           process.exit(OK_EXIT_CODE);
         });
       });
@@ -118,6 +121,7 @@ createDevice((err, deviceConnectionString) => {
         debug('error starting d2c_sender: ' + err.toString());
         clearTimeout(endTimeout);
         deleteDevice(() => {
+          debug('test device deleted. Exiting.')
           process.exit(ERROR_EXIT_CODE);
         });
       } else {
