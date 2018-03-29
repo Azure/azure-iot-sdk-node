@@ -4,6 +4,7 @@
 'use strict';
 
 import { EventEmitter } from 'events';
+import { Agent } from 'https';
 import { anHourFromNow, errors, results, Message, Receiver, SharedAccessSignature } from 'azure-iot-common';
 import { RetryOperation, RetryPolicy, ExponentialBackOffWithJitter } from 'azure-iot-common';
 import * as ConnectionString from './connection_string';
@@ -45,6 +46,9 @@ export class Client extends EventEmitter {
     this._transport = transport;
 
     this._restApiClient = restApiClient;
+    if (this._restApiClient && this._restApiClient.setOptions) {
+      this._restApiClient.setOptions({http: { agent: new Agent({ keepAlive: true }) } });
+    }
 
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_021: [The `Client` constructor shall initialize the default retry policy to `ExponentialBackoffWithJitter` with a maximum timeout of 4 minutes.]*/
     this._retryPolicy = new ExponentialBackOffWithJitter();

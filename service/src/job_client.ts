@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { Agent } from 'https';
 import { anHourFromNow, endpoint } from 'azure-iot-common';
 import * as ConnectionString from './connection_string';
 import * as SharedAccessSignature from './shared_access_signature';
@@ -49,6 +50,9 @@ export class JobClient {
     /*Codes_SRS_NODE_JOB_CLIENT_16_001: [The `JobClient` constructor shall throw a `ReferenceError` if `restApiClient` is falsy.]*/
     if (!restApiClient) throw new ReferenceError('restApiClient cannot be \'' + restApiClient + '\'');
     this._restApiClient = restApiClient;
+    if (this._restApiClient.setOptions) {
+      this._restApiClient.setOptions({http: { agent: new Agent({ keepAlive: true }) } });
+    }
   }
 
   /**
