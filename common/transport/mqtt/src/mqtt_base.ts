@@ -237,7 +237,9 @@ export class MqttBase extends EventEmitter {
     const offlineCallback = createErrorCallback('offline');
     const disconnectCallback = createErrorCallback('disconnect');
     const messageCallback = (topic, payload) => {
-      this.emit('message', topic, payload);
+      process.nextTick(() => {
+        this.emit('message', topic, payload);
+      });
     };
 
     this._mqttClient = this.mqttprovider.connect(this._config.uri, options);

@@ -53,4 +53,6 @@ module.exports = {
   X509AuthenticationProvider: require('./lib/x509_authentication_provider').X509AuthenticationProvider,
   SharedAccessSignatureAuthenticationProvider: require('./lib/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider,
   SharedAccessKeyAuthenticationProvider: require('./lib/sak_authentication_provider').SharedAccessKeyAuthenticationProvider,
+  Twin: require('./lib/twin').Twin,
+  TwinProperties: require('./lib/twin').TwinProperties
 };

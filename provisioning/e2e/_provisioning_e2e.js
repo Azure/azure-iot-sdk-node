@@ -23,7 +23,7 @@ var TssJs = require("tss.js");
 var idScope = process.env.IOT_PROVISIONING_DEVICE_IDSCOPE;
 var provisioningConnectionString = process.env.IOT_PROVISIONING_SERVICE_CONNECTION_STRING;
 var registryConnectionString = process.env.IOTHUB_CONNECTION_STRING;
-var provisioningHost = 'global.azure-devices-provisioning.net';
+var provisioningHost = process.env.IOT_PROVISIONING_DEVICE_ENDPOINT;
 
 var provisioningServiceClient = ProvisioningServiceClient.fromConnectionString(provisioningConnectionString);
 var registry = Registry.fromConnectionString(registryConnectionString);

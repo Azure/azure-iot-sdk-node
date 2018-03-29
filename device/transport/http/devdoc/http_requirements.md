@@ -91,6 +91,10 @@ Host: <config.host>
 
 **SRS_NODE_DEVICE_HTTP_16_019: [** If the `message` object has a `ack` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Ack`. **]**
 
+**SRS_NODE_DEVICE_HTTP_16_037: [** If the `message` object has a `contentType` property, the value of the property shall be inserted in the headers of the HTTP request with the key `iothub-contenttype`. **]**
+
+**SRS_NODE_DEVICE_HTTP_16_038: [** If the `message` object has a `contentEncoding` property, the value of the property shall be inserted in the headers of the HTTP request with the key `iothub-contentencoding`. **]**
+
 ### sendEventBatch(messages, done)
 
 The sendEventBatch method sends a list of events to an IoT hub on behalf of the device indicated in the constructor argument.
@@ -217,21 +221,21 @@ Host: <config.host>
 
 **SRS_NODE_DEVICE_HTTP_16_007: [**The `updateSharedAccessSignature` method shall call the `done` callback with a null error object and a SharedAccessSignatureUpdated object as a result, indicating that the client does not need to reestablish the transport connection.**]**
 
-### getTwinReceiver(done: (err?: Error, receiver?: any) => void): void;
+### getTwin(done: (err?: Error, twin?: any) => void): void;
 
-**SRS_NODE_DEVICE_HTTP_16_020: [** `getTwinReceiver` shall throw a `NotImplementedError`. **]**
+**SRS_NODE_DEVICE_HTTP_16_020: [** `getTwin` shall throw a `NotImplementedError`. **]**
 
-### sendTwinRequest(method: string, resource: string, properties: { [key: string]: any;}, body: any, done?: (err?: Error, result?: any) => void): void;
+### updateTwinReportedProperties(done: (err?: Error) => void): void
 
-**SRS_NODE_DEVICE_HTTP_16_021: [** `sendTwinRequest` shall throw a `NotImplementedError`. **]**
+**SRS_NODE_DEVICE_HTTP_16_034: [** `updateTwinReportedProperties` shall throw a `NotImplementedError`. **]**
 
-### enableTwin(callback: (err?: Error) => void): void;
+### enableTwinDesiredPropertiesUpdates(done: (err?: Error) => void): void
 
-**SRS_NODE_DEVICE_HTTP_16_022: [** `enableTwin` shall throw a `NotImplementedError`. **]**
+**SRS_NODE_DEVICE_HTTP_16_035: [** `enableTwinDesiredPropertiesUpdates` shall throw a `NotImplementedError`. **]**
 
-### disableTwin(callback: (err?: Error) => void): void;
+### disableTwinDesiredPropertiesUpdates(done: (err?: Error) => void): void
 
-**SRS_NODE_DEVICE_HTTP_16_023: [** `disableTwin` shall throw a `NotImplementedError`. **]**
+**SRS_NODE_DEVICE_HTTP_16_036: [** `disableTwinDesiredPropertiesUpdates` shall throw a `NotImplementedError`. **]**
 
 ### sendMethodResponse(response: DeviceMethodResponse, done?: (err?: Error, result?: any) => void): void;
 

@@ -8,7 +8,7 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-amqp:Amqp');
 import { EventEmitter } from 'events';
 
-import { DeviceMethodResponse, Client } from 'azure-iot-device';
+import { DeviceMethodResponse, Client, TwinProperties } from 'azure-iot-device';
 import { Amqp as BaseAmqpClient, translateError, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
 import { endpoint, SharedAccessSignature, errors, results, Message, X509, AuthenticationProvider, AuthenticationType } from 'azure-iot-common';
 import { AmqpDeviceMethodClient } from './amqp_device_method_client';
@@ -61,7 +61,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
   private _d2cLink: SenderLink;
 
   private _c2dErrorListener: (err: Error) => void;
-  private _c2dMessageListener: (msg: Message) => void;
+  private _c2dMessageListener: (msg: AmqpMessage) => void;
 
   private _d2cErrorListener: (err: Error) => void;
 
@@ -92,7 +92,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
     this._amqp = baseClient || new BaseAmqpClient(false, 'azure-iot-device/' + packageJson.version);
     this._amqp.setDisconnectHandler((err) => {
       debug('disconnected event handler: ' + (err ? err.toString() : 'no error'));
-      this._fsm.handle('disconnect', () => {
+      this._fsm.handle('amqpConnectionClosed', err, () => {
         this.emit('disconnect', getTranslatedError(err, 'AMQP client disconnected'));
       });
     });
@@ -113,6 +113,8 @@ export class Amqp extends EventEmitter implements Client.Transport {
       this.emit('error', twinError);
     });
 
+    this._twinClient.on('twinDesiredPropertiesUpdate', (patch) => this.emit('twinDesiredPropertiesUpdate', patch));
+
     /*Codes_SRS_NODE_DEVICE_AMQP_16_034: [Any `error` event received on the C2D link shall trigger the emission of an `error` event by the transport, with an argument that is a `C2DDetachedError` object with the `innerError` property set to that error.]*/
     this._c2dErrorListener = (err) => {
       debug('Error on the C2D link: ' + err.toString());
@@ -122,7 +124,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
     };
 
     this._c2dMessageListener = (msg) => {
-      this.emit('message', msg);
+      this.emit('message', AmqpMessage.toMessage(msg));
     };
 
     this._d2cErrorListener = (err) => {
@@ -135,7 +137,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
       initialState: 'disconnected',
       states: {
         disconnected: {
-          _onEnter: (callback, err) => {
+          _onEnter: (err, callback) => {
             if (callback) {
               if (err) {
                 callback(err);
@@ -166,26 +168,43 @@ export class Amqp extends EventEmitter implements Client.Transport {
             // nothing to do here: the SAS has been updated in the config object.
             callback(null, new results.SharedAccessSignatureUpdated(false));
           },
-          getTwinReceiver: (callback) => {
-            /*Codes_SRS_NODE_DEVICE_AMQP_16_027: [** The `getTwinReceiver` method shall connect and authenticate the AMQP connection if necessary.]*/
+          getTwin: (callback)  => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_16_059: [The `getTwin` method shall connect and authenticate the transport if it is disconnected.]*/
             this._fsm.handle('connect', (err, result) => {
               if (err) {
-                /*Tests_SRS_NODE_DEVICE_AMQP_16_028: [The `getTwinReceiver` method shall call the `done` callback with the corresponding error if the transport fails connect or authenticate the AMQP connection.]*/
+                /*Codes_SRS_NODE_DEVICE_AMQP_16_060: [The `getTwin` method shall call its callback with an error if connecting fails.]*/
+                /*Codes_SRS_NODE_DEVICE_AMQP_16_061: [The `getTwin` method shall call its callback with an error if authenticating fails.]*/
                 callback(err);
               } else {
-                this._fsm.handle('getTwinReceiver', callback);
+                this._fsm.handle('getTwin', callback);
               }
             });
           },
-          sendTwinRequest: (method, resource, properties, body, sendTwinRequestCallback) => {
+          updateTwinReportedProperties: (patch, callback)  => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_16_065: [The `updateTwinReportedProperties` method shall connect and authenticate the transport if it is disconnected.]*/
             this._fsm.handle('connect', (err, result) => {
               if (err) {
-                sendTwinRequestCallback(err);
+                /*Codes_SRS_NODE_DEVICE_AMQP_16_066: [The `updateTwinReportedProperties` method shall call its callback with an error if connecting fails.]*/
+                /*Codes_SRS_NODE_DEVICE_AMQP_16_067: [The `updateTwinReportedProperties` method shall call its callback with an error if authenticating fails.]*/
+                callback(err);
               } else {
-                this._fsm.handle('sendTwinRequest', method, resource, properties, body, sendTwinRequestCallback);
+                this._fsm.handle('updateTwinReportedProperties', patch, callback);
               }
             });
           },
+          enableTwinDesiredPropertiesUpdates:  (callback)  => {
+           /*Codes_SRS_NODE_DEVICE_AMQP_16_071: [The `enableTwinDesiredPropertiesUpdates` method shall connect and authenticate the transport if it is disconnected.]*/
+            this._fsm.handle('connect', (err, result) => {
+              if (err) {
+                /*Codes_SRS_NODE_DEVICE_AMQP_16_072: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with an error if connecting fails.]*/
+                /*Codes_SRS_NODE_DEVICE_AMQP_16_073: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with an error if authenticating fails.]*/
+                callback(err);
+              } else {
+                this._fsm.handle('enableTwinDesiredPropertiesUpdates', callback);
+              }
+            });
+          },
+          disableTwinDesiredPropertiesUpdates: (callback) => callback(),
           /*Codes_SRS_NODE_DEVICE_AMQP_16_031: [The `enableC2D` method shall connect and authenticate the transport if it is disconnected.]*/
           enableC2D: (callback) => {
             this._fsm.handle('connect', (err, result) => {
@@ -218,20 +237,9 @@ export class Amqp extends EventEmitter implements Client.Transport {
             // if we are disconnected the C2D link is already detached.
             callback();
           },
-          /*Codes_SRS_NODE_DEVICE_AMQP_16_045: [The `enableTwin` method shall connect and authenticate the transport if it is disconnected.]*/
-          enableTwin: (callback) => {
-            this._fsm.handle('connect', (err, result) => {
-              if (err) {
-                /*Codes_SRS_NODE_DEVICE_AMQP_16_047: [The `enableTwin` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach twin links.]*/
-                callback(err);
-              } else {
-                this._fsm.handle('enableTwin', callback);
-              }
-            });
-          },
-          /*Codes_SRS_NODE_DEVICE_AMQP_16_051: [The `disableTwin` method shall call its `callback` immediately if the transport is already disconnected.]*/
-          disableTwin: (callback) => {
-            // if we are disconnected the C2D link is already detached.
+          amqpConnectionClosed: (err, callback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_16_080: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is disconnected, the call shall be ignored.]*/
+            debug('ignoring amqpConnectionClosed because already disconnected: ' + err.toString());
             callback();
           }
         },
@@ -241,7 +249,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
             this._authenticationProvider.getDeviceCredentials((err, credentials) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_055: [The `connect` method shall call its callback with an error if the callback passed to the `getDeviceCredentials` method is called with an error.]*/
-                this._fsm.transition('disconnected', connectCallback, translateError('AMQP Transport: Could not get credentials', err));
+                this._fsm.transition('disconnected', translateError('AMQP Transport: Could not get credentials', err), connectCallback);
               } else {
                 this._c2dEndpoint = endpoint.messagePath(encodeURIComponent(credentials.deviceId));
                 this._d2cEndpoint = endpoint.eventPath(credentials.deviceId);
@@ -249,43 +257,44 @@ export class Amqp extends EventEmitter implements Client.Transport {
                 const uri = this._getConnectionUri(credentials.host);
                 this._amqp.connect(uri, credentials.x509, (err, connectResult) => {
                   if (err) {
-                    this._fsm.transition('disconnected', connectCallback, translateError('AMQP Transport: Could not connect', err));
+                    this._fsm.transition('disconnected', translateError('AMQP Transport: Could not connect', err), connectCallback);
                   } else {
-                    this._fsm.transition('authenticating', connectCallback, connectResult);
+                    this._fsm.transition('authenticating', connectResult, connectCallback);
                   }
                 });
               }
-
             });
           },
-          disconnect: (disconnectCallback, err) => this._fsm.transition('disconnecting', disconnectCallback, err),
+          disconnect: (disconnectCallback) => this._fsm.transition('disconnecting', null, disconnectCallback),
           updateSharedAccessSignature: (token, callback) => {
             callback(null, new results.SharedAccessSignatureUpdated(false));
           },
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_081: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connecting or authenticating, the connection shall be stopped and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error.]*/
+          amqpConnectionClosed: (err, callback) => this._fsm.transition('disconnecting', err, callback),
           '*': () => this._fsm.deferUntilTransition()
         },
         authenticating: {
-          _onEnter: (connectCallback, connectResult) => {
+          _onEnter: (connectResult, connectCallback) => {
             if (this._authenticationProvider.type === AuthenticationType.X509) {
               /*Codes_SRS_NODE_DEVICE_AMQP_06_005: [If x509 authentication is NOT being utilized then `initializeCBS` shall be invoked.]*/
-              this._fsm.transition('authenticated', connectCallback, connectResult);
+              this._fsm.transition('authenticated', connectResult, connectCallback);
             } else {
               this._amqp.initializeCBS((err) => {
                 if (err) {
                   /*Codes_SRS_NODE_DEVICE_AMQP_06_008: [If `initializeCBS` is not successful then the client will be disconnected.]*/
-                  this._fsm.transition('disconnecting', connectCallback, getTranslatedError(err, 'AMQP Transport: Could not initialize CBS'));
+                  this._fsm.transition('disconnecting', getTranslatedError(err, 'AMQP Transport: Could not initialize CBS'), connectCallback);
                 } else {
                   this._authenticationProvider.getDeviceCredentials((err, credentials) => {
                     if (err) {
-                      this._fsm.transition('disconnecting', connectCallback, getTranslatedError(err, 'AMQP Transport: Could not get credentials from AuthenticationProvider'));
+                      this._fsm.transition('disconnecting', getTranslatedError(err, 'AMQP Transport: Could not get credentials from AuthenticationProvider'), connectCallback);
                     } else {
                       /*Codes_SRS_NODE_DEVICE_AMQP_06_006: [If `initializeCBS` is successful, `putToken` shall be invoked If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter `audience`, created from the `sr` of the shared access signature, the actual shared access signature, and a callback.]*/
                       this._amqp.putToken(SharedAccessSignature.parse(credentials.sharedAccessSignature, ['sr', 'sig', 'se']).sr, credentials.sharedAccessSignature, (err) => {
                         if (err) {
                           /*Codes_SRS_NODE_DEVICE_AMQP_06_009: [If `putToken` is not successful then the client will be disconnected.]*/
-                          this._fsm.transition('disconnecting', connectCallback, getTranslatedError(err, 'AMQP Transport: Could not authorize with puttoken'));
+                          this._fsm.transition('disconnecting', getTranslatedError(err, 'AMQP Transport: Could not authorize with puttoken'), connectCallback);
                         } else {
-                          this._fsm.transition('authenticated', connectCallback, connectResult);
+                          this._fsm.transition('authenticated', connectResult, connectCallback);
                         }
                       });
                     }
@@ -294,15 +303,17 @@ export class Amqp extends EventEmitter implements Client.Transport {
               });
             }
           },
-          disconnect: (disconnectCallback) => this._fsm.transition('disconnecting', disconnectCallback),
+          disconnect: (disconnectCallback) => this._fsm.transition('disconnecting', null, disconnectCallback),
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_081: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connecting or authenticating, the connection shall be stopped and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error.]*/
+          amqpConnectionClosed: (err, callback) => this._fsm.transition('disconnecting', err, callback),
           '*': () => this._fsm.deferUntilTransition()
         },
         authenticated: {
-          _onEnter: (connectCallback, connectResult) => {
+          _onEnter: (connectResult, connectCallback) => {
             connectCallback(null, connectResult);
           },
           connect: (connectCallback) => connectCallback(null, new results.Connected()),
-          disconnect: (disconnectCallback) => this._fsm.transition('disconnecting', disconnectCallback),
+          disconnect: (disconnectCallback) => this._fsm.transition('disconnecting', null, disconnectCallback),
           sendEvent: (message, sendCallback) => {
             let amqpMessage = AmqpMessage.fromMessage(message);
             amqpMessage.properties.to = this._d2cEndpoint;
@@ -337,13 +348,22 @@ export class Amqp extends EventEmitter implements Client.Transport {
               }
             });
           },
-          getTwinReceiver: (callback) => {
-            /*Codes_SRS_NODE_DEVICE_AMQP_16_026: [** The `getTwinReceiver` method shall call the `done` callback with a `null` error argument and the `AmqpTwinClient` instance currently in use.]*/
-            callback(null, this._twinClient);
-          },
-          sendTwinRequest: (method, resource, properties, body, sendTwinRequestCallback) => {
-            this._twinClient.sendTwinRequest(method, resource, properties, body, sendTwinRequestCallback);
-          },
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_062: [The `getTwin` method shall call the `getTwin` method on the `AmqpTwinClient` instance created by the constructor.]*/
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_063: [The `getTwin` method shall call its callback with and error if the call to `AmqpTwinClient.getTwin` fails.]*/
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_064: [The `getTwin` method shall call its callback with a `null` error parameter and the result of the `AmqpTwinClient.getTwin` method if it succeeds.]*/
+          getTwin: (callback) => this._twinClient.getTwin(handleResult('could not get twin', callback)),
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_068: [The `updateTwinReportedProperties` method shall call the `updateTwinReportedProperties` method on the `AmqpTwinClient` instance created by the constructor.]*/
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_069: [The `updateTwinReportedProperties` method shall call its callback with and error if the call to `AmqpTwinClient.updateTwinReportedProperties` fails.]*/
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_070: [The `updateTwinReportedProperties` method shall call its callback with a `null` error parameter and the result of the `AmqpTwinClient.updateTwinReportedProperties` method if it succeeds.]*/
+          updateTwinReportedProperties: (patch, callback) => this._twinClient.updateTwinReportedProperties(patch, handleResult('could not update twin reported properties', callback)),
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_074: [The `enableTwinDesiredPropertiesUpdates` method shall call the `enableTwinDesiredPropertiesUpdates` method on the `AmqpTwinClient` instance created by the constructor.]*/
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_075: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with and error if the call to `AmqpTwinClient.enableTwinDesiredPropertiesUpdates` fails.]*/
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_076: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with no arguments if the call to `AmqpTwinClient.enableTwinDesiredPropertiesUpdates` succeeds.]*/
+          enableTwinDesiredPropertiesUpdates: (callback) => this._twinClient.enableTwinDesiredPropertiesUpdates(handleResult('could not enable twin desired properties updates', callback)),
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_077: [The `disableTwinDesiredPropertiesUpdates` method shall call the `disableTwinDesiredPropertiesUpdates` method on the `AmqpTwinClient` instance created by the constructor.]*/
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_078: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback with and error if the call to `AmqpTwinClient.disableTwinDesiredPropertiesUpdates` fails.]*/
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_079: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback no arguments if the call to `AmqpTwinClient.disableTwinDesiredPropertiesUpdates` succeeds.]*/
+          disableTwinDesiredPropertiesUpdates: (callback) => this._twinClient.disableTwinDesiredPropertiesUpdates(handleResult('could not disable twin desired properties updates', callback)),
           enableC2D: (callback) => {
             debug('attaching C2D link');
             this._amqp.attachReceiverLink(this._c2dEndpoint, null, (err, receiverLink) => {
@@ -376,19 +396,11 @@ export class Amqp extends EventEmitter implements Client.Transport {
             /*Codes_SRS_NODE_DEVICE_AMQP_16_043: [The `disableMethods` method shall call its `callback` with an `Error` if it fails to detach the device method links.]*/
             this._deviceMethodClient.detach(callback);
           },
-          enableTwin: (callback) => {
-            /*Codes_SRS_NODE_DEVICE_AMQP_16_046: [The `enableTwin` method shall attach the twin links and call its `callback` once these are successfully attached.]*/
-            /*Codes_SRS_NODE_DEVICE_AMQP_16_047: [The `enableTwin` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach twin links.]*/
-            this._twinClient.attach(callback);
-          },
-          disableTwin: (callback) => {
-            /*Codes_SRS_NODE_DEVICE_AMQP_16_049: [The `disableTwin` method shall call `detach` on the twin links and call its callback when these are successfully detached.]*/
-            /*Codes_SRS_NODE_DEVICE_AMQP_16_050: [The `disableTwin` method shall call its `callback` with an `Error` if it fails to detach the twin links.]*/
-            this._twinClient.detach(callback);
-          }
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_082: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connected, the connection shall be disconnected and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error.]*/
+          amqpConnectionClosed: (err, callback) => this._fsm.transition('disconnecting', err, callback)
         },
         disconnecting: {
-          _onEnter: (disconnectCallback, err) => {
+          _onEnter: (err, disconnectCallback) => {
             let finalError = err;
             async.series([
               (callback) => {
@@ -409,6 +421,19 @@ export class Amqp extends EventEmitter implements Client.Transport {
                     callback();
                   });
                 }
+              },
+              (callback) => {
+                this._twinClient.detach((twinDetachError) => {
+                  if (twinDetachError) {
+                    debug('error detaching twin links: ' + twinDetachError.toString());
+                    if (!finalError) {
+                      finalError = translateError('error while detaching twin links', twinDetachError);
+                    }
+                  } else {
+                    debug('device twin links detached');
+                  }
+                  callback();
+                });
               },
               (callback) => {
                 if (this._d2cLink) {
@@ -465,7 +490,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
             ], () => {
               /*Codes_SRS_NODE_DEVICE_AMQP_16_010: [The `done` callback method passed in argument shall be called when disconnected.]*/
               /*Codes_SRS_NODE_DEVICE_AMQP_16_011: [The `done` callback method passed in argument shall be called with an error object if disconnecting fails.]*/
-              this._fsm.transition('disconnected', disconnectCallback, finalError);
+              this._fsm.transition('disconnected', finalError, disconnectCallback);
             });
           },
           '*': (connectCallback) => this._fsm.deferUntilTransition()
@@ -544,7 +569,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
   /*Codes_SRS_NODE_DEVICE_AMQP_16_013: [The ‘complete’ method shall call the ‘complete’ method of the C2D `ReceiverLink` object and pass it the message and the callback given as parameters.] */
   complete(message: Message, done?: (err?: Error, result?: results.MessageCompleted) => void): void {
     if (this._c2dLink) {
-      this._c2dLink.complete(message, done);
+      this._c2dLink.complete(message.transportObj, done);
     } else {
       done(new errors.DeviceMessageLockLostError('No active C2D link'));
     }
@@ -561,7 +586,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
   /*Codes_SRS_NODE_DEVICE_AMQP_16_014: [The ‘reject’ method shall call the ‘reject’ method of the C2D `ReceiverLink` object and pass it the message and the callback given as parameters.] */
   reject(message: Message, done?: (err?: Error, result?: results.MessageRejected) => void): void {
     if (this._c2dLink) {
-      this._c2dLink.reject(message, done);
+      this._c2dLink.reject(message.transportObj, done);
     } else {
       done(new errors.DeviceMessageLockLostError('No active C2D link'));
     }
@@ -578,7 +603,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
   /*Codes_SRS_NODE_DEVICE_AMQP_16_012: [The ‘abandon’ method shall call the ‘abandon’ method of the C2D `ReceiverLink` object and pass it the message and the callback given as parameters.] */
   abandon(message: Message, done?: (err?: Error, result?: results.MessageAbandoned) => void): void {
     if (this._c2dLink) {
-      this._c2dLink.abandon(message, done);
+      this._c2dLink.abandon(message.transportObj, done);
     } else {
       done(new errors.DeviceMessageLockLostError('No active C2D link'));
     }
@@ -664,42 +689,33 @@ export class Amqp extends EventEmitter implements Client.Transport {
 
   /**
    * @private
-   * @method          module:azure-iot-device-amqp.Amqp#sendTwinRequest
-   * @description     Send a device-twin specific messager to the IoT Hub instance
+   * Gets the Twin for the connected device.
    *
-   * @param {String}        method    name of the method to invoke ('PUSH', 'PATCH', etc)
-   * @param {String}        resource  name of the resource to act on (e.g. '/properties/reported/') with beginning and ending slashes
-   * @param {Object}        properties  object containing name value pairs for request properties (e.g. { 'rid' : 10, 'index' : 17 })
-   * @param {String}        body  body of request
-   * @param {Function}      done  the callback to be invoked when this function completes.
-   *
-   * @throws {ReferenceError}   One of the required parameters is falsy
-   * @throws {ArgumentError}  One of the parameters is an incorrect type
+   * @param callback called when the transport has a twin or encountered and error trying to retrieve it.
    */
-  sendTwinRequest(method: string, resource: string, properties: { [key: string]: string }, body: any, done?: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    this._fsm.handle('sendTwinRequest', method, resource, properties, body, (err) => {
-      if (done) {
-        done(err);
-      }
-    });
+  getTwin(callback: (err?: Error, twin?: TwinProperties) => void): void {
+    this._fsm.handle('getTwin', callback);
   }
 
   /**
    * @private
-   * @method          module:azure-iot-device-mqtt.Amqp#getTwinReceiver
-   * @description     Get a receiver object that handles C2D device-twin traffic
-   *
-   * @param {Function}  done      the callback to be invoked when this function completes.
-   *
-   * @throws {ReferenceError}   One of the required parameters is falsy
    */
-  getTwinReceiver(done: (err?: Error, receiver?: AmqpTwinClient) => void): void {
-    /* Codes_SRS_NODE_DEVICE_AMQP_06_033: [The `getTwinReceiver` method shall throw an `ReferenceError` if done is falsy] */
-    if (!done) {
-      throw new ReferenceError('required parameter is missing');
-    }
+  updateTwinReportedProperties(patch: any, callback: (err?: Error) => void): void {
+    this._fsm.handle('updateTwinReportedProperties', patch, callback);
+  }
 
-    this._fsm.handle('getTwinReceiver', done);
+  /**
+   * @private
+   */
+  enableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void {
+    this._fsm.handle('enableTwinDesiredPropertiesUpdates', callback);
+  }
+
+  /**
+   * @private
+   */
+  disableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void {
+    this._fsm.handle('disableTwinDesiredPropertiesUpdates', callback);
   }
 
   /**
@@ -728,20 +744,6 @@ export class Amqp extends EventEmitter implements Client.Transport {
    */
   disableMethods(callback: (err?: Error) => void): void {
     this._fsm.handle('disableMethods', callback);
-  }
-
-  /**
-   * @private
-   */
-  enableTwin(callback: (err?: Error) => void): void {
-    this._fsm.handle('enableTwin', callback);
-  }
-
-  /**
-   * @private
-   */
-  disableTwin(callback: (err?: Error) => void): void {
-    this._fsm.handle('disableTwin', callback);
   }
 
   /**
@@ -790,6 +792,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
         // detaching listeners and getting rid of the object anyway.
         tmpC2DLink.removeListener('error', this._c2dErrorListener);
         tmpC2DLink.removeListener('message', this._c2dMessageListener);
+        callback();
       } else {
         tmpC2DLink.detach((err) => {
           if (err) {

@@ -196,13 +196,17 @@ describe('Http', function () {
     /*Tests_SRS_NODE_DEVICE_HTTP_16_017: [If the `message` object has a `to` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-To`.]*/
     /*Tests_SRS_NODE_DEVICE_HTTP_16_018: [If the `message` object has a `expiryTimeUtc` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Expiry`.]*/
     /*Tests_SRS_NODE_DEVICE_HTTP_16_019: [If the `message` object has a `ack` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Ack`.]*/
+    /*Tests_SRS_NODE_DEVICE_HTTP_16_037: [If the `message` object has a `contentType` property, the value of the property shall be inserted in the headers of the HTTP request with the key `iothub-contenttype`.]*/
+    /*Tests_SRS_NODE_DEVICE_HTTP_16_038: [If the `message` object has a `contentEncoding` property, the value of the property shall be inserted in the headers of the HTTP request with the key `iothub-contentencoding`.]*/
     [
       { messagePropertyName: 'messageId', headerName: 'IoTHub-MessageId', fakeValue: 'fakeMessageId' },
       { messagePropertyName: 'correlationId', headerName: 'IoTHub-CorrelationId', fakeValue: 'fakeCorrelationId' },
       { messagePropertyName: 'userId', headerName: 'IoTHub-UserId', fakeValue: 'fakeUserId' },
       { messagePropertyName: 'to', headerName: 'IoTHub-To', fakeValue: 'fakeTo' },
       { messagePropertyName: 'expiryTimeUtc', headerName: 'IoTHub-Expiry', fakeValue: new Date().toISOString() },
-      { messagePropertyName: 'ack', headerName: 'IoTHub-Ack', fakeValue: 'full' }
+      { messagePropertyName: 'ack', headerName: 'IoTHub-Ack', fakeValue: 'full' },
+      { messagePropertyName: 'contentType', headerName: 'iothub-contenttype', fakeValue: 'application/json' },
+      { messagePropertyName: 'contentEncoding', headerName: 'iothub-contentencoding', fakeValue: 'utf-8' }
     ].forEach(function(testConfig) {
       it('correctly populates the ' + testConfig.headerName + ' header if the message has a ' + testConfig.messagePropertyName + ' property', function() {
         transport._http = {
@@ -779,10 +783,10 @@ describe('HttpReceiver', function () {
     });
   });
 
-  /*Tests_SRS_NODE_DEVICE_HTTP_16_020: [`getTwinReceiver` shall throw a `NotImplementedError`.]*/
-  /*Tests_SRS_NODE_DEVICE_HTTP_16_021: [`sendTwinRequest` shall throw a `NotImplementedError`.]*/
-  /*Tests_SRS_NODE_DEVICE_HTTP_16_022: [`enableTwin` shall throw a `NotImplementedError`.]*/
-  /*Tests_SRS_NODE_DEVICE_HTTP_16_023: [`disableTwin` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_16_020: [`getTwin` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_16_034: [`updateTwinReportedProperties` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_16_035: [`enableTwinDesiredPropertiesUpdates` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_16_036: [`disableTwinDesiredPropertiesUpdates` shall throw a `NotImplementedError`.]*/
   /*Tests_SRS_NODE_DEVICE_HTTP_16_024: [`sendMethodResponse` shall throw a `NotImplementedError`.]*/
   /*Tests_SRS_NODE_DEVICE_HTTP_16_025: [`onDeviceMethod` shall throw a `NotImplementedError`.]*/
   /*Tests_SRS_NODE_DEVICE_HTTP_16_026: [`enableMethods` shall throw a `NotImplementedError`.]*/
@@ -792,10 +796,10 @@ describe('HttpReceiver', function () {
   /*Tests_SRS_NODE_DEVICE_HTTP_18_003: [`sendOutputEvent` shall throw a `NotImplementedError`.]*/
   /*Tests_SRS_NODE_DEVICE_HTTP_18_004: [`sendOutputEventBatch` shall throw a `NotImplementedError`.]*/
   [
-    'getTwinReceiver',
-    'sendTwinRequest',
-    'enableTwin',
-    'disableTwin',
+    'getTwin',
+    'updateTwinReportedProperties',
+    'enableTwinDesiredPropertiesUpdates',
+    'disableTwinDesiredPropertiesUpdates',
     'sendMethodResponse',
     'onDeviceMethod',
     'enableMethods',

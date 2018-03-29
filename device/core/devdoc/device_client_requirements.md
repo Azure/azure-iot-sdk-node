@@ -192,11 +192,9 @@ The `sendEventBatch` method sends a list of event messages to the IoT Hub as the
 
 #### getTwin(done)
 
-**SRS_NODE_DEVICE_CLIENT_18_001: [** The `getTwin` method shall call the `azure-iot-device-core!Twin.fromDeviceClient` method to create the device twin object. **]**
+**SRS_NODE_DEVICE_CLIENT_16_094: [** If this is the first call to `getTwin` the method shall instantiate a new `Twin` object  and pass it the transport currently in use. **]**
 
-**SRS_NODE_DEVICE_CLIENT_18_002: [** The `getTwin` method shall pass itself as the first parameter to `fromDeviceClient` and it shall pass the `done` method as the second parameter. **]**
-
-**SRS_NODE_DEVICE_CLIENT_18_003: [** The `getTwin` method shall use the second parameter (if it is not falsy) to call `fromDeviceClient` on. **]**
+**SRS_NODE_DEVICE_CLIENT_16_095: [** The `getTwin` method shall call the `get()` method on the `Twin` object currently in use and pass it its `done` argument for a callback. **]**
 
 #### onDeviceMethod(methodName, callback)
 
@@ -267,6 +265,8 @@ interface DeviceMethodEventHandler {
 **SRS_NODE_DEVICE_CLIENT_18_022: [** The `sendOutputEventBatch` method shall not throw if the `callback` is not passed. **]**
 
 
+**SRS_NODE_DEVICE_CLIENT_16_096: [** The `setRetryPolicy` method shall call the `setRetryPolicy` method on the twin if it is set and pass it the `policy` object. **]**
+
 ### Events
 #### message
 
@@ -304,3 +304,14 @@ interface DeviceMethodEventHandler {
 
 **SRS_NODE_DEVICE_CLIENT_16_019: [** The `disconnect` event shall be emitted when the client is disconnected from the server. **]**
 
+**SRS_NODE_DEVICE_CLIENT_16_097: [** If the transport emits a `disconnect` event event while the client is subscribed to c2d messages the retry policy shall be used to reconnect and re-enable the feature using the transport `enableC2D` method. **]**
+
+**SRS_NODE_DEVICE_CLIENT_16_102: [** If the retry policy fails to reestablish the C2D functionality a `disconnect` event shall be emitted with a `results.Disconnected` object. **]**
+
+**SRS_NODE_DEVICE_CLIENT_16_098: [** If the transport emits a `disconnect` event while the client is subscribed to direct methods the retry policy shall be used to reconnect and re-enable the feature using the transport `enableMethods` method. **]**
+
+**SRS_NODE_DEVICE_CLIENT_16_100: [** If the retry policy fails to reestablish the direct methods functionality a `disconnect` event shall be emitted with a `results.Disconnected` object. **]**
+
+**SRS_NODE_DEVICE_CLIENT_16_099: [** If the transport emits a `disconnect` event while the client is subscribed to desired properties updates the retry policy shall be used to reconnect and re-enable the feature using the transport `enableTwinDesiredPropertiesUpdates` method. **]**
+
+**SRS_NODE_DEVICE_CLIENT_16_101: [** If the retry policy fails to reestablish the twin desired properties updates functionality a `disconnect` event shall be emitted with a `results.Disconnected` object. **]**

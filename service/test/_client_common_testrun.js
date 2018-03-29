@@ -7,7 +7,6 @@ var assert = require('chai').assert;
 var Client = require('../lib/client.js').Client;
 var errors = require('azure-iot-common').errors;
 var Message = require('azure-iot-common').Message;
-var AmqpReceiver = require('azure-iot-amqp-base').AmqpReceiver;
 
 function transportSpecificTests(opts) {
   describe('Client', function () {
@@ -97,7 +96,6 @@ function transportSpecificTests(opts) {
         testSubject.getFeedbackReceiver(function (err, receiver) {
             if (err) done(err);
             else {
-              assert.instanceOf(receiver, AmqpReceiver);
               done();
             }
         });
@@ -112,7 +110,6 @@ function transportSpecificTests(opts) {
         testSubject.getFileNotificationReceiver(function (err, receiver) {
           if (err) done(err);
           else {
-            assert.instanceOf(receiver, AmqpReceiver);
             done();
           }
         });

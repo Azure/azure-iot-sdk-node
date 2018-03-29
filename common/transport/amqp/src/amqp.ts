@@ -107,7 +107,12 @@ export class Amqp {
     };
 
     this._amqp.on('disconnected', () => {
-      this._fsm.handle('amqpDisconnected');
+      // deferring this is necessary because in some instances
+      // the amqp10 library might want to send a close frame - and we don't want
+      // to trigger anything (especially not reconnection) before it has done so.
+      process.nextTick(() => {
+        this._fsm.handle('amqpDisconnected');
+      });
     });
 
     this._fsm = new machina.Fsm({

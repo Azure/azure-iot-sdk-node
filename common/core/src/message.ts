@@ -46,6 +46,16 @@ export class Message {
   ack: string;
 
   /**
+   * Content type property used to routes with the message body. Should be 'application/json'.
+   */
+  contentType: undefined | 'application/json';
+
+  /**
+   * Content encoding of the message body. can be 'utf-8', 'utf-16' or 'utf-32'.
+   */
+  contentEncoding: undefined | 'utf-8' | 'utf-16' | 'utf-32';
+
+  /**
    * @private
    */
   transportObj: any;
@@ -68,6 +78,8 @@ export class Message {
     this.lockToken = '';
     this.correlationId = '';
     this.userId = '';
+    this.contentEncoding = undefined;
+    this.contentType = undefined;
   }
 
   /**

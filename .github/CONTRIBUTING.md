@@ -1,14 +1,15 @@
 **The Azure IoT SDKs team wants to hear from you!**
 
-- [Ask a question](#ask-a-question)
+- [Need Support?](#need-support)
 - [File a bug](#file-a-bug)
 - [Contribute documentation](#contribute-documentation)
 - [Contribute code](#contribute-code)
 
-# Ask a question
-Our team monitors Stack Overflow, especially the [azure-iot-hub](http://stackoverflow.com/questions/tagged/azure-iot-hub) tag. It really is the best place to ask.
-
-We monitor the Github issues section specifically for bugs found with our SDK, however we will reply to questions asked using Github issues too.
+# Need Support?
+- **Have a feature request for SDKs?** Please post it on [User Voice](https://feedback.azure.com/forums/321918-azure-iot) to help us prioritize
+- **Have a technical question?** Ask on [Stack Overflow with tag "azure-iot-hub"](https://stackoverflow.com/questions/tagged/azure-iot-hub)
+- **Need Support?** Every customer with an active Azure subscription has access to [support](https://docs.microsoft.com/en-us/azure/azure-supportability/how-to-create-azure-support-request) with guaranteed response time.  Consider submitting a ticket and get assistance from Microsoft support team
+- **Found a bug?** Please help us fix it by thoroughly documenting it and filing an issue on GitHub (See below).
 
 # File a bug (code or documentation)
 That is definitely something we want to hear about. Please open an issue on github, we'll address it as fast as possible. Typically here's the information we're going to ask for to get started:

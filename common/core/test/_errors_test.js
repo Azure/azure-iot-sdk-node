@@ -38,6 +38,7 @@ describe('errors', function() {
     errors.CloudToDeviceDetachedError,
     errors.DeviceMethodsDetachedError,
     errors.TwinDetachedError,
+    errors.TwinRequestError,
     errors.OperationCancelledError,
     errors.DeviceRegistrationFailedError,
     errors.SecurityDeviceError

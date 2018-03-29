@@ -149,6 +149,38 @@ describe('Mqtt as MqttReceiver', function () {
         });
       });
 
+      /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_013: [When a message is received, the receiver shall populate the generated `Message` object `contentType` with the value of the property `$.ct` serialized in the topic, if present.]*/
+      it('populates Message.contentType from the topic', function (done) {
+        var contentType = 'application/json';
+        var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        receiver.connect(function () {
+          receiver.on('message', function (msg) {
+            assert.equal(msg.constructor.name, 'Message');
+            assert.equal(msg.contentType, contentType);
+            done();
+          });
+
+          fakeMqttBase.emit('message', 'devices/foo/messages/devicebound/%24.ct=' + encodeURIComponent(contentType));
+        });
+      });
+
+      /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_014: [When a message is received, the receiver shall populate the generated `Message` object `contentEncoding` with the value of the property `$.ce` serialized in the topic, if present.]*/
+      it('populates Message.contentEncoding from the topic', function (done) {
+        var contentEncoding = 'utf-8';
+        var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        receiver.connect(function () {
+          receiver.on('message', function (msg) {
+            assert.equal(msg.constructor.name, 'Message');
+            assert.equal(msg.contentEncoding, contentEncoding);
+            done();
+          });
+
+          fakeMqttBase.emit('message', 'devices/foo/messages/devicebound/%24.ce=' + contentEncoding);
+        });
+      });
+
+
+
 
       it('creates a message even if the properties topic segment is empty', function(done) {
         var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
@@ -164,7 +196,8 @@ describe('Mqtt as MqttReceiver', function () {
     });
 
     describe('#method', function() {
-      // Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_13_002: [ When a listener is added for the method event, the topic should be subscribed to. ]*/
+      /* Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_13_002: [ When a listener is added for the method event, the topic should be subscribed to. ]*/
+      // note: that test really does not test this requirement. Not since we introduced the enable/disable methods
       it('does not subscribe twice to the same topic for multiple event registrations', function () {
         var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
         receiver.connect(function () {
@@ -174,8 +207,8 @@ describe('Mqtt as MqttReceiver', function () {
           receiver.on('message', function () { });
 
           // assert
-          assert.isTrue(fakeMqttBase.on.calledTwice,
-            'mqttClient.on was not called twice (error + message)');
+          assert.isTrue(fakeMqttBase.on.calledThrice,
+            'mqttClient.on was not called thrice (error + message * 2 (c2d + twin)');
           assert.isTrue(fakeMqttBase.on.calledWith('message'),
             'mqttClient.on was not called for "message" event');
             assert.isTrue(fakeMqttBase.on.calledWith('error'),

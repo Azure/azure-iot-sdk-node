@@ -39,14 +39,11 @@ F:\repos\node\provisioning\tools>node create_test_cert.js
 create_test_cert.js <command>
 
 Commands:
-  create_test_cert.js root [commonName]     create a root certificate
-  create_test_cert.js intermediate          create an intermediate cert
-  <commonName> <parentCommonName>
-  create_test_cert.js device <commonName>   create a device cert
-  [parentCommonName]
-  create_test_cert.js verification          provide proof of possession for a
-  <certToVerify> <verificationCode>         cert using a verification code
-```
+  create_test_cert.js root [commonName]                                                                                create a root certificate
+  create_test_cert.js intermediate <commonName> <parentCommonName>                                                     create an intermediate cert
+  create_test_cert.js device <commonName> [parentCommonName]                                                           create a device cert
+  create_test_cert.js verification [--ca root cert pem file name] [--key root cert key pem file name] [--nonce nonce]  provide proof of possession for a cert using a verification code
+
 ### create a root certificate
 Creating a test root certificate is as simple as calling this script with the "root" command and passing in a common name for the certificate.  If no common name is provided, it will use "Test Root Cert" as the common name.
 
@@ -99,11 +96,10 @@ saving cert with chain to device43_fullchain.pem.
 ```
 
 ### provide proof of possession for a cert using a verification code
-To verify a cert, you need to pass the "verification" command along with the common name of the cert and the verification code from the Azure portal.  The tool will then create a new certificate (`verification_cert.pem`) which can be uploaded back to the portal to provide proof of possession.
+To verify a cert, you need to pass the "verification" command along with the cert filename, the key filename, and the verification code from the Azure portal.  The tool will then create a new certificate (`verification_cert.pem`) which can be uploaded back to the portal to provide proof of possession.
 
 ```
-F:\repos\node\provisioning\tools>node create_test_cert.js verification "My Test Root Certificate" AAEC1DA657F1B63F440BCB58DFE5E3E274B6162D2B2FA6CD
-reading parent cert from myTestRootCertificate_*.pem
+F:\repos\node\provisioning\tools>node create_test_cert.js verification --ca foo_cert.pem --key foo_key.pem --nonce AAEC1DA657F1B63F440BCB58DFE5E3E274B6162D2B2FA6CD
 creating certificate with common name=AAEC1DA657F1B63F440BCB58DFE5E3E274B6162D2B2FA6CD
 saving cert to verification_cert.pem.
 saving key to verification_key.pem.

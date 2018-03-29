@@ -8,6 +8,7 @@ var uuid = require('uuid');
 var assert = require('chai').assert;
 var sinon = require('sinon');
 
+var AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
 var Message = require('azure-iot-common').Message;
 var Amqp = require('../lib/amqp.js').Amqp;
 var AmqpTwinClient = require('../lib/amqp_twin_client.js').AmqpTwinClient;
@@ -21,11 +22,12 @@ describe('Amqp', function () {
   var receiver = null;
   var sender = null;
   var fakeBaseClient = null;
+  var disconnectHandler = null;
   var fakeTokenAuthenticationProvider = null;
   var fakeX509AuthenticationProvider = null;
 
   var testMessage = new Message();
-  testMessage._transportObj = {};
+  testMessage.transportObj = {};
   var testCallback = function () { };
   var configWithSSLOptions = { host: 'hub.host.name', deviceId: 'deviceId', x509: 'some SSL options' };
   var simpleSas = 'SharedAccessSignature sr=foo&sig=123&se=123';
@@ -58,7 +60,7 @@ describe('Amqp', function () {
       attachReceiverLink: sinon.stub().callsArgWith(2, null, receiver),
       detachSenderLink: sinon.stub().callsArg(1),
       detachReceiverLink: sinon.stub().callsArg(1),
-      setDisconnectHandler: sinon.stub(),
+      setDisconnectHandler: sinon.stub().callsFake(function (handler) { disconnectHandler = handler; }),
       send: sinon.stub().callsArgWith(3, null, new results.MessageEnqueued())
     };
 
@@ -617,6 +619,29 @@ describe('Amqp', function () {
 
         });
 
+        it('disconnects the Twin client', function (testCallback) {
+          sinon.spy(transport._twinClient, 'detach');
+          transport.connect(function () {
+            transport.disconnect(function () {
+              assert.isTrue(transport._twinClient.detach.calledOnce);
+              testCallback();
+            });
+          });
+        });
+
+        it('calls the disconnect callback with an error if the Twin client encounters an error while detaching', function (testCallback) {
+          var fakeError = new Error('fake');
+          sinon.stub(transport._twinClient, 'detach').callsFake(function(callback) { callback(fakeError); });
+          transport.connect(function () {
+            transport.disconnect(function (err) {
+              assert.isTrue(transport._twinClient.detach.calledOnce);
+              assert.instanceOf(err, Error);
+              assert.strictEqual(err.amqpError, fakeError);
+              testCallback();
+            });
+          });
+        });
+
         it('disconnects the AMQP transport', function (testCallback) {
           transport.connect(function () {
             transport.disconnect(function (err, result) {
@@ -807,6 +832,64 @@ describe('Amqp', function () {
         }, errors.InvalidOperationError);
       });
     });
+
+    describe('on(\'disconnect\')', function () {
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_080: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is disconnected, the call shall be ignored.]*/
+      it('ignores the event if already disconnected', function () {
+        transport.on('error', function () {
+          assert.fail();
+        });
+
+        disconnectHandler(new Error());
+      });
+
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_081: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connecting or authenticating, the connection shall be stopped and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error.]*/
+      it('emits a disconnect event if called while connecting', function (testCallback) {
+        var fakeError = new Error('disconnected');
+        fakeBaseClient.connect = sinon.stub();
+
+        transport.on('disconnect', function (err) {
+          assert.strictEqual(err.amqpError, fakeError);
+          assert(fakeBaseClient.connect.calledOnce);
+          assert(fakeBaseClient.disconnect.calledOnce);
+          testCallback();
+        });
+        transport.connect(function () {});
+
+        disconnectHandler(fakeError);
+      });
+
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_081: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connecting or authenticating, the connection shall be stopped and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error.]*/
+      it('emits an error event if called while authenticating', function (testCallback) {
+        var fakeError = new Error('disconnected');
+        fakeBaseClient.putToken = sinon.stub();
+
+        transport.on('disconnect', function (err) {
+          assert.strictEqual(err.amqpError, fakeError);
+          assert(fakeBaseClient.connect.calledOnce);
+          assert(fakeBaseClient.disconnect.calledOnce);
+          testCallback();
+        });
+        transport.connect(function () {});
+
+        disconnectHandler(fakeError);
+      });
+
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_082: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connected, the connection shall be disconnected and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error.]*/
+      it('emits an error event if called while connected and authenticated', function (testCallback) {
+        var fakeError = new Error('disconnected');
+        transport.on('disconnect', function (err) {
+          assert.strictEqual(err.amqpError, fakeError);
+          assert(fakeBaseClient.connect.calledOnce);
+          assert(fakeBaseClient.disconnect.calledOnce);
+          testCallback();
+        });
+
+        transport.connect(function () {});
+
+        disconnectHandler(fakeError);
+      });
+    });
   });
 
   describe('D2C', function () {
@@ -950,7 +1033,7 @@ describe('Amqp', function () {
           transport.on('message', function () {});
           transport.enableC2D(function () {
             transport.complete(testMessage, function () {
-              assert(receiver.complete.calledWith(testMessage));
+              assert(receiver.complete.calledWith(testMessage.transportObj));
               testCallback();
             });
           });
@@ -972,7 +1055,7 @@ describe('Amqp', function () {
           transport.on('message', function () {});
           transport.enableC2D(function () {
             transport.reject(testMessage, function () {
-              assert(receiver.reject.calledWith(testMessage));
+              assert(receiver.reject.calledWith(testMessage.transportObj));
               testCallback();
             });
           });
@@ -994,7 +1077,7 @@ describe('Amqp', function () {
           transport.on('message', function () {});
           transport.enableC2D(function () {
             transport.abandon(testMessage, function () {
-              assert(receiver.abandon.calledWith(testMessage));
+              assert(receiver.abandon.calledWith(testMessage.transportObj));
               testCallback();
             });
           });
@@ -1072,10 +1155,11 @@ describe('Amqp', function () {
       });
 
       it('forwards messages to the client once connected and authenticated', function (testCallback) {
-        var fakeMessage = new Message('fake');
+        var fakeMessage = new AmqpMessage();
 
         transport.on('message', function (msg) {
-          assert.strictEqual(msg, fakeMessage);
+          assert.instanceOf(msg, Message);
+          assert.strictEqual(msg.transportObj, fakeMessage);
           testCallback();
         });
 
@@ -1130,377 +1214,211 @@ describe('Amqp', function () {
   });
 
   describe('Twin', function () {
-    describe('#sendTwinRequest', function () {
-      it('connects the transport if necessary', function (testCallback) {
-        transport.sendTwinRequest('POST', '/properties/reported', { temp: 42 }, {}, function () {
+    function testStateMachine(methodName, methodUnderTest) {
+      describe('#' + methodName, function () {
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_059: [The `getTwin` method shall connect and authenticate the transport if it is disconnected.]*/
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_065: [The `updateTwinReportedProperties` method shall connect and authenticate the transport if it is disconnected.]*/
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_071: [The `enableTwinDesiredPropertiesUpdates` method shall connect and authenticate the transport if it is disconnected.]*/
+        it('connects the transport if necessary', function () {
+          methodUnderTest(function () {});
           assert(fakeBaseClient.connect.calledOnce);
           assert(fakeBaseClient.initializeCBS.calledOnce);
           assert(fakeBaseClient.putToken.calledOnce);
-          testCallback();
-        });
-      });
-
-      it('waits until connected and authenticated if called while connecting', function (testCallback) {
-        var connectCallback;
-        fakeBaseClient.connect = sinon.stub().callsFake(function (uri, options, callback) {
-          connectCallback = callback;
         });
 
-        transport.connect(function () {});
-        transport.sendTwinRequest('POST', '/properties/reported', { temp: 42 }, {}, function () {
+        it('waits until connected and authenticated if called while connecting', function () {
+          var connectCallback;
+          fakeBaseClient.connect = sinon.stub().callsFake(function (uri, options, callback) {
+            connectCallback = callback;
+          });
+
+          transport.connect(function () {});
+          methodUnderTest(function () {});
+          assert(fakeBaseClient.connect.calledOnce);
+          assert(fakeBaseClient.initializeCBS.notCalled);
+          assert(fakeBaseClient.putToken.notCalled);
+          assert(sender.send.notCalled);
+          connectCallback(null, new results.Connected());
+          assert(fakeBaseClient.initializeCBS.calledOnce);
+          assert(fakeBaseClient.putToken.calledOnce);
+          assert(sender.send.calledOnce);
+        });
+
+        it('waits until connected and authenticated if called while authenticating', function () {
+          var authCallback;
+          fakeBaseClient.putToken = sinon.stub().callsFake(function (uri, options, callback) {
+            authCallback = callback;
+          });
+
+          transport.connect(function () {});
+          methodUnderTest(function () {});
           assert(fakeBaseClient.connect.calledOnce);
           assert(fakeBaseClient.initializeCBS.calledOnce);
           assert(fakeBaseClient.putToken.calledOnce);
-          testCallback();
-        });
-        connectCallback(null, new results.Connected());
-      });
-
-      it('waits until connected and authenticated if called while authenticating', function (testCallback) {
-        var authCallback;
-        fakeBaseClient.putToken = sinon.stub().callsFake(function (uri, options, callback) {
-          authCallback = callback;
+          assert(sender.send.notCalled);
+          authCallback();
+          assert(sender.send.calledOnce);
         });
 
-        transport.connect(function () {});
-        transport.sendTwinRequest('POST', '/properties/reported', { temp: 42 }, {}, function () {
-          assert(fakeBaseClient.connect.calledOnce);
-          assert(fakeBaseClient.initializeCBS.calledOnce);
-          assert(fakeBaseClient.putToken.calledOnce);
-          testCallback();
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_060: [The `getTwin` method shall call its callback with an error if connecting fails.]*/
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_066: [The `updateTwinReportedProperties` method shall call its callback with an error if connecting fails.]*/
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_072: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with an error if connecting fails.]*/
+        it('calls its callback with an error if connecting the transport fails', function (testCallback) {
+          var testError = new Error('failed to connect');
+          fakeBaseClient.connect = sinon.stub().callsArgWith(2, testError);
+
+          methodUnderTest(function (err) {
+            assert(fakeBaseClient.connect.calledOnce);
+            assert.strictEqual(err.amqpError, testError);
+            testCallback();
+          });
         });
 
-        authCallback();
-      });
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_061: [The `getTwin` method shall call its callback with an error if authenticating fails.]*/
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_067: [The `updateTwinReportedProperties` method shall call its callback with an error if authenticating fails.]*/
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_073: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with an error if authenticating fails.]*/
+        it('calls its callback with an error if authentication fails to initialize CBS', function (testCallback) {
+          var testError = new Error('failed to authenticate');
+          fakeBaseClient.initializeCBS = sinon.stub().callsArgWith(0, testError);
 
-      it('calls its callback with an error if connecting the transport fails', function (testCallback) {
-        var testError = new Error('failed to connect');
-        fakeBaseClient.connect = sinon.stub().callsArgWith(2, testError);
-
-        transport.sendTwinRequest('POST', '/properties/reported', { temp: 42 }, {}, function (err) {
-          assert(fakeBaseClient.connect.calledOnce);
-          assert.strictEqual(err.amqpError, testError);
-          testCallback();
-        });
-      });
-
-      it('calls its callback with an error if authentication fails to initialize CBS', function (testCallback) {
-        var testError = new Error('failed to authenticate');
-        fakeBaseClient.initializeCBS = sinon.stub().callsArgWith(0, testError);
-
-        transport.sendTwinRequest('POST', '/properties/reported', { temp: 42 }, {}, function (err) {
-          assert(fakeBaseClient.connect.calledOnce);
-          assert(fakeBaseClient.initializeCBS.calledOnce);
-          assert.strictEqual(err.amqpError, testError);
-          testCallback();
-        });
-      });
-
-      it('calls its callback with an error if authentication fails to do a CBS putToken operation', function (testCallback) {
-        var testError = new Error('failed to authenticate');
-        fakeBaseClient.putToken = sinon.stub().callsArgWith(2, testError);
-
-        transport.sendTwinRequest('POST', '/properties/reported', { temp: 42 }, {}, function (err) {
-          assert(fakeBaseClient.connect.calledOnce);
-          assert(fakeBaseClient.initializeCBS.calledOnce);
-          assert(fakeBaseClient.putToken.calledOnce);
-          assert.strictEqual(err.amqpError, testError);
-          testCallback();
-        });
-      });
-
-      it('calls its callback with an error if the twin client fails to send the request', function (testCallback) {
-        var testError = new Error('failed to send');
-        sender.send = sinon.stub().callsArgWith(1, testError);
-
-        transport.sendTwinRequest('POST', '/properties/reported', { temp: 42 }, {}, function (err) {
-          assert(fakeBaseClient.connect.calledOnce);
-          assert(fakeBaseClient.initializeCBS.calledOnce);
-          assert(fakeBaseClient.putToken.calledOnce);
-          assert(fakeBaseClient.attachReceiverLink.calledOnce);
-          assert(fakeBaseClient.attachSenderLink.calledOnce);
-          assert.strictEqual(err.amqpError, testError);
-          testCallback();
-        });
-      });
-
-      it('tries to reconnect to send the message if the transport is disconnecting', function (testCallback) {
-        var disconnectCallback;
-
-        fakeBaseClient.disconnect = sinon.stub().callsFake(function (done) {
-          disconnectCallback = done;
+          methodUnderTest(function (err) {
+            assert(fakeBaseClient.connect.calledOnce);
+            assert(fakeBaseClient.initializeCBS.calledOnce);
+            assert.strictEqual(err.amqpError, testError);
+            testCallback();
+          });
         });
 
-        transport.connect(function () {
-          assert(fakeBaseClient.connect.calledOnce);
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_061: [The `getTwin` method shall call its callback with an error if authenticating fails.]*/
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_067: [The `updateTwinReportedProperties` method shall call its callback with an error if authenticating fails.]*/
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_073: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with an error if authenticating fails.]*/
+        it('calls its callback with an error if authentication fails to do a CBS putToken operation', function (testCallback) {
+          var testError = new Error('failed to authenticate');
+          fakeBaseClient.putToken = sinon.stub().callsArgWith(2, testError);
+
+          methodUnderTest(function (err) {
+            assert(fakeBaseClient.connect.calledOnce);
             assert(fakeBaseClient.initializeCBS.calledOnce);
             assert(fakeBaseClient.putToken.calledOnce);
-          transport.disconnect(function () {});
-          transport.sendTwinRequest('POST', '/properties/reported', { temp: 42 }, {}, function () {
-            assert(fakeBaseClient.connect.calledTwice);
-            assert(fakeBaseClient.initializeCBS.calledTwice);
-            assert(fakeBaseClient.putToken.calledTwice);
+            assert.strictEqual(err.amqpError, testError);
+            testCallback();
+          });
+        });
+
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_062: [The `getTwin` method shall call the `getTwin` method on the `AmqpTwinClient` instance created by the constructor.]*/
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_064: [The `getTwin` method shall call its callback with a `null` error parameter and the result of the `AmqpTwinClient.getTwin` method if it succeeds.]*/
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_063: [The `getTwin` method shall call its callback with and error if the call to `AmqpTwinClient.getTwin` fails.]*/
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_068: [The `updateTwinReportedProperties` method shall call the `updateTwinReportedProperties` method on the `AmqpTwinClient` instance created by the constructor.]*/
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_069: [The `updateTwinReportedProperties` method shall call its callback with and error if the call to `AmqpTwinClient.updateTwinReportedProperties` fails.]*/
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_070: [The `updateTwinReportedProperties` method shall call its callback with a `null` error parameter and the result of the `AmqpTwinClient.updateTwinReportedProperties` method if it succeeds.]*/
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_074: [The `enableTwinDesiredPropertiesUpdates` method shall call the `enableTwinDesiredPropertiesUpdates` method on the `AmqpTwinClient` instance created by the constructor.]*/
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_075: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with and error if the call to `AmqpTwinClient.enableTwinDesiredPropertiesUpdates` fails.]*/
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_076: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with no arguments if the call to `AmqpTwinClient.enableTwinDesiredPropertiesUpdates` succeeds.]*/
+        it('calls its callback with an error if the twin client fails to send the request', function (testCallback) {
+          var testError = new Error('failed to send');
+          sender.send = sinon.stub().callsArgWith(1, testError);
+
+          methodUnderTest(function (err) {
+            assert(fakeBaseClient.connect.calledOnce);
+            assert(fakeBaseClient.initializeCBS.calledOnce);
+            assert(fakeBaseClient.putToken.calledOnce);
             assert(fakeBaseClient.attachReceiverLink.calledOnce);
             assert(fakeBaseClient.attachSenderLink.calledOnce);
+            assert.strictEqual(err.amqpError, testError);
             testCallback();
           });
-
-          disconnectCallback(null, new results.Connected());
         });
-      });
-    });
 
-    describe('#getTwinReceiver', function () {
-      /*Tests_SRS_NODE_DEVICE_AMQP_06_033: [ The `getTwinReceiver` method shall throw an `ReferenceError` if done is falsy.]*/
-      it('throws if done is falsy', function() {
-        assert.throws(function() {
-          transport.getTwinReceiver();
-        }, ReferenceError);
-      });
+        it('tries to reconnect to send the message if the transport is disconnecting', function () {
+          var disconnectCallback;
 
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_026: [The `getTwinReceiver` method shall call the `done` callback with a `null` error argument and the `AmqpTwinClient` instance currently in use.]*/
-      it('calls done when complete', function(done) {
-        transport.getTwinReceiver(done);
-      });
-
-      it('only creates one twin receiver object', function(done) {
-        transport.getTwinReceiver(function(err, receiver1) {
-          assert.isNull(err);
-          assert.instanceOf(receiver1, AmqpTwinClient);
-          transport.getTwinReceiver(function(err, receiver2) {
-            assert.isNull(err);
-            assert.strictEqual(receiver1, receiver2);
-            done();
+          fakeBaseClient.disconnect = sinon.stub().callsFake(function (done) {
+            disconnectCallback = done;
           });
-        });
-      });
 
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_027: [The `getTwinReceiver` method shall connect and authenticate the AMQP connection if necessary.]*/
-      it('connects and authenticates the transport if disconnected', function (testCallback) {
-        transport.getTwinReceiver(function () {
+          methodUnderTest(function () {});
           assert(fakeBaseClient.connect.calledOnce);
           assert(fakeBaseClient.initializeCBS.calledOnce);
           assert(fakeBaseClient.putToken.calledOnce);
-          testCallback();
-        });
-      });
-
-      it('defers until connected and authenticated if called while connecting', function (testCallback) {
-        var connectCallback;
-        fakeBaseClient.connect = sinon.stub().callsFake(function (uri, sslOptions, callback) {
-          connectCallback = callback;
-        });
-
-        transport.connect(function () {});
-        // blocked in the 'connecting' state
-        transport.getTwinReceiver(function () {
-          assert(fakeBaseClient.connect.calledOnce);
-          assert(fakeBaseClient.initializeCBS.calledOnce);
-          assert(fakeBaseClient.putToken.calledOnce);
-          testCallback();
-        });
-
-        assert(fakeBaseClient.connect.calledOnce);
-        assert(fakeBaseClient.initializeCBS.notCalled);
-        assert(fakeBaseClient.putToken.notCalled);
-        connectCallback();
-      });
-
-      it('defers until authenticated if called while authenticating', function (testCallback) {
-        var authCallback;
-        fakeBaseClient.initializeCBS = sinon.stub().callsFake(function (callback) {
-          authCallback = callback;
-        });
-
-        transport.connect(function () {});
-        // blocked in the 'authenticating' state
-        transport.getTwinReceiver(function () {
-          assert(fakeBaseClient.connect.calledOnce);
-          assert(fakeBaseClient.initializeCBS.calledOnce);
-          assert(fakeBaseClient.putToken.calledOnce);
-          testCallback();
-        });
-
-        assert(fakeBaseClient.connect.calledOnce);
-        assert(fakeBaseClient.initializeCBS.calledOnce);
-        assert(fakeBaseClient.putToken.notCalled);
-        authCallback();
-      });
-
-      it('tries to reconnect if called while disconnecting', function (testCallback) {
-        var disconnectCallback;
-        fakeBaseClient.disconnect = sinon.stub().callsFake(function (callback) {
-          disconnectCallback = callback;
-        });
-
-        transport.connect(function () {
-          assert(fakeBaseClient.connect.calledOnce);
-          assert(fakeBaseClient.initializeCBS.calledOnce);
-          assert(fakeBaseClient.putToken.calledOnce);
+          assert(sender.send.calledOnce);
 
           transport.disconnect(function () {});
-          assert(fakeBaseClient.disconnect.calledOnce);
 
-          transport.getTwinReceiver(function () {
-            assert(fakeBaseClient.connect.calledTwice);
-            assert(fakeBaseClient.initializeCBS.calledTwice);
-            assert(fakeBaseClient.putToken.calledTwice);
-            testCallback();
-          });
+          methodUnderTest(function () {});
+          assert(fakeBaseClient.connect.calledOnce);
+          assert(fakeBaseClient.initializeCBS.calledOnce);
+          assert(fakeBaseClient.putToken.calledOnce);
 
-          disconnectCallback();
+          disconnectCallback(null, new results.Disconnected());
+
+          assert(fakeBaseClient.connect.calledTwice);
+          assert(fakeBaseClient.initializeCBS.calledTwice);
+          assert(fakeBaseClient.putToken.calledTwice);
+          assert(fakeBaseClient.attachReceiverLink.calledTwice);
+          assert(fakeBaseClient.attachSenderLink.calledTwice);
         });
       });
+    }
 
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_028: [The `getTwinReceiver` method shall call the `done` callback with the corresponding error if the transport fails connect or authenticate the AMQP connection.]*/
-      it('calls the callback with an error if the transport fails to connect', function (testCallback) {
-        var fakeError = new Error('test');
-        fakeBaseClient.connect = sinon.stub().callsArgWith(2, fakeError);
-        transport.getTwinReceiver(function (err, recv) {
-          assert.strictEqual(err.amqpError, fakeError);
-          assert.isUndefined(recv);
+    testStateMachine('getTwin', function (callback) {
+      transport.getTwin(callback);
+    });
+
+    testStateMachine('updateTwinReportedProperties', function (callback) {
+      transport.updateTwinReportedProperties({ fake: 'patch' }, callback);
+    });
+
+    testStateMachine('enableTwinDesiredPropertiesUpdates', function (callback) {
+      transport.enableTwinDesiredPropertiesUpdates(callback);
+    });
+
+    describe('#disableTwinDesiredPropertiesUpdates', function () {
+      it('calls its callback immediately if the amqp client is disconnected', function (testCallback) {
+        transport.disableTwinDesiredPropertiesUpdates(function () {
+          assert.isTrue(fakeBaseClient.connect.notCalled);
+          assert.isTrue(fakeBaseClient.initializeCBS.notCalled);
+          assert.isTrue(fakeBaseClient.putToken.notCalled);
+          assert.isTrue(fakeBaseClient.attachReceiverLink.notCalled);
+          assert.isTrue(fakeBaseClient.attachSenderLink.notCalled);
           testCallback();
         });
       });
 
-      it('calls the callback with an error if the transport fails to authenticate', function (testCallback) {
-        var fakeError = new Error('test');
-        fakeBaseClient.putToken = sinon.stub().callsArgWith(2, fakeError);
-        transport.getTwinReceiver(function (err, recv) {
-          assert.strictEqual(err.amqpError, fakeError);
-          assert.isUndefined(recv);
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_077: [The `disableTwinDesiredPropertiesUpdates` method shall call the `disableTwinDesiredPropertiesUpdates` method on the `AmqpTwinClient` instance created by the constructor.]*/
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_078: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback with and error if the call to `AmqpTwinClient.disableTwinDesiredPropertiesUpdates` fails.]*/
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_079: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback no arguments if the call to `AmqpTwinClient.disableTwinDesiredPropertiesUpdates` succeeds.]*/
+      it('calls disableTwinDesiredPropertiesUpdates on the twin client', function (testCallback) {
+        transport._twinClient.disableTwinDesiredPropertiesUpdates = sinon.stub().callsArg(0);
+        transport.enableTwinDesiredPropertiesUpdates(function () {});
+        transport.disableTwinDesiredPropertiesUpdates(function () {
+          assert.isTrue(transport._twinClient.disableTwinDesiredPropertiesUpdates.calledOnce);
           testCallback();
         });
       });
     });
 
-    describe('enableTwin', function () {
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_045: [The `enableTwin` method shall connect and authenticate the transport if it is disconnected.]*/
-      it('connects the transport if it is disconnected', function (testCallback) {
-        transport.enableTwin(function () {
-          assert(fakeBaseClient.connect.calledOnce);
-          assert(fakeBaseClient.initializeCBS.calledOnce);
-          assert(fakeBaseClient.putToken.calledOnce);
-          assert(fakeBaseClient.attachSenderLink.calledWith(transport._twinClient._endpoint));
-          assert(fakeBaseClient.attachReceiverLink.calledWith(transport._twinClient._endpoint));
+    describe('on(\'twinDesiredPropertiesUpdate\')', function () {
+      it('emits a twinDesiredPropertiesUpdate if it receives a twinDesiredPropertiesUpdate from the twin client', function (testCallback) {
+        var fakePatch = { fake : 'patch' };
+        transport.on('twinDesiredPropertiesUpdate', function (patch) {
+          assert.strictEqual(patch, fakePatch);
           testCallback();
         });
-      });
 
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_047: [The `enableTwin` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach twin links.]*/
-      it('calls the callback with an error if the transport fails to connect', function (testCallback) {
-        fakeBaseClient.connect = sinon.stub().callsArgWith(2, new Error('fake error'));
-        transport.enableTwin(function (err) {
-          assert(fakeBaseClient.connect.calledOnce);
-          assert.instanceOf(err, Error);
-          testCallback();
-        });
+        transport._twinClient.emit('twinDesiredPropertiesUpdate', fakePatch);
       });
+    });
 
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_047: [The `enableTwin` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach twin links.]*/
-      it('calls the callback with an error if the transport fails to initialize the CBS links', function (testCallback) {
-        fakeBaseClient.initializeCBS = sinon.stub().callsArgWith(0, new Error('fake error'));
-        transport.enableTwin(function (err) {
-          assert(fakeBaseClient.connect.calledOnce);
-          assert(fakeBaseClient.initializeCBS.calledOnce);
-          assert.instanceOf(err, Error);
-          testCallback();
-        });
-      });
-
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_047: [The `enableTwin` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach twin links.]*/
-      it('calls the callback with an error if the transport fails to make a new putToken request on the CBS links', function (testCallback) {
-        fakeBaseClient.putToken = sinon.stub().callsArgWith(2, new Error('fake error'));
-        transport.enableTwin(function (err) {
-          assert(fakeBaseClient.connect.calledOnce);
-          assert(fakeBaseClient.initializeCBS.calledOnce);
-          assert(fakeBaseClient.putToken.calledOnce);
-          assert.instanceOf(err, Error);
-          testCallback();
-        });
-      });
-
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_046: [The `enableTwin` method shall attach the twin links and call its `callback` once these are successfully attached.]*/
-      it('attaches the twin links', function (testCallback) {
-        transport.connect(function () {
-          assert(fakeBaseClient.attachReceiverLink.notCalled);
-          transport.enableTwin(function () {
-            assert(fakeBaseClient.attachSenderLink.calledWith(transport._twinClient._endpoint));
-            assert(fakeBaseClient.attachReceiverLink.calledWith(transport._twinClient._endpoint));
-            testCallback();
-          });
-        });
-      });
-
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_048: [Any `error` event received on any of the links used for twin shall trigger the emission of an `error` event by the transport, with an argument that is a `TwinDetachedError` object with the `innerError` property set to that error.]*/
-      it('calls its callback with an Error if attaching the twin receiver link fails', function (testCallback) {
-        transport._twinClient.attach = sinon.stub().callsArgWith(0, new Error('fake failed to attach'));
-        transport.connect(function () {
-          transport.enableTwin(function (err) {
-            assert(transport._twinClient.attach.calledOnce);
-            assert.instanceOf(err, Error);
-            testCallback();
-          });
-        });
-      });
-
-      it('emits a TwinDetachedError with an innerError property if the link fails after being established correctly', function (testCallback) {
-        var fakeError = new Error('fake twin receiver link error');
+    describe('on(\'error\')', function () {
+      it('emits a TwinDetachedError if it receives an error from the twin client', function (testCallback) {
+        var fakeError = new Error('fake');
         transport.on('error', function (err) {
           assert.instanceOf(err, errors.TwinDetachedError);
           assert.strictEqual(err.innerError, fakeError);
           testCallback();
         });
 
-        transport.connect(function () {
-          transport.enableTwin(function () {
-            transport._twinClient.emit('error', fakeError);
-          });
-        });
-      });
-    });
-
-    describe('disableTwin', function (testCallback) {
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_051: [The `disableTwin` method shall call its `callback` immediately if the transport is already disconnected.]*/
-      it('calls the callback immediately if the transport is disconnected', function (testCallback) {
-        transport.disableTwin(function (err) {
-          assert.isNotOk(err);
-          assert(receiver.detach.notCalled);
-          testCallback();
-        });
-      });
-
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_049: [The `disableTwin` method shall call `detach` on the twin links and call its callback when these are successfully detached.]*/
-      it('detaches the twin links', function (testCallback) {
-        transport._twinClient.detach = sinon.stub().callsArg(0);
-        transport.connect(function () {
-          assert(fakeBaseClient.attachReceiverLink.notCalled);
-          transport.enableTwin(function () {
-            assert(fakeBaseClient.attachSenderLink.calledWith(transport._twinClient._endpoint));
-            assert(fakeBaseClient.attachReceiverLink.calledWith(transport._twinClient._endpoint));
-            transport.disableTwin(function () {
-              assert(transport._twinClient.detach.calledOnce);
-              testCallback();
-            });
-          });
-        });
-      });
-
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_050: [The `disableTwin` method shall call its `callback` with an `Error` if it fails to detach the twin links.]*/
-      it('calls its callback with an Error if an error happens while detaching the twin links', function (testCallback) {
-        transport._twinClient.detach = sinon.stub().callsArgWith(0, new Error('fake detach error'));
-        transport.connect(function () {
-          assert(fakeBaseClient.attachReceiverLink.notCalled);
-          transport.enableTwin(function () {
-            assert(fakeBaseClient.attachSenderLink.calledWith(transport._twinClient._endpoint));
-            assert(fakeBaseClient.attachReceiverLink.calledWith(transport._twinClient._endpoint));
-            transport.disableTwin(function (err) {
-              assert(transport._twinClient.detach.calledOnce);
-              assert.instanceOf(err, Error);
-              testCallback();
-            });
-          });
-        });
+        transport._twinClient.emit('error', fakeError);
       });
     });
   });
