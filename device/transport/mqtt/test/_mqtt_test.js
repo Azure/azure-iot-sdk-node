@@ -859,7 +859,7 @@ describe('Mqtt', function () {
   [
     { enableFeatureMethod: 'enableC2D', disableFeatureMethod: 'disableC2D' },
     { enableFeatureMethod: 'enableMethods', disableFeatureMethod: 'disableMethods' },
-    { enableFeatureMethod: 'enableTwin', disableFeatureMethod: 'disableTwin' },
+    { enableFeatureMethod: 'enableTwinDesiredPropertiesUpdates', disableFeatureMethod: 'disableTwinDesiredPropertiesUpdates' },
     { enableFeatureMethod: 'enableInputMessages', disableFeatureMethod: 'disableInputMessages', moduleId: 'moduleId' }
   ].forEach(function (testConfig) {
     describe('#' + testConfig.disableFeatureMethod, function () {
