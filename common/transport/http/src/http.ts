@@ -4,11 +4,10 @@
 'use strict';
 
 import { ClientRequest, IncomingMessage } from 'http';
-import { request, RequestOptions, Agent } from 'https';
+import { request, RequestOptions } from 'https';
 import { Message, X509 } from 'azure-iot-common';
 import dbg = require('debug');
 const debug = dbg('azure-iot-common.Http');
-const keepAliveAgent = new Agent({ keepAlive: true });
 
 /**
  * @private
@@ -27,6 +26,8 @@ export type HttpCallback = (err: Error, body?: string, response?: IncomingMessag
  *                  You generally want to use these higher-level objects (such as [azure-iot-device-http.Http]{@link module:azure-iot-device-http.Http}) rather than this one.
  */
 export class Http {
+  private _options: any;
+
   /**
    * @method              module:azure-iot-http-base.Http.buildRequest
    * @description         Builds an HTTP request object using the parameters supplied by the caller.
@@ -60,12 +61,16 @@ export class Http {
     }
 
     let httpOptions: RequestOptions = {
-      agent: keepAliveAgent,
       host: host,
       path: path,
       method: method,
       headers: httpHeaders
     };
+
+    /*Codes_SRS_NODE_HTTP_18_001: [ If the `options` object passed into `setOptions` has a value in `http.agent`, that value shall be passed into the `request` function as `httpOptions.agent` ]*/
+    if (this._options && this._options.http && this._options.http.agent) {
+      httpOptions.agent = this._options.http.agent;
+    }
 
     /*Codes_SRS_NODE_HTTP_16_001: [If `x509Options` is specified, the certificate, key and passphrase in the structure shall be used to authenticate the connection.]*/
     if (x509Options) {
@@ -142,6 +147,14 @@ export class Http {
     }
 
     return msg;
+  }
+
+  /**
+   * @private
+   */
+  setOptions(options: any, callback: (err?: Error) => void): void {
+    this._options = options;
+    if (callback) callback();
   }
 
   /**

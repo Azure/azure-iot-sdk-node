@@ -12,7 +12,9 @@ import { Http as Base } from 'azure-iot-http-base';
 import { endpoint, errors, results, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
 import { translateError } from './http_errors.js';
 import { IncomingMessage } from 'http';
-import { DeviceMethodResponse, Client, X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
+import { Agent } from 'https';
+import { DeviceMethodResponse, Client, DeviceTransportOptions } from 'azure-iot-device';
+import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -296,7 +298,7 @@ export class Http extends EventEmitter implements Client.Transport {
    *
    * @param {Function}      done      The callback to be invoked when `setOptions` completes.
    */
-  setOptions(options: any, done: (err?: Error, result?: any) => void): void {
+  setOptions(options: DeviceTransportOptions, done: (err?: Error, result?: any) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_011: [The HTTP transport should use the x509 settings passed in the `options` object to connect to the service if present.]*/
     if (options.hasOwnProperty('cert')) {
       (this._authenticationProvider as X509AuthenticationProvider).setX509Options({
@@ -306,28 +308,29 @@ export class Http extends EventEmitter implements Client.Transport {
       });
     }
 
-    const calldoneifspecified = function(err?: Error): void {
-      /*Codes_SRS_NODE_DEVICE_HTTP_16_010: [`setOptions` should not throw if `done` has not been specified.]*/
-      if (done) {
-        /*Codes_SRS_NODE_DEVICE_HTTP_16_005: [If `done` has been specified the `setOptions` method shall call the `done` callback with no arguments when successful.]*/
-        /*Codes_SRS_NODE_DEVICE_HTTP_16_009: [If `done` has been specified the `setOptions` method shall call the `done` callback with a standard javascript `Error` object when unsuccessful.]*/
-        done(err);
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_010: [`setOptions` should not throw if `done` has not been specified.]*/
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_005: [If `done` has been specified the `setOptions` method shall call the `done` callback with no arguments when successful.]*/
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_009: [If `done` has been specified the `setOptions` method shall call the `done` callback with a standard javascript `Error` object when unsuccessful.]*/
+    this._http.setOptions(options, (err) => {
+      if (err) {
+        if (done) done(err);
+      } else {
+        // setOptions used to exist both on Http and HttpReceiver with different options class. In order not to break backward compatibility we have
+        // to check what properties this options object has to figure out what to do with it.
+        if (options.hasOwnProperty('http') && options.http.hasOwnProperty('receivePolicy')) {
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_004: [The `setOptions` method shall call the `setOptions` method of the HTTP Receiver with the content of the `http.receivePolicy` property of the `options` parameter.]*/
+          this._setReceiverOptions(options.http.receivePolicy);
+          if (done) done(err);
+        } else if (options.hasOwnProperty('interval')
+                  || options.hasOwnProperty('at')
+                  || options.hasOwnProperty('cron')
+                  || options.hasOwnProperty('manualPolling')
+                  || options.hasOwnProperty('drain')) {
+          this._setReceiverOptions(options as any);
+          if (done) done(err);
+        }
       }
-    };
-
-    // setOptions used to exist both on Http and HttpReceiver with different options class. In order not to break backward compatibility we have
-    // to check what properties this options object has to figure out what to do with it.
-    if (options.hasOwnProperty('http') && options.http.hasOwnProperty('receivePolicy')) {
-      /*Codes_SRS_NODE_DEVICE_HTTP_16_004: [The `setOptions` method shall call the `setOptions` method of the HTTP Receiver with the content of the `http.receivePolicy` property of the `options` parameter.]*/
-      this._setReceiverOptions(options.http.receivePolicy);
-      calldoneifspecified();
-    } else if (options.hasOwnProperty('interval')
-              || options.hasOwnProperty('at')
-              || options.hasOwnProperty('cron')
-              || options.hasOwnProperty('manualPolling')
-              || options.hasOwnProperty('drain')) {
-      this._setReceiverOptions(options);
-    }
+    });
   }
 
   /**
@@ -763,16 +766,7 @@ export class Http extends EventEmitter implements Client.Transport {
  * Options structure used to configure how often the HTTP receiver polls for messages.
  * Each of these options is mutually exclusive, except for the `drain` boolean. Only one `interval`, `at`, `cron` or `manualPolling` shall be present in the options structure.
  *
- * This is configured by calling {@link azure-iot-device.Client.setOptions} with an options structure following this format:
- * ```js
- * {
- *   http: {
- *     receivePolicy: {
- *       ...
- *     }
- *   }
- * }
- * ```
+ * This is configured by calling {@link azure-iot-device.Client.setOptions} with this as a property named `receivePolicy` inside of an {@link HttpTransportOptions} object.
  */
 export interface HttpReceiverOptions {
   /**
@@ -795,4 +789,23 @@ export interface HttpReceiverOptions {
    * Boolean indicating whether only one message should be received all messages should be drained.
    */
   drain?: boolean;
+}
+
+/**
+ * Options structure for passing optional configuration parameters into the Http Transport.
+ *
+ * This is passed into {@link azure-iot-device.Client.setOptions} as a property named `http` inside of an {@link azure-iot-device.DeviceTransportOptions} as follows:
+ * ``` js
+ *  var httpTransportOptions = {
+ *    receivePolicy: { ...}
+ *  };
+ *  var options = {
+ *    http: httpTransportOptions
+ *  }
+ *  client.setOptions(options, callback);
+ * ```
+ */
+export interface HttpTransportOptions {
+  agent?: Agent;
+  receivePolicy?: HttpReceiverOptions;
 }

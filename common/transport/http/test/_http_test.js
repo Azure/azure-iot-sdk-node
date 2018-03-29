@@ -1,7 +1,10 @@
 'use strict';
 
 var Http = require('../lib/http.js').Http;
+var https = require('https');
 var assert = require('chai').assert;
+var sinon = require('sinon');
+var EventEmitter = require('events');
 
 describe('Http', function() {
   describe('#parseErrorBody', function(){
@@ -26,6 +29,34 @@ describe('Http', function() {
         assert.isNull(result);
       });
     });
+  });
+
+
+  describe('#buildRequest', function() {
+    var fakeOptions = {
+      http: {
+        agent: '__FAKE_AGENT__'
+      }
+    };
+    var fakePath = '__FAKE_PATH__';
+    var fakeHeaders = { 'fake' : true };
+    var fakeHost = '__FAKE_HOST__';
+    it ('uses the right agent value', function(callback) {
+      after(function() {
+        https.request.restore();
+      });
+      sinon.stub(https,'request').returns(new EventEmitter());
+      var http = new Http();
+      http.setOptions(fakeOptions, function(err) {
+        assert(!err);
+        http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, function() {});
+        assert(https.request.called);
+        var httpOptions = https.request.firstCall.args[0];
+        assert.strictEqual(httpOptions.agent, fakeOptions.http.agent);
+        callback();
+      });
+    });
+
   });
 
   describe('#toMessage', function() {

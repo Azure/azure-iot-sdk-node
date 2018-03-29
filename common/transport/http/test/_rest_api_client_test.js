@@ -4,9 +4,9 @@
 'use strict';
 
 var assert = require('chai').assert;
+var sinon = require('sinon');
 var errors = require('azure-iot-common').errors;
 var HttpBase = require('../lib/http.js').Http;
-var PackageJson = require('../package.json');
 var RestApiClient = require('../lib/rest_api_client.js').RestApiClient;
 
 var fakeConfig = { host: 'host', sharedAccessSignature: 'sas' };
@@ -31,7 +31,7 @@ describe('RestApiClient', function() {
         }, ReferenceError);
       });
     });
- 
+
     /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` property.]*/
     ['host'].forEach(function(badPropName) {
       [undefined, null, ''].forEach(function(badPropValue) {
@@ -118,7 +118,7 @@ describe('RestApiClient', function() {
       var myFakeConfig = JSON.parse(JSON.stringify(fakeConfig));
       myFakeConfig.x509 = { 'fake' : 'yes' };
       var fakeHttpHelper = {
-          buildRequest: function(method, path, headers, host, x509, requestCallback) {
+          buildRequest: function(method, path, headers, host, x509) {
           assert.strictEqual(myFakeConfig.x509, x509);
           testCallback();
         }
@@ -505,5 +505,20 @@ describe('RestApiClient', function() {
         assert.equal(err.response, fakeReponse);
       });
     });
+  });
+
+  describe('#setOptions', function() {
+    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_18_003: [ `setOptions` shall call `this._http.setOptions` passing the same parameters ]*/
+    it ('passes the options down', function(callback) {
+      var fakeHttpRequestBuilder = { setOptions: sinon.stub().callsArg(1) };
+      var fakeOptions = '__FAKE_OPTIONS__';
+      var client = new RestApiClient({host: 'host', sharedAccessSignature: 'sas'}, fakeAgent, fakeHttpRequestBuilder);
+      client.setOptions(fakeOptions, function(err) {
+        assert(!err);
+        assert(fakeHttpRequestBuilder.setOptions.calledWith(fakeOptions));
+        callback();
+      });
+    });
+
   });
 });

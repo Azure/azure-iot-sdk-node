@@ -171,6 +171,14 @@ export class RestApiClient {
   }
 
   /**
+   * @private
+   */
+  setOptions(options: any, callback?: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_18_003: [ `setOptions` shall call `this._http.setOptions` passing the same parameters ]*/
+    this._http.setOptions(options, callback);
+  }
+
+  /**
    * @method             module:azure-iothub.RestApiClient.translateError
    * @description        Translates an HTTP error into a transport-agnostic error.
    *
