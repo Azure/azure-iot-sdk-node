@@ -4,6 +4,7 @@
 'use strict';
 
 import { errors, endpoint, SharedAccessSignature } from 'azure-iot-common';
+import { Agent } from 'https';
 import { RestApiClient } from 'azure-iot-http-base';
 import * as ConnectionString from './connection_string';
 import { Twin } from './twin';
@@ -53,6 +54,9 @@ export class Registry {
     /*SRS_NODE_IOTHUB_REGISTRY_16_025: [The `Registry` constructor shall use `azure-iothub.RestApiClient` if no `restApiClient` argument is provided.]*/
     // This httpRequestBuilder parameter is used only for unit-testing purposes and should not be used in other situations.
     this._restApiClient = restApiClient || new RestApiClient(config, packageJson.name + '/' + packageJson.version);
+    if (this._restApiClient.setOptions) {
+      this._restApiClient.setOptions({http: { agent: new Agent({ keepAlive: true }) } });
+    }
   }
 
   /**

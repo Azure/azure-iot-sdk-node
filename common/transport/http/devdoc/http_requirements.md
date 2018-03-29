@@ -45,6 +45,8 @@ The buildRequest method receives all the information necessary to make an HTTP r
 
 **SRS_NODE_HTTP_16_001: [** If `x509Options` is specified, the certificate, key and passphrase in the structure shall be used to authenticate the connection. **]**
 
+**SRS_NODE_HTTP_18_001: [** If the `options` object passed into `setOptions` has a value in `http.agent`, that value shall be passed into the `request` function as `httpOptions.agent` **]**
+
 ### toMessage(response, body)
 The `toMessage` function converts an HTTP response to an IoT Hub Message.
 

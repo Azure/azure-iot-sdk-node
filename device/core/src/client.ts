@@ -376,7 +376,7 @@ export class Client extends EventEmitter {
    *
    * @throws {ReferenceError}     If the options structure is falsy
    */
-  setOptions(options: any, done?: (err?: Error, result?: results.TransportConfigured) => void): void {
+  setOptions(options: DeviceTransportOptions, done?: (err?: Error, result?: results.TransportConfigured) => void): void {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
     if (!options) throw new ReferenceError('options cannot be falsy.');
 
@@ -876,5 +876,25 @@ export namespace Client {
   }
 
   export type TransportCtor = new(config: Config) => Transport;
+
 }
+
+export interface DeviceTransportOptions extends X509 {
+  /**
+   * Public certificate in PEM form for certificate authority being used by the Hub service.  This is the CA that the hub is using
+   * to secure TLS connections and the client validates the connection using this public cert in order to validate the identity of
+   * the hub.  If you are connecting to an Azure IoT Hub inside of an Azure data center, you do not need to set this.  If you are
+   * connecting to some other hub (e.g. an Edge Hub), then you may need to set this to the server cert that the hub uses for TLS.
+   */
+  ca?: string;
+
+  /**
+   * Other options, possibly including transport-specific options, the key name is the name of the transport [http, amqp, mqtt, etc]
+   * and the value is the transport-specific options object.
+   */
+  [key: string]: any;
+
+}
+
+
 

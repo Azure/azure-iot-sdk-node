@@ -33,12 +33,14 @@ FakeHttp.prototype.setMessageCount = function (messageCount) {
   this.messageCount = messageCount;
 };
 
+FakeHttp.prototype.setOptions = function(options, callback) {
+  if (callback) callback();
+};
+
 describe('Http', function () {
   var fakeAuthenticationProvider = null;
   var transport = null;
   var receiver = null;
-  var testMessage = new Message();
-  var testCallback = function () { };
 
   beforeEach(function () {
     fakeAuthenticationProvider = {
@@ -571,9 +573,12 @@ describe('HttpReceiver', function () {
         buildRequest: function (method, path, httpHeaders, host, sslOptions, done) {
           return {
             end: function () {
-              done(fakeError, { fake: 'response' }, 'fakeResponseBody')
+              done(fakeError, { fake: 'response' }, 'fakeResponseBody');
             }.bind(this)
           };
+        },
+        setOptions: function(options, done) {
+          if (done) done();
         }
       };
       var http = new Http(fakeAuthenticationProvider, fakeHttp);
@@ -675,7 +680,7 @@ describe('HttpReceiver', function () {
         assert.isTrue(http.disableC2D.calledOnce);
         assert.isTrue(http.enableC2D.calledOnce);
         testCallback();
-      })
+      });
     });
   });
 
@@ -815,7 +820,7 @@ describe('HttpReceiver', function () {
         assert.throws(function () {
           http[methodName]();
         }, NotImplementedError);
-      })
+      });
     });
   });
 });

@@ -8,9 +8,9 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-amqp:Amqp');
 import { EventEmitter } from 'events';
 
-import { DeviceMethodResponse, Client, TwinProperties } from 'azure-iot-device';
+import { DeviceMethodResponse, Client, TwinProperties, DeviceTransportOptions } from 'azure-iot-device';
 import { Amqp as BaseAmqpClient, translateError, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
-import { endpoint, SharedAccessSignature, errors, results, Message, X509, AuthenticationProvider, AuthenticationType } from 'azure-iot-common';
+import { endpoint, SharedAccessSignature, errors, results, Message, AuthenticationProvider, AuthenticationType } from 'azure-iot-common';
 import { AmqpDeviceMethodClient } from './amqp_device_method_client';
 import { AmqpTwinClient } from './amqp_twin_client';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
@@ -632,19 +632,22 @@ export class Amqp extends EventEmitter implements Client.Transport {
    * @param {object}        options   Options to set.  Currently for amqp these are the x509 cert, key, and optional passphrase properties. (All strings)
    * @param {Function}      done      The callback to be invoked when `setOptions` completes.
    */
-  setOptions(options: X509, done?: () => void): void {
+  setOptions(options: DeviceTransportOptions, done?: () => void): void {
   /*Codes_SRS_NODE_DEVICE_AMQP_06_001: [The `setOptions` method shall throw a ReferenceError if the `options` parameter has not been supplied.]*/
     if (!options) throw new ReferenceError('The options parameter can not be \'' + options + '\'');
-    if (this._authenticationProvider.type === AuthenticationType.X509) {
-      (this._authenticationProvider as X509AuthenticationProvider).setX509Options(options);
-      /*Codes_SRS_NODE_DEVICE_AMQP_06_002: [If `done` has been specified the `setOptions` method shall call the `done` callback with no arguments.]*/
-      if (done) {
-        /*Codes_SRS_NODE_DEVICE_AMQP_06_003: [`setOptions` should not throw if `done` has not been specified.]*/
-        done();
+
+    if (options.hasOwnProperty('cert')) {
+      if (this._authenticationProvider.type === AuthenticationType.X509) {
+        (this._authenticationProvider as X509AuthenticationProvider).setX509Options(options);
+        /*Codes_SRS_NODE_DEVICE_AMQP_06_002: [If `done` has been specified the `setOptions` method shall call the `done` callback with no arguments.]*/
+        if (done) {
+          /*Codes_SRS_NODE_DEVICE_AMQP_06_003: [`setOptions` should not throw if `done` has not been specified.]*/
+          done();
+        }
+      } else {
+        /*Codes_SRS_NODE_DEVICE_AMQP_16_053: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called while using token-based authentication.]*/
+        throw new errors.InvalidOperationError('cannot set X509 options when using token-based authentication');
       }
-    } else {
-      /*Codes_SRS_NODE_DEVICE_AMQP_16_053: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called while using token-based authentication.]*/
-      throw new errors.InvalidOperationError('cannot set X509 options when using token-based authentication');
     }
   }
 
