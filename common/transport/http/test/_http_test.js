@@ -47,14 +47,12 @@ describe('Http', function() {
       });
       sinon.stub(https,'request').returns(new EventEmitter());
       var http = new Http();
-      http.setOptions(fakeOptions, function(err) {
-        assert(!err);
-        http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, function() {});
-        assert(https.request.called);
-        var httpOptions = https.request.firstCall.args[0];
-        assert.strictEqual(httpOptions.agent, fakeOptions.http.agent);
-        callback();
-      });
+      http.setOptions(fakeOptions);
+      http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, function() {});
+      assert(https.request.called);
+      var httpOptions = https.request.firstCall.args[0];
+      assert.strictEqual(httpOptions.agent, fakeOptions.http.agent);
+      callback();
     });
 
   });

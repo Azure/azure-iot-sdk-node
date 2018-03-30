@@ -155,14 +155,12 @@ describe('MqttBase', function () {
       var fakemqtt = new FakeMqtt();
       var transport = new MqttBase('test', fakemqtt);
 
-      transport.setOptions({ca: fakeCa}, function(err) {
-        assert(!err);
-        fakemqtt.connect = function(host, options) {
-          assert.strictEqual(options.ca, fakeCa);
-          done();
-        };
-        transport.connect(fakeConfig, function () {});
-      });
+      transport.setOptions({ca: fakeCa});
+      fakemqtt.connect = function(host, options) {
+        assert.strictEqual(options.ca, fakeCa);
+        done();
+      };
+      transport.connect(fakeConfig, function () {});
     });
 
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_12_005: [The `connect` method shall call connect on MQTT.JS  library and call the `done` callback with a `null` error object and the result as a second argument.]*/

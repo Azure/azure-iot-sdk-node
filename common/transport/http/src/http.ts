@@ -152,9 +152,8 @@ export class Http {
   /**
    * @private
    */
-  setOptions(options: any, callback: (err?: Error) => void): void {
+  setOptions(options: any): void {
     this._options = options;
-    if (callback) callback();
   }
 
   /**

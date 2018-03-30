@@ -173,9 +173,9 @@ export class RestApiClient {
   /**
    * @private
    */
-  setOptions(options: any, callback?: (err?: Error) => void): void {
+  setOptions(options: any): void {
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_18_003: [ `setOptions` shall call `this._http.setOptions` passing the same parameters ]*/
-    this._http.setOptions(options, callback);
+    this._http.setOptions(options);
   }
 
   /**

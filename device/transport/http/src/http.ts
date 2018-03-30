@@ -321,26 +321,22 @@ export class Http extends EventEmitter implements Client.Transport {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_010: [`setOptions` should not throw if `done` has not been specified.]*/
     /*Codes_SRS_NODE_DEVICE_HTTP_16_005: [If `done` has been specified the `setOptions` method shall call the `done` callback with no arguments when successful.]*/
     /*Codes_SRS_NODE_DEVICE_HTTP_16_009: [If `done` has been specified the `setOptions` method shall call the `done` callback with a standard javascript `Error` object when unsuccessful.]*/
-    this._http.setOptions(options, (err) => {
-      if (err) {
-        if (done) done(err);
-      } else {
-        // setOptions used to exist both on Http and HttpReceiver with different options class. In order not to break backward compatibility we have
-        // to check what properties this options object has to figure out what to do with it.
-        if (options.hasOwnProperty('http') && options.http.hasOwnProperty('receivePolicy')) {
-          /*Codes_SRS_NODE_DEVICE_HTTP_16_004: [The `setOptions` method shall call the `setOptions` method of the HTTP Receiver with the content of the `http.receivePolicy` property of the `options` parameter.]*/
-          this._setReceiverOptions(options.http.receivePolicy);
-          if (done) done(err);
-        } else if (options.hasOwnProperty('interval')
-                  || options.hasOwnProperty('at')
-                  || options.hasOwnProperty('cron')
-                  || options.hasOwnProperty('manualPolling')
-                  || options.hasOwnProperty('drain')) {
-          this._setReceiverOptions(options as any);
-          if (done) done(err);
-        }
-      }
-    });
+    this._http.setOptions(options);
+
+    // setOptions used to exist both on Http and HttpReceiver with different options class. In order not to break backward compatibility we have
+    // to check what properties this options object has to figure out what to do with it.
+    if (options.hasOwnProperty('http') && options.http.hasOwnProperty('receivePolicy')) {
+      /*Codes_SRS_NODE_DEVICE_HTTP_16_004: [The `setOptions` method shall call the `setOptions` method of the HTTP Receiver with the content of the `http.receivePolicy` property of the `options` parameter.]*/
+      this._setReceiverOptions(options.http.receivePolicy);
+      if (done) done();
+    } else if (options.hasOwnProperty('interval')
+              || options.hasOwnProperty('at')
+              || options.hasOwnProperty('cron')
+              || options.hasOwnProperty('manualPolling')
+              || options.hasOwnProperty('drain')) {
+      this._setReceiverOptions(options as any);
+      if (done) done();
+    }
   }
 
   /**

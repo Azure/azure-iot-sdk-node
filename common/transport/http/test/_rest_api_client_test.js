@@ -510,14 +510,12 @@ describe('RestApiClient', function() {
   describe('#setOptions', function() {
     /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_18_003: [ `setOptions` shall call `this._http.setOptions` passing the same parameters ]*/
     it ('passes the options down', function(callback) {
-      var fakeHttpRequestBuilder = { setOptions: sinon.stub().callsArg(1) };
+      var fakeHttpRequestBuilder = { setOptions: sinon.stub() };
       var fakeOptions = '__FAKE_OPTIONS__';
       var client = new RestApiClient({host: 'host', sharedAccessSignature: 'sas'}, fakeAgent, fakeHttpRequestBuilder);
-      client.setOptions(fakeOptions, function(err) {
-        assert(!err);
-        assert(fakeHttpRequestBuilder.setOptions.calledWith(fakeOptions));
-        callback();
-      });
+      client.setOptions(fakeOptions);
+      assert(fakeHttpRequestBuilder.setOptions.calledWith(fakeOptions));
+      callback();
     });
 
   });

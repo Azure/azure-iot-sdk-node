@@ -203,9 +203,8 @@ export class MqttBase extends EventEmitter {
   /**
    * @private
    */
-  setOptions(options: any, callback: (err?: Error) => void): void {
+  setOptions(options: any): void {
     this._options = options;
-    callback();
   }
 
   private _connectClient(callback: (err?: Error, connack?: any) => void): void {
