@@ -42,19 +42,7 @@
       "directory": "provisioning/device"
     },
     {
-      "directory": "provisioning/device/samples",
-      "skip_build": true,
-      "skip_test": true,
-      "skip_ci": true
-    },
-    {
       "directory": "provisioning/service"
-    },
-    {
-      "directory": "provisioning/service/samples",
-      "skip_build": true,
-      "skip_test": true,
-      "skip_ci": true
     },
     {
       "directory": "provisioning/transport/amqp"

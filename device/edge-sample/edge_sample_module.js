@@ -7,6 +7,7 @@ var Protocol = require('azure-iot-device-mqtt').Mqtt;
 var Client = require('azure-iot-device').Client;
 var Message = require('azure-iot-device').Message;
 var fs = require('fs');
+
 var connectionString = process.env.EdgeHubConnectionString;
 
 var client = Client.fromConnectionString(connectionString, Protocol);
