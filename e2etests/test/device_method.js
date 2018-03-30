@@ -31,8 +31,6 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
     // create a new device for every test
     beforeEach(function (done) {
-      this.timeout(20000);
-
       deviceDescription = {
         deviceId:  '0000e2etest-delete-me-node-device-method-' + uuid.v4(),
         status: 'enabled',
@@ -57,7 +55,6 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
     // nuke the test device after every test
     afterEach(function (done) {
-      this.timeout(20000);
       if (!!deviceClient) {
         deviceClient.close(function(err) {
           if (!!err) {

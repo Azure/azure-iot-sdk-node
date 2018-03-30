@@ -118,14 +118,13 @@ delete nullMergeResult.tweedle;
 protocolAndTermination.forEach( function (testConfiguration) {
   describe(testConfiguration.transport.name + ' using device/service clients - disconnect twin', function () {
 
-    this.timeout(30000);
+    this.timeout(60000);
     var deviceClient, deviceTwin;
     var serviceTwin;
 
     var deviceDescription;
 
     beforeEach(function (done) {
-      this.timeout(30000);
       setTwinMoreNewPropsTimeout = null;
       var host = ConnectionString.parse(hubConnectionString).HostName;
       var pkey = new Buffer(uuid.v4()).toString('base64');
@@ -167,7 +166,6 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     afterEach(function (done) {
-      this.timeout(30000);
       if (setTwinMoreNewPropsTimeout) clearTimeout(setTwinMoreNewPropsTimeout);
       if (deviceClient) {
         deviceClient.close(function(err) {

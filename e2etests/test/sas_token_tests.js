@@ -38,7 +38,7 @@ transports.forEach(function (deviceTransport) {
     });
 
     after(function (afterCallback) {
-      debug('deleting test device: ' + provisionedDevice.deviceId);      
+      debug('deleting test device: ' + provisionedDevice.deviceId);
       DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
     });
 
@@ -101,7 +101,6 @@ transports.forEach(function (deviceTransport) {
     });
 
     it('Renews SAS after connection and is still able to send D2C messages', function(testCallback) {
-      this.timeout(60000);
       var beforeSas = uuid.v4();
       var afterSas = uuid.v4();
 
@@ -118,7 +117,7 @@ transports.forEach(function (deviceTransport) {
           ehClient.close().then(function () {
             testCallback(err);
           });
-        }); 
+        });
       }
 
       var ehReceivers = [];

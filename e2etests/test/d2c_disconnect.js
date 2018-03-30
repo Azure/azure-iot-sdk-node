@@ -107,7 +107,7 @@ var protocolAndTermination = [
 
 protocolAndTermination.forEach( function (testConfiguration) {
   describe(testConfiguration.transport.name + ' using device/eventhub clients - disconnect d2c', function () {
-    this.timeout(20000);
+    this.timeout(60000);
     var deviceClient, ehClient, senderInterval, provisionedDevice, ehReceivers;
 
     before(function (beforeCallback) {
@@ -122,7 +122,6 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     beforeEach(function () {
-      this.timeout(20000);
       ehClient = eventHubClient.fromConnectionString(hubConnectionString);
       deviceClient = createDeviceClient(testConfiguration.transport, provisionedDevice);
       senderInterval = null;
@@ -130,13 +129,11 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     afterEach(function (testCallback) {
-      this.timeout(20000);
       closeDeviceEventHubClients(deviceClient, ehClient, ehReceivers, testCallback);
       if (sendMessageTimeout !== null) clearTimeout(sendMessageTimeout);
     });
 
     doConnectTest(testConfiguration.testEnabled)('device sends a message, event hub client receives it, and' + testConfiguration.closeReason + 'which is noted by the iot hub device client', function (testCallback) {
-      this.timeout(40000);
       var uuidData = uuid.v4();
       var originalMessage = new Message(uuidData);
       var messageReceived = false;
@@ -200,7 +197,6 @@ protocolAndTermination.forEach( function (testConfiguration) {
           });
 
     doConnectTest(testConfiguration.testEnabled)('device sends ' + numberOfD2CMessages + ' messages, when event hub client receives first, it ' + testConfiguration.closeReason + 'which is not seen by the iot hub device client', function (testCallback) {
-      this.timeout(40000);
       var originalMessages = [];
       var messagesReceived = 0;
       var messagesSent = 0;

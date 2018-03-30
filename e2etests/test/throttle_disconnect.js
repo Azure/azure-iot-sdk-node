@@ -58,7 +58,7 @@ var protocolAndTermination = [
 
 protocolAndTermination.forEach( function (testConfiguration) {
   describe(testConfiguration.transport.name + ' using device/eventhub clients - disconnect d2c', function () {
-    this.timeout(20000);
+    this.timeout(60000);
     var deviceClient, ehClient, senderInterval, ehReceivers, provisionedDevice;
 
     before(function (beforeCallback) {
@@ -73,7 +73,6 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     beforeEach(function () {
-      this.timeout(20000);
       ehClient = eventHubClient.fromConnectionString(hubConnectionString);
       deviceClient = createDeviceClient(testConfiguration.transport, provisionedDevice);
       senderInterval = null;
@@ -81,7 +80,6 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     afterEach(function (testCallback) {
-      this.timeout(20000);
       closeDeviceEventHubClients(deviceClient, ehClient, ehReceivers, testCallback);
       if (sendMessageTimeout !== null) clearTimeout(sendMessageTimeout);
     });

@@ -47,7 +47,7 @@ var maximumMessageSize = ((256*1024)-512);
 
 function device_service_tests(deviceTransport, createDeviceMethod) {
   describe('Over ' + deviceTransport.name + ' using device/service clients c2d', function () {
-    this.timeout(20000);
+    this.timeout(60000);
 
     var serviceClient, deviceClient;
     var provisionedDevice;
@@ -64,13 +64,11 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
     });
 
     beforeEach(function () {
-      this.timeout(20000);
       serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString);
       deviceClient = createDeviceClient(deviceTransport, provisionedDevice);
     });
 
     afterEach(function (done) {
-      this.timeout(20000);
       closeDeviceServiceClients(deviceClient, serviceClient, done);
     });
 
@@ -161,7 +159,7 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
   });
 
   describe('Over ' + deviceTransport.name + ' using device/eventhub clients - messaging', function () {
-    this.timeout(20000);
+    this.timeout(60000);
 
     var deviceClient, ehClient, ehReceivers, provisionedDevice;
 
@@ -177,14 +175,12 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
     });
 
     beforeEach(function () {
-      this.timeout(20000);
       ehClient = eventHubClient.fromConnectionString(hubConnectionString);
       deviceClient = createDeviceClient(deviceTransport, provisionedDevice);
       ehReceivers = [];
     });
 
     afterEach(function (done) {
-      this.timeout(20000);
       closeDeviceEventHubClients(deviceClient, ehClient, ehReceivers, done);
     });
 

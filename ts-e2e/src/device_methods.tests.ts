@@ -19,7 +19,7 @@ const debug = dbg('ts-e2e-methods');
 describe('Device Methods', function () {
   [DeviceMqtt, DeviceMqttWs, DeviceAmqp, DeviceAmqpWs].forEach((TransportCtor: any) => {
     describe('Over ' + TransportCtor.name, function() {
-      this.timeout(20000);
+      this.timeout(60000);
 
       const testDevice = testUtils.createTestDevice();
       const scs = ServiceConnectionString.parse(process.env.IOTHUB_CONNECTION_STRING);

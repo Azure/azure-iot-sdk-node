@@ -11,7 +11,7 @@ const debug = dbg('ts-e2e-d2c');
 
 
 describe('File upload', function () {
-  this.timeout(20000);
+  this.timeout(60000);
   const testDevice = testUtils.createTestDevice();
 
   const hostName = ServiceConnectionString.parse(process.env.IOTHUB_CONNECTION_STRING).HostName;

@@ -114,13 +114,13 @@ var protocolAndTermination = [
 
 protocolAndTermination.forEach( function (testConfiguration) {
   describe(testConfiguration.transport.name + ' using device/eventhub clients - disconnect methods', function () {
+    this.timeout(60000);
 
     var deviceClient, serviceClient;
     var secondMethodTimeout;
     var provisionedDevice;
 
     before(function (beforeCallback) {
-      this.timeout(20000);
       DeviceIdentityHelper.createDeviceWithSas(function (err, testDeviceInfo) {
         provisionedDevice = testDeviceInfo;
         beforeCallback(err);
@@ -128,19 +128,16 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     after(function (afterCallback) {
-      this.timeout(20000);
       DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
     });
 
     beforeEach(function () {
-      this.timeout(20000);
       serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString);
       deviceClient = createDeviceClient(testConfiguration.transport, provisionedDevice);
       secondMethodTimeout = null;
     });
 
     afterEach(function (testCallback) {
-      this.timeout(20000);
       closeDeviceServiceClients(deviceClient, serviceClient, testCallback);
       if (secondMethodTimeout) clearTimeout(secondMethodTimeout);
     });
@@ -201,7 +198,6 @@ protocolAndTermination.forEach( function (testConfiguration) {
     };
 
     doConnectTest(testConfiguration.testEnabled)('Service sends a method, iothub client receives it, and' + testConfiguration.closeReason + 'which is noted by the device', function (testCallback) {
-      this.timeout(20000);
       var firstMethodSent = false;
       deviceClient.setRetryPolicy(new NoRetry());
       var disconnectHandler = function () {
@@ -234,7 +230,6 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     doConnectTest(testConfiguration.testEnabled)('Service client sends 2 methods, when iot hub client receives first, it ' + testConfiguration.closeReason + 'which is not seen by the device', function (testCallback) {
-      this.timeout(20000);
       deviceClient.on('disconnect', function () {
         testCallback(new Error('unexpected disconnect'));
       });
