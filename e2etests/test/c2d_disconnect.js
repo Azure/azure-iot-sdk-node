@@ -109,7 +109,7 @@ var protocolAndTermination = [
 
 protocolAndTermination.forEach( function (testConfiguration) {
   describe(testConfiguration.transport.name + ' using device/service clients - disconnect c2d', function () {
-    this.timeout(30000);
+    this.timeout(60000);
 
     var serviceClient, deviceClient;
 
@@ -127,20 +127,17 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     beforeEach(function () {
-      this.timeout(20000);
       serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString);
       deviceClient = createDeviceClient(testConfiguration.transport, provisionedDevice);
       sendMessageTimeout = null;
     });
 
     afterEach(function (testCallback) {
-      this.timeout(20000);
       closeDeviceServiceClients(deviceClient, serviceClient, testCallback);
       if (sendMessageTimeout !== null) clearTimeout(sendMessageTimeout);
     });
 
     doConnectTest(testConfiguration.testEnabled)('Service sends a C2D message, device receives it, and' + testConfiguration.closeReason + 'which is noted by the iot hub client', function (testCallback) {
-      this.timeout(20000);
       var receivingSideDone = false;
       var sendingSideDone = false;
       var uuidData = uuid.v4();
@@ -209,7 +206,6 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     doConnectTest(testConfiguration.testEnabled)('Service sends ' + numberOfC2DMessages + ' C2D messages, device receives first and' + testConfiguration.closeReason + 'which is never seen by the iot hub client', function (testCallback) {
-      this.timeout(60000);
       var originalMessages = [];
       var messagesReceived = 0;
       var messagesSent = 0;

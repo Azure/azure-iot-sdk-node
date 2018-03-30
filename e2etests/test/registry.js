@@ -42,7 +42,7 @@ var deviceIdWithThumbprints = {
 };
 
 describe('Registry', function () {
-  this.timeout(30000);
+  this.timeout(60000);
   it('Creates a device with only a deviceId and gets it', function (done){
     var registry = Registry.fromConnectionString(hubConnectionString);
 

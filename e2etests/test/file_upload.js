@@ -47,13 +47,11 @@ describe('File upload - HTTP transport', function () {
   });
 
   beforeEach(function () {
-    this.timeout(20000);
     serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString);
     deviceClient = createDeviceClient(HttpTransport, provisionedDevice);
   });
 
   afterEach(function (done) {
-    this.timeout(20000);
     closeDeviceServiceClients(deviceClient, serviceClient, done);
   });
 

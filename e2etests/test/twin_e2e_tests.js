@@ -50,16 +50,13 @@ delete nullMergeResult.tweedle;
   deviceMqtt.Mqtt
 ].forEach(function(protocolCtor) {
   describe('Twin over ' + protocolCtor.name, function() {
-
-    this.timeout(20000);
+    this.timeout(60000);
     var deviceClient, deviceTwin;
     var serviceTwin;
 
     var deviceDescription;
 
     beforeEach(function (done) {
-      this.timeout(20000);
-
       var host = ConnectionString.parse(hubConnectionString).HostName;
       var pkey = new Buffer(uuid.v4()).toString('base64');
       var deviceId = '0000e2etest-delete-me-twin-e2e-' + protocolCtor.name + '-'  + uuid.v4();
@@ -101,7 +98,6 @@ delete nullMergeResult.tweedle;
     });
 
     afterEach(function (done) {
-      this.timeout(20000);
       if (deviceClient) {
         deviceClient.close(function(err) {
           if (err) return done(err);
@@ -348,7 +344,7 @@ delete nullMergeResult.tweedle;
 
     it('can renew SAS 20 times without failure', function(done)
     {
-      this.timeout(120000);
+      this.timeout(180000);
       var iteration = 0;
       var doItAgain = function() {
         iteration++;

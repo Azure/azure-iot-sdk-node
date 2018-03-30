@@ -53,13 +53,11 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
     });
 
     beforeEach(function () {
-      this.timeout(120000);
       serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString);
       deviceClient = createDeviceClient(deviceTransport, provisionedDevice);
     });
 
     afterEach(function (done) {
-      this.timeout(120000);
       closeDeviceServiceClients(deviceClient, serviceClient, done);
     });
 

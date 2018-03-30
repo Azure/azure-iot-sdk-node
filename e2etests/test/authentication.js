@@ -25,7 +25,7 @@ var transports = [Amqp, AmqpWs, Mqtt, MqttWs, Http];
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 describe('Authentication', function() {
-  this.timeout(40000);
+  this.timeout(60000);
   var hostName = ServiceConnectionString.parse(hubConnectionString).HostName;
   var testDeviceId = 'nodee2etestDeviceAuth-' + uuid.v4();
   var testDeviceKey = '';
