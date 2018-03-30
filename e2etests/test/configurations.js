@@ -23,6 +23,8 @@ var registry = Registry.fromConnectionString(hubConnectionString);
 describe('device configuration', function() {
   var deviceConfig;
 
+  this.timeout(46000);
+
   beforeEach(function() {
     deviceConfig = {
       id: 'node_e2e_' + uuid.v4(),

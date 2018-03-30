@@ -26,6 +26,8 @@ describe('modules', function() {
   var module;
   var deviceId = null;
 
+  this.timeout(46000);
+
   before(function (done) {
     DeviceIdentityHelper.createDeviceWithSas(function (err, testDeviceInfo) {
       deviceId = testDeviceInfo.deviceId;
