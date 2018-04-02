@@ -8,6 +8,7 @@ var uuid = require('uuid');
 var DeviceIdentityHelper = require('./device_identity_helper.js');
 var async = require('async');
 var assert = require('chai').assert;
+var debug = require('debug')('e2etests:modules');
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 var registry = Registry.fromConnectionString(hubConnectionString);
@@ -29,8 +30,13 @@ describe('modules', function() {
   this.timeout(46000);
 
   before(function (done) {
+    debug('Creating SAS device to use with test');
     DeviceIdentityHelper.createDeviceWithSas(function (err, testDeviceInfo) {
-      deviceId = testDeviceInfo.deviceId;
+      debug('createDeviceWithSas returned ' + (err ? err : 'success'));
+      if (!err) {
+        deviceId = testDeviceInfo.deviceId;
+        debug('test deviceId = ' + deviceId);
+      }
       done(err);
     });
   });
@@ -39,7 +45,11 @@ describe('modules', function() {
     if (deviceId) {
       var id = deviceId;
       deviceId = null;
-      DeviceIdentityHelper.deleteDevice(id, done);
+      debug('deleting device with deviceId ' + id);
+      DeviceIdentityHelper.deleteDevice(id, function(err) {
+        debug('deleteDevice returned ' + (err ? err : 'success'));
+        done(err);
+      });
     } else {
       done();
     }
@@ -50,18 +60,26 @@ describe('modules', function() {
       deviceId: deviceId,
       moduleId: 'node_e2e_' + uuid.v4()
     };
+    debug('moduleId for this test will be ' + module.moduleId);
   });
 
   it ('can add a module and find it by id', function(done) {
     async.series([
       function addModule(callback) {
-        registry.addModule(module, callback);
+        debug('adding module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
+        registry.addModule(module, function(err) {
+          debug('addModule returned ' + (err ? err : 'success'));
+          callback(err);
+        });
       },
       function findModule(callback) {
+        debug('getting module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
         registry.getModule(module.deviceId, module.moduleId, function(err, foundModule) {
           if (err) {
+            debug('getModule returned ' + err);
             callback(err);
           } else {
+            debug('getModule returned success');
             assert.strictEqual(foundModule.deviceId, module.deviceId);
             assert.strictEqual(foundModule.moduleId, module.moduleId);
             callback();
@@ -74,13 +92,20 @@ describe('modules', function() {
   it ('can add a module and find it in list of all modules on device', function(done) {
     async.series([
       function addModule(callback) {
-        registry.addModule(module, callback);
+        debug('adding module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
+        registry.addModule(module, function(err) {
+          debug('addModule returned ' + (err ? err : 'success'));
+          callback(err);
+        });
       },
       function findModule(callback) {
+        debug('getting all modules on device ' + module.deviceId);
         registry.getModulesOnDevice(module.deviceId, function(err, foundModules) {
+          debug('getModulesOnDevice returned ' + (err ? err : 'success'));
           if (err) {
             callback(err);
           } else {
+            debug(foundModules.length.toString() + ' modules on device');
             var found = false;
             foundModules.forEach(function(foundModule) {
               if (foundModule.deviceId === module.deviceId && foundModule.moduleId === module.moduleId) {
@@ -95,90 +120,80 @@ describe('modules', function() {
     ], done);
   });
 
-  it ('can add and update a module', function(done) {
-    var expectedSecondary;
-    var expectedPrimary;
+  [true, false].forEach(function (forceUpdate) {
+    it ('can add and update a module' + (forceUpdate ? ' with forceUpdate = true' : ''), function(done) {
+      var expectedSecondary;
+      var expectedPrimary;
 
-    async.series([
-      function addModule(callback) {
-        registry.addModule(module, callback);
-      },
-      function updateModule(callback) {
-        registry.getModule(module.deviceId, module.moduleId, function(err, foundModule) {
-          if (err) {
+      async.series([
+        function addModule(callback) {
+          debug('adding module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
+          registry.addModule(module, function(err) {
+            debug('addModule returned ' + (err ? err : 'success'));
             callback(err);
-          } else {
-            expectedSecondary = foundModule.authentication.symmetricKey.primaryKey;
-            expectedPrimary = foundModule.authentication.symmetricKey.secondaryKey;
-            foundModule.authentication.symmetricKey.primaryKey = expectedPrimary;
-            foundModule.authentication.symmetricKey.secondaryKey = expectedSecondary;
-            registry.updateModule(foundModule, callback);
-          }
-        });
-      },
-      function verifyUpdate(callback) {
-        registry.getModule(module.deviceId, module.moduleId, function(err, foundModule) {
-          if (err) {
-            callback(err);
-          } else {
-            assert.strictEqual(foundModule.authentication.symmetricKey.primaryKey, expectedPrimary);
-            assert.strictEqual(foundModule.authentication.symmetricKey.secondaryKey, expectedSecondary);
-            callback();
-          }
-        });
-      }
-    ], done);
-  });
-
-
-
-  it ('can add and update a module', function(done) {
-    var expectedSecondary;
-    var expectedPrimary;
-
-    async.series([
-      function addModule(callback) {
-        registry.addModule(module, callback);
-      },
-      function updateModule(callback) {
-        registry.getModule(module.deviceId, module.moduleId, function(err, foundModule) {
-          if (err) {
-            callback(err);
-          } else {
-            expectedSecondary = foundModule.authentication.symmetricKey.primaryKey;
-            expectedPrimary = foundModule.authentication.symmetricKey.secondaryKey;
-            foundModule.authentication.symmetricKey.primaryKey = expectedPrimary;
-            foundModule.authentication.symmetricKey.secondaryKey = expectedSecondary;
-            delete foundModule.etag;
-            registry.updateModule(foundModule, true, callback);
-          }
-        });
-      },
-      function verifyUpdate(callback) {
-        registry.getModule(module.deviceId, module.moduleId, function(err, foundModule) {
-          if (err) {
-            callback(err);
-          } else {
-            assert.strictEqual(foundModule.authentication.symmetricKey.primaryKey, expectedPrimary);
-            assert.strictEqual(foundModule.authentication.symmetricKey.secondaryKey, expectedSecondary);
-            callback();
-          }
-        });
-      }
-    ], done);
+          });
+        },
+        function updateModule(callback) {
+          debug('Preparing to update. getting module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
+          registry.getModule(module.deviceId, module.moduleId, function(err, foundModule) {
+            debug('getModule returned ' + (err ? err : 'success'));
+            if (err) {
+              callback(err);
+            } else {
+              expectedSecondary = foundModule.authentication.symmetricKey.primaryKey;
+              expectedPrimary = foundModule.authentication.symmetricKey.secondaryKey;
+              foundModule.authentication.symmetricKey.primaryKey = expectedPrimary;
+              foundModule.authentication.symmetricKey.secondaryKey = expectedSecondary;
+              debug('calling updateModule set primary to ' + expectedPrimary);
+              if (forceUpdate) {
+                delete foundModule.etag;
+              }
+              registry.updateModule(foundModule, forceUpdate, function(err) {
+                debug('updateModule returned ' + (err ? err : 'success'));
+                callback(err);
+              });
+            }
+          });
+        },
+        function verifyUpdate(callback) {
+          debug('getting module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
+          registry.getModule(module.deviceId, module.moduleId, function(err, foundModule) {
+            debug('getModule returned ' + (err ? err : 'success'));
+            if (err) {
+              callback(err);
+            } else {
+              assert.strictEqual(foundModule.authentication.symmetricKey.primaryKey, expectedPrimary);
+              assert.strictEqual(foundModule.authentication.symmetricKey.secondaryKey, expectedSecondary);
+              debug('update successfully applied');
+              callback();
+            }
+          });
+        }
+      ], done);
+    });
   });
 
   // Skipped because of failure
   it.skip ('can add and remove a module', function(done) {
     async.series([
       function addModule(callback) {
-        registry.addModule(module, callback);
+        debug('adding module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
+        registry.addModule(module, function(err) {
+          debug('addModule returned ' + (err ? err : 'success'));
+          callback(err);
+        });
       },
       function removeModule(callback) {
-        registry.removeModule(module.deviceId, module.moduleId, callback);
+        debug('removing module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
+        registry.removeModule(module.deviceId, module.moduleId, function(err) {
+          debug('remove module returned ' + (err ? err : 'success'));
+          callback(err);
+        });
       },
       function verifyRemoval(callback) {
+        debug('Verifying removal.  Getting module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
         registry.getModule(module.deviceId, module.moduleId, function(err) {
+          debug('(expecting failure) getModule returned ' + (err ? err : 'success'));
           assert(err, 'The module should not be found after removal');
           callback();
         });

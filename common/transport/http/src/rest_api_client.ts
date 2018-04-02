@@ -7,6 +7,9 @@ import { anHourFromNow, errors, SharedAccessSignature, X509 } from 'azure-iot-co
 import { Http as HttpBase } from './http';
 import  * as uuid from 'uuid';
 import { ClientRequest } from 'http';
+import dbg = require('debug');
+const debug = dbg('azure-iot-http-base.RestApiClient');
+
 
 
 /**
@@ -118,6 +121,7 @@ export class RestApiClient {
     }
 
     const requestCallback = (err, responseBody, response) =>  {
+      debug(method + ' call to ' + path + ' returned ' + (err ? err : 'success'));
       if (err) {
         if (response) {
           /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_010: [If the HTTP request fails with an error code >= 300 the `executeApiCall` method shall translate the HTTP error into a transport-agnostic error using the `translateError` method and call the `done` callback with the resulting error as the only argument.]*/
@@ -147,7 +151,9 @@ export class RestApiClient {
       request.setTimeout(timeout as number);
     }
 
+    debug('sending ' + method + ' call to ' + path);
     if (requestBodyString) {
+      debug('with body ' + requestBodyString);
       request.write(requestBodyString);
     }
 
