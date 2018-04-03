@@ -8,7 +8,7 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-amqp:Amqp');
 import { EventEmitter } from 'events';
 
-import { DeviceMethodResponse, Client, TwinProperties, DeviceTransportOptions } from 'azure-iot-device';
+import { DeviceMethodResponse, Client, TwinProperties, DeviceClientOptions } from 'azure-iot-device';
 import { Amqp as BaseAmqpClient, translateError, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
 import { endpoint, SharedAccessSignature, errors, results, Message, AuthenticationProvider, AuthenticationType } from 'azure-iot-common';
 import { AmqpDeviceMethodClient } from './amqp_device_method_client';
@@ -632,7 +632,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
    * @param {object}        options   Options to set.  Currently for amqp these are the x509 cert, key, and optional passphrase properties. (All strings)
    * @param {Function}      done      The callback to be invoked when `setOptions` completes.
    */
-  setOptions(options: DeviceTransportOptions, done?: () => void): void {
+  setOptions(options: DeviceClientOptions, done?: () => void): void {
   /*Codes_SRS_NODE_DEVICE_AMQP_06_001: [The `setOptions` method shall throw a ReferenceError if the `options` parameter has not been supplied.]*/
     if (!options) throw new ReferenceError('The options parameter can not be \'' + options + '\'');
 

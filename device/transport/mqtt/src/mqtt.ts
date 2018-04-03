@@ -7,7 +7,7 @@ import * as URL from 'url';
 import * as machina from 'machina';
 
 import { endpoint, results, errors, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
-import { DeviceMethodResponse, Client, DeviceTransportOptions, TwinProperties } from 'azure-iot-device';
+import { DeviceMethodResponse, Client, DeviceClientOptions, TwinProperties } from 'azure-iot-device';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
 import { EventEmitter } from 'events';
 import * as util from 'util';
@@ -469,7 +469,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
    * @param {object}        options   Options to set.  Currently for MQTT these are the x509 cert, key, and optional passphrase properties. (All strings)
    * @param {Function}      done      The callback to be invoked when `setOptions` completes.
    */
-  setOptions(options: DeviceTransportOptions, done?: (err?: Error, result?: any) => void): void {
+  setOptions(options: DeviceClientOptions, done?: (err?: Error, result?: any) => void): void {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_011: [The `setOptions` method shall throw a `ReferenceError` if the `options` argument is falsy]*/
     if (!options) throw new ReferenceError('The options parameter can not be \'' + options + '\'');
 
