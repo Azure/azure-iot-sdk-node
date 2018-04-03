@@ -21,7 +21,7 @@ var registry = Registry.fromConnectionString(hubConnectionString);
 // Test of applyConfigurationContentToDevice
 // Test to verify that config applies to device based on targetCondition
 
-describe('device configuration', function() {
+describe.skip('device configuration', function() {
   var deviceConfig;
 
   this.timeout(46000);
