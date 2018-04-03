@@ -103,6 +103,9 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
     });
   }
 
+  /**
+   * @private
+   */
   setAuthentication(auth: X509): void {
     this._auth = auth;
   }
@@ -122,7 +125,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
   }
 
   /**
-   * private
+   * @private
    */
   cancel(callback: (err?: Error) => void): void {
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_041: [ `cancel` shall immediately call `callback` passing null. ] */
@@ -130,7 +133,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
   }
 
   /**
-   * private
+   * @private
    */
   disconnect(callback: (err?: Error) => void): void {
     // nothing to do
@@ -139,7 +142,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
   }
 
   /**
-   * private
+   * @private
    */
   registrationRequest(request: RegistrationRequest, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void {
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_007: [ If an X509 cert if provided, `registrationRequest` shall include it in the Http authorization header. ] */
@@ -192,7 +195,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
   }
 
   /**
-   * private
+   * @private
    */
   queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void {
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_021: [ If an X509 cert if provided, `queryOperationStatus` shall include it in the Http authorization header. ] */
@@ -233,7 +236,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
   }
 
   /**
-   * private
+   * @private
    */
   private _ensureRestApiClient(request: RegistrationRequest): void {
     if (!this._restApiClient) {

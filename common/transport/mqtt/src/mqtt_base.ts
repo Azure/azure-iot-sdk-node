@@ -12,6 +12,9 @@ import { errors, results, endpoint, SharedAccessSignature, X509 } from 'azure-io
 
 /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_004: [The `MqttBase` constructor shall instanciate the default MQTT.JS library if no argument is passed to it.]*/
 /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_005: [The `MqttBase` constructor shall use the object passed as argument instead of the default MQTT.JS library if it's not falsy.]*/
+/**
+ * @private
+ */
 export class MqttBase extends EventEmitter {
   private mqttprovider: any;
   private _config: MqttBase.TransportConfig;
@@ -272,6 +275,9 @@ export class MqttBase extends EventEmitter {
 }
 
 export namespace MqttBase {
+  /**
+   * @private
+   */
   export interface TransportConfig {
     host: string;
     sharedAccessSignature?: string | SharedAccessSignature;

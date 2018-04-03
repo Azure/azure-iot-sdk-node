@@ -202,7 +202,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
   }
 
   /**
-   * private
+   * @private
    */
   registrationRequest(request: RegistrationRequest, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void {
     let rid = uuid.v4();
@@ -217,7 +217,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
   }
 
   /**
-   * private
+   * @private
    */
   queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void {
     let rid = uuid.v4();
