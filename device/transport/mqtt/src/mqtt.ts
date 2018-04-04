@@ -6,7 +6,7 @@ import * as querystring from 'querystring';
 import * as URL from 'url';
 import * as machina from 'machina';
 
-import { results, errors, Message, X509, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
+import { results, errors, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
 import { DeviceMethodResponse, Client, DeviceClientOptions, TwinProperties } from 'azure-iot-device';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
 import { EventEmitter } from 'events';

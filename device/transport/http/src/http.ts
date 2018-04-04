@@ -338,7 +338,7 @@ export class Http extends EventEmitter implements Client.Transport {
               || options.hasOwnProperty('cron')
               || options.hasOwnProperty('manualPolling')
               || options.hasOwnProperty('drain')) {
-      this._setReceiverOptions(options);
+      this._setReceiverOptions(options as any);
       calldoneifspecified();
     }
   }

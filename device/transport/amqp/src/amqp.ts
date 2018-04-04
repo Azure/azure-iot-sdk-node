@@ -8,9 +8,9 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-amqp:Amqp');
 import { EventEmitter } from 'events';
 
-import { DeviceMethodResponse, Client, TwinProperties, DeviceTransportOptions } from 'azure-iot-device';
+import { DeviceMethodResponse, Client, DeviceClientOptions, TwinProperties } from 'azure-iot-device';
 import { Amqp as BaseAmqpClient, translateError, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
-import { endpoint, SharedAccessSignature, errors, results, Message, X509, AuthenticationProvider, AuthenticationType } from 'azure-iot-common';
+import { endpoint, SharedAccessSignature, errors, results, Message, AuthenticationProvider, AuthenticationType } from 'azure-iot-common';
 import { AmqpDeviceMethodClient } from './amqp_device_method_client';
 import { AmqpTwinClient } from './amqp_twin_client';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
