@@ -226,8 +226,16 @@ export class MqttBase extends EventEmitter {
     };
 
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_18_001: [The `connect` method shall set the `ca` option based on the `ca` string passed in the `options` structure via the `setOptions` function.]*/
-    if (this._options && this._options.ca) {
-      options.ca = this._options.ca;
+    if (this._options) {
+      if (this._options.ca) {
+        options.ca = this._options.ca;
+      }
+      /*Codes_SRS_NODE_COMMON_MQTT_BASE_18_002: [The `connect` method shall set the `wsOptions.agent` option based on the `mqtt.webSocketAgent` object passed in the `options` structure via the `setOptions` function.]*/
+      if (this._options.mqtt && this._options.mqtt.webSocketAgent) {
+        options.wsOptions = {
+          agent: this._options.mqtt.webSocketAgent
+        };
+      }
     }
 
     if (this._config.sharedAccessSignature) {
