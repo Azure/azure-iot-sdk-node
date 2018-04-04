@@ -189,6 +189,25 @@ describe('MqttBase', function () {
       transport.connect(config, function () {});
     });
 
+    /*Tests_SRS_NODE_COMMON_MQTT_BASE_18_001: [The `connect` method shall set the `ca` option based on the `ca` string passed in the `options` structure via the `setOptions` function.]*/
+    it('uses the ca passed into setOptions', function(done) {
+      var fakeConfig = {
+        host: "host.name",
+        deviceId: "deviceId",
+        sharedAccessSignature: "sasToken"
+      };
+      var fakeCa = '__FAKE_CA__';
+      var fakemqtt = new FakeMqtt();
+      var transport = new MqttBase('test', fakemqtt);
+
+      transport.setOptions({ca: fakeCa});
+      fakemqtt.connect = function(host, options) {
+        assert.strictEqual(options.ca, fakeCa);
+        done();
+      };
+      transport.connect(fakeConfig, function () {});
+    });
+
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_12_005: [The `connect` method shall call connect on MQTT.JS  library and call the `done` callback with a `null` error object and the result as a second argument.]*/
     it('calls the done callback once successfully connected to the server', function(done) {
       var config = {
