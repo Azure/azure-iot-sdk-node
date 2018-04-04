@@ -327,6 +327,8 @@ export class Http extends EventEmitter implements Client.Transport {
       }
     };
 
+    this._http.setOptions(options);
+
     // setOptions used to exist both on Http and HttpReceiver with different options class. In order not to break backward compatibility we have
     // to check what properties this options object has to figure out what to do with it.
     if (options.hasOwnProperty('http') && options.http.hasOwnProperty('receivePolicy')) {
