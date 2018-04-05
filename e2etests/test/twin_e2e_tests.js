@@ -280,7 +280,7 @@ delete nullMergeResult.tweedle;
       mergeTags(newProps, moreNewProps, "*", mergeResult, done);
     });
 
-    it('can send reported properties to the service after renewing the sas token', function(done) {
+    it.skip('can send reported properties to the service after renewing the sas token', function(done) {
       deviceClient.on('_sharedAccessSignatureUpdated', function() {
         // _sharedAccessSignatureUpdated fired when the signature has been updated,
         // but we still have to wait for the library to connect and register for events.
@@ -292,7 +292,7 @@ delete nullMergeResult.tweedle;
       deviceClient.updateSharedAccessSignature(deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString());
     });
 
-    it('can receive desired properties from the service after renewing the sas token', function(done) {
+    it.skip('can receive desired properties from the service after renewing the sas token', function(done) {
       deviceClient.on('_sharedAccessSignatureUpdated', function() {
         // See note above about "twinReady" event.
         setTimeout(function() {

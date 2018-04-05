@@ -49,8 +49,9 @@
     "job_client": "mocha --reporter spec test/job_client.js",
     "authentication": "mocha --reporter spec test/authentication.js",
     "provisioning": "cd ../provisioning/e2e && npm run ci && cd ../../e2etests",
-    "phase1_fast": "npm-run-all -p -l twin_disconnect service registry device_acknowledge_tests upload_disconnect authentication job_client",
-    "phase2_slow": "npm-run-all -p -l method_disconnect device_method twin_e2e_tests sas_token_tests device_service c2d_disconnect d2c_disconnect provisioning",
+    "flaky_tests": "npm-run-all -p -l twin_disconnect method_disconnect c2d_disconnect d2c_disconnect",
+    "phase1_fast": "npm-run-all -p -l service registry device_acknowledge_tests upload_disconnect authentication job_client",
+    "phase2_slow": "npm-run-all -p -l device_method twin_e2e_tests sas_token_tests device_service provisioning",
     "alltest": "npm run phase1_fast && npm run phase2_slow",
     "ci": "npm -s run lint && npm -s run alltest",
     "test": "npm -s run lint && npm -s run alltest"
