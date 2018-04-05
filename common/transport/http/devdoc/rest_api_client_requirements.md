@@ -111,3 +111,7 @@ The `translateError` method translates HTTP errors into Azure IoT Hub errors, ef
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_034: [** The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the `sharedAccessSignature` argument is falsy. **]**
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_028: [** The `updateSharedAccessSignature` method shall update the `sharedAccessSignature` configuration parameter that is used in the `Authorization` header of all HTTP requests. **]**
+
+### setOptions(options: any, callback?: (err?: Error) => void): void;
+
+**SRS_NODE_IOTHUB_REST_API_CLIENT_18_003: [** `setOptions` shall call `this._http.setOptions` passing the same parameters **]**

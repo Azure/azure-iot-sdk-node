@@ -21,6 +21,7 @@ export class MqttBase extends EventEmitter {
   private _sdkVersionString: string;
   private _mqttClient: MqttClient;
   private _fsm: any;
+  private _options: any;
 
   constructor(sdkVersionString: string, mqttprovider?: any) {
     super();
@@ -201,6 +202,13 @@ export class MqttBase extends EventEmitter {
     this._fsm.handle('updateSharedAccessSignature', callback);
   }
 
+  /**
+   * @private
+   */
+  setOptions(options: any): void {
+    this._options = options;
+  }
+
   private _connectClient(callback: (err?: Error, connack?: any) => void): void {
     const uri = (<any>this._config).uri || 'mqtts://' + this._config.host;
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_002: [The `connect` method shall use the authentication parameters contained in the `config` argument to connect to the server.]*/
@@ -219,6 +227,19 @@ export class MqttBase extends EventEmitter {
       keepalive: 180,
       reschedulePings: false
     };
+
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_18_001: [The `connect` method shall set the `ca` option based on the `ca` string passed in the `options` structure via the `setOptions` function.]*/
+    if (this._options) {
+      if (this._options.ca) {
+        options.ca = this._options.ca;
+      }
+      /*Codes_SRS_NODE_COMMON_MQTT_BASE_18_002: [The `connect` method shall set the `wsOptions.agent` option based on the `mqtt.webSocketAgent` object passed in the `options` structure via the `setOptions` function.]*/
+      if (this._options.mqtt && this._options.mqtt.webSocketAgent) {
+        options.wsOptions = {
+          agent: this._options.mqtt.webSocketAgent
+        };
+      }
+    }
 
     if (this._config.sharedAccessSignature) {
       options.password = this._config.sharedAccessSignature.toString();

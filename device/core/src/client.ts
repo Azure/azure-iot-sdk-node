@@ -18,6 +18,7 @@ import { Twin, TwinProperties } from './twin';
 import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
 import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
 import { X509AuthenticationProvider } from './x509_authentication_provider';
+import { DeviceClientOptions } from './interfaces';
 
 /**
  * @private
@@ -344,7 +345,7 @@ export class Client extends EventEmitter {
    *
    * @throws {ReferenceError}     If the options structure is falsy
    */
-  setOptions(options: any, done?: (err?: Error, result?: results.TransportConfigured) => void): void {
+  setOptions(options: DeviceClientOptions, done?: (err?: Error, result?: results.TransportConfigured) => void): void {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
     if (!options) throw new ReferenceError('options cannot be falsy.');
 
@@ -732,7 +733,7 @@ export namespace Client {
 
     connect(done: (err?: Error, result?: results.Connected) => void): void;
     disconnect(done: (err?: Error, result?: results.Disconnected) => void): void;
-    setOptions?(options: any, done: (err?: Error, result?: results.TransportConfigured) => void): void;
+    setOptions?(options: DeviceClientOptions, done: (err?: Error, result?: results.TransportConfigured) => void): void;
     updateSharedAccessSignature(sharedAccessSignature: string, done: (err?: Error, result?: results.SharedAccessSignatureUpdated) => void): void;
 
     // D2C

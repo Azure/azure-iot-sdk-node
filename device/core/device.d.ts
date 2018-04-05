@@ -10,3 +10,4 @@ export { X509AuthenticationProvider } from './lib/x509_authentication_provider';
 export { SharedAccessSignatureAuthenticationProvider } from './lib/sas_authentication_provider';
 export { SharedAccessKeyAuthenticationProvider } from './lib/sak_authentication_provider';
 export { Twin, TwinProperties } from './lib/twin';
+export { DeviceClientOptions, HttpReceiverOptions, AmqpTransportOptions, HttpTransportOptions, MqttTransportOptions } from './lib/interfaces';

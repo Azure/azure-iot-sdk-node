@@ -12,7 +12,9 @@ import { Http as Base } from 'azure-iot-http-base';
 import { endpoint, errors, results, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
 import { translateError } from './http_errors.js';
 import { IncomingMessage } from 'http';
-import { DeviceMethodResponse, Client, X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider, TwinProperties } from 'azure-iot-device';
+import { DeviceMethodResponse, Client, TwinProperties } from 'azure-iot-device';
+import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
+import { DeviceClientOptions, HttpReceiverOptions } from 'azure-iot-device';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -306,7 +308,7 @@ export class Http extends EventEmitter implements Client.Transport {
    *
    * @param {Function}      done      The callback to be invoked when `setOptions` completes.
    */
-  setOptions(options: any, done: (err?: Error, result?: any) => void): void {
+  setOptions(options: DeviceClientOptions, done: (err?: Error, result?: any) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_011: [The HTTP transport should use the x509 settings passed in the `options` object to connect to the service if present.]*/
     if (options.hasOwnProperty('cert')) {
       (this._authenticationProvider as X509AuthenticationProvider).setX509Options({
@@ -325,6 +327,8 @@ export class Http extends EventEmitter implements Client.Transport {
       }
     };
 
+    this._http.setOptions(options);
+
     // setOptions used to exist both on Http and HttpReceiver with different options class. In order not to break backward compatibility we have
     // to check what properties this options object has to figure out what to do with it.
     if (options.hasOwnProperty('http') && options.http.hasOwnProperty('receivePolicy')) {
@@ -336,7 +340,8 @@ export class Http extends EventEmitter implements Client.Transport {
               || options.hasOwnProperty('cron')
               || options.hasOwnProperty('manualPolling')
               || options.hasOwnProperty('drain')) {
-      this._setReceiverOptions(options);
+      this._setReceiverOptions(options as any);
+      calldoneifspecified();
     }
   }
 
@@ -733,40 +738,3 @@ export class Http extends EventEmitter implements Client.Transport {
   }
 }
 
-/**
- * Options structure used to configure how often the HTTP receiver polls for messages.
- * Each of these options is mutually exclusive, except for the `drain` boolean. Only one `interval`, `at`, `cron` or `manualPolling` shall be present in the options structure.
- *
- * This is configured by calling {@link azure-iot-device.Client.setOptions} with an options structure following this format:
- * ```js
- * {
- *   http: {
- *     receivePolicy: {
- *       ...
- *     }
- *   }
- * }
- * ```
- */
-export interface HttpReceiverOptions {
-  /**
-   * Interval **in seconds** at which the Azure IoT hub is going to be polled.
-   */
-  interval?: number;
-  /**
-   * Use this option to configure the receiver to receive only once at a specific time.
-   */
-  at?: Date;
-  /**
-   * Use a cron-formatted string
-   */
-  cron?: string;
-  /**
-   * Does not poll and instead rely on the user calling the `receive` method.
-   */
-  manualPolling?: boolean;
-  /**
-   * Boolean indicating whether only one message should be received all messages should be drained.
-   */
-  drain?: boolean;
-}
