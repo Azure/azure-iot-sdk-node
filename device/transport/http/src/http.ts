@@ -14,7 +14,7 @@ import { translateError } from './http_errors.js';
 import { IncomingMessage } from 'http';
 import { DeviceMethodResponse, Client, TwinProperties } from 'azure-iot-device';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
-import { DeviceClientOptions, HttpReceiverOptions as _clientReceiverOptions } from 'azure-iot-device';
+import { DeviceClientOptions, HttpReceiverOptions } from 'azure-iot-device';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -736,12 +736,5 @@ export class Http extends EventEmitter implements Client.Transport {
       });
     }
   }
-}
-
-/**
- * @deprecated use {@link azure-iot-device:HttpReceiverOptions} instead.
- */
-export interface HttpReceiverOptions extends _clientReceiverOptions {
-
 }
 
