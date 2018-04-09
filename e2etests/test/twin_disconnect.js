@@ -5,7 +5,7 @@
 
 var Registry = require('azure-iothub').Registry;
 var ConnectionString = require('azure-iothub').ConnectionString;
-var debug = require('debug')('e2etests:twindisconnect');
+var debug = require('debug')('e2etests:twin_disconnect');
 var Message = require('azure-iot-common').Message;
 var deviceSdk = require('azure-iot-device');
 var deviceMqtt = require('azure-iot-device-mqtt');

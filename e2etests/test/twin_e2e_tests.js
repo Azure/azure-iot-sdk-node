@@ -12,6 +12,7 @@ var uuid = require('uuid');
 var _ = require('lodash');
 var assert = require('chai').assert;
 var async = require('async');
+var debug = require('debug')('e2etests:twin_e2e');
 
 var deviceAmqp = require('azure-iot-device-amqp');
 var deviceMqtt = require('azure-iot-device-mqtt');
@@ -154,13 +155,24 @@ delete nullMergeResult.tweedle;
       assertObjectIsEmpty(serviceTwin.properties.reported);
       assertObjectIsEmpty(deviceTwin.properties.reported);
 
+      debug('updating reported properties');
       deviceTwin.properties.reported.update(newProps, function(err) {
-        if (err) return done(err);
-        serviceTwin.get(function(err) {
-          if (err) return done(err);
-          assertObjectsAreEqual(newProps, serviceTwin.properties.reported);
-          done();
-        });
+        if (err) {
+          debug('error updating reported properties: ' + err.toString());
+          return done(err);
+        } else {
+          debug('reported properties updated - getting twin from the service side');
+          serviceTwin.get(function(err) {
+            if (err) {
+              debug('error getting twin on the service side');
+              return done(err);
+            } else {
+              debug('got twin from the service side');
+              assertObjectsAreEqual(newProps, serviceTwin.properties.reported);
+              done();
+            }
+          });
+        }
       });
     };
 
@@ -188,19 +200,24 @@ delete nullMergeResult.tweedle;
       assertObjectIsEmpty(deviceTwin.properties.desired);
       deviceTwin.on('properties.desired', function(props) {
         if (props.$version === 1) {
-          // ignore
-          assert(true);
+          debug('initial property update (v1) - ignoring');
         } else if (props.$version === 2) {
+          debug('new desired properties update received (v2)');
           assertObjectsAreEqual(newProps, deviceTwin.properties.desired);
           done();
         } else {
+          debug('invalid property version! test failure.');
           done(new Error('incorrect property version received - ' + props.$version));
         }
       });
 
-      serviceTwin.update( { properties : { desired : newProps } }, function(err) {
-        if (err) return done(err);
-      });
+      // wait a little before triggering the properties update to account for subscription time.
+      setTimeout(function () {
+        debug('sending desired properties update');
+        serviceTwin.update( { properties : { desired : newProps } }, function(err) {
+          if (err) return done(err);
+        });
+      }, 3000);
     };
 
     it('sends and receives desired properties', sendsAndReceivesDesiredProperties);
@@ -208,29 +225,44 @@ delete nullMergeResult.tweedle;
     var mergeDesiredProperties = function(first, second, newEtag, result, done) {
       deviceTwin.on('properties.desired', function(props) {
         if (props.$version === 1 || props.$version === 2) {
-          // ignore
-          assert(true);
+          debug('ignoring initial properties updates with version ' + props.$version);
         } else if (props.$version === 3) {
+          debug('property update with $version===3 received');
           assertObjectsAreEqual(deviceTwin.properties.desired, result);
           done();
         } else {
+          debug('incorrect property version received: ' + props.$version + ' ; test failure!');
           done(new Error('incorrect property version received - ' + props.$version));
         }
       });
 
-      serviceTwin.update( { properties : { desired : first } }, function(err) {
-        if (err) return done(err);
+      // account for some delay when subscribing to desired properties updates.
+      setTimeout(function () {
+        debug('sending first desired properties update');
+        serviceTwin.update( { properties : { desired : first } }, function(err) {
+          if (err) {
+            debug('failed to send the first desired properties update');
+            return done(err);
+          } else {
+            debug('first desired properties update successful');
+            if (newEtag) {
+              assert.isDefined(serviceTwin.etag);
+              assert.notEqual(serviceTwin.etag, "*");
+              serviceTwin.etag = newEtag;
+            }
 
-        if (newEtag) {
-          assert.isDefined(serviceTwin.etag);
-          assert.notEqual(serviceTwin.etag, "*");
-          serviceTwin.etag = newEtag;
-        }
-
-        serviceTwin.update( { properties : { desired : second } }, function(err) {
-          if (err) return done(err);
+            debug('second desired properties updates');
+            serviceTwin.update( { properties : { desired : second } }, function(err) {
+              if (err) {
+                debug('failed to send the second desired properties update.');
+                return done(err);
+              } else {
+                debug('service successfully updated the desired properties');
+              }
+            });
+          }
         });
-      });
+      }, 3000);
     };
 
     it('sends and receives merged desired properties', function(done) {
@@ -280,26 +312,32 @@ delete nullMergeResult.tweedle;
       mergeTags(newProps, moreNewProps, "*", mergeResult, done);
     });
 
-    it.skip('can send reported properties to the service after renewing the sas token', function(done) {
-      deviceClient.on('_sharedAccessSignatureUpdated', function() {
-        // _sharedAccessSignatureUpdated fired when the signature has been updated,
-        // but we still have to wait for the library to connect and register for events.
-        // We really need a "twinReady" event, but we don't have one right now.
-        setTimeout(function() {
+    it('can send reported properties to the service after renewing the sas token', function(done) {
+      var newSas = deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
+      debug('updating the shared access signature for device: ' + deviceDescription.deviceId);
+      deviceClient.updateSharedAccessSignature(newSas, function (err) {
+        if (err) {
+          debug('error renewing the shared access signature: ' + err.toString());
+          done(err);
+        } else {
+          debug('updating reported properties');
           sendsAndReceiveReportedProperties(done);
-        }, 1000);
+        }
       });
-      deviceClient.updateSharedAccessSignature(deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString());
     });
 
-    it.skip('can receive desired properties from the service after renewing the sas token', function(done) {
-      deviceClient.on('_sharedAccessSignatureUpdated', function() {
-        // See note above about "twinReady" event.
-        setTimeout(function() {
+    it('can receive desired properties from the service after renewing the sas token', function(done) {
+      var newSas = deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
+      debug('updating the shared access signature for device: ' + deviceDescription.deviceId);
+      deviceClient.updateSharedAccessSignature(newSas, function (err) {
+        if (err) {
+          debug('error renewing the shared access signature: ' + err.toString());
+          done(err);
+        } else {
+          debug('updating desired properties');
           sendsAndReceivesDesiredProperties(done);
-        }, 1000);
+        }
       });
-      deviceClient.updateSharedAccessSignature(deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString());
     });
 
     it.skip('call null out all reported properties', function(done) {
