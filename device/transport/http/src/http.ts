@@ -337,7 +337,7 @@ export class Http extends EventEmitter implements Client.Transport {
               || options.hasOwnProperty('manualPolling')
               || options.hasOwnProperty('drain')) {
       this._setReceiverOptions(options as any);
-      calldoneifspecified();
+      if (done) done();
     }
   }
 

@@ -163,32 +163,8 @@ describe('MqttBase', function () {
       transport.connect(fakeConfig, function () {});
     });
 
-    /*Tests_SRS_NODE_COMMON_MQTT_BASE_18_001: [The `connect` method shall set the `ca` option based on the `ca` string passed in the `options` structure via the `setOptions` function.]*/
-    it('uses the ca passed into setOptions', function(done) {
-      var fakeConfig = {
-        host: "host.name",
-        deviceId: "deviceId",
-        sharedAccessSignature: "sasToken"
-      };
-      var fakeCa = '__FAKE_CA__';
-      var fakemqtt = new FakeMqtt();
-      var transport = new MqttBase('test', fakemqtt);
-
-      transport.setOptions({ca: fakeCa});
-      fakemqtt.connect = function(host, options) {
-        assert.strictEqual(options.ca, fakeCa);
-        done();
-      };
-      transport.connect(fakeConfig, function () {});
-    });
-
-    /*Tests_SRS_NODE_COMMON_MQTT_BASE_18_002: [The `connect` method shall set the `wsOptions.agent` option based on the `mqtt.webSocketAgent` object passed in the `options` structure via the `setOptions` function.]*/
+   /*Tests_SRS_NODE_COMMON_MQTT_BASE_18_002: [The `connect` method shall set the `wsOptions.agent` option based on the `mqtt.webSocketAgent` object passed in the `options` structure via the `setOptions` function.]*/
     it('uses the agent passed into setOptions', function(done) {
-      var fakeConfig = {
-        host: "host.name",
-        deviceId: "deviceId",
-        sharedAccessSignature: "sasToken"
-      };
       var fakeAgent = '__FAKE_AGENT__';
       var fakemqtt = new FakeMqtt();
       var transport = new MqttBase('test', fakemqtt);
