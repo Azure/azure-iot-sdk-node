@@ -8,12 +8,27 @@ import * as Promise from 'bluebird';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-provisioning-device-amqp:SaslTpm');
 
+/**
+ * @private
+ */
 export type GetSasTokenCallback = (err: Error, sasToken?: string) => void;
+
+/**
+ * @private
+ */
+
 export type GetSasToken = (challenge: Buffer, callback: GetSasTokenCallback) => void;
+
+/**
+ * @private
+ */
 export type SaslResponseFrame = {
   response: Buffer
 };
 
+/**
+ * @private
+ */
 export class SaslTpm {
   public name: string = 'TPM';
 

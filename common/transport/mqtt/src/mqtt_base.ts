@@ -12,6 +12,9 @@ import { errors, results, SharedAccessSignature, X509 } from 'azure-iot-common';
 
 /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_004: [The `MqttBase` constructor shall instanciate the default MQTT.JS library if no argument is passed to it.]*/
 /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_005: [The `MqttBase` constructor shall use the object passed as argument instead of the default MQTT.JS library if it's not falsy.]*/
+/**
+ * @private
+ */
 export class MqttBase extends EventEmitter {
   private mqttprovider: any;
   private _config: MqttBaseTransportConfig;
@@ -223,6 +226,19 @@ export class MqttBase extends EventEmitter {
     };
 
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_18_001: [The `connect` method shall set the `ca` option based on the `ca` string passed in the `options` structure via the `setOptions` function.]*/
+    if (this._options) {
+      if (this._options.ca) {
+        options.ca = this._options.ca;
+      }
+      /*Codes_SRS_NODE_COMMON_MQTT_BASE_18_002: [The `connect` method shall set the `wsOptions.agent` option based on the `mqtt.webSocketAgent` object passed in the `options` structure via the `setOptions` function.]*/
+      if (this._options.mqtt && this._options.mqtt.webSocketAgent) {
+        options.wsOptions = {
+          agent: this._options.mqtt.webSocketAgent
+        };
+      }
+    }
+
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_18_001: [The `connect` method shall set the `ca` option based on the `ca` string passed in the `options` structure via the `setOptions` function.]*/
     if (this._options && this._options.ca) {
       options.ca = this._options.ca;
     }
@@ -281,6 +297,9 @@ export class MqttBase extends EventEmitter {
   }
 }
 
+  /**
+   * @private
+   */
 export interface MqttBaseTransportConfig {
   sharedAccessSignature?: string | SharedAccessSignature;
   clientId: string;

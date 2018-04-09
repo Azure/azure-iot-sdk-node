@@ -14,7 +14,7 @@ import { translateError } from './http_errors.js';
 import { IncomingMessage } from 'http';
 import { DeviceMethodResponse, Client, TwinProperties } from 'azure-iot-device';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
-import { DeviceClientOptions, HttpReceiverOptions as _clientReceiverOptions } from 'azure-iot-device';
+import { DeviceClientOptions, HttpReceiverOptions } from 'azure-iot-device';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -323,6 +323,8 @@ export class Http extends EventEmitter implements Client.Transport {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_009: [If `done` has been specified the `setOptions` method shall call the `done` callback with a standard javascript `Error` object when unsuccessful.]*/
     this._http.setOptions(options);
 
+    this._http.setOptions(options);
+
     // setOptions used to exist both on Http and HttpReceiver with different options class. In order not to break backward compatibility we have
     // to check what properties this options object has to figure out what to do with it.
     if (options.hasOwnProperty('http') && options.http.hasOwnProperty('receivePolicy')) {
@@ -335,7 +337,7 @@ export class Http extends EventEmitter implements Client.Transport {
               || options.hasOwnProperty('manualPolling')
               || options.hasOwnProperty('drain')) {
       this._setReceiverOptions(options as any);
-      if (done) done();
+      calldoneifspecified();
     }
   }
 
@@ -766,10 +768,4 @@ export class Http extends EventEmitter implements Client.Transport {
   }
 }
 
-/**
- * @deprecated use {@link azure-iot-device:HttpReceiverOptions} instead.
- */
-export interface HttpReceiverOptions extends _clientReceiverOptions {
-
-}
 

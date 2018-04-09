@@ -77,6 +77,10 @@ export interface HttpTransportOptions {
  * This is passed into {@link Client.setOptions} as a property named `mqtt` inside of an {@link DeviceClientOptions} object.
  */
 export interface MqttTransportOptions {
+  /**
+   * Optional [Agent]{@link https://nodejs.org/api/https.html#https_class_https_agent} object to use with MQTT-WS connections
+   */
+  webSocketAgent?: Agent;
 
 }
 
