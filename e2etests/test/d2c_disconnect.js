@@ -128,9 +128,18 @@ protocolAndTermination.forEach( function (testConfiguration) {
       ehReceivers = [];
     });
 
-    afterEach(function (testCallback) {
-      closeDeviceEventHubClients(deviceClient, ehClient, ehReceivers, testCallback);
+    afterEach(function (afterEachCallback) {
       if (sendMessageTimeout !== null) clearTimeout(sendMessageTimeout);
+      debug('closing device and event hubs clients...');
+      closeDeviceEventHubClients(deviceClient, ehClient, ehReceivers, function (err) {
+        if (err) {
+          debug('error closing clients: ' + err.toString());
+          afterEachCallback(err);
+        } else {
+          debug('device and event hubs client closed.');
+          afterEachCallback();
+        }
+      });
     });
 
     doConnectTest(testConfiguration.testEnabled)('device sends a message, event hub client receives it, and' + testConfiguration.closeReason + 'which is noted by the iot hub device client', function (testCallback) {
@@ -205,19 +214,39 @@ protocolAndTermination.forEach( function (testConfiguration) {
           message: new Message(uuidData),
           sent: false,
           received: false
-        }
+        };
       }
 
       var allDone = function () {
         for (var messageId in originalMessages) {
-          debug('message ' + messageId + ': sent: ' + originalMessages[messageId].sent + '; received: ' + originalMessages[messageId].received);
-          if (!originalMessages[messageId].sent || !originalMessages[messageId].received) {
-            return false;
+          if (originalMessages.hasOwnProperty(messageId)) {
+            debug('message ' + messageId + ': sent: ' + originalMessages[messageId].sent + '; received: ' + originalMessages[messageId].received);
+            if (!originalMessages[messageId].sent || !originalMessages[messageId].received) {
+              return false;
+            }
           }
         }
         debug('allDone: true!');
         return true;
-      }
+      };
+
+      var sendMessage = function (messageId) {
+        deviceClient.sendEvent(originalMessages[messageId].message, function (sendErr) {
+          if (sendErr) {
+            debug('failed to send message with id: ' + messageId + ': ' + sendErr.toString());
+            testCallback(sendErr);
+          } else {
+            debug('message sent: ' + messageId);
+            originalMessages[messageId].sent = true;
+            if (allDone()) {
+              debug('all messages have been sent and received!');
+              testCallback();
+            } else {
+              debug('still not done!');
+            }
+          }
+        });
+      };
 
       var sendNextMessage = function() {
         for (var messageId in originalMessages) {
@@ -225,21 +254,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
             continue;
           } else {
             debug('Sending message with id: ' + messageId);
-            return deviceClient.sendEvent(originalMessages[messageId].message, function (sendErr) {
-              if (sendErr) {
-                debug('failed to send message with id: ' + messageId + ': ' + sendErr.toString());
-                testCallback(sendErr);
-              } else {
-                debug('message sent: ' + messageId);
-                originalMessages[messageId].sent = true;
-                if (allDone()) {
-                  debug('all messages have been sent and received!');
-                  testCallback();
-                } else {
-                  debug('still not done!');
-                }
-              }
-            });
+            return sendMessage(messageId);
           }
         }
         debug('all messages have been sent.');
@@ -279,7 +294,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
                             if (allDone()) {
                               testCallback();
                             } else {
-                              sendMessageTimeout = setTimeout(sendNextMessage.bind(this), 3000);
+                              sendMessageTimeout = setTimeout(sendNextMessage, 3000);
                             }
                           } else {
                             debug('eventData message id doesn\'t match any stored message id');
