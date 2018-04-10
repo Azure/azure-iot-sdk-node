@@ -51,7 +51,7 @@ client.attach(function (err) {
 
 **SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_014: [** The `AmqpDeviceMethodClient` object shall set 2 properties of any AMQP link that it create:
 - `com.microsoft:api-version` shall be set to the current API version in use.
-- `com.microsoft:channel-correlation-id` shall be set to the identifier of the device (also often referred to as `deviceId`). **]**
+- `com.microsoft:channel-correlation-id` shall be set to the string "methods:" followed by a guid **]**
 
 **SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_019: [** The `attach` method shall create a SenderLink and a ReceiverLink and attach them. **]**
 
@@ -62,6 +62,8 @@ client.attach(function (err) {
 **SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_015: [** The `AmqpDeviceMethodClient` object shall forward any error received on a link to any listening client in an `error` event. **]**
 
 **SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_017: [** The endpoint used to for the sender and receiver link shall be `/devices/<device-id>/methods/devicebound` **]**
+
+**SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_18_001: [** If a `moduleId` value was set in the device's connection string, The endpoint used to for the sender and receiver link shall be `/devices/<deviceId>/modules/<moduleId>/methods/devicebound` **]**
 
 ### detach(callback)
 

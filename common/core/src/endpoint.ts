@@ -6,16 +6,20 @@
 
 export const apiVersion = '2017-11-08-preview';
 
-export function devicePath(id: string): string {
-  return '/devices/' + id;
+export function devicePath(deviceId: string, moduleId?: string): string {
+  if (moduleId) {
+    return '/devices/' + deviceId + '/modules/' + moduleId;
+  } else {
+    return '/devices/' + deviceId;
+  }
 }
 
-export function eventPath(id: string): string {
-  return devicePath(id) + '/messages/events';
+export function eventPath(deviceId: string, moduleId?: string): string {
+  return devicePath(deviceId, moduleId) + '/messages/events';
 }
 
-export function messagePath(id: string): string {
-  return devicePath(id) + '/messages/devicebound';
+export function messagePath(deviceId: string, moduleId?: string): string {
+  return devicePath(deviceId, moduleId) + '/messages/devicebound';
 }
 
 export function feedbackPath(id: string, lockToken: string): string {

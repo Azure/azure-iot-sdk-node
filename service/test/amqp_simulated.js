@@ -47,6 +47,26 @@ SimulatedAmqp.prototype.send = function send(deviceId, message, done) {
   }
 };
 
+SimulatedAmqp.prototype.sendToModule = function send(deviceId, moduleId, inputName, message, done) {
+  if (done) {
+    if (deviceId.search(/^no-device/) !== -1) {
+      done(new errors.DeviceNotFoundError());
+    }
+    else {
+      done(null, new results.MessageEnqueued());
+      if (message.ack === 'full') {
+        this._receiver.emit('message', {
+          body: [{
+            originalMessageId: message.messageId,
+            deviceId: deviceId,
+            moduleId: moduleId
+          }]
+        });
+      }
+    }
+  }
+};
+
 SimulatedAmqp.prototype.getFeedbackReceiver = function (done) {
   if (this._config.sharedAccessSignature === 'fail') {
     done(new Error('error'));

@@ -17,8 +17,19 @@ The following table shows which clients support which events & messages:
 
 | client type | `sendEvent` | `sendOutputEvent` | Messages | InputMessages |
 |------------ | --------- | --------------- | -------- | ------------- |
-| device | yes | (theoretically yes)  | yes | no |
-| module | yes | yes | no | yes|
+| device | yes | no  | yes | no |
+| module | no | yes | no | yes|
+
+## Notes on inputName and outputName encoding
+| parameter | encoding for MQTT | encoding for AMQP |
+|-|-|-|
+| outputName | encoded in outgoing topic name.  E.g. "devices/\<deviceId>/modules/\<moduleId>/messages/events/$.on=\<outputName>" | uses the same link as telemetry, outputName is encoded in an annotation named "x-opt-output-name" |
+| inputName | encoded in incoming topic name E.g. "devices/\<deviceId>/modules/\<moduleId>/messages/inputs/\<inputName>" | uses the same link as C2D, inputName is encoded in an annotation named "x-opt-input-name" |
+
+Put another way:
+* AMQP uses the C2D and telemetry links for inputs and outputs.  This applies to both the device SDK and the service SDK.  inputName and outputName are stored in annotations.
+* For outputs, MQTT uses the same base topic string as for telemetry, with the outputName being stored in the newly added $.on querystring value.
+* For inputs, MQTT has an entirely new topic string, ending in /inputs/\<inputName>
 
 ## Design principles
 1. The concept of "module" is completely orthogonal to the concepts of `inputName` and `outputName`.  The `moduleId` is one of the properties of the service connection.  The `inputName` and `outputName` define how a message travels.  This orthogonality is very important.

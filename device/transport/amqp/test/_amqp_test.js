@@ -11,10 +11,8 @@ var sinon = require('sinon');
 var AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
 var Message = require('azure-iot-common').Message;
 var Amqp = require('../lib/amqp.js').Amqp;
-var AmqpTwinClient = require('../lib/amqp_twin_client.js').AmqpTwinClient;
 var errors = require('azure-iot-common').errors;
 var results = require('azure-iot-common').results;
-var endpoint = require('azure-iot-common').endpoint;
 var AuthenticationType = require('azure-iot-common').AuthenticationType;
 
 describe('Amqp', function () {
@@ -28,7 +26,6 @@ describe('Amqp', function () {
 
   var testMessage = new Message();
   testMessage.transportObj = {};
-  var testCallback = function () { };
   var configWithSSLOptions = { host: 'hub.host.name', deviceId: 'deviceId', x509: 'some SSL options' };
   var simpleSas = 'SharedAccessSignature sr=foo&sig=123&se=123';
   var configWithSAS = { host: 'hub.host.name', deviceId: 'deviceId', sharedAccessSignature: simpleSas};
@@ -97,6 +94,7 @@ describe('Amqp', function () {
     it('does not subscribe to the newTokenAvailable event if the authenticationProvider is x509', function () {
       fakeX509AuthenticationProvider.on = sinon.stub();
       var amqp = new Amqp(fakeX509AuthenticationProvider, fakeBaseClient);
+      void(amqp);
       assert.isTrue(fakeX509AuthenticationProvider.on.notCalled);
     });
 
@@ -104,7 +102,7 @@ describe('Amqp', function () {
     it('initiates a putToken when a newTokenAvailable event is received', function (testCallback) {
       var newSas = 'SharedAccessSignature sr=new&sig=456&se=456';
       transport.connect(function () {
-        assert.isTrue(fakeBaseClient.putToken.calledOnce)
+        assert.isTrue(fakeBaseClient.putToken.calledOnce);
         fakeTokenAuthenticationProvider.emit('newTokenAvailable', { sharedAccessSignature: newSas });
         assert.isTrue(fakeBaseClient.putToken.calledTwice);
         assert.strictEqual(fakeBaseClient.putToken.secondCall.args[1], newSas);
@@ -125,7 +123,7 @@ describe('Amqp', function () {
         fakeBaseClient.putToken = sinon.stub().callsArgWith(2, fakeError);
         fakeTokenAuthenticationProvider.emit('newTokenAvailable', { sharedAccessSignature: newSas });
       });
-    })
+    });
   });
 
   describe('Direct Methods', function () {
@@ -195,7 +193,7 @@ describe('Amqp', function () {
           requestId: 'foo',
           payload: { key: 'value' },
           methodName: 'fakeMethod'
-        }
+        };
 
         transport.connect(function () {
           transport.onDeviceMethod(fakeMethodRequest.methodName, function () {
@@ -312,7 +310,7 @@ describe('Amqp', function () {
       });
     });
 
-    describe('disableMethods', function (testCallback) {
+    describe('disableMethods', function () {
       /*Tests_SRS_NODE_DEVICE_AMQP_16_044: [The `disableMethods` method shall call its `callback` immediately if the transport is already disconnected.]*/
       it('calls the callback immediately if the transport is disconnected', function (testCallback) {
         transport.disableMethods(function (err) {
@@ -460,13 +458,12 @@ describe('Amqp', function () {
       });
 
       it('defers the call if already connected and authenticating', function (testCallback) {
-        var connectErr = new Error('cannot connect');
         var authCallback;
         fakeBaseClient.initializeCBS = sinon.stub().callsFake(function (done) {
           authCallback = done;
         });
 
-        transport.connect(function (err) {
+        transport.connect(function () {
           fakeBaseClient.initializeCBS = sinon.stub().callsArgWith(0, null);
         });
 
@@ -548,7 +545,6 @@ describe('Amqp', function () {
         });
 
         it('is deferred until connecting succeeds', function (testCallback) {
-          var connectErr = new Error('cannot connect');
           var connectCallback;
           fakeBaseClient.connect = sinon.stub().callsFake(function (uri, options, done) {
             connectCallback = done;
@@ -579,7 +575,7 @@ describe('Amqp', function () {
           transport.connect(function () {
             transport.on('message', function () {});
             transport.enableC2D(function () {
-              transport.disconnect(function (err, result) {
+              transport.disconnect(function () {
                 assert.isTrue(receiver.removeListener.calledWith('message'));
                 assert.isTrue(receiver.removeListener.calledWith('error'));
                 assert.isTrue(receiver.detach.calledOnce);
@@ -593,7 +589,7 @@ describe('Amqp', function () {
         it('detaches the D2C link if it is attached', function (testCallback) {
           transport.connect(function () {
             transport.sendEvent(new Message('foo'), function () {
-              transport.disconnect(function (err, result) {
+              transport.disconnect(function () {
                 assert.isTrue(sender.removeListener.calledWith('error'));
                 assert.isTrue(sender.detach.calledOnce);
                 testCallback();
@@ -662,7 +658,7 @@ describe('Amqp', function () {
               assert.strictEqual(err.amqpError, fakeError);
               testCallback();
             });
-          })
+          });
         });
       });
 
@@ -892,21 +888,34 @@ describe('Amqp', function () {
     });
   });
 
-  describe('D2C', function () {
-    describe('#sendEvent', function () {
+
+
+  [{
+    functionUnderTest: 'sendEvent',
+    invokeFunction: function(msg, callback) { transport.sendEvent(msg, callback); },
+    expectedOutputName: null
+  },
+  {
+    functionUnderTest: 'sendOutputEvent',
+    invokeFunction: function(msg, callback) { transport.sendOutputEvent('_fake_output', msg, callback); },
+    expectedOutputName: '_fake_output'
+  }].forEach(function(testConfig) {
+    describe('#' + testConfig.functionUnderTest, function () {
       /*Tests_SRS_NODE_DEVICE_AMQP_16_024: [The `sendEvent` method shall connect and authenticate the transport if necessary.]*/
+      /*Tests_SRS_NODE_DEVICE_AMQP_18_005: [The `sendOutputEvent` method shall connect and authenticate the transport if necessary.]*/
       it('automatically connects the transport if necessary', function (testCallback) {
-        transport.sendEvent(new Message('test'), function () {
+        testConfig.invokeFunction(new Message('test'), function () {
           assert(fakeBaseClient.connect.calledOnce);
           testCallback();
         });
       });
 
+      /*Tests_SRS_NODE_DEVICE_AMQP_18_009: [If `sendOutputEvent` encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
       it('forwards the error if connecting fails while trying to send a message', function (testCallback) {
         var fakeError = new Error('failed to connect');
         fakeBaseClient.connect = sinon.stub().callsArgWith(2, fakeError);
 
-        transport.sendEvent(new Message('test'), function (err) {
+        testConfig.invokeFunction(new Message('test'), function (err) {
           assert(fakeBaseClient.connect.calledOnce);
           assert.strictEqual(err.amqpError, fakeError);
           testCallback();
@@ -923,7 +932,7 @@ describe('Amqp', function () {
 
         transport.connect(function () {});
 
-        transport.sendEvent(new Message('test'), function () {
+        testConfig.invokeFunction(new Message('test'), function () {
           assert(fakeBaseClient.connect.calledOnce);
           testCallback();
         });
@@ -941,7 +950,7 @@ describe('Amqp', function () {
 
         transport.connect(function () {});
 
-        transport.sendEvent(new Message('test'), function () {
+        testConfig.invokeFunction(new Message('test'), function () {
           assert(fakeBaseClient.connect.calledOnce);
           testCallback();
         });
@@ -950,11 +959,12 @@ describe('Amqp', function () {
       });
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_025: [The `sendEvent` method shall create and attach the d2c link if necessary.]*/
+      /*Tests_SRS_NODE_DEVICE_AMQP_18_006: [The `sendOutputEvent` method shall create and attach the d2c link if necessary.]*/
       it('attaches the messaging link on first send, then reuses it', function (testCallback) {
-        transport.sendEvent(new Message('test'), function () {
+        testConfig.invokeFunction(new Message('test'), function () {
           assert(fakeBaseClient.attachSenderLink.calledOnce);
           assert(sender.on.calledOnce);
-          transport.sendEvent(new Message('test2'), function () {
+          testConfig.invokeFunction(new Message('test2'), function () {
             assert(fakeBaseClient.attachSenderLink.calledOnce);
             assert(sender.send.calledTwice);
             testCallback();
@@ -972,7 +982,7 @@ describe('Amqp', function () {
           testCallback();
         });
 
-        transport.sendEvent(new Message('test'), function (err) {
+        testConfig.invokeFunction(new Message('test'), function () {
           sender.emit('error', fakeError);
         });
       });
@@ -986,7 +996,7 @@ describe('Amqp', function () {
         transport.connect(function () {
           assert(fakeBaseClient.connect.calledOnce);
           transport.disconnect(function () {});
-          transport.sendEvent(new Message('test'), function () {
+          testConfig.invokeFunction(new Message('test'), function () {
             assert(fakeBaseClient.connect.calledTwice);
             testCallback();
           });
@@ -998,7 +1008,7 @@ describe('Amqp', function () {
       it('calls the callback with an error if attaching the link fails', function (testCallback) {
         var fakeError = new Error('fake');
         fakeBaseClient.attachSenderLink = sinon.stub().callsArgWith(2, fakeError);
-        transport.sendEvent(new Message('test'), function (err) {
+        testConfig.invokeFunction(new Message('test'), function (err) {
           assert.strictEqual(err.amqpError, fakeError);
           testCallback();
         });
@@ -1007,19 +1017,38 @@ describe('Amqp', function () {
       it('calls the callback with an error if sending the message fails', function (testCallback) {
         var fakeError = new Error('fake');
         sender.send = sinon.stub().callsArgWith(1, fakeError);
-        transport.sendEvent(new Message('test'), function (err) {
+        testConfig.invokeFunction(new Message('test'), function (err) {
           assert.strictEqual(err.amqpError, fakeError);
           testCallback();
         });
       });
 
       it('registers an error event handler on the d2c link', function (testCallback) {
-        transport.sendEvent(new Message('test'), function (err) {
+        testConfig.invokeFunction(new Message('test'), function () {
           assert.isTrue(sender.on.calledWith('error'));
           assert.doesNotThrow(function () {
             sender.emit('error', new Error());
           });
           testCallback();
+        });
+      });
+
+
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_002: [The `sendEvent` method shall construct an AMQP request using the message passed in argument as the body of the message.]*/
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_003: [The `sendEvent` method shall call the `done` callback with a null error object and a MessageEnqueued result object when the message has been successfully sent.]*/
+      /*Tests_SRS_NODE_DEVICE_AMQP_18_007: [The `sendOutputEvent` method shall construct an AMQP request using the message passed in argument as the body of the message.]*/
+      /*Tests_SRS_NODE_DEVICE_AMQP_18_012: [The `sendOutputEvent` method  shall set the annotation "x-opt-output-name" on the message to the `outputName`.]*/
+      /*Tests_SRS_NODE_DEVICE_AMQP_18_008: [The `sendOutputEvent` method shall call the `done` callback with a null error object and a MessageEnqueued result object when the message has been successfully sent.]*/
+      it ('constructs a request correctly and succeeds correctly', function (testCallback) {
+        testConfig.invokeFunction(new Message('test'), function (err, result) {
+          var sentMsg = sender.send.firstCall.args[0];
+          assert.instanceOf(sentMsg, AmqpMessage);
+          assert.instanceOf(result, results.MessageEnqueued);
+          assert.strictEqual(sentMsg.body, 'test');
+          if (testConfig.expectedOutputName) {
+            assert.strictEqual(sentMsg.messageAnnotations['x-opt-output-name'], testConfig.expectedOutputName);
+          }
+          testCallback(err);
         });
       });
     });
@@ -1092,120 +1121,130 @@ describe('Amqp', function () {
       });
     });
 
-    describe('enableC2D', function () {
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_031: [The `enableC2D` method shall connect and authenticate the transport if it is disconnected.]*/
-      it('connects the transport if it is disconnected', function (testCallback) {
-        transport.enableC2D(function () {
-          assert(fakeBaseClient.connect.calledOnce);
-          assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
-          testCallback();
-        });
-      });
-
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_032: [The `enableC2D` method shall attach the C2D link and call its `callback` once it is successfully attached.]*/
-      it('attaches the C2D link', function (testCallback) {
-        transport.connect(function () {
-          assert(fakeBaseClient.attachReceiverLink.notCalled);
-          transport.enableC2D(function () {
+    /*Tests_SRS_NODE_DEVICE_AMQP_18_010: [The `enableInputMessages` method shall enable C2D messages]*/
+    /*Tests_SRS_NODE_DEVICE_AMQP_18_011: [The `disableInputMessages` method shall disable C2D messages]*/
+    [{
+      enableFunc: 'enableC2D',
+      disableFunc: 'disableC2D'
+    },{
+      enableFunc: 'enableInputMessages',
+      disableFunc: 'disableInputMessages'
+    }].forEach(function(testConfig) {
+      describe(testConfig.enableFunc, function () {
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_031: [The `enableC2D` method shall connect and authenticate the transport if it is disconnected.]*/
+        it('connects the transport if it is disconnected', function (testCallback) {
+          transport[testConfig.enableFunc](function () {
+            assert(fakeBaseClient.connect.calledOnce);
             assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
             testCallback();
           });
         });
-      });
 
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
-      it('calls its callback with an Error if connecting the transport fails', function (testCallback) {
-        fakeBaseClient.connect = sinon.stub().callsArgWith(2, new Error('fake failed to connect'));
-        transport.enableC2D(function (err) {
-          assert(fakeBaseClient.connect.calledOnce);
-          assert.instanceOf(err, Error);
-          testCallback();
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_032: [The `enableC2D` method shall attach the C2D link and call its `callback` once it is successfully attached.]*/
+        it('attaches the C2D link', function (testCallback) {
+          transport.connect(function () {
+            assert(fakeBaseClient.attachReceiverLink.notCalled);
+            transport[testConfig.enableFunc](function () {
+              assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
+              testCallback();
+            });
+          });
         });
-      });
 
-      it('calls its callback with an Error if attaching the C2D link fails', function (testCallback) {
-        fakeBaseClient.attachReceiverLink = sinon.stub().callsArgWith(2, new Error('fake failed to attach'));
-        transport.connect(function () {
-          assert(fakeBaseClient.attachReceiverLink.notCalled);
-          transport.enableC2D(function (err) {
-            assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
+        it('calls its callback with an Error if connecting the transport fails', function (testCallback) {
+          fakeBaseClient.connect = sinon.stub().callsArgWith(2, new Error('fake failed to connect'));
+          transport[testConfig.enableFunc](function (err) {
+            assert(fakeBaseClient.connect.calledOnce);
             assert.instanceOf(err, Error);
             testCallback();
           });
         });
-      });
 
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_034: [Any `error` event received on the C2D link shall trigger the emission of an `error` event by the transport, with an argument that is a `C2DDetachedError` object with the `innerError` property set to that error.]*/
-      // disabled until the client supports it
-      it('emits a CloudToDeviceDetachedError with an innerError property if the link fails after being established correctly', function (testCallback) {
-        var fakeError = new Error('fake C2D receiver link error');
-        transport.on('error', function (err) {
-          assert.instanceOf(err, errors.CloudToDeviceDetachedError);
-          assert.strictEqual(err.innerError, fakeError);
-          testCallback();
-        });
-
-        transport.connect(function () {
-          assert(fakeBaseClient.attachReceiverLink.notCalled);
-          transport.enableC2D(function () {
-            assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
-            receiver.emit('error', fakeError);
-          });
-        });
-      });
-
-      it('forwards messages to the client once connected and authenticated', function (testCallback) {
-        var fakeMessage = new AmqpMessage();
-
-        transport.on('message', function (msg) {
-          assert.instanceOf(msg, Message);
-          assert.strictEqual(msg.transportObj, fakeMessage);
-          testCallback();
-        });
-
-        transport.connect(function () {
-          transport.enableC2D(function () {
-            receiver.emit('message', fakeMessage);
-          });
-        });
-      });
-    });
-
-    describe('disableC2D', function (testCallback) {
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_037: [The `disableC2D` method shall call its `callback` immediately if the transport is already disconnected.]*/
-      it('calls the callback immediately if the transport is disconnected', function (testCallback) {
-        transport.disableC2D(function (err) {
-          assert.isNotOk(err);
-          assert(receiver.detach.notCalled);
-          testCallback();
-        });
-      });
-
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_035: [The `disableC2D` method shall call `detach` on the C2D link and call its callback when it is successfully detached.]*/
-      it('detaches the C2D link', function (testCallback) {
-        transport.connect(function () {
-          assert(fakeBaseClient.attachReceiverLink.notCalled);
-          transport.enableC2D(function () {
-            assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
-            transport.disableC2D(function () {
-              assert(receiver.detach.calledOnce);
+        it('calls its callback with an Error if attaching the C2D link fails', function (testCallback) {
+          fakeBaseClient.attachReceiverLink = sinon.stub().callsArgWith(2, new Error('fake failed to attach'));
+          transport.connect(function () {
+            assert(fakeBaseClient.attachReceiverLink.notCalled);
+            transport[testConfig.enableFunc](function (err) {
+              assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
+              assert.instanceOf(err, Error);
               testCallback();
+            });
+          });
+        });
+
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_034: [Any `error` event received on the C2D link shall trigger the emission of an `error` event by the transport, with an argument that is a `C2DDetachedError` object with the `innerError` property set to that error.]*/
+        // disabled until the client supports it
+        it('emits a CloudToDeviceDetachedError with an innerError property if the link fails after being established correctly', function (testCallback) {
+          var fakeError = new Error('fake C2D receiver link error');
+          transport.on('error', function (err) {
+            assert.instanceOf(err, errors.CloudToDeviceDetachedError);
+            assert.strictEqual(err.innerError, fakeError);
+            testCallback();
+          });
+
+          transport.connect(function () {
+            assert(fakeBaseClient.attachReceiverLink.notCalled);
+            transport[testConfig.enableFunc](function () {
+              assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
+              receiver.emit('error', fakeError);
+            });
+          });
+        });
+
+        it('forwards messages to the client once connected and authenticated', function (testCallback) {
+          var fakeMessage = new AmqpMessage();
+
+          transport.on('message', function (msg) {
+            assert.instanceOf(msg, Message);
+            assert.strictEqual(msg.transportObj, fakeMessage);
+            testCallback();
+          });
+
+          transport.connect(function () {
+            transport[testConfig.enableFunc](function () {
+              receiver.emit('message', fakeMessage);
             });
           });
         });
       });
 
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_036: [The `disableC2D` method shall call its `callback` with an `Error` if it fails to detach the C2D link.]*/
-      it('calls its callback with an Error if an error happens while detaching the C2D link', function (testCallback) {
-        receiver.detach = sinon.stub().callsArgWith(0, new Error('fake detach error'));
-        transport.connect(function () {
-          assert(fakeBaseClient.attachReceiverLink.notCalled);
-          transport.enableC2D(function () {
-            assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
-            transport.disableC2D(function (err) {
-              assert(receiver.detach.calledOnce);
-              assert.instanceOf(err, Error);
-              testCallback();
+      describe(testConfig.disableFunc, function () {
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_037: [The `disableC2D` method shall call its `callback` immediately if the transport is already disconnected.]*/
+        it('calls the callback immediately if the transport is disconnected', function (testCallback) {
+          transport[testConfig.disableFunc](function (err) {
+            assert.isNotOk(err);
+            assert(receiver.detach.notCalled);
+            testCallback();
+          });
+        });
+
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_035: [The `disableC2D` method shall call `detach` on the C2D link and call its callback when it is successfully detached.]*/
+        it('detaches the C2D link', function (testCallback) {
+          transport.connect(function () {
+            assert(fakeBaseClient.attachReceiverLink.notCalled);
+            transport[testConfig.enableFunc](function () {
+              assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
+              transport[testConfig.disableFunc](function () {
+                assert(receiver.detach.calledOnce);
+                testCallback();
+              });
+            });
+          });
+        });
+
+        /*Tests_SRS_NODE_DEVICE_AMQP_16_036: [The `disableC2D` method shall call its `callback` with an `Error` if it fails to detach the C2D link.]*/
+        it('calls its callback with an Error if an error happens while detaching the C2D link', function (testCallback) {
+          receiver.detach = sinon.stub().callsArgWith(0, new Error('fake detach error'));
+          transport.connect(function () {
+            assert(fakeBaseClient.attachReceiverLink.notCalled);
+            transport[testConfig.enableFunc](function () {
+              assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
+              transport[testConfig.disableFunc](function (err) {
+                assert(receiver.detach.calledOnce);
+                assert.instanceOf(err, Error);
+                testCallback();
+              });
             });
           });
         });
@@ -1423,16 +1462,48 @@ describe('Amqp', function () {
     });
   });
 
+  /*Tests_SRS_NODE_DEVICE_AMQP_18_013: [If `amqp` receives a message on the C2D link without an annotation named "x-opt-input-name", it shall emit a "message" event with the message as the event parameter.]*/
+  describe('on(\'message\')', function () {
+    it('calls the message handler when message received', function (testCallback) {
+      var testText = '__TEST_TEXT__';
+      transport.connect(function () {
+        transport.on('message', function (msg) {
+          assert.strictEqual(msg.data, testText);
+          testCallback();
+        });
+        transport.enableC2D(function (err) {
+          assert(!err);
+          receiver.emit('message', AmqpMessage.fromMessage(new Message(testText)));
+        });
+      });
+    });
+  });
+
+  /*Tests_SRS_NODE_DEVICE_AMQP_18_014: [If `amqp` receives a message on the C2D link with an annotation named "x-opt-input-name", it shall emit a "message" event with the "x-opt-input-name" annotation as the first parameter and the message as the second parameter.]*/
+  describe('on(\'inputMessage\')', function () {
+    it('calls the message handler when message received', function (testCallback) {
+      var testText = '__TEST_TEXT__';
+      var testInputName = '__INPUT__';
+      transport.connect(function () {
+        transport.on('inputMessage', function (inputName, msg) {
+          assert.strictEqual(inputName, testInputName);
+          assert.strictEqual(msg.data, testText);
+          testCallback();
+        });
+        transport.enableInputMessages(function (err) {
+          assert(!err);
+          var amqpMessage = AmqpMessage.fromMessage(new Message(testText));
+          amqpMessage.messageAnnotations = { 'x-opt-input-name': testInputName };
+          receiver.emit('message', amqpMessage);
+        });
+      });
+    });
+  });
+
   /*Tests_SRS_NODE_DEVICE_AMQP_16_052: [The `sendEventBatch` method shall throw a `NotImplementedError`.]*/
-  /*Tests_SRS_NODE_DEVICE_AMQP_18_001: [`enableInputMessages` shall throw a `NotImplementedError`.]*/
-  /*Tests_SRS_NODE_DEVICE_AMQP_18_002: [`disableInputMessages` shall throw a `NotImplementedError`.]*/
-  /*Tests_SRS_NODE_DEVICE_AMQP_18_003: [`sendOutputEvent` shall throw a `NotImplementedError`.]*/
   /*Tests_SRS_NODE_DEVICE_AMQP_18_004: [`sendOutputEventBatch` shall throw a `NotImplementedError`.]*/
   [
     'sendEventBatch',
-    'enableInputMessages',
-    'disableInputMessages',
-    'sendOutputEvent',
     'sendOutputEventBatch'
   ].forEach(function (methodName) {
     describe('#' + methodName, function () {
@@ -1440,7 +1511,8 @@ describe('Amqp', function () {
         assert.throws(function () {
           transport[methodName]();
         }, errors.NotImplementedError);
-      })
+      });
     });
   });
 });
+

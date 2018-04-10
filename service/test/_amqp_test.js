@@ -529,117 +529,141 @@ describe('Amqp', function() {
     });
   });
 
-  describe('#send', function () {
-    /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_025: [The `send` method shall connect and authenticate the transport if it is disconnected.]*/
-    it('connects the transport if necessary', function (testCallback) {
-      var fakeSender = new EventEmitter();
-      fakeSender.send = sinon.stub().callsArgWith(1, null, new results.MessageEnqueued());
-      var amqp = new Amqp(fakeConfig, fakeAmqpBase);
-      fakeAmqpBase.attachSenderLink = sinon.stub().callsArgWith(2, null, fakeSender);
+  [
+    {
+      functionUnderTest: 'send',
+      invokeFunctionUnderTest: function(amqp, msg, callback) { amqp.send('fakeDeviceId', msg, callback); },
+      expectedDestination: '/devices/fakeDeviceId/messages/devicebound',
+      expectedInputName: null
+    },
+    {
+      functionUnderTest: 'sendToModule',
+      invokeFunctionUnderTest: function(amqp, msg, callback) { amqp.sendToModule('fakeDeviceId', 'fakeModuleId', 'fakeInputName', msg, callback); },
+      expectedDestination: '/devices/fakeDeviceId/modules/fakeModuleId/messages/devicebound',
+      expectedInputName: 'fakeInputName'
+     }
+  ].forEach(function(testConfig) {
+    describe('#' + testConfig.functionUnderTest, function () {
+      /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_025: [The `send` method shall connect and authenticate the transport if it is disconnected.]*/
+      /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_18_003: [The `sendToModule` method shall connect and authenticate the transport if it is disconnected.]*/
+      it('connects the transport if necessary', function (testCallback) {
+        var fakeSender = new EventEmitter();
+        fakeSender.send = sinon.stub().callsArgWith(1, null, new results.MessageEnqueued());
+        var amqp = new Amqp(fakeConfig, fakeAmqpBase);
+        fakeAmqpBase.attachSenderLink = sinon.stub().callsArgWith(2, null, fakeSender);
 
-      amqp.send('fakeDeviceId', new Message('foo'), function () {
-        assert.isTrue(fakeAmqpBase.connect.calledOnce);
-        assert.isTrue(fakeAmqpBase.initializeCBS.calledOnce);
-        assert.isTrue(fakeAmqpBase.putToken.calledOnce);
-        testCallback();
-      });
-    });
-
-    /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_026: [The `send` method shall call its callback with an error if connecting and/or authenticating the transport fails.]*/
-    it('calls its callback with an error if connecting the transport fails', function (testCallback) {
-      var amqp = new Amqp(fakeConfig, fakeAmqpBase);
-      fakeAmqpBase.connect = sinon.stub().callsArgWith(2, new Error('fakeError'));
-
-      amqp.send('fakeDeviceId', new Message('foo'), function (err) {
-        assert.isTrue(fakeAmqpBase.connect.calledOnce);
-        assert.instanceOf(err, Error);
-        testCallback();
-      });
-    });
-
-    /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_027: [The `send` method shall attach the C2D link if necessary.]*/
-    it('attaches the link if necessary', function (testCallback) {
-      var fakeSender = new EventEmitter();
-      fakeSender.send = sinon.stub().callsArgWith(1, null, new results.MessageEnqueued());
-      var amqp = new Amqp(fakeConfig, fakeAmqpBase);
-      fakeAmqpBase.attachSenderLink = sinon.stub().callsArgWith(2, fakeSender);
-
-      amqp.connect(function () {
-        amqp.send('fakeDeviceId', new Message('foo'), function () {
-          assert.isTrue(fakeAmqpBase.attachSenderLink.calledOnce);
-          assert.isTrue(fakeAmqpBase.attachSenderLink.calledWith('/messages/devicebound'));
+        testConfig.invokeFunctionUnderTest(amqp, new Message('foo'), function () {
+          assert.isTrue(fakeAmqpBase.connect.calledOnce);
+          assert.isTrue(fakeAmqpBase.initializeCBS.calledOnce);
+          assert.isTrue(fakeAmqpBase.putToken.calledOnce);
           testCallback();
         });
       });
-    });
 
-    /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_029: [The `send` method shall call its callback with an error if it fails to attach the C2D link.]*/
-    it('calls its callback with an error if the link fails to attach', function (testCallback) {
-      var fakeSender = new EventEmitter();
-      fakeSender.send = sinon.stub().callsArgWith(1, null, new results.MessageEnqueued());
-      var amqp = new Amqp(fakeConfig, fakeAmqpBase);
-      fakeAmqpBase.attachSenderLink = sinon.stub().callsArgWith(2, new Error('fake error'));
+      /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_026: [The `send` method shall call its callback with an error if connecting and/or authenticating the transport fails.]*/
+      /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_18_004: [The `sendToModule` method shall call its callback with an error if connecting and/or authenticating the transport fails.]*/
+      it('calls its callback with an error if connecting the transport fails', function (testCallback) {
+        var amqp = new Amqp(fakeConfig, fakeAmqpBase);
+        fakeAmqpBase.connect = sinon.stub().callsArgWith(2, new Error('fakeError'));
 
-      amqp.connect(function () {
-        amqp.send('fakeDeviceId', new Message('foo'), function (err) {
-          assert.isTrue(fakeAmqpBase.attachSenderLink.calledOnce);
+        testConfig.invokeFunctionUnderTest(amqp, new Message('foo'), function (err) {
+          assert.isTrue(fakeAmqpBase.connect.calledOnce);
           assert.instanceOf(err, Error);
           testCallback();
         });
       });
-    });
 
-    /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_030: [The `send` method shall call the `send` method of the C2D link and pass it the Amqp request that it created.]*/
-    it('calls send on the c2d link object', function (testCallback) {
-      var fakeDeviceId = 'fakeDeviceId';
-      var fakeSender = new EventEmitter();
-      fakeSender.send = sinon.stub().callsArgWith(1, null, new results.MessageEnqueued());
-      var amqp = new Amqp(fakeConfig, fakeAmqpBase);
-      fakeAmqpBase.attachSenderLink = sinon.stub().callsArgWith(2, null, fakeSender);
+      /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_027: [The `send` method shall attach the C2D link if necessary.]*/
+      /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_18_005: [The `sendToModule` method shall attach the C2D link if necessary.]*/
+      it('attaches the link if necessary', function (testCallback) {
+        var fakeSender = new EventEmitter();
+        fakeSender.send = sinon.stub().callsArgWith(1, null, new results.MessageEnqueued());
+        var amqp = new Amqp(fakeConfig, fakeAmqpBase);
+        fakeAmqpBase.attachSenderLink = sinon.stub().callsArgWith(2, fakeSender);
 
-      amqp.connect(function () {
-        amqp.send(fakeDeviceId, new Message('foo'), function () {
-          assert.isTrue(fakeSender.send.calledOnce);
-          assert.instanceOf(fakeSender.send.firstCall.args[0], AmqpMessage);
-          assert.strictEqual(fakeSender.send.firstCall.args[0].properties.to, '/devices/' + fakeDeviceId + '/messages/devicebound');
-          testCallback();
-        });
-      });
-    });
-
-    /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_017: [All asynchronous instance methods shall call the `done` callback with a single parameter that is derived from the standard Javascript `Error` object if the operation failed.]*/
-    it('calls its callback with an error if the link fails to send the message', function (testCallback) {
-      var fakeDeviceId = 'fakeDeviceId';
-      var fakeSender = new EventEmitter();
-      fakeSender.send = sinon.stub().callsArgWith(1, new Error('fake'));
-      var amqp = new Amqp(fakeConfig, fakeAmqpBase);
-      fakeAmqpBase.attachSenderLink = sinon.stub().callsArgWith(2, null, fakeSender);
-
-      amqp.connect(function () {
-        amqp.send(fakeDeviceId, new Message('foo'), function (err) {
-          assert.isTrue(fakeSender.send.calledOnce);
-          assert.instanceOf(err, Error);
-          testCallback();
-        });
-      });
-    });
-
-    /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_028: [The `send` method shall reuse the C2D link if it is already attached.]*/
-    it('Reuses the c2d link object', function (testCallback) {
-      var fakeDeviceId = 'fakeDeviceId';
-      var fakeSender = new EventEmitter();
-      fakeSender.send = sinon.stub().callsArgWith(1, null, new results.MessageEnqueued());
-      var amqp = new Amqp(fakeConfig, fakeAmqpBase);
-      fakeAmqpBase.attachSenderLink = sinon.stub().callsArgWith(2, null, fakeSender);
-
-      amqp.connect(function () {
-        amqp.send(fakeDeviceId, new Message('test1'), function () {
-          assert.isTrue(fakeAmqpBase.attachSenderLink.calledOnce);
-          assert.isTrue(fakeSender.send.calledOnce);
-          amqp.send(fakeDeviceId, new Message('test2'), function () {
+        amqp.connect(function () {
+          testConfig.invokeFunctionUnderTest(amqp, new Message('foo'), function () {
             assert.isTrue(fakeAmqpBase.attachSenderLink.calledOnce);
-            assert.isTrue(fakeSender.send.calledTwice);
+            assert.isTrue(fakeAmqpBase.attachSenderLink.calledWith('/messages/devicebound'));
             testCallback();
+          });
+        });
+      });
+
+      /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_029: [The `send` method shall call its callback with an error if it fails to attach the C2D link.]*/
+      /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_18_007: [The `sendToModule` method shall call its callback with an error if it fails to attach the C2D link.]*/
+      it('calls its callback with an error if the link fails to attach', function (testCallback) {
+        var fakeSender = new EventEmitter();
+        fakeSender.send = sinon.stub().callsArgWith(1, null, new results.MessageEnqueued());
+        var amqp = new Amqp(fakeConfig, fakeAmqpBase);
+        fakeAmqpBase.attachSenderLink = sinon.stub().callsArgWith(2, new Error('fake error'));
+
+        amqp.connect(function () {
+          testConfig.invokeFunctionUnderTest(amqp, new Message('foo'), function (err) {
+            assert.isTrue(fakeAmqpBase.attachSenderLink.calledOnce);
+            assert.instanceOf(err, Error);
+            testCallback();
+          });
+        });
+      });
+
+      /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_030: [The `send` method shall call the `send` method of the C2D link and pass it the Amqp request that it created.]*/
+      /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_18_008: [The `sendToModule` method shall call the `send` method of the C2D link and pass it the Amqp request that it created.]*/
+      it('calls send on the c2d link object', function (testCallback) {
+        var fakeSender = new EventEmitter();
+        fakeSender.send = sinon.stub().callsArgWith(1, null, new results.MessageEnqueued());
+        var amqp = new Amqp(fakeConfig, fakeAmqpBase);
+        fakeAmqpBase.attachSenderLink = sinon.stub().callsArgWith(2, null, fakeSender);
+
+        amqp.connect(function () {
+          testConfig.invokeFunctionUnderTest(amqp, new Message('foo'), function () {
+            assert.isTrue(fakeSender.send.calledOnce);
+            assert.instanceOf(fakeSender.send.firstCall.args[0], AmqpMessage);
+            /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_003: [The message generated by the `send` method should have its “to” field set to the device ID passed as an argument.]*/
+            /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_18_002: [The message generated by the `sendToModule` method should have its “to” field set to the `deviceId` & `moduleId` passed as arguments.]*/
+            assert.strictEqual(fakeSender.send.firstCall.args[0].properties.to, testConfig.expectedDestination);
+            /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_18_009: [The message generated by the `sendToModule` method should have its “x-opt-input-name” annotation set to the `inputName` passed a an argument.]*/
+            if (testConfig.expectedInputName) {
+              assert.strictEqual(fakeSender.send.firstCall.args[0].messageAnnotations['x-opt-input-name'], testConfig.expectedInputName);
+            }
+            testCallback();
+          });
+        });
+      });
+
+      /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_017: [All asynchronous instance methods shall call the `done` callback with a single parameter that is derived from the standard Javascript `Error` object if the operation failed.]*/
+      it('calls its callback with an error if the link fails to send the message', function (testCallback) {
+        var fakeSender = new EventEmitter();
+        fakeSender.send = sinon.stub().callsArgWith(1, new Error('fake'));
+        var amqp = new Amqp(fakeConfig, fakeAmqpBase);
+        fakeAmqpBase.attachSenderLink = sinon.stub().callsArgWith(2, null, fakeSender);
+
+        amqp.connect(function () {
+          testConfig.invokeFunctionUnderTest(amqp, new Message('foo'), function (err) {
+            assert.isTrue(fakeSender.send.calledOnce);
+            assert.instanceOf(err, Error);
+            testCallback();
+          });
+        });
+      });
+
+      /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_028: [The `send` method shall reuse the C2D link if it is already attached.]*/
+      /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_18_006: [The `sendToModule` method shall reuse the C2D link if it is already attached.]*/
+      it('Reuses the c2d link object', function (testCallback) {
+        var fakeSender = new EventEmitter();
+        fakeSender.send = sinon.stub().callsArgWith(1, null, new results.MessageEnqueued());
+        var amqp = new Amqp(fakeConfig, fakeAmqpBase);
+        fakeAmqpBase.attachSenderLink = sinon.stub().callsArgWith(2, null, fakeSender);
+
+        amqp.connect(function () {
+          testConfig.invokeFunctionUnderTest(amqp, new Message('test1'), function () {
+            assert.isTrue(fakeAmqpBase.attachSenderLink.calledOnce);
+            assert.isTrue(fakeSender.send.calledOnce);
+            testConfig.invokeFunctionUnderTest(amqp,  new Message('test2'), function () {
+              assert.isTrue(fakeAmqpBase.attachSenderLink.calledOnce);
+              assert.isTrue(fakeSender.send.calledTwice);
+              testCallback();
+            });
           });
         });
       });

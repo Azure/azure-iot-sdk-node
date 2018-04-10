@@ -4,6 +4,7 @@
 'use strict';
 
 import { EventEmitter } from 'events';
+import * as uuid from 'uuid';
 import * as machina  from 'machina';
 import * as async from 'async';
 import * as dbg from 'debug';
@@ -78,16 +79,17 @@ export class AmqpDeviceMethodClient extends EventEmitter {
                 this._fsm.transition('detached', attachCallback, err);
               } else {
                 /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_017: [The endpoint used to for the sender and receiver link shall be `/devices/<device-id>/methods/devicebound`.]*/
-                this._methodEndpoint = endpoint.devicePath(encodeURIComponent(credentials.deviceId)) + '/methods/devicebound';
+                /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_18_001: [If a `moduleId` value was set in the device's connection string, The endpoint used to for the sender and receiver link shall be `/devices/<deviceId>/modules/<moduleId>/methods/devicebound`.]*/
+                this._methodEndpoint = endpoint.devicePath(credentials.deviceId, credentials.moduleId) + '/methods/devicebound';
 
                 /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_014: [** The `AmqpDeviceMethodClient` object shall set 2 properties of any AMQP link that it create:
                 - `com.microsoft:api-version` shall be set to the current API version in use.
-                - `com.microsoft:channel-correlation-id` shall be set to the identifier of the device (also often referred to as `deviceId`).]*/
+                - `com.microsoft:channel-correlation-id` shall be set to the string "methods:" followed by a guid.]*/
                 const linkOptions = {
                   attach: {
                     properties: {
                       'com.microsoft:api-version': endpoint.apiVersion,
-                      'com.microsoft:channel-correlation-id': credentials.deviceId
+                      'com.microsoft:channel-correlation-id': 'methods:' + uuid.v4()
                     }
                   }
                 };

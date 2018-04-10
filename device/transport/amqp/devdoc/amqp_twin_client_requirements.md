@@ -121,6 +121,8 @@ class AmqpTwinClient extends EventEmitter {
 
 **SRS_NODE_DEVICE_AMQP_TWIN_06_007: [** The endpoint argument for `attachReceiverLink` shall be `/devices/<deviceId>/twin`. **]**
 
+**SRS_NODE_DEVICE_AMQP_TWIN_18_001: [** If a `moduleId` value was set in the device's connection string, the endpoint argument for `attachReceiverLink` shall be `/devices/<deviceId>/modules/<moduleId>/twin` **]**
+
 **SRS_NODE_DEVICE_AMQP_TWIN_06_008: [** The link options argument for `attachReceiverLink` shall be:
  attach: {
         properties: {
@@ -133,6 +135,8 @@ class AmqpTwinClient extends EventEmitter {
 
 
 **SRS_NODE_DEVICE_AMQP_TWIN_06_009: [** The endpoint argument for `attachSenderLink` shall be `/device/<deviceId>/twin`. **]**
+
+**SRS_NODE_DEVICE_AMQP_TWIN_18_002: [** If a `moduleId` value was set in the device's connection string, the endpoint argument for `attachSenderLink` shall be `/device/<deviceId>/modules/<moduleId>/twin`. **]**
 
 **SRS_NODE_DEVICE_AMQP_TWIN_06_010: [** The link options argument for `attachSenderLink` shall be:
  attach: {

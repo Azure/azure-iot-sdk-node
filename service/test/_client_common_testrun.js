@@ -88,12 +88,53 @@ function transportSpecificTests(opts) {
       });
     });
 
+    describe('#sendToModule', function () {
+      function createTestMessage() {
+        var msg = new Message('msg');
+        msg.expiryTimeUtc = Date.now() + 5000; // Expire 5s from now, to reduce the chance of us hitting the 50-message limit on the IoT Hub
+        return msg;
+      }
+
+      /*Tests_SRS_NODE_IOTHUB_CLIENT_18_009: [When the `sendToModule` method completes, the callback function (indicated by the done - argument) shall be invoked with the following arguments:
+      - `err` - standard JavaScript Error object (or subclass)
+      - `result` - an implementation-specific response object returned by the underlying protocol, useful for logging and troubleshooting]*/
+      /*Tests_SRS_NODE_IOTHUB_CLIENT_18_010: [The argument `err` passed to the callback `done` shall be `null` if the protocol operation was successful.]*/
+      it('sends the message', function (done) {
+        testSubject.send(deviceId, createTestMessage(), function (err, state) {
+            if (!err) {
+            assert.equal(state.constructor.name, "MessageEnqueued");
+            }
+            done(err);
+        });
+      });
+
+      /*Tests_SRS_NODE_IOTHUB_CLIENT_18_008: [The `sendToModule` method shall convert the message object to type azure-iot-common.Message if necessary.]*/
+      it('accepts any message that is convertible to type Message', function (done) {
+        var message = 'msg';
+        testSubject.send(deviceId, message, function (err, state) {
+            if (!err) {
+            assert.equal(state.constructor.name, "MessageEnqueued");
+            }
+            done(err);
+        });
+      });
+
+    /*Tests_SRS_NODE_IOTHUB_CLIENT_18_012: [If the `deviceId` has not been registered with the IoT Hub, `sendToModule` shall call the `done` callback with a `DeviceNotFoundError`.]*/
+    it('returns DeviceNotFoundError when sending to an unregistered deviceId', function (done) {
+        var unregisteredDeviceId = 'no-device' + Math.random();
+        testSubject.send(unregisteredDeviceId, new Message('msg'), function (err) {
+            assert.instanceOf(err, errors.DeviceNotFoundError);
+            done();
+        });
+      });
+    });
+
     describe('#getFeedbackReceiver', function () {
       /*Tests_SRS_NODE_IOTHUB_CLIENT_05_027: [When the `getFeedbackReceiver` method completes, the callback function (indicated by the `done` argument) shall be invoked with the following arguments:
       - `err` - standard JavaScript `Error` object (or subclass): `null` if the operation was successful
       - `receiver` - an `AmqpReceiver` instance: `undefined` if the operation failed]*/
       it('calls the `done` callback with a null error object and an AmqpReceiver object if the operation succeeds', function (done) {
-        testSubject.getFeedbackReceiver(function (err, receiver) {
+        testSubject.getFeedbackReceiver(function (err) {
             if (err) done(err);
             else {
               done();
@@ -107,7 +148,7 @@ function transportSpecificTests(opts) {
       - `err` - standard JavaScript `Error` object (or subclass): `null` if the operation was successful
       - `receiver` - an `AmqpReceiver` instance: `undefined` if the operation failed]*/
       it('calls the `done` callback with a null error object and an AmqpReceiver object if the operation succeeds', function (done) {
-        testSubject.getFileNotificationReceiver(function (err, receiver) {
+        testSubject.getFileNotificationReceiver(function (err) {
           if (err) done(err);
           else {
             done();

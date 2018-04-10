@@ -130,6 +130,41 @@ describe('Client', function () {
     });
   });
 
+  describe('#sendToModule', function () {
+    var testSubject;
+
+    beforeEach('prepare test subject', function () {
+      testSubject = new Client({}, {});
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_CLIENT_18_007: [The `sendToModule` method shall throw `ReferenceError` if the deviceId, moduleId, inputName, or message arguments are falsy.]*/
+    ['deviceId', 'moduleId', 'inputName', 'message'].forEach(function(paramToTest) {
+      [ null, '', undefined, ].forEach(function(falsyValue) {
+        it('throws if ' + paramToTest + ' is ' + falsyValue, function() {
+          var params = {
+            deviceId: '__FAKE_DEVICE_ID__',
+            moduleId: '__FAKE_MODULE_ID__',
+            inputName: '__FAKE_INPUT_NAME__',
+            message: new Message('msg')
+          };
+          params[paramToTest] = falsyValue;
+          assert.throws(function() {
+            testSubject.sendToModule(params.deviceId, params.moduleId, params.inputName, params.messageName);
+          }, ReferenceError);
+        });
+      });
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_CLIENT_18_015: [The `sendToModule` method shall not throw if the `done` callback is falsy. .]*/
+    it('does not throw if done is falsy', function () {
+      var simulatedAmqp = new SimulatedAmqp();
+      var client = new Client(simulatedAmqp);
+      assert.doesNotThrow(function () {
+        client.sendToModule('deviceId', 'moduleId', 'inputName', new Message('msg'));
+      });
+    });
+  });
+
   describe('#invokeDeviceMethod', function() {
     /*Tests_SRS_NODE_IOTHUB_CLIENT_16_014: [The `invokeDeviceMethod` method shall throw a `ReferenceError` if `deviceId` is `null`, `undefined` or an empty string.]*/
     [undefined, null, ''].forEach(function(badDeviceId) {
@@ -191,7 +226,7 @@ describe('Client', function () {
     describe('#' + testConfig.name, function() {
       /*Tests_SRS_NODE_IOTHUB_CLIENT_16_009: [The `invokeDeviceMethod` method shall initialize a new instance of `DeviceMethod` with the `methodName` and `timeout` values passed in the arguments.]*/
       /*Tests_SRS_NODE_IOTHUB_CLIENT_16_010: [The `invokeDeviceMethod` method shall use the newly created instance of `DeviceMethod` to invoke the method with the `payload` argument on the device specified with the `deviceid` argument .]*/
-      /*Tests_SRS_NODE_IOTHUB_CLIENT_16_013: [The `invokeDeviceMethod` method shall call the `done` callback with a `null` first argument, the result of the method execution in the second argument, and the transport-specific response object as a third argument.]*/
+      /*Tests_SRS_NODE_IOTHUB_CLIENT_16_013: [The `invokeDeviceMethod` method sendthe `done` callback with a `null` first argument, the result of the method execution in the second argument, and the transport-specific response object as a third argument.]*/
       /*Tests_SRS_NODE_IOTHUB_CLIENT_18_002: [The `invokeModuleMethod` method shall initialize a new `DeviceMethod` instance with `methodParams` values passed in the arguments. ]*/
       /*Tests_SRS_NODE_IOTHUB_CLIENT_18_003: [The `invokeModuleMethod` method shall call `invokeOnModule` on the new `DeviceMethod` instance. ]*/
       /*Tests_SRS_NODE_IOTHUB_CLIENT_18_005: [The `invokeModuleMethod` method shall call the `done` callback with a `null` first argument, the result of the method execution in the second argument, and the transport-specific response object as a third argument. ]*/

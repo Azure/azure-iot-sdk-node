@@ -1072,11 +1072,16 @@ export class Registry {
     DELETE /devices/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
     Authorization: <sharedAccessSignature>
     Request-Id: <guid>
+    If-Match: "*"
     ```
     ]*/
+    const httpHeaders = {
+      'If-Match': '"*"'
+    };
+
     const path = `/devices/${encodeURIComponent(deviceId)}/modules/${encodeURIComponent(moduleId)}${endpoint.versionQueryString()}`;
 
-    this._restApiClient.executeApiCall('DELETE', path, null, null, done);
+    this._restApiClient.executeApiCall('DELETE', path, httpHeaders, null, done);
   }
 
   private _bulkOperation(devices: Registry.DeviceDescription[], done: Callback<any>): void {

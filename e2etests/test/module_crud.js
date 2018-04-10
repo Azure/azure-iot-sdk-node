@@ -8,21 +8,11 @@ var uuid = require('uuid');
 var DeviceIdentityHelper = require('./device_identity_helper.js');
 var async = require('async');
 var assert = require('chai').assert;
-var debug = require('debug')('e2etests:modules');
+var debug = require('debug')('e2etests:module_crud');
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 var registry = Registry.fromConnectionString(hubConnectionString);
 
-// MISSING SCENARIOS
-//
-// The following scenarios are missing because modules, module twins, and
-// module methods are not yet supported for devices on IoT Hub
-//
-// 1. create a module, get the connection string, and connect using the device API.
-// 2. set a module twin and verify desired properties from device API.
-// 3. set reported properties from device api and verify from service api.
-// 4. invoke a device method and verify using device api
-//
 describe('modules', function() {
   var module;
   var deviceId = null;
@@ -174,7 +164,7 @@ describe('modules', function() {
   });
 
   // Skipped because of failure
-  it.skip ('can add and remove a module', function(done) {
+  it ('can add and remove a module', function(done) {
     async.series([
       function addModule(callback) {
         debug('adding module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);

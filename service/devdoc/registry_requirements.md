@@ -628,6 +628,7 @@ Request-Id: <guid>
 DELETE /devices/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
 Request-Id: <guid>
+If-Match: "*"
 ```
 **]**
 

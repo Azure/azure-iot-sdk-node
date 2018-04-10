@@ -67,13 +67,19 @@ function closeDeviceEventHubClients(deviceClient, eventHubClient, ehReceivers, d
       done(eventHubErr);
     }
   });
-  deviceClient.close(function (err) {
-    deviceErr = err || eventHubErr;
-    deviceClient = null;
-    if (deviceErr || !eventHubClient) {
-      done(deviceErr);
+  if (!deviceClient) {
+    if (!eventHubClient) {
+      done();
     }
-  });
+  } else {
+    deviceClient.close(function (err) {
+      deviceErr = err || eventHubErr;
+      deviceClient = null;
+      if (deviceErr || !eventHubClient) {
+        done(deviceErr);
+      }
+    });
+  }
 }
 
 module.exports = {

@@ -107,6 +107,30 @@ The `send` method sends a cloud-to-device message to the service, intended for d
 
 **SRS_NODE_IOTHUB_CLIENT_16_030: [** The `send` method shall not throw if the `done` callback is falsy. **]**
 
+sendToModule(deviceId: string, moduleId: string, inputName: string, message: Message | Message.BufferConvertible, done?: Callback<results.MessageEnqueued>): void;
+The `sendToModule` method sends a message to the service, intended for delivery to the given input on the given module on the given device
+
+**SRS_NODE_IOTHUB_CLIENT_18_007: [** The `sendToModule` method shall throw `ReferenceError` if the deviceId, moduleId, inputName, or message arguments are falsy. **]**
+
+**SRS_NODE_IOTHUB_CLIENT_18_008: [** The `sendToModule` method shall convert the message object to type azure-iot-common.Message if necessary. **]**
+
+**SRS_NODE_IOTHUB_CLIENT_18_009: [** When the `sendToModule` method completes, the callback function (indicated by the done - argument) shall be invoked with the following arguments:
+- `err` - standard JavaScript Error object (or subclass)
+- `result` - an implementation-specific response object returned by the underlying protocol, useful for logging and troubleshooting **]**
+
+**SRS_NODE_IOTHUB_CLIENT_18_010: [** The argument `err` passed to the callback `done` shall be `null` if the protocol operation was successful. **]**
+
+**SRS_NODE_IOTHUB_CLIENT_18_011: [** Otherwise the argument `err` shall have an `amqpError` property containing implementation-specific response information for use in logging and troubleshooting. **]**
+
+**SRS_NODE_IOTHUB_CLIENT_18_012: [** If the `deviceId` has not been registered with the IoT Hub, `sendToModule` shall call the `done` callback with a `DeviceNotFoundError`. **]**
+
+**SRS_NODE_IOTHUB_CLIENT_18_013: [** If the queue which receives messages on behalf of the device is full, `sendToModule` shall call the `done` callback with a `DeviceMaximumQueueDepthExceededError`. **]**
+
+**SRS_NODE_IOTHUB_CLIENT_18_014: [** The `sendToModule` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to send the message. **]**
+
+**SRS_NODE_IOTHUB_CLIENT_18_015: [** The `sendToModule` method shall not throw if the `done` callback is falsy. . **]**
+
+
 ###getFeedbackReceiver(done)
 The `getFeedbackReceiver` method is used to obtain an `AmqpReceiver` object which emits events when new feedback messages are received by the client.
 
