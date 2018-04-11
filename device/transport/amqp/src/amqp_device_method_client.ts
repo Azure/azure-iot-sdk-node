@@ -12,6 +12,7 @@ const debug = dbg('azure-iot-device-amqp:AmqpDeviceMethodClient');
 import { Message, errors, endpoint, AuthenticationProvider } from 'azure-iot-common';
 import { Client, DeviceMethodResponse } from 'azure-iot-device';
 import { Amqp as BaseAmqpClient, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
+import rhea = require('rhea');
 
 const methodMessagePropertyKeys = {
   methodName: 'IoThub-methodname',
@@ -84,12 +85,9 @@ export class AmqpDeviceMethodClient extends EventEmitter {
                 - `com.microsoft:api-version` shall be set to the current API version in use.
                 - `com.microsoft:channel-correlation-id` shall be set to the identifier of the device (also often referred to as `deviceId`).]*/
                 const linkOptions = {
-                  attach: {
-                    properties: {
-                      'com.microsoft:api-version': endpoint.apiVersion,
-                      'com.microsoft:channel-correlation-id': credentials.deviceId
-                    },
-                    rcvSettleMode: 0
+                  properties: {
+                    'com.microsoft:api-version': endpoint.apiVersion,
+                    'com.microsoft:channel-correlation-id': credentials.deviceId
                   }
                 };
 
@@ -108,13 +106,21 @@ export class AmqpDeviceMethodClient extends EventEmitter {
                         this._receiverLink.on('message', (msg) => {
                           debug('got method request');
                           debug(JSON.stringify(msg, null, 2));
-                          const methodName = msg.applicationProperties[methodMessagePropertyKeys.methodName];
-                          const methodRequest = {
-                            methods: { methodName: methodName },
-                            requestId: msg.properties.correlationId,
-                            body: msg.body
-                          };
-
+                          const methodName = msg.application_properties[methodMessagePropertyKeys.methodName];
+                          //
+                          // SERIALIZATION DEPENDENCY!!
+                          // The rhea library will de-serialize an encoded uuid (0x98) as a 16 byte buffer.
+                          //
+                          let methodRequest: any = {};
+                          methodRequest.methods = {methodName: methodName};
+                          if (msg.body && msg.body.content) {
+                            methodRequest.body = msg.body.content.toString();
+                          }
+                          if (((msg.correlation_id as any) instanceof Buffer) && (msg.correlation_id.length === 16)) {
+                            methodRequest.requestId = rhea.uuid_to_string(msg.correlation_id);
+                          } else {
+                            methodRequest.requestId = msg.correlation_id;
+                          }
                           debug(JSON.stringify(methodRequest, null, 2));
                           this.emit('method_' + methodName, methodRequest);
                         });

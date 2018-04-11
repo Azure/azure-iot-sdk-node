@@ -548,7 +548,7 @@ describe('Amqp', function () {
         it('is deferred until connecting succeeds', function (testCallback) {
           var connectErr = new Error('cannot connect');
           var connectCallback;
-          fakeBaseClient.connect = sinon.stub().callsFake(function (uri, options, done) {
+          fakeBaseClient.connect = sinon.stub().callsFake(function (config, done) {
             connectCallback = done;
           });
 

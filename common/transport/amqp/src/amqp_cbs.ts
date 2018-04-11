@@ -1,12 +1,16 @@
 import * as machina from 'machina';
-import * as amqp10 from 'amqp10';
 import * as uuid from 'uuid';
 import * as async from 'async';
+import { EventEmitter } from 'events';
+import * as dbg from 'debug';
+
 
 import { errors } from 'azure-iot-common';
 import { AmqpMessage } from './amqp_message';
 import { SenderLink } from './sender_link';
 import { ReceiverLink } from './receiver_link';
+
+const debug = dbg('azure-iot-amqp-base:CBS');
 
 /**
  * @interface  module:azure-iot-amqp-base.PutTokenOperation
@@ -55,10 +59,10 @@ class PutTokenStatus {
  * This resides in the amqp-base package because it's used by the device and service SDKs but
  * the lifecycle of this object is actually managed by the upper layer of each transport.
  */
-export class ClaimsBasedSecurityAgent {
+export class ClaimsBasedSecurityAgent extends EventEmitter {
   private static _putTokenSendingEndpoint: string = '$cbs';
   private static _putTokenReceivingEndpoint: string = '$cbs';
-  private _amqp10Client: amqp10.AmqpClient;
+  private _amqpSession: any;
   private _errorHandler: (err: Error)  => void;
   private _fsm: machina.Fsm;
   private _senderLink: SenderLink;
@@ -70,18 +74,20 @@ export class ClaimsBasedSecurityAgent {
     callback: (err?: Error) => void
   }[];
 
-  constructor(amqp10Client: amqp10.AmqpClient) {
+  constructor(session: any) {
+    super();
     this._errorHandler = (err: Error): void => {
+      debug('In the generic error handler for the CBS.  error emitted: ' + err.name);
       this._fsm.handle('detach', undefined, err);
     };
 
-    this._amqp10Client = amqp10Client;
-    /*Codes_SRS_NODE_AMQP_CBS_16_001: [The `constructor` shall instanciate a `SenderLink` object for the `$cbs` endpoint using a custom policy `{encoder: function(body) { return body;}}` which forces the amqp layer to send the token as an amqp value in the body.]*/
-    this._senderLink = new SenderLink(ClaimsBasedSecurityAgent._putTokenSendingEndpoint, { encoder: (body) => body }, this._amqp10Client);
+    this._amqpSession = session;
+    /*Codes_SRS_NODE_AMQP_CBS_16_001: [The `constructor` shall instantiate a `SenderLink` object for the `$cbs` endpoint using a custom policy `{encoder: function(body) { return body;}}` which forces the amqp layer to send the token as an amqp value in the body.]*/
+    this._senderLink = new SenderLink(ClaimsBasedSecurityAgent._putTokenSendingEndpoint, null, this._amqpSession);
     this._senderLink.on('error', this._errorHandler);
 
-    /*Codes_SRS_NODE_AMQP_CBS_16_002: [The `constructor` shall instanciate a `ReceiverLink` object for the `$cbs` endpoint.]*/
-    this._receiverLink = new ReceiverLink(ClaimsBasedSecurityAgent._putTokenReceivingEndpoint, null, this._amqp10Client);
+    /*Codes_SRS_NODE_AMQP_CBS_16_002: [The `constructor` shall instantiate a `ReceiverLink` object for the `$cbs` endpoint.]*/
+    this._receiverLink = new ReceiverLink(ClaimsBasedSecurityAgent._putTokenReceivingEndpoint, null, this._amqpSession);
     this._receiverLink.on('error', this._errorHandler);
 
     this._putTokenQueue = [];
@@ -136,7 +142,12 @@ export class ClaimsBasedSecurityAgent {
                       /*Codes_SRS_NODE_AMQP_CBS_16_020: [All responses shall be accepted.]*/
                       this._receiverLink.accept(msg);
                       for (let i = 0; i < this._putToken.outstandingPutTokens.length; i++) {
-                        if (msg.properties.correlationId === this._putToken.outstandingPutTokens[i].correlationId) {
+                        //
+                        // Just as a reminder.  For cbs, the message id and the correlation id
+                        // always stayed as string values.  They never went on over the wire
+                        // as the amqp uuid type.
+                        //
+                        if (msg.correlation_id === this._putToken.outstandingPutTokens[i].correlationId) {
                           const completedPutToken = this._putToken.outstandingPutTokens[i];
                           this._putToken.outstandingPutTokens.splice(i, 1);
                           //
@@ -148,9 +159,9 @@ export class ClaimsBasedSecurityAgent {
                           if (completedPutToken.putTokenCallback) {
                             /*Codes_SRS_NODE_AMQP_CBS_16_019: [A put token response of 200 will invoke `putTokenCallback` with null parameters.]*/
                             let error = null;
-                            if (msg.applicationProperties['status-code'] !== 200) {
+                            if (msg.application_properties['status-code'] !== 200) {
                               /*Codes_SRS_NODE_AMQP_CBS_16_018: [A put token response not equal to 200 will invoke `putTokenCallback` with an error object of UnauthorizedError.]*/
-                              error = new errors.UnauthorizedError(msg.applicationProperties['status-description']);
+                              error = new errors.UnauthorizedError(msg.application_properties['status-description']);
                             }
                             completedPutToken.putTokenCallback(error);
                           }
@@ -195,8 +206,12 @@ export class ClaimsBasedSecurityAgent {
             }
           },
           attach: (callback) => callback(),
-          detach: (callback, err) => this._fsm.transition('detaching', callback, err),
+          detach: (callback, err) => {
+            debug('while attached - detach for CBS links ' + this._receiverLink + ' ' + this._senderLink);
+            this._fsm.transition('detaching', callback, err);
+          },
           forceDetach: () => {
+            debug('while attached - force detach for CBS links ' + this._receiverLink + ' ' + this._senderLink);
             /*Tests_SRS_NODE_AMQP_CBS_16_022: [The `forceDetach()` method shall call `forceDetach()` on all attached links.]*/
             this._receiverLink.forceDetach();
             this._senderLink.forceDetach();
@@ -217,22 +232,25 @@ export class ClaimsBasedSecurityAgent {
           ```
           and a body containing `<sasToken>`.]*/
             let amqpMessage = new AmqpMessage();
-            amqpMessage.applicationProperties = {
+            amqpMessage.application_properties = {
               operation: 'put-token',
               type: 'servicebus.windows.net:sastoken',
               name: audience
             };
             amqpMessage.body = token;
-            amqpMessage.properties = {
-              to: '$cbs',
-              messageId: uuid.v4(),
-              reply_to: 'cbs'
-            };
+            amqpMessage.to = '$cbs';
+            //
+            // Just as a reminder:  For cbs, the message id and the correlation id
+            // always stayed as string values.  They never went on over the wire
+            // as the amqp uuid type.
+            //
+            amqpMessage.message_id = uuid.v4();
+            amqpMessage.reply_to = 'cbs';
 
             let outstandingPutToken: PutTokenOperation = {
               putTokenCallback: putTokenCallback,
               expirationTime: Math.round(Date.now() / 1000) + this._putToken.numberOfSecondsToTimeout,
-              correlationId: amqpMessage.properties.messageId
+              correlationId: amqpMessage.message_id
             };
 
             this._putToken.outstandingPutTokens.push(outstandingPutToken);
@@ -250,7 +268,7 @@ export class ClaimsBasedSecurityAgent {
                 // it's more likely near the end.
                 // If the token has expired it won't be found, but that's ok because its callback will have been called when it was removed.
                 for (let i = this._putToken.outstandingPutTokens.length - 1; i >= 0; i--) {
-                  if (this._putToken.outstandingPutTokens[i].correlationId === amqpMessage.properties.messageId) {
+                  if (this._putToken.outstandingPutTokens[i].correlationId === amqpMessage.message_id) {
                     const outStandingPutTokenInError = this._putToken.outstandingPutTokens[i];
                     this._putToken.outstandingPutTokens.splice(i, 1);
                     //
@@ -274,6 +292,7 @@ export class ClaimsBasedSecurityAgent {
             const links = [this._senderLink, this._receiverLink];
             async.each(links, (link, callback) => {
               if (link) {
+                debug('while detaching for  link ');
                 link.detach(callback);
               } else {
                 callback();

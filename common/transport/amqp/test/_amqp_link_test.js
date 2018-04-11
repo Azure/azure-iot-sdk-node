@@ -8,11 +8,25 @@ var AmqpMessage = require('../lib/amqp_message.js').AmqpMessage;
 [
   {
     linkClass: ReceiverLink,
-    amqp10Method: 'createReceiver'
+    direction: 'source',
+    kindOfLink: 'receiver',
+    openMethod: 'open_receiver',
+    detachMethod: 'close',
+    rheaCloseEvent: 'receiver_close',
+    rheaOpenEvent: 'receiver_open',
+    rheaDisconnectEvent: 'disconnected',
+    rheaErrorEvent: 'receiver_error'
   },
   {
     linkClass: SenderLink,
-    amqp10Method: 'createSender'
+    direction: 'target',
+    kindOfLink: 'sender',
+    openMethod: 'open_sender',
+    detachMethod: 'close',
+    rheaCloseEvent: 'sender_close',
+    rheaOpenEvent: 'sender_open',
+    rheaDisconnectEvent: 'disconnected',
+    rheaErrorEvent: 'sender_error'
   }
 ].forEach(function (testConfig) {
   describe(testConfig.linkClass.name, function () {
@@ -41,110 +55,133 @@ var AmqpMessage = require('../lib/amqp_message.js').AmqpMessage;
     });
 
     describe('#attach', function () {
-      /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_004: [The `attach` method shall use the stored instance of the `amqp10.AmqpClient` object to attach a new link object with the `linkAddress` and `linkOptions` provided when creating the `SenderLink` instance.]*/
+      /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_004: [The `attach` method shall use the stored instance of the `rhea` session object to attach a new link object with the combined `linkAddress` and `linkOptions` provided when creating the `SenderLink` instance.]*/
       /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_022: [The `attach` method shall call the `callback` if the link was successfully attached.]*/
-      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_004: [The `attach` method shall use the stored instance of the `amqp10.AmqpClient` object to attach a new link object with the `linkAddress` and `linkOptions` provided when creating the `ReceiverLink` instance.]*/
+      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_004: [The `attach` method shall use the stored instance of the `rhea` session object to attach a new link object with the combined `linkAddress` and `linkOptions` provided when creating the `ReceiverLink` instance.]*/
       /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_020: [The `attach` method shall call the `callback` if the link was successfully attached.]*/
-      it('attaches a new link using the amqp10.AmqpClient object', function (testCallback) {
+      it('attaches a new link using the rhea session object', function (testCallback) {
         var fakeLinkAddress = 'link';
         var fakeLinkOptions = {};
-        var fakeAmqp10Client = new EventEmitter();
-        fakeAmqp10Client[testConfig.amqp10Method] = sinon.stub().resolves(new EventEmitter());
+        var fakeContext = {};
+        fakeContext[testConfig.kindOfLink] = new EventEmitter();
+        fakeLinkOptions[testConfig.direction] = fakeLinkAddress;
+        var fakeRheaSession = new EventEmitter();
+        fakeRheaSession[testConfig.openMethod] = () => {};
+        sinon.stub(fakeRheaSession, testConfig.openMethod).callsFake(() => {fakeRheaSession.emit(testConfig.rheaOpenEvent, fakeContext)});
 
-        var link = new testConfig.linkClass(fakeLinkAddress, fakeLinkOptions, fakeAmqp10Client);
+        var link = new testConfig.linkClass(fakeLinkAddress, {}, fakeRheaSession);
         link.attach(function () {
-          assert(fakeAmqp10Client[testConfig.amqp10Method].calledWith(fakeLinkAddress, fakeLinkOptions));
+          assert(fakeRheaSession[testConfig.openMethod].calledWith(fakeLinkOptions));
           testCallback();
         });
       });
 
       it('does not create a new link if already attached', function (testCallback) {
-        var fakeLinkObj = new EventEmitter();
-        var fakeAmqp10Client = new EventEmitter();
-        fakeAmqp10Client[testConfig.amqp10Method] = sinon.stub().resolves(fakeLinkObj);
+        var fakeLinkAddress = 'link';
+        var fakeLinkOptions = {};
+        var fakeContext = {};
+        fakeContext[testConfig.kindOfLink] = new EventEmitter();
+        fakeLinkOptions[testConfig.direction] = fakeLinkAddress;
+        var fakeRheaSession = new EventEmitter();
+        fakeRheaSession[testConfig.openMethod] = () => {};
+        sinon.stub(fakeRheaSession, testConfig.openMethod).callsFake(() => {fakeRheaSession.emit(testConfig.rheaOpenEvent, fakeContext)});
 
-        var link = new testConfig.linkClass('link', null, fakeAmqp10Client);
+        var link = new testConfig.linkClass(fakeLinkAddress, {}, fakeRheaSession);
         link.attach(function () {
           // now successfully attached
-          assert.isTrue(fakeAmqp10Client[testConfig.amqp10Method].calledOnce);
+          assert.isTrue(fakeRheaSession[testConfig.openMethod].calledOnce);
           link.attach(function () {
-            assert.isTrue(fakeAmqp10Client[testConfig.amqp10Method].calledOnce); // would be false if createReceiver had been called twice
+            assert.isTrue(fakeRheaSession[testConfig.openMethod].calledOnce); // would be false if createReceiver had been called twice
             testCallback();
           });
         });
       });
 
-      /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_008: [If the `amqp10.AmqpClient` fails to create the link the `callback` function shall be called with this error object.]*/
-      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_008: [If the `amqp10.AmqpClient` fails to create the link the `callback` function shall be called with this error object.]*/
+      /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_008: [If the `rhea` session fails to create the link the `callback` function shall be called with this error object.]*/
+      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_008: [If the `rhea` session fails to create the link the `callback` function shall be called with this error object.]*/
       it('calls the callback with an error if attaching the link fails', function (testCallback) {
+        var fakeLinkAddress = 'link';
         var fakeError = new Error('fake error');
-        var fakeAmqp10Client = new EventEmitter();
-        fakeAmqp10Client[testConfig.amqp10Method] = sinon.stub().rejects(fakeError);
+        var fakeRheaSession = new EventEmitter();
+        fakeRheaSession.name = 'session';
+        var fakeRheaSessionContext = {session: fakeRheaSession};
+        fakeRheaSession.error = fakeError;
+        fakeRheaSession[testConfig.openMethod] = () => {};
+        sinon.stub(fakeRheaSession, testConfig.openMethod).callsFake(() => {fakeRheaSession.emit(testConfig.rheaErrorEvent, fakeRheaSessionContext)});
 
-        var link = new testConfig.linkClass('link', null, fakeAmqp10Client);
+        var link = new testConfig.linkClass('link', null, fakeRheaSession);
         link.attach(function (err) {
           assert.strictEqual(err, fakeError);
           testCallback();
         });
       });
 
-      /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_006: [The `SenderLink` object should subscribe to the `detached` event of the newly created `amqp10` link object.]*/
-      /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_007: [The `SenderLink` object should subscribe to the `errorReceived` event of the newly created `amqp10` link object.]*/
-      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_006: [The `ReceiverLink` object should subscribe to the `detached` event of the newly created `amqp10` link object.]*/
-      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_007: [The `ReceiverLink` object should subscribe to the `errorReceived` event of the newly created `amqp10` link object.]*/
-      it('subscribes to the detach and errorReceived events', function (testCallback) {
-        var fakeLinkObj = new EventEmitter();
-        sinon.spy(fakeLinkObj, 'on');
-        var fakeAmqp10Client = new EventEmitter();
-        fakeAmqp10Client[testConfig.amqp10Method] = sinon.stub().resolves(fakeLinkObj);
+      /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_006: [The `SenderLink` object should subscribe to the `sender_close` event of the newly created `rhea` link object.]*/
+      /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_007: [The `SenderLink` object should subscribe to the `error` event of the newly created `rhea` link object.]*/
+      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_006: [The `ReceiverLink` object should subscribe to the `receiver_close` event of the newly created `rhea` link object.]*/
+      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_007: [The `ReceiverLink` object should subscribe to the `error` event of the newly created `rhea` link object.]*/
+      it('subscribes to the ' + testConfig.kindOfLink + '_close and ' + testConfig.kindOfLink +  '_error events', function (testCallback) {
+        var fakeLinkAddress = 'link';
+        var fakeContext = {};
+        fakeContext[testConfig.kindOfLink] = new EventEmitter();
+        var fakeRheaSession = new EventEmitter();
+        sinon.spy(fakeContext[testConfig.kindOfLink], 'on');
+        fakeRheaSession[testConfig.openMethod] = () => {};
+        sinon.stub(fakeRheaSession, testConfig.openMethod).callsFake(() => {fakeRheaSession.emit(testConfig.rheaOpenEvent, fakeContext)});
 
-        var link = new testConfig.linkClass('link', {}, fakeAmqp10Client);
+        var link = new testConfig.linkClass('link', {}, fakeRheaSession);
         link.attach(function () {
-          assert(fakeLinkObj.on.calledWith('detached'));
-          assert(fakeLinkObj.on.calledWith('errorReceived'));
+          assert(fakeContext[testConfig.kindOfLink].on.calledWith(testConfig.kindOfLink + '_close'));
+          assert(fakeContext[testConfig.kindOfLink].on.calledWith(testConfig.kindOfLink + '_error'));
           testCallback();
         });
       });
     });
 
     describe('#detach', function () {
-      /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_009: [The `detach` method shall detach the link created by the `amqp10.AmqpClient` underlying object.]*/
-      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_009: [The `detach` method shall detach the link created by the `amqp10.AmqpClient` underlying object.]*/
+      /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_009: [The `detach` method shall detach the link created by `rhea`.]*/
+      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_009: [The `detach` method shall detach the link created by `rhea`.]*/
       it('detaches the link if it is attached', function (testCallback) {
-        var fakeLinkObj = new EventEmitter();
-        fakeLinkObj.detach = sinon.stub().resolves();
-        fakeLinkObj.forceDetach = sinon.stub();
-        var fakeAmqp10Client = new EventEmitter();
-        fakeAmqp10Client[testConfig.amqp10Method] = sinon.stub().resolves(fakeLinkObj);
+        var fakeContext = {};
+        var fakeRheaLink = new EventEmitter();
+        fakeContext[testConfig.kindOfLink] = fakeRheaLink;
+        fakeRheaLink[testConfig.detachMethod] = () => {};
+        sinon.stub(fakeRheaLink, testConfig.detachMethod).callsFake(() => {fakeRheaLink.emit(testConfig.rheaCloseEvent, fakeContext)});
+        fakeRheaLink.remove = sinon.stub();
+        var fakeRheaSession = new EventEmitter();
+        fakeRheaSession[testConfig.openMethod] = () => {};
+        sinon.stub(fakeRheaSession, testConfig.openMethod).callsFake(() => {fakeRheaSession.emit(testConfig.rheaOpenEvent, fakeContext)});
 
-        var link = new testConfig.linkClass('link', {}, fakeAmqp10Client);
+        var link = new testConfig.linkClass('link', {}, fakeRheaSession);
         link.attach(function () {
           link.detach(function () {
-            assert(fakeLinkObj.detach.calledOnce);
-            assert(fakeLinkObj.forceDetach.notCalled);
+            assert(fakeRheaLink[testConfig.detachMethod].calledOnce);
+            assert(fakeRheaLink.remove.notCalled);
             testCallback();
           });
         });
       });
 
       it('does not do anything if the link is already detached', function (testCallback) {
-        var fakeAmqp10Client = new EventEmitter();
-        fakeAmqp10Client[testConfig.amqp10Method] = function () { assert.fail('should not try to create a receiver'); };
+        var fakeRheaSession = new EventEmitter();
+        fakeRheaSession['open_' + testConfig.kindOfLink] = function () { assert.fail('should not try to create a receiver'); };
 
-        var link = new testConfig.linkClass('link', {}, fakeAmqp10Client);
+        var link = new testConfig.linkClass('link', {}, fakeRheaSession);
         link.detach(testCallback);
       });
 
       /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_017: [The `detach` method shall return the state machine to the `detached` state.]*/
       /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_010: [The `detach` method shall return the state machine to the `detached` state.]*/
       it('returns to the detached state if called while attaching', function (testCallback) {
-        var fakeLinkObj = new EventEmitter();
-        fakeLinkObj.detach = sinon.stub().resolves();
-        fakeLinkObj.forceDetach = sinon.stub();
-        var fakeAmqp10Client = new EventEmitter();
-        fakeAmqp10Client[testConfig.amqp10Method] = sinon.stub().resolves(fakeLinkObj);
+        var fakeRheaLink = new EventEmitter();
+        fakeRheaLink[testConfig.detachMethod] = () => {};
+        sinon.stub(fakeRheaLink, testConfig.detachMethod).callsFake(() => {fakeRheaLink.emit(testConfig.rheaCloseEvent)});
+        fakeRheaLink.forceDetach = sinon.stub();
+        var fakeRheaSession = new EventEmitter();
+        fakeRheaSession[testConfig.openMethod] = () => {};
+        sinon.stub(fakeRheaSession, testConfig.openMethod).callsFake(() => {fakeRheaSession.emit(testConfig.rheaOpenEvent)});
 
-        var link = new testConfig.linkClass('link', {}, fakeAmqp10Client);
+        var link = new testConfig.linkClass('link', {}, fakeRheaSession);
         link._fsm.on('transition', function (data) {
           if (data.toState === 'attaching') {
             link.detach();
@@ -155,19 +192,24 @@ var AmqpMessage = require('../lib/amqp_message.js').AmqpMessage;
         link.attach(function () {});
       });
 
-      it('calls the callback with an error if there is an error detaching the underlying amqp10 object', function (testCallback) {
-        var fakeLinkObj = new EventEmitter();
+      it('calls the callback with an error if there is an error detaching the underlying rhea object', function (testCallback) {
+        var fakeRheaLink = new EventEmitter();
+        fakeRheaLink.name = 'link';
+        var fakeContext = {};
+        fakeContext[testConfig.kindOfLink] = fakeRheaLink;
         var fakeError = new Error('fake error');
-        fakeLinkObj.detach = sinon.stub().rejects(fakeError);
-        fakeLinkObj.forceDetach = sinon.stub();
-        var fakeAmqp10Client = new EventEmitter();
-        fakeAmqp10Client[testConfig.amqp10Method] = sinon.stub().resolves(fakeLinkObj);
+        fakeRheaLink[testConfig.detachMethod] = () => {};
+        sinon.stub(fakeRheaLink, testConfig.detachMethod).callsFake(() => {fakeRheaLink.error = fakeError; fakeRheaLink.emit(testConfig.rheaErrorEvent, fakeContext)});
+        fakeRheaLink.remove = sinon.stub();
+        var fakeRheaSession = new EventEmitter();
+        fakeRheaSession[testConfig.openMethod] = () => {};
+        sinon.stub(fakeRheaSession, testConfig.openMethod).callsFake(() => {fakeRheaSession.emit(testConfig.rheaOpenEvent, fakeContext)});
 
-        var link = new testConfig.linkClass('link', {}, fakeAmqp10Client);
+        var link = new testConfig.linkClass('link', {}, fakeRheaSession);
         link.attach(function () {
           link.detach(function (err) {
-            assert(fakeLinkObj.detach.calledOnce);
-            assert(fakeLinkObj.forceDetach.notCalled);
+            assert(fakeRheaLink[testConfig.detachMethod].calledOnce);
+            assert(fakeRheaLink.remove.notCalled);
             assert.strictEqual(err, fakeError);
             testCallback();
           });
@@ -179,79 +221,93 @@ var AmqpMessage = require('../lib/amqp_message.js').AmqpMessage;
       /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_028: [The `forceDetach` method shall return immediately if the link is already detached.]*/
       /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_026: [The `forceDetach` method shall return immediately if the link is already detached.]*/
       it('returns if the link is already detached', function () {
-        var fakeLinkObj = new EventEmitter();
-        fakeLinkObj.detach = sinon.stub().resolves();
-        fakeLinkObj.forceDetach = sinon.stub();
-        var fakeAmqp10Client = new EventEmitter();
-        fakeAmqp10Client[testConfig.amqp10Method] = sinon.stub().resolves(fakeLinkObj);
+        var fakeRheaLink = new EventEmitter();
+        fakeRheaLink[testConfig.detachMethod] = () => {};
+        sinon.stub(fakeRheaLink, testConfig.detachMethod).callsFake(() => {fakeRheaLink.emit(testConfig.rheaErrorEvent)});
+        fakeRheaLink.remove = sinon.stub();
+        var fakeRheaSession = new EventEmitter();
 
-        var link = new testConfig.linkClass('link', {}, fakeAmqp10Client);
+        var link = new testConfig.linkClass('link', {}, fakeRheaSession);
         link.forceDetach();
-        assert(fakeLinkObj.detach.notCalled);
-        assert(fakeLinkObj.forceDetach.notCalled);
+        assert(fakeRheaLink[testConfig.detachMethod].notCalled);
+        assert(fakeRheaLink.remove.notCalled);
       });
 
-      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_027: [** The `forceDetach` method shall call the `forceDetach` method on the underlying `amqp10` link object.]*/
-      /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_025: [The `forceDetach` method shall call the `forceDetach` method on the underlying `amqp10` link object.]*/
+      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_027: [** The `forceDetach` method shall call the `remove` method on the underlying `rhea` link object.]*/
+      /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_025: [The `forceDetach` method shall call the `remove` method on the underlying `rhea` link object.]*/
       it('calls forceDetach on the underlying link if it is attached', function (testCallback) {
-        var fakeLinkObj = new EventEmitter();
-        fakeLinkObj.detach = sinon.stub().resolves();
-        fakeLinkObj.forceDetach = sinon.stub();
-        var fakeAmqp10Client = new EventEmitter();
-        fakeAmqp10Client[testConfig.amqp10Method] = sinon.stub().resolves(fakeLinkObj);
+        var fakeRheaLink = new EventEmitter();
+        var fakeContext = {};
+        fakeContext[testConfig.kindOfLink] = fakeRheaLink;
+        fakeRheaLink[testConfig.detachMethod] = () => {};
+        sinon.stub(fakeRheaLink, testConfig.detachMethod).callsFake(() => {fakeRheaLink.emit(testConfig.rheaErrorEvent)});
+        fakeRheaLink.remove = sinon.stub();
+        var fakeRheaSession = new EventEmitter();
+        fakeRheaSession[testConfig.openMethod] = () => {};
+        sinon.stub(fakeRheaSession, testConfig.openMethod).callsFake(() => {fakeRheaSession.emit(testConfig.rheaOpenEvent, fakeContext)});
 
-        var link = new testConfig.linkClass('link', {}, fakeAmqp10Client);
+        var link = new testConfig.linkClass('link', {}, fakeRheaSession);
         link.attach(function () {
           link.forceDetach();
-          assert(fakeLinkObj.detach.notCalled);
-          assert(fakeLinkObj.forceDetach.calledOnce);
+          assert(fakeRheaLink[testConfig.detachMethod].notCalled);
+          assert(fakeRheaLink.remove.calledOnce);
           testCallback();
         });
       });
 
       it('calls forceDetach on the underlying link if it is attaching and has a link object already', function (testCallback) {
-        var fakeLinkObj = new EventEmitter();
-        fakeLinkObj.detach = sinon.stub().resolves();
-        fakeLinkObj.forceDetach = sinon.stub();
-        var fakeAmqp10Client = new EventEmitter();
-        fakeAmqp10Client[testConfig.amqp10Method] = sinon.stub().resolves(fakeLinkObj);
-        sinon.stub(fakeLinkObj, 'on').callsFake(function () {
+        var fakeRheaLink = new EventEmitter();
+        var fakeContext = {};
+        fakeContext[testConfig.kindOfLink] = fakeRheaLink;
+        fakeRheaLink[testConfig.detachMethod] = () => {};
+        sinon.stub(fakeRheaLink, testConfig.detachMethod).callsFake(() => {fakeRheaLink.emit(testConfig.rheaErrorEvent)});
+        fakeRheaLink.remove = sinon.stub();
+        var fakeRheaSession = new EventEmitter();
+        fakeRheaSession[testConfig.openMethod] = () => {};
+        sinon.stub(fakeRheaSession, testConfig.openMethod).callsFake(() => {fakeRheaSession.emit(testConfig.rheaOpenEvent, fakeContext)});
+
+        sinon.stub(fakeRheaLink, 'on').callsFake(function () {
           link.forceDetach();
-          assert(fakeLinkObj.detach.notCalled);
-          assert(fakeLinkObj.forceDetach.calledOnce);
+          assert(fakeRheaLink[testConfig.detachMethod].notCalled);
+          assert(fakeRheaLink.remove.calledOnce);
           testCallback();
         });
 
-        var link = new testConfig.linkClass('link', {}, fakeAmqp10Client);
+        var link = new testConfig.linkClass('link', {}, fakeRheaSession);
         link.attach(function () {});
       });
     });
 
     describe('events', function () {
-      /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_015: [If a `detached` or `errorReceived` event is emitted by the `ampq10` link object, the `SenderLink` object shall return to the `detached` state.]*/
-      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_011: [If a `detached` or `errorReceived` event is emitted by the `ampq10` link object, the `ReceiverLink` object shall return to the `detached` state.]*/
+      /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_015: [If a `sender_close` or `error` event is emitted by the `rhea` link object, the `SenderLink` object shall return to the `detached` state.]*/
+      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_011: [If a `receiver_close` or `error` event is emitted by the `rhea` link object, the `ReceiverLink` object shall return to the `detached` state.]*/
       [
-        { name: 'errorReceived', payload: new Error('fake error') },
-        { name: 'detached', payload: { closed: true, error: new Error('fake error') } }
+        { name: testConfig.kindOfLink + '_error', payload: new Error('fake error') },
+        { name: testConfig.kindOfLink + '_close', payload: new Error('fake error') }
       ].forEach(function (errorEvent) {
         describe(errorEvent.name, function () {
           it('returns to the detached state when the ' + errorEvent.name + ' event is received and emits an error if any', function (testCallback) {
-            var fakeLinkObj = new EventEmitter();
-            fakeLinkObj.forceDetach = function () {};
-            var fakeAmqp10Client = new EventEmitter();
-            fakeAmqp10Client[testConfig.amqp10Method] = sinon.stub().resolves(fakeLinkObj);
+            var fakeRheaLink = new EventEmitter();
+            var fakeContext = {};
+            fakeContext[testConfig.kindOfLink] = fakeRheaLink;
+            fakeRheaLink.name = testConfig.kindOfLink;
+            fakeRheaLink.error = errorEvent.payload;
+            fakeRheaLink.remove = sinon.stub();
+            var fakeRheaSession = new EventEmitter();
+            fakeRheaSession[testConfig.openMethod] = () => {};
+            sinon.stub(fakeRheaSession, testConfig.openMethod).callsFake(() => {fakeRheaSession.emit(testConfig.rheaOpenEvent, fakeContext)});
 
-            var link = new testConfig.linkClass('link', null, fakeAmqp10Client);
+            var link = new testConfig.linkClass('link', null, fakeRheaSession);
             link.on('error', function (err) {
               assert.strictEqual(err.message, 'fake error');
             });
             link.attach(function () {
               // now successfully attached
-              assert.isTrue(fakeAmqp10Client[testConfig.amqp10Method].calledOnce);
-              fakeLinkObj.emit(errorEvent.name, errorEvent.payload);
+              assert.isTrue(fakeRheaSession[testConfig.openMethod].calledOnce);
+              fakeRheaLink.emit(errorEvent.name, fakeContext);
               // now detached
               link.attach(function () {
-                assert.isTrue(fakeAmqp10Client[testConfig.amqp10Method].calledTwice);
+                assert.isTrue(fakeRheaSession[testConfig.openMethod].calledTwice);
                 testCallback();
               });
             });

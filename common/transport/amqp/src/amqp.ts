@@ -3,23 +3,20 @@
 
 'use strict';
 
-import * as amqp10 from 'amqp10';
 import * as machina from 'machina';
+import urlParser = require('url');
 import { AmqpMessage } from './amqp_message';
 import { errors, results, Message } from 'azure-iot-common';
 import { ClaimsBasedSecurityAgent } from './amqp_cbs';
 import { SenderLink } from './sender_link';
 import { ReceiverLink } from './receiver_link';
 import { AmqpLink } from './amqp_link_interface';
-// From https://www.typescriptlang.org/docs/handbook/modules.html
-// When exporting a module using export =, TypeScript-specific import module = require("module") must be used to import the module
+import { create_container as rheaCreateContainer, EventContext, AmqpError, Connection, Session } from 'rhea';
 import merge = require('lodash.merge');
-
 import * as dbg from 'debug';
 import * as async from 'async';
-const debug = dbg('azure-iot-amqp-base:Amqp');
 
-const _amqpClientError = 'client:errorReceived';
+const debug = dbg('azure-iot-amqp-base:Amqp');
 
 export type GenericAmqpBaseCallback<T> = (err: Error | null, result?: T) => void;
 
@@ -34,12 +31,90 @@ export type GenericAmqpBaseCallback<T> = (err: Error | null, result?: T) => void
  * @param   {String}    sdkVersionString        String identifying the type and version of the SDK used.
  */
 export class Amqp {
-  private _amqp: amqp10.Client;
+  //
+  // Top of the rhea object hierarchy.
+  //
+  private _amqpContainer: any;
+  //
+  // Rhea object used to represent the connection.  The connection object is a child of the container object.
+  // It is an event emitter.  Numerous handlers listen to manage setting up a connection and act upon error events
+  // associated with the connection.
+  //
+  private _amqpConnection: Connection;
+  //
+  // Another rhea object.  It is a child of the connection.  It is an event emitter.  All rhea links will
+  // be children of the session object.
+  //
+  private _amqpSession: Session;
+  //
+  // A dictionary to handle looking up THIS transports (NOT rhea) link objects.  The key is the actual name of the link.
+  // The value is the link object.
+  //
   private _receivers: { [key: string]: ReceiverLink; } = {};
+  //
+  // A dictionary to handle looking up THIS transports (NOT rhea) link objects.  The key is the actual name of the link.
+  // The value is the link object.
+  //
   private _senders: { [key: string]: SenderLink; } = {};
+  //
+  // We utilize this property to hold the callback that was provided when entering a state.  This callback
+  // is invoked when an operation is completed.  Due to the event driven nature of rhea, multiple handlers
+  // will be invoked while in a state.  We need a place to keep the callback as event progression occurs.
+  //
+  private _connectionCallback: (err: Error | AmqpError, result?: any) => void;
+  //
+  // This field is used to hold the error value that was provided to the *_error handler.  Since we want to
+  // also process the *_close event which will send the error up to calling application, we needed a place
+  // to keep the error between events.
+  //
+  private _indicatedConnectionError: Error | AmqpError;
+  //
+  // We utilize this property to hold the callback that was provided when entering a state.  This callback
+  // is invoked when an operation is completed.  Due to the event driven nature of rhea, multiple handlers
+  // will be invoked while in a state.  We need a place to keep the callback as event progression occurs.
+  //
+  private _sessionCallback: (err: Error | AmqpError, result?: any) => void;
+  //
+  // This field is used to hold the error value that was provided to the *_error handler.  Since we want to
+  // also process the *_close event which will send the error up to calling application, we needed a place
+  // to keep the error between events.
+  //
+  private _indicatedSessionError: Error | AmqpError;
+  //
+  // We are provided a result argument to the connecting_session state.  This will hold it while we create
+  // the session.  We will then pass the result, (assuming success), up to the application via a callback.
+  //
+  private _sessionResult: any;
+  //
+  // This is provided by the calling application so that can be notified of a disconnect.
+  //
   private _disconnectHandler: (err: Error) => void;
+  //
+  // We want to know if an actual disconnect has occurred as we run down the various links.  If the disconnect
+  // has occurred we will utilize a forceDetach rather than a detach.  forceDetach doesn't cause network activity.
+  //
+  private _disconnectionOccurred: boolean = false;
+  //
+  // We want to know if an actual session close has already occurred.  We will want to send a matching session
+  // close but we can't expect a reply to it.
+  //
+  private _sessionCloseOccurred: boolean = false;
+  //
+  // We want to know if an actual connection close has already occurred.  We will want to send a matching
+  // connection close but we can't expect a reply to it.
+  //
+  private _connectionCloseOccurred: boolean = false;
+  //
+  // State machine object.
+  //
   private _fsm: machina.Fsm;
+  //
+  // A class represent CBS based authentication.  It's methods are init and putToken.  Note that
+  // we DON'T initiate the put tokens ourselves.  This is done but the upper device client.
   private _cbs: ClaimsBasedSecurityAgent;
+  //
+  // Structure containing the connection information needed such as uri, ssl (cert) etc.
+  //
   private _config: AmqpBaseTransportConfig;
 
   /*Codes_SRS_NODE_COMMON_AMQP_16_001: [The Amqp constructor shall accept two parameters:
@@ -48,69 +123,85 @@ export class Amqp {
         False if the caller intends to manually settle messages
         A string containing the version of the SDK used for telemetry purposes] */
   constructor(autoSettleMessages: boolean) {
-    const autoSettleMode = autoSettleMessages ? amqp10.Constants.receiverSettleMode.autoSettle : amqp10.Constants.receiverSettleMode.settleOnDisposition;
+    const autoSettleMode = autoSettleMessages ? 1 : 2;
     // node-amqp10 has an automatic reconnection/link re-attach feature that is enabled by default.
     // In our case we want to control the reconnection flow ourselves, so we need to disable it.
 
-    /*Codes_SRS_NODE_COMMON_AMQP_16_042: [The Amqp constructor shall create a new `amqp10.Client` instance and configure it to:
+    /*Codes_SRS_NODE_COMMON_AMQP_16_042: [The Amqp constructor shall create a new `rhea.Client` instance and configure it to:
     - not reconnect on failure
     - not reattach sender and receiver links on failure
     - not reestablish sessions on failure]*/
-    this._amqp = new amqp10.Client(amqp10.Policy.merge(<any>{
-      session: {
-        reestablish: {
-          retries: 0,
-          forever: false
-        }
-      },
-      senderLink: {
-        attach: {
-          maxMessageSize: 0,
-        },
-        encoder: (body: any): any => {
-          if (typeof body === 'string') {
-            return new Buffer(body, 'utf8');
-          } else {
-            return body;
-          }
-        },
-        reattach: {
-          retries: 0,
-          forever: false
-        }
-      },
-      receiverLink: {
-        attach: {
-          maxMessageSize: 0,
-          receiverSettleMode: autoSettleMode,
-        },
-        decoder: (body: any): any => body,
-        reattach: {
-          retries: 0,
-          forever: false
-        }
-      },
-      // reconnections will be handled at the client level, not the transport level.
-      reconnect: {
-        retries: 0,
-        strategy: 'fibonacci',
-        forever: false
-      }
-    }, amqp10.Policy.EventHub));
 
+    this._amqpContainer = rheaCreateContainer();
+    this._amqpContainer.on('error', (context: EventContext) => {
+      debug('Container received a error event' + this._getErrorName(context.connection.error));
+    });
+
+    this._amqpContainer.on('azure-iot-amqp-base:error-indicated', (err: AmqpError) => {
+      debug('azure-iot-amqp-base:error-indicated invoked ' + this._getErrorName(err));
+      this._fsm.handle('amqpError', err);
+
+    });
+
+    //
+    // This error handler listens for events from THIS transport SenderLinks or ReceiverLinks.
+    // These error indications would be as a result of an error indication from the associated
+    // rhea links that are not associated with a specific request.
+    //
     const amqpErrorHandler = (err) => {
-      debug('amqp10 client error: ' + err.toString());
+      debug('amqpErrorHandler invoked ' + this._getErrorName(err));
       this._fsm.handle('amqpError', err);
     };
 
-    this._amqp.on('disconnected', () => {
-      // deferring this is necessary because in some instances
-      // the amqp10 library might want to send a close frame - and we don't want
-      // to trigger anything (especially not reconnection) before it has done so.
-      process.nextTick(() => {
-        this._fsm.handle('amqpDisconnected');
-      });
-    });
+    const rheaErrorHandler = (context: EventContext) => {
+      debug('rhea error event handler');
+      this._fsm.handle('error', context);
+    };
+
+    const connectionErrorHandler = (context: EventContext) => {
+      debug('connection error event handler');
+      this._fsm.handle('connection_error', context);
+    };
+
+    const connectionCloseHandler = (context: EventContext) => {
+      debug('connection close event handler');
+      this._fsm.handle('connection_close', context);
+    };
+
+    const connectionOpenHandler = (context: EventContext) => {
+      debug('connection open event handler');
+      this._fsm.handle('connection_open', context);
+    };
+
+    const connectionDisconnectedHandler = (context: EventContext) => {
+      debug('connection disconnected event handler');
+      this._fsm.handle('disconnected', context);
+    };
+    const manageConnectionHandlers = (operation: string) => {
+      this._amqpContainer[operation]('connection_error', connectionErrorHandler);
+      this._amqpContainer[operation]('connection_open', connectionOpenHandler);
+      this._amqpContainer[operation]('connection_close', connectionCloseHandler);
+      this._amqpContainer[operation]('disconnected', connectionDisconnectedHandler);
+      this._amqpContainer[operation]('error', rheaErrorHandler);
+    };
+
+    const sessionErrorHandler = (context: EventContext) => {
+      debug('session error event handler');
+      this._fsm.handle('session_error', context);
+    };
+    const sessionOpenHandler = (context: EventContext) => {
+      debug('session open event handler');
+      this._fsm.handle('session_open', context);
+    };
+    const sessionCloseHandler = (context: EventContext) => {
+      debug('session close event handler');
+      this._fsm.handle('session_close', context);
+    };
+    const manageSessionHandlers = (operation: string) => {
+      this._amqpConnection[operation]('session_error', sessionErrorHandler);
+      this._amqpConnection[operation]('session_open', sessionOpenHandler);
+      this._amqpConnection[operation]('session_close', sessionCloseHandler);
+    };
 
     this._fsm = new machina.Fsm({
       namespace: 'amqp-base',
@@ -126,15 +217,15 @@ export class Amqp {
               }
             } else if (this._disconnectHandler) {
               debug('calling upper layer disconnect handler');
-              this._disconnectHandler(err);
+              debug('error passed to disconnect handler is: ' + this._getErrorName(err || new errors.NotConnectedError('rhea: connection disconnected')));
+              this._disconnectHandler(err || new errors.NotConnectedError('rhea: connection disconnected'));
             }
           },
           amqpError: (err) => {
-            debug('received an error while disconnected: maybe a bug: ' + (!!err ? err.toString() : 'falsy error object.'));
+            debug('received an error while disconnected: maybe a bug: ' + (!!err ? err.name : 'falsy error object.'));
           },
-          amqpDisconnected: () => debug('ignoring disconnected event while disconnected'),
-          connect: (config, connectCallback) => {
-            this._fsm.transition('connecting', config, connectCallback);
+          connect: (connectionParameters, connectCallback) => {
+            this._fsm.transition('connecting', connectionParameters, connectCallback);
           },
           disconnect: (callback) => callback(null, new results.Disconnected()),
           attachSenderLink: (endpoint, linkOptions, callback) => callback(new errors.NotConnectedError()),
@@ -145,29 +236,117 @@ export class Amqp {
           putToken: (audience, token, callback) => callback(new errors.NotConnectedError()),
         },
         connecting: {
-          _onEnter: (config, connectCallback) => {
-            let connectError = null;
-            const connectErrorHandler = (err) => {
-              connectError = err;
-            };
-
-            this._amqp.on(_amqpClientError, connectErrorHandler);
-            this._amqp.connect(config.uri, config.policyOverride)
-              .then((result) => {
-                debug('AMQP transport connected.');
-                this._amqp.on(_amqpClientError, amqpErrorHandler);
-                this._amqp.removeListener(_amqpClientError, connectErrorHandler);
-                this._fsm.transition('connected', connectCallback, result);
-                return null;
-              })
-              .catch((err) => {
-                this._amqp.removeListener(_amqpClientError, connectErrorHandler);
-                /*Codes_SRS_NODE_COMMON_AMQP_16_003: [The `connect` method shall call the `done` callback if the connection fails.] */
-                this._fsm.transition('disconnected', connectCallback, connectError || err);
-              });
+          _onEnter: (connectionParameters, connectCallback) => {
+            this._amqpContainer.options.sender_options = {properties: {'com.microsoft:client-version': this._config.userAgentString}, reconnect: false};
+            this._amqpContainer.options.receiver_options = {properties: {'com.microsoft:client-version': this._config.userAgentString}, reconnect: false, autoaccept: autoSettleMode};
+            this._connectionCallback = connectCallback;
+            this._indicatedConnectionError = undefined;
+            this._disconnectionOccurred = false;
+            this._sessionCloseOccurred = false;
+            this._connectionCloseOccurred = false;
+            manageConnectionHandlers('on');
+            this._amqpContainer.connect(connectionParameters);
           },
-          amqpError: (err) => this._fsm.transition('disconnecting', null, err),
-          amqpDisconnected: () => debug('ignoring disconnected event while connecting'),
+          'connection_open': (context: EventContext) => {
+            debug('in the connection open handler for the connection state: ' + context.connection.name);
+            this._amqpConnection = context.connection;
+            let callback = this._connectionCallback;
+            this._connectionCallback = undefined;
+            this._fsm.transition('connecting_session', callback);
+          },
+          'connection_close': (context: EventContext) => {
+            debug('In the connection_close handler for the connecting state: ' + context.connection.name + ' with an indicated error of: ' + this._getErrorName(this._indicatedConnectionError));
+            let err = this._indicatedConnectionError;
+            let callback = this._connectionCallback;
+            this._indicatedConnectionError = undefined;
+            this._connectionCallback = undefined;
+            this._connectionCloseOccurred = true;
+            manageConnectionHandlers('removeListener');
+            this._fsm.transition('disconnected', callback, err);
+          },
+          'connection_error': (context: EventContext) => {
+            debug('In the connection_error handler for the connecting state: ' + context.connection.name + ' with error of: ' + this._getErrorName(context.connection.error));
+            debug('Deferring transition until the connection_close occurs.');
+            this._indicatedConnectionError = context.connection.error as AmqpError;
+          },
+          'error': (context: EventContext) => {
+            debug('In the \'error\' handler for the connecting state: ' + context.connection.name + ' with error of: ' + this._getErrorName(context.connection.error));
+            let callback = this._connectionCallback;
+            this._connectionCallback = undefined;
+            manageConnectionHandlers('removeListener');
+            this._fsm.transition('disconnected', callback, context.connection.error);
+          },
+          'disconnected': (context: EventContext) => {
+            debug('In the disconnect handler for the connecting state: ' + context.connection.name + ' with error of: ' + this._getErrorName(context.connection.error));
+            let callback = this._connectionCallback;
+            this._connectionCallback = undefined;
+            manageConnectionHandlers('removeListener');
+            this._fsm.transition('disconnected', callback, new errors.NotConnectedError('rhea: connection disconnected'));
+          },
+          '*': () => this._fsm.deferUntilTransition()
+        },
+        connecting_session: {
+          _onEnter: (connectCallback, result) => {
+            manageSessionHandlers('on');
+            this._sessionCallback = connectCallback;
+            this._sessionResult = result;
+            this._amqpSession = this._amqpConnection.create_session();
+            this._amqpSession.open();
+          },
+          'session_open': (context: EventContext) => {
+            debug('In the session_open handler for the connecting_session state');
+            let callback = this._sessionCallback;
+            let result = this._sessionResult;
+            this._sessionCallback = undefined;
+            this._sessionResult = undefined;
+            this._fsm.transition('connected', callback, result);
+          },
+          'session_error': (context: EventContext) => {
+            debug('In the session_error handler for the connecting_session state with error of: ' + this._getErrorName(context.session.error));
+            debug('Deferring transition until the session_close event occurs.');
+            this._indicatedSessionError = context.session.error;
+          },
+          'session_close': (context: EventContext) => {
+            debug('In the session_close handler for the connecting_session state with indicated error of: ' + this._getErrorName(this._indicatedSessionError));
+            debug('Transition to disconnecting');
+            let err = this._indicatedSessionError;
+            let callback = this._sessionCallback;
+            this._indicatedSessionError = undefined;
+            this._sessionCallback = undefined;
+            this._sessionCloseOccurred = true;
+            this._fsm.transition('disconnecting', callback, err);
+          },
+          'connection_error': (context: EventContext) => {
+            debug('In the connection_error handler for the connecting session state with error of: ' + this._getErrorName(context.connection.error));
+            debug('Deferring transition until the connection_close occurs.');
+            this._indicatedConnectionError = context.connection.error;
+          },
+          'connection_close': (context: EventContext) => {
+            debug('In the connection_close handler for the connecting_session state with indicated error of: ' + this._getErrorName(this._indicatedConnectionError));
+            debug('Transition to disconnecting');
+            let err = this._indicatedConnectionError;
+            let callback = this._sessionCallback;
+            this._indicatedConnectionError = undefined;
+            this._sessionCallback = undefined;
+            this._connectionCloseOccurred = true;
+            this._fsm.transition('disconnecting', callback, err);
+          },
+          'error': (context: EventContext) => {
+            debug('In the \'error\' handler for the connecting_session state with error of: ' + this._getErrorName(context.connection.error));
+            let callback = this._sessionCallback;
+            this._sessionCallback = undefined;
+            this._fsm.transition('disconnecting', callback, context.connection.error);
+          },
+          'disconnected': (context: EventContext) => {
+            debug('In the disconnect handler for the connecting session state with error of: ' + this._getErrorName(context.connection.error));
+            let callback = this._sessionCallback;
+            this._sessionCallback = undefined;
+            manageConnectionHandlers('removeListener');
+            this._fsm.transition('disconnected', callback, new errors.NotConnectedError('rhea: connection disconnected'));
+          },
+          amqpError: (err) => {
+            this._fsm.transition('disconnecting', null, err);
+          },
           '*': () => this._fsm.deferUntilTransition()
         },
         connected: {
@@ -175,14 +354,50 @@ export class Amqp {
             /*Codes_SRS_NODE_COMMON_AMQP_16_002: [The `connect` method shall establish a connection with the IoT hub instance and if given as argument call the `done` callback with a null error object in the case of success and a `results.Connected` object.]*/
             this._safeCallback(connectCallback, null, new results.Connected(result));
           },
-          amqpError: (err) => this._fsm.transition('disconnecting', null, err),
-          amqpDisconnected: () => this._fsm.transition('disconnected', undefined, new errors.NotConnectedError('amqp10: connection closed')),
+          'session_error': (context: EventContext) => {
+            debug('In the session_error handler for the connected state with error of: ' + this._getErrorName(context.session.error));
+            debug('Deferring transition until the session_close event occurs.');
+            this._indicatedSessionError = context.session.error;
+          },
+          'session_close': (context: EventContext) => {
+            debug('In the session_close handler for the connected state with indicated error of: ' + this._getErrorName(this._indicatedSessionError));
+            debug('Transition to disconnecting');
+            let err = this._indicatedSessionError;
+            this._indicatedSessionError = undefined;
+            this._sessionCloseOccurred = true;
+            this._fsm.transition('disconnecting', null, err);
+          },
+          'connection_error': (context: EventContext) => {
+            debug('In the connection_error handler for the connected state with error of: ' + this._getErrorName(context.connection.error));
+            debug('Deferring transition until the connection_close occurs.');
+            this._indicatedConnectionError = context.connection.error;
+          },
+          'connection_close': (context: EventContext) => {
+            debug('In the connection_close handler for the connected state with indicated error of: ' + this._getErrorName(this._indicatedConnectionError));
+            debug('Transition to disconnecting');
+            let err = this._indicatedConnectionError;
+            this._indicatedConnectionError = undefined;
+            this._connectionCloseOccurred = true;
+            this._fsm.transition('disconnecting', null, err);
+          },
+          'error': (context: EventContext) => {
+            debug('In the \'error\' handler for the connected state with error of: ' + this._getErrorName(context.connection.error));
+            this._fsm.transition('disconnecting', null, context.connection.error);
+          },
+          'disconnected': (context: EventContext) => {
+            debug('In the disconnect handler for the connected state with error of: ' + this._getErrorName(context.connection.error));
+            this._disconnectionOccurred = true;
+            this._fsm.transition('disconnecting', null, new errors.NotConnectedError('rhea: connection disconnected'));
+          },
+          amqpError: (err) => {
+            this._fsm.transition('disconnecting', null, err);
+          },
           connect: (policyOverride, callback) => callback(null, new results.Connected()),
           disconnect: (disconnectCallback) => {
             this._fsm.transition('disconnecting', disconnectCallback);
           },
           initializeCBS: (callback) => {
-            this._cbs = new ClaimsBasedSecurityAgent(this._amqp);
+            this._cbs = new ClaimsBasedSecurityAgent(this._amqpSession);
             this._cbs.attach(callback);
           },
           putToken: (audience, token, callback) => {
@@ -191,10 +406,12 @@ export class Amqp {
                 if (err) {
                   callback(err);
                 } else {
+                  debug('reinvoking putToken handler following initializeCBS');
                   this._fsm.handle('putToken', audience, token, callback);
                 }
               });
             } else {
+              debug('calling the actual putToken without initing');
               this._cbs.putToken(audience, token, callback);
             }
           },
@@ -205,7 +422,7 @@ export class Amqp {
             debug('call to deprecated api \'azure-iot-amqp-base.Amqp.send\'. You should be using SenderLink.send instead');
             let amqpMessage = AmqpMessage.fromMessage(message);
             if (to !== undefined) {
-              amqpMessage.properties.to = to;
+              amqpMessage.to = to;
             }
 
             if (!this._senders[endpoint]) {
@@ -239,10 +456,12 @@ export class Amqp {
           },
           attachReceiverLink: (endpoint: string, linkOptions: any, done: GenericAmqpBaseCallback<ReceiverLink>): void => {
             debug('creating receiver link for: ' + endpoint);
-            this._receivers[endpoint] = new ReceiverLink(endpoint, linkOptions, this._amqp);
+            this._receivers[endpoint] = new ReceiverLink(endpoint, linkOptions, this._amqpSession);
             const permanentErrorHandler = (err) => {
+              debug('receiver link invokes perm error handler for attachReceiverLink: ' + endpoint + ': ' + err.toString());
               debug('receiver link error - removing it from cache: ' + endpoint + ': ' + err.toString());
               delete(this._receivers[endpoint]);
+              amqpErrorHandler(err);
             };
 
             const operationErrorHandler = (err) => {
@@ -252,6 +471,7 @@ export class Amqp {
 
             this._receivers[endpoint].on('error', permanentErrorHandler);
             this._receivers[endpoint].on('error', operationErrorHandler);
+            /*Codes_SRS_NODE_COMMON_AMQP_16_018: [The `attachReceiverLink` method shall call `open_receiver` on the `rhea` session object.]*/
             this._receivers[endpoint].attach((err) => {
               if (err) {
                 debug('failed to attach receiver link: ' + endpoint + ': ' + err.toString());
@@ -266,10 +486,9 @@ export class Amqp {
           },
           attachSenderLink: (endpoint: string, linkOptions: any, done: GenericAmqpBaseCallback<any>): void => {
             debug('creating sender link for: ' + endpoint);
-            let senderFsm = new SenderLink(endpoint, linkOptions, this._amqp);
-            this._senders[endpoint] = senderFsm;
+            this._senders[endpoint] = new SenderLink(endpoint, linkOptions, this._amqpSession);
             const permanentErrorHandler = (err) => {
-              debug('sender link error while attaching: ' + endpoint + ': ' + err.toString());
+              debug('sender link invokes perm error handler for attachSenderLink: ' + endpoint + ': ' + err.toString());
               delete(this._senders[endpoint]);
             };
 
@@ -281,6 +500,7 @@ export class Amqp {
             this._senders[endpoint].on('error', permanentErrorHandler);
             this._senders[endpoint].on('error', operationErrorHandler);
             debug('attaching sender link for: ' + endpoint);
+            /*Codes_SRS_NODE_COMMON_AMQP_16_013: [The `attachSenderLink` method shall call `open_sender` on the `rhea` session object.]*/
             this._senders[endpoint].attach((err) => {
               if (err) {
                 permanentErrorHandler(err);
@@ -311,19 +531,52 @@ export class Amqp {
         },
         disconnecting: {
           _onEnter: (disconnectCallback, err) => {
-            const disconnect = (callback) => {
-              if (err) {
+            debug('Entering disconnecting state with disconnectCallback: ' + disconnectCallback + ' error of: ' + this._getErrorName(err));
+            const sessionEnd = (callback) => {
+              //
+              // If a disconnection has already happened then there is no point in trying to send a session close.
+              // Just be done.
+              //
+              if (this._disconnectionOccurred) {
                 callback();
               } else {
-                /*Codes_SRS_NODE_COMMON_AMQP_16_004: [The disconnect method shall call the done callback when the application/service has been successfully disconnected from the service] */
-                this._amqp.disconnect().then(() => {
-                  debug('amqp10 client cleanly disconnected');
+                //
+                // A session close may have already been received from the peer.  If we are disconnecting because of a session error as an example.
+                // We should send a session close from our end BUT, we should not expect to receive back another session close in response.
+                //
+                this._amqpSession.close();
+                if (this._sessionCloseOccurred) {
                   callback();
-                  return null;
-                }).catch((err) => {
-                  debug('amqp10 failed to cleanly disconnect: ' + err.toString());
+                } else {
+                  this._sessionCallback = callback; // So that the session_close handler for this disconnecting state can invoke the callback.
+                }
+              }
+            };
+
+            const disconnect = (callback) => {
+              debug('entering disconnect function of disconnecting state');
+              if (err) {
+                debug('with a disconnecting state err: ' + this._getErrorName(err));
+              }
+              //
+              // If a disconnection has already occurred there is no point in generating any network traffic.
+              //
+              if (this._disconnectionOccurred) {
+                debug('in disconnecting state - a disconnect had already been detected.  No point in doing anything.');
+                callback(err);
+              } else {
+                //
+                // A connection close may have already been received from the peer.  If we are disconnecting because of a connection error as an example.
+                // We should send a connection close from our end BUT, we should not expect to receive back another connection close in response.
+                //
+                debug('disconnect in disconnecting state is about send a close to the peer.');
+                this._amqpConnection.close();
+                if (this._connectionCloseOccurred) {
+                  debug('while in disconnecting state - a close from the peer was already received.  No point in waiting for another one.');
                   callback(err);
-                });
+                } else {
+                  this._connectionCallback = callback;
+                }
               }
             };
 
@@ -332,13 +585,13 @@ export class Amqp {
                 return callback();
               }
 
-              if (err) {
+              if (this._sessionCloseOccurred || this._disconnectionOccurred) {
                 debug('forceDetaching link');
                 link.forceDetach(err);
                 callback();
               } else {
                 debug('cleanly detaching link');
-                link.detach(callback);
+                link.detach(callback, err);
               }
             };
 
@@ -360,16 +613,63 @@ export class Amqp {
 
               /*Codes_SRS_NODE_COMMON_AMQP_16_034: [The `disconnect` method shall detach all open links before disconnecting the underlying AMQP client.]*/
               async.each(remainingLinks, detachLink, () => {
-                disconnect((disconnectError) => {
-                  const finalError = err || disconnectError;
-                  this._amqp.removeListener(_amqpClientError, amqpErrorHandler);
-                  this._fsm.transition('disconnected', disconnectCallback, finalError);
+                debug('In the disconnecting state.  All the links have been shut down.');
+                sessionEnd((sessionError) => {
+                  debug('session has been shut down - session error is: ' + this._getErrorName(sessionError));
+                  disconnect((disconnectError) => {
+                    debug('connection has been closed - connection error is: ' + this._getErrorName(disconnectError));
+                    manageConnectionHandlers('removeListener');
+                    const finalError = err || sessionError || disconnectError;
+                    debug('About to transition from disconnecting to disconnected. Callback is: ' + disconnectCallback + ' with a finalError: ' + this._getErrorName(finalError));
+                    this._fsm.transition('disconnected', disconnectCallback, finalError);
+                  });
                 });
               });
             });
           },
-          amqpError: (err) => debug('ignoring error event while disconnecting: ' + (!!err) ? err.toString() : 'falsy error object'),
-          amqpDisconnected: () => debug('ignoring disconnected event while disconnecting'),
+          'session_close': (context: EventContext) => {
+            debug('In the session_close handler for the disconnecting state with indicated error of: ' + this._getErrorName(this._indicatedSessionError));
+            let err = this._indicatedSessionError;
+            this._indicatedSessionError = undefined;
+            let callback = this._sessionCallback;
+            this._sessionCallback = undefined;
+            this._sessionCloseOccurred = true;
+            if (callback) {
+              callback(err);
+            }
+          },
+          'session_error': (context: EventContext) => {
+            debug('In the session_error handler for the disconnecting state with error of: ' + this._getErrorName(context.session.error));
+            debug('Deferring transition until the session_close event occurs.');
+            this._indicatedSessionError = context.session.error;
+          },
+          'connection_error': (context: EventContext) => {
+            debug('In the connection_error handler for the disconnecting state with error of: ' + this._getErrorName(context.connection.error));
+            debug('Deferring transition until the connection_close occurs.');
+            this._indicatedConnectionError = context.connection.error;
+          },
+          'connection_close': (context: EventContext) => {
+            debug('In the connection_close handler for the disconnecting state with indicated error of: ' + this._getErrorName(this._indicatedConnectionError));
+            let err = this._indicatedConnectionError;
+            let callback = this._connectionCallback;
+            this._indicatedConnectionError = undefined;
+            this._connectionCloseOccurred = true;
+            /*Codes_SRS_NODE_COMMON_AMQP_16_004: [The disconnect method shall call the done callback when the application/service has been successfully disconnected from the service] */
+            if (callback) {
+              callback(err);
+            }
+          },
+          'error': (context: EventContext) => {
+            debug('In the \'error\' handler for the disconnecting state with error of: ' + this._getErrorName(context.connection.error));
+            debug('ignoring error events while disconnecting');
+          },
+          'disconnected': (context: EventContext) => {
+            debug('In the disconnect handler for the disconnecting state with error of: ' + this._getErrorName(context.connection.error));
+              this._disconnectionOccurred = true;
+          },
+          amqpError: (err) => {
+            debug('ignoring error event while disconnecting: ' + this._getErrorName(err));
+          },
           '*': () => this._fsm.deferUntilTransition('disconnected')
         }
       }
@@ -387,24 +687,26 @@ export class Amqp {
    * @param {Function}                    done          Callback called when the connection is established or if an error happened.
    */
   connect(config: AmqpBaseTransportConfig, done: GenericAmqpBaseCallback<any>): void {
-    if (config.uri.substring(0, 3) === 'wss') {
-      const wsTransport = require('amqp10-transport-ws');
-      wsTransport.register(amqp10.TransportProvider);
-    }
-    let policyOverride: any = config.policyOverride || {};
-    if (config.sslOptions) {
-      policyOverride.options = {
-        sslOptions: config.sslOptions
-      };
-    }
-    if (config.saslMechanism) {
-      policyOverride.saslMechanism = config.saslMechanismName;
-      this._amqp.registerSaslMechanism(config.saslMechanismName, config.saslMechanism);
-    }
 
-    config.policyOverride = policyOverride;
+    let parsedUrl = urlParser.parse(config.uri);
+    let connectionParameters: any = {};
+    if (config.sslOptions) {
+      connectionParameters.cert = config.sslOptions.cert;
+      connectionParameters.key = config.sslOptions.key;
+    }
+    connectionParameters.port = parsedUrl.port ? ( parsedUrl.port ) : (5671);
+    connectionParameters.transport = 'tls';
+    connectionParameters.hostname = parsedUrl.hostname;
+    connectionParameters.host = parsedUrl.hostname;
+    connectionParameters.reconnect = false;
+    if (parsedUrl.protocol === 'wss:') {
+      let webSocket = require('ws');
+      let ws = this._amqpContainer.websocket_connect(webSocket);
+      connectionParameters.connection_details = ws(config.uri, 'AMQPWSB10', config.sslOptions );
+    }
+    connectionParameters = merge(connectionParameters, config.policyOverride);
     this._config = config;
-    this._fsm.handle('connect', config, done);
+    this._fsm.handle('connect', connectionParameters, done);
   }
 
   /**
@@ -456,7 +758,7 @@ export class Amqp {
    * @description        Creates and attaches an AMQP receiver link for the specified endpoint.
    *
    * @param {string}    endpoint    Endpoint used for the receiver link.
-   * @param {Object}    linkOptions Configuration options to be merged with the AMQP10 policies for the link..
+   * @param {Object}    linkOptions Configuration options to be merged with the rhea policies for the link..
    * @param {Function}  done        Callback used to return the link object or an Error.
    */
   attachReceiverLink(endpoint: string, linkOptions: any, done: GenericAmqpBaseCallback<ReceiverLink>): void {
@@ -464,17 +766,7 @@ export class Amqp {
     if (!endpoint) {
       throw new ReferenceError('endpoint cannot be \'' + endpoint + '\'');
     }
-    let newLinkOptions: any = linkOptions || {};
-    if (this._config) {
-      newLinkOptions = merge(newLinkOptions || {}, {
-        attach: {
-          properties: {
-            'com.microsoft:client-version': this._config.userAgentString
-          }
-        }
-      });
-    }
-    this._fsm.handle('attachReceiverLink', endpoint, newLinkOptions, done);
+    this._fsm.handle('attachReceiverLink', endpoint, linkOptions, done);
   }
 
   /**
@@ -482,7 +774,7 @@ export class Amqp {
    * @description        Creates and attaches an AMQP sender link for the specified endpoint.
    *
    * @param {string}    endpoint    Endpoint used for the sender link.
-   * @param {Object}    linkOptions Configuration options to be merged with the AMQP10 policies for the link..
+   * @param {Object}    linkOptions Configuration options to be merged with the rhea policies for the link..
    * @param {Function}  done        Callback used to return the link object or an Error.
    */
   attachSenderLink(endpoint: string, linkOptions: any, done: GenericAmqpBaseCallback<SenderLink>): void {
@@ -490,19 +782,7 @@ export class Amqp {
     if (!endpoint) {
       throw new ReferenceError('endpoint cannot be \'' + endpoint + '\'');
     }
-
-    let newLinkOptions: any = linkOptions || {};
-    if (this._config) {
-      newLinkOptions = merge(newLinkOptions, {
-        attach: {
-          properties: {
-            'com.microsoft:client-version': this._config.userAgentString
-          }
-        }
-      });
-    }
-
-    this._fsm.handle('attachSenderLink', endpoint, newLinkOptions, done);
+    this._fsm.handle('attachSenderLink', endpoint, linkOptions, done);
   }
 
   /**
@@ -517,7 +797,6 @@ export class Amqp {
     if (!endpoint) {
       throw new ReferenceError('endpoint cannot be \'' + endpoint + '\'');
     }
-
     this._fsm.handle('detachReceiverLink', endpoint, detachCallback);
   }
 
@@ -533,7 +812,6 @@ export class Amqp {
     if (!endpoint) {
       throw new ReferenceError('endpoint cannot be \'' + endpoint + '\'');
     }
-
     this._fsm.handle('detachSenderLink', endpoint, detachCallback);
   }
 
@@ -568,17 +846,29 @@ export class Amqp {
     }
   }
 
+  private _getErrorName(err: any): string {
+    if (err) {
+      if (err.condition) {
+        return '(amqp error) ' + err.condition;
+      } else if (err.hasOwnProperty('name')) {
+        return '(javascript error) ' + err.name;
+      } else {
+        return 'this is not an error type I understand';
+      }
+    } else {
+      return 'error is falsy';
+    }
+  }
 }
 
-
-  /**
-   * @private
-   */
-  export interface AmqpBaseTransportConfig {
-    uri: string;
-    userAgentString: string;
-    sslOptions?: any;
-    saslMechanismName?: string;
-    saslMechanism?: any;
-    policyOverride?: any;
-  }
+/**
+ * @private
+ */
+export interface AmqpBaseTransportConfig {
+  uri: string;
+  userAgentString: string;
+  sslOptions?: any;
+  saslMechanismName?: string;
+  saslMechanism?: any;
+  policyOverride?: any;
+}

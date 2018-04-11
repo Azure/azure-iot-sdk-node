@@ -12,6 +12,8 @@ import { TwinProperties } from 'azure-iot-device';
 
 import * as uuid from 'uuid';
 import * as dbg from 'debug';
+import rhea = require('rhea');
+
 const debug = dbg('azure-iot-device-amqp:AmqpTwinClient');
 
 enum TwinMethod {
@@ -58,7 +60,7 @@ export class AmqpTwinClient extends EventEmitter {
       //
       // The ONLY time we should see a message on the receiver link without a correlationId is if the message is a desired property delta update.
       //
-      const correlationId: string = message.properties ? message.properties.correlationId : undefined;
+      const correlationId: string = message.correlation_id;
       if (correlationId) {
         this._onResponseMessage(message);
       } else if (message.hasOwnProperty('body')) {
@@ -139,34 +141,33 @@ export class AmqpTwinClient extends EventEmitter {
                 /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_008: [The `attach` method shall call its callback with an error if the call to `getDeviceCredentials` fails with an error.]*/
                 this._fsm.transition('detached', err, attachCallback);
               } else {
-                  /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_007: [The endpoint argument for attachReceiverLink shall be `/device/<deviceId>/twin`.] */
-                  /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_009: [The endpoint argument for attachSenderLink shall be `/device/<deviceId>/twin`.] */
-                  this._endpoint = endpoint.devicePath(credentials.deviceId) + '/twin';
-                  /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_006: [When a listener is added for the `response` event, and the `post` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLink`.] */
-                  /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_012: [When a listener is added for the `post` event, and the `response` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLine`.] */
-                  /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_036: [The same correlationId shall be used for both the sender and receiver links.]*/
-                  const linkCorrelationId: string  = uuid.v4().toString();
-                  this._client.attachReceiverLink( this._endpoint, this._generateTwinLinkProperties(linkCorrelationId), (receiverLinkError?: Error, receiverTransportObject?: any): void => {
-                    if (receiverLinkError) {
-                      /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_022: [If an error occurs on establishing the upstream or downstream link then the `error` event shall be emitted.] */
-                      this._fsm.transition('detached', receiverLinkError, attachCallback);
-                    } else {
-                      this._receiverLink = receiverTransportObject;
-                      this._receiverLink.on('message', this._messageHandler);
-                      this._receiverLink.on('error', this._errorHandler);
-                      this._client.attachSenderLink( this._endpoint, this._generateTwinLinkProperties(linkCorrelationId), (senderLinkError?: Error, senderTransportObject?: any): void => {
-                        if (senderLinkError) {
-                          this._fsm.transition('detached', senderLinkError, attachCallback);
-                        } else {
-                          this._senderLink = senderTransportObject;
-                          this._senderLink.on('error', this._errorHandler);
-                          this._fsm.transition('attached', attachCallback);
-                        }
-                      });
-                    }
+                /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_007: [The endpoint argument for attachReceiverLink shall be `/device/<deviceId>/twin`.] */
+                /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_009: [The endpoint argument for attachSenderLink shall be `/device/<deviceId>/twin`.] */
+                this._endpoint = endpoint.devicePath(credentials.deviceId) + '/twin';
+                /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_006: [When a listener is added for the `response` event, and the `post` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLink`.] */
+                /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_012: [When a listener is added for the `post` event, and the `response` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLine`.] */
+                /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_036: [The same correlationId shall be used for both the sender and receiver links.]*/
+                const linkCorrelationId: string  = uuid.v4().toString();
+                this._client.attachSenderLink( this._endpoint, this._generateTwinLinkProperties(linkCorrelationId), (senderLinkError?: Error, senderTransportObject?: any): void => {
+                  if (senderLinkError) {
+                    this._fsm.transition('detached', senderLinkError, attachCallback);
+                  } else {
+                    this._senderLink = senderTransportObject;
+                    this._senderLink.on('error', this._errorHandler);
+                    this._client.attachReceiverLink( this._endpoint, this._generateTwinLinkProperties(linkCorrelationId), (receiverLinkError?: Error, receiverTransportObject?: any): void => {
+                      if (receiverLinkError) {
+                        this._fsm.transition('detached', receiverLinkError, attachCallback);
+                      } else {
+                        this._receiverLink = receiverTransportObject;
+                        this._receiverLink.on('message', this._messageHandler);
+                        this._receiverLink.on('error', this._errorHandler);
+                        this._fsm.transition('attached', attachCallback);
+                      }
+                    });
+                  }
                 });
               }
-            });
+             });
           },
           handleLinkError: (err, callback) => this._fsm.transition('detaching', err, callback),
           detach: (callback) => this._fsm.transition('detaching', null, callback),
@@ -278,14 +279,12 @@ export class AmqpTwinClient extends EventEmitter {
               } ] */
     // Note that the settle mode hard coded values correspond to the defined constant values in the amqp10 specification.
     return {
-      attach: {
         properties: {
           'com.microsoft:channel-correlation-id' : 'twin:' + correlationId,
           'com.microsoft:api-version' : endpoint.apiVersion
         },
-        sndSettleMode: 1,
-        rcvSettleMode: 0
-      }
+        snd_settle_mode: 1,
+        rcv_settle_mode: 0
     };
   }
 
@@ -295,15 +294,15 @@ export class AmqpTwinClient extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_021: [The `updateTwinReportedProperties` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received.]*/
     /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_029: [The `enableTwinDesiredPropertiesUpdates` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received.]*/
     /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_034: [The `disableTwinDesiredPropertiesUpdates` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received.]*/
-    if (this._pendingTwinRequests[message.properties.correlationId]) {
-      const pendingRequestCallback = this._pendingTwinRequests[message.properties.correlationId];
-      delete this._pendingTwinRequests[message.properties.correlationId];
-      if (message.messageAnnotations.status >= 200 && message.messageAnnotations.status <= 300) {
+    if (this._pendingTwinRequests[message.correlation_id]) {
+      const pendingRequestCallback = this._pendingTwinRequests[message.correlation_id];
+      delete this._pendingTwinRequests[message.correlation_id];
+      if (message.message_annotations.status >= 200 && message.message_annotations.status <= 300) {
         /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_014: [The `getTwin` method shall parse the body of the received message and call its callback with a `null` error object and the parsed object as a result.]*/
         /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_022: [The `updateTwinReportedProperties` method shall call its callback with no argument when a response is received]*/
         /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_030: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with no argument when a response is received]*/
         /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_035: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback with no argument when a response is received]*/
-        let result = message.body ? JSON.parse(message.body) : undefined;
+        let result = message.body ? JSON.parse(message.body.content) : undefined;
         pendingRequestCallback(null, result);
       } else {
         /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_038: [The `getTwin` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the `status` message annotation is `> 300`.]*/
@@ -319,26 +318,29 @@ export class AmqpTwinClient extends EventEmitter {
 
   private _onDesiredPropertyDelta(message: AmqpMessage): void {
     debug('onDesiredPropertyDelta: The message is: ' + JSON.stringify(message));
-    this.emit('twinDesiredPropertiesUpdate', JSON.parse(message.body));
+    this.emit('twinDesiredPropertiesUpdate', JSON.parse(message.body.content));
   }
 
   private _sendTwinRequest(method: TwinMethod, resource: string, body: string, callback: (err?: Error) => void): void {
     let amqpMessage = new AmqpMessage();
 
-    amqpMessage.messageAnnotations = {
+    amqpMessage.message_annotations = {
       operation: method
     };
 
     if (resource) {
-      amqpMessage.messageAnnotations.resource = resource;
+      amqpMessage.message_annotations.resource = resource;
     }
 
-    const correlationId = uuid.v4();
-    amqpMessage.properties = {
-      correlationId: correlationId
-    };
-
-    amqpMessage.body = body;
+    let correlationId = uuid.v4();
+    //
+    // Just a reminder here.  The correlation id will not be serialized into a amqp uuid encoding (0x98).
+    // The service doesn't require it and leaving it as a string will be just fine.
+    //
+    amqpMessage.correlation_id = correlationId;
+    if (body) {
+      amqpMessage.body = rhea.message.data_section(new Buffer(body));
+    }
 
     this._pendingTwinRequests[correlationId] = callback;
     this._senderLink.send(amqpMessage, (err) => {
@@ -374,12 +376,12 @@ export class AmqpTwinClient extends EventEmitter {
     let statusCode: number;
     let errorMessage: string = 'Twin operation failed';
 
-    if (amqpMessage.messageAnnotations) {
-      statusCode = amqpMessage.messageAnnotations.status;
+    if (amqpMessage.message_annotations) {
+      statusCode = amqpMessage.message_annotations.status;
     }
 
     if (amqpMessage.body) {
-      errorMessage = JSON.parse(amqpMessage.body);
+      errorMessage = JSON.parse(amqpMessage.body.content);
     }
 
     switch (statusCode) {

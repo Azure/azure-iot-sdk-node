@@ -6,6 +6,9 @@ var EventEmitter = require('events').EventEmitter;
 var AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
 var errors = require('azure-iot-common').errors;
 var endpoint = require('azure-iot-common').endpoint;
+var rhea = require('rhea');
+var uuidV4 = require('uuid').v4;
+
 
 var AmqpDeviceMethodClient = require('../lib/amqp_device_method_client.js').AmqpDeviceMethodClient;
 
@@ -56,11 +59,9 @@ describe('AmqpDeviceMethodClient', function () {
       var fakeAmqpReceiver = new EventEmitter();
       var fakeMethodName = 'testMethod';
       var fakeMethodRequest = new AmqpMessage();
-      fakeMethodRequest.body = 'payload';
-      fakeMethodRequest.properties = {
-        correlationId: 'fakeCorrelationId'
-      };
-      fakeMethodRequest.applicationProperties = {
+      fakeMethodRequest.body = rhea.message.data_section('payload');
+      fakeMethodRequest.correlation_id = 'fakeCorrelationId';
+      fakeMethodRequest.application_properties = {
         'IoThub-methodname': fakeMethodName
       };
       var fakeAmqpClient = {
@@ -71,14 +72,14 @@ describe('AmqpDeviceMethodClient', function () {
         /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_012: [The `AmqpDeviceMethodClient` object shall automatically establish the AMQP links required to receive method calls and send responses when either `onDeviceMethod` or `sendMethodResponse` is called.]*/
         attachSenderLink: function(ep, options, callback) {
           assert.strictEqual(ep, '/devices/' + fakeConfig.deviceId + '/methods/devicebound');
-          assert.strictEqual(options.attach.properties['com.microsoft:api-version'], endpoint.apiVersion);
-          assert.strictEqual(options.attach.properties['com.microsoft:channel-correlation-id'], fakeConfig.deviceId);
+          assert.strictEqual(options.properties['com.microsoft:api-version'], endpoint.apiVersion);
+          assert.strictEqual(options.properties['com.microsoft:channel-correlation-id'], fakeConfig.deviceId);
           callback(null, {});
         },
         attachReceiverLink: function(ep, options, callback) {
           assert.strictEqual(ep, '/devices/' + fakeConfig.deviceId + '/methods/devicebound');
-          assert.strictEqual(options.attach.properties['com.microsoft:api-version'], endpoint.apiVersion);
-          assert.strictEqual(options.attach.properties['com.microsoft:channel-correlation-id'], fakeConfig.deviceId);
+          assert.strictEqual(options.properties['com.microsoft:api-version'], endpoint.apiVersion);
+          assert.strictEqual(options.properties['com.microsoft:channel-correlation-id'], fakeConfig.deviceId);
           callback(null, fakeAmqpReceiver);
         }
       };
@@ -91,8 +92,8 @@ describe('AmqpDeviceMethodClient', function () {
           - `body`: the payload of the message received, which is also the payload of the method request
           - `methods`: an object with a `methodName` property containing the name of the method that is being called, extracted from the incoming message's application property named `IoThub-methodname`.]*/
           assert.strictEqual(methodRequest.methods.methodName, fakeMethodName);
-          assert.strictEqual(methodRequest.requestId, fakeMethodRequest.properties.correlationId);
-          assert.strictEqual(methodRequest.body, fakeMethodRequest.body);
+          assert.strictEqual(methodRequest.requestId, fakeMethodRequest.correlation_id);
+          assert.strictEqual(methodRequest.body, fakeMethodRequest.body.content);
           testCallback();
         });
 
@@ -104,11 +105,9 @@ describe('AmqpDeviceMethodClient', function () {
       var fakeAmqpReceiver = new EventEmitter();
       var fakeMethodName = 'testMethod';
       var fakeMethodRequest = new AmqpMessage();
-      fakeMethodRequest.body = 'payload';
-      fakeMethodRequest.properties = {
-        correlationId: 'fakeCorrelationId'
-      };
-      fakeMethodRequest.applicationProperties = {
+      fakeMethodRequest.body = rhea.message.data_section('payload');
+      fakeMethodRequest.correlation_id = 'fakeCorrelationId';
+      fakeMethodRequest.application_properties = {
         'IoThub-methodname': fakeMethodName
       };
       var fakeAmqpClient = {
@@ -123,8 +122,8 @@ describe('AmqpDeviceMethodClient', function () {
         - `body`: the payload of the message received, which is also the payload of the method request
         - `methods`: an object with a `methodName` property containing the name of the method that is being called, extracted from the incoming message's application property named `IoThub-methodname`.]*/
         assert.strictEqual(methodRequest.methods.methodName, fakeMethodName);
-        assert.strictEqual(methodRequest.requestId, fakeMethodRequest.properties.correlationId);
-        assert.strictEqual(methodRequest.body, fakeMethodRequest.body);
+        assert.strictEqual(methodRequest.requestId, fakeMethodRequest.correlation_id);
+        assert.strictEqual(methodRequest.body, fakeMethodRequest.body.content);
         testCallback();
       });
 
@@ -137,11 +136,9 @@ describe('AmqpDeviceMethodClient', function () {
       var fakeAmqpReceiver = new EventEmitter();
       var fakeMethodName = 'testMethod';
       var fakeMethodRequest = new AmqpMessage();
-      fakeMethodRequest.body = 'payload';
-      fakeMethodRequest.properties = {
-        correlationId: 'fakeCorrelationId'
-      };
-      fakeMethodRequest.applicationProperties = {
+      fakeMethodRequest.body = rhea.message.data_section('payload');
+      fakeMethodRequest.correlation_id = 'fakeCorrelationId';
+      fakeMethodRequest.application_properties = {
         'IoThub-methodname': fakeMethodName
       };
       var attachCallback;
@@ -159,8 +156,8 @@ describe('AmqpDeviceMethodClient', function () {
       // now blocked in the 'attaching' state
       client.onDeviceMethod(fakeMethodName, function(methodRequest) {
         assert.strictEqual(methodRequest.methods.methodName, fakeMethodName);
-        assert.strictEqual(methodRequest.requestId, fakeMethodRequest.properties.correlationId);
-        assert.strictEqual(methodRequest.body, fakeMethodRequest.body);
+        assert.strictEqual(methodRequest.requestId, fakeMethodRequest.correlation_id);
+        assert.strictEqual(methodRequest.body, fakeMethodRequest.body.content);
         testCallback();
       });
 
@@ -220,14 +217,14 @@ describe('AmqpDeviceMethodClient', function () {
         /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_012: [The `AmqpDeviceMethodClient` object shall automatically establish the AMQP links required to receive method calls and send responses when either `onDeviceMethod` or `sendMethodResponse` is called.]*/
         attachSenderLink: function(ep, options, callback) {
           assert.strictEqual(ep, '/devices/' + fakeConfig.deviceId + '/methods/devicebound');
-          assert.strictEqual(options.attach.properties['com.microsoft:api-version'], endpoint.apiVersion);
-          assert.strictEqual(options.attach.properties['com.microsoft:channel-correlation-id'], fakeConfig.deviceId);
+          assert.strictEqual(options.properties['com.microsoft:api-version'], endpoint.apiVersion);
+          assert.strictEqual(options.properties['com.microsoft:channel-correlation-id'], fakeConfig.deviceId);
           callback(null, {});
         },
         attachReceiverLink: function(ep, options, callback) {
           assert.strictEqual(ep, '/devices/' + fakeConfig.deviceId + '/methods/devicebound');
-          assert.strictEqual(options.attach.properties['com.microsoft:api-version'], endpoint.apiVersion);
-          assert.strictEqual(options.attach.properties['com.microsoft:channel-correlation-id'], fakeConfig.deviceId);
+          assert.strictEqual(options.properties['com.microsoft:api-version'], endpoint.apiVersion);
+          assert.strictEqual(options.properties['com.microsoft:channel-correlation-id'], fakeConfig.deviceId);
           callback(null, new EventEmitter());
         },
         send: function(message, endpoint, to, sendCallback) {
