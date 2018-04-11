@@ -7,14 +7,12 @@
   "main": "main.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "amqp10": "^3.6.0",
-    "amqp10-transport-ws": "^0.0.5",
+    "azure-iot-common": "1.5.0",
     "async": "^2.5.0",
-    "azure-iot-common": "1.5.2",
-    "bluebird": "^3.5.0",
     "debug": "^3.0.1",
     "lodash.merge": "^4.6.1",
     "machina": "^2.0.1",
+    "rhea": "^0.2.11",
     "uuid": "^3.0.1"
   },
   "devDependencies": {

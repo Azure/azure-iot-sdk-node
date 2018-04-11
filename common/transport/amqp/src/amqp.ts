@@ -3,8 +3,9 @@
 
 'use strict';
 
-import * as amqp10 from 'amqp10';
+import rhea = require('rhea');
 import * as machina from 'machina';
+import urlParser = require('url');
 import { AmqpMessage } from './amqp_message';
 import { errors, results, Message } from 'azure-iot-common';
 import { ClaimsBasedSecurityAgent } from './amqp_cbs';
@@ -14,9 +15,9 @@ import { AmqpLink } from './amqp_link_interface';
 // From https://www.typescriptlang.org/docs/handbook/modules.html
 // When exporting a module using export =, TypeScript-specific import module = require("module") must be used to import the module
 import merge = require('lodash.merge');
-
 import * as dbg from 'debug';
 import * as async from 'async';
+
 const debug = dbg('azure-iot-amqp-base:Amqp');
 
 const _amqpClientError = 'client:errorReceived';
@@ -34,7 +35,9 @@ export type GenericAmqpBaseCallback<T> = (err: Error | null, result?: T) => void
  * @param   {String}    sdkVersionString        String identifying the type and version of the SDK used.
  */
 export class Amqp {
-  private _amqp: amqp10.Client;
+  private _amqpContainer: any;
+  private _amqpConnection: any;
+  private _amqpSession: any;
   private _receivers: { [key: string]: ReceiverLink; } = {};
   private _senders: { [key: string]: SenderLink; } = {};
   private _disconnectHandler: (err: Error) => void;
@@ -48,7 +51,7 @@ export class Amqp {
         False if the caller intends to manually settle messages
         A string containing the version of the SDK used for telemetry purposes] */
   constructor(autoSettleMessages: boolean) {
-    const autoSettleMode = autoSettleMessages ? amqp10.Constants.receiverSettleMode.autoSettle : amqp10.Constants.receiverSettleMode.settleOnDisposition;
+    const autoSettleMode = autoSettleMessages ? 1 : 2;
     // node-amqp10 has an automatic reconnection/link re-attach feature that is enabled by default.
     // In our case we want to control the reconnection flow ourselves, so we need to disable it.
 
@@ -56,56 +59,26 @@ export class Amqp {
     - not reconnect on failure
     - not reattach sender and receiver links on failure
     - not reestablish sessions on failure]*/
-    this._amqp = new amqp10.Client(amqp10.Policy.merge(<any>{
-      session: {
-        reestablish: {
-          retries: 0,
-          forever: false
-        }
-      },
-      senderLink: {
-        attach: {
-          maxMessageSize: 0,
-        },
-        encoder: (body: any): any => {
-          if (typeof body === 'string') {
-            return new Buffer(body, 'utf8');
-          } else {
-            return body;
-          }
-        },
-        reattach: {
-          retries: 0,
-          forever: false
-        }
-      },
-      receiverLink: {
-        attach: {
-          maxMessageSize: 0,
-          receiverSettleMode: autoSettleMode,
-        },
-        decoder: (body: any): any => body,
-        reattach: {
-          retries: 0,
-          forever: false
-        }
-      },
-      // reconnections will be handled at the client level, not the transport level.
-      reconnect: {
-        retries: 0,
-        strategy: 'fibonacci',
-        forever: false
-      }
-    }, amqp10.Policy.EventHub));
-
+    this._amqpContainer = rhea.create_container(
+    );
+    let manageConnectedConnectionHandlers: (operation: string) => void;
     const amqpErrorHandler = (err) => {
-      debug('amqp10 client error: ' + err.toString());
+      debug('rhea client error: ' + ((!!err) ? err.toString() : 'no err provided on the error'));
       this._fsm.handle('amqpError', err);
     };
+    const amqpDisconnectedHandler = (err) => {
+      debug('rhea client error: ' + ((!!err) ? err.toString() : 'no err provided on the disconnect'));
+      this._fsm.handle('amqpDisconnected', err);
+    };
+    manageConnectedConnectionHandlers = (operation: string) => {
+      this._amqpConnection[operation]('error', amqpErrorHandler);
+      this._amqpConnection[operation]('disconnected', amqpDisconnectedHandler);
+      this._amqpConnection[operation]('connection_close', amqpErrorHandler);
+    };
 
-    this._amqp.on('disconnected', () => {
+    this._amqpContainer.on('disconnected', () => {
       // deferring this is necessary because in some instances
-      // the amqp10 library might want to send a close frame - and we don't want
+      // the rhea library might want to send a close frame - and we don't want
       // to trigger anything (especially not reconnection) before it has done so.
       process.nextTick(() => {
         this._fsm.handle('amqpDisconnected');
@@ -133,8 +106,8 @@ export class Amqp {
             debug('received an error while disconnected: maybe a bug: ' + (!!err ? err.toString() : 'falsy error object.'));
           },
           amqpDisconnected: () => debug('ignoring disconnected event while disconnected'),
-          connect: (config, connectCallback) => {
-            this._fsm.transition('connecting', config, connectCallback);
+          connect: (connectionParameters, connectCallback) => {
+            this._fsm.transition('connecting', connectionParameters, connectCallback);
           },
           disconnect: (callback) => callback(null, new results.Disconnected()),
           attachSenderLink: (endpoint, linkOptions, callback) => callback(new errors.NotConnectedError()),
@@ -145,26 +118,72 @@ export class Amqp {
           putToken: (audience, token, callback) => callback(new errors.NotConnectedError()),
         },
         connecting: {
-          _onEnter: (config, connectCallback) => {
-            let connectError = null;
-            const connectErrorHandler = (err) => {
-              connectError = err;
+          _onEnter: (connectionParameters, connectCallback) => {
+            this._amqpContainer.options.sender_options = {properties: {'com.microsoft:client-version': this._config.userAgentString}, reconnect: false};
+            this._amqpContainer.options.receiver_options = {properties: {'com.microsoft:client-version': this._config.userAgentString}, reconnect: false, autoaccept: autoSettleMode};
+            let manageCreateConnectionHandlers: (operation: string) => void;
+            const createConnectionErrorHandler = (err) => {
+              debug('In the error handler for the connect');
+              manageCreateConnectionHandlers('removeListener');
+              this._fsm.transition('disconnected', connectCallback, err);
             };
+            const createConnectionDisconnectHandler = (err) => {
+              debug('In the disconnect handler for the connect');
+              manageCreateConnectionHandlers('removeListener');
+              this._fsm.transition('disconnected', connectCallback, err);
+            };
+            const createConnectionCloseHandler = (context) => {
+              debug('In the close handler for connect');
+              manageCreateConnectionHandlers('removeListener');
+              this._fsm.transition('disconnected', connectCallback, context);
+            };
+            const createConnectionOpenHandler = (context) => {
+              debug('In the open handler for connect');
+              manageCreateConnectionHandlers('removeListener');
+              this._amqpConnection = context.connection;
+              manageConnectedConnectionHandlers('on');
+              this._fsm.transition('connecting_session', connectCallback, context);
+            };
+            manageCreateConnectionHandlers = (operation: string) => {
+              this._amqpContainer[operation]('connection_open', createConnectionOpenHandler);
+              this._amqpContainer[operation]('connection_close', createConnectionCloseHandler);
+              this._amqpContainer[operation]('error', createConnectionErrorHandler);
+              this._amqpContainer[operation]('disconnected', createConnectionDisconnectHandler);
+            };
+            manageCreateConnectionHandlers('on');
+            this._amqpContainer.connect(connectionParameters);
+          },
+          amqpError: (err) => this._fsm.transition('disconnecting', null, err),
+          amqpDisconnected: () => debug('ignoring disconnected event while connecting'),
+          '*': () => this._fsm.deferUntilTransition()
+        },
+        connecting_session: {
+          _onEnter: (connectCallback, result) => {
+            let manageCreateSessionHandlers: (operation: string) => void;
+            const createSessionErrorHandler = (err) => {
+              debug('In the error handler for the session create');
+              manageCreateSessionHandlers('removeListener');
+              this._fsm.transition('disconnecting', connectCallback, err);
+            };
+            const createSessionCloseHandler = (context) => {
+              debug('In the close handler for the session create');
+              manageCreateSessionHandlers('removeListener');
+              this._fsm.transition('disconnecting', connectCallback, context);
+            };
+            const createSessionOpenHandler = (context) => {
+              debug('In the open handler for session create');
+              manageCreateSessionHandlers('removeListener');
+              this._fsm.transition('connected', connectCallback, context);
+            };
+            manageCreateSessionHandlers = (operation: string) => {
+              this._amqpSession[operation]('session_open', createSessionOpenHandler);
+              this._amqpSession[operation]('session_close', createSessionCloseHandler);
+              this._amqpSession[operation]('session_error', createSessionErrorHandler);
+            };
+            this._amqpSession = this._amqpConnection.create_session();
+            manageCreateSessionHandlers('on');
+            this._amqpSession.open();
 
-            this._amqp.on(_amqpClientError, connectErrorHandler);
-            this._amqp.connect(config.uri, config.policyOverride)
-              .then((result) => {
-                debug('AMQP transport connected.');
-                this._amqp.on(_amqpClientError, amqpErrorHandler);
-                this._amqp.removeListener(_amqpClientError, connectErrorHandler);
-                this._fsm.transition('connected', connectCallback, result);
-                return null;
-              })
-              .catch((err) => {
-                this._amqp.removeListener(_amqpClientError, connectErrorHandler);
-                /*Codes_SRS_NODE_COMMON_AMQP_16_003: [The `connect` method shall call the `done` callback if the connection fails.] */
-                this._fsm.transition('disconnected', connectCallback, connectError || err);
-              });
           },
           amqpError: (err) => this._fsm.transition('disconnecting', null, err),
           amqpDisconnected: () => debug('ignoring disconnected event while connecting'),
@@ -182,7 +201,7 @@ export class Amqp {
             this._fsm.transition('disconnecting', disconnectCallback);
           },
           initializeCBS: (callback) => {
-            this._cbs = new ClaimsBasedSecurityAgent(this._amqp);
+            this._cbs = new ClaimsBasedSecurityAgent(this._amqpSession);
             this._cbs.attach(callback);
           },
           putToken: (audience, token, callback) => {
@@ -205,7 +224,7 @@ export class Amqp {
             debug('call to deprecated api \'azure-iot-amqp-base.Amqp.send\'. You should be using SenderLink.send instead');
             let amqpMessage = AmqpMessage.fromMessage(message);
             if (to !== undefined) {
-              amqpMessage.properties.to = to;
+              amqpMessage.to = to;
             }
 
             if (!this._senders[endpoint]) {
@@ -239,7 +258,7 @@ export class Amqp {
           },
           attachReceiverLink: (endpoint: string, linkOptions: any, done: GenericAmqpBaseCallback<ReceiverLink>): void => {
             debug('creating receiver link for: ' + endpoint);
-            this._receivers[endpoint] = new ReceiverLink(endpoint, linkOptions, this._amqp);
+            this._receivers[endpoint] = new ReceiverLink(endpoint, linkOptions, this._amqpSession);
             const permanentErrorHandler = (err) => {
               debug('receiver link error - removing it from cache: ' + endpoint + ': ' + err.toString());
               delete(this._receivers[endpoint]);
@@ -252,12 +271,16 @@ export class Amqp {
 
             this._receivers[endpoint].on('error', permanentErrorHandler);
             this._receivers[endpoint].on('error', operationErrorHandler);
+            /*Codes_SRS_NODE_COMMON_AMQP_16_018: [The `attachReceiverLink` method shall call `open_receiver` on the `rhea` session object.]*/
             this._receivers[endpoint].attach((err) => {
               if (err) {
                 debug('failed to attach receiver link: ' + endpoint + ': ' + err.toString());
                 permanentErrorHandler(err);
                 operationErrorHandler(err);
               } else {
+                //
+                // TODO: It seems odd not to remove the perm error handler here also. (also for attachSender)
+                //
                 this._receivers[endpoint].removeListener('error', operationErrorHandler);
                 debug('receiver link attached: ' + endpoint);
                 done(null, this._receivers[endpoint]);
@@ -266,8 +289,7 @@ export class Amqp {
           },
           attachSenderLink: (endpoint: string, linkOptions: any, done: GenericAmqpBaseCallback<any>): void => {
             debug('creating sender link for: ' + endpoint);
-            let senderFsm = new SenderLink(endpoint, linkOptions, this._amqp);
-            this._senders[endpoint] = senderFsm;
+            this._senders[endpoint] = new SenderLink(endpoint, linkOptions, this._amqpSession);
             const permanentErrorHandler = (err) => {
               debug('sender link error while attaching: ' + endpoint + ': ' + err.toString());
               delete(this._senders[endpoint]);
@@ -281,6 +303,7 @@ export class Amqp {
             this._senders[endpoint].on('error', permanentErrorHandler);
             this._senders[endpoint].on('error', operationErrorHandler);
             debug('attaching sender link for: ' + endpoint);
+            /*Codes_SRS_NODE_COMMON_AMQP_16_013: [The `attachSenderLink` method shall call `open_sender` on the `rhea` session object.]*/
             this._senders[endpoint].attach((err) => {
               if (err) {
                 permanentErrorHandler(err);
@@ -312,18 +335,28 @@ export class Amqp {
         disconnecting: {
           _onEnter: (disconnectCallback, err) => {
             const disconnect = (callback) => {
+              manageConnectedConnectionHandlers('removeListener');
+              let manageCloseConnectionHandlers: (operation: string) => void;
+              const closeConnectionErrorHandler = (err) => {
+                debug('amqp10 failed to cleanly disconnect: ' + err.toString());
+                manageCloseConnectionHandlers('removeListener');
+                callback(err);
+              };
+              const closeConnectionCloseHandler = () => {
+                debug('rhea client cleanly disconnected');
+                manageCloseConnectionHandlers('removeListener');
+                callback();
+              };
+              manageCloseConnectionHandlers = (operation: string) => {
+                this._amqpConnection[operation]('connection_close', closeConnectionCloseHandler);
+                this._amqpConnection[operation]('connection_error', closeConnectionErrorHandler);
+              };
+              manageCloseConnectionHandlers('on');
               if (err) {
                 callback();
               } else {
                 /*Codes_SRS_NODE_COMMON_AMQP_16_004: [The disconnect method shall call the done callback when the application/service has been successfully disconnected from the service] */
-                this._amqp.disconnect().then(() => {
-                  debug('amqp10 client cleanly disconnected');
-                  callback();
-                  return null;
-                }).catch((err) => {
-                  debug('amqp10 failed to cleanly disconnect: ' + err.toString());
-                  callback(err);
-                });
+                this._amqpConnection.close();
               }
             };
 
@@ -362,7 +395,7 @@ export class Amqp {
               async.each(remainingLinks, detachLink, () => {
                 disconnect((disconnectError) => {
                   const finalError = err || disconnectError;
-                  this._amqp.removeListener(_amqpClientError, amqpErrorHandler);
+                  this._amqpConnection.removeListener(_amqpClientError, amqpErrorHandler);
                   this._fsm.transition('disconnected', disconnectCallback, finalError);
                 });
               });
@@ -387,24 +420,26 @@ export class Amqp {
    * @param {Function}                    done          Callback called when the connection is established or if an error happened.
    */
   connect(config: AmqpBaseTransportConfig, done: GenericAmqpBaseCallback<any>): void {
-    if (config.uri.substring(0, 3) === 'wss') {
-      const wsTransport = require('amqp10-transport-ws');
-      wsTransport.register(amqp10.TransportProvider);
-    }
-    let policyOverride: any = config.policyOverride || {};
-    if (config.sslOptions) {
-      policyOverride.options = {
-        sslOptions: config.sslOptions
-      };
-    }
-    if (config.saslMechanism) {
-      policyOverride.saslMechanism = config.saslMechanismName;
-      this._amqp.registerSaslMechanism(config.saslMechanismName, config.saslMechanism);
-    }
 
-    config.policyOverride = policyOverride;
+    let parsedUrl = urlParser.parse(config.uri);
+    let connectionParameters: any = {};
+    if (config.sslOptions) {
+      connectionParameters.cert = config.sslOptions.cert;
+      connectionParameters.key = config.sslOptions.key;
+    }
+    connectionParameters.port = parsedUrl.port ? ( parsedUrl.port ) : (5671);
+    connectionParameters.transport = 'tls';
+    connectionParameters.hostname = parsedUrl.hostname;
+    connectionParameters.host = parsedUrl.hostname;
+    connectionParameters.reconnect = false;
+    if (parsedUrl.protocol === 'wss:') {
+      let webSocket = require('ws');
+      let ws = this._amqpContainer.websocket_connect(webSocket);
+      connectionParameters.connection_details = ws(config.uri, 'AMQPWSB10' );
+    }
+    connectionParameters = merge(connectionParameters, config.policyOverride);
     this._config = config;
-    this._fsm.handle('connect', config, done);
+    this._fsm.handle('connect', connectionParameters, done);
   }
 
   /**
@@ -456,7 +491,7 @@ export class Amqp {
    * @description        Creates and attaches an AMQP receiver link for the specified endpoint.
    *
    * @param {string}    endpoint    Endpoint used for the receiver link.
-   * @param {Object}    linkOptions Configuration options to be merged with the AMQP10 policies for the link..
+   * @param {Object}    linkOptions Configuration options to be merged with the rhea policies for the link..
    * @param {Function}  done        Callback used to return the link object or an Error.
    */
   attachReceiverLink(endpoint: string, linkOptions: any, done: GenericAmqpBaseCallback<ReceiverLink>): void {
@@ -464,17 +499,7 @@ export class Amqp {
     if (!endpoint) {
       throw new ReferenceError('endpoint cannot be \'' + endpoint + '\'');
     }
-    let newLinkOptions: any = linkOptions || {};
-    if (this._config) {
-      newLinkOptions = merge(newLinkOptions || {}, {
-        attach: {
-          properties: {
-            'com.microsoft:client-version': this._config.userAgentString
-          }
-        }
-      });
-    }
-    this._fsm.handle('attachReceiverLink', endpoint, newLinkOptions, done);
+    this._fsm.handle('attachReceiverLink', endpoint, linkOptions, done);
   }
 
   /**
@@ -482,7 +507,7 @@ export class Amqp {
    * @description        Creates and attaches an AMQP sender link for the specified endpoint.
    *
    * @param {string}    endpoint    Endpoint used for the sender link.
-   * @param {Object}    linkOptions Configuration options to be merged with the AMQP10 policies for the link..
+   * @param {Object}    linkOptions Configuration options to be merged with the rhea policies for the link..
    * @param {Function}  done        Callback used to return the link object or an Error.
    */
   attachSenderLink(endpoint: string, linkOptions: any, done: GenericAmqpBaseCallback<SenderLink>): void {
@@ -490,19 +515,7 @@ export class Amqp {
     if (!endpoint) {
       throw new ReferenceError('endpoint cannot be \'' + endpoint + '\'');
     }
-
-    let newLinkOptions: any = linkOptions || {};
-    if (this._config) {
-      newLinkOptions = merge(newLinkOptions, {
-        attach: {
-          properties: {
-            'com.microsoft:client-version': this._config.userAgentString
-          }
-        }
-      });
-    }
-
-    this._fsm.handle('attachSenderLink', endpoint, newLinkOptions, done);
+    this._fsm.handle('attachSenderLink', endpoint, linkOptions, done);
   }
 
   /**
@@ -517,7 +530,6 @@ export class Amqp {
     if (!endpoint) {
       throw new ReferenceError('endpoint cannot be \'' + endpoint + '\'');
     }
-
     this._fsm.handle('detachReceiverLink', endpoint, detachCallback);
   }
 
@@ -533,7 +545,6 @@ export class Amqp {
     if (!endpoint) {
       throw new ReferenceError('endpoint cannot be \'' + endpoint + '\'');
     }
-
     this._fsm.handle('detachSenderLink', endpoint, detachCallback);
   }
 
@@ -567,18 +578,16 @@ export class Amqp {
       process.nextTick(() => callback(error, result));
     }
   }
-
 }
 
-
-  /**
-   * @private
-   */
-  export interface AmqpBaseTransportConfig {
-    uri: string;
-    userAgentString: string;
-    sslOptions?: any;
-    saslMechanismName?: string;
-    saslMechanism?: any;
-    policyOverride?: any;
-  }
+/**
+ * @private
+ */
+export interface AmqpBaseTransportConfig {
+  uri: string;
+  userAgentString: string;
+  sslOptions?: any;
+  saslMechanismName?: string;
+  saslMechanism?: any;
+  policyOverride?: any;
+}

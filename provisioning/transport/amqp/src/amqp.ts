@@ -278,21 +278,20 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
             ]*/
             let requestMessage = new AmqpMessage();
             requestMessage.body = '';
-            requestMessage.applicationProperties = {};
-            requestMessage.properties = {};
-            requestMessage.applicationProperties[MessagePropertyNames.OperationType] = DeviceOperations.Register;
-            requestMessage.applicationProperties[MessagePropertyNames.ForceRegistration] = !!request.forceRegistration;
-            requestMessage.properties.correlationId = correlationId;
+            requestMessage.application_properties = {};
+            requestMessage.application_properties[MessagePropertyNames.OperationType] = DeviceOperations.Register;
+            requestMessage.application_properties[MessagePropertyNames.ForceRegistration] = !!request.forceRegistration;
+            requestMessage.correlation_id = correlationId;
 
             debug('initial registration request: ' + JSON.stringify(requestMessage));
-            this._operations[requestMessage.properties.correlationId] = callback;
+            this._operations[requestMessage.correlation_id] = callback;
             this._senderLink.send(requestMessage, (err) => {
               if (err) {
-                delete this._operations[requestMessage.properties.correlationId];
+                delete this._operations[requestMessage.correlation_id];
                 /*Codes_SRS_NODE_PROVISIONING_AMQP_16_011: [The `registrationRequest` method shall call its callback with an error if the transport fails to send the request message.]*/
                 callback(err);
               } else {
-                debug('registration request sent with correlationId: ' + requestMessage.properties.correlationId);
+                debug('registration request sent with correlationId: ' + requestMessage.correlation_id);
               }
             });
           },
@@ -305,21 +304,20 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
             ```*/
             let requestMessage = new AmqpMessage();
             requestMessage.body = '';
-            requestMessage.applicationProperties = {};
-            requestMessage.properties = {};
-            requestMessage.applicationProperties[MessagePropertyNames.OperationType] = DeviceOperations.GetOperationStatus;
-            requestMessage.applicationProperties[MessagePropertyNames.OperationId] = operationId;
-            requestMessage.properties.correlationId = correlationId;
+            requestMessage.application_properties = {};
+            requestMessage.application_properties[MessagePropertyNames.OperationType] = DeviceOperations.GetOperationStatus;
+            requestMessage.application_properties[MessagePropertyNames.OperationId] = operationId;
+            requestMessage.correlation_id = correlationId;
 
             debug('registration status request: ' + JSON.stringify(requestMessage));
-            this._operations[requestMessage.properties.correlationId] = callback;
+            this._operations[requestMessage.correlation_id] = callback;
             this._senderLink.send(requestMessage, (err) => {
               if (err) {
-                delete this._operations[requestMessage.properties.correlationId];
+                delete this._operations[requestMessage.correlation_id];
                 /*Codes_SRS_NODE_PROVISIONING_AMQP_16_021: [The `queryOperationStatus` method shall call its callback with an error if the transport fails to send the request message.]*/
                 callback(err);
               } else {
-                debug('registration status request sent with correlationId: ' + requestMessage.properties.correlationId);
+                debug('registration status request sent with correlationId: ' + requestMessage.correlation_id);
               }
             });
           },
