@@ -5,6 +5,11 @@
 
 node_root=$(cd "$(dirname "$0")/.." && pwd)
 
+export NPM_CONFIG_PREFIX=$node_root/npm-symlinks
+if [ ! -d $NPM_CONFIG_PREFIX ]; then
+  mkdir $NPM_CONFIG_PREFIX
+fi
+
 cleanup_and_exit()
 {
     exit $1

@@ -12,6 +12,7 @@ var uuid = require('uuid');
 var _ = require('lodash');
 var assert = require('chai').assert;
 var async = require('async');
+var debug = require('debug')('e2etests:twin_e2e');
 
 var deviceAmqp = require('azure-iot-device-amqp');
 var deviceMqtt = require('azure-iot-device-mqtt');
@@ -51,13 +52,11 @@ delete nullMergeResult.tweedle;
 ].forEach(function(protocolCtor) {
   describe('Twin over ' + protocolCtor.name, function() {
     this.timeout(60000);
-    var deviceClient, deviceTwin;
-    var serviceTwin;
+    var deviceDescription, deviceClient, deviceTwin, serviceTwin;
+    var host = ConnectionString.parse(hubConnectionString).HostName;
+    var registry = Registry.fromConnectionString(hubConnectionString);
 
-    var deviceDescription;
-
-    beforeEach(function (done) {
-      var host = ConnectionString.parse(hubConnectionString).HostName;
+    before(function (done) {
       var pkey = new Buffer(uuid.v4()).toString('base64');
       var deviceId = '0000e2etest-delete-me-twin-e2e-' + protocolCtor.name + '-'  + uuid.v4();
 
@@ -73,42 +72,81 @@ delete nullMergeResult.tweedle;
         connectionString: 'HostName=' + host + ';DeviceId=' + deviceId + ';SharedAccessKey=' + pkey
       };
 
-      var registry = Registry.fromConnectionString(hubConnectionString);
-
+      debug('creating test device: ' + deviceId + ' on hub: ' + host);
       registry.create(deviceDescription, function (err) {
-        if (err) return done(err);
+        if (err) {
+          debug('error creating test device: ' + err.toString());
+          return done(err);
+        } else {
+          debug('test device successfully created: ' + deviceId);
+          return done();
+        }
+      });
+    });
 
-        var sas = deviceSas.create(host, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
-        deviceClient = deviceSdk.Client.fromSharedAccessSignature(sas, protocolCtor);
+    after(function (done) {
+      debug('deleting test device: ' + deviceDescription.deviceId);
+      registry.delete(deviceDescription.deviceId, function(err) {
+        if (err) {
+          debug('Error deleting test device: ' + err.toString());
+          return done(err);
+        } else {
+          debug('test device deleted: ' + deviceDescription.deviceId);
+          return done();
+        }
+      });
+    });
 
-        deviceClient.open(function(err) {
-          if (err) return done(err);
+    beforeEach(function (done) {
+      var sas = deviceSas.create(host, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
+      deviceClient = deviceSdk.Client.fromSharedAccessSignature(sas, protocolCtor);
+
+      debug('device client connecting...');
+      deviceClient.open(function(err) {
+        if (err) {
+          debug('error connecting the device client: ' + err.toString());
+          return done(err);
+        } else {
+          debug('device client connected - getting twin');
           deviceClient.getTwin(function(err, twin) {
-            if (err) return done(err);
-            deviceTwin = twin;
+            if (err) {
+              debug('error getting device twin: ' + err.toString());
+              return done(err);
+            } else {
+              debug('device got its twin');
+              deviceTwin = twin;
 
-            registry.getTwin(deviceDescription.deviceId, function(err, twin) {
-              if (err) return done(err);
-              serviceTwin = twin;
-              done();
-            });
+              debug('service getting device twin...');
+              registry.getTwin(deviceDescription.deviceId, function(err, twin) {
+                if (err) {
+                  debug('error getting the device twin on the service side: ' + err.toString());
+                  return done(err);
+                } else {
+                  debug('got device twin on the service side');
+                  serviceTwin = twin;
+                  done();
+                }
+              });
+            }
           });
-        });
+        }
       });
     });
 
     afterEach(function (done) {
       if (deviceClient) {
+        debug('closing device client');
         deviceClient.close(function(err) {
-          if (err) return done(err);
-
-          var registry = Registry.fromConnectionString(hubConnectionString);
-          registry.delete(deviceDescription.deviceId, function(err) {
-            if (err) return done(err);
+          if (err) {
+            debug('error closing the device client: ' + err.toString());
+            return done(err);
+          } else {
+            debug('device client closed');
             done();
-          });
+          }
         });
       } else {
+        debug('no device client. continuing...');
         done();
       }
     });
@@ -134,114 +172,211 @@ delete nullMergeResult.tweedle;
     };
 
     it('relies on $version starting at 1 and incrementing by 1 each time', function(done) {
-      assert.equal(deviceTwin.properties.desired.$version,1);
+      assert.equal(deviceTwin.properties.desired.$version, 1);
       deviceTwin.on('properties.desired', function() {
+        debug('desired property update with version: ' + deviceTwin.properties.desired.$version);
         if (deviceTwin.properties.desired.$version === 1) {
-          // ignore $update === 1.  assert needed to make jshint happy
-          assert(true);
+          debug('initial property update received');
+          debug('updating desired properties using the service API');
+          serviceTwin.update( { properties : { desired : newProps } }, function(err) {
+            if (err) {
+              debug('error sending the desired properties update:' + err.toString());
+              return done(err);
+            } else {
+              debug('desired properties update sent');
+            }
+          });
         } else if (deviceTwin.properties.desired.$version === 2) {
+          debug('desired property update received, version is 2. test successful');
           done();
         } else  {
+          debug('incorrect property version received: ' + deviceTwin.properties.desired.$version);
           done(new Error('incorrect property version received - ' + deviceTwin.properties.desired.$version));
         }
-      });
-      serviceTwin.update( { properties : { desired : newProps } }, function(err) {
-        if (err) return done(err);
       });
     });
 
     var sendsAndReceiveReportedProperties  = function(done) {
-      assertObjectIsEmpty(serviceTwin.properties.reported);
-      assertObjectIsEmpty(deviceTwin.properties.reported);
-
+      debug('updating reported properties');
       deviceTwin.properties.reported.update(newProps, function(err) {
-        if (err) return done(err);
-        serviceTwin.get(function(err) {
-          if (err) return done(err);
-          assertObjectsAreEqual(newProps, serviceTwin.properties.reported);
-          done();
-        });
+        if (err) {
+          debug('error updating reported properties: ' + err.toString());
+          return done(err);
+        } else {
+          debug('reported properties updated');
+          setTimeout(function () {
+            debug('getting twin from the service side');
+            serviceTwin.get(function(err) {
+              if (err) {
+                debug('error getting twin on the service side');
+                return done(err);
+              } else {
+                debug('got twin from the service side');
+                assertObjectsAreEqual(newProps, serviceTwin.properties.reported);
+                done();
+              }
+            });
+          }, 3000);
+        }
       });
     };
-
-    it('sends and receives reported properties', sendsAndReceiveReportedProperties);
 
     var mergeReportedProperties =  function(first, second, result, done) {
+      debug('sending first reported properties update');
       deviceTwin.properties.reported.update(first, function(err) {
-        if (err) return done(err);
-        deviceTwin.properties.reported.update(second, function(err) {
-          if (err) return done(err);
-          serviceTwin.get(function(err) {
-            if (err) return done(err);
-            assertObjectsAreEqual(serviceTwin.properties.reported, result);
-            done();
+        if (err) {
+          debug('error updating reported properties: ' + err.toString());
+          return done(err);
+        } else {
+          debug('first reported property update sent.');
+          debug('sending second reported property update');
+          deviceTwin.properties.reported.update(second, function(err) {
+            if (err) {
+              debug('error sending second reported property update: ' + err.toString());
+              return done(err);
+            } else {
+              setTimeout(function () {
+                serviceTwin.get(function(err) {
+                  if (err) return done(err);
+                  assertObjectsAreEqual(serviceTwin.properties.reported, result);
+                  done();
+                });
+              }, 3000);
+            }
           });
-        });
+        }
       });
     };
 
-    it('sends and receives merged reported properties', function(done) {
+    it('device sends reported properties and the service gets them', sendsAndReceiveReportedProperties);
+
+    it('device sends more reported properties, they are merged, and the service gets them', function(done) {
       mergeReportedProperties(newProps, moreNewProps, mergeResult, done);
     });
 
     var sendsAndReceivesDesiredProperties = function(done) {
-      assertObjectIsEmpty(deviceTwin.properties.desired);
+      var initialPropertyVersion = deviceTwin.properties.desired.$version;
+      var updatedPropertyVersion = initialPropertyVersion + 1;
       deviceTwin.on('properties.desired', function(props) {
-        if (props.$version === 1) {
-          // ignore
-          assert(true);
-        } else if (props.$version === 2) {
+        debug('desired properties update received with version: ' + props.$version);
+        if (props.$version === initialPropertyVersion) {
+          debug('initial property update: ignoring');
+          // wait a little before triggering the properties update to account for subscription time.
+          setTimeout(function () {
+            debug('sending desired properties update');
+            serviceTwin.update( { properties : { desired : newProps } }, function(err) {
+              if (err) {
+                debug('error sending desired properties update: ' + err.toString());
+                return done(err);
+              } else {
+                debug('desired properties update sent');
+              }
+            });
+          }, 3000);
+        } else if (props.$version === updatedPropertyVersion) {
+          debug('updated properties received');
           assertObjectsAreEqual(newProps, deviceTwin.properties.desired);
           done();
         } else {
+          debug('unexpected property version! test failure.');
           done(new Error('incorrect property version received - ' + props.$version));
         }
       });
-
-      serviceTwin.update( { properties : { desired : newProps } }, function(err) {
-        if (err) return done(err);
-      });
     };
-
-    it('sends and receives desired properties', sendsAndReceivesDesiredProperties);
 
     var mergeDesiredProperties = function(first, second, newEtag, result, done) {
+      var initialPropertyVersion = deviceTwin.properties.desired.$version;
+      var firstUpdateVersion = initialPropertyVersion + 1;
+      var secondUpdateVersion = firstUpdateVersion + 1;
+      debug('initial property version: ' + initialPropertyVersion);
+      debug('first update version: ' + firstUpdateVersion);
+      debug('second update version: ' + secondUpdateVersion);
       deviceTwin.on('properties.desired', function(props) {
-        if (props.$version === 1 || props.$version === 2) {
-          // ignore
-          assert(true);
-        } else if (props.$version === 3) {
+        debug('property update with $version: ' + props.$version);
+        if (props.$version === initialPropertyVersion) {
+          debug('received initial properties');
+          setTimeout(function () {
+            debug('sending first desired properties update');
+            serviceTwin.update( { properties : { desired : first } }, function(err) {
+              if (err) {
+                debug('failed to send the first desired properties update');
+                return done(err);
+              } else {
+                debug('first desired properties update successful');
+              }
+            });
+          }, 3000);
+        } else if (props.$version === firstUpdateVersion) {
+          setTimeout(function () {
+            if (newEtag) {
+              debug('setting serviceTwin etag: ' + newEtag);
+              assert.isDefined(serviceTwin.etag);
+              assert.notEqual(serviceTwin.etag, "*");
+              serviceTwin.etag = newEtag;
+           }
+           debug('sending second desired properties update');
+           serviceTwin.update( { properties : { desired : second } }, function(err) {
+             if (err) {
+               debug('failed to send the second desired properties update.');
+               return done(err);
+             } else {
+               debug('service successfully updated the desired properties');
+             }
+           });
+          }, 3000);
+        } else if (props.$version >= secondUpdateVersion) {
+          debug('second update received. asserting equality');
           assertObjectsAreEqual(deviceTwin.properties.desired, result);
+          debug('desired properties received. test successful');
           done();
         } else {
+          debug('unexpected property version received: ' + props.$version + ' ; test failure!');
           done(new Error('incorrect property version received - ' + props.$version));
         }
       });
-
-      serviceTwin.update( { properties : { desired : first } }, function(err) {
-        if (err) return done(err);
-
-        if (newEtag) {
-          assert.isDefined(serviceTwin.etag);
-          assert.notEqual(serviceTwin.etag, "*");
-          serviceTwin.etag = newEtag;
-        }
-
-        serviceTwin.update( { properties : { desired : second } }, function(err) {
-          if (err) return done(err);
-        });
-      });
     };
 
-    it('sends and receives merged desired properties', function(done) {
+    it('service sends desired properties and device receives them', sendsAndReceivesDesiredProperties);
+
+    it('service sends new desired properties, they are merged and the device receives them', function(done) {
       mergeDesiredProperties(newProps, moreNewProps, null, mergeResult, done);
     });
 
-    it('sends and receives merged desired properties using etag *', function(done) {
+    it('service sends desired properties using etag *, they are merged and the device receives them', function(done) {
       mergeDesiredProperties(newProps, moreNewProps, "*", mergeResult, done);
     });
 
-    it('can get and set tags', function(done) {
+    var mergeTags =  function(first, second, newEtag, result, done) {
+      debug('sending first tag update..');
+      serviceTwin.update( { tags : first }, function(err) {
+        if (err) {
+          debug('error updating tags: ' + err.toString());
+          return done(err);
+        } else {
+          debug('first twin update sent');
+          if (newEtag) {
+            assert.isDefined(serviceTwin.etag);
+            assert.notEqual(serviceTwin.etag, "*");
+            debug('setting twin etag to: ' + newEtag);
+            serviceTwin.etag = newEtag;
+          }
+
+          debug('sending second tag update...');
+          serviceTwin.update( { tags: second }, function(err) {
+            if (err) {
+              debug('error sending second tag update: ' + err.toString());
+              return done(err);
+            } else {
+              debug('second tag update sent');
+              assertObjectsAreEqual(serviceTwin.tags, result);
+              done();
+            }
+          });
+        }
+      });
+    };
+
+    it('service can get and set tags', function(done) {
       assertObjectIsEmpty(serviceTwin.tags);
 
       serviceTwin.update( { tags : newProps }, function(err) {
@@ -252,54 +387,40 @@ delete nullMergeResult.tweedle;
       });
     });
 
-    var mergeTags =  function(first, second, newEtag, result, done) {
-      assertObjectIsEmpty(serviceTwin.tags);
-
-      serviceTwin.update( { tags : first }, function(err) {
-        if (err) return done(err);
-
-        if (newEtag) {
-          assert.isDefined(serviceTwin.etag);
-          assert.notEqual(serviceTwin.etag, "*");
-          serviceTwin.etag = newEtag;
-        }
-
-        serviceTwin.update( { tags: second }, function(err) {
-          if (err) return done(err);
-          assertObjectsAreEqual(serviceTwin.tags, result);
-          done();
-        });
-      });
-    };
-
-    it('can merge tags', function(done) {
+    it('service can merge new tags', function(done) {
       mergeTags(newProps, moreNewProps, null, mergeResult, done);
     });
 
-    it('can merge tags using etag *', function(done) {
+    it('service can merge new tags using etag *', function(done) {
       mergeTags(newProps, moreNewProps, "*", mergeResult, done);
     });
 
-    it.skip('can send reported properties to the service after renewing the sas token', function(done) {
-      deviceClient.on('_sharedAccessSignatureUpdated', function() {
-        // _sharedAccessSignatureUpdated fired when the signature has been updated,
-        // but we still have to wait for the library to connect and register for events.
-        // We really need a "twinReady" event, but we don't have one right now.
-        setTimeout(function() {
+    it('can send reported properties to the service after renewing the sas token', function(done) {
+      var newSas = deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
+      debug('updating the shared access signature for device: ' + deviceDescription.deviceId);
+      deviceClient.updateSharedAccessSignature(newSas, function (err) {
+        if (err) {
+          debug('error renewing the shared access signature: ' + err.toString());
+          done(err);
+        } else {
+          debug('updating reported properties');
           sendsAndReceiveReportedProperties(done);
-        }, 1000);
+        }
       });
-      deviceClient.updateSharedAccessSignature(deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString());
     });
 
-    it.skip('can receive desired properties from the service after renewing the sas token', function(done) {
-      deviceClient.on('_sharedAccessSignatureUpdated', function() {
-        // See note above about "twinReady" event.
-        setTimeout(function() {
+    it('can receive desired properties from the service after renewing the sas token', function(done) {
+      var newSas = deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
+      debug('updating the shared access signature for device: ' + deviceDescription.deviceId);
+      deviceClient.updateSharedAccessSignature(newSas, function (err) {
+        if (err) {
+          debug('error renewing the shared access signature: ' + err.toString());
+          done(err);
+        } else {
+          debug('updating desired properties');
           sendsAndReceivesDesiredProperties(done);
-        }, 1000);
+        }
       });
-      deviceClient.updateSharedAccessSignature(deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString());
     });
 
     it.skip('call null out all reported properties', function(done) {
@@ -340,27 +461,6 @@ delete nullMergeResult.tweedle;
 
     it('can null out individual tags with etag *', function(done) {
       mergeTags(newProps, nullIndividualProps, "*", nullMergeResult, done);
-    });
-
-    it('can renew SAS 20 times without failure', function(done)
-    {
-      this.timeout(180000);
-      var iteration = 0;
-      var doItAgain = function() {
-        iteration++;
-        if (iteration === 20) {
-          done();
-        } else {
-          deviceClient.updateSharedAccessSignature(deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString());
-          // at this point, signature renewal has begun, but the connection is
-          // not complete.  We need a "connection complete" event here, but
-          // we don't have one yet.  Instead, sleep for a while -- 3 seconds
-          // is good enough for now.
-          setTimeout(doItAgain, 3000);
-        }
-      };
-
-      doItAgain();
     });
 
     it('can set desired properties while the client is disconnected', function(done) {

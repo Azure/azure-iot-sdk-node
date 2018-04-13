@@ -128,9 +128,18 @@ protocolAndTermination.forEach( function (testConfiguration) {
       ehReceivers = [];
     });
 
-    afterEach(function (testCallback) {
-      closeDeviceEventHubClients(deviceClient, ehClient, ehReceivers, testCallback);
+    afterEach(function (afterEachCallback) {
       if (sendMessageTimeout !== null) clearTimeout(sendMessageTimeout);
+      debug('closing device and event hubs clients...');
+      closeDeviceEventHubClients(deviceClient, ehClient, ehReceivers, function (err) {
+        if (err) {
+          debug('error closing clients: ' + err.toString());
+          afterEachCallback(err);
+        } else {
+          debug('device and event hubs client closed.');
+          afterEachCallback();
+        }
+      });
     });
 
     doConnectTest(testConfiguration.testEnabled)('device sends a message, event hub client receives it, and' + testConfiguration.closeReason + 'which is noted by the iot hub device client', function (testCallback) {
@@ -197,48 +206,68 @@ protocolAndTermination.forEach( function (testConfiguration) {
           });
 
     doConnectTest(testConfiguration.testEnabled)('device sends ' + numberOfD2CMessages + ' messages, when event hub client receives first, it ' + testConfiguration.closeReason + 'which is not seen by the iot hub device client', function (testCallback) {
-      var originalMessages = [];
-      var messagesReceived = 0;
-      var messagesSent = 0;
-      var d2cMessageSender = function() {
-        debug('Sending message number: ' + (messagesSent + 1));
-        if (messagesSent >= numberOfD2CMessages) {
-          testCallback(new Error('tried to send to many messages'));
-        } else {
-          deviceClient.sendEvent(originalMessages[messagesSent++], function (sendErr) {
-            debug('At device client send callback - error is: ' + sendErr);
-            if (sendErr) {
-              testCallback(sendErr);
-            }
-          });
-        }
-      };
-      var findMessage = function(incomingMessage, storedMessages) {
-        if (incomingMessage.properties && incomingMessage.properties.messageId) {
-          for (var j = 0; j < storedMessages.length; j++) {
-            if (incomingMessage.properties.messageId === storedMessages[j].messageId) {
-              if (!storedMessages[j].alreadyReceived) {
-                storedMessages.alreadyReceived =  true;
-                return true;
-              } else {
-                testCallback(new Error('received a message more than once'));
-              }
+      var originalMessages = {};
+      var faultInjected = false;
+      for (var i = 0; i < numberOfD2CMessages; i++) {
+        var uuidData = uuid.v4();
+        originalMessages[uuidData] = {
+          message: new Message(uuidData),
+          sent: false,
+          received: false
+        };
+      }
+
+      var allDone = function () {
+        for (var messageId in originalMessages) {
+          if (originalMessages.hasOwnProperty(messageId)) {
+            debug('message ' + messageId + ': sent: ' + originalMessages[messageId].sent + '; received: ' + originalMessages[messageId].received);
+            if (!originalMessages[messageId].sent || !originalMessages[messageId].received) {
+              return false;
             }
           }
         }
-        return false;
+        debug('allDone: true!');
+        return true;
       };
-      for (var i = 0; i < numberOfD2CMessages; i++) {
-        var uuidData = uuid.v4();
-        originalMessages[i] = new Message(uuidData);
-        originalMessages[i].messageId = uuidData;
-        originalMessages[i].alreadyReceived = false;
-      }
+
+      var sendMessage = function (messageId) {
+        deviceClient.sendEvent(originalMessages[messageId].message, function (sendErr) {
+          if (sendErr) {
+            debug('failed to send message with id: ' + messageId + ': ' + sendErr.toString());
+            testCallback(sendErr);
+          } else {
+            debug('message sent: ' + messageId);
+            originalMessages[messageId].sent = true;
+            if (allDone()) {
+              debug('all messages have been sent and received!');
+              testCallback();
+            } else {
+              debug('still not done!');
+            }
+          }
+        });
+      };
+
+      var sendNextMessage = function() {
+        for (var messageId in originalMessages) {
+          if (originalMessages[messageId].sent) {
+            continue;
+          } else {
+            debug('Sending message with id: ' + messageId);
+            return sendMessage(messageId);
+          }
+        }
+        debug('all messages have been sent.');
+      };
+
+      var startAfterTime = Date.now() - 5000;
+      debug('starting to listen to messages received since: ' + new Date(startAfterTime).toISOString());
+
       ehClient.open()
               .then(ehClient.getPartitionIds.bind(ehClient))
               .then(function (partitionIds) {
                 return partitionIds.map(function (partitionId) {
-                  return ehClient.createReceiver('$Default', partitionId, { 'startAfterTime' : Date.now() }).then(function (receiver) {
+                  return ehClient.createReceiver('$Default', partitionId, { 'startAfterTime' : startAfterTime }).then(function (receiver) {
                     ehReceivers.push(receiver);
                     receiver.on('errorReceived', function(err) {
                       testCallback(err);
@@ -246,22 +275,26 @@ protocolAndTermination.forEach( function (testConfiguration) {
                     receiver.on('message', function (eventData) {
                         if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
                           debug('did get a message for this device.');
-                          if (findMessage(eventData, originalMessages)) {
-                            debug('It was one of the messages we sent.');
-                            if (messagesReceived++ === 0) {
-                              debug('It was the first message.');
+                          var receivedMessageId = eventData.body.toString();
+                          if (originalMessages[receivedMessageId]) {
+                            debug('It was one of the messages we sent: ' + receivedMessageId);
+                            originalMessages[receivedMessageId].received = true;
+                            if (!faultInjected) {
+                              debug('Fault has not been injected yet. Failing now...');
                               var terminateMessage = new Message('');
                               terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
                               terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
                               terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
+                              faultInjected = true;
                               deviceClient.sendEvent(terminateMessage, function (sendErr) {
                                 debug('at the callback for the fault injection send, err is:' + sendErr);
                               });
                             }
-                            if (messagesReceived === numberOfD2CMessages) {
+
+                            if (allDone()) {
                               testCallback();
                             } else {
-                              sendMessageTimeout = setTimeout(d2cMessageSender.bind(this), 5000);
+                              sendMessageTimeout = setTimeout(sendNextMessage, 3000);
                             }
                           } else {
                             debug('eventData message id doesn\'t match any stored message id');
@@ -281,7 +314,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
                     deviceClient.on('disconnect', function () {
                       testCallback(new Error('unexpected disconnect'));
                     });
-                    d2cMessageSender();
+                    sendNextMessage();
                   }
                 });
               })

@@ -8,6 +8,9 @@ set node-root=%~dp0..
 REM // resolve to fully qualified path
 for %%i in ("%node-root%") do set node-root=%%~fi
 
+set NPM_CONFIG_PREFIX=%node-root%\npm-symlinks
+if NOT exist %NPM_CONFIG_PREFIX% mkdir %NPM_CONFIG_PREFIX%
+
 echo.
 echo -- Setting up build_parallel tool --
 cd %node-root%\build\build_parallel

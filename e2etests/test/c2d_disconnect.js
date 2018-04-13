@@ -116,14 +116,30 @@ protocolAndTermination.forEach( function (testConfiguration) {
     var provisionedDevice;
 
     before(function (beforeCallback) {
+      debug('creating test device...');
       DeviceIdentityHelper.createDeviceWithSas(function (err, testDeviceInfo) {
-        provisionedDevice = testDeviceInfo;
-        beforeCallback(err);
+        if (err) {
+          debug('failed to create test device: ' + err.toString());
+          beforeCallback(err);
+        } else {
+          debug('test device created: ' + testDeviceInfo.deviceId);
+          provisionedDevice = testDeviceInfo;
+          beforeCallback(err);
+        }
       });
     });
 
     after(function (afterCallback) {
-      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+      debug('deleting device: ' + provisionedDevice.deviceId);
+      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, function (err) {
+        if (err) {
+          debug('failed to delete test device: ' + err.toString());
+          afterCallback(err);
+        } else {
+          debug('test device deleted');
+          afterCallback();
+        }
+      });
     });
 
     beforeEach(function () {
@@ -133,8 +149,17 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     afterEach(function (testCallback) {
-      closeDeviceServiceClients(deviceClient, serviceClient, testCallback);
       if (sendMessageTimeout !== null) clearTimeout(sendMessageTimeout);
+      debug('closing device and service clients...');
+      closeDeviceServiceClients(deviceClient, serviceClient, function (err) {
+        if (err) {
+          debug('failed to close clients: ' + err.toString());
+          testCallback(err);
+        } else {
+          debug('device and service clients closed');
+          testCallback();
+        }
+      });
     });
 
     doConnectTest(testConfiguration.testEnabled)('Service sends a C2D message, device receives it, and' + testConfiguration.closeReason + 'which is noted by the iot hub client', function (testCallback) {
@@ -206,46 +231,69 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     doConnectTest(testConfiguration.testEnabled)('Service sends ' + numberOfC2DMessages + ' C2D messages, device receives first and' + testConfiguration.closeReason + 'which is never seen by the iot hub client', function (testCallback) {
-      var originalMessages = [];
-      var messagesReceived = 0;
-      var messagesSent = 0;
-      var c2dMessageSender = function() {
-        if (messagesSent >= numberOfC2DMessages) {
-          testCallback(new Error('tried to send to many messages'));
-        } else {
-          serviceClient.send(provisionedDevice.deviceId, originalMessages[messagesSent++], function (sendErr) {
-            debug('At service client send callback - error is: ' + sendErr);
-            if (sendErr) {
-              testCallback(sendErr);
-            }
-          });
-        }
-      };
-      var findMessage = function(incomingMessage, storedMessages) {
-        for (var j = 0; j < storedMessages.length; j++) {
-          if (incomingMessage.messageId === storedMessages[j].messageId) {
-            if (!storedMessages[j].alreadyReceived) {
-              storedMessages.alreadyReceived =  true;
-              return true;
-            } else {
-              testCallback(new Error('received a message more than once'));
+      var originalMessages = {};
+      var faultInjected = false;
+      for (var i = 0; i < numberOfC2DMessages; i++) {
+        var uuidData = uuid.v4();
+        originalMessages[uuidData] = {
+          message: new Message(uuidData),
+          sent: false,
+          received: false
+        };
+        originalMessages[uuidData].message.messageId = uuidData;
+        originalMessages[uuidData].message.expiryTimeUtc = Date.now() + 60000;
+      }
+
+      var allDone = function () {
+        for (var messageId in originalMessages) {
+          if (originalMessages.hasOwnProperty(messageId)) {
+            debug('message ' + messageId + ': sent: ' + originalMessages[messageId].sent + '; received: ' + originalMessages[messageId].received);
+            if (!originalMessages[messageId].sent || !originalMessages[messageId].received) {
+              return false;
             }
           }
         }
-        return false;
+        debug('allDone: true!');
+        return true;
       };
-      for (var i = 0; i < numberOfC2DMessages; i++) {
-        var uuidData = uuid.v4();
-        originalMessages[i] = new Message(uuidData);
-        originalMessages[i].messageId = uuidData;
-        originalMessages[i].expiryTimeUtc = Date.now() + 60000; // Expire 60s from now, to reduce the chance of us hitting the 50-message limit on the IoT Hub
-        originalMessages[i].alreadyReceived = false;  // Yes a bit tacky, but it really shouldn't even make it to the hub, and even if it did it wouldn't matter.
-      }
+
+      var sendMessage = function (messageId) {
+        serviceClient.send(provisionedDevice.deviceId, originalMessages[messageId].message, function (sendErr) {
+          if (sendErr) {
+            debug('failed to send message with id: ' + messageId + ': ' + sendErr.toString());
+            testCallback(sendErr);
+          } else {
+            debug('message sent: ' + messageId);
+            originalMessages[messageId].sent = true;
+            if (allDone()) {
+              debug('all messages have been sent and received!');
+              testCallback();
+            } else {
+              debug('still not done!');
+            }
+          }
+        });
+      };
+
+      var sendNextMessage = function() {
+        for (var messageId in originalMessages) {
+          if (originalMessages[messageId].sent) {
+            continue;
+          } else {
+            debug('Sending message with id: ' + messageId);
+            return sendMessage(messageId);
+          }
+        }
+        debug('all messages have been sent.');
+      };
+
+      debug('connecting device client...');
       deviceClient.open(function (openErr) {
-        debug('device has opened.');
         if (openErr) {
+          debug('error connecting device client: ' + openErr.toString());
           testCallback(openErr);
         } else {
+          debug('device client connected');
           deviceClient.on('disconnect', function () {
             debug('got an unexpected disconnect - this test should never see one!');
             testCallback(new Error('unexpected disconnect'));
@@ -257,28 +305,35 @@ protocolAndTermination.forEach( function (testConfiguration) {
             debug('c2d message received with id: ' + receivedMessage.messageId);
             deviceClient.complete(receivedMessage, function (err, result) {
               if (err) {
+                debug('error while settling (accept) the message: ' + err.toString());
                 testCallback(err);
               } else {
                 assert.equal(result.constructor.name, 'MessageCompleted');
+                debug('message completed');
                 //
                 // Make sure that the message we are looking at is one of the messages that we just sent.
                 //
-                if (findMessage(receivedMessage, originalMessages)) {
-                  if (messagesReceived++ === 0) {
+                if (originalMessages[receivedMessage.messageId]) {
+                  originalMessages[receivedMessage.messageId].received = true;
+
+                  if (!faultInjected) {
                     var terminateMessage = new Message('');
                     terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
                     terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
                     terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
+                    debug('Injecting fault: ' + testConfiguration.operationType);
+                    faultInjected = true;
                     deviceClient.sendEvent(terminateMessage, function (sendErr) {
                       debug('at the callback for the fault injection send, err is:' + sendErr);
                     });
-                    sendMessageTimeout = setTimeout(c2dMessageSender.bind(this), 5000);
+                  }
+
+                  if (allDone()) {
+                    debug('all messages have been received. test successful');
+                    testCallback();
                   } else {
-                    if (messagesReceived === numberOfC2DMessages) {
-                      testCallback();
-                    } else {
-                      sendMessageTimeout = setTimeout(c2dMessageSender.bind(this), 3000);
-                    }
+                    debug('scheduling next message in 3 seconds');
+                    sendMessageTimeout = setTimeout(sendNextMessage, 3000);
                   }
                 } else {
                   debug('received an unanticipated message, id: ' + receivedMessage.messageId + ' data: ' + receivedMessage.data.toString());
@@ -286,13 +341,15 @@ protocolAndTermination.forEach( function (testConfiguration) {
               }
             });
           });
-          debug('about to open the service client');
+          debug('connecting service client...');
           serviceClient.open(function (serviceErr) {
-            debug('At service client open callback - error is:' + serviceErr);
             if (serviceErr) {
+              debug('Failed to connect servic client:' + serviceErr.toString());
               testCallback(serviceErr);
             } else {
-              c2dMessageSender();
+              debug('service client connected');
+              debug('sending first message');
+              sendNextMessage();
             }
           });
         }

@@ -232,3 +232,6 @@ longhaultests/lib
 
 # Build artifacts
 build/build_parallel/temp
+
+# directory with dev-setup symlinks
+npm-symlinks/

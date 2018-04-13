@@ -5,7 +5,7 @@
 
 var Registry = require('azure-iothub').Registry;
 var ConnectionString = require('azure-iothub').ConnectionString;
-var debug = require('debug')('e2etests:twindisconnect');
+var debug = require('debug')('e2etests:twin_disconnect');
 var Message = require('azure-iot-common').Message;
 var deviceSdk = require('azure-iot-device');
 var deviceMqtt = require('azure-iot-device-mqtt');
@@ -196,11 +196,14 @@ protocolAndTermination.forEach( function (testConfiguration) {
       });
       assert.equal(deviceTwin.properties.desired.$version, 1);
       deviceTwin.on('properties.desired', function() {
-        if (deviceTwin.properties.desired.$version === 2) {
+        if (deviceTwin.properties.desired.$version === 1) {
+          debug('received notification for desired property v1. nothing to do');
+        } else if (deviceTwin.properties.desired.$version === 2) {
           var terminateMessage = new Message(' ');
           terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
           terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
           terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
+          debug('sending fault injection message');
           deviceClient.sendEvent(terminateMessage, function (sendErr) {
             debug('at the callback for the fault injection send, err is:' + sendErr);
           });
@@ -208,9 +211,15 @@ protocolAndTermination.forEach( function (testConfiguration) {
           testCallback(new Error('incorrect property version received - ' + deviceTwin.properties.desired.$version));
         }
       });
-      serviceTwin.update( { properties : { desired : newProps } }, function(err) {
-        if (err) return testCallback(err);
-      });
+
+      // giving a few seconds for the twin subscription to happen before we send the update.
+      setTimeout(function () {
+        debug('Updating twin properties');
+        serviceTwin.update( { properties : { desired : newProps } }, function(err) {
+          debug('twin properties updated. version should now be 2');
+          if (err) return testCallback(err);
+        });
+      }, 3000);
     });
 
     doConnectTest(testConfiguration.testEnabled)('Simple twin update: device receives it, and' + testConfiguration.closeReason + 'which is NOT noted by the iot hub client', function(testCallback) {
@@ -229,27 +238,34 @@ protocolAndTermination.forEach( function (testConfiguration) {
       assert.equal(deviceTwin.properties.desired.$version,1);
       deviceTwin.on('properties.desired', function() {
         if (deviceTwin.properties.desired.$version === 1) {
-          // ignore $update === 1.  assert needed to make jshint happy
-          assert(true);
+          debug('received notification for desired property v1. nothing to do');
         } else if (deviceTwin.properties.desired.$version === 2) {
           var terminateMessage = new Message(' ');
           terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
           terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
           terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
+          debug('sending fault injection message');
           deviceClient.sendEvent(terminateMessage, function (sendErr) {
             debug('at the callback for the fault injection send, err is:' + sendErr);
           });
           setTwinMoreNewPropsTimeout = setTimeout(setTwinMoreNewProps, (testConfiguration.delayInSeconds + 5) * 1000);
         } else if (deviceTwin.properties.desired.$version === 3) {
+          debug('received notification for desired property v3. test is successful.');
           testCallback();
         } else {
+          debug('incorrect property version received. exiting test with an error.');
           testCallback(new Error('incorrect property version received - ' + deviceTwin.properties.desired.$version));
         }
       });
-      serviceTwin.update( { properties : { desired : newProps } }, function(err) {
-        if (err) return testCallback(err);
-      });
+
+      // giving a few seconds for the twin subscription to happen before we send the update.
+      setTimeout(function () {
+        debug('Updating twin properties');
+        serviceTwin.update( { properties : { desired : newProps } }, function(err) {
+          debug('twin properties updated. version should now be 2');
+          if (err) return testCallback(err);
+        });
+      }, 3000);
     });
   });
 });
-
