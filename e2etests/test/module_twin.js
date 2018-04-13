@@ -3,7 +3,7 @@
 
 'use strict';
 
-var ModuleIdentityHelper = require('./module_identity_helper.js');
+var ModuleTestHelper = require('./module_test_helper.js');
 var assert = require('chai').assert;
 var debug = require('debug')('e2etests:module-twin');
 var Amqp = require('azure-iot-device-amqp').Amqp;
@@ -21,17 +21,17 @@ describe('module twin', function() {
       var testModule = {};
 
       before(function(done) {
-        ModuleIdentityHelper.createModule(testModule, Transport, function(err) {
+        ModuleTestHelper.createModule(testModule, Transport, function(err) {
           if (err) {
             done(err);
           } else {
-            ModuleIdentityHelper.createModuleTwinObjects(testModule, done);
+            ModuleTestHelper.getTwinObjects(testModule, done);
           }
         });
       });
 
       after(function(done) {
-        ModuleIdentityHelper.cleanUpAfterTest(testModule, done);
+        ModuleTestHelper.cleanUpAfterTest(testModule, done);
       });
 
       it ('can receive desired property changes', function(done) {

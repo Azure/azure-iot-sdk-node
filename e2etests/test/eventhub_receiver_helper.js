@@ -11,6 +11,7 @@ var closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubCl
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 var EventHubReceiverHelper = function() {
+  EventEmitter.call(this);
 };
 util.inherits(EventHubReceiverHelper, EventEmitter);
 

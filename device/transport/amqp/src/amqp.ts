@@ -129,7 +129,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
         inputName = msg.messageAnnotations['x-opt-input-name'];
       }
       if (inputName) {
-        /*Codes_SRS_NODE_DEVICE_AMQP_18_014: [If `amqp` receives a message on the C2D link with an annotation named "x-opt-input-name", it shall emit a "message" event with the "x-opt-input-name" annotation as the first parameter and the message as the second parameter.]*/
+        /*Codes_SRS_NODE_DEVICE_AMQP_18_014: [If `amqp` receives a message on the C2D link with an annotation named "x-opt-input-name", it shall emit an "inputMessage" event with the "x-opt-input-name" annotation as the first parameter and the message as the second parameter.]*/
         this.emit('inputMessage', inputName, AmqpMessage.toMessage(msg));
       } else {
         /*Codes_SRS_NODE_DEVICE_AMQP_18_013: [If `amqp` receives a message on the C2D link without an annotation named "x-opt-input-name", it shall emit a "message" event with the message as the event parameter.]*/

@@ -47,12 +47,13 @@ SimulatedAmqp.prototype.send = function send(deviceId, message, done) {
   }
 };
 
-SimulatedAmqp.prototype.sendToModule = function send(deviceId, moduleId, inputName, message, done) {
+SimulatedAmqp.prototype.sendToModuleInput = function send(deviceId, moduleId, inputName, message, done) {
   if (done) {
     if (deviceId.search(/^no-device/) !== -1) {
       done(new errors.DeviceNotFoundError());
-    }
-    else {
+    } else if (moduleId.search(/^no-module/) !== -1) {
+      done(new errors.DeviceNotFoundError());
+    } else {
       done(null, new results.MessageEnqueued());
       if (message.ack === 'full') {
         this._receiver.emit('message', {

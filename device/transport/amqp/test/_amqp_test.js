@@ -1479,7 +1479,7 @@ describe('Amqp', function () {
     });
   });
 
-  /*Tests_SRS_NODE_DEVICE_AMQP_18_014: [If `amqp` receives a message on the C2D link with an annotation named "x-opt-input-name", it shall emit a "message" event with the "x-opt-input-name" annotation as the first parameter and the message as the second parameter.]*/
+  /*Tests_SRS_NODE_DEVICE_AMQP_18_014: [If `amqp` receives a message on the C2D link with an annotation named "x-opt-input-name", it shall emit an "inputMessage" event with the "x-opt-input-name" annotation as the first parameter and the message as the second parameter.]*/
   describe('on(\'inputMessage\')', function () {
     it('calls the message handler when message received', function (testCallback) {
       var testText = '__TEST_TEXT__';

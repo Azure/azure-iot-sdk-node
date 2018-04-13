@@ -3,7 +3,7 @@
 
 'use strict';
 
-var ModuleIdentityHelper = require('./module_identity_helper.js');
+var ModuleTestHelper = require('./module_test_helper.js');
 var assert = require('chai').assert;
 var debug = require('debug')('e2etests:module-methods');
 var Amqp = require('azure-iot-device-amqp').Amqp;
@@ -21,11 +21,11 @@ describe('module methods', function() {
       var testModule = {};
 
       before(function(done) {
-        ModuleIdentityHelper.createModule(testModule, Transport, done);
+        ModuleTestHelper.createModule(testModule, Transport, done);
       });
 
       after(function(done) {
-        ModuleIdentityHelper.cleanUpAfterTest(testModule, done);
+        ModuleTestHelper.cleanUpAfterTest(testModule, done);
       });
 
       it ('can receive a method call', function(done) {

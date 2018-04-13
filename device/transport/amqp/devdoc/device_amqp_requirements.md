@@ -286,5 +286,5 @@ This method is deprecated. The `AmqpReceiver` object and pattern is going away a
 
 ### inputMessage events
 
-**SRS_NODE_DEVICE_AMQP_18_014: [** If `amqp` receives a message on the C2D link with an annotation named "x-opt-input-name", it shall emit a "message" event with the "x-opt-input-name" annotation as the first parameter and the message as the second parameter. **]**
+**SRS_NODE_DEVICE_AMQP_18_014: [** If `amqp` receives a message on the C2D link with an annotation named "x-opt-input-name", it shall emit an "inputMessage" event with the "x-opt-input-name" annotation as the first parameter and the message as the second parameter. **]**
 

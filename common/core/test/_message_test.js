@@ -6,7 +6,7 @@
 var assert = require('chai').assert;
 var Message = require('../lib/message.js').Message;
 
-var stringTestMsg = "message";
+var stringTestMsg = 'message';
 
 describe('message', function () {
 
@@ -38,6 +38,35 @@ describe('message', function () {
       assert.instanceOf(buffer, Buffer);
       assert.equal(buffer.toString('ascii'), stringTestMsg);
     });
+
+  });
+
+  describe('#isBufferConvertible', function() {
+
+    /*Tests_SRS_NODE_IOTHUB_MESSAGE_18_001: [`isBufferConvertible` shall return `true` if `obj` is a `Buffer`, a `string`, an `Array`, or an `ArrayBuffer`.]*/
+    [
+      { obj: new Buffer('foo'), name: 'Buffer' },
+      { obj: 'foo', name: 'string' },
+      { obj: [], name: 'Array' },
+      { obj: new ArrayBuffer(), name: 'ArrayBuffer' }
+    ].forEach(function(testConfig) {
+      it('returns true if object is of type ' + testConfig.name, function() {
+        assert.isTrue(Message.isBufferConvertible(testConfig.obj));
+      });
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_MESSAGE_18_002: [`isBufferConvertible` shall return `false` if `obj` is any other type.]*/
+    [
+      { obj: 1, name: 'number' },
+      { obj: true, name: 'boolean' },
+      { obj: {}, name: 'object' },
+      { obj: new Message(), name: 'Message' }
+    ].forEach(function(testConfig) {
+      it('returns false if object is of type ' + testConfig.name, function() {
+        assert.isFalse(Message.isBufferConvertible(testConfig.obj));
+      });
+    });
+
 
   });
 

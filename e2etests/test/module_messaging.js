@@ -3,7 +3,7 @@
 
 'use strict';
 
-var ModuleIdentityHelper = require('./module_identity_helper.js');
+var ModuleTestHelper = require('./module_test_helper.js');
 var EventHubReceiverHelper = require('./eventhub_receiver_helper');
 var Message = require('azure-iot-common').Message;
 var assert = require('chai').assert;
@@ -23,11 +23,11 @@ describe('module messaging', function() {
       var testModule = {};
 
       before(function(done) {
-        ModuleIdentityHelper.createModule(testModule, Transport, done);
+        ModuleTestHelper.createModule(testModule, Transport, done);
       });
 
       after(function(done) {
-        ModuleIdentityHelper.cleanUpAfterTest(testModule, done);
+        ModuleTestHelper.cleanUpAfterTest(testModule, done);
       });
 
       it ('Can send from service to module input', function(done) {
@@ -42,8 +42,8 @@ describe('module messaging', function() {
 
         var messageToSend = new Message(testMessageText);
         debug('sending message to input named ' + testInputName);
-        testModule.serviceClient.sendToModule(testModule.deviceId, testModule.moduleId, testInputName, messageToSend, function(err) {
-          debug('sendToModule returned ' + (err ? err : 'success'));
+        testModule.serviceClient.sendToModuleInput(testModule.deviceId, testModule.moduleId, testInputName, messageToSend, function(err) {
+          debug('sendToModuleInput returned ' + (err ? err : 'success'));
         });
       });
 

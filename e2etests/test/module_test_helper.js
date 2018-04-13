@@ -4,7 +4,7 @@
 'use strict';
 
 var uuid = require('uuid');
-var debug = require('debug')('e2etests:module-identity-helper');
+var debug = require('debug')('e2etests:module-test-helper');
 var async = require('async');
 
 var Registry = require('azure-iothub').Registry;
@@ -72,7 +72,7 @@ module.exports.createModule = function(testModule, Transport, done)  {
   ], done);
 };
 
-module.exports.createModuleTwinObjects = function(testModule, done) {
+module.exports.getTwinObjects = function(testModule, done) {
   async.series([
     function createServiceTwin(done) {
       debug('creating service twin');

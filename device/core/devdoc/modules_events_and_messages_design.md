@@ -15,7 +15,7 @@ There are two kinds of incoming messages that can be received by an IoT device: 
 
 The following table shows which clients support which events & messages:
 
-| client type | `sendEvent` | `sendOutputEvent` | Messages | InputMessages |
+| client type | `sendEvent` | `sendOutputEvent` | `on('messages')` | `on('inputMessages')` |
 |------------ | --------- | --------------- | -------- | ------------- |
 | device | yes | no  | yes | no |
 | module | no | yes | no | yes|
