@@ -39,8 +39,8 @@ var enrollmentGroup = {
 };
 
 describe('provisioning service client', function () {
+  this.timeout(60000);
   before(function(done) {
-    this.timeout(60000);
     certHelper.createIntermediateCaCert('test cert', null, function(err, cert) {
       if (err) {
         done(err);
@@ -71,7 +71,6 @@ describe('provisioning service client', function () {
   ];
   testSpecification.forEach(function(testConfiguration) {
     describe('#Create', function() {
-      this.timeout(5000);
       var enrollmentToDelete = {};
       after(function(done) {
         testConfiguration.deleteFunction(enrollmentToDelete, function(err) {
@@ -98,7 +97,6 @@ describe('provisioning service client', function () {
 
   testSpecification.forEach(function(testConfiguration) {
     describe('#Delete', function() {
-      this.timeout(5000);
       var enrollmentToDelete = {};
       before(function(done) {
         testConfiguration.createFunction(testConfiguration.enrollmentObject, function(err, returnedEnrollment) {
@@ -125,7 +123,6 @@ describe('provisioning service client', function () {
 
   testSpecification.forEach(function(testConfiguration) {
     describe('#Update', function() {
-      this.timeout(10000);
       var enrollmentToDelete = {};
       var enrollmentToUpdate = {};
       before(function(done) {
