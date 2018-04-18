@@ -869,7 +869,7 @@ export class Registry {
     <content>
     ```
     ]*/
-    const path = `/devices/${encodeURIComponent(deviceId)}/applyConfigurationContent${endpoint.versionQueryString()}`;
+    const path = `${endpoint.devicePath(encodeURIComponent(deviceId))}/applyConfigurationContent${endpoint.versionQueryString()}`;
     const httpHeaders = {
       'Content-Type': 'application/json; charset=utf-8'
     };
@@ -914,7 +914,7 @@ export class Registry {
     const preparedModule = JSON.parse(JSON.stringify(module));
     this._normalizeAuthentication(preparedModule);
 
-    const path = `/devices/${encodeURIComponent(preparedModule.deviceId)}/modules/${encodeURIComponent(preparedModule.moduleId)}${endpoint.versionQueryString()}`;
+    const path = `${endpoint.modulePath(encodeURIComponent(preparedModule.deviceId),encodeURIComponent(preparedModule.moduleId))}${endpoint.versionQueryString()}`;
     const httpHeaders = {
       'Content-Type': 'application/json; charset=utf-8'
     };
@@ -945,7 +945,7 @@ export class Registry {
     Request-Id: <guid>
     ```
     ]*/
-    const path = `/devices/${encodeURIComponent(deviceId)}/modules${endpoint.versionQueryString()}`;
+    const path = `${endpoint.devicePath(encodeURIComponent(deviceId))}/modules${endpoint.versionQueryString()}`;
     this._restApiClient.executeApiCall('GET', path, null, null, done);
   }
 
@@ -973,7 +973,7 @@ export class Registry {
     Request-Id: <guid>
     ```
     ]*/
-    const path = `/devices/${encodeURIComponent(deviceId)}/modules/${encodeURIComponent(moduleId)}${endpoint.versionQueryString()}`;
+    const path = `${endpoint.modulePath(encodeURIComponent(deviceId), encodeURIComponent(moduleId))}${endpoint.versionQueryString()}`;
     this._restApiClient.executeApiCall('GET', path, null, null, done);
   }
 
@@ -1042,7 +1042,7 @@ export class Registry {
     ```
     ]*/
 
-    const path = `/devices/${encodeURIComponent(preparedModule.deviceId)}/modules/${encodeURIComponent(preparedModule.moduleId)}${endpoint.versionQueryString()}`;
+    const path = `${endpoint.modulePath(encodeURIComponent(preparedModule.deviceId),encodeURIComponent(preparedModule.moduleId))}${endpoint.versionQueryString()}`;
     this._restApiClient.executeApiCall('PUT', path, httpHeaders, preparedModule, done);
   }
 
@@ -1079,7 +1079,7 @@ export class Registry {
       'If-Match': '"*"'
     };
 
-    const path = `/devices/${encodeURIComponent(deviceId)}/modules/${encodeURIComponent(moduleId)}${endpoint.versionQueryString()}`;
+    const path = `${endpoint.modulePath(encodeURIComponent(deviceId), encodeURIComponent(moduleId))}${endpoint.versionQueryString()}`;
 
     this._restApiClient.executeApiCall('DELETE', path, httpHeaders, null, done);
   }

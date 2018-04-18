@@ -153,7 +153,7 @@ export class Http extends EventEmitter implements Client.Transport {
         /*Codes_SRS_NODE_DEVICE_HTTP_16_033: [if the `getDeviceCredentials` fails with an error, the Http request shall call its callback with that error]*/
         done(err);
       } else {
-        const path = endpoint.eventPath(config.deviceId);
+        const path = endpoint.deviceEventPath(encodeURIComponent(config.deviceId));
         let httpHeaders = {
           'iothub-to': path,
           'User-Agent': 'azure-iot-device/' + packageJson.version,
@@ -283,7 +283,7 @@ export class Http extends EventEmitter implements Client.Transport {
         {"body":"<Base64 Message1>","properties":{"<key>":"<value>"}},
         {"body":"<Base64 Message1>"}...
         ```]*/
-        const path = endpoint.eventPath(config.deviceId);
+        const path = endpoint.deviceEventPath(encodeURIComponent(config.deviceId));
         let httpHeaders = {
           'iothub-to': path,
           'Content-Type': 'application/vnd.microsoft.iothub.json',
@@ -362,7 +362,7 @@ export class Http extends EventEmitter implements Client.Transport {
         debug('Error while receiving: ' + err.toString());
         this.emit('error', err);
       } else {
-        const path = endpoint.messagePath(config.deviceId);
+        const path = endpoint.deviceMessagePath(encodeURIComponent(config.deviceId));
         let httpHeaders = {
           'iothub-to': path,
           'User-Agent': 'azure-iot-device/' + packageJson.version
@@ -642,7 +642,7 @@ export class Http extends EventEmitter implements Client.Transport {
       } else {
         let method;
         let resultConstructor = null;
-        let path = endpoint.feedbackPath(config.deviceId, message.lockToken);
+        let path = endpoint.deviceFeedbackPath(encodeURIComponent(config.deviceId), message.lockToken);
         let httpHeaders = {
           'If-Match': message.lockToken,
           'User-Agent': 'azure-iot-device/' + packageJson.version

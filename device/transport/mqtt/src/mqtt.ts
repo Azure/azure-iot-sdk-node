@@ -669,9 +669,9 @@ export class Mqtt extends EventEmitter implements Client.Transport {
   protected _configureEndpoints(credentials: TransportConfig): void {
 
     if (credentials.moduleId) {
-      this._topicTelemetryPublish = 'devices/' + credentials.deviceId + '/modules/' + credentials.moduleId + '/messages/events/';
+      this._topicTelemetryPublish = endpoint.moduleEventPath(credentials.deviceId, credentials.moduleId).substring(1) + '/';
     } else {
-      this._topicTelemetryPublish = 'devices/' + credentials.deviceId + '/messages/events/';
+      this._topicTelemetryPublish = endpoint.deviceEventPath(credentials.deviceId).substring(1)  + '/';
     }
     debug('topic publish: ' + this._topicTelemetryPublish);
 
@@ -688,7 +688,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
 
     if (credentials.moduleId) {
       this._topics.inputMessage = {
-        name: 'devices/' + credentials.deviceId + '/modules/' + credentials.moduleId + '/inputs/#',
+        name: endpoint.moduleInputMessagePath(credentials.deviceId, credentials.moduleId).substring(1) + '/#',
         subscribeInProgress: false,
         subscribed: false,
         topicMatchRegex: /^devices\/.*\/modules\/.*\/inputs\/.*\/.*$/g,
@@ -697,7 +697,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
       debug('inputMessage topic subscribe: ' + this._topics.inputMessage.name);
     } else {
       this._topics.message = {
-        name: 'devices/' + credentials.deviceId + '/messages/devicebound/#',
+        name: endpoint.deviceMessagePath(credentials.deviceId).substring(1) + '/#',
         subscribeInProgress: false,
         subscribed: false,
         topicMatchRegex: /^devices\/.*\/messages\/devicebound\/.*$/g,

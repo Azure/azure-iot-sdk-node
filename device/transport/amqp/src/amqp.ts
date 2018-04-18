@@ -262,8 +262,13 @@ export class Amqp extends EventEmitter implements Client.Transport {
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_055: [The `connect` method shall call its callback with an error if the callback passed to the `getDeviceCredentials` method is called with an error.]*/
                 this._fsm.transition('disconnected', translateError('AMQP Transport: Could not get credentials', err), connectCallback);
               } else {
-                this._c2dEndpoint = endpoint.messagePath(credentials.deviceId, credentials.moduleId);
-                this._d2cEndpoint = endpoint.eventPath(credentials.deviceId, credentials.moduleId);
+                if (credentials.moduleId) {
+                  this._c2dEndpoint = endpoint.moduleMessagePath(credentials.deviceId, credentials.moduleId);
+                  this._d2cEndpoint = endpoint.moduleEventPath(credentials.deviceId, credentials.moduleId);
+                } else {
+                  this._c2dEndpoint = endpoint.deviceMessagePath(credentials.deviceId);
+                  this._d2cEndpoint = endpoint.deviceEventPath(credentials.deviceId);
+                }
 
                 const uri = this._getConnectionUri(credentials.host);
                 this._amqp.connect(uri, credentials.x509, (err, connectResult) => {

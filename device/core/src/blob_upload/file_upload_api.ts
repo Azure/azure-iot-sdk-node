@@ -43,7 +43,7 @@ export class FileUploadApi implements FileUploadInterface {
 
         this._authenticationProvider.getDeviceCredentials((err, deviceCredentials) => {
             /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_006: [`getBlobSharedAccessSignature` shall create a `POST` HTTP request to a path formatted as the following:`/devices/<deviceId>/files?api-version=<api-version>]*/
-            const path = endpoint.devicePath(deviceCredentials.deviceId) + '/files' + endpoint.versionQueryString();
+            const path = endpoint.deviceBlobUploadPath(encodeURIComponent(deviceCredentials.deviceId)) + endpoint.versionQueryString();
             const body = JSON.stringify({ blobName: blobName });
 
             /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_007: [The `POST` HTTP request shall have the following headers:
@@ -100,7 +100,7 @@ export class FileUploadApi implements FileUploadInterface {
 
         this._authenticationProvider.getDeviceCredentials((err, deviceCredentials) => {
             /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_013: [`notifyUploadComplete` shall create a `POST` HTTP request to a path formatted as the following:`/devices/<deviceId>/files/<correlationId>?api-version=<api-version>`]*/
-            const path = endpoint.devicePath(deviceCredentials.deviceId) + '/files/notifications/' + encodeURIComponent(correlationId) + endpoint.versionQueryString();
+            const path = endpoint.deviceBlobUploadNotificationPath(encodeURIComponent(deviceCredentials.deviceId), correlationId) + endpoint.versionQueryString();
             const body = JSON.stringify(uploadResult);
 
             /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_014: [The `POST` HTTP request shall have the following headers:
