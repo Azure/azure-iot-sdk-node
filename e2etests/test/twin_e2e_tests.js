@@ -172,26 +172,32 @@ delete nullMergeResult.tweedle;
     };
 
     it('relies on $version starting at 1 and incrementing by 1 each time', function(done) {
+      // This test file relies on the behavior or $version.  The production code does not rely on this.
       assert.equal(deviceTwin.properties.desired.$version, 1);
+      var firstUpdateReceived = false;
+
       deviceTwin.on('properties.desired', function() {
         debug('desired property update with version: ' + deviceTwin.properties.desired.$version);
         if (deviceTwin.properties.desired.$version === 1) {
           debug('initial property update received');
-          debug('updating desired properties using the service API');
-          serviceTwin.update( { properties : { desired : newProps } }, function(err) {
-            if (err) {
-              debug('error sending the desired properties update:' + err.toString());
-              return done(err);
-            } else {
-              debug('desired properties update sent');
-            }
-          });
+          firstUpdateReceived = true;
         } else if (deviceTwin.properties.desired.$version === 2) {
+          assert(firstUpdateReceived);
           debug('desired property update received, version is 2. test successful');
           done();
         } else  {
           debug('incorrect property version received: ' + deviceTwin.properties.desired.$version);
           done(new Error('incorrect property version received - ' + deviceTwin.properties.desired.$version));
+        }
+      });
+
+      debug('updating desired properties using the service API');
+      serviceTwin.update( { properties : { desired : newProps } }, function(err) {
+        if (err) {
+          debug('error sending the desired properties update:' + err.toString());
+          return done(err);
+        } else {
+          debug('desired properties update sent');
         }
       });
     });
