@@ -163,8 +163,7 @@ describe('modules', function() {
     });
   });
 
-  // Skipped because of failure
-  it ('can add and remove a module', function(done) {
+  it ('can add and remove a module using deviceId, moduleId pair', function(done) {
     async.series([
       function addModule(callback) {
         debug('adding module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
@@ -190,5 +189,37 @@ describe('modules', function() {
       }
     ], done);
   });
+
+  it ('can add and remove a module using a module object', function(done) {
+    async.series([
+      function addModule(callback) {
+        debug('adding module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
+        registry.addModule(module, function(err) {
+          debug('addModule returned ' + (err ? err : 'success'));
+          callback(err);
+        });
+      },
+      function removeModule(callback) {
+        debug('getting module');
+        registry.getModule(module.deviceId, module.moduleId, function(err, foundModule) {
+          debug('getModule returned ' + (err ? err : 'success'));
+          debug('removing module using object returned from getModule');
+          registry.removeModule(foundModule, function(err) {
+            debug('remove module returned ' + (err ? err : 'success'));
+            callback(err);
+          });
+        });
+      },
+      function verifyRemoval(callback) {
+        debug('Verifying removal.  Getting module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
+        registry.getModule(module.deviceId, module.moduleId, function(err) {
+          debug('(expecting failure) getModule returned ' + (err ? err : 'success'));
+          assert(err, 'The module should not be found after removal');
+          callback();
+        });
+      }
+    ], done);
+  });
+
 });
 

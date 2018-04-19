@@ -1556,12 +1556,35 @@ describe('Registry', function() {
     testAllFalsyArgValues('removeModule', 'moduleId', 1, 'deviceId', 'moduleId');
     testAllFalsyArgValues('removeModule', 'done', 2, 'deviceId', 'moduleId');
 
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_043: [The `removeModule` method shall throw an `ArgumentError` if `deviceId` or `moduleId` parameters are not strings.]*/
+    it ('throws with non-string deviceId', function() {
+      assert.throws(function() {
+        var registry = new Registry(fakeConfig, {});
+        registry.removeModule(34, 'moduleId', {});
+      }, errors.ArgumentError);
+    });
+    it ('throws with non-string moduleId', function() {
+      assert.throws(function() {
+        var registry = new Registry(fakeConfig, {});
+        registry.removeModule('deviceId', 44, {});
+      }, errors.ArgumentError);
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_044: [The `removeModule` method shall throw an `ArgumentError` if the `done` parameter is not a function.]*/
+    it ('throws when done is not a function', function() {
+      assert.throws(function() {
+        var registry = new Registry(fakeConfig, {});
+        registry.removeModule('deviceId', 'moduleId', 'not a callback');
+      }, errors.ArgumentError);
+    })
+
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_042: [if a `deviceId` and `moduleId` are passed in, `removeModule` shall use those values and the `etag` shall be `*`.]*/
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_040: [The `removeModule` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
     DELETE /devices/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
     Authorization: <sharedAccessSignature>
     Request-Id: <guid>
-    If-Match: "*"
+    If-Match: "<etag>"
     ```
     ]*/
     it('constructs a valid HTTP request', function(testCallback) {
@@ -1577,5 +1600,26 @@ describe('Registry', function() {
       var registry = new Registry(fakeConfig, fakeHttpHelper);
       registry.removeModule('deviceId', 'moduleId', testCallback);
     });
+
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_041: [if a `Module` object is passed in, `removeModule` shall use the `deviceId`, `moduleId`, and `etag` from the `Module` object.]*/
+    it('constructs a valid HTTP request with a module object', function(testCallback) {
+      var fakeHttpHelper = {
+        executeApiCall: function (method, path, httpHeaders, body, done) {
+          assert.strictEqual(method, 'DELETE');
+          assert.strictEqual(path, '/devices/device-from-object/modules/module-from-object' + endpoint.versionQueryString());
+          assert.strictEqual(httpHeaders['If-Match'], '"etag-from-object"');
+          done();
+        }
+      };
+
+      var mod = {
+        moduleId: 'module-from-object',
+        deviceId: 'device-from-object',
+        etag:'etag-from-object'
+      }
+      var registry = new Registry(fakeConfig, fakeHttpHelper);
+      registry.removeModule(mod, testCallback);
+    });
+
   });
 });

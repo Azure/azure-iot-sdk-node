@@ -1061,22 +1061,48 @@ export class Registry {
    *
    * @throws {ReferenceError}       If the done deviceId, moduleId, or argument is falsy.
    */
-   removeModule(deviceId: string, moduleId: string, done: Registry.ResponseCallback): void {
+  removeModule(module: Module, done: Registry.ResponseCallback): void;
+  removeModule(deviceId: string, moduleId: string, done: Registry.ResponseCallback): void;
+  removeModule(moduleOrDeviceId: Module | string, doneOrModuleId: Registry.ResponseCallback | string, done?: Registry.ResponseCallback): void {
+    let moduleId: string;
+    let deviceId: string;
+    let etag: string;
+
+    if (moduleOrDeviceId && ((moduleOrDeviceId as any).moduleId)) { // can't do "instanceof Module" at runtime because Module is an interface
+      /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_041: [if a `Module` object is passed in, `removeModule` shall use the `deviceId`, `moduleId`, and `etag` from the `Module` object.]*/
+      done = doneOrModuleId as Registry.ResponseCallback;
+      let module = moduleOrDeviceId as Module;
+      deviceId = module.deviceId;
+      moduleId = module.moduleId;
+      etag = module.etag;
+    } else {
+      /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_042: [if a `deviceId` and `moduleId` are passed in, `removeModule` shall use those values and the `etag` shall be `*`.]*/
+      deviceId = moduleOrDeviceId as string;
+      moduleId = doneOrModuleId as string;
+      etag = '*';
+    }
+
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_039: [The `removeModule` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, or `done` is falsy. ]*/
-    if (!deviceId) throw new ReferenceError('Argument \'deviceId\' cannot be falsy');
-    if (!moduleId) throw new ReferenceError('Argument \'moduleId\' cannot be falsy');
+    if (!deviceId) throw new ReferenceError('\'deviceId\' cannot be falsy');
+    if (!moduleId) throw new ReferenceError('\'moduleId\' cannot be falsy');
     if (!done) throw new ReferenceError('Argument \'done\' cannot be falsy');
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_043: [The `removeModule` method shall throw an `ArgumentError` if `deviceId` or `moduleId` parameters are not strings.]*/
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_044: [The `removeModule` method shall throw an `ArgumentError` if the `done` parameter is not a function.]*/
+    if (typeof deviceId !== 'string') throw new ArgumentError('\'deviceId\' must be a string');
+    if (typeof moduleId !== 'string') throw new ArgumentError('\'moduleId\' must be a string');
+    if (typeof(done) !== 'function') throw new ArgumentError('\'done\' must be a function');
 
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_040: [The `removeModule` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
     DELETE /devices/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
     Authorization: <sharedAccessSignature>
     Request-Id: <guid>
-    If-Match: "*"
+    If-Match: "<etag>"
     ```
     ]*/
     const httpHeaders = {
-      'If-Match': '"*"'
+      'If-Match': '"' + etag + '"'
     };
 
     const path = `${endpoint.modulePath(encodeURIComponent(deviceId), encodeURIComponent(moduleId))}${endpoint.versionQueryString()}`;

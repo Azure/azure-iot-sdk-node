@@ -619,16 +619,26 @@ Request-Id: <guid>
 ```
 **]**
 
+### removeModule(module: Module, done: Registry.ResponseCallback): void;
 ### removeModule(deviceId: string, moduleId: string, done: Registry.ResponseCallback): void;
+### removeModule(moduleOrDeviceId: Module | string, doneOrModuleId: Registry.ResponseCallback | string, done?: Registry.ResponseCallback): void;
+
+**SRS_NODE_IOTHUB_REGISTRY_18_041: [** if a `Module` object is passed in, `removeModule` shall use the `deviceId`, `moduleId`, and `etag` from the `Module` object. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_042: [** if a `deviceId` and `moduleId` are passed in, `removeModule` shall use those values and the `etag` shall be `*`. **]**
 
 **SRS_NODE_IOTHUB_REGISTRY_18_039: [** The `removeModule` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, or `done` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_043: [** The `removeModule` method shall throw an `ArgumentError` if `deviceId` or `moduleId` parameters are not strings. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_044: [** The `removeModule` method shall throw an `ArgumentError` if the `done` parameter is not a function. **]**
 
 **SRS_NODE_IOTHUB_REGISTRY_18_040: [** The `removeModule` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
 DELETE /devices/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
 Request-Id: <guid>
-If-Match: "*"
+If-Match: "<etag>"
 ```
 **]**
 
