@@ -11,3 +11,4 @@ export { SharedAccessSignatureAuthenticationProvider } from './lib/sas_authentic
 export { SharedAccessKeyAuthenticationProvider } from './lib/sak_authentication_provider';
 export { Twin, TwinProperties } from './lib/twin';
 export { DeviceClientOptions, HttpReceiverOptions, AmqpTransportOptions, HttpTransportOptions, MqttTransportOptions } from './lib/interfaces';
+export { getUserAgentString } from './lib/utils';

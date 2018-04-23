@@ -161,9 +161,9 @@ describe('Amqp', function () {
       it('calls the `sendMethodResponse` method on the AmqpDeviceMethodClient object', function (testCallback) {
         var fakeMethodResponse = { status: 200, payload: null, requestId: uuid.v4() };
         var fakeCallback = function () {};
-        sinon.spy(transport._deviceMethodClient, 'sendMethodResponse');
 
         transport.connect(function () {
+          sinon.spy(transport._deviceMethodClient, 'sendMethodResponse');
           transport.sendMethodResponse(fakeMethodResponse, fakeCallback);
           assert.isTrue(transport._deviceMethodClient.sendMethodResponse.calledWith(fakeMethodResponse));
           testCallback();
@@ -282,8 +282,8 @@ describe('Amqp', function () {
       /*Tests_SRS_NODE_DEVICE_AMQP_16_040: [The `enableMethods` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach method links.]*/
       it('calls its callback with an Error if attaching the method links fails', function (testCallback) {
         var fakeError = new Error('fake failed to attach');
-        transport._deviceMethodClient.attach = sinon.stub().callsArgWith(0, fakeError);
         transport.connect(function () {
+          transport._deviceMethodClient.attach = sinon.stub().callsArgWith(0, fakeError);
           assert(fakeBaseClient.attachReceiverLink.notCalled);
           transport.enableMethods(function (err) {
             assert.isTrue(transport._deviceMethodClient.attach.calledOnce);
@@ -324,8 +324,8 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_042: [The `disableMethods` method shall call `detach` on the device method links and call its callback when these are successfully detached.]*/
       it('detaches the methods links', function (testCallback) {
-        transport._deviceMethodClient.detach = sinon.stub().callsArg(0);
         transport.connect(function () {
+          transport._deviceMethodClient.detach = sinon.stub().callsArg(0);
           assert(fakeBaseClient.attachReceiverLink.notCalled);
           transport.enableMethods(function () {
             assert(fakeBaseClient.attachSenderLink.calledWith(transport._deviceMethodClient._methodEndpoint));
@@ -340,8 +340,8 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_043: [The `disableMethods` method shall call its `callback` with an `Error` if it fails to detach the device method links.]*/
       it('calls its callback with an Error if an error happens while detaching the methods links', function (testCallback) {
-        transport._deviceMethodClient.detach = sinon.stub().callsArgWith(0, new Error('fake detach error'));
         transport.connect(function () {
+          transport._deviceMethodClient.detach = sinon.stub().callsArgWith(0, new Error('fake detach error'));
           assert(fakeBaseClient.attachReceiverLink.notCalled);
           transport.enableMethods(function () {
             assert(fakeBaseClient.attachSenderLink.calledWith(transport._deviceMethodClient._methodEndpoint));
@@ -380,8 +380,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_008: [The `done` callback method passed in argument shall be called if the connection is established]*/
       it('calls done if connection established using SSL', function () {
-        var transport = new Amqp(fakeX509AuthenticationProvider);
-        sinon.stub(transport._amqp,'connect').callsArgWith(2,null);
+        fakeBaseClient.connect = sinon.stub().callsArgWith(2,null);
         transport.connect(function(err) {
           assert.isNotOk(err);
         });
@@ -389,8 +388,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_009: [The `done` callback method passed in argument shall be called with an error object if the connection fails]*/
       it('calls done with an error if connection failed', function () {
-        var transport = new Amqp(fakeX509AuthenticationProvider);
-        sinon.stub(transport._amqp,'connect').callsArgWith(2,new errors.UnauthorizedError('cryptic'));
+        fakeBaseClient.connect = sinon.stub().callsArgWith(2,new errors.UnauthorizedError('cryptic'));
         transport.connect(function(err) {
           assert.isOk(err);
         });
@@ -620,8 +618,8 @@ describe('Amqp', function () {
         });
 
         it('disconnects the Twin client', function (testCallback) {
-          sinon.spy(transport._twinClient, 'detach');
           transport.connect(function () {
+            sinon.spy(transport._twinClient, 'detach');
             transport.disconnect(function () {
               assert.isTrue(transport._twinClient.detach.calledOnce);
               testCallback();
@@ -631,8 +629,8 @@ describe('Amqp', function () {
 
         it('calls the disconnect callback with an error if the Twin client encounters an error while detaching', function (testCallback) {
           var fakeError = new Error('fake');
-          sinon.stub(transport._twinClient, 'detach').callsFake(function(callback) { callback(fakeError); });
           transport.connect(function () {
+            sinon.stub(transport._twinClient, 'detach').callsFake(function(callback) { callback(fakeError); });
             transport.disconnect(function (err) {
               assert.isTrue(transport._twinClient.detach.calledOnce);
               assert.instanceOf(err, Error);
@@ -1397,11 +1395,14 @@ describe('Amqp', function () {
       /*Tests_SRS_NODE_DEVICE_AMQP_16_078: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback with and error if the call to `AmqpTwinClient.disableTwinDesiredPropertiesUpdates` fails.]*/
       /*Tests_SRS_NODE_DEVICE_AMQP_16_079: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback no arguments if the call to `AmqpTwinClient.disableTwinDesiredPropertiesUpdates` succeeds.]*/
       it('calls disableTwinDesiredPropertiesUpdates on the twin client', function (testCallback) {
-        transport._twinClient.disableTwinDesiredPropertiesUpdates = sinon.stub().callsArg(0);
-        transport.enableTwinDesiredPropertiesUpdates(function () {});
-        transport.disableTwinDesiredPropertiesUpdates(function () {
-          assert.isTrue(transport._twinClient.disableTwinDesiredPropertiesUpdates.calledOnce);
-          testCallback();
+        transport.connect(function(err) {
+          assert(!err);
+          transport._twinClient.disableTwinDesiredPropertiesUpdates = sinon.stub().callsArg(0);
+          transport.enableTwinDesiredPropertiesUpdates(function () {});
+          transport.disableTwinDesiredPropertiesUpdates(function () {
+            assert.isTrue(transport._twinClient.disableTwinDesiredPropertiesUpdates.calledOnce);
+            testCallback();
+          });
         });
       });
     });
@@ -1414,7 +1415,9 @@ describe('Amqp', function () {
           testCallback();
         });
 
-        transport._twinClient.emit('twinDesiredPropertiesUpdate', fakePatch);
+        transport.connect(function(err) {
+          transport._twinClient.emit('twinDesiredPropertiesUpdate', fakePatch);
+        });
       });
     });
 
@@ -1427,7 +1430,10 @@ describe('Amqp', function () {
           testCallback();
         });
 
-        transport._twinClient.emit('error', fakeError);
+        transport.connect(function(err) {
+          assert(!err);
+          transport._twinClient.emit('error', fakeError);
+        });
       });
     });
   });
