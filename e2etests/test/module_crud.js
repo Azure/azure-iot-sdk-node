@@ -65,11 +65,10 @@ describe('modules', function() {
       function findModule(callback) {
         debug('getting module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
         registry.getModule(module.deviceId, module.moduleId, function(err, foundModule) {
+          debug('getModule returned ' + (err ? err : 'success'));
           if (err) {
-            debug('getModule returned ' + err);
             callback(err);
           } else {
-            debug('getModule returned success');
             assert.strictEqual(foundModule.deviceId, module.deviceId);
             assert.strictEqual(foundModule.moduleId, module.moduleId);
             callback();
@@ -97,8 +96,11 @@ describe('modules', function() {
           } else {
             debug(foundModules.length.toString() + ' modules on device');
             var found = false;
+            debug('looking for moduleId ' + module.moduleId);
             foundModules.forEach(function(foundModule) {
+              debug('found moduleId ' + foundModule.moduleId);
               if (foundModule.deviceId === module.deviceId && foundModule.moduleId === module.moduleId) {
+                debug('that\'s it!');
                 found = true;
               }
             });
@@ -130,14 +132,19 @@ describe('modules', function() {
             if (err) {
               callback(err);
             } else {
+              debug('switching primary and secondary keys');
               expectedSecondary = foundModule.authentication.symmetricKey.primaryKey;
               expectedPrimary = foundModule.authentication.symmetricKey.secondaryKey;
               foundModule.authentication.symmetricKey.primaryKey = expectedPrimary;
               foundModule.authentication.symmetricKey.secondaryKey = expectedSecondary;
               debug('calling updateModule set primary to ' + expectedPrimary);
               if (forceUpdate) {
+                debug('forcing update');
                 delete foundModule.etag;
+              } else {
+                debug('not forching update.  etag=' + foundModule.etag);
               }
+              debug('calling updateModule');
               registry.updateModule(foundModule, forceUpdate, function(err) {
                 debug('updateModule returned ' + (err ? err : 'success'));
                 callback(err);
@@ -146,6 +153,7 @@ describe('modules', function() {
           });
         },
         function verifyUpdate(callback) {
+          debug('verify the update');
           debug('getting module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
           registry.getModule(module.deviceId, module.moduleId, function(err, foundModule) {
             debug('getModule returned ' + (err ? err : 'success'));
@@ -163,7 +171,7 @@ describe('modules', function() {
     });
   });
 
-  it ('can add and remove a module using deviceId, moduleId pair', function(done) {
+  it ('can remove a module using deviceId, moduleId pair', function(done) {
     async.series([
       function addModule(callback) {
         debug('adding module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
@@ -190,7 +198,7 @@ describe('modules', function() {
     ], done);
   });
 
-  it ('can add and remove a module using a module object', function(done) {
+  it ('can remove a module using a module object', function(done) {
     async.series([
       function addModule(callback) {
         debug('adding module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
@@ -204,6 +212,7 @@ describe('modules', function() {
         registry.getModule(module.deviceId, module.moduleId, function(err, foundModule) {
           debug('getModule returned ' + (err ? err : 'success'));
           debug('removing module using object returned from getModule');
+          debug('removing module. etag = ' + foundModule.etag);
           registry.removeModule(foundModule, function(err) {
             debug('remove module returned ' + (err ? err : 'success'));
             callback(err);

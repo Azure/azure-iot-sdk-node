@@ -21,17 +21,27 @@ describe('module twin', function() {
       var testModule = {};
 
       before(function(done) {
+        debug('using ModuleTestHelper to create modules');
         ModuleTestHelper.createModule(testModule, Transport, function(err) {
+          debug('ModuleTestHelper.createModule returned ' + (err ? err : 'success'));
           if (err) {
             done(err);
           } else {
-            ModuleTestHelper.getTwinObjects(testModule, done);
+            debug('using ModuleTestHelper to get twin objects');
+            ModuleTestHelper.getTwinObjects(testModule, function(err) {
+              debug('ModuleTestHelper.getTwinObjects returned ' + (err ? err : 'success'));
+              done(err);
+            });
           }
         });
       });
 
       after(function(done) {
-        ModuleTestHelper.cleanUpAfterTest(testModule, done);
+        debug('using ModuleTestHelper to clean up after tests');
+        ModuleTestHelper.cleanUpAfterTest(testModule, function(err) {
+          debug('ModuleTestHelper.cleanUpAfterTest returned ' + (err ? err : 'success'));
+          done(err);
+        });
       });
 
       it ('can receive desired property changes', function(done) {
@@ -42,10 +52,14 @@ describe('module twin', function() {
             }
           }
         };
+        debug('adding handler for properties.desired');
         testModule.deviceTwin.on('properties.desired', function(props) {
           debug('received properties:' + JSON.stringify(props));
           if (props.fake_key === patch.properties.desired.fake_key) {
+            debug('key matches.  Finishing test');
             done();
+          } else {
+            debug('no match.  Continuing to wait.  Looking for ' + props.fake_key + ' got ' + patch.properties.desired.fake_key);
           }
         });
         debug('sending desired properties');

@@ -21,11 +21,19 @@ describe('module methods', function() {
       var testModule = {};
 
       before(function(done) {
-        ModuleTestHelper.createModule(testModule, Transport, done);
+        debug('using ModuleTestHelper to create modules');
+        ModuleTestHelper.createModule(testModule, Transport, function(err) {
+          debug('ModuleTestHelper.createModule returned ' + (err ? err : 'success'));
+          done(err);
+        });
       });
 
       after(function(done) {
-        ModuleTestHelper.cleanUpAfterTest(testModule, done);
+        debug('using ModuleTestHelper to clean up after tests');
+        ModuleTestHelper.cleanUpAfterTest(testModule, function(err) {
+          debug('ModuleTestHelper.cleanUpAfterTest returned ' + (err ? err : 'success'));
+          done(err);
+        });
       });
 
       it ('can receive a method call', function(done) {
@@ -43,8 +51,10 @@ describe('module methods', function() {
           responseTimeoutInSeconds: 15
         };
 
+        debug('adding method handler for ' + methodName);
         testModule.deviceClient.onDeviceMethod(methodName, function(request, response) {
-          debug('received method call');
+          debug('received method call for ' + methodName);
+          debug('payload: ' + request.payload);
           assert.strictEqual(request.methodName, methodName);
           assert.deepEqual(request.payload, requestPayload);
 
@@ -56,6 +66,7 @@ describe('module methods', function() {
         });
 
         // Waiting for an arbitrary 2 seconds because we don't know when all the links above have been established.
+        debug('waiting for links before invoking method');
         setTimeout(function() {
           debug('invoking method');
           testModule.serviceClient.invokeModuleMethod(testModule.deviceId, testModule.moduleId, methodParams, function(err, response) {
@@ -63,6 +74,7 @@ describe('module methods', function() {
             if (err) {
               done(err);
             } else {
+              debug('response: ' + response);
               assert.strictEqual(response.status, methodResult);
               assert.deepEqual(response.payload, responsePayload);
               done();

@@ -23,11 +23,19 @@ describe('module messaging', function() {
       var testModule = {};
 
       before(function(done) {
-        ModuleTestHelper.createModule(testModule, Transport, done);
+        debug('using ModuleTestHelper to create modules');
+        ModuleTestHelper.createModule(testModule, Transport, function(err) {
+          debug('ModuleTestHelper.createModule returned ' + (err ? err : 'success'));
+          done(err);
+        });
       });
 
       after(function(done) {
-        ModuleTestHelper.cleanUpAfterTest(testModule, done);
+        debug('using ModuleTestHelper to clean up after tests');
+        ModuleTestHelper.cleanUpAfterTest(testModule, function(err) {
+          debug('ModuleTestHelper.cleanUpAfterTest returned ' + (err ? err : 'success'));
+          done(err);
+        });
       });
 
       it ('Can send from service to module input', function(done) {
@@ -55,10 +63,13 @@ describe('module messaging', function() {
         after(function(done) {
           ehReceiver.closeClient(done);
         });
+        debug('opening eventHub receiver');
         ehReceiver.openClient(function(err) {
+          debug('ehReceiver.openClient returned ' + (err ? err : 'success'));
           if (err) {
             done (err);
           } else {
+            debug('adding handler for \'message\' event on ehReceiver');
             ehReceiver.on('message', function(msg) {
               if (msg.properties.to === '/devices/' + testModule.deviceId + '/modules/' + testModule.moduleId + '/messages/events') {
                 assert.strictEqual(msg.annotations['x-opt-output-name'], testOutputName);

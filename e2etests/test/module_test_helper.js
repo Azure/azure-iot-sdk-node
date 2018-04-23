@@ -32,6 +32,7 @@ module.exports.createModule = function(testModule, Transport, done)  {
           if (err) {
             done(err);
           } else {
+            debug('test deviceId: ' + testDevice.deviceId);
             testModule.testDevice = testDevice;
             testModule.deviceId = testDevice.deviceId;
             done();
@@ -75,7 +76,7 @@ module.exports.createModule = function(testModule, Transport, done)  {
 module.exports.getTwinObjects = function(testModule, done) {
   async.series([
     function createServiceTwin(done) {
-      debug('creating service twin');
+      debug('getting service twin');
         registry.getModuleTwin(testModule.deviceId, testModule.moduleId, function(err, twin) {
           debug('getModuleTwin returned ' + (err ? err : 'success'));
           if (err) {
