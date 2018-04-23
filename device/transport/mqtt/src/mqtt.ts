@@ -8,16 +8,13 @@ import * as machina from 'machina';
 
 import { results, errors, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
 import { DeviceMethodResponse, Client, DeviceClientOptions, TwinProperties } from 'azure-iot-device';
-import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
+import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider, getUserAgentString } from 'azure-iot-device';
 import { EventEmitter } from 'events';
 import * as util from 'util';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-mqtt:Mqtt');
 import { MqttBase, translateError } from 'azure-iot-mqtt-base';
 import { MqttTwinClient } from './mqtt_twin_client';
-
-// tslint:disable-next-line:no-var-requires
-const packageJson = require('../package.json');
 
 const TOPIC_RESPONSE_PUBLISH_FORMAT = '$iothub/%s/res/%d/?$rid=%s';
 
@@ -46,13 +43,13 @@ export class Mqtt extends EventEmitter implements Client.Transport {
   private _topicMethodSucbscribe: string;
   private _fsm: machina.Fsm;
   private _topics: { [key: string]: TopicDescription };
+  private _ensureBaseObject: (done: () => void) => void;
 
   /**
    * @private
    */
   constructor(authenticationProvider: AuthenticationProvider, mqttBase?: any) {
     super();
-    const sdkVersionString = encodeURIComponent('azure-iot-device/' + packageJson.version);
 
     this._authenticationProvider = authenticationProvider;
     /*Codes_SRS_NODE_DEVICE_MQTT_16_071: [The constructor shall subscribe to the `newTokenAvailable` event of the `authenticationProvider` passed as an argument if it uses tokens for authentication.]*/
@@ -69,28 +66,38 @@ export class Mqtt extends EventEmitter implements Client.Transport {
       });
     }
 
-    /* Codes_SRS_NODE_DEVICE_MQTT_18_025: [ If the Mqtt constructor receives a second parameter, it shall be used as a mqttBase in place of mqtt.js ]*/
-    if (mqttBase) {
-      this._mqtt = mqttBase;
-    } else {
-      this._mqtt = new MqttBase(sdkVersionString);
-    }
+    this._ensureBaseObject = (done) => {
+      if (this._mqtt) {
+        done();
+      } else {
+        getUserAgentString((sdkVersionString) => {
+          /* Codes_SRS_NODE_DEVICE_MQTT_18_025: [ If the Mqtt constructor receives a second parameter, it shall be used as a mqttBase in place of mqtt.js ]*/
+          if (mqttBase) {
+            this._mqtt = mqttBase;
+          } else {
+            this._mqtt = new MqttBase(sdkVersionString);
+          }
 
-    /* Codes_SRS_NODE_DEVICE_MQTT_18_026: When MqttTransport fires the close event, the Mqtt object shall emit a disconnect event */
-    this._mqtt.on('error', (err) => {
-      debug('on close');
-      this._fsm.handle('disconnect', () => {
-        this.emit('disconnect', err);
-      });
-    });
+          /* Codes_SRS_NODE_DEVICE_MQTT_18_026: When MqttTransport fires the close event, the Mqtt object shall emit a disconnect event */
+          this._mqtt.on('error', (err) => {
+            debug('on close');
+            this._fsm.handle('disconnect', () => {
+              this.emit('disconnect', err);
+            });
+          });
 
-    this._mqtt.on('message', this._dispatchMqttMessage.bind(this));
+          this._mqtt.on('message', this._dispatchMqttMessage.bind(this));
 
-    this._twinClient = new MqttTwinClient(this._mqtt);
+          this._twinClient = new MqttTwinClient(this._mqtt);
 
-    /*Codes_SRS_NODE_DEVICE_MQTT_16_081: [The `Mqtt` constructor shall subscribe to the `MqttTwinClient` `twinDesiredPropertiesUpdates`.]*/
-    /*Codes_SRS_NODE_DEVICE_MQTT_16_082: [A `twinDesiredPropertiesUpdates` shall be emitted by the `Mqtt` object for each `twinDesiredPropertiesUpdates` event received from the `MqttTwinClient` with the same payload. **/
-    this._twinClient.on('twinDesiredPropertiesUpdate', (patch) => this.emit('twinDesiredPropertiesUpdate', patch));
+          /*Codes_SRS_NODE_DEVICE_MQTT_16_081: [The `Mqtt` constructor shall subscribe to the `MqttTwinClient` `twinDesiredPropertiesUpdates`.]*/
+          /*Codes_SRS_NODE_DEVICE_MQTT_16_082: [A `twinDesiredPropertiesUpdates` shall be emitted by the `Mqtt` object for each `twinDesiredPropertiesUpdates` event received from the `MqttTwinClient` with the same payload. **/
+          this._twinClient.on('twinDesiredPropertiesUpdate', (patch) => this.emit('twinDesiredPropertiesUpdate', patch));
+
+          done();
+        });
+      }
+    };
 
     this._fsm = new machina.Fsm({
       initialState: 'disconnected',
@@ -203,14 +210,16 @@ export class Mqtt extends EventEmitter implements Client.Transport {
                 /*Codes_SRS_NODE_DEVICE_MQTT_16_068: [The `connect` method shall call its callback with the error returned by `getDeviceCredentials` if it fails to return the device credentials.]*/
                 this._fsm.transition('disconnected', connectCallback, err);
               } else {
-                this._configureEndpoints(credentials);
-                this._mqtt.connect(credentials, (err, result) => {
-                  debug('connect');
-                  if (err) {
-                    this._fsm.transition('disconnected', connectCallback, err);
-                  } else {
-                    this._fsm.transition('connected', connectCallback, result);
-                  }
+                this._ensureBaseObject(() => {
+                  this._configureEndpoints(credentials);
+                  this._mqtt.connect(credentials, (err, result) => {
+                    debug('connect');
+                    if (err) {
+                      this._fsm.transition('disconnected', connectCallback, err);
+                    } else {
+                      this._fsm.transition('connected', connectCallback, result);
+                    }
+                  });
                 });
               }
             });
@@ -480,25 +489,27 @@ export class Mqtt extends EventEmitter implements Client.Transport {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_015: [The `setOptions` method shall throw an `ArgumentError` if the `cert` property is populated but the device uses symmetric key authentication.]*/
     if (this._authenticationProvider.type === AuthenticationType.Token && options.cert) throw new errors.ArgumentError('Cannot set x509 options on a device that uses token authentication.');
 
-    this._mqtt.setOptions(options);
+    this._ensureBaseObject(() => {
+      this._mqtt.setOptions(options);
 
-    if (!options.cert) {
-      if (done) done(null);
-    } else {
-      /*Codes_SRS_NODE_DEVICE_MQTT_16_069: [The `setOptions` method shall obtain the current credentials by calling `getDeviceCredentials` on the `AuthenticationProvider` passed to the constructor as an argument.]*/
-      this._authenticationProvider.getDeviceCredentials((err, credentials) => {
-        if (err) {
-          /*Codes_SRS_NODE_DEVICE_MQTT_16_070: [The `setOptions` method shall call its callback with the error returned by `getDeviceCredentials` if it fails to return the credentials.]*/
-          if (done) done(err);
-        } else {
-          /*Codes_SRS_NODE_DEVICE_MQTT_16_012: [The `setOptions` method shall update the existing configuration of the MQTT transport with the content of the `options` object.]*/
-          (this._authenticationProvider as X509AuthenticationProvider).setX509Options(options);
-          /*Codes_SRS_NODE_DEVICE_MQTT_16_013: [If a `done` callback function is passed as a argument, the `setOptions` method shall call it when finished with no arguments.]*/
-          /*Codes_SRS_NODE_DEVICE_MQTT_16_014: [The `setOptions` method shall not throw if the `done` argument is not passed.]*/
-          if (done) done(null);
-        }
-      });
-    }
+      if (!options.cert) {
+        if (done) done(null);
+      } else {
+        /*Codes_SRS_NODE_DEVICE_MQTT_16_069: [The `setOptions` method shall obtain the current credentials by calling `getDeviceCredentials` on the `AuthenticationProvider` passed to the constructor as an argument.]*/
+        this._authenticationProvider.getDeviceCredentials((err, credentials) => {
+          if (err) {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_070: [The `setOptions` method shall call its callback with the error returned by `getDeviceCredentials` if it fails to return the credentials.]*/
+            if (done) done(err);
+          } else {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_012: [The `setOptions` method shall update the existing configuration of the MQTT transport with the content of the `options` object.]*/
+            (this._authenticationProvider as X509AuthenticationProvider).setX509Options(options);
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_013: [If a `done` callback function is passed as a argument, the `setOptions` method shall call it when finished with no arguments.]*/
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_014: [The `setOptions` method shall not throw if the `done` argument is not passed.]*/
+            if (done) done(null);
+          }
+        });
+      }
+    });
   }
 
   /**

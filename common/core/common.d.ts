@@ -14,6 +14,7 @@ export { SharedAccessSignature } from './lib/shared_access_signature';
 export { RetryOperation } from './lib/retry_operation';
 export { RetryPolicy, NoRetry, ExponentialBackOffWithJitter } from './lib/retry_policy';
 export { AuthenticationProvider, AuthenticationType } from './lib/authentication_provider';
+export { getAgentPlatformString } from './lib/utils';
 
 export interface Receiver extends EventEmitter {
     on(type: 'message', func: (msg: Message) => void): this;

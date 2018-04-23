@@ -6,7 +6,9 @@
   "license": "MIT",
   "main": "common.js",
   "typings": "common.d.ts",
-  "dependencies": {},
+  "dependencies": {
+    "getos": "^3.1.0"
+  },
   "devDependencies": {
     "@types/node": "^7.0.5",
     "chai": "^3.5.0",

@@ -36,6 +36,7 @@ describe('Mqtt', function () {
     fakeMqttBase.subscribe = sinon.stub().callsArg(2);
     fakeMqttBase.unsubscribe = sinon.stub().callsArg(1);
     fakeMqttBase.updateSharedAccessSignature = sinon.stub().callsArg(1);
+    fakeMqttBase.setOptions = sinon.stub();
   });
 
   afterEach(function () {
@@ -60,9 +61,13 @@ describe('Mqtt', function () {
     });
 
     /*Tests_SRS_NODE_DEVICE_MQTT_18_025: [If the `Mqtt` constructor receives a second parameter, it shall be used as a provider in place of mqtt.]*/
-    it('accepts an mqttProvider for testing', function() {
+    it('accepts an mqttProvider for testing', function(done) {
       var mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
-      assert.equal(mqtt._mqtt, fakeMqttBase);
+      mqtt.connect(function(err) {
+        assert(!err);
+        assert.equal(mqtt._mqtt, fakeMqttBase);
+      });
+      done();
     });
 
     /*Tests_SRS_NODE_DEVICE_MQTT_16_072: [If the `newTokenAvailable` event is fired, the `Mqtt` object shall do nothing if it isn't connected.]*/
@@ -435,7 +440,7 @@ describe('Mqtt', function () {
     /*Tests_SRS_NODE_DEVICE_MQTT_16_011: [The `setOptions` method shall throw a `ReferenceError` if the `options` argument is falsy]*/
     [null, undefined].forEach(function(badOptions) {
       it('throws a ReferenceError if the `options` argument is \'' + badOptions + '\'', function() {
-        var mqtt = new Mqtt(fakeX509AuthenticationProvider);
+        var mqtt = new Mqtt(fakeX509AuthenticationProvider, fakeMqttBase);
         assert.throws(function() {
           mqtt.setOptions(badOptions);
         }, ReferenceError);
@@ -444,28 +449,32 @@ describe('Mqtt', function () {
 
     /*Tests_SRS_NODE_DEVICE_MQTT_16_015: [The `setOptions` method shall throw an `ArgumentError` if the `cert` property is populated but the device uses symmetric key authentication.]*/
     it('throws an ArgumentError if the options.cert property is set but the device is using symmetric key authentication', function() {
-      var mqtt = new Mqtt(fakeAuthenticationProvider);
+      var mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
       assert.throws(function() {
         mqtt.setOptions(fakeX509Options);
       }, errors.ArgumentError);
     });
 
     /*Tests_SRS_NODE_DEVICE_MQTT_16_012: [The `setOptions` method shall update the existing configuration of the MQTT transport with the content of the `options` object.]*/
-    it('updates the existing configuration with new options', function() {
-      var mqtt = new Mqtt(fakeX509AuthenticationProvider);
-      mqtt.setOptions(fakeX509Options);
-      assert.strictEqual(fakeX509AuthenticationProvider.setX509Options.firstCall.args[0], fakeX509Options);
+    it('updates the existing configuration with new options', function(done) {
+      var mqtt = new Mqtt(fakeX509AuthenticationProvider, fakeMqttBase);
+      mqtt.connect(function(err) {
+        assert(!err);
+        mqtt.setOptions(fakeX509Options);
+        assert.strictEqual(fakeX509AuthenticationProvider.setX509Options.firstCall.args[0], fakeX509Options);
+        done();
+      });
     });
 
     /*Tests_SRS_NODE_DEVICE_MQTT_16_013: [If a `done` callback function is passed as a argument, the `setOptions` method shall call it when finished with no arguments.]*/
     it('calls the `done` callback with no arguments when finished', function(done){
-      var mqtt = new Mqtt(fakeX509AuthenticationProvider);
+      var mqtt = new Mqtt(fakeX509AuthenticationProvider, fakeMqttBase);
       mqtt.setOptions(fakeX509Options, done);
     });
 
     /*Tests_SRS_NODE_DEVICE_MQTT_16_014: [The `setOptions` method shall not throw if the `done` argument is not passed.]*/
     it('doesn\'t throw if `done` is not passed in the arguments', function() {
-      var mqtt = new Mqtt(fakeX509AuthenticationProvider);
+      var mqtt = new Mqtt(fakeX509AuthenticationProvider, fakeMqttBase);
       assert.doesNotThrow(function() {
         mqtt.setOptions(fakeX509Options);
       });
@@ -473,7 +482,7 @@ describe('Mqtt', function () {
 
     /*Tests_SRS_NODE_DEVICE_MQTT_16_069: [The `setOptions` method shall obtain the current credentials by calling `getDeviceCredentials` on the `AuthenticationProvider` passed to the constructor as an argument.]*/
     it('calls getDeviceCredentials on the AuthenticationProvider', function (testCallback) {
-      var mqtt = new Mqtt(fakeX509AuthenticationProvider);
+      var mqtt = new Mqtt(fakeX509AuthenticationProvider, fakeMqttBase);
       mqtt.setOptions(fakeX509Options, function () {
         assert.isTrue(fakeX509AuthenticationProvider.getDeviceCredentials.calledOnce);
         testCallback();
@@ -484,7 +493,7 @@ describe('Mqtt', function () {
     it('calls its callback with an error if AuthenticationProvider.getDeviceCredentials fails', function (testCallback) {
       var fakeError = new Error('fake');
       fakeX509AuthenticationProvider.getDeviceCredentials = sinon.stub().callsArgWith(0, fakeError);
-      var mqtt = new Mqtt(fakeX509AuthenticationProvider);
+      var mqtt = new Mqtt(fakeX509AuthenticationProvider, fakeMqttBase);
       mqtt.setOptions(fakeX509Options, function (err) {
         assert.strictEqual(err, fakeError);
         testCallback();
@@ -815,8 +824,8 @@ describe('Mqtt', function () {
     it('calls getTwin on the MqttTwinClient object and passes its callback', function (testCallback) {
       var transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
       var fakeCallback = function () {};
-      sinon.spy(transport._twinClient, 'getTwin');
       transport.connect(function () {
+        sinon.spy(transport._twinClient, 'getTwin');
         transport.getTwin(fakeCallback);
         assert.isTrue(transport._twinClient.getTwin.calledOnce);
         assert.isTrue(transport._twinClient.getTwin.calledWith(fakeCallback));
@@ -850,8 +859,8 @@ describe('Mqtt', function () {
     it('calls updateTwinReportedProperties on the MqttTwinClient object and passes its callback', function (testCallback) {
       var transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
       var fakeCallback = function () {};
-      sinon.spy(transport._twinClient, 'updateTwinReportedProperties');
       transport.connect(function () {
+        sinon.spy(transport._twinClient, 'updateTwinReportedProperties');
         transport.updateTwinReportedProperties(fakePatch, fakeCallback);
         assert.isTrue(transport._twinClient.updateTwinReportedProperties.calledOnce);
         assert.isTrue(transport._twinClient.updateTwinReportedProperties.calledWith(fakePatch, fakeCallback));
@@ -884,8 +893,8 @@ describe('Mqtt', function () {
     /*Tests_SRS_NODE_DEVICE_MQTT_16_059: [`enableTwinDesiredPropertiesUpdates` shall call the `enableTwinDesiredPropertiesUpdates` on the `MqttTwinClient` object created by the constructor and pass it its callback.]*/
     it('calls \'enableTwinDesiredPropertiesUpdates\' on the MqttTwinClient and passes its callback', function () {
       var transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
-      sinon.spy(transport._twinClient, 'enableTwinDesiredPropertiesUpdates');
       transport.connect(function () {
+        sinon.spy(transport._twinClient, 'enableTwinDesiredPropertiesUpdates');
         var callback = function () {};
         transport.enableTwinDesiredPropertiesUpdates(callback);
         assert.isTrue(transport._twinClient.enableTwinDesiredPropertiesUpdates.calledOnce);
@@ -898,8 +907,8 @@ describe('Mqtt', function () {
     /*Tests_SRS_NODE_DEVICE_MQTT_16_083: [`disableTwinDesiredPropertiesUpdates` shall call the `disableTwinDesiredPropertiesUpdates` on the `MqttTwinClient` object created by the constructor and pass it its callback.]*/
     it('calls \'disableTwinDesiredPropertiesUpdates\' on the MqttTwinClient and passes its callback', function () {
       var transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
-      sinon.spy(transport._twinClient, 'disableTwinDesiredPropertiesUpdates');
       transport.connect(function () {
+        sinon.spy(transport._twinClient, 'disableTwinDesiredPropertiesUpdates');
         var callback = function () {};
         transport.disableTwinDesiredPropertiesUpdates(callback);
         assert.isTrue(transport._twinClient.disableTwinDesiredPropertiesUpdates.calledOnce);
@@ -922,7 +931,10 @@ describe('Mqtt', function () {
         testCallback();
       });
 
-      transport._twinClient.emit('twinDesiredPropertiesUpdate', fakePatch);
+      transport.connect(function(err) {
+        assert(!err);
+        transport._twinClient.emit('twinDesiredPropertiesUpdate', fakePatch);
+      });
     });
   });
 });

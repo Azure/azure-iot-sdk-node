@@ -8,15 +8,12 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-amqp:Amqp');
 import { EventEmitter } from 'events';
 
-import { DeviceMethodResponse, Client, DeviceClientOptions, TwinProperties } from 'azure-iot-device';
+import { DeviceMethodResponse, Client, DeviceClientOptions, TwinProperties, getUserAgentString } from 'azure-iot-device';
 import { Amqp as BaseAmqpClient, translateError, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
 import { endpoint, SharedAccessSignature, errors, results, Message, AuthenticationProvider, AuthenticationType } from 'azure-iot-common';
 import { AmqpDeviceMethodClient } from './amqp_device_method_client';
 import { AmqpTwinClient } from './amqp_twin_client';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
-
-// tslint:disable-next-line:no-var-requires
-const packageJson = require('../package.json');
 
 const handleResult = function (errorMessage: string, done: (err?: Error, result?: any) => void): (err?: Error, result?: any) => void {
   return function (err?: Error, result?: any): void {
@@ -66,6 +63,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
   private _d2cErrorListener: (err: Error) => void;
 
   private _fsm: machina.Fsm;
+  private _ensureBaseObject: (done: () => void) => void;
 
   /**
    * @private
@@ -89,31 +87,40 @@ export class Amqp extends EventEmitter implements Client.Transport {
       });
     }
 
-    this._amqp = baseClient || new BaseAmqpClient(false, 'azure-iot-device/' + packageJson.version);
-    this._amqp.setDisconnectHandler((err) => {
-      debug('disconnected event handler: ' + (err ? err.toString() : 'no error'));
-      this._fsm.handle('amqpConnectionClosed', err, () => {
-        this.emit('disconnect', getTranslatedError(err, 'AMQP client disconnected'));
-      });
-    });
+    this._ensureBaseObject = (done) => {
+      if (this._amqp) {
+        done();
+      } else {
+        getUserAgentString((sdkVersionString) => {
+          this._amqp = baseClient || new BaseAmqpClient(false, sdkVersionString);
+          this._amqp.setDisconnectHandler((err) => {
+            debug('disconnected event handler: ' + (err ? err.toString() : 'no error'));
+            this._fsm.handle('amqpConnectionClosed', err, () => {
+              this.emit('disconnect', getTranslatedError(err, 'AMQP client disconnected'));
+            });
+          });
 
-    this._deviceMethodClient = new AmqpDeviceMethodClient(this._authenticationProvider, this._amqp);
-    /*Codes_SRS_NODE_DEVICE_AMQP_16_041: [Any `error` event received on any of the links used for device methods shall trigger the emission of an `error` event by the transport, with an argument that is a `MethodsDetachedError` object with the `innerError` property set to that error.]*/
-    this._deviceMethodClient.on('error', (err) => {
-      let methodsError = new errors.DeviceMethodsDetachedError('Device Methods AMQP links failed');
-      methodsError.innerError = err;
-      this.emit('error', methodsError);
-    });
+          this._deviceMethodClient = new AmqpDeviceMethodClient(this._authenticationProvider, this._amqp);
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_041: [Any `error` event received on any of the links used for device methods shall trigger the emission of an `error` event by the transport, with an argument that is a `MethodsDetachedError` object with the `innerError` property set to that error.]*/
+          this._deviceMethodClient.on('error', (err) => {
+            let methodsError = new errors.DeviceMethodsDetachedError('Device Methods AMQP links failed');
+            methodsError.innerError = err;
+            this.emit('error', methodsError);
+          });
 
-    this._twinClient = new AmqpTwinClient(this._authenticationProvider, this._amqp);
-    /*Codes_SRS_NODE_DEVICE_AMQP_16_048: [Any `error` event received on any of the links used for twin shall trigger the emission of an `error` event by the transport, with an argument that is a `TwinDetachedError` object with the `innerError` property set to that error.]*/
-    this._twinClient.on('error', (err) => {
-      let twinError = new errors.TwinDetachedError('Twin AMQP links failed');
-      twinError.innerError = err;
-      this.emit('error', twinError);
-    });
+          this._twinClient = new AmqpTwinClient(this._authenticationProvider, this._amqp);
+          /*Codes_SRS_NODE_DEVICE_AMQP_16_048: [Any `error` event received on any of the links used for twin shall trigger the emission of an `error` event by the transport, with an argument that is a `TwinDetachedError` object with the `innerError` property set to that error.]*/
+          this._twinClient.on('error', (err) => {
+            let twinError = new errors.TwinDetachedError('Twin AMQP links failed');
+            twinError.innerError = err;
+            this.emit('error', twinError);
+          });
 
-    this._twinClient.on('twinDesiredPropertiesUpdate', (patch) => this.emit('twinDesiredPropertiesUpdate', patch));
+          this._twinClient.on('twinDesiredPropertiesUpdate', (patch) => this.emit('twinDesiredPropertiesUpdate', patch));
+          done();
+        });
+      }
+    };
 
     /*Codes_SRS_NODE_DEVICE_AMQP_16_034: [Any `error` event received on the C2D link shall trigger the emission of an `error` event by the transport, with an argument that is a `C2DDetachedError` object with the `innerError` property set to that error.]*/
     this._c2dErrorListener = (err) => {
@@ -255,12 +262,14 @@ export class Amqp extends EventEmitter implements Client.Transport {
                 this._d2cEndpoint = endpoint.eventPath(credentials.deviceId);
 
                 const uri = this._getConnectionUri(credentials.host);
-                this._amqp.connect(uri, credentials.x509, (err, connectResult) => {
-                  if (err) {
-                    this._fsm.transition('disconnected', translateError('AMQP Transport: Could not connect', err), connectCallback);
-                  } else {
-                    this._fsm.transition('authenticating', connectResult, connectCallback);
-                  }
+                this._ensureBaseObject(() => {
+                  this._amqp.connect(uri, credentials.x509, (err, connectResult) => {
+                    if (err) {
+                      this._fsm.transition('disconnected', translateError('AMQP Transport: Could not connect', err), connectCallback);
+                    } else {
+                      this._fsm.transition('authenticating', connectResult, connectCallback);
+                    }
+                  });
                 });
               }
             });
@@ -684,7 +693,9 @@ export class Amqp extends EventEmitter implements Client.Transport {
     }
 
     /*Codes_SRS_NODE_DEVICE_AMQP_16_020: [The `sendMethodResponse` response shall call the `AmqpDeviceMethodClient.sendMethodResponse` method with the arguments that were given to it.]*/
-    this._deviceMethodClient.sendMethodResponse(methodResponse, callback);
+    this._ensureBaseObject(() => {
+      this._deviceMethodClient.sendMethodResponse(methodResponse, callback);
+    });
   }
 
   /**
