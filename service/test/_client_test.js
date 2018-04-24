@@ -169,67 +169,6 @@ describe('Client', function () {
 
   });
 
-  describe('#sendToModuleInput', function () {
-    var testSubject;
-
-    beforeEach('prepare test subject', function () {
-      testSubject = new Client({}, {});
-    });
-
-    /*Tests_SRS_NODE_IOTHUB_CLIENT_18_007: [The `sendToModuleInput` method shall throw `ReferenceError` if the deviceId, moduleId, inputName, or message arguments are falsy.]*/
-    ['deviceId', 'moduleId', 'inputName', 'message'].forEach(function(paramToTest) {
-      [ null, '', undefined, ].forEach(function(falsyValue) {
-        it('throws if ' + paramToTest + ' is ' + falsyValue, function() {
-          var params = {
-            deviceId: '__FAKE_DEVICE_ID__',
-            moduleId: '__FAKE_MODULE_ID__',
-            inputName: '__FAKE_INPUT_NAME__',
-            message: new Message('msg')
-          };
-          params[paramToTest] = falsyValue;
-          assert.throws(function() {
-            testSubject.sendToModuleInput(params.deviceId, params.moduleId, params.inputName, params.messageName);
-          }, ReferenceError);
-        });
-      });
-    });
-
-    /*Tests_SRS_NODE_IOTHUB_CLIENT_18_015: [The `sendToModuleInput` method shall not throw if the `done` callback is falsy.git stat]*/
-    it('does not throw if done is falsy', function () {
-      var simulatedAmqp = new SimulatedAmqp();
-      var client = new Client(simulatedAmqp);
-      assert.doesNotThrow(function () {
-        client.sendToModuleInput('deviceId', 'moduleId', 'inputName', new Message('msg'));
-      });
-    });
-
-    /*Tests_SRS_NODE_IOTHUB_CLIENT_18_017: [The `sendToModuleInput` method shall throw an `ArgumentError` if the `message` argument is not of type `azure-iot-common.Message` or `azure-iot-common.Message.BufferConvertible`.]*/
-    badSendParameters.forEach(function(testConfig) {
-      it('throws if message is of type ' + testConfig.name, function() {
-        var client = new Client({}, {});
-        assert.throws(function () {
-          client.sendToModuleInput('id', 'id2', 'input', testConfig.obj);
-        }, errors.ArgumentError);
-      });
-    });
-
-    /*Tests_SRS_NODE_IOTHUB_CLIENT_18_008: [The `sendToModuleInput` method shall convert the message object to type `azure-iot-common.Message` if it is not already of type `azure-iot-common.Message`.]*/
-    goodSendParameters.forEach(function(testConfig) {
-      it('Converts to message if message is of type ' + testConfig.name, function(testCallback) {
-        var simulatedAmqp = new SimulatedAmqp();
-        var client = new Client(simulatedAmqp);
-        sinon.spy(simulatedAmqp, 'sendToModuleInput');
-        client.sendToModuleInput('id', 'id2', 'input', testConfig.obj, function(err, state) {
-          assert(!err);
-          assert.equal(state.constructor.name, "MessageEnqueued");
-          var sentMessage = simulatedAmqp.sendToModuleInput.firstCall.args[3];
-          assert.deepEqual(sentMessage, new Message(testConfig.obj));
-          testCallback();
-        });
-      });
-    });
-  });
-
   describe('#invokeDeviceMethod', function() {
     /*Tests_SRS_NODE_IOTHUB_CLIENT_16_014: [The `invokeDeviceMethod` method shall throw a `ReferenceError` if `deviceId` is `null`, `undefined` or an empty string.]*/
     [undefined, null, ''].forEach(function(badDeviceId) {

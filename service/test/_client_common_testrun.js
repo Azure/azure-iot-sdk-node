@@ -14,7 +14,6 @@ function transportSpecificTests(opts) {
     var testSubject;
     var deviceId = 'testDevice-node-' + Math.random();
     var moduleId = 'testModule-' + Math.random();
-    var inputName = 'inputName';
 
     before('prepare test subject', function (done) {
       /*Tests_SRS_NODE_IOTHUB_CLIENT_05_008: [The open method shall open a connection to the IoT Hub that was identified when the Client object was created (e.g., in Client.fromConnectionString).]*/
@@ -95,52 +94,6 @@ function transportSpecificTests(opts) {
       });
     });
 
-    describe('#sendToModuleInput', function () {
-      function createTestMessage() {
-        var msg = new Message('msg');
-        msg.expiryTimeUtc = Date.now() + 5000; // Expire 5s from now, to reduce the chance of us hitting the 50-message limit on the IoT Hub
-        return msg;
-      }
-
-      /*Tests_SRS_NODE_IOTHUB_CLIENT_18_009: [When the `sendToModuleInput` method completes, the callback function (indicated by the done - argument) shall be invoked with the following arguments:
-      - `err` - standard JavaScript Error object (or subclass)
-      - `result` - an implementation-specific response object returned by the underlying protocol, useful for logging and troubleshooting]*/
-      /*Tests_SRS_NODE_IOTHUB_CLIENT_18_010: [The argument `err` passed to the callback `done` shall be `null` if the protocol operation was successful.]*/
-      it('sends the message', function (done) {
-        testSubject.sendToModuleInput(deviceId, moduleId, inputName, createTestMessage(), function (err, state) {
-            if (!err) {
-            assert.equal(state.constructor.name, "MessageEnqueued");
-            }
-            done(err);
-        });
-      });
-
-      /*Tests_SRS_NODE_IOTHUB_CLIENT_18_012: [If the `deviceId` has not been registered with the IoT Hub, `sendToModuleInput` shall call the `done` callback with a `DeviceNotFoundError`.]*/
-      // commented out because IoT hub is currently returning amqp:internal-error in this case
-      it.skip('returns DeviceNotFoundError when sending to an unregistered deviceId', function (done) {
-        // DeviceNotFound returned because
-        // 1) amqp_simulated has special-case code for devices with 'no-device' in the name.
-        // 2) real hubs don't have this device.
-        var unregisteredDeviceId = 'no-device' + Math.random();
-        testSubject.sendToModuleInput(unregisteredDeviceId, moduleId, inputName, new Message('msg'), function (err) {
-          assert.instanceOf(err, errors.DeviceNotFoundError);
-          done();
-        });
-      });
-
-      /*Tests_SRS_NODE_IOTHUB_CLIENT_18_018: [If the `moduleId` has not been added to the device named `deviceId` on the IoT Hub, `sendToModuleInput` shall call the `done` callback with a `DeviceNotFoundError`.]*/
-      // commented out because IoT hub is currently returning amqp:internal-error in this case
-      it.skip('returns DeviceNotFoundError when sending to an unregistered moduleId', function (done) {
-        // DeviceNotFound returned because
-        // 1) amqp_simulated has special-case code for devices with 'no-module' in the name.
-        // 2) real hubs don't have this module.
-        var unregisteredModuleId = 'no-module' + Math.random();
-        testSubject.sendToModuleInput(deviceId, unregisteredModuleId, inputName, new Message('msg'), function (err) {
-            assert.instanceOf(err, errors.DeviceNotFoundError);
-            done();
-        });
-      });
-    });
 
     describe('#getFeedbackReceiver', function () {
       /*Tests_SRS_NODE_IOTHUB_CLIENT_05_027: [When the `getFeedbackReceiver` method completes, the callback function (indicated by the `done` argument) shall be invoked with the following arguments:
