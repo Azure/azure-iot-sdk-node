@@ -38,25 +38,7 @@ describe('module messaging', function() {
         });
       });
 
-      it ('Can send from service to module input', function(done) {
-        var testInputName = '__input__';
-        var testMessageText = '__message__';
-
-        testModule.deviceClient.on('inputMessage', function (inputName, msg) {
-          assert.strictEqual(inputName, testInputName);
-          assert.strictEqual(msg.getBytes().toString('ascii'), testMessageText);
-          done();
-        });
-
-        var messageToSend = new Message(testMessageText);
-        debug('sending message to input named ' + testInputName);
-        testModule.serviceClient.sendToModuleInput(testModule.deviceId, testModule.moduleId, testInputName, messageToSend, function(err) {
-          debug('sendToModuleInput returned ' + (err ? err : 'success'));
-        });
-      });
-
-      it ('Can send from module output to service', function(done) {
-        var testOutputName = '__output__';
+      it ('Can send from module to service', function(done) {
         var testOutputText = '__test_output_text__';
 
         var ehReceiver = new EventHubReceiverHelper();
@@ -72,14 +54,13 @@ describe('module messaging', function() {
             debug('adding handler for \'message\' event on ehReceiver');
             ehReceiver.on('message', function(msg) {
               if (msg.properties.to === '/devices/' + testModule.deviceId + '/modules/' + testModule.moduleId + '/messages/events') {
-                assert.strictEqual(msg.annotations['x-opt-output-name'], testOutputName);
                 assert.strictEqual(msg.body.toString('ascii'), testOutputText);
                 done();
               }
             });
-            debug('sending message to output named ' + testOutputName);
-            testModule.deviceClient.sendOutputEvent(testOutputName, new Message(testOutputText), function(err) {
-              debug('sendOutputEvent returned ' + (err ? err : 'success'));
+            debug('sending message');
+            testModule.deviceClient.sendEvent(new Message(testOutputText), function(err) {
+              debug('sendEvent returned ' + (err ? err : 'success'));
             });
           }
         });

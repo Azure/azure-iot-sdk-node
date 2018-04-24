@@ -109,32 +109,6 @@ The `send` method sends a cloud-to-device message to the service, intended for d
 
 **SRS_NODE_IOTHUB_CLIENT_16_030: [** The `send` method shall not throw if the `done` callback is falsy. **]**
 
-sendToModuleInput(deviceId: string, moduleId: string, inputName: string, message: Message | Message.BufferConvertible, done?: Callback<results.MessageEnqueued>): void;
-The `sendToModuleInput` method sends a message to the service, intended for delivery to the given input on the given module on the given device
-
-**SRS_NODE_IOTHUB_CLIENT_18_007: [** The `sendToModuleInput` method shall throw `ReferenceError` if the deviceId, moduleId, inputName, or message arguments are falsy. **]**
-
-**SRS_NODE_IOTHUB_CLIENT_18_017: [** The `sendToModuleInput` method shall throw an `ArgumentError` if the `message` argument is not of type `azure-iot-common.Message` or `azure-iot-common.Message.BufferConvertible`. **]**
-
-**SRS_NODE_IOTHUB_CLIENT_18_008: [** The `sendToModuleInput` method shall convert the message object to type `azure-iot-common.Message` if it is not already of type `azure-iot-common.Message`. **]**
-
-**SRS_NODE_IOTHUB_CLIENT_18_009: [** When the `sendToModuleInput` method completes, the callback function (indicated by the done - argument) shall be invoked with the following arguments:
-- `err` - standard JavaScript Error object (or subclass)
-- `result` - an implementation-specific response object returned by the underlying protocol, useful for logging and troubleshooting **]**
-
-**SRS_NODE_IOTHUB_CLIENT_18_010: [** The argument `err` passed to the callback `done` shall be `null` if the protocol operation was successful. **]**
-
-**SRS_NODE_IOTHUB_CLIENT_18_011: [** Otherwise the argument `err` shall have an `amqpError` property containing implementation-specific response information for use in logging and troubleshooting. **]**
-
-**SRS_NODE_IOTHUB_CLIENT_18_012: [** If the `deviceId` has not been registered with the IoT Hub, `sendToModuleInput` shall call the `done` callback with a `DeviceNotFoundError`. **]**
-
-**SRS_NODE_IOTHUB_CLIENT_18_018: [** If the `moduleId` has not been added to the device named `deviceId` on the IoT Hub, `sendToModuleInput` shall call the `done` callback with a `DeviceNotFoundError`. **]**
-
-**SRS_NODE_IOTHUB_CLIENT_18_013: [** If the queue which receives messages on behalf of the device is full, `sendToModuleInput` shall call the `done` callback with a `DeviceMaximumQueueDepthExceededError`. **]**
-
-**SRS_NODE_IOTHUB_CLIENT_18_014: [** The `sendToModuleInput` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to send the message. **]**
-
-**SRS_NODE_IOTHUB_CLIENT_18_015: [** The `sendToModuleInput` method shall not throw if the `done` callback is falsy. **]**
 
 
 ###getFeedbackReceiver(done)

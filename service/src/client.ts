@@ -171,72 +171,6 @@ export class Client extends EventEmitter {
     });
   }
 
-
-  /**
-   * @method            module:azure-iothub.Client#sendToModuleInput
-   * @description       Sends a message to a device.
-   * @param {String}    deviceId  The identifier of an existing device identity.
-   * @param {String}    moduleId  The identifier of an existing module.
-   * @param {String}    inputName Name of the input that the message is destined for.
-   * @param {Object}    message   The body of the message to send to the module.
-   *                              If `message` is not of type
-   *                              {@link module:azure-iot-common.Message|Message},
-   *                              it will be converted.
-   * @param {Function}  done      The function to call when the operation is
-   *                              complete. `done` will be called with two
-   *                              arguments: an Error object (can be null) and a
-   *                              transport-specific response object useful for
-   *                              logging or debugging.
-   *
-   * @throws {ReferenceError}     If `deviceId`, `moduleId`, `inputName`, or `message` is null, undefined or empty.
-   */
-  sendToModuleInput(deviceId: string, moduleId: string, inputName: string, message: Message | Message.BufferConvertible, done?: Callback<results.MessageEnqueued>): void {
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_18_007: [The `sendToModuleInput` method shall throw `ReferenceError` if the deviceId, moduleId, inputName, or message arguments are falsy.]*/
-    if (!deviceId) {
-      throw new ReferenceError('deviceId is \'' + deviceId + '\'');
-    }
-    if (!moduleId) {
-      throw new ReferenceError('moduleId is \'' + moduleId + '\'');
-    }
-    if (!inputName) {
-      throw new ReferenceError('inputName is \'' + inputName + '\'');
-    }
-    if (!message) {
-      throw new ReferenceError('message is \'' + message + '\'');
-    }
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_18_008: [The `sendToModuleInput` method shall convert the message object to type `azure-iot-common.Message` if it is not already of type `azure-iot-common.Message`.]*/
-    if ((<any>message.constructor).name !== 'Message') {
-      /*Codes_SRS_NODE_IOTHUB_CLIENT_18_017: [The `sendToModuleInput` method shall throw an `ArgumentError` if the `message` argument is not of type `azure-iot-common.Message` or `azure-iot-common.Message.BufferConvertible`.]*/
-      if (!Message.isBufferConvertible(message)) {
-        throw new errors.ArgumentError('message is not of type Message or Message.BufferConvertible');
-      }
-      message = new Message(message as Message.BufferConvertible);
-    }
-
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_18_009: [When the `sendToModuleInput` method completes, the callback function (indicated by the done - argument) shall be invoked with the following arguments:
-    - `err` - standard JavaScript Error object (or subclass)
-    - `result` - an implementation-specific response object returned by the underlying protocol, useful for logging and troubleshooting]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_18_010: [The argument `err` passed to the callback `done` shall be `null` if the protocol operation was successful.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_18_011: [Otherwise the argument `err` shall have an `amqpError` property containing implementation-specific response information for use in logging and troubleshooting.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_18_012: [If the `deviceId` has not been registered with the IoT Hub, `sendToModuleInput` shall call the `done` callback with a `DeviceNotFoundError`.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_18_018: [If the `moduleId` has not been added to the device named `deviceId` on the IoT Hub, `sendToModuleInput` shall call the `done` callback with a `DeviceNotFoundError`.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_18_013: [If the queue which receives messages on behalf of the device is full, `sendToModuleInput` shall call the `done` callback with a `DeviceMaximumQueueDepthExceededError`.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_18_014: [The `sendToModuleInput` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to send the message.]*/
-    const retryOp = new RetryOperation(this._retryPolicy, MAX_RETRY_TIMEOUT);
-    retryOp.retry((retryCallback) => {
-      this._transport.sendToModuleInput(deviceId, moduleId, inputName, message as Message, retryCallback);
-    }, (err, result) => {
-      /*Codes_SRS_NODE_IOTHUB_CLIENT_18_015: [The `sendToModuleInput` method shall not throw if the `done` callback is falsy.]*/
-      if (done) {
-        if (err) {
-          done(err);
-        } else {
-          done(null, result);
-        }
-      }
-    });
-  }
-
   /**
    * @method            module:azure-iothub.Client#invokeDeviceMethod
    * @description       Invokes a method on a particular device.
@@ -517,7 +451,6 @@ export namespace Client {
       connect(done?: Callback<results.Connected>): void;
       disconnect(done: Callback<results.Disconnected>): void;
       send(deviceId: string, message: Message, done?: Callback<results.MessageEnqueued>): void;
-      sendToModuleInput(deviceId: string, moduleId: string, inputName: string, message: Message, done?: Callback<results.MessageEnqueued>): void;
       getFeedbackReceiver(done: Callback<ServiceReceiver>): void;
       getFileNotificationReceiver(done: Callback<ServiceReceiver>): void;
   }
