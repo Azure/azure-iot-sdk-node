@@ -33,8 +33,8 @@ describe('AmqpWs', function() {
 
       sinon.spy(amqpWs._amqp, 'connect');
       amqpWs.connect(function(){});
-      assert.strictEqual(amqpWs._amqp.connect.args[0][0].indexOf('wss://'), 0);
-      assert(amqpWs._amqp.connect.args[0][0].indexOf('$iothub/websocket') > 0);
+      assert.strictEqual(amqpWs._amqp.connect.args[0][0].uri.indexOf('wss://'), 0);
+      assert(amqpWs._amqp.connect.args[0][0].uri.indexOf('$iothub/websocket') > 0);
     });
   });
 });

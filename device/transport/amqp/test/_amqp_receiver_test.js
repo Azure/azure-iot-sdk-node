@@ -22,7 +22,7 @@ describe('AmqpReceiver', function () {
   var fakeMethodClient;
   var fakeAuthenticationProvider;
   var fakeAmqpBaseClient = {
-    connect: sinon.stub().callsArg(2),
+    connect: sinon.stub().callsArg(1),
     setDisconnectHandler: sinon.stub(),
     initializeCBS: sinon.stub().callsArg(0),
     putToken: sinon.stub().callsArg(2)

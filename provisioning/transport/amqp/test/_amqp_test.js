@@ -71,7 +71,7 @@ describe('Amqp', function () {
     });
 
     fakeAmqpBase = {
-      connect: sinon.stub().callsArg(2),
+      connect: sinon.stub().callsArg(1),
       disconnect: sinon.stub().callsArg(0),
       attachSenderLink: sinon.stub().callsArgWith(2, null, fakeSenderLink),
       attachReceiverLink: sinon.stub().callsArgWith(2, null, fakeReceiverLink),
@@ -107,7 +107,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_PROVISIONING_AMQP_16_008: [The `registrationRequest` method shall call its callback with an error if the transport fails to connect.]*/
       it ('calls its callback with an error if it fails to connect', function (testCallback) {
-        fakeAmqpBase.connect = sinon.stub().callsArgWith(2, fakeError);
+        fakeAmqpBase.connect = sinon.stub().callsArgWith(1, fakeError);
 
         amqp.registrationRequest({ registrationId: 'fakeRegistrationId' }, function (err) {
           assert.isTrue(fakeAmqpBase.connect.calledOnce);
@@ -213,7 +213,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_PROVISIONING_AMQP_16_018: [The `queryOperationStatus` method shall call its callback with an error if the transport fails to connect.]*/
       it ('calls its callback with an error if it fails to connect', function (testCallback) {
-        fakeAmqpBase.connect = sinon.stub().callsArgWith(2, fakeError);
+        fakeAmqpBase.connect = sinon.stub().callsArgWith(1, fakeError);
 
         amqp.queryOperationStatus({ registrationId: 'fakeRegistrationId' }, 'fakeOpId', function (err) {
           assert.isTrue(fakeAmqpBase.connect.calledOnce);
@@ -568,7 +568,7 @@ describe('Amqp', function () {
         var challengeCallback = SaslTpm.firstCall.args[4];
         // return the auth key to the transport.  When it sends us the SAS token, complete the connection.
         challengeCallback(fakeAuthenticationKey, function() {
-          var connectionComplete = fakeAmqpBase.connectWithCustomSasl.firstCall.args[3];
+          var connectionComplete = fakeAmqpBase.connect.firstCall.args[1];
           connectionComplete(null);
         });
       };

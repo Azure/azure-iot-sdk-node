@@ -51,7 +51,7 @@ describe('Amqp', function () {
     sinon.spy(receiver, 'removeListener');
 
     fakeBaseClient = {
-      connect: sinon.stub().callsArgWith(2, null, new results.Connected()),
+      connect: sinon.stub().callsArgWith(1, null, new results.Connected()),
       disconnect: sinon.stub().callsArgWith(0, null, new results.Disconnected()),
       initializeCBS: sinon.stub().callsArgWith(0, null),
       putToken: sinon.stub().callsArgWith(2, null),
@@ -236,7 +236,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_038: [The `enableMethods` method shall connect and authenticate the transport if it is disconnected.]*/
       it('calls the callback with an error if the transport fails to connect', function (testCallback) {
-        fakeBaseClient.connect = sinon.stub().callsArgWith(2, new Error('fake error'));
+        fakeBaseClient.connect = sinon.stub().callsArgWith(1, new Error('fake error'));
         transport.enableMethods(function (err) {
           assert(fakeBaseClient.connect.calledOnce);
           assert.instanceOf(err, Error);
@@ -381,7 +381,7 @@ describe('Amqp', function () {
       /*Tests_SRS_NODE_DEVICE_AMQP_16_008: [The `done` callback method passed in argument shall be called if the connection is established]*/
       it('calls done if connection established using SSL', function () {
         var transport = new Amqp(fakeX509AuthenticationProvider);
-        sinon.stub(transport._amqp,'connect').callsArgWith(2,null);
+        sinon.stub(transport._amqp,'connect').callsArgWith(1,null);
         transport.connect(function(err) {
           assert.isNotOk(err);
         });
@@ -390,7 +390,7 @@ describe('Amqp', function () {
       /*Tests_SRS_NODE_DEVICE_AMQP_16_009: [The `done` callback method passed in argument shall be called with an error object if the connection fails]*/
       it('calls done with an error if connection failed', function () {
         var transport = new Amqp(fakeX509AuthenticationProvider);
-        sinon.stub(transport._amqp,'connect').callsArgWith(2,new errors.UnauthorizedError('cryptic'));
+        sinon.stub(transport._amqp,'connect').callsArgWith(1,new errors.UnauthorizedError('cryptic'));
         transport.connect(function(err) {
           assert.isOk(err);
         });
@@ -440,13 +440,13 @@ describe('Amqp', function () {
       it('defers the call if already connecting', function (testCallback) {
         var connectErr = new Error('cannot connect');
         var connectCallback;
-        fakeBaseClient.connect = sinon.stub().callsFake(function (uri, options, done) {
+        fakeBaseClient.connect = sinon.stub().callsFake(function (config, done) {
           connectCallback = done;
         });
 
         transport.connect(function (err) {
           assert.strictEqual(err.amqpError, connectErr);
-          fakeBaseClient.connect = sinon.stub().callsArgWith(2, null, new results.Connected());
+          fakeBaseClient.connect = sinon.stub().callsArgWith(1, null, new results.Connected());
         });
 
         // now blocked in "connecting" state
@@ -526,7 +526,7 @@ describe('Amqp', function () {
         it('is deferred until connecting fails', function (testCallback) {
           var connectErr = new Error('cannot connect');
           var connectCallback;
-          fakeBaseClient.connect = sinon.stub().callsFake(function (uri, options, done) {
+          fakeBaseClient.connect = sinon.stub().callsFake(function (config, done) {
             // will block in "connecting" state since the callback isn't called.
             // calling connectCallback will unblock it.
             connectCallback = done;
@@ -534,7 +534,7 @@ describe('Amqp', function () {
 
           transport.connect(function (err) {
             assert.strictEqual(err.amqpError, connectErr);
-            fakeBaseClient.connect = sinon.stub().callsArgWith(2, null, new results.Connected());
+            fakeBaseClient.connect = sinon.stub().callsArgWith(1, null, new results.Connected());
           });
 
           transport.disconnect(function (err, result) {
@@ -557,7 +557,7 @@ describe('Amqp', function () {
           transport.connect(function (err, result) {
             assert.isNull(err);
             assert.instanceOf(result, results.Connected);
-            fakeBaseClient.connect = sinon.stub().callsArgWith(2, null, new results.Connected());
+            fakeBaseClient.connect = sinon.stub().callsArgWith(1, null, new results.Connected());
           });
 
           // now blocked in "connecting" state
@@ -727,7 +727,7 @@ describe('Amqp', function () {
 
       it('updates the shared access signature but results in a single putToken if called while connecting but not authenticated yet', function (testCallback) {
         var connectCallback;
-        fakeBaseClient.connect = sinon.stub().callsFake(function (uri, options, callback) {
+        fakeBaseClient.connect = sinon.stub().callsFake(function (config, callback) {
           connectCallback = callback;
         });
         transport.connect(function () {
@@ -904,7 +904,7 @@ describe('Amqp', function () {
 
       it('forwards the error if connecting fails while trying to send a message', function (testCallback) {
         var fakeError = new Error('failed to connect');
-        fakeBaseClient.connect = sinon.stub().callsArgWith(2, fakeError);
+        fakeBaseClient.connect = sinon.stub().callsArgWith(1, fakeError);
 
         transport.sendEvent(new Message('test'), function (err) {
           assert(fakeBaseClient.connect.calledOnce);
@@ -915,7 +915,7 @@ describe('Amqp', function () {
 
       it('sends the message even if called while the transport is connecting', function (testCallback) {
         var connectCallback;
-        fakeBaseClient.connect = sinon.stub().callsFake(function (uri, options, done) {
+        fakeBaseClient.connect = sinon.stub().callsFake(function (config, done) {
           // this will block in the 'connecting' state since the callback is not called.
           // calling connectCallback will unblock.
           connectCallback = done;
@@ -1124,7 +1124,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
       it('calls its callback with an Error if connecting the transport fails', function (testCallback) {
-        fakeBaseClient.connect = sinon.stub().callsArgWith(2, new Error('fake failed to connect'));
+        fakeBaseClient.connect = sinon.stub().callsArgWith(1, new Error('fake failed to connect'));
         transport.enableC2D(function (err) {
           assert(fakeBaseClient.connect.calledOnce);
           assert.instanceOf(err, Error);
@@ -1237,7 +1237,7 @@ describe('Amqp', function () {
 
         it('waits until connected and authenticated if called while connecting', function () {
           var connectCallback;
-          fakeBaseClient.connect = sinon.stub().callsFake(function (uri, options, callback) {
+          fakeBaseClient.connect = sinon.stub().callsFake(function (config, callback) {
             connectCallback = callback;
           });
 
@@ -1274,7 +1274,7 @@ describe('Amqp', function () {
         /*Tests_SRS_NODE_DEVICE_AMQP_16_072: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with an error if connecting fails.]*/
         it('calls its callback with an error if connecting the transport fails', function (testCallback) {
           var testError = new Error('failed to connect');
-          fakeBaseClient.connect = sinon.stub().callsArgWith(2, testError);
+          fakeBaseClient.connect = sinon.stub().callsArgWith(1, testError);
 
           methodUnderTest(function (err) {
             assert(fakeBaseClient.connect.calledOnce);

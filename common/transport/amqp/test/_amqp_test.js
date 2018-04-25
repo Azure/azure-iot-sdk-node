@@ -31,24 +31,28 @@ describe('Amqp', function () {
 
     it('sets the session policy to not reestablish on failure', function () {
       var amqp = new Amqp();
+      void(amqp);
       assert.isFalse(amqp10.Client.firstCall.args[0].session.reestablish.forever);
       assert.strictEqual(amqp10.Client.firstCall.args[0].session.reestablish.retries, 0);
     });
 
     it('sets the sender link to not reattach on failure', function () {
       var amqp = new Amqp();
+      void(amqp);
       assert.isFalse(amqp10.Client.firstCall.args[0].senderLink.reattach.forever);
       assert.strictEqual(amqp10.Client.firstCall.args[0].senderLink.reattach.retries, 0);
     });
 
     it('sets the receiver link to not reattach on failure', function () {
       var amqp = new Amqp();
+      void(amqp);
       assert.isFalse(amqp10.Client.firstCall.args[0].receiverLink.reattach.forever);
       assert.strictEqual(amqp10.Client.firstCall.args[0].receiverLink.reattach.retries, 0);
     });
 
     it('sets the connection to not reconnect on failure', function () {
       var amqp = new Amqp();
+      void(amqp);
       assert.isFalse(amqp10.Client.firstCall.args[0].reconnect.forever);
       assert.strictEqual(amqp10.Client.firstCall.args[0].reconnect.retries, 0);
     });
@@ -59,22 +63,12 @@ describe('Amqp', function () {
   });
 
   describe('#connect', function () {
-    /* Tests_SRS_NODE_COMMON_AMQP_06_002: [The connect method shall throw a ReferenceError if the uri parameter has not been supplied.] */
-    [undefined, null, ''].forEach(function (badUri){
-      it('throws if uri is \'' + badUri +'\'', function () {
-        var newClient = new Amqp();
-        assert.throws(function () {
-          newClient.connect(badUri);
-        }, ReferenceError, '');
-      });
-    });
-
     /*Tests_SRS_NODE_COMMON_AMQP_16_002: [The connect method shall establish a connection with the IoT hub instance and if given as argument call the `done` callback with a null error object in the case of success and a `results.Connected` object.]*/
     /*Tests_SRS_NODE_COMMON_AMQP_06_011: [The `connect` method shall set up a listener for responses to put tokens.]*/
     it('Calls the done callback when successfully connected', function(testCallback) {
       var amqp = new Amqp();
       sinon.stub(amqp._amqp, 'connect').resolves('connected');
-      amqp.connect('uri', null, function(err, res) {
+      amqp.connect({uri: 'uri'}, function(err, res) {
         if (err) testCallback(err);
         else {
           assert.instanceOf(res, results.Connected);
@@ -86,12 +80,12 @@ describe('Amqp', function () {
     it('Calls the done callback immediately when already connected', function(testCallback) {
       var amqp = new Amqp();
       var connectStub = sinon.stub(amqp._amqp, 'connect').resolves();
-      amqp.connect('uri', null, function(err, res) {
+      amqp.connect({uri: 'uri'}, function(err, res) {
         if (err) testCallback(err);
         else {
           assert.instanceOf(res, results.Connected);
           assert(connectStub.calledOnce);
-          amqp.connect('uri', null, function(err, res) {
+          amqp.connect({uri: 'uri'}, function(err, res) {
             if (err) testCallback(err);
             else {
               assert.instanceOf(res, results.Connected);
@@ -107,7 +101,7 @@ describe('Amqp', function () {
     it('Calls the done callback with an error if connecting fails (disconnected)', function(testCallback) {
       var amqp = new Amqp();
       sinon.stub(amqp._amqp, 'connect').rejects('connection failed');
-      amqp.connect('uri', null, function(err) {
+      amqp.connect({uri: 'uri'}, function(err) {
         assert.instanceOf(err, Error);
         testCallback();
       });
@@ -122,7 +116,7 @@ describe('Amqp', function () {
           reject(new Error('cannot connect'));
         });
       });
-      amqp.connect('uri', null, function(err) {
+      amqp.connect({uri: 'uri'}, function(err) {
         assert.strictEqual(err, testError);
         testCallback();
       });
@@ -136,7 +130,7 @@ describe('Amqp', function () {
       amqp.setDisconnectHandler(function() {
         testCallback();
       });
-      amqp.connect('uri', null, function () {
+      amqp.connect({uri: 'uri'}, function () {
         amqp._amqp.emit('disconnected');
       });
     });
@@ -156,7 +150,7 @@ describe('Amqp', function () {
       amqp.setDisconnectHandler(function() {
         assert.fail();
       });
-      amqp.connect('uri', undefined, function() {});
+      amqp.connect({uri: 'uri'}, function() {});
       amqp._amqp.emit('disconnected');
       testCallback();
     });
@@ -168,7 +162,7 @@ describe('Amqp', function () {
       amqp.setDisconnectHandler(function() {
         assert.fail();
       });
-      amqp.connect('uri', undefined, function() {
+      amqp.connect({uri: 'uri'}, function() {
         amqp.disconnect(function () { });
         amqp._amqp.emit('disconnected');
         testCallback();
@@ -186,7 +180,7 @@ describe('Amqp', function () {
         detach: sinon.stub().callsArg(0)
       };
 
-      amqp.connect('uri', null, function() {
+      amqp.connect({uri: 'uri'}, function() {
         amqp.disconnect(function(err) {
           if (err) {
             testCallback(err);
@@ -209,7 +203,7 @@ describe('Amqp', function () {
         detach: sinon.stub().callsArg(0)
       };
 
-      amqp.connect('uri', null, function() {
+      amqp.connect({uri: 'uri'}, function() {
         amqp._senders.fake_sender_endpoint = fakeSender;
         amqp._receivers.fake_receiver_endpoint = fakeReceiver;
 
@@ -230,7 +224,7 @@ describe('Amqp', function () {
       var amqp = new Amqp();
       sinon.stub(amqp._amqp, 'connect').resolves();
       sinon.stub(amqp._amqp, 'disconnect').resolves();
-      amqp.connect('uri', null, function() {
+      amqp.connect({uri: 'uri'}, function() {
         amqp.disconnect(function(err) {
           if (err) testCallback(err);
           else {
@@ -245,7 +239,7 @@ describe('Amqp', function () {
       var amqp = new Amqp();
       sinon.stub(amqp._amqp, 'connect').resolves();
       sinon.stub(amqp._amqp, 'disconnect').rejects(new Error('disconnection error'));
-      amqp.connect('uri', null, function() {
+      amqp.connect({uri: 'uri'}, function() {
         amqp.disconnect(function(err) {
           if (err) {
             assert.instanceOf(err, Error);
@@ -271,11 +265,11 @@ describe('Amqp', function () {
       var amqp = new Amqp();
       sinon.stub(amqp._amqp, 'connect').resolves();
       sinon.stub(amqp._amqp, 'disconnect').callsFake(function () { return new Promise(function () {}); }); // will not resolve and block in the 'disconnecting' state
-      
+
       amqp.setDisconnectHandler(function() {
         assert.fail();
       });
-      amqp.connect('uri', null, function() {
+      amqp.connect({uri: 'uri'}, function() {
         amqp.disconnect(function() {});
         amqp._amqp.emit('client:errorReceived', new Error('should be ignored'));
         testCallback();
@@ -283,14 +277,20 @@ describe('Amqp', function () {
     });
   });
 
-  describe('#connectWithCustomSasl', function() {
+  describe('#connect using custom SASL', function() {
     it('sets the saslMechanism property in the policyOverride object', function (testCallback) {
       var amqp = new Amqp();
       var connectStub = sinon.stub(amqp._amqp, 'connect').resolves();
       var fakeSaslName = 'FAKE';
       var fakeSaslMechanism = { getInitFrame: function () {}, getResponseFrame: function () {}};
 
-      amqp.connectWithCustomSasl('uri', fakeSaslName, fakeSaslMechanism, function () {
+      var config = {
+        uri: 'uri',
+        saslMechanismName: fakeSaslName,
+        saslMechanism: fakeSaslMechanism
+      };
+
+      amqp.connect(config, function () {
         assert.strictEqual(connectStub.firstCall.args[1].saslMechanism, fakeSaslName);
         testCallback();
       });
@@ -302,8 +302,13 @@ describe('Amqp', function () {
       var registerSaslMechanismStub = sinon.stub(amqp._amqp, 'registerSaslMechanism');
       var fakeSaslName = 'FAKE';
       var fakeSaslMechanism = { getInitFrame: function () {}, getResponseFrame: function () {}};
+      var config= {
+        uri: 'uri',
+        saslMechanismName: fakeSaslName,
+        saslMechanism: fakeSaslMechanism
+      };
 
-      amqp.connectWithCustomSasl('uri', fakeSaslName, fakeSaslMechanism, function () {
+      amqp.connect(config, function () {
         assert.strictEqual(registerSaslMechanismStub.firstCall.args[0], fakeSaslName);
         assert.strictEqual(registerSaslMechanismStub.firstCall.args[1], fakeSaslMechanism);
         testCallback();
@@ -320,7 +325,7 @@ describe('Amqp', function () {
       sinon.stub(amqp._amqp, 'connect').resolves('connected');
       sinon.stub(amqp._amqp, 'createSender').resolves(sender);
 
-      amqp.connect('uri', null, function() {
+      amqp.connect({uri: 'uri'}, function() {
         amqp.send(new Message('message'), 'endpoint', 'deviceId', function(err, result) {
           if(!err) {
             assert.instanceOf(result, results.MessageEnqueued);
@@ -340,7 +345,7 @@ describe('Amqp', function () {
       sinon.stub(amqp._amqp, 'connect').resolves('connected');
       sinon.stub(amqp._amqp, 'createSender').rejects('failed to create sender');
 
-      amqp.connect('uri', null, function() {
+      amqp.connect({uri: 'uri'}, function() {
         amqp.send(new Message('message'), 'endpoint', 'deviceId', function(err) {
           assert.instanceOf(err, Error);
           testCallback();
@@ -356,7 +361,7 @@ describe('Amqp', function () {
       sinon.stub(amqp._amqp, 'connect').resolves('connected');
       sinon.stub(amqp._amqp, 'createSender').resolves(sender);
 
-      amqp.connect('uri', null, function() {
+      amqp.connect({uri: 'uri'}, function() {
         amqp.send(new Message('message'), 'endpoint', 'deviceId', function(err) {
           assert.instanceOf(err, Error);
           testCallback();
@@ -373,7 +378,7 @@ describe('Amqp', function () {
       sinon.stub(amqp._amqp, 'connect').resolves('connected');
       sinon.stub(amqp._amqp, 'createSender').resolves(sender);
 
-      amqp.connect('uri', null, function() {
+      amqp.connect({uri: 'uri'}, function() {
         amqp.send(new Message('message'), endpointName, 'deviceId', function(err, result) {
           if (err) {
             testCallback(err);
@@ -401,7 +406,7 @@ describe('Amqp', function () {
       sinon.stub(amqp._amqp, 'createSender').resolves(sender);
 
       assert.doesNotThrow(function() {
-        amqp.connect('uri', null, function() {
+        amqp.connect({uri: 'uri'}, function() {
           amqp.send(new Message('message'), 'endpoint', undefined, function() {
             assert.isUndefined(sender.send.args[0][0].properties.to);
             testCallback();
@@ -420,7 +425,7 @@ describe('Amqp', function () {
       sinon.stub(amqp._amqp, 'createSender').resolves(sender);
 
       assert.doesNotThrow(function() {
-        amqp.connect('uri', null, function() {
+        amqp.connect({uri: 'uri'}, function() {
           amqp.send(new Message('message'), 'endpoint', 'deviceId');
         });
       });
@@ -435,7 +440,7 @@ describe('Amqp', function () {
       sinon.stub(amqp._amqp, 'createSender').resolves(sender);
 
       assert.doesNotThrow(function() {
-        amqp.connect('uri', null, function() {
+        amqp.connect({uri: 'uri'}, function() {
           amqp.send(new Message('message'), 'endpoint', 'deviceId');
         });
       });
@@ -449,7 +454,7 @@ describe('Amqp', function () {
       sinon.stub(amqp._amqp, 'connect').resolves('connected');
       sinon.stub(amqp._amqp, 'createReceiver').resolves(new EventEmitter());
 
-      amqp.connect('uri', null, function() {
+      amqp.connect({uri: 'uri'}, function() {
         amqp.getReceiver('endpoint', function(err, receiver) {
           assert.instanceOf(receiver, ReceiverLink);
           testCallback(err);
@@ -463,7 +468,7 @@ describe('Amqp', function () {
       sinon.stub(amqp._amqp, 'connect').resolves('connected');
       sinon.stub(amqp._amqp, 'createReceiver').resolves(new EventEmitter());
 
-      amqp.connect('uri', null, function() {
+      amqp.connect({uri: 'uri'}, function() {
         amqp.getReceiver('endpoint', function(err, recv1) {
           if (err) {
             testCallback(err);
@@ -487,7 +492,7 @@ describe('Amqp', function () {
       sinon.stub(amqp._amqp, 'connect').resolves('connected');
       sinon.stub(amqp._amqp, 'createReceiver').rejects(new Error('cannt create receiver'));
 
-      amqp.connect('uri', null, function() {
+      amqp.connect({uri: 'uri'}, function() {
         amqp.getReceiver('endpoint', function(err) {
           assert.instanceOf(err, Error);
           testCallback();
@@ -496,37 +501,8 @@ describe('Amqp', function () {
     });
   });
 
-  describe('#initializeCBS', function() {
-    it('tries to connect the client if it is disconnected', function(testCallback) {
-      var amqp = new Amqp();
-      var fakeSender = new EventEmitter();
-      fakeSender.forceDetach = function () {};
-      var fakeReceiver = new EventEmitter();
-      fakeReceiver.forceDetach = function () {};
-      sinon.stub(amqp._amqp, 'connect').resolves('connected');
-      sinon.stub(amqp._amqp, 'createSender').resolves(fakeSender);
-      sinon.stub(amqp._amqp, 'createReceiver').resolves(fakeReceiver);
-
-      amqp.initializeCBS(function() {
-        assert(amqp._amqp.connect.calledOnce);
-        testCallback();
-      });
-    });
-
-    it('calls the callback with an error if the client cannot be connected', function (testCallback) {
-      var amqp = new Amqp();
-      var fakeError = new Error('fake error');
-      sinon.stub(amqp._amqp, 'connect').rejects(fakeError);
-
-      amqp.initializeCBS(function(err) {
-        assert.strictEqual(err, fakeError);
-        testCallback();
-      });
-    });
-  });
-
   describe('#putToken', function() {
-    it('tries to connect the client and initialize the CBS endpoints if necessary', function(testCallback) {
+    it('initializes the CBS endpoints if necessary', function(testCallback) {
       var fakeUuid = uuid.v4();
       var uuidStub = sinon.stub(uuid,'v4');
       uuidStub.onCall(0).returns(fakeUuid);
@@ -539,6 +515,7 @@ describe('Amqp', function () {
       var fakeSender = new EventEmitter();
       fakeSender.send = function() {
         return new Promise(function (resolve, reject) {
+          void(reject);
           resolve();
           fakeReceiver.emit('message', responseMessage);
         });
@@ -555,23 +532,16 @@ describe('Amqp', function () {
       sinon.stub(amqp._amqp, 'createSender').resolves(fakeSender);
       sinon.stub(amqp._amqp, 'createReceiver').resolves(fakeReceiver);
 
-      amqp.putToken('audience', 'token', function(err) {
-        uuid.v4.restore();
-        assert.isNull(err);
-        assert(amqp._amqp.connect.calledOnce);
-        assert(amqp._amqp.createSender.calledWith('$cbs'));
-        assert(amqp._amqp.createReceiver.calledWith('$cbs'));
-        testCallback();
-      });
-    });
-
-    it('calls the callback with an error if the client cannot be connected', function (testCallback) {
-      var amqp = new Amqp();
-      var fakeError = new Error('fake error');
-      sinon.stub(amqp._amqp, 'connect').rejects(fakeError);
-      amqp.putToken('audience', 'token', function(err) {
-        assert.strictEqual(err, fakeError);
-        testCallback();
+      amqp.connect({uri: 'uri'}, function(err) {
+        assert(!err);
+        amqp.putToken('audience', 'token', function(err) {
+          uuid.v4.restore();
+          assert.isNull(err);
+          assert(amqp._amqp.connect.calledOnce);
+          assert(amqp._amqp.createSender.calledWith('$cbs'));
+          assert(amqp._amqp.createReceiver.calledWith('$cbs'));
+          testCallback();
+        });
       });
     });
 
@@ -584,9 +554,12 @@ describe('Amqp', function () {
       sinon.stub(amqp._amqp, 'createSender').rejects(fakeError);
       sinon.stub(amqp._amqp, 'createReceiver').resolves(fakeReceiver);
 
-      amqp.putToken('audience', 'token', function(err) {
-        assert.strictEqual(err, fakeError);
-        testCallback();
+      amqp.connect({uri: 'uri'}, function(err) {
+        assert(!err);
+        amqp.putToken('audience', 'token', function(err) {
+          assert.strictEqual(err, fakeError);
+          testCallback();
+        });
       });
     });
 
@@ -600,9 +573,12 @@ describe('Amqp', function () {
       sinon.stub(amqp._amqp, 'createSender').resolves(fakeSender);
       sinon.stub(amqp._amqp, 'createReceiver').rejects(fakeError);
 
-      amqp.putToken('audience', 'token', function(err) {
-        assert.strictEqual(err, fakeError);
-        testCallback();
+      amqp.connect({uri: 'uri'}, function(err) {
+        assert(!err);
+        amqp.putToken('audience', 'token', function(err) {
+          assert.strictEqual(err, fakeError);
+          testCallback();
+        });
       });
     });
   });
@@ -637,7 +613,7 @@ describe('Amqp', function () {
           var amqp = new Amqp();
           sinon.stub(amqp._amqp, 'connect').resolves('connected');
           sinon.stub(amqp._amqp, testConfig.amqp10Func).resolves(testConfig.fakeLinkObject);
-          amqp.connect('uri', null, function() {
+          amqp.connect({uri: 'uri'}, function() {
             amqp[testConfig.amqpFunc](fake_generic_endpoint, null, function(err) {
               if (err) { return testCallback(err); }
               assert.isNotTrue(amqp._amqp[testConfig.amqp10Func].args[0][1]);
@@ -656,24 +632,14 @@ describe('Amqp', function () {
 
           sinon.stub(amqp._amqp, 'connect').resolves('connected');
           sinon.stub(amqp._amqp, testConfig.amqp10Func).resolves(testConfig.fakeLinkObject);
-          amqp.connect('uri', null, function() {
+          amqp.connect({uri: 'uri'}, function() {
+
             /*Tests_SRS_NODE_COMMON_AMQP_16_015: [The `attachSenderLink` method shall call the `done` callback with a `null` error and the link object that was created if the link was attached successfully.]*/
             /*Tests_SRS_NODE_COMMON_AMQP_16_020: [The `attachReceiverLink` method shall call the `done` callback with a `null` error and the link object that was created if the link was attached successfully.]*/
             amqp[testConfig.amqpFunc](fake_generic_endpoint, fakeLinkProps, function() {
               assert.deepEqual(amqp._amqp[testConfig.amqp10Func].args[0][1], { fakeKey: 'fakeValue'});
               testCallback();
             });
-          });
-        });
-
-        it('calls the callback with an error if the client cannot be connected', function (testCallback) {
-          var amqp = new Amqp();
-          var fakeError = new Error('fake error');
-          sinon.stub(amqp._amqp, 'connect').rejects(fakeError);
-
-          amqp[testConfig.amqpFunc](fake_generic_endpoint, null, function(err) {
-            assert.strictEqual(err, fakeError);
-            testCallback();
           });
         });
 
@@ -684,7 +650,7 @@ describe('Amqp', function () {
           var fakeError = new Error('failed to create link');
           sinon.stub(amqp._amqp, 'connect').resolves('connected');
           sinon.stub(amqp._amqp, testConfig.amqp10Func).rejects(fakeError);
-          amqp.connect('uri', null, function() {
+          amqp.connect({uri: 'uri'}, function() {
             amqp[testConfig.amqpFunc](fake_generic_endpoint, null, function(err) {
               assert.strictEqual(fakeError, err);
               testCallback();
@@ -698,7 +664,7 @@ describe('Amqp', function () {
           var fakeError = new Error('failed to create sender');
           sinon.stub(amqp._amqp, 'connect').resolves('connected');
           sinon.stub(amqp._amqp, testConfig.amqp10Func).resolves(testConfig.fakeLinkObject);
-          amqp.connect('uri', null, function() {
+          amqp.connect({uri: 'uri'}, function() {
             amqp[testConfig.amqpFunc](fake_generic_endpoint, null, function(err) {
               assert.strictEqual(fakeError, err);
               testCallback();
@@ -712,8 +678,8 @@ describe('Amqp', function () {
           var amqp = new Amqp();
           sinon.stub(amqp._amqp, 'connect').resolves('connected');
           sinon.stub(amqp._amqp, testConfig.amqp10Func).resolves(testConfig.fakeLinkObject);
-          amqp.connect('uri', null, function() {
-            amqp[testConfig.amqpFunc](fake_generic_endpoint, null, function(err) {
+          amqp.connect({uri: 'uri'}, function() {
+            amqp[testConfig.amqpFunc](fake_generic_endpoint, null, function() {
               testConfig.fakeLinkObject.emit('detached', { closed: true, error: new Error() });
               assert.isUndefined(amqp[testConfig.privateLinkArray][fake_generic_endpoint]);
               testCallback();
@@ -743,11 +709,13 @@ describe('Amqp', function () {
         amqp._amqp.connect = sinon.stub().resolves();
         amqp._amqp.createSender = sinon.stub().resolves(fakeLink);
 
-        amqp.attachSenderLink(fake_generic_endpoint, null, function() {
-          /*Tests_SRS_NODE_COMMON_AMQP_16_024: [The `detachSenderLink` method shall call the `done` callback with no arguments if detaching the link succeeded.]*/
-          amqp.detachSenderLink(fake_generic_endpoint, function(err) {
-            assert(fakeLink.detach.calledOnce);
-            testCallback(err);
+        amqp.connect({uri: 'uri'}, function() {
+          amqp.attachSenderLink(fake_generic_endpoint, null, function() {
+            /*Tests_SRS_NODE_COMMON_AMQP_16_024: [The `detachSenderLink` method shall call the `done` callback with no arguments if detaching the link succeeded.]*/
+            amqp.detachSenderLink(fake_generic_endpoint, function(err) {
+              assert(fakeLink.detach.calledOnce);
+              testCallback(err);
+            });
           });
         });
       });
@@ -756,7 +724,7 @@ describe('Amqp', function () {
       it('calls the callback immediately if there\'s no link attached', function (testCallback) {
         var amqp = new Amqp();
         amqp._amqp.connect = sinon.stub().resolves();
-        amqp.connect('fakeuri', null, function() {
+        amqp.connect({uri: 'uri'}, function() {
           amqp.detachSenderLink(fake_generic_endpoint, function(err) {
             testCallback(err);
           });
@@ -793,11 +761,13 @@ describe('Amqp', function () {
         amqp._amqp.connect = sinon.stub().resolves();
         amqp._amqp.createReceiver = sinon.stub().resolves(fakeLink);
 
-        amqp.attachReceiverLink(fake_generic_endpoint, null, function() {
-          /*Tests_SRS_NODE_COMMON_AMQP_16_029: [The `detachReceiverLink` method shall call the `done` callback with no arguments if detaching the link succeeded.]*/
-          amqp.detachReceiverLink(fake_generic_endpoint, function(err) {
-            assert(fakeLink.detach.calledOnce);
-            testCallback();
+        amqp.connect({uri: 'uri'}, function() {
+          amqp.attachReceiverLink(fake_generic_endpoint, null, function() {
+            /*Tests_SRS_NODE_COMMON_AMQP_16_029: [The `detachReceiverLink` method shall call the `done` callback with no arguments if detaching the link succeeded.]*/
+            amqp.detachReceiverLink(fake_generic_endpoint, function() {
+              assert(fakeLink.detach.calledOnce);
+              testCallback();
+            });
           });
         });
       });
@@ -806,7 +776,7 @@ describe('Amqp', function () {
       it('calls the callback immediately if there\'s no link attached', function (testCallback) {
         var amqp = new Amqp();
         amqp._amqp.connect = sinon.stub().resolves();
-        amqp.connect('fakeuri', null, function() {
+        amqp.connect({uri: 'uri'}, function() {
           amqp.detachReceiverLink(fake_generic_endpoint, function(err) {
             testCallback(err);
           });
@@ -820,6 +790,21 @@ describe('Amqp', function () {
           assert.isUndefined(err);
           testCallback();
         });
+      });
+    });
+  });
+
+  [
+    { functionName: 'attachSenderLink',   invoke: (amqp, callback) => amqp.attachSenderLink('endpoint', null, callback) },
+    { functionName: 'attachReceiverLink', invoke: (amqp, callback) => amqp.attachReceiverLink('endpoint', null, callback) },
+    { functionName: 'initializeCBS',      invoke: (amqp, callback) => amqp.initializeCBS(callback) },
+    { functionName: 'putToken',           invoke: (amqp, callback) => amqp.putToken('audience', 'token', callback) }
+  ].forEach(function(testConfig) {
+    it (testConfig.functionName + ' fails with NotConnectedError if not connected', function(callback) {
+      var amqp = new Amqp();
+      testConfig.invoke(amqp, function(err) {
+        assert.instanceOf(err, errors.NotConnectedError);
+        callback();
       });
     });
   });

@@ -9,7 +9,7 @@ const debug = dbg('azure-iot-device-amqp:Amqp');
 import { EventEmitter } from 'events';
 
 import { DeviceMethodResponse, Client, DeviceClientOptions, TwinProperties } from 'azure-iot-device';
-import { Amqp as BaseAmqpClient, translateError, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
+import { Amqp as BaseAmqpClient, AmqpBaseTransportConfig, translateError, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
 import { endpoint, SharedAccessSignature, errors, results, Message, AuthenticationProvider, AuthenticationType } from 'azure-iot-common';
 import { AmqpDeviceMethodClient } from './amqp_device_method_client';
 import { AmqpTwinClient } from './amqp_twin_client';
@@ -254,8 +254,11 @@ export class Amqp extends EventEmitter implements Client.Transport {
                 this._c2dEndpoint = endpoint.messagePath(encodeURIComponent(credentials.deviceId));
                 this._d2cEndpoint = endpoint.eventPath(credentials.deviceId);
 
-                const uri = this._getConnectionUri(credentials.host);
-                this._amqp.connect(uri, credentials.x509, (err, connectResult) => {
+                const config: AmqpBaseTransportConfig = {
+                  uri: this._getConnectionUri(credentials.host),
+                  sslOptions: credentials.x509
+                };
+                this._amqp.connect(config, (err, connectResult) => {
                   if (err) {
                     this._fsm.transition('disconnected', translateError('AMQP Transport: Could not connect', err), connectCallback);
                   } else {

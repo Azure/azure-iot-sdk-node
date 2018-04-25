@@ -167,7 +167,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
         connecting: {
           _onEnter: (callback) => {
             const uri = this._getConnectionUri();
-            this._amqp.connect(uri, undefined, (err, result) => {
+            this._amqp.connect({uri: uri}, (err, result) => {
               if (err) {
                 debug('failed to connect' + err.toString());
                 this._fsm.transition('disconnected', err, callback);
