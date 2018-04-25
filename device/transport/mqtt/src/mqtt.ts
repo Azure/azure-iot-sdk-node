@@ -6,14 +6,14 @@ import * as querystring from 'querystring';
 import * as URL from 'url';
 import * as machina from 'machina';
 
-import { results, errors, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
+import { endpoint, results, errors, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
 import { DeviceMethodResponse, Client, DeviceClientOptions, TwinProperties } from 'azure-iot-device';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
 import { EventEmitter } from 'events';
 import * as util from 'util';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-mqtt:Mqtt');
-import { MqttBase, translateError } from 'azure-iot-mqtt-base';
+import { MqttBaseTransportConfig, MqttBase, translateError } from 'azure-iot-mqtt-base';
 import { MqttTwinClient } from './mqtt_twin_client';
 
 // tslint:disable-next-line:no-var-requires
@@ -46,13 +46,13 @@ export class Mqtt extends EventEmitter implements Client.Transport {
   private _topicMethodSucbscribe: string;
   private _fsm: machina.Fsm;
   private _topics: { [key: string]: TopicDescription };
+  private _sdkVersionString: string = encodeURIComponent('azure-iot-device/' + packageJson.version);
 
   /**
    * @private
    */
   constructor(authenticationProvider: AuthenticationProvider, mqttBase?: any) {
     super();
-    const sdkVersionString = encodeURIComponent('azure-iot-device/' + packageJson.version);
 
     this._authenticationProvider = authenticationProvider;
     /*Codes_SRS_NODE_DEVICE_MQTT_16_071: [The constructor shall subscribe to the `newTokenAvailable` event of the `authenticationProvider` passed as an argument if it uses tokens for authentication.]*/
@@ -73,7 +73,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
     if (mqttBase) {
       this._mqtt = mqttBase;
     } else {
-      this._mqtt = new MqttBase(sdkVersionString);
+      this._mqtt = new MqttBase();
     }
 
     /* Codes_SRS_NODE_DEVICE_MQTT_18_026: When MqttTransport fires the close event, the Mqtt object shall emit a disconnect event */
@@ -204,7 +204,8 @@ export class Mqtt extends EventEmitter implements Client.Transport {
                 this._fsm.transition('disconnected', connectCallback, err);
               } else {
                 this._configureEndpoints(credentials);
-                this._mqtt.connect(credentials, (err, result) => {
+                let baseConfig = this._getBaseTransportConfig(credentials);
+                this._mqtt.connect(baseConfig, (err, result) => {
                   debug('connect');
                   if (err) {
                     this._fsm.transition('disconnected', connectCallback, err);
@@ -598,6 +599,27 @@ export class Mqtt extends EventEmitter implements Client.Transport {
    */
   disableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void {
     this._fsm.handle('disableTwinDesiredPropertiesUpdates', callback);
+  }
+
+
+  protected _getBaseTransportConfig(credentials: TransportConfig): MqttBaseTransportConfig {
+    let clientId: string;
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_053: [ If a `moduleId` is not specified in the connection string, the Mqtt constructor shall initialize the `clientId` property of the `config` object to '<deviceId>'. ]*/
+    clientId = credentials.deviceId;
+
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_016: [If the connection string does not specify a `gatewayHostName` value, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_054: [If a `gatewayHostName` is specified in the connection string, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<gatewayhostname>`. ]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_055: [The Mqtt constructor shall initialize the `username` property of the `config` object to '<host>/<clientId>/api-version=<version>&DeviceClientType=<agentString>'. ]*/
+    let baseConfig: MqttBaseTransportConfig = {
+      uri: 'mqtts://' + (credentials.gatewayHostName || credentials.host),
+      username: credentials.host + '/' + clientId +
+        '/' + endpoint.versionQueryString().substr(1) +
+        '&DeviceClientType=' + this._sdkVersionString,
+      clientId: clientId,
+      sharedAccessSignature: credentials.sharedAccessSignature,
+      x509: credentials.x509
+    };
+    return baseConfig;
   }
 
   protected _configureEndpoints(credentials: TransportConfig): void {

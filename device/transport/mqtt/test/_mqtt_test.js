@@ -7,11 +7,13 @@ require('es5-shim');
 var assert = require('chai').assert;
 var sinon = require('sinon');
 var Mqtt = require('../lib/mqtt.js').Mqtt;
+var endpoint = require('azure-iot-common').endpoint;
 var errors = require('azure-iot-common').errors;
 var results = require('azure-iot-common').results;
 var Message = require('azure-iot-common').Message;
 var AuthenticationType = require('azure-iot-common').AuthenticationType;
 var EventEmitter = require('events').EventEmitter;
+var packageJson = require('../package.json');
 
 describe('Mqtt', function () {
   var fakeConfig, fakeAuthenticationProvider, fakeMqttBase;
@@ -223,7 +225,7 @@ describe('Mqtt', function () {
           done();
         });
       });
-      fakemqtt.emit('connect', { connack: true });
+      fakeMqttBase.emit('connect', { connack: true });
     });
 
     [
@@ -277,7 +279,7 @@ describe('Mqtt', function () {
           testCallback();
         });
         mqtt.emit('method_testMethod', {});
-      })
+      });
     });
   });
 
@@ -504,12 +506,46 @@ describe('Mqtt', function () {
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_MQTT_16_016: [The `Mqtt` constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
-    it('sets the uri property to \'mqtts://<host>\'', function (testCallback) {
-      var mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
-      mqtt.connect(function () {
-        assert.strictEqual(fakeMqttBase.connect.firstCall.args[0].uri, 'mqtts://' + fakeConfig.host);
-        testCallback();
+
+    [
+      /*Tests_SRS_NODE_DEVICE_MQTT_16_016: [If the connection string does not specify a `gatewayHostName` value, the `Mqtt` constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
+      {
+        fieldNameToSet: null,
+        fieldValueToSet: null,
+        fieldNameToCheck: 'uri',
+        fieldValueToCheck: 'mqtts://host.name'
+      },
+      /*Tests_SRS_NODE_DEVICE_MQTT_18_053: [ If a `moduleId` is not specified in the connection string, the Mqtt constructor shall initialize the `clientId` property of the `config` object to '<deviceId>'. ]*/
+      {
+        fieldNameToSet: null,
+        fieldValueToSet: null,
+        fieldNameToCheck: 'clientId',
+        fieldValueToCheck: 'deviceId'
+      },
+      /*Tests_SRS_NODE_DEVICE_MQTT_18_054: [ If a `gatewayHostName` is specified in the connection string, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<gatewayhostname>`. ]*/
+      {
+        fieldNameToSet: 'gatewayHostName',
+        fieldValueToSet: 'fakeGatewayHost',
+        fieldNameToCheck: 'uri',
+        fieldValueToCheck: 'mqtts://fakeGatewayHost'
+      },
+      /*Tests_SRS_NODE_DEVICE_MQTT_18_055: [ The Mqtt constructor shall initialize the `username` property of the `config` object to '<host>/<clientId>/api-version=<version>&DeviceClientType=<agentString>'. ]*/
+      {
+        fieldNameToSet: null,
+        fieldValueToSet: null,
+        fieldNameToCheck: 'username',
+        fieldValueToCheck: 'host.name/deviceId/' + endpoint.versionQueryString().substr(1) + '&DeviceClientType=' + encodeURIComponent('azure-iot-device/' + packageJson.version)
+      }
+    ].forEach(function (testConfig) {
+      it('sets the ' + testConfig.fieldNameToCheck + ' to \'' + testConfig.fieldValueToCheck + '\'', function (testCallback) {
+        if (testConfig.fieldNameToSet) {
+          fakeConfig[testConfig.fieldNameToSet] = testConfig.fieldValueToSet;
+        }
+        var mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        mqtt.connect(function () {
+          assert.strictEqual(fakeMqttBase.connect.firstCall.args[0][testConfig.fieldNameToCheck], testConfig.fieldValueToCheck);
+          testCallback();
+        });
       });
     });
 

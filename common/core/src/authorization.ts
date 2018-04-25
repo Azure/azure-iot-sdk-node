@@ -68,6 +68,10 @@ export interface TransportConfig {
    * Object containing the certificate and key used by the device to connect and authenticate with the Azure IoT hub instance.
    */
   x509?: X509;
+  /**
+   * IP address or internet name of the host machine working as a device or protocol gateway.  Used when communicating with Azure Edge devices.
+   */
+  gatewayHostName?: string;
 }
 
 /**

@@ -61,7 +61,11 @@ The `Mqtt` and `MqttWs` constructors initialize a new instance of the MQTT trans
 
 **SRS_NODE_DEVICE_MQTT_12_003: [** The constructor shall create an MqttBase object and store it in a member variable.**]**
 
-**SRS_NODE_DEVICE_MQTT_16_016: [** The `Mqtt` constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`. **]**
+**SRS_NODE_DEVICE_MQTT_16_016: [** If the connection string does not specify a `gatewayHostName` value, the `Mqtt` constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_053: [** If a `moduleId` is not specified in the connection string, the Mqtt constructor shall initialize the `clientId` property of the `config` object to '<deviceId>'. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_055: [** The Mqtt constructor shall initialize the `username` property of the `config` object to '<host>/<clientId>/api-version=<version>&DeviceClientType=<agentString>'. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_017: [** The `MqttWs` constructor shall initialize the `uri` property of the `config` object to `wss://<host>:443/$iothub/websocket`. **]**
 
@@ -76,6 +80,11 @@ The `Mqtt` and `MqttWs` constructors initialize a new instance of the MQTT trans
 The `connect` method initializes a connection to an IoT hub.
 
 **SRS_NODE_DEVICE_MQTT_12_004: [** The `connect` method shall call the `connect` method on `MqttBase`. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_029: [** If a `moduleId` is not specified, the `connect` method shall use a `clientId` of "<deviceId>" when connecting to the MQTT service. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_030: [** If a `moduleId` is not specified, the `connect` method shall use a `username` of "<host>/<deviceId>/DeviceClientType=<userAgent>&apiVersion=<apiVersion>". **]**
+
 
 **SRS_NODE_DEVICE_MQTT_18_026: [** When `MqttBase` fires the `error` event, the `Mqtt` object shall emit a `disconnect` event. **]**
 

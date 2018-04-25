@@ -9,7 +9,7 @@ import * as machina from 'machina';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-provisioning-device-mqtt:Mqtt');
 
-import { MqttBase } from 'azure-iot-mqtt-base';
+import { MqttBase, MqttBaseTransportConfig } from 'azure-iot-mqtt-base';
 import { errors, X509 } from 'azure-iot-common';
 import { X509ProvisioningTransport } from 'azure-iot-provisioning-device';
 import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure-iot-provisioning-device';
@@ -41,7 +41,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
    */
   constructor(mqttBase?: MqttBase) {
     super();
-    this._mqttBase = mqttBase || new MqttBase(ProvisioningDeviceConstants.apiVersion);
+    this._mqttBase = mqttBase || new MqttBase();
     this._config.pollingInterval = ProvisioningDeviceConstants.defaultPollingInterval;
 
     const responseHandler = (topic: string, payload: any) => {
@@ -260,20 +260,18 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
   private _connect(request: RegistrationRequest, callback: (err?: Error) => void): void {
 
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_037: [ When connecting, `Mqtt` shall pass in the `X509` certificate that was passed into `setAuthentication` in the base `TransportConfig` object.] */
-    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_050: [ When connecting, `Mqtt` shall set `host` in the base `TransportConfig` object to the `provisioningDeviceHost`.] */
+    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_050: [ When connecting, `Mqtt` shall set `uri` in the base `TransportConfig` object to the 'mqtts://' + `provisioningDeviceHost`.] */
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_035: [ When connecting, `Mqtt` shall set `clientId` in the base `registrationRequest` object to the registrationId.] */
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_036: [ When connecting, `Mqtt` shall set the `clean` flag in the base `TransportConfig` object to true.] */
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_038: [ When connecting, `Mqtt` shall set the `username` in the base `TransportConfig` object to '<idScope>/registrations/<registrationId>/api-version=<apiVersion>&clientVersion=<UrlEncode<userAgent>>'.] */
-    let baseConfig: MqttBase.TransportConfig = {
-      host: request.provisioningHost,
-      deviceId: request.registrationId,
+    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_039: [ If a uri is specified in the request object, `Mqtt` shall set it in the base `TransportConfig` object.] */
+    let baseConfig: MqttBaseTransportConfig = {
+      clientId: request.registrationId,
       clean: true,
       x509: this._auth,
-      username: request.idScope + '/registrations/' + request.registrationId + '/api-version=' + ProvisioningDeviceConstants.apiVersion + '&ClientVersion=' + encodeURIComponent(ProvisioningDeviceConstants.userAgent)
+      username: request.idScope + '/registrations/' + request.registrationId + '/api-version=' + ProvisioningDeviceConstants.apiVersion + '&ClientVersion=' + encodeURIComponent(ProvisioningDeviceConstants.userAgent),
+      uri: this._getConnectionUri(request)
     };
-
-    /* Codes_SRS_NODE_PROVISIONING_MQTT_18_039: [ If a uri is specified in the request object, `Mqtt` shall set it in the base `TransportConfig` object.] */
-    (<any>baseConfig).uri = this._getConnectionUri(request);
 
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_040: [ When connecting, `Mqtt` shall call `_mqttBase.connect`.] */
     this._mqttBase.connect(baseConfig, (err) => {

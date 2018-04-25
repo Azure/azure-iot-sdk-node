@@ -8,7 +8,7 @@ import * as machina from 'machina';
 import { Client as MqttClient, IClientOptions, IClientPublishOptions, IClientSubscribeOptions } from 'mqtt';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-mqtt-base:MqttBase');
-import { errors, results, endpoint, SharedAccessSignature, X509 } from 'azure-iot-common';
+import { errors, results, SharedAccessSignature, X509 } from 'azure-iot-common';
 
 /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_004: [The `MqttBase` constructor shall instanciate the default MQTT.JS library if no argument is passed to it.]*/
 /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_005: [The `MqttBase` constructor shall use the object passed as argument instead of the default MQTT.JS library if it's not falsy.]*/
@@ -17,16 +17,14 @@ import { errors, results, endpoint, SharedAccessSignature, X509 } from 'azure-io
  */
 export class MqttBase extends EventEmitter {
   private mqttprovider: any;
-  private _config: MqttBase.TransportConfig;
-  private _sdkVersionString: string;
+  private _config: MqttBaseTransportConfig;
   private _mqttClient: MqttClient;
   private _fsm: any;
   private _options: any;
 
-  constructor(sdkVersionString: string, mqttprovider?: any) {
+  constructor(mqttprovider?: any) {
     super();
     this.mqttprovider = mqttprovider ? mqttprovider : require('mqtt');
-    this._sdkVersionString = sdkVersionString;
 
     this._fsm = new machina.Fsm({
       namespace: 'mqtt-base',
@@ -144,11 +142,12 @@ export class MqttBase extends EventEmitter {
     });
   }
 
-  connect(config: MqttBase.TransportConfig, done: (err?: Error, result?: any) => void): void {
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_006: [The `connect` method shall throw a ReferenceError if the config argument is falsy, or if one of the following properties of the config argument is falsy: deviceId, host, and one of sharedAccessSignature or x509.cert and x509.key.]*/
+  connect(config: MqttBaseTransportConfig, done: (err?: Error, result?: any) => void): void {
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_006: [The `connect` method shall throw a ReferenceError if the config argument is falsy, or if one of the following properties of the config argument is falsy: uri, clientId, username, and one of sharedAccessSignature or x509.cert and x509.key.]*/
     if ((!config) ||
-      (!config.host) ||
-      (!config.deviceId) ||
+      (!config.uri) ||
+      (!config.clientId) ||
+      (!config.username) ||
       (!config.sharedAccessSignature && (!config.x509 || !config.x509.cert || !config.x509.key))) {
       throw new ReferenceError('Invalid transport configuration');
     }
@@ -210,18 +209,14 @@ export class MqttBase extends EventEmitter {
   }
 
   private _connectClient(callback: (err?: Error, connack?: any) => void): void {
-    const uri = (<any>this._config).uri || 'mqtts://' + this._config.host;
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_002: [The `connect` method shall use the authentication parameters contained in the `config` argument to connect to the server.]*/
     let options: IClientOptions = {
       protocolId: 'MQTT',
       protocolVersion: 4,
       clean: this._config.clean || false,
-      clientId: this._config.deviceId,
+      clientId: this._config.clientId,
       rejectUnauthorized: true,
-      username: this._config.username ||
-                (this._config.host + '/' + this._config.deviceId +
-                '/DeviceClientType=' + this._sdkVersionString +
-                '&' + endpoint.versionQueryString().substr(1)),
+      username: this._config.username,
       reconnectPeriod: 0,  // Client will handle reconnection at the higher level.
       /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_016: [The `connect` method shall configure the `keepalive` ping interval to 3 minutes by default since the Azure Load Balancer TCP Idle timeout default is 4 minutes.]*/
       keepalive: 180,
@@ -240,11 +235,10 @@ export class MqttBase extends EventEmitter {
         };
       }
     }
-
     if (this._config.sharedAccessSignature) {
       options.password = this._config.sharedAccessSignature.toString();
       debug('username: ' + options.username);
-      debug('uri:      ' + uri);
+      debug('uri:      ' + this._config.uri);
     } else {
       options.cert = this._config.x509.cert;
       options.key = this._config.x509.key;
@@ -269,7 +263,7 @@ export class MqttBase extends EventEmitter {
       });
     };
 
-    this._mqttClient = this.mqttprovider.connect(uri, options);
+    this._mqttClient = this.mqttprovider.connect(this._config.uri, options);
     this._mqttClient.on('message', messageCallback);
     this._mqttClient.on('error', errorCallback);
     this._mqttClient.on('close', closeCallback);
@@ -295,17 +289,15 @@ export class MqttBase extends EventEmitter {
   }
 }
 
-export namespace MqttBase {
   /**
    * @private
    */
-  export interface TransportConfig {
-    host: string;
-    sharedAccessSignature?: string | SharedAccessSignature;
-    deviceId: string;
-    x509?: X509;
-    username?: string;
-    clean?: boolean;
-  }
+export interface MqttBaseTransportConfig {
+  sharedAccessSignature?: string | SharedAccessSignature;
+  clientId: string;
+  x509?: X509;
+  username: string;
+  clean?: boolean;
+  uri: string;
 }
 
