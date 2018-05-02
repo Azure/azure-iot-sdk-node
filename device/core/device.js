@@ -54,5 +54,6 @@ module.exports = {
   SharedAccessSignatureAuthenticationProvider: require('./lib/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider,
   SharedAccessKeyAuthenticationProvider: require('./lib/sak_authentication_provider').SharedAccessKeyAuthenticationProvider,
   Twin: require('./lib/twin').Twin,
-  TwinProperties: require('./lib/twin').TwinProperties
+  TwinProperties: require('./lib/twin').TwinProperties,
+  getUserAgentString: require('./lib/utils').getUserAgentString
 };

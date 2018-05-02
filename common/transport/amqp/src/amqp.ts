@@ -11,6 +11,9 @@ import { ClaimsBasedSecurityAgent } from './amqp_cbs';
 import { SenderLink } from './sender_link';
 import { ReceiverLink } from './receiver_link';
 import { AmqpLink } from './amqp_link_interface';
+// From https://www.typescriptlang.org/docs/handbook/modules.html
+// When exporting a module using export =, TypeScript-specific import module = require("module") must be used to import the module
+import merge = require('lodash.merge');
 
 import * as dbg from 'debug';
 import * as async from 'async';
@@ -37,13 +40,14 @@ export class Amqp {
   private _disconnectHandler: (err: Error) => void;
   private _fsm: machina.Fsm;
   private _cbs: ClaimsBasedSecurityAgent;
+  private _config: AmqpBaseTransportConfig;
 
   /*Codes_SRS_NODE_COMMON_AMQP_16_001: [The Amqp constructor shall accept two parameters:
     A Boolean indicating whether the client should automatically settle messages:
         True if the messages should be settled automatically
         False if the caller intends to manually settle messages
         A string containing the version of the SDK used for telemetry purposes] */
-  constructor(autoSettleMessages: boolean, sdkVersionString: string) {
+  constructor(autoSettleMessages: boolean) {
     const autoSettleMode = autoSettleMessages ? amqp10.Constants.receiverSettleMode.autoSettle : amqp10.Constants.receiverSettleMode.settleOnDisposition;
     // node-amqp10 has an automatic reconnection/link re-attach feature that is enabled by default.
     // In our case we want to control the reconnection flow ourselves, so we need to disable it.
@@ -61,9 +65,6 @@ export class Amqp {
       },
       senderLink: {
         attach: {
-          properties: {
-            'com.microsoft:client-version': sdkVersionString
-          },
           maxMessageSize: 0,
         },
         encoder: (body: any): any => {
@@ -80,9 +81,6 @@ export class Amqp {
       },
       receiverLink: {
         attach: {
-          properties: {
-            'com.microsoft:client-version': sdkVersionString
-          },
           maxMessageSize: 0,
           receiverSettleMode: autoSettleMode,
         },
@@ -403,7 +401,9 @@ export class Amqp {
       policyOverride.saslMechanism = config.saslMechanismName;
       this._amqp.registerSaslMechanism(config.saslMechanismName, config.saslMechanism);
     }
+
     config.policyOverride = policyOverride;
+    this._config = config;
     this._fsm.handle('connect', config, done);
   }
 
@@ -464,8 +464,17 @@ export class Amqp {
     if (!endpoint) {
       throw new ReferenceError('endpoint cannot be \'' + endpoint + '\'');
     }
-
-    this._fsm.handle('attachReceiverLink', endpoint, linkOptions, done);
+    let newLinkOptions: any = linkOptions || {};
+    if (this._config) {
+      newLinkOptions = merge(newLinkOptions || {}, {
+        attach: {
+          properties: {
+            'com.microsoft:client-version': this._config.userAgentString
+          }
+        }
+      });
+    }
+    this._fsm.handle('attachReceiverLink', endpoint, newLinkOptions, done);
   }
 
   /**
@@ -482,7 +491,18 @@ export class Amqp {
       throw new ReferenceError('endpoint cannot be \'' + endpoint + '\'');
     }
 
-    this._fsm.handle('attachSenderLink', endpoint, linkOptions, done);
+    let newLinkOptions: any = linkOptions || {};
+    if (this._config) {
+      newLinkOptions = merge(newLinkOptions, {
+        attach: {
+          properties: {
+            'com.microsoft:client-version': this._config.userAgentString
+          }
+        }
+      });
+    }
+
+    this._fsm.handle('attachSenderLink', endpoint, newLinkOptions, done);
   }
 
   /**
@@ -556,6 +576,7 @@ export class Amqp {
    */
   export interface AmqpBaseTransportConfig {
     uri: string;
+    userAgentString: string;
     sslOptions?: any;
     saslMechanismName?: string;
     saslMechanism?: any;

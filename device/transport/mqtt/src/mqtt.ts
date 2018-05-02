@@ -9,15 +9,13 @@ import * as machina from 'machina';
 import { endpoint, results, errors, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
 import { DeviceMethodResponse, Client, DeviceClientOptions, TwinProperties } from 'azure-iot-device';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
+import { getUserAgentString } from 'azure-iot-device';
 import { EventEmitter } from 'events';
 import * as util from 'util';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-mqtt:Mqtt');
 import { MqttBaseTransportConfig, MqttBase, translateError } from 'azure-iot-mqtt-base';
 import { MqttTwinClient } from './mqtt_twin_client';
-
-// tslint:disable-next-line:no-var-requires
-const packageJson = require('../package.json');
 
 const TOPIC_RESPONSE_PUBLISH_FORMAT = '$iothub/%s/res/%d/?$rid=%s';
 
@@ -46,7 +44,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
   private _topicMethodSucbscribe: string;
   private _fsm: machina.Fsm;
   private _topics: { [key: string]: TopicDescription };
-  private _sdkVersionString: string = encodeURIComponent('azure-iot-device/' + packageJson.version);
+  private _userAgentString: string;
 
   /**
    * @private
@@ -204,14 +202,16 @@ export class Mqtt extends EventEmitter implements Client.Transport {
                 this._fsm.transition('disconnected', connectCallback, err);
               } else {
                 this._configureEndpoints(credentials);
-                let baseConfig = this._getBaseTransportConfig(credentials);
-                this._mqtt.connect(baseConfig, (err, result) => {
-                  debug('connect');
-                  if (err) {
-                    this._fsm.transition('disconnected', connectCallback, err);
-                  } else {
-                    this._fsm.transition('connected', connectCallback, result);
-                  }
+                this._ensureAgentString(() => {
+                  let baseConfig = this._getBaseTransportConfig(credentials);
+                  this._mqtt.connect(baseConfig, (err, result) => {
+                    debug('connect');
+                    if (err) {
+                      this._fsm.transition('disconnected', connectCallback, err);
+                    } else {
+                      this._fsm.transition('connected', connectCallback, result);
+                    }
+                  });
                 });
               }
             });
@@ -614,7 +614,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
       uri: 'mqtts://' + (credentials.gatewayHostName || credentials.host),
       username: credentials.host + '/' + clientId +
         '/' + endpoint.versionQueryString().substr(1) +
-        '&DeviceClientType=' + this._sdkVersionString,
+        '&DeviceClientType=' + encodeURIComponent(this._userAgentString),
       clientId: clientId,
       sharedAccessSignature: credentials.sharedAccessSignature,
       x509: credentials.x509
@@ -789,6 +789,18 @@ export class Mqtt extends EventEmitter implements Client.Transport {
       this.emit('method_' + methodMessage.methods.methodName, methodMessage);
     }
   }
+
+  private _ensureAgentString(done: () => void): void {
+    if (this._userAgentString) {
+      done();
+    } else {
+      getUserAgentString((agent) => {
+        this._userAgentString = agent;
+        done();
+      });
+    }
+  }
+
 }
 
 /**

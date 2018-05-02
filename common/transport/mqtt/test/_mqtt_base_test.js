@@ -40,7 +40,7 @@ describe('MqttBase', function () {
           fakeConfig[falsyProperty] = falsyValue;
           var mqtt = new MqttBase(new FakeMqtt());
           assert.throws(function () {
-              mqtt.connect(fakeConfig, function () {});
+            mqtt.connect(fakeConfig, function () {});
           }, ReferenceError, 'Invalid transport configuration');
         });
       });
@@ -61,7 +61,7 @@ describe('MqttBase', function () {
           var config = fakeConfig;
           config.sharedAccessSignature = sas;
           config.x509 = x509;
-          var mqtt = new MqttBase(config, 'test', new FakeMqtt());
+          var mqtt = new MqttBase(new FakeMqtt());
           assert.throws(function () {
             mqtt.connect(config, function () {});
           }, ReferenceError, 'Invalid transport configuration');

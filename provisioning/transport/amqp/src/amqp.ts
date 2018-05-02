@@ -60,7 +60,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
    */
   constructor(amqpBase?: Base) {
     super();
-    this._amqpBase = amqpBase || new Base(true, ProvisioningDeviceConstants.userAgent);
+    this._amqpBase = amqpBase || new Base(true);
     this._config.pollingInterval = ProvisioningDeviceConstants.defaultPollingInterval;
 
     const amqpErrorListener = (err) => this._amqpStateMachine.handle('amqpError', err);
@@ -127,7 +127,8 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
             /*Codes_SRS_NODE_PROVISIONING_AMQP_16_012: [The `queryOperationStatus` method shall connect the AMQP client with the certificate and key given in the `auth` parameter of the previously called `setAuthentication` method. **]**]*/
             const config: AmqpBaseTransportConfig = {
               uri: this._getConnectionUri(request),
-              sslOptions: this._x509Auth
+              sslOptions: this._x509Auth,
+              userAgentString: ProvisioningDeviceConstants.userAgent
             };
             this._amqpBase.connect(config, (err) => {
               if (err) {
@@ -195,9 +196,8 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
             const linkOptions = {
               attach: {
                 properties: {
-                  'com.microsoft:api-version' : ProvisioningDeviceConstants.apiVersion,
-                  'com.microsoft:client-version': ProvisioningDeviceConstants.userAgent
-                }
+                  'com.microsoft:api-version' : ProvisioningDeviceConstants.apiVersion
+               }
               }
             };
 
@@ -519,7 +519,8 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
     const config: AmqpBaseTransportConfig = {
       uri: this._getConnectionUri(request),
       saslMechanismName: this._customSaslMechanism.name,
-      saslMechanism: this._customSaslMechanism
+      saslMechanism: this._customSaslMechanism,
+      userAgentString: ProvisioningDeviceConstants.userAgent
     };
     this._amqpBase.connect(config, (err) => {
       this._amqpStateMachine.handle('tpmConnectionComplete', err);

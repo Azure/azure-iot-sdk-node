@@ -9,14 +9,12 @@ const debug = dbg('azure-iot-device-amqp:Amqp');
 import { EventEmitter } from 'events';
 
 import { DeviceMethodResponse, Client, DeviceClientOptions, TwinProperties } from 'azure-iot-device';
+import { getUserAgentString } from 'azure-iot-device';
 import { Amqp as BaseAmqpClient, AmqpBaseTransportConfig, translateError, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
 import { endpoint, SharedAccessSignature, errors, results, Message, AuthenticationProvider, AuthenticationType } from 'azure-iot-common';
 import { AmqpDeviceMethodClient } from './amqp_device_method_client';
 import { AmqpTwinClient } from './amqp_twin_client';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
-
-// tslint:disable-next-line:no-var-requires
-const packageJson = require('../package.json');
 
 const handleResult = function (errorMessage: string, done: (err?: Error, result?: any) => void): (err?: Error, result?: any) => void {
   return function (err?: Error, result?: any): void {
@@ -89,7 +87,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
       });
     }
 
-    this._amqp = baseClient || new BaseAmqpClient(false, 'azure-iot-device/' + packageJson.version);
+    this._amqp = baseClient || new BaseAmqpClient(false);
     this._amqp.setDisconnectHandler((err) => {
       debug('disconnected event handler: ' + (err ? err.toString() : 'no error'));
       this._fsm.handle('amqpConnectionClosed', err, () => {
@@ -254,16 +252,19 @@ export class Amqp extends EventEmitter implements Client.Transport {
                 this._c2dEndpoint = endpoint.messagePath(encodeURIComponent(credentials.deviceId));
                 this._d2cEndpoint = endpoint.eventPath(credentials.deviceId);
 
-                const config: AmqpBaseTransportConfig = {
-                  uri: this._getConnectionUri(credentials.host),
-                  sslOptions: credentials.x509
-                };
-                this._amqp.connect(config, (err, connectResult) => {
-                  if (err) {
-                    this._fsm.transition('disconnected', translateError('AMQP Transport: Could not connect', err), connectCallback);
-                  } else {
-                    this._fsm.transition('authenticating', connectResult, connectCallback);
-                  }
+                getUserAgentString((userAgentString) => {
+                  const config: AmqpBaseTransportConfig = {
+                    uri: this._getConnectionUri(credentials.host),
+                    sslOptions: credentials.x509,
+                    userAgentString: userAgentString
+                  };
+                  this._amqp.connect(config, (err, connectResult) => {
+                    if (err) {
+                      this._fsm.transition('disconnected', translateError('AMQP Transport: Could not connect', err), connectCallback);
+                    } else {
+                      this._fsm.transition('authenticating', connectResult, connectCallback);
+                    }
+                  });
                 });
               }
             });

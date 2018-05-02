@@ -9,7 +9,7 @@ import * as machina from 'machina';
 import * as async from 'async';
 
 import { anHourFromNow, endpoint, errors, results, SharedAccessSignature, Message } from 'azure-iot-common';
-import { Amqp as Base, AmqpMessage, SenderLink } from 'azure-iot-amqp-base';
+import { Amqp as Base, AmqpMessage, SenderLink, AmqpBaseTransportConfig } from 'azure-iot-amqp-base';
 import { translateError } from './amqp_service_errors.js';
 import { Callback } from './interfaces';
 import { Client } from './client';
@@ -76,7 +76,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
    */
   constructor(config: Client.TransportConfigOptions, amqpBase?: Base) {
     super();
-    this._amqp = amqpBase ? amqpBase : new Base(true, packageJson.name + '/' + packageJson.version);
+    this._amqp = amqpBase ? amqpBase : new Base(true);
     this._config = config;
     this._renewalTimeout = null;
     this._amqp.setDisconnectHandler((err) => {
@@ -166,8 +166,11 @@ export class Amqp extends EventEmitter implements Client.Transport {
         },
         connecting: {
           _onEnter: (callback) => {
-            const uri = this._getConnectionUri();
-            this._amqp.connect({uri: uri}, (err, result) => {
+            const config: AmqpBaseTransportConfig = {
+              uri: this._getConnectionUri(),
+              userAgentString: packageJson.name + '/' + packageJson.version
+            };
+            this._amqp.connect(config, (err, result) => {
               if (err) {
                 debug('failed to connect' + err.toString());
                 this._fsm.transition('disconnected', err, callback);

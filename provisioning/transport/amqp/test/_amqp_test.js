@@ -153,7 +153,6 @@ describe('Amqp', function () {
           var attachedLinkOptions = fakeAmqpBase.attachReceiverLink.firstCall.args[1];
           assert.strictEqual(attachedLinkEndpoint, fakeRequest.idScope +  '/registrations/' + fakeRequest.registrationId);
           assert.strictEqual(attachedLinkOptions.attach.properties['com.microsoft:api-version'], ProvisioningDeviceConstants.apiVersion);
-          assert.strictEqual(attachedLinkOptions.attach.properties['com.microsoft:client-version'], ProvisioningDeviceConstants.userAgent);
 
           testCallback();
         });

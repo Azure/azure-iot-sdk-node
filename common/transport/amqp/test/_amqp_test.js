@@ -632,12 +632,20 @@ describe('Amqp', function () {
 
           sinon.stub(amqp._amqp, 'connect').resolves('connected');
           sinon.stub(amqp._amqp, testConfig.amqp10Func).resolves(testConfig.fakeLinkObject);
-          amqp.connect({uri: 'uri'}, function() {
+          amqp.connect({uri: 'uri', userAgentString: 'fakeAgent'}, function() {
 
             /*Tests_SRS_NODE_COMMON_AMQP_16_015: [The `attachSenderLink` method shall call the `done` callback with a `null` error and the link object that was created if the link was attached successfully.]*/
             /*Tests_SRS_NODE_COMMON_AMQP_16_020: [The `attachReceiverLink` method shall call the `done` callback with a `null` error and the link object that was created if the link was attached successfully.]*/
             amqp[testConfig.amqpFunc](fake_generic_endpoint, fakeLinkProps, function() {
-              assert.deepEqual(amqp._amqp[testConfig.amqp10Func].args[0][1], { fakeKey: 'fakeValue'});
+              var expectedValue = {
+                fakeKey: 'fakeValue',
+                attach: {
+                  properties: {
+                    'com.microsoft:client-version': 'fakeAgent'
+                  }
+                }
+              };
+              assert.deepEqual(amqp._amqp[testConfig.amqp10Func].args[0][1], expectedValue);
               testCallback();
             });
           });

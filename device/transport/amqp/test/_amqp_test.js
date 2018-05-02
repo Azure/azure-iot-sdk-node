@@ -380,8 +380,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_008: [The `done` callback method passed in argument shall be called if the connection is established]*/
       it('calls done if connection established using SSL', function () {
-        var transport = new Amqp(fakeX509AuthenticationProvider);
-        sinon.stub(transport._amqp,'connect').callsArgWith(1,null);
+        fakeBaseClient.connect = sinon.stub().callsArgWith(1,null);
         transport.connect(function(err) {
           assert.isNotOk(err);
         });
@@ -389,8 +388,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_009: [The `done` callback method passed in argument shall be called with an error object if the connection fails]*/
       it('calls done with an error if connection failed', function () {
-        var transport = new Amqp(fakeX509AuthenticationProvider);
-        sinon.stub(transport._amqp,'connect').callsArgWith(1,new errors.UnauthorizedError('cryptic'));
+        fakeBaseClient.connect = sinon.stub().callsArgWith(1,new errors.UnauthorizedError('cryptic'));
         transport.connect(function(err) {
           assert.isOk(err);
         });
