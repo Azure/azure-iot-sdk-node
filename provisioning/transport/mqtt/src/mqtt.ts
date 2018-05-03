@@ -41,7 +41,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
    */
   constructor(mqttBase?: MqttBase) {
     super();
-    this._mqttBase = mqttBase || new MqttBase(ProvisioningDeviceConstants.apiVersion);
+    this._mqttBase = mqttBase || new MqttBase();
     this._config.pollingInterval = ProvisioningDeviceConstants.defaultPollingInterval;
 
     const responseHandler = (topic: string, payload: any) => {

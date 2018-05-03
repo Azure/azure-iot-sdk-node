@@ -15,9 +15,7 @@ import { IncomingMessage } from 'http';
 import { DeviceMethodResponse, Client, TwinProperties } from 'azure-iot-device';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
 import { DeviceClientOptions, HttpReceiverOptions } from 'azure-iot-device';
-
-// tslint:disable-next-line:no-var-requires
-const packageJson = require('../package.json');
+import { getUserAgentString } from 'azure-iot-device';
 
 const MESSAGE_PROP_HEADER_PREFIX = 'iothub-app-';
 
@@ -73,6 +71,7 @@ export class Http extends EventEmitter implements Client.Transport {
   private _intervalObj: number;
   private _timeoutObj: number;
   private _receiverStarted: boolean;
+  private _userAgentString: string;
 
   /**
    * @private
@@ -147,74 +146,75 @@ export class Http extends EventEmitter implements Client.Transport {
 
     <message>
     ```]*/
-    /*Codes_SRS_NODE_DEVICE_HTTP_16_032: [All HTTP requests shall obtain the credentials necessary to execute the request by calling `getDeviceCredentials` on the `AuthenticationProvider` object passed to the `Http` constructor.]*/
-    this._authenticationProvider.getDeviceCredentials((err, config) => {
-      if (err) {
-        /*Codes_SRS_NODE_DEVICE_HTTP_16_033: [if the `getDeviceCredentials` fails with an error, the Http request shall call its callback with that error]*/
-        done(err);
-      } else {
-        const path = endpoint.deviceEventPath(encodeURIComponent(config.deviceId));
-        let httpHeaders = {
-          'iothub-to': path,
-          'User-Agent': 'azure-iot-device/' + packageJson.version,
-        };
+    this._ensureAgentString(() => {
+      /*Codes_SRS_NODE_DEVICE_HTTP_16_032: [All HTTP requests shall obtain the credentials necessary to execute the request by calling `getDeviceCredentials` on the `AuthenticationProvider` object passed to the `Http` constructor.]*/
+      this._authenticationProvider.getDeviceCredentials((err, config) => {
+        if (err) {
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_033: [if the `getDeviceCredentials` fails with an error, the Http request shall call its callback with that error]*/
+          done(err);
+        } else {
+          const path = endpoint.deviceEventPath(encodeURIComponent(config.deviceId));
+          let httpHeaders = {
+            'iothub-to': path,
+            'User-Agent': this._userAgentString
+          };
 
-        this._insertAuthHeaderIfNecessary(httpHeaders, config);
+          this._insertAuthHeaderIfNecessary(httpHeaders, config);
 
-        for (let i = 0; i < message.properties.count(); i++) {
-          const propItem = message.properties.getItem(i);
-          /*Codes_SRS_NODE_DEVICE_HTTP_13_001: [ sendEvent shall add message properties as HTTP headers and prefix the key name with the string iothub-app. ]*/
-          httpHeaders[MESSAGE_PROP_HEADER_PREFIX + propItem.key] = propItem.value;
+          for (let i = 0; i < message.properties.count(); i++) {
+            const propItem = message.properties.getItem(i);
+            /*Codes_SRS_NODE_DEVICE_HTTP_13_001: [ sendEvent shall add message properties as HTTP headers and prefix the key name with the string iothub-app. ]*/
+            httpHeaders[MESSAGE_PROP_HEADER_PREFIX + propItem.key] = propItem.value;
+          }
+
+          if (message.messageId) {
+            /*Codes_SRS_NODE_DEVICE_HTTP_16_014: [If the `message` object has a `messageId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-MessageId`.]*/
+            httpHeaders['IoTHub-MessageId'] = message.messageId;
+          }
+
+          if (message.correlationId) {
+            /*Codes_SRS_NODE_DEVICE_HTTP_16_015: [If the `message` object has a `correlationId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-CorrelationId`.]*/
+            httpHeaders['IoTHub-CorrelationId'] = message.correlationId;
+          }
+
+          if (message.userId) {
+            /*Codes_SRS_NODE_DEVICE_HTTP_16_016: [If the `message` object has a `userId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-UserId`.]*/
+            httpHeaders['IoTHub-UserId'] = message.userId;
+          }
+
+          if (message.to) {
+            /*Codes_SRS_NODE_DEVICE_HTTP_16_017: [If the `message` object has a `to` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-To`.]*/
+            httpHeaders['IoTHub-To'] = message.to;
+          }
+
+          if (message.expiryTimeUtc) {
+            /*Codes_SRS_NODE_DEVICE_HTTP_16_018: [If the `message` object has a `expiryTimeUtc` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Expiry`.]*/
+            httpHeaders['IoTHub-Expiry'] = message.expiryTimeUtc;
+          }
+
+          if (message.ack) {
+            /*Codes_SRS_NODE_DEVICE_HTTP_16_019: [If the `message` object has a `ack` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Ack`.]*/
+            httpHeaders['IoTHub-Ack'] = message.ack;
+          }
+
+          if (message.contentType) {
+            /*Codes_SRS_NODE_DEVICE_HTTP_16_037: [If the `message` object has a `contentType` property, the value of the property shall be inserted in the headers of the HTTP request with the key `iothub-contenttype`.]*/
+            httpHeaders['iothub-contenttype'] = message.contentType;
+          }
+
+          if (message.contentEncoding) {
+            /*Codes_SRS_NODE_DEVICE_HTTP_16_038: [If the `message` object has a `contentEncoding` property, the value of the property shall be inserted in the headers of the HTTP request with the key `iothub-contentencoding`.]*/
+            httpHeaders['iothub-contentencoding'] = message.contentEncoding;
+          }
+
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_013: [If using x509 authentication the `Authorization` header shall not be set and the x509 parameters shall instead be passed to the underlying transpoort.]*/
+          const request = this._http.buildRequest('POST', path + endpoint.versionQueryString(), httpHeaders, config.host, config.x509, handleResponse(done));
+
+          request.write(message.getBytes());
+          request.end();
         }
-
-        if (message.messageId) {
-          /*Codes_SRS_NODE_DEVICE_HTTP_16_014: [If the `message` object has a `messageId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-MessageId`.]*/
-          httpHeaders['IoTHub-MessageId'] = message.messageId;
-        }
-
-        if (message.correlationId) {
-          /*Codes_SRS_NODE_DEVICE_HTTP_16_015: [If the `message` object has a `correlationId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-CorrelationId`.]*/
-          httpHeaders['IoTHub-CorrelationId'] = message.correlationId;
-        }
-
-        if (message.userId) {
-          /*Codes_SRS_NODE_DEVICE_HTTP_16_016: [If the `message` object has a `userId` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-UserId`.]*/
-          httpHeaders['IoTHub-UserId'] = message.userId;
-        }
-
-        if (message.to) {
-          /*Codes_SRS_NODE_DEVICE_HTTP_16_017: [If the `message` object has a `to` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-To`.]*/
-          httpHeaders['IoTHub-To'] = message.to;
-        }
-
-        if (message.expiryTimeUtc) {
-          /*Codes_SRS_NODE_DEVICE_HTTP_16_018: [If the `message` object has a `expiryTimeUtc` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Expiry`.]*/
-          httpHeaders['IoTHub-Expiry'] = message.expiryTimeUtc;
-        }
-
-        if (message.ack) {
-          /*Codes_SRS_NODE_DEVICE_HTTP_16_019: [If the `message` object has a `ack` property, the value of the property shall be inserted in the headers of the HTTP request with the key `IoTHub-Ack`.]*/
-          httpHeaders['IoTHub-Ack'] = message.ack;
-        }
-
-        if (message.contentType) {
-          /*Codes_SRS_NODE_DEVICE_HTTP_16_037: [If the `message` object has a `contentType` property, the value of the property shall be inserted in the headers of the HTTP request with the key `iothub-contenttype`.]*/
-          httpHeaders['iothub-contenttype'] = message.contentType;
-        }
-
-        if (message.contentEncoding) {
-          /*Codes_SRS_NODE_DEVICE_HTTP_16_038: [If the `message` object has a `contentEncoding` property, the value of the property shall be inserted in the headers of the HTTP request with the key `iothub-contentencoding`.]*/
-          httpHeaders['iothub-contentencoding'] = message.contentEncoding;
-        }
-
-        /*Codes_SRS_NODE_DEVICE_HTTP_16_013: [If using x509 authentication the `Authorization` header shall not be set and the x509 parameters shall instead be passed to the underlying transpoort.]*/
-        const request = this._http.buildRequest('POST', path + endpoint.versionQueryString(), httpHeaders, config.host, config.x509, handleResponse(done));
-
-        request.write(message.getBytes());
-        request.end();
-      }
+      });
     });
-
   }
 
   /**
@@ -237,67 +237,69 @@ export class Http extends EventEmitter implements Client.Transport {
    *                                  `sendEventBatch` completes execution.
    */
   sendEventBatch(messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    /*Codes_SRS_NODE_DEVICE_HTTP_16_032: [All HTTP requests shall obtain the credentials necessary to execute the request by calling `getDeviceCredentials` on the `AuthenticationProvider` object passed to the `Http` constructor.]*/
-    this._authenticationProvider.getDeviceCredentials((err, config) => {
-      if (err) {
-        /*Codes_SRS_NODE_DEVICE_HTTP_16_033: [if the `getDeviceCredentials` fails with an error, the Http request shall call its callback with that error]*/
-        done(err);
-      } else {
-        const constructBatchBody = (messages: Message[]): string => {
-          let body = '[';
+    this._ensureAgentString(() => {
+      /*Codes_SRS_NODE_DEVICE_HTTP_16_032: [All HTTP requests shall obtain the credentials necessary to execute the request by calling `getDeviceCredentials` on the `AuthenticationProvider` object passed to the `Http` constructor.]*/
+      this._authenticationProvider.getDeviceCredentials((err, config) => {
+        if (err) {
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_033: [if the `getDeviceCredentials` fails with an error, the Http request shall call its callback with that error]*/
+          done(err);
+        } else {
+          const constructBatchBody = (messages: Message[]): string => {
+            let body = '[';
 
-          messages.forEach((message, index) => {
-            const buffMsg = new Buffer(<any>message.getData());
+            messages.forEach((message, index) => {
+              const buffMsg = new Buffer(<any>message.getData());
 
-            if (index > 0) body += ',';
+              if (index > 0) body += ',';
 
-            body += '{\"body\":\"' + buffMsg.toString('base64') + '\"';
-            // Get the properties
-            let propertyIdx = 0;
-            let property = ',\"properties\":{';
-            for (propertyIdx = 0; propertyIdx < message.properties.count(); propertyIdx++) {
-              if (propertyIdx > 0)
-                property += ',';
-              const propItem = message.properties.getItem(propertyIdx);
-              /*Codes_SRS_NODE_DEVICE_HTTP_13_002: [ sendEventBatch shall prefix the key name for all message properties with the string iothub-app. ]*/
-              property += '\"' + MESSAGE_PROP_HEADER_PREFIX + propItem.key + '\":\"' + propItem.value + '\"';
-            }
-            if (propertyIdx > 0) {
-              property += '}';
-              body += property;
-            }
-            body += '}';
-          });
-          body += ']';
-          return body;
-        };
+              body += '{\"body\":\"' + buffMsg.toString('base64') + '\"';
+              // Get the properties
+              let propertyIdx = 0;
+              let property = ',\"properties\":{';
+              for (propertyIdx = 0; propertyIdx < message.properties.count(); propertyIdx++) {
+                if (propertyIdx > 0)
+                  property += ',';
+                const propItem = message.properties.getItem(propertyIdx);
+                /*Codes_SRS_NODE_DEVICE_HTTP_13_002: [ sendEventBatch shall prefix the key name for all message properties with the string iothub-app. ]*/
+                property += '\"' + MESSAGE_PROP_HEADER_PREFIX + propItem.key + '\":\"' + propItem.value + '\"';
+              }
+              if (propertyIdx > 0) {
+                property += '}';
+                body += property;
+              }
+              body += '}';
+            });
+            body += ']';
+            return body;
+          };
 
-        /*Codes_SRS_NODE_DEVICE_HTTP_05_003: [The `sendEventBatch` method shall construct an HTTP request using information supplied by the caller, as follows:
-        ```
-        POST <config.host>/devices/<config.deviceId>/messages/events?api-version=<version> HTTP/1.1
-        iothub-to: /devices/<config.deviceId>/messages/events
-        User-Agent: <version string>
-        Content-Type: application/vnd.microsoft.iothub.json
-        Host: <config.host>
+          /*Codes_SRS_NODE_DEVICE_HTTP_05_003: [The `sendEventBatch` method shall construct an HTTP request using information supplied by the caller, as follows:
+          ```
+          POST <config.host>/devices/<config.deviceId>/messages/events?api-version=<version> HTTP/1.1
+          iothub-to: /devices/<config.deviceId>/messages/events
+          User-Agent: <version string>
+          Content-Type: application/vnd.microsoft.iothub.json
+          Host: <config.host>
 
-        {"body":"<Base64 Message1>","properties":{"<key>":"<value>"}},
-        {"body":"<Base64 Message1>"}...
-        ```]*/
-        const path = endpoint.deviceEventPath(encodeURIComponent(config.deviceId));
-        let httpHeaders = {
-          'iothub-to': path,
-          'Content-Type': 'application/vnd.microsoft.iothub.json',
-          'User-Agent': 'azure-iot-device/' + packageJson.version
-        };
+          {"body":"<Base64 Message1>","properties":{"<key>":"<value>"}},
+          {"body":"<Base64 Message1>"}...
+          ```]*/
+          const path = endpoint.deviceEventPath(encodeURIComponent(config.deviceId));
+          let httpHeaders = {
+            'iothub-to': path,
+            'Content-Type': 'application/vnd.microsoft.iothub.json',
+            'User-Agent': this._userAgentString
+          };
 
-        this._insertAuthHeaderIfNecessary(httpHeaders, config);
+          this._insertAuthHeaderIfNecessary(httpHeaders, config);
 
-        /*Codes_SRS_NODE_DEVICE_HTTP_16_013: [If using x509 authentication the `Authorization` header shall not be set and the x509 parameters shall instead be passed to the underlying transpoort.]*/
-        const request = this._http.buildRequest('POST', path + endpoint.versionQueryString(), httpHeaders, config.host, config.x509, handleResponse(done));
-        const body = constructBatchBody(messages);
-        request.write(body);
-        request.end();
-      }
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_013: [If using x509 authentication the `Authorization` header shall not be set and the x509 parameters shall instead be passed to the underlying transpoort.]*/
+          const request = this._http.buildRequest('POST', path + endpoint.versionQueryString(), httpHeaders, config.host, config.x509, handleResponse(done));
+          const body = constructBatchBody(messages);
+          request.write(body);
+          request.end();
+        }
+      });
     });
   }
 
@@ -355,45 +357,47 @@ export class Http extends EventEmitter implements Client.Transport {
   Host: <config.host>
   ]*/
   receive(): void {
-    /*Codes_SRS_NODE_DEVICE_HTTP_16_032: [All HTTP requests shall obtain the credentials necessary to execute the request by calling `getDeviceCredentials` on the `AuthenticationProvider` object passed to the `Http` constructor.]*/
-    this._authenticationProvider.getDeviceCredentials((err, config) => {
-      if (err) {
-        /*Codes_SRS_NODE_DEVICE_HTTP_16_033: [if the `getDeviceCredentials` fails with an error, the Http request shall call its callback with that error]*/
-        debug('Error while receiving: ' + err.toString());
-        this.emit('error', err);
-      } else {
-        const path = endpoint.deviceMessagePath(encodeURIComponent(config.deviceId));
-        let httpHeaders = {
-          'iothub-to': path,
-          'User-Agent': 'azure-iot-device/' + packageJson.version
-        };
+    this._ensureAgentString(() => {
+      /*Codes_SRS_NODE_DEVICE_HTTP_16_032: [All HTTP requests shall obtain the credentials necessary to execute the request by calling `getDeviceCredentials` on the `AuthenticationProvider` object passed to the `Http` constructor.]*/
+      this._authenticationProvider.getDeviceCredentials((err, config) => {
+        if (err) {
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_033: [if the `getDeviceCredentials` fails with an error, the Http request shall call its callback with that error]*/
+          debug('Error while receiving: ' + err.toString());
+          this.emit('error', err);
+        } else {
+          const path = endpoint.deviceMessagePath(encodeURIComponent(config.deviceId));
+          let httpHeaders = {
+            'iothub-to': path,
+            'User-Agent': this._userAgentString
+          };
 
-        this._insertAuthHeaderIfNecessary(httpHeaders, config);
+          this._insertAuthHeaderIfNecessary(httpHeaders, config);
 
-        /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_017: [If opts.drain is true all messages in the queue should be pulled at once.]*/
-        /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_018: [If opts.drain is false, only one message shall be received at a time]*/
-        const drainRequester = new EventEmitter();
-        drainRequester.on('nextRequest', () => {
-          const request = this._http.buildRequest('GET', path + endpoint.versionQueryString(), httpHeaders, config.host, config.x509, (err, body, res) => {
-            if (!err) {
-              if (body) {
-                const msg = this._http.toMessage(res, body);
-                if (this._opts.drain) {
-                  drainRequester.emit('nextRequest');
+          /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_017: [If opts.drain is true all messages in the queue should be pulled at once.]*/
+          /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_018: [If opts.drain is false, only one message shall be received at a time]*/
+          const drainRequester = new EventEmitter();
+          drainRequester.on('nextRequest', () => {
+            const request = this._http.buildRequest('GET', path + endpoint.versionQueryString(), httpHeaders, config.host, config.x509, (err, body, res) => {
+              if (!err) {
+                if (body) {
+                  const msg = this._http.toMessage(res, body);
+                  if (this._opts.drain) {
+                    drainRequester.emit('nextRequest');
+                  }
+                  this.emit('message', msg);
                 }
-                this.emit('message', msg);
+              } else {
+                (<any>err).response = res;
+                (<any>err).responseBody = body;
+                this.emit('error', err);
               }
-            } else {
-              (<any>err).response = res;
-              (<any>err).responseBody = body;
-              this.emit('error', err);
-            }
+            });
+            request.end();
           });
-          request.end();
-        });
 
-        drainRequester.emit('nextRequest');
-      }
+          drainRequester.emit('nextRequest');
+        }
+      });
     });
   }
 
@@ -456,27 +460,29 @@ export class Http extends EventEmitter implements Client.Transport {
    * @private
    */
   enableC2D(callback: (err?: Error) => void): void {
-    if (!this._cronObj && !this._intervalObj && !this._timeoutObj) {
-      if (this._opts.interval) {
-        /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_021: [If opts.interval is set, messages should be received repeatedly at that interval]*/
-        this._intervalObj = setInterval(this.receive.bind(this), this._opts.interval * 1000); // this._opts.interval is in seconds but setInterval takes milliseconds.
-        this._receiverStarted = true;
-      } else if (this._opts.at) {
-        /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_003: [if opts.at is set, messages shall be received at the Date and time specified.]*/
-        const at = new Date(this._opts.at).getTime();
-        const diff = Math.max(at - Date.now(), 0);
-        this._timeoutObj = setTimeout(this.receive.bind(this), diff);
-        this._receiverStarted = true;
-      } else if (this._opts.cron) {
-        /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_020: [If opts.cron is set messages shall be received according to the schedule described by the expression.]*/
-        this._cronObj = cron.scheduleJob(this._opts.cron, this.receive.bind(this));
-        this._receiverStarted = true;
-      } else if (this._opts.manualPolling) {
-        /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_023: [If opts.manualPolling is true, messages shall be received only when receive() is called] */
-        this._receiverStarted = true;
+    this._ensureAgentString(() => {
+      if (!this._cronObj && !this._intervalObj && !this._timeoutObj) {
+        if (this._opts.interval) {
+          /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_021: [If opts.interval is set, messages should be received repeatedly at that interval]*/
+          this._intervalObj = setInterval(this.receive.bind(this), this._opts.interval * 1000); // this._opts.interval is in seconds but setInterval takes milliseconds.
+          this._receiverStarted = true;
+        } else if (this._opts.at) {
+          /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_003: [if opts.at is set, messages shall be received at the Date and time specified.]*/
+          const at = new Date(this._opts.at).getTime();
+          const diff = Math.max(at - Date.now(), 0);
+          this._timeoutObj = setTimeout(this.receive.bind(this), diff);
+          this._receiverStarted = true;
+        } else if (this._opts.cron) {
+          /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_020: [If opts.cron is set messages shall be received according to the schedule described by the expression.]*/
+          this._cronObj = cron.scheduleJob(this._opts.cron, this.receive.bind(this));
+          this._receiverStarted = true;
+        } else if (this._opts.manualPolling) {
+          /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_023: [If opts.manualPolling is true, messages shall be received only when receive() is called] */
+          this._receiverStarted = true;
+        }
       }
-    }
-    callback();
+      callback();
+    });
   }
 
   /**
@@ -645,7 +651,7 @@ export class Http extends EventEmitter implements Client.Transport {
         let path = endpoint.deviceFeedbackPath(encodeURIComponent(config.deviceId), message.lockToken);
         let httpHeaders = {
           'If-Match': message.lockToken,
-          'User-Agent': 'azure-iot-device/' + packageJson.version
+          'User-Agent': this._userAgentString
         };
 
         this._insertAuthHeaderIfNecessary(httpHeaders, config);
@@ -763,6 +769,17 @@ export class Http extends EventEmitter implements Client.Transport {
     if (restartReceiver) {
       this.enableC2D(() => {
         debug('Http c2d message polling enabled');
+      });
+    }
+  }
+
+  private _ensureAgentString(done: () => void): void {
+    if (this._userAgentString) {
+      done();
+    } else {
+      getUserAgentString((agent) => {
+        this._userAgentString = agent;
+        done();
       });
     }
   }

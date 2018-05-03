@@ -13,7 +13,7 @@ var results = require('azure-iot-common').results;
 var Message = require('azure-iot-common').Message;
 var AuthenticationType = require('azure-iot-common').AuthenticationType;
 var EventEmitter = require('events').EventEmitter;
-const packageJson = require('../package.json');
+var getUserAgentString = require('azure-iot-device').getUserAgentString;
 
 describe('Mqtt', function () {
   var fakeConfig, fakeAuthenticationProvider, fakeMqttBase;
@@ -48,6 +48,7 @@ describe('Mqtt', function () {
     /*Tests_SRS_NODE_DEVICE_MQTT_16_071: [The constructor shall subscribe to the `newTokenAvailable` event of the `authenticationProvider` passed as an argument if it uses tokens for authentication.]*/
     it('subscribes to the newTokenAvailable event on the authenticationProvider uses Tokens', function () {
       var mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      void(mqtt);
       assert.isTrue(fakeAuthenticationProvider.on.calledOnce);
     });
 
@@ -58,6 +59,7 @@ describe('Mqtt', function () {
       };
 
       var mqtt = new Mqtt(fakeX509AuthProvider, fakeMqttBase);
+      void(mqtt);
       assert.isTrue(fakeX509AuthProvider.on.notCalled);
     });
 
@@ -70,6 +72,7 @@ describe('Mqtt', function () {
     /*Tests_SRS_NODE_DEVICE_MQTT_16_072: [If the `newTokenAvailable` event is fired, the `Mqtt` object shall do nothing if it isn't connected.]*/
     it('does not do anything if the newTokenAvailable is fired and the MQTT connection is disconnected', function (testCallback) {
       var mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      void(mqtt);
       fakeAuthenticationProvider.emit('newTokenAvailable', fakeConfig);
       assert.isTrue(fakeMqttBase.connect.notCalled);
       testCallback();
@@ -340,7 +343,7 @@ describe('Mqtt', function () {
           testCallback();
         });
         mqtt.emit('method_testMethod', {});
-      })
+      });
     });
   });
 
@@ -568,6 +571,7 @@ describe('Mqtt', function () {
     });
 
 
+    getUserAgentString(function(userAgentString) {
     [
       /*Tests_SRS_NODE_DEVICE_MQTT_16_016: [If the connection string does not specify a `gatewayHostName` value, the `Mqtt` constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
       {
@@ -602,7 +606,7 @@ describe('Mqtt', function () {
         fieldNameToSet: null,
         fieldValueToSet: null,
         fieldNameToCheck: 'username',
-        fieldValueToCheck: 'host.name/deviceId/' + endpoint.versionQueryString().substr(1) + '&DeviceClientType=' + encodeURIComponent('azure-iot-device/' + packageJson.version)
+        fieldValueToCheck: 'host.name/deviceId/' + endpoint.versionQueryString().substr(1) + '&DeviceClientType=' + encodeURIComponent(userAgentString)
       }
     ].forEach(function (testConfig) {
       it('sets the ' + testConfig.fieldNameToCheck + ' to \'' + testConfig.fieldValueToCheck + '\'', function (testCallback) {

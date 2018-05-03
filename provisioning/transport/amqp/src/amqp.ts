@@ -12,7 +12,7 @@ const debug = dbg('azure-iot-provisioning-device-amqp:Amqp');
 
 import { X509, errors } from 'azure-iot-common';
 import { ProvisioningTransportOptions, X509ProvisioningTransport, TpmProvisioningTransport, RegistrationRequest, RegistrationResult, ProvisioningDeviceConstants } from 'azure-iot-provisioning-device';
-import { Amqp as Base, SenderLink, ReceiverLink, AmqpMessage } from 'azure-iot-amqp-base';
+import { Amqp as Base, SenderLink, ReceiverLink, AmqpMessage, AmqpBaseTransportConfig } from 'azure-iot-amqp-base';
 import { GetSasTokenCallback, SaslTpm } from './sasl_tpm';
 
 /**
@@ -60,7 +60,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
    */
   constructor(amqpBase?: Base) {
     super();
-    this._amqpBase = amqpBase || new Base(true, ProvisioningDeviceConstants.userAgent);
+    this._amqpBase = amqpBase || new Base(true);
     this._config.pollingInterval = ProvisioningDeviceConstants.defaultPollingInterval;
 
     const amqpErrorListener = (err) => this._amqpStateMachine.handle('amqpError', err);
@@ -125,7 +125,12 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
           _onEnter: (request, callback) => {
             /*Codes_SRS_NODE_PROVISIONING_AMQP_16_002: [The `registrationRequest` method shall connect the AMQP client with the certificate and key given in the `auth` parameter of the previously called `setAuthentication` method.]*/
             /*Codes_SRS_NODE_PROVISIONING_AMQP_16_012: [The `queryOperationStatus` method shall connect the AMQP client with the certificate and key given in the `auth` parameter of the previously called `setAuthentication` method. **]**]*/
-            this._amqpBase.connect(this._getConnectionUri(request), this._x509Auth, (err) => {
+            const config: AmqpBaseTransportConfig = {
+              uri: this._getConnectionUri(request),
+              sslOptions: this._x509Auth,
+              userAgentString: ProvisioningDeviceConstants.userAgent
+            };
+            this._amqpBase.connect(config, (err) => {
               if (err) {
                 debug('_amqpBase.connect failed');
                 debug(err);
@@ -191,9 +196,8 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
             const linkOptions = {
               attach: {
                 properties: {
-                  'com.microsoft:api-version' : ProvisioningDeviceConstants.apiVersion,
-                  'com.microsoft:client-version': ProvisioningDeviceConstants.userAgent
-                }
+                  'com.microsoft:api-version' : ProvisioningDeviceConstants.apiVersion
+               }
               }
             };
 
@@ -512,7 +516,13 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
       callback(null, challenge);
     });
 
-    this._amqpBase.connectWithCustomSasl(this._getConnectionUri(request), this._customSaslMechanism.name, this._customSaslMechanism, (err) => {
+    const config: AmqpBaseTransportConfig = {
+      uri: this._getConnectionUri(request),
+      saslMechanismName: this._customSaslMechanism.name,
+      saslMechanism: this._customSaslMechanism,
+      userAgentString: ProvisioningDeviceConstants.userAgent
+    };
+    this._amqpBase.connect(config, (err) => {
       this._amqpStateMachine.handle('tpmConnectionComplete', err);
     });
   }

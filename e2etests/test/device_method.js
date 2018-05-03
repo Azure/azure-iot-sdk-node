@@ -26,11 +26,11 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 ].forEach(function(protocolCtor) {
   describe('Device Methods over ' + protocolCtor.name, function() {
     this.timeout(120000);
+    var registry = Registry.fromConnectionString(hubConnectionString);
     var deviceClient;
     var deviceDescription;
 
-    // create a new device for every test
-    beforeEach(function (done) {
+    before(function (done) {
       deviceDescription = {
         deviceId:  '0000e2etest-delete-me-node-device-method-' + uuid.v4(),
         status: 'enabled',
@@ -42,33 +42,63 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
         }
       };
 
-      var registry = Registry.fromConnectionString(hubConnectionString);
+      debug('creating device: ' + deviceDescription.deviceId);
       registry.create(deviceDescription, function (err) {
-        if (err) return done(err);
-        debug('created test device: ' + deviceDescription.deviceId);
-        var host = ConnectionString.parse(hubConnectionString).HostName;
-        var sas = deviceSas.create(host, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
-        deviceClient = deviceSdk.Client.fromSharedAccessSignature(sas, protocolCtor);
-        deviceClient.open(done);
+        if (err) {
+          debug('failed to create the device: ' +  deviceDescription.deviceId + ': ' + err.toString());
+          return done(err);
+        } else {
+          debug('created test device: ' + deviceDescription.deviceId);
+          return done();
+        }
+      });
+    });
+
+    after(function (done) {
+      debug('deleting test device: ' + deviceDescription.deviceId);
+      registry.delete(deviceDescription.deviceId, function (err) {
+        if (err) {
+          debug('failed to delete device: ' +  deviceDescription.deviceId + ': ' + err.toString());
+          return done(err);
+        } else {
+          debug('device deleted: ' +  deviceDescription.deviceId);
+          return done();
+        }
+      });
+    });
+
+    // create a new device for every test
+    beforeEach(function (done) {
+      var host = ConnectionString.parse(hubConnectionString).HostName;
+      var sas = deviceSas.create(host, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
+      deviceClient = deviceSdk.Client.fromSharedAccessSignature(sas, protocolCtor);
+      debug('connecting device client...');
+      deviceClient.open(function (err) {
+        if (err) {
+          debug('error connecting device client: ' + err.toString());
+          return done(err);
+        } else {
+          debug('device client connected');
+          return done();
+        }
       });
     });
 
     // nuke the test device after every test
     afterEach(function (done) {
       if (!!deviceClient) {
+        debug('disconnecting device client...');
         deviceClient.close(function(err) {
           if (!!err) {
-            console.warn('Could not close connection to device ' +
-              deviceDescription.deviceId + '. Deleting device anyway.'
-            );
+            console.warn('Could not close connection to device ' + deviceDescription.deviceId + ': ' + err.toString());
+            return done(err);
+          } else {
+            debug('device connection closed');
+            return done();
           }
-
-          debug('deleting test device: ' + deviceDescription.deviceId);
-          Registry
-            .fromConnectionString(hubConnectionString)
-            .delete(deviceDescription.deviceId, done);
         });
       } else {
+        debug('no device client. nothing to disconnect');
         done();
       }
     });

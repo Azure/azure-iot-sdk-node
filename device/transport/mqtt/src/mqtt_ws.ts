@@ -20,8 +20,8 @@ export class MqttWs extends Mqtt {
    * @constructor
    * @param   {Object}    config  Configuration object derived from the connection string by the client.
    */
-  constructor(authenticationProvider: AuthenticationProvider) {
-    super(authenticationProvider);
+  constructor(authenticationProvider: AuthenticationProvider, mqttBase?: any) {
+    super(authenticationProvider, mqttBase);
     /*Codes_SRS_NODE_DEVICE_MQTT_16_017: [The `MqttWs` constructor shall initialize the `uri` property of the `config` object to `wss://<host>:443/$iothub/websocket`.]*/
   }
 

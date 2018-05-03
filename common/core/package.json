@@ -6,8 +6,11 @@
   "license": "MIT",
   "main": "common.js",
   "typings": "common.d.ts",
-  "dependencies": {},
+  "dependencies": {
+    "getos": "^3.1.0"
+  },
   "devDependencies": {
+    "@types/getos": "^3.0.0",
     "@types/node": "^7.0.5",
     "chai": "^3.5.0",
     "istanbul": "^0.4.4",
@@ -26,7 +29,7 @@
     "alltest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
     "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
     "test": "npm -s run lint && npm -s run build && npm -s run unittest",
-    "check-cover": "istanbul check-coverage --statements 99 --branches 97 --functions 98 --lines 99"
+    "check-cover": "istanbul check-coverage --statements 99 --branches 96 --functions 98 --lines 99"
   },
   "engines": {
     "node": ">= 0.10"

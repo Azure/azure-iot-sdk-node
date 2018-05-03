@@ -18,15 +18,13 @@ import { errors, results, SharedAccessSignature, X509 } from 'azure-iot-common';
 export class MqttBase extends EventEmitter {
   private mqttprovider: any;
   private _config: MqttBaseTransportConfig;
-  private _sdkVersionString: string;
   private _mqttClient: MqttClient;
   private _fsm: any;
   private _options: any;
 
-  constructor(sdkVersionString: string, mqttprovider?: any) {
+  constructor(mqttprovider?: any) {
     super();
     this.mqttprovider = mqttprovider ? mqttprovider : require('mqtt');
-    this._sdkVersionString = sdkVersionString;
 
     this._fsm = new machina.Fsm({
       namespace: 'mqtt-base',

@@ -60,8 +60,6 @@ A possibly undefined sslOptions structure.
 A done callback.
  **]**
 
-**SRS_NODE_COMMON_AMQP_06_002: [** The `connect` method shall throw a ReferenceError if the uri parameter has not been supplied.**]**
-
 **SRS_NODE_COMMON_AMQP_16_002: [**The `connect` method shall establish a connection with the IoT hub instance and if given as argument call the `done` callback with a null error object in the case of success and a `results.Connected` object.**]**
 
 **SRS_NODE_COMMON_AMQP_16_003: [**If given as an argument, the connect method shall call the `done` callback with a standard `Error` object if the connection or link/listener establishment fails.**]**

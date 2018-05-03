@@ -28,6 +28,10 @@ The `Mqtt` and `MqttWs` constructors initialize a new instance of the MQTT trans
 
 **SRS_NODE_DEVICE_MQTT_18_055: [** The Mqtt constructor shall initialize the `username` property of the `config` object to '<host>/<clientId>/api-version=<version>&DeviceClientType=<agentString>'. **]**
 
+**SRS_NODE_DEVICE_MQTT_18_053: [** If a `moduleId` is not specified in the connection string, the Mqtt constructor shall initialize the `clientId` property of the `config` object to '<deviceId>'. **]**
+
+**SRS_NODE_DEVICE_MQTT_18_055: [** The Mqtt constructor shall initialize the `username` property of the `config` object to '<host>/<clientId>/api-version=<version>&DeviceClientType=<agentString>'. **]**
+
 **SRS_NODE_DEVICE_MQTT_16_017: [** The `MqttWs` constructor shall initialize the `uri` property of the `config` object to `wss://<host>:443/$iothub/websocket`. **]**
 
 **SRS_NODE_DEVICE_MQTT_18_025: [** If the `Mqtt` constructor receives a second parameter, it shall be used as a provider in place of mqtt.js **]**

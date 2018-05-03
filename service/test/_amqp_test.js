@@ -30,7 +30,7 @@ describe('Amqp', function() {
 
   beforeEach(function () {
     fakeAmqpBase = new EventEmitter();
-    fakeAmqpBase.connect = sinon.stub().callsArgWith(2, null, new results.Connected());
+    fakeAmqpBase.connect = sinon.stub().callsArgWith(1, null, new results.Connected());
     fakeAmqpBase.initializeCBS = sinon.stub().callsArg(0);
     fakeAmqpBase.putToken = sinon.stub().callsArg(2);
     fakeAmqpBase.disconnect = sinon.stub().callsArg(0);
@@ -121,7 +121,7 @@ describe('Amqp', function() {
     /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_017: [All asynchronous instance methods shall call the `done` callback with a single parameter that is derived from the standard Javascript `Error` object if the operation failed.]*/
     it('calls its callback with an error if the base transport connect method fails', function(done) {
       var testError = new errors.NotConnectedError('fake error');
-      fakeAmqpBase.connect = sinon.stub().callsArgWith(2, testError);
+      fakeAmqpBase.connect = sinon.stub().callsArgWith(1, testError);
       var amqp = new Amqp(fakeConfig, fakeAmqpBase);
       amqp.connect(function (err) {
         assert.instanceOf(err, Error);
@@ -399,7 +399,7 @@ describe('Amqp', function() {
 
     it('calls its callback with an error if connecting the transport fails', function (testCallback) {
       var amqp = new Amqp(fakeConfig, fakeAmqpBase);
-      fakeAmqpBase.connect = sinon.stub().callsArgWith(2, new Error('fakeError'));
+      fakeAmqpBase.connect = sinon.stub().callsArgWith(1, new Error('fakeError'));
 
       amqp.getFeedbackReceiver(function (err) {
         assert.isTrue(fakeAmqpBase.connect.calledOnce);
@@ -473,7 +473,7 @@ describe('Amqp', function() {
 
     it('calls its callback with an error if connecting the transport fails', function (testCallback) {
       var amqp = new Amqp(fakeConfig, fakeAmqpBase);
-      fakeAmqpBase.connect = sinon.stub().callsArgWith(2, new Error('fakeError'));
+      fakeAmqpBase.connect = sinon.stub().callsArgWith(1, new Error('fakeError'));
 
       amqp.getFileNotificationReceiver(function (err) {
         assert.isTrue(fakeAmqpBase.connect.calledOnce);
@@ -556,7 +556,7 @@ describe('Amqp', function() {
       /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_026: [The `send` method shall call its callback with an error if connecting and/or authenticating the transport fails.]*/
       it('calls its callback with an error if connecting the transport fails', function (testCallback) {
         var amqp = new Amqp(fakeConfig, fakeAmqpBase);
-        fakeAmqpBase.connect = sinon.stub().callsArgWith(2, new Error('fakeError'));
+      fakeAmqpBase.connect = sinon.stub().callsArgWith(1, new Error('fakeError'));
 
         testConfig.invokeFunctionUnderTest(amqp, new Message('foo'), function (err) {
           assert.isTrue(fakeAmqpBase.connect.calledOnce);

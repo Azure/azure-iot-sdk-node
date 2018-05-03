@@ -32,8 +32,6 @@ describe('Mqtt', function () {
   };
   var fakeErrorText = 'fake error text';
 
-  this.timeout(100);
-
   beforeEach(function() {
     fakeBase = new EventEmitter();
     fakeBase.connect = sinon.stub().callsArg(1); // (config: MqttBase.TransportConfig, done: (err?: Error, result?: any) => void): void
@@ -500,4 +498,3 @@ describe('Mqtt', function () {
   });
 
 });
-

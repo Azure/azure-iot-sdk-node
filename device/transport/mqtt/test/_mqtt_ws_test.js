@@ -42,10 +42,10 @@ describe('MqttWs', function () {
 
   describe('#connect', function () {
     /*Tests_SRS_NODE_DEVICE_MQTT_16_017: [The `MqttWs` constructor shall initialize the `uri` property of the `config` object to `wss://<host>:443/$iothub/websocket`.]*/
-    it('sets the uri property to \'wss://<host>:443/$iothub/websocket\'', function () {
-      var mqttWs = new MqttWs(fakeAuthenticationProvider);
+    it('sets the uri property to \'wss://<host>:443/$iothub/websocket\'', function (testCallback) {
+      var mqttWs = new MqttWs(fakeAuthenticationProvider, fakeMqttBase);
       mqttWs.connect(function () {
-        assert.strictEqual(fakeMqttBase.connect.firstCall.args[0].uri, 'mqtts://' + fakeConfig.host);
+        assert.strictEqual(fakeMqttBase.connect.firstCall.args[0].uri, 'wss://' + fakeConfig.host + ':443/$iothub/websocket');
         testCallback();
       });
     });

@@ -27,7 +27,7 @@ describe('MqttBase', function () {
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_006: [The `connect` method shall throw a ReferenceError if the config argument is falsy, or if one of the following properties of the config argument is falsy: uri, clientId, username, and one of sharedAccessSignature or x509.cert and x509.key.]*/
     it('throws if config structure is falsy', function () {
       [null, undefined, '', 0].forEach(function (config) {
-        var mqtt = new MqttBase('test', new FakeMqtt());
+        var mqtt = new MqttBase(new FakeMqtt());
         assert.throws(function () {
           mqtt.connect(config, function () {});
         }, ReferenceError, 'Invalid transport configuration');
@@ -38,7 +38,7 @@ describe('MqttBase', function () {
       [null, undefined, ''].forEach(function (falsyValue) {
         it('throws if ' + falsyProperty + ' is ' + falsyValue , function () {
           fakeConfig[falsyProperty] = falsyValue;
-          var mqtt = new MqttBase(fakeConfig, 'test', new FakeMqtt());
+          var mqtt = new MqttBase(new FakeMqtt());
           assert.throws(function () {
             mqtt.connect(fakeConfig, function () {});
           }, ReferenceError, 'Invalid transport configuration');
@@ -61,7 +61,7 @@ describe('MqttBase', function () {
           var config = fakeConfig;
           config.sharedAccessSignature = sas;
           config.x509 = x509;
-          var mqtt = new MqttBase(config, 'test', new FakeMqtt());
+          var mqtt = new MqttBase(new FakeMqtt());
           assert.throws(function () {
             mqtt.connect(config, function () {});
           }, ReferenceError, 'Invalid transport configuration');
@@ -72,9 +72,8 @@ describe('MqttBase', function () {
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_002: [The `connect` method shall use the authentication parameters contained in the `config` argument to connect to the server.]*/
     it('uses the authentication parameters contained in the config structure (SharedAccessSignature)', function () {
       var config = fakeConfig;
-      var fakeSdkVersionString = 'test';
       var fakemqtt = new FakeMqtt();
-      var transport = new MqttBase(fakeSdkVersionString, fakemqtt);
+      var transport = new MqttBase(fakemqtt);
 
       fakemqtt.connect = function(host, options) {
         assert.strictEqual(options.clientId, config.clientId);
@@ -106,9 +105,8 @@ describe('MqttBase', function () {
         }
       };
 
-      var fakeSdkVersionString = 'test';
       var fakemqtt = new FakeMqtt();
-      var transport = new MqttBase(fakeSdkVersionString, fakemqtt);
+      var transport = new MqttBase(fakemqtt);
 
       fakemqtt.connect = function(host, options) {
         assert.strictEqual(options.clientId, config.clientId);
@@ -139,7 +137,7 @@ describe('MqttBase', function () {
       };
 
       var fakemqtt = new FakeMqtt();
-      var transport = new MqttBase('test', fakemqtt);
+      var transport = new MqttBase(fakemqtt);
 
       fakemqtt.connect = function(host) {
         assert.strictEqual(host, config.uri);
@@ -153,7 +151,7 @@ describe('MqttBase', function () {
     it('uses the ca passed into setOptions', function(done) {
       var fakeCa = '__FAKE_CA__';
       var fakemqtt = new FakeMqtt();
-      var transport = new MqttBase('test', fakemqtt);
+      var transport = new MqttBase(fakemqtt);
 
       transport.setOptions({ca: fakeCa});
       fakemqtt.connect = function(host, options) {
@@ -167,7 +165,7 @@ describe('MqttBase', function () {
     it('uses the agent passed into setOptions', function(done) {
       var fakeAgent = '__FAKE_AGENT__';
       var fakemqtt = new FakeMqtt();
-      var transport = new MqttBase('test', fakemqtt);
+      var transport = new MqttBase(fakemqtt);
 
       transport.setOptions({mqtt: { webSocketAgent: fakeAgent }});
       fakemqtt.connect = function(host, options) {
@@ -181,7 +179,7 @@ describe('MqttBase', function () {
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_12_005: [The `connect` method shall call connect on MQTT.JS  library and call the `done` callback with a `null` error object and the result as a second argument.]*/
     it('calls the done callback once successfully connected to the server', function(done) {
       var fakemqtt = new FakeMqtt();
-      var transport = new MqttBase('test', fakemqtt);
+      var transport = new MqttBase(fakemqtt);
       transport.connect(fakeConfig, function(err) {
         if(err) {
           done(err);
@@ -197,7 +195,7 @@ describe('MqttBase', function () {
     ['close', 'offline', 'error', 'disconnect'].forEach(function(event) {
       it('calls the done callback with an error if we get the \'' + event + '\' event before connect', function(done) {
         var fakemqtt = new FakeMqtt();
-        var transport = new MqttBase('test', fakemqtt);
+        var transport = new MqttBase(fakemqtt);
         transport.connect(fakeConfig, function(err) {
           assert.isNotNull(err);
           done();
@@ -211,7 +209,7 @@ describe('MqttBase', function () {
         var callbackCounter = 0;
 
         var fakemqtt = new FakeMqtt();
-        var transport = new MqttBase('test', fakemqtt);
+        var transport = new MqttBase(fakemqtt);
         transport.connect(fakeConfig, function(err) {
           callbackCounter++;
           assert.equal(callbackCounter, 1);
@@ -225,7 +223,7 @@ describe('MqttBase', function () {
 
     it('calls the callback immediately if already connected', function (testCallback) {
       var fakeMqtt = new FakeMqtt();
-      var mqttBase = new MqttBase('test', fakeMqtt);
+      var mqttBase = new MqttBase(fakeMqtt);
       mqttBase.connect(fakeConfig, function () {
         mqttBase.connect(fakeConfig, function() {
           assert.isTrue(fakeMqtt.connect.calledOnce);
@@ -239,7 +237,7 @@ describe('MqttBase', function () {
   describe('#disconnect', function () {
     it('calls the callback immediately if already disconnected', function (testCallback) {
       var fakeMqtt = new FakeMqtt();
-      var mqttBase = new MqttBase('test', fakeMqtt);
+      var mqttBase = new MqttBase(fakeMqtt);
       mqttBase.disconnect(function() {
         assert.isTrue(fakeMqtt.connect.notCalled);
         testCallback();
@@ -248,7 +246,7 @@ describe('MqttBase', function () {
 
     it('disconnects the client if connected', function (testCallback) {
       var fakeMqtt = new FakeMqtt();
-      var mqttBase = new MqttBase('test', fakeMqtt);
+      var mqttBase = new MqttBase(fakeMqtt);
       mqttBase.connect(fakeConfig, function () {
         mqttBase.disconnect(function() {
           assert.isTrue(fakeMqtt.connect.calledOnce);
@@ -264,7 +262,7 @@ describe('MqttBase', function () {
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_018: [The `publish` method shall throw a `ReferenceError` if the topic is falsy.]*/
     [null, undefined, ''].forEach(function (topic) {
       it('throws if topic is \'' + topic + '\'', function () {
-        var transport = new MqttBase('test', new FakeMqtt());
+        var transport = new MqttBase(new FakeMqtt());
         assert.throws(function () {
           transport.publish(topic, 'payload', function () {});
         }, ReferenceError, 'Invalid topic');
@@ -274,7 +272,7 @@ describe('MqttBase', function () {
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_019: [The `publish` method shall throw a `ReferenceError` if the payload is falsy.]*/
     [null, undefined, ''].forEach(function (payload) {
       it('throws if payload is \'' + payload + '\'', function () {
-        var transport = new MqttBase('test', new FakeMqtt());
+        var transport = new MqttBase(new FakeMqtt());
         assert.throws(function () {
           transport.publish('topic', payload, function () {});
         }, ReferenceError, 'Invalid payload');
@@ -283,7 +281,7 @@ describe('MqttBase', function () {
 
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_020: [The `publish` method shall call the callback with a `NotConnectedError` if the connection hasn't been established prior to calling `publish`.]*/
     it('fails with a NotConnectedError if the MQTT connection is not active', function (testCallback) {
-      var transport = new MqttBase('test', new FakeMqtt());
+      var transport = new MqttBase(new FakeMqtt());
       transport.publish('topic', 'payload', {}, function (err) {
         assert.instanceOf(err, errors.NotConnectedError);
         testCallback();
@@ -293,7 +291,7 @@ describe('MqttBase', function () {
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_017: [The `publish` method publishes a `payload` on a `topic` using `options`.]*/
     it('calls publish on the MQTT library', function(testCallback) {
       var fakemqtt = new FakeMqtt();
-      var transport = new MqttBase('test', fakemqtt);
+      var transport = new MqttBase(fakemqtt);
       transport.connect(fakeConfig, function () {
         fakemqtt.publishShouldSucceed(true);
         /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_021: [The  `publish` method shall call `publish` on the mqtt client object and call the `callback` argument with `null` and the `puback` object if it succeeds.]*/
@@ -305,7 +303,7 @@ describe('MqttBase', function () {
     // Publish errors are handled with a callback, so 'error' should be subscribed only once when connecting, to get link errors.
     it('does not subscribe to the error event', function (done) {
       var fakemqtt = new FakeMqtt();
-      var transport = new MqttBase('test', fakemqtt);
+      var transport = new MqttBase(fakemqtt);
       transport.connect(fakeConfig, function () {
         assert.equal(fakemqtt.listeners('error').length, 1);
         fakemqtt.publishShouldSucceed(false);
@@ -322,7 +320,7 @@ describe('MqttBase', function () {
   describe('#subscribe', function () {
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_026: [The `subscribe` method shall call the callback with a `NotConnectedError` if the connection hasn't been established prior to calling `publish`.]*/
     it('fails with a NotConnectedError if the MQTT connection is not active', function (testCallback) {
-      var transport = new MqttBase('test', new FakeMqtt());
+      var transport = new MqttBase(new FakeMqtt());
       transport.subscribe('topic', {}, function (err) {
         assert.instanceOf(err, errors.NotConnectedError);
         testCallback();
@@ -333,7 +331,7 @@ describe('MqttBase', function () {
     [null, undefined, ''].forEach(function (badTopic) {
       it('throws if the topic is \'' + badTopic + '\'', function () {
         var fakeMqtt = new FakeMqtt();
-        var transport = new MqttBase('test', fakeMqtt);
+        var transport = new MqttBase(fakeMqtt);
         assert.throws(function () {
           transport.subscribe(badTopic, {}, function () {});
         }, ReferenceError);
@@ -345,7 +343,7 @@ describe('MqttBase', function () {
       var fakeTopic = 'topic';
       var fakeOptions = {};
       var fakeMqtt = new FakeMqtt();
-      var transport = new MqttBase('test', fakeMqtt);
+      var transport = new MqttBase(fakeMqtt);
       transport.connect(fakeConfig, function () {
         transport.subscribe(fakeTopic, fakeOptions, function () {
           /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_024: [The `subscribe` method shall call the callback with `null` and the `suback` object if the mqtt library successfully subscribes to the `topic`.]*/
@@ -363,7 +361,7 @@ describe('MqttBase', function () {
       var fakeError = new Error('unsubscribe failed');
       var fakeMqtt = new FakeMqtt();
       fakeMqtt.subscribe = sinon.stub().callsArgWith(2, fakeError);
-      var transport = new MqttBase('test', fakeMqtt);
+      var transport = new MqttBase(fakeMqtt);
       transport.connect(fakeConfig, function () {
         transport.subscribe(fakeTopic, fakeOptions, function (err) {
           assert.strictEqual(err, fakeError);
@@ -378,7 +376,7 @@ describe('MqttBase', function () {
   describe('#unsubscribe', function () {
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_027: [The `unsubscribe` method shall call the callback with a `NotConnectedError` if the connection hasn't been established prior to calling `publish`.]*/
     it('fails with a NotConnectedError if the MQTT connection is not active', function (testCallback) {
-      var transport = new MqttBase('test', new FakeMqtt());
+      var transport = new MqttBase(new FakeMqtt());
       transport.unsubscribe('topic', function (err) {
         assert.instanceOf(err, errors.NotConnectedError);
         testCallback();
@@ -389,7 +387,7 @@ describe('MqttBase', function () {
     [null, undefined, ''].forEach(function (badTopic) {
       it('throws if the topic is \'' + badTopic + '\'', function () {
         var fakeMqtt = new FakeMqtt();
-        var transport = new MqttBase('test', fakeMqtt);
+        var transport = new MqttBase(fakeMqtt);
         assert.throws(function () {
           transport.unsubscribe(badTopic, function () {});
         }, ReferenceError);
@@ -401,7 +399,7 @@ describe('MqttBase', function () {
     it('calls unsubscribe on the mqtt client', function (testCallback) {
       var fakeTopic = 'topic';
       var fakeMqtt = new FakeMqtt();
-      var transport = new MqttBase('test', fakeMqtt);
+      var transport = new MqttBase(fakeMqtt);
       transport.connect(fakeConfig, function () {
         transport.unsubscribe(fakeTopic, function () {
           assert.isTrue(fakeMqtt.unsubscribe.calledWith(fakeTopic));
@@ -417,7 +415,7 @@ describe('MqttBase', function () {
     [null, undefined, ''].forEach(function (badSas) {
       it('throws if the new shared access signature is \'' + badSas + '\'', function () {
         var fakeMqtt = new FakeMqtt();
-        var transport = new MqttBase('test', fakeMqtt);
+        var transport = new MqttBase(fakeMqtt);
         assert.throws(function () {
           transport.updateSharedAccessSignature(badSas, function () {});
         }, ReferenceError);
@@ -427,7 +425,7 @@ describe('MqttBase', function () {
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_034: [The `updateSharedAccessSignature` method shall not trigger any network activity if the mqtt client is not connected.]*/
     it('does not try to connect if the MQTT connection is not active', function (testCallback) {
       var fakeMqtt = new FakeMqtt();
-      var transport = new MqttBase('test', fakeMqtt);
+      var transport = new MqttBase(fakeMqtt);
       transport.connect(fakeConfig, function () {
         transport.disconnect(function () {
           transport.updateSharedAccessSignature('sas', function () {
@@ -444,7 +442,7 @@ describe('MqttBase', function () {
     it('disconnects and reconnects the mqtt client', function (testCallback) {
       var newSas = 'newsas';
       var fakeMqtt = new FakeMqtt();
-      var transport = new MqttBase('test', fakeMqtt);
+      var transport = new MqttBase(fakeMqtt);
       transport.connect(fakeConfig, function () {
         assert.isTrue(fakeMqtt.connect.calledOnce);
         assert.strictEqual(fakeMqtt.connect.firstCall.args[1].password, fakeConfig.sharedAccessSignature);
@@ -465,7 +463,7 @@ describe('MqttBase', function () {
     it('calls the callback with an error if it fails to reconnect the mqtt client', function (testCallback) {
       var fakeError = new Error('fake failed to reconnect');
       var fakeMqtt = new FakeMqtt();
-      var transport = new MqttBase('test', fakeMqtt);
+      var transport = new MqttBase(fakeMqtt);
       transport.connect(fakeConfig, function () {
         transport.updateSharedAccessSignature('newSas', function (err) {
           assert.isTrue(fakeMqtt.end.calledOnce);
@@ -485,7 +483,7 @@ describe('MqttBase', function () {
       var fakeTopic = 'topic';
       var fakePayload = 'payload';
       var fakeMqtt = new FakeMqtt();
-      var mqttBase = new MqttBase('test', fakeMqtt);
+      var mqttBase = new MqttBase(fakeMqtt);
       mqttBase.on('message', function (topic, payload) {
         assert.strictEqual(topic, fakeTopic);
         assert.strictEqual(payload, fakePayload);
@@ -499,7 +497,7 @@ describe('MqttBase', function () {
 
     it('emits a NotConnectedError when the mqtt client emits an close while connected', function (testCallback) {
       var fakeMqtt = new FakeMqtt();
-      var mqttBase = new MqttBase('test', fakeMqtt);
+      var mqttBase = new MqttBase(fakeMqtt);
       mqttBase.on('error', function (err) {
         assert.instanceOf(err, errors.NotConnectedError);
         testCallback();
@@ -517,7 +515,7 @@ describe('MqttBase', function () {
         disconnectCallback = callback;
         // blocks instead of calling its callback.
       });
-      var mqttBase = new MqttBase('test', fakeMqtt);
+      var mqttBase = new MqttBase(fakeMqtt);
       mqttBase.on('error', function () {
         assert.fail();
       });

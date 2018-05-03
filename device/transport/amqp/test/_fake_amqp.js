@@ -66,7 +66,7 @@ var FakeAmqp = function() {
     detachCallback();
   }
 
-  this.connect = function (uri, sslOptions, callback) {
+  this.connect = function (config, callback) {
     callback(null, new results.Connected());
   }
 
