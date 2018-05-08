@@ -918,7 +918,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
 
     return topic;
   }
-  
+
    private _ensureAgentString(done: () => void): void {
     if (this._userAgentString) {
       done();

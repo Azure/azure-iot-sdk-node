@@ -149,8 +149,6 @@ describe('Mqtt', function () {
       baseTopicWithProps: 'devices/deviceId/modules/moduleId/messages/events/%24.on=fakeOutputName&',
       topicEnder: '/'
     }
-
-
   ].forEach(function (testConfig) {
     describe('#' + testConfig.testName, function () {
 
@@ -572,51 +570,52 @@ describe('Mqtt', function () {
 
 
     getUserAgentString(function(userAgentString) {
-    [
-      /*Tests_SRS_NODE_DEVICE_MQTT_16_016: [If the connection string does not specify a `gatewayHostName` value, the `Mqtt` constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
-      {
-        fieldNameToSet: null,
-        fieldValueToSet: null,
-        fieldNameToCheck: 'uri',
-        fieldValueToCheck: 'mqtts://host.name'
-      },
-      /*Tests_SRS_NODE_DEVICE_MQTT_18_052: [ If a `moduleId` is specified in the connection string, the Mqtt constructor shall initialize the `clientId` property of the `config` object to '<deviceId>/<moduleId>'. ]*/
-      {
-        fieldNameToSet: 'moduleId',
-        fieldValueToSet: 'moduleId',
-        fieldNameToCheck: 'clientId',
-        fieldValueToCheck: 'deviceId/moduleId'
-      },
-      /*Tests_SRS_NODE_DEVICE_MQTT_18_053: [ If a `moduleId` is not specified in the connection string, the Mqtt constructor shall initialize the `clientId` property of the `config` object to '<deviceId>'. ]*/
-      {
-        fieldNameToSet: null,
-        fieldValueToSet: null,
-        fieldNameToCheck: 'clientId',
-        fieldValueToCheck: 'deviceId'
-      },
-      /*Tests_SRS_NODE_DEVICE_MQTT_18_054: [ If a `gatewayHostName` is specified in the connection string, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<gatewayhostname>`. ]*/
-      {
-        fieldNameToSet: 'gatewayHostName',
-        fieldValueToSet: 'fakeGatewayHost',
-        fieldNameToCheck: 'uri',
-        fieldValueToCheck: 'mqtts://fakeGatewayHost'
-      },
-      /*Tests_SRS_NODE_DEVICE_MQTT_18_055: [ The Mqtt constructor shall initialize the `username` property of the `config` object to '<host>/<clientId>/api-version=<version>&DeviceClientType=<agentString>'. ]*/
-      {
-        fieldNameToSet: null,
-        fieldValueToSet: null,
-        fieldNameToCheck: 'username',
-        fieldValueToCheck: 'host.name/deviceId/' + endpoint.versionQueryString().substr(1) + '&DeviceClientType=' + encodeURIComponent(userAgentString)
-      }
-    ].forEach(function (testConfig) {
-      it('sets the ' + testConfig.fieldNameToCheck + ' to \'' + testConfig.fieldValueToCheck + '\'', function (testCallback) {
-        if (testConfig.fieldNameToSet) {
-          fakeConfig[testConfig.fieldNameToSet] = testConfig.fieldValueToSet;
+      [
+        /*Tests_SRS_NODE_DEVICE_MQTT_16_016: [If the connection string does not specify a `gatewayHostName` value, the `Mqtt` constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
+        {
+          fieldNameToSet: null,
+          fieldValueToSet: null,
+          fieldNameToCheck: 'uri',
+          fieldValueToCheck: 'mqtts://host.name'
+        },
+        /*Tests_SRS_NODE_DEVICE_MQTT_18_052: [ If a `moduleId` is specified in the connection string, the Mqtt constructor shall initialize the `clientId` property of the `config` object to '<deviceId>/<moduleId>'. ]*/
+        {
+          fieldNameToSet: 'moduleId',
+          fieldValueToSet: 'moduleId',
+          fieldNameToCheck: 'clientId',
+          fieldValueToCheck: 'deviceId/moduleId'
+        },
+        /*Tests_SRS_NODE_DEVICE_MQTT_18_053: [ If a `moduleId` is not specified in the connection string, the Mqtt constructor shall initialize the `clientId` property of the `config` object to '<deviceId>'. ]*/
+        {
+          fieldNameToSet: null,
+          fieldValueToSet: null,
+          fieldNameToCheck: 'clientId',
+          fieldValueToCheck: 'deviceId'
+        },
+        /*Tests_SRS_NODE_DEVICE_MQTT_18_054: [ If a `gatewayHostName` is specified in the connection string, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<gatewayhostname>`. ]*/
+        {
+          fieldNameToSet: 'gatewayHostName',
+          fieldValueToSet: 'fakeGatewayHost',
+          fieldNameToCheck: 'uri',
+          fieldValueToCheck: 'mqtts://fakeGatewayHost'
+        },
+        /*Tests_SRS_NODE_DEVICE_MQTT_18_055: [ The Mqtt constructor shall initialize the `username` property of the `config` object to '<host>/<clientId>/api-version=<version>&DeviceClientType=<agentString>'. ]*/
+        {
+          fieldNameToSet: null,
+          fieldValueToSet: null,
+          fieldNameToCheck: 'username',
+          fieldValueToCheck: 'host.name/deviceId/' + endpoint.versionQueryString().substr(1) + '&DeviceClientType=' + encodeURIComponent(userAgentString)
         }
-        var mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
-        mqtt.connect(function () {
-          assert.strictEqual(fakeMqttBase.connect.firstCall.args[0][testConfig.fieldNameToCheck], testConfig.fieldValueToCheck);
-          testCallback();
+      ].forEach(function (testConfig) {
+        it('sets the ' + testConfig.fieldNameToCheck + ' to \'' + testConfig.fieldValueToCheck + '\'', function (testCallback) {
+          if (testConfig.fieldNameToSet) {
+            fakeConfig[testConfig.fieldNameToSet] = testConfig.fieldValueToSet;
+          }
+          var mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+          mqtt.connect(function () {
+            assert.strictEqual(fakeMqttBase.connect.firstCall.args[0][testConfig.fieldNameToCheck], testConfig.fieldValueToCheck);
+            testCallback();
+          });
         });
       });
     });
