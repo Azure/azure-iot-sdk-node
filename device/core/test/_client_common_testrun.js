@@ -6,7 +6,6 @@
 var assert = require('chai').assert;
 var fs = require('fs');
 
-var Client = require('../lib/client.js').Client;
 var ConnectionString = require('azure-iot-common').ConnectionString;
 var NoRetry = require('azure-iot-common').NoRetry;
 
@@ -25,7 +24,7 @@ var x509Key = fs.readFileSync(process.env.IOTHUB_X509_KEY, 'utf-8');
 var x509Passphrase = process.env.IOTHUB_X509_PASSPHRASE;
 var x509ConnectionString = 'HostName=' + host + ';DeviceId=' + x509DeviceId + ';x509=true';
 
-function badConfigTests(opName, Transport, requestFn) {
+function badConfigTests(opName, Client, Transport, requestFn) {
   var badConnectionStrings = [
     makeConnectionString('bad' + Math.random(), deviceId, 'key=='),
     makeConnectionString(host, 'bad' + Math.random(), 'key=='),
@@ -54,7 +53,7 @@ function badConfigTests(opName, Transport, requestFn) {
     { name: 'password is wrong', expect: assert.isNotNull }
   ];
 
-  /*Tests_SRS_NODE_DEVICE_CLIENT_05_016: [When a Client method encounters an error in the transport, the callback function (indicated by the done argument) shall be invoked with the following arguments:
+  /*Tests_SRS_NODE_INTERNAL_CLIENT_05_016: [When a Client method encounters an error in the transport, the callback function (indicated by the done argument) shall be invoked with the following arguments:
   err - the standard JavaScript Error object, with a response property that points to a transport-specific response object, and a responseBody property that contains the body of the transport response.]*/
   badConnectionStrings.forEach(function (test, index) {
     it('fails to ' + opName + ' when the ' + tests[index].name, function (done) {
@@ -63,9 +62,9 @@ function badConfigTests(opName, Transport, requestFn) {
   });
 }
 
-function singleMessageTests(Transport, registry, testName, requestFn) {
+function singleMessageTests(Client, Transport, registry, testName, requestFn) {
   describe(testName, function () {
-    badConfigTests('send an event', Transport, function (client, done) {
+    badConfigTests('send an event', Client, Transport, function (client, done) {
       requestFn(client, done);
     });
 
@@ -81,11 +80,11 @@ function singleMessageTests(Transport, registry, testName, requestFn) {
       after(function(done) {
         registry.delete(deviceId, done);
       });
-      /*Tests_SRS_NODE_DEVICE_CLIENT_05_007: [The sendEvent method shall send the event indicated by the message argument via the transport associated with the Client instance.]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_05_017: [With the exception of receive, when a Client method completes successfully, the callback function (indicated by the done argument) shall be invoked with the following arguments:
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_05_007: [The sendEvent method shall send the event indicated by the message argument via the transport associated with the Client instance.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_05_017: [With the exception of receive, when a Client method completes successfully, the callback function (indicated by the done argument) shall be invoked with the following arguments:
       err - null
       response - a transport-specific response object]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_18_010: [The `sendOutputEvent` method shall send the event indicated by the `message` argument via the transport associated with the Client instance. ]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_18_010: [The `sendOutputEvent` method shall send the event indicated by the `message` argument via the transport associated with the Client instance. ]*/
       it('sends the event when the client is opened', function (done) {
         var client = Client.fromConnectionString(sakConnectionString, Transport);
 
@@ -108,7 +107,7 @@ function singleMessageTests(Transport, registry, testName, requestFn) {
         });
       });
 
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_048: [The `sendEvent` method shall automatically connect the transport if necessary.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_048: [The `sendEvent` method shall automatically connect the transport if necessary.]*/
       it('sends the event and automatically opens the client if necessary', function(done) {
         var client = Client.fromConnectionString(sakConnectionString, Transport);
         requestFn(client, function (err, res) {
@@ -125,11 +124,11 @@ function singleMessageTests(Transport, registry, testName, requestFn) {
     });
 
     describe('#' + testName + ' with an x509 certificate', function () {
-      /*Tests_SRS_NODE_DEVICE_CLIENT_05_007: [The sendEvent method shall send the event indicated by the message argument via the transport associated with the Client instance.]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_05_017: [With the exception of receive, when a Client method completes successfully, the callback function (indicated by the done argument) shall be invoked with the following arguments:
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_05_007: [The sendEvent method shall send the event indicated by the message argument via the transport associated with the Client instance.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_05_017: [With the exception of receive, when a Client method completes successfully, the callback function (indicated by the done argument) shall be invoked with the following arguments:
       err - null
       response - a transport-specific response object]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_18_010: [The `sendOutputEvent` method shall send the event indicated by the `message` argument via the transport associated with the Client instance. ]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_18_010: [The `sendOutputEvent` method shall send the event indicated by the `message` argument via the transport associated with the Client instance. ]*/
       it('sends the event', function (done) {
         var client = Client.fromConnectionString(x509ConnectionString, Transport);
         client.setOptions({
@@ -157,7 +156,7 @@ function singleMessageTests(Transport, registry, testName, requestFn) {
         });
       });
 
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_048: [The `sendEvent` method shall automatically connect the transport if necessary.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_048: [The `sendEvent` method shall automatically connect the transport if necessary.]*/
       it('sends the event and automatically opens the client if necessary', function(done) {
         var client = Client.fromConnectionString(x509ConnectionString, Transport);
         client.setOptions({
@@ -180,9 +179,9 @@ function singleMessageTests(Transport, registry, testName, requestFn) {
   });
 }
 
-function batchMessageTests(Transport, registry, testName, requestFn) {
+function batchMessageTests(Client, Transport, registry, testName, requestFn) {
   describe(testName, function () {
-    badConfigTests('send an event batch', Transport, function (client, done) {
+    badConfigTests('send an event batch', Client, Transport, function (client, done) {
       requestFn(client, done);
     });
 
@@ -199,11 +198,11 @@ function batchMessageTests(Transport, registry, testName, requestFn) {
         registry.delete(deviceId, done);
       });
 
-      /*Tests_SRS_NODE_DEVICE_CLIENT_05_008: [The sendEventBatch method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance.]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_05_017: [With the exception of receive, when a Client method completes successfully, the callback function (indicated by the done argument) shall be invoked with the following arguments:
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_05_008: [The sendEventBatch method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_05_017: [With the exception of receive, when a Client method completes successfully, the callback function (indicated by the done argument) shall be invoked with the following arguments:
       err - null
       response - a transport-specific response object]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_18_011: [The `sendOutputEventBatch` method shall send the list of events (indicated by the `messages` argument) via the transport associated with the Client instance. ]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_18_011: [The `sendOutputEventBatch` method shall send the list of events (indicated by the `messages` argument) via the transport associated with the Client instance. ]*/
       it('sends the event batch message', function (done) {
         var client = Client.fromConnectionString(sakConnectionString, Transport);
 
@@ -219,11 +218,11 @@ function batchMessageTests(Transport, registry, testName, requestFn) {
     });
 
     describe('#sendEventBatch with an x509 certificate', function() {
-      /*Tests_SRS_NODE_DEVICE_CLIENT_05_008: [The sendEventBatch method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance.]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_05_017: [With the exception of receive, when a Client method completes successfully, the callback function (indicated by the done argument) shall be invoked with the following arguments:
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_05_008: [The sendEventBatch method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_05_017: [With the exception of receive, when a Client method completes successfully, the callback function (indicated by the done argument) shall be invoked with the following arguments:
       err - null
       response - a transport-specific response object]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_18_011: [The `sendOutputEventBatch` method shall send the list of events (indicated by the `messages` argument) via the transport associated with the Client instance. ]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_18_011: [The `sendOutputEventBatch` method shall send the list of events (indicated by the `messages` argument) via the transport associated with the Client instance. ]*/
       it('sends the event batch message', function (done) {
         var client = Client.fromConnectionString(x509ConnectionString, Transport);
         client.setOptions({
@@ -245,36 +244,36 @@ function batchMessageTests(Transport, registry, testName, requestFn) {
   });
 }
 
-var sendEventTests = function(Transport, registry) {
+var sendEventTests = function(Client, Transport, registry) {
   var message = new Message('hello');
-  singleMessageTests(Transport, registry, 'Client.sendEvent', function (client, done) {
+  singleMessageTests(Client, Transport, registry, 'Client.sendEvent', function (client, done) {
     client.sendEvent(message, done);
   });
 }
 
-var sendOutputEventTests = function(Transport, registry) {
+var sendOutputEventTests = function(Client, Transport, registry) {
   var message = new Message('hello');
-  singleMessageTests(Transport, registry, 'Client.sendOutputEvent', function (client, done) {
+  singleMessageTests(Client, Transport, registry, 'Client.sendOutputEvent', function (client, done) {
     client.sendOutputEvent('outputName', message, done);
   });
 }
 
-var sendEventBatchTests = function(Transport, registry) {
+var sendEventBatchTests = function(Client, Transport, registry) {
   var messages = [];
   for (var i = 0; i < 5; i++) {
     messages[i] = new Message('Event Msg ' + i);
   }
-  batchMessageTests(Transport, registry, 'client.sendEventBatch', function (client, done) {
+  batchMessageTests(Client, Transport, registry, 'client.sendEventBatch', function (client, done) {
     client.sendEventBatch(messages, done);
   });
 }
 
-var sendOutputEventBatchTests = function(Transport, registry) {
+var sendOutputEventBatchTests = function(Client, Transport, registry) {
   var messages = [];
   for (var i = 0; i < 5; i++) {
     messages[i] = new Message('Event Msg ' + i);
   }
-  batchMessageTests(Transport, registry, 'client.sendOutputEventBatch', function (client, done) {
+  batchMessageTests(Client, Transport, registry, 'client.sendOutputEventBatch', function (client, done) {
     client.sendOutputEventBatch('outputName', messages, done);
   });
 }

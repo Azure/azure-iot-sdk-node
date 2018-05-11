@@ -7,14 +7,14 @@ var EventEmitter = require('events').EventEmitter;
 var assert = require('chai').assert;
 var sinon = require('sinon');
 
-var Client = require('../lib/client.js').Client;
+var InternalClient = require('../lib/internal_client.js').InternalClient;
 var results = require('azure-iot-common').results;
 var Message = require('azure-iot-common').Message;
 var errors = require('azure-iot-common').errors;
 var ExponentialBackOffWithJitter = require('azure-iot-common').ExponentialBackOffWithJitter;
 
 
-describe('Client Retry Logic', function () {
+describe('InternalClient Retry Logic', function () {
   [
     {
       funcName: 'sendEvent',
@@ -50,7 +50,7 @@ describe('Client Retry Logic', function () {
       var fakeBlobClient = { updateSharedAccessSignature: function () {} };
       fakeTransport[testConfig.funcName] = sinon.stub().callsArgWith(1, new errors.TimeoutError('failed'));
 
-      var client = new Client(fakeTransport, null, fakeBlobClient);
+      var client = new InternalClient(fakeTransport, null, fakeBlobClient);
       client._maxOperationTimeout = 100;
       client[testConfig.funcName](new Message('foo'), function (err) {
         assert(fakeTransport[testConfig.funcName].callCount >= 2);
@@ -64,7 +64,7 @@ describe('Client Retry Logic', function () {
     var fakeBlobClient = { updateSharedAccessSignature: function () {} };
     fakeTransport.connect = sinon.stub().callsArgWith(0, new errors.TimeoutError('failed'));
 
-    var client = new Client(fakeTransport, null, fakeBlobClient);
+    var client = new InternalClient(fakeTransport, null, fakeBlobClient);
     client._maxOperationTimeout = 100;
     client.open(function (err) {
       assert(fakeTransport.connect.callCount >= 2);
@@ -78,7 +78,7 @@ describe('Client Retry Logic', function () {
     fakeTransport.onDeviceMethod = sinon.stub();
     fakeTransport.enableMethods = sinon.stub().callsArgWith(0, new errors.TimeoutError('failed'));
 
-    var client = new Client(fakeTransport, null, fakeBlobClient);
+    var client = new InternalClient(fakeTransport, null, fakeBlobClient);
     client._maxOperationTimeout = 100;
     client.on('error', (err) => {
       assert(fakeTransport.onDeviceMethod.calledOnce);
@@ -95,7 +95,7 @@ describe('Client Retry Logic', function () {
     sinon.spy(fakeTransport, 'on');
     fakeTransport.enableC2D = sinon.stub().callsArgWith(0, new errors.TimeoutError('failed'));
 
-    var client = new Client(fakeTransport, null, fakeBlobClient);
+    var client = new InternalClient(fakeTransport, null, fakeBlobClient);
     client._maxOperationTimeout = 100;
     client.on('error', (err) => {
       assert(fakeTransport.enableC2D.callCount >= 2);

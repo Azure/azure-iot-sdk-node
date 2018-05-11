@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-import { Client } from '../client';
+import { DeviceTransport } from '../internal_client';
 
 /**
  * a {@link azure-iot-device.DeviceMethodResponse} object is provided to the user with each {@link azure-iot-device.DeviceMethodRequest} allowing the user to construct and send a
@@ -30,9 +30,9 @@ export class DeviceMethodResponse {
    * @private
    * An object that implements the interface expected of a transport object, e.g., {@link Http}.
    */
-  private _transport: any;
+  private _transport: DeviceTransport;
 
-  constructor(requestId: string, transport: Client.Transport) {
+  constructor(requestId: string, transport: DeviceTransport) {
     // Codes_SRS_NODE_DEVICE_METHOD_RESPONSE_13_002: [ DeviceMethodRequest shall throw an Error if requestId is an empty string. ]
     if (typeof(requestId) === 'string' && requestId.length === 0) {
       throw new Error('requestId must not be an empty string');

@@ -8,7 +8,7 @@ var sinon = require('sinon');
 var stream = require('stream');
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
-var Client = require('../lib/client.js').Client;
+var InternalClient = require('../lib/internal_client.js').InternalClient;
 var SimulatedHttp = require('./http_simulated.js');
 var FakeTransport = require('./fake_transport.js');
 var clientTests = require('./_client_common_testrun.js');
@@ -20,41 +20,43 @@ var SharedAccessKeyAuthenticationProvider = require('../lib/sak_authentication_p
 var SharedAccessSignatureAuthenticationProvider = require('../lib/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider;
 var X509AuthenticationProvider = require('../lib/x509_authentication_provider').X509AuthenticationProvider;
 var Twin = require('../lib/twin').Twin;
+var Client = require('../lib/device_client').Client;
+var ModuleClient = require('../lib/module_client').ModuleClient;
 
-describe('Client', function () {
+describe('InternalClient', function () {
   var sharedKeyConnectionString = 'HostName=host;DeviceId=id;SharedAccessKey=key';
   describe('#constructor', function () {
-    /*Tests_SRS_NODE_DEVICE_CLIENT_05_001: [The Client constructor shall throw ReferenceError if the transport argument is falsy.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_05_001: [The InternalClient constructor shall throw ReferenceError if the transport argument is falsy.]*/
     it('throws if transport arg is falsy', function () {
       [null, undefined, '', 0].forEach(function (transport) {
         assert.throws(function () {
-          return new Client(transport);
+          return new InternalClient(transport);
         }, ReferenceError, 'transport is \'' + transport + '\'');
       });
     });
 
     it('throws if a connection string is passed', function () {
       assert.throws(function () {
-        return new Client(EventEmitter, 'fakeconnectionstring');
+        return new InternalClient(EventEmitter, 'fakeconnectionstring');
       }, errors.InvalidOperationError);
     })
   });
 
   describe('#fromConnectionString', function () {
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_05_003: [The fromConnectionString method shall throw ReferenceError if the connStr argument is falsy.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_05_003: [The fromConnectionString method shall throw ReferenceError if the connStr argument is falsy.]*/
     it('throws if connStr arg is falsy', function () {
       [null, undefined, '', 0].forEach(function (value) {
         assert.throws(function () {
-          return Client.fromConnectionString(value);
+          return InternalClient.fromConnectionString(value);
         }, ReferenceError, 'connStr is \'' + value + '\'');
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_05_006: [The fromConnectionString method shall return a new instance of the Client object, as by a call to new Client(new Transport(...)).]*/
-    it('returns an instance of Client', function () {
-      var client = Client.fromConnectionString(sharedKeyConnectionString, FakeTransport);
-      assert.instanceOf(client, Client);
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_05_006: [The fromConnectionString method shall return a new instance of the InternalClient object, as by a call to new InternalClient(new Transport(...)).]*/
+    it('returns an instance of InternalClient', function () {
+      var client = InternalClient.fromConnectionString(sharedKeyConnectionString, FakeTransport, InternalClient);
+      assert.instanceOf(client, InternalClient);
     });
 
     it('doesn\'t try to renew the SAS token when using x509', function (testCallback) {
@@ -62,8 +64,8 @@ describe('Client', function () {
       var clock = this.clock;
 
       var x509ConnectionString = 'HostName=host;DeviceId=id;x509=true';
-      var client = new Client.fromConnectionString(x509ConnectionString, FakeTransport);
-      assert.instanceOf(client, Client);
+      var client = new InternalClient.fromConnectionString(x509ConnectionString, FakeTransport, InternalClient);
+      assert.instanceOf(client, InternalClient);
 
       sinon.stub(client._transport, 'updateSharedAccessSignature').callsFake(function () {
         clock.restore();
@@ -75,43 +77,43 @@ describe('Client', function () {
       testCallback();
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_087: [The `fromConnectionString` method shall create a new `SharedAccessKeyAuthorizationProvider` object with the connection string passed as argument if it contains a SharedAccessKey parameter and pass this object to the transport constructor. ]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_087: [The `fromConnectionString` method shall create a new `SharedAccessKeyAuthorizationProvider` object with the connection string passed as argument if it contains a SharedAccessKey parameter and pass this object to the transport constructor. ]*/
     it('creates a SharedAccessKeyAuthorizationProvider and passes it to the transport', function (testCallback) {
-      var client = Client.fromConnectionString(sharedKeyConnectionString, function (authProvider) {
+      var client = InternalClient.fromConnectionString(sharedKeyConnectionString, function (authProvider) {
         assert.instanceOf(authProvider, SharedAccessKeyAuthenticationProvider);
         testCallback();
-      })
+      }, InternalClient);
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_093: [The `fromConnectionString` method shall create a new `X509AuthorizationProvider` object with the connection string passed as argument if it contains an X509 parameter and pass this object to the transport constructor.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_093: [The `fromConnectionString` method shall create a new `X509AuthorizationProvider` object with the connection string passed as argument if it contains an X509 parameter and pass this object to the transport constructor.]*/
     it('creates a X509AuthenticationProvider and passes it to the transport', function (testCallback) {
       var x509ConnectionString = 'HostName=host;DeviceId=id;x509=true';
-      var client = Client.fromConnectionString(x509ConnectionString, function (authProvider) {
+      var client = InternalClient.fromConnectionString(x509ConnectionString, function (authProvider) {
         assert.instanceOf(authProvider, X509AuthenticationProvider);
         testCallback();
-      })
+      }, InternalClient)
     });
   });
 
   describe('#fromSharedAccessSignature', function () {
     var sharedAccessSignature = '"SharedAccessSignature sr=hubName.azure-devices.net/devices/deviceId&sig=s1gn4tur3&se=1454204843"';
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_029: [The fromSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature argument is falsy.] */
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_029: [The fromSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature argument is falsy.] */
     it('throws if sharedAccessSignature arg is falsy', function () {
       [null, undefined, '', 0].forEach(function (value) {
         assert.throws(function () {
-          return Client.fromSharedAccessSignature(value);
+          return InternalClient.fromSharedAccessSignature(value);
         }, ReferenceError, 'sharedAccessSignature is \'' + value + '\'');
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_030: [The fromSharedAccessSignature method shall return a new instance of the Client object] */
-    it('returns an instance of Client', function () {
-      var client = Client.fromSharedAccessSignature(sharedAccessSignature, FakeTransport);
-      assert.instanceOf(client, Client);
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_030: [The fromSharedAccessSignature method shall return a new instance of the InternalClient object] */
+    it('returns an instance of InternalClient', function () {
+      var client = InternalClient.fromSharedAccessSignature(sharedAccessSignature, FakeTransport, InternalClient);
+      assert.instanceOf(client, InternalClient);
     });
 
     it('creates a SharedAccessSignatureAuthorizationProvider and passes it to the transport', function (testCallback) {
-      var client = Client.fromSharedAccessSignature(sharedAccessSignature, function (authProvider) {
+      var client = InternalClient.fromSharedAccessSignature(sharedAccessSignature, function (authProvider) {
         assert.instanceOf(authProvider, SharedAccessSignatureAuthenticationProvider);
         testCallback();
       });
@@ -119,42 +121,42 @@ describe('Client', function () {
   });
 
   describe('#fromAuthenticationProvider', function () {
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_089: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `authenticationProvider` argument is falsy.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_089: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `authenticationProvider` argument is falsy.]*/
     [null, undefined].forEach(function (badAuthProvider) {
       it('throws if the authenticationProvider is falsy', function () {
         assert.throws(function () {
-          return Client.fromAuthenticationProvider(badAuthProvider, function () {});
+          return InternalClient.fromAuthenticationProvider(badAuthProvider, function () {});
         }, ReferenceError);
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_092: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `transportCtor` argument is falsy.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_092: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `transportCtor` argument is falsy.]*/
     [null, undefined].forEach(function (badTransportCtor) {
       it('throws if the transportCtor is falsy', function () {
         assert.throws(function () {
-          return Client.fromAuthenticationProvider({}, badTransportCtor);
+          return InternalClient.fromAuthenticationProvider({}, badTransportCtor);
         }, ReferenceError);
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_090: [The `fromAuthenticationProvider` method shall pass the `authenticationProvider` object passed as argument to the transport constructor.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_090: [The `fromAuthenticationProvider` method shall pass the `authenticationProvider` object passed as argument to the transport constructor.]*/
     it('passes the authenticationProvider to the transport', function () {
       var fakeAuthProvider = {};
       var fakeTransportCtor = sinon.stub().returns(new EventEmitter());
-      return Client.fromAuthenticationProvider(fakeAuthProvider, fakeTransportCtor);
+      return InternalClient.fromAuthenticationProvider(fakeAuthProvider, fakeTransportCtor, InternalClient);
       assert.isTrue(fakeTransportCtor.calledWith(fakeAuthProvider));
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_091: [The `fromAuthenticationProvider` method shall return a `Client` object configured with a new instance of a transport created using the `transportCtor` argument.]*/
-    it('returns an instance of Client', function () {
-      var client = Client.fromAuthenticationProvider({}, FakeTransport);
-      assert.instanceOf(client, Client);
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_091: [The `fromAuthenticationProvider` method shall return a `InternalClient` object configured with a new instance of a transport created using the `transportCtor` argument.]*/
+    it('returns an instance of InternalClient', function () {
+      var client = InternalClient.fromAuthenticationProvider({}, FakeTransport, InternalClient);
+      assert.instanceOf(client, InternalClient);
     })
   });
 
   describe('#setTransportOptions', function () {
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_021: [The ‘setTransportOptions’ method shall call the ‘setOptions’ method on the transport object.]*/
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_022: [The ‘done’ callback shall be invoked with a null error object and a ‘TransportConfigured’ object nce the transport has been configured.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_021: [The ‘setTransportOptions’ method shall call the ‘setOptions’ method on the transport object.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_022: [The ‘done’ callback shall be invoked with a null error object and a ‘TransportConfigured’ object nce the transport has been configured.]*/
     it('calls the setOptions method on the transport object and gives it the options parameter', function (done) {
       var testOptions = { foo: 42 };
       var dummyTransport = new FakeTransport();
@@ -163,7 +165,7 @@ describe('Client', function () {
         callback(null, new results.TransportConfigured());
       });
 
-      var client = new Client(dummyTransport);
+      var client = new InternalClient(dummyTransport);
       client.setTransportOptions(testOptions, function (err, result) {
         if (err) {
           done(err);
@@ -174,7 +176,7 @@ describe('Client', function () {
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_023: [The ‘done’ callback shall be invoked with a standard javascript Error object and no result object if the transport could not be configued as requested.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_023: [The ‘done’ callback shall be invoked with a standard javascript Error object and no result object if the transport could not be configued as requested.]*/
     it('calls the \'done\' callback with an error object if setOptions failed', function (done) {
       var dummyTransport = new FakeTransport();
       sinon.stub(dummyTransport, 'setOptions').callsFake(function (options, callback) {
@@ -182,26 +184,26 @@ describe('Client', function () {
         callback(err);
       });
 
-      var client = new Client(dummyTransport);
+      var client = new InternalClient(dummyTransport);
       client.setTransportOptions({ foo: 42 }, function (err) {
         assert.isNotNull(err);
         done();
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_024: [The ‘setTransportOptions’ method shall throw a ‘ReferenceError’ if the options object is falsy] */
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_024: [The ‘setTransportOptions’ method shall throw a ‘ReferenceError’ if the options object is falsy] */
     [null, undefined, '', 0].forEach(function (option) {
       it('throws a ReferenceError if options is ' + option, function () {
-        var client = new Client(new FakeTransport());
+        var client = new InternalClient(new FakeTransport());
         assert.throws(function () {
           client.setTransportOptions(option, function () { });
         }, ReferenceError);
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_025: [The ‘setTransportOptions’ method shall throw a ‘NotImplementedError’ if the transport doesn’t implement a ‘setOption’ method.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_025: [The ‘setTransportOptions’ method shall throw a ‘NotImplementedError’ if the transport doesn’t implement a ‘setOption’ method.]*/
     it('throws a NotImplementedError if the setOptions method is not implemented on the transport', function () {
-      var client = new Client(new EventEmitter());
+      var client = new InternalClient(new EventEmitter());
 
       assert.throws(function () {
         client.setTransportOptions({ foo: 42 }, function () { });
@@ -210,30 +212,30 @@ describe('Client', function () {
   });
 
   describe('#setOptions', function() {
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
     [null, undefined].forEach(function(options) {
       it('throws is options is ' + options, function() {
-        var client = new Client(new EventEmitter());
+        var client = new InternalClient(new EventEmitter());
         assert.throws(function () {
           client.setOptions(options, function () { });
         }, ReferenceError);
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_043: [The `done` callback shall be invoked no parameters when it has successfully finished setting the client and/or transport options.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_043: [The `done` callback shall be invoked no parameters when it has successfully finished setting the client and/or transport options.]*/
     it('calls the done callback with no parameters when it has successfully configured the transport', function(done) {
-      var client = new Client(new FakeTransport());
+      var client = new InternalClient(new FakeTransport());
       client.setOptions({}, done);
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_044: [The `done` callback shall be invoked with a standard javascript `Error` object and no result object if the client could not be configured as requested.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_044: [The `done` callback shall be invoked with a standard javascript `Error` object and no result object if the client could not be configured as requested.]*/
     it('calls the done callback with an error when it failed to configured the transport', function(done) {
       var failingTransport = new FakeTransport();
       sinon.stub(failingTransport, 'setOptions').callsFake(function (options, done) {
         done(new Error('dummy error'));
       });
 
-      var client = new Client(failingTransport);
+      var client = new InternalClient(failingTransport);
       client.setOptions({}, function(err) {
         assert.instanceOf(err, Error);
         done();
@@ -242,37 +244,37 @@ describe('Client', function () {
   });
 
   describe('#uploadToBlob', function() {
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_037: [The `uploadToBlob` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_037: [The `uploadToBlob` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
     [undefined, null, ''].forEach(function (blobName) {
       it('throws a ReferenceError if \'blobName\' is ' + blobName + '\'', function() {
-        var client = new Client(new EventEmitter(), null, {});
+        var client = new InternalClient(new EventEmitter(), null, {});
         assert.throws(function() {
           client.uploadToBlob(blobName, new stream.Readable(), 42, function() {});
         });
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_038: [The `uploadToBlob` method shall throw a `ReferenceError` if `stream` is falsy.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_038: [The `uploadToBlob` method shall throw a `ReferenceError` if `stream` is falsy.]*/
     [undefined, null, ''].forEach(function (stream) {
       it('throws a ReferenceError if \'stream\' is ' + stream + '\'', function() {
-        var client = new Client(new EventEmitter(), null, {});
+        var client = new InternalClient(new EventEmitter(), null, {});
         assert.throws(function() {
           client.uploadToBlob('blobName', stream, 42, function() {});
         });
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_039: [The `uploadToBlob` method shall throw a `ReferenceError` if `streamLength` is falsy.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_039: [The `uploadToBlob` method shall throw a `ReferenceError` if `streamLength` is falsy.]*/
     [undefined, null, '', 0].forEach(function (streamLength) {
       it('throws a ReferenceError if \'streamLength\' is ' + streamLength + '\'', function() {
-        var client = new Client(new EventEmitter(), null, {});
+        var client = new InternalClient(new EventEmitter(), null, {});
         assert.throws(function() {
           client.uploadToBlob('blobName', new stream.Readable(), streamLength, function() {});
         });
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_040: [The `uploadToBlob` method shall call the `done` callback with an `Error` object if the upload fails.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_040: [The `uploadToBlob` method shall call the `done` callback with an `Error` object if the upload fails.]*/
     it('calls the done callback with an Error object if the upload fails', function(done) {
       var DummyBlobUploader = function () {
         this.uploadToBlob = function(blobName, stream, streamLength, callback) {
@@ -280,14 +282,14 @@ describe('Client', function () {
         };
       };
 
-      var client = new Client(new EventEmitter(), null, new DummyBlobUploader());
+      var client = new InternalClient(new EventEmitter(), null, new DummyBlobUploader());
       client.uploadToBlob('blobName', new stream.Readable(), 42, function(err) {
         assert.instanceOf(err, Error);
         done();
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_041: [The `uploadToBlob` method shall call the `done` callback no parameters if the upload succeeds.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_041: [The `uploadToBlob` method shall call the `done` callback no parameters if the upload succeeds.]*/
     it('calls the done callback with no parameters if the upload succeeded', function (done) {
       var DummyBlobUploader = function () {
         this.uploadToBlob = function(blobName, stream, streamLength, callback) {
@@ -295,15 +297,15 @@ describe('Client', function () {
         };
       };
 
-      var client = new Client(new EventEmitter(), null, new DummyBlobUploader());
+      var client = new InternalClient(new EventEmitter(), null, new DummyBlobUploader());
       client.uploadToBlob('blobName', new stream.Readable(), 42, done);
     });
   });
 
   describe('#open', function () {
-    /* Tests_SRS_NODE_DEVICE_CLIENT_12_001: [The open function shall call the transport’s connect function, if it exists.] */
+    /* Tests_SRS_NODE_INTERNAL_CLIENT_12_001: [The open function shall call the transport’s connect function, if it exists.] */
     it('calls connect on the transport if the method exists', function (done) {
-      var client = new Client(new FakeTransport());
+      var client = new InternalClient(new FakeTransport());
       client.open(function (err, result) {
         if (err) {
           done(err);
@@ -314,10 +316,10 @@ describe('Client', function () {
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_045: [If the transport successfully establishes a connection the `open` method shall subscribe to the `disconnect` event of the transport.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_045: [If the transport successfully establishes a connection the `open` method shall subscribe to the `disconnect` event of the transport.]*/
     it('subscribes to the \'disconnect\' event once connected', function(done) {
       var transport = new FakeTransport();
-      var client = new Client(transport);
+      var client = new InternalClient(transport);
       client.open(function() {
         client.on('disconnect', function() {
           done();
@@ -327,7 +329,7 @@ describe('Client', function () {
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_064: [The `open` method shall call the `openCallback` immediately with a null error object and a `results.Connected()` object if called while renewing the shared access signature.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_064: [The `open` method shall call the `openCallback` immediately with a null error object and a `results.Connected()` object if called while renewing the shared access signature.]*/
     it('calls the callback without trying connect while updating the shared access signature', function(testCallback) {
       var transport = new FakeTransport();
       sinon.spy(transport, 'connect');
@@ -339,7 +341,7 @@ describe('Client', function () {
         transport._updateSasCallback(null, new results.SharedAccessSignatureUpdated()); // unblock the state machine and calls the stored callback.
       };
 
-      var client = new Client(transport);
+      var client = new InternalClient(transport);
       client.blobUploadClient = { updateSharedAccessSignature: function() {} };
 
       client.open(function(err) {
@@ -355,10 +357,10 @@ describe('Client', function () {
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_061: [The `open` method shall not throw if the `openCallback` callback has not been provided.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_061: [The `open` method shall not throw if the `openCallback` callback has not been provided.]*/
     it('doesn\'t throw if the callback hasn\'t been passed as argument', function() {
       var transport = new FakeTransport();
-      var client = new Client(transport);
+      var client = new InternalClient(transport);
       assert.doesNotThrow(function() {
         client.open();
       });
@@ -366,13 +368,13 @@ describe('Client', function () {
   });
 
   describe('#close', function () {
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_001: [The close function shall call the transport’s disconnect function if it exists.] */
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_001: [The close function shall call the transport’s disconnect function if it exists.] */
     it('calls disconnect on the transport if the method exists', function (done) {
       var transport = new FakeTransport();
       sinon.stub(transport, 'disconnect').callsFake(function() {
         done();
       });
-      var client = new Client(transport);
+      var client = new InternalClient(transport);
       client.open(function() {
         client.close();
       });
@@ -383,14 +385,14 @@ describe('Client', function () {
       sinon.stub(transport, 'disconnect').callsFake(function() {
         assert.fail();
       });
-      var client = new Client(transport);
+      var client = new InternalClient(transport);
       client.close(testCallback());
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_046: [** The `disconnect` method shall remove the listener that has been attached to the transport `disconnect` event.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_046: [** The `disconnect` method shall remove the listener that has been attached to the transport `disconnect` event.]*/
     it('unsubscribes for the \'disconnect\' event when disconnecting', function(done) {
       var transport = new FakeTransport();
-      var client = new Client(transport);
+      var client = new InternalClient(transport);
       var disconnectReceived = false;
       client.open(function() {
         client.on('disconnect', function() {
@@ -404,7 +406,7 @@ describe('Client', function () {
       });
     });
 
-    /*Test_SRS_NODE_DEVICE_CLIENT_16_001: [The `close` function shall call the transport's `disconnect` function if it exists.]*/
+    /*Test_SRS_NODE_INTERNAL_CLIENT_16_001: [The `close` function shall call the transport's `disconnect` function if it exists.]*/
     it('disconnects the transport if called while updating the shared access signature', function(testCallback){
       var transport = new FakeTransport();
       sinon.stub(transport, 'updateSharedAccessSignature').callsFake(function() {
@@ -412,7 +414,7 @@ describe('Client', function () {
       });
       sinon.spy(transport, 'disconnect');
 
-      var client = new Client(transport);
+      var client = new InternalClient(transport);
       client.blobUploadClient = { updateSharedAccessSignature: function() {} };
       client.open(function() {
         client.updateSharedAccessSignature('newSas');
@@ -423,14 +425,14 @@ describe('Client', function () {
       });
     });
 
-    /*Test_SRS_NODE_DEVICE_CLIENT_16_001: [The `close` function shall call the transport's `disconnect` function if it exists.]*/
+    /*Test_SRS_NODE_INTERNAL_CLIENT_16_001: [The `close` function shall call the transport's `disconnect` function if it exists.]*/
     it('closes the transport when called while connecting', function(testCallback) {
       var transport = new FakeTransport();
       sinon.stub(transport, 'connect').callsFake(function() {
         // will not call the callback, leaving the state machine in the 'CONNECTING' state
       });
 
-      var client = new Client(transport);
+      var client = new InternalClient(transport);
       client.open();
       client.close(testCallback);
     });
@@ -438,16 +440,16 @@ describe('Client', function () {
 
   ['sendEvent', 'sendEventBatch', 'complete', 'reject', 'abandon', 'sendOutputEvent', 'sendOutputEventBatch'].forEach(function(funcName) {
     describe('#' + funcName, function() {
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_051: [The `sendEventBatch` method shall not throw if the `sendEventBatchCallback` is not passed.]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_047: [The `sendEvent` method shall not throw if the `sendEventCallback` is not passed.]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_067: [The `complete` method shall not throw if the `completeCallback` is not passed.]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_071: [The `reject` method shall not throw if the `rejectCallback` is not passed.]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_075: [The `abandon` method shall not throw if the `abandonCallback` is not passed.]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_18_019: [The `sendOutputEvent` method shall not throw if the `callback` is not passed. ]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_18_022: [The `sendOutputEventBatch` method shall not throw if the `callback` is not passed. ]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_051: [The `sendEventBatch` method shall not throw if the `sendEventBatchCallback` is not passed.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_047: [The `sendEvent` method shall not throw if the `sendEventCallback` is not passed.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_067: [The `complete` method shall not throw if the `completeCallback` is not passed.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_071: [The `reject` method shall not throw if the `rejectCallback` is not passed.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_075: [The `abandon` method shall not throw if the `abandonCallback` is not passed.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_18_019: [The `sendOutputEvent` method shall not throw if the `callback` is not passed. ]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_18_022: [The `sendOutputEventBatch` method shall not throw if the `callback` is not passed. ]*/
       it('doesn\'t throw if no callback is given and the method exists on the transport', function() {
         var transport = new FakeTransport();
-        var client = new Client(transport);
+        var client = new InternalClient(transport);
         client.open(function() {
           assert.doesNotThrow(function() {
             client[funcName]('message');
@@ -500,55 +502,55 @@ describe('Client', function () {
     };
     util.inherits(FakeMethodTransport, EventEmitter);
 
-    // Tests_SRS_NODE_DEVICE_CLIENT_13_020: [ onDeviceMethod shall throw a ReferenceError if methodName is falsy. ]
+    // Tests_SRS_NODE_INTERNAL_CLIENT_13_020: [ onDeviceMethod shall throw a ReferenceError if methodName is falsy. ]
     [undefined, null].forEach(function (methodName) {
       it('throws ReferenceError when methodName is "' + methodName + '"', function() {
         var transport = new FakeMethodTransport();
-        var client = new Client(transport);
+        var client = new InternalClient(transport);
         assert.throws(function() {
           client.onDeviceMethod(methodName, function() {});
         }, ReferenceError);
       });
     });
 
-    // Tests_SRS_NODE_DEVICE_CLIENT_13_024: [ onDeviceMethod shall throw a TypeError if methodName is not a string. ]
+    // Tests_SRS_NODE_INTERNAL_CLIENT_13_024: [ onDeviceMethod shall throw a TypeError if methodName is not a string. ]
     [new Date(), 42].forEach(function (methodName) {
       it('throws TypeError when methodName is "' + methodName + '"', function() {
         var transport = new FakeMethodTransport();
-        var client = new Client(transport);
+        var client = new InternalClient(transport);
         assert.throws(function() {
           client.onDeviceMethod(methodName, function() {});
         }, TypeError);
       });
     });
 
-    // Tests_SRS_NODE_DEVICE_CLIENT_13_022: [ onDeviceMethod shall throw a ReferenceError if callback is falsy. ]
+    // Tests_SRS_NODE_INTERNAL_CLIENT_13_022: [ onDeviceMethod shall throw a ReferenceError if callback is falsy. ]
     [undefined, null].forEach(function (callback) {
       it('throws ReferenceError when callback is "' + callback + '"', function() {
         var transport = new FakeMethodTransport();
-        var client = new Client(transport);
+        var client = new InternalClient(transport);
         assert.throws(function() {
           client.onDeviceMethod('doSomeTests', callback);
         }, ReferenceError);
       });
     });
 
-    // Tests_SRS_NODE_DEVICE_CLIENT_13_025: [ onDeviceMethod shall throw a TypeError if callback is not a Function. ]
+    // Tests_SRS_NODE_INTERNAL_CLIENT_13_025: [ onDeviceMethod shall throw a TypeError if callback is not a Function. ]
     ['not_a_function', 42].forEach(function (callback) {
       it('throws ReferenceError when callback is "' + callback + '"', function() {
         var transport = new FakeMethodTransport();
-        var client = new Client(transport);
+        var client = new InternalClient(transport);
         assert.throws(function() {
           client.onDeviceMethod('doSomeTests', callback);
         }, TypeError);
       });
     });
 
-    // Tests_SRS_NODE_DEVICE_CLIENT_13_001: [ The onDeviceMethod method shall cause the callback function to be invoked when a cloud-to-device method invocation signal is received from the IoT Hub service. ]
+    // Tests_SRS_NODE_INTERNAL_CLIENT_13_001: [ The onDeviceMethod method shall cause the callback function to be invoked when a cloud-to-device method invocation signal is received from the IoT Hub service. ]
     it('calls callback when C2D method call arrives', function(done) {
       // setup
       var transport = new FakeMethodTransport();
-      var client = new Client(transport);
+      var client = new InternalClient(transport);
       client.open(function() {
         client.onDeviceMethod('firstMethod', function() {}); // This will connect the method receiver
         client.onDeviceMethod('reboot', function() {
@@ -560,11 +562,11 @@ describe('Client', function () {
       transport.emitMethodCall('reboot');
     });
 
-    // Tests_SRS_NODE_DEVICE_CLIENT_13_003: [ The client shall start listening for method calls from the service whenever there is a listener subscribed for a method callback. ]
+    // Tests_SRS_NODE_INTERNAL_CLIENT_13_003: [ The client shall start listening for method calls from the service whenever there is a listener subscribed for a method callback. ]
     it('registers callback on transport when a method event is subscribed to', function() {
       // setup
       var transport = new FakeMethodTransport();
-      var client = new Client(transport);
+      var client = new InternalClient(transport);
       var callback = sinon.spy();
       transport.on('newListener', callback);
 
@@ -578,11 +580,11 @@ describe('Client', function () {
       transport.removeListener('newListener', callback);
     });
 
-    // Tests_SRS_NODE_DEVICE_CLIENT_13_023: [ onDeviceMethod shall throw an Error if a listener is already subscribed for a given method call. ]
+    // Tests_SRS_NODE_INTERNAL_CLIENT_13_023: [ onDeviceMethod shall throw an Error if a listener is already subscribed for a given method call. ]
     it('throws if a listener is already subscribed for a method call', function() {
       // setup
       var transport = new FakeMethodTransport();
-      var client = new Client(transport);
+      var client = new InternalClient(transport);
       client.onDeviceMethod('reboot', function(){});
 
       // test
@@ -596,7 +598,7 @@ describe('Client', function () {
       var transport = new FakeMethodTransport();
       var fakeError = new Error('fake');
       sinon.stub(transport, 'enableMethods').callsFake(function (callback) { callback(fakeError); });
-      var client = new Client(transport);
+      var client = new InternalClient(transport);
       client.on('error', function (err) {
         assert.strictEqual(err, fakeError);
         testCallback();
@@ -606,12 +608,12 @@ describe('Client', function () {
   });
 
   describe('#on(\'message\')', function () {
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_002: [The ‘message’ event shall be emitted when a cloud-to-device message is received from the IoT Hub service.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_002: [The ‘message’ event shall be emitted when a cloud-to-device message is received from the IoT Hub service.]*/
     it('emits a message event when a message is received', function (done) {
       var dummyTransport = new FakeTransport();
-      var client = new Client(dummyTransport);
+      var client = new InternalClient(dummyTransport);
       client.on('message', function(msg) {
-        /*Tests_SRS_NODE_DEVICE_CLIENT_16_003: [The ‘message’ event parameter shall be a ‘Message’ object.]*/
+        /*Tests_SRS_NODE_INTERNAL_CLIENT_16_003: [The ‘message’ event parameter shall be a ‘Message’ object.]*/
         assert.equal(msg.constructor.name, 'Message');
         done();
       });
@@ -621,12 +623,12 @@ describe('Client', function () {
   });
 
   describe('#on(\'inputMessage\')', function () {
-    /*Tests_SRS_NODE_DEVICE_CLIENT_18_012: [ The `inputMessage` event shall be emitted when an inputMessage is received from the IoT Hub service. ]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_18_012: [ The `inputMessage` event shall be emitted when an inputMessage is received from the IoT Hub service. ]*/
     it('emits a message event when a message is received', function (done) {
       var dummyTransport = new FakeTransport();
-      var client = new Client(dummyTransport);
+      var client = new InternalClient(dummyTransport);
       client.on('inputMessage', function(inputName,msg) {
-        /*Tests_SRS_NODE_DEVICE_CLIENT_18_013: [ The `inputMessage` event parameters shall be the inputName for the message and a `Message` object. ]*/
+        /*Tests_SRS_NODE_INTERNAL_CLIENT_18_013: [ The `inputMessage` event parameters shall be the inputName for the message and a `Message` object. ]*/
         assert.strictEqual(inputName, 'fakeInputName');
         assert.strictEqual(msg.constructor.name, 'Message');
         done();
@@ -651,12 +653,12 @@ describe('Client', function () {
   ].forEach(function(testConfig) {
     describe('#on(\'' + testConfig.eventName + '\')', function () {
 
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_004: [The client shall start listening for messages from the service whenever there is a listener subscribed to the ‘message’ event.]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_18_014: [ The client shall start listening for messages from the service whenever there is a listener subscribed to the `inputMessage` event. ]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_004: [The client shall start listening for messages from the service whenever there is a listener subscribed to the ‘message’ event.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_18_014: [ The client shall start listening for messages from the service whenever there is a listener subscribed to the `inputMessage` event. ]*/
       it('starts listening for messages when a listener subscribes to the message event', function () {
         var dummyTransport = new FakeTransport();
         sinon.spy(dummyTransport, testConfig.enableFunc);
-        var client = new Client(dummyTransport);
+        var client = new InternalClient(dummyTransport);
 
         // Calling 'on' twice to make sure it's called only once on the receiver.
         // It works because the test will fail if the test callback is called multiple times, and it's called for every time the testConfig.eventName event is subscribed on the receiver.
@@ -665,15 +667,15 @@ describe('Client', function () {
         assert.isTrue(dummyTransport[testConfig.enableFunc].calledOnce);
       });
 
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_005: [The client shall stop listening for messages from the service whenever the last listener unsubscribes from the ‘message’ event.]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_18_015: [ The client shall stop listening for messages from the service whenever the last listener unsubscribes from the `inputMessage` event. ]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_005: [The client shall stop listening for messages from the service whenever the last listener unsubscribes from the ‘message’ event.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_18_015: [ The client shall stop listening for messages from the service whenever the last listener unsubscribes from the `inputMessage` event. ]*/
       it('stops listening for messages when the last listener has unsubscribed', function (testCallback) {
         var dummyTransport = new FakeTransport();
         sinon.spy(dummyTransport, testConfig.enableFunc);
         sinon.spy(dummyTransport, testConfig.disableFunc);
         sinon.spy(dummyTransport, 'removeAllListeners');
 
-        var client = new Client(dummyTransport);
+        var client = new InternalClient(dummyTransport);
         var listener1 = function () { };
         var listener2 = function () { };
         client.on(testConfig.eventName, listener1);
@@ -688,13 +690,13 @@ describe('Client', function () {
         });
       });
 
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_066: [ The client shall emit an error if connecting the transport fails while subscribing to message events ]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_18_017: [ The client shall emit an `error` if connecting the transport fails while subscribing to `inputMessage` events. ]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_066: [ The client shall emit an error if connecting the transport fails while subscribing to message events ]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_18_017: [ The client shall emit an `error` if connecting the transport fails while subscribing to `inputMessage` events. ]*/
       it('emits an error if it fails to start listening for messages', function (testCallback) {
         var dummyTransport = new FakeTransport();
         var fakeError = new Error('fake');
         sinon.stub(dummyTransport, testConfig.enableFunc).callsFake(function (callback) { callback(fakeError); });
-        var client = new Client(dummyTransport);
+        var client = new InternalClient(dummyTransport);
         client.on('error', function (err) {
           assert.strictEqual(err, fakeError);
           testCallback();
@@ -706,14 +708,14 @@ describe('Client', function () {
         assert.isTrue(dummyTransport[testConfig.enableFunc].calledOnce);
       });
 
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_066: [ The client shall emit an error if connecting the transport fails while subscribing to message events ]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_18_017: [ The client shall emit an `error` if connecting the transport fails while subscribing to `inputMessage` events. ]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_066: [ The client shall emit an error if connecting the transport fails while subscribing to message events ]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_18_017: [ The client shall emit an `error` if connecting the transport fails while subscribing to `inputMessage` events. ]*/
       it('emits an error if it fails to stop listening for messages', function (testCallback) {
         var dummyTransport = new FakeTransport();
         var fakeError = new Error('fake');
         sinon.spy(dummyTransport, testConfig.enableFunc);
         sinon.stub(dummyTransport, testConfig.disableFunc).callsFake(function (callback) { callback(fakeError); });
-        var client = new Client(dummyTransport);
+        var client = new InternalClient(dummyTransport);
         client.on('error', function (err) {
           assert.strictEqual(err, fakeError);
           testCallback();
@@ -733,7 +735,7 @@ describe('Client', function () {
     it.skip('forwards transport errors into a disconnect event', function (testCallback) {
       var fakeError = new Error('fake');
       var dummyTransport = new FakeTransport();
-      var client = new Client(dummyTransport);
+      var client = new InternalClient(dummyTransport);
       client.setRetryPolicy(new NoRetry());
       client.on('disconnect', function (err) {
         assert.strictEqual(err, fakeError);
@@ -750,37 +752,37 @@ describe('Client', function () {
     { methodName: 'abandon', expectedResultCtor: 'MessageAbandoned' }
   ].forEach(function(testConfig) {
     describe('#' + testConfig.methodName, function () {
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_016: [The ‘complete’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_018: [The ‘reject’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_017: [The ‘abandon’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_016: [The ‘complete’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_018: [The ‘reject’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_017: [The ‘abandon’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
       [undefined, null, '', 0].forEach(function (message) {
         it('throws if message is \'' + message + '\'', function () {
-          var client = new Client(new FakeTransport());
+          var client = new InternalClient(new FakeTransport());
           assert.throws(function () {
             client[testConfig.methodName](message, function () { });
           }, ReferenceError);
         });
       });
 
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_007: [The ‘complete’ method shall call the ‘complete’ method of the transport with the message as an argument]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_010: [The ‘reject’ method shall call the ‘reject’ method of the transport with the message as an argument]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_013: [The ‘abandon’ method shall call the ‘abandon’ method of the transport with the message as an argument]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_007: [The ‘complete’ method shall call the ‘complete’ method of the transport with the message as an argument]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_010: [The ‘reject’ method shall call the ‘reject’ method of the transport with the message as an argument]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_013: [The ‘abandon’ method shall call the ‘abandon’ method of the transport with the message as an argument]*/
       it('calls the ' + testConfig.methodName + ' method on the transport with the message as an argument', function () {
         var dummyTransport = new FakeTransport();
         sinon.spy(dummyTransport, testConfig.methodName);
 
-        var client = new Client(dummyTransport);
+        var client = new InternalClient(dummyTransport);
         var message = new Message();
         client[testConfig.methodName](message, function () { });
         assert(client._transport[testConfig.methodName].calledOnce);
         assert(client._transport[testConfig.methodName].calledWith(message));
       });
 
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_008: [The ‘done’ callback shall be called with a null error object and a ‘MessageCompleted’ result once the transport has completed the message.]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_011: [The ‘done’ callback shall be called with a null error object and a ‘MessageRejected’ result once the transport has rejected the message.]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_014: [The ‘done’ callback shall be called with a null error object and a ‘Messageabandoned’ result once the transport has abandoned the message.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_008: [The ‘done’ callback shall be called with a null error object and a ‘MessageCompleted’ result once the transport has completed the message.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_011: [The ‘done’ callback shall be called with a null error object and a ‘MessageRejected’ result once the transport has rejected the message.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_014: [The ‘done’ callback shall be called with a null error object and a ‘Messageabandoned’ result once the transport has abandoned the message.]*/
       it('calls the done callback with a null error object and a result', function (done) {
-        var client = new Client(new FakeTransport());
+        var client = new InternalClient(new FakeTransport());
         var message = new Message();
         client[testConfig.methodName](message, function (err, res) {
           if (err) {
@@ -792,9 +794,9 @@ describe('Client', function () {
         });
       });
 
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_009: [The ‘done’ callback shall be called with a standard javascript Error object and no result object if the transport could not complete the message.]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_012: [The ‘done’ callback shall be called with a standard javascript Error object and no result object if the transport could not reject the message.]*/
-      /*Tests_SRS_NODE_DEVICE_CLIENT_16_015: [The ‘done’ callback shall be called with a standard javascript Error object and no result object if the transport could not abandon the message.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_009: [The ‘done’ callback shall be called with a standard javascript Error object and no result object if the transport could not complete the message.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_012: [The ‘done’ callback shall be called with a standard javascript Error object and no result object if the transport could not reject the message.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_015: [The ‘done’ callback shall be called with a standard javascript Error object and no result object if the transport could not abandon the message.]*/
       it('calls the done callback with an error if the transport fails to complete the message', function (done) {
         var testError = new Error('fake error');
         var dummyTransport = new FakeTransport();
@@ -802,7 +804,7 @@ describe('Client', function () {
           callback(testError);
         });
 
-        var client = new Client(dummyTransport);
+        var client = new InternalClient(dummyTransport);
         var message = new Message();
         client[testConfig.methodName](message, function (err) {
           assert.strictEqual(err, testError);
@@ -816,45 +818,45 @@ describe('Client', function () {
     var DummyBlobUploadClient = function() {};
     DummyBlobUploadClient.prototype.updateSharedAccessSignature = function() {};
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_031: [The updateSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature parameter is falsy.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_031: [The updateSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature parameter is falsy.]*/
     [undefined, null, '', 0].forEach(function (sas) {
       it('throws a ReferenceError if sharedAccessSignature is \'' + sas + '\'', function () {
-        var client = new Client(new FakeTransport());
+        var client = new InternalClient(new FakeTransport());
         assert.throws(function () {
           client.updateSharedAccessSignature(sas, function () { });
         }, ReferenceError);
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_032: [The updateSharedAccessSignature method shall call the updateSharedAccessSignature method of the transport currently in use with the sharedAccessSignature parameter.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_032: [The updateSharedAccessSignature method shall call the updateSharedAccessSignature method of the transport currently in use with the sharedAccessSignature parameter.]*/
     it('calls the transport `updateSharedAccessSignature` method with the sharedAccessSignature parameter', function () {
       var dummyTransport = new FakeTransport();
       sinon.spy(dummyTransport, 'updateSharedAccessSignature');
 
-      var client = new Client(dummyTransport, null, new DummyBlobUploadClient());
+      var client = new InternalClient(dummyTransport, null, new DummyBlobUploadClient());
       var sas = 'sas';
       client.updateSharedAccessSignature(sas, function () { });
       assert(dummyTransport.updateSharedAccessSignature.calledOnce);
       assert(dummyTransport.updateSharedAccessSignature.calledWith(sas));
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_035: [The updateSharedAccessSignature method shall call the `done` callback with an error object if an error happened while renewing the token.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_035: [The updateSharedAccessSignature method shall call the `done` callback with an error object if an error happened while renewing the token.]*/
     it('Calls the `done` callback with an error object if an error happened', function (done) {
       var dummyTransport = new FakeTransport();
       sinon.stub(dummyTransport, 'updateSharedAccessSignature').callsFake(function (sas, callback) {
         callback(new Error('foo'));
       });
 
-      var client = new Client(dummyTransport, null, new DummyBlobUploadClient());
+      var client = new InternalClient(dummyTransport, null, new DummyBlobUploadClient());
       client.updateSharedAccessSignature('sas', function (err) {
         assert.isOk(err);
         done();
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_036: [The updateSharedAccessSignature method shall call the `done` callback with a null error object and a result of type SharedAccessSignatureUpdated if the token was updated successfully.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_036: [The updateSharedAccessSignature method shall call the `done` callback with a null error object and a result of type SharedAccessSignatureUpdated if the token was updated successfully.]*/
     it('Calls the `done` callback with a null error object and a SharedAccessSignatureUpdated result', function (done) {
-      var client = new Client(new FakeTransport(), null, new DummyBlobUploadClient());
+      var client = new InternalClient(new FakeTransport(), null, new DummyBlobUploadClient());
       client.updateSharedAccessSignature('sas', function (err, res) {
         if (err) {
           done(err);
@@ -867,11 +869,11 @@ describe('Client', function () {
   });
 
   describe('getTwin', function() {
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_094: [If this is the first call to `getTwin` the method shall instantiate a new `Twin` object  and pass it the transport currently in use.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_094: [If this is the first call to `getTwin` the method shall instantiate a new `Twin` object  and pass it the transport currently in use.]*/
     it('creates the device twin correctly', function(testCallback) {
       var transport = new FakeTransport();
       sinon.spy(transport, 'getTwin');
-      var client = new Client(transport);
+      var client = new InternalClient(transport);
       client.getTwin(function (err, twin) {
         assert.instanceOf(twin, Twin);
         assert.isTrue(transport.getTwin.calledOnce);
@@ -880,7 +882,7 @@ describe('Client', function () {
     });
 
     it('reuses the existing twin', function (testCallback) {
-      var client = new Client(new FakeTransport());
+      var client = new InternalClient(new FakeTransport());
       client.getTwin(function (err, firstTwin) {
         client.getTwin(function (err, secondTwin) {
           assert.strictEqual(firstTwin, secondTwin);
@@ -889,9 +891,9 @@ describe('Client', function () {
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_095: [The `getTwin` method shall call the `get()` method on the `Twin` object currently in use and pass it its `done` argument for a callback.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_095: [The `getTwin` method shall call the `get()` method on the `Twin` object currently in use and pass it its `done` argument for a callback.]*/
     it('Calls the get() method on the Twin', function (testCallback) {
-      var client = new Client(new FakeTransport());
+      var client = new InternalClient(new FakeTransport());
       client.getTwin(function (err, twin) {
         sinon.spy(twin, 'get');
         client.getTwin(function () {
@@ -903,19 +905,19 @@ describe('Client', function () {
   });
 
   describe('setRetryPolicy', function() {
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_083: [The `setRetryPolicy` method shall throw a `ReferenceError` if the policy object is falsy.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_083: [The `setRetryPolicy` method shall throw a `ReferenceError` if the policy object is falsy.]*/
     [null, undefined, ''].forEach(function(badPolicy) {
       it('throws a ReferenceError if policy is \'' + badPolicy + '\'', function() {
-        var client = new Client(new EventEmitter());
+        var client = new InternalClient(new EventEmitter());
         assert.throws(function() {
           client.setRetryPolicy(badPolicy);
         }, ReferenceError);
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_084: [The `setRetryPolicy` method shall throw an `ArgumentError` if the policy object doesn't have a `shouldRetry` method.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_084: [The `setRetryPolicy` method shall throw an `ArgumentError` if the policy object doesn't have a `shouldRetry` method.]*/
     it('throws an ArgumentError if the policy does not have a shouldRetry method', function() {
-      var client = new Client(new EventEmitter());
+      var client = new InternalClient(new EventEmitter());
       var badPolicy = {
         nextRetryTimeout: function() {}
       };
@@ -924,9 +926,9 @@ describe('Client', function () {
       }, errors.ArgumentError);
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_085: [The `setRetryPolicy` method shall throw an `ArgumentError` if the policy object doesn't have a `nextRetryTimeout` method.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_085: [The `setRetryPolicy` method shall throw an `ArgumentError` if the policy object doesn't have a `nextRetryTimeout` method.]*/
     it('throws an ArgumentError if the policy does not have a nextRetryTimeout method', function() {
-      var client = new Client(new EventEmitter());
+      var client = new InternalClient(new EventEmitter());
       var badPolicy = {
         shouldRetry: function () {}
       };
@@ -935,7 +937,7 @@ describe('Client', function () {
       }, errors.ArgumentError);
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_086: [Any operation happening after a `setRetryPolicy` call should use the policy set during that call.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_086: [Any operation happening after a `setRetryPolicy` call should use the policy set during that call.]*/
     it('uses the new retry policy for the next operation', function (testCallback) {
       var testPolicy = {
         shouldRetry: sinon.stub().returns(false),
@@ -944,7 +946,7 @@ describe('Client', function () {
       var fakeTransport = new EventEmitter();
       fakeTransport.sendEvent = sinon.stub().callsArgWith(1, new results.MessageEnqueued());
 
-      var client = new Client(fakeTransport);
+      var client = new InternalClient(fakeTransport);
       client.setRetryPolicy(testPolicy);
       client.sendEvent(new Message('foo'), function() {
         assert.isTrue(testPolicy.shouldRetry.calledOnce);
@@ -954,7 +956,7 @@ describe('Client', function () {
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_096: [The `setRetryPolicy` method shall call the `setRetryPolicy` method on the twin if it is set and pass it the `policy` object.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_096: [The `setRetryPolicy` method shall call the `setRetryPolicy` method on the twin if it is set and pass it the `policy` object.]*/
     it('updates the twin retry policy', function (testCallback) {
       var newPolicy = {
         shouldRetry: function () {},
@@ -964,7 +966,7 @@ describe('Client', function () {
       var fakeTransport = new EventEmitter();
       fakeTransport.getTwin = sinon.stub().callsArgWith(0, null, new Twin(fakeTransport, {}, 0));
 
-      var client = new Client(fakeTransport);
+      var client = new InternalClient(fakeTransport);
       client.getTwin(function (err, twin) {
         sinon.spy(twin, 'setRetryPolicy');
         client.setRetryPolicy(newPolicy);
@@ -991,9 +993,9 @@ describe('Client', function () {
       fakeTransport.getTwin = sinon.stub().callsArgWith(0, null, new Twin(fakeTransport, fakeRetryPolicy));
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_097: [If the transport emits a `disconnect` event while the client is subscribed to c2d messages updates the retry policy shall be used to reconnect and re-enable the feature using the transport `enableC2D` method.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_097: [If the transport emits a `disconnect` event while the client is subscribed to c2d messages updates the retry policy shall be used to reconnect and re-enable the feature using the transport `enableC2D` method.]*/
     it('reenables C2D after being disconnected if C2D was enabled', function () {
-      var client = new Client(fakeTransport);
+      var client = new InternalClient(fakeTransport);
       client.setRetryPolicy(fakeRetryPolicy);
       client.on('message', function () {});
       assert.isTrue(fakeTransport.enableC2D.calledOnce);
@@ -1001,10 +1003,10 @@ describe('Client', function () {
       assert.isTrue(fakeTransport.enableC2D.calledTwice);
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_102: [If the retry policy fails to reestablish the C2D functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_102: [If the retry policy fails to reestablish the C2D functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
     it('emits a disconnect event if reenabling C2D fails', function (testCallback) {
       var fakeError = new Error('fake');
-      var client = new Client(fakeTransport);
+      var client = new InternalClient(fakeTransport);
       client.on('disconnect', function (err) {
         assert.instanceOf(err, results.Disconnected);
         assert.strictEqual(err.transportObj, fakeError);
@@ -1019,9 +1021,9 @@ describe('Client', function () {
       fakeTransport.emit('disconnect', new errors.TimeoutError()); // timeouts can be retried
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_099: [If the transport emits a `disconnect` event while the client is subscribed to direct methods the retry policy shall be used to reconnect and re-enable the feature using the transport `enableTwinDesiredPropertiesUpdates` method.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_099: [If the transport emits a `disconnect` event while the client is subscribed to direct methods the retry policy shall be used to reconnect and re-enable the feature using the transport `enableTwinDesiredPropertiesUpdates` method.]*/
     it('reenables device methods after being disconnected if methods were enabled', function () {
-      var client = new Client(fakeTransport);
+      var client = new InternalClient(fakeTransport);
       client.setRetryPolicy(fakeRetryPolicy);
       client.onDeviceMethod('method', function () {});
       assert.isTrue(fakeTransport.enableMethods.calledOnce);
@@ -1029,10 +1031,10 @@ describe('Client', function () {
       assert.isTrue(fakeTransport.enableMethods.calledTwice);
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_100: [If the retry policy fails to reestablish the direct methods functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_100: [If the retry policy fails to reestablish the direct methods functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
     it('emits a disconnect event if reenabling methods fails', function (testCallback) {
       var fakeError = new Error('fake');
-      var client = new Client(fakeTransport);
+      var client = new InternalClient(fakeTransport);
       client.on('disconnect', function (err) {
         assert.instanceOf(err, results.Disconnected);
         assert.strictEqual(err.transportObj, fakeError);
@@ -1047,9 +1049,9 @@ describe('Client', function () {
       fakeTransport.emit('disconnect', new errors.TimeoutError()); // timeouts can be retried
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_098: [If the transport emits a `disconnect` event while the client is subscribed to desired properties updates the retry policy shall be used to reconnect and re-enable the feature using the transport `enableMethods` method.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_098: [If the transport emits a `disconnect` event while the client is subscribed to desired properties updates the retry policy shall be used to reconnect and re-enable the feature using the transport `enableMethods` method.]*/
     it('reenables device methods after being disconnected if Twin desired properties updates were enabled', function () {
-      var client = new Client(fakeTransport);
+      var client = new InternalClient(fakeTransport);
       client.setRetryPolicy(fakeRetryPolicy);
       client.getTwin(function (err, twin) {
         twin.on('properties.desired', function () {});
@@ -1059,10 +1061,10 @@ describe('Client', function () {
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_16_101: [If the retry policy fails to reestablish the twin desired properties updates functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_101: [If the retry policy fails to reestablish the twin desired properties updates functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
     it('emits a disconnect event if reenabling twin desired properties updates fails', function (testCallback) {
       var fakeError = new Error('fake');
-      var client = new Client(fakeTransport);
+      var client = new InternalClient(fakeTransport);
       client.on('disconnect', function (err) {
         assert.instanceOf(err, results.Disconnected);
         assert.strictEqual(err.transportObj, fakeError);
@@ -1096,9 +1098,9 @@ describe('Over simulated HTTPS', function () {
     delete: function(deviceId, done) { done(); }
   };
 
-  clientTests.sendEventTests(SimulatedHttp, registry);
-  clientTests.sendEventBatchTests(SimulatedHttp, registry);
-  clientTests.sendOutputEventTests(SimulatedHttp, registry);
-  clientTests.sendOutputEventBatchTests(SimulatedHttp, registry);
+  clientTests.sendEventTests(Client, SimulatedHttp, registry);
+  clientTests.sendEventBatchTests(Client, SimulatedHttp, registry);
+  clientTests.sendOutputEventTests(ModuleClient, SimulatedHttp, registry);
+  clientTests.sendOutputEventBatchTests(ModuleClient, SimulatedHttp, registry);
 });
 

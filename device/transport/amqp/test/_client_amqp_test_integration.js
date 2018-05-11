@@ -5,10 +5,11 @@
 
 var Registry = require('azure-iothub').Registry;
 var Amqp = require('../lib/amqp.js').Amqp;
+var Client = require('azure-iot-device').Client;
 var clientTests = require('azure-iot-device/test/_client_common_testrun.js');
 
 describe('Over real AMQPS', function () {
   this.timeout(60000);
   var registry = Registry.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
-  clientTests.sendEventTests(Amqp, registry);
+  clientTests.sendEventTests(Client, Amqp, registry);
 });

@@ -12,7 +12,7 @@ import { Http as Base } from 'azure-iot-http-base';
 import { endpoint, errors, results, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
 import { translateError } from './http_errors.js';
 import { IncomingMessage } from 'http';
-import { DeviceMethodResponse, Client, TwinProperties } from 'azure-iot-device';
+import { DeviceTransport, MethodMessage, DeviceMethodResponse, TwinProperties } from 'azure-iot-device';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
 import { DeviceClientOptions, HttpReceiverOptions } from 'azure-iot-device';
 import { getUserAgentString } from 'azure-iot-device';
@@ -63,7 +63,7 @@ and either:
 or:
 - `x509` (object) an object with 3 properties: `cert`, `key` and `passphrase`, all strings, containing the necessary information to connect to the service.
 ]*/
-export class Http extends EventEmitter implements Client.Transport {
+export class Http extends EventEmitter implements DeviceTransport {
   private _authenticationProvider: AuthenticationProvider;
   private _http: Base;
   private _opts: HttpReceiverOptions;
@@ -556,7 +556,7 @@ export class Http extends EventEmitter implements Client.Transport {
   /**
    * @private
    */
-  onDeviceMethod(methodName: string, methodCallback: (request: Client.MethodMessage, response: DeviceMethodResponse) => void): void {
+  onDeviceMethod(methodName: string, methodCallback: (request: MethodMessage, response: DeviceMethodResponse) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_025: [`onDeviceMethod` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Direct methods are not implemented over HTTP.');
   }

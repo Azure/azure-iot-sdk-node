@@ -7,7 +7,7 @@ import * as URL from 'url';
 import * as machina from 'machina';
 
 import { endpoint, results, errors, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
-import { DeviceMethodResponse, Client, DeviceClientOptions, TwinProperties } from 'azure-iot-device';
+import { MethodMessage, DeviceMethodResponse, DeviceTransport, DeviceClientOptions, TwinProperties } from 'azure-iot-device';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
 import { getUserAgentString } from 'azure-iot-device';
 import { EventEmitter } from 'events';
@@ -32,7 +32,7 @@ const TOPIC_RESPONSE_PUBLISH_FORMAT = '$iothub/%s/res/%d/?$rid=%s';
  Codes_SRS_NODE_DEVICE_MQTT_12_002: [The `Mqtt` constructor shall store the configuration structure in a member variable
  Codes_SRS_NODE_DEVICE_MQTT_12_003: [The Mqtt constructor shall create an base transport object and store it in a member variable.]
 */
-export class Mqtt extends EventEmitter implements Client.Transport {
+export class Mqtt extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
@@ -535,7 +535,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
   /**
    * @private
    */
-  onDeviceMethod(methodName: string, callback: (methodRequest: Client.MethodMessage, methodResponse: DeviceMethodResponse) => void): void {
+  onDeviceMethod(methodName: string, callback: (methodRequest: MethodMessage, methodResponse: DeviceMethodResponse) => void): void {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_066: [The `methodCallback` parameter shall be called whenever a `method_<methodName>` is emitted and device methods have been enabled.]*/
     this.on('method_' + methodName, callback);
   }
@@ -955,7 +955,7 @@ class MethodDescription {
 /**
  * @private
  */
-class MethodMessage implements Client.MethodMessage {
+class MethodMessageImpl implements MethodMessage {
   methods: MethodDescription;
   requestId: string;
   properties: { [key: string]: string };
@@ -985,7 +985,7 @@ function _parseMessage(topic: string, body: any): MethodMessage {
   }
 
   if (path.length > 0 && path[0] === '$iothub') {
-    let message = new MethodMessage();
+    let message = new MethodMessageImpl();
     if (path.length > 1 && path[1].length > 0) {
       // create an object for the module; for example, $iothub/twin/...
       // would result in there being a message.twin object

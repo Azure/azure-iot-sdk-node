@@ -72,6 +72,13 @@ function FakeTransport() {
   this.getTwin = function (callback) {
     callback(null, { desired: {}, reported: {} });
   };
+
+  this.enableMethods = function(callback) {
+    callback();
+  };
+
+  this.onDeviceMethod = function(methodName, callback) {
+  }
 }
 
 util.inherits(FakeTransport, EventEmitter);

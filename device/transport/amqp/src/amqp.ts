@@ -8,7 +8,7 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-amqp:Amqp');
 import { EventEmitter } from 'events';
 
-import { DeviceMethodResponse, Client, TwinProperties, DeviceClientOptions } from 'azure-iot-device';
+import { DeviceTransport, MethodMessage, DeviceMethodResponse, TwinProperties, DeviceClientOptions } from 'azure-iot-device';
 import { getUserAgentString } from 'azure-iot-device';
 import { Amqp as BaseAmqpClient, AmqpBaseTransportConfig, translateError, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
 import { endpoint, SharedAccessSignature, errors, results, Message, AuthenticationProvider, AuthenticationType } from 'azure-iot-common';
@@ -45,7 +45,7 @@ deviceId – (string) the identifier of a device registered with the IoT Hub
 sharedAccessSignature – (string) the shared access signature associated with the device registration.] */
 /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_001: [The `Amqp` constructor shall implement the `Receiver` interface.]*/
 /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_002: [The `Amqp` object shall inherit from the `EventEmitter` node object.]*/
-export class Amqp extends EventEmitter implements Client.Transport {
+export class Amqp extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
@@ -689,7 +689,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
    * @private
    */
   /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `AmqpDeviceMethodClient` object.]*/
-  onDeviceMethod(methodName: string, methodCallback: (request: Client.MethodMessage, response: DeviceMethodResponse) => void): void {
+  onDeviceMethod(methodName: string, methodCallback: (request: MethodMessage, response: DeviceMethodResponse) => void): void {
     /*Codes_SRS_NODE_DEVICE_AMQP_16_022: [The `onDeviceMethod` method shall call the `onDeviceMethod` method on the `AmqpDeviceMethodClient` object with the same arguments.]*/
     this._deviceMethodClient.onDeviceMethod(methodName, methodCallback);
   }
