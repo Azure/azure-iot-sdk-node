@@ -63,7 +63,8 @@ export class DeviceMethod {
     /*Codes_SRS_NODE_IOTHUB_DEVICE_METHOD_16_008: [The `invokeOn` method shall throw a `ReferenceError` if `deviceId` is `null`, `undefined` or an empty string.]*/
     if (deviceId === null || deviceId === undefined || deviceId === '') throw new ReferenceError('deviceId cannot be \'' + deviceId + '\'');
 
-    const path = '/twins/' + deviceId + '/methods' + endpoint.versionQueryString();
+    /*Codes_SRS_NODE_IOTHUB_DEVICE_METHOD_16_017: [The `invokeOn` method shall uri-encode the device id.]*/
+    const path = '/twins/' + encodeURIComponent(deviceId) + '/methods' + endpoint.versionQueryString();
     const headers = {
       'Content-Type': 'application/json; charset=utf-8'
     };

@@ -160,6 +160,28 @@ describe('DeviceMethod', function() {
       method.invokeOn(fakeDeviceId, testCallback);
     });
 
+    /*Tests_SRS_NODE_IOTHUB_DEVICE_METHOD_16_017: [The `invokeOn` method shall uri-encode the device id.]*/
+    it('URI-encodes the device id', function(testCallback) {
+      var fakeMethodParams = {
+        methodName: 'method',
+        payload: { foo: 'bar' },
+        responseTimeoutInSeconds: 42
+      };
+
+      var fakeDeviceId = 'device#';
+      var uriEncodedDeviceId = encodeURIComponent(fakeDeviceId);
+
+      var fakeRestClient = {
+        executeApiCall: function(method, path, headers, body, timeout, callback) {
+          assert.equal(path, '/twins/' + uriEncodedDeviceId + '/methods' + endpoint.versionQueryString());
+          callback();
+        }
+      };
+
+      var method = new DeviceMethod(fakeMethodParams, fakeRestClient);
+      method.invokeOn(fakeDeviceId, testCallback);
+    });
+
     [-1, 0, '', {}, { foo: 'bar' }, 'one line', new Buffer([0xDE, 0xAD, 0xBE, 0xEF])].forEach(function(goodPayload) {
       it('builds a correct request when the payload is ' + goodPayload.toString(), function(testCallback) {
         var fakeMethodParams = {
