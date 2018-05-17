@@ -6,8 +6,8 @@
   "author": "Microsoft Corp.",
   "license": "MIT",
   "dependencies": {
-    "azure-iot-device": "1.4.0-modules-preview",
-    "azure-iot-device-mqtt": "1.4.0-modules-preview"
+    "azure-iot-device": "1.5.0-modules-preview.2",
+    "azure-iot-device-mqtt": "1.5.0-modules-preview.2"
   },
   "devDependencies": {
     "jshint": "^2.9.2"
