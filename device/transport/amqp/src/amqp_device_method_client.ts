@@ -88,7 +88,8 @@ export class AmqpDeviceMethodClient extends EventEmitter {
                     properties: {
                       'com.microsoft:api-version': endpoint.apiVersion,
                       'com.microsoft:channel-correlation-id': credentials.deviceId
-                    }
+                    },
+                    rcvSettleMode: 0
                   }
                 };
 
