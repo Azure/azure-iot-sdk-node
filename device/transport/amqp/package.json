@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-device-amqp",
-  "version": "1.5.1-modules-preview.2",
+  "version": "1.5.2-modules-preview.3",
   "description": "AMQP transport for Azure IoT device SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
@@ -10,7 +10,7 @@
     "async": "^2.5.0",
     "azure-iot-amqp-base": "1.6.1-modules-preview.2",
     "azure-iot-common": "1.6.1-modules-preview.2",
-    "azure-iot-device": "1.5.1-modules-preview.2",
+    "azure-iot-device": "1.5.2-modules-preview.3",
     "debug": "^3.0.1",
     "machina": "^2.0.1",
     "uuid": "^3.0.1"

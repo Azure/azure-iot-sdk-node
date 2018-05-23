@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-device",
-  "version": "1.5.1-modules-preview.2",
+  "version": "1.5.2-modules-preview.3",
   "description": "Azure IoT device SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",

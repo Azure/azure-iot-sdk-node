@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-device-mqtt",
-  "version": "1.5.1-modules-preview.2",
+  "version": "1.5.2-modules-preview.3",
   "description": "MQTT transport for Azure IoT device SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
@@ -8,7 +8,7 @@
   "typings": "index.d.ts",
   "dependencies": {
     "azure-iot-common": "1.6.1-modules-preview.2",
-    "azure-iot-device": "1.5.1-modules-preview.2",
+    "azure-iot-device": "1.5.2-modules-preview.3",
     "azure-iot-mqtt-base": "1.4.1-modules-preview.2",
     "debug": "^3.0.1",
     "machina": "^2.0.1",
