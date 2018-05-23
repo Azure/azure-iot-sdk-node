@@ -45,6 +45,7 @@ var common = require('azure-iot-common');
 
 module.exports = {
   Client: require('./lib/device_client.js').Client,
+  ModuleClient: require('./lib/module_client.js').ModuleClient,
   ConnectionString: require('./lib/connection_string.js'),
   Message: common.Message,
   SharedAccessSignature: require('./lib/shared_access_signature.js'),

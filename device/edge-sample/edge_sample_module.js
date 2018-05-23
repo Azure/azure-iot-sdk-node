@@ -4,7 +4,7 @@
 'use strict';
 
 var Protocol = require('azure-iot-device-mqtt').Mqtt;
-var Client = require('azure-iot-device').Client;
+var Client = require('azure-iot-device').ModuleClient;
 var Message = require('azure-iot-device').Message;
 var fs = require('fs');
 
