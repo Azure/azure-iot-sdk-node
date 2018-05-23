@@ -139,6 +139,12 @@ export class ClaimsBasedSecurityAgent {
                         if (msg.properties.correlationId === this._putToken.outstandingPutTokens[i].correlationId) {
                           const completedPutToken = this._putToken.outstandingPutTokens[i];
                           this._putToken.outstandingPutTokens.splice(i, 1);
+                          //
+                          // If this was the last outstanding put token then get rid of the timer trying to clear out expiring put tokens.
+                          //
+                          if (this._putToken.outstandingPutTokens.length === 0) {
+                            clearTimeout(this._putToken.timeoutTimer);
+                          }
                           if (completedPutToken.putTokenCallback) {
                             /*Codes_SRS_NODE_AMQP_CBS_16_019: [A put token response of 200 will invoke `putTokenCallback` with null parameters.]*/
                             let error = null;
