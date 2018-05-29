@@ -11,6 +11,7 @@ var SharedAccessKeyAuthenticationProvider = require('../lib/sak_authentication_p
 
 describe('SharedAccessKeyAuthenticationProvider', function () {
   describe('#constructor', function () {
+
     /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_001: [The `constructor` shall create the initial token value using the `credentials` parameter.]*/
     it('initializes the credentials', function (testCallback) {
       var fakeCredentials = {
