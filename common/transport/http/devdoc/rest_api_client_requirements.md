@@ -22,7 +22,7 @@ The `RestApiClient` constructor initializes a new instance of a `RestApiClient` 
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_001: [** The `RestApiClient` constructor shall throw a `ReferenceError` if config is falsy. **]**
 
-**SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [** The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` property and a `socketPath` property. **]**
+**SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [** The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` property. **]**
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_18_001: [** The `RestApiClient` constructor shall throw a `ReferenceError` if `userAgent` is falsy. **]**
 

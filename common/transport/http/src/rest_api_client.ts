@@ -44,8 +44,8 @@ export class RestApiClient {
   constructor(config: RestApiClient.TransportConfig, userAgent: string, httpRequestBuilder?: HttpBase) {
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_001: [The `RestApiClient` constructor shall throw a `ReferenceError` if config is falsy.]*/
     if (!config) throw new ReferenceError('config cannot be \'' + config + '\'');
-    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` property and a `socketPath` property.]*/
-    if (!config.host && !config.socketPath) throw new errors.ArgumentError('config.host and config.socketPath both cannot be unspecified');
+    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` property.]*/
+    if (!config.host) throw new errors.ArgumentError('config.host cannot be \'' + config.host + '\'');
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_18_001: [The `RestApiClient` constructor shall throw a `ReferenceError` if `userAgent` is falsy.]*/
     if (!userAgent) throw new ReferenceError('userAgent cannot be \'' + userAgent + '\'');
 
@@ -138,13 +138,12 @@ export class RestApiClient {
     };
 
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_008: [The `executeApiCall` method shall build the HTTP request using the arguments passed by the caller.]*/
-    const hostOrPath = this._config.host || { socketPath: this._config.socketPath };
     let request: ClientRequest;
     if (!!this._config.x509) {
       /* Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_18_002: [ If an `x509` cert was passed into the constructor via the `config` object, `executeApiCall` shall use it to establish the TLS connection. ] */
-       request = this._http.buildRequest(method, path, httpHeaders, hostOrPath, this._config.x509, requestCallback);
+       request = this._http.buildRequest(method, path, httpHeaders, this._config.host, this._config.x509, requestCallback);
     } else {
-       request = this._http.buildRequest(method, path, httpHeaders, hostOrPath, requestCallback);
+       request = this._http.buildRequest(method, path, httpHeaders, this._config.host, requestCallback);
     }
 
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_030: [If `timeout` is defined and is not a function, the HTTP request timeout shall be adjusted to match the value of the argument.]*/
@@ -274,8 +273,7 @@ export class RestApiClient {
 
 export namespace RestApiClient {
     export interface TransportConfig {
-        host?: string;
-        socketPath?: string;
+        host: string | { socketPath: string };
         sharedAccessSignature?: string | SharedAccessSignature;
         x509?: X509;
     }

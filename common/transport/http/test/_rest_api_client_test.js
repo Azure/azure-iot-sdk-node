@@ -10,7 +10,7 @@ var HttpBase = require('../lib/http.js').Http;
 var RestApiClient = require('../lib/rest_api_client.js').RestApiClient;
 
 var fakeConfig = { host: 'host', sharedAccessSignature: 'sas' };
-var socketConfig = { socketPath: '/var/run/foo.sock', sharedAccessSignature: 'sas' };
+var socketConfig = { host: { socketPath: '/var/run/foo.sock' }, sharedAccessSignature: 'sas' };
 var fakeAgent = 'agentString';
 
 describe('RestApiClient', function() {
@@ -33,11 +33,11 @@ describe('RestApiClient', function() {
       });
     });
 
-    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` property and a `socketPath` property.]*/
-    ['host', 'socketPath'].forEach(function(badPropName) {
+    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` property.]*/
+    ['host'].forEach(function(badPropName) {
       [undefined, null, ''].forEach(function(badPropValue) {
         it('throws an ArgumentError if config.' + badPropName + ' is \'' + badPropValue + '\'', function() {
-          var badConfig = { sharedAccessSignature: 'sas' };
+          var badConfig = JSON.parse(JSON.stringify(fakeConfig));
           badConfig[badPropName] = badPropValue;
           assert.throws(function() {
             return new RestApiClient(badConfig, fakeAgent);
@@ -191,9 +191,9 @@ describe('RestApiClient', function() {
             assert.equal(headers[testHeaderKey], testHeaderValue);
 
             if (typeof(host) === 'string') {
-              assert.equal(host, transportConfig.host);
+              assert.equal(transportConfig.host, host);
             } else {
-              assert.equal(host.socketPath, transportConfig.socketPath);
+              assert.equal(transportConfig.host.socketPath, host.socketPath);
             }
 
             return {
