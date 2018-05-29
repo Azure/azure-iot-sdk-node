@@ -2,6 +2,7 @@
 
 var Http = require('../lib/http.js').Http;
 var https = require('https');
+const node_http = require('http');
 var assert = require('chai').assert;
 var sinon = require('sinon');
 var EventEmitter = require('events');
@@ -52,6 +53,28 @@ describe('Http', function() {
       assert(https.request.called);
       var httpOptions = https.request.firstCall.args[0];
       assert.strictEqual(httpOptions.agent, fakeOptions.http.agent);
+      callback();
+    });
+
+    // Tests_SRS_NODE_HTTP_13_004: [ Use the request object from the https module when dealing with TCP based HTTP requests. ]
+    it ('uses https when using tcp', function(callback) {
+      var http = new Http();
+      http.setOptions(fakeOptions);
+      http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, function() {});
+      assert(https.request.called);
+      callback();
+    });
+
+    // // Tests_SRS_NODE_HTTP_13_005: [ Use the request object from the http module when dealing with unix domain socket based HTTP requests. ]
+    it ('uses http when using unix domain socket', function(callback) {
+      after(function() {
+        node_http.request.restore();
+      });
+      sinon.stub(node_http, 'request').returns(new EventEmitter());
+      var http = new Http();
+      http.setOptions(fakeOptions);
+      http.buildRequest('GET', fakePath, fakeHeaders, { socketPath: fakeHost }, function() {});
+      assert(node_http.request.called);
       callback();
     });
 

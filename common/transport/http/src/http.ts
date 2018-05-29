@@ -3,8 +3,8 @@
 
 'use strict';
 
-import { ClientRequest, IncomingMessage } from 'http';
-import { request, RequestOptions } from 'https';
+import { request as http_request, ClientRequest, IncomingMessage } from 'http';
+import { request as https_request, RequestOptions } from 'https';
 import { Message, X509 } from 'azure-iot-common';
 import dbg = require('debug');
 const debug = dbg('azure-iot-http-base.Http');
@@ -51,7 +51,7 @@ export class Http {
   buildRequest (method: HttpMethod,
                 path: string,
                 httpHeaders: { [key: string]: string | string[] | number },
-                host: string,
+                host: string | { socketPath: string },
                 x509Options: X509 | HttpCallback,
                 done?: HttpCallback): ClientRequest {
 
@@ -61,11 +61,29 @@ export class Http {
     }
 
     let httpOptions: RequestOptions = {
-      host: host,
       path: path,
       method: method,
       headers: httpHeaders
     };
+
+    // Codes_SRS_NODE_HTTP_13_004: [ Use the request object from the https module when dealing with TCP based HTTP requests. ]
+    let request = https_request;
+    if (typeof(host) === 'string') {
+      // Codes_SRS_NODE_HTTP_13_002: [ If the host argument is a string then assign its value to the host property of httpOptions. ]
+      httpOptions.host = host;
+    } else {
+      // Codes_SRS_NODE_HTTP_13_003: [ If the host argument is an object then assign its socketPath property to the socketPath property of httpOptions. ]
+
+      // this is a unix domain socket so use `socketPath` property in options
+      // instead of `host`
+      httpOptions.socketPath = host.socketPath;
+
+      // Codes_SRS_NODE_HTTP_13_005: [ Use the request object from the http module when dealing with unix domain socket based HTTP requests. ]
+
+      // unix domain sockets only work with the HTTP request function; https's
+      // request function cannot handle UDS
+      request = http_request;
+    }
 
     /*Codes_SRS_NODE_HTTP_18_001: [ If the `options` object passed into `setOptions` has a value in `http.agent`, that value shall be passed into the `request` function as `httpOptions.agent` ]*/
     if (this._options && this._options.http && this._options.http.agent) {

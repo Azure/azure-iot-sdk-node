@@ -10,6 +10,7 @@ var HttpBase = require('../lib/http.js').Http;
 var RestApiClient = require('../lib/rest_api_client.js').RestApiClient;
 
 var fakeConfig = { host: 'host', sharedAccessSignature: 'sas' };
+var socketConfig = { socketPath: '/var/run/foo.sock', sharedAccessSignature: 'sas' };
 var fakeAgent = 'agentString';
 
 describe('RestApiClient', function() {
@@ -32,11 +33,11 @@ describe('RestApiClient', function() {
       });
     });
 
-    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` property.]*/
-    ['host'].forEach(function(badPropName) {
+    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` property and a `socketPath` property.]*/
+    ['host', 'socketPath'].forEach(function(badPropName) {
       [undefined, null, ''].forEach(function(badPropValue) {
-        it('throws an ArgumentError if config.' + badPropName + 'is \'' + badPropValue + '\'', function() {
-          var badConfig = JSON.parse(JSON.stringify(fakeConfig));
+        it('throws an ArgumentError if config.' + badPropName + ' is \'' + badPropValue + '\'', function() {
+          var badConfig = { sharedAccessSignature: 'sas' };
           badConfig[badPropName] = badPropValue;
           assert.throws(function() {
             return new RestApiClient(badConfig, fakeAgent);
@@ -172,37 +173,46 @@ describe('RestApiClient', function() {
     });
 
     /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_008: [The `executeApiCall` method shall build the HTTP request using the arguments passed by the caller.]*/
-    it('builds the HTTP request with the passed arguments', function(testCallback) {
-      var testMethod = 'GET';
-      var testPath = '/test/path';
-      var testHeaderKey = 'Content-Type';
-      var testHeaderValue = 'text/plain; charset=utf-8';
-      var testHeaders = {};
-      testHeaders[testHeaderKey] = testHeaderValue;
-      var testRequestBody = 'foo';
-      var testTimeout = 42;
+    [fakeConfig, socketConfig].forEach(transportConfig => {
+      it('builds the HTTP request with the passed arguments', function(testCallback) {
+        var testMethod = 'GET';
+        var testPath = '/test/path';
+        var testHeaderKey = 'Content-Type';
+        var testHeaderValue = 'text/plain; charset=utf-8';
+        var testHeaders = {};
+        testHeaders[testHeaderKey] = testHeaderValue;
+        var testRequestBody = 'foo';
+        var testTimeout = 42;
 
-      var fakeHttpHelper = {
-        buildRequest: function(method, path, headers, host, requestCallback) {
-          assert.equal(method, testMethod);
-          assert.equal(path, testPath);
-          assert.equal(headers[testHeaderKey], testHeaderValue);
-          return {
-            setTimeout: function(timeout) {
-              assert.equal(timeout, testTimeout);
-            },
-            write: function(body) {
-              assert.equal(body, testRequestBody);
-            },
-            end: function() {
-              requestCallback();
+        var fakeHttpHelper = {
+          buildRequest: function(method, path, headers, host, requestCallback) {
+            assert.equal(method, testMethod);
+            assert.equal(path, testPath);
+            assert.equal(headers[testHeaderKey], testHeaderValue);
+
+            if (typeof(host) === 'string') {
+              assert.equal(host, transportConfig.host);
+            } else {
+              assert.equal(host.socketPath, transportConfig.socketPath);
             }
-          };
-        }
-      };
 
-      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
-      client.executeApiCall(testMethod, testPath, testHeaders, testRequestBody, testTimeout, testCallback);
+            return {
+              setTimeout: function(timeout) {
+                assert.equal(timeout, testTimeout);
+              },
+              write: function(body) {
+                assert.equal(body, testRequestBody);
+              },
+              end: function() {
+                requestCallback();
+              }
+            };
+          }
+        };
+
+        var client = new RestApiClient(transportConfig, fakeAgent, fakeHttpHelper);
+        client.executeApiCall(testMethod, testPath, testHeaders, testRequestBody, testTimeout, testCallback);
+      });
     });
 
     /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_009: [If the HTTP request is successful the `executeApiCall` method shall parse the JSON response received and call the `done` callback with a `null` first argument, the parsed result as a second argument and the HTTP response object itself as a third argument.]*/

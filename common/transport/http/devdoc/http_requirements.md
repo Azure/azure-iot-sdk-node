@@ -23,14 +23,14 @@ request.end();
 ```
 
 ## Public Interface
-### buildRequest(method, path, httpHeaders, host, done)
+### buildRequest(method, path, httpHeaders, host, x509Options, done)
 The buildRequest method receives all the information necessary to make an HTTP request to an IoT hub.  This method should only be called by higher-level Azure IoT Hub libraries, and does not validate input.
 
 **SRS_NODE_HTTP_05_001: [** `buildRequest` shall accept the following arguments:
 - `method` - an HTTP verb, e.g., 'GET', 'POST', 'DELETE'
 - `path` - the path to the resource, not including the hostname
 - `httpHeaders` - an object whose properties represent the names and values of HTTP headers to include in the request
-- `host` - the fully-qualified DNS hostname of the IoT hub
+- `host` - the fully-qualified DNS hostname of the IoT hub or an object containing a unix domain socket path in a property named `socketPath`
 - `x509Options` - *[optional]* the x509 certificate, key and passphrase that are needed to connect to the service using x509 certificate authentication
 - `done` - a callback that will be invoked when a completed response is returned from the server **]**
 
@@ -42,6 +42,14 @@ The buildRequest method receives all the information necessary to make an HTTP r
 - `err` - the standard JavaScript `Error` object if status code >= 300, otherwise null
 - `body` - the body of the HTTP response as a string
 - `response` - the Node.js `http.ServerResponse` object returned by the transport **]**
+
+**SRS_NODE_HTTP_13_002: [** If the `host` argument is a string then assign its value to the `host` property of `httpOptions`. **]**
+
+**SRS_NODE_HTTP_13_003: [** If the `host` argument is an object then assign its `socketPath` property to the `socketPath` property of `httpOptions`. **]**
+
+**SRS_NODE_HTTP_13_004: [** Use the request object from the `https` module when dealing with TCP based HTTP requests. **]**
+
+**SRS_NODE_HTTP_13_005: [** Use the request object from the `http` module when dealing with unix domain socket based HTTP requests. **]**
 
 **SRS_NODE_HTTP_16_001: [** If `x509Options` is specified, the certificate, key and passphrase in the structure shall be used to authenticate the connection. **]**
 
