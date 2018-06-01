@@ -11,6 +11,7 @@ export { anHourFromNow, encodeUriComponentStrict } from './lib/authorization';
 export { ConnectionString } from './lib/connection_string';
 export { Message }
 export { SharedAccessSignature } from './lib/shared_access_signature';
+export { SignatureProvider } from './lib/signature_provider';
 export { RetryOperation } from './lib/retry_operation';
 export { RetryPolicy, NoRetry, ExponentialBackOffWithJitter } from './lib/retry_policy';
 export { AuthenticationProvider, AuthenticationType } from './lib/authentication_provider';
