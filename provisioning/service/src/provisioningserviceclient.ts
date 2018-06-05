@@ -217,7 +217,7 @@ export class ProvisioningServiceClient {
   }
 
   private _versionQueryString(): string {
-    return '?api-version=2017-11-15';
+    return '?api-version=2018-04-01';
   }
 
   private _createOrUpdate(endpointPrefix: string, enrollment: any, callback?: (err: Error, enrollmentResponse?: any, response?: any) => void): void {
