@@ -20,7 +20,10 @@ var fakeEnrollment = {
       endorsementKey: 'endorsementkey'
     }
   },
-  initialTwinState: null
+  initialTwinState: null,
+  capabilities: {
+    iotEdge: false
+  }
 };
 
 var fakeEnrollmentNoEtag = {

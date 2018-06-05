@@ -268,6 +268,16 @@ export interface DeviceRegistrationState {
 export type RegistrationStatus = 'unassigned' | 'assigning' | 'assigned' | 'failed' | 'disabled';
 
 /**
+ * Capabilities of the device that will be provisioned using this enrollment record.
+ */
+export interface DeviceCapabilities {
+  /**
+   * Boolean indicating whether the provisioned device is an Azure IoT Edge device.
+   */
+  iotEdge: boolean;
+}
+
+/**
  * The individual enrollment record.
  */
 export interface IndividualEnrollment {
@@ -320,6 +330,11 @@ export interface IndividualEnrollment {
    * could include an update or an actual registration.
    */
   lastUpdatedDateTimeUtc: string;
+
+  /**
+   * The capabilities of the device that will be provisioned using this enrollment record.
+   */
+  capabilities?: DeviceCapabilities;
 }
 
 export type ProvisioningStatus = 'enabled' | 'disabled';
