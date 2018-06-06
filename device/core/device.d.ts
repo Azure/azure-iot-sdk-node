@@ -10,6 +10,7 @@ export { DeviceMethodRequest, DeviceMethodResponse } from './lib/device_method';
 export { X509AuthenticationProvider } from './lib/x509_authentication_provider';
 export { SharedAccessSignatureAuthenticationProvider } from './lib/sas_authentication_provider';
 export { SharedAccessKeyAuthenticationProvider } from './lib/sak_authentication_provider';
+export { EdgedAuthConfig, IotEdgeAuthenticationProvider } from './lib/iotedge_authentication_provider';
 export { Twin, TwinProperties } from './lib/twin';
 export { DeviceClientOptions, HttpReceiverOptions, AmqpTransportOptions, HttpTransportOptions, MqttTransportOptions } from './lib/interfaces';
 export { getUserAgentString } from './lib/utils';

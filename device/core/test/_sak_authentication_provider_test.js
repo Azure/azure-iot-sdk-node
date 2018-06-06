@@ -73,6 +73,73 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
       });
     });
 
+    it('getDeviceCredentials renews token on demand', function (testCallback) {
+      this.clock = sinon.useFakeTimers();
+      var testClock = this.clock;
+      var fakeCredentials = {
+        deviceId: 'fakeDeviceId',
+        host: 'fake.host.name',
+        sharedAccessKey: 'fakeKey'
+      };
+      var token;
+      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+
+      // the following line will cause _shouldRenewToken to resolve to true
+      sakAuthProvider._currentTokenExpiryTimeInSeconds = undefined;
+
+      sakAuthProvider.getDeviceCredentials(function (err, creds) {
+        assert.equal(creds.sharedAccessSignature, 'SharedAccessSignature sr=fake.host.name%2Fdevices%2FfakeDeviceId&sig=bYz5R2IFTaejB6pgYOxns2mw6lcuA4VSy8kJbYQp0Sc%3D&se=10');
+        testClock.restore();
+        testCallback();
+      });
+    });
+
+    it('_renewToken propagates error via event if _sign fails', function (testCallback) {
+      var fakeCredentials = {
+        deviceId: 'fakeDeviceId',
+        host: 'fake.host.name',
+        sharedAccessKey: 'fakeKey'
+      };
+      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+      var eventSpy = sinon.spy();
+      sakAuthProvider.on('error', eventSpy);
+
+      sinon.stub(sakAuthProvider, '_sign').callsArgWith(2, 'whoops');
+      sakAuthProvider._renewToken();
+      assert.isTrue(eventSpy.calledOnce);
+      testCallback();
+    });
+
+    it('_renewToken propagates error via callback if _sign fails', function (testCallback) {
+      var fakeCredentials = {
+        deviceId: 'fakeDeviceId',
+        host: 'fake.host.name',
+        sharedAccessKey: 'fakeKey'
+      };
+      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+
+      sinon.stub(sakAuthProvider, '_sign').callsArgWith(2, 'whoops');
+      sakAuthProvider._renewToken(function(err) {
+        assert.equal(err, 'whoops');
+      });
+      testCallback();
+    });
+
+    it('_renewToken provides result via callback', function (testCallback) {
+      var fakeCredentials = {
+        deviceId: 'fakeDeviceId',
+        host: 'fake.host.name',
+        sharedAccessKey: 'fakeKey'
+      };
+      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+
+      sinon.stub(sakAuthProvider, '_sign').callsArgWith(2, null, 'signature');
+      sakAuthProvider._renewToken(function(err, creds) {
+        assert.equal(creds.sharedAccessSignature, 'signature');
+      });
+      testCallback();
+    });
+
     /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_011: [The `constructor` shall throw an `ArgumentError` if the `tokenValidTimeInSeconds` is less than or equal `tokenRenewalMarginInSeconds`.]*/
     it('throws ArgumentError if the tokenValidTimeInSeconds is less than or equal tokenRenewalMarginInSeconds', function () {
       assert.throw(function () {
