@@ -14,7 +14,6 @@ var registry = iothub.Registry.fromConnectionString(connectionString);
 var deviceAddArray = [
   {
     deviceId: 'Device1',
-    status: 'disabled',
     authentication: {
       symmetricKey: {
         primaryKey: new Buffer(uuid.v4()).toString('base64'),
@@ -24,7 +23,6 @@ var deviceAddArray = [
   },
   {
     deviceId: 'Device2',
-    status: 'disabled',
     authentication: {
       symmetricKey: {
         primaryKey: new Buffer(uuid.v4()).toString('base64'),
@@ -34,7 +32,6 @@ var deviceAddArray = [
   },
   {
     deviceId: 'Device3',
-    status: 'disabled',
     authentication: {
       symmetricKey: {
         primaryKey: new Buffer(uuid.v4()).toString('base64'),
