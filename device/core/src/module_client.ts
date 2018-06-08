@@ -222,4 +222,25 @@ export class ModuleClient extends EventEmitter {
   static fromAuthenticationProvider(authenticationProvider: AuthenticationProvider, transportCtor: any): ModuleClient {
     return InternalClient.fromAuthenticationProvider(authenticationProvider, transportCtor, ModuleClient) as ModuleClient;
   }
+
+  /**
+   * @description         Creates an IoT Hub device client by using configuration
+   *                      information from the environment. If an environment
+   *                      variable called `EdgeHubConnectionString` or `IotHubConnectionString`
+   *                      exists, then that value is used and behavior is identical
+   *                      to calling `fromConnectionString` passing that in. If
+   *                      those environment variables do not exist then the following
+   *                      variables MUST be defined:
+   *                          IOTEDGE_WORKLOADURI        - URI for iotedged's workload API
+   *                          IOTEDGE_DEVICEID           - Device identifier
+   *                          IOTEDGE_MODULEID           - Module identifier
+   *                          IOTEDGE_MODULEGENERATIONID - Module generation identifier
+   *                          IOTEDGE_IOTHUBHOSTNAME     - IoT Hub host name
+   *                          IOTEDGE_AUTHSCHEME         - Authentication scheme to use;
+   *                                                       must be "SasToken"
+   * @param transportCtor Transport protocol used to connect to IoT hub.
+   */
+  static fromEnvironment(transportCtor: any): ModuleClient {
+    return InternalClient.fromEnvironment(transportCtor, ModuleClient) as ModuleClient;
+  }
 }

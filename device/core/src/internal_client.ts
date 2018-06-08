@@ -19,6 +19,7 @@ import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_prov
 import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
 import { X509AuthenticationProvider } from './x509_authentication_provider';
 import { DeviceClientOptions } from './interfaces';
+import { IotEdgeAuthenticationProvider } from './iotedge_authentication_provider';
 
 /**
  * @private
@@ -642,6 +643,115 @@ export class InternalClient extends EventEmitter {
     /*Codes_SRS_NODE_INTERNAL_CLIENT_16_091: [The `fromAuthenticationProvider` method shall return a `Client` object configured with a new instance of a transport created using the `transportCtor` argument.]*/
     return new clientCtor(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider));
   }
+
+  static validateEnvironment(): void {
+    // Codes_SRS_NODE_INTERNAL_CLIENT_13_029: [ If environment variables EdgeHubConnectionString and IotHubConnectionString do not exist then the following environment variables must be defined: IOTEDGE_WORKLOADURI, IOTEDGE_DEVICEID, IOTEDGE_MODULEID, IOTEDGE_IOTHUBHOSTNAME, IOTEDGE_AUTHSCHEME and IOTEDGE_MODULEGENERATIONID. ]
+
+    const keys = [
+      'IOTEDGE_WORKLOADURI',
+      'IOTEDGE_DEVICEID',
+      'IOTEDGE_MODULEID',
+      'IOTEDGE_IOTHUBHOSTNAME',
+      'IOTEDGE_AUTHSCHEME',
+      'IOTEDGE_MODULEGENERATIONID'
+    ];
+
+    keys.forEach((key) => {
+      if (!process.env[key]) {
+        throw new errors.PreconditionFailedError(
+          `Envrionment variable ${key} was not provided.`
+        );
+      }
+    });
+
+    // Codes_SRS_NODE_INTERNAL_CLIENT_13_030: [ The value for the environment variable IOTEDGE_AUTHSCHEME must be SasToken. ]
+
+    // we only support sas token auth scheme at this time
+    if (process.env.IOTEDGE_AUTHSCHEME !== 'SasToken') {
+      throw new errors.PreconditionFailedError(
+        `Authentication scheme ${
+          process.env.IOTEDGE_AUTHSCHEME
+        } is not a supported scheme.`
+      );
+    }
+  }
+
+    /**
+     * @method            module:azure-iot-device.Client.fromEnvironment
+     * @description       Creates an IoT Hub internal client by using configuration
+     *                    information from the environment. If an environment
+     *                    variable called `EdgeHubConnectionString` or `IotHubConnectionString`
+     *                    exists, then that value is used and behavior is identical
+     *                    to calling `fromConnectionString` passing that in. If
+     *                    those environment variables do not exist then the following
+     *                    variables MUST be defined:
+     *                      IOTEDGE_WORKLOADURI        - URI for iotedged's workload API
+     *                      IOTEDGE_DEVICEID           - Device identifier
+     *                      IOTEDGE_MODULEID           - Module identifier
+     *                      IOTEDGE_MODULEGENERATIONID - Module generation identifier
+     *                      IOTEDGE_IOTHUBHOSTNAME     - IoT Hub host name
+     *                      IOTEDGE_AUTHSCHEME         - Authentication scheme to use;
+     *                                                   must be "SasToken"
+     *
+     * @param {Function}  transportCtor     A transport constructor.
+     * @param {Function}  clientCtor        The client object constructor.
+     */
+  static fromEnvironment(transportCtor: any, clientCtor: any): any {
+    // Codes_SRS_NODE_INTERNAL_CLIENT_13_026: [ The fromEnvironment method shall throw a ReferenceError if the transportCtor argument is falsy. ]
+    if (!transportCtor) {
+      throw new ReferenceError('transportCtor cannot be \'' + transportCtor + '\'');
+    }
+
+    // Codes_SRS_NODE_INTERNAL_CLIENT_13_027: [ The fromEnvironment method shall throw a ReferenceError if the clientCtor argument is falsy. ]
+    if (!clientCtor) {
+      throw new ReferenceError('clientCtor cannot be \'' + clientCtor + '\'');
+    }
+
+    // Codes_SRS_NODE_INTERNAL_CLIENT_13_028: [ The fromEnvironment method shall delegate to InternalClient.fromConnectionString if an environment variable called EdgeHubConnectionString or IotHubConnectionString exists. ]
+
+    // if the environment has a value for EdgeHubConnectionString then we use that
+    const connectionString = process.env.EdgeHubConnectionString || process.env.IotHubConnectionString;
+    if (connectionString) {
+      return InternalClient.fromConnectionString(
+        connectionString,
+        transportCtor,
+        clientCtor
+      );
+    }
+
+    // make sure all the environment variables we need have been provided
+    InternalClient.validateEnvironment();
+
+    const authConfig = {
+      workloadUri: process.env.IOTEDGE_WORKLOADURI,
+      deviceId: process.env.IOTEDGE_DEVICEID,
+      moduleId: process.env.IOTEDGE_MODULEID,
+      iothubHostName: process.env.IOTEDGE_IOTHUBHOSTNAME,
+      authScheme: process.env.IOTEDGE_AUTHSCHEME,
+      gatewayHostName: process.env.IOTEDGE_GATEWAYHOSTNAME,
+      generationId: process.env.IOTEDGE_MODULEGENERATIONID
+    };
+
+    // Codes_SRS_NODE_INTERNAL_CLIENT_13_032: [ The fromEnvironment method shall create a new IotEdgeAuthenticationProvider object and pass this to the transport constructor. ]
+    const authenticationProvider = new IotEdgeAuthenticationProvider(
+      authConfig,
+      {
+        host: authConfig.iothubHostName,
+        deviceId: authConfig.deviceId,
+        moduleId: authConfig.moduleId,
+        gatewayHostName: authConfig.gatewayHostName
+      },
+      null,
+      null
+    );
+
+    // Codes_SRS_NODE_INTERNAL_CLIENT_13_031: [ The fromEnvironment method shall return a new instance of the Client object. ]
+    return new clientCtor(
+      new transportCtor(authenticationProvider),
+      null,
+      new BlobUploadClient(authenticationProvider)
+    );
+  }
 }
 
 /**
@@ -738,8 +848,3 @@ export interface MethodMessage {
 }
 
 export type TransportCtor = new(config: Config) => DeviceTransport;
-
-
-
-
-
