@@ -111,6 +111,7 @@ describe('Mqtt', function () {
       transport.sendEvent(new Message('test'), function () {
         assert.isTrue(fakeMqttBase.connect.calledOnce);
         assert.isTrue(fakeMqttBase.publish.calledOnce);
+        assert.strictEqual(fakeMqttBase.publish.firstCall.args[0], 'devices/deviceId/messages/events/');
         testCallback();
       });
     });
