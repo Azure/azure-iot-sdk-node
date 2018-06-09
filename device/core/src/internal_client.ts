@@ -733,17 +733,7 @@ export class InternalClient extends EventEmitter {
     };
 
     // Codes_SRS_NODE_INTERNAL_CLIENT_13_032: [ The fromEnvironment method shall create a new IotEdgeAuthenticationProvider object and pass this to the transport constructor. ]
-    const authenticationProvider = new IotEdgeAuthenticationProvider(
-      authConfig,
-      {
-        host: authConfig.iothubHostName,
-        deviceId: authConfig.deviceId,
-        moduleId: authConfig.moduleId,
-        gatewayHostName: authConfig.gatewayHostName
-      },
-      null,
-      null
-    );
+    const authenticationProvider = new IotEdgeAuthenticationProvider(authConfig);
 
     // Codes_SRS_NODE_INTERNAL_CLIENT_13_031: [ The fromEnvironment method shall return a new instance of the Client object. ]
     return new clientCtor(

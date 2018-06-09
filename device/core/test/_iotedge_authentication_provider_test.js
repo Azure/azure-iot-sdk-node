@@ -18,10 +18,8 @@ describe('IotEdgeAuthenticationProvider', function() {
         {
           workloadUri: 'unix:///var/run/iotedged.w.sock',
           moduleId: 'm1',
-          generationId: 'g1'
-        },
-        {
-          host: 'h1',
+          generationId: 'g1',
+          iothubHostName: 'h1',
           deviceId: 'd1'
         }
       );
@@ -37,10 +35,8 @@ describe('IotEdgeAuthenticationProvider', function() {
           {
             workloadUri: 'unix:///var/run/iotedged.w.sock',
             moduleId: 'm1',
-            generationId: 'g1'
-          },
-          {
-            host: 'h1',
+            generationId: 'g1',
+            iothubHostName: 'h1',
             deviceId: 'd1'
           },
           10,
@@ -57,10 +53,8 @@ describe('IotEdgeAuthenticationProvider', function() {
           {
             workloadUri: 'unix:///var/run/iotedged.w.sock',
             moduleId: 'm1',
-            generationId: 'g1'
-          },
-          {
-            host: 'h1',
+            generationId: 'g1',
+            iothubHostName: 'h1',
             deviceId: 'd1'
           },
           8,
@@ -135,10 +129,8 @@ describe('IotEdgeAuthenticationProvider', function() {
         {
           workloadUri: 'unix:///var/run/iotedged.w.sock',
           moduleId: 'm1',
-          generationId: 'g1'
-        },
-        {
-          host: 'h1',
+          generationId: 'g1',
+          iothubHostName: 'h1',
           deviceId: 'd1'
         }
       );
@@ -154,10 +146,8 @@ describe('IotEdgeAuthenticationProvider', function() {
         {
           workloadUri: 'http://localhost:8081',
           moduleId: 'm1',
-          generationId: 'g1'
-        },
-        {
-          host: 'h1',
+          generationId: 'g1',
+          iothubHostName: 'h1',
           deviceId: 'd1'
         }
       );
@@ -184,10 +174,8 @@ describe('IotEdgeAuthenticationProvider', function() {
           {
             workloadUri: 'unix:///var/run/iotedged.w.sock',
             moduleId: 'm1',
-            generationId: 'g1'
-          },
-          {
-            host: 'h1',
+            generationId: 'g1',
+            iothubHostName: 'h1',
             deviceId: 'd1'
           }
         );
@@ -213,10 +201,8 @@ describe('IotEdgeAuthenticationProvider', function() {
           {
             workloadUri: 'unix:///var/run/iotedged.w.sock',
             moduleId: 'm1',
-            generationId: 'g1'
-          },
-          {
-            host: 'h1',
+            generationId: 'g1',
+            iothubHostName: 'h1',
             deviceId: 'd1'
           }
         );
@@ -233,10 +219,8 @@ describe('IotEdgeAuthenticationProvider', function() {
         {
           workloadUri: 'unix:///var/run/iotedged.w.sock',
           moduleId: 'm1',
-          generationId: 'g1'
-        },
-        {
-          host: 'h1',
+          generationId: 'g1',
+          iothubHostName: 'h1',
           deviceId: 'd1'
         }
       );
@@ -270,10 +254,8 @@ describe('IotEdgeAuthenticationProvider', function() {
         {
           workloadUri: 'unix:///var/run/iotedged.w.sock',
           moduleId: 'm1',
-          generationId: 'g1'
-        },
-        {
-          host: 'h1',
+          generationId: 'g1',
+          iothubHostName: 'h1',
           deviceId: 'd1'
         }
       );
@@ -295,10 +277,8 @@ describe('IotEdgeAuthenticationProvider', function() {
         {
           workloadUri: 'unix:///var/run/iotedged.w.sock',
           moduleId: 'm1',
-          generationId: 'g1'
-        },
-        {
-          host: 'h1',
+          generationId: 'g1',
+          iothubHostName: 'h1',
           deviceId: 'd1'
         }
       );
@@ -318,10 +298,8 @@ describe('IotEdgeAuthenticationProvider', function() {
         {
           workloadUri: 'unix:///var/run/iotedged.w.sock',
           moduleId: 'm1',
-          generationId: 'g1'
-        },
-        {
-          host: 'h1',
+          generationId: 'g1',
+          iothubHostName: 'h1',
           deviceId: 'd1'
         }
       );
