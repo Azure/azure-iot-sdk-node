@@ -31,11 +31,6 @@ export interface Configuration {
   content?: ConfigurationContent;
 
   /**
-   * Type of content.  Will always be "assignment"
-   */
-  contentType?: string;
-
-  /**
    * The target condition is continuously evaluated to include any new devices that meet the requirements or remove devices that no longer do through the life time of the deployment.
    * Use any Boolean condition on device twins tags or deviceId to select the target devices, e.g. tags.environment='prod' or deviceId='linuxprod' or tags.environment = 'prod' AND tags.location = 'westus'.
    */
@@ -57,9 +52,14 @@ export interface Configuration {
   priority?: number;
 
   /**
-   * All the statistics that are emitted by the deployment.
+   * System configuration metrics
    */
-  statistics?: ConfigurationStatistics;
+  systemMetrics?: ConfigurationMetrics;
+
+  /**
+   * Custom configuration metrics
+   */
+  metrics?: ConfigurationMetrics;
 
   /**
    * A string used for protecting opportunistic concurrency updates by the caller. This gets updated when deployment is update
@@ -67,48 +67,52 @@ export interface Configuration {
   etag?: string;
 }
 
-export interface ConfigurationStatistics {
+/**
+ * Metrics used to report the results of applying a configuration.
+ *
+ * The `results` and `queries` dictionaries should have the same keys, each key matching a particular query in the `queries` dictionary with the associated results in the `results` dictionary
+ */
+export interface ConfigurationMetrics {
   /**
-   * [read-only] Count of devices in targetCondition
+   * Dictionary containing, for each metric, the number of devices or modules on which the configuration was applied
    */
-  targetedCount?: number;
-
+  results: { [key: string]: number };
   /**
-   * [read-only] Count of devices that have a desired module defined in this configuration.
+   * Dictionary containing the queries used to compute each result in the `results` property.
    */
- appliedCount?: number;
-
-  /**
-   * [read-only] Count of devices that have a desired module defined in this configuration, for which the device reported a successful statusForLastDesired.
-   */
- reportedSuccessfulCount?: number;
-
-  /**
-   * [read-only] Count of devices that have a desired module defined in this configuration, for which the device reported a failure statusForLastDesired.
-   */
- reportedFailedCount?: number;
-
-  /**
-   * [read-only] Count of devices that have a reported module defined in this configuration with an unhealthy status (i.e. <> running).
-   */
- unhealthyModulesCount?: number;
-
- /**
-  * Other values
-  */
- [key: string]: any;
+  queries: { [key: string]: string };
 }
 
+/**
+ * Content of the configuration that needs to be applied to devices and/or modules on a device.
+ */
 export interface ConfigurationContent {
   /**
-   * The configuration for all the modules.
+   * Configuration used by devices
    */
-  moduleContent: {[key: string]: TwinContent};
+  deviceContent?: TwinContent;
+  /**
+   * Configuration used by modules on Edge devices
+   */
+  modulesContent?: {
+    /**
+     * The key shall be the module name, and the value the `TwinContent` for this module.
+     */
+    [key: string]: TwinContent
+  };
 }
 
+/**
+ *
+ */
 export interface TwinContent {
   /**
-   * Desired properties for this module
+   * Desired properties for this module or device twin
    */
   'properties.desired': any;
+
+  /**
+   * Free-form properties where the key format is "properties.desired.<subpath>"
+   */
+  [key: string]: any;
 }
