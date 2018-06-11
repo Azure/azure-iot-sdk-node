@@ -21,17 +21,19 @@ var registry = Registry.fromConnectionString(hubConnectionString);
 // Test of applyConfigurationContentToDevice
 // Test to verify that config applies to device based on targetCondition
 
-describe.skip('device configuration', function() {
+describe('device configuration', function() {
   var deviceConfig;
 
-  this.timeout(46000);
+  this.timeout(60000);
 
   beforeEach(function() {
     deviceConfig = {
       id: 'node_e2e_' + uuid.v4(),
-      labels: {},
+      labels: {
+        key: 'value'
+      },
       content: {
-        moduleContent: {
+        modulesContent: {
           fakeModule: {
             'properties.desired': {
               prop1: 'foo'
@@ -226,5 +228,3 @@ describe.skip('device configuration', function() {
     ], done);
   });
 });
-
-
