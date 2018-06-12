@@ -37,9 +37,9 @@ describe('ModuleClient', function() {
 
         it('if env ' + envName + ' is defined', function() {
           var client = ModuleClient.fromEnvironment(function() {});
-          assert.equal(client, 42);
-          assert.equal(stub.called, true);
-          assert.equal(stub.args[0][0], 'cs');
+          assert.strictEqual(client, 42);
+          assert.strictEqual(stub.called, true);
+          assert.strictEqual(stub.args[0][0], 'cs');
         });
       });
     });
@@ -78,7 +78,7 @@ describe('ModuleClient', function() {
         it('throws if env var ' + requiredVars[index] + ' is not defined', function() {
           assert.throws(function() {
             ModuleClient.fromEnvironment(function() {});
-          }, errors.PreconditionFailedError);
+          }, errors.ReferenceError);
         });
       });
     });
@@ -105,7 +105,7 @@ describe('ModuleClient', function() {
         assert.throws(function() {
           process.env['IOTEDGE_AUTHSCHEME'] = 'NotSasToken';
           ModuleClient.fromEnvironment(function() {});
-        }, errors.PreconditionFailedError);
+        }, errors.ReferenceError);
       });
     });
 
@@ -137,16 +137,16 @@ describe('ModuleClient', function() {
       it('creates IotEdgeAuthenticationProvider', function() {
         var transportStub = sinon.stub().returns(new EventEmitter());
         var client = ModuleClient.fromEnvironment(transportStub);
-        assert.equal(transportStub.called, true);
+        assert.strictEqual(transportStub.called, true);
         var provider = transportStub.args[0][0];
         assert.isOk(provider);
-        assert.equal(provider._authConfig.workloadUri, 'unix:///var/run/iotedge.w.sock');
-        assert.equal(provider._authConfig.deviceId, 'd1');
-        assert.equal(provider._authConfig.moduleId, 'm1');
-        assert.equal(provider._authConfig.iothubHostName, 'host1');
-        assert.equal(provider._authConfig.authScheme, 'SasToken');
-        assert.equal(provider._authConfig.gatewayHostName, 'gwhost');
-        assert.equal(provider._authConfig.generationId, 'g1');
+        assert.strictEqual(provider._authConfig.workloadUri, 'unix:///var/run/iotedge.w.sock');
+        assert.strictEqual(provider._authConfig.deviceId, 'd1');
+        assert.strictEqual(provider._authConfig.moduleId, 'm1');
+        assert.strictEqual(provider._authConfig.iothubHostName, 'host1');
+        assert.strictEqual(provider._authConfig.authScheme, 'SasToken');
+        assert.strictEqual(provider._authConfig.gatewayHostName, 'gwhost');
+        assert.strictEqual(provider._authConfig.generationId, 'g1');
         assert.instanceOf(provider, IotEdgeAuthenticationProvider);
         assert.instanceOf(client, ModuleClient);
       });

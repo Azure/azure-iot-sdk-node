@@ -238,8 +238,8 @@ export class ModuleClient extends EventEmitter {
 
     keys.forEach((key) => {
       if (!process.env[key]) {
-        throw new errors.PreconditionFailedError(
-          `Envrionment variable ${key} was not provided.`
+        throw new ReferenceError(
+          `Environment variable ${key} was not provided.`
         );
       }
     });
@@ -248,7 +248,7 @@ export class ModuleClient extends EventEmitter {
 
     // we only support sas token auth scheme at this time
     if (process.env.IOTEDGE_AUTHSCHEME !== 'SasToken') {
-      throw new errors.PreconditionFailedError(
+      throw new ReferenceError(
         `Authentication scheme ${
           process.env.IOTEDGE_AUTHSCHEME
         } is not a supported scheme.`
