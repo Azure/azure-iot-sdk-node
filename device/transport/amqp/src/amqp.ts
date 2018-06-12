@@ -11,7 +11,7 @@ import { EventEmitter } from 'events';
 import { DeviceTransport, MethodMessage, DeviceMethodResponse, TwinProperties, DeviceClientOptions } from 'azure-iot-device';
 import { getUserAgentString } from 'azure-iot-device';
 import { Amqp as BaseAmqpClient, AmqpBaseTransportConfig, translateError, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
-import { endpoint, SharedAccessSignature, errors, results, Message, AuthenticationProvider, AuthenticationType } from 'azure-iot-common';
+import { endpoint, SharedAccessSignature, errors, results, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
 import { AmqpDeviceMethodClient } from './amqp_device_method_client';
 import { AmqpTwinClient } from './amqp_twin_client';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
@@ -57,6 +57,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
   private _d2cEndpoint: string;
   private _c2dLink: ReceiverLink;
   private _d2cLink: SenderLink;
+  private _options: DeviceClientOptions;
 
   private _c2dErrorListener: (err: Error) => void;
   private _c2dMessageListener: (msg: AmqpMessage) => void;
@@ -270,10 +271,15 @@ export class Amqp extends EventEmitter implements DeviceTransport {
 
                 getUserAgentString((userAgentString) => {
                   const config: AmqpBaseTransportConfig = {
-                    uri: this._getConnectionUri(credentials.host),
+                    uri: this._getConnectionUri(credentials),
                     sslOptions: credentials.x509,
                     userAgentString: userAgentString
                   };
+                  /*Codes_SRS_NODE_DEVICE_AMQP_13_002: [ The connect method shall set the CA cert on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
+                  if (this._options && this._options.ca) {
+                    config.sslOptions = config.sslOptions || {};
+                    config.sslOptions.caFile = this._options.ca;
+                  }
                   this._amqp.connect(config, (err, connectResult) => {
                     if (err) {
                       this._fsm.transition('disconnected', translateError('AMQP Transport: Could not connect', err), connectCallback);
@@ -670,6 +676,9 @@ export class Amqp extends EventEmitter implements DeviceTransport {
         throw new errors.InvalidOperationError('cannot set X509 options when using token-based authentication');
       }
     }
+
+    /*Codes_SRS_NODE_DEVICE_AMQP_13_001: [ The setOptions method shall save the options passed in. ]*/
+    this._options = options;
   }
 
   /**
@@ -810,8 +819,8 @@ export class Amqp extends EventEmitter implements DeviceTransport {
     throw new errors.NotImplementedError('Output events are not implemented over AMQP.');
   }
 
-  protected _getConnectionUri(host: string): string {
-    return 'amqps://' + host;
+  protected _getConnectionUri(credentials: TransportConfig): string {
+    return 'amqps://' + (credentials.gatewayHostName || credentials.host);
   }
 
   private _stopC2DListener(err: Error | undefined, callback: (err?: Error) => void): void {

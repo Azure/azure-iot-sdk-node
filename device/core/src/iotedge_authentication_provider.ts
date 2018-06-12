@@ -1,6 +1,7 @@
-import { AuthenticationProvider, encodeUriComponentStrict } from 'azure-iot-common';
+import { request as http_request } from 'http';
+import { AuthenticationProvider, encodeUriComponentStrict, SharedAccessSignature } from 'azure-iot-common';
 import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
-import { RestApiClient } from 'azure-iot-http-base';
+import { HttpRequestOptions, RestApiClient } from 'azure-iot-http-base';
 import * as url from 'url';
 
 // tslint:disable-next-line:no-var-requires
@@ -47,6 +48,7 @@ interface SignResponse {
  */
 export class IotEdgeAuthenticationProvider extends SharedAccessKeyAuthenticationProvider implements AuthenticationProvider {
   private _restApiClient: RestApiClient;
+  private _workloadUri: url.UrlWithStringQuery;
 
   /**
    * @private
@@ -95,12 +97,36 @@ export class IotEdgeAuthenticationProvider extends SharedAccessKeyAuthentication
     // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_005: [ The constructor shall throw a TypeError if the _authConfig.workloadUri field is not a valid URI. ]
     // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_006: [ The constructor shall build a unix domain socket path host if the workload URI protocol is unix. ]
     // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_007: [ The constructor shall build a string host if the workload URI protocol is not unix. ]
-    let workloadUri = url.parse(this._authConfig.workloadUri);
+    this._workloadUri = url.parse(this._authConfig.workloadUri);
     const config: RestApiClient.TransportConfig = {
-      host: workloadUri.protocol === 'unix:' ? { socketPath: workloadUri.pathname } : workloadUri.host
+      host: this._workloadUri.protocol === 'unix:' ? { socketPath: this._workloadUri.pathname } : this._workloadUri.hostname
     };
 
+    // TODO: The user agent string below needs to be constructed using the utils.getUserAgentString function.
+    // But that is an async function and since we can't do async things while initializing fields, one way to
+    // handle this might be to make this._restApiClient a lazily initialized object.
     this._restApiClient = new RestApiClient(config, `${packageJson.name}/${packageJson.version}`);
+  }
+
+  public getTrustBundle(callback: (err?: Error, ca?: string) => void): void {
+    // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_020: [ The getTrustBundle method shall throw a ReferenceError if the callback parameter is falsy or is not a function. ]
+    if (!callback || typeof callback !== 'function') {
+      throw new ReferenceError('callback cannot be \'' + callback + '\'');
+    }
+
+    // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_022: [ The getTrustBundle method shall build the HTTP request path in the format /trust-bundle?api-version=2018-06-28. ]
+    const path = `/trust-bundle?api-version=${encodeUriComponentStrict(WORKLOAD_API_VERSION)}`;
+
+    // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_021: [ The getTrustBundle method shall invoke this._restApiClient.executeApiCall to make the REST call on iotedged using the GET method. ]
+    // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_023: [** The `getTrustBundle` method shall set the HTTP request option's `request` property to use the `http.request` object.
+    // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_024: [** The `getTrustBundle` method shall set the HTTP request option's `port` property to use the workload URI's port if available.
+    this._restApiClient.executeApiCall('GET', path, null, null, this._getRequestOptions(), (err, ca) => {
+      if (err) {
+        callback(err);
+      } else {
+        callback(null, ca.certificate);
+      }
+    });
   }
 
   protected _sign(resourceUri: string, expiry: number, callback: (err: Error, signature?: string) => void): void {
@@ -123,36 +149,66 @@ export class IotEdgeAuthenticationProvider extends SharedAccessKeyAuthentication
       this._authConfig.generationId
     )}/sign?api-version=${encodeUriComponentStrict(WORKLOAD_API_VERSION)}`;
 
-    // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_014: [ The _sign method shall build an object with the following schema as the HTTP request body as the sign request:
-    //   interface SignRequest {
-    //     keyId: string;
-    //     algo: string;
-    //     data: string;
-    //   }
-    //   ]
+    // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_027: [** The `_sign` method shall use the `SharedAccessSignature.createWithSigningFunction` function to build the data buffer which is to be signed by iotedged.
+    SharedAccessSignature.createWithSigningFunction(this._credentials, expiry, (buffer, signCallback) => {
+      // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_014: [ The _sign method shall build an object with the following schema as the HTTP request body as the sign request:
+      //   interface SignRequest {
+      //     keyId: string;
+      //     algo: string;
+      //     data: string;
+      //   }
+      //   ]
 
-    // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_013: [ The _sign method shall build the sign request using the following values:
-    //   const signRequest = {
-    //     keyId: "primary"
-    //     algo: "HMACSHA256"
-    //     data: `${data}\n${expiry}`
-    //   };
-    //   ]
-    const signRequest: SignRequest = {
-      keyId: DEFAULT_KEY_ID,
-      algo: DEFAULT_SIGN_ALGORITHM,
-      // the data to be signed needs to have the expiry value appended with a newline
-      data: `${resourceUri}\n${expiry}`
-    };
+      // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_013: [ The _sign method shall build the sign request using the following values:
+      //   const signRequest = {
+      //     keyId: "primary"
+      //     algo: "HMACSHA256"
+      //     data: `${data}\n${expiry}`
+      //   };
+      //   ]
+      const signRequest: SignRequest = {
+        keyId: DEFAULT_KEY_ID,
+        algo: DEFAULT_SIGN_ALGORITHM,
+        data: buffer.toString('base64')
+      };
 
-    // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_019: [ The _sign method shall invoke this._restApiClient.executeApiCall to make the REST call on iotedged using the POST method. ]
-    this._restApiClient.executeApiCall('POST', path, null, signRequest, (err, body: SignResponse, response) => {
+      // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_019: [ The _sign method shall invoke this._restApiClient.executeApiCall to make the REST call on iotedged using the POST method. ]
+      // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_025: [** The `_sign` method shall set the HTTP request option's `request` property to use the `http.request` object.
+      // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_026: [** The `_sign` method shall set the HTTP request option's `port` property to use the workload URI's port if available.
+      this._restApiClient.executeApiCall(
+        'POST',
+        path,
+        { 'Content-Type': 'application/json' },
+        signRequest,
+        this._getRequestOptions(),
+        (err, body: SignResponse, response) => {
+          if (err) {
+            signCallback(err, null);
+          } else {
+            // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_015: [ The _sign method shall invoke callback when the signature is available. ]
+            signCallback(null, Buffer.from(body.digest, 'base64'));
+          }
+        });
+    }, (err, sas) => {
       if (err) {
-        callback(err, null);
+        callback(err);
       } else {
-        // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_015: [ The _sign method shall invoke callback when the signature is available. ]
-        callback(null, body.digest);
+        callback(null, sas.toString());
       }
     });
+  }
+
+  private _getRequestOptions(): HttpRequestOptions {
+    const requestOptions: HttpRequestOptions = {
+      request: http_request,
+    };
+    if (this._workloadUri.port) {
+      const port = parseInt(this._workloadUri.port);
+      if (!isNaN(port)) {
+        requestOptions.port = port;
+      }
+    }
+
+    return requestOptions;
   }
 }

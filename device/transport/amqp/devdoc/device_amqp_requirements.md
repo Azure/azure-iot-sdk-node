@@ -80,6 +80,8 @@ The `connect` method establishes a connection with the Azure IoT Hub instance.
 
 **SRS_NODE_DEVICE_AMQP_06_009: [** If `putToken` is not successful then the client will remain disconnected and the callback will be called with an error per SRS_NODE_DEVICE_AMQP_16_009. **]**
 
+**SRS_NODE_DEVICE_AMQP_13_002: [** The `connect` method shall set the CA cert on the options object when calling the underlying connection object's connect method if it was supplied. **]**
+
 ### disconnect(done)
 The `disconnect` method terminates the connection with the Azure IoT Hub instance.
 
@@ -144,6 +146,8 @@ This method is deprecated. The `AmqpReceiver` object and pattern is going away a
 **SRS_NODE_DEVICE_AMQP_06_004: [** The AMQP transport should use the x509 settings passed in the `options` object to connect to the service if present.**]**
 
 **SRS_NODE_DEVICE_AMQP_16_053: [** The `setOptions` method shall throw an `InvalidOperationError` if the method is called while using token-based authentication. **]**
+
+**SRS_NODE_DEVICE_AMQP_13_001: [** The `setOptions` method shall save the options passed in. **]**
 
 ### abandon(message, done)
 

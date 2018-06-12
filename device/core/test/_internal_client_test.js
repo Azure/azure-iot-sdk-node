@@ -201,7 +201,7 @@ describe('InternalClient', function () {
       });
     });
 
-    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_025: [The ‘setTransportOptions’ method shall throw a ‘NotImplementedError’ if the transport doesn’t implement a ‘setOption’ method.]*/
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_025: [The ‘setTransportOptions’ method shall throw a ‘NotImplementedError’ if the transport doesn’t implement a ‘setOptions’ method.]*/
     it('throws a NotImplementedError if the setOptions method is not implemented on the transport', function () {
       var client = new InternalClient(new EventEmitter());
 

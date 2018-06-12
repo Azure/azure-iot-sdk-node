@@ -14,13 +14,12 @@ import { AuthenticationProvider, AuthenticationType, ConnectionString, SharedAcc
 export class SharedAccessKeyAuthenticationProvider extends EventEmitter implements AuthenticationProvider {
   type: AuthenticationType = AuthenticationType.Token;
 
+  protected _credentials: TransportConfig;
   protected _tokenValidTimeInSeconds: number = 3600;   // 1 hour
   private _tokenRenewalMarginInSeconds: number = 900; // 15 minutes
 
   private _currentTokenExpiryTimeInSeconds: number;
   private _renewalTimeout: NodeJS.Timer;
-
-  private _credentials: TransportConfig;
 
   /**
    * @private

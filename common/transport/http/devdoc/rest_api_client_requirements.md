@@ -30,14 +30,18 @@ The `RestApiClient` constructor initializes a new instance of a `RestApiClient` 
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_004: [** The `RestApiClient` constructor shall use the value of the `httpBase` argument as the internal HTTP client if present. **]**
 
-### executeApiCall(method, path, headers, requestBody, timeout, done)
+### executeApiCall(method, path, headers, requestBody, timeout, requestOptions, done)
 The `executeApiCall` method builds the HTTP request using the passed arguments and calls the `done` callback with the result of the API call.
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_005: [** The `executeApiCall` method shall throw a `ReferenceError` if the `method` argument is falsy. **]**
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_006: [** The `executeApiCall` method shall throw a `ReferenceError` if the `path` argument is falsy. **]**
 
-**SRS_NODE_IOTHUB_REST_API_CLIENT_16_029: [** If `done` is `undefined` and the `timeout` argument is a function, `timeout` should be used as the callback. **]**
+**SRS_NODE_IOTHUB_REST_API_CLIENT_16_029: [** If `done` is `undefined` and the `timeout` argument is a function, `timeout` should be used as the callback and mark `requestOptions` and `timeout` as `undefined`. **]**
+
+**SRS_NODE_IOTHUB_REST_API_CLIENT_13_001: [** If `done` is `undefined` and the `requestOptions` argument is a function, then `requestOptions` should be used as the callback and mark `requestOptions` as `undefined`. **]**
+
+**SRS_NODE_IOTHUB_REST_API_CLIENT_13_002: [** If `timeout` is an object and `requestOptions` is `undefined`, then assign `timeout` to `requestOptions` and mark `timeout` as `undefined`. **]**
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_030: [** If `timeout` is defined and is not a function, the HTTP request timeout shall be adjusted to match the value of the argument. **]**
 
@@ -49,6 +53,8 @@ The `executeApiCall` method builds the HTTP request using the passed arguments a
 - User-Agent: <version string> **]**
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_008: [** The `executeApiCall` method shall build the HTTP request using the arguments passed by the caller. **]**
+
+**SRS_NODE_IOTHUB_REST_API_CLIENT_13_003: [** If `requestOptions` is not falsy then it shall be passed to the `buildRequest` function. **]**
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_009: [** If the HTTP request is successful the `executeApiCall` method shall parse the JSON response received and call the `done` callback with a `null` first argument, the parsed result as a second argument and the HTTP response object itself as a third argument. **]**
 

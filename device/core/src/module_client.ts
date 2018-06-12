@@ -224,7 +224,7 @@ export class ModuleClient extends EventEmitter {
     return InternalClient.fromAuthenticationProvider(authenticationProvider, transportCtor, ModuleClient) as ModuleClient;
   }
 
-  static validateEnvironment(): void {
+  static validateEnvironment(): ReferenceError {
     // Codes_SRS_NODE_MODULE_CLIENT_13_029: [ If environment variables EdgeHubConnectionString and IotHubConnectionString do not exist then the following environment variables must be defined: IOTEDGE_WORKLOADURI, IOTEDGE_DEVICEID, IOTEDGE_MODULEID, IOTEDGE_IOTHUBHOSTNAME, IOTEDGE_AUTHSCHEME and IOTEDGE_MODULEGENERATIONID. ]
 
     const keys = [
@@ -238,7 +238,7 @@ export class ModuleClient extends EventEmitter {
 
     keys.forEach((key) => {
       if (!process.env[key]) {
-        throw new ReferenceError(
+        return new ReferenceError(
           `Environment variable ${key} was not provided.`
         );
       }
@@ -248,7 +248,7 @@ export class ModuleClient extends EventEmitter {
 
     // we only support sas token auth scheme at this time
     if (process.env.IOTEDGE_AUTHSCHEME !== 'SasToken') {
-      throw new ReferenceError(
+      return new ReferenceError(
         `Authentication scheme ${
           process.env.IOTEDGE_AUTHSCHEME
         } is not a supported scheme.`
@@ -272,11 +272,19 @@ export class ModuleClient extends EventEmitter {
    *                          IOTEDGE_AUTHSCHEME         - Authentication scheme to use;
    *                                                       must be "SasToken"
    * @param transportCtor Transport protocol used to connect to IoT hub.
+   * @param callback      Callback to invoke when the ModuleClient has been constructured or if an
+   *                      error occurs while creating the client.
    */
-  static fromEnvironment(transportCtor: any): ModuleClient {
-    // Codes_SRS_NODE_MODULE_CLIENT_13_026: [ The fromEnvironment method shall throw a ReferenceError if the transportCtor argument is falsy. ]
+  static fromEnvironment(transportCtor: any, callback: (err?: Error, client?: ModuleClient) => void): void {
+    // Codes_SRS_NODE_MODULE_CLIENT_13_033: [ The fromEnvironment method shall throw a ReferenceError if the callback argument is falsy or is not a function. ]
+    if (!callback || typeof(callback) !== 'function') {
+      throw new ReferenceError('callback cannot be \'' + callback + '\'');
+    }
+
+    // Codes_SRS_NODE_MODULE_CLIENT_13_026: [ The fromEnvironment method shall invoke callback with a ReferenceError if the transportCtor argument is falsy. ]
     if (!transportCtor) {
-      throw new ReferenceError('transportCtor cannot be \'' + transportCtor + '\'');
+      callback(new ReferenceError('transportCtor cannot be \'' + transportCtor + '\''));
+      return;
     }
 
     // Codes_SRS_NODE_MODULE_CLIENT_13_028: [ The fromEnvironment method shall delegate to ModuleClient.fromConnectionString if an environment variable called EdgeHubConnectionString or IotHubConnectionString exists. ]
@@ -284,14 +292,19 @@ export class ModuleClient extends EventEmitter {
     // if the environment has a value for EdgeHubConnectionString then we use that
     const connectionString = process.env.EdgeHubConnectionString || process.env.IotHubConnectionString;
     if (connectionString) {
-      return ModuleClient.fromConnectionString(
-        connectionString,
-        transportCtor
-      );
+      ModuleClient._fromEnvironmentNormal(connectionString, transportCtor, callback);
+    } else {
+      ModuleClient._fromEnvironmentEdge(transportCtor, callback);
     }
+  }
 
+  private static _fromEnvironmentEdge(transportCtor: any, callback: (err?: Error, client?: ModuleClient) => void): void {
     // make sure all the environment variables we need have been provided
-    ModuleClient.validateEnvironment();
+    const validationError = ModuleClient.validateEnvironment();
+    if (validationError) {
+      callback(validationError);
+      return;
+    }
 
     const authConfig = {
       workloadUri: process.env.IOTEDGE_WORKLOADURI,
@@ -306,7 +319,40 @@ export class ModuleClient extends EventEmitter {
     // Codes_SRS_NODE_MODULE_CLIENT_13_032: [ The fromEnvironment method shall create a new IotEdgeAuthenticationProvider object and pass this to the transport constructor. ]
     const authenticationProvider = new IotEdgeAuthenticationProvider(authConfig);
 
-    // Codes_SRS_NODE_MODULE_CLIENT_13_031: [ The fromEnvironment method shall return a new instance of the ModuleClient object. ]
-    return new ModuleClient(new transportCtor(authenticationProvider));
+    // get trust bundle
+    authenticationProvider.getTrustBundle((err, ca) => {
+      if (err) {
+        callback(err);
+      } else {
+        const transport = new transportCtor(authenticationProvider);
+
+        // Codes_SRS_NODE_MODULE_CLIENT_13_035: [ If the client is running in edge mode then the IotEdgeAuthenticationProvider.getTrustBundle method shall be invoked to retrieve the CA cert and the returned value shall be set as the CA cert for the transport via the transport's setOptions method passing in the CA value for the ca property in the options object. ]
+        transport.setOptions({ ca });
+
+        // Codes_SRS_NODE_MODULE_CLIENT_13_031: [ The fromEnvironment method shall invoke the callback with a new instance of the ModuleClient object. ]
+        callback(null, new ModuleClient(transport));
+      }
+    });
+  }
+
+  private static _fromEnvironmentNormal(connectionString: string, transportCtor: any, callback: (err?: Error, client?: ModuleClient) => void): void {
+    // this is a transport decorator that provides the CA certificate to the underlying
+    // transport if a CA cert is provided in the environment
+    function CertTransport(authenticationProvider: AuthenticationProvider): any {
+      const transport = new transportCtor(authenticationProvider);
+      // Codes_SRS_NODE_MODULE_CLIENT_13_034: [ If the client is running in a non-edge mode and an environment variable named EdgeModuleCACertificateFile exists then its value shall be set as the CA cert for the transport via the transport's setOptions method passing in the CA as the value for the ca property in the options object. ]
+      transport.setOptions({ ca: process.env.EdgeModuleCACertificateFile });
+      return transport;
+    }
+
+    let wrappedTransportCtor = transportCtor;
+    if (process.env.EdgeModuleCACertificateFile) {
+      wrappedTransportCtor = CertTransport;
+    }
+
+    callback(null, ModuleClient.fromConnectionString(
+      connectionString,
+      wrappedTransportCtor
+    ));
   }
 }

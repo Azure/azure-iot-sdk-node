@@ -23,7 +23,7 @@ request.end();
 ```
 
 ## Public Interface
-### buildRequest(method, path, httpHeaders, host, x509Options, done)
+### buildRequest(method, path, httpHeaders, host, options, done)
 The buildRequest method receives all the information necessary to make an HTTP request to an IoT hub.  This method should only be called by higher-level Azure IoT Hub libraries, and does not validate input.
 
 **SRS_NODE_HTTP_05_001: [** `buildRequest` shall accept the following arguments:
@@ -31,10 +31,10 @@ The buildRequest method receives all the information necessary to make an HTTP r
 - `path` - the path to the resource, not including the hostname
 - `httpHeaders` - an object whose properties represent the names and values of HTTP headers to include in the request
 - `host` - the fully-qualified DNS hostname of the IoT hub or an object containing a unix domain socket path in a property named `socketPath`
-- `x509Options` - *[optional]* the x509 certificate, key and passphrase that are needed to connect to the service using x509 certificate authentication
+- `options` - *[optional]* the x509 certificate options or HTTP request options
 - `done` - a callback that will be invoked when a completed response is returned from the server **]**
 
-**SRS_NODE_HTTP_05_002: [** `buildRequest` shall return a Node.js https.ClientRequest object, upon which the caller must invoke the end method in order to actually send the request. **]**
+**SRS_NODE_HTTP_05_002: [** `buildRequest` shall return a Node.js https.ClientRequest/http.ClientRequest object, upon which the caller must invoke the end method in order to actually send the request. **]**
 
 **SRS_NODE_HTTP_05_003: [** If `buildRequest` encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript `Error` object with a text description of the error (err.message). **]**
 
@@ -45,13 +45,15 @@ The buildRequest method receives all the information necessary to make an HTTP r
 
 **SRS_NODE_HTTP_13_002: [** If the `host` argument is a string then assign its value to the `host` property of `httpOptions`. **]**
 
+**SRS_NODE_HTTP_13_006: [** If the `options` object has a `port` property set then assign that to the `port` property on `httpOptions`. **]**
+
 **SRS_NODE_HTTP_13_003: [** If the `host` argument is an object then assign its `socketPath` property to the `socketPath` property of `httpOptions`. **]**
 
-**SRS_NODE_HTTP_13_004: [** Use the request object from the `https` module when dealing with TCP based HTTP requests. **]**
+**SRS_NODE_HTTP_13_004: [** Use the request object from the `options` object if one has been provided or default to HTTPS request. **]**
 
 **SRS_NODE_HTTP_13_005: [** Use the request object from the `http` module when dealing with unix domain socket based HTTP requests. **]**
 
-**SRS_NODE_HTTP_16_001: [** If `x509Options` is specified, the certificate, key and passphrase in the structure shall be used to authenticate the connection. **]**
+**SRS_NODE_HTTP_16_001: [** If `options` has x509 properties, the certificate, key and passphrase in the structure shall be used to authenticate the connection. **]**
 
 **SRS_NODE_HTTP_18_001: [** If the `options` object passed into `setOptions` has a value in `http.agent`, that value shall be passed into the `request` function as `httpOptions.agent` **]**
 

@@ -219,8 +219,8 @@ describe('SharedAccessSignature', function () {
       [undefined, null, '', 0].forEach(throws);
     }
 
-    /*Tests_SRS_NODE_COMMON_SAS_06_002: [The `createWithSigningFunction` shall create a `SharedAccessSignature` object with an `sr` property formed by url encoding `credentials.host` + `/devices/` + `credentials.deviceId`.] */
-    it('creates a valid sr value', function(callback) {
+    /*Tests_SRS_NODE_COMMON_SAS_06_002: [The `createWithSigningFunction` shall create a `SharedAccessSignature` object with an `sr` property formed by url encoding `credentials.host` + `/devices/` + `credentials.deviceId` + `/modules/` + `credentials.moduleId`.] */
+    it('creates a valid sr value for device id', function(callback) {
       var fakeCredentials = {
         host: 'fakeHostName',
         deviceId: 'fakeDeviceId'
@@ -229,6 +229,22 @@ describe('SharedAccessSignature', function () {
       var fakeSigningFunction = sinon.stub().callsArgWith(1, null, fakeSignedValue);
       SharedAccessSignature.createWithSigningFunction(fakeCredentials, 1, fakeSigningFunction, (err, newSas) => {
         assert.strictEqual(newSas.sr, 'fakeHostName%2Fdevices%2FfakeDeviceId', 'Invalid scope create for sas token');
+        assert.isUndefined(newSas.skn, 'Skn is improperly included');
+        callback();
+      });
+    });
+
+    /*Tests_SRS_NODE_COMMON_SAS_06_002: [The `createWithSigningFunction` shall create a `SharedAccessSignature` object with an `sr` property formed by url encoding `credentials.host` + `/devices/` + `credentials.deviceId` + `/modules/` + `credentials.moduleId`.] */
+    it('creates a valid sr value for device id and module id', function(callback) {
+      var fakeCredentials = {
+        host: 'fakeHostName',
+        deviceId: 'fakeDeviceId',
+        moduleId: 'fakeModuleId'
+      };
+      var fakeSignedValue = Buffer.from('abcd');
+      var fakeSigningFunction = sinon.stub().callsArgWith(1, null, fakeSignedValue);
+      SharedAccessSignature.createWithSigningFunction(fakeCredentials, 1, fakeSigningFunction, (err, newSas) => {
+        assert.strictEqual(newSas.sr, 'fakeHostName%2Fdevices%2FfakeDeviceId%2Fmodules%2FfakeModuleId', 'Invalid scope create for sas token');
         assert.isUndefined(newSas.skn, 'Skn is improperly included');
         callback();
       });

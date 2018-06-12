@@ -3,12 +3,13 @@
 
 'use strict';
 
+var http = require('http');
 var assert = require('chai').assert;
 var sinon = require('sinon');
 var errors = require('azure-iot-common').errors;
+var SharedAccessSignature = require('azure-iot-common').SharedAccessSignature;
 var IotEdgeAuthenticationProvider = require('../lib/iotedge_authentication_provider').IotEdgeAuthenticationProvider;
 var WORKLOAD_API_VERSION = require('../lib/iotedge_authentication_provider').WORKLOAD_API_VERSION;
-var RestApiClient = require('azure-iot-http-base').RestApiClient;
 
 describe('IotEdgeAuthenticationProvider', function() {
   describe('#constructor', function() {
@@ -23,8 +24,8 @@ describe('IotEdgeAuthenticationProvider', function() {
           deviceId: 'd1'
         }
       );
-      assert.equal(provider._credentials.host, 'h1');
-      assert.equal(provider._credentials.deviceId, 'd1');
+      assert.strictEqual(provider._credentials.host, 'h1');
+      assert.strictEqual(provider._credentials.deviceId, 'd1');
       testCallback();
     });
 
@@ -135,7 +136,7 @@ describe('IotEdgeAuthenticationProvider', function() {
         }
       );
 
-      assert.equal(provider._restApiClient._config.host.socketPath, '/var/run/iotedged.w.sock');
+      assert.strictEqual(provider._restApiClient._config.host.socketPath, '/var/run/iotedged.w.sock');
 
       testCallback();
     });
@@ -152,9 +153,143 @@ describe('IotEdgeAuthenticationProvider', function() {
         }
       );
 
-      assert.equal(provider._restApiClient._config.host, 'localhost:8081');
+      assert.strictEqual(provider._restApiClient._config.host, 'localhost');
 
       testCallback();
+    });
+  });
+
+  describe('#getTrustBundle', function() {
+    // Tests_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_020: [ The getTrustBundle method shall throw a ReferenceError if the callback parameter is falsy or is not a function. ]
+    [null, undefined, '', 'not a function', 20].forEach(function(badCallback) {
+      it("throws if the callback is '" + badCallback + "'", function(testCallback) {
+        var provider = new IotEdgeAuthenticationProvider(
+          {
+            workloadUri: 'unix:///var/run/iotedged.w.sock',
+            moduleId: 'm1',
+            generationId: 'g1',
+            iothubHostName: 'h1',
+            deviceId: 'd1'
+          }
+        );
+        assert.throws(function() {
+          provider.getTrustBundle(badCallback);
+        }, ReferenceError);
+        testCallback();
+      });
+    });
+
+    // Tests_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_022: [ The getTrustBundle method shall build the HTTP request path in the format /trust-bundle?api-version=2018-06-28. ]
+    it('builds request path in expected format', function(testCallback) {
+      var provider = new IotEdgeAuthenticationProvider(
+        {
+          workloadUri: 'unix:///var/run/iotedged.w.sock',
+          moduleId: 'm1',
+          generationId: 'g1',
+          iothubHostName: 'h1',
+          deviceId: 'd1'
+        }
+      );
+      sinon.stub(provider._restApiClient, 'executeApiCall').callsFake(function(method, path, headers, body, requestOptions, callback) {
+        assert.strictEqual(path, '/trust-bundle?api-version=' + WORKLOAD_API_VERSION);
+        callback(null, { certificate: 'ca cert' });
+      });
+
+      provider.getTrustBundle(function(err, ca) {
+        assert.isNotOk(err);
+        assert.strictEqual(ca, 'ca cert');
+        testCallback();
+      });
+    });
+
+    // Tests_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_021: [ The getTrustBundle method shall invoke this._restApiClient.executeApiCall to make the REST call on iotedged using the GET method. ]
+    it('gets ca cert', function(testCallback) {
+      var provider = new IotEdgeAuthenticationProvider(
+        {
+          workloadUri: 'unix:///var/run/iotedged.w.sock',
+          moduleId: 'm1',
+          generationId: 'g1',
+          iothubHostName: 'h1',
+          deviceId: 'd1'
+        }
+      );
+      sinon.stub(provider._restApiClient, 'executeApiCall').callsFake(function(method, path, headers, body, requestOptions, callback) {
+        assert.strictEqual(method, 'GET');
+        callback(null, { certificate: 'ca cert' });
+      });
+
+      provider.getTrustBundle(function(err, ca) {
+        assert.isNotOk(err);
+        assert.strictEqual(ca, 'ca cert');
+        testCallback();
+      });
+    });
+
+    // Tests_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_023: [** The `getTrustBundle` method shall set the HTTP request option's `request` property to use the `http.request` object.
+    it('uses http.request object', function(testCallback) {
+      var provider = new IotEdgeAuthenticationProvider(
+        {
+          workloadUri: 'unix:///var/run/iotedged.w.sock',
+          moduleId: 'm1',
+          generationId: 'g1',
+          iothubHostName: 'h1',
+          deviceId: 'd1'
+        }
+      );
+      sinon.stub(provider._restApiClient, 'executeApiCall').callsFake(function(method, path, headers, body, requestOptions, callback) {
+        assert.strictEqual(method, 'GET');
+        assert.strictEqual(requestOptions.request, http.request);
+        callback(null, { certificate: 'ca cert' });
+      });
+
+      provider.getTrustBundle(function(err, ca) {
+        assert.isNotOk(err);
+        testCallback();
+      });
+    });
+
+    // Tests_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_024: [** The `getTrustBundle` method shall set the HTTP request option's `port` property to use the workload URI's port if available.
+    it('uses port when specified', function(testCallback) {
+      var provider = new IotEdgeAuthenticationProvider(
+        {
+          workloadUri: 'http://localhost:8081',
+          moduleId: 'm1',
+          generationId: 'g1',
+          iothubHostName: 'h1',
+          deviceId: 'd1'
+        }
+      );
+      sinon.stub(provider._restApiClient, 'executeApiCall').callsFake(function(method, path, headers, body, requestOptions, callback) {
+        assert.strictEqual(method, 'GET');
+        assert.strictEqual(requestOptions.port, 8081);
+        callback(null, { certificate: 'ca cert' });
+      });
+
+      provider.getTrustBundle(function(err, ca) {
+        assert.isNotOk(err);
+        testCallback();
+      });
+    });
+
+    it('forwards error', function(testCallback) {
+      var provider = new IotEdgeAuthenticationProvider(
+        {
+          workloadUri: 'unix:///var/run/iotedged.w.sock',
+          moduleId: 'm1',
+          generationId: 'g1',
+          iothubHostName: 'h1',
+          deviceId: 'd1'
+        }
+      );
+      sinon.stub(provider._restApiClient, 'executeApiCall').callsFake(function(method, path, headers, body, requestOptions, callback) {
+        assert.strictEqual(method, 'GET');
+        callback('whoops');
+      });
+
+      provider.getTrustBundle(function(err) {
+        assert.strictEqual(err, 'whoops');
+        testCallback();
+      });
     });
   });
 
@@ -224,8 +359,8 @@ describe('IotEdgeAuthenticationProvider', function() {
           deviceId: 'd1'
         }
       );
-      sinon.stub(provider._restApiClient, 'executeApiCall').callsFake(function(method, path, headers, body, callback) {
-        assert.equal(path, '/modules/m1/genid/g1/sign?api-version=' + WORKLOAD_API_VERSION);
+      sinon.stub(provider._restApiClient, 'executeApiCall').callsFake(function(method, path, headers, body, requestOptions, callback) {
+        assert.strictEqual(path, '/modules/m1/genid/g1/sign?api-version=' + WORKLOAD_API_VERSION);
         callback(null, { digest: 'digest1' });
       });
 
@@ -248,8 +383,8 @@ describe('IotEdgeAuthenticationProvider', function() {
     //     data: `${data}\n${expiry}`
     //   };
     //   ]
-    // Tests_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_014: [ The _sign method shall invoke this._restApiClient.executeApiCall to make the REST call on iotedged using the POST method. ]
-    it('sign request is as expected', function(testCallback) {
+    // Tests_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_019: [ The _sign method shall invoke this._restApiClient.executeApiCall to make the REST call on iotedged using the POST method. ]
+    it('signs request is as expected', function(testCallback) {
       var provider = new IotEdgeAuthenticationProvider(
         {
           workloadUri: 'unix:///var/run/iotedged.w.sock',
@@ -259,16 +394,136 @@ describe('IotEdgeAuthenticationProvider', function() {
           deviceId: 'd1'
         }
       );
-      sinon.stub(provider._restApiClient, 'executeApiCall').callsFake(function(method, path, headers, body, callback) {
-        assert.equal(method, 'POST');
-        assert.equal(body.keyId, 'primary');
-        assert.equal(body.algo, 'HMACSHA256');
-        assert.equal(body.data, 'data\n2000');
+      sinon.stub(provider._restApiClient, 'executeApiCall').callsFake(function(method, path, headers, body, requestOptions, callback) {
+        assert.strictEqual(method, 'POST');
+        assert.strictEqual(body.keyId, 'primary');
+        assert.strictEqual(body.algo, 'HMACSHA256');
+        assert.strictEqual(body.data, 'aDElMkZkZXZpY2VzJTJGZDElMkZtb2R1bGVzJTJGbTEKMjAwMA==');
         callback(null, { digest: 'digest1' });
       });
 
       provider._sign('data', 2000, function(err) {
         testCallback();
+      });
+    });
+
+    it('uses http.request object', function(testCallback) {
+      var provider = new IotEdgeAuthenticationProvider(
+        {
+          workloadUri: 'unix:///var/run/iotedged.w.sock',
+          moduleId: 'm1',
+          generationId: 'g1',
+          iothubHostName: 'h1',
+          deviceId: 'd1'
+        }
+      );
+      sinon.stub(provider._restApiClient, 'executeApiCall').callsFake(function(method, path, headers, body, requestOptions, callback) {
+        assert.strictEqual(method, 'POST');
+        assert.strictEqual(body.keyId, 'primary');
+        assert.strictEqual(body.algo, 'HMACSHA256');
+        assert.strictEqual(body.data, 'aDElMkZkZXZpY2VzJTJGZDElMkZtb2R1bGVzJTJGbTEKMjAwMA==');
+        assert.strictEqual(requestOptions.request, http.request);
+        callback(null, { digest: 'digest1' });
+      });
+
+      provider._sign('data', 2000, function(err) {
+        testCallback();
+      });
+    });
+
+    it('uses port when specified', function(testCallback) {
+      var provider = new IotEdgeAuthenticationProvider(
+        {
+          workloadUri: 'http://localhost:8081',
+          moduleId: 'm1',
+          generationId: 'g1',
+          iothubHostName: 'h1',
+          deviceId: 'd1'
+        }
+      );
+      sinon.stub(provider._restApiClient, 'executeApiCall').callsFake(function(method, path, headers, body, requestOptions, callback) {
+        assert.strictEqual(method, 'POST');
+        assert.strictEqual(body.keyId, 'primary');
+        assert.strictEqual(body.algo, 'HMACSHA256');
+        assert.strictEqual(body.data, 'aDElMkZkZXZpY2VzJTJGZDElMkZtb2R1bGVzJTJGbTEKMjAwMA==');
+        assert.strictEqual(requestOptions.port, 8081);
+        callback(null, { digest: 'digest1' });
+      });
+
+      provider._sign('data', 2000, function(err) {
+        testCallback();
+      });
+    });
+
+    describe('#SharedAccessSignature.createWithSigningFunction works', function() {
+      var createWithSigningFunctionStub;
+      beforeEach(function() {
+        createWithSigningFunctionStub = sinon
+          .stub(SharedAccessSignature, 'createWithSigningFunction')
+          .callsArgWith(3, null, 'sas token');
+      });
+
+      afterEach(function() {
+        createWithSigningFunctionStub.restore();
+      });
+
+      // Tests_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_027: [** The `_sign` method shall use the `SharedAccessSignature.createWithSigningFunction` function to build the data buffer which is to be signed by iotedged.
+      it('uses SharedAccessSignature.createWithSigningFunction', function(testCallback) {
+        var provider = new IotEdgeAuthenticationProvider(
+          {
+            workloadUri: 'unix:///var/run/iotedged.w.sock',
+            moduleId: 'm1',
+            generationId: 'g1',
+            iothubHostName: 'h1',
+            deviceId: 'd1'
+          }
+        );
+        sinon.stub(provider._restApiClient, 'executeApiCall').callsFake(function(method, path, headers, body, requestOptions, callback) {
+          assert.strictEqual(method, 'POST');
+          assert.strictEqual(body.keyId, 'primary');
+          assert.strictEqual(body.algo, 'HMACSHA256');
+          assert.strictEqual(body.data, 'aDElMkZkZXZpY2VzJTJGZDElMkZtb2R1bGVzJTJGbTEKMjAwMA==');
+          callback(null, { digest: 'digest1' });
+        });
+
+        provider._sign('data', 2000, function(err, sas) {
+          assert.isNotOk(err);
+          assert.strictEqual(sas, 'sas token');
+          assert.isTrue(createWithSigningFunctionStub.called);
+          testCallback();
+        });
+      });
+    });
+
+    describe('#SharedAccessSignature.createWithSigningFunction fails', function() {
+      var createWithSigningFunctionStub;
+      beforeEach(function() {
+        createWithSigningFunctionStub = sinon
+          .stub(SharedAccessSignature, 'createWithSigningFunction')
+          .callsArgWith(3, 'whoops');
+      });
+
+      afterEach(function() {
+        createWithSigningFunctionStub.restore();
+      });
+
+      // Tests_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_027: [** The `_sign` method shall use the `SharedAccessSignature.createWithSigningFunction` function to build the data buffer which is to be signed by iotedged.
+      it('forwards error', function(testCallback) {
+        var provider = new IotEdgeAuthenticationProvider(
+          {
+            workloadUri: 'unix:///var/run/iotedged.w.sock',
+            moduleId: 'm1',
+            generationId: 'g1',
+            iothubHostName: 'h1',
+            deviceId: 'd1'
+          }
+        );
+
+        provider._sign('data', 2000, function(err) {
+          assert.strictEqual(err, 'whoops');
+          assert.isTrue(createWithSigningFunctionStub.called);
+          testCallback();
+        });
       });
     });
 
@@ -282,12 +537,12 @@ describe('IotEdgeAuthenticationProvider', function() {
           deviceId: 'd1'
         }
       );
-      sinon.stub(provider._restApiClient, 'executeApiCall').callsFake(function(method, path, headers, body, callback) {
+      sinon.stub(provider._restApiClient, 'executeApiCall').callsFake(function(method, path, headers, body, requestOptions, callback) {
         callback('whoops');
       });
 
       provider._sign('data', 2000, function(err) {
-        assert.equal(err, 'whoops');
+        assert.strictEqual(err, 'whoops');
         testCallback();
       });
     });
@@ -303,12 +558,12 @@ describe('IotEdgeAuthenticationProvider', function() {
           deviceId: 'd1'
         }
       );
-      sinon.stub(provider._restApiClient, 'executeApiCall').callsFake(function(method, path, headers, body, callback) {
+      sinon.stub(provider._restApiClient, 'executeApiCall').callsFake(function(method, path, headers, body, requestOptions, callback) {
         callback(null, { digest: 'digest1' });
       });
 
       provider._sign('data', 2000, function(err, sig) {
-        assert.equal(sig, 'digest1');
+        assert.strictEqual(sig, 'SharedAccessSignature sr=h1%2Fdevices%2Fd1%2Fmodules%2Fm1&sig=digest0%3D&se=2000');
         testCallback();
       });
     });

@@ -28,6 +28,18 @@ The `IotEdgeAuthenticationProvider` class implements the `AuthenticationProvider
 
 **SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_007: [** The `constructor` shall build a string host if the workload URI protocol is not `unix`. **]**
 
+# public getTrustBundle(callback: (err?: Error, ca?: string) => void): void
+
+**SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_020: [** The `getTrustBundle` method shall throw a ReferenceError if the callback parameter is falsy or is not a function. **]**
+
+**SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_023: [** The `getTrustBundle` method shall set the HTTP request option's `request` property to use the `http.request` object. **]**
+
+**SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_024: [** The `getTrustBundle` method shall set the HTTP request option's `port` property to use the workload URI's port if available. **]**
+
+**SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_021: [** The `getTrustBundle` method shall invoke `this._restApiClient.executeApiCall` to make the REST call on iotedged using the GET method. **]**
+
+**SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_022: [** The `getTrustBundle` method shall build the HTTP request path in the format `/trust-bundle?api-version=2018-06-28`. **]**
+
 # _sign(resourceUri: string, expiry: number, callback: (err: Error, signature?: string) => void): void
 
 **SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_009: [** The `_sign` method shall throw a `ReferenceError` if the `callback` parameter is falsy or is not a function. **]**
@@ -35,6 +47,12 @@ The `IotEdgeAuthenticationProvider` class implements the `AuthenticationProvider
 **SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_010: [** The `_sign` method invoke `callback` with a `ReferenceError` if the `resourceUri` parameter is falsy. **]**
 
 **SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_011: [** The `_sign` method shall build the HTTP request path in the format `/modules/<module id>/genid/<generation id>/sign?api-version=2018-06-28`. **]**
+
+**SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_025: [** The `_sign` method shall set the HTTP request option's `request` property to use the `http.request` object. **]**
+
+**SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_026: [** The `_sign` method shall set the HTTP request option's `port` property to use the workload URI's port if available. **]**
+
+**SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_027: [** The `_sign` method shall use the `SharedAccessSignature.createWithSigningFunction` function to build the data buffer which is to be signed by iotedged. **]**
 
 **SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_019: [** The `_sign` method shall invoke `this._restApiClient.executeApiCall` to make the REST call on iotedged using the POST method. **]**
 

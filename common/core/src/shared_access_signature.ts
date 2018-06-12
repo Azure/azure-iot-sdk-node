@@ -130,8 +130,12 @@ static createWithSigningFunction(credentials: authorization.TransportConfig, exp
   if (!signingFunction) throwRef('signingFunction', signingFunction);
   if (!callback) throwRef('callback', callback);
   let sas = new SharedAccessSignature();
-  /*Codes_SRS_NODE_COMMON_SAS_06_002: [The `createWithSigningFunction` shall create a `SharedAccessSignature` object with an `sr` property formed by url encoding `credentials.host` + `/devices/` + `credentials.deviceId`.] */
-  sas.sr = authorization.encodeUriComponentStrict(credentials.host + '/devices/' + credentials.deviceId);
+  /*Codes_SRS_NODE_COMMON_SAS_06_002: [The `createWithSigningFunction` shall create a `SharedAccessSignature` object with an `sr` property formed by url encoding `credentials.host` + `/devices/` + `credentials.deviceId` + `/modules/` + `credentials.moduleId`.] */
+  let resource = credentials.host + '/devices/' + credentials.deviceId;
+  if (credentials.moduleId) {
+    resource += `/modules/${credentials.moduleId}`;
+  }
+  sas.sr = authorization.encodeUriComponentStrict(resource);
   /*Codes_SRS_NODE_COMMON_SAS_06_003: [** The `createWithSigningFunction` shall create a `SharedAccessSignature` object with an `se` property containing the value of the parameter `expiry`.] */
   sas.se = expiry;
   /*Codes_SRS_NODE_COMMON_SAS_06_004: [The `createWithSigningFunction` shall create a `SharedAccessSignature` object with an optional property `skn`, if the `credentials.sharedAccessKeyName` is not falsy,  The value of the `skn` property will be the url encoded value of `credentials.sharedAccessKeyName`.] */

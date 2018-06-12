@@ -4,7 +4,7 @@
 'use strict';
 
 import { Amqp } from './amqp.js';
-import { AuthenticationProvider } from 'azure-iot-common';
+import { AuthenticationProvider, TransportConfig } from 'azure-iot-common';
 
 /**
  * Constructs a transport object that can be used by the device {@link azure-iot-device.Client} to send and receive messages to and from an IoT Hub instance, using the AMQP protocol over secure websockets.
@@ -22,7 +22,7 @@ export class AmqpWs extends Amqp {
     super(authenticationProvider);
   }
 
-  protected _getConnectionUri(host: string): string {
-    return 'wss://' + host + ':443/$iothub/websocket';
+  protected _getConnectionUri(credentials: TransportConfig): string {
+    return 'wss://' + (credentials.gatewayHostName || credentials.host) + ':443/$iothub/websocket';
   }
 }

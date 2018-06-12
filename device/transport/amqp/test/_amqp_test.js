@@ -29,6 +29,7 @@ describe('Amqp', function () {
   var configWithSSLOptions = { host: 'hub.host.name', deviceId: 'deviceId', x509: 'some SSL options' };
   var simpleSas = 'SharedAccessSignature sr=foo&sig=123&se=123';
   var configWithSAS = { host: 'hub.host.name', deviceId: 'deviceId', sharedAccessSignature: simpleSas};
+  var configWithGatewayHostName = { gatewayHostName: 'gateway.host', deviceId: 'deviceId', sharedAccessSignature: simpleSas};
 
   beforeEach(function () {
     sender = new EventEmitter();
@@ -372,6 +373,27 @@ describe('Amqp', function () {
         transport.connect(function (err) {
           assert.isTrue(fakeTokenAuthenticationProvider.getDeviceCredentials.calledOnce);
           assert.strictEqual(err.amqpError, fakeError);
+          testCallback();
+        });
+      });
+
+      /*Tests_SRS_NODE_DEVICE_AMQP_13_002: [ The connect method shall set the CA cert on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
+      it('sets CA cert if provided', function (testCallback) {
+        transport.setOptions({ ca: 'ca cert' });
+        transport.connect(function (err) {
+          assert.isNotOk(err);
+          assert(fakeBaseClient.connect.called);
+          assert.strictEqual(fakeBaseClient.connect.firstCall.args[0].sslOptions.caFile, 'ca cert');
+          testCallback();
+        });
+      });
+
+      it('sets gateway host name if provided', function (testCallback) {
+        fakeTokenAuthenticationProvider.getDeviceCredentials = sinon.stub().callsArgWith(0, null, configWithGatewayHostName);
+        transport.connect(function (err) {
+          assert.isNotOk(err);
+          assert(fakeBaseClient.connect.called);
+          assert.strictEqual(fakeBaseClient.connect.firstCall.args[0].uri, 'amqps://' + configWithGatewayHostName.gatewayHostName);
           testCallback();
         });
       });
@@ -824,6 +846,12 @@ describe('Amqp', function () {
         assert.throws(function () {
           transport.setOptions({ cert: 'cert' });
         }, errors.InvalidOperationError);
+      });
+
+      /*Tests_SRS_NODE_DEVICE_AMQP_13_001: [ The setOptions method shall save the options passed in. ]*/
+      it('saves options', function () {
+        transport.setOptions({ ca: 'ca cert' });
+        assert.strictEqual(transport._options.ca, 'ca cert');
       });
     });
 

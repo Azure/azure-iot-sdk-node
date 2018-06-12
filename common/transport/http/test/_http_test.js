@@ -32,6 +32,94 @@ describe('Http', function() {
     });
   });
 
+  describe('#buildRequest', function() {
+    var fakeOptions = {
+      http: {
+        agent: '__FAKE_AGENT__'
+      }
+    };
+    var fakePath = '__FAKE_PATH__';
+    var fakeHeaders = { 'fake' : true };
+    var fakeHost = '__FAKE_HOST__';
+
+    beforeEach(function() {
+      sinon.stub(https, 'request').returns(new EventEmitter());
+      sinon.stub(node_http, 'request').returns(new EventEmitter());
+    });
+
+    afterEach(function() {
+      https.request.restore();
+      node_http.request.restore();
+    });
+
+    it ('uses the right agent value', function(callback) {
+      var http = new Http();
+      http.setOptions(fakeOptions);
+      http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, function() {});
+      assert(https.request.called);
+      var httpOptions = https.request.firstCall.args[0];
+      assert.strictEqual(httpOptions.agent, fakeOptions.http.agent);
+      callback();
+    });
+
+    // Tests_SRS_NODE_HTTP_13_004: [ Use the request object from the `options` object if one has been provided or default to HTTPS request. ]
+    it ('uses https when using tcp', function(callback) {
+      var http = new Http();
+      http.setOptions(fakeOptions);
+      http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, function() {});
+      assert(https.request.called);
+      callback();
+    });
+
+    // Tests_SRS_NODE_HTTP_13_004: [ Use the request object from the `options` object if one has been provided or default to HTTPS request. ]
+    it ('uses supplied request object when using tcp', function(callback) {
+      var http = new Http();
+      http.setOptions(fakeOptions);
+      var requestOptions = {
+        request: sinon.stub().returns(new EventEmitter())
+      };
+      http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, requestOptions, function() {});
+      assert(requestOptions.request.called);
+      callback();
+    });
+
+    // Tests_SRS_NODE_HTTP_13_005: [ Use the request object from the http module when dealing with unix domain socket based HTTP requests. ]
+    it ('uses http when using unix domain socket', function(callback) {
+      var http = new Http();
+      http.setOptions(fakeOptions);
+      http.buildRequest('GET', fakePath, fakeHeaders, { socketPath: fakeHost }, function() {});
+      assert(node_http.request.called);
+      callback();
+    });
+
+    it ('uses custom port if specified', function(callback) {
+      var http = new Http();
+      http.setOptions(fakeOptions);
+      var requestOptions = {
+        request: sinon.stub().returns(new EventEmitter()),
+        port: 12345
+      };
+      http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, requestOptions, function() {});
+      assert(requestOptions.request.called);
+      assert.strictEqual(requestOptions.request.args[0][0].port, 12345);
+      callback();
+    });
+
+    it ('uses x509 options if specified', function(callback) {
+      var http = new Http();
+      http.setOptions(fakeOptions);
+      var x509Options = {
+        cert: 'cert1',
+        key: 'key1',
+        passphrase: 'pass1'
+      };
+      http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, x509Options, function() {});
+      assert.strictEqual(https.request.args[0][0].cert, 'cert1');
+      assert.strictEqual(https.request.args[0][0].key, 'key1');
+      assert.strictEqual(https.request.args[0][0].passphrase, 'pass1');
+      callback();
+    });
+  });
 
   describe('#buildRequest', function() {
     var fakeOptions = {
@@ -42,42 +130,136 @@ describe('Http', function() {
     var fakePath = '__FAKE_PATH__';
     var fakeHeaders = { 'fake' : true };
     var fakeHost = '__FAKE_HOST__';
-    it ('uses the right agent value', function(callback) {
-      after(function() {
-        https.request.restore();
+    var fakeResponse = {
+      on: function() {}
+    };
+
+    beforeEach(function() {
+      sinon.stub(https, 'request')
+        .callsFake(function(httpOptions, callback) {
+          callback(fakeResponse);
+          return new EventEmitter();
+        });
+      
+      sinon.stub(fakeResponse, 'on')
+        .callsFake(function(eventName, callback) {
+          if (eventName === 'error') {
+            callback('whoops');
+          }
+        });
+    });
+
+    afterEach(function() {
+      https.request.restore();
+    });
+
+    it ('forwards response error', function(callback) {
+      var http = new Http();
+      http.setOptions(fakeOptions);
+      http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, function(err) {
+        assert.strictEqual(err, 'whoops');
+        callback();
       });
-      sinon.stub(https,'request').returns(new EventEmitter());
-      var http = new Http();
-      http.setOptions(fakeOptions);
-      http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, function() {});
-      assert(https.request.called);
-      var httpOptions = https.request.firstCall.args[0];
-      assert.strictEqual(httpOptions.agent, fakeOptions.http.agent);
-      callback();
+    });
+  });
+
+  describe('#buildRequest', function() {
+    var fakeOptions = {
+      http: {
+        agent: '__FAKE_AGENT__'
+      }
+    };
+    var fakePath = '__FAKE_PATH__';
+    var fakeHeaders = { 'fake' : true };
+    var fakeHost = '__FAKE_HOST__';
+    var fakeResponse = {
+      statusCode: 200,
+      on: function() {}
+    };
+    var dataCallback, endCallback;
+
+    beforeEach(function() {
+      sinon.stub(https, 'request')
+        .callsFake(function(httpOptions, callback) {
+          callback(fakeResponse);
+          return new EventEmitter();
+        });
+      
+      sinon.stub(fakeResponse, 'on')
+        .callsFake(function(eventName, callback) {
+          if (eventName === 'data') {
+            dataCallback = callback;
+          } else if (eventName === 'end') {
+            endCallback = callback;
+
+            // generate some data and then raise 'end'
+            setTimeout(function() {
+              dataCallback('somedata');
+              endCallback();
+            }, 1);
+          }
+        });
     });
 
-    // Tests_SRS_NODE_HTTP_13_004: [ Use the request object from the https module when dealing with TCP based HTTP requests. ]
-    it ('uses https when using tcp', function(callback) {
-      var http = new Http();
-      http.setOptions(fakeOptions);
-      http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, function() {});
-      assert(https.request.called);
-      callback();
+    afterEach(function() {
+      https.request.restore();
     });
 
-    // // Tests_SRS_NODE_HTTP_13_005: [ Use the request object from the http module when dealing with unix domain socket based HTTP requests. ]
-    it ('uses http when using unix domain socket', function(callback) {
-      after(function() {
-        node_http.request.restore();
+    it ('handles data', function(callback) {
+      var http = new Http();
+      http.setOptions(fakeOptions);
+      http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, function(err, body, response) {
+        assert.isNotOk(err);
+        assert.strictEqual(body, 'somedata');
+        assert.strictEqual(response.statusCode, 200);
+        callback();
       });
-      sinon.stub(node_http, 'request').returns(new EventEmitter());
-      var http = new Http();
-      http.setOptions(fakeOptions);
-      http.buildRequest('GET', fakePath, fakeHeaders, { socketPath: fakeHost }, function() {});
-      assert(node_http.request.called);
-      callback();
+    });
+  });
+
+  describe('#buildRequest', function() {
+    var fakeOptions = {
+      http: {
+        agent: '__FAKE_AGENT__'
+      }
+    };
+    var fakePath = '__FAKE_PATH__';
+    var fakeHeaders = { 'fake' : true };
+    var fakeHost = '__FAKE_HOST__';
+    var fakeResponse = {
+      statusCode: 300,
+      statusMessage: 'not good',
+      on: function() {}
+    };
+
+    beforeEach(function() {
+      sinon.stub(https, 'request')
+        .callsFake(function(httpOptions, callback) {
+          callback(fakeResponse);
+          return new EventEmitter();
+        });
+      
+      sinon.stub(fakeResponse, 'on')
+        .callsFake(function(eventName, callback) {
+          if (eventName === 'end') {
+            setTimeout(callback, 1);
+          }
+        });
     });
 
+    afterEach(function() {
+      https.request.restore();
+    });
+
+    it ('handles request error', function(callback) {
+      var http = new Http();
+      http.setOptions(fakeOptions);
+      http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, function(err) {
+        assert.isOk(err);
+        assert.strictEqual(err.message, 'not good');
+        callback();
+      });
+    });
   });
 
   describe('#toMessage', function() {
