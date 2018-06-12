@@ -33,22 +33,6 @@ azure-iot-device.InternalClient is an internal class which provides a means for 
 
 **SRS_NODE_INTERNAL_CLIENT_16_091: [** The `fromAuthenticationProvider` method shall return a `Client` object configured with a new instance of a transport created using the `transportCtor` argument. **]**
 
-#### fromEnvironment
-
-**SRS_NODE_INTERNAL_CLIENT_13_026: [** The `fromEnvironment` method shall throw a `ReferenceError` if the `transportCtor` argument is falsy. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_13_027: [** The `fromEnvironment` method shall throw a `ReferenceError` if the `clientCtor` argument is falsy. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_13_028: [** The `fromEnvironment` method shall delegate to `InternalClient.fromConnectionString` if an environment variable called `EdgeHubConnectionString` or `IotHubConnectionString` exists. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_13_029: [** If environment variables `EdgeHubConnectionString` and `IotHubConnectionString` do not exist then the following environment variables must be defined: `IOTEDGE_WORKLOADURI`, `IOTEDGE_DEVICEID`, `IOTEDGE_MODULEID`, `IOTEDGE_IOTHUBHOSTNAME`, `IOTEDGE_AUTHSCHEME` and `IOTEDGE_MODULEGENERATIONID`. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_13_030: [** The value for the environment variable `IOTEDGE_AUTHSCHEME` must be `SasToken`. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_13_031: [** The `fromEnvironment` method shall return a new instance of the `Client` object. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_13_032: [** The `fromEnvironment` method shall create a new `IotEdgeAuthenticationProvider` object and pass this to the transport constructor. **]**
-
 ### Constructors
 #### Client(transport, connectionString) constructor
 
