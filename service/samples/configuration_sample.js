@@ -6,23 +6,26 @@
 var iothub = require('azure-iothub');
 
 var connectionString = '[IoT Hub Connection String]';
-var deviceId = '[Device ID]';
 
 var registry = iothub.Registry.fromConnectionString(connectionString);
 
+var sampleConfigId = 'chiller4000x';
 var sampleConfig = {
-  id: 'sampleconfig',
-  labels: {},
+  id: sampleConfigId,
   content: {
-    moduleContent: {
-      fakeModule: {
-        'properties.desired': {
-          prop1: 'foo'
-        }
+    deviceContent: {
+      'properties.desired.chiller-water': {
+        temperature: 66,
+        pressure: 28
       }
     }
   },
-  targetCondition: 'tags.environment=\'prod\'',
+  metrics: {
+    queries: {
+      waterSettingsPending: 'SELECT deviceId FROM devices WHERE properties.reported.chillerWaterSettings.status=\'pending\''
+    }
+  },
+  targetCondition: 'properties.reported.chillerProperties.model=\'4000x\'',
   priority: 20
 };
 
@@ -42,33 +45,16 @@ var getAllConfigurations = function(done) {
     } else {
       console.log(configurations.length.toString() + ' configurations found');
       configurations.forEach(function(config) {
-        console.log(config.id);
+        console.log('contents of ' + config.id + ':');
+        printJson(config);
+        console.log();
       });
-
-      if (configurations.length >= 1) {
-        getConfigurationById(configurations[0].id,done);
-      } else {
-        done();
-      }
-    }
-  });
-};
-
-var getConfigurationById = function(id, done) {
-  console.log();
-  console.log('getting details for config ' + id);
-  registry.getConfiguration(id, function(err, config) {
-    if (err) {
-      console.log('getConfigurationById failed: ' + err);
-      done();
-    } else {
-      printJson(config);
       done();
     }
   });
 };
 
-var addConfiguration = function(done) {
+var createConfiguration = function(done) {
   console.log();
   console.log('adding new configuration with id ' + sampleConfig.id + ' and priority ' + sampleConfig.priority);
 
@@ -83,17 +69,31 @@ var addConfiguration = function(done) {
   });
 };
 
+var monitorConfiguration = function(done) {
+  console.log();
+  console.log('getting details for config ' + sampleConfigId);
+  registry.getConfiguration(sampleConfigId, function(err, config) {
+    if (err) {
+      console.log('getConfigurationById failed: ' + err);
+      done();
+    } else {
+      printJson(config);
+      done();
+    }
+  });
+};
+
+
 var updateConfiguration = function(done) {
   console.log();
-  console.log('retrieving new configuration back from the service to update');
+  console.log('updating configuration ' + sampleConfigId + ' to add new query' );
 
-  registry.getConfiguration(sampleConfig.id, function(err, configFromService) {
+  registry.getConfiguration(sampleConfigId, function(err, configFromService) {
     if (err) {
       console.log('getConfiguration failed: ' + err);
       done();
     } else {
-      configFromService.priority++;
-      console.log('updating configuration with new priority ' + configFromService.priority);
+      configFromService.metrics.queries['overheat'] = 'SELECT deviceId FROM devices WHERE properties.reported.chillerWaterSettings.temperature > 75';
       registry.updateConfiguration(configFromService, function(err) {
         if (err) {
           console.log('updateConfiguration failed: ' + err);
@@ -109,9 +109,9 @@ var updateConfiguration = function(done) {
 
 var removeConfiguration = function(done) {
   console.log();
-  console.log('removing configuration with id ' + sampleConfig.id);
+  console.log('removing configuration with id ' + sampleConfigId);
 
-  registry.removeConfiguration(sampleConfig.id, function(err) {
+  registry.removeConfiguration(sampleConfigId, function(err) {
     if (err) {
       console.log('removeConfiguration failed: ' + err);
       done();
@@ -122,26 +122,13 @@ var removeConfiguration = function(done) {
   });
 };
 
-var applyConfigurationContentOnDevice = function(done) {
-  console.log("Applying configuration to device " + deviceId);
-
-  registry.applyConfigurationContentOnDevice(deviceId, sampleConfig, function(err) {
-    if (err) {
-      console.log('applyConfigurationContentOnDevice failed: ' + err);
-      done();
-    } else {
-      console.log('applyConfigurationContentOnDevice succeeded');
-      done();
-    }
-  });
-};
-
 getAllConfigurations(function() {
-  addConfiguration(function() {
-    updateConfiguration(function() {
-      removeConfiguration(function() {
-        applyConfigurationContentOnDevice(function() {
-
+  createConfiguration(function() {
+    monitorConfiguration(function() {
+      updateConfiguration(function() {
+        monitorConfiguration(function() {
+          removeConfiguration(function() {
+          });
         });
       });
     });
