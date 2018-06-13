@@ -82,8 +82,24 @@ function closeDeviceEventHubClients(deviceClient, eventHubClient, ehReceivers, d
   }
 }
 
+function getErrorDetailString(functionName, err) {
+  var detail = functionName + ' returned ' + (err ? err : 'success');
+  if (err && err.responseBody) {
+    if (err.response && err.response.headers) {
+      if (err.response.headers['content-type'].indexOf('json') !== -1) {
+        detail += '\n';
+        var body = JSON.parse(err.responseBody);
+        delete body.StackTrace;
+        detail += JSON.stringify(body, null, ' ');
+      }
+    }
+  }
+  return detail;
+}
+
 module.exports = {
   createDeviceClient: createDeviceClient,
   closeDeviceServiceClients: closeDeviceServiceClients,
-  closeDeviceEventHubClients: closeDeviceEventHubClients
+  closeDeviceEventHubClients: closeDeviceEventHubClients,
+  getErrorDetailString: getErrorDetailString
 };
