@@ -738,8 +738,3 @@ export interface MethodMessage {
 }
 
 export type TransportCtor = new(config: Config) => DeviceTransport;
-
-
-
-
-

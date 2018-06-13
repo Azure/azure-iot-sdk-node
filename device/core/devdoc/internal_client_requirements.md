@@ -33,7 +33,6 @@ azure-iot-device.InternalClient is an internal class which provides a means for 
 
 **SRS_NODE_INTERNAL_CLIENT_16_091: [** The `fromAuthenticationProvider` method shall return a `Client` object configured with a new instance of a transport created using the `transportCtor` argument. **]**
 
-
 ### Constructors
 #### Client(transport, connectionString) constructor
 

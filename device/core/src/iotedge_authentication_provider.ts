@@ -1,4 +1,4 @@
-import { AuthenticationProvider, TransportConfig, encodeUriComponentStrict } from 'azure-iot-common';
+import { AuthenticationProvider, encodeUriComponentStrict } from 'azure-iot-common';
 import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
 import { RestApiClient } from 'azure-iot-http-base';
 import * as url from 'url';
@@ -54,14 +54,23 @@ export class IotEdgeAuthenticationProvider extends SharedAccessKeyAuthentication
    * Initializes a new instance of the IotEdgeAuthenticationProvider.
    *
    * @param _authConfig                    iotedged connection configuration information.
-   * @param credentials                    Credentials to be used by the device to connect to the IoT hub.
    * @param tokenValidTimeInSeconds        [optional] The number of seconds for which a token is supposed to be valid.
    * @param tokenRenewalMarginInSeconds    [optional] The number of seconds before the end of the validity period during which the `IotEdgeAuthenticationProvider` should renew the token.
    */
-  constructor(private _authConfig: EdgedAuthConfig, credentials: TransportConfig, tokenValidTimeInSeconds?: number, tokenRenewalMarginInSeconds?: number) {
+  constructor(private _authConfig: EdgedAuthConfig, tokenValidTimeInSeconds?: number, tokenRenewalMarginInSeconds?: number) {
     // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_016: [ The constructor shall create the initial token value using the credentials parameter. ]
     // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_017: [ The constructor shall throw an ArgumentError if the tokenRenewalMarginInSeconds is less than or equal tokenValidTimeInSeconds. ]
-    super(credentials, tokenValidTimeInSeconds, tokenRenewalMarginInSeconds, true);
+    super(
+      {
+        host: _authConfig && _authConfig.iothubHostName,
+        deviceId: _authConfig && _authConfig.deviceId,
+        moduleId: _authConfig && _authConfig.moduleId,
+        gatewayHostName: _authConfig && _authConfig.gatewayHostName
+      },
+      tokenValidTimeInSeconds,
+      tokenRenewalMarginInSeconds,
+      true
+    );
 
     // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_001: [ The constructor shall throw a ReferenceError if the _authConfig parameter is falsy. ]
     if (!this._authConfig) {
