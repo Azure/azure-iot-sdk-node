@@ -5,11 +5,44 @@
 
 var assert = require('chai').assert;
 var sinon = require('sinon');
+var FakeTransport = require('./fake_transport.js');
+var Message = require('azure-iot-common').Message;
+var ModuleClient = require('../lib/module_client').ModuleClient;
+var errors = require('azure-iot-common').errors;
 var ModuleClient = require('../lib/module_client').ModuleClient;
 var IotEdgeAuthenticationProvider = require('../lib/iotedge_authentication_provider').IotEdgeAuthenticationProvider;
 var SharedAccessSignature = require('azure-iot-common').SharedAccessSignature;
 
-describe('ModuleClient', function() {
+describe('ModuleClient', function () {
+  var sharedKeyConnectionString = 'HostName=host;DeviceId=id;ModuleId=modId;SharedAccessKey=key';
+  var sharedAccessSignature = '"SharedAccessSignature sr=hubName.azure-devices.net/devices/deviceId/modules/moduleId&sig=s1gn4tur3&se=1454204843"';
+
+  describe('#fromConnectionString', function () {
+    /*Tests_SRS_NODE_MODULE_CLIENT_05_006: [The fromConnectionString method shall return a new instance of the ModuleClient object, as by a call to new ModuleClient(new Transport(...)).]*/
+    it('returns an instance of ModuleClient', function () {
+      var client = ModuleClient.fromConnectionString(sharedKeyConnectionString, FakeTransport);
+      assert.instanceOf(client, ModuleClient);
+    });
+  });
+
+
+  describe('#fromSharedAccessSignature', function () {
+    /*Tests_SRS_NODE_MODULE_CLIENT_16_030: [The fromSharedAccessSignature method shall return a new instance of the ModuleClient object] */
+    it('returns an instance of ModuleClient', function () {
+      var client = ModuleClient.fromSharedAccessSignature(sharedAccessSignature, FakeTransport);
+      assert.instanceOf(client, ModuleClient);
+    });
+  });
+
+  describe('#fromAuthenticationProvider', function () {
+    /*Tests_SRS_NODE_MODULE_CLIENT_16_091: [The `fromAuthenticationProvider` method shall return a `ModuleClient` object configured with a new instance of a transport created using the `transportCtor` argument.]*/
+    it('returns an instance of ModuleClient', function () {
+      var client = ModuleClient.fromAuthenticationProvider({}, FakeTransport);
+      assert.instanceOf(client, ModuleClient);
+      assert.instanceOf(client._transport, FakeTransport);
+    });
+  });
+
   describe('#fromEnvironment', function() {
     // Tests_SRS_NODE_MODULE_CLIENT_13_033: [ The fromEnvironment method shall throw a ReferenceError if the callback argument is falsy or is not a function. ]
     [null, undefined, 'not a function', 20].forEach(function(badCallback) {
@@ -58,7 +91,7 @@ describe('ModuleClient', function() {
     ['EdgeHubConnectionString', 'IotHubConnectionString'].forEach(function(envName) {
       describe('sets CA cert in non-edge mode', function() {
         var stub;
-        
+
         var transport = {
           setOptions: function() {}
         };
@@ -265,7 +298,7 @@ describe('ModuleClient', function() {
 
       var getTrustBundleStub;
       var createWithSigningFunctionStub;
-  
+
       beforeEach(function() {
         env.forEach(function(e) {
           process.env[e[0]] = e[1];
@@ -277,7 +310,7 @@ describe('ModuleClient', function() {
         createWithSigningFunctionStub = sinon.stub(SharedAccessSignature, 'createWithSigningFunction')
           .callsArgWith(3, null, 'sas token');
       });
-  
+
       afterEach(function() {
         env.forEach(function(e) {
           delete process.env[e[0]];
@@ -286,7 +319,7 @@ describe('ModuleClient', function() {
         getTrustBundleStub.restore();
         createWithSigningFunctionStub.restore();
       });
-  
+
       // Tests_SRS_NODE_MODULE_CLIENT_13_035: [ If the client is running in edge mode then the IotEdgeAuthenticationProvider.getTrustBundle method shall be invoked to retrieve the CA cert and the returned value shall be set as the CA cert for the transport via the transport's setOptions method passing in the CA value for the ca property in the options object. ]
       it('sets cert on transport', function(testCallback) {
         var transport = {
@@ -330,7 +363,7 @@ describe('ModuleClient', function() {
 
       var getTrustBundleStub;
       var createWithSigningFunctionStub;
-  
+
       beforeEach(function() {
         env.forEach(function(e) {
           process.env[e[0]] = e[1];
@@ -338,11 +371,11 @@ describe('ModuleClient', function() {
 
         getTrustBundleStub = sinon.stub(IotEdgeAuthenticationProvider.prototype, 'getTrustBundle')
           .callsArgWith(0, 'whoops');
-        
+
         createWithSigningFunctionStub = sinon.stub(SharedAccessSignature, 'createWithSigningFunction')
           .callsArgWith(3, null, 'sas token');
       });
-  
+
       afterEach(function() {
         env.forEach(function(e) {
           delete process.env[e[0]];
@@ -351,7 +384,7 @@ describe('ModuleClient', function() {
         getTrustBundleStub.restore();
         createWithSigningFunctionStub.restore();
       });
-  
+
       it('fails if getTrustBundle fails', function(testCallback) {
         var transport = {
           on: sinon.stub(),
@@ -368,4 +401,115 @@ describe('ModuleClient', function() {
       });
     });
   });
+
+  ['sendOutputEvent', 'sendOutputEventBatch'].forEach(function(funcName) {
+    describe('#' + funcName, function() {
+      /*Tests_SRS_NODE_MODULE_CLIENT_18_019: [The `sendOutputEvent` method shall not throw if the `callback` is not passed. ]*/
+      /*Tests_SRS_NODE_MODULE_CLIENT_18_022: [The `sendOutputEventBatch` method shall not throw if the `callback` is not passed. ]*/
+      it('doesn\'t throw if no callback is given and the method exists on the transport', function() {
+        var transport = new FakeTransport();
+        var client = new ModuleClient(transport);
+        client.open(function() {
+          assert.doesNotThrow(function() {
+            client[funcName]('message');
+          });
+        });
+      });
+    });
+  });
+
+  describe('#on(\'inputMessage\')', function () {
+    /*Tests_SRS_NODE_MODULE_CLIENT_18_012: [ The `inputMessage` event shall be emitted when an inputMessage is received from the IoT Hub service. ]*/
+    it('emits a message event when a message is received', function (done) {
+      var fakeTransport = new FakeTransport();
+      var client = new ModuleClient(fakeTransport);
+      client.on('inputMessage', function(inputName,msg) {
+        /*Tests_SRS_NODE_MODULE_CLIENT_18_013: [ The `inputMessage` event parameters shall be the inputName for the message and a `Message` object. ]*/
+        assert.strictEqual(inputName, 'fakeInputName');
+        assert.strictEqual(msg.constructor.name, 'Message');
+        done();
+      });
+
+      fakeTransport.emit('inputMessage', 'fakeInputName', new Message());
+    });
+  });
+
+  [
+    {
+      eventName: 'inputMessage',
+      enableFunc: 'enableInputMessages',
+      disableFunc: 'disableInputMessages'
+    }
+  ].forEach(function(testConfig) {
+    describe('#on(\'' + testConfig.eventName + '\')', function () {
+      /*Tests_SRS_NODE_MODULE_CLIENT_18_014: [ The client shall start listening for messages from the service whenever there is a listener subscribed to the `inputMessage` event. ]*/
+      it('starts listening for messages when a listener subscribes to the message event', function () {
+        var fakeTransport = new FakeTransport();
+        sinon.spy(fakeTransport, testConfig.enableFunc);
+        var client = new ModuleClient(fakeTransport);
+
+        // Calling 'on' twice to make sure it's called only once on the receiver.
+        // It works because the test will fail if the test callback is called multiple times, and it's called for every time the testConfig.eventName event is subscribed on the receiver.
+        client.on(testConfig.eventName, function () { });
+        client.on(testConfig.eventName, function () { });
+        assert.isTrue(fakeTransport[testConfig.enableFunc].calledOnce);
+      });
+
+      /*Tests_SRS_NODE_MODULE_CLIENT_18_015: [ The client shall stop listening for messages from the service whenever the last listener unsubscribes from the `inputMessage` event. ]*/
+      it('stops listening for messages when the last listener has unsubscribed', function (testCallback) {
+        var fakeTransport = new FakeTransport();
+        sinon.spy(fakeTransport, testConfig.enableFunc);
+        sinon.spy(fakeTransport, testConfig.disableFunc);
+        sinon.spy(fakeTransport, 'removeAllListeners');
+
+        var client = new ModuleClient(fakeTransport);
+        var listener1 = function () { };
+        var listener2 = function () { };
+        client.on(testConfig.eventName, listener1);
+        client.on(testConfig.eventName, listener2);
+
+        process.nextTick(function() {
+          client.removeListener(testConfig.eventName, listener1);
+          assert.isTrue(fakeTransport[testConfig.disableFunc].notCalled);
+          client.removeListener(testConfig.eventName, listener2);
+          assert(fakeTransport[testConfig.disableFunc].calledOnce);
+          testCallback();
+        });
+      });
+
+      /*Tests_SRS_NODE_MODULE_CLIENT_18_017: [ The client shall emit an `error` if connecting the transport fails while subscribing to `inputMessage` events. ]*/
+      it('emits an error if it fails to start listening for messages', function (testCallback) {
+        var fakeTransport = new FakeTransport();
+        var fakeError = new Error('fake');
+        sinon.stub(fakeTransport, testConfig.enableFunc).callsFake(function (callback) { callback(fakeError); });
+        var client = new ModuleClient(fakeTransport);
+        client.on('error', function (err) {
+          assert.strictEqual(err, fakeError);
+          testCallback();
+        })
+
+        client.on(testConfig.eventName, function () { });
+        assert.isTrue(fakeTransport[testConfig.enableFunc].calledOnce);
+      });
+
+      /*Tests_SRS_NODE_MODULE_CLIENT_16_097: [The client shall emit an `error` if connecting the transport fails while unsubscribing to `inputMessage` events.]*/
+      it('emits an error if it fails to stop listening for messages', function (testCallback) {
+        var fakeTransport = new FakeTransport();
+        var fakeError = new Error('fake');
+        sinon.spy(fakeTransport, testConfig.enableFunc);
+        sinon.stub(fakeTransport, testConfig.disableFunc).callsFake(function (callback) { callback(fakeError); });
+        var client = new ModuleClient(fakeTransport);
+        client.on('error', function (err) {
+          assert.strictEqual(err, fakeError);
+          testCallback();
+        })
+
+        client.on(testConfig.eventName, function () { });
+        assert.isTrue(fakeTransport[testConfig.enableFunc].calledOnce);
+        client.removeAllListeners(testConfig.eventName);
+        assert.isTrue(fakeTransport[testConfig.disableFunc].calledOnce);
+      });
+    });
+  });
+
 });

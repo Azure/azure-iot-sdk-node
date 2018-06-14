@@ -4,15 +4,19 @@
 'use strict';
 
 import { Stream } from 'stream';
-import { EventEmitter } from 'events';
+import * as dbg from 'debug';
+const debug = dbg('azure-iot-device:InternalClient');
 
-import { errors, results, Message, AuthenticationProvider, RetryPolicy } from 'azure-iot-common';
+import { AuthenticationProvider, RetryOperation, ConnectionString, results } from 'azure-iot-common';
 import { InternalClient, DeviceTransport } from './internal_client';
 import { BlobUploadClient } from './blob_upload';
-import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
-import { DeviceClientOptions } from './interfaces';
-import { Twin  } from './twin';
+import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
+import { X509AuthenticationProvider } from './x509_authentication_provider';
+import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
 
+function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
+  if (callback) callback(error, result);
+}
 /**
  * IoT Hub device client used to connect a device with an Azure IoT hub.
  *
@@ -21,9 +25,10 @@ import { Twin  } from './twin';
  * or {@link azure-iot-device.Client.fromSharedAccessSignature|fromSharedAccessSignature}
  * to create an IoT Hub device client.
  */
-export class Client extends EventEmitter {
-  private _internalClient: InternalClient;
-
+export class Client extends InternalClient {
+  private _c2dEnabled: boolean;
+  private _deviceDisconnectHandler: (err?: Error, result?: any) => void;
+  private blobUploadClient: BlobUploadClient; // Casing is wrong and should be corrected.
   /**
    * @constructor
    * @param {Object}  transport         An object that implements the interface
@@ -33,157 +38,61 @@ export class Client extends EventEmitter {
    * @param {Object}  blobUploadClient  An object that is capable of uploading a stream to a blob.
    */
   constructor(transport: DeviceTransport, connStr?: string, blobUploadClient?: BlobUploadClient) {
-    super();
-    this._internalClient = new InternalClient(transport, connStr, blobUploadClient);
+    super(transport, connStr);
+    this.blobUploadClient = blobUploadClient;
+    this._c2dEnabled = false;
 
-    this.on('newListener', (event, listener) => {
-      if (event === 'inputMessage') {
-        throw new errors.ArgumentError('The Client object does not support \'inputMessage\' events.  You need to use a ModuleClient object for that.');
+    this.on('removeListener', (eventName) => {
+      if (eventName === 'message' && this.listeners('message').length === 0) {
+        /*Codes_SRS_NODE_DEVICE_CLIENT_16_005: [The client shall stop listening for messages from the service whenever the last listener unsubscribes from the `message` event.]*/
+        this._disableC2D((err) => {
+          if (err) {
+            this.emit('error', err);
+          }
+        });
       }
-      this._internalClient.on(event, listener);
     });
 
-    this.on('removeListener', (event, listener) => {
-      this._internalClient.removeListener(event, listener);
+    this.on('newListener', (eventName) => {
+      if (eventName === 'message') {
+        /*Codes_SRS_NODE_DEVICE_CLIENT_16_004: [The client shall start listening for messages from the service whenever there is a listener subscribed to the `message` event.]*/
+        this._enableC2D((err) => {
+          if (err) {
+            this.emit('error', err);
+          }
+        });
+      }
     });
+
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_002: [The `message` event shall be emitted when a cloud-to-device message is received from the IoT Hub service.]*/
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_003: [The `message` event parameter shall be a `message` object.]*/
+    this._transport.on('message', (msg) => {
+      this.emit('message', msg);
+    });
+
+    this._deviceDisconnectHandler = (err) => {
+      debug('transport disconnect event: ' + (err ? err.toString() : 'no error'));
+      if (err && this._retryPolicy.shouldRetry(err)) {
+        /*Codes_SRS_NODE_DEVICE_CLIENT_16_097: [If the transport emits a `disconnect` event while the client is subscribed to c2d messages the retry policy shall be used to reconnect and re-enable the feature using the transport `enableC2D` method.]*/
+        if (this._c2dEnabled) {
+          this._c2dEnabled = false;
+          debug('re-enabling C2D link');
+          this._enableC2D((err) => {
+            if (err) {
+              /*Codes_SRS_NODE_DEVICE_CLIENT_16_102: [If the retry policy fails to reestablish the C2D functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
+              this.emit('disconnect', new results.Disconnected(err));
+            }
+          });
+        }
+      }
+    };
+
+    this._transport.on('disconnect', this._deviceDisconnectHandler);
   }
 
-  /**
-   * @description       Registers the `callback` to be invoked when a
-   *                    cloud-to-device method call is received by the client
-   *                    for the given `methodName`.
-   *
-   * @param {String}   methodName   The name of the method for which the callback
-   *                                is to be registered.
-   * @param {Function} callback     The callback to be invoked when the C2D method
-   *                                call is received.
-   *
-   * @throws {ReferenceError}       If the `methodName` or `callback` parameter
-   *                                is falsy.
-   * @throws {TypeError}            If the `methodName` parameter is not a string
-   *                                or if the `callback` is not a function.
-   */
-  onDeviceMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
-    this._internalClient.onDeviceMethod(methodName, callback);
-  }
-
-  /**
-   * @description       Updates the Shared Access Signature token used by the transport to authenticate with the IoT Hub service.
-   *
-   * @param {String}   sharedAccessSignature   The new SAS token to use.
-   * @param {Function} done       The callback to be invoked when `updateSharedAccessSignature`
-   *                              completes execution.
-   *
-   * @throws {ReferenceError}     If the sharedAccessSignature parameter is falsy.
-   * @throws {ReferenceError}     If the client uses x509 authentication.
-   */
-  updateSharedAccessSignature(sharedAccessSignature: string, updateSasCallback?: (err?: Error, result?: results.SharedAccessSignatureUpdated) => void): void {
-    this._internalClient.updateSharedAccessSignature(sharedAccessSignature, updateSasCallback);
-  }
-
-  /**
-   * @description       Call the transport layer CONNECT function if the
-   *                    transport layer implements it
-   *
-   * @param {Function} openCallback  The callback to be invoked when `open`
-   *                                 completes execution.
-   */
-  open(openCallback: (err?: Error, result?: results.Connected) => void): void {
-    this._internalClient.open(openCallback);
-  }
-
-  /**
-   * @description       The [sendEvent]{@link sendEvent} method sends an event message
-   *                    to the IoT Hub as the device indicated by the connection string passed
-   *                    via the constructor.
-   *
-   * @param {azure-iot-common.Message}  message            The [message]{@link azure-iot-common.Message} to be sent.
-   * @param {Function}                  sendEventCallback  The callback to be invoked when `sendEvent` completes execution.
-   */
-  sendEvent(message: Message, sendEventCallback?: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    this._internalClient.sendEvent(message, sendEventCallback);
-  }
-
-  /**
-   * @description       The [sendEventBatch]{@link sendEventBatch} method sends a list
-   *                    of event messages to the IoT Hub as the device indicated by the connection
-   *                    string passed via the constructor.
-   *
-   * @param {array<Message>} messages               Array of [Message]{@link azure-iot-common.Message}
-   *                                                objects to be sent as a batch.
-   * @param {Function}      sendEventBatchCallback  The callback to be invoked when
-   *                                                `sendEventBatch` completes execution.
-   */
-  sendEventBatch(messages: Message[], sendEventBatchCallback?: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    this._internalClient.sendEventBatch(messages, sendEventBatchCallback);
-  }
-
-  /**
-   * @description      The `close` method directs the transport to close the current connection to the IoT Hub instance
-   *
-   * @param {Function} closeCallback    The callback to be invoked when the connection has been closed.
-   */
   close(closeCallback?: (err?: Error, result?: results.Disconnected) => void): void {
-    this._internalClient.close(closeCallback);
-  }
-
-  /**
-   * @deprecated      Use Client.setOptions instead.
-   * @description     The `setTransportOptions` method configures transport-specific options for the client and its underlying transport object.
-   *
-   * @param {Object}      options     The options that shall be set (see transports documentation).
-   * @param {Function}    done        The callback that shall be invoked with either an error or a result object.
-   */
-  setTransportOptions(options: any, done?: (err?: Error, result?: results.TransportConfigured) => void): void {
-    this._internalClient.setTransportOptions(options, done);
-  }
-
-  /**
-   * @description     The `setOptions` method let the user configure the client.
-   *
-   * @param  {Object}    options  The options structure
-   * @param  {Function}  done     The callback that shall be called when setOptions is finished.
-   *
-   * @throws {ReferenceError}     If the options structure is falsy
-   */
-  setOptions(options: DeviceClientOptions, done?: (err?: Error, result?: results.TransportConfigured) => void): void {
-    this._internalClient.setOptions(options, done);
-  }
-
-  /**
-   * @description      The `complete` method directs the transport to settle the message passed as argument as 'completed'.
-   *
-   * @param {Message}  message           The message to settle.
-   * @param {Function} completeCallback  The callback to call when the message is completed.
-   *
-   * @throws {ReferenceError} If the message is falsy.
-   */
-  complete(message: Message, completeCallback: (err?: Error, result?: results.MessageCompleted) => void): void {
-    this._internalClient.complete(message, completeCallback);
-  }
-
-  /**
-   * @description      The `reject` method directs the transport to settle the message passed as argument as 'rejected'.
-   *
-   * @param {Message}  message         The message to settle.
-   * @param {Function} rejectCallback  The callback to call when the message is rejected.
-   *
-   * @throws {ReferenceException} If the message is falsy.
-   */
-  reject(message: Message, rejectCallback: (err?: Error, result?: results.MessageRejected) => void): void {
-    this._internalClient.reject(message, rejectCallback);
-  }
-
-  /**
-   * @description      The `abandon` method directs the transport to settle the message passed as argument as 'abandoned'.
-   *
-   * @param {Message}  message          The message to settle.
-   * @param {Function} abandonCallback  The callback to call when the message is abandoned.
-   *
-   * @throws {ReferenceException} If the message is falsy.
-   */
-  abandon(message: Message, abandonCallback: (err?: Error, result?: results.MessageAbandoned) => void): void {
-    this._internalClient.abandon(message, abandonCallback);
+    this._transport.removeListener('disconnect', this._deviceDisconnectHandler);
+    super.close(closeCallback);
   }
 
   /**
@@ -197,28 +106,54 @@ export class Client extends EventEmitter {
    * @throws {ReferenceException} If blobName or stream or streamLength is falsy.
    */
   uploadToBlob(blobName: string, stream: Stream, streamLength: number, done: (err?: Error) => void): void {
-    this._internalClient.uploadToBlob(blobName, stream, streamLength, done);
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_037: [The `uploadToBlob` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
+    if (!blobName) throw new ReferenceError('blobName cannot be \'' + blobName + '\'');
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_038: [The `uploadToBlob` method shall throw a `ReferenceError` if `stream` is falsy.]*/
+    if (!stream) throw new ReferenceError('stream cannot be \'' + stream + '\'');
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_039: [The `uploadToBlob` method shall throw a `ReferenceError` if `streamLength` is falsy.]*/
+    if (!streamLength) throw new ReferenceError('streamLength cannot be \'' + streamLength + '\'');
+
+    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_16_040: [The `uploadToBlob` method shall call the `done` callback with an `Error` object if the upload fails.]*/
+      /*Codes_SRS_NODE_DEVICE_CLIENT_16_041: [The `uploadToBlob` method shall call the `done` callback no parameters if the upload succeeds.]*/
+      this.blobUploadClient.uploadToBlob(blobName, stream, streamLength, opCallback);
+    }, (err, result) => {
+      safeCallback(done, err, result);
+    });
+  }
+
+  private _enableC2D(callback: (err?: Error) => void): void {
+    if (!this._c2dEnabled) {
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+        this._transport.enableC2D(opCallback);
+      }, (err) => {
+        if (!err) {
+          this._c2dEnabled = true;
+        }
+        callback(err);
+      });
+    } else {
+      callback();
+    }
+  }
+
+  private _disableC2D(callback: (err?: Error) => void): void {
+    if (this._c2dEnabled) {
+      this._transport.disableC2D((err) => {
+        if (!err) {
+          this._c2dEnabled = false;
+        }
+        callback(err);
+      });
+    } else {
+      callback();
+    }
   }
 
   /**
-   * @description      The `getTwin` method creates a Twin object and establishes a connection with the Twin service.
-   *
-   * @param {Function} done             The callback to call when the connection is established.
-   *
-   */
-  getTwin(done: (err?: Error, twin?: Twin) => void): void {
-    this._internalClient.getTwin(done);
-  }
-
-  /**
-   * Sets the retry policy used by the client on all operations. The default is {@link azure-iot-common.ExponentialBackoffWithJitter|ExponentialBackoffWithJitter}.
-   * @param policy {RetryPolicy}  The retry policy that should be used for all future operations.
-   */
-  setRetryPolicy(policy: RetryPolicy): void {
-    this._internalClient.setRetryPolicy(policy);
-  }
-
-  /**
+   * @method            module:azure-iot-device.Client.fromConnectionString
    * @description       Creates an IoT Hub device client from the given
    *                    connection string using the given transport type.
    *
@@ -228,12 +163,33 @@ export class Client extends EventEmitter {
    *
    * @throws {ReferenceError}         If the connStr parameter is falsy.
    *
+   * @returns {module:azure-iothub.Client}
    */
-  static fromConnectionString(connStr: string, transportCtor: any): Client {
-    return InternalClient.fromConnectionString(connStr, transportCtor, Client) as Client;
+  static fromConnectionString(connStr: string, transportCtor: any): any {
+    /*Codes_SRS_NODE_DEVICE_CLIENT_05_003: [The fromConnectionString method shall throw ReferenceError if the connStr argument is falsy.]*/
+    if (!connStr) throw new ReferenceError('connStr is \'' + connStr + '\'');
+
+    const cn = ConnectionString.parse(connStr);
+
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_087: [The `fromConnectionString` method shall create a new `SharedAccessKeyAuthorizationProvider` object with the connection string passed as argument if it contains a SharedAccessKey parameter and pass this object to the transport constructor.]*/
+    let authenticationProvider: AuthenticationProvider;
+
+    if (cn.SharedAccessKey) {
+      authenticationProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString(connStr);
+    } else {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_16_093: [The `fromConnectionString` method shall create a new `X509AuthorizationProvider` object with the connection string passed as argument if it contains an X509 parameter and pass this object to the transport constructor.]*/
+      authenticationProvider = new X509AuthenticationProvider({
+        host: cn.HostName,
+        deviceId: cn.DeviceId
+      });
+    }
+
+    /*Codes_SRS_NODE_DEVICE_CLIENT_05_006: [The fromConnectionString method shall return a new instance of the Client object, as by a call to new Client(new transportCtor(...)).]*/
+    return new Client(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider));
   }
 
   /**
+   * @method            module:azure-iot-device.Client.fromSharedAccessSignature
    * @description       Creates an IoT Hub device client from the given
    *                    shared access signature using the given transport type.
    *
@@ -243,17 +199,38 @@ export class Client extends EventEmitter {
    *
    * @throws {ReferenceError}         If the connStr parameter is falsy.
    *
+   * @returns {module:azure-iothub.Client}
    */
-  static fromSharedAccessSignature(sharedAccessSignature: string, transportCtor: any): Client {
-    return InternalClient.fromSharedAccessSignature(sharedAccessSignature, transportCtor, Client) as Client;
+  static fromSharedAccessSignature(sharedAccessSignature: string, transportCtor: any): any {
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_029: [The fromSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature argument is falsy.] */
+    if (!sharedAccessSignature) throw new ReferenceError('sharedAccessSignature is \'' + sharedAccessSignature + '\'');
+
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_088: [The `fromSharedAccessSignature` method shall create a new `SharedAccessSignatureAuthorizationProvider` object with the shared access signature passed as argument, and pass this object to the transport constructor.]*/
+    const authenticationProvider = SharedAccessSignatureAuthenticationProvider.fromSharedAccessSignature(sharedAccessSignature);
+
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_030: [The fromSharedAccessSignature method shall return a new instance of the Client object] */
+    return new Client(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider));
   }
 
   /**
+   * @method                        module:azure-iot-device.Client.fromAuthenticationMethod
    * @description                   Creates an IoT Hub device client from the given authentication method and using the given transport type.
    * @param authenticationProvider  Object used to obtain the authentication parameters for the IoT hub.
    * @param transportCtor           Transport protocol used to connect to IoT hub.
    */
-  static fromAuthenticationProvider(authenticationProvider: AuthenticationProvider, transportCtor: any): Client {
-    return InternalClient.fromAuthenticationProvider(authenticationProvider, transportCtor, Client) as Client;
+  static fromAuthenticationProvider(authenticationProvider: AuthenticationProvider, transportCtor: any): any {
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_089: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `authenticationProvider` argument is falsy.]*/
+    if (!authenticationProvider) {
+      throw new ReferenceError('authenticationMethod cannot be \'' + authenticationProvider + '\'');
+    }
+
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_092: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `transportCtor` argument is falsy.]*/
+    if (!transportCtor) {
+      throw new ReferenceError('transportCtor cannot be \'' + transportCtor + '\'');
+    }
+
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_090: [The `fromAuthenticationProvider` method shall pass the `authenticationProvider` object passed as argument to the transport constructor.]*/
+    /*Codes_SRS_NODE_DEVICE_CLIENT_16_091: [The `fromAuthenticationProvider` method shall return a `Client` object configured with a new instance of a transport created using the `transportCtor` argument.]*/
+    return new Client(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider));
   }
 }

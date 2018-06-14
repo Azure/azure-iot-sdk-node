@@ -9,7 +9,7 @@ var async = require('async');
 
 var Registry = require('azure-iothub').Registry;
 var ConnectionString = require('azure-iot-common').ConnectionString;
-var DeviceClient = require('azure-iot-device').Client;
+var ModuleClient = require('azure-iot-device').ModuleClient;
 var ServiceClient = require('azure-iothub').Client;
 var DeviceIdentityHelper = require('./device_identity_helper.js');
 
@@ -63,7 +63,7 @@ module.exports.createModule = function(testModule, Transport, done)  {
       });
     },
     function connectDeviceClient(done) {
-      testModule.deviceClient = DeviceClient.fromConnectionString(testModule.moduleConnectionString, Transport);
+      testModule.deviceClient = ModuleClient.fromConnectionString(testModule.moduleConnectionString, Transport);
       debug('opening device client');
       testModule.deviceClient.open(function(err) {
         debug('deviceClient.open returned ' + (err ? err : 'success'));

@@ -5,34 +5,6 @@ azure-iot-device.InternalClient is an internal class which provides a means for 
 
 ## Public Interface
 
-### Factory methods
-#### fromConnectionString
-**SRS_NODE_INTERNAL_CLIENT_05_003: [** The `fromConnectionString` method shall throw ReferenceError if the connStr argument is falsy. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_05_006: [** The `fromConnectionString` method shall return a new instance of the `Client` object, as by a call to `new Client(new Transport(...))`. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_087: [** The `fromConnectionString` method shall create a new `SharedAccessKeyAuthorizationProvider` object with the connection string passed as argument if it contains a SharedAccessKey parameter and pass this object to the transport constructor. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_093: [** The `fromConnectionString` method shall create a new `X509AuthorizationProvider` object with the connection string passed as argument if it contains an X509 parameter and pass this object to the transport constructor. **]**
-
-#### fromSharedAccessSignature
-
-**SRS_NODE_INTERNAL_CLIENT_16_029: [** The `fromSharedAccessSignature` method shall throw a `ReferenceError` if the sharedAccessSignature argument is falsy. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_030: [** The `fromSharedAccessSignature` method shall return a new instance of the `Client` object **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_088: [** The `fromSharedAccessSignature` method shall create a new `SharedAccessSignatureAuthorizationProvider` object with the shared access signature passed as argument, and pass this object to the transport constructor. **]**
-
-#### fromAuthenticationProvider
-
-**SRS_NODE_INTERNAL_CLIENT_16_089: [** The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `authenticationProvider` argument is falsy. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_092: [** The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `transportCtor` argument is falsy. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_090: [** The `fromAuthenticationProvider` method shall pass the `authenticationProvider` object passed as argument to the transport constructor. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_091: [** The `fromAuthenticationProvider` method shall return a `Client` object configured with a new instance of a transport created using the `transportCtor` argument. **]**
-
 ### Constructors
 #### Client(transport, connectionString) constructor
 
@@ -47,8 +19,6 @@ azure-iot-device.InternalClient is an internal class which provides a means for 
 **SRS_NODE_INTERNAL_CLIENT_12_001: [** The `open` function shall call the transport's `connect` function, if it exists. **]**
 
 **SRS_NODE_INTERNAL_CLIENT_16_045: [** If the transport successfully establishes a connection the `open` method shall subscribe to the `disconnect` event of the transport. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_020: [** The `open` function should start listening for C2D messages if there are listeners on the `message` event **]**
 
 **SRS_NODE_INTERNAL_CLIENT_16_064: [** The `open` method shall call the `openCallback` immediately with a null error object and a `results.Connected()` object if called while renewing the shared access signature. **]**
 
@@ -155,18 +125,6 @@ The `sendEventBatch` method sends a list of event messages to the IoT Hub as the
 
 **SRS_NODE_INTERNAL_CLIENT_16_036: [** The `updateSharedAccessSignature` method shall call the `done` callback with a `null` error object and a result of type SharedAccessSignatureUpdated if the token was updated successfully. **]**
 
-#### uploadToBlob(blobName, stream, done)
-
-**SRS_NODE_INTERNAL_CLIENT_16_037: [** The `uploadToBlob` method shall throw a `ReferenceError` if `blobName` is falsy. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_038: [** The `uploadToBlob` method shall throw a `ReferenceError` if `stream` is falsy. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_039: [** The `uploadToBlob` method shall throw a `ReferenceError` if `streamLength` is falsy. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_040: [** The `uploadToBlob` method shall call the `done` callback with an `Error` object if the upload fails. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_041: [** The `uploadToBlob` method shall call the `done` callback no parameters if the upload succeeds. **]**
-
 #### getTwin(done)
 
 **SRS_NODE_INTERNAL_CLIENT_16_094: [** If this is the first call to `getTwin` the method shall instantiate a new `Twin` object  and pass it the transport currently in use. **]**
@@ -225,53 +183,7 @@ interface DeviceMethodEventHandler {
 
 **SRS_NODE_INTERNAL_CLIENT_16_086: [** Any operation (such as `sendEvent` or `onDeviceMethod`) happening after a `setRetryPolicy` call should use the policy set during that call. **]*
 
-#### sendOutputEvent(outputName: string, message: Message, callback: (err?: Error, result?: results.MessageEnqueued) => void): void;
-
-**SRS_NODE_INTERNAL_CLIENT_18_010: [** The `sendOutputEvent` method shall send the event indicated by the `message` argument via the transport associated with the Client instance. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_18_018: [** When the `sendOutputEvent` method completes, the `callback` function shall be invoked with the same arguments as the underlying transport method's callback. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_18_019: [** The `sendOutputEvent` method shall not throw if the `callback` is not passed. **]**
-
-#### sendOutputEventBatch(outputName: string, messages: Message[], callback: (err?: Error, result?: results.MessageEnqueued) => void): void
-
-**SRS_NODE_INTERNAL_CLIENT_18_011: [** The `sendOutputEventBatch` method shall send the list of events (indicated by the `messages` argument) via the transport associated with the Client instance. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_18_021: [** When the `sendOutputEventBatch` method completes the `callback` function shall be invoked with the same arguments as the underlying transport method's callback. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_18_022: [** The `sendOutputEventBatch` method shall not throw if the `callback` is not passed. **]**
-
-
-**SRS_NODE_INTERNAL_CLIENT_16_096: [** The `setRetryPolicy` method shall call the `setRetryPolicy` method on the twin if it is set and pass it the `policy` object. **]**
-
 ### Events
-#### message
-
-**SRS_NODE_INTERNAL_CLIENT_16_002: [** The `message` event shall be emitted when a cloud-to-device message is received from the IoT Hub service. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_003: [** The `message` event parameter shall be a `message` object. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_004: [** The client shall start listening for messages from the service whenever there is a listener subscribed to the `message` event. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_005: [** The client shall stop listening for messages from the service whenever the last listener unsubscribes from the `message` event. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_065: [** The client shall connect the transport if needed in order to receive messages. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_066: [** The client shall emit an error if connecting the transport fails while subscribing to message events **]**
-
-#### inputMessage
-
-**SRS_NODE_INTERNAL_CLIENT_18_012: [** The `inputMessage` event shall be emitted when an inputMessage is received from the IoT Hub service. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_18_013: [** The `inputMessage` event parameters shall be the inputName for the message and a `Message` object. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_18_014: [** The client shall start listening for messages from the service whenever there is a listener subscribed to the `inputMessage` event. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_18_015: [** The client shall stop listening for messages from the service whenever the last listener unsubscribes from the `inputMessage` event. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_18_016: [** The client shall connect the transport if needed in order to receive inputMessages. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_18_017: [** The client shall emit an `error` if connecting the transport fails while subscribing to `inputMessage` events. **]**
 
 #### error
 
@@ -280,10 +192,6 @@ interface DeviceMethodEventHandler {
 #### disconnect
 
 **SRS_NODE_INTERNAL_CLIENT_16_019: [** The `disconnect` event shall be emitted when the client is disconnected from the server. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_097: [** If the transport emits a `disconnect` event event while the client is subscribed to c2d messages the retry policy shall be used to reconnect and re-enable the feature using the transport `enableC2D` method. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_102: [** If the retry policy fails to reestablish the C2D functionality a `disconnect` event shall be emitted with a `results.Disconnected` object. **]**
 
 **SRS_NODE_INTERNAL_CLIENT_16_098: [** If the transport emits a `disconnect` event while the client is subscribed to direct methods the retry policy shall be used to reconnect and re-enable the feature using the transport `enableMethods` method. **]**
 

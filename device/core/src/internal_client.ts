@@ -8,16 +8,11 @@ import { EventEmitter } from 'events';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:InternalClient');
 
-import { results, errors, Message, X509, AuthenticationProvider } from 'azure-iot-common';
+import { results, errors, Message, X509 } from 'azure-iot-common';
 import { SharedAccessSignature as CommonSharedAccessSignature } from 'azure-iot-common';
 import { ExponentialBackOffWithJitter, RetryPolicy, RetryOperation } from 'azure-iot-common';
-import * as ConnectionString from './connection_string.js';
-import { BlobUploadClient } from './blob_upload';
 import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
 import { Twin, TwinProperties } from './twin';
-import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
-import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
-import { X509AuthenticationProvider } from './x509_authentication_provider';
 import { DeviceClientOptions } from './interfaces';
 
 /**
@@ -33,7 +28,7 @@ function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Er
 /**
  * @private
  */
-export class InternalClient extends EventEmitter {
+export abstract class InternalClient extends EventEmitter {
   // SAS token created by the client have a lifetime of 60 minutes, renew every 45 minutes
   /**
    * @private
@@ -55,40 +50,25 @@ export class InternalClient extends EventEmitter {
    * Maximum timeout (in milliseconds) used to consider an operation failed.
    * The operation will be retried according to the retry policy set with {@link azure-iot-device.Client.setRetryPolicy} method (or {@link azure-iot-common.ExponentialBackoffWithJitter} by default) until this value is reached.)
    */
-  private _maxOperationTimeout: number;
+  protected _maxOperationTimeout: number;
+  protected _retryPolicy: RetryPolicy;
+
   private _methodCallbackMap: any;
   private _disconnectHandler: (err?: Error, result?: any) => void;
-  private blobUploadClient: BlobUploadClient; // TODO: wrong casing/naming convention
-  private _c2dEnabled: boolean;
   private _methodsEnabled: boolean;
-  private _inputMessagesEnabled: boolean;
 
-  private _retryPolicy: RetryPolicy;
-
-  constructor(transport: DeviceTransport, connStr?: string, blobUploadClient?: BlobUploadClient) {
+  constructor(transport: DeviceTransport, connStr?: string) {
     /*Codes_SRS_NODE_INTERNAL_CLIENT_05_001: [The Client constructor shall throw ReferenceError if the transport argument is falsy.]*/
     if (!transport) throw new ReferenceError('transport is \'' + transport + '\'');
 
     super();
-    this._c2dEnabled = false;
     this._methodsEnabled = false;
-    this._inputMessagesEnabled = false;
-    this.blobUploadClient = blobUploadClient;
 
     if (connStr) {
       throw new errors.InvalidOperationError('the connectionString parameter of the constructor is not used - users of the SDK should be using the `fromConnectionString` factory method.');
     }
 
     this._transport = transport;
-    this._transport.on('message', (msg) => {
-      this.emit('message', msg);
-    });
-
-    /* Codes_SRS_NODE_INTERNAL_CLIENT_18_012: [ The `inputMessage` event shall be emitted when an inputMessage is received from the IoT Hub service. ]*/
-    /* Codes_SRS_NODE_INTERNAL_CLIENT_18_013: [ The `inputMessage` event parameters shall be the inputName for the message and a `Message` object. ]*/
-    this._transport.on('inputMessage', (inputName, msg) => {
-      this.emit('inputMessage', inputName, msg);
-    });
 
     this._transport.on('error', (err) => {
       // errors right now bubble up through the disconnect handler.
@@ -98,65 +78,9 @@ export class InternalClient extends EventEmitter {
 
     this._methodCallbackMap = {};
 
-    this.on('removeListener', (eventName) => {
-      if (eventName === 'message' && this.listeners('message').length === 0) {
-        this._disableC2D((err) => {
-          if (err) {
-            this.emit('error', err);
-          }
-        });
-      } else if (eventName === 'inputMessage' && this.listeners('inputMessage').length === 0) {
-        /* Codes_SRS_NODE_INTERNAL_CLIENT_18_015: [ The client shall stop listening for messages from the service whenever the last listener unsubscribes from the `inputMessage` event. ]*/
-        this._disableInputMessages((err) => {
-          if (err) {
-            this.emit('error', err);
-          }
-        });
-      }
-    });
-
-    this.on('newListener', (eventName) => {
-      if (eventName === 'message') {
-        this._enableC2D((err) => {
-          if (err) {
-            this.emit('error', err);
-          }
-        });
-      } else if (eventName === 'inputMessage') {
-        /* Codes_SRS_NODE_INTERNAL_CLIENT_18_014: [ The client shall start listening for messages from the service whenever there is a listener subscribed to the `inputMessage` event. ]*/
-        this._enableInputMessages((err) => {
-          if (err) {
-            this.emit('error', err);
-          }
-        });
-      }
-    });
-
     this._disconnectHandler = (err) => {
       debug('transport disconnect event: ' + (err ? err.toString() : 'no error'));
       if (err && this._retryPolicy.shouldRetry(err)) {
-        /*Codes_SRS_NODE_INTERNAL_CLIENT_16_097: [If the transport emits a `disconnect` event while the client is subscribed to c2d messages the retry policy shall be used to reconnect and re-enable the feature using the transport `enableC2D` method.]*/
-        if (this._c2dEnabled) {
-          this._c2dEnabled = false;
-          debug('re-enabling C2D link');
-          this._enableC2D((err) => {
-            if (err) {
-              this.emit('disconnect', new results.Disconnected(err));
-            }
-          });
-        }
-
-        if (this._inputMessagesEnabled) {
-          this._inputMessagesEnabled = false;
-          debug('re-enabling input message link');
-          this._enableInputMessages((err) => {
-            if (err) {
-              /*Codes_SRS_NODE_INTERNAL_CLIENT_16_102: [If the retry policy fails to reestablish the C2D functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
-              this.emit('disconnect', new results.Disconnected(err));
-            }
-          });
-        }
-
         /*Codes_SRS_NODE_INTERNAL_CLIENT_16_098: [If the transport emits a `disconnect` event while the client is subscribed to direct methods the retry policy shall be used to reconnect and re-enable the feature using the transport `enableMethods` method.]*/
         if (this._methodsEnabled) {
           this._methodsEnabled = false;
@@ -336,24 +260,6 @@ export class InternalClient extends EventEmitter {
     });
   }
 
-  uploadToBlob(blobName: string, stream: Stream, streamLength: number, done: (err?: Error) => void): void {
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_037: [The `uploadToBlob` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
-    if (!blobName) throw new ReferenceError('blobName cannot be \'' + blobName + '\'');
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_038: [The `uploadToBlob` method shall throw a `ReferenceError` if `stream` is falsy.]*/
-    if (!stream) throw new ReferenceError('stream cannot be \'' + stream + '\'');
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_039: [The `uploadToBlob` method shall throw a `ReferenceError` if `streamLength` is falsy.]*/
-    if (!streamLength) throw new ReferenceError('streamLength cannot be \'' + streamLength + '\'');
-
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-    retryOp.retry((opCallback) => {
-      /*Codes_SRS_NODE_INTERNAL_CLIENT_16_040: [The `uploadToBlob` method shall call the `done` callback with an `Error` object if the upload fails.]*/
-      /*Codes_SRS_NODE_INTERNAL_CLIENT_16_041: [The `uploadToBlob` method shall call the `done` callback no parameters if the upload succeeds.]*/
-      this.blobUploadClient.uploadToBlob(blobName, stream, streamLength, opCallback);
-    }, (err, result) => {
-      safeCallback(done, err, result);
-    });
-  }
-
   getTwin(done: (err?: Error, twin?: Twin) => void): void {
     /*Codes_SRS_NODE_INTERNAL_CLIENT_16_094: [If this is the first call to `getTwin` the method shall instantiate a new `Twin` object  and pass it the transport currently in use.]*/
     if (!this._twin) {
@@ -387,30 +293,6 @@ export class InternalClient extends EventEmitter {
     if (this._twin) {
       this._twin.setRetryPolicy(policy);
     }
-  }
-
-  sendOutputEvent(outputName: string, message: Message, callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-    retryOp.retry((opCallback) => {
-      /* Codes_SRS_NODE_INTERNAL_CLIENT_18_010: [ The `sendOutputEvent` method shall send the event indicated by the `message` argument via the transport associated with the Client instance. ]*/
-      this._transport.sendOutputEvent(outputName, message, opCallback);
-    }, (err, result) => {
-      /*Codes_SRS_NODE_INTERNAL_CLIENT_18_018: [ When the `sendOutputEvent` method completes, the `callback` function shall be invoked with the same arguments as the underlying transport method's callback. ]*/
-      /*Codes_SRS_NODE_INTERNAL_CLIENT_18_019: [ The `sendOutputEvent` method shall not throw if the `callback` is not passed. ]*/
-      safeCallback(callback, err, result);
-    });
-  }
-
-  sendOutputEventBatch(outputName: string, messages: Message[], callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-    retryOp.retry((opCallback) => {
-      /* Codes_SRS_NODE_INTERNAL_CLIENT_18_011: [ The `sendOutputEventBatch` method shall send the list of events (indicated by the `messages` argument) via the transport associated with the Client instance. ]*/
-      this._transport.sendOutputEventBatch(outputName, messages, opCallback);
-    }, (err, result) => {
-      /*Codes_SRS_NODE_INTERNAL_CLIENT_18_021: [ When the `sendOutputEventBatch` method completes the `callback` function shall be invoked with the same arguments as the underlying transport method's callback. ]*/
-      /*Codes_SRS_NODE_INTERNAL_CLIENT_18_022: [ The `sendOutputEventBatch` method shall not throw if the `callback` is not passed. ]*/
-      safeCallback(callback, err, result);
-    });
   }
 
   private _validateDeviceMethodInputs(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
@@ -457,65 +339,6 @@ export class InternalClient extends EventEmitter {
     });
   }
 
-  private _enableC2D(callback: (err?: Error) => void): void {
-    if (!this._c2dEnabled) {
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-      retryOp.retry((opCallback) => {
-        this._transport.enableC2D(opCallback);
-      }, (err) => {
-        if (!err) {
-          this._c2dEnabled = true;
-        }
-        callback(err);
-      });
-    } else {
-      callback();
-    }
-  }
-
-  private _disableInputMessages(callback: (err?: Error) => void): void {
-    if (this._inputMessagesEnabled) {
-      this._transport.disableInputMessages((err) => {
-        if (!err) {
-          this._inputMessagesEnabled = false;
-        }
-        callback(err);
-      });
-    } else {
-      callback();
-    }
-  }
-
-  private _enableInputMessages(callback: (err?: Error) => void): void {
-    if (!this._inputMessagesEnabled) {
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-      retryOp.retry((opCallback) => {
-        /* Codes_SRS_NODE_INTERNAL_CLIENT_18_016: [ The client shall connect the transport if needed in order to receive inputMessages. ]*/
-        this._transport.enableInputMessages(opCallback);
-      }, (err) => {
-        if (!err) {
-          this._inputMessagesEnabled = true;
-        }
-        callback(err);
-      });
-    } else {
-      callback();
-    }
-  }
-
-  private _disableC2D(callback: (err?: Error) => void): void {
-    if (this._c2dEnabled) {
-      this._transport.disableC2D((err) => {
-        if (!err) {
-          this._c2dEnabled = false;
-        }
-        callback(err);
-      });
-    } else {
-      callback();
-    }
-  }
-
   private _enableMethods(callback: (err?: Error) => void): void {
     if (!this._methodsEnabled) {
       const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
@@ -559,88 +382,6 @@ export class InternalClient extends EventEmitter {
     this._transport.disconnect((disconnectError, disconnectResult) => {
       onDisconnected(disconnectError, disconnectResult);
     });
-  }
-
-  /**
-   * @method            module:azure-iot-device.Client.fromConnectionString
-   * @description       Creates an IoT Hub device client from the given
-   *                    connection string using the given transport type.
-   *
-   * @param {String}    connStr       A connection string which encapsulates "device
-   *                                  connect" permissions on an IoT hub.
-   * @param {Function}  Transport     A transport constructor.
-   *
-   * @throws {ReferenceError}         If the connStr parameter is falsy.
-   *
-   * @returns {module:azure-iothub.Client}
-   */
-  static fromConnectionString(connStr: string, transportCtor: any, clientCtor: any): any {
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_05_003: [The fromConnectionString method shall throw ReferenceError if the connStr argument is falsy.]*/
-    if (!connStr) throw new ReferenceError('connStr is \'' + connStr + '\'');
-
-    const cn = ConnectionString.parse(connStr);
-
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_087: [The `fromConnectionString` method shall create a new `SharedAccessKeyAuthorizationProvider` object with the connection string passed as argument if it contains a SharedAccessKey parameter and pass this object to the transport constructor.]*/
-    let authenticationProvider: AuthenticationProvider;
-
-    if (cn.SharedAccessKey) {
-      authenticationProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString(connStr);
-    } else {
-      /*Codes_SRS_NODE_INTERNAL_CLIENT_16_093: [The `fromConnectionString` method shall create a new `X509AuthorizationProvider` object with the connection string passed as argument if it contains an X509 parameter and pass this object to the transport constructor.]*/
-      authenticationProvider = new X509AuthenticationProvider({
-        host: cn.HostName,
-        deviceId: cn.DeviceId
-      });
-    }
-
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_05_006: [The fromConnectionString method shall return a new instance of the Client object, as by a call to new Client(new transportCtor(...)).]*/
-    return new clientCtor(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider));
-  }
-
-  /**
-   * @method            module:azure-iot-device.Client.fromSharedAccessSignature
-   * @description       Creates an IoT Hub device client from the given
-   *                    shared access signature using the given transport type.
-   *
-   * @param {String}    sharedAccessSignature      A shared access signature which encapsulates "device
-   *                                  connect" permissions on an IoT hub.
-   * @param {Function}  Transport     A transport constructor.
-   *
-   * @throws {ReferenceError}         If the connStr parameter is falsy.
-   *
-   * @returns {module:azure-iothub.Client}
-   */
-  static fromSharedAccessSignature(sharedAccessSignature: string, transportCtor: any, clientCtor: any): any {
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_029: [The fromSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature argument is falsy.] */
-    if (!sharedAccessSignature) throw new ReferenceError('sharedAccessSignature is \'' + sharedAccessSignature + '\'');
-
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_088: [The `fromSharedAccessSignature` method shall create a new `SharedAccessSignatureAuthorizationProvider` object with the shared access signature passed as argument, and pass this object to the transport constructor.]*/
-    const authenticationProvider = SharedAccessSignatureAuthenticationProvider.fromSharedAccessSignature(sharedAccessSignature);
-
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_030: [The fromSharedAccessSignature method shall return a new instance of the Client object] */
-    return new clientCtor(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider));
-  }
-
-  /**
-   * @method                        module:azure-iot-device.Client.fromAuthenticationMethod
-   * @description                   Creates an IoT Hub device client from the given authentication method and using the given transport type.
-   * @param authenticationProvider  Object used to obtain the authentication parameters for the IoT hub.
-   * @param transportCtor           Transport protocol used to connect to IoT hub.
-   */
-  static fromAuthenticationProvider(authenticationProvider: AuthenticationProvider, transportCtor: any, clientCtor: any): any {
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_089: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `authenticationProvider` argument is falsy.]*/
-    if (!authenticationProvider) {
-      throw new ReferenceError('authenticationMethod cannot be \'' + authenticationProvider + '\'');
-    }
-
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_092: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `transportCtor` argument is falsy.]*/
-    if (!transportCtor) {
-      throw new ReferenceError('transportCtor cannot be \'' + transportCtor + '\'');
-    }
-
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_090: [The `fromAuthenticationProvider` method shall pass the `authenticationProvider` object passed as argument to the transport constructor.]*/
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_091: [The `fromAuthenticationProvider` method shall return a `Client` object configured with a new instance of a transport created using the `transportCtor` argument.]*/
-    return new clientCtor(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider));
   }
 }
 

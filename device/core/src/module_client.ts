@@ -3,14 +3,19 @@
 
 'use strict';
 
-import { EventEmitter } from 'events';
+import * as dbg from 'debug';
+const debug = dbg('azure-iot-device:ModuleClient');
 
-import { results, Message, AuthenticationProvider, RetryPolicy, errors } from 'azure-iot-common';
+import { results, Message, RetryOperation, ConnectionString, AuthenticationProvider } from 'azure-iot-common';
 import { InternalClient, DeviceTransport } from './internal_client';
-import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
-import { DeviceClientOptions } from './interfaces';
-import { Twin  } from './twin';
+import { errors } from 'azure-iot-common';
+import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
+import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
 import { IotEdgeAuthenticationProvider } from './iotedge_authentication_provider';
+
+function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
+  if (callback) callback(error, result);
+}
 
 /**
  * IoT Hub device client used to connect a device with an Azure IoT hub.
@@ -20,8 +25,9 @@ import { IotEdgeAuthenticationProvider } from './iotedge_authentication_provider
  * or {@link azure-iot-device.Client.fromSharedAccessSignature|fromSharedAccessSignature}
  * to create an IoT Hub device client.
  */
-export class ModuleClient extends EventEmitter {
-  private _internalClient: InternalClient;
+export class ModuleClient extends InternalClient {
+  private _inputMessagesEnabled: boolean;
+  private _moduleDisconnectHandler: (err?: Error, result?: any) => void;
 
   /**
    * @constructor
@@ -31,138 +37,56 @@ export class ModuleClient extends EventEmitter {
    * @param {string}  connStr           A connection string (optional: when not provided, updateSharedAccessSignature must be called to set the SharedAccessSignature token directly).
    */
   constructor(transport: DeviceTransport, connStr?: string) {
-    super();
-    this._internalClient = new InternalClient(transport, connStr);
+    super(transport, connStr);
+    this._inputMessagesEnabled = false;
 
-    this.on('newListener', (event, listener) => {
-      if (event === 'message') {
-        throw new errors.ArgumentError('The ModuleClient object does not support \'message\' events.  You need to use a Client object for that');
+    /* Codes_SRS_NODE_MODULE_CLIENT_18_012: [ The `inputMessage` event shall be emitted when an inputMessage is received from the IoT Hub service. ]*/
+    /* Codes_SRS_NODE_MODULE_CLIENT_18_013: [ The `inputMessage` event parameters shall be the inputName for the message and a `Message` object. ]*/
+    this._transport.on('inputMessage', (inputName, msg) => {
+      this.emit('inputMessage', inputName, msg);
+    });
+
+    this.on('removeListener', (eventName) => {
+      if (eventName === 'inputMessage' && this.listeners('inputMessage').length === 0) {
+        /* Codes_SRS_NODE_MODULE_CLIENT_18_015: [ The client shall stop listening for messages from the service whenever the last listener unsubscribes from the `inputMessage` event. ]*/
+        this._disableInputMessages((err) => {
+          if (err) {
+            this.emit('error', err);
+          }
+        });
       }
-      this._internalClient.on(event, listener);
     });
 
-    this.on('removeListener', (event, listener) => {
-      this._internalClient.removeListener(event, listener);
+    this.on('newListener', (eventName) => {
+      if (eventName === 'inputMessage') {
+        /* Codes_SRS_NODE_MODULE_CLIENT_18_014: [ The client shall start listening for messages from the service whenever there is a listener subscribed to the `inputMessage` event. ]*/
+        this._enableInputMessages((err) => {
+          if (err) {
+            /*Codes_SRS_NODE_MODULE_CLIENT_18_017: [The client shall emit an `error` if connecting the transport fails while subscribing to `inputMessage` events.]*/
+            this.emit('error', err);
+          }
+        });
+      }
     });
-  }
 
-  /**
-   * @description       Registers the `callback` to be invoked when a
-   *                    cloud-to-device method call is received by the client
-   *                    for the given `methodName`.
-   *
-   * @param {String}   methodName   The name of the method for which the callback
-   *                                is to be registered.
-   * @param {Function} callback     The callback to be invoked when the C2D method
-   *                                call is received.
-   *
-   * @throws {ReferenceError}       If the `methodName` or `callback` parameter
-   *                                is falsy.
-   * @throws {TypeError}            If the `methodName` parameter is not a string
-   *                                or if the `callback` is not a function.
-   */
-  onDeviceMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
-    this._internalClient.onDeviceMethod(methodName, callback);
-  }
+    this._moduleDisconnectHandler = (err) => {
+      debug('transport disconnect event: ' + (err ? err.toString() : 'no error'));
+      if (err && this._retryPolicy.shouldRetry(err)) {
+        if (this._inputMessagesEnabled) {
+          this._inputMessagesEnabled = false;
+          debug('re-enabling input message link');
+          this._enableInputMessages((err) => {
+            if (err) {
+              /*Codes_SRS_NODE_MODULE_CLIENT_16_102: [If the retry policy fails to reestablish the C2D functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
+              this.emit('disconnect', new results.Disconnected(err));
+            }
+          });
+        }
+      }
+    };
 
-  /**
-   * @description       Updates the Shared Access Signature token used by the transport to authenticate with the IoT Hub service.
-   *
-   * @param {String}   sharedAccessSignature   The new SAS token to use.
-   * @param {Function} done       The callback to be invoked when `updateSharedAccessSignature`
-   *                              completes execution.
-   *
-   * @throws {ReferenceError}     If the sharedAccessSignature parameter is falsy.
-   * @throws {ReferenceError}     If the client uses x509 authentication.
-   */
-  updateSharedAccessSignature(sharedAccessSignature: string, updateSasCallback?: (err?: Error, result?: results.SharedAccessSignatureUpdated) => void): void {
-    this._internalClient.updateSharedAccessSignature(sharedAccessSignature, updateSasCallback);
-  }
-
-  /**
-   * @description       Call the transport layer CONNECT function if the
-   *                    transport layer implements it
-   *
-   * @param {Function} openCallback  The callback to be invoked when `open`
-   *                                 completes execution.
-   */
-  open(openCallback: (err?: Error, result?: results.Connected) => void): void {
-    this._internalClient.open(openCallback);
-  }
-
-  /**
-   * @description      The `close` method directs the transport to close the current connection to the IoT Hub instance
-   *
-   * @param {Function} closeCallback    The callback to be invoked when the connection has been closed.
-   */
-  close(closeCallback?: (err?: Error, result?: results.Disconnected) => void): void {
-    this._internalClient.close(closeCallback);
-  }
-
-  /**
-   * @description     The `setOptions` method let the user configure the client.
-   *
-   * @param  {Object}    options  The options structure
-   * @param  {Function}  done     The callback that shall be called when setOptions is finished.
-   *
-   * @throws {ReferenceError}     If the options structure is falsy
-   */
-  setOptions(options: DeviceClientOptions, done?: (err?: Error, result?: results.TransportConfigured) => void): void {
-    this._internalClient.setOptions(options, done);
-  }
-
-  /**
-   * @description      The `complete` method directs the transport to settle the message passed as argument as 'completed'.
-   *
-   * @param {Message}  message           The message to settle.
-   * @param {Function} completeCallback  The callback to call when the message is completed.
-   *
-   * @throws {ReferenceError} If the message is falsy.
-   */
-  complete(message: Message, completeCallback: (err?: Error, result?: results.MessageCompleted) => void): void {
-    this._internalClient.complete(message, completeCallback);
-  }
-
-  /**
-   * @description      The `reject` method directs the transport to settle the message passed as argument as 'rejected'.
-   *
-   * @param {Message}  message         The message to settle.
-   * @param {Function} rejectCallback  The callback to call when the message is rejected.
-   *
-   * @throws {ReferenceException} If the message is falsy.
-   */
-  reject(message: Message, rejectCallback: (err?: Error, result?: results.MessageRejected) => void): void {
-    this._internalClient.reject(message, rejectCallback);
-  }
-
-  /**
-   * @description      The `abandon` method directs the transport to settle the message passed as argument as 'abandoned'.
-   *
-   * @param {Message}  message          The message to settle.
-   * @param {Function} abandonCallback  The callback to call when the message is abandoned.
-   *
-   * @throws {ReferenceException} If the message is falsy.
-   */
-  abandon(message: Message, abandonCallback: (err?: Error, result?: results.MessageAbandoned) => void): void {
-    this._internalClient.abandon(message, abandonCallback);
-  }
-
-  /**
-   * @description      The `getTwin` method creates a Twin object and establishes a connection with the Twin service.
-   *
-   * @param {Function} done             The callback to call when the connection is established.
-   *
-   */
-  getTwin(done: (err?: Error, twin?: Twin) => void): void {
-    this._internalClient.getTwin(done);
-  }
-
-  /**
-   * Sets the retry policy used by the client on all operations. The default is {@link azure-iot-common.ExponentialBackoffWithJitter|ExponentialBackoffWithJitter}.
-   * @param policy {RetryPolicy}  The retry policy that should be used for all future operations.
-   */
-  setRetryPolicy(policy: RetryPolicy): void {
-    this._internalClient.setRetryPolicy(policy);
+    /*Codes_SRS_NODE_MODULE_CLIENT_16_045: [If the transport successfully establishes a connection the `open` method shall subscribe to the `disconnect` event of the transport.]*/
+    this._transport.on('disconnect', this._moduleDisconnectHandler);
   }
 
   /**
@@ -172,7 +96,15 @@ export class ModuleClient extends EventEmitter {
    * @param callback Function to call when the operation has been queued.
    */
   sendOutputEvent(outputName: string, message: Message, callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    this._internalClient.sendOutputEvent(outputName, message, callback);
+    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      /* Codes_SRS_NODE_MODULE_CLIENT_18_010: [ The `sendOutputEvent` method shall send the event indicated by the `message` argument via the transport associated with the Client instance. ]*/
+      this._transport.sendOutputEvent(outputName, message, opCallback);
+    }, (err, result) => {
+      /*Codes_SRS_NODE_MODULE_CLIENT_18_018: [ When the `sendOutputEvent` method completes, the `callback` function shall be invoked with the same arguments as the underlying transport method's callback. ]*/
+      /*Codes_SRS_NODE_MODULE_CLIENT_18_019: [ The `sendOutputEvent` method shall not throw if the `callback` is not passed. ]*/
+      safeCallback(callback, err, result);
+    });
   }
 
   /**
@@ -182,27 +114,74 @@ export class ModuleClient extends EventEmitter {
    * @param callback Function to call when the operations have been queued.
    */
   sendOutputEventBatch(outputName: string, messages: Message[], callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    this._internalClient.sendOutputEventBatch(outputName, messages, callback);
+    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      /* Codes_SRS_NODE_MODULE_CLIENT_18_011: [ The `sendOutputEventBatch` method shall send the list of events (indicated by the `messages` argument) via the transport associated with the Client instance. ]*/
+      this._transport.sendOutputEventBatch(outputName, messages, opCallback);
+    }, (err, result) => {
+      /*Codes_SRS_NODE_MODULE_CLIENT_18_021: [ When the `sendOutputEventBatch` method completes the `callback` function shall be invoked with the same arguments as the underlying transport method's callback. ]*/
+      /*Codes_SRS_NODE_MODULE_CLIENT_18_022: [ The `sendOutputEventBatch` method shall not throw if the `callback` is not passed. ]*/
+      safeCallback(callback, err, result);
+    });
   }
 
-  /**
-   * @description       Creates an IoT Hub device client from the given
-   *                    connection string using the given transport type.
-   *
-   * @param {String}    connStr       A connection string which encapsulates "device
-   *                                  connect" permissions on an IoT hub.
-   * @param {Function}  Transport     A transport constructor.
-   *
-   * @throws {ReferenceError}         If the connStr parameter is falsy.
-   *
-   */
+  close(closeCallback?: (err?: Error, result?: results.Disconnected) => void): void {
+    this._transport.removeListener('disconnect', this._moduleDisconnectHandler);
+    super.close(closeCallback);
+  }
+
+  private _disableInputMessages(callback: (err?: Error) => void): void {
+    if (this._inputMessagesEnabled) {
+      this._transport.disableInputMessages((err) => {
+        if (!err) {
+          this._inputMessagesEnabled = false;
+        }
+        callback(err);
+      });
+    } else {
+      callback();
+    }
+  }
+
+  private _enableInputMessages(callback: (err?: Error) => void): void {
+    if (!this._inputMessagesEnabled) {
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+        /* Codes_SRS_NODE_MODULE_CLIENT_18_016: [ The client shall connect the transport if needed in order to receive inputMessages. ]*/
+        this._transport.enableInputMessages(opCallback);
+      }, (err) => {
+        if (!err) {
+          this._inputMessagesEnabled = true;
+        }
+        callback(err);
+      });
+    } else {
+      callback();
+    }
+  }
+
   static fromConnectionString(connStr: string, transportCtor: any): ModuleClient {
-    return InternalClient.fromConnectionString(connStr, transportCtor, ModuleClient) as ModuleClient;
+    /*Codes_SRS_NODE_MODULE_CLIENT_05_003: [The fromConnectionString method shall throw ReferenceError if the connStr argument is falsy.]*/
+    if (!connStr) throw new ReferenceError('connStr is \'' + connStr + '\'');
+
+    const cn = ConnectionString.parse(connStr);
+
+    /*Codes_SRS_NODE_MODULE_CLIENT_16_087: [The `fromConnectionString` method shall create a new `SharedAccessKeyAuthorizationProvider` object with the connection string passed as argument if it contains a SharedAccessKey parameter and pass this object to the transport constructor.]*/
+    let authenticationProvider: AuthenticationProvider;
+
+    if (cn.SharedAccessKey) {
+      authenticationProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString(connStr);
+    } else {
+      /*Codes_SRS_NODE_MODULE_CLIENT_16_001: [The `fromConnectionString` method shall throw a `NotImplementedError` if the connection string does not contain a `SharedAccessKey` field because x509 authentication is not supported yet for modules.]*/
+      throw new errors.NotImplementedError('ModuleClient only supports SAS Token authentication');
+    }
+
+    /*Codes_SRS_NODE_MODULE_CLIENT_05_006: [The fromConnectionString method shall return a new instance of the Client object, as by a call to new Client(new transportCtor(...)).]*/
+    return new ModuleClient(new transportCtor(authenticationProvider), null);
   }
 
   /**
-   * @description       Creates an IoT Hub device client from the given
-   *                    shared access signature using the given transport type.
+   * Creates an IoT Hub module client from the given shared access signature using the given transport type.
    *
    * @param {String}    sharedAccessSignature      A shared access signature which encapsulates "device
    *                                  connect" permissions on an IoT hub.
@@ -210,65 +189,53 @@ export class ModuleClient extends EventEmitter {
    *
    * @throws {ReferenceError}         If the connStr parameter is falsy.
    *
+   * @returns {module:azure-iothub.Client}
    */
-  static fromSharedAccessSignature(sharedAccessSignature: string, transportCtor: any): ModuleClient {
-    return InternalClient.fromSharedAccessSignature(sharedAccessSignature, transportCtor, ModuleClient) as ModuleClient;
+  static fromSharedAccessSignature(sharedAccessSignature: string, transportCtor: any): any {
+    /*Codes_SRS_NODE_MODULE_CLIENT_16_029: [The fromSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature argument is falsy.] */
+    if (!sharedAccessSignature) throw new ReferenceError('sharedAccessSignature is \'' + sharedAccessSignature + '\'');
+
+    /*Codes_SRS_NODE_MODULE_CLIENT_16_088: [The `fromSharedAccessSignature` method shall create a new `SharedAccessSignatureAuthorizationProvider` object with the shared access signature passed as argument, and pass this object to the transport constructor.]*/
+    const authenticationProvider = SharedAccessSignatureAuthenticationProvider.fromSharedAccessSignature(sharedAccessSignature);
+
+    /*Codes_SRS_NODE_MODULE_CLIENT_16_030: [The fromSharedAccessSignature method shall return a new instance of the Client object] */
+    return new ModuleClient(new transportCtor(authenticationProvider), null);
   }
 
   /**
-   * @description                   Creates an IoT Hub device client from the given authentication method and using the given transport type.
+   * Creates an IoT Hub module client from the given authentication method and using the given transport type.
    * @param authenticationProvider  Object used to obtain the authentication parameters for the IoT hub.
    * @param transportCtor           Transport protocol used to connect to IoT hub.
    */
-  static fromAuthenticationProvider(authenticationProvider: AuthenticationProvider, transportCtor: any): ModuleClient {
-    return InternalClient.fromAuthenticationProvider(authenticationProvider, transportCtor, ModuleClient) as ModuleClient;
-  }
-
-  static validateEnvironment(): ReferenceError {
-    // Codes_SRS_NODE_MODULE_CLIENT_13_029: [ If environment variables EdgeHubConnectionString and IotHubConnectionString do not exist then the following environment variables must be defined: IOTEDGE_WORKLOADURI, IOTEDGE_DEVICEID, IOTEDGE_MODULEID, IOTEDGE_IOTHUBHOSTNAME, IOTEDGE_AUTHSCHEME and IOTEDGE_MODULEGENERATIONID. ]
-
-    const keys = [
-      'IOTEDGE_WORKLOADURI',
-      'IOTEDGE_DEVICEID',
-      'IOTEDGE_MODULEID',
-      'IOTEDGE_IOTHUBHOSTNAME',
-      'IOTEDGE_AUTHSCHEME',
-      'IOTEDGE_MODULEGENERATIONID'
-    ];
-
-    for (const key of keys) {
-      if (!process.env[key]) {
-        return new ReferenceError(`Environment variable ${key} was not provided.`);
-      }
+  static fromAuthenticationProvider(authenticationProvider: AuthenticationProvider, transportCtor: any): any {
+    /*Codes_SRS_NODE_MODULE_CLIENT_16_089: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `authenticationProvider` argument is falsy.]*/
+    if (!authenticationProvider) {
+      throw new ReferenceError('authenticationMethod cannot be \'' + authenticationProvider + '\'');
     }
 
-    // Codes_SRS_NODE_MODULE_CLIENT_13_030: [ The value for the environment variable IOTEDGE_AUTHSCHEME must be sasToken. ]
-
-    // we only support sas token auth scheme at this time
-    if (process.env.IOTEDGE_AUTHSCHEME.toLowerCase() !== 'sastoken') {
-      return new ReferenceError(
-        `Authentication scheme ${
-          process.env.IOTEDGE_AUTHSCHEME
-        } is not a supported scheme.`
-      );
+    /*Codes_SRS_NODE_MODULE_CLIENT_16_092: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `transportCtor` argument is falsy.]*/
+    if (!transportCtor) {
+      throw new ReferenceError('transportCtor cannot be \'' + transportCtor + '\'');
     }
+
+    /*Codes_SRS_NODE_MODULE_CLIENT_16_090: [The `fromAuthenticationProvider` method shall pass the `authenticationProvider` object passed as argument to the transport constructor.]*/
+    /*Codes_SRS_NODE_MODULE_CLIENT_16_091: [The `fromAuthenticationProvider` method shall return a `Client` object configured with a new instance of a transport created using the `transportCtor` argument.]*/
+    return new ModuleClient(new transportCtor(authenticationProvider), null);
   }
 
   /**
-   * @description         Creates an IoT Hub module client by using configuration
-   *                      information from the environment. If an environment
-   *                      variable called `EdgeHubConnectionString` or `IotHubConnectionString`
-   *                      exists, then that value is used and behavior is identical
-   *                      to calling `fromConnectionString` passing that in. If
-   *                      those environment variables do not exist then the following
-   *                      variables MUST be defined:
-   *                          IOTEDGE_WORKLOADURI        - URI for iotedged's workload API
-   *                          IOTEDGE_DEVICEID           - Device identifier
-   *                          IOTEDGE_MODULEID           - Module identifier
-   *                          IOTEDGE_MODULEGENERATIONID - Module generation identifier
-   *                          IOTEDGE_IOTHUBHOSTNAME     - IoT Hub host name
-   *                          IOTEDGE_AUTHSCHEME         - Authentication scheme to use;
-   *                                                       must be "sasToken"
+   * Creates an IoT Hub module client by using configuration information from the environment.
+   *
+   * If an environment variable called `EdgeHubConnectionString` or `IotHubConnectionString` exists, then that value is used and behavior is identical
+   * to calling `fromConnectionString` passing that in. If those environment variables do not exist then the following variables MUST be defined:
+   *
+   *     - IOTEDGE_WORKLOADURI          URI for iotedged's workload API
+   *     - IOTEDGE_DEVICEID             Device identifier
+   *     - IOTEDGE_MODULEID             Module identifier
+   *     - IOTEDGE_MODULEGENERATIONID   Module generation identifier
+   *     - IOTEDGE_IOTHUBHOSTNAME       IoT Hub host name
+   *     - IOTEDGE_AUTHSCHEME           Authentication scheme to use; must be "sasToken"
+   *
    * @param transportCtor Transport protocol used to connect to IoT hub.
    * @param callback      Callback to invoke when the ModuleClient has been constructured or if an
    *                      error occurs while creating the client.
@@ -352,5 +319,36 @@ export class ModuleClient extends EventEmitter {
       connectionString,
       wrappedTransportCtor
     ));
+  }
+
+  private static validateEnvironment(): ReferenceError {
+    // Codes_SRS_NODE_MODULE_CLIENT_13_029: [ If environment variables EdgeHubConnectionString and IotHubConnectionString do not exist then the following environment variables must be defined: IOTEDGE_WORKLOADURI, IOTEDGE_DEVICEID, IOTEDGE_MODULEID, IOTEDGE_IOTHUBHOSTNAME, IOTEDGE_AUTHSCHEME and IOTEDGE_MODULEGENERATIONID. ]
+    const keys = [
+      'IOTEDGE_WORKLOADURI',
+      'IOTEDGE_DEVICEID',
+      'IOTEDGE_MODULEID',
+      'IOTEDGE_IOTHUBHOSTNAME',
+      'IOTEDGE_AUTHSCHEME',
+      'IOTEDGE_MODULEGENERATIONID'
+    ];
+
+    for (const key of keys) {
+      if (!process.env[key]) {
+        return new ReferenceError(
+          `Environment variable ${key} was not provided.`
+        );
+      }
+    }
+
+    // Codes_SRS_NODE_MODULE_CLIENT_13_030: [ The value for the environment variable IOTEDGE_AUTHSCHEME must be sasToken. ]
+
+    // we only support sas token auth scheme at this time
+    if (process.env.IOTEDGE_AUTHSCHEME.toLowerCase() !== 'sastoken') {
+      return new ReferenceError(
+        `Authentication scheme ${
+          process.env.IOTEDGE_AUTHSCHEME
+        } is not a supported scheme.`
+      );
+    }
   }
 }
