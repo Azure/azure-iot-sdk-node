@@ -657,7 +657,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     let baseConfig: MqttBaseTransportConfig = {
       uri: 'mqtts://' + (credentials.gatewayHostName || credentials.host),
       username: credentials.host + '/' + clientId +
-        '/' + endpoint.versionQueryString().substr(1) +
+        '/' + endpoint.versionQueryString() +
         '&DeviceClientType=' + encodeURIComponent(this._userAgentString),
       clientId: clientId,
       sharedAccessSignature: credentials.sharedAccessSignature,
