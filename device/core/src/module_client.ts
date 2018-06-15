@@ -236,18 +236,16 @@ export class ModuleClient extends EventEmitter {
       'IOTEDGE_MODULEGENERATIONID'
     ];
 
-    keys.forEach((key) => {
+    for (const key of keys) {
       if (!process.env[key]) {
-        return new ReferenceError(
-          `Environment variable ${key} was not provided.`
-        );
+        return new ReferenceError(`Environment variable ${key} was not provided.`);
       }
-    });
+    }
 
-    // Codes_SRS_NODE_MODULE_CLIENT_13_030: [ The value for the environment variable IOTEDGE_AUTHSCHEME must be SasToken. ]
+    // Codes_SRS_NODE_MODULE_CLIENT_13_030: [ The value for the environment variable IOTEDGE_AUTHSCHEME must be sasToken. ]
 
     // we only support sas token auth scheme at this time
-    if (process.env.IOTEDGE_AUTHSCHEME !== 'SasToken') {
+    if (process.env.IOTEDGE_AUTHSCHEME.toLowerCase() !== 'sastoken') {
       return new ReferenceError(
         `Authentication scheme ${
           process.env.IOTEDGE_AUTHSCHEME
@@ -270,7 +268,7 @@ export class ModuleClient extends EventEmitter {
    *                          IOTEDGE_MODULEGENERATIONID - Module generation identifier
    *                          IOTEDGE_IOTHUBHOSTNAME     - IoT Hub host name
    *                          IOTEDGE_AUTHSCHEME         - Authentication scheme to use;
-   *                                                       must be "SasToken"
+   *                                                       must be "sasToken"
    * @param transportCtor Transport protocol used to connect to IoT hub.
    * @param callback      Callback to invoke when the ModuleClient has been constructured or if an
    *                      error occurs while creating the client.

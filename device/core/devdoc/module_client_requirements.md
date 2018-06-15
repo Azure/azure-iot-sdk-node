@@ -19,7 +19,7 @@ azure-iot-device.ModuleClient is a type that captures the functionality needed t
 
 **SRS_NODE_MODULE_CLIENT_13_029: [** If environment variables `EdgeHubConnectionString` and `IotHubConnectionString` do not exist then the following environment variables must be defined: `IOTEDGE_WORKLOADURI`, `IOTEDGE_DEVICEID`, `IOTEDGE_MODULEID`, `IOTEDGE_IOTHUBHOSTNAME`, `IOTEDGE_AUTHSCHEME` and `IOTEDGE_MODULEGENERATIONID`. **]**
 
-**SRS_NODE_MODULE_CLIENT_13_030: [** The value for the environment variable `IOTEDGE_AUTHSCHEME` must be `SasToken`. **]**
+**SRS_NODE_MODULE_CLIENT_13_030: [** The value for the environment variable `IOTEDGE_AUTHSCHEME` must be `sasToken`. **]**
 
 **SRS_NODE_MODULE_CLIENT_13_031: [** The `fromEnvironment` method shall invoke the callback with a new instance of the `ModuleClient` object. **]**
 
