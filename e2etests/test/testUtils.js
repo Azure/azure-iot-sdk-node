@@ -19,8 +19,8 @@ function createDeviceClient(deviceTransport, provisionedDevice) {
     // due to some clock skew, it is possible that the certificate is not valid yet using the IoT hub clock
     // since the pem module does not offer the possibility to set the NotBefore field, we have to resort to retrying.
     // https://github.com/Dexus/pem/issues/30
-    deviceClient._internalClient._retryPolicy._errorFilter.UnauthorizedError = true;
-    deviceClient._internalClient._maxOperationTimeout = 30000; // retry for at most 30 seconds, we don't want the test to take too long.
+    deviceClient._retryPolicy._errorFilter.UnauthorizedError = true;
+    deviceClient._maxOperationTimeout = 30000; // retry for at most 30 seconds, we don't want the test to take too long.
   } else {
     deviceClient = deviceSdk.Client.fromSharedAccessSignature(provisionedDevice.connectionString, deviceTransport);
   }
