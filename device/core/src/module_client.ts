@@ -247,7 +247,7 @@ export class ModuleClient extends EventEmitter {
     // Codes_SRS_NODE_MODULE_CLIENT_13_030: [ The value for the environment variable IOTEDGE_AUTHSCHEME must be SasToken. ]
 
     // we only support sas token auth scheme at this time
-    if (process.env.IOTEDGE_AUTHSCHEME !== 'SasToken') {
+    if (process.env.IOTEDGE_AUTHSCHEME.toLowerCase() !== 'sastoken') {
       return new ReferenceError(
         `Authentication scheme ${
           process.env.IOTEDGE_AUTHSCHEME
