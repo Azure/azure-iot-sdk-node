@@ -604,7 +604,7 @@ describe('Mqtt', function () {
           fieldNameToSet: null,
           fieldValueToSet: null,
           fieldNameToCheck: 'username',
-          fieldValueToCheck: 'host.name/deviceId/' + endpoint.versionQueryString().substr(1) + '&DeviceClientType=' + encodeURIComponent(userAgentString)
+          fieldValueToCheck: 'host.name/deviceId/' + endpoint.versionQueryString() + '&DeviceClientType=' + encodeURIComponent(userAgentString)
         }
       ].forEach(function (testConfig) {
         it('sets the ' + testConfig.fieldNameToCheck + ' to \'' + testConfig.fieldValueToCheck + '\'', function (testCallback) {
