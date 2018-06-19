@@ -82,8 +82,32 @@ class ModuleClient extends InternalClient {
 
 **SRS_NODE_MODULE_CLIENT_18_022: [** The `sendOutputEventBatch` method shall not throw if the `callback` is not passed. **]**
 
+### setOptions
+**SRS_NODE_MODULE_CLIENT_16_042: [** The `setOptions` method shall throw a `ReferenceError` if the options object is falsy. **]**
 
-**SRS_NODE_MODULE_CLIENT_16_096: [** The `setRetryPolicy` method shall call the `setRetryPolicy` method on the twin if it is set and pass it the `policy` object. **]**
+**SRS_NODE_MODULE_CLIENT_16_043: [** The `done` callback shall be invoked with no parameters when it has successfully finished setting the client and/or transport options. **]**
+
+**SRS_NODE_MODULE_CLIENT_16_044: [** The `done` callback shall be invoked with a standard javascript `Error` object and no result object if the client could not be configured as requested. **]**
+
+**SRS_NODE_MODULE_CLIENT_16_098: [** The `setOptions` method shall call the `setOptions` method with the `options` argument on the `MethodClient` object of the `ModuleClient`. **]**
+
+### invokeMethod(deviceId: string, moduleIdOrMethodParams: string | DirectMethodParams, methodParamsOrCallback: DirectMethodParams | DirectMethodCallback, callback?: DirectMethodCallback): void
+
+**Other valid signatures:**
+```typescript
+invokeMethod(deviceId: string, methodParams: DirectMethodParams, callback: DirectMethodCallback): void;
+invokeMethod(deviceId: string, moduleId: string, methodParams: DirectMethodParams, callback: DirectMethodCallback): void;
+```
+
+**SRS_NODE_MODULE_CLIENT_16_093: [** `invokeMethod` shall throw a `ReferenceError` if the `deviceId` argument is falsy. **]**
+
+**SRS_NODE_MODULE_CLIENT_16_094: [** `invokeMethod` shall throw a `ReferenceError` if the `moduleIdOrMethodParams` argument is falsy. **]**
+
+**SRS_NODE_MODULE_CLIENT_16_095: [** `invokeMethod` shall throw a `ReferenceError` if the `deviceId` and `moduleIdOrMethodParams` are strings and the `methodParamsOrCallback` argument is falsy. **]**
+
+**SRS_NODE_MODULE_CLIENT_16_096: [** `invokeMethod` shall throw a `ArgumentError` if the `methodName` property of the `MethodParams` argument is falsy. **]**
+
+**SRS_NODE_MODULE_CLIENT_16_097: [** `invokeMethod` shall call the `invokeMethod` API of the `MethodClient` API that was created for the `ModuleClient` instance. **]**
 
 ### on('inputMessage', msgHandler)
 

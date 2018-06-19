@@ -153,17 +153,14 @@ export class Client extends InternalClient {
   }
 
   /**
-   * @method            module:azure-iot-device.Client.fromConnectionString
-   * @description       Creates an IoT Hub device client from the given
-   *                    connection string using the given transport type.
+   * Creates an IoT Hub device client from the given connection string using the given transport type.
    *
-   * @param {String}    connStr       A connection string which encapsulates "device
-   *                                  connect" permissions on an IoT hub.
-   * @param {Function}  Transport     A transport constructor.
+   * @param {String}    connStr        A connection string which encapsulates "device connect" permissions on an IoT hub.
+   * @param {Function}  transportCtor  A transport constructor.
    *
    * @throws {ReferenceError}         If the connStr parameter is falsy.
    *
-   * @returns {module:azure-iothub.Client}
+   * @returns {module:azure-iot-device.Client}
    */
   static fromConnectionString(connStr: string, transportCtor: any): any {
     /*Codes_SRS_NODE_DEVICE_CLIENT_05_003: [The fromConnectionString method shall throw ReferenceError if the connStr argument is falsy.]*/

@@ -18,6 +18,14 @@ describe('Device Client', function () {
   var sharedKeyConnectionString = 'HostName=host;DeviceId=id;SharedAccessKey=key';
   var sharedAccessSignature = '"SharedAccessSignature sr=hubName.azure-devices.net/devices/deviceId&sig=s1gn4tur3&se=1454204843"';
 
+  describe('#constructor', function () {
+    it('throws if a connection string is passed', function () {
+      assert.throws(function () {
+        return new Client(EventEmitter, 'fakeconnectionstring');
+      }, errors.InvalidOperationError);
+    });
+  });
+
   describe('#fromConnectionString', function () {
     /*Tests_SRS_NODE_DEVICE_CLIENT_05_006: [The fromConnectionString method shall return a new instance of the Client object, as by a call to new Client(new Transport(...)).]*/
     it('returns an instance of Client', function () {
@@ -252,6 +260,38 @@ describe('Device Client', function () {
       assert.isTrue(fakeTransport.enableC2D.calledOnce);
       fakeTransport.enableC2D = sinon.stub().callsArgWith(0, fakeError);
       fakeTransport.emit('disconnect', new errors.TimeoutError()); // timeouts can be retried
+    });
+  });
+
+  describe('#setOptions', function () {
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
+    [null, undefined].forEach(function (options) {
+      it('throws is options is ' + options, function () {
+        var client = new Client(new EventEmitter());
+        assert.throws(function () {
+          client.setOptions(options, function () { });
+        }, ReferenceError);
+      });
+    });
+
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_043: [The `done` callback shall be invoked no parameters when it has successfully finished setting the client and/or transport options.]*/
+    it('calls the done callback with no parameters when it has successfully configured the transport', function (done) {
+      var client = new Client(new FakeTransport());
+      client.setOptions({}, done);
+    });
+
+    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_044: [The `done` callback shall be invoked with a standard javascript `Error` object and no result object if the client could not be configured as requested.]*/
+    it('calls the done callback with an error when it failed to configured the transport', function (done) {
+      var failingTransport = new FakeTransport();
+      sinon.stub(failingTransport, 'setOptions').callsFake(function (options, done) {
+        done(new Error('dummy error'));
+      });
+
+      var client = new Client(failingTransport);
+      client.setOptions({}, function (err) {
+        assert.instanceOf(err, Error);
+        done();
+      });
     });
   });
 });

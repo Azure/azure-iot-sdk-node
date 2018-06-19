@@ -119,6 +119,15 @@ describe('Http', function() {
       assert.strictEqual(https.request.args[0][0].passphrase, 'pass1');
       callback();
     });
+
+    it('populates the ca if provided in the options', function (callback) {
+      var http = new Http();
+      var fakeCA = 'ca';
+      http.setOptions({ ca: fakeCA });
+      http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, null, function() {});
+      assert.strictEqual(https.request.args[0][0].ca, fakeCA);
+      callback();
+    });
   });
 
   describe('#buildRequest', function() {
@@ -140,7 +149,7 @@ describe('Http', function() {
           callback(fakeResponse);
           return new EventEmitter();
         });
-      
+
       sinon.stub(fakeResponse, 'on')
         .callsFake(function(eventName, callback) {
           if (eventName === 'error') {
@@ -184,7 +193,7 @@ describe('Http', function() {
           callback(fakeResponse);
           return new EventEmitter();
         });
-      
+
       sinon.stub(fakeResponse, 'on')
         .callsFake(function(eventName, callback) {
           if (eventName === 'data') {
@@ -238,7 +247,7 @@ describe('Http', function() {
           callback(fakeResponse);
           return new EventEmitter();
         });
-      
+
       sinon.stub(fakeResponse, 'on')
         .callsFake(function(eventName, callback) {
           if (eventName === 'end') {

@@ -144,6 +144,10 @@ export class Http {
       httpOptions.passphrase = (x509Options as X509).passphrase;
     }
 
+    if (this._options && this._options.ca) {
+      httpOptions.ca = this._options.ca;
+    }
+
     let httpReq = request(httpOptions, (response: IncomingMessage): void => {
       let responseBody = '';
       response.on('error', (err: Error): void => {

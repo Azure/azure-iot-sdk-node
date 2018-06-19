@@ -4,6 +4,7 @@
 'use strict';
 
 var fs = require('fs');
+var EventEmitter = require('events').EventEmitter;
 var assert = require('chai').assert;
 var sinon = require('sinon');
 var FakeTransport = require('./fake_transport.js');
@@ -12,6 +13,7 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
 var errors = require('azure-iot-common').errors;
 var ModuleClient = require('../lib/module_client').ModuleClient;
 var IotEdgeAuthenticationProvider = require('../lib/iotedge_authentication_provider').IotEdgeAuthenticationProvider;
+var SharedAccessKeyAuthenticationProvider = require('../lib/sak_authentication_provider').SharedAccessKeyAuthenticationProvider;
 var SharedAccessSignature = require('azure-iot-common').SharedAccessSignature;
 
 describe('ModuleClient', function () {
@@ -91,49 +93,47 @@ describe('ModuleClient', function () {
     // Tests_SRS_NODE_MODULE_CLIENT_13_034: [ If the client is running in a non-edge mode and an environment variable named EdgeModuleCACertificateFile exists then its file contents shall be set as the CA cert for the transport via the transport's setOptions method passing in the CA as the value for the ca property in the options object. ]
     ['EdgeHubConnectionString', 'IotHubConnectionString'].forEach(function (envName) {
       describe('sets CA cert in non-edge mode', function () {
-        var stub;
+        var spy;
         var fsstub;
+        var fakeConnStr = 'HostName=fake.azure-devices.net;DeviceId=deviceId;ModuleId=moduleId;SharedAccessKey=key';
 
-        var transport = {
-          setOptions: function () { }
-        };
-        var setOptionsStub = sinon.stub(transport, 'setOptions');
+        var transport = new EventEmitter();
+        transport.setOptions = sinon.stub().callsArg(1);
 
         beforeEach(function () {
-          stub = sinon.stub(ModuleClient, 'fromConnectionString')
-            .callsArgWith(1, 'auth provider')
-            .returns(42);
-          process.env[envName] = 'cs';
+          spy = sinon.spy(ModuleClient, 'fromConnectionString');
+          process.env[envName] = fakeConnStr;
           process.env.EdgeModuleCACertificateFile = '/path/to/ca/cert/file';
           fsstub = sinon.stub(fs, 'readFile').callsArgWith(2, null, 'ca cert');
         });
 
         afterEach(function () {
-          stub.restore();
+          spy.restore();
           fsstub.restore();
           delete process.env[envName];
           delete process.env['EdgeModuleCACertificateFile'];
         });
 
-        it('if env ' + envName + ' is defined', function () {
+        it('if env ' + envName + ' is defined', function (testCallback) {
           ModuleClient.fromEnvironment(function (authProvider) {
-            assert.strictEqual(authProvider, 'auth provider');
+            assert.instanceOf(authProvider, SharedAccessKeyAuthenticationProvider);
             return transport;
           }, function (err, client) {
             assert.isNotOk(err);
-            assert.strictEqual(client, 42);
-            assert.strictEqual(stub.called, true);
-            assert.strictEqual(stub.args[0][0], 'cs');
+            assert.instanceOf(client, ModuleClient);
+            assert.strictEqual(spy.called, true);
+            assert.strictEqual(spy.args[0][0], fakeConnStr);
             assert.strictEqual(fsstub.called, true);
             assert.strictEqual(fsstub.args[0][0], '/path/to/ca/cert/file');
             assert.strictEqual(fsstub.args[0][1], 'utf8');
-            assert.strictEqual(setOptionsStub.called, true);
-            assert.strictEqual(setOptionsStub.args[0][0].ca, 'ca cert');
+            assert.strictEqual(transport.setOptions.called, true);
+            assert.strictEqual(transport.setOptions.args[0][0].ca, 'ca cert');
+            testCallback();
           });
         });
       });
 
-      describe('bails if CA cert fs read fails', function () {
+      describe('fails if CA cert fs read fails', function () {
         var fsstub;
         beforeEach(function () {
           process.env[envName] = 'cs';
@@ -153,6 +153,42 @@ describe('ModuleClient', function () {
           }, function (err) {
             assert.isOk(err);
             assert.strictEqual(err, 'whoops');
+          });
+        });
+      });
+
+
+      describe('fails if calling setOptions on transport fails', function () {
+        var spy;
+        var fsstub;
+        var fakeConnStr = 'HostName=fake.azure-devices.net;DeviceId=deviceId;ModuleId=moduleId;SharedAccessKey=key';
+        var fakeError = new Error('fake');
+
+        var transport = new EventEmitter();
+        transport.setOptions = sinon.stub().callsArgWith(1, fakeError);
+
+        beforeEach(function () {
+          spy = sinon.spy(ModuleClient, 'fromConnectionString');
+          process.env[envName] = fakeConnStr;
+          process.env.EdgeModuleCACertificateFile = '/path/to/ca/cert/file';
+          fsstub = sinon.stub(fs, 'readFile').callsArgWith(2, null, 'ca cert');
+        });
+
+        afterEach(function () {
+          spy.restore();
+          fsstub.restore();
+          delete process.env[envName];
+          delete process.env['EdgeModuleCACertificateFile'];
+        });
+
+        it('if env ' + envName + ' is defined', function (testCallback) {
+          ModuleClient.fromEnvironment(function (authProvider) {
+            assert.instanceOf(authProvider, SharedAccessKeyAuthenticationProvider);
+            return transport;
+          }, function (err, client) {
+            assert.strictEqual(err, fakeError);
+            assert.isUndefined(client);
+            testCallback();
           });
         });
       });
@@ -449,6 +485,87 @@ describe('ModuleClient', function () {
     });
   });
 
+  describe('#invokeMethod', function () {
+    /*Test_SRS_NODE_MODULE_CLIENT_16_093: [`invokeMethod` shall throw a `ReferenceError` if the `deviceId` argument is falsy.]*/
+    [undefined, null, ''].forEach(function (badDeviceId) {
+      it('throws a ReferenceError if deviceId is \'' + badDeviceId + '\'', function () {
+        var transport = new FakeTransport();
+        var client = new ModuleClient(transport);
+        assert.throws(function () {
+          client.invokeMethod(badDeviceId, 'moduleId', { methodName: 'method' }, function () {});
+        }, ReferenceError);
+      });
+    });
+
+    /*Test_SRS_NODE_MODULE_CLIENT_16_094: [`invokeMethod` shall throw a `ReferenceError` if the `moduleIdOrMethodParams` argument is falsy.]*/
+    [undefined, null, ''].forEach(function (badModuleId) {
+      it('throws a ReferenceError if moduleIdOrMethodParams is \'' + badModuleId + '\'', function () {
+        var transport = new FakeTransport();
+        var client = new ModuleClient(transport);
+        assert.throws(function () {
+          client.invokeMethod('deviceId', badModuleId, { methodName: 'method' }, function () {});
+        }, ReferenceError);
+      });
+    });
+
+    [undefined, null, ''].forEach(function (badModuleId) {
+      it('throws a ReferenceError if moduleIdOrMethodParams is \'' + badModuleId + '\'', function () {
+        var transport = new FakeTransport();
+        var client = new ModuleClient(transport);
+        assert.throws(function () {
+          client.invokeMethod('deviceId', badModuleId, function () {});
+        }, ReferenceError);
+      });
+    });
+
+    /*Test_SRS_NODE_MODULE_CLIENT_16_095: [`invokeMethod` shall throw a `ReferenceError` if the `deviceId` and `moduleIdOrMethodParams` are strings and the `methodParamsOrCallback` argument is falsy.]*/
+    [undefined, null, ''].forEach(function (badParams) {
+      it('throws a ReferenceError if moduleIdOrMethodParams is \'' + badParams + '\'', function () {
+        var transport = new FakeTransport();
+        var client = new ModuleClient(transport);
+        assert.throws(function () {
+          client.invokeMethod('deviceId', 'moduleId', badParams, function () {});
+        }, ReferenceError);
+      });
+    });
+
+    /*Test_SRS_NODE_MODULE_CLIENT_16_096: [`invokeMethod` shall throw a `ArgumentError` if the `methodName` property of the `MethodParams` argument is falsy.]*/
+    [undefined, null, ''].forEach(function (badMethodName) {
+      it('throws a ReferenceError if methodParams.methodName is \'' + badMethodName + '\'', function () {
+        var transport = new FakeTransport();
+        var client = new ModuleClient(transport);
+        assert.throws(function () {
+          client.invokeMethod('deviceId', 'moduleId', { methodName: badMethodName }, function () {});
+        }, errors.ArgumentError);
+      });
+    });
+
+    it('calls MethodClient.invokeMethod with the proper arguments when the target is a device', function () {
+      var transport = new FakeTransport();
+      var fakeMethodClient = {
+        invokeMethod: sinon.stub()
+      };
+      var fakeMethodParams = { methodName: 'methodName' };
+      var client = new ModuleClient(transport, fakeMethodClient);
+      client.invokeMethod('deviceId', fakeMethodParams, function() {});
+      assert.isTrue(fakeMethodClient.invokeMethod.calledOnce);
+      assert.isTrue(fakeMethodClient.invokeMethod.calledWith('deviceId', null, fakeMethodParams));
+    });
+
+    /*Test_SRS_NODE_MODULE_CLIENT_16_097: [`invokeMethod` shall call the `invokeMethod` API of the `MethodClient` API that was created for the `ModuleClient` instance.]*/
+    it('calls MethodClient.invokeMethod with the proper arguments when the target is a module', function () {
+      var transport = new FakeTransport();
+      var fakeMethodClient = {
+        invokeMethod: sinon.stub()
+      };
+      var fakeMethodParams = { methodName: 'methodName' };
+      var client = new ModuleClient(transport, fakeMethodClient);
+      client.invokeMethod('deviceId', 'moduleId', fakeMethodParams);
+      assert.isTrue(fakeMethodClient.invokeMethod.calledOnce);
+      assert.isTrue(fakeMethodClient.invokeMethod.calledWith('deviceId', 'moduleId', fakeMethodParams));
+    });
+  });
+
   describe('#on(\'inputMessage\')', function () {
     /*Tests_SRS_NODE_MODULE_CLIENT_18_012: [ The `inputMessage` event shall be emitted when an inputMessage is received from the IoT Hub service. ]*/
     it('emits a message event when a message is received', function (done) {
@@ -543,4 +660,51 @@ describe('ModuleClient', function () {
     });
   });
 
+  describe('#setOptions', function () {
+    var fakeMethodClient = {
+      setOptions: sinon.stub()
+    };
+
+    /*Tests_SRS_NODE_MODULE_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
+    [null, undefined].forEach(function (options) {
+      it('throws is options is ' + options, function () {
+        var client = new ModuleClient(new EventEmitter(), fakeMethodClient);
+        assert.throws(function () {
+          client.setOptions(options, function () { });
+        }, ReferenceError);
+      });
+    });
+
+    /*Tests_SRS_NODE_MODULE_CLIENT_16_043: [The `done` callback shall be invoked no parameters when it has successfully finished setting the client and/or transport options.]*/
+    it('calls the done callback with no parameters when it has successfully configured the transport', function (done) {
+      var client = new ModuleClient(new FakeTransport(), fakeMethodClient);
+      client.setOptions({}, done);
+    });
+
+    /*Tests_SRS_NODE_MODULE_CLIENT_16_044: [The `done` callback shall be invoked with a standard javascript `Error` object and no result object if the client could not be configured as requested.]*/
+    it('calls the done callback with an error when it failed to configured the transport', function (done) {
+      var failingTransport = new FakeTransport();
+      sinon.stub(failingTransport, 'setOptions').callsFake(function (options, done) {
+        done(new Error('dummy error'));
+      });
+
+      var client = new ModuleClient(failingTransport, fakeMethodClient);
+      client.setOptions({}, function (err) {
+        assert.instanceOf(err, Error);
+        done();
+      });
+    });
+
+    /*Tests_SRS_NODE_MODULE_CLIENT_16_098: [The `setOptions` method shall call the `setOptions` method with the `options` argument on the `MethodClient` object of the `ModuleClient`.]*/
+    it('calls setOptions on the MethodClient', function () {
+      var methodClient = {
+        setOptions: sinon.stub()
+      };
+      var fakeOptions = {};
+      var client = new ModuleClient(new FakeTransport(), methodClient);
+      client.setOptions(fakeOptions);
+      assert.isTrue(methodClient.setOptions.calledOnce);
+      assert.isTrue(methodClient.setOptions.calledWith(fakeOptions));
+    });
+  });
 });

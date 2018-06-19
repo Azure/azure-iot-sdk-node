@@ -14,7 +14,7 @@ describe('DeviceMethodRequest', function() {
     { val: null, err: ReferenceError },
     { val: '', err: Error }
   ];
-  
+
   // Tests_SRS_NODE_DEVICE_METHOD_REQUEST_13_001: [ DeviceMethodRequest shall throw a ReferenceError if requestId is falsy or is not a string. ]
   // Tests_SRS_NODE_DEVICE_METHOD_REQUEST_13_002: [ DeviceMethodRequest shall throw an Error if requestId is an empty string. ]
   inputs.forEach(function(inp) {

@@ -31,7 +31,15 @@ describe('DeviceClient Retry Logic', function () {
   });
 });
 
-[DeviceClient, ModuleClient].forEach(function (ClientCtor) {
+function DeviceClientCtor(fakeTransport) {
+  return new DeviceClient(fakeTransport, null, { updateSharedAccessSignature: sinon.stub() });
+}
+
+function ModuleClientCtor(fakeTransport) {
+  return new ModuleClient(fakeTransport, { setOptions: sinon.stub() });
+}
+
+[DeviceClientCtor, ModuleClientCtor].forEach(function (ClientCtor) {
   describe(ClientCtor.name + ' Retry Logic', function () {
     [
       {
@@ -65,10 +73,9 @@ describe('DeviceClient Retry Logic', function () {
     ].forEach(function (testConfig) {
       it('retries to ' + testConfig.funcName, function(testCallback) {
         var fakeTransport = new EventEmitter();
-        var fakeBlobClient = { updateSharedAccessSignature: function () {} };
         fakeTransport[testConfig.funcName] = sinon.stub().callsArgWith(1, new errors.TimeoutError('failed'));
 
-        var client = new ClientCtor(fakeTransport, null, fakeBlobClient);
+        var client = ClientCtor(fakeTransport);
         client._maxOperationTimeout = 100;
         client[testConfig.funcName](testConfig.funcParam, function () {
           assert(fakeTransport[testConfig.funcName].callCount >= 2);
@@ -79,10 +86,9 @@ describe('DeviceClient Retry Logic', function () {
 
     it('retries to open/connect', function(testCallback) {
       var fakeTransport = new EventEmitter();
-      var fakeBlobClient = { updateSharedAccessSignature: function () {} };
       fakeTransport.connect = sinon.stub().callsArgWith(0, new errors.TimeoutError('failed'));
 
-      var client = new ClientCtor(fakeTransport, null, fakeBlobClient);
+      var client = ClientCtor(fakeTransport);
       client._maxOperationTimeout = 100;
       client.open(function (err) {
         assert(fakeTransport.connect.callCount >= 2);
@@ -92,11 +98,10 @@ describe('DeviceClient Retry Logic', function () {
 
     it('retries to enable device methods', function(testCallback) {
       var fakeTransport = new EventEmitter();
-      var fakeBlobClient = { updateSharedAccessSignature: function () {} };
       fakeTransport.onDeviceMethod = sinon.stub();
       fakeTransport.enableMethods = sinon.stub().callsArgWith(0, new errors.TimeoutError('failed'));
 
-      var client = new ClientCtor(fakeTransport, null, fakeBlobClient);
+      var client = ClientCtor(fakeTransport);
       client._maxOperationTimeout = 100;
       client.on('error', (err) => {
         assert(fakeTransport.onDeviceMethod.calledOnce);

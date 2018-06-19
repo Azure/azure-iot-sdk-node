@@ -210,6 +210,11 @@ export abstract class InternalClient extends EventEmitter {
     });
   }
 
+  /**
+   * Passes options to the `Client` object that can be used to configure the transport.
+   * @param options   A {@link DeviceClientOptions} object.
+   * @param done      The callback to call once the options have been set.
+   */
   setOptions(options: DeviceClientOptions, done?: (err?: Error, result?: results.TransportConfigured) => void): void {
     /*Codes_SRS_NODE_INTERNAL_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
     if (!options) throw new ReferenceError('options cannot be falsy.');

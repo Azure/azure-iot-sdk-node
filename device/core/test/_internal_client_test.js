@@ -33,12 +33,6 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
           }, ReferenceError, 'transport is \'' + transport + '\'');
         });
       });
-
-      it('throws if a connection string is passed', function () {
-        assert.throws(function () {
-          return new ClientCtor(EventEmitter, 'fakeconnectionstring');
-        }, errors.InvalidOperationError);
-      })
     });
 
     describe('#fromConnectionString', function () {
@@ -167,38 +161,6 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
         assert.throws(function () {
           client.setTransportOptions({ foo: 42 }, function () { });
         }, errors.NotImplementedError);
-      });
-    });
-
-    describe('#setOptions', function () {
-      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
-      [null, undefined].forEach(function (options) {
-        it('throws is options is ' + options, function () {
-          var client = new ClientCtor(new EventEmitter());
-          assert.throws(function () {
-            client.setOptions(options, function () { });
-          }, ReferenceError);
-        });
-      });
-
-      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_043: [The `done` callback shall be invoked no parameters when it has successfully finished setting the client and/or transport options.]*/
-      it('calls the done callback with no parameters when it has successfully configured the transport', function (done) {
-        var client = new ClientCtor(new FakeTransport());
-        client.setOptions({}, done);
-      });
-
-      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_044: [The `done` callback shall be invoked with a standard javascript `Error` object and no result object if the client could not be configured as requested.]*/
-      it('calls the done callback with an error when it failed to configured the transport', function (done) {
-        var failingTransport = new FakeTransport();
-        sinon.stub(failingTransport, 'setOptions').callsFake(function (options, done) {
-          done(new Error('dummy error'));
-        });
-
-        var client = new ClientCtor(failingTransport);
-        client.setOptions({}, function (err) {
-          assert.instanceOf(err, Error);
-          done();
-        });
       });
     });
 

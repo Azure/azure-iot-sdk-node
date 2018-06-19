@@ -13,6 +13,8 @@ import { errors } from 'azure-iot-common';
 import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
 import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
 import { IotEdgeAuthenticationProvider } from './iotedge_authentication_provider';
+import { MethodParams, MethodCallback, MethodClient } from './device_method';
+import { DeviceClientOptions } from './interfaces';
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
   if (callback) callback(error, result);
@@ -29,17 +31,20 @@ function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Er
 export class ModuleClient extends InternalClient {
   private _inputMessagesEnabled: boolean;
   private _moduleDisconnectHandler: (err?: Error, result?: any) => void;
+  private _methodClient: MethodClient;
 
   /**
+   * @private
    * @constructor
    * @param {Object}  transport         An object that implements the interface
    *                                    expected of a transport object, e.g.,
-   *                                    {@link azure-iot-device-http.Http|Http}.
-   * @param {string}  connStr           A connection string (optional: when not provided, updateSharedAccessSignature must be called to set the SharedAccessSignature token directly).
+   *                                    {@link azure-iot-device-mqtt.Mqtt|Mqtt}.
+   * @param {Object}  restApiClient     the RestApiClient object to use for HTTP calls
    */
-  constructor(transport: DeviceTransport, connStr?: string) {
-    super(transport, connStr);
+  constructor(transport: DeviceTransport, methodClient: MethodClient) {
+    super(transport, undefined);
     this._inputMessagesEnabled = false;
+    this._methodClient = methodClient;
 
     /* Codes_SRS_NODE_MODULE_CLIENT_18_012: [ The `inputMessage` event shall be emitted when an inputMessage is received from the IoT Hub service. ]*/
     /* Codes_SRS_NODE_MODULE_CLIENT_18_013: [ The `inputMessage` event parameters shall be the inputName for the message and a `Message` object. ]*/
@@ -126,9 +131,68 @@ export class ModuleClient extends InternalClient {
     });
   }
 
+  /**
+   * Closes the client and the associated transport connection and resources.
+   *
+   * @param closeCallback callback that shall be called with either an error or a `results.Disconnected` object when the transport has successfully closed its connection.
+   */
   close(closeCallback?: (err?: Error, result?: results.Disconnected) => void): void {
     this._transport.removeListener('disconnect', this._moduleDisconnectHandler);
     super.close(closeCallback);
+  }
+
+  /**
+   * Invokes a method on a downstream device or on another module on the same Edge device. Please note that this feature only works when
+   * the module is being run as part of an Edge device.
+   *
+   * @param deviceId      target device identifier
+   * @param moduleId      target module identifier on the device identified with the `deviceId` argument
+   * @param methodParams  parameters of the direct method call
+   * @param callback      callback that will be invoked either with an Error object or the result of the method call.
+   */
+  invokeMethod(deviceId: string, methodParams: MethodParams, callback: MethodCallback): void;
+  invokeMethod(deviceId: string, moduleId: string, methodParams: MethodParams, callback: MethodCallback): void;
+  invokeMethod(deviceId: string, moduleIdOrMethodParams: string | MethodParams, methodParamsOrCallback: MethodParams | MethodCallback, callback?: MethodCallback): void {
+    /*Codes_SRS_NODE_MODULE_CLIENT_16_093: [`invokeMethod` shall throw a `ReferenceError` if the `deviceId` argument is falsy.]*/
+    if (!deviceId) {
+      throw new ReferenceError('deviceId cannot be \'' + deviceId + '\'');
+    }
+
+    /*Codes_SRS_NODE_MODULE_CLIENT_16_094: [`invokeMethod` shall throw a `ReferenceError` if the `moduleIdOrMethodParams` argument is falsy.]*/
+    if (!moduleIdOrMethodParams) {
+      throw new ReferenceError('The second parameter cannot be \'' + moduleIdOrMethodParams + '\'');
+    }
+
+    const actualModuleId     = typeof moduleIdOrMethodParams === 'string' ? moduleIdOrMethodParams : null;
+    const actualMethodParams = typeof moduleIdOrMethodParams === 'object' ? moduleIdOrMethodParams : methodParamsOrCallback;
+    const actualCallback     = typeof methodParamsOrCallback === 'function' ? methodParamsOrCallback : callback;
+
+    /*Codes_SRS_NODE_MODULE_CLIENT_16_095: [`invokeMethod` shall throw a `ReferenceError` if the `deviceId` and `moduleIdOrMethodParams` are strings and the `methodParamsOrCallback` argument is falsy.]*/
+    if (!actualMethodParams || typeof actualMethodParams !== 'object') {
+      throw new ReferenceError('methodParams cannot be \'' + actualMethodParams + '\'');
+    }
+
+    /*Codes_SRS_NODE_MODULE_CLIENT_16_096: [`invokeMethod` shall throw a `ArgumentError` if the `methodName` property of the `MethodParams` argument is falsy.]*/
+    if (!(actualMethodParams as MethodParams).methodName) {
+      throw new errors.ArgumentError('the name property of the methodParams argument cannot be \'' + (actualMethodParams as MethodParams).methodName + '\'');
+    }
+
+    /*Codes_SRS_NODE_MODULE_CLIENT_16_097: [`invokeMethod` shall call the `invokeMethod` API of the `MethodClient` API that was created for the `ModuleClient` instance.]*/
+    this._methodClient.invokeMethod(deviceId, actualModuleId, actualMethodParams as MethodParams, actualCallback);
+  }
+
+  /**
+   * Passes options to the `ModuleClient` object that can be used to configure the transport.
+   * @param options   A {@link DeviceClientOptions} object.
+   * @param done      The callback to call once the options have been set.
+   */
+  setOptions(options: DeviceClientOptions, done?: (err?: Error, result?: results.TransportConfigured) => void): void {
+    /*Codes_SRS_NODE_MODULE_CLIENT_16_098: [The `setOptions` method shall call the `setOptions` method with the `options` argument on the `MethodClient` object of the `ModuleClient`.]*/
+    this._methodClient.setOptions(options);
+    /*Codes_SRS_NODE_MODULE_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
+    /*Codes_SRS_NODE_MODULE_CLIENT_16_043: [The `done` callback shall be invoked with no parameters when it has successfully finished setting the client and/or transport options.]*/
+    /*Codes_SRS_NODE_MODULE_CLIENT_16_044: [The `done` callback shall be invoked with a standard javascript `Error` object and no result object if the client could not be configured as requested.]*/
+    super.setOptions(options, done);
   }
 
   private _disableInputMessages(callback: (err?: Error) => void): void {
@@ -161,6 +225,16 @@ export class ModuleClient extends InternalClient {
     }
   }
 
+  /**
+   * Creates an IoT Hub device client from the given connection string using the given transport type.
+   *
+   * @param {String}    connStr        A connection string which encapsulates "device connect" permissions on an IoT hub.
+   * @param {Function}  transportCtor  A transport constructor.
+   *
+   * @throws {ReferenceError}          If the connStr parameter is falsy.
+   *
+   * @returns {module:azure-iot-device.ModuleClient}
+   */
   static fromConnectionString(connStr: string, transportCtor: any): ModuleClient {
     /*Codes_SRS_NODE_MODULE_CLIENT_05_003: [The fromConnectionString method shall throw ReferenceError if the connStr argument is falsy.]*/
     if (!connStr) throw new ReferenceError('connStr is \'' + connStr + '\'');
@@ -178,7 +252,7 @@ export class ModuleClient extends InternalClient {
     }
 
     /*Codes_SRS_NODE_MODULE_CLIENT_05_006: [The fromConnectionString method shall return a new instance of the Client object, as by a call to new Client(new transportCtor(...)).]*/
-    return new ModuleClient(new transportCtor(authenticationProvider), null);
+    return new ModuleClient(new transportCtor(authenticationProvider), new MethodClient(authenticationProvider));
   }
 
   /**
@@ -200,7 +274,7 @@ export class ModuleClient extends InternalClient {
     const authenticationProvider = SharedAccessSignatureAuthenticationProvider.fromSharedAccessSignature(sharedAccessSignature);
 
     /*Codes_SRS_NODE_MODULE_CLIENT_16_030: [The fromSharedAccessSignature method shall return a new instance of the Client object] */
-    return new ModuleClient(new transportCtor(authenticationProvider), null);
+    return new ModuleClient(new transportCtor(authenticationProvider), new MethodClient(authenticationProvider));
   }
 
   /**
@@ -221,7 +295,7 @@ export class ModuleClient extends InternalClient {
 
     /*Codes_SRS_NODE_MODULE_CLIENT_16_090: [The `fromAuthenticationProvider` method shall pass the `authenticationProvider` object passed as argument to the transport constructor.]*/
     /*Codes_SRS_NODE_MODULE_CLIENT_16_091: [The `fromAuthenticationProvider` method shall return a `Client` object configured with a new instance of a transport created using the `transportCtor` argument.]*/
-    return new ModuleClient(new transportCtor(authenticationProvider), null);
+    return new ModuleClient(new transportCtor(authenticationProvider), new MethodClient(authenticationProvider));
   }
 
   /**
@@ -291,26 +365,20 @@ export class ModuleClient extends InternalClient {
         callback(err);
       } else {
         const transport = new transportCtor(authenticationProvider);
-
         // Codes_SRS_NODE_MODULE_CLIENT_13_035: [ If the client is running in edge mode then the IotEdgeAuthenticationProvider.getTrustBundle method shall be invoked to retrieve the CA cert and the returned value shall be set as the CA cert for the transport via the transport's setOptions method passing in the CA value for the ca property in the options object. ]
         transport.setOptions({ ca });
 
+        const methodClient = new MethodClient(authenticationProvider);
+        methodClient.setOptions({ ca });
+
         // Codes_SRS_NODE_MODULE_CLIENT_13_031: [ The fromEnvironment method shall invoke the callback with a new instance of the ModuleClient object. ]
-        callback(null, new ModuleClient(transport));
+        callback(null, new ModuleClient(transport, methodClient));
       }
     });
   }
 
   private static _fromEnvironmentNormal(connectionString: string, transportCtor: any, callback: (err?: Error, client?: ModuleClient) => void): void {
     let ca = '';
-    // this is a transport decorator that provides the CA certificate to the underlying
-    // transport if a CA cert is provided in the environment
-    function CertTransport(authenticationProvider: AuthenticationProvider): any {
-      const transport = new transportCtor(authenticationProvider);
-      transport.setOptions({ ca });
-      return transport;
-    }
-
     if (process.env.EdgeModuleCACertificateFile) {
       fs.readFile(process.env.EdgeModuleCACertificateFile, 'utf8', (err, data) => {
         if (err) {
@@ -318,7 +386,14 @@ export class ModuleClient extends InternalClient {
         } else {
           // Codes_SRS_NODE_MODULE_CLIENT_13_034: [ If the client is running in a non-edge mode and an environment variable named EdgeModuleCACertificateFile exists then its file contents shall be set as the CA cert for the transport via the transport's setOptions method passing in the CA as the value for the ca property in the options object. ]
           ca = data;
-          callback(null, ModuleClient.fromConnectionString(connectionString, CertTransport));
+          const moduleClient = ModuleClient.fromConnectionString(connectionString, transportCtor);
+          moduleClient.setOptions({ ca }, (err) => {
+            if (err) {
+              callback(err);
+            } else {
+              callback(null, moduleClient);
+            }
+          });
         }
       });
     } else {
