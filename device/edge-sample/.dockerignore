@@ -1,0 +1,3 @@
+node_modules
+build_base_image.sh
+Dockerfile.base
