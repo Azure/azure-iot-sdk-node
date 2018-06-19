@@ -320,7 +320,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
           disconnect: (disconnectCallback) => this._fsm.transition('disconnecting', null, disconnectCallback),
           sendEvent: (message, sendCallback) => {
             let amqpMessage = AmqpMessage.fromMessage(message);
-            amqpMessage.properties.to = this._d2cEndpoint;
+            amqpMessage.to = this._d2cEndpoint;
 
             /*Codes_SRS_NODE_DEVICE_AMQP_16_025: [The `sendEvent` method shall create and attach the d2c link if necessary.]*/
             if (!this._d2cLink) {

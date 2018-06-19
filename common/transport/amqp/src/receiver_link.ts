@@ -7,6 +7,11 @@ import { AmqpLink } from './amqp_link_interface';
 
 const debug = dbg('azure-iot-amqp-base:ReceiverLink');
 
+interface DeliveryRecord {
+  msg: AmqpMessage;
+  delivery: any;
+}
+
 /**
  * @private
  * State machine used to manage AMQP receiver links
@@ -24,30 +29,60 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
   private _linkOptions: any;
   private _linkObject: any;
   private _fsm: machina.Fsm;
-  private _amqp10Client: any;
-  private _detachHandler: (detachEvent: any) => void;
-  private _errorHandler: (err: Error) => void;
-  private _messageHandler: (message: AmqpMessage) => void;
+  private _amqpSession: any;
+  private _combinedOptions: any;
+  private _unDisposedDeliveries: DeliveryRecord[];
 
-  constructor(linkAddress: string, linkOptions: any, amqp10Client: any) {
+  constructor(linkAddress: string, linkOptions: any, session: any) {
     super();
     this._linkAddress = linkAddress;
     this._linkOptions = linkOptions;
-    this._amqp10Client = amqp10Client;
-
-    this._detachHandler = (detachEvent: any): void => {
-      debug('handling detach event: ' + JSON.stringify(detachEvent));
-      this._fsm.handle('forceDetach', detachEvent.error);
+    this._amqpSession = session;
+    this._unDisposedDeliveries = [];
+    this._combinedOptions = {
+      source: linkAddress
     };
 
-    this._errorHandler = (err: Error): void => {
+    if (linkOptions) {
+      for (let k in linkOptions) {
+        this._combinedOptions[k] = linkOptions[k];
+      }
+    }
+
+    let manageAttachedReceiverHandlers: (operation: string) => void;
+
+    const attachedReceiverErrorHandler = (err: Error): void => {
       debug('handling error event: ' + err.toString());
       this._fsm.handle('forceDetach', err);
     };
 
-    /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_012: [If a `message` event is emitted by the `amqp10` link object, the `ReceiverLink` object shall emit a `message` event with the same content.]*/
-    this._messageHandler = (message: AmqpMessage): void => {
-      this.emit('message', message);
+    const attachedReceiverDisconnectedHandler = (err: Error): void => {
+      debug('handling disconnected event: ' + err.toString());
+      this._fsm.handle('forceDetach', err);
+    };
+
+    const attachedReceiverCloseHandler = (context: any): void => {
+      debug('handling detach event: ' + JSON.stringify(context));
+      this._fsm.handle('forceDetach', context);
+    };
+
+    /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_012: [If a `message` event is emitted by the `rhea` link object, the `ReceiverLink` object shall emit a `message` event with the same content.]*/
+    const attachedReceiverMessageHandler = (context: any): void => {
+      this._unDisposedDeliveries.push({ msg: context.message, delivery: context.delivery});
+      this.emit('message', context.message);
+    };
+
+    /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_006: [The `ReceiverLink` object should subscribe to the `receiver_close` event of the newly created `rhea` link object.]*/
+    /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_007: [The `ReceiverLink` object should subscribe to the `error` event of the newly created `rhea` link object.]*/
+    manageAttachedReceiverHandlers = (operation: string) => {
+      if (this._linkObject) {
+        this._linkObject[operation]('error', attachedReceiverErrorHandler);
+        this._linkObject[operation]('disconnected', attachedReceiverDisconnectedHandler);
+        this._linkObject[operation]('receiver_close', attachedReceiverCloseHandler);
+        this._linkObject[operation]('message', attachedReceiverMessageHandler);
+      } else {
+        debug('manage attached receiver handlers called with no link object');
+      }
     };
 
     this._fsm = new machina.Fsm({
@@ -61,7 +96,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             if (callback) {
               callback(err);
             } else if (err) {
-              /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_011: [If a `detached` or `errorReceived` event is emitted by the `amqp10` link object, the `ReceiverLink` object shall forward that error to the client.]*/
+              /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_011: [If a `receiver_close` or `error` event is emitted by the `rhea` link object, the `ReceiverLink` object shall forward that error to the client.]*/
               this.emit('error', err);
             }
           },
@@ -80,38 +115,61 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
         },
         attaching: {
           _onEnter: (callback) => {
-            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_004: [The `attach` method shall use the stored instance of the `amqp10.AmqpClient` object to attach a new link object with the `linkAddress` and `linkOptions` provided when creating the `ReceiverLink` instance.]*/
-            debug('creating receiver with amqp10 for: ' + this._linkAddress);
-            this._amqp10Client.createReceiver(this._linkAddress, this._linkOptions)
-              .then((amqp10link) => {
-                debug('receiver object created by amqp10 for endpoint: ' + this._linkAddress);
-                if (this._fsm.state === 'attaching') {
-                  this._linkObject = amqp10link;
-                  /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_006: [The `ReceiverLink` object should subscribe to the `detached` event of the newly created `amqp10` link object.]*/
-                  this._linkObject.on('detached', this._detachHandler);
-                  /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_007: [The `ReceiverLink` object should subscribe to the `errorReceived` event of the newly created `amqp10` link object.]*/
-                  this._linkObject.on('errorReceived', this._errorHandler);
-                  this._linkObject.on('message', this._messageHandler);
-                  /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_020: [The `attach` method shall call the `callback` if the link was successfully attached.]*/
-                  this._fsm.transition('attached', callback);
-                } else {
-                  debug('client forceDetached us already - cleaning up');
-                  amqp10link.forceDetach();
-                }
-                return null;
-              })
-              .catch((err) => {
-                debug('amqp10 failed to create receiver: ' + err.toString());
-                this._fsm.transition('detached', callback, err);
-              });
+            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_004: [The `attach` method shall use the stored instance of the `rhea` session object to attach a new link object with the combined `linkAddress` and `linkOptions` provided when creating the `ReceiverLink` instance.]*/
+            debug('creating receiver with rhea for: ' + this._linkAddress);
+            let manageAttachingReceiverHandlers: (operation: string) => void;
+            const attachingReceiverErrorHandler = (context) => {
+              debug('In the error handler for the attaching receiver');
+              manageAttachingReceiverHandlers('removeListener');
+              this._fsm.transition('detached', callback, context);
+            };
+            const attachingReceiverDisconnectedHandler = (context) => {
+              debug('In the disconnected handler for the attaching receiver');
+              manageAttachingReceiverHandlers('removeListener');
+              this._fsm.transition('detached', callback, context);
+            };
+            const attachingReceiverCloseHandler = (context) => {
+              debug('In the close handler for attaching receiver');
+              manageAttachingReceiverHandlers('removeListener');
+              this._fsm.transition('detached', callback, context);
+            };
+            const attachingReceiverCancelHandler = (context) => {
+              debug('In the cancel handler for attaching receiver');
+              manageAttachingReceiverHandlers('removeListener');
+              this._fsm.transition('detached', callback, context);
+            };
+            const attachingReceiverOpenHandler = (context) => {
+              debug('In the open handler for attaching receiver');
+              this._linkObject = context.receiver;
+              manageAttachingReceiverHandlers('removeListener');
+              manageAttachedReceiverHandlers('on');
+              this._fsm.transition('attached', callback);
+            };
+            manageAttachingReceiverHandlers = (operation: string) => {
+              if (this._amqpSession) {
+                this._amqpSession[operation]('cancelAzureIotSdkAmqpAttaching', attachingReceiverCancelHandler);
+                this._amqpSession[operation]('receiver_open', attachingReceiverOpenHandler);
+                this._amqpSession[operation]('receiver_close', attachingReceiverCloseHandler);
+                this._amqpSession[operation]('disconnected', attachingReceiverDisconnectedHandler);
+                this._amqpSession[operation]('error', attachingReceiverErrorHandler);
+              } else {
+                debug('manage receiver attaching state handlers called with no session object');
+              }
+            };
+            manageAttachingReceiverHandlers('on');
+            /*Codes_SRS_NODE_COMMON_AMQP_16_018: [The `attachReceiverLink` method shall call `createReceiver` on the `amqp10` client object.]*/
+            this._amqpSession.open_receiver(this._combinedOptions);
           },
-          detach: (callback) => this._fsm.transition('detaching', callback),
+          attach: (null),
+          detach: (callback) => {
+            this._amqpSession.emit('cancelAzureIotSdkAmqpAttaching');
+            this._fsm.transition('detached', callback, new Error('detached while attaching'));
+          },
           forceDetach: (err) => {
+            this._amqpSession.emit('cancelAzureIotSdkAmqpAttaching');
             if (this._linkObject) {
-              this._removeListeners();
-              this._linkObject.forceDetach();
+              this._linkObject.remove();
             }
-
             this._fsm.transition('detached', undefined, err);
           },
           accept: (message, callback) => callback(new errors.DeviceMessageLockLostError()),
@@ -128,44 +186,96 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
           detach: (callback) => this._fsm.transition('detaching', callback),
           forceDetach: (err) => {
             if (this._linkObject) {
-              this._removeListeners();
-              /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_027: [** The `forceDetach` method shall call the `forceDetach` method on the underlying `amqp10` link object.]*/
-              this._linkObject.forceDetach();
+              manageAttachedReceiverHandlers('removeListener');
+              /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_027: [** The `forceDetach` method shall call the `remove` method on the underlying `rhea` link object.]*/
+              this._linkObject.remove();
             }
-
             this._fsm.transition('detached', undefined, err);
           },
           accept: (message, callback) => {
-            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_022: [** The `accept` method shall work whether a `callback` is specified or not, and call the callback with a `result.MessageCompleted` object if a callback is specified.]*/
-            this._linkObject.accept(message);
-            this._safeCallback(callback, null, new results.MessageCompleted());
+            let delivery = this._findDeliveryRecord(message);
+            if (delivery) {
+              /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_022: [** The `accept` method shall work whether a `callback` is specified or not, and call the callback with a `result.MessageCompleted` object if a callback is specified.]*/
+              delivery.accept();
+              this._safeCallback(callback, null, new results.MessageCompleted());
+            } else {
+              callback(new errors.DeviceMessageLockLostError());
+            }
           },
           reject: (message, callback) => {
-            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_023: [** The `reject` method shall work whether a `callback` is specified or not, and call the callback with a `result.MessageRejected` object if a callback is specified.]*/
-            this._linkObject.reject(message);
-            this._safeCallback(callback, null, new results.MessageRejected());
+            let delivery = this._findDeliveryRecord(message);
+            if (delivery) {
+              /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_023: [** The `reject` method shall work whether a `callback` is specified or not, and call the callback with a `result.MessageRejected` object if a callback is specified.]*/
+              delivery.reject();
+              this._safeCallback(callback, null, new results.MessageRejected());
+            } else {
+              callback(new errors.DeviceMessageLockLostError());
+            }
           },
           abandon: (message, callback) => {
-            this._linkObject.release(message);
-            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_024: [** The `abandon` method shall work whether a `callback` is specified or not, and call the callback with a `result.MessageAbandoned` object if a callback is specified.]*/
-            this._safeCallback(callback, null, new results.MessageAbandoned());
+            let delivery = this._findDeliveryRecord(message);
+            if (delivery) {
+              /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_024: [** The `abandon` method shall work whether a `callback` is specified or not, and call the callback with a `result.MessageAbandoned` object if a callback is specified.]*/
+              delivery.release();
+              this._safeCallback(callback, null, new results.MessageAbandoned());
+            } else {
+              callback(new errors.DeviceMessageLockLostError());
+            }
           }
         },
         detaching: {
           _onEnter: (callback, err) => {
             /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_025: [The `detach` method shall call the `callback` with an `Error` that caused the detach whether it succeeds or fails to cleanly detach the link.]*/
             if (this._linkObject) {
-              this._removeListeners();
-              /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_009: [The `detach` method shall detach the link created by the `amqp10.AmqpClient` underlying object.]*/
-              this._linkObject.detach().then(() => {
+              manageAttachedReceiverHandlers('removeListener');
+              let manageDetachingReceiverHandlers: (operation: string) => void;
+              if (this._linkObject) {
+                const detachingReceiverCloseHandler = (context) => {
+                  debug('receiver normal detaching close callback entered ' + context);
+                  manageDetachingReceiverHandlers('removeListener');
+                  this._fsm.transition('detached', callback, err);
+                };
+                const detachingReceiverErrorHandler = (err) => {
+                  debug('receiver normal detaching error callback entered ' + err);
+                  manageDetachingReceiverHandlers('removeListener');
+                  this._fsm.transition('detached', callback, err);
+                };
+                const detachingReceiverDisconnectedHandler = (context) => {
+                  debug('receiver normal detaching disconnected callback entered ' + context);
+                  manageDetachingReceiverHandlers('removeListener');
+                  this._fsm.transition('detached', callback, new Error('Disconnected'));
+                };
+                const detachingReceiverCancelHandler = () => {
+                  debug('receiver normal detaching cancel callback entered ');
+                  manageDetachingReceiverHandlers('removeListener');
+                  this._fsm.transition('detached', callback, new Error('detaching cancelled'));
+                };
+                manageDetachingReceiverHandlers = (operation: string) => {
+                  if (this._linkObject) {
+                    this._linkObject[operation]('cancelAzureIotSdkAmqpDetaching', detachingReceiverCancelHandler);
+                    this._linkObject[operation]('receiver_close', detachingReceiverCloseHandler);
+                    this._linkObject[operation]('error', detachingReceiverErrorHandler);
+                    this._linkObject[operation]('disconnected', detachingReceiverDisconnectedHandler);
+                  } else {
+                    debug('manage sender detaching state handlers called with no link object');
+                  }
+                };
+                manageDetachingReceiverHandlers('on');
+                this._linkObject.close_receiver();
+              } else {
                 this._fsm.transition('detached', callback, err);
-              }).catch((err) => {
-                debug('error detaching the receiver link: ' + err.toString());
-                this._fsm.transition('detached', callback, err);
-              });
+              }
             } else {
               this._fsm.transition('detached', callback, err);
             }
+          },
+          detach: (null),
+          forceDetach: (err) => {
+            if (this._linkObject) {
+              this._linkObject.emit('cancelAzureIotSdkAmqpDetaching');
+              this._linkObject.remove();
+            }
+            this._fsm.transition('detached', undefined, err);
           },
           '*': () => this._fsm.deferUntilTransition('detached')
         }
@@ -225,12 +335,16 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
     this._fsm.handle('abandon', message, callback);
   }
 
-  private _removeListeners(): void {
-    this._linkObject.removeListener('detached', this._detachHandler);
-    this._linkObject.removeListener('message', this._messageHandler);
-    this._linkObject.removeListener('errorReceived', this._errorHandler);
+  private _findDeliveryRecord(msg: AmqpMessage): any {
+    for (let element = 0; element < this._unDisposedDeliveries.length; element++) {
+      if (this._unDisposedDeliveries[element].msg === msg) {
+        let delivery = this._unDisposedDeliveries[element].delivery;
+        this._unDisposedDeliveries.splice(element, 1);
+        return delivery;
+      }
+    }
+    return undefined;
   }
-
   private _safeCallback(callback: (err?: Error, result?: any) => void, error?: Error | null, result?: any): void {
     if (callback) {
       process.nextTick(() => callback(error, result));

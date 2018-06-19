@@ -39,31 +39,31 @@ senderLink.send(new AmqpMessage(''), linkAddress, (err) => {
 
 ### attach(callback: (err?: Error) => void): void
 
-**SRS_NODE_AMQP_SENDER_LINK_16_004: [** The `attach` method shall use the stored instance of the `amqp10.AmqpClient` object to attach a new link object with the `linkAddress` and `linkOptions` provided when creating the `SenderLink` instance. **]**
+**SRS_NODE_AMQP_SENDER_LINK_16_004: [** The `attach` method shall use the stored instance of the `rhea` session object to attach a new link object with the combined `linkAddress` and `linkOptions` provided when creating the `SenderLink` instance. **]**
 
 **SRS_NODE_AMQP_SENDER_LINK_16_022: [** The `attach` method shall call the `callback` if the link was successfully attached. **]**
 
-**SRS_NODE_AMQP_SENDER_LINK_16_006: [** The `SenderLink` object should subscribe to the `detached` event of the newly created `amqp10` link object. **]**
+**SRS_NODE_AMQP_SENDER_LINK_16_006: [** The `SenderLink` object should subscribe to the `sender_close` event of the newly created `rhea` link object. **]**
 
-**SRS_NODE_AMQP_SENDER_LINK_16_007: [** The `SenderLink` object should subscribe to the `errorReceived` event of the newly created `amqp10` link object. **]**
+**SRS_NODE_AMQP_SENDER_LINK_16_007: [** The `SenderLink` object should subscribe to the `error` event of the newly created `rhea` link object. **]**
 
-**SRS_NODE_AMQP_SENDER_LINK_16_008: [** If the `amqp10.AmqpClient` fails to create the link the `callback` function shall be called with this error object. **]**
+**SRS_NODE_AMQP_SENDER_LINK_16_008: [** If the `rhea` session fails to create the link the `callback` function shall be called with this error object. **]**
 
 ### detach(callback?: (err?: Error) => void): void
 
-**SRS_NODE_AMQP_SENDER_LINK_16_009: [** The `detach` method shall detach the link created by the `amqp10.AmqpClient` underlying object. **]**
+**SRS_NODE_AMQP_SENDER_LINK_16_009: [** The `detach` method shall detach the link created by `rhea`. **]**
 
 **SRS_NODE_AMQP_SENDER_LINK_16_023: [** The `detach` method shall call the `callback` with the original `Error` that caused the detach whether it succeeds or fails to cleanly detach the link. **]**
 
 ### forceDetach()
 
-**SRS_NODE_AMQP_SENDER_LINK_16_025: [** The `forceDetach` method shall call the `forceDetach` method on the underlying `amqp10` link object. **]**
+**SRS_NODE_AMQP_SENDER_LINK_16_025: [** The `forceDetach` method shall call the `remove` method on the underlying `rhea` link object. **]**
 
 **SRS_NODE_AMQP_SENDER_LINK_16_026: [** The `forceDetach` method shall return immediately if the link is already detached.  **]**
 
 ### send(message: AmqpMessage, callback: (err?: Error, result?: results.MessageEnqueued) => void): void
 
-**SRS_NODE_AMQP_SENDER_LINK_16_010: [** The `send` method shall use the link created by the underlying `amqp10.AmqpClient` to send the specified `message` to the IoT hub. **]**
+**SRS_NODE_AMQP_SENDER_LINK_16_010: [** The `send` method shall use the link created by the underlying `rhea` to send the specified `message` to the IoT hub. **]**
 
 **SRS_NODE_AMQP_SENDER_LINK_16_011: [** If the state machine is not in the `attached` state, the `SenderLink` object shall attach the link first and then send the message. **]**
 
@@ -80,6 +80,8 @@ senderLink.send(new AmqpMessage(''), linkAddress, (err) => {
 **SRS_NODE_AMQP_SENDER_LINK_16_021: [** If the link fails to attach and there are messages in the queue, the callback for each message shall be called with the error that caused the detach in the first place. **]**
 
 ### Events
+
+**SRS_NODE_AMQP_SENDER_LINK_16_015: [** If a `sender_close` or `error` event is emitted by the `rhea` link object, the `SenderLink` object shall return to the `detached` state. **]**
 
 **SRS_NODE_AMQP_SENDER_LINK_16_016: [** If an error happened that caused the link to be detached, the sender link shall call emit an `error` event with that error. **]**
 

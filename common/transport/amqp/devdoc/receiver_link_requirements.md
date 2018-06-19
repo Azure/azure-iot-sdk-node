@@ -42,25 +42,25 @@ receiverLink.on('message', (msg) => {
 
 ### attach(callback: (err?: Error) => void): void
 
-**SRS_NODE_AMQP_RECEIVER_LINK_16_004: [** The `attach` method shall use the stored instance of the `amqp10.AmqpClient` object to attach a new link object with the `linkAddress` and `linkOptions` provided when creating the `ReceiverLink` instance. **]**
+**SRS_NODE_AMQP_RECEIVER_LINK_16_004: [** The `attach` method shall use the stored instance of the `rhea` session object to attach a new link object with the combined `linkAddress` and `linkOptions` provided when creating the `ReceiverLink` instance. **]**
 
-**SRS_NODE_AMQP_RECEIVER_LINK_16_006: [** The `ReceiverLink` object should subscribe to the `detached` event of the newly created `amqp10` link object. **]**
+**SRS_NODE_AMQP_RECEIVER_LINK_16_006: [** The `ReceiverLink` object should subscribe to the `receiver_close` event of the newly created `rhea` link object. **]**
 
-**SRS_NODE_AMQP_RECEIVER_LINK_16_007: [** The `ReceiverLink` object should subscribe to the `errorReceived` event of the newly created `amqp10` link object. **]**
+**SRS_NODE_AMQP_RECEIVER_LINK_16_007: [** The `ReceiverLink` object should subscribe to the `error` event of the newly created `rhea` link object. **]**
 
-**SRS_NODE_AMQP_RECEIVER_LINK_16_008: [** If the `amqp10.AmqpClient` fails to create the link the `callback` function shall be called with this error object. **]**
+**SRS_NODE_AMQP_RECEIVER_LINK_16_008: [** If the `rhea` session fails to create the link the `callback` function shall be called with this error object. **]**
 
 **SRS_NODE_AMQP_RECEIVER_LINK_16_020: [** The `attach` method shall call the `callback` if the link was successfully attached **]**
 
 ### detach(callback?: (err?: Error) => void): void
 
-**SRS_NODE_AMQP_RECEIVER_LINK_16_009: [** The `detach` method shall detach the link created by the `amqp10.AmqpClient` underlying object. **]**
+**SRS_NODE_AMQP_RECEIVER_LINK_16_009: [** The `detach` method shall detach the link created by `rhea` object. **]**
 
 **SRS_NODE_AMQP_RECEIVER_LINK_16_025: [** The `detach` method shall call the `callback` with an `Error` that caused the detach whether it succeeds or fails to cleanly detach the link. **]**
 
 ### forceDetach()
 
-**SRS_NODE_AMQP_RECEIVER_LINK_16_027: [** The `forceDetach` method shall call the `forceDetach` method on the underlying `amqp10` link object. **]**
+**SRS_NODE_AMQP_RECEIVER_LINK_16_027: [** The `forceDetach` method shall call the `remove` method on the underlying `rhea` link object. **]**
 
 **SRS_NODE_AMQP_RECEIVER_LINK_16_028: [** The `forceDetach` method shall return immediately if the link is already detached. **]**
 
@@ -68,7 +68,7 @@ receiverLink.on('message', (msg) => {
 
 **SRS_NODE_AMQP_RECEIVER_LINK_16_021: [** The `accept` method shall throw if the `message` argument is falsy. **]**
 
-**SRS_NODE_AMQP_RECEIVER_LINK_16_013: [** The `accept` method shall use the link created by the underlying `amqp10.AmqpClient` to settle the specified `message` with IoT hub by accepting it. **]**
+**SRS_NODE_AMQP_RECEIVER_LINK_16_013: [** The `accept` method shall use the link created by the underlying `rhea` to settle the specified `message` with IoT hub by accepting it. **]**
 
 **SRS_NODE_AMQP_RECEIVER_LINK_16_022: [** The `accept` method shall work whether a `callback` is specified or not, and call the callback with a `result.MessageCompleted` object if a callback is specified. **]**
 
@@ -82,7 +82,7 @@ receiverLink.on('message', (msg) => {
 
 **SRS_NODE_AMQP_RECEIVER_LINK_16_021: [** The `reject` method shall throw if the `message` argument is falsy. **]**
 
-**SRS_NODE_AMQP_RECEIVER_LINK_16_016: [** The `reject` method shall use the link created by the underlying `amqp10.AmqpClient` to settle the specified `message` with IoT hub by rejecting it. **]**
+**SRS_NODE_AMQP_RECEIVER_LINK_16_016: [** The `reject` method shall use the link created by the underlying `rhea` to settle the specified `message` with IoT hub by rejecting it. **]**
 
 **SRS_NODE_AMQP_RECEIVER_LINK_16_023: [** The `reject` method shall work whether a `callback` is specified or not, and call the callback with a `result.MessageRejected` object if a callback is specified. **]**
 
@@ -92,7 +92,7 @@ receiverLink.on('message', (msg) => {
 
 **SRS_NODE_AMQP_RECEIVER_LINK_16_021: [** The `abandon` method shall throw if the `message` argument is falsy. **]**
 
-**SRS_NODE_AMQP_RECEIVER_LINK_16_018: [** The `abandon` method shall use the link created by the underlying `amqp10.AmqpClient` to settle the specified `message` with IoT hub by abandoning it. **]**
+**SRS_NODE_AMQP_RECEIVER_LINK_16_018: [** The `abandon` method shall use the link created by the underlying `rhea` to settle the specified `message` with IoT hub by abandoning it. **]**
 
 **SRS_NODE_AMQP_RECEIVER_LINK_16_024: [** The `abandon` method shall work whether a `callback` is specified or not, and call the callback with a `result.MessageAbandoned` object if a callback is specified. **]**
 
@@ -100,7 +100,7 @@ receiverLink.on('message', (msg) => {
 
 ### Events
 
-**SRS_NODE_AMQP_RECEIVER_LINK_16_011: [** If a `detached` or `errorReceived` event is emitted by the `amqp10` link object, the `ReceiverLink` object shall forward that error to the client. **]**
+**SRS_NODE_AMQP_RECEIVER_LINK_16_011: [** If a `receiver_closed` or `error` event is emitted by the `rhea` link object, the `ReceiverLink` object shall forward that error to the client. **]**
 
-**SRS_NODE_AMQP_RECEIVER_LINK_16_012: [** If a `message` event is emitted by the `amqp10` link object, the `ReceiverLink` object shall emit a `message` event with the same content. **]**
+**SRS_NODE_AMQP_RECEIVER_LINK_16_012: [** If a `message` event is emitted by the `rhea` link object, the `ReceiverLink` object shall emit a `message` event with the same content. **]**
 
