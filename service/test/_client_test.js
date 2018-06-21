@@ -201,39 +201,15 @@ describe('Client', function () {
     });
   });
 
-  describe('#invokeModuleMethod', function() {
-    /*Tests_SRS_NODE_IOTHUB_CLIENT_18_001: [The `invokeModuleMethod` shall throw a `ReferenceError` if `deviceId` or `methodId` is falsy. ]*/
-    [undefined, null, ''].forEach(function(badArg) {
-      it('throws if deviceId is ' + badArg, function() {
-        var client = new Client({}, {});
-        assert.throws(function() {
-          client.invokeModuleMethod(badArg, 'moduleId', { }, 42, function() {});
-        }, ReferenceError);
-      });
-    });
-
-    /*Tests_SRS_NODE_IOTHUB_CLIENT_18_001: [The `invokeModuleMethod` shall throw a `ReferenceError` if `deviceId` or `methodId` is falsy. ]*/
-    [undefined, null, ''].forEach(function(badArg) {
-      it('throws if moduleId is ' + badArg, function() {
-        var client = new Client({}, {});
-        assert.throws(function() {
-          client.invokeModuleMethod('deviceId', badArg, {}, 42, function() {});
-        }, ReferenceError);
-      });
-    });
-  });
-
   [
-    { name: 'invokeDeviceMethod', functionUnderTest: function(client, param, callback) { client.invokeDeviceMethod('deviceId', param, callback); } },
-    { name: 'invokeModuleMethod', functionUnderTest: function(client, param, callback) { client.invokeModuleMethod('deviceId', 'moduleId', param, callback); } },
+    { functionUnderTest: function(client, param, callback) { client.invokeDeviceMethod('deviceId', param, callback); } },
+    { functionUnderTest: function(client, param, callback) { client.invokeDeviceMethod('deviceId', 'moduleId', param, callback); } },
   ].forEach(function(testConfig) {
-    describe('#' + testConfig.name, function() {
+    describe('#invokeDeviceMethod', function() {
       /*Tests_SRS_NODE_IOTHUB_CLIENT_16_009: [The `invokeDeviceMethod` method shall initialize a new instance of `DeviceMethod` with the `methodName` and `timeout` values passed in the arguments.]*/
       /*Tests_SRS_NODE_IOTHUB_CLIENT_16_010: [The `invokeDeviceMethod` method shall use the newly created instance of `DeviceMethod` to invoke the method with the `payload` argument on the device specified with the `deviceid` argument .]*/
       /*Tests_SRS_NODE_IOTHUB_CLIENT_16_013: [The `invokeDeviceMethod` method shall call the `done` callback with a `null` first argument, the result of the method execution in the second argument, and the transport-specific response object as a third argument.]*/
-      /*Tests_SRS_NODE_IOTHUB_CLIENT_18_002: [The `invokeModuleMethod` method shall initialize a new `DeviceMethod` instance with `methodParams` values passed in the arguments. ]*/
-      /*Tests_SRS_NODE_IOTHUB_CLIENT_18_003: [The `invokeModuleMethod` method shall call `invokeOnModule` on the new `DeviceMethod` instance. ]*/
-      /*Tests_SRS_NODE_IOTHUB_CLIENT_18_005: [The `invokeModuleMethod` method shall call the `done` callback with a `null` first argument, the result of the method execution in the second argument, and the transport-specific response object as a third argument. ]*/
+      /*Tests_SRS_NODE_IOTHUB_CLIENT_18_003: [If `moduleIdOrMethodParams` is a string the `invokeDeviceMethod` method shall call `invokeOnModule` on the new `DeviceMethod` instance. ]*/
       it('uses the DeviceMethod client to invoke the method', function(testCallback) {
         var fakeMethodParams = {
           methodName: 'method',
@@ -259,7 +235,6 @@ describe('Client', function () {
       });
 
       /*Tests_SRS_NODE_IOTHUB_CLIENT_16_012: [The `invokeDeviceMethod` method shall call the `done` callback with a standard javascript `Error` object if the request failed.]*/
-      /*Tests_SRS_NODE_IOTHUB_CLIENT_18_004: [The `invokeModuleMethod` method shall call the `done` callback with a standard javascript `Error` object if the request failed. ]*/
       it('works when payload and timeout are omitted', function(testCallback) {
         var fakeError = new Error('fake error');
         var fakeRestClientFails = {

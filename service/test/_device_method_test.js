@@ -112,7 +112,7 @@ describe('DeviceMethod', function() {
       expectedPath: '/twins/' + fakeDeviceId + '/methods' + endpoint.versionQueryString()
     },
     {
-      name: 'invokeModuleMethod',
+      name: 'invokeDeviceMethod',
       functionUnderTest: function(method, callback) { method.invokeOnModule(fakeDeviceId, fakeModuleId, callback); },
       expectedPath: '/twins/' + fakeDeviceId + '/modules/' + fakeModuleId + '/methods' + endpoint.versionQueryString()
     },

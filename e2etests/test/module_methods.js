@@ -69,8 +69,8 @@ describe('module methods', function() {
         debug('waiting for links before invoking method');
         setTimeout(function() {
           debug('invoking method');
-          testModule.serviceClient.invokeModuleMethod(testModule.deviceId, testModule.moduleId, methodParams, function(err, response) {
-            debug('invokeModuleMethod returned ' + (err ? err : 'success'));
+          testModule.serviceClient.invokeDeviceMethod(testModule.deviceId, testModule.moduleId, methodParams, function(err, response) {
+            debug('invokeDeviceMethod returned ' + (err ? err : 'success'));
             if (err) {
               done(err);
             } else {

@@ -147,8 +147,15 @@ The `close` method closes the connection opened by open.
 
 **SRS_NODE_IOTHUB_CLIENT_16_005: [** The `close` method should not throw if the `done` callback is not specified. **]**
 
-### invokeDeviceMethod(deviceId, methodParams, done)
-The `invokeDeviceMethod` method calls a device method on a specific device and calls back with the result of this method's execution.
+### invokeDeviceMethod(deviceId: string, moduleIdOrMethodParams: string | DeviceMethodParams, methodParamsOrDone?: DeviceMethodParams | Callback<any>, done?: Callback<any>): void;
+The `invokeDeviceMethod` method calls a device method on a specific device or module and calls back with the result of this method's execution.
+
+#### Valid prototypes:
+```typescript
+invokeDeviceMethod(deviceId: string, methodParams: DeviceMethodParams, done?: Callback<any>): void;
+invokeDeviceMethod(deviceId: string, moduleId: string, methodParams: DeviceMethodParams, done?: Callback<any>): void;
+invokeDeviceMethod(deviceId: string, moduleIdOrMethodParams: string | DeviceMethodParams, methodParamsOrDone?: DeviceMethodParams | Callback<any>, done?: Callback<any>): void;
+```
 
 **SRS_NODE_IOTHUB_CLIENT_16_014: [** The `invokeDeviceMethod` method shall throw a `ReferenceError` if `deviceId` is `null`, `undefined` or an empty string. **]**
 
@@ -166,20 +173,7 @@ The `invokeDeviceMethod` method calls a device method on a specific device and c
 
 **SRS_NODE_IOTHUB_CLIENT_16_026: [** The `invokeDeviceMethod` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to send the method request. **]**
 
-### invokeModuleMethod(deviceId: string, moduleId: string, methodParams: DeviceMethodParams, done?: Callback<any>): void;
-
-**SRS_NODE_IOTHUB_CLIENT_18_001: [** The `invokeModuleMethod` shall throw a `ReferenceError` if `deviceId` or `moduleId`   is falsy. **]**
-
-**SRS_NODE_IOTHUB_CLIENT_18_002: [** The `invokeModuleMethod` method shall initialize a new `DeviceMethod` instance with `methodParams` values passed in the arguments. **]**
-
-**SRS_NODE_IOTHUB_CLIENT_18_003: [** The `invokeModuleMethod` method shall call `invokeOnModule` on the new `DeviceMethod` instance. **]**
-
-**SRS_NODE_IOTHUB_CLIENT_18_004: [** The `invokeModuleMethod` method shall call the `done` callback with a standard javascript `Error` object if the request failed. **]**
-
-**SRS_NODE_IOTHUB_CLIENT_18_005: [** The `invokeModuleMethod` method shall call the `done` callback with a `null` first argument, the result of the method execution in the second argument, and the transport-specific response object as a third argument. **]**
-
-**SRS_NODE_IOTHUB_CLIENT_18_006: [** The `invokeModuleMethod` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to send the method request. **]**
-
+**SRS_NODE_IOTHUB_CLIENT_18_003: [** If `moduleIdOrMethodParams` is a string the `invokeDeviceMethod` method shall call `invokeOnModule` on the new `DeviceMethod` instance. **]**
 
 ### setRetryPolicy(policy)
 

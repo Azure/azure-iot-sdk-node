@@ -17,7 +17,7 @@ var methodParams = {
 
 var client = Client.fromConnectionString(connectionString);
 
-client.invokeModuleMethod(deviceId, moduleId, methodParams, function (err, result) {
+client.invokeDeviceMethod(deviceId, moduleId, methodParams, function (err, result) {
   if (err) {
     console.error('Failed to invoke method \'' + methodParams.methodName + '\': ' + err.message);
   } else {
