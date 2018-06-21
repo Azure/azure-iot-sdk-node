@@ -124,3 +124,52 @@ invokeMethod(deviceId: string, moduleId: string, methodParams: DirectMethodParam
 **SRS_NODE_MODULE_CLIENT_18_017: [** The client shall emit an `error` if connecting the transport fails while subscribing to `inputMessage` events. **]**
 
 **SRS_NODE_MODULE_CLIENT_16_097: [** The client shall emit an `error` if connecting the transport fails while unsubscribing to `inputMessage` events. **]**
+
+
+#### onMethod(methodName, callback)
+
+The `onMethod` method's `callback` parameter is a function that is expected to conform to the signature of the interface `DeviceMethodEventHandler` as defined below (specified here using TypeScript syntax for expository purposes):
+
+```
+interface StringMap {
+  [key: string]: string;
+}
+
+interface DeviceMethodRequest {
+  methodName: string;
+  properties: StringMap;
+  body: Buffer;
+}
+
+interface DeviceMethodResponse {
+  properties: StringMap;
+  write(data: Buffer | string): void;
+  end(status: number, done?: (err: any): void);
+}
+
+interface DeviceMethodEventHandler {
+  (request: DeviceMethodRequest, response: DeviceMethodResponse): void;
+}
+```
+
+**SRS_NODE_MODULE_CLIENT_13_020: [** `onMethod` shall throw a `ReferenceError` if `methodName` is falsy. **]**
+
+**SRS_NODE_MODULE_CLIENT_13_024: [** `onMethod` shall throw a `TypeError` if `methodName` is not a string. **]**
+
+**SRS_NODE_MODULE_CLIENT_13_022: [** `onMethod` shall throw a `ReferenceError` if `callback` is falsy. **]**
+
+**SRS_NODE_MODULE_CLIENT_13_025: [** `onMethod` shall throw a `TypeError` if `callback` is not a `Function`. **]**
+
+**SRS_NODE_MODULE_CLIENT_13_001: [** The `onMethod` method shall cause the `callback` function to be invoked when a cloud-to-device *method* invocation signal is received from the IoT Hub service. **]**
+
+**SRS_NODE_MODULE_CLIENT_13_003: [** The client shall start listening for method calls from the service whenever there is a listener subscribed for a method callback. **]**
+
+**SRS_NODE_MODULE_CLIENT_13_023: [** `onMethod` shall throw an `Error` if a listener is already subscribed for a given method call. **]**
+
+**SRS_NODE_MODULE_CLIENT_13_021: [** `onMethod` shall throw a `NotImplementedErrorError` if the underlying transport does not support device methods. **]**
+
+# on('disconnect') transport event
+
+**SRS_NODE_MODULE_CLIENT_16_098: [** If the transport emits a `disconnect` event while the client is subscribed to direct methods the retry policy shall be used to reconnect and re-enable the feature using the transport `enableMethods` method. **]**
+
+**SRS_NODE_MODULE_CLIENT_16_100: [** If the retry policy fails to reestablish the direct methods functionality a `disconnect` event shall be emitted with a `results.Disconnected` object. **]**

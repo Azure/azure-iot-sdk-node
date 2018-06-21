@@ -1,10 +1,10 @@
 'use strict';
 
 
-var Client = require('azure-iot-device').ModuleClient;
+var ModuleClient = require('azure-iot-device').ModuleClient;
 var Mqtt = require('azure-iot-device-mqtt').Mqtt;
 
-Client.fromEnvironment(Mqtt, (err, client) => {
+ModuleClient.fromEnvironment(Mqtt, (err, client) => {
     if (err) {
         console.error(err.toString());
         process.exit(-1);

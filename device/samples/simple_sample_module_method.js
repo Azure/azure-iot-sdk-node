@@ -4,12 +4,12 @@
 'use strict';
 
 var Protocol = require('azure-iot-device-mqtt').Mqtt;
-var Client = require('azure-iot-device').Client;
+var ModuleClient = require('azure-iot-device').ModuleClient;
 var fs = require('fs');
 
 var connectionString = process.env.EdgeHubConnectionString;
 
-var client = Client.fromConnectionString(connectionString, Protocol);
+var client = ModuleClient.fromConnectionString(connectionString, Protocol);
 console.log('got client');
 
 client.on('error', function (err) {
@@ -29,7 +29,7 @@ client.setOptions({
       } else {
         console.log('Client connected');
 
-        client.onDeviceMethod('doSomethingInteresting', function(request, response) {
+        client.onMethod('doSomethingInteresting', function(request, response) {
           console.log('doSomethingInteresting called');
 
           if(request.payload) {

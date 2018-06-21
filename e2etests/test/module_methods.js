@@ -52,7 +52,7 @@ describe('module methods', function() {
         };
 
         debug('adding method handler for ' + methodName);
-        testModule.deviceClient.onDeviceMethod(methodName, function(request, response) {
+        testModule.deviceClient.onMethod(methodName, function(request, response) {
           debug('received method call for ' + methodName);
           debug('payload: ' + request.payload);
           assert.strictEqual(request.methodName, methodName);

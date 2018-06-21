@@ -131,48 +131,6 @@ The `sendEventBatch` method sends a list of event messages to the IoT Hub as the
 
 **SRS_NODE_INTERNAL_CLIENT_16_095: [** The `getTwin` method shall call the `get()` method on the `Twin` object currently in use and pass it its `done` argument for a callback. **]**
 
-#### onDeviceMethod(methodName, callback)
-
-The `onDeviceMethod` method's `callback` parameter is a function that is expected to conform to the signature of the interface `DeviceMethodEventHandler` as defined below (specified here using TypeScript syntax for expository purposes):
-
-```
-interface StringMap {
-  [key: string]: string;
-}
-
-interface DeviceMethodRequest {
-  methodName: string;
-  properties: StringMap;
-  body: Buffer;
-}
-
-interface DeviceMethodResponse {
-  properties: StringMap;
-  write(data: Buffer | string): void;
-  end(status: number, done?: (err: any): void);
-}
-
-interface DeviceMethodEventHandler {
-  (request: DeviceMethodRequest, response: DeviceMethodResponse): void;
-}
-```
-
-**SRS_NODE_INTERNAL_CLIENT_13_020: [** `onDeviceMethod` shall throw a `ReferenceError` if `methodName` is falsy. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_13_024: [** `onDeviceMethod` shall throw a `TypeError` if `methodName` is not a string. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_13_022: [** `onDeviceMethod` shall throw a `ReferenceError` if `callback` is falsy. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_13_025: [** `onDeviceMethod` shall throw a `TypeError` if `callback` is not a `Function`. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_13_001: [** The `onDeviceMethod` method shall cause the `callback` function to be invoked when a cloud-to-device *method* invocation signal is received from the IoT Hub service. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_13_003: [** The client shall start listening for method calls from the service whenever there is a listener subscribed for a method callback. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_13_023: [** `onDeviceMethod` shall throw an `Error` if a listener is already subscribed for a given method call. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_13_021: [** `onDeviceMethod` shall throw a `NotImplementedErrorError` if the underlying transport does not support device methods. **]**
-
 #### setRetryPolicy(policy)
 
 **SRS_NODE_INTERNAL_CLIENT_16_083: [** The `setRetryPolicy` method shall throw a `ReferenceError` if the policy object is falsy. **]**
@@ -192,10 +150,6 @@ interface DeviceMethodEventHandler {
 #### disconnect
 
 **SRS_NODE_INTERNAL_CLIENT_16_019: [** The `disconnect` event shall be emitted when the client is disconnected from the server. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_098: [** If the transport emits a `disconnect` event while the client is subscribed to direct methods the retry policy shall be used to reconnect and re-enable the feature using the transport `enableMethods` method. **]**
-
-**SRS_NODE_INTERNAL_CLIENT_16_100: [** If the retry policy fails to reestablish the direct methods functionality a `disconnect` event shall be emitted with a `results.Disconnected` object. **]**
 
 **SRS_NODE_INTERNAL_CLIENT_16_099: [** If the transport emits a `disconnect` event while the client is subscribed to desired properties updates the retry policy shall be used to reconnect and re-enable the feature using the transport `enableTwinDesiredPropertiesUpdates` method. **]**
 

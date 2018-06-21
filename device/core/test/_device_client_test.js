@@ -4,6 +4,7 @@
 'use strict';
 
 var assert = require('chai').assert;
+var util = require('util');
 var sinon = require('sinon');
 var stream = require('stream');
 var EventEmitter = require('events').EventEmitter;
@@ -232,6 +233,8 @@ describe('Device Client', function () {
 
       fakeTransport = new EventEmitter();
       fakeTransport.enableC2D = sinon.stub().callsArg(0);
+      fakeTransport.enableMethods = sinon.stub().callsArg(0);
+      fakeTransport.onDeviceMethod = sinon.stub();
     });
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_097: [If the transport emits a `disconnect` event while the client is subscribed to c2d messages updates the retry policy shall be used to reconnect and re-enable the feature using the transport `enableC2D` method.]*/
@@ -261,10 +264,38 @@ describe('Device Client', function () {
       fakeTransport.enableC2D = sinon.stub().callsArgWith(0, fakeError);
       fakeTransport.emit('disconnect', new errors.TimeoutError()); // timeouts can be retried
     });
+
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_099: [If the transport emits a `disconnect` event while the client is subscribed to direct methods the retry policy shall be used to reconnect and re-enable the feature using the transport `enableTwinDesiredPropertiesUpdates` method.]*/
+      it('reenables device methods after being disconnected if methods were enabled', function () {
+        var client = new Client(fakeTransport);
+        client.setRetryPolicy(fakeRetryPolicy);
+        client.onDeviceMethod('method', function () { });
+        assert.isTrue(fakeTransport.enableMethods.calledOnce);
+        fakeTransport.emit('disconnect', new errors.TimeoutError()); // timeouts can be retried
+        assert.isTrue(fakeTransport.enableMethods.calledTwice);
+      });
+
+      /*Tests_SRS_NODE_DEVICE_CLIENT_16_100: [If the retry policy fails to reestablish the direct methods functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
+      it('emits a disconnect event if reenabling methods fails', function (testCallback) {
+        var fakeError = new Error('fake');
+        var client = new Client(fakeTransport);
+        client.on('disconnect', function (err) {
+          assert.instanceOf(err, results.Disconnected);
+          assert.strictEqual(err.transportObj, fakeError);
+          testCallback();
+        });
+
+        client.setRetryPolicy(fakeRetryPolicy);
+        client._maxOperationTimeout = 1;
+        client.onDeviceMethod('method', function () { });
+        assert.isTrue(fakeTransport.enableMethods.calledOnce);
+        fakeTransport.enableMethods = sinon.stub().callsArgWith(0, fakeError);
+        fakeTransport.emit('disconnect', new errors.TimeoutError()); // timeouts can be retried
+      });
   });
 
   describe('#setOptions', function () {
-    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
     [null, undefined].forEach(function (options) {
       it('throws is options is ' + options, function () {
         var client = new Client(new EventEmitter());
@@ -274,13 +305,13 @@ describe('Device Client', function () {
       });
     });
 
-    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_043: [The `done` callback shall be invoked no parameters when it has successfully finished setting the client and/or transport options.]*/
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_043: [The `done` callback shall be invoked no parameters when it has successfully finished setting the client and/or transport options.]*/
     it('calls the done callback with no parameters when it has successfully configured the transport', function (done) {
       var client = new Client(new FakeTransport());
       client.setOptions({}, done);
     });
 
-    /*Tests_SRS_NODE_INTERNAL_CLIENT_16_044: [The `done` callback shall be invoked with a standard javascript `Error` object and no result object if the client could not be configured as requested.]*/
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_044: [The `done` callback shall be invoked with a standard javascript `Error` object and no result object if the client could not be configured as requested.]*/
     it('calls the done callback with an error when it failed to configured the transport', function (done) {
       var failingTransport = new FakeTransport();
       sinon.stub(failingTransport, 'setOptions').callsFake(function (options, done) {
@@ -294,4 +325,153 @@ describe('Device Client', function () {
       });
     });
   });
+
+  describe('#onDeviceMethod', function () {
+    var FakeMethodTransport = function (config) {
+      EventEmitter.call(this);
+      this.config = config;
+
+      this.connect = function (callback) {
+        callback(null, new results.Connected());
+      }
+
+      this.disconnect = function (callback) {
+        callback(null, new results.Disconnected());
+      }
+
+      // causes a mock method event to be raised
+      this.emitMethodCall = function (methodName) {
+        this.emit('method_' + methodName, {
+          methods: { methodName: methodName },
+          body: JSON.stringify(''),
+          requestId: '42'
+        });
+      };
+
+      this.onDeviceMethod = function (methodName, callback) {
+        this.on('method_' + methodName, callback);
+      };
+
+      this.sendMethodResponse = function (response, done) {
+        response = response;
+        if (!!done && typeof (done) === 'function') {
+          done(null);
+        }
+      };
+
+      this.enableMethods = function (callback) {
+        callback();
+      };
+
+      this.disableMethods = function (callback) {
+        callback();
+      };
+    };
+    util.inherits(FakeMethodTransport, EventEmitter);
+
+    // Tests_SRS_NODE_DEVICE_CLIENT_13_020: [ onDeviceMethod shall throw a ReferenceError if methodName is falsy. ]
+    [undefined, null].forEach(function (methodName) {
+      it('throws ReferenceError when methodName is "' + methodName + '"', function () {
+        var transport = new FakeMethodTransport();
+        var client = new Client(transport);
+        assert.throws(function () {
+          client.onDeviceMethod(methodName, function () { });
+        }, ReferenceError);
+      });
+    });
+
+    // Tests_SRS_NODE_DEVICE_CLIENT_13_024: [ onDeviceMethod shall throw a TypeError if methodName is not a string. ]
+    [new Date(), 42].forEach(function (methodName) {
+      it('throws TypeError when methodName is "' + methodName + '"', function () {
+        var transport = new FakeMethodTransport();
+        var client = new Client(transport);
+        assert.throws(function () {
+          client.onDeviceMethod(methodName, function () { });
+        }, TypeError);
+      });
+    });
+
+    // Tests_SRS_NODE_DEVICE_CLIENT_13_022: [ onDeviceMethod shall throw a ReferenceError if callback is falsy. ]
+    [undefined, null].forEach(function (callback) {
+      it('throws ReferenceError when callback is "' + callback + '"', function () {
+        var transport = new FakeMethodTransport();
+        var client = new Client(transport);
+        assert.throws(function () {
+          client.onDeviceMethod('doSomeTests', callback);
+        }, ReferenceError);
+      });
+    });
+
+    // Tests_SRS_NODE_DEVICE_CLIENT_13_025: [ onDeviceMethod shall throw a TypeError if callback is not a Function. ]
+    ['not_a_function', 42].forEach(function (callback) {
+      it('throws ReferenceError when callback is "' + callback + '"', function () {
+        var transport = new FakeMethodTransport();
+        var client = new Client(transport);
+        assert.throws(function () {
+          client.onDeviceMethod('doSomeTests', callback);
+        }, TypeError);
+      });
+    });
+
+    // Tests_SRS_NODE_DEVICE_CLIENT_13_001: [ The onDeviceMethod method shall cause the callback function to be invoked when a cloud-to-device method invocation signal is received from the IoT Hub service. ]
+    it('calls callback when C2D method call arrives', function (done) {
+      // setup
+      var transport = new FakeMethodTransport();
+      var client = new Client(transport);
+      client.open(function () {
+        client.onDeviceMethod('firstMethod', function () { }); // This will connect the method receiver
+        client.onDeviceMethod('reboot', function () {
+          done();
+        });
+      });
+
+      // test
+      transport.emitMethodCall('reboot');
+    });
+
+    // Tests_SRS_NODE_DEVICE_CLIENT_13_003: [ The client shall start listening for method calls from the service whenever there is a listener subscribed for a method callback. ]
+    it('registers callback on transport when a method event is subscribed to', function () {
+      // setup
+      var transport = new FakeMethodTransport();
+      var client = new Client(transport);
+      var callback = sinon.spy();
+      transport.on('newListener', callback);
+
+      // test
+      client.onDeviceMethod('reboot', function () { });
+
+      // assert
+      assert.isTrue(callback.withArgs('method_reboot').calledOnce);
+
+      // cleanup
+      transport.removeListener('newListener', callback);
+    });
+
+    // Tests_SRS_NODE_DEVICE_CLIENT_13_023: [ onDeviceMethod shall throw an Error if a listener is already subscribed for a given method call. ]
+    it('throws if a listener is already subscribed for a method call', function () {
+      // setup
+      var transport = new FakeMethodTransport();
+      var client = new Client(transport);
+      client.onDeviceMethod('reboot', function () { });
+
+      // test
+      // assert
+      assert.throws(function () {
+        client.onDeviceMethod('reboot', function () { });
+      });
+    });
+
+    it('emits an error if the transport fails to enable the methods feature', function (testCallback) {
+      var transport = new FakeMethodTransport();
+      var fakeError = new Error('fake');
+      sinon.stub(transport, 'enableMethods').callsFake(function (callback) { callback(fakeError); });
+      var client = new Client(transport);
+      client.on('error', function (err) {
+        assert.strictEqual(err, fakeError);
+        testCallback();
+      })
+      client.onDeviceMethod('firstMethod', function () { }); // This will connect the method receiver
+    });
+  });
+
 });

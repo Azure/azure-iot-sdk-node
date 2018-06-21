@@ -13,7 +13,7 @@ import { errors } from 'azure-iot-common';
 import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
 import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
 import { IotEdgeAuthenticationProvider } from './iotedge_authentication_provider';
-import { MethodParams, MethodCallback, MethodClient } from './device_method';
+import { MethodParams, MethodCallback, MethodClient, DeviceMethodRequest, DeviceMethodResponse } from './device_method';
 import { DeviceClientOptions } from './interfaces';
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
@@ -130,11 +130,12 @@ export class ModuleClient extends InternalClient {
       safeCallback(callback, err, result);
     });
   }
-
   /**
-   * Closes the client and the associated transport connection and resources.
+   * Closes the transport connection and destroys the client resources.
    *
-   * @param closeCallback callback that shall be called with either an error or a `results.Disconnected` object when the transport has successfully closed its connection.
+   * *Note: After calling this method the ModuleClient object cannot be reused.*
+   *
+   * @param closeCallback Function to call once the transport is disconnected and the client closed.
    */
   close(closeCallback?: (err?: Error, result?: results.Disconnected) => void): void {
     this._transport.removeListener('disconnect', this._moduleDisconnectHandler);
@@ -179,6 +180,16 @@ export class ModuleClient extends InternalClient {
 
     /*Codes_SRS_NODE_MODULE_CLIENT_16_097: [`invokeMethod` shall call the `invokeMethod` API of the `MethodClient` API that was created for the `ModuleClient` instance.]*/
     this._methodClient.invokeMethod(deviceId, actualModuleId, actualMethodParams as MethodParams, actualCallback);
+  }
+
+  /**
+   * Registers a callback for a method named `methodName`.
+   *
+   * @param methodName Name of the method that will be handled by the callback
+   * @param callback   Function that shall be called whenever a method request for the method called `methodName` is received.
+   */
+  onMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
+    this._onDeviceMethod(methodName, callback);
   }
 
   /**

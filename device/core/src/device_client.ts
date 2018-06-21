@@ -13,6 +13,7 @@ import { BlobUploadClient } from './blob_upload';
 import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
 import { X509AuthenticationProvider } from './x509_authentication_provider';
 import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
+import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
   if (callback) callback(error, result);
@@ -90,9 +91,26 @@ export class Client extends InternalClient {
     this._transport.on('disconnect', this._deviceDisconnectHandler);
   }
 
+  /**
+   * Closes the transport connection and destroys the client resources.
+   *
+   * *Note: After calling this method the Client object cannot be reused.*
+   *
+   * @param closeCallback Function to call once the transport is disconnected and the client closed.
+   */
   close(closeCallback?: (err?: Error, result?: results.Disconnected) => void): void {
     this._transport.removeListener('disconnect', this._deviceDisconnectHandler);
     super.close(closeCallback);
+  }
+
+  /**
+   * Registers a callback for a method named `methodName`.
+   *
+   * @param methodName Name of the method that will be handled by the callback
+   * @param callback   Function that shall be called whenever a method request for the method called `methodName` is received.
+   */
+  onDeviceMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
+    this._onDeviceMethod(methodName, callback);
   }
 
   /**

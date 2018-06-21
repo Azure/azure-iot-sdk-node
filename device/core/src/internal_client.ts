@@ -114,20 +114,6 @@ export abstract class InternalClient extends EventEmitter {
     this._maxOperationTimeout = MAX_OPERATION_TIMEOUT;
   }
 
-  onDeviceMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
-    // validate input args
-    this._validateDeviceMethodInputs(methodName, callback);
-
-    this._methodCallbackMap[methodName] = callback;
-    this._addMethodCallback(methodName, callback);
-
-    this._enableMethods((err) => {
-      if (err) {
-        this.emit('error', err);
-      }
-    });
-  }
-
   /*Codes_SRS_NODE_INTERNAL_CLIENT_05_016: [When a Client method encounters an error in the transport, the callback function (indicated by the done argument) shall be invoked with the following arguments:
   err - the standard JavaScript Error object, with a response property that points to a transport-specific response object, and a responseBody property that contains the body of the transport response.]*/
   /*Codes_SRS_NODE_INTERNAL_CLIENT_05_017: [With the exception of receive, when a Client method completes successfully, the callback function (indicated by the done argument) shall be invoked with the following arguments:
@@ -298,6 +284,20 @@ export abstract class InternalClient extends EventEmitter {
     if (this._twin) {
       this._twin.setRetryPolicy(policy);
     }
+  }
+
+  protected _onDeviceMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
+    // validate input args
+    this._validateDeviceMethodInputs(methodName, callback);
+
+    this._methodCallbackMap[methodName] = callback;
+    this._addMethodCallback(methodName, callback);
+
+    this._enableMethods((err) => {
+      if (err) {
+        this.emit('error', err);
+      }
+    });
   }
 
   private _validateDeviceMethodInputs(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {

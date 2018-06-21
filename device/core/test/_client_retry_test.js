@@ -9,10 +9,8 @@ var sinon = require('sinon');
 
 var DeviceClient = require('../lib/device_client.js').Client;
 var ModuleClient = require('../lib/module_client.js').ModuleClient;
-var results = require('azure-iot-common').results;
 var Message = require('azure-iot-common').Message;
 var errors = require('azure-iot-common').errors;
-var ExponentialBackOffWithJitter = require('azure-iot-common').ExponentialBackOffWithJitter;
 
 describe('DeviceClient Retry Logic', function () {
   it('retries to receive cloud-to-device message', function(testCallback) {
@@ -39,8 +37,14 @@ function ModuleClientCtor(fakeTransport) {
   return new ModuleClient(fakeTransport, { setOptions: sinon.stub() });
 }
 
-[DeviceClientCtor, ModuleClientCtor].forEach(function (ClientCtor) {
-  describe(ClientCtor.name + ' Retry Logic', function () {
+[ {
+    ctor: DeviceClientCtor,
+    onMethodFunc: 'onDeviceMethod'
+  },{
+    ctor: ModuleClientCtor,
+    onMethodFunc: 'onMethod'
+  }].forEach(function (testClient) {
+  describe(testClient.ctor.name + ' Retry Logic', function () {
     [
       {
         funcName: 'sendEvent',
@@ -75,7 +79,7 @@ function ModuleClientCtor(fakeTransport) {
         var fakeTransport = new EventEmitter();
         fakeTransport[testConfig.funcName] = sinon.stub().callsArgWith(1, new errors.TimeoutError('failed'));
 
-        var client = ClientCtor(fakeTransport);
+        var client = testClient.ctor(fakeTransport);
         client._maxOperationTimeout = 100;
         client[testConfig.funcName](testConfig.funcParam, function () {
           assert(fakeTransport[testConfig.funcName].callCount >= 2);
@@ -88,7 +92,7 @@ function ModuleClientCtor(fakeTransport) {
       var fakeTransport = new EventEmitter();
       fakeTransport.connect = sinon.stub().callsArgWith(0, new errors.TimeoutError('failed'));
 
-      var client = ClientCtor(fakeTransport);
+      var client = testClient.ctor(fakeTransport);
       client._maxOperationTimeout = 100;
       client.open(function (err) {
         assert(fakeTransport.connect.callCount >= 2);
@@ -101,14 +105,14 @@ function ModuleClientCtor(fakeTransport) {
       fakeTransport.onDeviceMethod = sinon.stub();
       fakeTransport.enableMethods = sinon.stub().callsArgWith(0, new errors.TimeoutError('failed'));
 
-      var client = ClientCtor(fakeTransport);
+      var client = testClient.ctor(fakeTransport);
       client._maxOperationTimeout = 100;
       client.on('error', (err) => {
         assert(fakeTransport.onDeviceMethod.calledOnce);
         assert(fakeTransport.enableMethods.callCount >= 2);
         testCallback();
       });
-      client.onDeviceMethod('methodName', function () {});
+      client[testClient.onMethodFunc]('methodName', function () {});
     });
   });
 });
