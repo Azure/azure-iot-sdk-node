@@ -110,7 +110,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
           connect: (callback) => {
             this._fsm.transition('connecting', callback);
           },
-          sendEvent: (topic, payload, options, sendEventCallback) => {
+          sendEvent: (message, outputProps, sendEventCallback) => {
             /*Codes_SRS_NODE_DEVICE_MQTT_16_023: [The `sendEvent` method shall connect the Mqtt connection if it is disconnected.]*/
             /*Codes_SRS_NODE_DEVICE_MQTT_18_045: [The `sendOutputEvent` method shall connect the Mqtt connection if it is disconnected. ]*/
             this._fsm.handle('connect', (err) => {
@@ -119,7 +119,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
                 /*Codes_SRS_NODE_DEVICE_MQTT_18_046: [The `sendOutputEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to establish a connection. ]*/
                 sendEventCallback(translateError(err));
               } else {
-                this._fsm.handle('sendEvent', topic, payload, options, sendEventCallback);
+                this._fsm.handle('sendEvent', message, outputProps, sendEventCallback);
               }
             });
           },
@@ -251,8 +251,15 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
           disconnect: (disconnectCallback) => {
             this._fsm.transition('disconnecting', disconnectCallback);
           },
-          sendEvent: (topic, payload, options, sendEventCallback) => {
-            this._mqtt.publish(topic, payload, options, (err, result) => {
+          sendEvent: (message, outputProps, sendEventCallback) => {
+            /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_008: [The `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`.]*/
+            let topic = this._getEventTopicFromMessage(message, outputProps);
+            if (outputProps) {
+              topic += '/';
+            }
+
+            /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `sendEvent` method shall use QoS level of 1.]*/
+            this._mqtt.publish(topic, message.data, { qos: 1, retain: false }, (err, result) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_MQTT_16_027: [The `sendEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to publish the message.]*/
                 /*Codes_SRS_NODE_DEVICE_MQTT_18_050: [The `sendOutputEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to publish the message. ]*/
@@ -376,10 +383,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
   sendEvent(message: Message, done?: (err?: Error, result?: any) => void): void {
     debug('sendEvent ' + JSON.stringify(message));
 
-    let topic = this._getEventTopicFromMessage(message);
-
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `sendEvent` method shall use QoS level of 1.]*/
-    this._fsm.handle('sendEvent', topic, message.data, { qos: 1, retain: false }, (err, puback) => {
+    this._fsm.handle('sendEvent', message, undefined, (err, puback) => {
       if (err) {
         debug('send error: ' + err.toString());
         done(err);
@@ -616,13 +620,10 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
   sendOutputEvent(outputName: string, message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void {
     debug('sendOutputEvent ' + JSON.stringify(message));
 
-    /*Codes_SRS_NODE_DEVICE_MQTT_18_068: [ The `sendOutputEvent` method shall serialize the `outputName` property of the message as a key-value pair on the topic with the key `$.on`. ] */
-    let topic = this._getEventTopicFromMessage(message, { '$.on': outputName });
-    topic += '/';
-
     /*Codes_SRS_NODE_DEVICE_MQTT_18_035: [ The `sendOutputEvent` method shall call the publish method on `MqttBase`. ]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_039: [ The `sendOutputEvent` method shall use QoS level of 1. ]*/
-    this._fsm.handle('sendEvent', topic, message.data, { qos: 1, retain: false }, (err, puback) => {
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_068: [ The `sendOutputEvent` method shall serialize the `outputName` property of the message as a key-value pair on the topic with the key `$.on`. ] */
+    this._fsm.handle('sendEvent', message, { '$.on': outputName }, (err, puback) => {
       if (err) {
         debug('send error: ' + err.toString());
         done(err);
@@ -909,7 +910,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
 
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_009: [If the message has properties, the property keys and values shall be uri-encoded, then serialized and appended at the end of the topic with the following convention: `<key>=<value>&<key2>=<value2>&<key3>=<value3>(...)`.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_038: [ If the outputEvent message has properties, the property keys and values shall be uri-encoded, then serialized and appended at the end of the topic with the following convention: `<key>=<value>&<key2>=<value2>&<key3>=<value3>(...)`. ]*/
-    if (message.properties.count() > 0) {
+    if (message.properties && message.properties.count() > 0) {
       for (let i = 0; i < message.properties.count(); i++) {
         if (i > 0 || sysPropString) topic += '&';
         topic += encodeURIComponent(message.properties.propertyList[i].key) + '=' + encodeURIComponent(message.properties.propertyList[i].value);
@@ -1026,4 +1027,3 @@ function _parseMessage(topic: string, body: any): MethodMessage {
 
   return undefined;
 }
-

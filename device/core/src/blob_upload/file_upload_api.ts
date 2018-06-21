@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { endpoint, AuthenticationProvider } from 'azure-iot-common';
+import { endpoint, AuthenticationProvider, encodeUriComponentStrict } from 'azure-iot-common';
 import { Http as DefaultHttpTransport } from 'azure-iot-http-base';
 import { UploadParams, FileUpload as FileUploadInterface } from './blob_upload_client';
 import { BlobUploadResult } from './blob_upload_result';
@@ -42,8 +42,8 @@ export class FileUploadApi implements FileUploadInterface {
         if (!blobName) throw new ReferenceError('blobName cannot be \'' + blobName + '\'');
 
         this._authenticationProvider.getDeviceCredentials((err, deviceCredentials) => {
-            /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_006: [`getBlobSharedAccessSignature` shall create a `POST` HTTP request to a path formatted as the following:`/devices/<deviceId>/files?api-version=<api-version>]*/
-            const path = endpoint.deviceBlobUploadPath(encodeURIComponent(deviceCredentials.deviceId)) + endpoint.versionQueryString();
+            /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_006: [`getBlobSharedAccessSignature` shall create a `POST` HTTP request to a path formatted as the following:`/devices/URI_ENCODED(<deviceId>)/files?api-version=<api-version>]*/
+            const path = endpoint.devicePath(encodeUriComponentStrict(deviceCredentials.deviceId)) + '/files' + endpoint.versionQueryString();
             const body = JSON.stringify({ blobName: blobName });
 
             /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_007: [The `POST` HTTP request shall have the following headers:
@@ -99,8 +99,8 @@ export class FileUploadApi implements FileUploadInterface {
         if (!uploadResult) throw new ReferenceError('uploadResult cannot be \'' + uploadResult + '\'');
 
         this._authenticationProvider.getDeviceCredentials((err, deviceCredentials) => {
-            /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_013: [`notifyUploadComplete` shall create a `POST` HTTP request to a path formatted as the following:`/devices/<deviceId>/files/<correlationId>?api-version=<api-version>`]*/
-            const path = endpoint.deviceBlobUploadNotificationPath(encodeURIComponent(deviceCredentials.deviceId), correlationId) + endpoint.versionQueryString();
+            /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_013: [`notifyUploadComplete` shall create a `POST` HTTP request to a path formatted as the following:`/devices/URI_ENCODED(<deviceId>)/files/<correlationId>?api-version=<api-version>`]*/
+            const path = endpoint.devicePath(encodeUriComponentStrict(deviceCredentials.deviceId)) + '/files/notifications/' + encodeURIComponent(correlationId) + endpoint.versionQueryString();
             const body = JSON.stringify(uploadResult);
 
             /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_014: [The `POST` HTTP request shall have the following headers:

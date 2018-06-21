@@ -159,6 +159,28 @@ describe('DeviceMethod', function() {
         });
       });
 
+      /*Tests_SRS_NODE_IOTHUB_DEVICE_METHOD_16_017: [The `invokeOn` method shall uri-encode the device id.]*/
+      it('URI-encodes the device id', function(testCallback) {
+        var fakeMethodParams = {
+          methodName: 'method',
+          payload: { foo: 'bar' },
+          responseTimeoutInSeconds: 42
+        };
+
+        var fakeDeviceId = 'device#';
+        var uriEncodedDeviceId = encodeURIComponent(fakeDeviceId);
+
+        var fakeRestClient = {
+          executeApiCall: function(method, path, headers, body, timeout, callback) {
+            assert.equal(path, '/twins/' + uriEncodedDeviceId + '/methods' + endpoint.versionQueryString());
+            callback();
+          }
+        };
+
+        var method = new DeviceMethod(fakeMethodParams, fakeRestClient);
+        method.invokeOn(fakeDeviceId, testCallback);
+      });
+
       /*Tests_SRS_NODE_IOTHUB_DEVICE_METHOD_16_011: [The `invokeOn` method shall construct an HTTP request using information supplied by the caller, as follows:
       ```
       POST /twins/<encodeUriComponent(deviceId>)/methods?api-version=<version> HTTP/1.1
@@ -186,30 +208,32 @@ describe('DeviceMethod', function() {
       }
       ```
       ]*/
-      it('builds a correct HTTP request', function(testCallback) {
-        var fakeMethodParams = {
-          methodName: 'method',
-          payload: { foo: 'bar' },
-          responseTimeoutInSeconds: 42,
-          connectTimeoutInSeconds: 43
-        };
+      [-1, 0, '', {}, { foo: 'bar' }, 'one line', new Buffer([0xDE, 0xAD, 0xBE, 0xEF])].forEach(function(goodPayload) {
+        it('builds a correct request when the payload is ' + goodPayload.toString(), function(testCallback) {
+          var fakeMethodParams = {
+            methodName: 'method',
+            payload: { foo: 'bar' },
+            responseTimeoutInSeconds: 42,
+            connectTimeoutInSeconds: 43
+          };
 
-        var fakeRestClient = {
-          executeApiCall: function(method, path, headers, body, timeout, callback) {
-            assert.equal(method, 'POST');
-            assert.equal(path, testConfig.expectedPath);
-            assert.equal(headers['Content-Type'], 'application/json; charset=utf-8');
-            assert.equal(body.methodName, fakeMethodParams.methodName);
-            assert.equal(body.responseTimeoutInSeconds, fakeMethodParams.responseTimeoutInSeconds);
-            assert.equal(body.connectTimeoutInSeconds, fakeMethodParams.connectTimeoutInSeconds);
-            assert.equal(body.payload, fakeMethodParams.payload);
-            assert.equal(timeout, (fakeMethodParams.responseTimeoutInSeconds + fakeMethodParams.connectTimeoutInSeconds) * 1000);
-            callback();
-          }
-        };
+          var fakeRestClient = {
+            executeApiCall: function(method, path, headers, body, timeout, callback) {
+              assert.equal(method, 'POST');
+              assert.equal(path, testConfig.expectedPath);
+              assert.equal(headers['Content-Type'], 'application/json; charset=utf-8');
+              assert.equal(body.methodName, fakeMethodParams.methodName);
+              assert.equal(body.responseTimeoutInSeconds, fakeMethodParams.responseTimeoutInSeconds);
+              assert.equal(body.connectTimeoutInSeconds, fakeMethodParams.connectTimeoutInSeconds);
+              assert.equal(body.payload, fakeMethodParams.payload);
+              assert.equal(timeout, (fakeMethodParams.responseTimeoutInSeconds + fakeMethodParams.connectTimeoutInSeconds) * 1000);
+              callback();
+            }
+          };
 
-        var method = new DeviceMethod(fakeMethodParams, fakeRestClient);
-        testConfig.functionUnderTest(method, testCallback);
+          var method = new DeviceMethod(fakeMethodParams, fakeRestClient);
+          testConfig.functionUnderTest(method, testCallback);
+        });
       });
 
       [-1, 0, '', {}, { foo: 'bar' }, 'one line', new Buffer([0xDE, 0xAD, 0xBE, 0xEF])].forEach(function(goodPayload) {

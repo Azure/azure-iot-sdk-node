@@ -9,7 +9,7 @@ const debug = dbg('azure-iot-device-http:Http');
 
 import { EventEmitter } from 'events';
 import { Http as Base } from 'azure-iot-http-base';
-import { endpoint, errors, results, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
+import { endpoint, errors, results, Message, AuthenticationProvider, AuthenticationType, TransportConfig, encodeUriComponentStrict } from 'azure-iot-common';
 import { translateError } from './http_errors.js';
 import { IncomingMessage } from 'http';
 import { DeviceTransport, MethodMessage, DeviceMethodResponse, TwinProperties } from 'azure-iot-device';
@@ -139,8 +139,8 @@ export class Http extends EventEmitter implements DeviceTransport {
   sendEvent(message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_05_002: [The `sendEvent` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
-    POST <config.host>/devices/<config.deviceId>/messages/events?api-version=<version> HTTP/1.1
-    iothub-to: /devices/<config.deviceId>/messages/events
+    POST <config.host>/devices/URI_ENCODED(<config.deviceId>)/messages/events?api-version=<version> HTTP/1.1
+    iothub-to: /devices/URI_ENCODED(<config.deviceId>)/messages/events
     User-Agent: <version string>
     Host: <config.host>
 
@@ -153,7 +153,7 @@ export class Http extends EventEmitter implements DeviceTransport {
           /*Codes_SRS_NODE_DEVICE_HTTP_16_033: [if the `getDeviceCredentials` fails with an error, the Http request shall call its callback with that error]*/
           done(err);
         } else {
-          const path = endpoint.deviceEventPath(encodeURIComponent(config.deviceId));
+          const path = endpoint.deviceEventPath(encodeUriComponentStrict(config.deviceId));
           let httpHeaders = {
             'iothub-to': path,
             'User-Agent': this._userAgentString
@@ -275,8 +275,8 @@ export class Http extends EventEmitter implements DeviceTransport {
 
           /*Codes_SRS_NODE_DEVICE_HTTP_05_003: [The `sendEventBatch` method shall construct an HTTP request using information supplied by the caller, as follows:
           ```
-          POST <config.host>/devices/<config.deviceId>/messages/events?api-version=<version> HTTP/1.1
-          iothub-to: /devices/<config.deviceId>/messages/events
+          POST <config.host>/devices/URI_ENCODED(<config.deviceId>)/messages/events?api-version=<version> HTTP/1.1
+          iothub-to: /devices/URI_ENCODED(<config.deviceId>)/messages/events
           User-Agent: <version string>
           Content-Type: application/vnd.microsoft.iothub.json
           Host: <config.host>
@@ -284,7 +284,7 @@ export class Http extends EventEmitter implements DeviceTransport {
           {"body":"<Base64 Message1>","properties":{"<key>":"<value>"}},
           {"body":"<Base64 Message1>"}...
           ```]*/
-          const path = endpoint.deviceEventPath(encodeURIComponent(config.deviceId));
+          const path = endpoint.deviceEventPath(encodeUriComponentStrict(config.deviceId));
           let httpHeaders = {
             'iothub-to': path,
             'Content-Type': 'application/vnd.microsoft.iothub.json',
@@ -350,9 +350,9 @@ export class Http extends EventEmitter implements DeviceTransport {
    *                  `config` constructor parameter) for the next message in the queue.
    */
   /*Codes_SRS_NODE_DEVICE_HTTP_05_004: [The receive method shall construct an HTTP request using information supplied by the caller, as follows:
-  GET <config.host>/devices/<config.deviceId>/messages/devicebound?api-version=<version> HTTP/1.1
+  GET <config.host>/devices/URI_ENCODED(<config.deviceId>)/messages/devicebound?api-version=<version> HTTP/1.1
   Authorization: <config.sharedAccessSignature>
-  iothub-to: /devices/<config.deviceId>/messages/devicebound
+  iothub-to: /devices/URI_ENCODED(<config.deviceId>)/messages/devicebound
   User-Agent: <version string>
   Host: <config.host>
   ]*/
@@ -365,7 +365,7 @@ export class Http extends EventEmitter implements DeviceTransport {
           debug('Error while receiving: ' + err.toString());
           this.emit('error', err);
         } else {
-          const path = endpoint.deviceMessagePath(encodeURIComponent(config.deviceId));
+          const path = endpoint.deviceMessagePath(encodeUriComponentStrict(config.deviceId));
           let httpHeaders = {
             'iothub-to': path,
             'User-Agent': this._userAgentString
@@ -648,7 +648,7 @@ export class Http extends EventEmitter implements DeviceTransport {
       } else {
         let method;
         let resultConstructor = null;
-        let path = endpoint.deviceFeedbackPath(encodeURIComponent(config.deviceId), message.lockToken);
+        let path = endpoint.deviceFeedbackPath(encodeUriComponentStrict(config.deviceId), message.lockToken);
         let httpHeaders = {
           'If-Match': message.lockToken,
           'User-Agent': this._userAgentString
@@ -657,7 +657,7 @@ export class Http extends EventEmitter implements DeviceTransport {
         this._insertAuthHeaderIfNecessary(httpHeaders, config);
 
         /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_009: [abandon shall construct an HTTP request using information supplied by the caller, as follows:
-        POST <config.host>/devices/<config.deviceId>/messages/devicebound/<lockToken>/abandon?api-version=<version> HTTP/1.1
+        POST <config.host>/devices/URI_ENCODED(<config.deviceId>)/messages/devicebound/<lockToken>/abandon?api-version=<version> HTTP/1.1
         Authorization: <config.sharedAccessSignature>
         If-Match: <lockToken>
         Host: <config.host>]
@@ -668,7 +668,7 @@ export class Http extends EventEmitter implements DeviceTransport {
           resultConstructor = results.MessageAbandoned;
         } else if (action === 'reject') {
           /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_010: [reject shall construct an HTTP request using information supplied by the caller, as follows:
-          DELETE <config.host>/devices/<config.deviceId>/messages/devicebound/<lockToken>?api-version=<version>&reject HTTP/1.1
+          DELETE <config.host>/devices/URI_ENCODED(<config.deviceId>)/messages/devicebound/<lockToken>?api-version=<version>&reject HTTP/1.1
           Authorization: <config.sharedAccessSignature>
           If-Match: <lockToken>
           Host: <config.host>]*/
@@ -677,7 +677,7 @@ export class Http extends EventEmitter implements DeviceTransport {
           resultConstructor = results.MessageRejected;
         } else {
           /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_011: [complete shall construct an HTTP request using information supplied by the caller, as follows:
-          DELETE <config.host>/devices/<config.deviceId>/messages/devicebound/<lockToken>?api-version=<version> HTTP/1.1
+          DELETE <config.host>/devices/URI_ENCODED(<config.deviceId>)/messages/devicebound/<lockToken>?api-version=<version> HTTP/1.1
           Authorization: <config.sharedAccessSignature>
           If-Match: <lockToken>
           Host: <config.host>]*/
@@ -784,5 +784,3 @@ export class Http extends EventEmitter implements DeviceTransport {
     }
   }
 }
-
-

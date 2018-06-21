@@ -68,8 +68,8 @@ The `sendEvent` method sends an event to an IoT hub on behalf of the device indi
 
 **SRS_NODE_DEVICE_HTTP_05_002: [** The `sendEvent` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
-POST <config.host>/devices/<config.deviceId>/messages/events?api-version=<version> HTTP/1.1
-iothub-to: /devices/<config.deviceId>/messages/events
+POST <config.host>/devices/URI_ENCODED(<config.deviceId>)/messages/events?api-version=<version> HTTP/1.1
+iothub-to: /devices/URI_ENCODED(<config.deviceId>)/messages/events
 User-Agent: <version string>
 Host: <config.host>
 
@@ -101,8 +101,8 @@ The sendEventBatch method sends a list of events to an IoT hub on behalf of the 
 
 **SRS_NODE_DEVICE_HTTP_05_003: [**The `sendEventBatch` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
-POST <config.host>/devices/<config.deviceId>/messages/events?api-version=<version> HTTP/1.1
-iothub-to: /devices/<config.deviceId>/messages/events
+POST <config.host>/devices/URI_ENCODED(<config.deviceId>)/messages/events?api-version=<version> HTTP/1.1
+iothub-to: /devices/URI_ENCODED(<config.deviceId>)/messages/events
 User-Agent: <version string>
 Content-Type: application/vnd.microsoft.iothub.json
 Host: <config.host>
@@ -166,7 +166,7 @@ Host: <config.host>
 
 **SRS_NODE_DEVICE_HTTP_RECEIVER_16_009: [**`abandon` shall construct an HTTP request using information supplied by the caller, as follows:
 ```
-POST <config.host>/devices/<config.deviceId>/messages/devicebound/<lockToken>/abandon?api-version=<version> HTTP/1.1
+POST <config.host>/devices/URI_ENCODED(<config.deviceId>)/messages/devicebound/<lockToken>/abandon?api-version=<version> HTTP/1.1
 If-Match: <lockToken>
 Host: <config.host>
 ```
@@ -180,7 +180,7 @@ Host: <config.host>
 
 **SRS_NODE_DEVICE_HTTP_RECEIVER_16_011: [**complete shall construct an HTTP request using information supplied by the caller, as follows:
 ```
-DELETE <config.host>/devices/<config.deviceId>/messages/devicebound/<lockToken>?api-version=<version> HTTP/1.1
+DELETE <config.host>/devices/URI_ENCODED(<config.deviceId>)/messages/devicebound/<lockToken>?api-version=<version> HTTP/1.1
 If-Match: <lockToken>
 Host: <config.host>
 ```
@@ -195,7 +195,7 @@ Host: <config.host>
 
 **SRS_NODE_DEVICE_HTTP_RECEIVER_16_010: [**`reject` shall construct an HTTP request using information supplied by the caller, as follows:
 ```
-DELETE <config.host>/devices/<config.deviceId>/messages/devicebound/<lockToken>?api-version=<version>&reject HTTP/1.1
+DELETE <config.host>/devices/URI_ENCODED(<config.deviceId>)/messages/devicebound/<lockToken>?api-version=<version>&reject HTTP/1.1
 If-Match: <lockToken>
 Host: <config.host>
 ```
@@ -209,8 +209,8 @@ Host: <config.host>
 The `receive` method queries the IoT hub for the next message in the indicated device’s cloud-to-device (c2d) message queue. It is a transport-specific method.
 
 **SRS_NODE_DEVICE_HTTP_05_004: [** The receive method shall construct an HTTP request using information supplied by the caller, as follows:
-GET <config.host>/devices/<config.deviceId>/messages/devicebound?api-version=<version> HTTP/1.1
-iothub-to: /devices/<config.deviceId>/messages/devicebound
+GET <config.host>/devices/URI_ENCODED(<config.deviceId>)/messages/devicebound?api-version=<version> HTTP/1.1
+iothub-to: /devices/URI_ENCODED(<config.deviceId>)/messages/devicebound
 User-Agent: <version string>
 Host: <config.host>
 **]**
