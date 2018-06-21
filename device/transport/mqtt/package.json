@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-device-mqtt",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "MQTT transport for Azure IoT device SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",

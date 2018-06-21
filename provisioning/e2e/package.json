@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-provisioning-device-e2e",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "E2E tests for the Azure Device Provisioning SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
@@ -11,7 +11,7 @@
     "azure-iot-provisioning-device-amqp": "1.1.5",
     "azure-iot-provisioning-device-http": "1.1.5",
     "azure-iot-provisioning-device-mqtt": "1.0.6",
-    "azure-iot-provisioning-service": "1.0.6",
+    "azure-iot-provisioning-service": "1.1.0",
     "azure-iot-security-tpm": "1.0.1",
     "azure-iot-security-x509": "1.0.5",
     "azure-iothub": "1.3.2",
