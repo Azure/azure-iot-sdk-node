@@ -18,7 +18,8 @@ var sampleConfig = {
         temperature: 66,
         pressure: 28
       }
-    }
+    },
+    modulesContent: {}
   },
   metrics: {
     queries: {
