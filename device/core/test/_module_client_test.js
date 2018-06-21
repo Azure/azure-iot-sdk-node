@@ -3,6 +3,7 @@
 
 'use strict';
 
+var fs = require('fs');
 var assert = require('chai').assert;
 var sinon = require('sinon');
 var FakeTransport = require('./fake_transport.js');
@@ -87,41 +88,71 @@ describe('ModuleClient', function () {
       });
     });
 
-    // Tests_SRS_NODE_MODULE_CLIENT_13_034: [ If the client is running in a non-edge mode and an environment variable named EdgeModuleCACertificateFile exists then its value shall be set as the CA cert for the transport via the transport's setOptions method passing in the CA as the value for the ca property in the options object. ]
-    ['EdgeHubConnectionString', 'IotHubConnectionString'].forEach(function(envName) {
-      describe('sets CA cert in non-edge mode', function() {
+    // Tests_SRS_NODE_MODULE_CLIENT_13_034: [ If the client is running in a non-edge mode and an environment variable named EdgeModuleCACertificateFile exists then its file contents shall be set as the CA cert for the transport via the transport's setOptions method passing in the CA as the value for the ca property in the options object. ]
+    ['EdgeHubConnectionString', 'IotHubConnectionString'].forEach(function (envName) {
+      describe('sets CA cert in non-edge mode', function () {
         var stub;
+        var fsstub;
 
         var transport = {
-          setOptions: function() {}
+          setOptions: function () { }
         };
         var setOptionsStub = sinon.stub(transport, 'setOptions');
 
-        beforeEach(function() {
+        beforeEach(function () {
           stub = sinon.stub(ModuleClient, 'fromConnectionString')
             .callsArgWith(1, 'auth provider')
             .returns(42);
           process.env[envName] = 'cs';
-          process.env.EdgeModuleCACertificateFile = 'ca cert';
+          process.env.EdgeModuleCACertificateFile = '/path/to/ca/cert/file';
+          fsstub = sinon.stub(fs, 'readFile').callsArgWith(2, null, 'ca cert');
         });
 
-        afterEach(function() {
+        afterEach(function () {
           stub.restore();
+          fsstub.restore();
           delete process.env[envName];
           delete process.env['EdgeModuleCACertificateFile'];
         });
 
-        it('if env ' + envName + ' is defined', function() {
-          ModuleClient.fromEnvironment(function(authProvider) {
+        it('if env ' + envName + ' is defined', function () {
+          ModuleClient.fromEnvironment(function (authProvider) {
             assert.strictEqual(authProvider, 'auth provider');
             return transport;
-          }, function(err, client) {
+          }, function (err, client) {
             assert.isNotOk(err);
             assert.strictEqual(client, 42);
             assert.strictEqual(stub.called, true);
             assert.strictEqual(stub.args[0][0], 'cs');
+            assert.strictEqual(fsstub.called, true);
+            assert.strictEqual(fsstub.args[0][0], '/path/to/ca/cert/file');
+            assert.strictEqual(fsstub.args[0][1], 'utf8');
             assert.strictEqual(setOptionsStub.called, true);
             assert.strictEqual(setOptionsStub.args[0][0].ca, 'ca cert');
+          });
+        });
+      });
+
+      describe('bails if CA cert fs read fails', function () {
+        var fsstub;
+        beforeEach(function () {
+          process.env[envName] = 'cs';
+          process.env.EdgeModuleCACertificateFile = '/path/to/ca/cert/file';
+          fsstub = sinon.stub(fs, 'readFile').callsArgWith(2, 'whoops');
+        });
+
+        afterEach(function () {
+          fsstub.restore();
+          delete process.env[envName];
+          delete process.env['EdgeModuleCACertificateFile'];
+        });
+
+        it('if env ' + envName + ' is defined', function () {
+          ModuleClient.fromEnvironment(function () {
+            assert.fail("Transport constructor should not have been called.");
+          }, function (err) {
+            assert.isOk(err);
+            assert.strictEqual(err, 'whoops');
           });
         });
       });

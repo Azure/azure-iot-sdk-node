@@ -54,7 +54,7 @@ class ModuleClient extends InternalClient {
 
 **SRS_NODE_MODULE_CLIENT_13_028: [** The `fromEnvironment` method shall delegate to `ModuleClient.fromConnectionString` if an environment variable called `EdgeHubConnectionString` or `IotHubConnectionString` exists. **]**
 
-**SRS_NODE_MODULE_CLIENT_13_034: [** If the client is running in a non-edge mode and an environment variable named `EdgeModuleCACertificateFile` exists then its value shall be set as the CA cert for the transport via the transport's `setOptions` method passing in the CA as the value for the `ca` property in the options object. **]**
+**SRS_NODE_MODULE_CLIENT_13_034: [** If the client is running in a non-edge mode and an environment variable named `EdgeModuleCACertificateFile` exists then its file contents shall be set as the CA cert for the transport via the transport's `setOptions` method passing in the CA as the value for the `ca` property in the options object. **]**
 
 **SRS_NODE_MODULE_CLIENT_13_035: [** If the client is running in edge mode then the `IotEdgeAuthenticationProvider.getTrustBundle` method shall be invoked to retrieve the CA cert and the returned value shall be set as the CA cert for the transport via the transport's `setOptions` method passing in the CA value for the `ca` property in the options object. **]**
 

@@ -6,6 +6,7 @@
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:ModuleClient');
 
+import * as fs from 'fs';
 import { results, Message, RetryOperation, ConnectionString, AuthenticationProvider } from 'azure-iot-common';
 import { InternalClient, DeviceTransport } from './internal_client';
 import { errors } from 'azure-iot-common';
@@ -242,7 +243,7 @@ export class ModuleClient extends InternalClient {
    */
   static fromEnvironment(transportCtor: any, callback: (err?: Error, client?: ModuleClient) => void): void {
     // Codes_SRS_NODE_MODULE_CLIENT_13_033: [ The fromEnvironment method shall throw a ReferenceError if the callback argument is falsy or is not a function. ]
-    if (!callback || typeof(callback) !== 'function') {
+    if (!callback || typeof (callback) !== 'function') {
       throw new ReferenceError('callback cannot be \'' + callback + '\'');
     }
 
@@ -301,24 +302,28 @@ export class ModuleClient extends InternalClient {
   }
 
   private static _fromEnvironmentNormal(connectionString: string, transportCtor: any, callback: (err?: Error, client?: ModuleClient) => void): void {
+    let ca = '';
     // this is a transport decorator that provides the CA certificate to the underlying
     // transport if a CA cert is provided in the environment
     function CertTransport(authenticationProvider: AuthenticationProvider): any {
       const transport = new transportCtor(authenticationProvider);
-      // Codes_SRS_NODE_MODULE_CLIENT_13_034: [ If the client is running in a non-edge mode and an environment variable named EdgeModuleCACertificateFile exists then its value shall be set as the CA cert for the transport via the transport's setOptions method passing in the CA as the value for the ca property in the options object. ]
-      transport.setOptions({ ca: process.env.EdgeModuleCACertificateFile });
+      transport.setOptions({ ca });
       return transport;
     }
 
-    let wrappedTransportCtor = transportCtor;
     if (process.env.EdgeModuleCACertificateFile) {
-      wrappedTransportCtor = CertTransport;
+      fs.readFile(process.env.EdgeModuleCACertificateFile, 'utf8', (err, data) => {
+        if (err) {
+          callback(err);
+        } else {
+          // Codes_SRS_NODE_MODULE_CLIENT_13_034: [ If the client is running in a non-edge mode and an environment variable named EdgeModuleCACertificateFile exists then its file contents shall be set as the CA cert for the transport via the transport's setOptions method passing in the CA as the value for the ca property in the options object. ]
+          ca = data;
+          callback(null, ModuleClient.fromConnectionString(connectionString, CertTransport));
+        }
+      });
+    } else {
+      callback(null, ModuleClient.fromConnectionString(connectionString, transportCtor));
     }
-
-    callback(null, ModuleClient.fromConnectionString(
-      connectionString,
-      wrappedTransportCtor
-    ));
   }
 
   private static validateEnvironment(): ReferenceError {
@@ -346,7 +351,7 @@ export class ModuleClient extends InternalClient {
     if (process.env.IOTEDGE_AUTHSCHEME.toLowerCase() !== 'sastoken') {
       return new ReferenceError(
         `Authentication scheme ${
-          process.env.IOTEDGE_AUTHSCHEME
+        process.env.IOTEDGE_AUTHSCHEME
         } is not a supported scheme.`
       );
     }
