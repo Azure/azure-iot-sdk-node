@@ -70,8 +70,7 @@ export class IotEdgeAuthenticationProvider extends SharedAccessKeyAuthentication
         gatewayHostName: _authConfig && _authConfig.gatewayHostName
       },
       tokenValidTimeInSeconds,
-      tokenRenewalMarginInSeconds,
-      true
+      tokenRenewalMarginInSeconds
     );
 
     // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_001: [ The constructor shall throw a ReferenceError if the _authConfig parameter is falsy. ]

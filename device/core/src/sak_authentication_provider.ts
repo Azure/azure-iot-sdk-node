@@ -30,7 +30,7 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
    * @param tokenValidTimeInSeconds        [optional] The number of seconds for which a token is supposed to be valid.
    * @param tokenRenewalMarginInSeconds    [optional] The number of seconds before the end of the validity period during which the `SharedAccessKeyAuthenticationProvider` should renew the token.
    */
-  constructor(credentials: TransportConfig, tokenValidTimeInSeconds?: number, tokenRenewalMarginInSeconds?: number, startTimerOnNextTick?: boolean) {
+  constructor(credentials: TransportConfig, tokenValidTimeInSeconds?: number, tokenRenewalMarginInSeconds?: number) {
     super();
     /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_001: [The `constructor` shall create the initial token value using the `credentials` parameter.]*/
     this._credentials = credentials;
@@ -42,16 +42,6 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
     if (this._tokenValidTimeInSeconds <= this._tokenRenewalMarginInSeconds) {
       throw new errors.ArgumentError('tokenRenewalMarginInSeconds must be less than tokenValidTimeInSeconds');
     }
-
-    /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_002: [The `constructor` shall start a timer that will automatically renew the token every (`tokenValidTimeInSeconds` - `tokenRenewalMarginInSeconds`) seconds if specified, or 45 minutes by default.]*/
-
-    if (startTimerOnNextTick) {
-      // we kick off the initial token creation during the next tick because if this code is being run from a sub-class then
-      // there might be additional initialization that needs to occur before we are ready to sign tokens
-      setImmediate(() => this._renewToken());
-    } else {
-      this._renewToken();
-    }
   }
 
   /**
@@ -61,7 +51,15 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
    */
   getDeviceCredentials(callback: (err: Error, credentials?: TransportConfig) => void): void {
     if (this._shouldRenewToken()) {
-      this._renewToken(callback);
+      this._renewToken((err, creds) => {
+        if (err) {
+          callback(err);
+        } else {
+          /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_002: [The `getDeviceCredentials` method shall start a timer that will automatically renew the token every (`tokenValidTimeInSeconds` - `tokenRenewalMarginInSeconds`) seconds if specified, or 45 minutes by default.]*/
+          this._scheduleNextExpiryTimeout();
+          callback(null, creds);
+        }
+      });
     } else {
       /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_003: [The `getDeviceCredentials` should call its callback with a `null` first parameter and a `TransportConfig` object as a second parameter, containing the latest valid token it generated.]*/
       callback(null, this._credentials);
@@ -81,11 +79,7 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
     return (this._currentTokenExpiryTimeInSeconds - currentTimeInSeconds) < this._tokenRenewalMarginInSeconds;
   }
 
-  private _renewToken(callback?: (err: Error, credentials?: TransportConfig) => void): void {
-    if (this._renewalTimeout) {
-      clearTimeout(this._renewalTimeout);
-    }
-
+  private _renewToken(callback: (err: Error, credentials?: TransportConfig) => void): void {
     /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_009: [Every token shall be created with a validity period of `tokenValidTimeInSeconds` if specified when the constructor was called, or 1 hour by default.]*/
     const newExpiry =  Math.floor(Date.now() / 1000) + this._tokenValidTimeInSeconds;
 
@@ -104,25 +98,41 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
     const resourceUri = encodeUriComponentStrict(resourceString);
     this._sign(resourceUri, newExpiry, (err, signature) => {
       if (err) {
-        if (callback) {
-          callback(err);
-        } else {
-          this.emit('error', err);
-        }
+        callback(err);
       } else {
         this._currentTokenExpiryTimeInSeconds = newExpiry;
         this._credentials.sharedAccessSignature = signature;
 
-        const nextRenewalTimeout = (this._tokenValidTimeInSeconds - this._tokenRenewalMarginInSeconds) * 1000;
-        this._renewalTimeout = setTimeout(() => this._renewToken(), nextRenewalTimeout);
-        /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_005: [Every time a new token is created, the `newTokenAvailable` event shall be fired with the updated credentials.]*/
-        this.emit('newTokenAvailable', this._credentials);
-
-        if (callback) {
-          callback(null, this._credentials);
-        }
+        callback(null, this._credentials);
       }
     });
+  }
+
+  private _expiryTimerHandler(): void {
+    if (this._renewalTimeout) {
+      clearTimeout(this._renewalTimeout);
+      this._renewalTimeout = null;
+    }
+
+    this._renewToken((err) => {
+      if (!err) {
+        this._scheduleNextExpiryTimeout();
+        /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_005: [Every time a new token is created, the `newTokenAvailable` event shall be fired with the updated credentials.]*/
+        this.emit('newTokenAvailable', this._credentials);
+      } else {
+        this.emit('error', err);
+      }
+    });
+  }
+
+  private _scheduleNextExpiryTimeout(): void {
+    if (this._renewalTimeout) {
+      clearTimeout(this._renewalTimeout);
+      this._renewalTimeout = null;
+    }
+
+    const nextRenewalTimeout = (this._tokenValidTimeInSeconds - this._tokenRenewalMarginInSeconds) * 1000;
+    this._renewalTimeout = setTimeout(() => this._expiryTimerHandler(), nextRenewalTimeout);
   }
 
   /**

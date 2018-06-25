@@ -40,7 +40,7 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
       });
     });
 
-    /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_002: [The `constructor` shall start a timer that will automatically renew the token every (`tokenValidTimeInSeconds` - `tokenRenewalMarginInSeconds`) seconds if specified, or 45 minutes by default.]*/
+    /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_002: [The `getDeviceCredentials` method shall start a timer that will automatically renew the token every (`tokenValidTimeInSeconds` - `tokenRenewalMarginInSeconds`) seconds if specified, or 45 minutes by default.]*/
     it('starts a timer to renew the token', function (testCallback) {
       this.clock = sinon.useFakeTimers();
       var testClock = this.clock;
@@ -94,23 +94,25 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
       });
     });
 
-    it('_renewToken propagates error via event if _sign fails', function (testCallback) {
+    it('emits an error if _sign fails while automatically renewing on token timeout', function (testCallback) {
       var fakeCredentials = {
         deviceId: 'fakeDeviceId',
         host: 'fake.host.name',
         sharedAccessKey: 'fakeKey'
       };
+      var fakeError = new Error('whoops');
       var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
       var eventSpy = sinon.spy();
-      sakAuthProvider.on('error', eventSpy);
+      sakAuthProvider.on('error', function (err) {
+        assert.strictEqual(err, fakeError);
+        testCallback();
+      });
 
-      sinon.stub(sakAuthProvider, '_sign').callsArgWith(2, 'whoops');
-      sakAuthProvider._renewToken();
-      assert.isTrue(eventSpy.calledOnce);
-      testCallback();
+      sinon.stub(sakAuthProvider, '_sign').callsArgWith(2, fakeError);
+      sakAuthProvider._expiryTimerHandler();
     });
 
-    it('_renewToken propagates error via callback if _sign fails', function (testCallback) {
+    it('getDeviceCredentials propagates error via callback if _sign fails', function (testCallback) {
       var fakeCredentials = {
         deviceId: 'fakeDeviceId',
         host: 'fake.host.name',
@@ -119,10 +121,10 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
       var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
 
       sinon.stub(sakAuthProvider, '_sign').callsArgWith(2, 'whoops');
-      sakAuthProvider._renewToken(function(err) {
+      sakAuthProvider.getDeviceCredentials(function(err) {
         assert.equal(err, 'whoops');
+        testCallback();
       });
-      testCallback();
     });
 
     it('_renewToken provides result via callback', function (testCallback) {

@@ -26,11 +26,11 @@ sakAuthProvider.on('newTokenAvailable', function (credentials) {
 
 **SRS_NODE_SAK_AUTH_PROVIDER_16_001: [** The `constructor` shall create the initial token value using the `credentials` parameter. **]**
 
-**SRS_NODE_SAK_AUTH_PROVIDER_16_002: [** The `constructor` shall start a timer that will automatically renew the token every (`tokenValidTimeInSeconds` - `tokenRenewalMarginInSeconds`) seconds if specified, or 45 minutes by default. **]**
-
 **SRS_NODE_SAK_AUTH_PROVIDER_16_011: [** The `constructor` shall throw an `ArgumentError` if the `tokenRenewalMarginInSeconds` is less than or equal `tokenValidTimeInSeconds`. **]**
 
 ## getDeviceCredentials(callback: (err: Error, credentials: TransportConfig) => void): void
+
+**SRS_NODE_SAK_AUTH_PROVIDER_16_002: [** The `getDeviceCredentials` method shall start a timer that will automatically renew the token every (`tokenValidTimeInSeconds` - `tokenRenewalMarginInSeconds`) seconds if specified, or 45 minutes by default. **]**
 
 **SRS_NODE_SAK_AUTH_PROVIDER_16_003: [** The `getDeviceCredentials` should call its callback with a `null` first parameter and a `TransportConfig` object as a second parameter, containing the latest valid token it generated. **]**
 
