@@ -24,7 +24,7 @@ var autoSettle = true;
 var amqp = new Amqp (autoSettle, 'amqp version string');
 
 var sendEndpoint = '/messages/devicebound';
-var receiveEndpoint = '/messages/serviceBound/feedback;
+var receiveEndpoint = '/messages/serviceBound/feedback';
 var to = '/devices/deviceId/messages/devicebound';
 amqp.connect(saslUri,null,, function (err) {
   // something in response to the error
