@@ -98,7 +98,7 @@ describe('ReceiverLink', function() {
       /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_022: [** The `accept` method shall work whether a `callback` is specified or not, and call the callback with a `result.MessageCompleted` object if a callback is specified.]*/
       /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_023: [** The `reject` method shall work whether a `callback` is specified or not, and call the callback with a `result.MessageRejected` object if a callback is specified.]*/
       /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_024: [** The `abandon` method shall work whether a `callback` is specified or not, and call the callback with a `result.MessageAbandoned` object if a callback is specified.]*/
-      it('doesn\'t crash if no callback is provided', function() {
+      it('doesn\'t crash if no callback is provided', function(testCallback) {
         var fakeMessage = new AmqpMessage({});
         fakeMessage.transportObj = {};
         var fakeLinkObj = new EventEmitter();
@@ -109,7 +109,8 @@ describe('ReceiverLink', function() {
         var link = new ReceiverLink('link', {}, fakeAmqp10Client);
         link.attach(function() {
           link[testConfig.recvLinkMethod](fakeMessage);
-          assert(fakeLinkObj[testConfig.amqp10LinkMethod].calledWith(fakeMessage.transportObj));
+          assert(fakeLinkObj[testConfig.amqp10LinkMethod].calledWith(fakeMessage));
+          testCallback();
         });
       });
     });

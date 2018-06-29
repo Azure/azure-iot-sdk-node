@@ -17,8 +17,7 @@
     "chai": "^4.1.2",
     "es5-shim": "^4.5.9",
     "istanbul": "^0.4.5",
-    "jshint": "^2.9.4",
-    "mocha": "^3.2.0",
+    "mocha": "^5.2.0",
     "sinon": "^4.0.2",
     "tslint": "^5.1.0",
     "typescript": "2.5.2"

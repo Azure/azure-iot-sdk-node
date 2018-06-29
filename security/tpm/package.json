@@ -15,14 +15,14 @@
     "array-equal": "^1.0.0"
   },
   "devDependencies": {
+    "@types/node": "^7.0.5",
     "chai": "^3.5.0",
     "istanbul": "^0.4.4",
     "jshint": "^2.9.2",
-    "mocha": "^3.0.1",
+    "mocha": "^5.2.0",
     "sinon": "^1.17.5",
     "tslint": "^5.1.0",
-    "typescript": "2.2.2",
-    "@types/node": "^7.0.5"
+    "typescript": "2.2.2"
   },
   "scripts": {
     "lint": "tslint --project . -c ../../tslint.json",

@@ -12,15 +12,14 @@
     "debug": "^3.1.0"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
-    "sinon": "^1.17.5",
-    "istanbul": "^0.4.4",
-    "jshint": "^2.9.2",
-    "mocha": "^3.0.1",
-    "tslint": "^5.1.0",
-    "typescript": "2.2.2",
+    "@types/debug": "0.0.29",
     "@types/node": "^7.0.5",
-    "@types/debug": "0.0.29"
+    "chai": "^3.5.0",
+    "istanbul": "^0.4.4",
+    "mocha": "^5.2.0",
+    "sinon": "^1.17.5",
+    "tslint": "^5.1.0",
+    "typescript": "2.2.2"
   },
   "scripts": {
     "lint": "tslint --exclude ./samples --project . -c ../../tslint.json",

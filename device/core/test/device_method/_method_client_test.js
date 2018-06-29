@@ -57,14 +57,20 @@ describe('MethodClient', function () {
     /*Tests_SRS_NODE_DEVICE_METHOD_CLIENT_16_007: [The `invokeMethod` method shall create a `RestApiClient` object if it does not exist.]*/
     it('instantiates a RestApiClient with the proper parameters if it has not been created yet', function (testCallback) {
       var client = new MethodClient(fakeAuthProvider);
+      var fakeRestApiClient = {
+        setOptions: sinon.stub(),
+        executeApiCall: sinon.stub().callsArg(5)
+      }
       var restApiClientStub = sinon.stub(require('azure-iot-http-base'), 'RestApiClient').callsFake(function (config, userAgent) {
         assert.strictEqual(config.host, fakeCredentials.gatewayHostName);
         assert.strictEqual(config.sharedAccessSignature, fakeCredentials.sharedAccessSignature);
         assert.isString(userAgent);
         restApiClientStub.restore();
+        return fakeRestApiClient;
+      });
+      client.invokeMethod('targetDeviceId', 'targetModuleId', fakeMethodParams, function () {
         testCallback();
       });
-      client.invokeMethod('targetDeviceId', 'targetModuleId', fakeMethodParams, function () {});
     });
 
     /*Tests_SRS_NODE_DEVICE_METHOD_CLIENT_16_015: [The `invokeMethod` method shall update the shared access signature of the `RestApiClient` by using its `updateSharedAccessSignature` method and the credentials obtained with the call to `getDeviceCredentials` (see `SRS_NODE_DEVICE_METHOD_CLIENT_16_006`).]*/
