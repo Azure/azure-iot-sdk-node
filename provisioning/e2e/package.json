@@ -28,7 +28,7 @@
   "scripts": {
     "lint": "jshint --show-non-errors .",
     "alltest": "node node_modules/mocha/bin/_mocha -- _*.js",
-    "ci": "npm -s run lint && npm -s run alltest",
+    "e2e": "npm -s run lint && npm -s run alltest",
     "build": "echo nothing to build"
   },
   "engines": {
