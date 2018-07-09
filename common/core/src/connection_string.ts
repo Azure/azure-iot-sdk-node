@@ -24,6 +24,12 @@ export class ConnectionString {
   // tslint:disable-next-line:variable-name
   DeviceId?: string;
   /**
+   * Unique module identifier as it exists in the device identity registry. This is only used for device connection strings.
+   * @memberof {azure-iot-common.ConnectionString}
+   */
+  // tslint:disable-next-line:variable-name
+  ModuleId?: string;
+  /**
    * Symmetric key used to create shared access signature tokens that are in turn used to authenticate the connection. Associated either with a specific device or a specific service policy.
    * @memberof {azure-iot-common.ConnectionString}
    */
@@ -36,10 +42,8 @@ export class ConnectionString {
   // tslint:disable-next-line:variable-name
   SharedAccessKeyName?: string;
   /**
-   * This was used in public preview when MQTT support required the use of a protocol gateway.
-   * Now that MQTT is supported natively in Azure IoT Hub, this parameter is ignored and kept only for compatibility purposes.
+   * IP address or internet name of the host machine working as a device or protocol gateway.  Used when communicating with Azure Edge devices.
    * @memberof {azure-iot-common.ConnectionString}
-   * @deprecated
    */
   // tslint:disable-next-line:variable-name
   GatewayHostName?: string;

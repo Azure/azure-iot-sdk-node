@@ -10,26 +10,24 @@ var rhea = require('rhea');
 
 
 var AmqpTwinClient = require('../lib/amqp_twin_client.js').AmqpTwinClient;
-var Amqp = require('../lib/amqp').Amqp;
-var AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
 var errors = require('azure-iot-common').errors;
 var endpoint = require('azure-iot-common').endpoint;
 
 describe('AmqpTwinClient', function () {
 
-  var fakeConfig = {
-    deviceId: 'deviceId'
-  };
-
-  var fakeAuthenticationProvider, fakeAmqpClient, fakeSenderLink, fakeReceiverLink, twinClient;
+  var fakeConfig, fakeAuthenticationProvider, fakeAmqpClient, fakeSenderLink, fakeReceiverLink, twinClient;
 
   beforeEach(function () {
     fakeAuthenticationProvider = {
       getDeviceCredentials: sinon.stub().callsArgWith(0, null, fakeConfig)
     };
 
+    fakeConfig = {
+      deviceId: 'deviceId'
+    };
+
     fakeSenderLink = new EventEmitter();
-      fakeSenderLink.send = sinon.stub().callsArg(1)
+      fakeSenderLink.send = sinon.stub().callsArg(1);
 
       fakeReceiverLink = new EventEmitter();
 
@@ -89,12 +87,25 @@ describe('AmqpTwinClient', function () {
       assert.isTrue(fakeAmqpClient.attachReceiverLink.calledOnce);
     });
 
-    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06v_007: [The endpoint argument for attachReceiverLink shall be `/devices/<deviceId>/twin`.] */
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_007: [The endpoint argument for attachReceiverLink shall be `/devices/<deviceId>/twin`.] */
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_009: [The endpoint argument for attachSenderLink shall be `/devices/<deviceId>/twin`.] */
     it('attaches sender and receiver links to the `/devices/<deviceId>/twin` endpoint.', function() {
       methodUnderTest();
-      assert.isTrue(fakeAmqpClient.attachSenderLink.calledWith('/devices/' + fakeConfig.deviceId + '/twin'));
-      assert.isTrue(fakeAmqpClient.attachReceiverLink.calledWith('/devices/' + fakeConfig.deviceId + '/twin'));
+      assert.strictEqual(fakeAmqpClient.attachSenderLink.firstCall.args[0],'/devices/' + fakeConfig.deviceId + '/twin');
+      assert.strictEqual(fakeAmqpClient.attachReceiverLink.firstCall.args[0],'/devices/' + fakeConfig.deviceId + '/twin');
+    });
+
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_18_001: [If a `moduleId` value was set in the device's connection string, the endpoint argument for `attachReceiverLink` shall be `/devices/<deviceId>/modules/<moduleId>/twin`]*/
+    /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_18_002: [If a `moduleId` value was set in the device's connection string, the endpoint argument for `attachSenderLink` shall be `/device/<deviceId>/modules/<moduleId>/twin`.]*/
+    it('attaches sender and receiver links to the `/devices/<deviceId>/modules/<moduleId>/twin` endpoint when there\'s a moduleId', function() {
+      fakeConfig.moduleId = "fakeModuleId";
+      fakeAuthenticationProvider = {
+        getDeviceCredentials: sinon.stub().callsArgWith(0, null, fakeConfig)
+      };
+      twinClient = new AmqpTwinClient(fakeAuthenticationProvider, fakeAmqpClient);
+      methodUnderTest();
+      assert.strictEqual(fakeAmqpClient.attachSenderLink.firstCall.args[0],'/devices/' + fakeConfig.deviceId + '/modules/' + fakeConfig.moduleId + '/twin');
+      assert.strictEqual(fakeAmqpClient.attachReceiverLink.firstCall.args[0],'/devices/' + fakeConfig.deviceId + '/modules/' + fakeConfig.moduleId + '/twin');
     });
 
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_010: [** The link options argument for attachSenderLink shall be:
@@ -549,10 +560,10 @@ describe('AmqpTwinClient', function () {
       });
 
       it('ignores a message that has no correlationId and no data', function () {
-        twinClient.on('twinDesiredPropertiesUpdate', function (delta) {
+        twinClient.on('twinDesiredPropertiesUpdate', function () {
           assert.fail();
         });
-        twinClient.on('error', function (delta) {
+        twinClient.on('error', function () {
           assert.fail();
         });
 
@@ -566,7 +577,7 @@ describe('AmqpTwinClient', function () {
           },
           data: undefined
         });
-      })
+      });
     });
 
     describe('error', function () {
@@ -577,7 +588,7 @@ describe('AmqpTwinClient', function () {
           assert.isTrue(fakeAmqpClient.detachSenderLink.calledOnce);
           assert.isTrue(fakeAmqpClient.detachReceiverLink.calledOnce);
           testCallback();
-        })
+        });
         twinClient.enableTwinDesiredPropertiesUpdates(function () {
           fakeSenderLink.emit('error', fakeError);
         });
@@ -597,7 +608,7 @@ describe('AmqpTwinClient', function () {
           assert.isTrue(fakeAmqpClient.detachSenderLink.calledOnce);
           assert.isTrue(fakeAmqpClient.detachReceiverLink.calledOnce);
           testCallback();
-        })
+        });
         twinClient.enableTwinDesiredPropertiesUpdates(function () {
           fakeReceiverLink.emit('error', fakeError);
         });

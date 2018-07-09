@@ -7,11 +7,13 @@ var assert = require('chai').assert;
 var Client = require('../lib/client.js').Client;
 var errors = require('azure-iot-common').errors;
 var Message = require('azure-iot-common').Message;
+var debug = require('debug')('azure-iothub:_client_common_testrun');
 
 function transportSpecificTests(opts) {
   describe('Client', function () {
     var testSubject;
     var deviceId = 'testDevice-node-' + Math.random();
+    var moduleId = 'testModule-' + Math.random();
 
     before('prepare test subject', function (done) {
       /*Tests_SRS_NODE_IOTHUB_CLIENT_05_008: [The open method shall open a connection to the IoT Hub that was identified when the Client object was created (e.g., in Client.fromConnectionString).]*/
@@ -19,11 +21,23 @@ function transportSpecificTests(opts) {
       err - standard JavaScript Error object (or subclass)]*/
       /*Tests_SRS_NODE_IOTHUB_CLIENT_05_010: [The argument err passed to the callback done shall be null if the protocol operation was successful.]*/
       opts.registry.create({ deviceId: deviceId, status: "enabled" }, function(err) {
+        debug('create returned ' + (err ? err : 'success'));
         if (err) {
           done(err);
         } else {
-          testSubject = Client.fromConnectionString(opts.connectionString, opts.transport);
-          testSubject.open(function (err) { done(err); });
+          var module = {
+            deviceId: deviceId,
+            moduleId: moduleId
+          };
+          opts.registry.addModule(module, function(err) {
+            debug('addModule returned ' + (err ? err : 'success'));
+            if (err) {
+              done(err);
+            } else {
+              testSubject = Client.fromConnectionString(opts.connectionString, opts.transport);
+              testSubject.open(function (err) { done(err); });
+            }
+          });
         }
       });
     });
@@ -67,19 +81,11 @@ function transportSpecificTests(opts) {
         });
       });
 
-      /*Tests_SRS_NODE_IOTHUB_CLIENT_05_014: [The send method shall convert the message object to type azure-iot-common.Message if necessary.]*/
-      it('accepts any message that is convertible to type Message', function (done) {
-        var message = 'msg';
-        testSubject.send(deviceId, message, function (err, state) {
-            if (!err) {
-            assert.equal(state.constructor.name, "MessageEnqueued");
-            }
-            done(err);
-        });
-      });
-
       /*Tests_SRS_NODE_IOTHUB_CLIENT_05_019: [If the deviceId has not been registered with the IoT Hub, send shall return an instance of DeviceNotFoundError.]*/
       it('returns DeviceNotFoundError when sending to an unregistered deviceId', function (done) {
+        // DeviceNotFound returned because
+        // 1) amqp_simulated has special-case code for devices with 'no-device' in the name.
+        // 2) real hubs don't have this device.
         var unregisteredDeviceId = 'no-device' + Math.random();
         testSubject.send(unregisteredDeviceId, new Message('msg'), function (err) {
             assert.instanceOf(err, errors.DeviceNotFoundError);
@@ -88,12 +94,13 @@ function transportSpecificTests(opts) {
       });
     });
 
+
     describe('#getFeedbackReceiver', function () {
       /*Tests_SRS_NODE_IOTHUB_CLIENT_05_027: [When the `getFeedbackReceiver` method completes, the callback function (indicated by the `done` argument) shall be invoked with the following arguments:
       - `err` - standard JavaScript `Error` object (or subclass): `null` if the operation was successful
       - `receiver` - an `AmqpReceiver` instance: `undefined` if the operation failed]*/
       it('calls the `done` callback with a null error object and an AmqpReceiver object if the operation succeeds', function (done) {
-        testSubject.getFeedbackReceiver(function (err, receiver) {
+        testSubject.getFeedbackReceiver(function (err) {
             if (err) done(err);
             else {
               done();
@@ -107,7 +114,7 @@ function transportSpecificTests(opts) {
       - `err` - standard JavaScript `Error` object (or subclass): `null` if the operation was successful
       - `receiver` - an `AmqpReceiver` instance: `undefined` if the operation failed]*/
       it('calls the `done` callback with a null error object and an AmqpReceiver object if the operation succeeds', function (done) {
-        testSubject.getFileNotificationReceiver(function (err, receiver) {
+        testSubject.getFileNotificationReceiver(function (err) {
           if (err) done(err);
           else {
             done();

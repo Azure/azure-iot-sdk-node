@@ -2,8 +2,7 @@
 
 - [Need Support?](#need-support)
 - [File a bug](#file-a-bug)
-- [Contribute documentation](#contribute-documentation)
-- [Contribute code](#contribute-code)
+- [Contribute code and/or documentation](#contribute-code-andor-documentation)
 
 # Need Support?
 - **Have a feature request for SDKs?** Please post it on [User Voice](https://feedback.azure.com/forums/321918-azure-iot) to help us prioritize

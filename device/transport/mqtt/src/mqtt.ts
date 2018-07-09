@@ -7,7 +7,7 @@ import * as URL from 'url';
 import * as machina from 'machina';
 
 import { endpoint, results, errors, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
-import { DeviceMethodResponse, Client, DeviceClientOptions, TwinProperties } from 'azure-iot-device';
+import { MethodMessage, DeviceMethodResponse, DeviceTransport, DeviceClientOptions, TwinProperties } from 'azure-iot-device';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
 import { getUserAgentString } from 'azure-iot-device';
 import { EventEmitter } from 'events';
@@ -32,7 +32,7 @@ const TOPIC_RESPONSE_PUBLISH_FORMAT = '$iothub/%s/res/%d/?$rid=%s';
  Codes_SRS_NODE_DEVICE_MQTT_12_002: [The `Mqtt` constructor shall store the configuration structure in a member variable
  Codes_SRS_NODE_DEVICE_MQTT_12_003: [The Mqtt constructor shall create an base transport object and store it in a member variable.]
 */
-export class Mqtt extends EventEmitter implements Client.Transport {
+export class Mqtt extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
@@ -40,8 +40,6 @@ export class Mqtt extends EventEmitter implements Client.Transport {
   private _mqtt: MqttBase;
   private _twinClient: MqttTwinClient;
   private _topicTelemetryPublish: string;
-  private _topicMessageSubscribe: string;
-  private _topicMethodSucbscribe: string;
   private _fsm: machina.Fsm;
   private _topics: { [key: string]: TopicDescription };
   private _userAgentString: string;
@@ -112,14 +110,16 @@ export class Mqtt extends EventEmitter implements Client.Transport {
           connect: (callback) => {
             this._fsm.transition('connecting', callback);
           },
-          sendEvent: (topic, payload, options, sendEventCallback) => {
+          sendEvent: (message, outputProps, sendEventCallback) => {
             /*Codes_SRS_NODE_DEVICE_MQTT_16_023: [The `sendEvent` method shall connect the Mqtt connection if it is disconnected.]*/
+            /*Codes_SRS_NODE_DEVICE_MQTT_18_045: [The `sendOutputEvent` method shall connect the Mqtt connection if it is disconnected. ]*/
             this._fsm.handle('connect', (err) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_MQTT_16_024: [The `sendEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to establish a connection.]*/
+                /*Codes_SRS_NODE_DEVICE_MQTT_18_046: [The `sendOutputEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to establish a connection. ]*/
                 sendEventCallback(translateError(err));
               } else {
-                this._fsm.handle('sendEvent', topic, payload, options, sendEventCallback);
+                this._fsm.handle('sendEvent', message, outputProps, sendEventCallback);
               }
             });
           },
@@ -172,6 +172,17 @@ export class Mqtt extends EventEmitter implements Client.Transport {
               }
             });
           },
+          enableInputMessages: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_18_059: [ `enableInputMessages` shall connect the MQTT connection if it is disconnected. ]*/
+            this._fsm.handle('connect', (err) => {
+              if (err) {
+                /*Codes_SRS_NODE_DEVICE_MQTT_18_060: [ `enableInputMessages` shall calls its callback with an `Error` object if it fails to connect. ]*/
+                callback(err);
+              } else {
+                this._fsm.handle('enableInputMessages', callback);
+              }
+            });
+          },
           disableC2D: (callback) => {
             /*Codes_SRS_NODE_DEVICE_MQTT_16_041: [`disableC2D` shall call its callback immediately if the MQTT connection is already disconnected.]*/
             callback();
@@ -192,6 +203,10 @@ export class Mqtt extends EventEmitter implements Client.Transport {
             });
           },
           disableTwinDesiredPropertiesUpdates: (callback) => callback(),
+          disableInputMessages: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_18_064: [ `disableInputMessages` shall call its callback immediately if the MQTT connection is already disconnected. ]*/
+            callback();
+          },
         },
         connecting: {
           _onEnter: (connectCallback) => {
@@ -222,6 +237,8 @@ export class Mqtt extends EventEmitter implements Client.Transport {
 
           /*Codes_SRS_NODE_DEVICE_MQTT_16_025: [If `sendEvent` is called while `MqttBase` is establishing the connection, it shall wait until the connection is established and then send the event.]*/
           /*Codes_SRS_NODE_DEVICE_MQTT_16_035: [If `sendEvent` is called while `MqttBase` is establishing the connection, and `MqttBase` fails to establish the connection, then sendEvent shall fail.]*/
+          /*Codes_SRS_NODE_DEVICE_MQTT_18_047: [If `sendOutputEvent` is called while `MqttBase` is establishing the connection, it shall wait until the connection is established and then send the event. ]*/
+          /*Codes_SRS_NODE_DEVICE_MQTT_18_048: [If `sendOutputEvent` is called while `MqttBase` is establishing the connection, and `MqttBase` fails to establish the connection, then sendEvent shall fail. ]*/
           '*': () => this._fsm.deferUntilTransition()
         },
         connected: {
@@ -234,10 +251,18 @@ export class Mqtt extends EventEmitter implements Client.Transport {
           disconnect: (disconnectCallback) => {
             this._fsm.transition('disconnecting', disconnectCallback);
           },
-          sendEvent: (topic, payload, options, sendEventCallback) => {
-            this._mqtt.publish(topic, payload, options, (err, result) => {
+          sendEvent: (message, outputProps, sendEventCallback) => {
+            /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_008: [The `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`.]*/
+            let topic = this._getEventTopicFromMessage(message, outputProps);
+            if (outputProps) {
+              topic += '/';
+            }
+
+            /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `sendEvent` method shall use QoS level of 1.]*/
+            this._mqtt.publish(topic, message.data, { qos: 1, retain: false }, (err, result) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_MQTT_16_027: [The `sendEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to publish the message.]*/
+                /*Codes_SRS_NODE_DEVICE_MQTT_18_050: [The `sendOutputEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to publish the message. ]*/
                 sendEventCallback(translateError(err));
               } else {
                 sendEventCallback(null, new results.MessageEnqueued(result));
@@ -282,6 +307,9 @@ export class Mqtt extends EventEmitter implements Client.Transport {
           enableMethods: (callback) => {
             this._setupSubscription(this._topics.method, 0, callback);
           },
+          enableInputMessages: (callback) => {
+            this._setupSubscription(this._topics.inputMessage, 1, callback);
+          },
           disableC2D: (callback) => {
             this._removeSubscription(this._topics.message, callback);
           },
@@ -295,7 +323,10 @@ export class Mqtt extends EventEmitter implements Client.Transport {
           /*Codes_SRS_NODE_DEVICE_MQTT_16_059: [`enableTwinDesiredPropertiesUpdates` shall call the `enableTwinDesiredPropertiesUpdates` on the `MqttTwinClient` object created by the constructor and pass it its callback.]*/
           enableTwinDesiredPropertiesUpdates: (callback) => this._twinClient.enableTwinDesiredPropertiesUpdates(callback),
           /*Codes_SRS_NODE_DEVICE_MQTT_16_083: [`disableTwinDesiredPropertiesUpdates` shall call the `disableTwinDesiredPropertiesUpdates` on the `MqttTwinClient` object created by the constructor and pass it its callback.]*/
-          disableTwinDesiredPropertiesUpdates: (callback) => this._twinClient.disableTwinDesiredPropertiesUpdates(callback)
+          disableTwinDesiredPropertiesUpdates: (callback) => this._twinClient.disableTwinDesiredPropertiesUpdates(callback),
+          disableInputMessages: (callback) => {
+            this._removeSubscription(this._topics.inputMessage, callback);
+          },
         },
         disconnecting: {
           _onEnter: (disconnectCallback, err) => {
@@ -306,6 +337,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
             });
           },
           /*Codes_SRS_NODE_DEVICE_MQTT_16_026: [If `sendEvent` is called while `MqttBase` is disconnecting, it shall wait until the disconnection is complete and then try to connect again and send the event. ]*/
+          /*Codes_SRS_NODE_DEVICE_MQTT_18_049: [If `sendOutputEvent` is called while `MqttBase` is disconnecting, it shall wait until the disconnection is complete and then try to connect again and send the event. ]*/
           '*': () => this._fsm.deferUntilTransition()
         }
       }
@@ -351,40 +383,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
   sendEvent(message: Message, done?: (err?: Error, result?: any) => void): void {
     debug('sendEvent ' + JSON.stringify(message));
 
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_008: [The `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`.]*/
-    let topic = this._topicTelemetryPublish;
-    let systemProperties: { [key: string]: string } = {};
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_011: [The `sendEvent` method shall serialize the `messageId` property of the message as a key-value pair on the topic with the key `$.mid`.]*/
-    if (message.messageId) systemProperties['$.mid'] = message.messageId;
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_012: [The `sendEvent` method shall serialize the `correlationId` property of the message as a key-value pair on the topic with the key `$.cid`.]*/
-    if (message.correlationId) systemProperties['$.cid'] = message.correlationId;
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_013: [The `sendEvent` method shall serialize the `userId` property of the message as a key-value pair on the topic with the key `$.uid`.]*/
-    if (message.userId) systemProperties['$.uid'] = message.userId;
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_014: [The `sendEvent` method shall serialize the `to` property of the message as a key-value pair on the topic with the key `$.to`.]*/
-    if (message.to) systemProperties['$.to'] = message.to;
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_015: [The `sendEvent` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`.]*/
-    if (message.expiryTimeUtc) {
-      const expiryString = message.expiryTimeUtc instanceof Date ? message.expiryTimeUtc.toISOString() : message.expiryTimeUtc;
-      systemProperties['$.exp'] = (expiryString || undefined);
-    }
-    /*Codes_SRS_NODE_DEVICE_MQTT_16_084: [The `sendEvent` method shall serialize the `contentType` property of the message as a key-value pair on the topic with the key `$.ct`.]*/
-    if (message.contentType) systemProperties['$.ct'] = <string>message.contentType;
-    /*Codes_SRS_NODE_DEVICE_MQTT_16_083: [The `sendEvent` method shall serialize the `contentEncoding` property of the message as a key-value pair on the topic with the key `$.ce`.]*/
-    if (message.contentEncoding) systemProperties['$.ce'] = <string>message.contentEncoding;
-
-    const sysPropString = querystring.stringify(systemProperties);
-    topic += sysPropString;
-
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_009: [If the message has properties, the property keys and values shall be uri-encoded, then serialized and appended at the end of the topic with the following convention: `<key>=<value>&<key2>=<value2>&<key3>=<value3>(...)`.]*/
-    if (message.properties.count() > 0) {
-      for (let i = 0; i < message.properties.count(); i++) {
-        if (i > 0 || sysPropString) topic += '&';
-        topic += encodeURIComponent(message.properties.propertyList[i].key) + '=' + encodeURIComponent(message.properties.propertyList[i].value);
-      }
-    }
-
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `sendEvent` method shall use QoS level of 1.]*/
-    this._fsm.handle('sendEvent', topic, message.data, { qos: 1, retain: false }, (err, puback) => {
+    this._fsm.handle('sendEvent', message, undefined, (err, puback) => {
       if (err) {
         debug('send error: ' + err.toString());
         done(err);
@@ -406,7 +405,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
    */
   sendEventBatch(messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_056: [The `sendEventBatch` method shall throw a `NotImplementedError`]*/
-    throw new errors.NotImplementedError('AMQP Transport does not support batching yet');
+    throw new errors.NotImplementedError('MQTT Transport does not support batching yet');
   }
 
   /**
@@ -540,7 +539,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
   /**
    * @private
    */
-  onDeviceMethod(methodName: string, callback: (methodRequest: Client.MethodMessage, methodResponse: DeviceMethodResponse) => void): void {
+  onDeviceMethod(methodName: string, callback: (methodRequest: MethodMessage, methodResponse: DeviceMethodResponse) => void): void {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_066: [The `methodCallback` parameter shall be called whenever a `method_<methodName>` is emitted and device methods have been enabled.]*/
     this.on('method_' + methodName, callback);
   }
@@ -557,6 +556,20 @@ export class Mqtt extends EventEmitter implements Client.Transport {
    */
   disableC2D(callback: (err?: Error) => void): void {
     this._fsm.handle('disableC2D', callback);
+  }
+
+  /**
+   * @private
+   */
+  enableInputMessages(callback: (err?: Error) => void): void {
+    this._fsm.handle('enableInputMessages', callback);
+  }
+
+  /**
+   * @private
+   */
+  disableInputMessages(callback: (err?: Error) => void): void {
+    this._fsm.handle('disableInputMessages', callback);
   }
 
   /**
@@ -601,11 +614,43 @@ export class Mqtt extends EventEmitter implements Client.Transport {
     this._fsm.handle('disableTwinDesiredPropertiesUpdates', callback);
   }
 
+  /**
+   * @private
+   */
+  sendOutputEvent(outputName: string, message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    debug('sendOutputEvent ' + JSON.stringify(message));
+
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_035: [ The `sendOutputEvent` method shall call the publish method on `MqttBase`. ]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_039: [ The `sendOutputEvent` method shall use QoS level of 1. ]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_068: [ The `sendOutputEvent` method shall serialize the `outputName` property of the message as a key-value pair on the topic with the key `$.on`. ] */
+    this._fsm.handle('sendEvent', message, { '$.on': outputName }, (err, puback) => {
+      if (err) {
+        debug('send error: ' + err.toString());
+        done(err);
+      } else {
+        debug('PUBACK: ' + JSON.stringify(puback));
+        done(null, new results.MessageEnqueued(puback));
+      }
+    });
+  }
+
+  /**
+   * @private
+   */
+  sendOutputEventBatch(outputName: string, messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_051: [ `sendOutputEventBatch` shall throw a `NotImplementedError` exception. ]*/
+    throw new errors.NotImplementedError('MQTT Transport does not support batching yet');
+  }
 
   protected _getBaseTransportConfig(credentials: TransportConfig): MqttBaseTransportConfig {
     let clientId: string;
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_052: [ If a `moduleId` is specified in the connection string, the Mqtt constructor shall initialize the `clientId` property of the `config` object to '<deviceId>/<moduleId>'. ]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_053: [ If a `moduleId` is not specified in the connection string, the Mqtt constructor shall initialize the `clientId` property of the `config` object to '<deviceId>'. ]*/
-    clientId = credentials.deviceId;
+    if (credentials.moduleId) {
+      clientId = credentials.deviceId + '/' + credentials.moduleId;
+    } else {
+      clientId = credentials.deviceId;
+    }
 
     /*Codes_SRS_NODE_DEVICE_MQTT_16_016: [If the connection string does not specify a `gatewayHostName` value, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_054: [If a `gatewayHostName` is specified in the connection string, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<gatewayhostname>`. ]*/
@@ -613,7 +658,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
     let baseConfig: MqttBaseTransportConfig = {
       uri: 'mqtts://' + (credentials.gatewayHostName || credentials.host),
       username: credentials.host + '/' + clientId +
-        '/' + endpoint.versionQueryString().substr(1) +
+        '/' + endpoint.versionQueryString() +
         '&DeviceClientType=' + encodeURIComponent(this._userAgentString),
       clientId: clientId,
       sharedAccessSignature: credentials.sharedAccessSignature,
@@ -623,33 +668,44 @@ export class Mqtt extends EventEmitter implements Client.Transport {
   }
 
   protected _configureEndpoints(credentials: TransportConfig): void {
-    this._topicTelemetryPublish = 'devices/' + credentials.deviceId + '/messages/events/';
-    this._topicMessageSubscribe = 'devices/' + credentials.deviceId + '/messages/devicebound/#';
-    this._topicMethodSucbscribe = '$iothub/methods/POST/#';
 
+    if (credentials.moduleId) {
+      this._topicTelemetryPublish = endpoint.moduleEventPath(credentials.deviceId, credentials.moduleId).substring(1) + '/';
+    } else {
+      this._topicTelemetryPublish = endpoint.deviceEventPath(credentials.deviceId).substring(1)  + '/';
+    }
     debug('topic publish: ' + this._topicTelemetryPublish);
-    debug('topic subscribe: ' + this._topicMessageSubscribe);
-    /*Codes_SRS_NODE_DEVICE_MQTT_16_016: [The Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
-    (credentials as any).uri = 'mqtts://' + credentials.host;
 
     // MQTT topics to subscribe to
-    this._topics = {
-      'message': {
-        name: this._topicMessageSubscribe,
+    this._topics = {};
+
+    this._topics.method = {
+      name: '$iothub/methods/POST/#',
+      subscribeInProgress: false,
+      subscribed: false,
+      topicMatchRegex: /^\$iothub\/methods\/POST\/.*$/g,
+      handler: this._onDeviceMethod.bind(this)
+    };
+
+    if (credentials.moduleId) {
+      this._topics.inputMessage = {
+        name: endpoint.moduleInputMessagePath(credentials.deviceId, credentials.moduleId).substring(1) + '/#',
+        subscribeInProgress: false,
+        subscribed: false,
+        topicMatchRegex: /^devices\/.*\/modules\/.*\/inputs\/.*\/.*$/g,
+        handler: this._onInputMessage.bind(this)
+      };
+      debug('inputMessage topic subscribe: ' + this._topics.inputMessage.name);
+    } else {
+      this._topics.message = {
+        name: endpoint.deviceMessagePath(credentials.deviceId).substring(1) + '/#',
         subscribeInProgress: false,
         subscribed: false,
         topicMatchRegex: /^devices\/.*\/messages\/devicebound\/.*$/g,
         handler: this._onC2DMessage.bind(this)
-      },
-      'method': {
-        name: this._topicMethodSucbscribe,
-        subscribeInProgress: false,
-        subscribed: false,
-        topicMatchRegex: /^\$iothub\/methods\/POST\/.*$/g,
-        handler: this._onDeviceMethod.bind(this)
-      }
-    };
-
+      };
+      debug('message topic subscribe: ' + this._topics.message.name);
+    }
   }
 
   private _setupSubscription(topic: TopicDescription, qos: 0 | 1, callback: (err?: Error) => void): void {
@@ -658,13 +714,16 @@ export class Mqtt extends EventEmitter implements Client.Transport {
 
     /*Codes_SRS_NODE_DEVICE_MQTT_16_049: [`enableC2D` shall subscribe to the MQTT topic for messages with a QoS of `1`.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_16_040: [`enableMethods` shall subscribe to the MQTT topic for direct methods.]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_061: [`enableInputMessages` shall subscribe to the MQTT topic for inputMessages. ]*/
     this._mqtt.subscribe(topic.name, { qos: qos }, (err) => {
       topic.subscribeInProgress = false;
       topic.subscribed = true;
       /*Codes_SRS_NODE_DEVICE_MQTT_16_050: [`enableC2D` shall call its callback with no arguments when the `SUBACK` packet is received.]*/
       /*Codes_SRS_NODE_DEVICE_MQTT_16_051: [`enableMethods` shall call its callback with no arguments when the `SUBACK` packet is received.]*/
+      /*Codes_SRS_NODE_DEVICE_MQTT_18_062: [`enableInputMessages` shall call its callback with no arguments when the `SUBACK` packet is received. ]*/
       /*Codes_SRS_NODE_DEVICE_MQTT_16_052: [`enableC2D` shall call its callback with an `Error` if subscribing to the topic fails.]*/
       /*Codes_SRS_NODE_DEVICE_MQTT_16_053: [`enableMethods` shall call its callback with an `Error` if subscribing to the topic fails.]*/
+      /*Codes_SRS_NODE_DEVICE_MQTT_18_063: [`enableInputMessages` shall call its callback with an `Error` if subscribing to the topic fails. ]*/
       callback(err);
     });
   }
@@ -674,12 +733,15 @@ export class Mqtt extends EventEmitter implements Client.Transport {
 
     /*Codes_SRS_NODE_DEVICE_MQTT_16_042: [`disableC2D` shall unsubscribe from the topic for C2D messages.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_16_045: [`disableMethods` shall unsubscribe from the topic for direct methods.]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_065: [`disableInputMessages` shall unsubscribe from the topic for inputMessages. ]*/
     this._mqtt.unsubscribe(topic.name, (err) => {
       topic.subscribed = !err;
       /*Tests_SRS_NODE_DEVICE_MQTT_16_054: [`disableC2D` shall call its callback with no arguments when the `UNSUBACK` packet is received.]*/
       /*Tests_SRS_NODE_DEVICE_MQTT_16_055: [`disableMethods` shall call its callback with no arguments when the `UNSUBACK` packet is received.]*/
+      /*Codes_SRS_NODE_DEVICE_MQTT_18_066: [`disableInputMessages` shall call its callback with no arguments when the `UNSUBACK` packet is received. ]*/
       /*Codes_SRS_NODE_DEVICE_MQTT_16_043: [`disableC2D` shall call its callback with an `Error` if an error is received while unsubscribing.]*/
       /*Codes_SRS_NODE_DEVICE_MQTT_16_046: [`disableMethods` shall call its callback with an `Error` if an error is received while unsubscribing.]*/
+      /*Codes_SRS_NODE_DEVICE_MQTT_18_067: [ `disableInputMessages` shall call its callback with an `Error` if an error is received while unsubscribing. ]*/
       callback(err);
     });
   }
@@ -715,34 +777,42 @@ export class Mqtt extends EventEmitter implements Client.Transport {
     const topicParts = topic.split('/');
     // Message properties are always the 5th segment of the topic
     if (topicParts[4]) {
-      const keyValuePairs = topicParts[4].split('&');
+      this._extractPropertiesFromTopicPart(topicParts[4], msg);
+    }
 
-      for (let i = 0; i < keyValuePairs.length; i++) {
-        const keyValuePair = keyValuePairs[i].split('=');
-        const k = decodeURIComponent(keyValuePair[0]);
-        const v = decodeURIComponent(keyValuePair[1]);
+    /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_004: [If there is a listener for the message event, a message event shall be emitted for each message received.]*/
+    this.emit('message', msg);
+  }
 
-        switch (k) {
-          case '$.mid':
-            /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_008: [When a message is received, the receiver shall populate the generated `Message` object `messageId` with the value of the property `$.mid` serialized in the topic, if present.]*/
-            msg.messageId = v;
-            break;
-          case '$.to':
-            /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_009: [When a message is received, the receiver shall populate the generated `Message` object `to` with the value of the property `$.to` serialized in the topic, if present.]*/
-            msg.to = v;
-            break;
-          case '$.exp':
-            /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_010: [When a message is received, the receiver shall populate the generated `Message` object `expiryTimeUtc` with the value of the property `$.exp` serialized in the topic, if present.]*/
-            msg.expiryTimeUtc = v;
-            break;
-          case '$.cid':
-            /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_011: [When a message is received, the receiver shall populate the generated `Message` object `correlationId` with the value of the property `$.cid` serialized in the topic, if present.]*/
-            msg.correlationId = v;
-            break;
-          case '$.uid':
-            /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_012: [When a message is received, the receiver shall populate the generated `Message` object `userId` with the value of the property `$.uid` serialized in the topic, if present.]*/
-            msg.userId = v;
-            break;
+  private _extractPropertiesFromTopicPart(properties: string, msg: Message): void {
+    const keyValuePairs = properties.split('&');
+
+    for (let i = 0; i < keyValuePairs.length; i++) {
+      const keyValuePair = keyValuePairs[i].split('=');
+      const k = decodeURIComponent(keyValuePair[0]);
+      const v = decodeURIComponent(keyValuePair[1]);
+
+      switch (k) {
+        case '$.mid':
+          /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_008: [When a message is received, the receiver shall populate the generated `Message` object `messageId` with the value of the property `$.mid` serialized in the topic, if present.]*/
+          msg.messageId = v;
+          break;
+        case '$.to':
+          /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_009: [When a message is received, the receiver shall populate the generated `Message` object `to` with the value of the property `$.to` serialized in the topic, if present.]*/
+          msg.to = v;
+          break;
+        case '$.exp':
+          /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_010: [When a message is received, the receiver shall populate the generated `Message` object `expiryTimeUtc` with the value of the property `$.exp` serialized in the topic, if present.]*/
+          msg.expiryTimeUtc = v;
+          break;
+        case '$.cid':
+          /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_011: [When a message is received, the receiver shall populate the generated `Message` object `correlationId` with the value of the property `$.cid` serialized in the topic, if present.]*/
+          msg.correlationId = v;
+          break;
+        case '$.uid':
+          /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_012: [When a message is received, the receiver shall populate the generated `Message` object `userId` with the value of the property `$.uid` serialized in the topic, if present.]*/
+          msg.userId = v;
+          break;
           case '$.ct':
             /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_013: [When a message is received, the receiver shall populate the generated `Message` object `contentType` with the value of the property `$.ct` serialized in the topic, if present.]*/
             msg.contentType = <any>v;
@@ -751,16 +821,27 @@ export class Mqtt extends EventEmitter implements Client.Transport {
             /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_014: [When a message is received, the receiver shall populate the generated `Message` object `contentEncoding` with the value of the property `$.ce` serialized in the topic, if present.]*/
             msg.contentEncoding = <any>v;
             break;
-          default:
-            /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_007: [When a message is received, the receiver shall populate the generated `Message` object `properties` property with the user properties serialized in the topic.]*/
-            msg.properties.add(k, v);
-            break;
-        }
+        default:
+          /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_007: [When a message is received, the receiver shall populate the generated `Message` object `properties` property with the user properties serialized in the topic.]*/
+          msg.properties.add(k, v);
+          break;
       }
     }
+  }
 
-    /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_004: [If there is a listener for the message event, a message event shall be emitted for each message received.]*/
-    this.emit('message', msg);
+  private _onInputMessage(topic: string, payload: any): void {
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_056: [ When an `inputMessage` event is emitted, the first parameter shall be the inputName and the second parameter shall be of type `Message`. ]*/
+    let msg = new Message(payload);
+
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_058: [ When an `inputMessage` event is received, Mqtt shall extract the inputName from the topic according to the following convention: 'devices/<deviceId>/modules/<moduleId>/inputs/<inputName>' ]*/
+    const topicParts = topic.split('/');
+    if (topicParts[6]) {
+      this._extractPropertiesFromTopicPart(topicParts[6], msg);
+    }
+    let inputName: string = topicParts[5];
+
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_057: [ An `inputMessage` event shall be emitted for each message received. ]*/
+    this.emit('inputMessage', inputName, msg);
   }
 
   private _onDeviceMethod(topic: string, payload: any): void {
@@ -790,7 +871,56 @@ export class Mqtt extends EventEmitter implements Client.Transport {
     }
   }
 
-  private _ensureAgentString(done: () => void): void {
+  private _getEventTopicFromMessage(message: Message, extraSystemProperties?: { [key: string]: string }): string {
+
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_008: [The `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`.]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_036: [ If a `moduleId` was not specified in the transport connection, the `sendOutputEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`. ]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_037: [ If a `moduleId` was specified in the transport connection, the `sendOutputEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/<moduleId>/messages/events/`. ]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_034: [ If the connection string specifies a `moduleId` value, the `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/<moduleId>/messages/events/` ]*/
+    let topic = this._topicTelemetryPublish;
+    let systemProperties: { [key: string]: string } = extraSystemProperties || {};
+
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_011: [The `sendEvent` method shall serialize the `messageId` property of the message as a key-value pair on the topic with the key `$.mid`.]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_040: [ The `sendOutputEvent` method shall serialize the `messageId` property of the message as a key-value pair on the topic with the key `$.mid`. ]*/
+    if (message.messageId) systemProperties['$.mid'] = message.messageId;
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_012: [The `sendEvent` method shall serialize the `correlationId` property of the message as a key-value pair on the topic with the key `$.cid`.]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_041: [ The `sendOutputEvent` method shall serialize the `correlationId` property of the message as a key-value pair on the topic with the key `$.cid`. ]*/
+    if (message.correlationId) systemProperties['$.cid'] = message.correlationId;
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_013: [The `sendEvent` method shall serialize the `userId` property of the message as a key-value pair on the topic with the key `$.uid`.]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_042: [ The `sendOutputEvent` method shall serialize the `userId` property of the message as a key-value pair on the topic with the key `$.uid`. ]*/
+    if (message.userId) systemProperties['$.uid'] = message.userId;
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_014: [The `sendEvent` method shall serialize the `to` property of the message as a key-value pair on the topic with the key `$.to`.]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_043: [ The `sendOutputEvent` method shall serialize the `to` property of the message as a key-value pair on the topic with the key `$.to`. ]*/
+    if (message.to) systemProperties['$.to'] = message.to;
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_015: [The `sendEvent` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`.]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_044: [ The `sendOutputEvent` method shall serialize the `expiryTimeUtc` property of the message as a key-value pair on the topic with the key `$.exp`. ]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_084: [The `sendEvent` method shall serialize the `contentType` property of the message as a key-value pair on the topic with the key `$.ct`.]*/
+    if (message.contentType) systemProperties['$.ct'] = <string>message.contentType;
+    /*Codes_SRS_NODE_DEVICE_MQTT_16_083: [The `sendEvent` method shall serialize the `contentEncoding` property of the message as a key-value pair on the topic with the key `$.ce`.]*/
+    if (message.contentEncoding) systemProperties['$.ce'] = <string>message.contentEncoding;
+
+
+    if (message.expiryTimeUtc) {
+      const expiryString = message.expiryTimeUtc instanceof Date ? message.expiryTimeUtc.toISOString() : message.expiryTimeUtc;
+      systemProperties['$.exp'] = (expiryString || undefined);
+    }
+
+    const sysPropString = querystring.stringify(systemProperties);
+    topic += sysPropString;
+
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_009: [If the message has properties, the property keys and values shall be uri-encoded, then serialized and appended at the end of the topic with the following convention: `<key>=<value>&<key2>=<value2>&<key3>=<value3>(...)`.]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_18_038: [ If the outputEvent message has properties, the property keys and values shall be uri-encoded, then serialized and appended at the end of the topic with the following convention: `<key>=<value>&<key2>=<value2>&<key3>=<value3>(...)`. ]*/
+    if (message.properties && message.properties.count() > 0) {
+      for (let i = 0; i < message.properties.count(); i++) {
+        if (i > 0 || sysPropString) topic += '&';
+        topic += encodeURIComponent(message.properties.propertyList[i].key) + '=' + encodeURIComponent(message.properties.propertyList[i].value);
+      }
+    }
+
+    return topic;
+  }
+
+   private _ensureAgentString(done: () => void): void {
     if (this._userAgentString) {
       done();
     } else {
@@ -802,6 +932,7 @@ export class Mqtt extends EventEmitter implements Client.Transport {
   }
 
 }
+
 
 /**
  * @private
@@ -825,7 +956,7 @@ class MethodDescription {
 /**
  * @private
  */
-class MethodMessage implements Client.MethodMessage {
+class MethodMessageImpl implements MethodMessage {
   methods: MethodDescription;
   requestId: string;
   properties: { [key: string]: string };
@@ -855,7 +986,7 @@ function _parseMessage(topic: string, body: any): MethodMessage {
   }
 
   if (path.length > 0 && path[0] === '$iothub') {
-    let message = new MethodMessage();
+    let message = new MethodMessageImpl();
     if (path.length > 1 && path[1].length > 0) {
       // create an object for the module; for example, $iothub/twin/...
       // would result in there being a message.twin object

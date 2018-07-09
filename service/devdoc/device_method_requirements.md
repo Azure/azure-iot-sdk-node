@@ -54,7 +54,7 @@ is expressed in seconds and indicates how much time a method should wait for a r
 
 **SRS_NODE_IOTHUB_DEVICE_METHOD_16_011: [** The `invokeOn` method shall construct an HTTP request using information supplied by the caller, as follows:
 ```
-POST /twins/<deviceId>/methods?api-version=<version> HTTP/1.1
+POST /twins/<encodeUriComponent(deviceId)>/methods?api-version=<version> HTTP/1.1
 Authorization: <config.sharedAccessSignature>
 Content-Type: application/json; charset=utf-8
 Request-Id: <guid>
@@ -67,8 +67,29 @@ Request-Id: <guid>
 ```
 **]**
 
-**SRS_NODE_IOTHUB_DEVICE_METHOD_16_017: [** The `invokeOn` method shall uri-encode the device id. **]**
-
 **SRS_NODE_IOTHUB_DEVICE_METHOD_16_009: [** The `invokeOn` method shall invoke the `done` callback with a standard javascript `Error` object if the method execution failed. **]**
 
 **SRS_NODE_IOTHUB_DEVICE_METHOD_16_010: [** The `invokeOn` method shall invoke the `done` callback with a `null` first argument, a result second argument and a transport-specific response third argument if the method execution succeeded. **]**
+
+### invokeOnModule(deviceId: string, moduleId: string, done: DeviceMethod.ResponseCallback): void;
+
+**SRS_NODE_IOTHUB_DEVICE_METHOD_18_001: [** The `invokeOnModule` method shall throw a `ReferenceError` if `deviceId` or `moduleId` is falsy. **]**
+
+**SRS_NODE_IOTHUB_DEVICE_METHOD_18_002: [** The `invokeOnModule` method shall construct an HTTP request using information supplied by the caller, as follows:
+```
+POST /twins/<encodeUriComponent(deviceId)>/modules/<encodeUriComponent(moduleId)>/methods?api-version=<version> HTTP/1.1
+Authorization: <config.sharedAccessSignature>
+Content-Type: application/json; charset=utf-8
+Request-Id: <guid>
+{
+  "methodName": <DeviceMethod.params.name>,
+  "responseTimeoutInSeconds": <DeviceMethod.params.responseTimeoutInSeconds>,
+  "connectTimeoutInSeconds": <DeviceMethod.params.connectTimeoutInSeconds>,
+  "payload": <DeviceMethod.params.payload>
+}
+```
+**]**
+
+**SRS_NODE_IOTHUB_DEVICE_METHOD_18_003: [** The `invokeOnModule` method shall invoke the `done` callback with an standard javascript `Error` object if the method execution failed. **]**
+
+**SRS_NODE_IOTHUB_DEVICE_METHOD_18_004: [** The `invokeOnModule` method shall invoke the `done` callback with a `null` first argument, a result second argument and a transport-specific response third argument if the method execution succeeds. **]**

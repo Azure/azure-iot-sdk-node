@@ -99,6 +99,18 @@ describe('Client', function () {
     });
   });
 
+  var goodSendParameters = [
+    { obj: new Buffer('foo'), name: 'Buffer' },
+    { obj: 'foo', name: 'string' },
+    { obj: [], name: 'Array' },
+    { obj: new ArrayBuffer(), name: 'ArrayBuffer' }
+  ];
+  var badSendParameters = [
+    { obj: 1, name: 'number' },
+    { obj: true, name: 'boolean' },
+    { obj: {}, name: 'object' }
+  ];
+
   describe('#send', function () {
     var testSubject;
 
@@ -128,6 +140,33 @@ describe('Client', function () {
         client.send('id', new Message('msg'));
       });
     });
+
+    /*Tests_SRS_NODE_IOTHUB_CLIENT_18_016: [The `send` method shall throw an `ArgumentError` if the `message` argument is not of type `azure-iot-common.Message` or `azure-iot-common.Message.BufferConvertible`.]*/
+    badSendParameters.forEach(function(testConfig) {
+      it('throws if message is of type ' + testConfig.name, function() {
+        assert.throws(function () {
+          testSubject.send('id', testConfig.obj);
+        }, errors.ArgumentError);
+      });
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_CLIENT_05_014: [The `send` method shall convert the `message` object to type `azure-iot-common.Message` if it is not already of type `azure-iot-common.Message`.]*/
+    goodSendParameters.forEach(function(testConfig) {
+      it('Converts to message if message is of type ' + testConfig.name, function(testCallback) {
+        var simulatedAmqp = new SimulatedAmqp();
+        var client = new Client(simulatedAmqp);
+        sinon.spy(simulatedAmqp, 'send');
+        client.send('id', testConfig.obj, function(err, state) {
+          assert(!err);
+          assert.equal(state.constructor.name, "MessageEnqueued");
+          var sentMessage = simulatedAmqp.send.firstCall.args[1];
+          assert.deepEqual(sentMessage, new Message(testConfig.obj));
+          testCallback();
+        });
+      });
+    });
+
+
   });
 
   describe('#invokeDeviceMethod', function() {
@@ -160,50 +199,60 @@ describe('Client', function () {
         }, TypeError);
       });
     });
+  });
 
-    /*Tests_SRS_NODE_IOTHUB_CLIENT_16_009: [The `invokeDeviceMethod` method shall initialize a new instance of `DeviceMethod` with the `methodName` and `timeout` values passed in the arguments.]*/
-    /*Tests_SRS_NODE_IOTHUB_CLIENT_16_010: [The `invokeDeviceMethod` method shall use the newly created instance of `DeviceMethod` to invoke the method with the `payload` argument on the device specified with the `deviceid` argument .]*/
-    /*Tests_SRS_NODE_IOTHUB_CLIENT_16_013: [The `invokeDeviceMethod` method shall call the `done` callback with a `null` first argument, the result of the method execution in the second argument, and the transport-specific response object as a third argument.]*/
-    it('uses the DeviceMethod client to invoke the method', function(testCallback) {
-      var fakeMethodParams = {
-        methodName: 'method',
-        payload: null,
-        timeoutInSeconds: 42
-      };
+  [
+    { functionUnderTest: function(client, param, callback) { client.invokeDeviceMethod('deviceId', param, callback); } },
+    { functionUnderTest: function(client, param, callback) { client.invokeDeviceMethod('deviceId', 'moduleId', param, callback); } },
+  ].forEach(function(testConfig) {
+    describe('#invokeDeviceMethod', function() {
+      /*Tests_SRS_NODE_IOTHUB_CLIENT_16_009: [The `invokeDeviceMethod` method shall initialize a new instance of `DeviceMethod` with the `methodName` and `timeout` values passed in the arguments.]*/
+      /*Tests_SRS_NODE_IOTHUB_CLIENT_16_010: [The `invokeDeviceMethod` method shall use the newly created instance of `DeviceMethod` to invoke the method with the `payload` argument on the device specified with the `deviceid` argument .]*/
+      /*Tests_SRS_NODE_IOTHUB_CLIENT_16_013: [The `invokeDeviceMethod` method shall call the `done` callback with a `null` first argument, the result of the method execution in the second argument, and the transport-specific response object as a third argument.]*/
+      /*Tests_SRS_NODE_IOTHUB_CLIENT_18_003: [If `moduleIdOrMethodParams` is a string the `invokeDeviceMethod` method shall call `invokeOnModule` on the new `DeviceMethod` instance. ]*/
+      it('uses the DeviceMethod client to invoke the method', function(testCallback) {
+        var fakeMethodParams = {
+          methodName: 'method',
+          payload: null,
+          timeoutInSeconds: 42
+        };
 
-      var fakeResult = { foo: 'bar' };
-      var fakeResponse = { statusCode: 200 };
-      var fakeRestClient = {
-        executeApiCall: function(method, path, headers, body, timeout, callback) {
-          callback(null, fakeResult, fakeResponse);
-        }
-      };
-      var client = new Client({}, fakeRestClient);
+        var fakeResult = { foo: 'bar' };
+        var fakeResponse = { statusCode: 200 };
+        var fakeRestClient = {
+          executeApiCall: function(method, path, headers, body, timeout, callback) {
+            callback(null, fakeResult, fakeResponse);
+          }
+        };
+        var client = new Client({}, fakeRestClient);
 
-      client.invokeDeviceMethod('deviceId', fakeMethodParams, function(err, result, response) {
-        assert.isNull(err);
-        assert.equal(result, fakeResult);
-        assert.equal(response, fakeResponse);
-        testCallback();
+        testConfig.functionUnderTest(client, fakeMethodParams, function(err, result, response) {
+          assert.isNull(err);
+          assert.equal(result, fakeResult);
+          assert.equal(response, fakeResponse);
+          testCallback();
+        });
       });
-    });
 
-    /*Tests_SRS_NODE_IOTHUB_CLIENT_16_012: [The `invokeDeviceMethod` method shall call the `done` callback with a standard javascript `Error` object if the request failed.]*/
-    it('works when payload and timeout are omitted', function(testCallback) {
-      var fakeError = new Error('fake error');
-      var fakeRestClientFails = {
-        executeApiCall: function(method, path, headers, body, timeout, callback) {
-          callback(fakeError);
-        }
-      };
-      var client = new Client({}, fakeRestClientFails);
+      /*Tests_SRS_NODE_IOTHUB_CLIENT_16_012: [The `invokeDeviceMethod` method shall call the `done` callback with a standard javascript `Error` object if the request failed.]*/
+      it('works when payload and timeout are omitted', function(testCallback) {
+        var fakeError = new Error('fake error');
+        var fakeRestClientFails = {
+          executeApiCall: function(method, path, headers, body, timeout, callback) {
+            callback(fakeError);
+          }
+        };
+        var client = new Client({}, fakeRestClientFails);
 
-      client.invokeDeviceMethod('deviceId', { methodName: 'method' }, function(err) {
-        assert.equal(err, fakeError);
-        testCallback();
+        testConfig.functionUnderTest(client, { methodName: 'method' }, function(err) {
+          assert.equal(err, fakeError);
+          testCallback();
+        });
       });
     });
   });
+
+
 
   describe('#open', function() {
     /*Tests_SRS_NODE_IOTHUB_CLIENT_16_004: [The `disconnect` event shall be emitted when the client is disconnected from the server.]*/
@@ -295,7 +344,7 @@ describe('Client', function () {
         assert.strictEqual(err, fakeError);
         testCallback();
       });
-    })
+    });
   });
 
   /*Tests_SRS_NODE_IOTHUB_CLIENT_05_027: [When the `getFeedbackReceiver` method completes, the callback function (indicated by the `done` argument) shall be invoked with the following arguments:
@@ -382,6 +431,7 @@ describe('Client', function () {
 
 var fakeRegistry = {
   create: function(device, done) { done(); },
+  addModule: function(module, done) { done(); },
   delete: function(deviceId, done) { done(); }
 };
 

@@ -10,6 +10,7 @@ var HttpBase = require('../lib/http.js').Http;
 var RestApiClient = require('../lib/rest_api_client.js').RestApiClient;
 
 var fakeConfig = { host: 'host', sharedAccessSignature: 'sas' };
+var socketConfig = { host: { socketPath: '/var/run/foo.sock' }, sharedAccessSignature: 'sas' };
 var fakeAgent = 'agentString';
 
 describe('RestApiClient', function() {
@@ -35,7 +36,7 @@ describe('RestApiClient', function() {
     /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` property.]*/
     ['host'].forEach(function(badPropName) {
       [undefined, null, ''].forEach(function(badPropValue) {
-        it('throws an ArgumentError if config.' + badPropName + 'is \'' + badPropValue + '\'', function() {
+        it('throws an ArgumentError if config.' + badPropName + ' is \'' + badPropValue + '\'', function() {
           var badConfig = JSON.parse(JSON.stringify(fakeConfig));
           badConfig[badPropName] = badPropValue;
           assert.throws(function() {
@@ -130,7 +131,7 @@ describe('RestApiClient', function() {
     });
 
 
-    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_029: [If `done` is `undefined` and the `timeout` argument is a function, `timeout` should be used as the callback.]*/
+    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_029: [If `done` is `undefined` and the `timeout` argument is a function, `timeout` should be used as the callback and mark `requestOptions` and `timeout` as `undefined`.]*/
     it('can use the timeout parameter as callback', function(testCallback) {
       var fakeHttpHelper = {
         buildRequest: function(method, path, headers, host, requestCallback) {
@@ -148,6 +149,90 @@ describe('RestApiClient', function() {
 
       var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
       client.executeApiCall('GET', '/fake/path', null, null, testCallback);
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_13_001: [** If `done` is `undefined` and the `requestOptions` argument is a function, then `requestOptions` should be used as the callback and mark `requestOptions` as `undefined`.*/
+    it('can use the requestOptions parameter as callback', function(testCallback) {
+      var fakeHttpHelper = {
+        buildRequest: function(method, path, headers, host, requestCallback) {
+          return {
+            setTimeout: function() {},
+            write: function() {},
+            end: function() {
+              requestCallback();
+            }
+          };
+        }
+      };
+
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
+      client.executeApiCall('GET', '/fake/path', null, null, 10, testCallback);
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_13_002: [** If `timeout` is an object and `requestOptions` is `undefined`, then assign `timeout` to `requestOptions` and mark `timeout` as `undefined`.*/
+    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_13_003: [** If `requestOptions` is not falsy then it shall be passed to the `buildRequest` function.*/
+    it('can use the timeout parameter as requestOptions', function(testCallback) {
+      var fakeHttpHelper = {
+        buildRequest: function(method, path, headers, host, requestOptions) {
+          return {
+            setTimeout: function() {
+              assert.fail();
+            },
+            write: function() {},
+            end: function() {
+              assert.strictEqual(requestOptions.port, 2000);
+              testCallback();
+            }
+          };
+        }
+      };
+
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
+      client.executeApiCall('GET', '/fake/path', null, null, { port: 2000 });
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_13_003: [** If `requestOptions` is not falsy then it shall be passed to the `buildRequest` function.*/
+    it('uses the timeout parameter and requestOptions when specified', function(testCallback) {
+      var testTimeout = 42000;
+      var fakeHttpHelper = {
+        buildRequest: function(method, path, headers, host, requestOptions) {
+          return {
+            setTimeout: function(timeout) {
+              assert.equal(timeout, testTimeout);
+            },
+            write: function() {},
+            end: function() {
+              assert.strictEqual(requestOptions.port, 2000);
+              testCallback();
+            }
+          };
+        }
+      };
+
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
+      client.executeApiCall('GET', '/fake/path', null, null, testTimeout, { port: 2000 });
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_13_003: [** If `requestOptions` is not falsy then it shall be passed to the `buildRequest` function.*/
+    it('uses the timeout parameter, requestOptions and callback when specified', function(testCallback) {
+      var testTimeout = 42000;
+      var fakeHttpHelper = {
+        buildRequest: function(method, path, headers, host, requestOptions, requestCallback) {
+          return {
+            setTimeout: function(timeout) {
+              assert.equal(timeout, testTimeout);
+            },
+            write: function() {},
+            end: function() {
+              assert.strictEqual(requestOptions.port, 2000);
+              requestCallback();
+            }
+          };
+        }
+      };
+
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
+      client.executeApiCall('GET', '/fake/path', null, null, testTimeout, { port: 2000 }, testCallback);
     });
 
     /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_030: [If `timeout` is defined and is not a function, the HTTP request timeout shall be adjusted to match the value of the argument.]*/
@@ -172,37 +257,46 @@ describe('RestApiClient', function() {
     });
 
     /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_008: [The `executeApiCall` method shall build the HTTP request using the arguments passed by the caller.]*/
-    it('builds the HTTP request with the passed arguments', function(testCallback) {
-      var testMethod = 'GET';
-      var testPath = '/test/path';
-      var testHeaderKey = 'Content-Type';
-      var testHeaderValue = 'text/plain; charset=utf-8';
-      var testHeaders = {};
-      testHeaders[testHeaderKey] = testHeaderValue;
-      var testRequestBody = 'foo';
-      var testTimeout = 42;
+    [fakeConfig, socketConfig].forEach(transportConfig => {
+      it('builds the HTTP request with the passed arguments', function(testCallback) {
+        var testMethod = 'GET';
+        var testPath = '/test/path';
+        var testHeaderKey = 'Content-Type';
+        var testHeaderValue = 'text/plain; charset=utf-8';
+        var testHeaders = {};
+        testHeaders[testHeaderKey] = testHeaderValue;
+        var testRequestBody = 'foo';
+        var testTimeout = 42;
 
-      var fakeHttpHelper = {
-        buildRequest: function(method, path, headers, host, requestCallback) {
-          assert.equal(method, testMethod);
-          assert.equal(path, testPath);
-          assert.equal(headers[testHeaderKey], testHeaderValue);
-          return {
-            setTimeout: function(timeout) {
-              assert.equal(timeout, testTimeout);
-            },
-            write: function(body) {
-              assert.equal(body, testRequestBody);
-            },
-            end: function() {
-              requestCallback();
+        var fakeHttpHelper = {
+          buildRequest: function(method, path, headers, host, requestCallback) {
+            assert.equal(method, testMethod);
+            assert.equal(path, testPath);
+            assert.equal(headers[testHeaderKey], testHeaderValue);
+
+            if (typeof(host) === 'string') {
+              assert.equal(transportConfig.host, host);
+            } else {
+              assert.equal(transportConfig.host.socketPath, host.socketPath);
             }
-          };
-        }
-      };
 
-      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
-      client.executeApiCall(testMethod, testPath, testHeaders, testRequestBody, testTimeout, testCallback);
+            return {
+              setTimeout: function(timeout) {
+                assert.equal(timeout, testTimeout);
+              },
+              write: function(body) {
+                assert.equal(body, testRequestBody);
+              },
+              end: function() {
+                requestCallback();
+              }
+            };
+          }
+        };
+
+        var client = new RestApiClient(transportConfig, fakeAgent, fakeHttpHelper);
+        client.executeApiCall(testMethod, testPath, testHeaders, testRequestBody, testTimeout, testCallback);
+      });
     });
 
     /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_009: [If the HTTP request is successful the `executeApiCall` method shall parse the JSON response received and call the `done` callback with a `null` first argument, the parsed result as a second argument and the HTTP response object itself as a third argument.]*/

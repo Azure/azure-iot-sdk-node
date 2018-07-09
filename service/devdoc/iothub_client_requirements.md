@@ -89,7 +89,9 @@ The `send` method sends a cloud-to-device message to the service, intended for d
 
 **SRS_NODE_IOTHUB_CLIENT_05_013: [**The `send` method shall throw `ReferenceError` if the deviceId or message arguments are falsy.**]**
 
-**SRS_NODE_IOTHUB_CLIENT_05_014: [**The `send` method shall convert the message object to type azure-iot-common.Message if necessary.**]**
+**SRS_NODE_IOTHUB_CLIENT_18_016: [** The `send` method shall throw an `ArgumentError` if the `message` argument is not of type `azure-iot-common.Message` or `azure-iot-common.Message.BufferConvertible`. **]**
+
+**SRS_NODE_IOTHUB_CLIENT_05_014: [**The `send` method shall convert the `message` object to type `azure-iot-common.Message` if it is not already of type `azure-iot-common.Message`. **]**
 
 **SRS_NODE_IOTHUB_CLIENT_05_016: [**When the `send` method completes, the callback function (indicated by the done - argument) shall be invoked with the following arguments:
 - `err` - standard JavaScript Error object (or subclass)
@@ -106,6 +108,8 @@ The `send` method sends a cloud-to-device message to the service, intended for d
 **SRS_NODE_IOTHUB_CLIENT_16_023: [** The `send` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to send the message. **]**
 
 **SRS_NODE_IOTHUB_CLIENT_16_030: [** The `send` method shall not throw if the `done` callback is falsy. **]**
+
+
 
 ###getFeedbackReceiver(done)
 The `getFeedbackReceiver` method is used to obtain an `AmqpReceiver` object which emits events when new feedback messages are received by the client.
@@ -143,8 +147,15 @@ The `close` method closes the connection opened by open.
 
 **SRS_NODE_IOTHUB_CLIENT_16_005: [** The `close` method should not throw if the `done` callback is not specified. **]**
 
-### invokeDeviceMethod(deviceId, methodParams, done)
-The `invokeDeviceMethod` method calls a device method on a specific device and calls back with the result of this method's execution.
+### invokeDeviceMethod(deviceId: string, moduleIdOrMethodParams: string | DeviceMethodParams, methodParamsOrDone?: DeviceMethodParams | Callback<any>, done?: Callback<any>): void;
+The `invokeDeviceMethod` method calls a device method on a specific device or module and calls back with the result of this method's execution.
+
+#### Valid prototypes:
+```typescript
+invokeDeviceMethod(deviceId: string, methodParams: DeviceMethodParams, done?: Callback<any>): void;
+invokeDeviceMethod(deviceId: string, moduleId: string, methodParams: DeviceMethodParams, done?: Callback<any>): void;
+invokeDeviceMethod(deviceId: string, moduleIdOrMethodParams: string | DeviceMethodParams, methodParamsOrDone?: DeviceMethodParams | Callback<any>, done?: Callback<any>): void;
+```
 
 **SRS_NODE_IOTHUB_CLIENT_16_014: [** The `invokeDeviceMethod` method shall throw a `ReferenceError` if `deviceId` is `null`, `undefined` or an empty string. **]**
 
@@ -161,6 +172,8 @@ The `invokeDeviceMethod` method calls a device method on a specific device and c
 **SRS_NODE_IOTHUB_CLIENT_16_013: [** The `invokeDeviceMethod` method shall call the `done` callback with a `null` first argument, the result of the method execution in the second argument, and the transport-specific response object as a third argument. **]**
 
 **SRS_NODE_IOTHUB_CLIENT_16_026: [** The `invokeDeviceMethod` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to send the method request. **]**
+
+**SRS_NODE_IOTHUB_CLIENT_18_003: [** If `moduleIdOrMethodParams` is a string the `invokeDeviceMethod` method shall call `invokeOnModule` on the new `DeviceMethod` instance. **]**
 
 ### setRetryPolicy(policy)
 

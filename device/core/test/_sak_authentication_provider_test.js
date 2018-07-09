@@ -40,7 +40,7 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
       });
     });
 
-    /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_002: [The `constructor` shall start a timer that will automatically renew the token every (`tokenValidTimeInSeconds` - `tokenRenewalMarginInSeconds`) seconds if specified, or 45 minutes by default.]*/
+    /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_002: [The `getDeviceCredentials` method shall start a timer that will automatically renew the token every (`tokenValidTimeInSeconds` - `tokenRenewalMarginInSeconds`) seconds if specified, or 45 minutes by default.]*/
     it('starts a timer to renew the token', function (testCallback) {
       this.clock = sinon.useFakeTimers();
       var testClock = this.clock;
@@ -71,6 +71,75 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
           });
         });
       });
+    });
+
+    it('getDeviceCredentials renews token on demand', function (testCallback) {
+      this.clock = sinon.useFakeTimers();
+      var testClock = this.clock;
+      var fakeCredentials = {
+        deviceId: 'fakeDeviceId',
+        host: 'fake.host.name',
+        sharedAccessKey: 'fakeKey'
+      };
+      var token;
+      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+
+      // the following line will cause _shouldRenewToken to resolve to true
+      sakAuthProvider._currentTokenExpiryTimeInSeconds = undefined;
+
+      sakAuthProvider.getDeviceCredentials(function (err, creds) {
+        assert.equal(creds.sharedAccessSignature, 'SharedAccessSignature sr=fake.host.name%2Fdevices%2FfakeDeviceId&sig=bYz5R2IFTaejB6pgYOxns2mw6lcuA4VSy8kJbYQp0Sc%3D&se=10');
+        testClock.restore();
+        testCallback();
+      });
+    });
+
+    it('emits an error if _sign fails while automatically renewing on token timeout', function (testCallback) {
+      var fakeCredentials = {
+        deviceId: 'fakeDeviceId',
+        host: 'fake.host.name',
+        sharedAccessKey: 'fakeKey'
+      };
+      var fakeError = new Error('whoops');
+      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+      var eventSpy = sinon.spy();
+      sakAuthProvider.on('error', function (err) {
+        assert.strictEqual(err, fakeError);
+        testCallback();
+      });
+
+      sinon.stub(sakAuthProvider, '_sign').callsArgWith(2, fakeError);
+      sakAuthProvider._expiryTimerHandler();
+    });
+
+    it('getDeviceCredentials propagates error via callback if _sign fails', function (testCallback) {
+      var fakeCredentials = {
+        deviceId: 'fakeDeviceId',
+        host: 'fake.host.name',
+        sharedAccessKey: 'fakeKey'
+      };
+      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+
+      sinon.stub(sakAuthProvider, '_sign').callsArgWith(2, 'whoops');
+      sakAuthProvider.getDeviceCredentials(function(err) {
+        assert.equal(err, 'whoops');
+        testCallback();
+      });
+    });
+
+    it('_renewToken provides result via callback', function (testCallback) {
+      var fakeCredentials = {
+        deviceId: 'fakeDeviceId',
+        host: 'fake.host.name',
+        sharedAccessKey: 'fakeKey'
+      };
+      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+
+      sinon.stub(sakAuthProvider, '_sign').callsArgWith(2, null, 'signature');
+      sakAuthProvider._renewToken(function(err, creds) {
+        assert.equal(creds.sharedAccessSignature, 'signature');
+      });
+      testCallback();
     });
 
     /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_011: [The `constructor` shall throw an `ArgumentError` if the `tokenValidTimeInSeconds` is less than or equal `tokenRenewalMarginInSeconds`.]*/
@@ -104,20 +173,36 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
     });
 
     /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_008: [The `fromConnectionString` method shall extract the credentials from the `connectionString` argument and create a new `SharedAccessKeyAuthenticationProvider` that uses these credentials to generate security tokens.]*/
-    it('initializes the credentials from the connection string', function (testCallback) {
-      var fakeCredentials = {
-        deviceId: 'fakeDeviceId',
-        host: 'fake.host.name',
-        sharedAccessKey: 'fakeKey'
-      };
-      var fakeConnectionString = 'DeviceId=' + fakeCredentials.deviceId + ';HostName=' + fakeCredentials.host + ';SharedAccessKey=' + fakeCredentials.sharedAccessKey;
-
-      var sakAuthProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString(fakeConnectionString, 2, 1);
-      sakAuthProvider.getDeviceCredentials(function (err, creds) {
-        assert.strictEqual(creds.deviceId, fakeCredentials.deviceId);
-        assert.strictEqual(creds.host, fakeCredentials.host);
-        assert.strictEqual(creds.sharedAccessKey, fakeCredentials.sharedAccessKey);
-        testCallback();
+    [
+      {
+        name: 'without moduleId',
+        connectionString: 'DeviceId=fakeDeviceId;HostName=fake.host.name;SharedAccessKey=fakeKey',
+        credentials: {
+          deviceId: 'fakeDeviceId',
+          host: 'fake.host.name',
+          sharedAccessKey: 'fakeKey'
+        }
+      },
+      {
+        name: 'with moduleId',
+        connectionString: 'DeviceId=fakeDeviceId;ModuleId=fakeModuleId;HostName=fake.host.name;SharedAccessKey=fakeKey',
+        credentials: {
+          deviceId: 'fakeDeviceId',
+          moduleId: 'fakeModuleId',
+          host: 'fake.host.name',
+          sharedAccessKey: 'fakeKey'
+        }
+      }
+    ].forEach(function(testConfig) {
+      it('initializes the credentials from the connection string ' + testConfig.name, function (testCallback) {
+        var sakAuthProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString(testConfig.connectionString, 2, 1);
+        sakAuthProvider.getDeviceCredentials(function (err, creds) {
+          assert.strictEqual(creds.deviceId, testConfig.credentials.deviceId);
+          assert.strictEqual(creds.moduleId, testConfig.credentials.moduleId);
+          assert.strictEqual(creds.host, testConfig.credentials.host);
+          assert.strictEqual(creds.sharedAccessKey, testConfig.credentials.sharedAccessKey);
+          testCallback();
+        });
       });
     });
   });

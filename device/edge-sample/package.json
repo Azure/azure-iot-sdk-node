@@ -1,0 +1,20 @@
+{
+  "name": "iot-edge-sample",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Sample module showing an Azure IoT Edge module in Node.js",
+  "author": "Microsoft Corp.",
+  "license": "MIT",
+  "dependencies": {
+    "azure-iot-device": "1.5.2-modules-preview.3",
+    "azure-iot-device-mqtt": "1.5.2-modules-preview.3"
+  },
+  "devDependencies": {
+    "jshint": "^2.9.2"
+  },
+  "scripts": {
+    "lint": "jshint --show-non-errors .",
+    "test": "npm -s run lint",
+    "build": "echo nothing to build"
+  }
+}

@@ -38,7 +38,7 @@ registry.getTwin('deviceId', function(err, twin) {
         console.log(twin.deviceId + ' twin updated successfully');
       }
     });
-    
+
     // This will succeed even if the twin was updated by another service between the time of the `get` and the `update` operation because we are setting the etag to '*'
     twin.etag = '*';
     twin.update(patch, function(err) {
@@ -68,7 +68,7 @@ var propPatch = {
     }
 };
 
-// When the twin is manually created and not retrieved from the IoT Hub, the second parameter (force) must be set to true because we have no valid twin etag. 
+// When the twin is manually created and not retrieved from the IoT Hub, the second parameter (force) must be set to true because we have no valid twin etag.
 twin.properties.desired.update(propPatch, true, function (err) {
   if (err) {
     console.error(err.constructor.name + ': ' + err.message);
@@ -79,7 +79,7 @@ twin.properties.desired.update(propPatch, true, function (err) {
 ```
 
 ## Constructors
-In the majority of cases, users are better of creating `Twin` objects using the `Registry.getTwin()` API. This will not only return a new Twin instance but will 
+In the majority of cases, users are better of creating `Twin` objects using the `Registry.getTwin()` API. This will not only return a new Twin instance but will
 populate it with the latest state from the Device Registry, including the etag that is used to protect a twin against multiple concurrent updates.
 
 In advanced cases where benefitting from optimistic concurrency is not desired or desirable, the `Twin` constructors allow the users to create an empty `Twin` object initialized with only the arguments passed to it. It will also set the etag to `*`
@@ -103,26 +103,40 @@ having to get it first which can be useful in some high performance scenarios.
 ### get(done)
 The `get` method is used to refresh the `Twin` instance with the latest values from the IoT Hub Registry.
 
-**SRS_NODE_IOTHUB_TWIN_16_020: [** The `get` method shall call the `getTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+**SRS_NODE_IOTHUB_TWIN_16_020: [** If `this.moduleId` is falsy, The `get` method shall call the `getTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
 - `this.deviceId`
 - `done`
 **]**
 
+**SRS_NODE_IOTHUB_TWIN_18_001: [** If `this.moduleId` is not falsy, the `get` method shall call the `getModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+  - `this.deviceId`
+  - `this.moduleId`
+  - `done`
+**]**
+
 ### update(patch, done)
-The `update` method is used to update any part of the device twin stored in the IoT Hub registry with the values passed as a patch argument. 
+The `update` method is used to update any part of the device twin stored in the IoT Hub registry with the values passed as a patch argument.
 To satisfy optimistic concurrency requirements, the HTTP request `If-Match` header will be populated with the `Twin.eTag` field if defined. If not defined, `*` will be used.
 
-**SRS_NODE_IOTHUB_TWIN_16_019: [** The `update` method shall call the `updateTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+**SRS_NODE_IOTHUB_TWIN_16_019: [** If `this.moduleId` is falsy, The `update` method shall call the `updateTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
 - `this.deviceId`
 - `patch`
 - `this.etag`
 - `done`
 **]**
 
+**SRS_NODE_IOTHUB_TWIN_18_002: [** If `this.moduleId` is not falsy, the `update` method shall call the `updateModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+  - `this.deviceId`
+  - `this.moduleId`
+  - `patch`
+  - `this.etag`
+  - `done`
+**]**
+
 ### All twin methods calling to a Registry API
-**SRS_NODE_IOTHUB_TWIN_16_021: [** The method shall copy properties, tags, and etag in the twin returned in the callback of the `Registry` method call into its parent object. **]**  
-**SRS_NODE_IOTHUB_TWIN_16_022: [** The method shall call the `done` callback with an `Error` object if the request failed **]**  
-**SRS_NODE_IOTHUB_TWIN_16_023: [** The method shall call the `done` callback with a `null` error object, its parent instance as a second argument and the transport `response` object as a third argument if the request succeeded. **]**  
+**SRS_NODE_IOTHUB_TWIN_16_021: [** The method shall copy properties, tags, and etag in the twin returned in the callback of the `Registry` method call into its parent object. **]**
+**SRS_NODE_IOTHUB_TWIN_16_022: [** The method shall call the `done` callback with an `Error` object if the request failed **]**
+**SRS_NODE_IOTHUB_TWIN_16_023: [** The method shall call the `done` callback with a `null` error object, its parent instance as a second argument and the transport `response` object as a third argument if the request succeeded. **]**
 
 ### toJSON()
 The `toJSON` method is called when calling `JSON.stringify()` on a `Twin` object.

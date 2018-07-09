@@ -25,6 +25,14 @@ function FakeTransport() {
     callback(null, new results.MessageEnqueued());
   };
 
+  this.sendOutputEvent = function (outputName, msg, callback) {
+    callback(null, new results.MessageEnqueued());
+  };
+
+  this.sendOutputEventBatch = function (outputName, msg, callback) {
+    callback(null, new results.MessageEnqueued());
+  };
+
   this.complete = function (msg, callback) {
     callback(null, new results.MessageCompleted());
   };
@@ -53,9 +61,24 @@ function FakeTransport() {
     callback();
   };
 
+  this.enableInputMessages = function (callback) {
+    callback();
+  };
+
+  this.disableInputMessages = function (callback) {
+    callback();
+  };
+
   this.getTwin = function (callback) {
     callback(null, { desired: {}, reported: {} });
   };
+
+  this.enableMethods = function(callback) {
+    callback();
+  };
+
+  this.onDeviceMethod = function(methodName, callback) {
+  }
 }
 
 util.inherits(FakeTransport, EventEmitter);

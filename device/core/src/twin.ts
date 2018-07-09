@@ -9,7 +9,7 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:Twin');
 
 import { RetryPolicy, RetryOperation } from 'azure-iot-common';
-import { Client } from './client';
+import { DeviceTransport } from './internal_client';
 
 /**
  * Contains the desired and reported properties for the Twin.
@@ -46,11 +46,11 @@ export class Twin extends EventEmitter {
    */
 
   /**
-   * The desired and reported properties dictionnaries (respectively in `properties.desired` and `properties.reported`).
+   * The desired and reported properties dictionaries (respectively in `properties.desired` and `properties.reported`).
    */
   properties: TwinProperties;
   desiredPropertiesUpdatesEnabled: boolean;
-  private _transport: Client.Transport;
+  private _transport: DeviceTransport;
   private _retryPolicy: RetryPolicy;
   private _maxOperationTimeout: number;
 
@@ -62,7 +62,7 @@ export class Twin extends EventEmitter {
    * @param retryPolicy  The retry policy to apply when encountering an error.
    * @param maxTimeout   The maximum time allowed for the twin to retry before the operation is considered failed.
    */
-  constructor(transport: Client.Transport, retryPolicy: RetryPolicy, maxTimeout: number) {
+  constructor(transport: DeviceTransport, retryPolicy: RetryPolicy, maxTimeout: number) {
     super();
     this._transport = transport;
     this._retryPolicy = retryPolicy;

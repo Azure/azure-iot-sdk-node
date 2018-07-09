@@ -65,7 +65,7 @@ SRS_NODE_COMMON_SAS_05_020: [The skn segment is not part of the returned string 
 Creates a `SharedAccessSignature` utilizing the supplied `signingFunction`.  If the signing operation is successful the results will be made available via the `callback`
 
 **SRS_NODE_COMMON_SAS_06_001: [** If `credentials`, `expiry`, `signingFunction`, or `callback` are falsy, `createWithSigningFunction` shall throw `ReferenceError`. **]**
-**SRS_NODE_COMMON_SAS_06_002: [** The `createWithSigningFunction` shall create a `SharedAccessSignature` object with an `sr` property formed by url encoding `credentials.host` + `/devices/` + `credentials.deviceId`. **]**
+**SRS_NODE_COMMON_SAS_06_002: [** The `createWithSigningFunction` shall create a `SharedAccessSignature` object with an `sr` property formed by url encoding `credentials.host` + `/devices/` + `credentials.deviceId` + `/modules/` + `credentials.moduleId`. **]**
 **SRS_NODE_COMMON_SAS_06_003: [** The `createWithSigningFunction` shall create a `SharedAccessSignature` object with an `se` property containing the value of the parameter `expiry`. **]**
 **SRS_NODE_COMMON_SAS_06_004: [** The `createWithSigningFunction` shall create a `SharedAccessSignature` object with an optional property `skn`, if the `credentials.sharedAccessKeyName` is not falsy,  The value of the `skn` property will be the url encoded value of `credentials.sharedAccessKeyName`. **]**
 **SRS_NODE_COMMON_SAS_06_005: [** The `createWithSigningFunction` shall create a `SharedAccessSignature` object with a `sig` property with the SHA256 hash of the string sr + `\n` + se.  The `sig` value will first be base64 encoded THEN url encoded. **]**

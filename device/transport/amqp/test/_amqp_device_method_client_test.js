@@ -67,19 +67,19 @@ describe('AmqpDeviceMethodClient', function () {
       var fakeAmqpClient = {
         /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_014: [The `AmqpDeviceMethodClient` object shall set 2 properties of any AMQP link that it create:
         - `com.microsoft:api-version` shall be set to the current API version in use.
-        - `com.microsoft:channel-correlation-id` shall be set to the identifier of the device (also often referred to as `deviceId`).]*/
+        - `com.microsoft:channel-correlation-id` shall be set to the string "methods:" followed by a guid.]*/
         /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_017: [The endpoint used to for the sender and receiver link shall be `/devices/<device-id>/methods/devicebound`.]*/
         /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_012: [The `AmqpDeviceMethodClient` object shall automatically establish the AMQP links required to receive method calls and send responses when either `onDeviceMethod` or `sendMethodResponse` is called.]*/
         attachSenderLink: function(ep, options, callback) {
           assert.strictEqual(ep, '/devices/' + fakeConfig.deviceId + '/methods/devicebound');
           assert.strictEqual(options.properties['com.microsoft:api-version'], endpoint.apiVersion);
-          assert.strictEqual(options.properties['com.microsoft:channel-correlation-id'], fakeConfig.deviceId);
+          assert(options.properties['com.microsoft:channel-correlation-id'].startsWith('methods:'));
           callback(null, {});
         },
         attachReceiverLink: function(ep, options, callback) {
           assert.strictEqual(ep, '/devices/' + fakeConfig.deviceId + '/methods/devicebound');
           assert.strictEqual(options.properties['com.microsoft:api-version'], endpoint.apiVersion);
-          assert.strictEqual(options.properties['com.microsoft:channel-correlation-id'], fakeConfig.deviceId);
+          assert(options.properties['com.microsoft:channel-correlation-id'].startsWith('methods:'));
           callback(null, fakeAmqpReceiver);
         }
       };
@@ -100,6 +100,56 @@ describe('AmqpDeviceMethodClient', function () {
         fakeAmqpReceiver.emit('message', fakeMethodRequest);
       });
     });
+
+    /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_017: [The endpoint used to for the sender and receiver link shall be `/devices/<device-id>/methods/devicebound`.]*/
+    /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_18_001: [If a `moduleId` value was set in the device's connection string, The endpoint used to for the sender and receiver link shall be `/devices/<deviceId>/modules/<moduleId>/methods/devicebound`.]*/
+    [{
+      deviceId: 'fakeDeviceId',
+      moduleId: undefined,
+      expectedEndpoint: '/devices/fakeDeviceId/methods/devicebound'
+    },
+    {
+      deviceId: 'fakeDeviceId',
+      moduleId: 'fakeModuleId',
+      expectedEndpoint: '/devices/fakeDeviceId/modules/fakeModuleId/methods/devicebound'
+    }].forEach(function(testConfig) {
+      it('uses the right link parameters when moduleId is ' + testConfig.moduleId, function(testCallback) {
+        var authProvider = {
+          getDeviceCredentials: sinon.stub().callsArgWith(0, null, testConfig)
+        };
+
+        var fakeAmqpReceiver = new EventEmitter();
+        var fakeMethodName = 'testMethod';
+        var fakeMethodRequest = new AmqpMessage();
+        fakeMethodRequest.body = 'payload';
+        fakeMethodRequest.properties = {
+          correlationId: 'fakeCorrelationId'
+        };
+        fakeMethodRequest.applicationProperties = {
+          'IoThub-methodname': fakeMethodName
+        };
+
+        var fakeAmqpClient = {
+          attachSenderLink: sinon.spy(function(ep, options, callback) {
+            assert.strictEqual(ep, testConfig.expectedEndpoint);
+            callback(null, {});
+          }),
+          attachReceiverLink: sinon.spy(function(ep, options, callback) {
+            assert.strictEqual(ep, testConfig.expectedEndpoint);
+            callback(null, fakeAmqpReceiver);
+          })
+        };
+
+        var client = new AmqpDeviceMethodClient(authProvider, fakeAmqpClient);
+        client.attach(function () {
+          client.onDeviceMethod(fakeMethodName, function() {});
+          assert(fakeAmqpClient.attachSenderLink.calledOnce);
+          assert(fakeAmqpClient.attachReceiverLink.calledOnce);
+          testCallback();
+        });
+      });
+    });
+
 
     it('saves the callback for the method even though it is detached and works when attached', function (testCallback) {
       var fakeAmqpReceiver = new EventEmitter();
@@ -212,19 +262,19 @@ describe('AmqpDeviceMethodClient', function () {
       var fakeAmqpClient = {
         /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_014: [The `AmqpDeviceMethodClient` object shall set 2 properties of any AMQP link that it create:
         - `com.microsoft:api-version` shall be set to the current API version in use.
-        - `com.microsoft:channel-correlation-id` shall be set to the identifier of the device (also often referred to as `deviceId`).]*/
+        - `com.microsoft:channel-correlation-id` shall be set to the string "methods:" followed by a guid.]*/
         /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_017: [The endpoint used to for the sender and receiver link shall be `/devices/<device-id>/methods/devicebound`.]*/
         /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_012: [The `AmqpDeviceMethodClient` object shall automatically establish the AMQP links required to receive method calls and send responses when either `onDeviceMethod` or `sendMethodResponse` is called.]*/
         attachSenderLink: function(ep, options, callback) {
           assert.strictEqual(ep, '/devices/' + fakeConfig.deviceId + '/methods/devicebound');
           assert.strictEqual(options.properties['com.microsoft:api-version'], endpoint.apiVersion);
-          assert.strictEqual(options.properties['com.microsoft:channel-correlation-id'], fakeConfig.deviceId);
+          assert(options.properties['com.microsoft:channel-correlation-id'].startsWith('methods:'));
           callback(null, {});
         },
         attachReceiverLink: function(ep, options, callback) {
           assert.strictEqual(ep, '/devices/' + fakeConfig.deviceId + '/methods/devicebound');
           assert.strictEqual(options.properties['com.microsoft:api-version'], endpoint.apiVersion);
-          assert.strictEqual(options.properties['com.microsoft:channel-correlation-id'], fakeConfig.deviceId);
+          assert(options.properties['com.microsoft:channel-correlation-id'].startsWith('methods:'));
           callback(null, new EventEmitter());
         },
         send: function(message, endpoint, to, sendCallback) {
@@ -262,10 +312,6 @@ describe('AmqpDeviceMethodClient', function () {
         payload: 'fakePayload'
       };
       var fakeAmqpClient = {
-        /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_014: [The `AmqpDeviceMethodClient` object shall set 2 properties of any AMQP link that it create:
-        - `com.microsoft:api-version` shall be set to the current API version in use.
-        - `com.microsoft:channel-correlation-id` shall be set to the identifier of the device (also often referred to as `deviceId`).]*/
-        /*Tests_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_017: [The endpoint used to for the sender and receiver link shall be `/devices/<device-id>/methods/devicebound`.]*/
         attachSenderLink: sinon.stub(),
         attachReceiverLink: sinon.stub(),
       };
@@ -593,6 +639,6 @@ describe('AmqpDeviceMethodClient', function () {
         testCallback();
       });
     });
-  })
+  });
 });
 

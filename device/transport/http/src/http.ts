@@ -12,7 +12,7 @@ import { Http as Base } from 'azure-iot-http-base';
 import { endpoint, errors, results, Message, AuthenticationProvider, AuthenticationType, TransportConfig, encodeUriComponentStrict } from 'azure-iot-common';
 import { translateError } from './http_errors.js';
 import { IncomingMessage } from 'http';
-import { DeviceMethodResponse, Client, TwinProperties } from 'azure-iot-device';
+import { DeviceTransport, MethodMessage, DeviceMethodResponse, TwinProperties } from 'azure-iot-device';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
 import { DeviceClientOptions, HttpReceiverOptions } from 'azure-iot-device';
 import { getUserAgentString } from 'azure-iot-device';
@@ -63,7 +63,7 @@ and either:
 or:
 - `x509` (object) an object with 3 properties: `cert`, `key` and `passphrase`, all strings, containing the necessary information to connect to the service.
 ]*/
-export class Http extends EventEmitter implements Client.Transport {
+export class Http extends EventEmitter implements DeviceTransport {
   private _authenticationProvider: AuthenticationProvider;
   private _http: Base;
   private _opts: HttpReceiverOptions;
@@ -153,7 +153,7 @@ export class Http extends EventEmitter implements Client.Transport {
           /*Codes_SRS_NODE_DEVICE_HTTP_16_033: [if the `getDeviceCredentials` fails with an error, the Http request shall call its callback with that error]*/
           done(err);
         } else {
-          const path = endpoint.eventPath(encodeUriComponentStrict(config.deviceId));
+          const path = endpoint.deviceEventPath(encodeUriComponentStrict(config.deviceId));
           let httpHeaders = {
             'iothub-to': path,
             'User-Agent': this._userAgentString
@@ -284,7 +284,7 @@ export class Http extends EventEmitter implements Client.Transport {
           {"body":"<Base64 Message1>","properties":{"<key>":"<value>"}},
           {"body":"<Base64 Message1>"}...
           ```]*/
-          const path = endpoint.eventPath(encodeUriComponentStrict(config.deviceId));
+          const path = endpoint.deviceEventPath(encodeUriComponentStrict(config.deviceId));
           let httpHeaders = {
             'iothub-to': path,
             'Content-Type': 'application/vnd.microsoft.iothub.json',
@@ -320,14 +320,10 @@ export class Http extends EventEmitter implements Client.Transport {
       });
     }
 
-    const calldoneifspecified = function(err?: Error): void {
-      /*Codes_SRS_NODE_DEVICE_HTTP_16_010: [`setOptions` should not throw if `done` has not been specified.]*/
-      if (done) {
-        /*Codes_SRS_NODE_DEVICE_HTTP_16_005: [If `done` has been specified the `setOptions` method shall call the `done` callback with no arguments when successful.]*/
-        /*Codes_SRS_NODE_DEVICE_HTTP_16_009: [If `done` has been specified the `setOptions` method shall call the `done` callback with a standard javascript `Error` object when unsuccessful.]*/
-        done(err);
-      }
-    };
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_010: [`setOptions` should not throw if `done` has not been specified.]*/
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_005: [If `done` has been specified the `setOptions` method shall call the `done` callback with no arguments when successful.]*/
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_009: [If `done` has been specified the `setOptions` method shall call the `done` callback with a standard javascript `Error` object when unsuccessful.]*/
+    this._http.setOptions(options);
 
     this._http.setOptions(options);
 
@@ -336,14 +332,14 @@ export class Http extends EventEmitter implements Client.Transport {
     if (options.hasOwnProperty('http') && options.http.hasOwnProperty('receivePolicy')) {
       /*Codes_SRS_NODE_DEVICE_HTTP_16_004: [The `setOptions` method shall call the `setOptions` method of the HTTP Receiver with the content of the `http.receivePolicy` property of the `options` parameter.]*/
       this._setReceiverOptions(options.http.receivePolicy);
-      calldoneifspecified();
+      if (done) done();
     } else if (options.hasOwnProperty('interval')
               || options.hasOwnProperty('at')
               || options.hasOwnProperty('cron')
               || options.hasOwnProperty('manualPolling')
               || options.hasOwnProperty('drain')) {
       this._setReceiverOptions(options as any);
-      calldoneifspecified();
+      if (done) done();
     }
   }
 
@@ -369,7 +365,7 @@ export class Http extends EventEmitter implements Client.Transport {
           debug('Error while receiving: ' + err.toString());
           this.emit('error', err);
         } else {
-          const path = endpoint.messagePath(encodeUriComponentStrict(config.deviceId));
+          const path = endpoint.deviceMessagePath(encodeUriComponentStrict(config.deviceId));
           let httpHeaders = {
             'iothub-to': path,
             'User-Agent': this._userAgentString
@@ -560,7 +556,7 @@ export class Http extends EventEmitter implements Client.Transport {
   /**
    * @private
    */
-  onDeviceMethod(methodName: string, methodCallback: (request: Client.MethodMessage, response: DeviceMethodResponse) => void): void {
+  onDeviceMethod(methodName: string, methodCallback: (request: MethodMessage, response: DeviceMethodResponse) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_025: [`onDeviceMethod` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Direct methods are not implemented over HTTP.');
   }
@@ -580,6 +576,40 @@ export class Http extends EventEmitter implements Client.Transport {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_027: [`disableMethods` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Direct methods are not implemented over HTTP.');
   }
+
+  /**
+   * @private
+   */
+  enableInputMessages(callback: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_18_001: [`enableInputMessages` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Input messages are not implemented over HTTP.');
+  }
+
+  /**
+   * @private
+   */
+  disableInputMessages(callback: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_18_002: [`disableInputMessages` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Input messages are not implemented over HTTP.');
+  }
+
+  /**
+   * @private
+   */
+  sendOutputEvent(outputName: string, message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_18_003: [`sendOutputEvent` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Output events are not implemented over HTTP.');
+  }
+
+  /**
+   * @private
+   */
+  sendOutputEventBatch(outputName: string, messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_18_004: [`sendOutputEventBatch` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Output events are not implemented over HTTP.');
+  }
+
+
 
   private _insertAuthHeaderIfNecessary(headers: { [key: string]: string }, credentials: TransportConfig): void {
     if (this._authenticationProvider.type === AuthenticationType.Token) {
@@ -618,7 +648,7 @@ export class Http extends EventEmitter implements Client.Transport {
       } else {
         let method;
         let resultConstructor = null;
-        let path = endpoint.feedbackPath(encodeUriComponentStrict(config.deviceId), message.lockToken);
+        let path = endpoint.deviceFeedbackPath(encodeUriComponentStrict(config.deviceId), message.lockToken);
         let httpHeaders = {
           'If-Match': message.lockToken,
           'User-Agent': this._userAgentString
@@ -754,4 +784,3 @@ export class Http extends EventEmitter implements Client.Transport {
     }
   }
 }
-

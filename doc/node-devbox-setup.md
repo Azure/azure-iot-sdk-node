@@ -9,7 +9,7 @@ Instructions for using the npm packages can be found here:
 
 ## Prerequisites
 
-In order to work on the Azure IoT SDK for Node.js you must have Node.js installed. You can get Node.js from [here][node-download]. If you're running linux and want to install Node.js using a package manager, please refer to [these instructions][node-linux]. The Azure IoT SDK for Node.js support Node.js version 4 and up. It may still work with older versions (Node 0.10 and 0.12) but our dependencies are dropping support for those versions, so we cannot guarantee full support for these anymore.
+In order to work on the Azure IoT SDK for Node.js you must have Node.js installed. You can get Node.js from [here][node-download]. If you're running linux and want to install Node.js using a package manager, please refer to [these instructions][node-linux]. The Azure IoT SDK for Node.js supports Node.js version 6 and up. It may still work with older versions (Node 0.10, 0.12 and 4) but our dependencies are dropping support for those versions since they have been end-of-lifed, so we cannot guarantee full support for these anymore.
 
 If you'd like to be able to switch from one Node.js version to another you can also use [Node Version Switcher][nvs].
 
@@ -25,29 +25,64 @@ The SDK is entirely open-source (as you probably figured out already if you're r
 $ git clone https://github.com/azure/azure-iot-sdk-node
 ```
 
-The SDK ships in a few separate NPM packages that depend on each other. Once the repository has been cloned, some features span accross multiple packages so in order to build and test these features, we need to "link" those package together in a single environment. The following steps explain how to do that.
+The SDK ships in a few separate NPM packages that depend on each other. Once the repository has been cloned, some features span accross multiple packages so in order to build and test these features, we need to "link" those package together in a single environment. We use the awesome [lerna.js](https://lernajs.io) to do that, so you have to install this first.
 
-* If you are using _Windows_:
-  * Open the **Node.js command prompt** (or a regular command prompt if you made sure the node location was added to the PATH)
-  * Navigate to the local copy of this repository ([azure-iot-sdk-node](https://github.com/Azure/azure-iot-sdk-node)).
-  * Run the `build\dev-setup.cmd` script to prepare your development environment.
-  * Then run the `build\build.cmd` script to verify your installation.
-* If you are using _Linux_:
-  * Open a shell.
-  * Navigate to the local copy of this repository ([azure-iot-sdk-node](https://github.com/Azure/azure-iot-sdk-node)).
-  * Run the `build/dev-setup.sh` script to prepare your development environment.
-  * Then run the `build/build.sh` script to verify your installation.
+```
+npm install -g lerna
+```
+
+Once lerna is installed, you can set up your development environment by running the `bootstrap command` at the root of the repository: This will install all dependencies and link packages together.
+
+```
+lerna bootstrap
+```
+
+If you want to build/run the code, you'll need to compile the packages:
+
+```
+lerna run build
+```
+
+If you want to run the tests:
+
+```
+lerna run ci
+```
+
+and the end-to-end tests:
+
+```
+lerna run e2e
+```
+
+Please note that running tests and end-to-end tests require having an Azure IoT hub and an Azure IoT Hub Provisioning service setup and the proper environment variables configured. Here is the list of all the environment variables as well as how we use them:
+
+- **OPENSSL_CONF**: The SDK build script relies on OpenSSL to create certificates and keys so OpenSSL must be in the path and `OPENSSL_CONF` must be set to the path of your `openssl.cnf` configuration file
+- **IOTHUB_CONNECTION_STRING** must be set to a configuration string of your IoT Hub that has rights to create/delete devices and send messages to devices (typically, the one associated with the `iothubowner` policy or equivalent). Connection strings can be found in the settings section of the Azure portal.
+- **STORAGE_CONNECTION_STRING** must be set to an Azure Storage connection string if you want to test bulk import/export of device identities
+- **IOTHUB_X509_DEVICE_ID** must be set to the name of a device that uses x509 certs for authentication.
+- **IOTHUB_X509_CERTIFICATE** must be set to the path of the x509 certificate pem file for this device.
+- **IOTHUB_X509_KEY** must be set to the path of the x509 certificate key pem file for this device.
+- **IOTHUB_X509_PASSPHRASE** must be set to the passphrase of the x509 certificate key for this device.
+- **IOTHUB_CA_ROOT_CERT** must be set to the *base64-encoded content* of the certificate set a custom CA cert provisioned on IoT Hub.
+- **IOTHUB_CA_ROOT_CERT_KEY** must be set to the *base64-encoded content* of the key if the custom CA cert provisioned on IoT Hub.
+- **IOT_PROVISIONING_DEVICE_IDSCOPE** must be set to the idScope of your provisioning service.
+- **IOT_PROVISIONING_DEVICE_ENDPOINT** must be set to the public endpoint of your provisioning service or the global endpoint.
+- **IOT_PROVISIONING_SERVICE_CONNECTION_STRING** must be set to the connection string of your provisioning service.
+- **IOT_PROVISIONING_ROOT_CERT** must be set to the *base64-encoded content* of a root certificate used to test the group enrollments feature of the device provisioning service
+- **IOT_PROVISIONING_ROOT_CERT_KEY** must be set to the *base64-encoded content* of the key associated with the group enrollment root certificate.
+
 
 ## Running the samples
 
-The device and service SDKs samples are located in their respective folders. The samples are **not** linked to other packages at the same time as the rest of the SDK, in order to leave the choice for the customers to run them of the published packages or the local versions. The simplest way to run the samples is to use published packages. 
+The device and service SDKs samples are located in their respective folders. The samples are **not** linked to other packages at the same time as the rest of the SDK, in order to leave the choice for the customers to run them of the published packages or the local versions. The simplest way to run the samples is to use published packages.
 
 ```
 $ cd device/samples
 $ npm install
 ```
 
-Then, depending on which sample you want to run, you'll have to edit this particular file and replace the connection string placeholder with the connection string of the device (or IoT hub) that you want to test. 
+Then, depending on which sample you want to run, you'll have to edit this particular file and replace the connection string placeholder with the connection string of the device (or IoT hub) that you want to test.
 
 Once this is done, just run it like any other node script:
 
@@ -64,13 +99,6 @@ Each package in the SDK comes with the same set of NPM scripts that run various 
 * `npm run lint` will run `tslint` and lint the TypeScript code
 * `npm run alltest` will lint, build, run all tests, and create code coverage data
 * `npm run ci` will lint, build, run all tests and verify code coverage against existing numbers. (this is what the CI build does).
-
-### Environment variables required to run the tests
-
-If you intend on running the SDK test suite, there are a few environment variables that need to be configured:
-- **OPENSSL_CONF**: The SDK build script relies on OpenSSL to create certificates and keys so OpenSSL must be in the path and `OPENSSL_CONF` must be set to the path of your `openssl.cnf` configuration file
-- **IOTHUB_CONNECTION_STRING** must be set to a configuration string of your IoT Hub that has rights to create/delete devices and send messages to devices (typically, the one associated with the `iothubowner` policy or equivalent). Connection strings can be found in the settings section of the Azure portal.
-- **STORAGE_CONNECTION_STRING** must be set to an Azure Storage connection string if you want to test bulk import/export of device identities
 
 ### Tests
 

@@ -14,6 +14,7 @@ import { Callback } from './interfaces';
  */
 export interface TwinData {
   deviceId: string;
+  moduleId?: string;
   etag: string;
   tags: { [key: string]: any; };
   properties: {
@@ -47,6 +48,10 @@ export class Twin implements TwinData {
    * Unique identifier of the device identity associated with the twin, as it exists in the device identity registry.
    */
   deviceId: string;
+  /**
+   * Module identifier for the module associated with the twin, as it exists in the device identity registry.
+   */
+  moduleId?: string;
   /**
    * Tag used in optimistic concurrency to avoid multiple parallel editions of the device twin.
    */
@@ -120,12 +125,24 @@ export class Twin implements TwinData {
    *                                object useful for logging or debugging.
    */
   get(done: Callback<Twin>): void {
-    /*Codes_SRS_NODE_IOTHUB_TWIN_16_020: [The `get` method shall call the `getTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+    /*Codes_SRS_NODE_IOTHUB_TWIN_16_020: [If `this.moduleId` is falsy, the `get` method shall call the `getTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
     - `this.deviceId`
     - `done`]*/
-    this._registry.getTwin(this.deviceId, (err, result, response) => {
+    /*Codes_SRS_NODE_IOTHUB_TWIN_18_001: [If `this.moduleId` is not falsy, the `get` method shall call the `getModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+    - `this.deviceId`
+    - `this.moduleId`
+    - `done`]*/
+
+    let get: any;
+    if (this.moduleId) {
+      get = (done) => this._registry.getModuleTwin(this.deviceId, this.moduleId, done);
+    } else {
+      get = (done) => this._registry.getTwin(this.deviceId, done);
+    }
+
+    get((err, result, response) => {
       if (err) {
-      /*Codes_SRS_NODE_IOTHUB_TWIN_16_022: [The method shall call the `done` callback with an `Error` object if the request failed]*/
+        /*Codes_SRS_NODE_IOTHUB_TWIN_16_022: [The method shall call the `done` callback with an `Error` object if the request failed]*/
         done(err);
       } else {
         /*Codes_SRS_NODE_IOTHUB_TWIN_16_021: [The method shall copy properties, tags, and etag in the twin returned in the callback of the `Registry` method call into its parent object.]*/
@@ -151,12 +168,25 @@ export class Twin implements TwinData {
    *                                object useful for logging or debugging.
    */
   update(patch: any, done: Callback<Twin>): void {
-    /*Codes_SRS_NODE_IOTHUB_TWIN_16_019: [The `update` method shall call the `updateTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+    /*Codes_SRS_NODE_IOTHUB_TWIN_16_019: [If `this.moduleId` is falsy, The `update` method shall call the `updateTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
     - `this.deviceId`
     - `patch`
     - `this.etag`
     - `done`]*/
-    this._registry.updateTwin(this.deviceId, patch, this.etag, (err, result, response) => {
+    /*Codes_SRS_NODE_IOTHUB_TWIN_18_002: [If `this.moduleId` is not falsy, the `update` method shall call the `updateModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+    - `this.deviceId`
+    - `this.moduleId`
+    - `patch`
+    - `this.etag`
+    - `done`]*/
+    let update: any;
+    if (this.moduleId) {
+      update = (done) => this._registry.updateModuleTwin(this.deviceId, this.moduleId, patch, this.etag, done);
+    } else {
+      update = (done) => this._registry.updateTwin(this.deviceId, patch, this.etag, done);
+    }
+
+    update((err, result, response) => {
       if (err) {
         /*Codes_SRS_NODE_IOTHUB_TWIN_16_022: [The method shall call the `done` callback with an `Error` object if the request failed]*/
         done(err);

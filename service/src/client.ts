@@ -4,6 +4,7 @@
 'use strict';
 
 import { EventEmitter } from 'events';
+import { Agent } from 'https';
 import { anHourFromNow, errors, results, Message, Receiver, SharedAccessSignature } from 'azure-iot-common';
 import { RetryOperation, RetryPolicy, ExponentialBackOffWithJitter } from 'azure-iot-common';
 import * as ConnectionString from './connection_string';
@@ -45,6 +46,9 @@ export class Client extends EventEmitter {
     this._transport = transport;
 
     this._restApiClient = restApiClient;
+    if (this._restApiClient && this._restApiClient.setOptions) {
+      this._restApiClient.setOptions({http: { agent: new Agent({ keepAlive: true }) } });
+    }
 
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_021: [The `Client` constructor shall initialize the default retry policy to `ExponentialBackoffWithJitter` with a maximum timeout of 4 minutes.]*/
     this._retryPolicy = new ExponentialBackOffWithJitter();
@@ -133,8 +137,13 @@ export class Client extends EventEmitter {
     if (!message) {
       throw new ReferenceError('message is \'' + message + '\'');
     }
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_014: [The send method shall convert the message object to type azure-iot-common.Message if necessary.]*/
+
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_014: [The `send` method shall convert the `message` object to type `azure-iot-common.Message` if it is not already of type `azure-iot-common.Message`.]*/
     if ((<any>message.constructor).name !== 'Message') {
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_18_016: [The `send` method shall throw an `ArgumentError` if the `message` argument is not of type `azure-iot-common.Message` or `azure-iot-common.Message.BufferConvertible`.]*/
+      if (!Message.isBufferConvertible(message)) {
+        throw new errors.ArgumentError('message is not of type Message or Message.BufferConvertible');
+      }
       message = new Message(message as Message.BufferConvertible);
     }
 
@@ -164,8 +173,9 @@ export class Client extends EventEmitter {
 
   /**
    * @method            module:azure-iothub.Client#invokeDeviceMethod
-   * @description       Invokes a method on a particular device.
+   * @description       Invokes a method on a particular device or module.
    * @param {String}    deviceId            The identifier of an existing device identity.
+   * @param {String}    moduleId            The identifier of an existing module identity (optional)
    * @param {Object}    params              An object describing the method and shall have the following properties:
    *                                        - methodName          The name of the method that shall be invoked.
    *                                        - payload             [optional] The payload to use for the method call.
@@ -176,12 +186,29 @@ export class Client extends EventEmitter {
    * @throws {ReferenceError}  If one of the required parameters is null, undefined or empty.
    * @throws {TypeError}       If one of the parameters is of the wrong type.
    */
-  invokeDeviceMethod(deviceId: string, methodParams: DeviceMethodParams, done?: Callback<any>): void {
+  invokeDeviceMethod(deviceId: string, methodParams: DeviceMethodParams, done?: Callback<any>): void;
+  invokeDeviceMethod(deviceId: string, moduleId: string, methodParams: DeviceMethodParams, done?: Callback<any>): void;
+  invokeDeviceMethod(deviceId: string, moduleIdOrMethodParams: string | DeviceMethodParams, methodParamsOrDone?: DeviceMethodParams | Callback<any>, done?: Callback<any>): void {
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_014: [The `invokeDeviceMethod` method shall throw a `ReferenceError` if `deviceId` is `null`, `undefined` or an empty string.]*/
     if (deviceId === undefined || deviceId === null || deviceId === '') throw new ReferenceError('deviceId cannot be \'' + deviceId + '\'');
 
+    let actualModuleId: string = undefined;
+    let actualMethodParams: DeviceMethodParams = undefined;
+    let actualCallback: Callback<any> = undefined;
+
+    if (typeof moduleIdOrMethodParams === 'string') {
+      actualModuleId = moduleIdOrMethodParams;
+      actualMethodParams = methodParamsOrDone as DeviceMethodParams;
+      actualCallback = done;
+    } else {
+      // actualModuleId stays undefined
+      actualMethodParams = moduleIdOrMethodParams;
+      actualCallback = methodParamsOrDone as Callback<any>;
+    }
+
+    // Validation of the validity of actualMethodParams is handled in the DeviceMethod constructor.
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_009: [The `invokeDeviceMethod` method shall initialize a new `DeviceMethod` instance with the `methodName`, `payload` and `timeout` values passed in the arguments.]*/
-    const method = new DeviceMethod(methodParams, this._restApiClient);
+    const method = new DeviceMethod(actualMethodParams, this._restApiClient);
 
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_010: [The `invokeDeviceMethod` method shall use the newly created instance of `DeviceMethod` to invoke the method on the device specified with the `deviceid` argument .]*/
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_012: [The `invokeDeviceMethod` method shall call the `done` callback with a standard javascript `Error` object if the request failed.]*/
@@ -189,13 +216,18 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_026: [The `invokeDeviceMethod` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to send the method request.]*/
     const retryOp = new RetryOperation(this._retryPolicy, MAX_RETRY_TIMEOUT);
     retryOp.retry((retryCallback) => {
-      method.invokeOn(deviceId, retryCallback);
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_18_003: [If `moduleIdOrMethodParams` is a string the `invokeDeviceMethod` method shall call `invokeOnModule` on the new `DeviceMethod` instance. ]*/
+      if (actualModuleId) {
+        method.invokeOnModule(deviceId, actualModuleId, retryCallback);
+      } else {
+        method.invokeOn(deviceId, retryCallback);
+      }
     }, (err, result, response) => {
-      if (done) {
+      if (actualCallback) {
         if (err) {
-          done(err);
+          actualCallback(err);
         } else {
-          done(null, result, response);
+          actualCallback(null, result, response);
         }
       }
     });

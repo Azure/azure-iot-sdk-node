@@ -79,134 +79,188 @@ describe('DeviceMethod', function() {
         var method = new DeviceMethod({ methodName: 'foo', payload: null, responseTimeoutInSeconds: 42 }, {});
         assert.throws(function() {
           method.invokeOn(badDeviceId, {}, function() {});
+        }, ReferenceError);
+      });
+    });
+  });
+
+  /*Tests_SRS_NODE_IOTHUB_DEVICE_METHOD_18_001: [The `invokeOnModule` method shall throw a `ReferenceError` if `deviceId` or `moduleId` is falsy. ]*/
+  describe('#invokeOnModule', function() {
+    [undefined, null, ''].forEach(function(badArg) {
+      it('throws a ReferenceError if \'deviceId\' is \'' + badArg + '\'', function() {
+        var method = new DeviceMethod({ methodName: 'foo', payload: null, responseTimeoutInSeconds: 42 }, {});
+        assert.throws(function() {
+          method.invokeOnModule(badArg, 'moduleId', {}, function() {});
+        }, ReferenceError);
+      });
+
+      it('throws a ReferenceError if \'moduleId\' is \'' + badArg + '\'', function() {
+        var method = new DeviceMethod({ methodName: 'foo', payload: null, responseTimeoutInSeconds: 42 }, {});
+        assert.throws(function() {
+          method.invokeOnModule('deviceId', badArg, {}, function() {});
+        }, ReferenceError);
+      });
+    });
+  });
+
+  var fakeDeviceId = 'deviceId';
+  var fakeModuleId = 'moduleId';
+  [
+    {
+      name: 'invokeDeviceMethod',
+      functionUnderTest: function(method, callback) { method.invokeOn(fakeDeviceId, callback); },
+      expectedPath: '/twins/' + fakeDeviceId + '/methods' + endpoint.versionQueryString()
+    },
+    {
+      name: 'invokeDeviceMethod',
+      functionUnderTest: function(method, callback) { method.invokeOnModule(fakeDeviceId, fakeModuleId, callback); },
+      expectedPath: '/twins/' + fakeDeviceId + '/modules/' + fakeModuleId + '/methods' + endpoint.versionQueryString()
+    },
+  ].forEach(function(testConfig) {
+    describe('#' + testConfig.name, function() {
+      /*Tests_SRS_NODE_IOTHUB_DEVICE_METHOD_16_009: [The `invokeOn` method shall invoke the `done` callback with an standard javascript `Error` object if the method execution failed.]*/
+      /*Tests_SRS_NODE_IOTHUB_DEVICE_METHOD_18_003: [The `invokeOnModule` method shall invoke the `done` callback with an standard javascript `Error` object if the method execution failed. ]*/
+      it('calls the done callback with an Error object if the request fails', function(testCallback) {
+        var fakeError = new Error('Fake failure');
+        var fakeRestClientFails = {
+          executeApiCall: function(method, path, headers, body, timeout, callback) {
+            callback(fakeError);
+          }
+        };
+
+        var method = new DeviceMethod({ methodName: 'foo', payload: null, responseTimeoutInSeconds: 42 }, fakeRestClientFails);
+        testConfig.functionUnderTest(method, function(err) {
+          assert.equal(err, fakeError);
+          testCallback();
         });
       });
-    });
 
-    /*Tests_SRS_NODE_IOTHUB_DEVICE_METHOD_16_009: [The `invokeOn` method shall invoke the `done` callback with an standard javascript `Error` object if the method execution failed.]*/
-    it('calls the done callback with an Error object if the request fails', function(testCallback) {
-      var fakeError = new Error('Fake failure');
-      var fakeRestClientFails = {
-        executeApiCall: function(method, path, headers, body, timeout, callback) {
-          callback(fakeError);
-        }
-      };
+      /*Tests_SRS_NODE_IOTHUB_DEVICE_METHOD_16_010: [The `invokeOn` method shall invoke the `done` callback with a `null` first argument, a result second argument and a transport-specific response third argument if the method execution succeeds**/
+      /*Tests_SRS_NODE_IOTHUB_DEVICE_METHOD_18_004: [The `invokeOnModule` method shall invoke the `done` callback with a `null` first argument, a result second argument and a transport-specific response third argument if the method execution succeeds. ]*/
+      it('calls the done callback with a null first argument, a result second argument and a transport-specific response third argument', function(testCallback) {
+        var fakeResult = {
+          status: 'success'
+        };
+        var fakeResponse = {
+          statusCode: 200
+        };
+        var fakeRestClientSucceeds = {
+          executeApiCall: function(method, path, headers, body, timeout, callback) {
+            callback(null, fakeResult, fakeResponse);
+          }
+        };
 
-      var method = new DeviceMethod({ methodName: 'foo', payload: null, responseTimeoutInSeconds: 42 }, fakeRestClientFails);
-      method.invokeOn('deviceId', function(err) {
-        assert.equal(err, fakeError);
-        testCallback();
+        var method = new DeviceMethod({ methodName: 'foo', payload: null, responseTimeoutInSeconds: 42 }, fakeRestClientSucceeds);
+        testConfig.functionUnderTest(method, function(err, result, response) {
+          assert.isNull(err);
+          assert.equal(result, fakeResult);
+          assert.equal(response, fakeResponse);
+          testCallback();
+        });
       });
-    });
 
-    /*Tests_SRS_NODE_IOTHUB_DEVICE_METHOD_16_010: [The `invokeOn` method shall invoke the `done` callback with a `null` first argument, a result second argument and a transport-specific response third argument if the method execution succeede**/
-    it('calls the done callback with a null first argument, a result second argument and a transport-specific resonse third argument', function(testCallback) {
-      var fakeResult = {
-        status: 'success'
-      };
-      var fakeResponse = {
-        statusCode: 200
-      };
-      var fakeRestClientSucceeds = {
-        executeApiCall: function(method, path, headers, body, timeout, callback) {
-          callback(null, fakeResult, fakeResponse);
-        }
-      };
-
-      var method = new DeviceMethod({ methodName: 'foo', payload: null, responseTimeoutInSeconds: 42 }, fakeRestClientSucceeds);
-      method.invokeOn('deviceId', function(err, result, response) {
-        assert.isNull(err);
-        assert.equal(result, fakeResult);
-        assert.equal(response, fakeResponse);
-        testCallback();
-      });
-    });
-
-    /*Tests_SRS_NODE_IOTHUB_DEVICE_METHOD_16_011: [The `invokeOn` method shall construct an HTTP request using information supplied by the caller, as follows:
-    ```
-    POST /twins/<deviceId>/methods?api-version=<version> HTTP/1.1
-    Authorization: <config.sharedAccessSignature>
-    Content-Type: application/json; charset=utf-8
-    Request-Id: <guid>
-    {
-      "methodName": <DeviceMethod.name>,
-      "responseTimeoutInSeconds": <DeviceMethod.timeout>,
-      "payload": <payload>
-    }
-    ```]*/
-    it('builds a correct HTTP request', function(testCallback) {
-      var fakeMethodParams = {
-        methodName: 'method',
-        payload: { foo: 'bar' },
-        responseTimeoutInSeconds: 42
-      };
-
-      var fakeDeviceId = 'deviceId';
-
-      var fakeRestClient = {
-        executeApiCall: function(method, path, headers, body, timeout, callback) {
-          assert.equal(method, 'POST');
-          assert.equal(path, '/twins/' + fakeDeviceId + '/methods' + endpoint.versionQueryString());
-          assert.equal(headers['Content-Type'], 'application/json; charset=utf-8');
-          assert.equal(body.methodName, fakeMethodParams.methodName);
-          assert.equal(body.responseTimeoutInSeconds, fakeMethodParams.responseTimeoutInSeconds);
-          assert.equal(body.payload, fakeMethodParams.payload);
-          assert.equal(timeout, fakeMethodParams.responseTimeoutInSeconds * 1000);
-          callback();
-        }
-      };
-
-      var method = new DeviceMethod(fakeMethodParams, fakeRestClient);
-      method.invokeOn(fakeDeviceId, testCallback);
-    });
-
-    /*Tests_SRS_NODE_IOTHUB_DEVICE_METHOD_16_017: [The `invokeOn` method shall uri-encode the device id.]*/
-    it('URI-encodes the device id', function(testCallback) {
-      var fakeMethodParams = {
-        methodName: 'method',
-        payload: { foo: 'bar' },
-        responseTimeoutInSeconds: 42
-      };
-
-      var fakeDeviceId = 'device#';
-      var uriEncodedDeviceId = encodeURIComponent(fakeDeviceId);
-
-      var fakeRestClient = {
-        executeApiCall: function(method, path, headers, body, timeout, callback) {
-          assert.equal(path, '/twins/' + uriEncodedDeviceId + '/methods' + endpoint.versionQueryString());
-          callback();
-        }
-      };
-
-      var method = new DeviceMethod(fakeMethodParams, fakeRestClient);
-      method.invokeOn(fakeDeviceId, testCallback);
-    });
-
-    [-1, 0, '', {}, { foo: 'bar' }, 'one line', new Buffer([0xDE, 0xAD, 0xBE, 0xEF])].forEach(function(goodPayload) {
-      it('builds a correct request when the payload is ' + goodPayload.toString(), function(testCallback) {
+      /*Tests_SRS_NODE_IOTHUB_DEVICE_METHOD_16_017: [The `invokeOn` method shall uri-encode the device id.]*/
+      it('URI-encodes the device id', function(testCallback) {
         var fakeMethodParams = {
           methodName: 'method',
-          payload: goodPayload,
+          payload: { foo: 'bar' },
           responseTimeoutInSeconds: 42
         };
 
-        var fakeDeviceId = 'deviceId';
+        var fakeDeviceId = 'device#';
+        var uriEncodedDeviceId = encodeURIComponent(fakeDeviceId);
 
         var fakeRestClient = {
           executeApiCall: function(method, path, headers, body, timeout, callback) {
-            assert.equal(method, 'POST');
-            assert.equal(path, '/twins/' + fakeDeviceId + '/methods' + endpoint.versionQueryString());
-            assert.equal(headers['Content-Type'], 'application/json; charset=utf-8');
-            assert.equal(body.methodName, fakeMethodParams.methodName);
-            assert.equal(body.responseTimeoutInSeconds, fakeMethodParams.responseTimeoutInSeconds);
-            assert.equal(body.payload, fakeMethodParams.payload);
-            assert.equal(timeout, fakeMethodParams.responseTimeoutInSeconds * 1000);
+            assert.equal(path, '/twins/' + uriEncodedDeviceId + '/methods' + endpoint.versionQueryString());
             callback();
           }
         };
 
         var method = new DeviceMethod(fakeMethodParams, fakeRestClient);
         method.invokeOn(fakeDeviceId, testCallback);
+      });
+
+      /*Tests_SRS_NODE_IOTHUB_DEVICE_METHOD_16_011: [The `invokeOn` method shall construct an HTTP request using information supplied by the caller, as follows:
+      ```
+      POST /twins/<encodeUriComponent(deviceId>)/methods?api-version=<version> HTTP/1.1
+      Authorization: <config.sharedAccessSignature>
+      Content-Type: application/json; charset=utf-8
+      Request-Id: <guid>
+      {
+        "methodName": <DeviceMethod.params.name>,
+        "responseTimeoutInSeconds": <DeviceMethod.params.responseTimeoutInSeconds>,
+        "connectTimeoutInSeconds": <DeviceMethod.params.connectTimeoutInSeconds>,
+        "payload": <DeviceMethod.params.payload>
+      }
+      ```]*/
+      /*Tests_SRS_NODE_IOTHUB_DEVICE_METHOD_18_002: [The `invokeOnModule` method shall construct an HTTP request using information supplied by the caller, as follows:
+      ```
+      POST /twins/<encodeUriComponent(deviceId)>/modules/<encodeUriComponent(moduleId)>/methods?api-version=<version> HTTP/1.1
+      Authorization: <config.sharedAccessSignature>
+      Content-Type: application/json; charset=utf-8
+      Request-Id: <guid>
+      {
+        "methodName": <DeviceMethod.params.name>,
+        "responseTimeoutInSeconds": <DeviceMethod.params.responseTimeoutInSeconds>,
+        "connectTimeoutInSeconds": <DeviceMethod.params.connectTimeoutInSeconds>,
+        "payload": <DeviceMethod.params.payload>
+      }
+      ```
+      ]*/
+      [-1, 0, '', {}, { foo: 'bar' }, 'one line', new Buffer([0xDE, 0xAD, 0xBE, 0xEF])].forEach(function(goodPayload) {
+        it('builds a correct request when the payload is ' + goodPayload.toString(), function(testCallback) {
+          var fakeMethodParams = {
+            methodName: 'method',
+            payload: { foo: 'bar' },
+            responseTimeoutInSeconds: 42,
+            connectTimeoutInSeconds: 43
+          };
+
+          var fakeRestClient = {
+            executeApiCall: function(method, path, headers, body, timeout, callback) {
+              assert.equal(method, 'POST');
+              assert.equal(path, testConfig.expectedPath);
+              assert.equal(headers['Content-Type'], 'application/json; charset=utf-8');
+              assert.equal(body.methodName, fakeMethodParams.methodName);
+              assert.equal(body.responseTimeoutInSeconds, fakeMethodParams.responseTimeoutInSeconds);
+              assert.equal(body.connectTimeoutInSeconds, fakeMethodParams.connectTimeoutInSeconds);
+              assert.equal(body.payload, fakeMethodParams.payload);
+              assert.equal(timeout, (fakeMethodParams.responseTimeoutInSeconds + fakeMethodParams.connectTimeoutInSeconds) * 1000);
+              callback();
+            }
+          };
+
+          var method = new DeviceMethod(fakeMethodParams, fakeRestClient);
+          testConfig.functionUnderTest(method, testCallback);
+        });
+      });
+
+      [-1, 0, '', {}, { foo: 'bar' }, 'one line', new Buffer([0xDE, 0xAD, 0xBE, 0xEF])].forEach(function(goodPayload) {
+        it('builds a correct request when the payload is ' + goodPayload.toString(), function(testCallback) {
+          var fakeMethodParams = {
+            methodName: 'method',
+            payload: goodPayload,
+            responseTimeoutInSeconds: 42
+          };
+
+          var fakeRestClient = {
+            executeApiCall: function(method, path, headers, body, timeout, callback) {
+              assert.equal(method, 'POST');
+              assert.equal(path, testConfig.expectedPath);
+              assert.equal(headers['Content-Type'], 'application/json; charset=utf-8');
+              assert.equal(body.methodName, fakeMethodParams.methodName);
+              assert.equal(body.responseTimeoutInSeconds, fakeMethodParams.responseTimeoutInSeconds);
+              assert.equal(body.connectTimeoutInSeconds, fakeMethodParams.connectTimeoutInSeconds);
+              assert.equal(body.payload, fakeMethodParams.payload);
+              assert.equal(timeout, (fakeMethodParams.responseTimeoutInSeconds + fakeMethodParams.connectTimeoutInSeconds) * 1000);
+              callback();
+            }
+          };
+
+          var method = new DeviceMethod(fakeMethodParams, fakeRestClient);
+          testConfig.functionUnderTest(method, testCallback);
+        });
       });
     });
   });

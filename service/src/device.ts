@@ -20,6 +20,7 @@ export interface DeviceIdentity {
   lastActivityTime?: string;
   cloudToDeviceMessageCount?: string;
   authentication?: Device.Authentication;
+  capabilities?: Device.Capabilities;
 }
 
 
@@ -81,10 +82,15 @@ export class Device implements DeviceIdentity {
    * Contains the symmetric keys used to authenticate this device.
    */
   authentication?: Device.Authentication;
+  /**
+   * Contains the capabilities of this device.
+   */
+  capabilities?: Device.Capabilities;
+
 
   /**
    * Instantiate a new {@link azure-iothub.Device} object.
-   * @param jsonData An optional JSON representation of the device, which will be mapped to properties in the object. If no argument is provided, Device roperties will be assigned default values.
+   * @param jsonData An optional JSON representation of the device, which will be mapped to properties in the object. If no argument is provided, Device properties will be assigned default values.
    */
   constructor(jsonData?: any) {
     this.deviceId = null;
@@ -97,6 +103,7 @@ export class Device implements DeviceIdentity {
     this.statusUpdatedTime = null;
     this.lastActivityTime = null;
     this.cloudToDeviceMessageCount = '0';
+    this.capabilities = {};
     this.authentication = {
       symmetricKey: {  // <- this is the correct thing (camel-cased)
         primaryKey: null,
@@ -146,6 +153,11 @@ export namespace Device {
   export interface X509Thumbprints {
     primaryThumbprint?: string;
     secondaryThumbprint?: string;
+  }
+
+  export interface Capabilities {
+    iotEdge?: boolean;
+    [x: string]: any;
   }
 
   export type ConnectionState = 'connected' | 'disconnected';

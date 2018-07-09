@@ -80,6 +80,8 @@ The `connect` method establishes a connection with the Azure IoT Hub instance.
 
 **SRS_NODE_DEVICE_AMQP_06_009: [** If `putToken` is not successful then the client will remain disconnected and the callback will be called with an error per SRS_NODE_DEVICE_AMQP_16_009. **]**
 
+**SRS_NODE_DEVICE_AMQP_13_002: [** The `connect` method shall set the CA cert on the options object when calling the underlying connection object's connect method if it was supplied. **]**
+
 ### disconnect(done)
 The `disconnect` method terminates the connection with the Azure IoT Hub instance.
 
@@ -109,6 +111,25 @@ The `sendEvent` method sends an event to the IoT Hub as the device indicated in 
 
 **SRS_NODE_DEVICE_AMQP_16_052: [** The `sendEventBatch` method shall throw a `NotImplementedError`. **]**
 
+### sendOutputEvent(outputName: string, message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void;
+The `sendOutputEvent` method sends an event to the IoT Hub as the device indicated in the constructor argument.
+
+**SRS_NODE_DEVICE_AMQP_18_005: [** The `sendOutputEvent` method shall connect and authenticate the transport if necessary. **]**
+
+**SRS_NODE_DEVICE_AMQP_18_006: [** The `sendOutputEvent` method shall create and attach the d2c link if necessary. **]**
+
+**SRS_NODE_DEVICE_AMQP_18_007: [** The `sendOutputEvent` method shall construct an AMQP request using the message passed in argument as the body of the message. **]**
+
+**SRS_NODE_DEVICE_AMQP_18_012: [** The `sendOutputEvent` method  shall set the annotation "x-opt-output-name" on the message to the `outputName`. **]**
+
+**SRS_NODE_DEVICE_AMQP_18_008: [** The `sendOutputEvent` method shall call the `done` callback with a null error object and a MessageEnqueued result object when the message has been successfully sent. **]**
+
+**SRS_NODE_DEVICE_AMQP_18_009: [** If `sendOutputEvent` encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message). **]**
+
+### sendOutputEventBatch(outputName: string, messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void;
+
+**SRS_NODE_DEVICE_AMQP_18_004: [** `sendOutputEventBatch` shall throw a `NotImplementedError`. **]**
+
 ### getReceiver(done) [deprecated]
 This method is deprecated. The `AmqpReceiver` object and pattern is going away and the `Amqp` object now implements the `Receiver` interface until we can completely get rid of it in the device client.
 
@@ -125,6 +146,8 @@ This method is deprecated. The `AmqpReceiver` object and pattern is going away a
 **SRS_NODE_DEVICE_AMQP_06_004: [** The AMQP transport should use the x509 settings passed in the `options` object to connect to the service if present.**]**
 
 **SRS_NODE_DEVICE_AMQP_16_053: [** The `setOptions` method shall throw an `InvalidOperationError` if the method is called while using token-based authentication. **]**
+
+**SRS_NODE_DEVICE_AMQP_13_001: [** The `setOptions` method shall save the options passed in. **]**
 
 ### abandon(message, done)
 
@@ -174,6 +197,13 @@ This method is deprecated. The `AmqpReceiver` object and pattern is going away a
 
 **SRS_NODE_DEVICE_AMQP_16_037: [** The `disableC2D` method shall call its `callback` immediately if the transport is already disconnected. **]**
 
+### enableInputMessages(callback: (err?: Error) => void): void;
+
+**SRS_NODE_DEVICE_AMQP_18_010: [** The `enableInputMessages` method shall enable C2D messages **]**
+
+### disableInputMessages(callback: (err?: Error) => void): void;
+
+**SRS_NODE_DEVICE_AMQP_18_011: [** The `disableInputMessages` method shall disable C2D messages **]**
 
 ### enableMethods(callback)
 
@@ -252,3 +282,13 @@ This method is deprecated. The `AmqpReceiver` object and pattern is going away a
 **SRS_NODE_DEVICE_AMQP_16_081: [** if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connecting or authenticating, the connection shall be stopped and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error. **]**
 
 **SRS_NODE_DEVICE_AMQP_16_082: [** if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connected, the connection shall be disconnected and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error. **]**
+
+
+### message events
+
+**SRS_NODE_DEVICE_AMQP_18_013: [** If `amqp` receives a message on the C2D link without an annotation named "x-opt-input-name", it shall emit a "message" event with the message as the event parameter. **]**
+
+### inputMessage events
+
+**SRS_NODE_DEVICE_AMQP_18_014: [** If `amqp` receives a message on the C2D link with an annotation named "x-opt-input-name", it shall emit an "inputMessage" event with the "x-opt-input-name" annotation as the first parameter and the message as the second parameter. **]**
+

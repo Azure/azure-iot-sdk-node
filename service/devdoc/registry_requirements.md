@@ -417,8 +417,232 @@ Request-Id: <guid>
 ```
 **]**
 
+## Module Twins
 
-### All HTTP requests
+### getModuleTwin(deviceId: string, moduleId: string, done: (err: Error, twin?: Twin, response?: any) => void): void;
+
+**SRS_NODE_IOTHUB_REGISTRY_18_001: [** The `getModuleTwin` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, or `done` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_002: [** The `getModuleTwin` method shall construct an HTTP request using information supplied by the caller, as follows:
+```
+  GET /twins/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
+  Authorization: <config.sharedAccessSignature>
+  Request-Id: <guid>
+```
+**]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_003: [** The `getModuleTwin` method shall call the `done` callback with a `Twin` object updated with the latest property values stored in the IoT Hub service. **]**
+
+### updateModuleTwin(deviceId: string, moduleId: string, patch: any, etag: string, done: Registry.ResponseCallback): void;
+
+**SRS_NODE_IOTHUB_REGISTRY_18_004: [** The `updateModuleTwin` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, `patch`, `etag`,or `done` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_005: [** The `updateModuleTwin` method shall construct an HTTP request using information supplied by the caller, as follows:
+```
+PATCH /twins/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
+Authorization: <config.sharedAccessSignature>
+Content-Type: application/json; charset=utf-8
+Request-Id: <guid>
+If-Match: <etag>
+<patch>
+```
+**]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_006: [** The `updateModuleTwin` method shall call the `done` callback with a `Twin` object updated with the latest property values stored in the IoT Hub service. **]**
+
+## Device configuration
+
+### addConfiguration(configuration: Configuration, done: Registry.ResponseCallback): void;
+
+**SRS_NODE_IOTHUB_REGISTRY_18_007: [** The `addConfiguration` method shall throw a `ReferenceError` exception if `configuration` or `done` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_008: [** The `addConfiguration` method shall throw an `ArgumentError` exception if `configuration.id` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_009: [** The `addConfiguration` method shall set `configuration.schemaVersion` to '1.0' if it is not already set. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_010: [** The `addConfiguration` method shall construct an HTTP request using information supplied by the caller, as follows:
+```
+PUT /configurations/<encodeURIComponent(configuration.id)>?api-version=<version> HTTP/1.1
+Authorization: <sharedAccessSignature>
+Content-Type: application/json; charset=utf-8
+Request-Id: <guid>
+
+<configuration>
+```
+**]**
+
+### getConfiguration(configurationId: string, done: Registry.ResponseCallback): void;
+
+**SRS_NODE_IOTHUB_REGISTRY_18_011: [** The `getConfiguration` method shall throw a `ReferenceError` exception if `configurationId` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_012: [** The `getConfiguration` method shall construct an HTTP request using information supplied by the caller, as follows:
+```
+GET /configurations/<encodeURIComponent(configurationId)>?api-version=<version> HTTP/1.1
+Authorization: <sharedAccessSignature>
+Request-Id: <guid>
+```
+**]**
+
+### getConfigurations(done: Registry.ResponseCallback): void;
+
+**SRS_NODE_IOTHUB_REGISTRY_18_013: [** The `getConfigurations` method shall throw a `ReferenceError` exception if `done` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_014: [** The `getConfigurations` method shall construct an HTTP request using information supplied by the caller, as follows:
+```
+GET /configurations?api-version=<version> HTTP/1.1
+Authorization: <sharedAccessSignature>
+Request-Id: <guid>
+```
+**]**
+
+### updateConfiguration(configuration: Configuration, done: Registry.ResponseCallback): void;
+### updateConfiguration(configuration: Configuration, forceUpdate: boolean, done: Registry.ResponseCallback): void;
+### updateConfiguration(configuration: Configuration, forceUpdateOrDone: boolean | Registry.ResponseCallback, done?: Registry.ResponseCallback): void;
+
+**SRS_NODE_IOTHUB_REGISTRY_18_015: [** The `updateConfiguration` method shall throw a `ReferenceError` exception if `configuration` or `done` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_016: [** The `updateConfiguration` method shall throw an `ArgumentError` exception if `forceUpdate` is falsy and `configuration.etag` is also falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_017: [** The `updateConfiguration` method shall throw an `ArgumentError` exception if `configuration.id` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_018: [** The `updateConfiguration` method shall set ``configuration.schemaVersion` to '1.0' if it is not already set. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_020: [** If `forceUpdate` is not truthy, the `updateConfigurationMethod` shall put the `etag` parameter into the `If-Match` header value. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_021: [** If `forceUpdate` is truthy, the `updateConfiguration` method shall put `*` into the `If-Match` header value. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_019: [** The `updateConfiguration` method shall construct an HTTP request using information supplied by the caller, as follows:
+```
+PUT </configurations/<encodeURIComponent(configurationId)>?api-version=<version> HTTP/1.1
+Authorization: <sharedAccessSignature>
+Content-Type: application/json; charset=utf-8
+If-Match: <etag | *>
+Request-Id: <guid>
+
+<configuration>
+```
+**]**
+
+### removeConfiguration(configurationId: string, done: Registry.ResponseCallback): void;
+
+**SRS_NODE_IOTHUB_REGISTRY_18_022: [** The `removeConfiguration` method shall throw a `ReferenceError` exception if `configurationId` or `done` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_023: [** The `removeConfiguration` method shall construct an HTTP request using information supplied by the caller, as follows:
+```
+DELETE /configurations/<encodeURIComponent(configurationId)>?api-version=<version> HTTP/1.1
+Authorization: <sharedAccessSignature>
+Request-Id: <guid>
+```
+**]**
+
+### applyConfigurationContentOnDevice(deviceId: string, content: ConfigurationContent, done: Registry.ResponseCallback): void;
+
+**SRS_NODE_IOTHUB_REGISTRY_18_024: [** The `applyConfigurationContentOnDevice` method shall throw a `ReferenceError` exception if `deviceId`, `content`, or `done` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_025: [** The `applyConfigurationContentOnDevice` method shall construct an HTTP request using information supplied by the caller, as follows:
+```
+POST /devices/<encodeURIComponent(deviceId)>/applyConfigurationContent?api-version=<version> HTTP/1.1
+Authorization: <sharedAccessSignature>
+Content-Type: application/json; charset=utf-8
+Request-Id: <guid>
+
+<content>
+```
+**]**
+
+## Module CRUD
+
+### addModule(module: Module, done: Registry.ResponseCallback): void;
+
+**SRS_NODE_IOTHUB_REGISTRY_18_026: [** The `addModule` method shall throw a `ReferenceError` exception if `module` or `done` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_027: [** The `addModule` method shall throw an `ArgumentError` exception if `module.deviceId` or `module.moduleId` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_028: [** The `addModule` method shall construct an HTTP request using information supplied by the caller, as follows:
+```
+PUT /devices/<encodeURIComponent(module.deviceId)>/modules/<encodeURIComponent(module.moduleId)>?api-version=<version> HTTP/1.1
+Authorization: <sharedAccessSignature>
+Content-Type: application/json; charset=utf-8
+Request-Id: <guid>
+
+<module>
+```
+**]**
+
+### getModulesOnDevice(deviceId: string, done: (err: Error, modules?: Module[], response?: any) => void): void;
+
+**SRS_NODE_IOTHUB_REGISTRY_18_029: [** The `getModulesOnDevice` method shall throw a `ReferenceError` exception if `deviceId` or `done` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_030: [** The `getModulesOnDevice` method shall construct an HTTP request using information supplied by the caller, as follows:
+```
+GET /devices/<encodeURIComponent(deviceId)>/modules?api-version=<version> HTTP/1.1
+Authorization: <sharedAccessSignature>
+Request-Id: <guid>
+```
+**]**
+
+### getModule(deviceId: string, moduleId: string, done: (err: Error, module?: Module, response?: any) => void): void;
+
+**SRS_NODE_IOTHUB_REGISTRY_18_031: [** The `getModule` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, or `done` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_032: [** The `getModule` method shall construct an HTTP request using information supplied by the caller, as follows:
+```
+get /devices/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
+Authorization: <sharedAccessSignature>
+Request-Id: <guid>
+```
+**]**
+
+### updateModule(module: Module, done: Registry.ResponseCallback): void;
+### updateModule(module: Module, forceUpdate: boolean, done: Registry.ResponseCallback): void;
+### updateModule(module: Module, forceUpdateOrDone: boolean | Registry.ResponseCallback, done?: Registry.ResponseCallback): void;
+
+**SRS_NODE_IOTHUB_REGISTRY_18_033: [** The `updateModule` method shall throw a `ReferenceError` exception if `module` or `done` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_034: [** The `updateModule` method shall throw an `ArgumentError` exception if `module.deviceId` or `module.moduleId` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_035: [** The `updateModule` method shall throw an `ArgumentError` exception if `forceUpdate` is falsy and `module.etag` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_036: [** If `forceUpdate` is not truthy, the `updateModule` shall put the `etag` parameter into the `If-Match` header value. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_037: [** If `forceUpdate` is truthy, the `updateModule` method shall put `*` into the `If-Match` header value. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_038: [** The `updateModule` method shall construct an HTTP request using information supplied by the caller, as follows:
+```
+PUT /devices/<encodeURIComponent(module.deviceId)>/modules/<encodeURIComponent(module.moduleId)>?api-version=<version> HTTP/1.1
+Authorization: <sharedAccessSignature>
+Content-Type: application/json; charset=utf-8
+If-Match: <etag | *
+Request-Id: <guid>
+
+<module>
+```
+**]**
+
+### removeModule(module: Module, done: Registry.ResponseCallback): void;
+### removeModule(deviceId: string, moduleId: string, done: Registry.ResponseCallback): void;
+### removeModule(moduleOrDeviceId: Module | string, doneOrModuleId: Registry.ResponseCallback | string, done?: Registry.ResponseCallback): void;
+
+**SRS_NODE_IOTHUB_REGISTRY_18_041: [** if a `Module` object is passed in, `removeModule` shall use the `deviceId`, `moduleId`, and `etag` from the `Module` object. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_042: [** if a `deviceId` and `moduleId` are passed in, `removeModule` shall use those values and the `etag` shall be `*`. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_039: [** The `removeModule` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, or `done` is falsy. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_043: [** The `removeModule` method shall throw an `ArgumentError` if `deviceId` or `moduleId` parameters are not strings. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_044: [** The `removeModule` method shall throw an `ArgumentError` if the `done` parameter is not a function. **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_18_040: [** The `removeModule` method shall construct an HTTP request using information supplied by the caller, as follows:
+```
+DELETE /devices/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
+Authorization: <sharedAccessSignature>
+Request-Id: <guid>
+If-Match: "<etag>"
+```
+**]**
+
+## All HTTP requests
 All HTTP requests to the registry API should implement the following requirements:
 
 **SRS_NODE_IOTHUB_REGISTRY_16_040: [** All requests shall contain a `User-Agent` header that uniquely identifies the SDK and SDK version used. **]**

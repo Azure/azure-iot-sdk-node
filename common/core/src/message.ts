@@ -107,6 +107,28 @@ export class Message {
     }
   };
 
+  /**
+   * Returns true if the given object is of type {@link Message.BufferConvertible}.  Objects of type {@link Message.BufferConvertible} can be passed into the {@link Message} constructor.
+   *
+   * @param obj object instance to check
+   *
+   * @returns True if the object is of type {@link Message.BufferConvertible}
+   */
+  static isBufferConvertible(obj: any): boolean {
+    /*Codes_SRS_NODE_IOTHUB_MESSAGE_18_001: [`isBufferConvertible` shall return `true` if `obj` is a `Buffer`, a `string`, an `Array`, or an `ArrayBuffer`.]*/
+    if (Buffer.isBuffer(obj)) {
+      return true;
+    } else if (typeof obj === 'string') {
+      return true;
+    } else if (obj instanceof Array) {
+      return true;
+    } else if (obj instanceof ArrayBuffer) {
+      return true;
+    } else {
+      /*Codes_SRS_NODE_IOTHUB_MESSAGE_18_002: [`isBufferConvertible` shall return `false` if `obj` is any other type.]*/
+      return false;
+    }
+  }
 }
 
 export namespace Message {

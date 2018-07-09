@@ -4,7 +4,7 @@
 'use strict';
 
 import { anHourFromNow, errors, SharedAccessSignature, X509 } from 'azure-iot-common';
-import { Http as HttpBase } from './http';
+import { Http as HttpBase, HttpRequestOptions } from './http';
 import  * as uuid from 'uuid';
 import { ClientRequest } from 'http';
 import dbg = require('debug');
@@ -71,15 +71,34 @@ export class RestApiClient {
    * @throws {ReferenceError} If the method or path arguments are falsy.
    * @throws {TypeError}      If the type of the requestBody is not a string when Content-Type is text/plain
    */
-  executeApiCall(method: HttpMethodVerb, path: string, headers: { [key: string]: any }, requestBody: any, timeout?: number | RestApiClient.ResponseCallback, done?: RestApiClient.ResponseCallback): void {
+  executeApiCall(
+    method: HttpMethodVerb,
+    path: string,
+    headers: { [key: string]: any },
+    requestBody: any,
+    timeout?: number | HttpRequestOptions | RestApiClient.ResponseCallback,
+    requestOptions?: HttpRequestOptions | number | RestApiClient.ResponseCallback,
+    done?: RestApiClient.ResponseCallback): void {
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_005: [The `executeApiCall` method shall throw a `ReferenceError` if the `method` argument is falsy.]*/
     if (!method) throw new ReferenceError('method cannot be \'' + method + '\'');
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_006: [The `executeApiCall` method shall throw a `ReferenceError` if the `path` argument is falsy.]*/
     if (!path) throw new ReferenceError('path cannot be \'' + path + '\'');
 
-    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_029: [If `done` is `undefined` and the `timeout` argument is a function, `timeout` should be used as the callback.]*/
+    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_029: [If `done` is `undefined` and the `timeout` argument is a function, `timeout` should be used as the callback and mark `requestOptions` and `timeout` as `undefined`.]*/
     if (done === undefined && typeof(timeout) === 'function') {
       done = timeout;
+      requestOptions = timeout = undefined;
+    }
+
+    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_13_001: [** If `done` is `undefined` and the `requestOptions` argument is a function, then `requestOptions` should be used as the callback and mark `requestOptions` as `undefined`.*/
+    if (done === undefined && typeof(requestOptions) === 'function') {
+      done = requestOptions;
+      requestOptions = undefined;
+    }
+
+    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_13_002: [** If `timeout` is an object and `requestOptions` is `undefined`, then assign `timeout` to `requestOptions` and mark `timeout` as `undefined`.*/
+    if (typeof(timeout) === 'object' && requestOptions === undefined) {
+      requestOptions = timeout;
       timeout = undefined;
     }
 
@@ -143,7 +162,15 @@ export class RestApiClient {
       /* Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_18_002: [ If an `x509` cert was passed into the constructor via the `config` object, `executeApiCall` shall use it to establish the TLS connection. ] */
        request = this._http.buildRequest(method, path, httpHeaders, this._config.host, this._config.x509, requestCallback);
     } else {
-       request = this._http.buildRequest(method, path, httpHeaders, this._config.host, requestCallback);
+      /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_13_003: [** If `requestOptions` is not falsy then it shall be passed to the `buildRequest` function.*/
+      if (requestOptions) {
+        request = this._http.buildRequest(
+          method, path, httpHeaders, this._config.host,
+          requestOptions as HttpRequestOptions, requestCallback
+        );
+      } else {
+        request = this._http.buildRequest(method, path, httpHeaders, this._config.host, requestCallback);
+      }
     }
 
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_030: [If `timeout` is defined and is not a function, the HTTP request timeout shall be adjusted to match the value of the argument.]*/
@@ -273,7 +300,7 @@ export class RestApiClient {
 
 export namespace RestApiClient {
     export interface TransportConfig {
-        host: string;
+        host: string | { socketPath: string };
         sharedAccessSignature?: string | SharedAccessSignature;
         x509?: X509;
     }

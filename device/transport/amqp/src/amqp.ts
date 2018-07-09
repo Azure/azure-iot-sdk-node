@@ -8,10 +8,10 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-amqp:Amqp');
 import { EventEmitter } from 'events';
 
-import { DeviceMethodResponse, Client, DeviceClientOptions, TwinProperties } from 'azure-iot-device';
+import { DeviceTransport, MethodMessage, DeviceMethodResponse, TwinProperties, DeviceClientOptions } from 'azure-iot-device';
 import { getUserAgentString } from 'azure-iot-device';
 import { Amqp as BaseAmqpClient, AmqpBaseTransportConfig, translateError, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
-import { endpoint, SharedAccessSignature, errors, results, Message, AuthenticationProvider, AuthenticationType } from 'azure-iot-common';
+import { endpoint, SharedAccessSignature, errors, results, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
 import { AmqpDeviceMethodClient } from './amqp_device_method_client';
 import { AmqpTwinClient } from './amqp_twin_client';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
@@ -45,7 +45,7 @@ deviceId – (string) the identifier of a device registered with the IoT Hub
 sharedAccessSignature – (string) the shared access signature associated with the device registration.] */
 /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_001: [The `Amqp` constructor shall implement the `Receiver` interface.]*/
 /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_002: [The `Amqp` object shall inherit from the `EventEmitter` node object.]*/
-export class Amqp extends EventEmitter implements Client.Transport {
+export class Amqp extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
@@ -57,6 +57,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
   private _d2cEndpoint: string;
   private _c2dLink: ReceiverLink;
   private _d2cLink: SenderLink;
+  private _options: DeviceClientOptions;
 
   private _c2dErrorListener: (err: Error) => void;
   private _c2dMessageListener: (msg: AmqpMessage) => void;
@@ -121,8 +122,18 @@ export class Amqp extends EventEmitter implements Client.Transport {
       this.emit('error', c2dError);
     };
 
-    this._c2dMessageListener = (msg) => {
-      this.emit('message', AmqpMessage.toMessage(msg));
+    this._c2dMessageListener = (msg: AmqpMessage) => {
+      let inputName: string;
+      if (msg.messageAnnotations) {
+        inputName = msg.messageAnnotations['x-opt-input-name'];
+      }
+      if (inputName) {
+        /*Codes_SRS_NODE_DEVICE_AMQP_18_014: [If `amqp` receives a message on the C2D link with an annotation named "x-opt-input-name", it shall emit an "inputMessage" event with the "x-opt-input-name" annotation as the first parameter and the message as the second parameter.]*/
+        this.emit('inputMessage', inputName, AmqpMessage.toMessage(msg));
+      } else {
+        /*Codes_SRS_NODE_DEVICE_AMQP_18_013: [If `amqp` receives a message on the C2D link without an annotation named "x-opt-input-name", it shall emit a "message" event with the message as the event parameter.]*/
+        this.emit('message', AmqpMessage.toMessage(msg));
+      }
     };
 
     this._d2cErrorListener = (err) => {
@@ -152,13 +163,14 @@ export class Amqp extends EventEmitter implements Client.Transport {
               disconnectCallback(null, new results.Disconnected());
             }
           },
-          sendEvent: (message, sendCallback) => {
+          sendEvent: (amqpMessage, sendCallback) => {
             /*Codes_SRS_NODE_DEVICE_AMQP_16_024: [The `sendEvent` method shall connect and authenticate the transport if necessary.]*/
+            /*Codes_SRS_NODE_DEVICE_AMQP_18_005: [The `sendOutputEvent` method shall connect and authenticate the transport if necessary.]*/
             this._fsm.handle('connect', (err, result) => {
               if (err) {
                 sendCallback(err);
               } else {
-                this._fsm.handle('sendEvent', message, sendCallback);
+                this._fsm.handle('sendEvent', amqpMessage, sendCallback);
               }
             });
           },
@@ -249,15 +261,25 @@ export class Amqp extends EventEmitter implements Client.Transport {
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_055: [The `connect` method shall call its callback with an error if the callback passed to the `getDeviceCredentials` method is called with an error.]*/
                 this._fsm.transition('disconnected', translateError('AMQP Transport: Could not get credentials', err), connectCallback);
               } else {
-                this._c2dEndpoint = endpoint.messagePath(encodeURIComponent(credentials.deviceId));
-                this._d2cEndpoint = endpoint.eventPath(credentials.deviceId);
+                if (credentials.moduleId) {
+                  this._c2dEndpoint = endpoint.moduleMessagePath(credentials.deviceId, credentials.moduleId);
+                  this._d2cEndpoint = endpoint.moduleEventPath(credentials.deviceId, credentials.moduleId);
+                } else {
+                  this._c2dEndpoint = endpoint.deviceMessagePath(credentials.deviceId);
+                  this._d2cEndpoint = endpoint.deviceEventPath(credentials.deviceId);
+                }
 
                 getUserAgentString((userAgentString) => {
                   const config: AmqpBaseTransportConfig = {
-                    uri: this._getConnectionUri(credentials.host),
+                    uri: this._getConnectionUri(credentials),
                     sslOptions: credentials.x509,
                     userAgentString: userAgentString
                   };
+                  /*Codes_SRS_NODE_DEVICE_AMQP_13_002: [ The connect method shall set the CA cert on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
+                  if (this._options && this._options.ca) {
+                    config.sslOptions = config.sslOptions || {};
+                    config.sslOptions.caFile = this._options.ca;
+                  }
                   this._amqp.connect(config, (err, connectResult) => {
                     if (err) {
                       this._fsm.transition('disconnected', translateError('AMQP Transport: Could not connect', err), connectCallback);
@@ -323,6 +345,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
             amqpMessage.to = this._d2cEndpoint;
 
             /*Codes_SRS_NODE_DEVICE_AMQP_16_025: [The `sendEvent` method shall create and attach the d2c link if necessary.]*/
+            /*Codes_SRS_NODE_DEVICE_AMQP_18_006: [The `sendOutputEvent` method shall create and attach the d2c link if necessary.]*/
             if (!this._d2cLink) {
               this._amqp.attachSenderLink(this._d2cEndpoint, null, (err, link) => {
                 if (err) {
@@ -545,7 +568,8 @@ export class Amqp extends EventEmitter implements Client.Transport {
   /* Codes_SRS_NODE_DEVICE_AMQP_16_003: [The sendEvent method shall call the done() callback with a null error object and a MessageEnqueued result object when the message has been successfully sent.] */
   /* Codes_SRS_NODE_DEVICE_AMQP_16_004: [If sendEvent encounters an error before it can send the request, it shall invoke the done callback function and pass the standard JavaScript Error object with a text description of the error (err.message). ] */
   sendEvent(message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    this._fsm.handle('sendEvent', message, done);
+    let amqpMessage = AmqpMessage.fromMessage(message);
+    this._fsm.handle('sendEvent', amqpMessage, done);
   }
 
   /**
@@ -639,17 +663,23 @@ export class Amqp extends EventEmitter implements Client.Transport {
   setOptions(options: DeviceClientOptions, done?: () => void): void {
   /*Codes_SRS_NODE_DEVICE_AMQP_06_001: [The `setOptions` method shall throw a ReferenceError if the `options` parameter has not been supplied.]*/
     if (!options) throw new ReferenceError('The options parameter can not be \'' + options + '\'');
-    if (this._authenticationProvider.type === AuthenticationType.X509) {
-      (this._authenticationProvider as X509AuthenticationProvider).setX509Options(options);
-      /*Codes_SRS_NODE_DEVICE_AMQP_06_002: [If `done` has been specified the `setOptions` method shall call the `done` callback with no arguments.]*/
-      if (done) {
-        /*Codes_SRS_NODE_DEVICE_AMQP_06_003: [`setOptions` should not throw if `done` has not been specified.]*/
-        done();
+
+    if (options.hasOwnProperty('cert')) {
+      if (this._authenticationProvider.type === AuthenticationType.X509) {
+        (this._authenticationProvider as X509AuthenticationProvider).setX509Options(options);
+        /*Codes_SRS_NODE_DEVICE_AMQP_06_002: [If `done` has been specified the `setOptions` method shall call the `done` callback with no arguments.]*/
+        if (done) {
+          /*Codes_SRS_NODE_DEVICE_AMQP_06_003: [`setOptions` should not throw if `done` has not been specified.]*/
+          done();
+        }
+      } else {
+        /*Codes_SRS_NODE_DEVICE_AMQP_16_053: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called while using token-based authentication.]*/
+        throw new errors.InvalidOperationError('cannot set X509 options when using token-based authentication');
       }
-    } else {
-      /*Codes_SRS_NODE_DEVICE_AMQP_16_053: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called while using token-based authentication.]*/
-      throw new errors.InvalidOperationError('cannot set X509 options when using token-based authentication');
     }
+
+    /*Codes_SRS_NODE_DEVICE_AMQP_13_001: [ The setOptions method shall save the options passed in. ]*/
+    this._options = options;
   }
 
   /**
@@ -669,7 +699,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
    * @private
    */
   /*Codes_SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `AmqpDeviceMethodClient` object.]*/
-  onDeviceMethod(methodName: string, methodCallback: (request: Client.MethodMessage, response: DeviceMethodResponse) => void): void {
+  onDeviceMethod(methodName: string, methodCallback: (request: MethodMessage, response: DeviceMethodResponse) => void): void {
     /*Codes_SRS_NODE_DEVICE_AMQP_16_022: [The `onDeviceMethod` method shall call the `onDeviceMethod` method on the `AmqpDeviceMethodClient` object with the same arguments.]*/
     this._deviceMethodClient.onDeviceMethod(methodName, methodCallback);
   }
@@ -750,8 +780,48 @@ export class Amqp extends EventEmitter implements Client.Transport {
     this._fsm.handle('disableMethods', callback);
   }
 
-  protected _getConnectionUri(host: string): string {
-    return 'amqps://' + host;
+  /**
+   * @private
+   */
+  enableInputMessages(callback: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_DEVICE_AMQP_18_010: [The `enableInputMessages` method shall enable C2D messages]*/
+    this._fsm.handle('enableC2D', callback);
+  }
+
+  /**
+   * @private
+   */
+  disableInputMessages(callback: (err?: Error) => void): void {
+    /*Codes_SRS_NODE_DEVICE_AMQP_18_011: [The `disableInputMessages` method shall disable C2D messages]*/
+    this._fsm.handle('disableC2D', callback);
+  }
+
+  /**
+   * @private
+   */
+  /*Codes_SRS_NODE_DEVICE_AMQP_18_007: [The `sendOutputEvent` method shall construct an AMQP request using the message passed in argument as the body of the message.]*/
+  /*Codes_SRS_NODE_DEVICE_AMQP_18_008: [The `sendOutputEvent` method shall call the `done` callback with a null error object and a MessageEnqueued result object when the message has been successfully sent.]*/
+  /*Codes_SRS_NODE_DEVICE_AMQP_18_009: [If `sendOutputEvent` encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
+  sendOutputEvent(outputName: string, message: Message, callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    let amqpMessage = AmqpMessage.fromMessage(message);
+    if (!amqpMessage.messageAnnotations) {
+      amqpMessage.messageAnnotations = {};
+    }
+    /*Codes_SRS_NODE_DEVICE_AMQP_18_012: [The `sendOutputEvent` method  shall set the annotation "x-opt-output-name" on the message to the `outputName`.]*/
+    amqpMessage.messageAnnotations['x-opt-output-name'] = outputName;
+    this._fsm.handle('sendEvent', amqpMessage, callback);
+  }
+
+  /**
+   * @private
+   */
+  sendOutputEventBatch(outputName: string, messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+    /*Codes_SRS_NODE_DEVICE_AMQP_18_004: [`sendOutputEventBatch` shall throw a `NotImplementedError`.]*/
+    throw new errors.NotImplementedError('Output events are not implemented over AMQP.');
+  }
+
+  protected _getConnectionUri(credentials: TransportConfig): string {
+    return 'amqps://' + (credentials.gatewayHostName || credentials.host);
   }
 
   private _stopC2DListener(err: Error | undefined, callback: (err?: Error) => void): void {

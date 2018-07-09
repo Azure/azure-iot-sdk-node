@@ -5,3 +5,18 @@
 
 export { DeviceMethodRequest } from './device_method_request';
 export { DeviceMethodResponse } from './device_method_response';
+export { MethodClient } from './method_client';
+
+export interface MethodParams {
+  methodName: string;
+  payload: any;
+  connectTimeoutInSeconds: number;
+  responseTimeoutInSeconds: number;
+}
+
+export interface MethodResult {
+  status: number;
+  payload: any;
+}
+
+export type MethodCallback = (err?: Error, result?: MethodResult) => void;

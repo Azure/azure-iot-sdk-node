@@ -9,5 +9,7 @@ export { Amqp } from './lib/amqp';
 export { AmqpWs } from './lib/amqp_ws';
 export { DeviceMethodParams } from './lib/interfaces';
 export { JobClient } from './lib/job_client';
+export * from './lib/configuration';
 export { Device } from './lib/device';
+export { Module } from './lib/module';
 export { Twin } from './lib/twin';

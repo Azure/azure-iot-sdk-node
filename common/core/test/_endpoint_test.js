@@ -6,33 +6,87 @@
 var assert = require('chai').assert;
 
 var endpoint = require('../lib/endpoint.js');
+var deviceId = 'mydevice';
+var moduleId = 'mymodule';
 
 describe('endpoint', function () {
-    describe('#devicePath', function () {
-    it('matches /devices/<device-id>', function () {
-      var path = endpoint.devicePath('mydevice');
-      assert.equal('/devices/mydevice', path);
-    });
-  });
-
-  describe('#eventPath', function () {
-    it('matches /devices/<device-id>/messages/events', function () {
-      var path = endpoint.eventPath('mydevice');
-      assert.equal('/devices/mydevice/messages/events', path);
-    });
-  });
-  
-  describe('#messagePath', function () {
-    it('matches /devices/<device-id>/messages/devicebound', function () {
-      var path = endpoint.messagePath('mydevice');
-      assert.equal('/devices/mydevice/messages/devicebound', path);
-    });
-  });
-  
-  describe('#feedbackPath', function () {
-    it('matches /devices/<device-id>/messages/devicebound/<lockToken>', function () {
-      var path = endpoint.feedbackPath('mydevice', '55E68746-0AD9-4DCF-9906-79CDAC14FFBA');
-      assert.equal('/devices/mydevice/messages/devicebound/55E68746-0AD9-4DCF-9906-79CDAC14FFBA', path);
+  [{
+    name: 'devicePath',
+    expected: '/devices/mydevice',
+    actual: endpoint.devicePath(deviceId)
+  },
+  {
+    name: 'deviceEventPath',
+    expected: '/devices/mydevice/messages/events',
+    actual: endpoint.deviceEventPath(deviceId)
+  },
+  {
+    name: 'deviceMessagePath',
+    expected: '/devices/mydevice/messages/devicebound',
+    actual: endpoint.deviceMessagePath(deviceId)
+  },
+  {
+    name: 'deviceTwinPath',
+    expected: '/devices/mydevice/twin',
+    actual: endpoint.deviceTwinPath(deviceId)
+  },
+  {
+    name: 'deviceMethodPath',
+    expected: '/devices/mydevice/methods/devicebound',
+    actual: endpoint.deviceMethodPath(deviceId)
+  },
+  {
+    name: 'deviceBlobUploadPath',
+    expected: '/devices/mydevice/files',
+    actual: endpoint.deviceBlobUploadPath(deviceId)
+  },
+  {
+    name: 'deviceBlobUploadNotificationPath',
+    expected: '/devices/mydevice/files/notifications/correlationId',
+    actual: endpoint.deviceBlobUploadNotificationPath(deviceId, 'correlationId')
+  },
+  {
+    name: 'deviceFeedbackPath',
+    expected: '/devices/mydevice/messages/devicebound/55E68746-0AD9-4DCF-9906-79CDAC14FFBA',
+    actual: endpoint.deviceFeedbackPath(deviceId, '55E68746-0AD9-4DCF-9906-79CDAC14FFBA')
+  },
+  {
+    name: 'modulePath',
+    expected: '/devices/mydevice/modules/mymodule',
+    actual: endpoint.modulePath(deviceId, moduleId)
+  },
+  {
+    name: 'moduleEventPath',
+    expected: '/devices/mydevice/modules/mymodule/messages/events',
+    actual: endpoint.moduleEventPath(deviceId, moduleId)
+  },
+  {
+    name: 'moduleMessagePath',
+    expected: '/devices/mydevice/modules/mymodule/messages/devicebound',
+    actual: endpoint.moduleMessagePath(deviceId, moduleId)
+  },
+  {
+    name: 'moduleInputMessagePath',
+    expected: '/devices/mydevice/modules/mymodule/inputs',
+    actual: endpoint.moduleInputMessagePath(deviceId, moduleId)
+  },
+  {
+    name: 'moduleTwinPath',
+    expected: '/devices/mydevice/modules/mymodule/twin',
+    actual: endpoint.moduleTwinPath(deviceId, moduleId)
+  },
+  {
+    name: 'moduleMethodPath',
+    expected: '/devices/mydevice/modules/mymodule/methods/devicebound',
+    actual: endpoint.moduleMethodPath(deviceId, moduleId)
+  },
+  {
+    name: 'veryVersionString',
+    expected: '?api-version=' + endpoint.apiVersion,
+    actual:  endpoint.versionQueryString()
+  }].forEach(function(testConfig) {
+    it( testConfig.name + ' matches ' + testConfig.expected, function() {
+      assert.strictEqual(testConfig.actual, testConfig.expected);
     });
   });
 });

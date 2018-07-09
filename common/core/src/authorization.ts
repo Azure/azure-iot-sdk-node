@@ -53,6 +53,10 @@ export interface TransportConfig {
    */
   deviceId: string;
   /**
+   * Module unique identifier.
+   */
+  moduleId?: string;
+  /**
    * Shared access signature security token used to authenticate a device when token-based authentication is used.
    */
   sharedAccessSignature?: string;

@@ -4,12 +4,15 @@
 'use strict';
 
 import { errors, endpoint, SharedAccessSignature } from 'azure-iot-common';
+import { Agent } from 'https';
 import { RestApiClient } from 'azure-iot-http-base';
 import * as ConnectionString from './connection_string';
 import { Twin } from './twin';
 import { Query } from './query';
+import { Configuration, ConfigurationContent } from './configuration';
 import { Device } from './device';
 import { Callback } from './interfaces';
+import { Module } from './module';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -51,6 +54,9 @@ export class Registry {
     /*SRS_NODE_IOTHUB_REGISTRY_16_025: [The `Registry` constructor shall use `azure-iothub.RestApiClient` if no `restApiClient` argument is provided.]*/
     // This httpRequestBuilder parameter is used only for unit-testing purposes and should not be used in other situations.
     this._restApiClient = restApiClient || new RestApiClient(config, packageJson.name + '/' + packageJson.version);
+    if (this._restApiClient.setOptions) {
+      this._restApiClient.setOptions({http: { agent: new Agent({ keepAlive: true }) } });
+    }
   }
 
   /**
@@ -480,6 +486,39 @@ export class Registry {
   }
 
   /**
+   * @method              module:azure-iothub.Registry#getModuleTwin
+   * @description         Gets the Module Twin of the module with the specified module identifier.
+   * @param {String}      deviceId   The device identifier.
+   * @param {String}      moduleId   The module identifier.
+   * @param {Function}    done       The callback that will be called with either an Error object or
+   *                                 the module twin instance.
+   * @throws {ReferenceError}       If the deviceId, moduleId, or done argument is falsy.
+   */
+  getModuleTwin(deviceId: string, moduleId: string, done: (err: Error, twin?: Twin, response?: any) => void): void {
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_001: [The `getModuleTwin` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, or `done` is falsy. ]*/
+    if (!deviceId) throw new ReferenceError('Argument \'deviceId\' cannot be falsy');
+    if (!moduleId) throw new ReferenceError('Argument \'moduleId\' cannot be falsy');
+    if (!done) throw new ReferenceError('Argument \'done\' cannot be falsy');
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_002: [The `getModuleTwin` method shall construct an HTTP request using information supplied by the caller, as follows:
+    ```
+      GET /twins/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
+      Authorization: <config.sharedAccessSignature>
+      Request-Id: <guid>
+    ```
+    ]*/
+    const path = `/twins/${encodeURIComponent(deviceId)}/modules/${encodeURIComponent(moduleId)}${endpoint.versionQueryString()}`;
+    this._restApiClient.executeApiCall('GET', path, null, null, (err, newTwin, response) => {
+      if (err) {
+        done(err);
+      } else {
+        /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_003: [The `getModuleTwin` method shall call the `done` callback with a `Twin` object updated with the latest property values stored in the IoT Hub service. ]*/
+        done(null, new Twin(newTwin, this), response);
+      }
+    });
+  }
+
+  /**
    * @method              module:azure-iothub.Registry#updateTwin
    * @description         Updates the Device Twin of a specific device with the given patch.
    * @param {String}      deviceId   The device identifier.
@@ -524,6 +563,53 @@ export class Registry {
   }
 
   /**
+   * @method            module:azure-iothub.Registry#updateModuleTwin
+   * @description         Updates the Twin of a specific module with the given patch.
+   *
+   * @param {String}      deviceId    The device identifier.
+   * @param {String}      moduleId    The module identifier
+   * @param {Object}      patch       The desired properties and tags to patch the module twin with.
+   * @param {string}      etag        The latest etag for this module twin or '*' to force an update even if
+   *                                  the module twin has been updated since the etag was obtained.
+   * @param {Function}    done        The callback that will be called with either an Error object or
+   *                                  the module twin instance.
+   * @throws {ReferenceError}         If the deviceId, moduleId, patch, etag, or done argument is falsy.
+   */
+  updateModuleTwin(deviceId: string, moduleId: string, patch: any, etag: string, done: Registry.ResponseCallback): void {
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_004: [The `updateModuleTwin` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, `patch`, `etag`,or `done` is falsy. ]*/
+    if (!deviceId) throw new ReferenceError('Argument \'deviceId\' cannot be falsy');
+    if (!moduleId) throw new ReferenceError('Argument \'moduleId\' cannot be falsy');
+    if (!patch) throw new ReferenceError('Argument \'patch\' cannot be falsy');
+    if (!etag) throw new ReferenceError('Argument \'etag\' cannot be falsy');
+    if (!done) throw new ReferenceError('Argument \'done\' cannot be falsy');
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_005: [The `updateModuleTwin` method shall construct an HTTP request using information supplied by the caller, as follows:
+    ```
+    PATCH /twins/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
+    Authorization: <config.sharedAccessSignature>
+    Content-Type: application/json; charset=utf-8
+    Request-Id: <guid>
+    If-Match: <etag>
+    <patch>
+    ```
+    ]*/
+    const path = `/twins/${encodeURIComponent(deviceId)}/modules/${encodeURIComponent(moduleId)}${endpoint.versionQueryString()}`;
+    const headers = {
+      'Content-Type': 'application/json; charset=utf-8',
+      'If-Match': etag
+    };
+
+    this._restApiClient.executeApiCall('PATCH', path, headers, patch, (err, newTwin, response) => {
+      if (err) {
+        done(err);
+      } else {
+        /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_006: [The `updateModuleTwin` method shall call the `done` callback with a `Twin` object updated with the latest property values stored in the IoT Hub service. ]*/
+        done(null, new Twin(newTwin, this), response);
+      }
+    });
+  }
+
+  /**
    * @method              module:azure-iothub.Registry#createQuery
    * @description         Creates a query that can be run on the IoT Hub instance to find information about devices or jobs.
    * @param {String}      sqlQuery   The query written as an SQL string.
@@ -554,6 +640,474 @@ export class Registry {
   getRegistryStatistics(done: Callback<Registry.RegistryStatistics>): void {
     const path = '/statistics/devices' + endpoint.versionQueryString();
     this._restApiClient.executeApiCall('GET', path, {}, null, done);
+  }
+
+  /**
+   * @method            module:azure-iothub.Registry#addConfiguration
+   * @description       Add a configuration to an IoT hub.
+   *
+   * @param {Configuration} configuration An object of type module:azure-iothub.Configuration
+   *                                      to add to the hub
+   * @param {Function}      done          The function to call when the operation is
+   *                                      complete. `done` will be called with three
+   *                                      arguments: an Error object (can be null), the
+   *                                      body of the response, and a transport-specific
+   *                                      response object useful for logging or
+   *                                      debugging.
+   *
+   * @throws {ReferenceError}             The configuration or done parameter is falsy.
+   * @throws {ArgumentError}              The configuration object is missing the id property
+   */
+  addConfiguration(configuration: Configuration, done: Registry.ResponseCallback): void {
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_007: [The `addConfiguration` method shall throw a `ReferenceError` exception if `configuration` or `done` is falsy. ]*/
+    if (!configuration) throw new ReferenceError('configuration cannot be falsy');
+    if (!done) throw new ReferenceError('done cannot be falsy');
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_008: [The `addConfiguration` method shall throw an `ArgumentError` exception if `configuration.id` is falsy. ]*/
+    if (!configuration.id) throw new ArgumentError('configuration object is missing id property');
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_009: [The `addConfiguration` method shall set `configuration.schemaVersion` to '1.0' if it is not already set. ]*/
+    if (!configuration.schemaVersion) {
+      configuration.schemaVersion = '1.0';
+    }
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_010: [The `addConfiguration` method shall construct an HTTP request using information supplied by the caller, as follows:
+    ```
+    PUT /configurations/<encodeURIComponent(configuration.id)>?api-version=<version> HTTP/1.1
+    Authorization: <sharedAccessSignature>
+    Content-Type: application/json; charset=utf-8
+    Request-Id: <guid>
+
+    <configuration>
+    ```
+    ]*/
+    const path = `/configurations/${encodeURIComponent(configuration.id)}${endpoint.versionQueryString()}`;
+    const httpHeaders = {
+      'Content-Type': 'application/json; charset=utf-8'
+    };
+
+    this._restApiClient.executeApiCall('PUT', path, httpHeaders, configuration, done);
+  }
+
+  /**
+   * @method            module:azure-iothub.Registry#getConfiguration
+   * @description       Get a single configuration from an IoT Hub
+   *
+   * @param {string}    configurationId   The ID of the configuration you with to retrieve
+   * @param {Function}  done              The callback which will be called with either an Error object
+   *                                      or a module:azure-iothub.Configuration object with the configuration details.
+   *
+   * @throws {ReferenceError}             The configurationId or done argument is falsy
+   */
+  getConfiguration(configurationId: string, done: (err: Error, configuration?: Configuration, response?: any) => void): void {
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_011: [The `getConfiguration` method shall throw a `ReferenceError` exception if `configurationId` is falsy. ]*/
+    if (!configurationId) throw new ReferenceError('Argument \'configurationId\' cannot be falsy');
+    if (!done) throw new ReferenceError('Argument \'done\' cannot be falsy');
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_012: [The `getConfiguration` method shall construct an HTTP request using information supplied by the caller, as follows:
+    ```
+    GET /configurations/<encodeURIComponent(configurationId)>?api-version=<version> HTTP/1.1
+    Authorization: <sharedAccessSignature>
+    Request-Id: <guid>
+    ```
+    ]*/
+    const path = `/configurations/${encodeURIComponent(configurationId)}${endpoint.versionQueryString()}`;
+    this._restApiClient.executeApiCall('GET', path, null, null, done);
+  }
+
+  /**
+   * @method            module:azure-iothub.Registry#getConfigurations
+   * @description       Get all configurations on an IoT Hub
+   *
+   * @param {Function}  done              The callback which will be called with either an Error object
+   *                                      or an array of module:azure-iothub.Configuration objects
+   *                                      for all the configurations.
+   *
+   * @throws {ReferenceError}             The done argument is falsy
+   */
+  getConfigurations(done: (err: Error, configurations?: Configuration[], response?: any) => void): void {
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_013: [The `getConfigurations` method shall throw a `ReferenceError` exception if `done` is falsy. ]*/
+    if (!done) throw new ReferenceError('Argument \'done\' cannot be falsy');
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_014: [The `getConfigurations` method shall construct an HTTP request using information supplied by the caller, as follows:
+    ```
+    GET /configurations?api-version=<version> HTTP/1.1
+    Authorization: <sharedAccessSignature>
+    Request-Id: <guid>
+    ```
+    ]*/
+    const path = `/configurations${endpoint.versionQueryString()}`;
+    this._restApiClient.executeApiCall('GET', path, null, null, done);
+  }
+
+  /**
+   * @method            module:azure-iothub.Registry#updateConfiguration
+   * @description       Update a configuration in an IoT hub
+   *
+   * @param {Configuration} configuration An object of type module:azure-iothub.Configuration
+   *                                      to add to the hub
+   * @param {boolean}       forceUpdate   Set to true to force the update by ignoring the eTag
+   *                                      in the Configuration object (optional. default: false)
+   * @param {Function}      done          The function to call when the operation is
+   *                                      complete. `done` will be called with three
+   *                                      arguments: an Error object (can be null), the
+   *                                      body of the response, and a transport-specific
+   *                                      response object useful for logging or
+   *                                      debugging.
+   *
+   * @throws {ReferenceError}             The configuration or done argument is falsy
+   * @throws {ArgumentError}              The eTag is missing from the Configuration object,
+   *                                      but forceUpdate is not set to true, or the configuration
+   *                                      object is missing an id property.
+   */
+  updateConfiguration(configuration: Configuration, done: Registry.ResponseCallback): void;
+  updateConfiguration(configuration: Configuration, forceUpdate: boolean, done: Registry.ResponseCallback): void;
+  updateConfiguration(configuration: Configuration, forceUpdateOrDone: boolean | Registry.ResponseCallback, done?: Registry.ResponseCallback): void {
+    let forceUpdate: boolean;
+    if (typeof(forceUpdateOrDone) === 'function') {
+      forceUpdate = false;
+      done = forceUpdateOrDone;
+    } else {
+      forceUpdate = forceUpdateOrDone;
+    }
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_015: [The `updateConfiguration` method shall throw a `ReferenceError` exception if `configuration` or `done` is falsy. ]*/
+    if (!configuration) throw new ReferenceError('Argument \'configuration\' cannot be falsy');
+    if (!done) throw new ReferenceError('Argument \'done\' cannot be falsy');
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_016: [The `updateConfiguration` method shall throw an `ArgumentError` exception if `forceUpdate` is falsy and `configuration.etag` is also falsy. ]*/
+    if (!forceUpdate && !configuration.etag) {
+      throw new ArgumentError('The ETag should be set while updating the Configuration.');
+    }
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_017: [The `updateConfiguration` method shall throw an `ArgumentError` exception if `configuration.id` is falsy. ]*/
+    if (!configuration.id) throw new ArgumentError('configuration object is missing id property');
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_018: [The `updateConfiguration` method shall set ``configuration.schemaVersion` to '1.0' if it is not already set. ]*/
+    if (!configuration.schemaVersion) {
+      configuration.schemaVersion = '1.0';
+    }
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_019: [The `updateConfiguration` method shall construct an HTTP request using information supplied by the caller, as follows:
+    ```
+    PUT </configurations/<encodeURIComponent(configurationId)>?api-version=<version> HTTP/1.1
+    Authorization: <sharedAccessSignature>
+    Content-Type: application/json; charset=utf-8
+    If-Match: <etag | *>
+    Request-Id: <guid>
+
+    <configuration>
+    ```
+    ]*/
+    const path = `/configurations/${encodeURIComponent(configuration.id)}${endpoint.versionQueryString()}`;
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_020: [If `forceUpdate` is not truthy, the `updateConfigurationMethod` shall put the `etag` parameter into the `If-Match` header value. ]*/
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_021: [If `forceUpdate` is truthy, the `updateConfiguration` method shall put `*` into the `If-Match` header value. ]*/
+    const httpHeaders = {
+      'Content-Type': 'application/json; charset=utf-8',
+      'If-Match': forceUpdate ? '"*"' : '\"' + configuration.etag + '\"'
+    };
+
+    this._restApiClient.executeApiCall('PUT', path, httpHeaders, configuration, done);
+  }
+
+  /**
+   * @method            module:azure-iothub.Registry#removeConfiguration
+   * @description       Remove a configuration with the given ID from an IoT Hub
+   *
+   * @param {String}    configurationId   ID of the configuration to remove
+   * @param {Function}  done              The function to call when the operation is
+   *                                      complete. `done` will be called with three
+   *                                      arguments: an Error object (can be null), the
+   *                                      body of the response, and a transport-specific
+   *                                      response object useful for logging or
+   *                                      debugging.
+   *
+   * @throws {ReferenceError}             The configurationId or done argument is falsy
+   */
+  removeConfiguration(configurationId: string, done: Registry.ResponseCallback): void {
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_022: [The `removeConfiguration` method shall throw a `ReferenceError` exception if `configurationId` or `done` is falsy. ]*/
+    if (!configurationId) throw new ReferenceError('Argument \'configurationId\' cannot be falsy');
+    if (!done) throw new ReferenceError('Argument \'done\' cannot be falsy');
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_023: [The `removeConfiguration` method shall construct an HTTP request using information supplied by the caller, as follows:
+    ```
+    DELETE /configurations/<encodeURIComponent(configurationId)>?api-version=<version> HTTP/1.1
+    Authorization: <sharedAccessSignature>
+    Request-Id: <guid>
+    ```
+    ]*/
+    const path = `/configurations/${encodeURIComponent(configurationId)}${endpoint.versionQueryString()}`;
+
+    this._restApiClient.executeApiCall('DELETE', path, null, null, done);
+  }
+
+  /**
+   * @method            module:azure-iothub.Registry#applyConfigurationContentOnDevice
+   * @description       Apply the given configuration to a device on an IoT Hub
+   *
+   * @param {String} deviceId                 ID of the device to apply the configuration to
+   * @param {ConfigurationContent} content    The Configuration to apply
+   * @param {Function} done                   The function to call when the operation is
+   *                                          complete. `done` will be called with three
+   *                                          arguments: an Error object (can be null), the
+   *                                          body of the response, and a transport-specific
+   *                                          response object useful for logging or
+   *                                          debugging.
+   *
+   * @throws {ReferenceError}       If the deviceId, content, or done argument is falsy.
+   */
+  applyConfigurationContentOnDevice(deviceId: string, content: ConfigurationContent, done: Registry.ResponseCallback): void {
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_024: [The `applyConfigurationContentOnDevice` method shall throw a `ReferenceError` exception if `deviceId`, `content`, or `done` is falsy. ]*/
+    if (!deviceId) throw new ReferenceError('Argument \'deviceId\' cannot be falsy');
+    if (!content) throw new ReferenceError('Argument \'content\' cannot be falsy');
+    if (!done) throw new ReferenceError('Argument \'done\' cannot be falsy');
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_025: [The `applyConfigurationContentOnDevice` method shall construct an HTTP request using information supplied by the caller, as follows:
+    ```
+    POST /devices/<encodeURIComponent(deviceId)>/applyConfigurationContent?api-version=<version> HTTP/1.1
+    Authorization: <sharedAccessSignature>
+    Content-Type: application/json; charset=utf-8
+    Request-Id: <guid>
+
+    <content>
+    ```
+    ]*/
+    const path = `${endpoint.devicePath(encodeURIComponent(deviceId))}/applyConfigurationContent${endpoint.versionQueryString()}`;
+    const httpHeaders = {
+      'Content-Type': 'application/json; charset=utf-8'
+    };
+
+    this._restApiClient.executeApiCall('POST', path, httpHeaders, content, done);
+  }
+
+  /**
+   * @method            module:azure-iothub.Registry#addModule
+   * @description       Add the given module to the registry.
+   *
+   * @param {Module} module         Module object to add to the registry.
+   * @param {Function} done         The function to call when the operation is
+   *                                complete. `done` will be called with three
+   *                                arguments: an Error object (can be null), the
+   *                                body of the response, and a transport-specific
+   *                                response object useful for logging or
+   *                                debugging.
+   *
+   * @throws {ReferenceError}       If the module or done argument is falsy.
+   * @throws {ArgumentError}        If the module object is missing a deviceId or moduleId value.
+   */
+  addModule(module: Module, done: Registry.ResponseCallback): void {
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_026: [The `addModule` method shall throw a `ReferenceError` exception if `module` or `done` is falsy. ]*/
+    if (!module) throw new ReferenceError('Argument \'module\' cannot be falsy');
+    if (!done) throw new ReferenceError('Argument \'done\' cannot be falsy');
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_027: [The `addModule` method shall throw an `ArgumentError` exception if `module.deviceId` or `module.moduleId` is falsy. ]*/
+    if (!module.deviceId) throw new ArgumentError('deviceId property is missing from module object');
+    if (!module.moduleId) throw new ArgumentError('moduleId property is missing from module object');
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_028: [The `addModule` method shall construct an HTTP request using information supplied by the caller, as follows:
+    ```
+    PUT /devices/<encodeURIComponent(module.deviceId)>/modules/<encodeURIComponent(module.moduleId)>?api-version=<version> HTTP/1.1
+    Authorization: <sharedAccessSignature>
+    Content-Type: application/json; charset=utf-8
+    Request-Id: <guid>
+
+    <module>
+    ```
+    ]*/
+    const preparedModule = JSON.parse(JSON.stringify(module));
+    this._normalizeAuthentication(preparedModule);
+
+    const path = `${endpoint.modulePath(encodeURIComponent(preparedModule.deviceId),encodeURIComponent(preparedModule.moduleId))}${endpoint.versionQueryString()}`;
+    const httpHeaders = {
+      'Content-Type': 'application/json; charset=utf-8'
+    };
+
+    this._restApiClient.executeApiCall('PUT', path, httpHeaders, preparedModule, done);
+  }
+
+  /**
+   * @method            module:azure-iothub.Registry#getModulesOnDevice
+   * @description       Get a list of all modules on an IoT Hub device
+   *
+   * @param {String}    deviceId  ID of the device we're getting modules for
+   * @param {Function}  done      The callback which will be called with either an Error object
+   *                              or an array of module:azure-iothub.Module objects
+   *                              for all the modules.
+   *
+   * @throws {ReferenceError}     If the deviceId or done argument is falsy.
+   */
+  getModulesOnDevice(deviceId: string, done: (err: Error, modules?: Module[], response?: any) => void): void {
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_029: [The `getModulesOnDevice` method shall throw a `ReferenceError` exception if `deviceId` or `done` is falsy. ]*/
+    if (!deviceId) throw new ReferenceError('Argument \'deviceId\' cannot be falsy');
+    if (!done) throw new ReferenceError('Argument \'done\' cannot be falsy');
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_030: [The `getModulesOnDevice` method shall construct an HTTP request using information supplied by the caller, as follows:
+    ```
+    GET /devices/<encodeURIComponent(deviceId)>/modules?api-version=<version> HTTP/1.1
+    Authorization: <sharedAccessSignature>
+    Request-Id: <guid>
+    ```
+    ]*/
+    const path = `${endpoint.devicePath(encodeURIComponent(deviceId))}/modules${endpoint.versionQueryString()}`;
+    this._restApiClient.executeApiCall('GET', path, null, null, done);
+  }
+
+  /**
+   * @method            module:azure-iothub.Registry#getModule
+   * @description       Get a single module from a device on an IoT Hub
+   *
+   * @param {String} deviceId     Device ID that owns the module.
+   * @param {String} moduleId     Module ID to retrieve
+   * @param {Function} done       The callback which will be called with either an Error object
+   *                              or the module:azure-iothub.Module object for the requested module
+   *
+   * @throws {ReferenceError}     If the deviceId, moduleId, or done argument is falsy.
+   */
+  getModule(deviceId: string, moduleId: string, done: (err: Error, module?: Module, response?: any) => void): void {
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_031: [The `getModule` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, or `done` is falsy. ]*/
+    if (!deviceId) throw new ReferenceError('Argument \'deviceId\' cannot be falsy');
+    if (!moduleId) throw new ReferenceError('Argument \'moduleId\' cannot be falsy');
+    if (!done) throw new ReferenceError('Argument \'done\' cannot be falsy');
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_032: [The `getModule` method shall construct an HTTP request using information supplied by the caller, as follows:
+    ```
+    get /devices/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
+    Authorization: <sharedAccessSignature>
+    Request-Id: <guid>
+    ```
+    ]*/
+    const path = `${endpoint.modulePath(encodeURIComponent(deviceId), encodeURIComponent(moduleId))}${endpoint.versionQueryString()}`;
+    this._restApiClient.executeApiCall('GET', path, null, null, done);
+  }
+
+  /**
+   * @method            module:azure-iothub.Registry#updateModule
+   * @description       Update the given module object in the registry
+   *
+   * @param {Module} module         Module object to update.
+   * @param {boolean} forceUpdate   Set to true to force the update by ignoring the eTag
+   *                                in the Module object (optional. default: false)
+   * @param {Function}  done        The function to call when the operation is
+   *                                complete. `done` will be called with three
+   *                                arguments: an Error object (can be null), the
+   *                                body of the response, and a transport-specific
+   *                                response object useful for logging or
+   *                                debugging.
+   *
+   * @throws {ReferenceError}       If the module or done argument is falsy.
+   * @throws {ArgumentError}        If the module object is missing an etag and
+   *                                forceUpdate is not set to true, or the module
+   *                                object is missing it's deviceId or moduleId property.
+   */
+  updateModule(module: Module, done: Registry.ResponseCallback): void;
+  updateModule(module: Module, forceUpdate: boolean, done: Registry.ResponseCallback): void;
+  updateModule(module: Module, forceUpdateOrDone: boolean | Registry.ResponseCallback, done?: Registry.ResponseCallback): void {
+    let forceUpdate: boolean;
+    if (typeof(forceUpdateOrDone) === 'function') {
+      forceUpdate = false;
+      done = forceUpdateOrDone;
+    } else {
+      forceUpdate = forceUpdateOrDone;
+    }
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_033: [The `updateModule` method shall throw a `ReferenceError` exception if `module` or `done` is falsy. ]*/
+    if (!module) throw new ReferenceError('Argument \'module\' cannot be falsy');
+    if (!done) throw new ReferenceError('Argument \'done\' cannot be falsy');
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_034: [The `updateModule` method shall throw an `ArgumentError` exception if `module.deviceId` or `module.moduleId` is falsy. ]*/
+    if (!module.moduleId) throw new ArgumentError('moduleId property is missing from module object');
+    if (!module.deviceId) throw new ArgumentError('deviceId property is missing from module object');
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_035: [The `updateModule` method shall throw an `ArgumentError` exception if `forceUpdate` is falsy and `module.etag` is falsy. ]*/
+    if (!forceUpdate && !module.etag) {
+      throw new ArgumentError('The ETag should be set while updating the Module.');
+    }
+
+    const preparedModule = JSON.parse(JSON.stringify(module));
+    this._normalizeAuthentication(preparedModule);
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_036: [If `forceUpdate` is not truthy, the `updateModule` shall put the `etag` parameter into the `If-Match` header value. ]*/
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_037: [If `forceUpdate` is truthy, the `updateModule` method shall put `*` into the `If-Match` header value. ]*/
+    const httpHeaders = {
+      'Content-Type': 'application/json; charset=utf-8',
+      'If-Match': forceUpdate ? '"*"' : '\"' + preparedModule.etag + '\"'
+    };
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_038: [The `updateModule` method shall construct an HTTP request using information supplied by the caller, as follows:
+    ```
+    PUT /devices/<encodeURIComponent(module.deviceId)>/modules/<encodeURIComponent(module.moduleId)>?api-version=<version> HTTP/1.1
+    Authorization: <sharedAccessSignature>
+    Content-Type: application/json; charset=utf-8
+    If-Match: <etag | *
+    Request-Id: <guid>
+
+    <module>
+    ```
+    ]*/
+
+    const path = `${endpoint.modulePath(encodeURIComponent(preparedModule.deviceId),encodeURIComponent(preparedModule.moduleId))}${endpoint.versionQueryString()}`;
+    this._restApiClient.executeApiCall('PUT', path, httpHeaders, preparedModule, done);
+  }
+
+  /**
+   * @method            module:azure-iothub.Registry#removeModule
+   * @description       Remove the given module from the registry
+   *
+   * @param {String} deviceId       Device ID that owns the module
+   * @param {String} moduleId       Module ID to remove
+   * @param {Function}  done        The function to call when the operation is
+   *                                complete. `done` will be called with three
+   *                                arguments: an Error object (can be null), the
+   *                                body of the response, and a transport-specific
+   *                                response object useful for logging or
+   *                                debugging.
+   *
+   * @throws {ReferenceError}       If the done deviceId, moduleId, or argument is falsy.
+   */
+  removeModule(module: Module, done: Registry.ResponseCallback): void;
+  removeModule(deviceId: string, moduleId: string, done: Registry.ResponseCallback): void;
+  removeModule(moduleOrDeviceId: Module | string, doneOrModuleId: Registry.ResponseCallback | string, done?: Registry.ResponseCallback): void {
+    let moduleId: string;
+    let deviceId: string;
+    let etag: string;
+
+    if (moduleOrDeviceId && ((moduleOrDeviceId as any).moduleId)) { // can't do "instanceof Module" at runtime because Module is an interface
+      /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_041: [if a `Module` object is passed in, `removeModule` shall use the `deviceId`, `moduleId`, and `etag` from the `Module` object.]*/
+      done = doneOrModuleId as Registry.ResponseCallback;
+      let module = moduleOrDeviceId as Module;
+      deviceId = module.deviceId;
+      moduleId = module.moduleId;
+      etag = module.etag;
+    } else {
+      /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_042: [if a `deviceId` and `moduleId` are passed in, `removeModule` shall use those values and the `etag` shall be `*`.]*/
+      deviceId = moduleOrDeviceId as string;
+      moduleId = doneOrModuleId as string;
+      etag = '*';
+    }
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_039: [The `removeModule` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, or `done` is falsy. ]*/
+    if (!deviceId) throw new ReferenceError('\'deviceId\' cannot be falsy');
+    if (!moduleId) throw new ReferenceError('\'moduleId\' cannot be falsy');
+    if (!done) throw new ReferenceError('Argument \'done\' cannot be falsy');
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_043: [The `removeModule` method shall throw an `ArgumentError` if `deviceId` or `moduleId` parameters are not strings.]*/
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_044: [The `removeModule` method shall throw an `ArgumentError` if the `done` parameter is not a function.]*/
+    if (typeof deviceId !== 'string') throw new ArgumentError('\'deviceId\' must be a string');
+    if (typeof moduleId !== 'string') throw new ArgumentError('\'moduleId\' must be a string');
+    if (typeof(done) !== 'function') throw new ArgumentError('\'done\' must be a function');
+
+    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_040: [The `removeModule` method shall construct an HTTP request using information supplied by the caller, as follows:
+    ```
+    DELETE /devices/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
+    Authorization: <sharedAccessSignature>
+    Request-Id: <guid>
+    If-Match: "<etag>"
+    ```
+    ]*/
+    const httpHeaders = {
+      'If-Match': '"' + etag + '"'
+    };
+
+    const path = `${endpoint.modulePath(encodeURIComponent(deviceId), encodeURIComponent(moduleId))}${endpoint.versionQueryString()}`;
+
+    this._restApiClient.executeApiCall('DELETE', path, httpHeaders, null, done);
   }
 
   private _bulkOperation(devices: Registry.DeviceDescription[], done: Callback<any>): void {
@@ -804,6 +1358,7 @@ export namespace Registry {
 
     export interface DeviceDescription {
       deviceId: string;
+      capabilities?: Device.Capabilities;
       [x: string]: any;
     }
 

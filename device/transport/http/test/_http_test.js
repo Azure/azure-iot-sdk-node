@@ -41,8 +41,6 @@ describe('Http', function () {
   var fakeAuthenticationProvider = null;
   var transport = null;
   var receiver = null;
-  var testMessage = new Message();
-  var testCallback = function () { };
 
   beforeEach(function () {
     fakeAuthenticationProvider = {
@@ -798,6 +796,10 @@ describe('HttpReceiver', function () {
   /*Tests_SRS_NODE_DEVICE_HTTP_16_025: [`onDeviceMethod` shall throw a `NotImplementedError`.]*/
   /*Tests_SRS_NODE_DEVICE_HTTP_16_026: [`enableMethods` shall throw a `NotImplementedError`.]*/
   /*Tests_SRS_NODE_DEVICE_HTTP_16_027: [`disableMethods` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_18_001: [`enableInputMessages` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_18_002: [`disableInputMessages` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_18_003: [`sendOutputEvent` shall throw a `NotImplementedError`.]*/
+  /*Tests_SRS_NODE_DEVICE_HTTP_18_004: [`sendOutputEventBatch` shall throw a `NotImplementedError`.]*/
   [
     'getTwin',
     'updateTwinReportedProperties',
@@ -806,7 +808,11 @@ describe('HttpReceiver', function () {
     'sendMethodResponse',
     'onDeviceMethod',
     'enableMethods',
-    'disableMethods'
+    'disableMethods',
+    'enableInputMessages',
+    'disableInputMessages',
+    'sendOutputEvent',
+    'sendOutputEventBatch'
   ].forEach(function (methodName) {
     describe('#' + methodName, function () {
       it('throws a NotImplementedError', function () {
@@ -814,7 +820,7 @@ describe('HttpReceiver', function () {
         assert.throws(function () {
           http[methodName]();
         }, NotImplementedError);
-      })
+      });
     });
   });
 });
