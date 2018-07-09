@@ -5,7 +5,7 @@
 'use strict';
 
 import { errors } from 'azure-iot-common';
-import { Errors as Amqp10Errors } from 'amqp10';
+import { AmqpError } from 'rhea';
 
 /**
  * @private
@@ -46,8 +46,8 @@ export function translateError(message: string, amqpError: Error): AmqpTransport
   | "com.microsoft:timeout"                    | ServiceUnavailableError              |
   ]*/
 
-  if ((amqpError as Amqp10Errors.ProtocolError).condition) {
-    switch ((amqpError as Amqp10Errors.ProtocolError).condition) {
+  if ((amqpError as AmqpError).condition) {
+    switch ((amqpError as AmqpError).condition) {
       case 'amqp:internal-error':
         error = new errors.InternalServerError(message);
         break;
@@ -100,8 +100,6 @@ export function translateError(message: string, amqpError: Error): AmqpTransport
         /*Codes_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_002: [If the AMQP error code is unknown, `translateError` should return a generic Javascript `Error` object.]*/
         error = new Error(message);
     }
-  } else if (amqpError instanceof Amqp10Errors.AuthenticationError) {
-    error = new errors.UnauthorizedError(message);
   } else if ((<any>amqpError).code) {
     error = new errors.NotConnectedError(message);
   } else {

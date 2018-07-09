@@ -13,6 +13,7 @@
     "azure-iot-http-base": "1.7.0",
     "debug": "^3.1.0",
     "lodash": "^4.17.5",
+    "rhea": "^0.2.11",
     "machina": "^2.0.1"
   },
   "devDependencies": {
@@ -21,17 +22,15 @@
     "istanbul": "^0.4.4",
     "jshint": "^2.9.2",
     "mocha": "^3.0.1",
-    "typings": "^2.1.1",
     "tslint": "^5.1.0",
-    "typescript": "2.2.2",
+    "typescript": "2.9.2",
     "@types/node": "^7.0.5",
     "@types/debug": "0.0.29",
     "uuid": "^3.2.1"
   },
   "scripts": {
     "lint": "tslint --exclude ./samples --project . -c ../tslint.json",
-    "typings": "typings install",
-    "build": "npm run typings && tsc",
+    "build": "tsc",
     "unittest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test.js",
     "alltest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test*.js",
     "unittest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test.js",
