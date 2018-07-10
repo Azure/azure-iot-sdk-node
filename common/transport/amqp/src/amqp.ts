@@ -11,7 +11,7 @@ import { ClaimsBasedSecurityAgent } from './amqp_cbs';
 import { SenderLink } from './sender_link';
 import { ReceiverLink } from './receiver_link';
 import { AmqpLink } from './amqp_link_interface';
-import { create_container as rheaCreateContainer, EventContext, AmqpError, Connection, Session } from 'rhea';
+import { create_container as rheaCreateContainer, EventContext, AmqpError, Container, Connection, Session } from 'rhea';
 import merge = require('lodash.merge');
 import * as dbg from 'debug';
 import * as async from 'async';
@@ -34,18 +34,18 @@ export class Amqp {
   //
   // Top of the rhea object hierarchy.
   //
-  private _amqpContainer: any;
+  private _rheaContainer: Container;
   //
   // Rhea object used to represent the connection.  The connection object is a child of the container object.
   // It is an event emitter.  Numerous handlers listen to manage setting up a connection and act upon error events
   // associated with the connection.
   //
-  private _amqpConnection: Connection;
+  private _rheaConnection: Connection;
   //
   // Another rhea object.  It is a child of the connection.  It is an event emitter.  All rhea links will
   // be children of the session object.
   //
-  private _amqpSession: Session;
+  private _rheaSession: Session;
   //
   // A dictionary to handle looking up THIS transports (NOT rhea) link objects.  The key is the actual name of the link.
   // The value is the link object.
@@ -132,12 +132,12 @@ export class Amqp {
     - not reattach sender and receiver links on failure
     - not reestablish sessions on failure]*/
 
-    this._amqpContainer = rheaCreateContainer();
-    this._amqpContainer.on('error', (context: EventContext) => {
+    this._rheaContainer = rheaCreateContainer();
+    this._rheaContainer.on('error', (context: EventContext) => {
       debug('Container received a error event' + this._getErrorName(context.connection.error));
     });
 
-    this._amqpContainer.on('azure-iot-amqp-base:error-indicated', (err: AmqpError) => {
+    this._rheaContainer.on('azure-iot-amqp-base:error-indicated', (err: AmqpError) => {
       debug('azure-iot-amqp-base:error-indicated invoked ' + this._getErrorName(err));
       this._fsm.handle('amqpError', err);
 
@@ -178,11 +178,11 @@ export class Amqp {
       this._fsm.handle('disconnected', context);
     };
     const manageConnectionHandlers = (operation: string) => {
-      this._amqpContainer[operation]('connection_error', connectionErrorHandler);
-      this._amqpContainer[operation]('connection_open', connectionOpenHandler);
-      this._amqpContainer[operation]('connection_close', connectionCloseHandler);
-      this._amqpContainer[operation]('disconnected', connectionDisconnectedHandler);
-      this._amqpContainer[operation]('error', rheaErrorHandler);
+      this._rheaConnection[operation]('connection_error', connectionErrorHandler);
+      this._rheaConnection[operation]('connection_open', connectionOpenHandler);
+      this._rheaConnection[operation]('connection_close', connectionCloseHandler);
+      this._rheaConnection[operation]('disconnected', connectionDisconnectedHandler);
+      this._rheaConnection[operation]('error', rheaErrorHandler);
     };
 
     const sessionErrorHandler = (context: EventContext) => {
@@ -198,9 +198,9 @@ export class Amqp {
       this._fsm.handle('session_close', context);
     };
     const manageSessionHandlers = (operation: string) => {
-      this._amqpConnection[operation]('session_error', sessionErrorHandler);
-      this._amqpConnection[operation]('session_open', sessionOpenHandler);
-      this._amqpConnection[operation]('session_close', sessionCloseHandler);
+      this._rheaSession[operation]('session_error', sessionErrorHandler);
+      this._rheaSession[operation]('session_open', sessionOpenHandler);
+      this._rheaSession[operation]('session_close', sessionCloseHandler);
     };
 
     this._fsm = new machina.Fsm({
@@ -237,19 +237,25 @@ export class Amqp {
         },
         connecting: {
           _onEnter: (connectionParameters, connectCallback) => {
-            this._amqpContainer.options.sender_options = {properties: {'com.microsoft:client-version': this._config.userAgentString}, reconnect: false};
-            this._amqpContainer.options.receiver_options = {properties: {'com.microsoft:client-version': this._config.userAgentString}, reconnect: false, autoaccept: autoSettleMode};
+            this._rheaContainer.options.sender_options = {properties: {'com.microsoft:client-version': this._config.userAgentString}, reconnect: false};
+            this._rheaContainer.options.receiver_options = {properties: {'com.microsoft:client-version': this._config.userAgentString}, reconnect: false, autoaccept: autoSettleMode};
             this._connectionCallback = connectCallback;
             this._indicatedConnectionError = undefined;
             this._disconnectionOccurred = false;
             this._sessionCloseOccurred = false;
             this._connectionCloseOccurred = false;
+            //
+            // According to the rhea maintainers, one can depend on that fact that no actual network activity
+            // will occur until the nextTick() after the call to connect.  Because of that, one can
+            // put the event handlers on the rhea connection object returned from the connect call and be assured
+            // that the listeners are in place BEFORE any possible events will be emitted on the connection.
+            //
+            this._rheaConnection = this._rheaContainer.connect(connectionParameters);
             manageConnectionHandlers('on');
-            this._amqpContainer.connect(connectionParameters);
           },
           'connection_open': (context: EventContext) => {
             debug('in the connection open handler for the connection state: ' + context.connection.name);
-            this._amqpConnection = context.connection;
+            this._rheaConnection = context.connection;
             let callback = this._connectionCallback;
             this._connectionCallback = undefined;
             this._fsm.transition('connecting_session', callback);
@@ -287,11 +293,17 @@ export class Amqp {
         },
         connecting_session: {
           _onEnter: (connectCallback, result) => {
-            manageSessionHandlers('on');
             this._sessionCallback = connectCallback;
             this._sessionResult = result;
-            this._amqpSession = this._amqpConnection.create_session();
-            this._amqpSession.open();
+            //
+            // According to the rhea maintainers, one can depend on that fact that no actual network activity
+            // will occur until the nextTick() after the call to create_session.  Because of that, one can
+            // put the event handlers on the rhea session object returned from the create_session call and be assured
+            // that the listeners are in place BEFORE any possible events will be emitted on the session.
+            //
+            this._rheaSession = this._rheaConnection.create_session();
+            manageSessionHandlers('on');
+            this._rheaSession.open();
           },
           'session_open': (context: EventContext) => {
             debug('In the session_open handler for the connecting_session state');
@@ -397,7 +409,7 @@ export class Amqp {
             this._fsm.transition('disconnecting', disconnectCallback);
           },
           initializeCBS: (callback) => {
-            this._cbs = new ClaimsBasedSecurityAgent(this._amqpSession);
+            this._cbs = new ClaimsBasedSecurityAgent(this._rheaSession);
             this._cbs.attach(callback);
           },
           putToken: (audience, token, callback) => {
@@ -456,7 +468,7 @@ export class Amqp {
           },
           attachReceiverLink: (endpoint: string, linkOptions: any, done: GenericAmqpBaseCallback<ReceiverLink>): void => {
             debug('creating receiver link for: ' + endpoint);
-            this._receivers[endpoint] = new ReceiverLink(endpoint, linkOptions, this._amqpSession);
+            this._receivers[endpoint] = new ReceiverLink(endpoint, linkOptions, this._rheaSession);
             const permanentErrorHandler = (err) => {
               debug('receiver link invokes perm error handler for attachReceiverLink: ' + endpoint + ': ' + err.toString());
               debug('receiver link error - removing it from cache: ' + endpoint + ': ' + err.toString());
@@ -486,7 +498,7 @@ export class Amqp {
           },
           attachSenderLink: (endpoint: string, linkOptions: any, done: GenericAmqpBaseCallback<any>): void => {
             debug('creating sender link for: ' + endpoint);
-            this._senders[endpoint] = new SenderLink(endpoint, linkOptions, this._amqpSession);
+            this._senders[endpoint] = new SenderLink(endpoint, linkOptions, this._rheaSession);
             const permanentErrorHandler = (err) => {
               debug('sender link invokes perm error handler for attachSenderLink: ' + endpoint + ': ' + err.toString());
               delete(this._senders[endpoint]);
@@ -544,7 +556,7 @@ export class Amqp {
                 // A session close may have already been received from the peer.  If we are disconnecting because of a session error as an example.
                 // We should send a session close from our end BUT, we should not expect to receive back another session close in response.
                 //
-                this._amqpSession.close();
+                this._rheaSession.close();
                 if (this._sessionCloseOccurred) {
                   callback();
                 } else {
@@ -570,7 +582,7 @@ export class Amqp {
                 // We should send a connection close from our end BUT, we should not expect to receive back another connection close in response.
                 //
                 debug('disconnect in disconnecting state is about send a close to the peer.');
-                this._amqpConnection.close();
+                this._rheaConnection.close();
                 if (this._connectionCloseOccurred) {
                   debug('while in disconnecting state - a close from the peer was already received.  No point in waiting for another one.');
                   callback(err);
@@ -701,7 +713,7 @@ export class Amqp {
     connectionParameters.reconnect = false;
     if (parsedUrl.protocol === 'wss:') {
       let webSocket = require('ws');
-      let ws = this._amqpContainer.websocket_connect(webSocket);
+      let ws = this._rheaContainer.websocket_connect(webSocket);
       connectionParameters.connection_details = ws(config.uri, 'AMQPWSB10', config.sslOptions );
     }
     connectionParameters = merge(connectionParameters, config.policyOverride);

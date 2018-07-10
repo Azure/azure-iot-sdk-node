@@ -3,8 +3,7 @@ import * as uuid from 'uuid';
 import * as async from 'async';
 import { EventEmitter } from 'events';
 import * as dbg from 'debug';
-
-
+import { Session } from 'rhea';
 import { errors } from 'azure-iot-common';
 import { AmqpMessage } from './amqp_message';
 import { SenderLink } from './sender_link';
@@ -62,7 +61,7 @@ class PutTokenStatus {
 export class ClaimsBasedSecurityAgent extends EventEmitter {
   private static _putTokenSendingEndpoint: string = '$cbs';
   private static _putTokenReceivingEndpoint: string = '$cbs';
-  private _amqpSession: any;
+  private _rheaSession: Session;
   private _errorHandler: (err: Error)  => void;
   private _fsm: machina.Fsm;
   private _senderLink: SenderLink;
@@ -74,20 +73,20 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
     callback: (err?: Error) => void
   }[];
 
-  constructor(session: any) {
+  constructor(session: Session) {
     super();
     this._errorHandler = (err: Error): void => {
       debug('In the generic error handler for the CBS.  error emitted: ' + err.name);
       this._fsm.handle('detach', undefined, err);
     };
 
-    this._amqpSession = session;
+    this._rheaSession = session;
     /*Codes_SRS_NODE_AMQP_CBS_16_001: [The `constructor` shall instantiate a `SenderLink` object for the `$cbs` endpoint using a custom policy `{encoder: function(body) { return body;}}` which forces the amqp layer to send the token as an amqp value in the body.]*/
-    this._senderLink = new SenderLink(ClaimsBasedSecurityAgent._putTokenSendingEndpoint, null, this._amqpSession);
+    this._senderLink = new SenderLink(ClaimsBasedSecurityAgent._putTokenSendingEndpoint, null, this._rheaSession);
     this._senderLink.on('error', this._errorHandler);
 
     /*Codes_SRS_NODE_AMQP_CBS_16_002: [The `constructor` shall instantiate a `ReceiverLink` object for the `$cbs` endpoint.]*/
-    this._receiverLink = new ReceiverLink(ClaimsBasedSecurityAgent._putTokenReceivingEndpoint, null, this._amqpSession);
+    this._receiverLink = new ReceiverLink(ClaimsBasedSecurityAgent._putTokenReceivingEndpoint, null, this._rheaSession);
     this._receiverLink.on('error', this._errorHandler);
 
     this._putTokenQueue = [];

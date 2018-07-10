@@ -2,7 +2,7 @@ import * as machina from 'machina';
 import * as dbg from 'debug';
 import * as uuid from 'uuid';
 import { EventEmitter } from 'events';
-import { EventContext, AmqpError, Session, Receiver, Delivery } from 'rhea';
+import { EventContext, AmqpError, Session, Receiver, ReceiverOptions, Delivery } from 'rhea';
 import { errors, results } from 'azure-iot-common';
 import { AmqpMessage } from './amqp_message';
 import { AmqpLink } from './amqp_link_interface';
@@ -28,8 +28,8 @@ interface DeliveryRecord {
 /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_003: [** The `ReceiverLink` class shall implement the `AmqpLink` interface.]*/
 export class ReceiverLink  extends EventEmitter implements AmqpLink {
   private _linkAddress: string;
-  private _linkOptions: any;
-  private _rheaReceiverLink: Receiver;
+  private _linkOptions: ReceiverOptions;
+  private _rheaReceiver: Receiver;
   private _fsm: machina.Fsm;
   private _rheaSession: Session;
   //
@@ -50,14 +50,32 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
   //
   private _indicatedError: Error | AmqpError;
   //
-  // Create a name so that we can ensure that an event from the session is actually for the link we are utilizing
-  // for this ReceiverLink.
+  // Create a name to uniquely identify the link.  While not currently useful, it could be used to distinguish
+  // whether an event is for this receiver.  If the event handlers were on the session object and not
+  // directly on the link, this would be necessary.
   //
-  private _rheaReceiverLinkName: string;
-  private _combinedOptions: any;
+  private _rheaReceiverName: string;
+  private _combinedOptions: ReceiverOptions;
+  //
+  // When we receive a message from the service we send it up to the application.  We have no say as to how we
+  // dispose of the message.
+  //
+  // We need for the application to indicate the disposition.
+  //
+  // We create a dictionary that is keyed by the amqpMessage.  The value of the dictionary is the delivery record associated
+  // (by rhea) of this message.
+  //
+  // So when a message is received we place in the dictionary.  When the application sends back down the message we look it up
+  // in the dictionary, remove it if found, and issue the disposition.  Note we will indicate an error to the callback (if provided),
+  // if we can't find the item in the dictionary.
+  //
+  // Note also, if the application does NOT provide an indication on what to do with the message this dictionary will NOT
+  // remove the item.  This, could be considered a leak.  If so, we could implement a cleaner for the list.  However, for
+  // now this is treated as an application error.
+  //
   private _unDisposedDeliveries: DeliveryRecord[];
 
-  constructor(linkAddress: string, linkOptions: any, session: Session) {
+  constructor(linkAddress: string, linkOptions: ReceiverOptions, session: Session) {
     super();
     this._linkAddress = linkAddress;
     this._linkOptions = linkOptions;
@@ -74,7 +92,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
     }
 
     const receiverOpenHandler = (context: EventContext): void => {
-      if (context.receiver.name === this._rheaReceiverLinkName) {
+      if (context.receiver.name === this._rheaReceiverName) {
         debug('handling receiver_open event for link: ' + context.receiver.name + 'source: ' + context.receiver.source.address);
         this._fsm.handle('receiverOpenEvent', context);
       } else {
@@ -82,7 +100,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
       }
     };
     const receiverCloseHandler = (context: EventContext): void => {
-      if (context.receiver.name === this._rheaReceiverLinkName) {
+      if (context.receiver.name === this._rheaReceiverName) {
         debug('handling receiver_close event for link: ' + context.receiver.name + 'source: ' + context.receiver.source.address);
         this._fsm.handle('receiverCloseEvent', context);
       } else {
@@ -90,7 +108,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
       }
     };
     const receiverErrorHandler  = (context: EventContext): void => {
-      if (context.receiver.name === this._rheaReceiverLinkName) {
+      if (context.receiver.name === this._rheaReceiverName) {
         debug('handling receiver_error event for link: ' + context.receiver.name + 'source: ' + context.receiver.source.address);
         this._fsm.handle('receiverErrorEvent', context);
       } else {
@@ -100,7 +118,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
 
     /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_012: [If a `message` event is emitted by the `rhea` link object, the `ReceiverLink` object shall emit a `message` event with the same content.]*/
     const receiverMessageHandler = (context: EventContext): void => {
-      if (context.receiver.name === this._rheaReceiverLinkName) {
+      if (context.receiver.name === this._rheaReceiverName) {
         debug('handling message event for link: ' + context.receiver.name + 'source: ' + context.receiver.source.address + ' for deliveryId: ' + context.delivery.id);
         this._unDisposedDeliveries.push({msg: context.message as any, delivery: context.delivery});
         this.emit('message', context.message);
@@ -112,10 +130,10 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
     /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_006: [The `ReceiverLink` object should subscribe to the `receiver_close` event of the newly created `rhea` link object.]*/
     /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_007: [The `ReceiverLink` object should subscribe to the `error` event of the newly created `rhea` link object.]*/
     const manageReceiverHandlers = (operation: string) => {
-      this._rheaReceiverLink[operation]('receiver_error', receiverErrorHandler);
-      this._rheaReceiverLink[operation]('receiver_close', receiverCloseHandler);
-      this._rheaReceiverLink[operation]('receiver_open', receiverOpenHandler);
-      this._rheaReceiverLink[operation]('message', receiverMessageHandler);
+      this._rheaReceiver[operation]('receiver_error', receiverErrorHandler);
+      this._rheaReceiver[operation]('receiver_close', receiverCloseHandler);
+      this._rheaReceiver[operation]('receiver_open', receiverOpenHandler);
+      this._rheaReceiver[operation]('message', receiverMessageHandler);
     };
 
     this._fsm = new machina.Fsm({
@@ -124,8 +142,8 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
       states: {
         detached: {
           _onEnter: (callback, err) => {
-            this._rheaReceiverLink = null;
-            this._rheaReceiverLinkName = null;
+            this._rheaReceiver = null;
+            this._rheaReceiverName = null;
 
             if (callback) {
               this._safeCallback(callback,err);
@@ -156,9 +174,9 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             this._attachingCallback = callback;
             this._indicatedError = undefined;
             this._receiverCloseOccurred = false;
-            this._rheaReceiverLinkName = 'rheaReceiver_' + uuid.v4();
-            this._combinedOptions.name = this._rheaReceiverLinkName;
-            debug('attaching receiver name: ' + this._rheaReceiverLinkName + ' with address: ' + this._linkAddress);
+            this._rheaReceiverName = 'rheaReceiver_' + uuid.v4();
+            this._combinedOptions.name = this._rheaReceiverName;
+            debug('attaching receiver name: ' + this._rheaReceiverName + ' with address: ' + this._linkAddress);
             //
             // According to the rhea maintainers, one can depend on that fact that no actual network activity
             // will occur until the nextTick() after the call to open_receiver.  Because of that, one can
@@ -171,12 +189,12 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             // place the handlers on the session object instead of the link object.  The event handlers have
             // been written to deal with this appropriately.
             //
-            this._rheaReceiverLink = this._rheaSession.open_receiver(this._combinedOptions);
+            this._rheaReceiver = this._rheaSession.open_receiver(this._combinedOptions);
             manageReceiverHandlers('on');
           },
           receiverOpenEvent: (context: EventContext) => {
             debug('In receiver attaching state - open event for ' + context.receiver.name);
-            if (this._rheaReceiverLink !== context.receiver) {
+            if (this._rheaReceiver !== context.receiver) {
               debug('the receiver provided in the open no equal to the receiver returned from open_receiver');
             }
             let callback = this._attachingCallback;
@@ -197,9 +215,6 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             // We enabled the event listeners on the onEnter handler.  They are to stay alive until we
             // are about to transition to the detached state.
             // We are about to transition to the detached state, so clean up.
-            //
-            // We want to be particularly careful when we do this.  We don't want to blindly just disable the handlers.
-            // If we do, we could accidentally disable another ReceiverLink's set of listeners.
             //
             manageReceiverHandlers('removeListener');
             let error = this._indicatedError;
@@ -286,9 +301,9 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
           forceDetach: (err) => {
             debug('while attached - force detach for receiver link ' + this._linkAddress);
             manageReceiverHandlers('removeListener');
-            if (this._rheaReceiverLink) {
+            if (this._rheaReceiver) {
               /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_027: [** The `forceDetach` method shall call the `remove` method on the underlying `rhea` link object.]*/
-              this._rheaReceiverLink.remove();
+              this._rheaReceiver.remove();
             }
             this._fsm.transition('detached', undefined, err);
           },
@@ -329,7 +344,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             debug('Detaching of rhea receiver link ' + this._linkAddress);
             this._detachingCallback = callback;
             this._indicatedError = err;
-            this._rheaReceiverLink.close();
+            this._rheaReceiver.close();
             if (this._receiverCloseOccurred) {
               //
               // There will be no response from the peer to our detach (close).  Therefore no event handler will be invoked.  Simply
@@ -376,7 +391,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
           },
           forceDetach: (err) => {
             debug('while detaching - Force detaching for receiver link ' + this._linkAddress);
-            this._rheaReceiverLink.remove();
+            this._rheaReceiver.remove();
             this._detachingCallback = undefined;
             this._indicatedError = undefined;
             manageReceiverHandlers('removeListener');
@@ -440,7 +455,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
     this._fsm.handle('abandon', message, callback);
   }
 
-  private _findDeliveryRecord(msg: AmqpMessage): any {
+  private _findDeliveryRecord(msg: AmqpMessage): Delivery {
     for (let element = 0; element < this._unDisposedDeliveries.length; element++) {
       if (this._unDisposedDeliveries[element].msg === msg) {
         let delivery = this._unDisposedDeliveries[element].delivery;
