@@ -42,3 +42,7 @@ sasAuthProvider.on('newTokenAvailable', function (credentials) {
 **SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_005: [** The `fromSharedAccessSignature` method shall throw a `ReferenceError` if the `sharedAccessSignature` argument is falsy. **]**
 
 **SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_006: [** The `fromSharedAccessSignature` shall return a new `SharedAccessSignatureAuthenticationProvider` object initialized with the credentials parsed from the `sharedAccessSignature` argument. **]**
+
+### stop(): void
+
+**SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_007: [** The `stop` method shall simply return since there is no timeout or resources to clear. **]**

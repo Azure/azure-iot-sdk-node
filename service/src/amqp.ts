@@ -195,7 +195,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
               if (err) {
                 debug('error trying to initialize CBS: ' + err.toString());
                 /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_002: [If `initializeCBS` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
-                this._fsm.transition('disconnecting', callback);
+                this._fsm.transition('disconnecting', err, callback);
               } else {
                 debug('CBS initialized');
                 /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_003: [If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter audience, created from the sr of the sas signature, the next parameter of the actual sas, and a callback.]*/
@@ -205,7 +205,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
                 this._amqp.putToken(audience, sasToken, (err) => {
                   if (err) {
                     /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_004: [** If `putToken` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
-                    this._fsm.transition('disconnecting', err);
+                    this._fsm.transition('disconnecting', err, callback);
                   } else {
                     this._fsm.transition('authenticated', applicationSuppliedSas, callback);
                   }

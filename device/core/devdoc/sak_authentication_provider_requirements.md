@@ -46,6 +46,12 @@ sakAuthProvider.on('newTokenAvailable', function (credentials) {
 
 **SRS_NODE_SAK_AUTH_PROVIDER_16_008: [** The `fromConnectionString` method shall extract the credentials from the `connectionString` argument and create a new `SharedAccessKeyAuthenticationProvider` that uses these credentials to generate security tokens. **]**
 
+## stop(): void
+
+**SRS_NODE_SAK_AUTH_PROVIDER_16_012: [** The `stop` method shall clear the token renewal timer if it is running. **]**
+
+**SRS_NODE_SAK_AUTH_PROVIDER_16_013: [** The `stop` method shall simply return if the token renewal timer is not running. **]**
+
 # Generated Security Token
 
 **SRS_NODE_SAK_AUTH_PROVIDER_16_009: [** Every token shall be created with a validity period of `tokenValidTimeInSeconds` if specified when the constructor was called, or 1 hour by default. **]**

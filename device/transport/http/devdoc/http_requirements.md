@@ -62,6 +62,8 @@ or:
 
 **SRS_NODE_DEVICE_HTTP_16_031: [** The `disconnect` method shall call its callback with a `null` first argument and a `results.Disconnected` second argument after successfully disabling the C2D receiver (if necessary). **]**
 
+**SRS_NODE_DEVICE_HTTP_16_039: [** The `disconnect` method shall call the `stop` method on the `AuthenticationProvider` object if the type of authentication used is "token".  **]**
+
 ### sendEvent(message, done)
 
 The `sendEvent` method sends an event to an IoT hub on behalf of the device indicated in the constructor argument.

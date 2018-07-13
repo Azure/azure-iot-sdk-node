@@ -4,8 +4,6 @@
 'use strict';
 
 var assert = require('chai').assert;
-var sinon = require('sinon');
-var errors = require('azure-iot-common').errors;
 var SharedAccessSignature = require('azure-iot-common').SharedAccessSignature;
 var SharedAccessSignatureAuthenticationProvider = require('../lib/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider;
 
@@ -117,4 +115,18 @@ describe('SharedAccessSignatureAuthenticationProvider', function () {
       });
     });
   });
+
+  describe('#stop', function () {
+    /*Tests_SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_007: [The `stop` method shall simply return since there is no timeout or resources to clear.]*/
+    it('returns and does not crash if the timer is not running', function () {
+      var sasAuthProvider = new SharedAccessSignatureAuthenticationProvider({
+        host: 'host.name',
+        deviceId: 'deviceId',
+        sharedAccessSignature: 'sas'
+      }, 10, 1);
+      assert.doesNotThrow(function () {
+        sasAuthProvider.stop();
+      });
+    });
+  })
 });

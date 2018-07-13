@@ -66,6 +66,7 @@ describe('Amqp', function () {
     fakeTokenAuthenticationProvider.type = AuthenticationType.Token;
     fakeTokenAuthenticationProvider.getDeviceCredentials = sinon.stub().callsArgWith(0, null, configWithSAS);
     fakeTokenAuthenticationProvider.updateSharedAccessSignature = sinon.stub();
+    fakeTokenAuthenticationProvider.stop = sinon.stub();
     sinon.spy(fakeTokenAuthenticationProvider, 'on');
 
     fakeX509AuthenticationProvider = {
@@ -701,6 +702,15 @@ describe('Amqp', function () {
             });
             disconnectCallback(null, new results.Disconnected());
           });
+        });
+      });
+
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_083: [When the `amqp` client is disconnected and if token-based authentication is used the `stop` method of the `AuthenticationProvider` shall be called.]*/
+      it('calls stop on the authentication provider if using token authentication', function (testCallback) {
+        transport.connect(function () {});
+        transport.disconnect(function () {
+          assert.isTrue(fakeTokenAuthenticationProvider.stop.calledTwice); // once when instantiated, once when disconnected
+          testCallback();
         });
       });
     });

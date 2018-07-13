@@ -17,6 +17,7 @@ const debug = dbg('azure-iot-provisioning-device:PollingStateMachine');
 export class  PollingStateMachine extends EventEmitter {
   private _fsm: machina.Fsm;
   private _pollingTimer: any;
+  private _queryTimer: any;
   private _transport: PollingTransport;
   private _currentOperationCallback: any;
 
@@ -51,7 +52,7 @@ export class  PollingStateMachine extends EventEmitter {
         },
         sendingRegistrationRequest: {
           _onEnter: (request, callback) => {
-            let timeoutTimer = setTimeout(() => {
+            this._queryTimer = setTimeout(() => {
               /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_036: [ If `PollingTransport.registrationRequest` does not call its callback within `ProvisioningDeviceConstants.defaultTimeoutInterval` ms, register shall with with a `TimeoutError` error. ] */
               if (this._currentOperationCallback === callback) {
                   debug('timeout while sending request');
@@ -62,7 +63,7 @@ export class  PollingStateMachine extends EventEmitter {
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_012: [ `register` shall call `PollingTransport.registrationRequest`. ] */
             this._currentOperationCallback = callback;
             this._transport.registrationRequest(request, (err, result, response, pollingInterval) => {
-              clearTimeout(timeoutTimer);
+              clearTimeout(this._queryTimer);
               // Check if the operation is still pending before transitioning.  We might be in a different state now and we don't want to mess that up.
               if (this._currentOperationCallback === callback) {
                 this._fsm.transition('responseReceived', err, request, result, response, pollingInterval, callback);
@@ -165,7 +166,7 @@ export class  PollingStateMachine extends EventEmitter {
         polling: {
           _onEnter: (request, operationId, pollingInterval, callback) => {
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_037: [ If `PollingTransport.queryOperationStatus` does not call its callback within `ProvisioningDeviceConstants.defaultTimeoutInterval` ms, register shall with with a `TimeoutError` error. ] */
-            let timeoutTimer: any = setTimeout(() => {
+            this._queryTimer = setTimeout(() => {
               debug('timeout while query');
               if (this._currentOperationCallback === callback) {
                 /* tslint:disable:no-empty */
@@ -174,7 +175,7 @@ export class  PollingStateMachine extends EventEmitter {
             }, ProvisioningDeviceConstants.defaultTimeoutInterval);
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_018: [ When the polling interval elapses, `register` shall call `PollingTransport.queryOperationStatus`. ] */
             this._transport.queryOperationStatus(request, operationId, (err, result, response, pollingInterval) => {
-              clearTimeout(timeoutTimer);
+              clearTimeout(this._queryTimer);
               // Check if the operation is still pending before transitioning.  We might be in a different state now and we don't want to mess that up.
               if (this._currentOperationCallback === callback) {
                 this._fsm.transition('responseReceived', err, request, result, response, pollingInterval, callback);
@@ -212,6 +213,16 @@ export class  PollingStateMachine extends EventEmitter {
         },
         disconnecting: {
           _onEnter: (callback) => {
+            if (this._pollingTimer) {
+              debug('cancelling polling timer');
+              clearTimeout(this._pollingTimer);
+            }
+
+            if (this._queryTimer) {
+              debug('cancelling query timer');
+              clearTimeout(this._queryTimer);
+            }
+
             this._transport.disconnect((err) => {
               this._fsm.transition('disconnected', err, null, null, callback);
             });

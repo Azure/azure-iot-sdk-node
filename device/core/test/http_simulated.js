@@ -32,17 +32,21 @@ function SimulatedHttp(authProvider) {
         var sig = SharedAccessSignature.parse(config.sharedAccessSignature);
 
         if (config.host.indexOf('bad') >= 0) {                      // bad host
+          authProvider.stop();
           done(new Error('getaddrinfo ENOTFOUND bad'));
         }
         else if (config.deviceId.indexOf('bad') >= 0) {             // bad policy
+          authProvider.stop();
           done(makeError(404));
         }
         else {
           var cmpSig = (SharedAccessSignature.create(config.host, config.deviceId, 'bad', sig.se)).toString();
           if (config.sharedAccessSignature === cmpSig) {  // bad key
+            authProvider.stop();
             done(makeError(401));
           }
           else {
+            authProvider.stop();
             done(null, new results.MessageEnqueued(new Response(204)));
           }
         }

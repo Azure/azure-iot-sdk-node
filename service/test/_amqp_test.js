@@ -114,8 +114,13 @@ describe('Amqp', function() {
   describe('#connect', function() {
     /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_019: [The `connect` method shall call the `connect` method of the base AMQP transport and translate its result to the caller into a transport-agnostic object.]*/
     it('calls the base transport connect method', function(done) {
-      var amqp = new Amqp(fakeConfig, fakeAmqpBase);
-      amqp.connect(done);
+      var amqp = new Amqp(sasConfig, fakeAmqpBase);
+      amqp.connect(function () {
+        assert.isTrue(fakeAmqpBase.connect.calledOnce);
+        amqp.disconnect(function () {
+          done();
+        });
+      });
     });
 
     /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_017: [All asynchronous instance methods shall call the `done` callback with a single parameter that is derived from the standard Javascript `Error` object if the operation failed.]*/
@@ -125,22 +130,15 @@ describe('Amqp', function() {
       var amqp = new Amqp(fakeConfig, fakeAmqpBase);
       amqp.connect(function (err) {
         assert.instanceOf(err, Error);
-        done();
-      });
-    });
-
-    /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_16_019: [The `connect` method shall call the `connect` method of the base AMQP transport and translate its result to the caller into a transport-agnostic object.]*/
-    it('calls the base transport connect method with renewable sas config', function(testCallback) {
-      var amqp = new Amqp(sasConfig, fakeAmqpBase);
-      amqp.connect(function () {
-        assert.isTrue(fakeAmqpBase.connect.calledOnce);
-        testCallback();
+        amqp.disconnect(function () {
+          done();
+        });
       });
     });
 
     /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_06_001: [`initializeCBS` shall be invoked.]*/
     /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_06_002: [If `initializeCBS` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
-    it('Invokes initializeCBS - initialize fails and disconnects', function () {
+    it('Invokes initializeCBS - initialize fails and disconnects', function (testCallback) {
       var testError = new errors.InternalServerError('fake error');
       fakeAmqpBase.initializeCBS = sinon.stub().callsArgWith(0, testError);
       var transport = new Amqp(sasConfig, fakeAmqpBase);
@@ -148,12 +146,13 @@ describe('Amqp', function() {
         assert(fakeAmqpBase.initializeCBS.calledOnce);
         assert(fakeAmqpBase.disconnect.calledOnce);
         assert.instanceOf(err, Error);
+        testCallback();
       });
     });
 
     /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_06_003: [If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter audience, created from the sr of the sas signature, the next parameter of the actual sas, and a callback.]*/
     /*Tests_SRS_NODE_IOTHUB_SERVICE_AMQP_06_004: [If `putToken` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
-    it('Invokes putToken - puttoken fails and disconnects', function () {
+    it('Invokes putToken - puttoken fails and disconnects', function (testCallback) {
       var testError = new errors.NotConnectedError('fake error');
       fakeAmqpBase.putToken = sinon.stub().callsArgWith(2, testError);
       var transport = new Amqp(sasConfig, fakeAmqpBase);
@@ -162,6 +161,7 @@ describe('Amqp', function() {
         assert(fakeAmqpBase.putToken.calledWith('uri',sasConfig.sharedAccessSignature.toString()));
         assert(fakeAmqpBase.disconnect.calledOnce);
         assert.instanceOf(err, Error);
+        testCallback();
       });
     });
 
@@ -175,7 +175,9 @@ describe('Amqp', function() {
           assert.isTrue(fakeAmqpBase.connect.calledOnce);
           assert.isTrue(fakeAmqpBase.initializeCBS.calledOnce);
           assert.isTrue(fakeAmqpBase.putToken.calledOnce);
-          testCallback();
+          transport.disconnect(function () {
+            testCallback();
+          });
         });
       });
     });
