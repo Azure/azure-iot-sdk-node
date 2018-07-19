@@ -70,7 +70,7 @@ describe('Amqp', function () {
       var fakeConnection = new EventEmitter();
       fakeConnection.name = 'connection';
       var fakeContext = {connection: fakeConnection};
-      sinon.stub(amqp._amqpContainer, 'connect').callsFake(() => {amqp._amqpContainer.emit('connection_open', fakeContext)});
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeContext)}); return fakeConnection});
       var fakeSession = new EventEmitter();
       var fakeSessionContext = {session: fakeSession};
       fakeConnection.create_session = sinon.stub().returns(fakeSession);
@@ -90,7 +90,7 @@ describe('Amqp', function () {
       var fakeConnection = new EventEmitter();
       fakeConnection.name = 'connection';
       var fakeContext = {connection: fakeConnection};
-      sinon.stub(amqp._amqpContainer, 'connect').callsFake(() => {amqp._amqpContainer.emit('connection_open', fakeContext)});
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeContext)}); return fakeConnection});
       var fakeSession = new EventEmitter();
       var fakeSessionContext = {session: fakeSession};
       fakeConnection.create_session = sinon.stub().returns(fakeSession);
@@ -101,12 +101,12 @@ describe('Amqp', function () {
         if (err) testCallback(err);
         else {
           assert.instanceOf(res, results.Connected);
-          assert(amqp._amqpContainer.connect.calledOnce);
+          assert(amqp._rheaContainer.connect.calledOnce);
           amqp.connect({uri: 'uri'}, function(err, res) {
             if (err) testCallback(err);
             else {
               assert.instanceOf(res, results.Connected);
-              assert(amqp._amqpContainer.connect.calledOnce);
+              assert(amqp._rheaContainer.connect.calledOnce);
             }
           });
           testCallback();

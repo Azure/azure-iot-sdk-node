@@ -50,9 +50,8 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
   //
   private _indicatedError: Error | AmqpError;
   //
-  // Create a name to uniquely identify the link.  While not currently useful, it could be used to distinguish
-  // whether an event is for this receiver.  If the event handlers were on the session object and not
-  // directly on the link, this would be necessary.
+  // Create a name to uniquely identify the link.  Used for debugging purposes now.  If necessary it could
+  // be used to distinguish receivers.
   //
   private _rheaReceiverName: string;
   private _combinedOptions: ReceiverOptions;
@@ -92,39 +91,19 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
     }
 
     const receiverOpenHandler = (context: EventContext): void => {
-      if (context.receiver.name === this._rheaReceiverName) {
-        debug('handling receiver_open event for link: ' + context.receiver.name + 'source: ' + context.receiver.source.address);
-        this._fsm.handle('receiverOpenEvent', context);
-      } else {
-        debug('the receiver open event is not for ' + this._linkAddress);
-      }
+      this._fsm.handle('receiverOpenEvent', context);
     };
     const receiverCloseHandler = (context: EventContext): void => {
-      if (context.receiver.name === this._rheaReceiverName) {
-        debug('handling receiver_close event for link: ' + context.receiver.name + 'source: ' + context.receiver.source.address);
-        this._fsm.handle('receiverCloseEvent', context);
-      } else {
-        debug('the receiver close event is not for ' + this._linkAddress);
-      }
+      this._fsm.handle('receiverCloseEvent', context);
     };
     const receiverErrorHandler  = (context: EventContext): void => {
-      if (context.receiver.name === this._rheaReceiverName) {
-        debug('handling receiver_error event for link: ' + context.receiver.name + 'source: ' + context.receiver.source.address);
         this._fsm.handle('receiverErrorEvent', context);
-      } else {
-        debug('the receiver error event is not for ' + this._linkAddress);
-      }
     };
 
     /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_012: [If a `message` event is emitted by the `rhea` link object, the `ReceiverLink` object shall emit a `message` event with the same content.]*/
     const receiverMessageHandler = (context: EventContext): void => {
-      if (context.receiver.name === this._rheaReceiverName) {
-        debug('handling message event for link: ' + context.receiver.name + 'source: ' + context.receiver.source.address + ' for deliveryId: ' + context.delivery.id);
-        this._unDisposedDeliveries.push({msg: context.message as any, delivery: context.delivery});
-        this.emit('message', context.message);
-      } else {
-        debug('the receiver message event is not for ' + this._linkAddress);
-      }
+      this._unDisposedDeliveries.push({msg: context.message as any, delivery: context.delivery});
+      this.emit('message', context.message);
     };
 
     /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_006: [The `ReceiverLink` object should subscribe to the `receiver_close` event of the newly created `rhea` link object.]*/
@@ -182,12 +161,6 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             // will occur until the nextTick() after the call to open_receiver.  Because of that, one can
             // put the event handlers on the rhea link returned from the open_receiver call and be assured
             // that the listeners are in place BEFORE any possible events will be emitted on the link.
-            //
-            // This could make one feel a bit queasy.  If so, or if the interface gets changed and we
-            // can't depend on that anymore, the easy fix would be to move the call to manageReceiverHandlers
-            // to before the call to open_receiver and change the implementation of manageReceiverHandler to
-            // place the handlers on the session object instead of the link object.  The event handlers have
-            // been written to deal with this appropriately.
             //
             this._rheaReceiver = this._rheaSession.open_receiver(this._combinedOptions);
             manageReceiverHandlers('on');

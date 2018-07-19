@@ -279,8 +279,8 @@ var AmqpMessage = require('../lib/amqp_message.js').AmqpMessage;
     });
 
     describe('events', function () {
-      /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_015: [If a `sender_close` or `error` event is emitted by the `rhea` link object, the `SenderLink` object shall return to the `detached` state.]*/
-      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_011: [If a `receiver_close` or `error` event is emitted by the `rhea` link object, the `ReceiverLink` object shall return to the `detached` state.]*/
+      /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_015: [If a `sender_close` or `sender_error` event is emitted by the `rhea` link object, the `SenderLink` object shall return to the `detached` state.]*/
+      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_011: [If a `receiver_close` or `receiver_error` event is emitted by the `rhea` link object, the `ReceiverLink` object shall return to the `detached` state.]*/
       [
         { name: testConfig.kindOfLink + '_error', payload: new Error('fake error') },
         { name: testConfig.kindOfLink + '_close', payload: new Error('fake error') }

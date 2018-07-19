@@ -25,6 +25,19 @@ interface MessageOperation {
 /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_002: [The `SenderLink` class shall inherit from `EventEmitter`.]*/
 /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_003: [The `SenderLink` class shall implement the `AmqpLink` interface.]*/
 export class SenderLink extends EventEmitter implements AmqpLink {
+  //
+  // If an error is sent by the peer (the IoT Hub service), *WHILE* the link is in the attached state,
+  // this sender link will emit an error on the container object (rhea parent object) of 'azure-iot-amqp-base:error-indicated'.
+  // Note that this SenderLink WILL NOT change states at this point.  It is left to the user of this SenderLink to invoke
+  // the .detach method.  THAT call will cause us to transition to the detached state.
+  //
+  // While perhaps a non-intuitive workflow, there was quite a bit of dependency in the upper levels that required this behavior.
+  // One rationalization for this strategy is that we really want this error condition to be signaled on the link itself rather
+  // that via the individual send operations.  This also causes the rundown to be done in a top-down fashion as opposed to
+  // bottom-up.
+  //
+  // Note also that errors will always be indicated in rhea on a link basis.
+  //
   private _linkAddress: string;
   private _linkOptions: SenderOptions;
   private _rheaSender: Sender;
@@ -49,9 +62,8 @@ export class SenderLink extends EventEmitter implements AmqpLink {
   //
   private _indicatedError: Error | AmqpError;
   //
-  // Create a name to uniquely identify the link.  While not currently useful, it could be used to distinguish
-  // whether an event is for this sender.  If the event handlers were on the session object and not
-  // directly on the link, this would be necessary.
+  // Create a name to uniquely identify the link.  Used for debugging purposes now.  If necessary it could
+  // be used to distinguish senders.
   //
   private _rheaSenderName: string;
   //
@@ -88,71 +100,34 @@ export class SenderLink extends EventEmitter implements AmqpLink {
     }
 
     const senderOpenHandler = (context: EventContext): void => {
-      if (context.sender.name === this._rheaSenderName) {
-        debug('handling sender_open event for link: ' + context.sender.name + ' target: ' + context.sender.target.address);
-        this._fsm.handle('senderOpenEvent', context);
-      } else {
-        debug('The sender open event is not for: ' + this._linkAddress);
-      }
+      this._fsm.handle('senderOpenEvent', context);
     };
 
     const senderCloseHandler = (context: EventContext): void => {
-      if (context.sender.name === this._rheaSenderName) {
-        debug('handling sender_close event for link: ' + context.sender.name + ' target: ' + context.sender.target.address);
-        this._fsm.handle('senderCloseEvent', context);
-      } else {
-        debug('The sender close event is not for: ' + this._linkAddress);
-      }
+      this._fsm.handle('senderCloseEvent', context);
     };
 
     const senderErrorHandler = (context: EventContext): void => {
-      if (context.sender.name === this._rheaSenderName) {
-        debug('handling sender error event for link: ' + context.sender.name + ' target: ' + context.sender.target.address);
-        debug('handling error event: ' + this._getErrorName(context.sender.error));
-        this._fsm.handle('senderErrorEvent', context);
-      } else {
-        debug('The sender close event is not for: ' + this._linkAddress);
-      }
+      debug('handling error event: ' + this._getErrorName(context.sender.error));
+      this._fsm.handle('senderErrorEvent', context);
     };
 
     const senderAcceptedHandler = (context: EventContext): void => {
-      if (context.sender.name === this._rheaSenderName) {
-        debug('handling sender accepted event for link: ' + context.sender.name + ' target: ' + context.sender.target.address + ' for deliveryId: ' + context.delivery.id);
-        this._fsm.handle('senderAcceptedEvent', context);
-      } else {
-        debug('The sender accepted event is not for: ' + this._linkAddress);
-      }
+      this._fsm.handle('senderAcceptedEvent', context);
     };
 
     const senderRejectedHandler = (context: EventContext): void => {
-      if (context.sender.name === this._rheaSenderName) {
-        debug('handling sender rejected event for link: ' + context.sender.name + ' target: ' + context.sender.target.address + ' for deliveryId: ' + context.delivery.id);
-        this._fsm.handle('senderRejectedEvent', context);
-      } else {
-        debug('The sender rejected event is not for: ' + this._linkAddress);
-      }
+      this._fsm.handle('senderRejectedEvent', context);
     };
 
     const senderSendableHandler = (context: EventContext): void => {
-      if (context.sender.name === this._rheaSenderName) {
-        debug('handling sender sendable event for link: ' + context.sender.name + ' target: ' + context.sender.target.address);
-        this._fsm.handle('send');
-      } else {
-        debug('The sender sendable event is not for: ' + this._linkAddress);
-      }
+      this._fsm.handle('send');
     };
 
     const senderReleasedHandler = (context: EventContext): void => {
-      if (context.sender.name === this._rheaSenderName) {
-        debug('handling sender released event for link: ' + context.sender.name + ' target: ' + context.sender.target.address + ' for deliveryId: ' + context.delivery.id);
-        this._fsm.handle('senderReleasedEvent', context);
-      } else {
-        debug('The sender released event is not for: ' + this._linkAddress);
-      }
+      this._fsm.handle('senderReleasedEvent', context);
     };
 
-    /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_006: [The `SenderLink` object should subscribe to the `sender_close` event of the newly created `rhea` link object.]*/
-    /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_007: [The `SenderLink` object should subscribe to the `error` event of the newly created `rhea` link object.]*/
     const manageSenderHandlers = (operation: string) => {
       this._rheaSender[operation]('sender_error', senderErrorHandler);
       this._rheaSender[operation]('sender_open', senderOpenHandler);
@@ -180,12 +155,14 @@ export class SenderLink extends EventEmitter implements AmqpLink {
               debug('dequeuing and failing unsent messages');
               let unsent = this._unsentMessageQueue.shift();
               while (unsent) {
-                unsent.callback(messageCallbackError);
+                if (unsent.callback) {
+                  unsent.callback(messageCallbackError);
+                }
                 unsent = this._unsentMessageQueue.shift();
               }
             }
 
-            /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_014: [If the link is detached while a message is being sent, the `callback` shall be called with an `Error` object describing the AMQP error that caused the detach to happen in the first place.]*/
+            /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_014: [If the link is detached while a message is being sent, the `callback` shall be called with an `Error` object describing the AMQP error that caused the detach to happen in the first place.] */
             Object.keys(this._pendingMessageDictionary).forEach((pendingSend) => {
               let op = this._pendingMessageDictionary[pendingSend];
               delete this._pendingMessageDictionary[pendingSend];
@@ -198,18 +175,18 @@ export class SenderLink extends EventEmitter implements AmqpLink {
               /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_018: [If an error happened that caused the link to be detached while trying to attach the link or send a message, the `callback` for this function shall be called with that error.]*/
               callback(err);
             } else if (err) {
-              /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_016: [If an error happened that caused the link to be detached, the sender link shall call emit an `error` event with that error.]*/
               this.emit('error', err);
             }
           },
           /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_011: [If the state machine is not in the `attached` state, the `SenderLink` object shall attach the link first and then send the message.]*/
           attach: (callback) => this._fsm.transition('attaching', callback),
           detach: (callback, err) => {
+            /*Codes_SRS_NODE_AMQP_SENDER_LINK_06_005: [If the `SenderLink` is already in the detached state an invocation of `detach` shall immediately invoke the callback with the (potentially) supplied error parameter.] */
             debug('detach: link already detached');
             callback(err);
           },
           forceDetach: () => {
-            /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_026: [The `forceDetach` method shall return immediately if the link is already detached.]*/
+            /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_026: [The `forceDetach` method shall return immediately if the link is already detached.] */
             debug('forceDetach: link already detached');
             return;
           },
@@ -231,16 +208,12 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             // put the event handlers on the rhea link returned from the open_sender call and be assured
             // that the listeners are in place BEFORE any possible events will be emitted on the link.
             //
-            // This could make one feel a bit queasy.  If so, or if the interface gets changed and we
-            // can't depend on that anymore, the easy fix would be to move the call to manageReceiverHandlers
-            // to before the call to open_sender and change the implementation of manageReceiverHandler to
-            // place the handlers on the session object instead of the link object.  The event handlers have
-            // been written to deal with this appropriately.
-            //
+            /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_004: [The `attach` method shall use the stored instance of the `rhea` session object to attach a new link object with the combined `linkAddress` and `linkOptions` provided when creating the `SenderLink` instance.] */
             this._rheaSender = this._rheaSession.open_sender(this._combinedOptions);
             manageSenderHandlers('on');
           },
           senderOpenEvent: (context: EventContext) => {
+            /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_022: [The `attach` method shall call the `callback` if the link was successfully attached.] */
             debug('in sender attaching state - open event for ' + context.sender.name);
             if (this._rheaSender !== context.sender) {
               debug('the sender provided in the open not equal to the receiver returned from open_sender');
@@ -279,6 +252,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
           },
           attach: (null),
           detach: (callback, err) => {
+            /*Codes_SRS_NODE_AMQP_SENDER_LINK_06_001: [If the `detach` method is invoked on the `SenderLink` while still attaching, the SenderLink shall detach.  It will indicate the error to the callback for the `detach` as well as the callback to the `attach`.] */
             debug('Detaching while attaching of rhea sender link ' + this._linkAddress);
             manageSenderHandlers('removeListener');
             //
@@ -294,6 +268,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             this._fsm.transition('detached', callback, error);
           },
           forceDetach: (err) => {
+            /*Codes_SRS_NODE_AMQP_SENDER_LINK_06_003: [If the `forceDetach` method is invoked on the `SenderLink` while still attaching, the SenderLink shall detach.  It will indicate the error to the callback to the `attach`.] */
             debug('Force detaching while attaching of rhea sender link ' + this._linkAddress);
             manageSenderHandlers('removeListener');
             let error = err || this._indicatedError;
@@ -308,13 +283,8 @@ export class SenderLink extends EventEmitter implements AmqpLink {
         attached: {
           _onEnter: (callback) => {
             debug('link attached. processing unsent message queue');
-            callback();
+            if (callback) callback();
             this._fsm.handle('send');
-          },
-          senderOpenEvent: (context: EventContext) => {
-            debug('in sender attached state - open event for ' + context.sender.name);
-            debug('this simply should not happen!');
-            this._fsm.transition('detaching', null, new Error('Open Sender while already attached!'));
           },
           senderErrorEvent: (context: EventContext) => {
             debug('in sender attached state - error event for ' + context.sender.name + ' error is: ' + this._getErrorName(context.sender.error));
@@ -334,15 +304,18 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             this._indicatedError = undefined;
             this._senderCloseOccurred = true;
             debug('in sender attached state - close event for ' + context.sender.name + ' already indicated error is: ' + this._getErrorName(error));
+            /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_016: [If an error happened that caused the link to be detached, the sender link shall call emit an `error` event with that error/] */
             if (error) {
               context.container.emit('azure-iot-amqp-base:error-indicated', error);
             } else {
+              /*Codes_SRS_NODE_AMQP_SENDER_LINK_06_006: [A `sender_close` event with no previous error will simply detach the link.  No error is emitted.] */
               this._fsm.transition('detaching');
             }
           },
           senderAcceptedEvent: (context: EventContext) => {
             debug('in sender attached state - accepted event for ' + context.sender.name);
-            const op = this._pendingMessageDictionary[context.delivery.id];
+            const op = this._pendingMessageDictionary
+            [context.delivery.id];
             if (op) {
               delete this._pendingMessageDictionary[context.delivery.id];
               /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_013: [If the message is successfully sent, the `callback` shall be called with a first parameter (error) set to `null` and a second parameter of type `MessageEnqueued`.]*/
@@ -352,18 +325,18 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             }
           },
           senderRejectedEvent: (context: EventContext) => {
-            debug('in sender attached state - rejected event for ' + context.sender.name);
+            debug('in sender attached state - rejected event for ' + context.sender.name + ' with a condition of ' + this._getErrorName(context.delivery.remote_state.error));
             const op = this._pendingMessageDictionary[context.delivery.id];
             if (op) {
               delete this._pendingMessageDictionary[context.delivery.id];
-              /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_012: [If the message cannot be sent the `callback` shall be called with an `Error` object describing the AMQP error reported by the service.]*/
+              /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_012: [If the message cannot be sent the `callback` shall be called with an `Error` object describing the AMQP error reported by the service.] */
               if (op.callback) {
                 op.callback(context.delivery.remote_state.error);
               }
             }
           },
           senderReleasedEvent: (context: EventContext) => {
-            debug('in sender attached state - released event for ' + context.sender.name);
+            debug('in sender attached state - released event for ' + context.sender.name + ' with a condition of ' + this._getErrorName(context.delivery.remote_state.error));
             const op = this._pendingMessageDictionary[context.delivery.id];
             if (op) {
               delete this._pendingMessageDictionary[context.delivery.id];
@@ -373,10 +346,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
               }
             }
           },
-          sendable: (context: EventContext) => {
-            debug('in sender attached state - sendable event for ' + context.sender.name);
-            this._fsm.handle('send');
-          },
+          /*Codes_SRS_NODE_AMQP_SENDER_LINK_06_007: [The `attach` method shall immediately invoke the `callback` if already in an attached state.] */
           attach: (callback) => callback(),
           detach: (callback, err) => {
             debug('while attached - detach for receiver link ' + this._linkAddress + ' callback: ' + callback + ' error: ' + this._getErrorName(err));
@@ -385,30 +355,27 @@ export class SenderLink extends EventEmitter implements AmqpLink {
           forceDetach: (err) => {
             debug('Force detaching while attached of rhea sender link ' + this._linkAddress);
             manageSenderHandlers('removeListener');
-            if (this._rheaSender) {
-              /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_025: [The `forceDetach` method shall call the `remove` method on the underlying `rhea` link object.]*/
-              this._rheaSender.remove();
-            }
+            /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_025: [The `forceDetach` method shall call the `remove` method on the underlying `rhea` link object.]*/
+            this._rheaSender.remove();
+            /*Codes_SRS_NODE_AMQP_SENDER_LINK_06_004: [The `forceDetach` method shall cause an `error` event to be emitted on the `SenderLink`.] */
             this._fsm.transition('detached', undefined, err);
           },
           send: () => {
             while ((this._unsentMessageQueue.length > 0) && this._rheaSender.sendable()) {
               debug('unsent message queue length is: ' + this._unsentMessageQueue.length);
+              /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_020: [When the link gets attached, the messages shall be sent in the order they were queued.] */
               let opToSend = this._unsentMessageQueue.shift();
-              debug('after shift unsent message queue length is: ' + this._unsentMessageQueue.length);
-              if (opToSend) {
-                debug('sending message using underlying rhea link object');
-                /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_010: [The `send` method shall use the link created by the underlying `rhea` transport to send the specified `message` to the IoT hub.]*/
-                let sendDeliveryObject = this._rheaSender.send(opToSend.message as any);
-                if (sendDeliveryObject.settled) {
-                  debug('message sent as settled');
+              /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_010: [The `send` method shall use the link created by the underlying `rhea` transport to send the specified `message` to the IoT hub.]*/
+              let sendDeliveryObject = this._rheaSender.send(opToSend.message as any);
+              if (sendDeliveryObject.settled) {
+                /*Codes_SRS_NODE_AMQP_SENDER_LINK_06_008: [Handles sending messages that can be settled on send.] */
+                debug('message sent as settled');
+                if (opToSend.callback) {
                   opToSend.callback( null, new results.MessageEnqueued());
-                } else {
-                  debug('message placed in dictionary for lookup later.');
-                  this._pendingMessageDictionary[sendDeliveryObject.id] = opToSend;
                 }
               } else {
-                break;
+                debug('message placed in dictionary for lookup later.');
+                this._pendingMessageDictionary[sendDeliveryObject.id] = opToSend;
               }
             }
           }
@@ -429,10 +396,6 @@ export class SenderLink extends EventEmitter implements AmqpLink {
               this._indicatedError = undefined;
               this._fsm.transition('detached', callback, err);
             }
-          },
-          senderOpenEvent: (context: EventContext) => {
-            debug('in sender detaching state - open event for ' + context.sender.name);
-            debug('this simply should not happen!');
           },
           senderErrorEvent: (context: EventContext) => {
             debug('in sender detaching state - error event for ' + context.sender.name + ' error is: ' + this._getErrorName(context.sender.error));
@@ -476,9 +439,14 @@ export class SenderLink extends EventEmitter implements AmqpLink {
           forceDetach: (err) => {
             debug('while detaching - Force detaching for sender link ' + this._linkAddress);
             this._rheaSender.remove();
+            let detachCallback = this._detachingCallback;
+            let error = err || this._indicatedError || new Error('Detach preempted by force');
             this._detachingCallback = undefined;
             this._indicatedError = undefined;
             manageSenderHandlers('removeListener');
+            if (detachCallback) {
+              detachCallback(error);
+            }
             this._fsm.transition('detached', undefined, err);
           },
           '*': () => this._fsm.deferUntilTransition('detached')
@@ -504,6 +472,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
 
   send(message: AmqpMessage, callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
     debug('placing a message in the unsent message queue.');
+    /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_019: [While the link isn't attached, the messages passed to the `send` method shall be queued.] */
     this._unsentMessageQueue.push({
       message: message,
       callback: callback
@@ -515,7 +484,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
     if (err) {
       if (err.condition) {
         return '(amqp error) ' + err.condition;
-      } else if (err.hasOwnProperty('name')) {
+      } else if (err.name) {
         return '(javascript error) ' + err.name;
       } else {
         return 'this is not an error type I understand';
