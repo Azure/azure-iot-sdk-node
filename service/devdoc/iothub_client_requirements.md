@@ -183,6 +183,37 @@ invokeDeviceMethod(deviceId: string, moduleIdOrMethodParams: string | DeviceMeth
 
 **SRS_NODE_IOTHUB_CLIENT_16_029: [** Any operation (e.g. `send`, `getFeedbackReceiver`, etc) initiated after a call to `setRetryPolicy` shall use the policy passed as argument to retry. **]**
 
+### initiateStream(deviceId: string, streamInitiation: StreamInitiation, callback: (err: Error, result?: StreamInitiationResult) => void): void {
+
+**SRS_NODE_IOTHUB_CLIENT_16_031: [** The `initiateStream` method shall throw a `ReferenceError` if the `deviceId` is argument falsy. **]**
+
+**SRS_NODE_IOTHUB_CLIENT_16_032: [** The `initiateStream` method shall throw a `ReferenceError` if the `streamInitiation` argument is falsy. **]**
+
+**SRS_NODE_IOTHUB_CLIENT_16_033: [** The `initiateStream` method shall send an HTTP request formatted as follows:
+```
+POST /twins/encodeUriComponentStrict(<deviceId>)/streams/encodeUriComponentStrict(streamInitiation.streamName)
+
+iothub-streaming-connect-timeout-in-seconds: <streamInitiation.connectTimeoutInSeconds>
+iothub-streaming-response-timeout-in-seconds: <streamInitiation.responseTimeoutInSeconds>
+Content-Type: <streamInitiation.contentType>
+Content-Encoding: <streamInitiation.contentEncoding>
+
+streamInitiation.payload
+``` **]**
+
+**SRS_NODE_IOTHUB_CLIENT_16_034: [** The `initiateStream` method shall have a custom timeout set to the value in milliseconds of the sum of the streamInitiation.connectTimeoutInSeconds and streamInitiation.responseTimeoutInSeconds. **]**
+
+**SRS_NODE_IOTHUB_CLIENT_16_036: [** The `initiateStream` method shall create a `StreamInitiationResult` object from the received HTTP response as follows:
+streamInitiationResult.authorizationToken: response.headers['iothub-streaming-auth-token']
+streamInitiationResult.uri: response.headers['iothub-streaming-url']
+streamInitiationResult.contentType: response.headers['Content-Type']
+streamInitiationResult.contentEncoding: response.headers['Content-Encoding']
+streamInitiationResult.data: response body
+streamInitiationResult.ipAddress: response.headers['iothub-streaming-ip-address']
+streamInitiationResult.isAccepted: true if response.headers['iothub-streaming-is-accepted'] is 'True', false otherwise. **]**
+
+**SRS_NODE_IOTHUB_CLIENT_16_035: [** The `initiateStream` method shall call its callback with an error if the RestApiClient fails to execute the API call. **]**
+
 ### Events
 #### disconnect
 **SRS_NODE_IOTHUB_CLIENT_16_004: [** The `disconnect` event shall be emitted when the client is disconnected from the server. **]**

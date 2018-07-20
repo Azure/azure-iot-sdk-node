@@ -5,13 +5,14 @@
 
 import { EventEmitter } from 'events';
 import { Agent } from 'https';
-import { anHourFromNow, errors, results, Message, Receiver, SharedAccessSignature } from 'azure-iot-common';
+import { anHourFromNow, errors, results, Message, Receiver, SharedAccessSignature, encodeUriComponentStrict, endpoint } from 'azure-iot-common';
 import { RetryOperation, RetryPolicy, ExponentialBackOffWithJitter } from 'azure-iot-common';
 import * as ConnectionString from './connection_string';
 import { Amqp } from './amqp';
 import { DeviceMethod } from './device_method';
 import { RestApiClient } from 'azure-iot-http-base';
-import { Callback, DeviceMethodParams } from './interfaces';
+import { Callback, DeviceMethodParams, StreamInitiation } from './interfaces';
+import { StreamInitiationResult } from './stream_initiation_result';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -317,6 +318,65 @@ export class Client extends EventEmitter {
 
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_029: [Any operation (e.g. `send`, `getFeedbackReceiver`, etc) initiated after a call to `setRetryPolicy` shall use the policy passed as argument to retry.]*/
     this._retryPolicy = policy;
+  }
+
+  /**
+   * Initializes a new cloud-to-device stream.
+   *
+   * @param deviceId          target device identifier.
+   * @param streamInitiation  stream initialization request.
+   * @param callback          function called when the stream has been successfully initialized.
+   */
+  initiateStream(deviceId: string, streamInitiation: StreamInitiation, callback: (err: Error, result?: StreamInitiationResult) => void): void {
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_031: [The `initiateStream` method shall throw a `ReferenceError` if the `deviceId` is argument falsy.]*/
+    if (!deviceId) {
+      throw new ReferenceError('\'deviceId\' cannot be \'' + deviceId + '\'');
+    }
+
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_032: [The `initiateStream` method shall throw a `ReferenceError` if the `streamInitiation` argument is falsy.]*/
+    if (!streamInitiation) {
+      throw new ReferenceError('\'streamInitiation\' cannot be \'' + streamInitiation + '\'');
+    }
+
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_033: [The `initiateStream` method shall send an HTTP request formatted as follows:
+    ```
+    POST /twins/encodeUriComponentStrict(<deviceId>)/streams/encodeUriComponentStrict(streamInitiation.streamName)
+
+    iothub-streaming-connect-timeout-in-seconds: <streamInitiation.connectTimeoutInSeconds>
+    iothub-streaming-response-timeout-in-seconds: <streamInitiation.responseTimeoutInSeconds>
+    Content-Type: <streamInitiation.contentType>
+    Content-Encoding: <streamInitiation.contentEncoding>
+
+    streamInitiation.payload
+    ```]*/
+    const path = '/twins/' + encodeUriComponentStrict(deviceId) + '/streams/' + streamInitiation.streamName + '?api-version=' + endpoint.apiVersion;
+    const httpHeaders = {
+      'Content-Type': streamInitiation.contentType,
+      'Content-Encoding': streamInitiation.contentEncoding,
+      'iothub-streaming-connect-timeout-in-seconds': streamInitiation.connectTimeoutInSeconds,
+      'iothub-streaming-response-timeout-in-seconds': streamInitiation.responseTimeoutInSeconds
+    };
+
+    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_034: [The `initiateStream` method shall have a custom timeout set to the value in milliseconds of the sum of the streamInitiation.connectTimeoutInSeconds and streamInitiation.responseTimeoutInSeconds.]*/
+    const requestTimeout = 1000 * (streamInitiation.connectTimeoutInSeconds + streamInitiation.responseTimeoutInSeconds);
+
+    this._restApiClient.executeApiCall('POST', path, httpHeaders, streamInitiation.payload, requestTimeout, (err, result, response) => {
+      if (err) {
+        /*Codes_SRS_NODE_IOTHUB_CLIENT_16_035: [The `initiateStream` method shall call its callback with an error if the RestApiClient fails to execute the API call.]*/
+        callback(err);
+      } else {
+        /*Codes_SRS_NODE_IOTHUB_CLIENT_16_036: [The `initiateStream` method shall create a `StreamInitiationResult` object from the received HTTP response as follows:
+        streamInitiationResult.authorizationToken: response.headers['iothub-streaming-auth-token']
+        streamInitiationResult.uri: response.headers['iothub-streaming-url']
+        streamInitiationResult.contentType: response.headers['Content-Type']
+        streamInitiationResult.contentEncoding: response.headers['Content-Encoding']
+        streamInitiationResult.data: response body
+        streamInitiationResult.ipAddress: response.headers['iothub-streaming-ip-address']
+        streamInitiationResult.isAccepted: true if response.headers['iothub-streaming-is-accepted'] is 'True', false otherwise.]*/
+        const streamInitResult = StreamInitiationResult.fromHttpResponse(response.headers, result);
+        callback(null, streamInitResult);
+      }
+    });
   }
 
   private _disconnectHandler(reason: string): void {
