@@ -5,10 +5,11 @@
 
 var websocket = require('websocket-stream')
 var ServiceClient = require('azure-iothub').Client;
+var net = require('net');
 
 var streamInit = {
   streamName: 'TestStream',
-  contentType: 'application/json',
+  contentType: 'text/plain',
   contentEncoding: 'utf-8',
   connectTimeoutInSeconds: 30,
   responseTimeoutInSeconds: 30,
@@ -26,7 +27,24 @@ client.initiateStream(process.env.STREAMING_TARGET_DEVICE, streamInit, function(
     console.log(JSON.stringify(result, null, 2));
 
     var ws = websocket(result.uri, { headers: { 'Authorization': 'Bearer ' + result.authorizationToken} });
-    process.stdin.pipe(ws);
-    ws.pipe(process.stdout);
+    console.log('Got websocket - creating local server on port ' + process.env.PROXY_PORT);
+    var proxyServer = net.createServer(function (socket) {
+      socket.on('end', function () {
+        console.log('client disconnected');
+        process.exit(0);
+      })
+
+      socket.pipe(ws);
+      ws.pipe(socket);
+    });
+
+    proxyServer.on('error', function (err) {
+      console.error('error on the proxy server socket: ' + err.toString());
+      process.exit(-1);
+    })
+
+    proxyServer.listen(process.env.PROXY_PORT, function () {
+      console.log('listening on port: ' + process.env.PROXY_PORT + '...');
+    })
   }
 });
