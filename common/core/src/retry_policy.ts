@@ -134,7 +134,7 @@ export class ExponentialBackOffWithJitter implements RetryPolicy {
       let minRandomFactor = constants.c * (1 - constants.jd);
       let maxRandomFactor = constants.c * (1 - constants.ju);
       let randomJitter = Math.random() * (maxRandomFactor - minRandomFactor);
-      return Math.min(constants.cMin + (Math.pow(retryCount - 1, 2) - 1) * randomJitter, constants.cMax);
+      return Math.min(constants.cMin + (Math.pow(2, retryCount - 1) - 1) * randomJitter, constants.cMax);
     }
   }
 
