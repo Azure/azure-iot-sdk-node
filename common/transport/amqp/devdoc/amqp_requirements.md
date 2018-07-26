@@ -48,8 +48,7 @@ A string containing the version of the SDK used for telemetry purposes**]**
 
 **SRS_NODE_COMMON_AMQP_16_042: [** The Amqp constructor shall create a new `amqp10.Client` instance and configure it to:
 - not reconnect on failure
-- not reattach sender and receiver links on failure
-- not reestablish sessions on failure **]**
+- not reattach sender and receiver links on failure  **]**
 
 ### connect(done)
 Establishes a connection using the AMQP protocol with the IoT Hub instance.
@@ -92,14 +91,18 @@ Configures a `ReceiverLink` object to use the endpoint passed as a parameter and
 
 ### attachSenderLink(endpoint, properties, done)
 **SRS_NODE_COMMON_AMQP_16_012: [** The `attachSenderLink` method shall throw a ReferenceError if the `endpoint` argument is falsy. **]**
-**SRS_NODE_COMMON_AMQP_16_013: [** The `attachSenderLink` method shall call `open_sender` on the `rhea` session object. **]**
+
+**SRS_NODE_COMMON_AMQP_06_005: [** The `attachSenderLink` method shall call `attach` on the `SenderLink` object. **]**
+
 **SRS_NODE_COMMON_AMQP_06_003: [** The `attachSenderLink` method shall create a policy object that contain link options to be merged if the linkOptions argument is not falsy. **]**
 **SRS_NODE_COMMON_AMQP_16_015: [** The `attachSenderLink` method shall call the `done` callback with a `null` error and the link object that was created if the link was attached successfully. **]**
 **SRS_NODE_COMMON_AMQP_16_016: [** The `attachSenderLink` method shall call the `done` callback with an `Error` object if the link object wasn't created successfully. **]**
 
 ### attachReceiverLink(endpoint, properties, done)
 **SRS_NODE_COMMON_AMQP_16_017: [** The `attachReceiverLink` method shall throw a ReferenceError if the `endpoint` argument is falsy. **]**
-**SRS_NODE_COMMON_AMQP_16_018: [** The `attachReceiverLink` method shall call `open_receiver` on the `rhea` session object. **]**
+
+**SRS_NODE_COMMON_AMQP_06_006: [** The `attachReceiverLink` method shall call `attach` on the `ReceiverLink` object. **]**
+
 **SRS_NODE_COMMON_AMQP_06_004: [** The `attachReceiverLink` method shall create a policy object that contain link options to be merged if the linkOptions argument is not falsy. **]**
 **SRS_NODE_COMMON_AMQP_16_020: [** The `attachReceiverLink` method shall call the `done` callback with a `null` error and the link object that was created if the link was attached successfully. **]**
 **SRS_NODE_COMMON_AMQP_16_021: [** The `attachReceiverLink` method shall call the `done` callback with an `Error` object if the link object wasn't created successfully. **]**

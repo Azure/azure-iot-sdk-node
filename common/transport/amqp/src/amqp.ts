@@ -47,12 +47,12 @@ export class Amqp {
   //
   private _rheaSession: Session;
   //
-  // A dictionary to handle looking up THIS transports (NOT rhea) link objects.  The key is the actual name of the link.
+  // A dictionary to handle looking up THIS transport's (NOT rhea) link objects.  The key is the actual name of the link.
   // The value is the link object.
   //
   private _receivers: { [key: string]: ReceiverLink; } = {};
   //
-  // A dictionary to handle looking up THIS transports (NOT rhea) link objects.  The key is the actual name of the link.
+  // A dictionary to handle looking up THIS transport's (NOT rhea) link objects.  The key is the actual name of the link.
   // The value is the link object.
   //
   private _senders: { [key: string]: SenderLink; } = {};
@@ -129,8 +129,7 @@ export class Amqp {
 
     /*Codes_SRS_NODE_COMMON_AMQP_16_042: [The Amqp constructor shall create a new `rhea.Client` instance and configure it to:
     - not reconnect on failure
-    - not reattach sender and receiver links on failure
-    - not reestablish sessions on failure]*/
+    - not reattach sender and receiver links on failure]*/
 
     this._rheaContainer = rheaCreateContainer();
     this._rheaContainer.on('error', (context: EventContext) => {
@@ -483,7 +482,7 @@ export class Amqp {
 
             this._receivers[endpoint].on('error', permanentErrorHandler);
             this._receivers[endpoint].on('error', operationErrorHandler);
-            /*Codes_SRS_NODE_COMMON_AMQP_16_018: [The `attachReceiverLink` method shall call `open_receiver` on the `rhea` session object.]*/
+            /*Codes_SRS_NODE_COMMON_AMQP_06_006: [The `attachReceiverLink` method shall call `attach` on the `ReceiverLink` object.] */
             this._receivers[endpoint].attach((err) => {
               if (err) {
                 debug('failed to attach receiver link: ' + endpoint + ': ' + err.toString());
@@ -512,7 +511,7 @@ export class Amqp {
             this._senders[endpoint].on('error', permanentErrorHandler);
             this._senders[endpoint].on('error', operationErrorHandler);
             debug('attaching sender link for: ' + endpoint);
-            /*Codes_SRS_NODE_COMMON_AMQP_16_013: [The `attachSenderLink` method shall call `open_sender` on the `rhea` session object.]*/
+            /*Codes_SRS_NODE_COMMON_AMQP_06_005: [The `attachSenderLink` method shall call `attach` on the `SenderLink` object.] */
             this._senders[endpoint].attach((err) => {
               if (err) {
                 permanentErrorHandler(err);

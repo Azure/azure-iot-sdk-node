@@ -3,62 +3,61 @@
 
 'use strict';
 
-var Promise = require('bluebird');
 var assert = require('chai').assert;
 var sinon = require('sinon');
+var sinonTestFactory = require('sinon-test');
+var sinonTest = sinonTestFactory(sinon);
 var AmqpMessage = require('../lib/amqp_message.js').AmqpMessage;
 var Amqp = require('../lib/amqp.js').Amqp;
+var MockReceiverLink = require('../lib/receiver_link.js');
+var MockSenderLink = require('../lib/sender_link.js');
 var ReceiverLink = require('../lib/receiver_link.js').ReceiverLink;
 var results = require('azure-iot-common').results;
 var errors = require('azure-iot-common').errors;
 var Message = require('azure-iot-common').Message;
 var EventEmitter = require('events').EventEmitter;
 var uuid = require('uuid');
-var amqp10 = require('amqp10');
-
-var cbsReceiveEndpoint = '$cbs';
-var cbsSendEndpoint = '$cbs';
 
 describe('Amqp', function () {
+  sinon.test = sinonTest;
   /*Tests_SRS_NODE_COMMON_AMQP_16_042: [The Amqp constructor shall create a new `amqp10.Client` instance and configure it to:
   - not reconnect on failure
-  - not reattach sender and receiver links on failure
-  - not reestablish sessions on failure]*/
+  - not reattach sender and receiver links on failure]*/
   describe('#policies', function () {
-    before(function () {
-      sinon.spy(amqp10, 'Client');
-    });
-
-    it.skip('sets the connection to not reestablish on failure', function () {
+    it('sets the connection to not reconnect on failure', function () {
       var amqp = new Amqp();
-      void(amqp);
-      assert.isFalse(amqp10.Client.firstCall.args[0].session.reestablish.forever);
-      assert.strictEqual(amqp10.Client.firstCall.args[0].session.reestablish.retries, 0);
+      var fakeConnection = new EventEmitter();
+      fakeConnection.name = 'connection';
+      var fakeConnectionContext = {connection: fakeConnection};
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
+      var fakeSession = new EventEmitter();
+      var fakeSessionContext = {session: fakeSession};
+      fakeConnection.create_session = sinon.stub().returns(fakeSession);
+      fakeSession.open = () => {};
+      sinon.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
+      amqp.connect({uri: 'uri'}, function(err) {
+        assert.isNotOk(err,'client connected');
+        assert(amqp._rheaContainer.connect.args[0][0].hasOwnProperty('reconnect'), 'connection parameter has reconnect property');
+        assert.isFalse(amqp._rheaContainer.connect.args[0][0].reconnect, 'connection parameter reconnect is false');
+      });
     });
 
-    it.skip('sets the sender link to not reattach on failure', function () {
+    it('sets the links to not reattach on failure', function () {
       var amqp = new Amqp();
-      void(amqp);
-      assert.isFalse(amqp10.Client.firstCall.args[0].senderLink.reattach.forever);
-      assert.strictEqual(amqp10.Client.firstCall.args[0].senderLink.reattach.retries, 0);
-    });
-
-    it.skip('sets the receiver link to not reattach on failure', function () {
-      var amqp = new Amqp();
-      void(amqp);
-      assert.isFalse(amqp10.Client.firstCall.args[0].receiverLink.reattach.forever);
-      assert.strictEqual(amqp10.Client.firstCall.args[0].receiverLink.reattach.retries, 0);
-    });
-
-    it.skip('sets the connection to not reconnect on failure', function () {
-      var amqp = new Amqp();
-      void(amqp);
-      assert.isFalse(amqp10.Client.firstCall.args[0].reconnect.forever);
-      assert.strictEqual(amqp10.Client.firstCall.args[0].reconnect.retries, 0);
-    });
-
-    after(function () {
-      amqp10.Client.restore();
+      var fakeConnection = new EventEmitter();
+      fakeConnection.name = 'connection';
+      var fakeConnectionContext = {connection: fakeConnection};
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
+      var fakeSession = new EventEmitter();
+      var fakeSessionContext = {session: fakeSession};
+      fakeConnection.create_session = sinon.stub().returns(fakeSession);
+      fakeSession.open = () => {};
+      sinon.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
+      amqp.connect({uri: 'uri'}, function(err, res) {
+        assert.isNotOk(err,'client connected');
+        assert.isFalse(amqp._rheaContainer.options.sender_options.reconnect, 'rhea sender does not reconnect');
+        assert.isFalse(amqp._rheaContainer.options.receiver_options.reconnect, 'rhea sender does not reconnect');
+      });
     });
   });
 
@@ -69,13 +68,13 @@ describe('Amqp', function () {
       var amqp = new Amqp();
       var fakeConnection = new EventEmitter();
       fakeConnection.name = 'connection';
-      var fakeContext = {connection: fakeConnection};
-      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeContext)}); return fakeConnection});
+      var fakeConnectionContext = {connection: fakeConnection};
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
       var fakeSession = new EventEmitter();
       var fakeSessionContext = {session: fakeSession};
       fakeConnection.create_session = sinon.stub().returns(fakeSession);
       fakeSession.open = () => {};
-      sinon.stub(fakeSession, 'open').callsFake(() => {fakeSession.emit('session_open', fakeSessionContext)});
+      sinon.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
       amqp.connect({uri: 'uri'}, function(err, res) {
         if (err) testCallback(err);
         else {
@@ -89,13 +88,13 @@ describe('Amqp', function () {
       var amqp = new Amqp();
       var fakeConnection = new EventEmitter();
       fakeConnection.name = 'connection';
-      var fakeContext = {connection: fakeConnection};
-      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeContext)}); return fakeConnection});
+      var fakeConnectionContext = {connection: fakeConnection};
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
       var fakeSession = new EventEmitter();
       var fakeSessionContext = {session: fakeSession};
       fakeConnection.create_session = sinon.stub().returns(fakeSession);
       fakeSession.open = () => {};
-      sinon.stub(fakeSession, 'open').callsFake(() => {fakeSession.emit('session_open', fakeSessionContext)});
+      sinon.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
 
       amqp.connect({uri: 'uri'}, function(err, res) {
         if (err) testCallback(err);
@@ -117,9 +116,11 @@ describe('Amqp', function () {
     /*Tests_SRS_NODE_COMMON_AMQP_16_003: [If given as an argument, the connect method shall call the `done` callback with a standard `Error` object if the connection fails.]*/
     it('Calls the done callback with an error if connecting fails (disconnected)', function(testCallback) {
       var amqp = new Amqp();
-      var fakeContext = {container: amqp._amqpContainer};
-      amqp._amqpContainer.error = new Error();
-      sinon.stub(amqp._amqpContainer, 'connect').callsFake(() => {amqp._amqpContainer.emit('disconnected', fakeContext)});
+      var fakeConnection = new EventEmitter();
+      var fakeConnectionContext = {connection: fakeConnection};
+      fakeConnection.name = 'connection';
+      fakeConnection.error = new Error();
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('disconnected', fakeConnectionContext)}); return fakeConnection});
 
       amqp.connect({uri: 'uri'}, function(err) {
         assert.instanceOf(err, Error);
@@ -129,11 +130,12 @@ describe('Amqp', function () {
 
     it('Calls the done callback with an error if connecting fails (auth error)', function(testCallback) {
       var amqp = new Amqp();
-      var fakeContext = {container: amqp._amqpContainer};
-      amqp._amqpContainer.error = new Error();
-      sinon.stub(amqp._amqpContainer, 'connect').callsFake(() => {amqp._amqpContainer.emit('connection_error', fakeContext)});
+      var fakeConnection = new EventEmitter();
+      var fakeConnectionContext = {container: amqp._rheaContainer, connection: fakeConnection};
+      fakeConnection.error = new Error();
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_error', fakeConnectionContext);amqp._rheaConnection.emit('connection_close', fakeConnectionContext)}); return fakeConnection});
       amqp.connect({uri: 'uri'}, function(err) {
-        assert.strictEqual(err, amqp._amqpContainer.error);
+        assert.strictEqual(err, fakeConnection.error);
         testCallback();
       });
     });
@@ -145,13 +147,13 @@ describe('Amqp', function () {
       var fakeConnection = new EventEmitter();
       fakeConnection.name = 'connection';
       var fakeConnectionContext = {connection: fakeConnection};
-      sinon.stub(amqp._amqpContainer, 'connect').callsFake(() => {amqp._amqpContainer.emit('connection_open', fakeConnectionContext)});
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
       var fakeSession = new EventEmitter();
       fakeSession.name = 'session';
-      var fakeSessionContext = {session: fakeSession};
+      var fakeSessionContext = {connection: fakeConnection, session: fakeSession};
       fakeConnection.create_session = sinon.stub().returns(fakeSession);
       fakeSession.open = () => {};
-      sinon.stub(fakeSession, 'open').callsFake(() => {fakeSession.emit('session_open', fakeSessionContext)});
+      sinon.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
 
       amqp.setDisconnectHandler(function() {
         testCallback();
@@ -159,7 +161,7 @@ describe('Amqp', function () {
       amqp.connect({uri: 'uri'}, function () {
         var fakeError = new Error('Connected closed');
         fakeConnection.error = fakeError;
-        amqp._amqpConnection.emit('disconnected', fakeConnectionContext);
+        fakeConnection.emit('disconnected', fakeConnectionContext);
       });
     });
 
@@ -168,20 +170,26 @@ describe('Amqp', function () {
       amqp.setDisconnectHandler(function() {
         assert.fail();
       });
-      amqp._amqpContainer.emit('disconnected');
+      amqp._rheaContainer.emit('disconnected');
       testCallback();
     });
 
     it('ignores the disconnected event if fired while connecting', function (testCallback) {
       var amqp = new Amqp();
-      var fakeContext = {container: amqp._amqpContainer};
-      amqp._amqpContainer.connect = sinon.stub();
+      var fakeConnection = new EventEmitter();
+      fakeConnection.name = 'connection';
+      var fakeConnectionContext = {connection: fakeConnection};
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
+      var fakeSession = new EventEmitter();
+      fakeSession.name = 'session';
+      fakeConnection.create_session = sinon.stub().returns(fakeSession);
+      fakeSession.open = () => sinon.stub();
 
       amqp.setDisconnectHandler(function() {
         assert.fail();
       });
       amqp.connect({uri: 'uri'}, function() {});
-      amqp._amqpContainer.emit('disconnected', fakeContext);
+      fakeConnection.emit('disconnected', fakeConnectionContext);
       testCallback();
     });
 
@@ -190,13 +198,16 @@ describe('Amqp', function () {
       var fakeConnection = new EventEmitter();
       fakeConnection.name = 'connection';
       var fakeConnectionContext = {connection: fakeConnection};
-      sinon.stub(amqp._amqpContainer, 'connect').callsFake(() => {amqp._amqpContainer.emit('connection_open', fakeConnectionContext)});
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
       var fakeSession = new EventEmitter();
       fakeSession.name = 'session';
-      var fakeSessionContext = {session: fakeSession};
+      var fakeSessionContext = {connection: fakeConnection, session: fakeSession};
       fakeConnection.create_session = sinon.stub().returns(fakeSession);
+      fakeConnection.close = sinon.stub();
+      fakeSession.close = sinon.stub();
       fakeSession.open = () => {};
-      sinon.stub(fakeSession, 'open').callsFake(() => {fakeSession.emit('session_open', fakeSessionContext)});
+      sinon.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
+
       fakeConnection.close = sinon.stub();
 
       amqp.setDisconnectHandler(function() {
@@ -205,7 +216,7 @@ describe('Amqp', function () {
       amqp.connect({uri: 'uri'}, () => {
         amqp.disconnect(function () { });
         fakeConnection.error = new Error('connection disconnected');
-        amqp._amqpConnection.emit('disconnected', fakeConnectionContext);
+        fakeConnection.emit('disconnected', fakeConnectionContext);
         testCallback();
       });
     });
@@ -216,15 +227,19 @@ describe('Amqp', function () {
     it('detaches the CBS endpoints before disconnecting the client', function(testCallback) {
       var amqp = new Amqp();
       var fakeConnection = new EventEmitter();
-      var fakeContext = {connection: fakeConnection};
-      sinon.stub(amqp._amqpContainer, 'connect').callsFake(() => {amqp._amqpContainer.emit('connection_open', fakeContext)});
+      fakeConnection.name = 'connection';
+      var fakeConnectionContext = {connection: fakeConnection};
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
       var fakeSession = new EventEmitter();
-      var fakeSessionContext = {session: fakeSession};
+      fakeSession.name = 'session';
+      var fakeSessionContext = {connection: fakeConnection, session: fakeSession};
       fakeConnection.create_session = sinon.stub().returns(fakeSession);
-      fakeSession.open = () => {};
-      sinon.stub(fakeSession, 'open').callsFake(() => {fakeSession.emit('session_open', fakeSessionContext)});
       fakeConnection.close = () => {};
-      sinon.stub(fakeConnection, 'close').callsFake(() => {fakeConnection.emit('connection_close')});
+      sinon.stub(fakeConnection, 'close').callsFake(() => {process.nextTick(() => {fakeConnection.emit('connection_close', fakeConnectionContext)})});
+      fakeSession.close = () => {};
+      sinon.stub(fakeSession, 'close').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_close', fakeSessionContext)})});
+      fakeSession.open = () => {};
+      sinon.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
 
       amqp._cbs = {
         detach: sinon.stub().callsArg(0)
@@ -245,15 +260,19 @@ describe('Amqp', function () {
     it('detaches existing links before disconnecting the client', function(testCallback) {
       var amqp = new Amqp();
       var fakeConnection = new EventEmitter();
-      var fakeContext = {connection: fakeConnection};
-      sinon.stub(amqp._amqpContainer, 'connect').callsFake(() => {amqp._amqpContainer.emit('connection_open', fakeContext)});
+      fakeConnection.name = 'connection';
+      var fakeConnectionContext = {connection: fakeConnection};
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
       var fakeSession = new EventEmitter();
-      var fakeSessionContext = {session: fakeSession};
+      fakeSession.name = 'session';
+      var fakeSessionContext = {connection: fakeConnection, session: fakeSession};
       fakeConnection.create_session = sinon.stub().returns(fakeSession);
-      fakeSession.open = () => {};
-      sinon.stub(fakeSession, 'open').callsFake(() => {fakeSession.emit('session_open', fakeSessionContext)});
       fakeConnection.close = () => {};
-      sinon.stub(fakeConnection, 'close').callsFake(() => {fakeConnection.emit('connection_close')});
+      sinon.stub(fakeConnection, 'close').callsFake(() => {process.nextTick(() => {fakeConnection.emit('connection_close', fakeConnectionContext)})});
+      fakeSession.close = () => {};
+      sinon.stub(fakeSession, 'close').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_close', fakeSessionContext)})});
+      fakeSession.open = () => {};
+      sinon.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
 
       var fakeSender = {
         detach: sinon.stub().callsArg(0)
@@ -282,15 +301,19 @@ describe('Amqp', function () {
     it('calls the done callback if disconnected successfully', function(testCallback) {
       var amqp = new Amqp();
       var fakeConnection = new EventEmitter();
-      var fakeContext = {connection: fakeConnection};
-      sinon.stub(amqp._amqpContainer, 'connect').callsFake(() => {amqp._amqpContainer.emit('connection_open', fakeContext)});
+      fakeConnection.name = 'connection';
+      var fakeConnectionContext = {connection: fakeConnection};
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
       var fakeSession = new EventEmitter();
-      var fakeSessionContext = {session: fakeSession};
+      fakeSession.name = 'session';
+      var fakeSessionContext = {connection: fakeConnection, session: fakeSession};
       fakeConnection.create_session = sinon.stub().returns(fakeSession);
-      fakeSession.open = () => {};
-      sinon.stub(fakeSession, 'open').callsFake(() => {fakeSession.emit('session_open', fakeSessionContext)});
       fakeConnection.close = () => {};
-      sinon.stub(fakeConnection, 'close').callsFake(() => {fakeConnection.emit('connection_close')});
+      sinon.stub(fakeConnection, 'close').callsFake(() => {process.nextTick(() => {fakeConnection.emit('connection_close', fakeConnectionContext)})});
+      fakeSession.close = () => {};
+      sinon.stub(fakeSession, 'close').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_close', fakeSessionContext)})});
+      fakeSession.open = () => {};
+      sinon.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
 
       amqp.connect({uri: 'uri'}, function() {
         amqp.disconnect(function(err) {
@@ -308,15 +331,17 @@ describe('Amqp', function () {
       var fakeConnection = new EventEmitter();
       fakeConnection.name = 'connection';
       var fakeConnectionContext = {connection: fakeConnection};
-      sinon.stub(amqp._amqpContainer, 'connect').callsFake(() => {amqp._amqpContainer.emit('connection_open', fakeConnectionContext)});
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
       var fakeSession = new EventEmitter();
-      var fakeSessionContext = {session: fakeSession};
+      fakeSession.name = 'session';
+      var fakeSessionContext = {connection: fakeConnection, session: fakeSession};
       fakeConnection.create_session = sinon.stub().returns(fakeSession);
-      fakeSession.open = () => {};
-      sinon.stub(fakeSession, 'open').callsFake(() => {fakeSession.emit('session_open', fakeSessionContext)});
       fakeConnection.close = () => {};
-      fakeConnection.error = new Error('error while disconnecting')
-      sinon.stub(fakeConnection, 'close').callsFake(() => {fakeConnection.emit('connection_error', fakeConnectionContext)});
+      sinon.stub(fakeConnection, 'close').callsFake(() => {process.nextTick(() => {fakeConnection.error = new Error('connerror'); fakeConnection.emit('connection_error', fakeConnectionContext); fakeConnection.error = undefined; fakeConnection.emit('connection_close', fakeConnectionContext)})});
+      fakeSession.close = () => {};
+      sinon.stub(fakeSession, 'close').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_close', fakeSessionContext)})});
+      fakeSession.open = () => {};
+      sinon.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
 
       amqp.connect({uri: 'uri'}, function() {
         amqp.disconnect(function(err) {
@@ -341,21 +366,26 @@ describe('Amqp', function () {
     it('ignores client errors emitted while disconnecting', function (testCallback) {
       var amqp = new Amqp();
       var fakeConnection = new EventEmitter();
-      var fakeContext = {connection: fakeConnection};
-      sinon.stub(amqp._amqpContainer, 'connect').callsFake(() => {amqp._amqpContainer.emit('connection_open', fakeContext)});
+      fakeConnection.name = 'connection';
+      var fakeConnectionContext = {connection: fakeConnection};
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
       var fakeSession = new EventEmitter();
-      var fakeSessionContext = {session: fakeSession};
+      fakeSession.name = 'session';
+      var fakeSessionContext = {connection: fakeConnection, session: fakeSession};
       fakeConnection.create_session = sinon.stub().returns(fakeSession);
-      fakeSession.open = () => {};
-      sinon.stub(fakeSession, 'open').callsFake(() => {fakeSession.emit('session_open', fakeSessionContext)});
       fakeConnection.close = sinon.stub();
+      fakeSession.close = () => {};
+      sinon.stub(fakeSession, 'close').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_close', fakeSessionContext)})});
+      fakeSession.open = () => {};
+      sinon.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
 
       amqp.setDisconnectHandler(function() {
         assert.fail();
       });
       amqp.connect({uri: 'uri'}, function() {
         amqp.disconnect(function() {});
-        amqp._amqpConnection.emit('client:errorReceived', new Error('should be ignored'));
+        fakeConnection.error = new Error('should be ignored');
+        fakeConnection.emit('error', fakeConnectionContext);
         testCallback();
       });
     });
@@ -668,16 +698,10 @@ describe('Amqp', function () {
   });
 
   describe('Links', function() {
-    function createFakeLink() {
-      var fakeLink = new EventEmitter();
-      fakeLink.forceDetach = function() {};
-      return fakeLink;
-    }
-
-    var fake_generic_endpoint = 'fake_generic_endpoint';
+    var fakeEndpoint = 'fakeEndpoint';
     [
-      { amqpFunc: 'attachSenderLink', rheaFunc: 'open_sender', direction: 'target', kindOfLink: 'sender', rheaErrorEvent: 'sender_error', rheaOpenEvent: 'sender_open', rheaDetachEvent: 'sender_close', privateLinkArray: '_senders', fakeLinkObject: createFakeLink() },
-      { amqpFunc: 'attachReceiverLink', rheaFunc: 'open_receiver', direction: 'source', kindOfLink: 'receiver', rheaErrorEvent: 'receiver_error', rheaOpenEvent: 'receiver_open', rheaDetachEvent: 'receiver_close', privateLinkArray: '_receivers', fakeLinkObject: createFakeLink() }
+      { amqpFunc: 'attachSenderLink', privateLinkArray: '_senders', mockLink: MockSenderLink, nameOfConstructor: 'SenderLink'},
+      { amqpFunc: 'attachReceiverLink', privateLinkArray: '_receivers', mockLink: MockReceiverLink, nameOfConstructor: 'ReceiverLink'}
     ].forEach(function(testConfig) {
       describe('#' + testConfig.amqpFunc, function() {
         /*Tests_SRS_NODE_COMMON_AMQP_16_012: [The `attachSenderLink` method shall throw a ReferenceError if the `endpoint` argument is falsy.]*/
@@ -691,195 +715,177 @@ describe('Amqp', function () {
           });
         });
 
-        /*Tests_SRS_NODE_COMMON_AMQP_16_013: [The `attachSenderLink` method shall call `open_sender` on the `rhea` session object.]*/
-        /*Tests_SRS_NODE_COMMON_AMQP_16_018: [The `attachReceiverLink` method shall call `open_receiver` on the `rhea` session object.]*/
-        it('calls ' + testConfig.rheaFunc + ' and passes the endpoint on rhea', function(testCallback) {
-          var amqp = new Amqp();
-          var fakeConnection = new EventEmitter();
-          var fakeRheaConnectionContext = {connection: fakeConnection};
-          sinon.stub(amqp._amqpContainer, 'connect').callsFake(() => {amqp._amqpContainer.emit('connection_open', fakeRheaConnectionContext)});
-          var fakeRheaSession = new EventEmitter();
-          var fakeRheaSessionContext = {session: fakeRheaSession};
-          fakeConnection.create_session = sinon.stub().returns(fakeRheaSession);
-          fakeRheaSession.open = () => {};
-          sinon.stub(fakeRheaSession, 'open').callsFake(() => {fakeRheaSession.emit('session_open', fakeRheaSessionContext)});
-          var fakeRheaLinkContext = {};
-          fakeRheaLinkContext[testConfig.kindOfLink] = testConfig.fakeLinkObject;
-          fakeRheaSession[testConfig.rheaFunc] = () => {};
-          sinon.stub(fakeRheaSession, testConfig.rheaFunc).callsFake(() => {fakeRheaSession.emit(testConfig.rheaOpenEvent, fakeRheaLinkContext)});
-
-          amqp.connect({uri: 'uri'}, function() {
-            amqp[testConfig.amqpFunc](fake_generic_endpoint, null, function(err) {
-              if (err) { return testCallback(err); }
-              //
-              // HELP HELP HELP - I'M AT A LOSS ON THIS ASSERT.  WHAT'S IT TESTING?
-              //
-              assert.isNotTrue(amqp._amqpSession[testConfig.rheaFunc].args[0][1]);
-              testCallback();
-            });
-          });
-        });
-
+        /*Tests_SRS_NODE_COMMON_AMQP_06_006: [The `attachReceiverLink` method shall call `attach` on the `ReceiverLink` object.] */
+        /*Tests_SRS_NODE_COMMON_AMQP_06_005: [The `attachSenderLink` method shall call `attach` on the `SenderLink` object.] */
         /*Tests_SRS_NODE_COMMON_AMQP_06_003: [The `attachSenderLink` method shall create a policy object that contain link options to be merged if the linkOptions argument is not falsy.]*/
         /*Tests_SRS_NODE_COMMON_AMQP_06_004: [The `attachReceiverLink` method shall create a policy object that contain link options to be merged if the linkOptions argument is not falsy.]*/
-        it('sets up the attach properties object with the link properties passed as argument', function(testCallback) {
+        it('calls `attach` with success and passes options to the constructor ', sinon.test(function(testCallback) {
           var amqp = new Amqp();
           var fakeConnection = new EventEmitter();
-          var fakeRheaConnectionContext = {connection: fakeConnection};
-          sinon.stub(amqp._amqpContainer, 'connect').callsFake(() => {amqp._amqpContainer.emit('connection_open', fakeRheaConnectionContext)});
-          var fakeRheaSession = new EventEmitter();
-          var fakeRheaSessionContext = {session: fakeRheaSession};
-          fakeConnection.create_session = sinon.stub().returns(fakeRheaSession);
-          fakeRheaSession.open = () => {};
-          sinon.stub(fakeRheaSession, 'open').callsFake(() => {fakeRheaSession.emit('session_open', fakeRheaSessionContext)});
-          var fakeRheaLinkContext = {};
-          fakeRheaLinkContext[testConfig.kindOfLink] = testConfig.fakeLinkObject;
-          fakeRheaSession[testConfig.rheaFunc] = () => {};
-          sinon.stub(fakeRheaSession, testConfig.rheaFunc).callsFake(() => {fakeRheaSession.emit(testConfig.rheaOpenEvent, fakeRheaLinkContext)});
+          fakeConnection.name = 'connection';
+          var fakeConnectionContext = {connection: fakeConnection};
+          this.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
+          var fakeSession = new EventEmitter();
+          fakeSession.name = 'session';
+          var fakeSessionContext = {connection: fakeConnection, session: fakeSession};
+          fakeConnection.create_session = this.stub().returns(fakeSession);
+          fakeConnection.close = this.stub();
+          fakeSession.close = () => {};
+          this.stub(fakeSession, 'close').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_close', fakeSessionContext)})});
+          fakeSession.open = () => {};
+          this.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
 
-          var fakeLinkProps = {
-            fakeKey: 'fakeValue'
-          };
+          var fakeLink = new EventEmitter();
+          fakeLink.attach = sinon.stub().callsArg(0);
+          var fakeOptions = {color: 'red'};
 
-          amqp.connect({uri: 'uri', userAgentString: 'fakeAgent'}, function() {
-
-            /*Tests_SRS_NODE_COMMON_AMQP_16_015: [The `attachSenderLink` method shall call the `done` callback with a `null` error and the link object that was created if the link was attached successfully.]*/
-            /*Tests_SRS_NODE_COMMON_AMQP_16_020: [The `attachReceiverLink` method shall call the `done` callback with a `null` error and the link object that was created if the link was attached successfully.]*/
-            amqp[testConfig.amqpFunc](fake_generic_endpoint, fakeLinkProps, function() {
-              var expectedValue = {
-                fakeKey: 'fakeValue',
-              };
-              expectedValue[testConfig.direction] = fake_generic_endpoint;
-              assert.deepEqual(amqp._amqpSession[testConfig.rheaFunc].args[0][0], expectedValue);
+          amqp.connect({uri: 'uri'}, () => {
+            this.stub(testConfig.mockLink, testConfig.nameOfConstructor).returns(fakeLink);
+            amqp[testConfig.amqpFunc](fakeEndpoint, fakeOptions, function(err) {
+              assert(testConfig.mockLink[testConfig.nameOfConstructor].calledWith(fakeEndpoint,fakeOptions), 'constructor passed address and options');
+              if (err) { return testCallback(err); }
+              assert(fakeLink.attach.calledOnce, 'attach is invoked');
               testCallback();
             });
           });
-        });
+        }));
 
         /*Tests_SRS_NODE_COMMON_AMQP_16_016: [The `attachSenderLink` method shall call the `done` callback with an `Error` object if the link object wasn't created successfully.]*/
         /*Tests_SRS_NODE_COMMON_AMQP_16_021: [The `attachReceiverLink` method shall call the `done` callback with an `Error` object if the link object wasn't created successfully.]*/
-        it('calls the done callback with an error if attaching the link failed', function(testCallback) {
+        it('calls the done callback with an error if attaching the link failed', sinon.test(function(testCallback) {
           var amqp = new Amqp();
-          var fakeError = new Error('failed to create link');
-          var fakeConnection = new EventEmitter();
-          var fakeRheaConnectionContext = {connection: fakeConnection};
-          sinon.stub(amqp._amqpContainer, 'connect').callsFake(() => {amqp._amqpContainer.emit('connection_open', fakeRheaConnectionContext)});
-          var fakeRheaSession = new EventEmitter();
-          fakeRheaSession.name = 'session';
-          var fakeRheaSessionContext = {session: fakeRheaSession};
-          fakeConnection.create_session = sinon.stub().returns(fakeRheaSession);
-          fakeRheaSession.open = () => {};
-          sinon.stub(fakeRheaSession, 'open').callsFake(() => {fakeRheaSession.emit('session_open', fakeRheaSessionContext)});
-          fakeRheaSession[testConfig.rheaFunc] = () => {};
-          fakeRheaSession.error = fakeError;
-          sinon.stub(fakeRheaSession, testConfig.rheaFunc).callsFake(() => {fakeRheaSession.emit(testConfig.rheaErrorEvent, fakeRheaSessionContext)});
-
-          amqp.connect({uri: 'uri'}, function() {
-            amqp[testConfig.amqpFunc](fake_generic_endpoint, null, function(err) {
-              assert.strictEqual(fakeError, err);
-              testCallback();
-            });
-          });
-        });
-
-        it.skip('calls the done callback with an error if the connection fails while trying to attach the link', function(testCallback) {
-          var amqp = new Amqp();
-          var fakeError = new Error('failed to create link');
           var fakeConnection = new EventEmitter();
           fakeConnection.name = 'connection';
-          var fakeRheaConnectionContext = {connection: fakeConnection};
-          sinon.stub(amqp._amqpContainer, 'connect').callsFake(() => {amqp._amqpContainer.emit('connection_open', fakeRheaConnectionContext)});
-          var fakeRheaSession = new EventEmitter();
-          fakeRheaSession.name = 'session';
-          var fakeRheaSessionContext = {session: fakeRheaSession};
-          fakeConnection.create_session = sinon.stub().returns(fakeRheaSession);
-          fakeRheaSession.open = () => {};
-          sinon.stub(fakeRheaSession, 'open').callsFake(() => {fakeRheaSession.emit('session_open', fakeRheaSessionContext)});
-          fakeRheaSession[testConfig.rheaFunc] = sinon.stub();
+          var fakeConnectionContext = {connection: fakeConnection};
+          this.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
+          var fakeSession = new EventEmitter();
+          fakeSession.name = 'session';
+          var fakeSessionContext = {connection: fakeConnection, session: fakeSession};
+          fakeConnection.create_session = this.stub().returns(fakeSession);
+          fakeConnection.close = this.stub();
+          fakeSession.close = () => {};
+          this.stub(fakeSession, 'close').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_close', fakeSessionContext)})});
+          fakeSession.open = () => {};
+          this.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
 
-          amqp.connect({uri: 'uri'}, function() {
-            fakeRheaSession.error = fakeError;
-            amqp[testConfig.amqpFunc](fake_generic_endpoint, null, function(err) {
+          var fakeLink = new EventEmitter();
+          var fakeAttachError = new Error('bad attach');
+          fakeLink.attach = sinon.stub().callsArgWith(0, fakeAttachError);
+
+          amqp.connect({uri: 'uri'}, () => {
+            this.stub(testConfig.mockLink, testConfig.nameOfConstructor).returns(fakeLink);
+            amqp[testConfig.amqpFunc](fakeEndpoint, null, function(err) {
+              assert.strictEqual(err, fakeAttachError);
+              assert(fakeLink.attach.calledOnce, 'attach is invoked');
+              testCallback();
+            });
+          });
+        }));
+
+        it('calls the done callback with an error if the connection fails while trying to attach the link', sinon.test(function(testCallback) {
+          var amqp = new Amqp();
+          var fakeConnection = new EventEmitter();
+          fakeConnection.name = 'connection';
+          var fakeConnectionContext = {connection: fakeConnection};
+          this.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
+          var fakeSession = new EventEmitter();
+          fakeSession.name = 'session';
+          var fakeSessionContext = {connection: fakeConnection, session: fakeSession};
+          fakeConnection.create_session = this.stub().returns(fakeSession);
+          fakeConnection.close = this.stub();
+          fakeSession.close = () => {};
+          this.stub(fakeSession, 'close').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_close', fakeSessionContext)})});
+          fakeSession.open = () => {};
+          this.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
+
+          var fakeLink = new EventEmitter();
+          var fakeError = new Error('error emitted');
+          fakeLink.attach = sinon.stub();
+
+          amqp.connect({uri: 'uri'}, () => {
+            this.stub(testConfig.mockLink, testConfig.nameOfConstructor).returns(fakeLink);
+            amqp[testConfig.amqpFunc](fakeEndpoint, null, function(err) {
               assert.strictEqual(fakeError, err);
               testCallback();
             });
-            fakeConnection.error = fakeError;
-            amqp._amqpConnection.emit('disconnected', fakeRheaConnectionContext);
+            fakeLink.emit('error', fakeError);
           });
-        });
+        }));
 
-        it('subscribe to the detached event and removes it from ' + testConfig.privateLinkArray + ' if it is emitted', function(testCallback) {
+        it('subscribe to the `error` event and removes the link from ' + testConfig.privateLinkArray + ' if it is emitted', sinon.test(function(testCallback) {
           var amqp = new Amqp();
           var fakeConnection = new EventEmitter();
-          var fakeRheaConnectionContext = {connection: fakeConnection};
-          sinon.stub(amqp._amqpContainer, 'connect').callsFake(() => {amqp._amqpContainer.emit('connection_open', fakeRheaConnectionContext)});
-          var fakeRheaSession = new EventEmitter();
-          var fakeRheaSessionContext = {session: fakeRheaSession};
-          fakeConnection.create_session = sinon.stub().returns(fakeRheaSession);
-          fakeRheaSession.open = () => {};
-          sinon.stub(fakeRheaSession, 'open').callsFake(() => {fakeRheaSession.emit('session_open', fakeRheaSessionContext)});
-          var fakeRheaLinkContext = {};
-          fakeRheaLinkContext[testConfig.kindOfLink] = testConfig.fakeLinkObject;
-          testConfig.fakeLinkObject.name = testConfig.kindOfLink;
-          fakeRheaSession[testConfig.rheaFunc] = () => {};
-          sinon.stub(fakeRheaSession, testConfig.rheaFunc).callsFake(() => {fakeRheaSession.emit(testConfig.rheaOpenEvent, fakeRheaLinkContext)});
-          testConfig.fakeLinkObject.remove = sinon.stub();
+          fakeConnection.name = 'connection';
+          var fakeConnectionContext = {connection: fakeConnection};
+          this.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
+          var fakeSession = new EventEmitter();
+          fakeSession.name = 'session';
+          var fakeSessionContext = {connection: fakeConnection, session: fakeSession};
+          fakeConnection.create_session = this.stub().returns(fakeSession);
+          fakeConnection.close = this.stub();
+          fakeSession.close = () => {};
+          this.stub(fakeSession, 'close').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_close', fakeSessionContext)})});
+          fakeSession.open = () => {};
+          this.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
 
-          amqp.connect({uri: 'uri'}, function() {
-            amqp[testConfig.amqpFunc](fake_generic_endpoint, null, function() {
-              assert.isDefined(amqp[testConfig.privateLinkArray][fake_generic_endpoint]);
-              testConfig.fakeLinkObject.error = new Error();
-              testConfig.fakeLinkObject.emit(testConfig.rheaDetachEvent, fakeRheaLinkContext);
-              assert.isUndefined(amqp[testConfig.privateLinkArray][fake_generic_endpoint]);
+          var fakeLink = new EventEmitter();
+          fakeLink.attach = sinon.stub().callsArgWith(0);
+
+          amqp.connect({uri: 'uri'}, () => {
+            this.stub(testConfig.mockLink, testConfig.nameOfConstructor).returns(fakeLink);
+            amqp[testConfig.amqpFunc](fakeEndpoint, null, function() {
+              assert.isDefined(amqp[testConfig.privateLinkArray][fakeEndpoint]);
+              fakeLink.emit('error', new Error('error emitted'));
+              assert.isUndefined(amqp[testConfig.privateLinkArray][fakeEndpoint]);
               testCallback();
             });
           });
-        });
+        }));
       });
     });
 
     [
-      { amqpDetachFunc: 'detachSenderLink', amqpAttachFunc: 'attachSenderLink', rheaOpenFunc: 'open_sender', rheaCloseFunc: 'close', direction: 'target', kindOfLink: 'sender', rheaErrorEvent: 'error', rheaOpenEvent: 'sender_open', rheaCloseEvent: 'sender_close', rheaDetachEvent: 'sender_close', privateLinkArray: '_senders', fakeLinkObject: createFakeLink() },
-      { amqpDetachFunc: 'detachReceiverLink', amqpAttachFunc: 'attachReceiverLink', rheaOpenFunc: 'open_receiver', rheaCloseFunc: 'close', direction: 'source', kindOfLink: 'receiver', rheaErrorEvent: 'error', rheaOpenEvent: 'receiver_open', rheaCloseEvent: 'receiver_close', rheaDetachEvent: 'receiver_close', privateLinkArray: '_receivers', fakeLinkObject: createFakeLink() }
+      { amqpFunc: 'detachSenderLink', privateLinkArray: '_senders', mockLink: MockSenderLink, nameOfConstructor: 'SenderLink'},
+      { amqpFunc: 'detachReceiverLink', privateLinkArray: '_receivers', mockLink: MockReceiverLink, nameOfConstructor: 'ReceiverLink'}
     ].forEach(function(testConfig) {
-      describe('#' + testConfig.amqpDetachFunc, function() {
+      describe('#' + testConfig.amqpFunc, function() {
         /*Tests_SRS_NODE_COMMON_AMQP_16_022: [The `detachSenderLink` method shall throw a ReferenceError if the `endpoint` argument is falsy.]*/
         [null, undefined, ''].forEach(function(badEndpoint) {
           it('throws if the endpoint is \'' + badEndpoint + '\'', function() {
             var amqp = new Amqp();
             assert.throws(function() {
-              amqp[testConfig.amqpDetachFunc](badEndpoint, null, function() {});
+              amqp[testConfig.amqpFunc](badEndpoint, null, function() {});
             }, ReferenceError);
           });
         });
 
         /*Tests_SRS_NODE_COMMON_AMQP_16_023: [The `detachSenderLink` method shall call detach on the link object corresponding to the endpoint passed as argument.]*/
-        it('calls the \'detach\' method on the link object', function (testCallback) {
+        it('calls the \'detach\' method on the link object', function(testCallback) {
           var amqp = new Amqp();
           var fakeConnection = new EventEmitter();
-          var fakeRheaConnectionContext = {connection: fakeConnection};
-          sinon.stub(amqp._amqpContainer, 'connect').callsFake(() => {amqp._amqpContainer.emit('connection_open', fakeRheaConnectionContext)});
-          var fakeRheaSession = new EventEmitter();
-          var fakeRheaSessionContext = {session: fakeRheaSession};
-          fakeConnection.create_session = sinon.stub().returns(fakeRheaSession);
-          fakeRheaSession.open = () => {};
-          sinon.stub(fakeRheaSession, 'open').callsFake(() => {fakeRheaSession.emit('session_open', fakeRheaSessionContext)});
-          var fakeRheaLink = new EventEmitter();
-          fakeRheaLink.name = 'link';
-          var fakeRheaLinkContext = {};
-          fakeRheaLinkContext[testConfig.kindOfLink] = fakeRheaLink;
-          fakeRheaSession[testConfig.rheaOpenFunc] = () => {};
-          sinon.stub(fakeRheaSession, testConfig.rheaOpenFunc).callsFake(() => {fakeRheaSession.emit(testConfig.rheaOpenEvent, fakeRheaLinkContext)});
-          fakeRheaLink[testConfig.rheaCloseFunc] = () => {};
-          sinon.stub(fakeRheaLink, testConfig.rheaCloseFunc).callsFake(() => {fakeRheaLink.emit(testConfig.rheaCloseEvent, fakeRheaLinkContext)});
+          fakeConnection.name = 'connection';
+          var fakeConnectionContext = {connection: fakeConnection};
+          sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
+          var fakeSession = new EventEmitter();
+          fakeSession.name = 'session';
+          var fakeSessionContext = {connection: fakeConnection, session: fakeSession};
+          fakeConnection.create_session = sinon.stub().returns(fakeSession);
+          fakeConnection.close = sinon.stub();
+          fakeSession.close = () => {};
+          sinon.stub(fakeSession, 'close').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_close', fakeSessionContext)})});
+          fakeSession.open = () => {};
+          sinon.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
 
-          amqp.connect({uri: 'uri'}, function() {
-            amqp[testConfig.amqpAttachFunc](fake_generic_endpoint, null, function() {
-              /*Tests_SRS_NODE_COMMON_AMQP_16_024: [The `detachSenderLink` method shall call the `done` callback with no arguments if detaching the link succeeded.]*/
-              amqp[testConfig.amqpDetachFunc](fake_generic_endpoint, function(err) {
-                assert(fakeRheaLink[testConfig.rheaCloseFunc].calledOnce);
-                testCallback(err);
-              });
+          var fakeLink = new EventEmitter();
+          fakeLink.detach = sinon.stub().callsArgWith(0);
+
+          amqp.connect({uri: 'uri'}, () => {
+            /*Tests_SRS_NODE_COMMON_AMQP_16_024: [The `detachSenderLink` method shall call the `done` callback with no arguments if detaching the link succeeded.]*/
+            amqp[testConfig.privateLinkArray][fakeEndpoint] = fakeLink;
+            amqp[testConfig.amqpFunc](fakeEndpoint, function(err) {
+              if (err) { return testCallback(err); }
+              assert(fakeLink.detach.calledOnce, 'attach is invoked');
+              testCallback();
             });
           });
         });
@@ -888,16 +894,25 @@ describe('Amqp', function () {
         it('calls the callback immediately if there\'s no link attached', function (testCallback) {
           var amqp = new Amqp();
           var fakeConnection = new EventEmitter();
-          var fakeRheaConnectionContext = {connection: fakeConnection};
-          sinon.stub(amqp._amqpContainer, 'connect').callsFake(() => {amqp._amqpContainer.emit('connection_open', fakeRheaConnectionContext)});
-          var fakeRheaSession = new EventEmitter();
-          var fakeRheaSessionContext = {session: fakeRheaSession};
-          fakeConnection.create_session = sinon.stub().returns(fakeRheaSession);
-          fakeRheaSession.open = () => {};
-          sinon.stub(fakeRheaSession, 'open').callsFake(() => {fakeRheaSession.emit('session_open', fakeRheaSessionContext)});
+          fakeConnection.name = 'connection';
+          var fakeConnectionContext = {connection: fakeConnection};
+          sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
+          var fakeSession = new EventEmitter();
+          fakeSession.name = 'session';
+          var fakeSessionContext = {connection: fakeConnection, session: fakeSession};
+          fakeConnection.create_session = sinon.stub().returns(fakeSession);
+          fakeConnection.close = sinon.stub();
+          fakeSession.close = () => {};
+          sinon.stub(fakeSession, 'close').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_close', fakeSessionContext)})});
+          fakeSession.open = () => {};
+          sinon.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
 
-          amqp.connect({uri: 'uri'}, function() {
-            amqp[testConfig.amqpDetachFunc](fake_generic_endpoint, function(err) {
+          var fakeLink = new EventEmitter();
+          fakeLink.detach = sinon.stub().callsArgWith(0);
+
+          amqp.connect({uri: 'uri'}, () => {
+            /*Tests_SRS_NODE_COMMON_AMQP_16_024: [The `detachSenderLink` method shall call the `done` callback with no arguments if detaching the link succeeded.]*/
+            amqp[testConfig.amqpFunc](fakeEndpoint, function(err) {
               testCallback(err);
             });
           });
@@ -906,7 +921,7 @@ describe('Amqp', function () {
         it('calls the callback immediately if already disconnected', function (testCallback) {
           var amqp = new Amqp();
           /*Tests_SRS_NODE_COMMON_AMQP_16_024: [The `detachSenderLink` method shall call the `done` callback with no arguments if detaching the link succeeded.]*/
-          amqp[testConfig.amqpDetachFunc](fake_generic_endpoint, function(err) {
+          amqp[testConfig.amqpFunc](fakeEndpoint, function(err) {
             assert.isUndefined(err);
             testCallback();
           });

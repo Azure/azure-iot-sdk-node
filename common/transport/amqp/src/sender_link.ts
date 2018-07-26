@@ -139,6 +139,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
     };
 
     this._fsm = new machina.Fsm({
+      /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_001: [The `SenderLink` internal state machine shall be initialized in the `detached` state.]*/
       initialState: 'detached',
       namespace: 'senderLink',
       states: {
@@ -214,10 +215,6 @@ export class SenderLink extends EventEmitter implements AmqpLink {
           },
           senderOpenEvent: (context: EventContext) => {
             /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_022: [The `attach` method shall call the `callback` if the link was successfully attached.] */
-            debug('in sender attaching state - open event for ' + context.sender.name);
-            if (this._rheaSender !== context.sender) {
-              debug('the sender provided in the open not equal to the receiver returned from open_sender');
-            }
             let callback = this._attachingCallback;
             this._attachingCallback = null;
             this._fsm.transition('attached', callback);
@@ -260,7 +257,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             // We will signal to that callback that an error occurred. We will also invoke the callback supplied
             // for this detach.
             //
-            let error = err || this._indicatedError;
+            let error = err || this._indicatedError || new Error('Unexpected link detach while attaching');
             let attachingCallback = this._attachingCallback;
             this._indicatedError = undefined;
             this._attachingCallback = undefined;
@@ -357,7 +354,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             manageSenderHandlers('removeListener');
             /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_025: [The `forceDetach` method shall call the `remove` method on the underlying `rhea` link object.]*/
             this._rheaSender.remove();
-            /*Codes_SRS_NODE_AMQP_SENDER_LINK_06_004: [The `forceDetach` method shall cause an `error` event to be emitted on the `SenderLink`.] */
+            /*Codes_SRS_NODE_AMQP_SENDER_LINK_06_004: [The `forceDetach` method shall cause an `error` event to be emitted on the `SenderLink` if an error is supplied.] */
             this._fsm.transition('detached', undefined, err);
           },
           send: () => {
@@ -386,6 +383,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             debug('Detaching of rhea sender link ' + this._linkAddress);
             this._detachingCallback = callback;
             this._indicatedError = err;
+            /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_009: [The `detach` method shall detach the link created by `rhea`.] */
             this._rheaSender.close();
             if (this._senderCloseOccurred) {
               //
@@ -398,6 +396,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             }
           },
           senderErrorEvent: (context: EventContext) => {
+            /*Codes_SRS_NODE_AMQP_SENDER_LINK_06_010: [An error occurring during a detach will be indicated in the error result of the `detach`.] */
             debug('in sender detaching state - error event for ' + context.sender.name + ' error is: ' + this._getErrorName(context.sender.error));
             this._indicatedError = this._indicatedError || context.sender.error;
             //
@@ -427,6 +426,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             }
           },
           detach: (callback, err) => {
+            /*Codes_SRS_NODE_AMQP_SENDER_LINK_06_011: [If `detach` invoked while already detaching, it's callback will be invoked with an error.  Whatever caused the original detaching will proceed.] */
             //
             // Note that we are NOT transitioning to the detached state.
             // We are going to give the code a chance to complete normally.
@@ -437,6 +437,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             callback(err || new Error('Detached invoked while detaching.'));
           },
           forceDetach: (err) => {
+            /*Codes_SRS_NODE_AMQP_SENDER_LINK_06_009: [If `forceDetach` invoked while detaching, the detach will be completed with the error supplied to the `forceDetach` or an error indicating that the `detach` was preempted by the `forceDetach`.] */
             debug('while detaching - Force detaching for sender link ' + this._linkAddress);
             this._rheaSender.remove();
             let detachCallback = this._detachingCallback;
@@ -449,7 +450,9 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             }
             this._fsm.transition('detached', undefined, err);
           },
-          '*': () => this._fsm.deferUntilTransition('detached')
+          '*': () => {
+            this._fsm.deferUntilTransition('detached');
+          }
         }
       }
     });

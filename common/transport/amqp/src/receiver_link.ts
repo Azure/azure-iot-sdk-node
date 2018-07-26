@@ -106,8 +106,6 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
       this.emit('message', context.message);
     };
 
-    /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_006: [The `ReceiverLink` object should subscribe to the `receiver_close` event of the newly created `rhea` link object.]*/
-    /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_007: [The `ReceiverLink` object should subscribe to the `error` event of the newly created `rhea` link object.]*/
     const manageReceiverHandlers = (operation: string) => {
       this._rheaReceiver[operation]('receiver_error', receiverErrorHandler);
       this._rheaReceiver[operation]('receiver_close', receiverCloseHandler);
@@ -116,6 +114,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
     };
 
     this._fsm = new machina.Fsm({
+      /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_001: [The `ReceiverLink` internal state machine shall be initialized in the `detached` state.]*/
       initialState: 'detached',
       namespace: 'receiverLink',
       states: {
@@ -135,6 +134,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             this._fsm.transition('attaching', callback);
           },
           detach: (callback, err) => {
+            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_004: [If the `ReceiverLink` is already in the detached state an invocation of `detach` shall immediately invoke the callback with the (potentially) supplied error parameter.] */
             debug('while detached - detach for receiver link ' + this._linkAddress);
             this._safeCallback(callback, err);
           },
@@ -167,9 +167,6 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
           },
           receiverOpenEvent: (context: EventContext) => {
             debug('In receiver attaching state - open event for ' + context.receiver.name);
-            if (this._rheaReceiver !== context.receiver) {
-              debug('the receiver provided in the open no equal to the receiver returned from open_receiver');
-            }
             let callback = this._attachingCallback;
             this._attachingCallback = null;
             this._fsm.transition('attached', callback);
@@ -198,7 +195,8 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             this._fsm.transition('detached', callback, error);
           },
           attach: (null),
-          detach: (callback) => {
+          detach: (callback, err) => {
+            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_002: [If the `detach` method is invoked on the `ReceiverLink` while still attaching, the ReceiverLink shall detach.  It will indicate the error to the callback for the `detach` as well as the callback to the `attach`.] */
             debug('Detaching while attaching of rhea receiver link ' + this._linkAddress);
             manageReceiverHandlers('removeListener');
             //
@@ -206,7 +204,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             // We will signal to that callback that an error occurred. We will also invoke the callback supplied
             // for this detach.
             //
-            let error = this._indicatedError || new Error('Unexpected link detach while attaching');
+            let error = err || this._indicatedError || new Error('Unexpected link detach while attaching');
             let attachingCallback = this._attachingCallback;
             this._indicatedError = undefined;
             this._attachingCallback = undefined;
@@ -216,15 +214,14 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             this._fsm.transition('detached', callback, error);
           },
           forceDetach: (err) => {
+            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_003: [If the `forceDetach` method is invoked on the `ReceiverLink` while still attaching, the ReceiverLink shall detach.  It will indicate the error to the callback to the `attach`.] */
             debug('Force detaching while attaching of rhea receiver link ' + this._linkAddress);
             manageReceiverHandlers('removeListener');
-            let error = err || this._indicatedError || new Error('Unexpected link detach while attaching');
+            let error = err || this._indicatedError;
             let attachingCallback = this._attachingCallback;
             this._indicatedError = undefined;
             this._attachingCallback = undefined;
-            if (attachingCallback) {
-              this._safeCallback(attachingCallback, error);
-            }
+            attachingCallback(error);
             this._fsm.transition('detached', undefined, error);
           },
           accept: (message, callback) => callback(new errors.DeviceMessageLockLostError()),
@@ -233,12 +230,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
         },
         attached: {
           _onEnter: (callback, err) => {
-            this._safeCallback(callback, err);
-          },
-          receiverOpenEvent: (context: EventContext) => {
-            debug('in receiver attached state - open event for ' + context.receiver.name);
-            debug('this simply should not happen!');
-            this._fsm.transition('detaching', null, new Error('Open receiver while already attached!'));
+            if (callback) callback(err);
           },
           receiverErrorEvent: (context: EventContext) => {
             debug('in receiver attached state - error event for ' + context.receiver.name + ' error is: ' + this._getErrorName(context.receiver.error));
@@ -249,6 +241,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             //
           },
           receiverCloseEvent: (context: EventContext) => {
+            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_009: [If a `receiver_close` event received with no preceding error, the link shall be closed with no error.] */
             //
             // We have a close (which is how the amqp detach performative is surfaced). It could be because of an error that was
             // already indicated by the receiver_error event. Or it could simply be that for some reason (disconnect tests?)
@@ -265,6 +258,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             }
           },
           attach: (callback) => {
+            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_001: [The `attach` method shall immediately invoke the `callback` if already in an attached state.] */
             this._safeCallback(callback);
           },
           detach: (callback, err) => {
@@ -274,10 +268,9 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
           forceDetach: (err) => {
             debug('while attached - force detach for receiver link ' + this._linkAddress);
             manageReceiverHandlers('removeListener');
-            if (this._rheaReceiver) {
-              /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_027: [** The `forceDetach` method shall call the `remove` method on the underlying `rhea` link object.]*/
-              this._rheaReceiver.remove();
-            }
+            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_027: [** The `forceDetach` method shall call the `remove` method on the underlying `rhea` link object.]*/
+            this._rheaReceiver.remove();
+            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_008: [The `forceDetach` method shall cause an `error` event to be emitted on the `ReceiverLink` if an error is supplied.] */
             this._fsm.transition('detached', undefined, err);
           },
           accept: (message, callback) => {
@@ -317,6 +310,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             debug('Detaching of rhea receiver link ' + this._linkAddress);
             this._detachingCallback = callback;
             this._indicatedError = err;
+            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_009: [The `detach` method shall detach the link created by `rhea` object.] */
             this._rheaReceiver.close();
             if (this._receiverCloseOccurred) {
               //
@@ -328,11 +322,8 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
               this._fsm.transition('detached', callback, err);
             }
           },
-          receiverOpenEvent: (context: EventContext) => {
-            debug('in receiver detaching state - open event for ' + context.receiver.name);
-            debug('this simply should not happen!');
-          },
           receiverErrorEvent: (context: EventContext) => {
+            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_006: [An error occurring during a detach will be indicated in the error result of the `detach`.] */
             debug('in receiver detaching state - error event for ' + context.receiver.name + ' error is: ' + this._getErrorName(context.receiver.error));
             this._indicatedError = this._indicatedError || context.receiver.error;
             //
@@ -350,6 +341,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             this._fsm.transition('detached', callback, error);
           },
           detach: (callback, err) => {
+            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_007: [If `detach` invoked while already detaching, it's callback will be invoked with an error.  Whatever caused the original detaching will proceed.] */
             //
             // Note that we are NOT transitioning to the detached state.
             // We are going to give the code a chance to complete normally.
@@ -363,16 +355,28 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             }
           },
           forceDetach: (err) => {
+            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_005: [If `forceDetach` invoked while detaching, the detach will be completed with the error supplied to the `forceDetach` or an error indicating that the `detach` was preempted by the `forceDetach`.] */
             debug('while detaching - Force detaching for receiver link ' + this._linkAddress);
             this._rheaReceiver.remove();
+            let detachCallback = this._detachingCallback;
+            let error = err || this._indicatedError || new Error('Detach preempted by force');
             this._detachingCallback = undefined;
             this._indicatedError = undefined;
             manageReceiverHandlers('removeListener');
+            if (detachCallback) {
+              detachCallback(error);
+            }
             this._fsm.transition('detached', undefined, err);
           },
-          '*': () => this._fsm.deferUntilTransition('detached')
+          '*': () => {
+            this._fsm.deferUntilTransition('detached');
+          }
         }
       }
+    });
+
+    this._fsm.on('transition', (transition) => {
+      debug(transition.fromState + ' -> ' + transition.toState + ' (action:' + transition.action + ')');
     });
 
     this.on('removeListener', (eventName) => {
@@ -391,7 +395,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
   }
 
   detach(callback: (err?: Error) => void, err?: Error | AmqpError): void {
-    this._fsm.handle('detach', callback);
+    this._fsm.handle('detach', callback, err);
   }
 
   forceDetach(err?: Error | AmqpError): void {
@@ -448,7 +452,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
     if (err) {
       if (err.condition) {
         return '(amqp error) ' + err.condition;
-      } else if (err.hasOwnProperty('name')) {
+      } else if (err.name) {
         return '(javascript error) ' + err.name;
       } else {
         return 'this is not an error type I understand';

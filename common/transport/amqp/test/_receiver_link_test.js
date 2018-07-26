@@ -5,14 +5,14 @@ var errors = require('azure-iot-common').errors;
 var ReceiverLink = require('../lib/receiver_link.js').ReceiverLink;
 var AmqpMessage = require('../lib/amqp_message.js').AmqpMessage;
 
-/*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_013: [The `accept` method shall use the link created by the underlying `rhea` to settle the specified `message` with IoT hub by accepting it.]*/
-/*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_015: [The `complete` method shall call the `accept` method with the same arguments (it is here for backward compatibility purposes only).]*/
-/*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_016: [The `reject` method shall use the link created by the underlying `rhea` to settle the specified `message` with IoT hub by rejecting it.]*/
-/*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_018: [The `abandon` method shall use the link created by the underlying `rhea` to settle the specified `message` with IoT hub by abandoning it.]*/
 
 
 
 describe('ReceiverLink', function() {
+  /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_013: [The `accept` method shall use the link created by the underlying `rhea` to settle the specified `message` with IoT hub by accepting it.]*/
+  /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_015: [The `complete` method shall call the `accept` method with the same arguments (it is here for backward compatibility purposes only).]*/
+  /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_016: [The `reject` method shall use the link created by the underlying `rhea` to settle the specified `message` with IoT hub by rejecting it.]*/
+  /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_018: [The `abandon` method shall use the link created by the underlying `rhea` to settle the specified `message` with IoT hub by abandoning it.]*/
   [{
     recvLinkMethod: 'accept',
     rheaLinkMethod: 'accept'
@@ -52,7 +52,7 @@ describe('ReceiverLink', function() {
         var fakeContext = {receiver: fakeRheaLink};
         var fakeRheaSession = new EventEmitter();
         fakeRheaSession.open_receiver = () => {};
-        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {fakeRheaSession.emit('receiver_open', fakeContext)});
+        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {process.nextTick( () => {fakeRheaLink.emit('receiver_open', fakeContext)});return fakeRheaLink;});
 
         var fakeMessage = new AmqpMessage({});
         var delivery = {};
@@ -71,6 +71,27 @@ describe('ReceiverLink', function() {
           });
         });
       });
+
+      it(testConfig.rheaLinkMethod + ' with an unknown message passed as argument indicate a lock lost error on the callback', function(testCallback) {
+        var fakeRheaLink = new EventEmitter();
+        var fakeContext = {receiver: fakeRheaLink};
+        var fakeRheaSession = new EventEmitter();
+        fakeRheaSession.open_receiver = () => {};
+        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {process.nextTick( () => {fakeRheaLink.emit('receiver_open', fakeContext)});return fakeRheaLink;});
+
+        var fakeMessage = new AmqpMessage({});
+
+        var link = new ReceiverLink('link', {}, fakeRheaSession);
+        link.attach(function(err) {
+          assert.isNotOk(err, 'attach completes successfully');
+          link[testConfig.recvLinkMethod](fakeMessage, function(disposeError) {
+            assert.isOk(disposeError, 'did receive an error indication');
+            assert.instanceOf(disposeError, errors.DeviceMessageLockLostError, 'a standard javascript error returned');
+            testCallback();
+          });
+        });
+      });
+
 
       /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_014: [If the state machine is not in the `attached` state, the `accept` method shall immediately fail with a `DeviceMessageLockLostError`.]*/
       /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_017: [If the state machine is not in the `attached` state, the `reject` method shall immediately fail with a `DeviceMessageLockLostError`.]*/
@@ -91,9 +112,8 @@ describe('ReceiverLink', function() {
       /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_019: [If the state machine is not in the `attached` state, the `abandon` method shall immediately fail with a `DeviceMessageLockLostError`.]*/
       it('calls the callback with a DeviceLockLostError if called while the state is attaching', function(testCallback) {
         var fakeRheaLink = new EventEmitter();
-        var fakeContext = {receiver: fakeRheaLink};
         var fakeRheaSession = new EventEmitter();
-        fakeRheaSession.open_receiver = sinon.stub();
+        fakeRheaSession.open_receiver = sinon.stub().returns(fakeRheaLink);
         var fakeMessage = new AmqpMessage({});
 
         var link = new ReceiverLink('link', {}, fakeRheaSession);
@@ -112,7 +132,7 @@ describe('ReceiverLink', function() {
         var fakeContext = {receiver: fakeRheaLink};
         var fakeRheaSession = new EventEmitter();
         fakeRheaSession.open_receiver = () => {};
-        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {fakeRheaSession.emit('receiver_open', fakeContext)});
+        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {process.nextTick( () => {fakeRheaLink.emit('receiver_open', fakeContext)});return fakeRheaLink;});
 
         var fakeMessage = new AmqpMessage({});
         var delivery = {};
@@ -134,13 +154,12 @@ describe('ReceiverLink', function() {
 
   describe('events', function() {
     describe('message', function() {
-      /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_16_012: [If a `message` event is emitted by the `rhea` link object, the `ReceiverLink` object shall emit a `message` event with the same content.]*/
       it('attaches the link when subscribing to the \'message\' event', function() {
         var fakeRheaLink = new EventEmitter();
         var fakeContext = {receiver: fakeRheaLink};
         var fakeRheaSession = new EventEmitter();
         fakeRheaSession.open_receiver = () => {};
-        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {fakeRheaSession.emit('receiver_open', fakeContext)});
+        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {process.nextTick( () => {fakeRheaLink.emit('receiver_open', fakeContext)});return fakeRheaLink;});
 
         var link = new ReceiverLink('link', {}, fakeRheaSession);
         link.on('message', function() {});
@@ -148,13 +167,14 @@ describe('ReceiverLink', function() {
       });
 
       it('emits an error if attaching the link fails while subscribing to the \'message\' event', function(testCallback) {
+        var fakeRheaLink = new EventEmitter();
+        var fakeContext = {receiver: fakeRheaLink};
         var fakeRheaSession = new EventEmitter();
-        var fakeContext = {session: fakeRheaSession};
-        fakeRheaSession.name = 'rheaSession';
+        fakeRheaLink.name = 'rheaLink';
         var fakeError = new Error('fake error');
         fakeRheaSession.open_receiver = () => {};
-        fakeRheaSession.error = fakeError;
-        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {fakeRheaSession.emit('receiver_error', fakeContext)});
+        fakeRheaLink.error = fakeError;
+        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {process.nextTick( () => {fakeRheaLink.emit('receiver_error', fakeContext);fakeRheaLink.emit('receiver_close', fakeContext)});return fakeRheaLink;});
 
         var link = new ReceiverLink('link', {}, fakeRheaSession);
         link.on('error', function(err) {
@@ -170,7 +190,7 @@ describe('ReceiverLink', function() {
         var fakeContext = {receiver: fakeRheaLink};
         var fakeRheaSession = new EventEmitter();
         fakeRheaSession.open_receiver = () => {};
-        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {fakeRheaSession.emit('receiver_open', fakeContext)});
+        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {process.nextTick( () => {fakeRheaLink.emit('receiver_open', fakeContext)});return fakeRheaLink;});
         sinon.spy(fakeRheaLink, 'on');
 
         var link = new ReceiverLink('link', {}, fakeRheaSession);
@@ -196,7 +216,7 @@ describe('ReceiverLink', function() {
         fakeRheaLink.remove = sinon.stub();
         var fakeRheaSession = new EventEmitter();
         fakeRheaSession.open_receiver = () => {};
-        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {fakeRheaSession.emit('receiver_open', fakeContext)});
+        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {process.nextTick( () => {fakeRheaLink.emit('receiver_open', fakeContext)});return fakeRheaLink;});
 
         var link = new ReceiverLink('link', {}, fakeRheaSession);
         var listener1 = function() {};
@@ -223,7 +243,7 @@ describe('ReceiverLink', function() {
         var fakeContext = {receiver: fakeRheaLink};
         var fakeRheaSession = new EventEmitter();
         fakeRheaSession.open_receiver = () => {};
-        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {fakeRheaSession.emit('receiver_open', fakeContext)});
+        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {process.nextTick( () => {fakeRheaLink.emit('receiver_open', fakeContext)});return fakeRheaLink;});
 
         var amqpMessage = new AmqpMessage('');
         amqpMessage.message_id = 'hello';
@@ -244,26 +264,30 @@ describe('ReceiverLink', function() {
         });
       });
 
-      it('emits an error event if receiver_error is emitted by the underlying link', function(testCallback) {
+      it('emits an `azure-iot-amqp-base:error-indicated` event if receiver_error is emitted by the underlying link', function(testCallback) {
         var fakeRheaLink = new EventEmitter();
         fakeRheaLink.name = 'receiver';
         var fakeContext = {receiver: fakeRheaLink};
         fakeRheaLink.remove = sinon.stub();
+        fakeRheaLink.close = sinon.stub();
         var fakeRheaSession = new EventEmitter();
+        var fakeRheaContainer = new EventEmitter();
+        var fakeCloseContext = {receiver: fakeRheaLink, container: fakeRheaContainer};
         fakeRheaSession.open_receiver = () => {};
-        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {fakeRheaSession.emit('receiver_open', fakeContext)});
+        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {process.nextTick( () => {fakeRheaLink.emit('receiver_open', fakeContext)});return fakeRheaLink;});
 
 
         var link = new ReceiverLink('link', {}, fakeRheaSession);
         link.attach(function() {
-          var fakeRheaLinkError = new Error('fake error');
-          fakeRheaLink.error = fakeRheaLinkError;
-          link.on('error', function(err) {
-            assert.strictEqual(err, fakeRheaLinkError);
-            assert(fakeRheaLink.remove.calledOnce,'remove called once');
+          fakeRheaContainer.on('azure-iot-amqp-base:error-indicated', (err) => {
+            assert.isOk(err, 'error supplied with the indicated event');
             testCallback();
           });
+          var fakeRheaLinkError = new Error('fake error');
+          fakeRheaLink.error = fakeRheaLinkError;
           fakeRheaLink.emit('receiver_error', fakeContext);
+          fakeRheaLink.error = undefined;
+          fakeRheaLink.emit('receiver_close', fakeCloseContext);
         });
       });
 
@@ -272,21 +296,30 @@ describe('ReceiverLink', function() {
         fakeRheaLink.name = 'receiver';
         var fakeContext = {receiver: fakeRheaLink};
         fakeRheaLink.remove = sinon.stub();
+        fakeRheaLink.close = sinon.stub();
         var fakeRheaSession = new EventEmitter();
+        var fakeRheaContainer = new EventEmitter();
+        var fakeCloseContext = {receiver: fakeRheaLink, container: fakeRheaContainer};
         fakeRheaSession.open_receiver = () => {};
-        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {fakeRheaSession.emit('receiver_open', fakeContext)});
+        sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {process.nextTick( () => {fakeRheaLink.emit('receiver_open', fakeContext)});return fakeRheaLink;});
 
-        var fakeError = new Error('fake error');
 
         var link = new ReceiverLink('link', {}, fakeRheaSession);
         link.attach(function() {
+          fakeRheaContainer.on('azure-iot-amqp-base:error-indicated', (err) => {
+            link.detach(null, err);
+          });
           var fakeRheaLinkError = new Error('fake error');
-          fakeRheaLink.error = fakeRheaLinkError;
           link.on('error', function(err) {
             assert.strictEqual(err, fakeRheaLinkError);
+            assert(fakeRheaLink.close.calledOnce, 'close called once');
+            assert(fakeRheaLink.remove.notCalled, 'remove called once');
             testCallback();
           });
-          fakeRheaLink.emit('receiver_close', fakeContext);
+          fakeRheaLink.error = fakeRheaLinkError;
+          fakeRheaLink.emit('receiver_error', fakeContext);
+          fakeRheaLink.error = undefined;
+          fakeRheaLink.emit('receiver_close', fakeCloseContext);
         });
       });
     });
