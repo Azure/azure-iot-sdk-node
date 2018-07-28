@@ -43,6 +43,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
   private _fsm: machina.Fsm;
   private _topics: { [key: string]: TopicDescription };
   private _userAgentString: string;
+  private _newTokenHandler: (credentials: any) => void;
 
   /**
    * @private
@@ -53,7 +54,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     this._authenticationProvider = authenticationProvider;
     /*Codes_SRS_NODE_DEVICE_MQTT_16_071: [The constructor shall subscribe to the `newTokenAvailable` event of the `authenticationProvider` passed as an argument if it uses tokens for authentication.]*/
     if (this._authenticationProvider.type === AuthenticationType.Token) {
-      (<any>this._authenticationProvider).on('newTokenAvailable', (newCredentials) => {
+      this._newTokenHandler = (newCredentials) => {
         /*Codes_SRS_NODE_DEVICE_MQTT_16_072: [If the `newTokenAvailable` event is fired, the `Mqtt` object shall do nothing if it isn't connected.]*/
         /*Codes_SRS_NODE_DEVICE_MQTT_16_073: [If the `newTokenAvailable` event is fired, the `Mqtt` object shall call `updateSharedAccessSignature` on the `mqttBase` object if it is connected.]*/
         this._fsm.handle('updateSharedAccessSignature', newCredentials.sharedAccessSignature, (err) => {
@@ -62,7 +63,8 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
             this.emit('disconnect', err);
           }
         });
-      });
+      };
+      (<any>this._authenticationProvider).on('newTokenAvailable', this._newTokenHandler);
     }
 
     /* Codes_SRS_NODE_DEVICE_MQTT_18_025: [ If the Mqtt constructor receives a second parameter, it shall be used as a mqttBase in place of mqtt.js ]*/
@@ -463,11 +465,15 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
    */
   updateSharedAccessSignature (sharedAccessSignature: string, done: (err?: Error, result?: any) => void): void {
     debug('updateSharedAccessSignature');
-    /*Codes_SRS_NODE_DEVICE_MQTT_16_007: [The `updateSharedAccessSignature` method shall save the new shared access signature given as a parameter to its configuration.]*/
-    (this._authenticationProvider as SharedAccessSignatureAuthenticationProvider).updateSharedAccessSignature(sharedAccessSignature);
-    this._fsm.handle('updateSharedAccessSignature', sharedAccessSignature, (err, result) => {
-      done(err, result);
-    });
+    if (this._authenticationProvider.type === AuthenticationType.Token) {
+      (this._authenticationProvider as SharedAccessKeyAuthenticationProvider).removeListener('newTokenAvailable', this._newTokenHandler);
+      /*Codes_SRS_NODE_DEVICE_MQTT_16_007: [The `updateSharedAccessSignature` method shall save the new shared access signature given as a parameter to its configuration.]*/
+      (this._authenticationProvider as SharedAccessSignatureAuthenticationProvider).updateSharedAccessSignature(sharedAccessSignature);
+      this._fsm.handle('updateSharedAccessSignature', sharedAccessSignature, (err, result) => {
+        (this._authenticationProvider as SharedAccessKeyAuthenticationProvider).on('newTokenAvailable', this._newTokenHandler);
+        done(err, result);
+      });
+    }
   }
 
   /**

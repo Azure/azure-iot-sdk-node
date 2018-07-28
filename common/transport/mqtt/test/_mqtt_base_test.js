@@ -526,5 +526,34 @@ describe('MqttBase', function () {
       });
       fakeMqtt.emit('connect');
     });
+
+    it('disconnects and emits an error if an error is received while connected', function (testCallback) {
+      var fakeMqtt = new FakeMqtt();
+      var mqttBase = new MqttBase(fakeMqtt);
+      var fakeError = new Error('fake');
+
+      mqttBase.on('error', function (err) {
+        assert.strictEqual(err, fakeError);
+        assert.isTrue(fakeMqtt.end.notCalled);
+        mqttBase.connect(fakeConfig, function () {
+          // fakeMqtt.connect is called only when the MqttBase state machine switched to a disconnected state
+          // fakeMqtt.connect being called twice is therefore proof that it was connected, then disconnected, then reconnected again.
+          assert.isTrue(fakeMqtt.connect.calledTwice);
+          mqttBase.disconnect(function () {
+            // this time: no error, end() is called.
+            assert.isTrue(fakeMqtt.end.calledOnce);
+            testCallback();
+          });
+        });
+        fakeMqtt.emit('connect');
+      });
+
+      mqttBase.connect(fakeConfig, function () {
+        assert.isTrue(fakeMqtt.connect.calledOnce);
+        fakeMqtt.emit('error', fakeError);
+      });
+
+      fakeMqtt.emit('connect');
+    });
   });
 });

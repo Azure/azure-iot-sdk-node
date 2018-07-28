@@ -21,10 +21,26 @@ export class MqttBase extends EventEmitter {
   private _mqttClient: MqttClient;
   private _fsm: any;
   private _options: any;
+  private _closeEventFsmHandler: () => void;
+  private _errorEventFsmHandler: (err?: Error) => void;
+  private _messageEventFsmHandler: (topic: string, payload: any) => void;
 
   constructor(mqttprovider?: any) {
     super();
     this.mqttprovider = mqttprovider ? mqttprovider : require('mqtt');
+    this._messageEventFsmHandler = (topic, payload) => {
+      process.nextTick(() => {
+        this.emit('message', topic, payload);
+      });
+    };
+
+    this._closeEventFsmHandler = () => {
+      this._fsm.handle('closeEvent');
+    };
+
+    this._errorEventFsmHandler = (err) => {
+      this._fsm.handle('errorEvent', err);
+    };
 
     this._fsm = new machina.Fsm({
       namespace: 'mqtt-base',
@@ -76,10 +92,6 @@ export class MqttBase extends EventEmitter {
         },
         connected: {
           _onEnter: (connectCallback, conack) => {
-            this._mqttClient.on('close', () => {
-              debug('close event received from mqtt.js client - no error');
-              this._fsm.handle('closeEvent');
-            });
             connectCallback(null, new results.Connected(conack));
           },
           connect: (callback) => callback(null, new results.Connected()),
@@ -107,6 +119,9 @@ export class MqttBase extends EventEmitter {
           },
           closeEvent: () => {
             this._fsm.transition('disconnected', undefined, new errors.NotConnectedError('Connection to the server has been closed.'));
+          },
+          errorEvent: (err) => {
+            this._fsm.transition('disconnected', undefined, err);
           }
         },
         disconnecting: {
@@ -122,11 +137,15 @@ export class MqttBase extends EventEmitter {
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_033: [The `updateSharedAccessSignature` method shall disconnect and reconnect the mqtt client with the new `sharedAccessSignature`.]*/
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_035: [The `updateSharedAccessSignature` method shall call the `callback` argument with no parameters if the operation succeeds.]*/
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_036: [The `updateSharedAccessSignature` method shall call the `callback` argument with an `Error` if the operation fails.]*/
+            debug('disconnecting MQTT client');
             this._disconnectClient(false, () => {
+              debug('reconnecting MQTT client');
               this._connectClient((err, connack) => {
                 if (err) {
+                  debug('Could not reconnect MQTT client');
                   this._fsm.transition('disconnected', callback, err);
                 } else {
+                  debug('MQTT client reconnected');
                   this._fsm.transition('connected', callback, connack);
                 }
               });
@@ -248,44 +267,65 @@ export class MqttBase extends EventEmitter {
     const createErrorCallback = (eventName) => {
       return (error) => {
         debug('received \'' + eventName + '\' from mqtt client');
-        const err = error || new errors.NotConnectedError('Unable to establish a connection');
+        const err = error || new errors.NotConnectedError('Unable to establish a connection: ' + eventName + ' event received.');
         callback(err);
       };
     };
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_003: [The `connect` method shall call the `done` callback with a standard javascript `Error` object if the connection failed.]*/
-    const errorCallback = createErrorCallback('error');
-    const closeCallback = createErrorCallback('close');
-    const offlineCallback = createErrorCallback('offline');
-    const disconnectCallback = createErrorCallback('disconnect');
-    const messageCallback = (topic, payload) => {
-      process.nextTick(() => {
-        this.emit('message', topic, payload);
-      });
-    };
+    const connectingErrorCallback = createErrorCallback('error');
+    const connectingCloseCallback = createErrorCallback('close');
+    const connectingOfflineCallback = createErrorCallback('offline');
+    const connectingDisconnectCallback = createErrorCallback('disconnect');
 
     this._mqttClient = this.mqttprovider.connect(this._config.uri, options);
-    this._mqttClient.on('message', messageCallback);
-    this._mqttClient.on('error', errorCallback);
-    this._mqttClient.on('close', closeCallback);
-    this._mqttClient.on('offline', offlineCallback);
-    this._mqttClient.on('disconnect', disconnectCallback);
+    this._mqttClient.on('message', this._messageEventFsmHandler);
+    this._mqttClient.on('error', connectingErrorCallback);
+    this._mqttClient.on('close', connectingCloseCallback);
+    this._mqttClient.on('offline', connectingOfflineCallback);
+    this._mqttClient.on('disconnect', connectingDisconnectCallback);
 
-    this._mqttClient.on('connect', (connack) => {
+    this._mqttClient.once('connect', (connack) => {
       debug('Device is connected');
       debug('CONNACK: ' + JSON.stringify(connack));
 
-      this._mqttClient.removeListener('close', closeCallback);
-      this._mqttClient.removeListener('offline', offlineCallback);
-      this._mqttClient.removeListener('disconnect', disconnectCallback);
+      this._mqttClient.on('error', this._errorEventFsmHandler);
+      this._mqttClient.on('close', this._closeEventFsmHandler);
+      this._mqttClient.on('offline', this._closeEventFsmHandler);
+      this._mqttClient.on('disconnect', this._closeEventFsmHandler);
+      this._mqttClient.removeListener('close', connectingCloseCallback);
+      this._mqttClient.removeListener('offline', connectingOfflineCallback);
+      this._mqttClient.removeListener('disconnect', connectingDisconnectCallback);
+      this._mqttClient.removeListener('error', connectingErrorCallback);
 
       callback(null, connack);
     });
   }
 
   private _disconnectClient(forceDisconnect: boolean, callback: () => void): void {
-    this._mqttClient.removeAllListeners();
     /* Codes_SRS_NODE_COMMON_MQTT_BASE_16_001: [The disconnect method shall call the done callback when the connection to the server has been closed.] */
-    this._mqttClient.end(forceDisconnect, callback);
+    let oldMqttClient = this._mqttClient;
+    this._mqttClient = undefined;
+
+    const oldMqttClientErrorHandler = (err) => debug('BUG? received an error on an MQTT client that is already being closed, ignoring it: ' + err.toString());
+
+      // close is the event that indicates the end of the TCP connection, no chance to get a packet or an error after that.
+      // if forceDisconnect is set to true, we already received an error, so the socket is already closed and we won't receive a close event.
+    if (!forceDisconnect) {
+      oldMqttClient.on('error', oldMqttClientErrorHandler);
+      oldMqttClient.once('close', () => {
+        debug('old MQTT client closed - removing the last error handler');
+        oldMqttClient.removeListener('error', oldMqttClientErrorHandler);
+        oldMqttClient = undefined;
+      });
+    }
+
+    oldMqttClient.removeListener('disconnect', this._closeEventFsmHandler);
+    oldMqttClient.removeListener('offline', this._closeEventFsmHandler);
+    oldMqttClient.removeListener('close', this._closeEventFsmHandler);
+    oldMqttClient.removeListener('message', this._messageEventFsmHandler);
+    oldMqttClient.removeListener('error', this._errorEventFsmHandler);
+
+    oldMqttClient.end(forceDisconnect, callback);
   }
 }
 
@@ -300,4 +340,3 @@ export interface MqttBaseTransportConfig {
   clean?: boolean;
   uri: string;
 }
-

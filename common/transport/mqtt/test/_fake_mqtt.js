@@ -28,13 +28,7 @@ var FakeMqtt = function() {
     return this;
   });
 
-  this.subscribe = sinon.stub().callsFake(function(topicName, param, done) {
-    if (this.subscribeShouldFail) {
-      done (new Error('Not authorized'));
-    } else {
-      done(null, 'fake_object');
-    }
-  });
+  this.subscribe = sinon.stub().callsArgWith(2, null, 'fake_object');
 
   this.unsubscribe = sinon.stub().callsFake(function(topicName, done) {
     done();
