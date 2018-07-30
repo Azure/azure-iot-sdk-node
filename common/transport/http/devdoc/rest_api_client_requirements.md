@@ -56,7 +56,11 @@ The `executeApiCall` method builds the HTTP request using the passed arguments a
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_13_003: [** If `requestOptions` is not falsy then it shall be passed to the `buildRequest` function. **]**
 
-**SRS_NODE_IOTHUB_REST_API_CLIENT_16_009: [** If the HTTP request is successful the `executeApiCall` method shall parse the JSON response received and call the `done` callback with a `null` first argument, the parsed result as a second argument and the HTTP response object itself as a third argument. **]**
+**SRS_NODE_IOTHUB_REST_API_CLIENT_16_009: [** If the HTTP request is successful the `executeApiCall` method shall call the `done` callback with a `null` first argument, the parsed result according to **SRS_NODE_IOTHUB_REST_API_CLIENT_16_037** and **SRS_NODE_IOTHUB_REST_API_CLIENT_16_038** as a second argument and the HTTP response object itself as a third argument. **]**
+
+**SRS_NODE_IOTHUB_REST_API_CLIENT_16_037: [** If the HTTP request is successful and the `content-type` header of the response starts with `application/json` the `executeApiCall` method shall parse the body of the response and provide the `result` as an object. **]**
+
+**SRS_NODE_IOTHUB_REST_API_CLIENT_16_038: [** If the HTTP request is successful and the `content-type` is not set or is set to something else than `application/json`, the `executeApiCall` method shall use the body of the response as is for the `result` object. **]**
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_010: [** If the HTTP request fails with an error code >= 300 the `executeApiCall` method shall translate the HTTP error into a transport-agnostic error using the `translateError` method and call the `done` callback with the resulting error as the only argument. **]**
 

@@ -300,8 +300,9 @@ describe('RestApiClient', function() {
     });
 
     /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_009: [If the HTTP request is successful the `executeApiCall` method shall parse the JSON response received and call the `done` callback with a `null` first argument, the parsed result as a second argument and the HTTP response object itself as a third argument.]*/
-    it('calls the done callback with null, a result and a response if the request succeeds', function (testCallback) {
-      var fakeResponse = { statusCode: 200 };
+    it('calls the done callback with null, a parsed result and a response if the request succeeds and the content-type response headers starts with application/json', function (testCallback) {
+      /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_037: [If the HTTP request is successful and the `content-type` header of the response starts with `application/json` the `executeApiCall` method shall parse the body of the response and provide the `result` as an object.]*/
+      var fakeResponse = { statusCode: 200, headers: { 'content-type' : 'application/json; charset=utf-8' } };
       var fakeResponseBody = {
         foo: 'bar'
       };
@@ -322,6 +323,33 @@ describe('RestApiClient', function() {
       client.executeApiCall('GET', '/test/path', null, null, function(err, result, response) {
         assert.isNull(err);
         assert.deepEqual(result, fakeResponseBody);
+        assert.equal(response, fakeResponse);
+        testCallback();
+      });
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_038: [If the HTTP request is successful and the `content-type` is not set or is set to something else than `application/json`, the `executeApiCall` method shall use the body of the response as is for the `result` object.]*/
+    it('calls the done callback with null, an unparsed result and a response if the request succeeds and the headers is not application/json', function (testCallback) {
+      /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_037: [If the HTTP request is successful and the `content-type` header of the response starts with `application/json` the `executeApiCall` method shall parse the body of the response and provide the `result` as an object.]*/
+      var fakeResponse = { statusCode: 200, headers: { 'content-type' : 'text/plain; charset=utf-8' } };
+      var fakeResponseBody = "Hello world";
+
+      var fakeHttpHelper = {
+        buildRequest: function(method, path, headers, host, requestCallback) {
+          return {
+            setTimeout: function() {},
+            write: function() {},
+            end: function() {
+              requestCallback(null, JSON.stringify(fakeResponseBody), fakeResponse);
+            }
+          };
+        }
+      };
+
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
+      client.executeApiCall('GET', '/test/path', null, null, function(err, result, response) {
+        assert.isNull(err);
+        assert.strictEqual(result, fakeResponseBody);
         assert.equal(response, fakeResponse);
         testCallback();
       });
