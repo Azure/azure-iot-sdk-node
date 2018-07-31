@@ -56,13 +56,12 @@ class PutTokenStatus {
  * @private
  * Handles claims based security (sending and receiving SAS tokens over AMQP links).
  * This resides in the amqp-base package because it's used by the device and service SDKs but
- * the lifecycle of this object is actually managed by the upper layer of each transport.
+ * the life cycle of this object is actually managed by the upper layer of each transport.
  */
 export class ClaimsBasedSecurityAgent extends EventEmitter {
   private static _putTokenSendingEndpoint: string = '$cbs';
   private static _putTokenReceivingEndpoint: string = '$cbs';
   private _rheaSession: Session;
-  private _errorHandler: (err: Error)  => void;
   private _fsm: machina.Fsm;
   private _senderLink: SenderLink;
   private _receiverLink: ReceiverLink;
@@ -75,19 +74,13 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
 
   constructor(session: Session) {
     super();
-    this._errorHandler = (err: Error): void => {
-      debug('In the generic error handler for the CBS.  error emitted: ' + err.name);
-      this._fsm.handle('detach', undefined, err);
-    };
 
     this._rheaSession = session;
     /*Codes_SRS_NODE_AMQP_CBS_16_001: [The `constructor` shall instantiate a `SenderLink` object for the `$cbs` endpoint using a custom policy `{encoder: function(body) { return body;}}` which forces the amqp layer to send the token as an amqp value in the body.]*/
     this._senderLink = new SenderLink(ClaimsBasedSecurityAgent._putTokenSendingEndpoint, null, this._rheaSession);
-    this._senderLink.on('error', this._errorHandler);
 
     /*Codes_SRS_NODE_AMQP_CBS_16_002: [The `constructor` shall instantiate a `ReceiverLink` object for the `$cbs` endpoint.]*/
     this._receiverLink = new ReceiverLink(ClaimsBasedSecurityAgent._putTokenReceivingEndpoint, null, this._rheaSession);
-    this._receiverLink.on('error', this._errorHandler);
 
     this._putTokenQueue = [];
 
@@ -204,6 +197,7 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
               tokenOperation = this._putTokenQueue.shift();
             }
           },
+          /*Codes_SRS_NODE_AMQP_CBS_06_001: [If in the attached state, either the sender or the receiver links gets an error, an error of `azure-iot-amqp-base:error-indicated` will have been indicated on the container object and the cbs will remain in the attached state.  The owner of the cbs MUST detach.] */
           attach: (callback) => callback(),
           detach: (callback, err) => {
             debug('while attached - detach for CBS links ' + this._receiverLink + ' ' + this._senderLink);

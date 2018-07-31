@@ -337,7 +337,7 @@ describe('Amqp', function () {
       var fakeSessionContext = {connection: fakeConnection, session: fakeSession};
       fakeConnection.create_session = sinon.stub().returns(fakeSession);
       fakeConnection.close = () => {};
-      sinon.stub(fakeConnection, 'close').callsFake(() => {process.nextTick(() => {fakeConnection.error = new Error('connerror'); fakeConnection.emit('connection_error', fakeConnectionContext); fakeConnection.error = undefined; fakeConnection.emit('connection_close', fakeConnectionContext)})});
+      sinon.stub(fakeConnection, 'close').callsFake(() => {process.nextTick(() => {fakeConnection.error = new Error('connection error'); fakeConnection.emit('connection_error', fakeConnectionContext); fakeConnection.error = undefined; fakeConnection.emit('connection_close', fakeConnectionContext)})});
       fakeSession.close = () => {};
       sinon.stub(fakeSession, 'close').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_close', fakeSessionContext)})});
       fakeSession.open = () => {};

@@ -31,9 +31,10 @@
   "scripts": {
     "lint": "tslint --project . -c ../../../tslint.json",
     "build": "tsc",
-    "alltogether": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_amqp_message_test.js test/_amqp_common_errors_test.js test/_sender_link_test.js test/_receiver_link_test.js test/_amqp_link_test.js",
+    "alltogether": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_amqp_cbs_test.js test/_amqp_common_errors_test.js test/_amqp_link_test.js test/_amqp_message_test.js test/_sender_link_test.js test/_receiver_link_test.js",
     "sender_link": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_sender_link_test.js",
     "receiver_link": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_receiver_link_test.js",
+    "cbs": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_amqp_cbs_test.js",
     "amqp_link": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_amqp_link_test.js",
     "amqp": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_amqp_test.js",
     "unittest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test.js",

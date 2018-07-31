@@ -422,7 +422,7 @@ export class Amqp {
                 }
               });
             } else {
-              debug('calling the actual putToken without initing');
+              debug('calling the actual putToken without initializing');
               this._cbs.putToken(audience, token, callback);
             }
           },

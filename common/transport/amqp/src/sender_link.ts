@@ -192,7 +192,12 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             return;
           },
           send: () => {
-            this._fsm.handle('attach');
+            if (this._unsentMessageQueue.length > 0) {
+              //
+              // We are depending on the attach path to process the send queue when it is done attaching.
+              //
+              this._fsm.handle('attach');
+            }
           }
         },
         attaching: {
@@ -274,14 +279,15 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             this._attachingCallback = undefined;
             attachingCallback(error);
             this._fsm.transition('detached', undefined, error);
-          },
-          send: () => this._fsm.deferUntilTransition('send')
+          }
         },
         attached: {
           _onEnter: (callback) => {
             debug('link attached. processing unsent message queue');
             if (callback) callback();
-            this._fsm.handle('send');
+            if (this._unsentMessageQueue.length > 0) {
+              this._fsm.handle('send');
+            }
           },
           senderErrorEvent: (context: EventContext) => {
             debug('in sender attached state - error event for ' + context.sender.name + ' error is: ' + this._getErrorName(context.sender.error));
