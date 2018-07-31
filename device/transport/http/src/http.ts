@@ -12,7 +12,7 @@ import { Http as Base } from 'azure-iot-http-base';
 import { endpoint, errors, results, Message, AuthenticationProvider, AuthenticationType, TransportConfig, encodeUriComponentStrict } from 'azure-iot-common';
 import { translateError } from './http_errors.js';
 import { IncomingMessage } from 'http';
-import { DeviceTransport, MethodMessage, DeviceMethodResponse, TwinProperties } from 'azure-iot-device';
+import { DeviceTransport, MethodMessage, DeviceMethodResponse, TwinProperties, SharedAccessKeyAuthenticationProvider } from 'azure-iot-device';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
 import { DeviceClientOptions, HttpReceiverOptions } from 'azure-iot-device';
 import { getUserAgentString } from 'azure-iot-device';
@@ -99,6 +99,11 @@ export class Http extends EventEmitter implements DeviceTransport {
    * @private
    */
   disconnect(callback: (err?: Error, result?: results.Disconnected) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_16_039: [The `disconnect` method shall call the `stop` method on the `AuthenticationProvider` object if the type of authentication used is "token".]*/
+    if (this._authenticationProvider.type === AuthenticationType.Token) {
+      (this._authenticationProvider as SharedAccessKeyAuthenticationProvider).stop();
+    }
+
     if (this._receiverStarted) {
       /*Codes_SRS_NODE_DEVICE_HTTP_16_029: [The `disconnect` method shall disable the C2D message receiver if it is running. ]*/
       this.disableC2D((err) => {
@@ -111,8 +116,8 @@ export class Http extends EventEmitter implements DeviceTransport {
         }
       });
     } else {
-    /*Codes_SRS_NODE_DEVICE_HTTP_16_031: [The `disconnect` method shall call its callback with a `null` first argument and a `results.Disconnected` second argument after successfully disabling the C2D receiver (if necessary). ]*/
-    callback(null, new results.Disconnected());
+      /*Codes_SRS_NODE_DEVICE_HTTP_16_031: [The `disconnect` method shall call its callback with a `null` first argument and a `results.Disconnected` second argument after successfully disabling the C2D receiver (if necessary). ]*/
+      callback(null, new results.Disconnected());
     }
   }
 

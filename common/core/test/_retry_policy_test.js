@@ -38,10 +38,10 @@ describe('RetryPolicy', function () {
         Math.random.restore();
       });
 
-      it('returns \'C\' for the first retry if the first retry is not set to be immediate', function () {
+      it('returns a non-zero value for the first retry if the first retry is not set to be immediate', function () {
         sinon.stub(Math, 'random').returns(0.42);
         var policy = new ExponentialBackOffWithJitter(false);
-        assert.strictEqual(policy.nextRetryTimeout(0, false), 100);
+        assert.isAbove(policy.nextRetryTimeout(0, false), 0);
         Math.random.restore();
       });
 
@@ -59,10 +59,10 @@ describe('RetryPolicy', function () {
         ```]*/
         [
           { retryCount: 0, expected: 0 },
-          { retryCount: 1, expected: 89.5 },
-          { retryCount: 2, expected: 100 },
+          { retryCount: 1, expected: 100 },
+          { retryCount: 2, expected: 110.5 },
           { retryCount: 3, expected: 131.5 },
-          { retryCount: 10, expected: 940 },
+          { retryCount: 10, expected: 5465.5 },
           { retryCount: 42, expected: 10000 }
         ].forEach(function (testConfig) {
           assert.strictEqual(policy.nextRetryTimeout(testConfig.retryCount, false), testConfig.expected);
@@ -77,11 +77,11 @@ describe('RetryPolicy', function () {
         jd = 0.25
         ```]*/
         [
-          { retryCount: 0, expected: 10000 },
-          { retryCount: 1, expected: 9475 },
-          { retryCount: 2, expected: 10000 },
+          { retryCount: 0, expected: 9737.5 },
+          { retryCount: 1, expected: 10000 },
+          { retryCount: 2, expected: 10525 },
           { retryCount: 3, expected: 11575 },
-          { retryCount: 10, expected: 52000 },
+          { retryCount: 10, expected: 60000 },
           { retryCount: 42, expected: 60000 }
         ].forEach(function (testConfig) {
           assert.strictEqual(policy.nextRetryTimeout(testConfig.retryCount, true), testConfig.expected);

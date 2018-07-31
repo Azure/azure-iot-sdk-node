@@ -1,31 +1,30 @@
 {
   "name": "azure-iot-provisioning-device-mqtt",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "MQTT transport for Azure Device Provisioning SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.7.0",
-    "azure-iot-mqtt-base": "1.7.0",
-    "azure-iot-provisioning-device": "1.3.0",
+    "azure-iot-common": "1.7.1",
+    "azure-iot-mqtt-base": "1.7.1",
+    "azure-iot-provisioning-device": "1.3.1",
     "debug": "^3.0.1",
     "machina": "^2.0.1",
     "uuid": "^3.1.0"
   },
   "devDependencies": {
+    "@types/node": "^7.0.5",
     "chai": "^3.5.0",
     "istanbul": "^0.4.4",
-    "jshint": "^2.9.2",
-    "mocha": "^3.0.1",
+    "mocha": "^5.2.0",
     "sinon": "^1.17.5",
     "tslint": "^5.1.0",
-    "typescript": "2.2.2",
-    "@types/node": "^7.0.5"
+    "typescript": "2.2.2"
   },
   "scripts": {
-    "lint": "tslint --project . -c ../../../tslint.json && jshint ./test",
+    "lint": "tslint --project . -c ../../../tslint.json",
     "build": "tsc",
     "unittest-min": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test.js",
     "alltest-min": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test*.js",

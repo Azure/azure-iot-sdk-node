@@ -10,6 +10,7 @@ var Message = require('azure-iot-common').Message;
 var results = require('azure-iot-common').results;
 var ArgumentError = require('azure-iot-common').errors.ArgumentError;
 var NotImplementedError = require('azure-iot-common').errors.NotImplementedError;
+var AuthenticationType = require('azure-iot-common').AuthenticationType;
 var Http = require('../lib/http.js').Http;
 
 var FakeHttp = function () { };
@@ -44,10 +45,12 @@ describe('Http', function () {
 
   beforeEach(function () {
     fakeAuthenticationProvider = {
+      type: AuthenticationType.Token,
       getDeviceCredentials: sinon.stub().callsFake(function (callback) {
         callback(null, { host: 'hub.host.name', deviceId: 'deviceId', sharedAccessSignature: 'sas.key' });
       }),
-      updateSharedAccessSignature: sinon.stub()
+      updateSharedAccessSignature: sinon.stub(),
+      stop: sinon.stub()
     };
     transport = new Http(fakeAuthenticationProvider);
   });
@@ -119,6 +122,16 @@ describe('Http', function () {
             });
           });
         });
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_HTTP_16_039: [The `disconnect` method shall call the `stop` method on the `AuthenticationProvider` object if the type of authentication used is "token".]*/
+    it('calls stop on the authentication provider if using token authentication', function (testCallback) {
+      var http = new Http(fakeAuthenticationProvider);
+      http.connect(function () {});
+      http.disconnect(function () {
+        assert.isTrue(fakeAuthenticationProvider.stop.calledOnce);
+        testCallback();
       });
     });
   });
@@ -365,7 +378,8 @@ describe('HttpReceiver', function () {
       getDeviceCredentials: sinon.stub().callsFake(function (callback) {
         callback(null, { host: 'hub.host.name', deviceId: 'deviceId', sharedAccessSignature: 'sas.key' });
       }),
-      updateSharedAccessSignature: sinon.stub()
+      updateSharedAccessSignature: sinon.stub(),
+      stop: sinon.stub()
     };
   });
 
@@ -679,7 +693,7 @@ describe('HttpReceiver', function () {
         http.setOptions({ interval: 1, at: null, cron: null, drain: true });
         assert.isTrue(http.disableC2D.calledOnce);
         assert.isTrue(http.enableC2D.calledOnce);
-        testCallback();
+        http.disconnect(testCallback);
       });
     });
   });

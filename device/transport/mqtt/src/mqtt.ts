@@ -7,7 +7,7 @@ import * as URL from 'url';
 import * as machina from 'machina';
 
 import { endpoint, results, errors, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
-import { MethodMessage, DeviceMethodResponse, DeviceTransport, DeviceClientOptions, TwinProperties } from 'azure-iot-device';
+import { MethodMessage, DeviceMethodResponse, DeviceTransport, DeviceClientOptions, TwinProperties, SharedAccessKeyAuthenticationProvider } from 'azure-iot-device';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
 import { getUserAgentString } from 'azure-iot-device';
 import { EventEmitter } from 'events';
@@ -93,6 +93,11 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
       states: {
         disconnected: {
           _onEnter: (disconnectedCallback, err, result) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_16_085: [Once the MQTT transport is disconnected and if it is using a token authentication provider, the `stop` method of the `AuthenticationProvider` object shall be called to stop any running timer.]*/
+            if (this._authenticationProvider.type === AuthenticationType.Token) {
+              (this._authenticationProvider as SharedAccessKeyAuthenticationProvider).stop();
+            }
+
             if (disconnectedCallback) {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_MQTT_16_019: [The `connect` method shall calls its callback with an `Error` that has been translated from the `MqttBase` error using the `translateError` method if it fails to establish a connection.]*/

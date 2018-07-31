@@ -41,6 +41,14 @@ export class SharedAccessSignatureAuthenticationProvider extends EventEmitter im
   }
 
   /**
+   * does nothing and returns - this is part of the token-based authentication provider API but there are no resources to stop/free here.
+   */
+  stop(): void {
+    /*Codes_SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_007: [The `stop` method shall simply return since there is no timeout or resources to clear.]*/
+    return;
+  }
+
+  /**
    * Updates the shared access signature token that transports should use to authenticate. When called, the `SharedAccessSignatureAuthenticationProvider` will emit
    * a `newTokenAvailable` event that the transports can then use to authenticate with the Azure IoT hub instance.
    *

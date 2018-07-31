@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-device-amqp",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "AMQP transport for Azure IoT device SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
@@ -8,25 +8,24 @@
   "typings": "index.d.ts",
   "dependencies": {
     "async": "^2.5.0",
-    "azure-iot-amqp-base": "1.7.0",
-    "azure-iot-common": "1.7.0",
-    "azure-iot-device": "1.7.0",
+    "azure-iot-amqp-base": "1.7.1",
+    "azure-iot-common": "1.7.1",
+    "azure-iot-device": "1.7.1",
     "debug": "^3.0.1",
     "machina": "^2.0.1",
+    "rhea": "^0.2.11",
     "uuid": "^3.0.1"
   },
   "devDependencies": {
-    "azure-iothub": "1.7.0",
-    "bluebird": "^3.5.0",
+    "azure-iothub": "1.7.1",
+    "@types/debug": "0.0.30",
+    "@types/node": "^8.0.28",
     "chai": "^4.1.2",
     "istanbul": "^0.4.5",
-    "jshint": "^2.9.4",
-    "mocha": "^3.2.0",
+    "mocha": "^5.2.0",
     "sinon": "^4.0.2",
     "tslint": "^5.1.0",
-    "typescript": "2.5.2",
-    "@types/node": "^8.0.28",
-    "@types/debug": "0.0.30"
+    "typescript": "2.5.2"
   },
   "scripts": {
     "lint": "tslint --project . -c ../../../tslint.json",

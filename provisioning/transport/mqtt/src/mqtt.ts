@@ -102,7 +102,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
               if (err) {
                 callback(err);
               } else {
-                this._fsm.handle('registrationRequest', rid, request, callback);
+                this._fsm.handle('registrationRequest', request, rid, callback);
               }
             });
           },
@@ -363,6 +363,3 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
     }
   }
 }
-
-
-

@@ -66,6 +66,18 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
     }
   }
 
+  /**
+   * Stops the timer used to renew to SAS token.
+   */
+  stop(): void {
+    /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_012: [The `stop` method shall clear the token renewal timer if it is running.]*/
+    /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_013: [The `stop` method shall simply return if the token renewal timer is not running.]*/
+    if (this._renewalTimeout) {
+      clearTimeout(this._renewalTimeout);
+      this._renewalTimeout = null;
+    }
+  }
+
   protected _sign(resourceUri: string, expiry: number, callback: (err: Error, signature?: string) => void): void {
     callback(null, SharedAccessSignature.create(resourceUri, this._credentials.sharedAccessKeyName, this._credentials.sharedAccessKey, expiry).toString());
   }

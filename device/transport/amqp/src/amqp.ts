@@ -8,7 +8,7 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-amqp:Amqp');
 import { EventEmitter } from 'events';
 
-import { DeviceTransport, MethodMessage, DeviceMethodResponse, TwinProperties, DeviceClientOptions } from 'azure-iot-device';
+import { DeviceTransport, MethodMessage, DeviceMethodResponse, TwinProperties, DeviceClientOptions, SharedAccessKeyAuthenticationProvider } from 'azure-iot-device';
 import { getUserAgentString } from 'azure-iot-device';
 import { Amqp as BaseAmqpClient, AmqpBaseTransportConfig, translateError, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
 import { endpoint, SharedAccessSignature, errors, results, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
@@ -147,6 +147,11 @@ export class Amqp extends EventEmitter implements DeviceTransport {
       states: {
         disconnected: {
           _onEnter: (err, callback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_16_083: [When the `amqp` client is disconnected and if token-based authentication is used the `stop` method of the `AuthenticationProvider` shall be called.]*/
+            if (this._authenticationProvider.type === AuthenticationType.Token) {
+              (this._authenticationProvider as SharedAccessKeyAuthenticationProvider).stop();
+            }
+
             if (callback) {
               if (err) {
                 callback(err);

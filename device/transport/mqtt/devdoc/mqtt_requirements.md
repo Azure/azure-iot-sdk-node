@@ -76,6 +76,8 @@ The `disconnect` method should close the connection to the IoT Hub instance.
 
 **SRS_NODE_DEVICE_MQTT_16_022: [** The `disconnect` method shall call its callback with a `null` error parameter and a `results.Disconnected` response if `MqttBase` successfully disconnects if not disconnected already. **]**
 
+**SRS_NODE_DEVICE_MQTT_16_085: [** Once the MQTT transport is disconnected and if it is using a token authentication provider, the `stop` method of the `AuthenticationProvider` object shall be called to stop any running timer. **]**
+
 ### sendEvent(message)
 
 The `sendEvent` method sends an event to an IoT hub on behalf of the device indicated in the constructor argument.

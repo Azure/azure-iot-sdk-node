@@ -93,6 +93,8 @@ The `disconnect` method terminates the connection with the Azure IoT Hub instanc
 
 **SRS_NODE_DEVICE_AMQP_16_023: [** The `disconnect` method shall forcefully detach all attached links if a connection error is the causing the transport to be disconnected. **]**
 
+**SRS_NODE_DEVICE_AMQP_16_083: [** When the `amqp` client is disconnected and if token-based authentication is used the `stop` method of the `AuthenticationProvider` shall be called. **]**
+
 ### sendEvent(message, done)
 
 The `sendEvent` method sends an event to the IoT Hub as the device indicated in the constructor argument.

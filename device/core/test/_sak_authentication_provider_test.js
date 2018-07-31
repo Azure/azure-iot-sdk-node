@@ -36,6 +36,7 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
         assert.notOk(sasObject.skn);
         assert.isOk(sasObject.sig);
         assert.isTrue(sasObject.se > Date.now() / 1000);
+        sakAuthProvider.stop();
         testCallback();
       });
     });
@@ -67,6 +68,7 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
             assert.isTrue(eventSpy.calledOnce);
             sakAuthProvider.automaticRenewal = false;
             testClock.restore();
+            sakAuthProvider.stop();
             testCallback();
           });
         });
@@ -90,6 +92,7 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
       sakAuthProvider.getDeviceCredentials(function (err, creds) {
         assert.equal(creds.sharedAccessSignature, 'SharedAccessSignature sr=fake.host.name%2Fdevices%2FfakeDeviceId&sig=bYz5R2IFTaejB6pgYOxns2mw6lcuA4VSy8kJbYQp0Sc%3D&se=10');
         testClock.restore();
+        sakAuthProvider.stop();
         testCallback();
       });
     });
@@ -105,7 +108,8 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
       var eventSpy = sinon.spy();
       sakAuthProvider.on('error', function (err) {
         assert.strictEqual(err, fakeError);
-        testCallback();
+          sakAuthProvider.stop();
+          testCallback();
       });
 
       sinon.stub(sakAuthProvider, '_sign').callsArgWith(2, fakeError);
@@ -123,7 +127,8 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
       sinon.stub(sakAuthProvider, '_sign').callsArgWith(2, 'whoops');
       sakAuthProvider.getDeviceCredentials(function(err) {
         assert.equal(err, 'whoops');
-        testCallback();
+          sakAuthProvider.stop();
+          testCallback();
       });
     });
 
@@ -139,6 +144,7 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
       sakAuthProvider._renewToken(function(err, creds) {
         assert.equal(creds.sharedAccessSignature, 'signature');
       });
+      sakAuthProvider.stop();
       testCallback();
     });
 
@@ -201,8 +207,49 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
           assert.strictEqual(creds.moduleId, testConfig.credentials.moduleId);
           assert.strictEqual(creds.host, testConfig.credentials.host);
           assert.strictEqual(creds.sharedAccessKey, testConfig.credentials.sharedAccessKey);
+          sakAuthProvider.stop();
           testCallback();
         });
+      });
+    });
+  });
+
+  describe('stop', function () {
+
+    /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_012: [The `stop` method shall clear the token renewal timer if it is running.]*/
+    it('clears the SAS token renewal timeout', function (testCallback) {
+      this.clock = sinon.useFakeTimers();
+      var testClock = this.clock;
+      var fakeCredentials = {
+        deviceId: 'fakeDeviceId',
+        host: 'fake.host.name',
+        sharedAccessKey: 'fakeKey'
+      };
+      var token;
+      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+      var eventSpy = sinon.spy();
+      sakAuthProvider.on('newTokenAvailable', eventSpy);
+      /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_003: [The `getDeviceCredentials` should call its callback with a `null` first parameter and a `TransportConfig` object as a second parameter, containing the latest valid token it generated.]*/
+      sakAuthProvider.getDeviceCredentials(function () {
+        testClock.tick(11000); // 11 seconds - event should've fired
+        assert.isTrue(eventSpy.calledOnce);
+        sakAuthProvider.stop();
+        testClock.tick(11000);
+        assert.isTrue(eventSpy.calledOnce); // if the timer is still running, the event would've fired twice.
+        testClock.restore();
+        testCallback();
+      });
+    });
+
+    /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_013: [The `stop` method shall simply return if the token renewal timer is not running.]*/
+    it('returns and does not crash if the timer is not running', function () {
+      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider({
+        deviceId: 'fakeDeviceId',
+        host: 'fake.host.name',
+        sharedAccessKey: 'fakeKey'
+      }, 10, 1);
+      assert.doesNotThrow(function () {
+        sakAuthProvider.stop();
       });
     });
   });

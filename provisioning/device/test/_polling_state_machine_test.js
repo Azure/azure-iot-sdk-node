@@ -42,7 +42,7 @@ var operationStatusReturnsAssigningThenAssigned = function () {
   });
 };
 
-describe('state machine', function () {
+describe('polling state machine', function () {
   this.timeout(1000);
 
   var makeNewMachine = function () {
@@ -79,7 +79,7 @@ describe('state machine', function () {
     describe('calls registrationRequest', function () {
 
       /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_013: [ If `PollingTransport.registrationRequest` fails, `register` shall fail. ] */
-      it ('and returns failure if it fails', function (testCallback) {
+      it('and returns failure if it fails', function (testCallback) {
         machine._transport.registrationRequest = registrationRequestReturnsFailure();
         callRegisterWithDefaultArgs(function (err) {
           assert.instanceOf(err, Error);
@@ -98,19 +98,20 @@ describe('state machine', function () {
       });
 
       /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_015: [ If `PollingTransport.registrationRequest` succeeds with status==Assigning, it shall emit an 'operationStatus' event and begin polling for operation status requests. ] */
-      it ('and starts polling if it succeeds with status===\'Assigning\'', function (testCallback) {
+      it('and starts polling if it succeeds with status===\'Assigning\'', function (testCallback) {
         machine._transport.registrationRequest = registrationRequestReturnsAssigning();
         machine._transport.queryOperationStatus = waitingForNetworkIo();
         callRegisterWithDefaultArgs(function () {});
         setTimeout(function () {
           assert(machine._transport.registrationRequest.calledOnce);
           assert(machine._transport.queryOperationStatus.calledOnce);
+          machine.disconnect();
           testCallback();
         }, 2);
       });
 
       /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_016: [ If `PollingTransport.registrationRequest` succeeds with an unknown status, `register` shall fail with a `SyntaxError` and pass the response body and the protocol-specific result to the `callback`. ] */
-      it ('and returns failure if it succeeds with some other status', function (testCallback) {
+      it('and returns failure if it succeeds with some other status', function (testCallback) {
         machine._transport.registrationRequest = registrationRequestReturnsBadResponse();
         callRegisterWithDefaultArgs(function (err) {
           assert.instanceOf(err, SyntaxError);
@@ -120,7 +121,7 @@ describe('state machine', function () {
       });
 
       /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_028: [ If `PollingTransport.registrationRequest` succeeds with status==Failed, it shall fail with a `DeviceRegistrationFailedError` error ] */
-      it ('and returns failure if status==Failed', function (testCallback) {
+      it('and returns failure if status==Failed', function (testCallback) {
         machine._transport.registrationRequest = registrationRequestReturnsFailed();
         callRegisterWithDefaultArgs(function (err) {
           assert.instanceOf(err, errors.DeviceRegistrationFailedError);
@@ -130,7 +131,7 @@ describe('state machine', function () {
 
 
       /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_014: [ If `PollingTransport.registrationRequest` succeeds with status==Assigned, it shall emit an 'operationStatus' event and  call `callback` with null, the response body, and the protocol-specific result. ] */
-      it ('and fires an operationStatus event if it succeeds', function (testCallback) {
+      it('and fires an operationStatus event if it succeeds', function (testCallback) {
         machine.on('operationStatus', function (body) {
           assert.strictEqual(body.status, 'Assigned');
           testCallback();
@@ -210,21 +211,23 @@ describe('state machine', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_024: [ If `register` is called while a different request is in progress, it shall fail with an `InvalidOperationError`. ] */
-    it ('fails if called while sending the first request', function (testCallback) {
+    it('fails if called while sending the first request', function (testCallback) {
       machine._transport.registrationRequest = waitingForNetworkIo();
       callRegisterWithDefaultArgs(function() {});
 
       setTimeout(function() {
         callRegisterWithDefaultArgs(function(err) {
           assert.strictEqual(err.constructor.name, 'InvalidOperationError');
-          machine.cancel(function() {});
-          testCallback();
+          machine.cancel(function() {
+            machine.disconnect();
+            testCallback();
+          });
         });
-      },10);
+      }, 10);
     });
 
     /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_024: [ If `register` is called while a different request is in progress, it shall fail with an `InvalidOperationError`. ] */
-    it ('fails if called while waiting to poll', function (testCallback) {
+    it('fails if called while waiting to poll', function (testCallback) {
       machine._transport.registrationRequest = registrationRequestReturnsAssigning(1000);
       callRegisterWithDefaultArgs(function() {});
 
@@ -238,7 +241,7 @@ describe('state machine', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_024: [ If `register` is called while a different request is in progress, it shall fail with an `InvalidOperationError`. ] */
-    it ('fails if called while sending an operation status request', function (testCallback) {
+    it('fails if called while sending an operation status request', function (testCallback) {
       machine._transport.registrationRequest = registrationRequestReturnsAssigning(1);
       machine._transport.queryOperationStatus = waitingForNetworkIo();
       callRegisterWithDefaultArgs(function() {});
@@ -246,8 +249,10 @@ describe('state machine', function () {
       setTimeout(function() {
         callRegisterWithDefaultArgs(function(err) {
           assert.strictEqual(err.constructor.name, 'InvalidOperationError');
-          machine.cancel(function() {});
-          testCallback();
+          machine.cancel(function() {
+            machine.disconnect();
+            testCallback();
+          });
         });
       },2);
     });
@@ -256,7 +261,7 @@ describe('state machine', function () {
   describe('cancel function', function () {
 
     /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_025: [ If `cancel` is called while disconnected, it shall immediately call its `callback`. ] */
-    it ('does nothing if called while disconnected', function (testCallback) {
+    it('does nothing if called while disconnected', function (testCallback) {
       machine.cancel(function(err) {
         assert.oneOf(err, [null, undefined]);
         assert(machine);
@@ -266,7 +271,7 @@ describe('state machine', function () {
     });
 
     /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_030: [ If `cancel` is called while the transport is connected but idle, it shall immediately call its `callback`. ] */
-    it ('does nothing if called while idle', function (testCallback) {
+    it('does nothing if called while idle', function (testCallback) {
       callRegisterWithDefaultArgs(function(err) {
         assert.oneOf(err, [null, undefined]);
         testCallback();
@@ -276,7 +281,7 @@ describe('state machine', function () {
     describe('calls cancel', function () {
 
       /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `cancel` shall cause that registration to fail with an `OperationCancelledError`. ] */
-      it ('and causes register to fail if called while sending the first request', function (testCallback) {
+      it('and causes register to fail if called while sending the first request', function (testCallback) {
         var registrationErr;
         var registrationCallback;
         machine._transport.registrationRequest = sinon.spy(function (request, callback) {
@@ -299,7 +304,7 @@ describe('state machine', function () {
       });
 
       /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `cancel` shall cause that registration to fail with an `OperationCancelledError`. ] */
-      it ('and causes register to fail if called while waiting to poll', function (testCallback) {
+      it('and causes register to fail if called while waiting to poll', function (testCallback) {
         var registrationErr;
         machine._transport.registrationRequest = registrationRequestReturnsAssigning(1000);
         callRegisterWithDefaultArgs(function(err) {
@@ -320,7 +325,7 @@ describe('state machine', function () {
       });
 
       /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_027: [ If a registration is in progress, `cancel` shall cause that registration to fail with an `OperationCancelledError`. ] */
-      it ('and causes register to fail if called while sending an operation status request', function (testCallback) {
+      it('and causes register to fail if called while sending an operation status request', function (testCallback) {
         var registrationErr;
         machine._transport.registrationRequest = registrationRequestReturnsAssigning();
         machine._transport.queryOperationStatus = sinon.spy(function() {
@@ -328,6 +333,7 @@ describe('state machine', function () {
             setTimeout(function() {
               assert(!!registrationErr);
               assert(machine._transport.cancel.calledOnce);
+              machine.disconnect();
               testCallback();
             }, 2);
           });

@@ -1,28 +1,27 @@
 {
   "name": "azure-iot-device-http",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "HTTP transport for Azure IoT device SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.7.0",
-    "azure-iot-device": "1.7.0",
-    "azure-iot-http-base": "1.7.0",
+    "azure-iot-common": "1.7.1",
+    "azure-iot-device": "1.7.1",
+    "azure-iot-http-base": "1.7.1",
     "debug": "^3.1.0",
     "node-crontab": "^0.0.8"
   },
   "devDependencies": {
-    "azure-iothub": "1.7.0",
+    "@types/node": "^8.0.45",
+    "azure-iothub": "1.7.1",
     "chai": "^4.1.2",
     "istanbul": "^0.4.4",
-    "jshint": "^2.9.2",
-    "mocha": "^3.5.3",
+    "mocha": "^5.2.0",
     "sinon": "^4.0.2",
     "tslint": "^5.1.0",
-    "typescript": "2.5.3",
-    "@types/node": "^8.0.45"
+    "typescript": "2.5.3"
   },
   "scripts": {
     "lint": "tslint --project . -c ../../../tslint.json",

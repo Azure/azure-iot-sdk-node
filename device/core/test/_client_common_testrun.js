@@ -37,7 +37,7 @@ function badConfigTests(opName, Client, Transport, requestFn) {
     client.open(function(err) {
       if (err) {
         test(err);
-        done();
+        client.close(done);
       } else {
         requestFn(client, function (err, res) {
           test(err, res);
@@ -208,10 +208,12 @@ function batchMessageTests(Client, Transport, registry, testName, requestFn) {
 
         requestFn(client, function (err, res) {
           if (err) {
-            done(err);
+            client.close(function () {
+              done(err);
+            });
           } else {
             assert.equal(res.constructor.name, 'MessageEnqueued');
-            done();
+            client.close(done);
           }
         });
       });

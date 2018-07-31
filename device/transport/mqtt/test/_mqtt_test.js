@@ -29,6 +29,7 @@ describe('Mqtt', function () {
     fakeAuthenticationProvider.type = AuthenticationType.Token;
     fakeAuthenticationProvider.getDeviceCredentials = sinon.stub().callsArgWith(0, null, fakeConfig);
     fakeAuthenticationProvider.updateSharedAccessSignature = sinon.stub();
+    fakeAuthenticationProvider.stop = sinon.stub();
     sinon.spy(fakeAuthenticationProvider, 'on');
 
     fakeMqttBase = new EventEmitter();
@@ -703,6 +704,16 @@ describe('Mqtt', function () {
       mqtt.connect(function () {});
       mqtt.disconnect(function () {
         assert.isTrue(fakeMqttBase.disconnect.calledOnce);
+        testCallback();
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_16_085: [Once the MQTT transport is disconnected and if it is using a token authentication provider, the `stop` method of the `AuthenticationProvider` object shall be called to stop any running timer.]*/
+    it('calls stop on the authentication provider if using token authentication', function (testCallback) {
+      var mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      mqtt.connect(function () {});
+      mqtt.disconnect(function () {
+        assert.isTrue(fakeAuthenticationProvider.stop.calledTwice); // once when instantiated, once when disconnected
         testCallback();
       });
     });

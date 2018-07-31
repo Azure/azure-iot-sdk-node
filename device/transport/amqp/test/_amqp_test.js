@@ -66,6 +66,7 @@ describe('Amqp', function () {
     fakeTokenAuthenticationProvider.type = AuthenticationType.Token;
     fakeTokenAuthenticationProvider.getDeviceCredentials = sinon.stub().callsArgWith(0, null, configWithSAS);
     fakeTokenAuthenticationProvider.updateSharedAccessSignature = sinon.stub();
+    fakeTokenAuthenticationProvider.stop = sinon.stub();
     sinon.spy(fakeTokenAuthenticationProvider, 'on');
 
     fakeX509AuthenticationProvider = {
@@ -703,6 +704,15 @@ describe('Amqp', function () {
           });
         });
       });
+
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_083: [When the `amqp` client is disconnected and if token-based authentication is used the `stop` method of the `AuthenticationProvider` shall be called.]*/
+      it('calls stop on the authentication provider if using token authentication', function (testCallback) {
+        transport.connect(function () {});
+        transport.disconnect(function () {
+          assert.isTrue(fakeTokenAuthenticationProvider.stop.calledTwice); // once when instantiated, once when disconnected
+          testCallback();
+        });
+      });
     });
 
     describe('#updateSharedAccessSignature', function () {
@@ -1070,9 +1080,9 @@ describe('Amqp', function () {
           var sentMsg = sender.send.firstCall.args[0];
           assert.instanceOf(sentMsg, AmqpMessage);
           assert.instanceOf(result, results.MessageEnqueued);
-          assert.strictEqual(sentMsg.body, 'test');
+          assert.strictEqual(sentMsg.body.content.toString(), 'test');
           if (testConfig.expectedOutputName) {
-            assert.strictEqual(sentMsg.messageAnnotations['x-opt-output-name'], testConfig.expectedOutputName);
+            assert.strictEqual(sentMsg.message_annotations['x-opt-output-name'], testConfig.expectedOutputName);
           }
           testCallback(err);
         });
@@ -1494,7 +1504,7 @@ describe('Amqp', function () {
       var testText = '__TEST_TEXT__';
       transport.connect(function () {
         transport.on('message', function (msg) {
-          assert.strictEqual(msg.data, testText);
+          assert.strictEqual(msg.data.toString(), testText);
           testCallback();
         });
         transport.enableC2D(function (err) {
@@ -1513,13 +1523,13 @@ describe('Amqp', function () {
       transport.connect(function () {
         transport.on('inputMessage', function (inputName, msg) {
           assert.strictEqual(inputName, testInputName);
-          assert.strictEqual(msg.data, testText);
+          assert.strictEqual(msg.data.toString(), testText);
           testCallback();
         });
         transport.enableInputMessages(function (err) {
           assert(!err);
           var amqpMessage = AmqpMessage.fromMessage(new Message(testText));
-          amqpMessage.messageAnnotations = { 'x-opt-input-name': testInputName };
+          amqpMessage.message_annotations = { 'x-opt-input-name': testInputName };
           receiver.emit('message', amqpMessage);
         });
       });
