@@ -12,8 +12,9 @@
     "debug": "^3.0.1",
     "lodash.merge": "^4.6.1",
     "machina": "^2.0.1",
-    "rhea": "^0.2.11",
-    "uuid": "^3.0.1"
+    "rhea": "^0.2.17",
+    "uuid": "^3.0.1",
+    "ws": "^6.0.0"
   },
   "devDependencies": {
     "@types/async": "^2.0.42",
@@ -30,7 +31,7 @@
   "scripts": {
     "lint": "tslint --project . -c ../../../tslint.json",
     "build": "tsc",
-    "alltogether": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_amqp_cbs_test.js test/_amqp_common_errors_test.js test/_amqp_link_test.js test/_amqp_message_test.js test/_sender_link_test.js test/_receiver_link_test.js",
+    "all_together": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_amqp_cbs_test.js test/_amqp_common_errors_test.js test/_amqp_link_test.js test/_amqp_message_test.js test/_sender_link_test.js test/_receiver_link_test.js",
     "sender_link": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_sender_link_test.js",
     "receiver_link": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_receiver_link_test.js",
     "cbs": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_amqp_cbs_test.js",

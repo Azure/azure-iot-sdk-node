@@ -39,7 +39,6 @@ export class SenderLink extends EventEmitter implements AmqpLink {
   // Note also that errors will always be indicated in rhea on a link basis.
   //
   private _linkAddress: string;
-  private _linkOptions: SenderOptions;
   private _rheaSender: Sender;
   private _fsm: machina.Fsm;
   private _rheaSession: Session;
@@ -85,7 +84,6 @@ export class SenderLink extends EventEmitter implements AmqpLink {
   constructor(linkAddress: string, linkOptions: SenderOptions, session: Session) {
     super();
     this._linkAddress = linkAddress;
-    this._linkOptions = linkOptions;
     this._rheaSession = session;
     this._unsentMessageQueue = [];
     this._pendingMessageDictionary = {};

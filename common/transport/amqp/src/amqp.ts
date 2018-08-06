@@ -142,15 +142,15 @@ export class Amqp {
 
     });
 
-    //
-    // This error handler listens for events from THIS transport SenderLinks or ReceiverLinks.
-    // These error indications would be as a result of an error indication from the associated
-    // rhea links that are not associated with a specific request.
-    //
-    const amqpErrorHandler = (err) => {
-      debug('amqpErrorHandler invoked ' + this._getErrorName(err));
-      this._fsm.handle('amqpError', err);
-    };
+    // //
+    // // This error handler listens for events from THIS transport SenderLinks or ReceiverLinks.
+    // // These error indications would be as a result of an error indication from the associated
+    // // rhea links that are not associated with a specific request.
+    // //
+    // const amqpErrorHandler = (err) => {
+    //   debug('amqpErrorHandler invoked ' + this._getErrorName(err));
+    //   this._fsm.handle('amqpError', err);
+    // };
 
     const rheaErrorHandler = (context: EventContext) => {
       debug('rhea error event handler');
@@ -337,6 +337,11 @@ export class Amqp {
             debug('Transition to disconnecting');
             let err = this._indicatedConnectionError;
             let callback = this._sessionCallback;
+            //
+            // We lie about session close coming in.  Thing is that if we are here we don't actually have
+            // a good session set up.  This way we won't wait around for a session end that probably won't come.
+            //
+            this._sessionCloseOccurred = true;
             this._indicatedConnectionError = undefined;
             this._sessionCallback = undefined;
             this._connectionCloseOccurred = true;
@@ -345,6 +350,11 @@ export class Amqp {
           'error': (context: EventContext) => {
             debug('In the \'error\' handler for the connecting_session state with error of: ' + this._getErrorName(context.connection.error));
             let callback = this._sessionCallback;
+            //
+            // We lie about session close coming in.  Thing is that if we are here we don't actually have
+            // a good session set up.  This way we won't wait around for a session end that probably won't come.
+            //
+            this._sessionCloseOccurred = true;
             this._sessionCallback = undefined;
             this._fsm.transition('disconnecting', callback, context.connection.error);
           },
@@ -472,7 +482,6 @@ export class Amqp {
               debug('receiver link invokes perm error handler for attachReceiverLink: ' + endpoint + ': ' + err.toString());
               debug('receiver link error - removing it from cache: ' + endpoint + ': ' + err.toString());
               delete(this._receivers[endpoint]);
-              amqpErrorHandler(err);
             };
 
             const operationErrorHandler = (err) => {

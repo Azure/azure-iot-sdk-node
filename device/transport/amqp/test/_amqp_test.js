@@ -427,7 +427,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_06_006: [If `initializeCBS` is successful, `putToken` shall be invoked If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter audience, created from the sr of the sas signature, the next parameter of the actual sas, and a callback.]*/
       /*Tests_SRS_NODE_DEVICE_AMQP_06_009: [If `putToken` is not successful then the client will remain disconnected and the callback will be called with an error per SRS_NODE_DEVICE_AMQP_16_009.]*/
-      it('Invokes putToken - puttoken fails and disconnects', function () {
+      it('Invokes putToken - putToken fails and disconnects', function () {
         var testError = new errors.NotConnectedError('fake error');
         fakeBaseClient.putToken = sinon.stub().callsArgWith(2, testError);
         transport.connect(function(err) {
