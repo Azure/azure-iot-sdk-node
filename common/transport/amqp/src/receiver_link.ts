@@ -64,22 +64,22 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
   // We create a dictionary that is keyed by the amqpMessage.  The value of the dictionary is the delivery record associated
   // (by rhea) of this message.
   //
-  // So when a message is received we place in the dictionary.  When the application sends back down the message we look it up
-  // in the dictionary, remove it if found, and issue the disposition.  Note we will indicate an error to the callback (if provided),
-  // if we can't find the item in the dictionary.
+  // So when a message is received we place in the dictionary.  When the application settles the message by accepting, abandoning or rejecting,
+  // it sends back down the message, we look it up in the dictionary, remove it if found, and issue the disposition.  Note we will
+  // indicate an error to the callback (if provided), if we can't find the item in the dictionary.
   //
   // Note also, if the application does NOT provide an indication on what to do with the message this dictionary will NOT
   // remove the item.  This, could be considered a leak.  If so, we could implement a cleaner for the list.  However, for
   // now this is treated as an application error.
   //
-  private _unDisposedDeliveries: DeliveryRecord[];
+  private _undisposedDeliveries: DeliveryRecord[];
 
   constructor(linkAddress: string, linkOptions: ReceiverOptions, session: Session) {
     super();
     this._linkAddress = linkAddress;
     this._linkOptions = linkOptions;
     this._rheaSession = session;
-    this._unDisposedDeliveries = [];
+    this._undisposedDeliveries = [];
     this._combinedOptions = {
       source: linkAddress
     };
@@ -102,7 +102,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
 
     /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_012: [If a `message` event is emitted by the `rhea` link object, the `ReceiverLink` object shall emit a `message` event with the same content.]*/
     const receiverMessageHandler = (context: EventContext): void => {
-      this._unDisposedDeliveries.push({msg: context.message as any, delivery: context.delivery});
+      this._undisposedDeliveries.push({msg: context.message as any, delivery: context.delivery});
       this.emit('message', context.message);
     };
 
@@ -200,7 +200,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             debug('Detaching while attaching of rhea receiver link ' + this._linkAddress);
             manageReceiverHandlers('removeListener');
             //
-            // We may have a callback outstanding on the request that started the attaching.
+            // We may have a callback outstanding from the request that started the attaching.
             // We will signal to that callback that an error occurred. We will also invoke the callback supplied
             // for this detach.
             //
@@ -214,7 +214,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             this._fsm.transition('detached', callback, error);
           },
           forceDetach: (err) => {
-            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_003: [If the `forceDetach` method is invoked on the `ReceiverLink` while still attaching, the ReceiverLink shall detach.  It will indicate the error to the callback to the `attach`.] */
+            /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_003: [If the `forceDetach` method is invoked on the `ReceiverLink` while still attaching, the ReceiverLink shall detach.  With the error supplied to the forceDetach, the `attach` callback will also be invoked.  If the error is NOT falsy it will also be emitted as the argument to the `error` event.] */
             debug('Force detaching while attaching of rhea receiver link ' + this._linkAddress);
             manageReceiverHandlers('removeListener');
             let error = err || this._indicatedError;
@@ -433,10 +433,10 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
   }
 
   private _findDeliveryRecord(msg: AmqpMessage): Delivery {
-    for (let element = 0; element < this._unDisposedDeliveries.length; element++) {
-      if (this._unDisposedDeliveries[element].msg === msg) {
-        let delivery = this._unDisposedDeliveries[element].delivery;
-        this._unDisposedDeliveries.splice(element, 1);
+    for (let element = 0; element < this._undisposedDeliveries.length; element++) {
+      if (this._undisposedDeliveries[element].msg === msg) {
+        let delivery = this._undisposedDeliveries[element].delivery;
+        this._undisposedDeliveries.splice(element, 1);
         return delivery;
       }
     }
@@ -455,7 +455,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
       } else if (err.name) {
         return '(javascript error) ' + err.name;
       } else {
-        return 'this is not an error type I understand';
+        return 'unknown error type';
       }
     } else {
       return 'error is falsy';

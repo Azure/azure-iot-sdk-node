@@ -46,7 +46,7 @@ A Boolean indicating whether the client should automatically settle messages:
 - False if the caller intends to manually settle messages
 A string containing the version of the SDK used for telemetry purposes**]**
 
-**SRS_NODE_COMMON_AMQP_16_042: [** The Amqp constructor shall create a new `amqp10.Client` instance and configure it to:
+**SRS_NODE_COMMON_AMQP_16_042: [** The Amqp constructor shall create a new `rhea` container instance and configure it to:
 - not reconnect on failure
 - not reattach sender and receiver links on failure  **]**
 

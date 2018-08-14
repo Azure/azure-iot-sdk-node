@@ -27,7 +27,7 @@ The `SenderLink` class implements a state machine that manages the underlying `r
 
 **SRS_NODE_AMQP_SENDER_LINK_06_001: [** If the `detach` method is invoked on the `SenderLink` while still attaching, the SenderLink shall detach.  It will indicate the error to the callback for the `detach` as well as the callback to the `attach` **]**
 
-**SRS_NODE_AMQP_SENDER_LINK_06_003: [** If the `forceDetach` method is invoked on the `SenderLink` while still attaching, the SenderLink shall detach.  It will indicate the error to the callback to the `attach` and emit an `error` event on the `SenderLink`.**]**
+**SRS_NODE_AMQP_SENDER_LINK_06_003: [** If the `forceDetach` method is invoked on the `SenderLink` while still attaching, the SenderLink shall detach.  With the error supplied to the forceDetach, the `attach` callback will also be invoked.  If the error is NOT falsy it will also be emitted as the argument to the `error` event.**]**
 
 ### detach(callback?: (err?: Error) => void): void
 

@@ -76,7 +76,7 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
     super();
 
     this._rheaSession = session;
-    /*Codes_SRS_NODE_AMQP_CBS_16_001: [The `constructor` shall instantiate a `SenderLink` object for the `$cbs` endpoint using a custom policy `{encoder: function(body) { return body;}}` which forces the amqp layer to send the token as an amqp value in the body.]*/
+    /*Codes_SRS_NODE_AMQP_CBS_16_001: [The `constructor` shall instantiate a `SenderLink` object for the `$cbs` endpoint.]*/
     this._senderLink = new SenderLink(ClaimsBasedSecurityAgent._putTokenSendingEndpoint, null, this._rheaSession);
 
     /*Codes_SRS_NODE_AMQP_CBS_16_002: [The `constructor` shall instantiate a `ReceiverLink` object for the `$cbs` endpoint.]*/
@@ -233,9 +233,7 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
             amqpMessage.body = token;
             amqpMessage.to = '$cbs';
             //
-            // Just as a reminder:  For cbs, the message id and the correlation id
-            // always stayed as string values.  They never went on over the wire
-            // as the amqp uuid type.
+            // For CBS, the message id and correlation id are encoded as string
             //
             amqpMessage.message_id = uuid.v4();
             amqpMessage.reply_to = 'cbs';
@@ -285,7 +283,7 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
             const links = [this._senderLink, this._receiverLink];
             async.each(links, (link, callback) => {
               if (link) {
-                debug('while detaching for  link ');
+                debug('while detaching for link ');
                 link.detach(callback);
               } else {
                 callback();

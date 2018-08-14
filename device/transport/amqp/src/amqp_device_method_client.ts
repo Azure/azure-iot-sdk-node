@@ -115,7 +115,6 @@ export class AmqpDeviceMethodClient extends EventEmitter {
                           debug(JSON.stringify(msg, null, 2));
                           const methodName = msg.application_properties[methodMessagePropertyKeys.methodName];
                           //
-                          // SERIALIZATION DEPENDENCY!!
                           // The rhea library will de-serialize an encoded uuid (0x98) as a 16 byte buffer.
                           //
                           let methodRequest: any = {};

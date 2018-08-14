@@ -268,7 +268,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             this._fsm.transition('detached', callback, error);
           },
           forceDetach: (err) => {
-            /*Codes_SRS_NODE_AMQP_SENDER_LINK_06_003: [If the `forceDetach` method is invoked on the `SenderLink` while still attaching, the SenderLink shall detach.  It will indicate the error to the callback to the `attach`.] */
+            /*Codes_SRS_NODE_AMQP_SENDER_LINK_06_003: [If the `forceDetach` method is invoked on the `SenderLink` while still attaching, the SenderLink shall detach. With the error supplied to the forceDetach, the `attach` callback will also be invoked.  If the error is NOT falsy it will also be emitted as the argument to the `error` event.] */
             debug('Force detaching while attaching of rhea sender link ' + this._linkAddress);
             manageSenderHandlers('removeListener');
             let error = err || this._indicatedError;
@@ -494,7 +494,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
       } else if (err.name) {
         return '(javascript error) ' + err.name;
       } else {
-        return 'this is not an error type I understand';
+        return 'unknown error type';
       }
     } else {
       return 'error is falsy';

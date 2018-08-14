@@ -152,8 +152,8 @@ describe('AmqpLink implementation unit tests', function() {
           });
         });
 
-        /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_06_003: [If the `forceDetach` method is invoked on the `ReceiverLink` while still attaching, the ReceiverLink shall detach.  It will indicate the error to the callback to the `attach`.] */
-        /*Tests_SRS_NODE_AMQP_SENDER_LINK_06_003: [If the `forceDetach` method is invoked on the `SenderLink` while still attaching, the SenderLink shall detach.  It will indicate the error to the callback to the `attach`.] */
+        /*Tests_SRS_NODE_AMQP_RECEIVER_LINK_06_003: [If the `forceDetach` method is invoked on the `ReceiverLink` while still attaching, the ReceiverLink shall detach.  With the error supplied to the forceDetach, the `attach` callback will also be invoked.  If the error is NOT falsy it will also be emitted as the argument to the `error` event.] */
+        /*Tests_SRS_NODE_AMQP_SENDER_LINK_06_003: [If the `forceDetach` method is invoked on the `SenderLink` while still attaching, the SenderLink shall detach.  With the error supplied to the forceDetach, the `attach` callback will also be invoked.  If the error is NOT falsy it will also be emitted as the argument to the `error` event.] */
         it('forceDetach while attaching invokes the attach callback with an error (if provided) and emits an `error` event with the (potentially) supplied error.', function(testCallback) {
           var fakeRheaLink = new EventEmitter();
           var detachError = new Error('fake error');

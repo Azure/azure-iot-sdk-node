@@ -14,7 +14,6 @@ function encodeUuid(uuidString: string): any {
   let uuid;
   if (typeof uuidString === 'string' && uuidString.match(uuidRegEx)) {
     //
-    // SERIALIZATION DEPENDENCY!!
     // The rhea library will only serialize the the uuid with an encoding of 0x98 if the uuid property is actually
     // a 16 byte buffer.
     //
@@ -158,7 +157,6 @@ export class AmqpMessage {
     }
 
     //
-    // SERIALIZATION DEPENDENCY!!
     // The rhea library will de-serialize an encoded uuid (0x98) as a 16 byte buffer.
     // Since common messages should only have type string it is safe to decode
     // these as strings.

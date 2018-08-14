@@ -13,7 +13,7 @@
     "azure-iot-device": "1.7.1",
     "debug": "^3.0.1",
     "machina": "^2.0.1",
-    "rhea": "^0.2.17",
+    "rhea": "^0.2.18",
     "uuid": "^3.0.1"
   },
   "devDependencies": {
