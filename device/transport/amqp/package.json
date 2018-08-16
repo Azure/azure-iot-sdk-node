@@ -13,13 +13,13 @@
     "azure-iot-device": "1.7.3",
     "debug": "^3.0.1",
     "machina": "^2.0.1",
+    "rhea": "^0.2.18",
     "uuid": "^3.0.1"
   },
   "devDependencies": {
     "azure-iothub": "1.7.3",
     "@types/debug": "0.0.30",
     "@types/node": "^8.0.28",
-    "bluebird": "^3.5.0",
     "chai": "^4.1.2",
     "istanbul": "^0.4.5",
     "mocha": "^5.2.0",

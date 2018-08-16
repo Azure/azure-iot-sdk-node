@@ -1,8 +1,0 @@
-{
-  "name": "azure-iot-amqp-base",
-  "main": "index.d.ts",
-  "dependencies": {
-    "amqp10": "registry:npm/amqp10#3.3.1+20170124180914",
-    "bluebird": "registry:npm/bluebird#3.5.0+20170314181206"
-  }
-}

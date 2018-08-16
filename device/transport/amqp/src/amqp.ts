@@ -124,8 +124,8 @@ export class Amqp extends EventEmitter implements DeviceTransport {
 
     this._c2dMessageListener = (msg: AmqpMessage) => {
       let inputName: string;
-      if (msg.messageAnnotations) {
-        inputName = msg.messageAnnotations['x-opt-input-name'];
+      if (msg.message_annotations) {
+        inputName = msg.message_annotations['x-opt-input-name'];
       }
       if (inputName) {
         /*Codes_SRS_NODE_DEVICE_AMQP_18_014: [If `amqp` receives a message on the C2D link with an annotation named "x-opt-input-name", it shall emit an "inputMessage" event with the "x-opt-input-name" annotation as the first parameter and the message as the second parameter.]*/
@@ -323,7 +323,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
                       this._amqp.putToken(SharedAccessSignature.parse(credentials.sharedAccessSignature, ['sr', 'sig', 'se']).sr, credentials.sharedAccessSignature, (err) => {
                         if (err) {
                           /*Codes_SRS_NODE_DEVICE_AMQP_06_009: [If `putToken` is not successful then the client will be disconnected.]*/
-                          this._fsm.transition('disconnecting', getTranslatedError(err, 'AMQP Transport: Could not authorize with puttoken'), connectCallback);
+                          this._fsm.transition('disconnecting', getTranslatedError(err, 'AMQP Transport: Could not authorize with putToken'), connectCallback);
                         } else {
                           this._fsm.transition('authenticated', connectResult, connectCallback);
                         }
@@ -346,7 +346,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
           connect: (connectCallback) => connectCallback(null, new results.Connected()),
           disconnect: (disconnectCallback) => this._fsm.transition('disconnecting', null, disconnectCallback),
           sendEvent: (amqpMessage, sendCallback) => {
-            amqpMessage.properties.to = this._d2cEndpoint;
+            amqpMessage.to = this._d2cEndpoint;
 
             /*Codes_SRS_NODE_DEVICE_AMQP_16_025: [The `sendEvent` method shall create and attach the d2c link if necessary.]*/
             /*Codes_SRS_NODE_DEVICE_AMQP_18_006: [The `sendOutputEvent` method shall create and attach the d2c link if necessary.]*/
@@ -808,11 +808,11 @@ export class Amqp extends EventEmitter implements DeviceTransport {
   /*Codes_SRS_NODE_DEVICE_AMQP_18_009: [If `sendOutputEvent` encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
   sendOutputEvent(outputName: string, message: Message, callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
     let amqpMessage = AmqpMessage.fromMessage(message);
-    if (!amqpMessage.messageAnnotations) {
-      amqpMessage.messageAnnotations = {};
+    if (!amqpMessage.message_annotations) {
+      amqpMessage.message_annotations = {};
     }
     /*Codes_SRS_NODE_DEVICE_AMQP_18_012: [The `sendOutputEvent` method  shall set the annotation "x-opt-output-name" on the message to the `outputName`.]*/
-    amqpMessage.messageAnnotations['x-opt-output-name'] = outputName;
+    amqpMessage.message_annotations['x-opt-output-name'] = outputName;
     this._fsm.handle('sendEvent', amqpMessage, callback);
   }
 
