@@ -3,16 +3,16 @@
 
 'use strict';
 
-var ProvisioningTransport = require('azure-iot-provisioning-device-http').Http;
+// var ProvisioningTransport = require('azure-iot-provisioning-device-http').Http;
 var iotHubTransport = require('azure-iot-device-mqtt').Mqtt;
 var Client = require('azure-iot-device').Client;
 var Message = require('azure-iot-device').Message;
 
 // Feel free to change the preceding using statement to anyone of the following if you would like to try another protocol.
-// var provisioningTransport = require('azure-iot-provisioning-device-amqp').Amqp;
-// var provisioningTransport = require('azure-iot-provisioning-device-amqp').AmqpWs;
-// var provisioningTransport = require('azure-iot-provisioning-device-mqtt').Mqtt;
-// var provisioningTransport = require('azure-iot-provisioning-device-mqtt').MqttWs;
+var ProvisioningTransport = require('azure-iot-provisioning-device-amqp').Amqp;
+// var ProvisioningTransport = require('azure-iot-provisioning-device-amqp').AmqpWs;
+// var ProvisioningTransport = require('azure-iot-provisioning-device-mqtt').Mqtt;
+// var ProvisioningTransport = require('azure-iot-provisioning-device-mqtt').MqttWs;
 
 var tpmSecurity = require('azure-iot-security-tpm');
 var ProvisioningDeviceClient = require('azure-iot-provisioning-device').ProvisioningDeviceClient;
@@ -62,4 +62,3 @@ provisioningClient.register(function(err, result) {
     }
   }
 });
-

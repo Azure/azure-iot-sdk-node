@@ -672,6 +672,10 @@ export class Amqp {
       let ws = this._rheaContainer.websocket_connect(webSocket);
       connectionParameters.connection_details = ws(config.uri, 'AMQPWSB10', config.sslOptions );
     }
+    if (config.saslMechanism) {
+      connectionParameters.sasl_mechanisms = {};
+      connectionParameters.sasl_mechanisms[config.saslMechanismName] = config.saslMechanism;
+    }
     connectionParameters = merge(connectionParameters, config.policyOverride);
     this._config = config;
     this._fsm.handle('connect', connectionParameters, done);
