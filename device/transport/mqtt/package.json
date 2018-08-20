@@ -19,7 +19,8 @@
     "@types/node": "^8.0.30",
     "chai": "^4.1.2",
     "es5-shim": "^4.5.9",
-    "istanbul": "^0.4.5",
+    "nyc": "^12.0.2",
+    "source-map-support": "^0.5.8",
     "mocha": "^5.2.0",
     "sinon": "^4.0.2",
     "tslint": "^5.1.0",
@@ -28,13 +29,10 @@
   "scripts": {
     "lint": "tslint --project . -c ../../../tslint.json",
     "build": "tsc",
-    "unittest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test.js",
-    "alltest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test*.js",
-    "unittest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test.js",
-    "alltest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
-    "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
-    "test": "npm -s run lint && npm -s run build && npm -s run unittest",
-    "check-cover": "istanbul check-coverage --statements 95 --branches 83 --functions 94 --lines 96"
+    "test-min": "nyc mocha --reporter dot --require source-map-support/register test/_*_test.js",
+    "test": "nyc mocha --reporter spec --require source-map-support/register test/_*_test.js",
+    "ci": "npm -s run lint && npm -s run build && npm -s run test-min && npm -s run check-cover",
+    "check-cover": "nyc check-coverage --statements 97 --branches 89 --functions 98 --lines 97"
   },
   "engines": {
     "node": ">= 0.10"
@@ -46,5 +44,22 @@
   "bugs": {
     "url": "https://github.com/Azure/azure-iot-sdk-node/issues"
   },
-  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme"
+  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme",
+  "nyc": {
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "exclude": [
+      "**/*.d.ts",
+      "coverage/",
+      "index.js",
+      "test/"
+    ],
+    "reporter": [
+      "html",
+      "text-summary"
+    ],
+    "all": true
+  }
 }

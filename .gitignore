@@ -190,6 +190,7 @@ $RECYCLE.BIN/
 **/node_modules/
 **/.idea/
 **/coverage/
+**/.nyc_output/
 
 # VS Code stuff
 **/typings/**

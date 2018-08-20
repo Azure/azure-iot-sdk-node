@@ -18,11 +18,10 @@ function makeConnectionString(host, device, key) {
   return 'HostName=' + host + ';DeviceId=' + device + ';SharedAccessKey=' + key;
 }
 
-var x509DeviceId = process.env.IOTHUB_X509_DEVICE_ID;
-var x509Certificate = fs.readFileSync(process.env.IOTHUB_X509_CERTIFICATE, 'utf-8');
-var x509Key = fs.readFileSync(process.env.IOTHUB_X509_KEY, 'utf-8');
-var x509Passphrase = process.env.IOTHUB_X509_PASSPHRASE;
-var x509ConnectionString = 'HostName=' + host + ';DeviceId=' + x509DeviceId + ';x509=true';
+var x509Certificate = 'cert';
+var x509Key = 'key';
+var x509Passphrase = 'pass';
+var x509ConnectionString = 'HostName=' + host + ';DeviceId=x509Device;x509=true';
 
 function badConfigTests(opName, Client, Transport, requestFn) {
   var badConnectionStrings = [

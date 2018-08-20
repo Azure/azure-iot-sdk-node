@@ -11,32 +11,29 @@
     "azure-iot-amqp-base": "1.7.3",
     "azure-iot-common": "1.7.3",
     "azure-iot-device": "1.7.3",
-    "debug": "^3.0.1",
+    "debug": "^3.1.0",
     "machina": "^2.0.1",
     "rhea": "^0.2.18",
     "uuid": "^3.0.1"
   },
   "devDependencies": {
-    "azure-iothub": "1.7.3",
     "@types/debug": "0.0.30",
     "@types/node": "^8.0.28",
     "chai": "^4.1.2",
-    "istanbul": "^0.4.5",
     "mocha": "^5.2.0",
+    "nyc": "^12.0.2",
     "sinon": "^4.0.2",
+    "source-map-support": "^0.5.8",
     "tslint": "^5.1.0",
     "typescript": "2.5.2"
   },
   "scripts": {
     "lint": "tslint --project . -c ../../../tslint.json",
     "build": "tsc",
-    "unittest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test.js",
-    "alltest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test*.js",
-    "unittest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test.js",
-    "alltest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
-    "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
-    "test": "npm -s run lint && npm -s run build && npm -s run unittest",
-    "check-cover": "istanbul check-coverage --statements 93 --branches 83  --lines 95 --functions 93"
+    "test-min": "nyc mocha --reporter dot --require source-map-support/register test/_*_test.js",
+    "test": "nyc mocha --reporter spec --require source-map-support/register test/_*_test.js",
+    "ci": "npm -s run lint && npm -s run build && npm -s run test-min && npm -s run check-cover",
+    "check-cover": "nyc check-coverage --statements 95 --branches 90 --functions 96 --lines 95"
   },
   "engines": {
     "node": ">= 0.10"
@@ -48,5 +45,22 @@
   "bugs": {
     "url": "https://github.com/Azure/azure-iot-sdk-node/issues"
   },
-  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme"
+  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme",
+  "nyc": {
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "exclude": [
+      "**/*.d.ts",
+      "coverage/",
+      "index.js",
+      "test/"
+    ],
+    "reporter": [
+      "html",
+      "text-summary"
+    ],
+    "all": true
+  }
 }
