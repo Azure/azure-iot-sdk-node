@@ -63,7 +63,7 @@ Service SDK subfolders:
 
 Development requirements documentation
 
-### /lib
+### /src
 
 Code for the library
 
