@@ -32,7 +32,7 @@ com.microsoft:client-version: <CLIENT_VERSION>
 ```
 **]**
 
-**SRS_NODE_PROVISIONING_AMQP_16_005: [** The `registrationRequest` method shall send a message on the previously attached sender link with a `correlationId` set to a newly generated UUID and the following application properties:
+**SRS_NODE_PROVISIONING_AMQP_16_005: [** The `registrationRequest` method shall send a message on the previously attached sender link with a `correlation_id` set to a newly generated UUID and the following application properties:
 ```
 iotdps-operation-type: iotdps-register;
 iotdps-forceRegistration: <true or false>;
@@ -41,7 +41,7 @@ iotdps-forceRegistration: <true or false>;
 
 **SRS_NODE_PROVISIONING_AMQP_16_006: [** The `registrationRequest` method shall listen for the response on the receiver link and accept it when it comes. **]**
 
-**SRS_NODE_PROVISIONING_AMQP_16_007: [** The `registrationRequest` method shall call its callback with a `RegistrationResult` object parsed from the body of the response message which `correlationId` matches the `correlationId` of the request message sent on the sender link. **]**
+**SRS_NODE_PROVISIONING_AMQP_16_007: [** The `registrationRequest` method shall call its callback with a `RegistrationResult` object parsed from the body of the response message which `correlation_id` matches the `correlation_id` of the request message sent on the sender link. **]**
 
 **SRS_NODE_PROVISIONING_AMQP_16_008: [** The `registrationRequest` method shall call its callback with an error if the transport fails to connect. **]**
 
@@ -71,7 +71,7 @@ com.microsoft:client-version: <CLIENT_VERSION>
 ```
 **]**
 
-**SRS_NODE_PROVISIONING_AMQP_16_015: [** The `queryOperationStatus` method shall send a message on the pre-attached sender link with a `correlationId` set to a newly generated UUID and the following application properties:
+**SRS_NODE_PROVISIONING_AMQP_16_015: [** The `queryOperationStatus` method shall send a message on the pre-attached sender link with a `correlation_id` set to a newly generated UUID and the following application properties:
 ```
 iotdps-operation-type: iotdps-get-operationstatus;
 iotdps-operation-id: <operationId>;
@@ -80,7 +80,7 @@ iotdps-operation-id: <operationId>;
 
 **SRS_NODE_PROVISIONING_AMQP_16_016: [** The `queryOperationStatus` method shall listen for the response on the receiver link and accept it when it comes. **]**
 
-**SRS_NODE_PROVISIONING_AMQP_16_017: [** The `queryOperationStatus` method shall call its callback with a `RegistrationResult` object parsed from the body of the response message which `correlationId` matches the `correlationId` of the request message sent on the sender link. **]**
+**SRS_NODE_PROVISIONING_AMQP_16_017: [** The `queryOperationStatus` method shall call its callback with a `RegistrationResult` object parsed from the body of the response message which `correlation_id` matches the `correlation_id` of the request message sent on the sender link. **]**
 
 **SRS_NODE_PROVISIONING_AMQP_16_018: [** The `queryOperationStatus` method shall call its callback with an error if the transport fails to connect. **]**
 

@@ -4,7 +4,6 @@
 'use strict';
 
 import * as Builder from 'buffer-builder';
-import * as Promise from 'bluebird';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-provisioning-device-amqp:SaslTpm');
 
@@ -31,6 +30,7 @@ export type SaslResponseFrame = {
  */
 export class SaslTpm {
   public name: string = 'TPM';
+  public hostname: string;
 
   private _getSasToken: GetSasToken;
   private _challengeKey: Builder;
@@ -54,11 +54,8 @@ export class SaslTpm {
     this._challengeKey = new Builder();
   }
 
-  /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_002: [ `getInitFrame` shall return a promise that resolves to an object with the following members:
-    `mechanism` - Must be 'TPM'
-    `initialResponse` - The inital frame contents
-    `hostname` - the hostName ] */
-  getInitFrame(): Promise<any> {
+  /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_002: [`start` shall call its callback with the init frame content.*/
+  start(callback: (err?: Error, response?: any) => void): void {
     let init: Buffer = new Builder()
         .appendUInt8(0)
         .appendString(this._idScope)
@@ -68,59 +65,53 @@ export class SaslTpm {
         .appendBuffer(this._endorsementKey)
         .get();
 
-    return new Promise((resolve: any) => {
-      resolve({
-        mechanism: this.name,
-        initialResponse: init,
-        hostname: this._idScope + '/registrations/' + this._registrationId
-      });
-    });
+    this.hostname = this._idScope + '/registrations/' + this._registrationId;
+
+    callback(undefined, init);
   }
 
-  getResponseFrame(challenge: any): Promise<SaslResponseFrame> {
+  step(challenge: any, callback: (err?: Error, response?: any) => void): void {
     // depends on the stage of the flow - needs a state machine
-    return new Promise((resolve, reject) => {
-      if (challenge[0].value.length === 1) {
-        let firstResponse: Buffer = new Builder()
-          .appendUInt8(0)
-          .appendBuffer(this._storageRootKey)
-          .get();
+    if (challenge.length === 1) {
+      let firstResponse: Buffer = new Builder()
+        .appendUInt8(0)
+        .appendBuffer(this._storageRootKey)
+        .get();
 
-        /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_003: [ If `getResponseFrame` is called with a 1 byte challenge, it shall resolve with the the initial response that was passed into the constructor. ] */
-        // initial challenge, reply with the srk
-        debug('initial response');
-        resolve({response: firstResponse});
+      /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_003: [ If `step` is called with a 1 byte challenge, it shall resolve with the the initial response that was passed into the constructor. ] */
+      // initial challenge, reply with the srk
+      debug('initial response');
+      callback(undefined, firstResponse);
+    } else {
+      debug('length = ' + challenge.length + ' control byte = ' + challenge[0]);
+      if ((challenge[0] & 0xC0) === 192) {
+        /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_004: [ If `step` is called with a first byte that has 1 in the most significant bit, it shall append the challenge to the full challenge buffer and call its callback with `\u0000` ] */
+        this._challengeKey.appendBuffer(challenge.slice(1));
+        let keyBuffer: Buffer = this._challengeKey.get();
+        /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_005: [ If `step` is called with a first byte that has 11 in the most significant bits, it shall call the challenge callback with the full challenge buffer. ] */
+        this._getSasToken(keyBuffer, (err, sasToken) => {
+          if (err) {
+            /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_007: [ If `ChallengeResponseCallback` is called with an error, `step` shall call its callback with an error. ] */
+            callback(err);
+          } else {
+            let responseBuffer: Buffer = new Builder()
+              .appendUInt8(0)
+              .appendString(sasToken)
+              .get();
+
+            /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_006: [ If `ChallengeResponseCallback` is called without passing an error, the final `step` promise shall call its callback with the SAS Token. ] */
+            callback(undefined, responseBuffer);
+          }
+        });
+      } else if ((challenge[0] & 0x80) === 128) {
+        /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_004: [ If `step` is called with a first byte that has 1 in the most significant bit, it shall append the challenge to the full challenge buffer and call its callback with `\u0000` ] */
+        this._challengeKey.appendBuffer(challenge.slice(1));
+        let responseBuffer: Builder = new Builder();
+        responseBuffer.appendUInt8(0); // <null>
+        callback(undefined, responseBuffer.get());
       } else {
-        debug('length = ' + challenge[0].value.length + ' control byte = ' + challenge[0].value[0]);
-        if ((challenge[0].value[0] & 0xC0) === 192) {
-          /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_004: [ If `getResponseFrame` is called with a first byte that has 1 in the most significant bit, it shall append the challenge to the full challenge buffer ] */
-          this._challengeKey.appendBuffer(challenge[0].value.slice(1));
-          let keyBuffer: Buffer = this._challengeKey.get();
-          /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_005: [ If `getResponseFrame` is called with a first byte that has 11 in the most significant bits, it shall call the challenge callback with the full challenge buffer ] */
-          this._getSasToken(keyBuffer, (err, sasToken) => {
-            if (err) {
-              /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_007: [ If `ChallengeResponseCallback` is called with an error, the final `getResponseFrame` promise shall be rejected. ] */
-              reject(err);
-            } else {
-              let responseBuffer: Buffer = new Builder()
-                .appendUInt8(0)
-                .appendString(sasToken)
-                .get();
-
-              /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_006: [ If `ChallengeResponseCallback` is called without passing an error, the final `getResponseFrame` promise shall be resolved. ] */
-              resolve({response: responseBuffer});
-            }
-          });
-        } else if ((challenge[0].value[0] & 0x80) === 128) {
-          /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_004: [ If `getResponseFrame` is called with a first byte that has 1 in the most significant bit, it shall append the challenge to the full challenge buffer ] */
-          this._challengeKey.appendBuffer(challenge[0].value.slice(1));
-          let responseBuffer: Builder = new Builder();
-          responseBuffer.appendUInt8(0); // <null>
-          resolve({response: responseBuffer.get()});
-        } else {
-          reject(new Error('unknown control byte value'));
-        }
+        callback(new Error('unknown control byte value'));
       }
-    });
+    }
   }
 }
