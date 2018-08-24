@@ -93,8 +93,8 @@ and a body containing `<sasToken>`. **]**
 
 ### events
 
-**SRS_NODE_AMQP_CBS_16_016: [** If either the sender or receiver link emits an `error` event, remaining links shall be detached. **]**
-
+**SRS_NODE_AMQP_CBS_06_001: [** If in the attached state, either the sender or the receiver links gets an error, an error of `azure-iot-amqp-base:error-indicated` will have been indicated on the container object and the cbs will remain in the attached state.  The owner of the cbs MUST detach.
+ **]**
 # $cbs listener
 
 **SRS_NODE_AMQP_CBS_16_019: [** A put token response of 200 will invoke the corresponding `putTokenCallback` with no parameters. **]**

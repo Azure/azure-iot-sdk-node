@@ -10,6 +10,7 @@
     "service",
     "provisioning/*",
     "provisioning/transport/*",
+    "provisioning/device/samples",
     "security/*",
     "longhaultests",
     "e2etests"

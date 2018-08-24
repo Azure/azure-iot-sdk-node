@@ -3,7 +3,6 @@
 
 'use strict';
 var EventEmitter = require('events').EventEmitter;
-var Promise = require('bluebird');
 var util = require('util');
 var results = require('azure-iot-common').results;
 

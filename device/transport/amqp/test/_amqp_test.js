@@ -427,7 +427,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_06_006: [If `initializeCBS` is successful, `putToken` shall be invoked If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter audience, created from the sr of the sas signature, the next parameter of the actual sas, and a callback.]*/
       /*Tests_SRS_NODE_DEVICE_AMQP_06_009: [If `putToken` is not successful then the client will remain disconnected and the callback will be called with an error per SRS_NODE_DEVICE_AMQP_16_009.]*/
-      it('Invokes putToken - puttoken fails and disconnects', function () {
+      it('Invokes putToken - putToken fails and disconnects', function () {
         var testError = new errors.NotConnectedError('fake error');
         fakeBaseClient.putToken = sinon.stub().callsArgWith(2, testError);
         transport.connect(function(err) {
@@ -567,7 +567,7 @@ describe('Amqp', function () {
 
         it('is deferred until connecting succeeds', function (testCallback) {
           var connectCallback;
-          fakeBaseClient.connect = sinon.stub().callsFake(function (uri, options, done) {
+          fakeBaseClient.connect = sinon.stub().callsFake(function (config, done) {
             connectCallback = done;
           });
 
@@ -1080,9 +1080,9 @@ describe('Amqp', function () {
           var sentMsg = sender.send.firstCall.args[0];
           assert.instanceOf(sentMsg, AmqpMessage);
           assert.instanceOf(result, results.MessageEnqueued);
-          assert.strictEqual(sentMsg.body, 'test');
+          assert.strictEqual(sentMsg.body.content.toString(), 'test');
           if (testConfig.expectedOutputName) {
-            assert.strictEqual(sentMsg.messageAnnotations['x-opt-output-name'], testConfig.expectedOutputName);
+            assert.strictEqual(sentMsg.message_annotations['x-opt-output-name'], testConfig.expectedOutputName);
           }
           testCallback(err);
         });
@@ -1504,7 +1504,7 @@ describe('Amqp', function () {
       var testText = '__TEST_TEXT__';
       transport.connect(function () {
         transport.on('message', function (msg) {
-          assert.strictEqual(msg.data, testText);
+          assert.strictEqual(msg.data.toString(), testText);
           testCallback();
         });
         transport.enableC2D(function (err) {
@@ -1523,13 +1523,13 @@ describe('Amqp', function () {
       transport.connect(function () {
         transport.on('inputMessage', function (inputName, msg) {
           assert.strictEqual(inputName, testInputName);
-          assert.strictEqual(msg.data, testText);
+          assert.strictEqual(msg.data.toString(), testText);
           testCallback();
         });
         transport.enableInputMessages(function (err) {
           assert(!err);
           var amqpMessage = AmqpMessage.fromMessage(new Message(testText));
-          amqpMessage.messageAnnotations = { 'x-opt-input-name': testInputName };
+          amqpMessage.message_annotations = { 'x-opt-input-name': testInputName };
           receiver.emit('message', amqpMessage);
         });
       });

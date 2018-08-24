@@ -66,16 +66,16 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
     const amqpErrorListener = (err) => this._amqpStateMachine.handle('amqpError', err);
 
     const responseHandler = (msg) => {
-      debug('got message with correlationId: ' + msg.properties.correlationId);
-      /*Codes_SRS_NODE_PROVISIONING_AMQP_16_007: [The `registrationRequest` method shall call its callback with a `RegistrationResult` object parsed from the body of the response message which `correlationId` matches the `correlationId` of the request message sent on the sender link.]*/
-      /*Codes_SRS_NODE_PROVISIONING_AMQP_16_017: [The `queryOperationStatus` method shall call its callback with a `RegistrationResult` object parsed from the body of the response message which `correlationId` matches the `correlationId` of the request message sent on the sender link.]*/
-      const registrationResult = JSON.parse(msg.body);
-      if (this._operations[msg.properties.correlationId]) {
-        const requestCallback = this._operations[msg.properties.correlationId];
-        delete this._operations[msg.properties.correlationId];
+      debug('got message with correlation_id: ' + msg.correlation_id);
+      /*Codes_SRS_NODE_PROVISIONING_AMQP_16_007: [The `registrationRequest` method shall call its callback with a `RegistrationResult` object parsed from the body of the response message which `correlation_id` matches the `correlation_id` of the request message sent on the sender link.]*/
+      /*Codes_SRS_NODE_PROVISIONING_AMQP_16_017: [The `queryOperationStatus` method shall call its callback with a `RegistrationResult` object parsed from the body of the response message which `correlation_id` matches the `correlation_id` of the request message sent on the sender link.]*/
+      const registrationResult = JSON.parse(msg.body.content);
+      if (this._operations[msg.correlation_id]) {
+        const requestCallback = this._operations[msg.correlation_id];
+        delete this._operations[msg.correlation_id];
         requestCallback(null, registrationResult, msg, this._config.pollingInterval);
       } else {
-        debug('ignoring message with unknown correlationId');
+        debug('ignoring message with unknown correlation_id');
       }
     };
 
@@ -194,10 +194,8 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
           _onEnter: (request, callback) => {
             const linkEndpoint = request.idScope + '/registrations/' + request.registrationId;
             const linkOptions = {
-              attach: {
-                properties: {
-                  'com.microsoft:api-version' : ProvisioningDeviceConstants.apiVersion
-               }
+              properties: {
+                'com.microsoft:api-version' : ProvisioningDeviceConstants.apiVersion
               }
             };
 
@@ -270,7 +268,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
           _onEnter: (callback) => callback(),
           registrationRequest: (request, correlationId, callback) => {
 
-            /*Codes_SRS_NODE_PROVISIONING_AMQP_16_005: [The `registrationRequest` method shall send a message on the previously attached sender link with a `correlationId` set to a newly generated UUID and the following application properties:
+            /*Codes_SRS_NODE_PROVISIONING_AMQP_16_005: [The `registrationRequest` method shall send a message on the previously attached sender link with a `correlation_id` set to a newly generated UUID and the following application properties:
             ```
             iotdps-operation-type: iotdps-register;
             iotdps-forceRegistration: <true or false>;
@@ -278,48 +276,46 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
             ]*/
             let requestMessage = new AmqpMessage();
             requestMessage.body = '';
-            requestMessage.applicationProperties = {};
-            requestMessage.properties = {};
-            requestMessage.applicationProperties[MessagePropertyNames.OperationType] = DeviceOperations.Register;
-            requestMessage.applicationProperties[MessagePropertyNames.ForceRegistration] = !!request.forceRegistration;
-            requestMessage.properties.correlationId = correlationId;
+            requestMessage.application_properties = {};
+            requestMessage.application_properties[MessagePropertyNames.OperationType] = DeviceOperations.Register;
+            requestMessage.application_properties[MessagePropertyNames.ForceRegistration] = !!request.forceRegistration;
+            requestMessage.correlation_id = correlationId;
 
             debug('initial registration request: ' + JSON.stringify(requestMessage));
-            this._operations[requestMessage.properties.correlationId] = callback;
+            this._operations[requestMessage.correlation_id] = callback;
             this._senderLink.send(requestMessage, (err) => {
               if (err) {
-                delete this._operations[requestMessage.properties.correlationId];
+                delete this._operations[requestMessage.correlation_id];
                 /*Codes_SRS_NODE_PROVISIONING_AMQP_16_011: [The `registrationRequest` method shall call its callback with an error if the transport fails to send the request message.]*/
                 callback(err);
               } else {
-                debug('registration request sent with correlationId: ' + requestMessage.properties.correlationId);
+                debug('registration request sent with correlation_id: ' + requestMessage.correlation_id);
               }
             });
           },
           queryOperationStatus: (request, correlationId, operationId, callback) => {
 
-            /*Codes_SRS_NODE_PROVISIONING_AMQP_16_015: [The `queryOperationStatus` method shall send a message on the pre-attached sender link with a `correlationId` set to a newly generated UUID and the following application properties:
+            /*Codes_SRS_NODE_PROVISIONING_AMQP_16_015: [The `queryOperationStatus` method shall send a message on the pre-attached sender link with a `correlation_id` set to a newly generated UUID and the following application properties:
             ```
             iotdps-operation-type: iotdps-get-operationstatus;
             iotdps-operation-id: <operationId>;
             ```*/
             let requestMessage = new AmqpMessage();
             requestMessage.body = '';
-            requestMessage.applicationProperties = {};
-            requestMessage.properties = {};
-            requestMessage.applicationProperties[MessagePropertyNames.OperationType] = DeviceOperations.GetOperationStatus;
-            requestMessage.applicationProperties[MessagePropertyNames.OperationId] = operationId;
-            requestMessage.properties.correlationId = correlationId;
+            requestMessage.application_properties = {};
+            requestMessage.application_properties[MessagePropertyNames.OperationType] = DeviceOperations.GetOperationStatus;
+            requestMessage.application_properties[MessagePropertyNames.OperationId] = operationId;
+            requestMessage.correlation_id = correlationId;
 
             debug('registration status request: ' + JSON.stringify(requestMessage));
-            this._operations[requestMessage.properties.correlationId] = callback;
+            this._operations[requestMessage.correlation_id] = callback;
             this._senderLink.send(requestMessage, (err) => {
               if (err) {
-                delete this._operations[requestMessage.properties.correlationId];
+                delete this._operations[requestMessage.correlation_id];
                 /*Codes_SRS_NODE_PROVISIONING_AMQP_16_021: [The `queryOperationStatus` method shall call its callback with an error if the transport fails to send the request message.]*/
                 callback(err);
               } else {
-                debug('registration status request sent with correlationId: ' + requestMessage.properties.correlationId);
+                debug('registration status request sent with correlation_id: ' + requestMessage.correlation_id);
               }
             });
           },

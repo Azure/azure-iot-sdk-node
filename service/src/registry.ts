@@ -28,7 +28,6 @@ const ArgumentError = errors.ArgumentError;
  */
 /*Codes_SRS_NODE_IOTHUB_REGISTRY_05_001: [The Registry constructor shall accept a transport object]*/
 export class Registry {
-  private _config: Registry.TransportConfig;
   private _restApiClient: RestApiClient;
 
   /**
@@ -48,7 +47,6 @@ export class Registry {
       - `sharedAccessSignature`: shared access signature with the permissions for the desired operations.]*/
       throw new ArgumentError('The \'config\' argument is missing either the host or the sharedAccessSignature property');
     }
-    this._config = config;
 
     /*SRS_NODE_IOTHUB_REGISTRY_16_024: [The `Registry` constructor shall use the `restApiClient` provided as a second argument if it is provided.]*/
     /*SRS_NODE_IOTHUB_REGISTRY_16_025: [The `Registry` constructor shall use `azure-iothub.RestApiClient` if no `restApiClient` argument is provided.]*/

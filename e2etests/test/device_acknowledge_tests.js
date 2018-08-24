@@ -34,7 +34,7 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 device_acknowledgment_tests(deviceAmqp.Amqp, DeviceIdentityHelper.createDeviceWithX509CASignedCert);
 
 function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
-  describe('Over ' + deviceTransport.name, function () {
+  describe('Over ' + deviceTransport.name + ' using ' + createDeviceMethod.name, function () {
     this.timeout(60000);
 
     var serviceClient, deviceClient;
