@@ -123,7 +123,6 @@ export class Amqp {
         False if the caller intends to manually settle messages
         A string containing the version of the SDK used for telemetry purposes] */
   constructor(autoSettleMessages: boolean) {
-    const autoSettleMode = autoSettleMessages ? 1 : 2;
     // node-amqp10 has an automatic reconnection/link re-attach feature that is enabled by default.
     // In our case we want to control the reconnection flow ourselves, so we need to disable it.
 
@@ -234,7 +233,7 @@ export class Amqp {
                 'com.microsoft:client-version': this._config.userAgentString
               },
               reconnect: false,
-              autoaccept: autoSettleMode
+              autoaccept: autoSettleMessages
             };
             this._connectionCallback = connectCallback;
             this._indicatedConnectionError = undefined;
