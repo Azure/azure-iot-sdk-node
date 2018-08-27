@@ -75,5 +75,5 @@ exports.deviceConnectionIdRoundtripMethodCallMethodNamePUT = function(connection
 // and then make sure we've replaced them all before exporting.
 //
 // WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
-module.exports = require('./glueUtils').replaceExports(module.exports, 'deviceGlue.js')
+module.exports = require('../glue/glueUtils').replaceExports(module.exports, '../glue/deviceGlue.js')
 

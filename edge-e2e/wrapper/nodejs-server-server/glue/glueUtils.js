@@ -137,7 +137,27 @@ var setOptionalCert = function(client, cert, done) {
 }
 
 /**
- * Copy all exports from other modules and verify that we've got them all.
+ * Replace exports from one file with functions exported from another file.  We use this function
+ * to make it easier to re-generate the stub code.  With this, we can replace the auto-generated
+ * functions in the service directory with their equivalent functions in the glue folder.
+ *
+ * Here's how it works:
+ *
+ * service/ModuleService.js (etc) has a bunch of handler functions that are auto-generated for us.
+ * The intention of this file is that app developers would replace the implementations inside this
+ * file with "real" code to handle the various rest api calls.
+ *
+ * However, if app developers manually insert their code into one of these services files, then
+ * they're in for a world of pain the next time they need to run the codegen tools because they
+ * have to merge the newly generated code with their manual insertions.  This is an painful and
+ * error-prone operation.
+ *
+ * To get around this pain, we use this function that replaces, at runtime, all of the functions
+ * exported from service/moduleService.js (etc) with functions from ModuleGlue.js.  This way, the
+ * only "merging" that app developers need to do is to make sure that this function gets called
+ * at the end of ModuleService.js.  If any functions are added or removed from ModuleService.js,
+ * this code will be able to notice this and flag an error.
+ *
  */
 var replaceExports = function(oldExports, filename) {
   var fail = false;

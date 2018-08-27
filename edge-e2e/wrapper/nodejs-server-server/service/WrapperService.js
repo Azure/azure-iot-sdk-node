@@ -58,5 +58,5 @@ exports.wrapperSessionPUT = function() {
 // and then make sure we've replaced them all before exporting.
 //
 // WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
-module.exports = require('./glueUtils').replaceExports(module.exports, 'wrapperGlue.js')
+module.exports = require('../glue/glueUtils').replaceExports(module.exports, '../glue/wrapperGlue.js')
 

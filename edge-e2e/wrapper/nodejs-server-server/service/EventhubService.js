@@ -77,4 +77,4 @@ exports.eventhubConnectionIdEnableTelemetryPUT = function(connectionId) {
 // and then make sure we've replaced them all before exporting.
 //
 // WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
-module.exports = require('./glueUtils').replaceExports(module.exports, 'eventHubGlue.js')
+module.exports = require('../glue/glueUtils').replaceExports(module.exports, '../glue/eventHubGlue.js')

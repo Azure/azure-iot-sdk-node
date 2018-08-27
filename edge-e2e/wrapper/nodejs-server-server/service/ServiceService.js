@@ -88,4 +88,4 @@ exports.serviceConnectionIdModuleMethodDeviceIdModuleIdPUT = function(connection
 // and then make sure we've replaced them all before exporting.
 //
 // WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
-module.exports = require('./glueUtils').replaceExports(module.exports, 'serviceGlue.js')
+module.exports = require('../glue/glueUtils').replaceExports(module.exports, 'serviceGlue.js')
