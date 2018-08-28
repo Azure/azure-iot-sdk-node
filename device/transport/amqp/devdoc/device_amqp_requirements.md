@@ -82,6 +82,8 @@ The `connect` method establishes a connection with the Azure IoT Hub instance.
 
 **SRS_NODE_DEVICE_AMQP_13_002: [** The `connect` method shall set the CA cert on the options object when calling the underlying connection object's connect method if it was supplied. **]**
 
+**SRS_NODE_DEVICE_AMQP_06_012: [** The `connect` method shall first test if the `ca` property is the name of an already existent file.  If so, it will attempt to read that file as a pem into a string value and pass the string to config object `ca` property.  Otherwise, it is assumed to be a pem string. **]**
+
 ### disconnect(done)
 The `disconnect` method terminates the connection with the Azure IoT Hub instance.
 
@@ -122,7 +124,7 @@ The `sendOutputEvent` method sends an event to the IoT Hub as the device indicat
 
 **SRS_NODE_DEVICE_AMQP_18_007: [** The `sendOutputEvent` method shall construct an AMQP request using the message passed in argument as the body of the message. **]**
 
-**SRS_NODE_DEVICE_AMQP_18_012: [** The `sendOutputEvent` method  shall set the annotation "x-opt-output-name" on the message to the `outputName`. **]**
+**SRS_NODE_DEVICE_AMQP_18_012: [** The `sendOutputEvent` method  shall set the application property "iothub-outputname" on the message to the `outputName`. **]**
 
 **SRS_NODE_DEVICE_AMQP_18_008: [** The `sendOutputEvent` method shall call the `done` callback with a null error object and a MessageEnqueued result object when the message has been successfully sent. **]**
 
@@ -288,9 +290,9 @@ This method is deprecated. The `AmqpReceiver` object and pattern is going away a
 
 ### message events
 
-**SRS_NODE_DEVICE_AMQP_18_013: [** If `amqp` receives a message on the C2D link without an annotation named "x-opt-input-name", it shall emit a "message" event with the message as the event parameter. **]**
+**SRS_NODE_DEVICE_AMQP_18_013: [** If `amqp` receives a message on the C2D link, it shall emit a "message" event with the message as the event parameter. **]**
 
 ### inputMessage events
 
-**SRS_NODE_DEVICE_AMQP_18_014: [** If `amqp` receives a message on the C2D link with an annotation named "x-opt-input-name", it shall emit an "inputMessage" event with the "x-opt-input-name" annotation as the first parameter and the message as the second parameter. **]**
+**SRS_NODE_DEVICE_AMQP_18_014: [** If `amqp` receives a message on the input message link, it shall emit an "inputMessage" event with the value of the annotation property "x-opt-input-name" as the first parameter and the agnostic message as the second parameter. **]**
 

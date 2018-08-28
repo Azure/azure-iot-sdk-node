@@ -4,6 +4,7 @@
 'use strict';
 import * as machina from 'machina';
 import * as async from 'async';
+import * as fs from 'fs';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-amqp:Amqp');
 import { EventEmitter } from 'events';
@@ -55,6 +56,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
   private _twinClient: AmqpTwinClient;
   private _c2dEndpoint: string;
   private _d2cEndpoint: string;
+  private _messageEventName: string;
   private _c2dLink: ReceiverLink;
   private _d2cLink: SenderLink;
   private _options: DeviceClientOptions;
@@ -127,11 +129,11 @@ export class Amqp extends EventEmitter implements DeviceTransport {
       if (msg.message_annotations) {
         inputName = msg.message_annotations['x-opt-input-name'];
       }
-      if (inputName) {
-        /*Codes_SRS_NODE_DEVICE_AMQP_18_014: [If `amqp` receives a message on the C2D link with an annotation named "x-opt-input-name", it shall emit an "inputMessage" event with the "x-opt-input-name" annotation as the first parameter and the message as the second parameter.]*/
+      if (this._messageEventName === 'inputMessage') {
+        /*Codes_SRS_NODE_DEVICE_AMQP_18_014: [If `amqp` receives a message on the input message link, it shall emit an "inputMessage" event with the value of the annotation property "x-opt-input-name" as the first parameter and the agnostic message as the second parameter.]*/
         this.emit('inputMessage', inputName, AmqpMessage.toMessage(msg));
       } else {
-        /*Codes_SRS_NODE_DEVICE_AMQP_18_013: [If `amqp` receives a message on the C2D link without an annotation named "x-opt-input-name", it shall emit a "message" event with the message as the event parameter.]*/
+        /*Codes_SRS_NODE_DEVICE_AMQP_18_013: [If `amqp` receives a message on the C2D link, it shall emit a "message" event with the message as the event parameter.]*/
         this.emit('message', AmqpMessage.toMessage(msg));
       }
     };
@@ -269,9 +271,11 @@ export class Amqp extends EventEmitter implements DeviceTransport {
                 if (credentials.moduleId) {
                   this._c2dEndpoint = endpoint.moduleMessagePath(credentials.deviceId, credentials.moduleId);
                   this._d2cEndpoint = endpoint.moduleEventPath(credentials.deviceId, credentials.moduleId);
+                  this._messageEventName = 'inputMessage';
                 } else {
                   this._c2dEndpoint = endpoint.deviceMessagePath(credentials.deviceId);
                   this._d2cEndpoint = endpoint.deviceEventPath(credentials.deviceId);
+                  this._messageEventName = 'message';
                 }
 
                 getUserAgentString((userAgentString) => {
@@ -283,7 +287,12 @@ export class Amqp extends EventEmitter implements DeviceTransport {
                   /*Codes_SRS_NODE_DEVICE_AMQP_13_002: [ The connect method shall set the CA cert on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
                   if (this._options && this._options.ca) {
                     config.sslOptions = config.sslOptions || {};
-                    config.sslOptions.caFile = this._options.ca;
+                    /*Codes_SRS_NODE_DEVICE_AMQP_06_012: [The `connect` method shall first test if the `ca` property is the name of an already existent file.  If so, it will attempt to read that file as a pem into a string value and pass the string to config object `ca` property.  Otherwise, it is assumed to be a pem string.] */
+                    if (fs.existsSync(this._options.ca)) {
+                      config.sslOptions.ca = fs.readFileSync(this._options.ca, 'utf8');
+                    } else {
+                      config.sslOptions.ca = this._options.ca;
+                    }
                   }
                   this._amqp.connect(config, (err, connectResult) => {
                     if (err) {
@@ -808,11 +817,11 @@ export class Amqp extends EventEmitter implements DeviceTransport {
   /*Codes_SRS_NODE_DEVICE_AMQP_18_009: [If `sendOutputEvent` encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
   sendOutputEvent(outputName: string, message: Message, callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
     let amqpMessage = AmqpMessage.fromMessage(message);
-    if (!amqpMessage.message_annotations) {
-      amqpMessage.message_annotations = {};
+    if (!amqpMessage.application_properties) {
+      amqpMessage.application_properties = {};
     }
-    /*Codes_SRS_NODE_DEVICE_AMQP_18_012: [The `sendOutputEvent` method  shall set the annotation "x-opt-output-name" on the message to the `outputName`.]*/
-    amqpMessage.message_annotations['x-opt-output-name'] = outputName;
+    /*Codes_SRS_NODE_DEVICE_AMQP_18_012: [The `sendOutputEvent` method  shall set the application property "iothub-outputname" on the message to the `outputName`.]*/
+    amqpMessage.application_properties['iothub-outputname'] = outputName;
     this._fsm.handle('sendEvent', amqpMessage, callback);
   }
 

@@ -47,7 +47,7 @@ export function moduleEventPath(deviceId: string, moduleId: string): string {
 }
 
 export function moduleMessagePath(deviceId: string, moduleId: string): string {
-  return modulePath(deviceId, moduleId) + '/messages/devicebound';
+  return modulePath(deviceId, moduleId) + '/messages/events';
 }
 
 export function moduleMethodPath(deviceId: string, moduleId: string): string {
