@@ -660,6 +660,7 @@ export class Amqp {
     if (config.sslOptions) {
       connectionParameters.cert = config.sslOptions.cert;
       connectionParameters.key = config.sslOptions.key;
+      connectionParameters.ca = config.sslOptions.ca;
     }
     connectionParameters.port = parsedUrl.port ? ( parsedUrl.port ) : (5671);
     connectionParameters.transport = 'tls';
