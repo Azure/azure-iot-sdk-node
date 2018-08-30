@@ -1,0 +1,23 @@
+{
+  "node": true,
+  "mocha": true,
+  "bitwise": true,
+  "curly": false,
+  "eqeqeq": true,
+  "forin": true,
+  "immed": true,
+  "latedef": false,
+  "newcap": true,
+  "noarg": true,
+  "noempty": true,
+  "nonew": true,
+  "regexp": true,
+  "undef": true,
+  "unused": true,
+  "strict": true,
+  "globalstrict": true,
+  "trailing": true,
+  "asi": true,  // Tolerate Automatic Semicolon Insertion (no semicolons).
+  "unused": false,   // suppress "foo is defined but never used"
+  "sub": true       // suppress "foo is better written in dot notation"
+}

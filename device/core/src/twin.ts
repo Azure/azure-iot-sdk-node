@@ -81,13 +81,13 @@ export class Twin extends EventEmitter {
   get(callback: (err: Error, twin?: Twin) => void): void {
     const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
+      this._clearCachedProperties();
       /*Codes_SRS_NODE_DEVICE_TWIN_16_002: [The `get` method shall call the `getTwin` method of the `Transport` object with a callback.]*/
       this._transport.getTwin((err, twinProperties) => {
         if (err) {
           /*Codes_SRS_NODE_DEVICE_TWIN_16_003: [If the callback passed to the `getTwin` method is called with an error, the `callback` passed to the call to the `get` method shall be called with that error.]*/
           opCallback(err);
         } else {
-          this._clearCachedProperties();
           /*Codes_SRS_NODE_DEVICE_TWIN_16_004: [If the callback passed to the `getTwin` method is called with no error and a `TwinProperties` object, these properties shall be merged with the current instance properties.]*/
           this._mergePatch(this.properties.desired, twinProperties.desired);
           this._mergePatch(this.properties.reported, twinProperties.reported);
