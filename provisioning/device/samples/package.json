@@ -16,9 +16,6 @@
     "azure-iot-device-http": "1.7.3",
     "azure-iot-device": "1.7.3"
   },
-  "scripts": {
-    "build": "echo nothing to do"
-  },
   "engines": {
     "node": ">= 0.10"
   },

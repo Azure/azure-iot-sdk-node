@@ -32,7 +32,6 @@
     "mocha-multi-reporters": "^1.1.7"
   },
   "scripts": {
-    "build": "echo \"Nothing to do\"",
     "lint": "jshint --show-non-errors .",
     "device_service": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/device_service.js",
     "registry": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/registry.js",
