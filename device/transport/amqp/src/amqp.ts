@@ -693,6 +693,9 @@ export class Amqp extends EventEmitter implements DeviceTransport {
 
     /*Codes_SRS_NODE_DEVICE_AMQP_13_001: [ The setOptions method shall save the options passed in. ]*/
     this._options = options;
+    if (done) {
+      done();
+    }
   }
 
   /**

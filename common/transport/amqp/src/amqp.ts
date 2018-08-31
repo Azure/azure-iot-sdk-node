@@ -374,7 +374,11 @@ export class Amqp {
             this._fsm.transition('disconnecting', null, err);
           },
           error: (context: EventContext) => {
-            this._fsm.transition('disconnecting', null, context.connection.error);
+            if (context && context.connection) {
+              this._fsm.transition('disconnecting', null, context.connection.error);
+            } else {
+              this._fsm.transition('disconnecting', null, context);
+            }
           },
           disconnected: (context: EventContext) => {
             this._disconnectionOccurred = true;
