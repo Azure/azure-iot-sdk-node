@@ -41,6 +41,14 @@ phases:
       IOT_PROVISIONING_ROOT_CERT: $(NODE-WINDOWS-DF-IOT-PROVISIONING-CERT)
       IOT_PROVISIONING_ROOT_CERT_KEY: $(NODE-WINDOWS-DF-IOT-PROVISIONING-ROOT-CERT-KEY)
 
+  - task: PublishTestResults@1
+    displayName: 'Publish Test Results | Mocha'
+    inputs:
+      testResultsFiles: 'e2etests/test-results.*.xml'
+      mergeTestResults: true
+      testRunTitle: 'E2E Tests - Linux'
+    condition: succeededOrFailed()
+
 
 - phase: Phase_1
   displayName: Windows Build - Node 8
@@ -84,4 +92,11 @@ phases:
       IOT_PROVISIONING_ROOT_CERT: $(NODE-WINDOWS-DF-IOT-PROVISIONING-CERT)
       IOT_PROVISIONING_ROOT_CERT_KEY: $(NODE-WINDOWS-DF-IOT-PROVISIONING-ROOT-CERT-KEY)
 
+  - task: PublishTestResults@1
+    displayName: 'Publish Test Results | Mocha'
+    inputs:
+      testResultsFiles: 'e2etests/test-results.*.xml'
+      mergeTestResults: true
+      testRunTitle: 'E2E Tests - Windows'
+    condition: succeededOrFailed()
 
