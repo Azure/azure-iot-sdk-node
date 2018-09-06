@@ -82,8 +82,6 @@ The `connect` method establishes a connection with the Azure IoT Hub instance.
 
 **SRS_NODE_DEVICE_AMQP_13_002: [** The `connect` method shall set the CA cert on the options object when calling the underlying connection object's connect method if it was supplied. **]**
 
-**SRS_NODE_DEVICE_AMQP_06_012: [** The `connect` method shall first test if the `ca` property is the name of an already existent file.  If so, it will attempt to read that file as a pem into a string value and pass the string to config object `ca` property.  Otherwise, it is assumed to be a pem string. **]**
-
 ### disconnect(done)
 The `disconnect` method terminates the connection with the Azure IoT Hub instance.
 
