@@ -165,10 +165,10 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
     });
 
     describe('#setOptions', function () {
-      before(function() {
+      beforeEach(function() {
         fs.writeFileSync('aziotfakepemfile', 'ca cert');
       });
-      after(function() {
+      afterEach(function() {
         fs.unlinkSync('aziotfakepemfile');
       });
 
