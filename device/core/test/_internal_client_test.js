@@ -5,6 +5,7 @@
 
 var assert = require('chai').assert;
 var sinon = require('sinon');
+var fs = require('fs');
 var EventEmitter = require('events').EventEmitter;
 var SimulatedHttp = require('./http_simulated.js');
 var FakeTransport = require('./fake_transport.js');
@@ -164,6 +165,13 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
     });
 
     describe('#setOptions', function () {
+      before(function() {
+        fs.writeFileSync('aziotfakepemfile', 'ca cert');
+      });
+      after(function() {
+        fs.unlinkSync('aziotfakepemfile');
+      });
+
       /*Tests_SRS_NODE_INTERNAL_CLIENT_06_001: [The `setOption` method shall first test if the `ca` property is the name of an already existent file.  If so, it will attempt to read that file as a pem into a string value and pass the string to config object `ca` property.  Otherwise, it is assumed to be a pem string.] */
       it('sets CA cert with contents of file if provided', function (testCallback) {
         var fakeBaseClient = new FakeTransport();
@@ -172,7 +180,7 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
         fakeMethodClient.setOptions = sinon.stub();
         var client = new ClientCtor(fakeBaseClient);
         client._methodClient = fakeMethodClient;
-        client.setOptions({ ca: '.\\device\\core\\test\\_fake_cert.txt' });
+        client.setOptions({ ca: 'aziotfakepemfile' });
         assert(fakeBaseClient.setOptions.called);
         assert.strictEqual(fakeBaseClient.setOptions.firstCall.args[0].ca, 'ca cert');
         testCallback();
