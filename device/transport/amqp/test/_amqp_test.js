@@ -400,6 +400,17 @@ describe('Amqp', function () {
         });
       });
 
+      /*Tests_SRS_NODE_DEVICE_AMQP_06_012: [The `connect` method shall first test if the `ca` property is the name of an already existent file.  If so, it will attempt to read that file as a pem into a string value and pass the string to config object `ca` property.  Otherwise, it is assumed to be a pem string.] */
+      it('sets CA cert with contents of file if provided', function (testCallback) {
+        transport.setOptions({ ca: '.\\device\\transport\\amqp\\test\\_fake_pem.pem' });
+        transport.connect(function (err) {
+          assert.isNotOk(err);
+          assert(fakeBaseClient.connect.called);
+          assert.strictEqual(fakeBaseClient.connect.firstCall.args[0].sslOptions.ca, 'ca cert');
+          testCallback();
+        });
+      });
+
       it('sets gateway host name if provided', function (testCallback) {
         fakeTokenAuthenticationProvider.getDeviceCredentials = sinon.stub().callsArgWith(0, null, configWithGatewayHostName);
         transport.connect(function (err) {

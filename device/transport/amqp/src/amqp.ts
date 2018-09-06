@@ -4,6 +4,7 @@
 'use strict';
 import * as machina from 'machina';
 import * as async from 'async';
+import * as fs from 'fs';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-amqp:Amqp');
 import { EventEmitter } from 'events';
@@ -687,6 +688,9 @@ export class Amqp extends EventEmitter implements DeviceTransport {
 
     /*Codes_SRS_NODE_DEVICE_AMQP_13_001: [ The setOptions method shall save the options passed in. ]*/
     this._options = options;
+    if (done) {
+      done();
+    }
   }
 
   /**
