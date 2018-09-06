@@ -14,6 +14,7 @@ import { SharedAccessSignatureAuthenticationProvider } from './sas_authenticatio
 import { X509AuthenticationProvider } from './x509_authentication_provider';
 import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
 import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
+import { Callback } from './promise_utils';
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
   if (callback) callback(error, result);
@@ -98,9 +99,25 @@ export class Client extends InternalClient {
    *
    * @param closeCallback Function to call once the transport is disconnected and the client closed.
    */
-  close(closeCallback?: (err?: Error, result?: results.Disconnected) => void): void {
+  _close(closeCallback?: (err?: Error, result?: results.Disconnected) => void): void {
     this._transport.removeListener('disconnect', this._deviceDisconnectHandler);
     super.close(closeCallback);
+  }
+
+  close(closeCallback?: Callback<results.Disconnected>): Promise<results.Disconnected> | void {
+    if (closeCallback) {
+      return this._close(closeCallback);
+    }
+
+    return new Promise<results.Disconnected>((resolve, reject) => {
+      this._close((error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      });
+    });
   }
 
   /**
