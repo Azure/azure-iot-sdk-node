@@ -165,7 +165,7 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
 
     describe('#setOptions', function () {
       /*Tests_SRS_NODE_INTERNAL_CLIENT_06_001: [The `setOption` method shall first test if the `ca` property is the name of an already existent file.  If so, it will attempt to read that file as a pem into a string value and pass the string to config object `ca` property.  Otherwise, it is assumed to be a pem string.] */
-      it.only('sets CA cert with contents of file if provided', function (testCallback) {
+      it('sets CA cert with contents of file if provided', function (testCallback) {
         var fakeBaseClient = new FakeTransport();
         fakeBaseClient.setOptions = sinon.stub();
         var fakeMethodClient = {}
@@ -173,6 +173,19 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
         var client = new ClientCtor(fakeBaseClient);
         client._methodClient = fakeMethodClient;
         client.setOptions({ ca: '.\\device\\core\\test\\_fake_cert.txt' });
+        assert(fakeBaseClient.setOptions.called);
+        assert.strictEqual(fakeBaseClient.setOptions.firstCall.args[0].ca, 'ca cert');
+        testCallback();
+      });
+
+      it('sets CA cert with contents of provided string', function (testCallback) {
+        var fakeBaseClient = new FakeTransport();
+        fakeBaseClient.setOptions = sinon.stub();
+        var fakeMethodClient = {}
+        fakeMethodClient.setOptions = sinon.stub();
+        var client = new ClientCtor(fakeBaseClient);
+        client._methodClient = fakeMethodClient;
+        client.setOptions({ ca: 'ca cert' });
         assert(fakeBaseClient.setOptions.called);
         assert.strictEqual(fakeBaseClient.setOptions.firstCall.args[0].ca, 'ca cert');
         testCallback();
