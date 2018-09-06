@@ -4,7 +4,6 @@
 'use strict';
 import * as machina from 'machina';
 import * as async from 'async';
-import * as fs from 'fs';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-amqp:Amqp');
 import { EventEmitter } from 'events';
@@ -287,12 +286,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
                   /*Codes_SRS_NODE_DEVICE_AMQP_13_002: [ The connect method shall set the CA cert on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
                   if (this._options && this._options.ca) {
                     config.sslOptions = config.sslOptions || {};
-                    /*Codes_SRS_NODE_DEVICE_AMQP_06_012: [The `connect` method shall first test if the `ca` property is the name of an already existent file.  If so, it will attempt to read that file as a pem into a string value and pass the string to config object `ca` property.  Otherwise, it is assumed to be a pem string.] */
-                    if (fs.existsSync(this._options.ca)) {
-                      config.sslOptions.ca = fs.readFileSync(this._options.ca, 'utf8');
-                    } else {
-                      config.sslOptions.ca = this._options.ca;
-                    }
+                    config.sslOptions.ca = this._options.ca;
                   }
                   this._amqp.connect(config, (err, connectResult) => {
                     if (err) {
