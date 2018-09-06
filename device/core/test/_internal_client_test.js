@@ -5,6 +5,7 @@
 
 var assert = require('chai').assert;
 var sinon = require('sinon');
+var fs = require('fs');
 var EventEmitter = require('events').EventEmitter;
 var SimulatedHttp = require('./http_simulated.js');
 var FakeTransport = require('./fake_transport.js');
@@ -163,6 +164,46 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
       });
     });
 
+    describe('#setOptions', function () {
+      beforeEach(function() {
+        fs.writeFileSync('aziotfakepemfile', 'ca cert');
+      });
+      afterEach(function() {
+        fs.unlinkSync('aziotfakepemfile');
+      });
+
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_06_001: [The `setOptions` method shall assume the `ca` property is the name of an already existent file and it will attempt to read that file as a pem into a string value and pass the string to config object `ca` property.  Otherwise, it is assumed to be a pem string.] */
+      it('sets CA cert with contents of file if provided', function (testCallback) {
+        var fakeBaseClient = new FakeTransport();
+        fakeBaseClient.setOptions = sinon.stub().callsArg(1);
+        var fakeMethodClient = {}
+        fakeMethodClient.setOptions = sinon.stub();
+        var client = new ClientCtor(fakeBaseClient);
+        client._methodClient = fakeMethodClient;
+        client.setOptions({ ca: 'aziotfakepemfile' }, function(err) {
+          assert.isNotOk(err, 'the setOptions passed')
+          assert(fakeBaseClient.setOptions.called);
+          assert.strictEqual(fakeBaseClient.setOptions.firstCall.args[0].ca, 'ca cert');
+          testCallback();
+        });
+      });
+
+      it('sets CA cert with contents of provided string', function (testCallback) {
+        var fakeBaseClient = new FakeTransport();
+        fakeBaseClient.setOptions = sinon.stub().callsArg(1);
+        var fakeMethodClient = {}
+        fakeMethodClient.setOptions = sinon.stub();
+        var client = new ClientCtor(fakeBaseClient);
+        client._methodClient = fakeMethodClient;
+        client.setOptions({ ca: 'ca cert' }, function(err) {
+          assert.isNotOk(err, 'the setOptions passed')
+          assert(fakeBaseClient.setOptions.called);
+          assert.strictEqual(fakeBaseClient.setOptions.firstCall.args[0].ca, 'ca cert');
+          testCallback();
+        });
+      });
+    });
+
     describe('#open', function () {
       /* Tests_SRS_NODE_INTERNAL_CLIENT_12_001: [The open function shall call the transport’s connect function, if it exists.] */
       it('calls connect on the transport if the method exists', function (done) {
@@ -239,15 +280,6 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
         client.open(function () {
           client.close();
         });
-      });
-
-      it('calls the callback immediately if the client is already disconnected', function (testCallback) {
-        var transport = new FakeTransport();
-        sinon.stub(transport, 'disconnect').callsFake(function () {
-          assert.fail();
-        });
-        var client = new ClientCtor(transport);
-        client.close(testCallback());
       });
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_046: [** The `disconnect` method shall remove the listener that has been attached to the transport `disconnect` event.]*/

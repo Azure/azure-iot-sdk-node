@@ -25,7 +25,15 @@ The SDK is entirely open-source (as you probably figured out already if you're r
 $ git clone https://github.com/azure/azure-iot-sdk-node
 ```
 
-The SDK ships in a few separate NPM packages that depend on each other. Once the repository has been cloned, some features span accross multiple packages so in order to build and test these features, we need to "link" those package together in a single environment. We use the awesome [lerna.js](https://lernajs.io) to do that, so you have to install this first.
+If you are going to be developing on Windows you will need to install some additional build tools.  In an administrator command prompt:
+
+```
+npm install -g windows-build-tools
+```
+
+This will probably take serveral minutes to run.
+
+The SDK ships in a few separate NPM packages that depend on each other. Once the repository has been cloned, some features span across multiple packages so in order to build and test these features, we need to "link" those package together in a single environment. We use the awesome [lerna.js](https://lernajs.io) to do that, so you have to install this first.  At a prompt with administrative privileges:
 
 ```
 npm install -g lerna

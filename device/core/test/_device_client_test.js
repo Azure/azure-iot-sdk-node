@@ -78,7 +78,6 @@ describe('Device Client', function () {
     });
   });
 
-
   describe('#uploadToBlob', function() {
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_037: [The `uploadToBlob` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
     [undefined, null, ''].forEach(function (blobName) {
@@ -404,7 +403,7 @@ describe('Device Client', function () {
 
     // Tests_SRS_NODE_DEVICE_CLIENT_13_025: [ onDeviceMethod shall throw a TypeError if callback is not a Function. ]
     ['not_a_function', 42].forEach(function (callback) {
-      it('throws ReferenceError when callback is "' + callback + '"', function () {
+      it('throws TypeError when callback is "' + callback + '"', function () {
         var transport = new FakeMethodTransport();
         var client = new Client(transport);
         assert.throws(function () {

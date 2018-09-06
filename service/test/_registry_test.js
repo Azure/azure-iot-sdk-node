@@ -41,14 +41,17 @@ function testBadArg(methodUnderTest, ExpectedErrorType, argName, argIndex, arg1,
     case 4: argValue = arg5; break;
     default: assert.fail('invalid argIndex value in test: ' + argIndex);
   }
-  it('throws a ' + errorName + ' if \'' + argName + '\' is \'' + JSON.stringify(argValue) + '\' (type:' + typeof(argValue) + ')', function() {
-    var registry = new Registry({ host: 'host', sharedAccessSignature: 'sas' });
-    assert.throws(function() {
-      var callback = function() { };
+  it('throws a ' + errorName + ' if \'' + argName + '\' is \'' + JSON.stringify(argValue) + '\' (type:' + typeof (argValue) + ')', function () {
+    var registry = new Registry({
+      host: 'host',
+      sharedAccessSignature: 'sas'
+    });
+    assert.throws(function () {
+      var callback = function () {};
       if ((argIndex === 4) || (arg1 && arg2 && arg3 && arg4 && arg5)) {
         registry[methodUnderTest](arg1, arg2, arg3, arg4, arg5, callback);
       } else if ((argIndex === 3) || (arg1 && arg2 && arg3 && arg4)) {
-          registry[methodUnderTest](arg1, arg2, arg3, arg4, callback);
+        registry[methodUnderTest](arg1, arg2, arg3, arg4, callback);
       } else if ((argIndex === 2) || (arg1 && arg2 && arg3)) {
         registry[methodUnderTest](arg1, arg2, arg3, callback);
       } else if ((argIndex === 1) || (arg1 && arg2)) {
@@ -87,10 +90,13 @@ function testDevicesNonBooleanForce(methodUnderTest, argName, argValue, Expected
 
 function testWrongLengthArg(methodUnderTest, argName, argValue, ExpectedErrorType) {
   var errorName = ExpectedErrorType ? ExpectedErrorType.name : 'Error';
-  it('throws a ' + errorName + ' if \'' + argName + '\' is length \'' + argValue.length + '\' (type:' + typeof(argValue) + ')', function() {
-    var registry = new Registry({ host: 'host', sharedAccessSignature: 'sas' });
-    assert.throws(function() {
-      registry[methodUnderTest](argValue, true, function() {});
+  it('throws a ' + errorName + ' if \'' + argName + '\' is length \'' + argValue.length + '\' (type:' + typeof (argValue) + ')', function () {
+    var registry = new Registry({
+      host: 'host',
+      sharedAccessSignature: 'sas'
+    });
+    assert.throws(function () {
+      registry[methodUnderTest](argValue, function () {});
     }, ExpectedErrorType);
   });
 }
@@ -111,7 +117,7 @@ function testUriEncoding(methodUnderTest, deviceArg, expected) {
 
 function testErrorCallback(methodUnderTest, arg1, arg2, arg3, arg4, arg5) {
 
-  var invokeMethodUnderTest = function(registry, callback) {
+  var invokeMethodUnderTest = function (registry, callback) {
     if (arg5) {
       registry[methodUnderTest](arg1, arg2, arg3, arg4, arg5, callback);
     } else if (arg4) {
@@ -128,7 +134,7 @@ function testErrorCallback(methodUnderTest, arg1, arg2, arg3, arg4, arg5) {
   };
 
   /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_035: [** When any registry operation method receives an HTTP response with a status code >= 300, it shall invoke the `done` callback function with an error translated using the requirements detailed in `registry_http_errors_requirements.md`]*/
-  it('calls the done callback with a proper error if an HTTP error occurs', function(testCallback) {
+  it('calls the done callback with a proper error if an HTTP error occurs', function (testCallback) {
     var FakeHttpErrorHelper = {
       executeApiCall: function (method, path, httpHeaders, body, done) {
         done(new errors.DeviceNotFoundError('Not found'));
@@ -136,7 +142,7 @@ function testErrorCallback(methodUnderTest, arg1, arg2, arg3, arg4, arg5) {
     };
 
     var registry = new Registry(fakeConfig, FakeHttpErrorHelper);
-    var callback = function(err, result, response) {
+    var callback = function (err, result, response) {
       assert.instanceOf(err, errors.DeviceNotFoundError);
       assert.isUndefined(result);
       assert.isUndefined(response);
@@ -148,7 +154,7 @@ function testErrorCallback(methodUnderTest, arg1, arg2, arg3, arg4, arg5) {
   });
 
   /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_033: [If any registry operation method encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript `Error` object with a text description of the error (err.message).]*/
-  it('calls the done callback with a standard error if not an HTTP error', function(testCallback) {
+  it('calls the done callback with a standard error if not an HTTP error', function (testCallback) {
     var FakeGenericErrorHelper = {
       executeApiCall: function (method, path, httpHeaders, body, done) {
         done(new Error('Fake Error'));
@@ -156,7 +162,7 @@ function testErrorCallback(methodUnderTest, arg1, arg2, arg3, arg4, arg5) {
     };
 
     var registry = new Registry(fakeConfig, FakeGenericErrorHelper);
-    var callback = function(err, result, response) {
+    var callback = function (err, result, response) {
       assert.instanceOf(err, Error);
       assert.isUndefined(result);
       assert.isUndefined(response);
@@ -168,12 +174,12 @@ function testErrorCallback(methodUnderTest, arg1, arg2, arg3, arg4, arg5) {
 }
 
 
-describe('Registry', function() {
-  describe('#constructor', function() {
+describe('Registry', function () {
+  describe('#constructor', function () {
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_023: [The `Registry` constructor shall throw a `ReferenceError` if the config object is falsy.]*/
-    [undefined, null].forEach(function(badConfig) {
-      it('throws if \'config\' is \'' + badConfig + '\'', function() {
-        assert.throws(function() {
+    [undefined, null].forEach(function (badConfig) {
+      it('throws if \'config\' is \'' + badConfig + '\'', function () {
+        assert.throws(function () {
           return new Registry(badConfig);
         }, ReferenceError);
       });
@@ -182,16 +188,22 @@ describe('Registry', function() {
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_05_001: [The `Registry` constructor shall throw an `ArgumentException` if the config object is missing one or more of the following properties:
     - `host`: the IoT Hub hostname
     - `sharedAccessSignature`: shared access signature with the permissions for the desired operations.]*/
-    [undefined, null, ''].forEach(function(badConfigProperty) {
-      it('throws if \'config.host\' is \'' + badConfigProperty + '\'', function() {
-        assert.throws(function() {
-          return new Registry({host: badConfigProperty, sharedAccessSignature: 'sharedAccessSignature'});
+    [undefined, null, ''].forEach(function (badConfigProperty) {
+      it('throws if \'config.host\' is \'' + badConfigProperty + '\'', function () {
+        assert.throws(function () {
+          return new Registry({
+            host: badConfigProperty,
+            sharedAccessSignature: 'sharedAccessSignature'
+          });
         }, errors.ArgumentError);
       });
 
-      it('throws if \'config.sharedAccessSignature\' is \'' + badConfigProperty + '\'', function() {
-        assert.throws(function() {
-          return new Registry({host: 'host', sharedAccessSignature: badConfigProperty});
+      it('throws if \'config.sharedAccessSignature\' is \'' + badConfigProperty + '\'', function () {
+        assert.throws(function () {
+          return new Registry({
+            host: 'host',
+            sharedAccessSignature: badConfigProperty
+          });
         }, errors.ArgumentError);
       });
     });
@@ -200,11 +212,11 @@ describe('Registry', function() {
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_025: [The `Registry` constructor shall use `azure-iot-http-base.Http` if no `httpHelper` argument is provided.]*/
   });
 
-  describe('#fromConnectionString', function() {
+  describe('#fromConnectionString', function () {
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_05_008: [The `fromConnectionString` method shall throw `ReferenceError` if the value argument is falsy.]*/
-    [undefined, null, ''].forEach(function(falsyConnectionString) {
-      it('throws if \'value\' is \'' + falsyConnectionString + '\'', function() {
-        assert.throws(function() {
+    [undefined, null, ''].forEach(function (falsyConnectionString) {
+      it('throws if \'value\' is \'' + falsyConnectionString + '\'', function () {
+        assert.throws(function () {
           return Registry.fromConnectionString(falsyConnectionString);
         }, ReferenceError);
       });
@@ -212,17 +224,17 @@ describe('Registry', function() {
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_05_009: [The `fromConnectionString` method shall derive and transform the needed parts from the connection string in order to create a `config` object for the constructor (see `SRS_NODE_IOTHUB_REGISTRY_05_001`).]*/
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_05_010: [The `fromConnectionString` method shall return a new instance of the `Registry` object.]*/
-    it('returns a new instance of the Registry object', function() {
+    it('returns a new instance of the Registry object', function () {
       var registry = Registry.fromConnectionString('HostName=a.b.c;SharedAccessKeyName=name;SharedAccessKey=key');
       assert.instanceOf(registry, Registry);
     });
   });
 
-  describe('#fromSharedAccessSignature', function() {
+  describe('#fromSharedAccessSignature', function () {
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_05_011: [The `fromSharedAccessSignature` method shall throw `ReferenceError` if the value argument is falsy.]*/
-    [undefined, null, ''].forEach(function(falsySas) {
-      it('throws if \'value\' is \'' + falsySas + '\'', function() {
-        assert.throws(function() {
+    [undefined, null, ''].forEach(function (falsySas) {
+      it('throws if \'value\' is \'' + falsySas + '\'', function () {
+        assert.throws(function () {
           return Registry.fromSharedAccessSignature(falsySas);
         }, ReferenceError);
       });
@@ -230,21 +242,23 @@ describe('Registry', function() {
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_05_012: [The `fromSharedAccessSignature` method shall derive and transform the needed parts from the shared access signature in order to create a `config` object for the constructor (see `SRS_NODE_IOTHUB_REGISTRY_05_001`).]*/
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_05_013: [The `fromSharedAccessSignature` method shall return a new instance of the `Registry` object.]*/
-    it('returns a new instance of the Registry object', function() {
+    it('returns a new instance of the Registry object', function () {
       var registry = Registry.fromSharedAccessSignature('SharedAccessSignature sr=audience&sig=signature&se=expiry&skn=keyname');
       assert.instanceOf(registry, Registry);
     });
   });
 
-  describe('#create', function(){
+  describe('#create', function () {
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_07_001: [The `create` method shall throw `ReferenceError` if the `deviceInfo` argument is falsy.]*/
-    [undefined, null].forEach(function(badDeviceInfo) {
+    [undefined, null].forEach(function (badDeviceInfo) {
       testFalsyArg('create', 'deviceInfo', badDeviceInfo, ReferenceError);
     });
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_07_001: [The `create` method shall throw `ArgumentError` if the `deviceInfo` argument does not contain a `deviceId` property.]*/
-    [undefined, null, ''].forEach(function(badDeviceId) {
-      testFalsyArg('create', 'deviceInfo', { deviceId: badDeviceId }, errors.ArgumentError);
+    [undefined, null, ''].forEach(function (badDeviceId) {
+      testFalsyArg('create', 'deviceInfo', {
+        deviceId: badDeviceId
+      }, errors.ArgumentError);
     });
 
     testErrorCallback('create', fakeDevice);
@@ -268,7 +282,7 @@ describe('Registry', function() {
     }
     ] */
 
-    it('constructs a valid HTTP request for a SAS device', function(testCallback) {
+    it('constructs a valid HTTP request for a SAS device', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.equal(method, 'PUT');
@@ -303,9 +317,9 @@ describe('Registry', function() {
   });
 
 
-  describe('#update', function(){
+  describe('#update', function () {
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_043: [The `update` method shall throw `ReferenceError` if the `deviceInfo` argument is falsy.]*/
-    [undefined, null].forEach(function(badDeviceInfo) {
+    [undefined, null].forEach(function (badDeviceInfo) {
       testFalsyArg('update', 'deviceInfo', badDeviceInfo, ReferenceError);
     });
 
@@ -325,7 +339,7 @@ describe('Registry', function() {
 
     <deviceInfo>
     ```]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.equal(method, 'PUT');
@@ -343,9 +357,9 @@ describe('Registry', function() {
     testUriEncoding('update', { deviceId: 'test#' }, encodeURIComponent('test#'));
   });
 
-  describe('#get', function(){
+  describe('#get', function () {
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_05_006: [The `get` method shall throw `ReferenceError` if the supplied deviceId is falsy.]*/
-    [undefined, null, ''].forEach(function(badDeviceId) {
+    [undefined, null, ''].forEach(function (badDeviceId) {
       testFalsyArg('get', 'deviceId', badDeviceId, ReferenceError);
     });
 
@@ -357,7 +371,7 @@ describe('Registry', function() {
     Authorization: <config.sharedAccessSignature>
     Request-Id: <guid>
     ```]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.equal(method, 'GET');
@@ -373,7 +387,7 @@ describe('Registry', function() {
     testUriEncoding('get', 'test#', encodeURIComponent('test#'));
   });
 
-  describe('#list', function() {
+  describe('#list', function () {
     testErrorCallback('list');
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_029: [** The `list` method shall construct an HTTP request using information supplied by the caller, as follows:
@@ -382,7 +396,7 @@ describe('Registry', function() {
     Authorization: <config.sharedAccessSignature>
     Request-Id: <guid>
     ```]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.equal(method, 'GET');
@@ -396,9 +410,9 @@ describe('Registry', function() {
     });
   });
 
-  describe('#delete', function() {
+  describe('#delete', function () {
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_07_007: [The `delete` method shall throw `ReferenceError` if the supplied deviceId is falsy.]*/
-    [undefined, null, ''].forEach(function(badDeviceId) {
+    [undefined, null, ''].forEach(function (badDeviceId) {
       testFalsyArg('delete', 'deviceId', badDeviceId, ReferenceError);
     });
 
@@ -411,7 +425,7 @@ describe('Registry', function() {
     If-Match: *
     Request-Id: <guid>
     ```]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.equal(method, 'DELETE');
@@ -430,17 +444,17 @@ describe('Registry', function() {
 
   describe('#getTwin', function () {
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_019: [The `getTwin` method shall throw a `ReferenceError` if the `deviceId` parameter is falsy.]*/
-    [undefined, null, ''].forEach(function(badDeviceId) {
+    [undefined, null, ''].forEach(function (badDeviceId) {
       testFalsyArg('getTwin', 'deviceId', badDeviceId, ReferenceError);
     });
 
-    /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_020: [The `getTwin` method shall throw a `ReferenceError` if the `done` parameter is falsy.]*/
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_020: [The `getTwin` method shall return a Promise if the `done` parameter is falsy.]*/
     [undefined, null].forEach(function(badCallback) {
-      it('throws a ReferenceError if \'done\' is \'' + badCallback + '\'', function() {
+      it('returns a Promise if \'done\' is \'' + badCallback + '\'', function() {
         var registry = new Registry({ host: 'host', sharedAccessSignature: 'sas' });
-        assert.throws(function(){
-          registry.getTwin('deviceId', badCallback);
-        }, ReferenceError);
+        const promise = registry.getTwin('deviceId', badCallback);
+        assert(promise instanceof Promise);
+        promise.then(assert.fail, assert.ok).catch(assert.fail);
       });
     });
 
@@ -454,7 +468,7 @@ describe('Registry', function() {
         }
       });
 
-      registry.getTwin('deviceId', function(err, twin) {
+      registry.getTwin('deviceId', function (err, twin) {
         assert.instanceOf(twin, Twin);
         testCallback();
       });
@@ -463,7 +477,7 @@ describe('Registry', function() {
     testUriEncoding('getTwin', 'test#', encodeURIComponent('test#'));
   });
 
-  describe('updateTwin', function() {
+  describe('#updateTwin', function () {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_044: [The `updateTwin` method shall throw a `ReferenceError` if the `deviceId` argument is `undefined`, `null` or an empty string.]*/
     [undefined, null, ''].forEach(function(badDeviceId) {
       it('throws a \'ReferenceError\' if \'deviceId\' is \'' + badDeviceId + '\'', function() {
@@ -504,7 +518,7 @@ describe('Registry', function() {
 
     <patch>
     ```]*/
-    it('creates a valid HTTP request', function(testCallback) {
+    it('creates a valid HTTP request', function (testCallback) {
       var fakeDeviceId = 'deviceId';
       var fakeTwinPatch = {
         tags: {
@@ -537,7 +551,7 @@ describe('Registry', function() {
         }
       });
 
-      registry.updateTwin('deviceId', {}, 'etag==', function(err, twin) {
+      registry.updateTwin('deviceId', {}, 'etag==', function (err, twin) {
         assert.instanceOf(twin, Twin);
         testCallback();
       });
@@ -560,7 +574,7 @@ describe('Registry', function() {
     });
   });
 
-  describe('importDevicesFromBlob', function() {
+  describe('#importDevicesFromBlob', function () {
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_001: [A `ReferenceError` shall be thrown if `inputBlobContainerUri` is falsy]*/
     [undefined, null, ''].forEach(function(badUri) {
       it('throws a ReferenceError if inputBlobContainerUri is \'' + badUri + '\'', function() {
@@ -596,7 +610,7 @@ describe('Registry', function() {
       "outputBlobContainerUri": "<output container Uri given as parameter>"
     }
     ```]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeInputBlob = "input";
       var fakeOutputBlob = "output";
       var fakeHttpHelper = {
@@ -616,7 +630,7 @@ describe('Registry', function() {
     });
   });
 
-  describe('exportDevicesToBlob', function() {
+  describe('#exportDevicesToBlob', function () {
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_004: [A `ReferenceError` shall be thrown if outputBlobContainerUri is falsy]*/
     [undefined, null, ''].forEach(function(badUri) {
       it('throws a ReferenceError if outputBlobContainerUri is \'' + badUri + '\'', function() {
@@ -624,8 +638,8 @@ describe('Registry', function() {
         assert.throws(function(){
           registry.exportDevicesToBlob(badUri, false, function() {});
         }, ReferenceError);
-        assert.throws(function(){
-          registry.exportDevicesToBlob(badUri, true, function() {});
+        assert.throws(function () {
+          registry.exportDevicesToBlob(badUri, true, function () {});
         }, ReferenceError);
       });
     });
@@ -645,11 +659,11 @@ describe('Registry', function() {
       "excludeKeysInExport": "<excludeKeys Boolean given as parameter>"
     }
     ```]*/
-    [true, false].forEach(function(fakeExcludeKeys) {
-      it('constructs a valid HTTP request when excludeKeys is \'' + fakeExcludeKeys + '\'', function(testCallback) {
+    [true, false].forEach(function (fakeExcludeKeys) {
+      it('constructs a valid HTTP request when excludeKeys is \'' + fakeExcludeKeys + '\'', function (testCallback) {
         var fakeOutputBlob = "output";
         var fakeHttpHelper = {
-        executeApiCall: function (method, path, httpHeaders, body, done) {
+          executeApiCall: function (method, path, httpHeaders, body, done) {
             assert.equal(method, 'POST');
             assert.equal(path, '/jobs/create' + endpoint.versionQueryString());
             assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
@@ -666,7 +680,7 @@ describe('Registry', function() {
     });
   });
 
-  describe('listJobs', function() {
+  describe('#listJobs', function () {
     testErrorCallback('listJobs');
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_037: [The `listJobs` method shall construct an HTTP request using information supplied by the caller, as follows:
@@ -675,7 +689,7 @@ describe('Registry', function() {
     Authorization: <config.sharedAccessSignature>
     Request-Id: <guid>
     ```]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.equal(method, 'GET');
@@ -689,9 +703,9 @@ describe('Registry', function() {
     });
   });
 
-  describe('#getJob', function() {
+  describe('#getJob', function () {
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_006: [A `ReferenceError` shall be thrown if jobId is falsy]*/
-    [undefined, null, ''].forEach(function(badJobId) {
+    [undefined, null, ''].forEach(function (badJobId) {
       testFalsyArg('getJob', 'jobId', badJobId, ReferenceError);
     });
 
@@ -703,7 +717,7 @@ describe('Registry', function() {
     Authorization: <config.sharedAccessSignature>
     Request-Id: <guid>
     ```]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeJob = {
         jobId: '42'
       };
@@ -720,9 +734,9 @@ describe('Registry', function() {
     });
   });
 
-  describe('#cancelJob', function(){
+  describe('#cancelJob', function () {
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_012: [A `ReferenceError` shall be thrown if the jobId is falsy]*/
-    [undefined, null, ''].forEach(function(badJobId) {
+    [undefined, null, ''].forEach(function (badJobId) {
       testFalsyArg('cancelJob', 'jobId', badJobId, ReferenceError);
     });
 
@@ -734,7 +748,7 @@ describe('Registry', function() {
     Authorization: <config.sharedAccessSignature>
     Request-Id: <guid>
     ```]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeJobId = '42';
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
@@ -749,36 +763,36 @@ describe('Registry', function() {
     });
   });
 
-  describe('#createQuery', function() {
+  describe('#createQuery', function () {
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_051: [The `createQuery` method shall throw a `ReferenceError` if the `sqlQuery` argument is falsy.]*/
-    [undefined, null, ''].forEach(function(badSql) {
+    [undefined, null, ''].forEach(function (badSql) {
       testFalsyArg('createQuery', 'sqlQuery', badSql, ReferenceError);
     });
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_052: [The `createQuery` method shall throw a `TypeError` if the `sqlQuery` argument is not a string.]*/
-    [42, {}, function() {}].forEach(function(badSql) {
+    [42, {}, function () {}].forEach(function (badSql) {
       testFalsyArg('createQuery', 'sqlQuery', badSql, TypeError);
     });
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_053: [The `createQuery` method shall throw a `TypeError` if the `pageSize` argument is not `null`, `undefined` or a number.]*/
-    ['foo', {}, function() {}].forEach(function(badPageSize) {
-      it('throws a TypeError if pageSize is of type \'' + typeof(badPageSize) + '\'', function() {
+    ['foo', {}, function () {}].forEach(function (badPageSize) {
+      it('throws a TypeError if pageSize is of type \'' + typeof (badPageSize) + '\'', function () {
         var registry = new Registry(fakeConfig, {});
-        assert.throws(function() {
+        assert.throws(function () {
           registry.createQuery('foo', badPageSize);
         }, TypeError);
       });
     });
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_054: [The `createQuery` method shall return a new `Query` instance initialized with the `sqlQuery` and the `pageSize` argument if specified.]*/
-    it('returns a Query instance', function() {
+    it('returns a Query instance', function () {
       var registry = new Registry(fakeConfig, {});
       var query = registry.createQuery('SELECT * FROM devices', 42);
       assert.instanceOf(query, Query);
     });
   });
 
-  describe('#_executeQueryFunc', function() {
+  describe('#_executeQueryFunc', function () {
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_057: [The `executeQuery` method shall construct an HTTP request as follows:
     ```
     POST /devices/query?api-version=<version> HTTP/1.1
@@ -793,17 +807,17 @@ describe('Registry', function() {
     [{
       fakePageSize: 42,
       fakeContinuationToken: null
-    },{
+    }, {
       fakePageSize: undefined,
       fakeContinuationToken: null
-    },{
+    }, {
       fakePageSize: undefined,
       fakeContinuationToken: 'continuation'
-    },{
+    }, {
       fakePageSize: 42,
       fakeContinuationToken: 'continuation'
-    }].forEach(function(testConfig){
-      it('constructs a valid HTTP request with pageSize: \'' + testConfig.fakePageSize + '\' and continuation token: \'' + testConfig.fakeContinuationToken + '\'', function() {
+    }].forEach(function (testConfig) {
+      it('constructs a valid HTTP request with pageSize: \'' + testConfig.fakePageSize + '\' and continuation token: \'' + testConfig.fakeContinuationToken + '\'', function () {
         var fakeSql = 'sql';
         var fakePageSize = testConfig.fakePageSize;
         var fakeQuery = {
@@ -814,8 +828,8 @@ describe('Registry', function() {
 
         var registry = new Registry(fakeConfig, fakeHttpHelper);
         var query = registry.createQuery(fakeSql, fakePageSize);
-        query.next(function() {
-          query.next(function() {});
+        query.next(function () {
+          query.next(function () {});
         });
         assert.strictEqual(fakeHttpHelper.executeApiCall.args[0][0], 'POST');
         assert.strictEqual(fakeHttpHelper.executeApiCall.args[0][1], '/devices/query' + endpoint.versionQueryString());
@@ -839,14 +853,14 @@ describe('Registry', function() {
     });
   });
 
-  describe('#getRegistryStatistics', function() {
-  /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_058: [The `getRegistryStatics` method shall construct an HTTP request using information supplied by the caller as follows:
-    ```
-    GET /statistics/devices?api-version=<version> HTTP/1.1
-    Authorization: <config.sharedAccessSignature>
-    Request-Id: <guid>
-    ```]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+  describe('#getRegistryStatistics', function () {
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_058: [The `getRegistryStatics` method shall construct an HTTP request using information supplied by the caller as follows:
+      ```
+      GET /statistics/devices?api-version=<version> HTTP/1.1
+      Authorization: <config.sharedAccessSignature>
+      Request-Id: <guid>
+      ```]*/
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.equal(method, 'GET');
@@ -862,11 +876,11 @@ describe('Registry', function() {
     testErrorCallback('getRegistryStatistics');
   });
 
-  describe('add/update/removeDevices', function () {
+  describe('#add/update/removeDevices', function () {
 
-    describe('#addDevices', function(){
+    describe('#addDevices', function () {
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_004: [ The `addDevices` method shall throw `ReferenceError` if the `devices` argument is falsy.]*/
-      [undefined, null].forEach(function(badDevices) {
+      [undefined, null].forEach(function (badDevices) {
         testFalsyArg('addDevices', 'devices', badDevices, ReferenceError);
       });
 
@@ -876,12 +890,14 @@ describe('Registry', function() {
       });
 
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_014: [The `addDevices` method shall throw `ArgumentError` if devices.length == 0  or is greater than 100.]*/
-      [zeroDevices,oneHundredOneDevices].forEach(function(badDevices) {
+      [zeroDevices, oneHundredOneDevices].forEach(function (badDevices) {
         testWrongLengthArg('addDevices', 'devices', badDevices, errors.ArgumentError);
       });
 
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_021: [The `addDevices` method shall throw `ArgumentError` if devices is NOT an array.]*/
-      [1,'just a string',{deviceId: 'goodDevice'}, function () {}].forEach(function(notAnArray) {
+      [1, 'just a string', {
+        deviceId: 'goodDevice'
+      }, function () {}].forEach(function (notAnArray) {
         testFalsyArg('addDevices', 'devices', notAnArray, errors.ArgumentError);
       });
 
@@ -930,30 +946,56 @@ describe('Registry', function() {
       });
     });
 
-    describe('#updateDevices', function(){
+    describe('#updateDevices', function () {
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_025: [The `updateDevices` method shall throw `ReferenceError` if the `devices` argument is falsy.]*/
-      [undefined, null].forEach(function(badDevices) {
-        testDevicesFalsyArg('updateDevices', 'devices', badDevices, ReferenceError);
+      [undefined, null].forEach(function (badDevices) {
+        it("throw `ReferenceError` if the `devices` argument is falsy", function () {
+          assert.throws(() => {
+            var registry = new Registry({
+              host: 'host',
+              sharedAccessSignature: 'sas'
+            });
+            registry.updateDevices(badDevices, false, () => {});
+          }, ReferenceError)
+        });
       });
 
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_012: [The `updateDevices` method shall throw `ArgumentError` if any elements of devices do NOT contain a `deviceId` property.]*/
-      [undefined, null, ''].forEach(function(badDeviceId) {
-        testDevicesFalsyArg('updateDevices', 'devices', [{deviceId: 'goodDevice'},{ deviceId: badDeviceId }], errors.ArgumentError);
+      [undefined, null, ''].forEach(function (badDeviceId) {
+        it("throws `ArgumentError` if any elements of devices do NOT contain a `deviceId` property", function () {
+          assert.throws(() => {
+            var registry = new Registry({
+              host: 'host',
+              sharedAccessSignature: 'sas'
+            });
+            registry.updateDevices([{
+              deviceId: 'goodDevice'
+            }, {
+              deviceId: badDeviceId
+            }], false, () => {});
+          }, errors.ArgumentError)
+        });
       });
 
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_015: [The `updateDevices` method shall throw `ArgumentError` if devices.length == 0  or is greater than 100.]*/
-      [zeroDevices,oneHundredOneDevices].forEach(function(badDevices) {
-        testWrongLengthArg('updateDevices', 'devices', badDevices, errors.ArgumentError);
+      [zeroDevices, oneHundredOneDevices].forEach(function (badDevices) {
+        //testWrongLengthArg('updateDevices', 'devices', badDevices, errors.ArgumentError);
+        testBadArg('updateDevices', errors.ArgumentError, 'devices', 0, badDevices, true);
       });
 
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_020: [The `updateDevices` method shall throw `ArgumentError` if devices is NOT an array.]*/
-      [1,'just a string',{deviceId: 'goodDevice'}, function () {}].forEach(function(notAnArray) {
-        testDevicesFalsyArg('updateDevices', 'devices', notAnArray, errors.ArgumentError);
+      [1, 'just a string', {
+        deviceId: 'goodDevice'
+      }, function () {}].forEach(function (notAnArray) {
+        //testDevicesFalsyArg('updateDevices', 'devices', notAnArray, errors.ArgumentError);
+        testBadArg('updateDevices', errors.ArgumentError, 'devices', 0, notAnArray, true);
       });
 
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_026: [The `updateDevices` method shall throw `ReferenceError` if the `forceUpdate` parameter is null or undefined.]*/
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_024: [The `updateDevices` method shall throw `ReferenceError` if the `forceUpdate` parameter is NOT typeof boolean.]*/
-      [1,'just a string',{deviceId: 'goodDevice'}, function () {}, undefined, null].forEach(function(notABoolean) {
+      [1, 'just a string', {
+        deviceId: 'goodDevice'
+      }, function () {}, undefined, null].forEach(function (notABoolean) {
         testDevicesNonBooleanForce('updateDevices', 'forceUpdate', notABoolean, ReferenceError);
       });
 
@@ -992,30 +1034,54 @@ describe('Registry', function() {
       });
     });
 
-    describe('#removeDevices', function(){
+    describe('#removeDevices', function () {
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_006: [The `removeDevices` method shall throw `ReferenceError` if the deviceInfo is falsy.]*/
-      [undefined, null].forEach(function(badDevices) {
-        testDevicesFalsyArg('removeDevices', 'devices', badDevices, ReferenceError);
+      [undefined, null].forEach(function (badDevices) {
+        it("throws `ReferenceError` if the `devices` argument is falsy", function () {
+          assert.throws(() => {
+            var registry = new Registry({
+              host: 'host',
+              sharedAccessSignature: 'sas'
+            });
+            registry.removeDevices(badDevices, false, () => {});
+          }, ReferenceError)
+        });
       });
 
-     /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_017: [The `removeDevices` method shall throw `ArgumentError` if any elements of devices do NOT contain a `deviceId` property.]*/
-      [undefined, null, ''].forEach(function(badDeviceId) {
-        testDevicesFalsyArg('removeDevices', 'devices', [{deviceId: 'goodDevice'},{ deviceId: badDeviceId }], errors.ArgumentError);
+      /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_017: [The `removeDevices` method shall throw `ArgumentError` if any elements of devices do NOT contain a `deviceId` property.]*/
+      [undefined, null, ''].forEach(function (badDeviceId) {
+        it("throws `ArgumentError` if any elements of devices do NOT contain a `deviceId` property", function () {
+          assert.throws(() => {
+            var registry = new Registry({
+              host: 'host',
+              sharedAccessSignature: 'sas'
+            });
+            registry.removeDevices([{
+              deviceId: 'goodDevice'
+            }, {
+              deviceId: badDeviceId
+            }], false, () => {});
+          }, errors.ArgumentError)
+        });
       });
 
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_016: [The `removeDevices` method shall throw `ArgumentError` if devices.length == 0  or is greater than 100.]*/
-      [zeroDevices,oneHundredOneDevices].forEach(function(badDevices) {
-        testWrongLengthArg('removeDevices', 'devices', badDevices, errors.ArgumentError);
+      [zeroDevices, oneHundredOneDevices].forEach(function (badDevices) {
+        testBadArg('removeDevices', errors.ArgumentError, 'devices', 0, badDevices, true);
       });
 
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_019: [The `removeDevices` method shall throw `ArgumentError` if devices is NOT an array.]*/
-      [1,'just a string',{deviceId: 'goodDevice'}, function () {}].forEach(function(notAnArray) {
-        testDevicesFalsyArg('removeDevices', 'devices', notAnArray, errors.ArgumentError);
+      [1, 'just a string', {
+        deviceId: 'goodDevice'
+      }, function () {}].forEach(function (notAnArray) {
+        testBadArg('removeDevices', errors.ArgumentError, 'devices', 0, notAnArray, true);
       });
 
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_027: [The `removeDevices` method shall throw `ReferenceError` if the `forceRemove` parameter is null or undefined.]*/
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_06_023: [The `removeDevices` method shall throw `ReferenceError` if the `forceRemove` parameter is NOT typeof boolean.]*/
-      [1,'just a string',{deviceId: 'goodDevice'}, function () {}, undefined, null].forEach(function(notABoolean) {
+      [1, 'just a string', {
+        deviceId: 'goodDevice'
+      }, function () {}, undefined, null].forEach(function (notABoolean) {
         testDevicesNonBooleanForce('removeDevices', 'forceUpdate', notABoolean, ReferenceError);
       });
 
@@ -1055,13 +1121,34 @@ describe('Registry', function() {
     });
   });
 
-  describe ('#getModuleTwin', function() {
+  describe('#getModuleTwin', function () {
     testErrorCallback('getModuleTwin', 'deviceId', 'moduleId');
 
-    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_001: [The `getModuleTwin` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, or `done` is falsy. ]*/
-    testAllFalsyArgValues('getModuleTwin', 'deviceId', 0, 'deviceId', 'moduleId');
-    testAllFalsyArgValues('getModuleTwin', 'moduleId', 1, 'deviceId', 'moduleId');
-    testAllFalsyArgValues('getModuleTwin', 'done', 2, 'deviceId', 'moduleId');
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_001: [The `getModuleTwin` method shall throw a `ReferenceError` exception if `deviceId` is falsy. ]*/
+    [undefined, null].forEach(function (deviceId) {
+      it("throws a `ReferenceError` exception if `deviceId` is falsy", function () {
+        assert.throws(() => {
+          var registry = new Registry({
+            host: 'host',
+            sharedAccessSignature: 'sas'
+          });
+          registry.getModuleTwin(deviceId, "moduleId", () => {});
+        }, ReferenceError)
+      });
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_001: [The `getModuleTwin` method shall throw a `ReferenceError` exception if `moduleId` is falsy. ]*/
+    [undefined, null].forEach(function (moduleId) {
+      it("throws a `ReferenceError` exception if `moduleId` is falsy", function () {
+        assert.throws(() => {
+          var registry = new Registry({
+            host: 'host',
+            sharedAccessSignature: 'sas'
+          });
+          registry.getModuleTwin("deviceId", moduleId, () => {});
+        }, ReferenceError)
+      });
+    });
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_002: [The `getModuleTwin` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
@@ -1070,12 +1157,16 @@ describe('Registry', function() {
       Request-Id: <guid>
     ```
     ]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.strictEqual(method, 'GET');
           assert.strictEqual(path, '/twins/deviceId/modules/moduleId' + endpoint.versionQueryString());
-          done(null, JSON.stringify({ deviceId: 'fakeTwin' }), { status: 200 });
+          done(null, JSON.stringify({
+            deviceId: 'fakeTwin'
+          }), {
+            status: 200
+          });
         }
       };
 
@@ -1084,14 +1175,21 @@ describe('Registry', function() {
     });
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_003: [The `getModuleTwin` method shall call the `done` callback with a `Twin` object updated with the latest property values stored in the IoT Hub service. ]*/
-    it('calls the \'done\' callback with a \'Twin\' object', function(testCallback) {
-      var registry = new Registry({ host: 'host', sharedAccessSignature: 'sas' }, {
+    it('calls the \'done\' callback with a \'Twin\' object', function (testCallback) {
+      var registry = new Registry({
+        host: 'host',
+        sharedAccessSignature: 'sas'
+      }, {
         executeApiCall: function (method, path, httpHeaders, body, done) {
-          done(null, JSON.stringify({ deviceId: 'fakeTwin' }), { status: 200 });
+          done(null, JSON.stringify({
+            deviceId: 'fakeTwin'
+          }), {
+            status: 200
+          });
         }
       });
 
-      registry.getModuleTwin('deviceId', 'moduleId', function(err, twin) {
+      registry.getModuleTwin('deviceId', 'moduleId', function (err, twin) {
         assert.instanceOf(twin, Twin);
         testCallback();
       });
@@ -1099,15 +1197,60 @@ describe('Registry', function() {
 
   });
 
-  describe ('#updateModuleTwin', function() {
+  describe('#updateModuleTwin', function () {
     testErrorCallback('updateModuleTwin', 'deviceId', 'moduleId', {}, 'etag');
 
-    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_004: [The `updateModuleTwin` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, `patch`, `etag`, or `done` is falsy. ]*/
-    testAllFalsyArgValues('updateModuleTwin', 'deviceId', 0, 'deviceId', 'moduleId', {}, 'etag');
-    testAllFalsyArgValues('updateModuleTwin', 'moduleId', 1, 'deviceId', 'moduleId', {}, 'etag');
-    testAllFalsyArgValues('updateModuleTwin', 'patch', 2, 'deviceId', 'moduleId', {}, 'etag');
-    testAllFalsyArgValues('updateModuleTwin', 'etag', 3, 'deviceId', 'moduleId', {}, 'etag');
-    testAllFalsyArgValues('updateModuleTwin', 'done', 4, 'deviceId', 'moduleId', {}, 'etag');
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_004: [The `updateModuleTwin` method shall throw a `ReferenceError` exception if `deviceId` is falsy. ]*/
+    [undefined, null].forEach(function (deviceId) {
+      it("throws a `ReferenceError` exception if `deviceId` is falsy", function () {
+        assert.throws(() => {
+          var registry = new Registry({
+            host: 'host',
+            sharedAccessSignature: 'sas'
+          });
+          registry.updateModuleTwin(deviceId, "moduleId", "patch", "etag", () => {});
+        }, ReferenceError)
+      });
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_004: [The `updateModuleTwin` method shall throw a `ReferenceError` exception if `moduleId` is falsy. ]*/
+    [undefined, null].forEach(function (moduleId) {
+      it("throws a `ReferenceError` exception if `moduleId` is falsy", function () {
+        assert.throws(() => {
+          var registry = new Registry({
+            host: 'host',
+            sharedAccessSignature: 'sas'
+          });
+          registry.updateModuleTwin("deviceId", moduleId, "patch", "etag", () => {});
+        }, ReferenceError)
+      });
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_004: [The `updateModuleTwin` method shall throw a `ReferenceError` exception if `patch` is falsy. ]*/
+    [undefined, null].forEach(function (patch) {
+      it("throws a `ReferenceError` exception if `patch` is falsy", function () {
+        assert.throws(() => {
+          var registry = new Registry({
+            host: 'host',
+            sharedAccessSignature: 'sas'
+          });
+          registry.updateModuleTwin("deviceId", "moduleId", patch, "etag", () => {});
+        }, ReferenceError)
+      });
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_004: [The `updateModuleTwin` method shall throw a `ReferenceError` exception if `etag` is falsy. ]*/
+    [undefined, null].forEach(function (etag) {
+      it("throws a `ReferenceError` exception if `etag` is falsy", function () {
+        assert.throws(() => {
+          var registry = new Registry({
+            host: 'host',
+            sharedAccessSignature: 'sas'
+          });
+          registry.updateModuleTwin("deviceId", "moduleId", "patch", etag, () => {});
+        }, ReferenceError)
+      });
+    });
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_005: [The `updateModuleTwin` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
@@ -1119,8 +1262,10 @@ describe('Registry', function() {
     <patch>
     ```
     ]*/
-    it('constructs a valid HTTP request', function(testCallback) {
-      var fakePatch = { patch: true };
+    it('constructs a valid HTTP request', function (testCallback) {
+      var fakePatch = {
+        patch: true
+      };
       var fakeEtag = "Fake";
 
       var fakeHttpHelper = {
@@ -1130,7 +1275,11 @@ describe('Registry', function() {
           assert.strictEqual(path, '/twins/deviceId/modules/moduleId' + endpoint.versionQueryString());
           assert.strictEqual(httpHeaders['If-Match'], fakeEtag);
           assert.deepEqual(body, fakePatch);
-          done(null, JSON.stringify({ deviceId: 'fakeTwin' }), { status: 200 });
+          done(null, JSON.stringify({
+            deviceId: 'fakeTwin'
+          }), {
+            status: 200
+          });
         }
       };
 
@@ -1139,14 +1288,21 @@ describe('Registry', function() {
     });
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_006: [The `updateModuleTwin` method shall call the `done` callback with a `Twin` object updated with the latest property values stored in the IoT Hub service. ]*/
-    it('calls the \'done\' callback with a \'Twin\' object', function(testCallback) {
-      var registry = new Registry({ host: 'host', sharedAccessSignature: 'sas' }, {
+    it('calls the \'done\' callback with a \'Twin\' object', function (testCallback) {
+      var registry = new Registry({
+        host: 'host',
+        sharedAccessSignature: 'sas'
+      }, {
         executeApiCall: function (method, path, httpHeaders, body, done) {
-          done(null, JSON.stringify({ deviceId: 'fakeTwin' }), { status: 200 });
+          done(null, JSON.stringify({
+            deviceId: 'fakeTwin'
+          }), {
+            status: 200
+          });
         }
       });
 
-      registry.updateModuleTwin('deviceId', 'moduleId', {}, 'etag==', function(err, twin) {
+      registry.updateModuleTwin('deviceId', 'moduleId', {}, 'etag==', function (err, twin) {
         assert.instanceOf(twin, Twin);
         testCallback();
       });
@@ -1159,16 +1315,17 @@ describe('Registry', function() {
     etag: 'etag'
   };
 
-  describe ('#addConfiguration', function() {
+  describe('#addConfiguration', function () {
     testErrorCallback('addConfiguration', fakeConfiguration);
 
-    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_007: [The `addConfiguration` method shall throw a `ReferenceError` exception if `configuration` or `done` is falsy. ]*/
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_007: [The `addConfiguration` method shall throw a `ReferenceError` exception if `configuration` is falsy. ]*/
     testAllFalsyArgValues('addConfiguration', 'configuration', 0, fakeConfiguration);
-    testAllFalsyArgValues('addConfiguration', 'done', 1, fakeConfiguration);
 
-    [undefined, null, ''].forEach(function(badValue) {
+    [undefined, null, ''].forEach(function (badValue) {
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_008: [The `addConfiguration` method shall throw an `ArgumentError` exception if `configuration.id` is falsy. ]*/
-      testBadArg('addConfiguration', errors.ArgumentError, 'configuration', 0, {id: badValue} );
+      testBadArg('addConfiguration', errors.ArgumentError, 'configuration', 0, {
+        id: badValue
+      });
     });
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_010: [The `addConfiguration` method shall construct an HTTP request using information supplied by the caller, as follows:
@@ -1182,7 +1339,7 @@ describe('Registry', function() {
     ```
     ]*/
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_009: [The `addConfiguration` method shall set `configuration.schemaVersion` to '1.0' if it is not already set. ]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.strictEqual(method, 'PUT');
@@ -1200,12 +1357,11 @@ describe('Registry', function() {
     });
   });
 
-  describe ('#getConfiguration', function() {
+  describe('#getConfiguration', function () {
     testErrorCallback('getConfiguration', 'id');
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_011: [The `getConfiguration` method shall throw a `ReferenceError` exception if `configurationId` is falsy. ]*/
     testAllFalsyArgValues('getConfiguration', 'configurationId', 0, 'id');
-    testAllFalsyArgValues('getConfiguration', 'done', 1, 'id');
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_012: [The `getConfiguration` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
@@ -1214,7 +1370,7 @@ describe('Registry', function() {
     Request-Id: <guid>
     ```
     ]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.strictEqual(method, 'GET');
@@ -1228,11 +1384,8 @@ describe('Registry', function() {
     });
   });
 
-  describe ('#getConfigurations', function() {
+  describe('#getConfigurations', function () {
     testErrorCallback('getConfigurations');
-
-    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_013: [The `getConfigurations` method shall throw a `ReferenceError` exception if `done` is falsy. ]*/
-    testAllFalsyArgValues('getConfigurations', 'done', 0);
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_014: [The `getConfigurations` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
@@ -1241,7 +1394,7 @@ describe('Registry', function() {
     Request-Id: <guid>
     ```
     ]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.strictEqual(method, 'GET');
@@ -1255,25 +1408,30 @@ describe('Registry', function() {
     });
   });
 
-  describe ('#updateConfiguration', function() {
+  describe('#updateConfiguration', function () {
     testErrorCallback('updateConfiguration', fakeConfiguration);
     testErrorCallback('updateConfiguration', fakeConfiguration, true);
     testErrorCallback('updateConfiguration', fakeConfiguration, false);
 
-    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_015: [The `updateConfiguration` method shall throw a `ReferenceError` exception if `configuration` or `done` is falsy. ]*/
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_015: [The `updateConfiguration` method shall throw a `ReferenceError` exception if `configuration` is falsy. ]*/
     testAllFalsyArgValues('updateConfiguration', 'configuration', 0, fakeConfiguration, false);
-    testAllFalsyArgValues('updateConfiguration', 'done', 2, fakeConfiguration, false);
 
-    [undefined, null, ''].forEach(function(badValue) {
+    [undefined, null, ''].forEach(function (badValue) {
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_016: [The `updateConfiguration` method shall throw an `ArgumentError` exception if `forceUpdate` is falsy and `configuration.etag` is also falsy. ]*/
-      testBadArg('updateConfiguration', errors.ArgumentError, 'configuration', 0, {id: 'id', etag: badValue}, false );
+      testBadArg('updateConfiguration', errors.ArgumentError, 'configuration', 0, {
+        id: 'id',
+        etag: badValue
+      }, false);
 
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_017: [The `updateConfiguration` method shall throw an `ArgumentError` exception if `configuration.id` is falsy. ]*/
-      testBadArg('updateConfiguration', errors.ArgumentError, 'configuration', 0, {id: badValue, etag: 'a'}, false );
+      testBadArg('updateConfiguration', errors.ArgumentError, 'configuration', 0, {
+        id: badValue,
+        etag: 'a'
+      }, false);
     });
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_021: [If `forceUpdate` is truthy, the `updateConfiguration` method shall put `*` into the `If-Match` header value. ]*/
-    it('Uses wildcard for forceUpdate', function(testCallback) {
+    it('Uses wildcard for forceUpdate', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.strictEqual(httpHeaders['If-Match'], '"*"');
@@ -1298,7 +1456,7 @@ describe('Registry', function() {
     ]*/
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_020: [If `forceUpdate` is not truthy, the `updateConfigurationMethod` shall put the `etag` parameter into the `If-Match` header value. ]*/
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_018: [The `updateConfiguration` method shall set ``configuration.schemaVersion` to '1.0' if it is not already set. ]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.strictEqual(method, 'PUT');
@@ -1315,14 +1473,26 @@ describe('Registry', function() {
       var registry = new Registry(fakeConfig, fakeHttpHelper);
       registry.updateConfiguration(fakeConfiguration, testCallback);
     });
+
+    it('returns a promise if no callback is not specified', function (testCallback) {
+      const fakeHttpHelper = {
+        executeApiCall: function (method, path, httpHeaders, body, done) {
+          done();
+        }
+      };
+
+      const registry = new Registry(fakeConfig, fakeHttpHelper);
+      const promise = registry.updateConfiguration(fakeConfiguration);
+      assert.typeOf(promise, "Promise");
+      promise.then(_ => testCallback()).catch(err => testCallback(err));
+    });
   });
 
-  describe ('#removeConfiguration', function() {
+  describe('#removeConfiguration', function () {
     testErrorCallback('removeConfiguration', 'id');
 
-    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_022: [The `removeConfiguration` method shall throw a `ReferenceError` exception if `configurationId` or `done` is falsy. ]*/
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_022: [The `removeConfiguration` method shall throw a `ReferenceError` exception if `configurationId` is falsy. ]*/
     testAllFalsyArgValues('removeConfiguration', 'configurationId', 0, 'id');
-    testAllFalsyArgValues('removeConfiguration', 'done', 1, 'id');
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_023: [The `removeConfiguration` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
@@ -1331,7 +1501,7 @@ describe('Registry', function() {
     Request-Id: <guid>
     ```
     ]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.strictEqual(method, 'DELETE');
@@ -1346,13 +1516,34 @@ describe('Registry', function() {
 
   });
 
-  describe ('#applyConfigurationContentOnDevice', function() {
+  describe('#applyConfigurationContentOnDevice', function () {
     testErrorCallback('applyConfigurationContentOnDevice', 'id', {});
 
-    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_024: [The `applyConfigurationContentOnDevice` method shall throw a `ReferenceError` exception if `deviceId`, `content`, or `done` is falsy. ]*/
-    testAllFalsyArgValues('applyConfigurationContentOnDevice', 'deviceId', 0, 'id', {});
-    testAllFalsyArgValues('applyConfigurationContentOnDevice', 'content', 1, 'id', {});
-    testAllFalsyArgValues('applyConfigurationContentOnDevice', 'done', 2, 'id', {});
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_024: [The `applyConfigurationContentOnDevice` method shall throw a `ReferenceError` exception if `deviceId` is falsy. ]*/
+    [undefined, null].forEach(function (deviceId) {
+      it("throws a `ReferenceError` exception if `deviceId` is falsy", function () {
+        assert.throws(() => {
+          var registry = new Registry({
+            host: 'host',
+            sharedAccessSignature: 'sas'
+          });
+          registry.applyConfigurationContentOnDevice(deviceId, {}, () => {});
+        }, ReferenceError)
+      });
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_024: [The `applyConfigurationContentOnDevice` method shall throw a `ReferenceError` exception if ``content` is falsy. ]*/
+    [undefined, null].forEach(function (content) {
+      it("throws a `ReferenceError` exception if `deviceId` is falsy", function () {
+        assert.throws(() => {
+          var registry = new Registry({
+            host: 'host',
+            sharedAccessSignature: 'sas'
+          });
+          registry.applyConfigurationContentOnDevice("deviceId", content, () => {});
+        }, ReferenceError)
+      });
+    });
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_025: [The `applyConfigurationContentOnDevice` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
@@ -1364,8 +1555,10 @@ describe('Registry', function() {
     <content>
     ```
     ]*/
-    it('constructs a valid HTTP request', function(testCallback) {
-      var fakeConfigContent = {fake: true};
+    it('constructs a valid HTTP request', function (testCallback) {
+      var fakeConfigContent = {
+        fake: true
+      };
 
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
@@ -1388,15 +1581,14 @@ describe('Registry', function() {
     etag: 'etag'
   };
 
-  describe ('#addModule', function() {
+  describe('#addModule', function () {
     testErrorCallback('addModule', fakeModule);
 
-    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_026: [The `addModule` method shall throw a `ReferenceError` exception if `module` or `done` is falsy. ]*/
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_026: [The `addModule` method shall throw a `ReferenceError` exception if `module`s is falsy. ]*/
     testAllFalsyArgValues('addModule', 'module', 0, fakeModule);
-    testAllFalsyArgValues('addModule', 'done', 1, fakeModule);
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_027: [The `addModule` method shall throw an `ArgumentError` exception if `module.deviceId` or `module.moduleId` is falsy. ]*/
-    [undefined, null, ''].forEach(function(badValue) {
+    [undefined, null, ''].forEach(function (badValue) {
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_034: [The `updateModule` method shall throw an `ArgumentError` exception if `module.deviceId` or `module.moduleId` is falsy. ]*/
       testBadArg('addModule', errors.ArgumentError, 'module', 0, {deviceId: badValue, moduleId: 'moduleId'}, false );
       testBadArg('addModule', errors.ArgumentError, 'module', 0, {deviceId: 'deviceId', moduleId: badValue}, false );
@@ -1412,7 +1604,7 @@ describe('Registry', function() {
     <module>
     ```
     ]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.strictEqual(method, 'PUT');
@@ -1430,12 +1622,12 @@ describe('Registry', function() {
     });
   });
 
-  describe ('#getModulesOnDevice', function() {
+  describe('#getModulesOnDevice', function () {
     testErrorCallback('getModulesOnDevice', 'deviceId');
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_029: [The `getModulesOnDevice` method shall throw a `ReferenceError` exception if `deviceId` or `done` is falsy. ]*/
     testAllFalsyArgValues('getModulesOnDevice', 'deviceId', 0, 'deviceId');
-    testAllFalsyArgValues('getModulesOnDevice', 'done', 1, 'deviceId');
+
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_030: [The `getModulesOnDevice` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
@@ -1444,7 +1636,7 @@ describe('Registry', function() {
     Request-Id: <guid>
     ```
     ]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.strictEqual(method, 'GET');
@@ -1459,13 +1651,34 @@ describe('Registry', function() {
 
   });
 
-  describe ('#getModule', function() {
+  describe('#getModule', function () {
     testErrorCallback('getModule', 'deviceId', 'moduleId');
 
-    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_031: [The `getModule` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, or `done` is falsy. ]*/
-    testAllFalsyArgValues('getModule', 'deviceId', 0, 'deviceId', 'moduleId');
-    testAllFalsyArgValues('getModule', 'moduleId', 1, 'deviceId', 'moduleId');
-    testAllFalsyArgValues('getModule', 'done', 2, 'deviceId', 'moduleId');
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_031: [The `getModule` method shall throw a `ReferenceError` exception if `deviceId` is falsy. ]*/
+    [undefined, null].forEach(function (deviceId) {
+      it("throws a `ReferenceError` exception if `deviceId` is falsy", function () {
+        assert.throws(() => {
+          var registry = new Registry({
+            host: 'host',
+            sharedAccessSignature: 'sas'
+          });
+          registry.getModule(deviceId, "moduleId", () => {});
+        }, ReferenceError)
+      });
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_031: [The `getModule` method shall throw a `ReferenceError` exception if `moduleId` is falsy. ]*/
+    [undefined, null].forEach(function (moduleId) {
+      it("throws a `ReferenceError` exception if `moduleId` is falsy", function () {
+        assert.throws(() => {
+          var registry = new Registry({
+            host: 'host',
+            sharedAccessSignature: 'sas'
+          });
+          registry.getModule("deviceId", moduleId, () => {});
+        }, ReferenceError)
+      });
+    });
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_032: [The `getModule` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
@@ -1474,7 +1687,7 @@ describe('Registry', function() {
     Request-Id: <guid>
     ```
     ]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.strictEqual(method, 'GET');
@@ -1488,14 +1701,13 @@ describe('Registry', function() {
     });
   });
 
-  describe ('#updateModule', function() {
+  describe('#updateModule', function () {
     testErrorCallback('updateModule', fakeModule);
 
-    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_033: [The `updateModule` method shall throw a `ReferenceError` exception if `module` or `done` is falsy. ]*/
-    testAllFalsyArgValues('updateModule', 'module', 0, fakeModule, true);
-    testAllFalsyArgValues('updateModule', 'done', 2, fakeModule, true);
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_033: [The `updateModule` method shall throw a `ReferenceError` exception if `module` is falsy. ]*/
+    testAllFalsyArgValues('updateModule', 'module', 0, fakeModule, true, () => {});
 
-    [undefined, null, ''].forEach(function(badValue) {
+    [undefined, null, ''].forEach(function (badValue) {
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_034: [The `updateModule` method shall throw an `ArgumentError` exception if `module.deviceId` or `module.moduleId` is falsy. ]*/
       testBadArg('updateModule', errors.ArgumentError, 'module', 0, {deviceId: badValue, moduleId: 'moduleId', etag: 'etag'}, false );
       testBadArg('updateModule', errors.ArgumentError, 'module', 0, {deviceId: 'deviceId', moduleId: badValue, etag: 'etag'}, false );
@@ -1505,8 +1717,8 @@ describe('Registry', function() {
     });
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_037: [If `forceUpdate` is truthy, the `updateModule` method shall put `*` into the `If-Match` header value. ]*/
-    it('Uses wildcard for forceUpdate', function(testCallback) {
-        var fakeHttpHelper = {
+    it('Uses wildcard for forceUpdate', function (testCallback) {
+      var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.strictEqual(httpHeaders['If-Match'], '"*"');
           done();
@@ -1529,7 +1741,7 @@ describe('Registry', function() {
     ```
     ]*/
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_036: [If `forceUpdate` is not truthy, the `updateModule` shall put the `etag` parameter into the `If-Match` header value. ]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.strictEqual(method, 'PUT');
@@ -1548,31 +1760,30 @@ describe('Registry', function() {
     });
   });
 
-  describe ('#removeModule', function() {
+  describe('#removeModule', function () {
     testErrorCallback('removeModule', 'deviceId', 'moduleId');
 
-    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_039: [The `removeModule` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, or `done` is falsy. ]*/
-    testAllFalsyArgValues('removeModule', 'deviceId', 0, 'deviceId', 'moduleId');
-    testAllFalsyArgValues('removeModule', 'moduleId', 1, 'deviceId', 'moduleId');
-    testAllFalsyArgValues('removeModule', 'done', 2, 'deviceId', 'moduleId');
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_039: [The `removeModule` method shall throw a `ReferenceError` exception if `deviceId` or `moduleId` is falsy. ]*/
+    testAllFalsyArgValues('removeModule', 'deviceId', 0, 'deviceId', 'moduleId', () => {});
+    testAllFalsyArgValues('removeModule', 'moduleId', 1, 'deviceId', 'moduleId', () => {});
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_043: [The `removeModule` method shall throw an `ArgumentError` if `deviceId` or `moduleId` parameters are not strings.]*/
-    it ('throws with non-string deviceId', function() {
-      assert.throws(function() {
+    it('throws with non-string deviceId', function () {
+      assert.throws(function () {
         var registry = new Registry(fakeConfig, {});
         registry.removeModule(34, 'moduleId', {});
       }, errors.ArgumentError);
     });
-    it ('throws with non-string moduleId', function() {
-      assert.throws(function() {
+    it('throws with non-string moduleId', function () {
+      assert.throws(function () {
         var registry = new Registry(fakeConfig, {});
         registry.removeModule('deviceId', 44, {});
       }, errors.ArgumentError);
     });
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_044: [The `removeModule` method shall throw an `ArgumentError` if the `done` parameter is not a function.]*/
-    it ('throws when done is not a function', function() {
-      assert.throws(function() {
+    it('throws when done is not a function', function () {
+      assert.throws(function () {
         var registry = new Registry(fakeConfig, {});
         registry.removeModule('deviceId', 'moduleId', 'not a callback');
       }, errors.ArgumentError);
@@ -1587,7 +1798,7 @@ describe('Registry', function() {
     If-Match: "<etag>"
     ```
     ]*/
-    it('constructs a valid HTTP request', function(testCallback) {
+    it('constructs a valid HTTP request', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.strictEqual(method, 'DELETE');
@@ -1602,7 +1813,7 @@ describe('Registry', function() {
     });
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_041: [if a `Module` object is passed in, `removeModule` shall use the `deviceId`, `moduleId`, and `etag` from the `Module` object.]*/
-    it('constructs a valid HTTP request with a module object', function(testCallback) {
+    it('constructs a valid HTTP request with a module object', function (testCallback) {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.strictEqual(method, 'DELETE');
@@ -1615,11 +1826,51 @@ describe('Registry', function() {
       var mod = {
         moduleId: 'module-from-object',
         deviceId: 'device-from-object',
-        etag:'etag-from-object'
+        etag: 'etag-from-object'
       }
       var registry = new Registry(fakeConfig, fakeHttpHelper);
       registry.removeModule(mod, testCallback);
     });
 
+    it('returns a Promise if no callback was specified', function (testCallback) {
+      const fakeHttpHelper = {
+        executeApiCall: function (method, path, httpHeaders, body, done) {
+          done();
+        }
+      };
+
+      const registry = new Registry(fakeConfig, fakeHttpHelper);
+      const promise = registry.removeModule("deviceId", "moduleId");
+      assert.typeOf(promise, "Promise");
+      promise.then(_ => testCallback()).catch(err => testCallback(err));
+    });
+
+  })
+
+  describe("#_updateConfiguration", function() {
+    [undefined, null, ''].forEach(function (badValue) {
+        it ("throws when done is falsy", function() {
+          var registry = new Registry(fakeConfig, {});
+          assert.throws(function() { registry._updateConfiguration({}, false, badValue); })
+        });
+      });
+    });
+
+  describe("#_updateModule", function() {
+    [undefined, null, ''].forEach(function (badValue) {
+      it ("throws when done is falsy", function() {
+        var registry = new Registry(fakeConfig, {});
+        assert.throws(function() { registry._updateModule({}, false, badValue); })
+      });
+    });
+  });
+
+  describe("#_removeModule", function() {
+    [undefined, null, ''].forEach(function (badValue) {
+      it ("throws when done is falsy", function() {
+        var registry = new Registry(fakeConfig, {});
+        assert.throws(function() { registry._removeModule({}, "moduleId", badValue); })
+      });
+    });
   });
 });

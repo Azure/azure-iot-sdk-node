@@ -5,16 +5,16 @@
   "author": "Microsoft Corporation",
   "license": "MIT",
   "dependencies": {
-    "azure-iot-provisioning-device": "1.3.3",
-    "azure-iot-provisioning-device-amqp": "1.3.3",
-    "azure-iot-provisioning-device-http": "1.3.3",
-    "azure-iot-provisioning-device-mqtt": "1.3.3",
-    "azure-iot-security-tpm": "1.2.3",
-    "azure-iot-security-x509": "1.2.3",
-    "azure-iot-device-mqtt": "1.7.3",
-    "azure-iot-device-amqp": "1.7.3",
-    "azure-iot-device-http": "1.7.3",
-    "azure-iot-device": "1.7.3"
+    "azure-iot-provisioning-device": "1.3.4",
+    "azure-iot-provisioning-device-amqp": "1.3.4",
+    "azure-iot-provisioning-device-http": "1.3.4",
+    "azure-iot-provisioning-device-mqtt": "1.3.4",
+    "azure-iot-security-tpm": "1.2.4",
+    "azure-iot-security-x509": "1.2.4",
+    "azure-iot-device-mqtt": "1.7.4",
+    "azure-iot-device-amqp": "1.7.4",
+    "azure-iot-device-http": "1.7.4",
+    "azure-iot-device": "1.7.4"
   },
   "engines": {
     "node": ">= 0.10"

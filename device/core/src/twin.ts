@@ -8,7 +8,7 @@ import * as traverse from 'traverse';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:Twin');
 
-import { RetryPolicy, RetryOperation } from 'azure-iot-common';
+import { RetryPolicy, RetryOperation, Callback, callbackToPromise } from 'azure-iot-common';
 import { DeviceTransport } from './internal_client';
 
 /**
@@ -76,27 +76,30 @@ export class Twin extends EventEmitter {
   /**
    * Gets the whole twin from the service.
    *
-   * @param callback function that shall be called back with either the twin or an error if the transport fails to retrieve the twin.
+   * @param [callback] optional function that shall be called back with either the twin or an error if the transport fails to retrieve the twin.
+   * @returns {Promise<Twin> | void} Promise if no callback function was passed, void otherwise.
    */
-  get(callback: (err: Error, twin?: Twin) => void): void {
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-    retryOp.retry((opCallback) => {
-      this._clearCachedProperties();
-      /*Codes_SRS_NODE_DEVICE_TWIN_16_002: [The `get` method shall call the `getTwin` method of the `Transport` object with a callback.]*/
-      this._transport.getTwin((err, twinProperties) => {
-        if (err) {
-          /*Codes_SRS_NODE_DEVICE_TWIN_16_003: [If the callback passed to the `getTwin` method is called with an error, the `callback` passed to the call to the `get` method shall be called with that error.]*/
-          opCallback(err);
-        } else {
-          /*Codes_SRS_NODE_DEVICE_TWIN_16_004: [If the callback passed to the `getTwin` method is called with no error and a `TwinProperties` object, these properties shall be merged with the current instance properties.]*/
-          this._mergePatch(this.properties.desired, twinProperties.desired);
-          this._mergePatch(this.properties.reported, twinProperties.reported);
-          /*Codes_SRS_NODE_DEVICE_TWIN_16_006: [For each desired property that is part of the `TwinProperties` object received, an event named after the path to this property shall be fired and passed the property value as argument.]*/
-          this._fireChangeEvents(this.properties.desired);
-          /*Codes_SRS_NODE_DEVICE_TWIN_16_005: [Once the properties have been merged the `callback` method passed to the call to `get` shall be called with a first argument that is `null` and a second argument that is the current `Twin` instance (`this`).]*/
-          opCallback(null, this);
-        }
-      });
+  get(callback?: Callback<Twin>): Promise<Twin> | void {
+    return callbackToPromise((_callback) => {
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+        this._clearCachedProperties();
+        /*Codes_SRS_NODE_DEVICE_TWIN_16_002: [The `get` method shall call the `getTwin` method of the `Transport` object with a callback.]*/
+        this._transport.getTwin((err, twinProperties) => {
+          if (err) {
+            /*Codes_SRS_NODE_DEVICE_TWIN_16_003: [If the callback passed to the `getTwin` method is called with an error, the `callback` passed to the call to the `get` method shall be called with that error.]*/
+            opCallback(err);
+          } else {
+            /*Codes_SRS_NODE_DEVICE_TWIN_16_004: [If the callback passed to the `getTwin` method is called with no error and a `TwinProperties` object, these properties shall be merged with the current instance properties.]*/
+            this._mergePatch(this.properties.desired, twinProperties.desired);
+            this._mergePatch(this.properties.reported, twinProperties.reported);
+            /*Codes_SRS_NODE_DEVICE_TWIN_16_006: [For each desired property that is part of the `TwinProperties` object received, an event named after the path to this property shall be fired and passed the property value as argument.]*/
+            this._fireChangeEvents(this.properties.desired);
+            /*Codes_SRS_NODE_DEVICE_TWIN_16_005: [Once the properties have been merged the `callback` method passed to the call to `get` shall be called with a first argument that is `null` and a second argument that is the current `Twin` instance (`this`).]*/
+            opCallback(null, this);
+          }
+        });
+      }, _callback);
     }, callback);
   }
 

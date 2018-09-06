@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-amqp-base",
-  "version": "1.7.3",
+  "version": "2.0.0",
   "description": "AMQP operations used by Azure IoT device and service SDKs",
   "author": "Microsoft Corporation",
   "license": "MIT",
@@ -8,7 +8,7 @@
   "typings": "index.d.ts",
   "dependencies": {
     "async": "^2.5.0",
-    "azure-iot-common": "1.7.3",
+    "azure-iot-common": "1.7.4",
     "debug": "^3.0.1",
     "lodash.merge": "^4.6.1",
     "machina": "^2.0.1",

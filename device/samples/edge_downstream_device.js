@@ -3,18 +3,25 @@
 
 'use strict';
 
+var fs = require('fs');
 var Protocol = require('azure-iot-device-mqtt').Mqtt;
 // Uncomment one of these transports and then change it in fromConnectionString to test other transports
-// var Protocol = require('azure-iot-device-amqp').AmqpWs;
 // var Protocol = require('azure-iot-device-http').Http;
 // var Protocol = require('azure-iot-device-amqp').Amqp;
-// var Protocol = require('azure-iot-device-mqtt').MqttWs;
 var Client = require('azure-iot-device').Client;
 var Message = require('azure-iot-device').Message;
 
-// String containing Hostname, Device Id & Device Key in the following formats:
-//  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
-var connectionString = '[IoT device connection string]';
+// 1) Obtain the connection string for your downstream device and to it
+//    append this string GatewayHostName=<edge device hostname>;
+// 2) The edge device hostname is the hostname set in the config.yaml of the Edge device
+//    to which this sample will connect to.
+//
+// The resulting string should look like the following
+//  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>;GatewayHostName=<edge device hostname>"
+var connectionString = '[Downstream device IoT Edge connection string]';
+
+// Path to the Edge "owner" root CA certificate
+var edge_ca_cert_path = '[Path to Edge CA certificate]';
 
 // fromConnectionString must specify a transport constructor, coming from any transport package.
 var client = Client.fromConnectionString(connectionString, Protocol);
@@ -40,7 +47,7 @@ var connectCallback = function (err) {
       var windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
       var temperature = 20 + (Math.random() * 10); // range: [20, 30]
       var humidity = 60 + (Math.random() * 20); // range: [60, 80]
-      var data = JSON.stringify({ deviceId: 'myFirstDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
+      var data = JSON.stringify({ deviceId: 'myFirstDownstreamDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
       var message = new Message(data);
       message.properties.add('temperatureAlert', (temperature > 28) ? 'true' : 'false');
       console.log('Sending message: ' + message.getData());
@@ -59,7 +66,19 @@ var connectCallback = function (err) {
   }
 };
 
-client.open(connectCallback);
+// Provide the Azure IoT device client via setOptions with the X509
+// Edge root CA certificate that was used to setup the Edge runtime
+var options = {
+  ca : fs.readFileSync(edge_ca_cert_path, 'utf-8'),
+};
+
+client.setOptions(options, function(err) {
+  if (err) {
+    console.log('SetOptions Error: ' + err);
+  } else {
+    client.open(connectCallback);
+  }
+});
 
 // Helper function to print results in the console
 function printResultFor(op) {

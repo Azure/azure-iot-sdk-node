@@ -3,8 +3,11 @@
 
 'use strict';
 
+import { Callback } from 'azure-iot-common';
+
 export { DeviceMethodRequest } from './device_method_request';
 export { DeviceMethodResponse } from './device_method_response';
+export { DeviceMethodExchange, createDeviceMethodExchange } from './device_method_exchange';
 export { MethodClient } from './method_client';
 
 export interface MethodParams {
@@ -19,4 +22,4 @@ export interface MethodResult {
   payload: any;
 }
 
-export type MethodCallback = (err?: Error, result?: MethodResult) => void;
+export type MethodCallback = Callback<MethodResult>;
