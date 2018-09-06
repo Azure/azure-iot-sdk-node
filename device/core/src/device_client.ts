@@ -140,7 +140,7 @@ export class Client extends InternalClient {
    *
    * @throws {ReferenceException} If blobName or stream or streamLength is falsy.
    */
-  uploadToBlob(blobName: string, stream: Stream, streamLength: number, done: (err?: Error) => void): void {
+  _uploadToBlob(blobName: string, stream: Stream, streamLength: number, done: (err?: Error) => void): void {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_037: [The `uploadToBlob` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
     if (!blobName) throw new ReferenceError('blobName cannot be \'' + blobName + '\'');
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_038: [The `uploadToBlob` method shall throw a `ReferenceError` if `stream` is falsy.]*/
@@ -155,6 +155,22 @@ export class Client extends InternalClient {
       this.blobUploadClient.uploadToBlob(blobName, stream, streamLength, opCallback);
     }, (err, result) => {
       safeCallback(done, err, result);
+    });
+  }
+
+  uploadToBlob(blobName: string, stream: Stream, streamLength: number, callback: ErrorCallback): Promise<void> | void {
+    if (callback) {
+      return this._uploadToBlob(blobName, stream, streamLength, callback);
+    }
+
+    return new Promise((reject, resolve) => {
+      this._uploadToBlob(blobName, stream, streamLength, (error) => {
+        if (error) {
+          return Promise.reject(error);
+        }
+
+        return Promise.resolve();
+      });
     });
   }
 
