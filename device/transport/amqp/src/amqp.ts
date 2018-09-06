@@ -4,7 +4,6 @@
 'use strict';
 import * as machina from 'machina';
 import * as async from 'async';
-import * as fs from 'fs';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-amqp:Amqp');
 import { EventEmitter } from 'events';
@@ -675,11 +674,6 @@ export class Amqp extends EventEmitter implements DeviceTransport {
     if (options.hasOwnProperty('cert')) {
       if (this._authenticationProvider.type === AuthenticationType.X509) {
         (this._authenticationProvider as X509AuthenticationProvider).setX509Options(options);
-        /*Codes_SRS_NODE_DEVICE_AMQP_06_002: [If `done` has been specified the `setOptions` method shall call the `done` callback with no arguments.]*/
-        if (done) {
-          /*Codes_SRS_NODE_DEVICE_AMQP_06_003: [`setOptions` should not throw if `done` has not been specified.]*/
-          done();
-        }
       } else {
         /*Codes_SRS_NODE_DEVICE_AMQP_16_053: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called while using token-based authentication.]*/
         throw new errors.InvalidOperationError('cannot set X509 options when using token-based authentication');
@@ -689,6 +683,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
     /*Codes_SRS_NODE_DEVICE_AMQP_13_001: [ The setOptions method shall save the options passed in. ]*/
     this._options = options;
     if (done) {
+      /*Codes_SRS_NODE_DEVICE_AMQP_06_003: [`setOptions` should not throw if `done` has not been specified.]*/
       done();
     }
   }
