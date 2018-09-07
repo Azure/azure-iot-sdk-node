@@ -13,8 +13,8 @@ import { BlobUploadClient } from './blob_upload';
 import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
 import { X509AuthenticationProvider } from './x509_authentication_provider';
 import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
-import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
-import { Callback } from './promise_utils';
+import { DeviceMethodRequest, DeviceMethodResponse, DeviceMethodExchange } from './device_method';
+import { Callback, ErrorCallback, callbackToPromise } from './promise_utils';
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
   if (callback) callback(error, result);
@@ -109,15 +109,7 @@ export class Client extends InternalClient {
       return this._close(closeCallback);
     }
 
-    return new Promise<results.Disconnected>((resolve, reject) => {
-      this._close((error, result) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(result);
-        }
-      });
-    });
+    return callbackToPromise((callback) => this._close(callback));
   }
 
   /**
@@ -126,8 +118,20 @@ export class Client extends InternalClient {
    * @param methodName Name of the method that will be handled by the callback
    * @param callback   Function that shall be called whenever a method request for the method called `methodName` is received.
    */
-  onDeviceMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
+  __onDeviceMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
     this._onDeviceMethod(methodName, callback);
+  }
+
+  onDeviceMethod(methodName: string, callback?: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): Promise<DeviceMethodExchange> | void {
+    if (callback) {
+      return this._onDeviceMethod(methodName, callback);
+    }
+
+    return new Promise((resolve, reject) => {
+      this._onDeviceMethod(methodName, (deviceMethodRequest, deviceMethodResponse) => {
+        return resolve({ request: deviceMethodRequest, response: deviceMethodResponse });
+      });
+    });
   }
 
   /**
@@ -163,15 +167,7 @@ export class Client extends InternalClient {
       return this._uploadToBlob(blobName, stream, streamLength, callback);
     }
 
-    return new Promise((reject, resolve) => {
-      this._uploadToBlob(blobName, stream, streamLength, (error) => {
-        if (error) {
-          return Promise.reject(error);
-        }
-
-        return Promise.resolve();
-      });
-    });
+    return callbackToPromise((callback) => this._uploadToBlob(blobName, stream, streamLength, callback));
   }
 
   private _enableC2D(callback: (err?: Error) => void): void {
