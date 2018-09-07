@@ -7,7 +7,7 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:ModuleClient');
 
 import * as fs from 'fs';
-import { results, Message, RetryOperation, ConnectionString, AuthenticationProvider } from 'azure-iot-common';
+import { results, Message, RetryOperation, ConnectionString, AuthenticationProvider, Callback, callbackToPromise } from 'azure-iot-common';
 import { InternalClient, DeviceTransport } from './internal_client';
 import { errors } from 'azure-iot-common';
 import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
@@ -15,7 +15,6 @@ import { SharedAccessSignatureAuthenticationProvider } from './sas_authenticatio
 import { IotEdgeAuthenticationProvider } from './iotedge_authentication_provider';
 import { MethodParams, MethodCallback, MethodClient, DeviceMethodRequest, DeviceMethodResponse } from './device_method';
 import { DeviceClientOptions } from './interfaces';
-import { Callback, callbackToPromise } from './promise_utils';
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
   if (callback) callback(error, result);

@@ -24,5 +24,8 @@ module.exports = {
   ExponentialBackOffWithJitter: require('./lib/retry_policy.js').ExponentialBackOffWithJitter,
   AuthenticationProvider: require('./lib/authentication_provider').X509AuthenticationProvider,
   AuthenticationType: require('./lib/authentication_provider').AuthenticationType,
-  getAgentPlatformString: require('./lib/utils').getAgentPlatformString
+  getAgentPlatformString: require('./lib/utils').getAgentPlatformString,
+  callbackToPromise: require('./lib/promise_utils').callbackToPromise,
+  Callback: require('./lib/promise_utils').Callback,
+  ErrorCallback: require('./lib/promise_utils').ErrorCallback
 };
