@@ -15,6 +15,7 @@ import { SharedAccessSignatureAuthenticationProvider } from './sas_authenticatio
 import { IotEdgeAuthenticationProvider } from './iotedge_authentication_provider';
 import { MethodParams, MethodCallback, MethodClient, DeviceMethodRequest, DeviceMethodResponse } from './device_method';
 import { DeviceClientOptions } from './interfaces';
+import { Callback, callbackToPromise } from './promise_utils';
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
   if (callback) callback(error, result);
@@ -101,7 +102,7 @@ export class ModuleClient extends InternalClient {
    * @param message Message to send to the given output
    * @param callback Function to call when the operation has been queued.
    */
-  sendOutputEvent(outputName: string, message: Message, callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
+  _sendOutputEvent(outputName: string, message: Message, callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
     const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       /* Codes_SRS_NODE_MODULE_CLIENT_18_010: [ The `sendOutputEvent` method shall send the event indicated by the `message` argument via the transport associated with the Client instance. ]*/
@@ -111,6 +112,14 @@ export class ModuleClient extends InternalClient {
       /*Codes_SRS_NODE_MODULE_CLIENT_18_019: [ The `sendOutputEvent` method shall not throw if the `callback` is not passed. ]*/
       safeCallback(callback, err, result);
     });
+  }
+
+  sendOutputEvent(outputName: string, message: Message, callback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
+    if (callback) {
+      return this._sendOutputEvent(outputName, message, callback);
+    }
+
+    return callbackToPromise((callback) => this._sendOutputEvent(outputName, message, callback));
   }
 
   /**
