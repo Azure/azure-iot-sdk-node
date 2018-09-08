@@ -8,10 +8,10 @@ var assert = require('chai').assert;
 var debug = require('debug')('e2etests:module-methods');
 var Amqp = require('azure-iot-device-amqp').Amqp;
 var AmqpWs = require('azure-iot-device-amqp').AmqpWs;
-//var Mqtt = require('azure-iot-device-mqtt').Mqtt;
-//var MqttWs = require('azure-iot-device-mqtt').MqttWs;
+var Mqtt = require('azure-iot-device-mqtt').Mqtt;
+var MqttWs = require('azure-iot-device-mqtt').MqttWs;
 
-var transportsToTest = [ Amqp, AmqpWs ];
+var transportsToTest = [ Amqp, AmqpWs, Mqtt, MqttWs ];
 
 describe('module methods', function() {
   this.timeout(46000);

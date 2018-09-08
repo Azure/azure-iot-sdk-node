@@ -10,10 +10,10 @@ var assert = require('chai').assert;
 var debug = require('debug')('e2etests:module-messaging');
 var Amqp = require('azure-iot-device-amqp').Amqp;
 var AmqpWs = require('azure-iot-device-amqp').AmqpWs;
-//var Mqtt = require('azure-iot-device-mqtt').Mqtt;
-//var MqttWs = require('azure-iot-device-mqtt').MqttWs;
+var Mqtt = require('azure-iot-device-mqtt').Mqtt;
+var MqttWs = require('azure-iot-device-mqtt').MqttWs;
 
-var transportsToTest = [ Amqp, AmqpWs ];
+var transportsToTest = [ Amqp, AmqpWs, Mqtt, MqttWs ];
 
 describe('module messaging', function() {
   this.timeout(46000);
@@ -53,7 +53,7 @@ describe('module messaging', function() {
           } else {
             debug('adding handler for \'message\' event on ehReceiver');
             ehReceiver.on('message', function(msg) {
-              if (msg.properties.to === '/devices/' + testModule.deviceId + '/modules/' + testModule.moduleId + '/messages/events') {
+              if (msg.annotations['iothub-connection-device-id'] === testModule.deviceId && msg.annotations['iothub-connection-module-id'] === testModule.moduleId) {
                 assert.strictEqual(msg.body.toString('ascii'), testOutputText);
                 done();
               }
