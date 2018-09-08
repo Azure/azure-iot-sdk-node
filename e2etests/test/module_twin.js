@@ -8,10 +8,10 @@ var assert = require('chai').assert;
 var debug = require('debug')('e2etests:module-twin');
 var Amqp = require('azure-iot-device-amqp').Amqp;
 var AmqpWs = require('azure-iot-device-amqp').AmqpWs;
-//var Mqtt = require('azure-iot-device-mqtt').Mqtt;
-//var MqttWs = require('azure-iot-device-mqtt').MqttWs;
+var Mqtt = require('azure-iot-device-mqtt').Mqtt;
+var MqttWs = require('azure-iot-device-mqtt').MqttWs;
 
-var transportsToTest = [ Amqp, AmqpWs ];
+var transportsToTest = [ Amqp, AmqpWs, Mqtt, MqttWs ];
 
 describe('module twin', function() {
   this.timeout(46000);
@@ -62,11 +62,14 @@ describe('module twin', function() {
             debug('no match.  Continuing to wait.  Looking for ' + props.fake_key + ' got ' + patch.properties.desired.fake_key);
           }
         });
-        debug('sending desired properties');
-        testModule.serviceTwin.update(patch, function(err) {
-          debug('twin.update returned ' + (err ? err : 'success'));
-          assert(!err);
-        });
+
+        setTimeout(function () {
+          debug('sending desired properties');
+          testModule.serviceTwin.update(patch, function(err) {
+            debug('twin.update returned ' + (err ? err : 'success'));
+            assert(!err);
+          });
+        }, 3000);
       });
 
       it('can send reported properties', function(done) {
