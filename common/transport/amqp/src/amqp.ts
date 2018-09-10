@@ -374,7 +374,11 @@ export class Amqp {
             this._fsm.transition('disconnecting', null, err);
           },
           error: (context: EventContext) => {
-            this._fsm.transition('disconnecting', null, context.connection.error);
+            if (context && context.connection) {
+              this._fsm.transition('disconnecting', null, context.connection.error);
+            } else {
+              this._fsm.transition('disconnecting', null, context);
+            }
           },
           disconnected: (context: EventContext) => {
             this._disconnectionOccurred = true;
@@ -660,6 +664,7 @@ export class Amqp {
     if (config.sslOptions) {
       connectionParameters.cert = config.sslOptions.cert;
       connectionParameters.key = config.sslOptions.key;
+      connectionParameters.ca = config.sslOptions.ca;
     }
     connectionParameters.port = parsedUrl.port ? ( parsedUrl.port ) : (5671);
     connectionParameters.transport = 'tls';
