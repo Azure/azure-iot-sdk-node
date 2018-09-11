@@ -7,3 +7,10 @@ export interface DeviceMethodExchange {
     request: DeviceMethodRequest;
     response: DeviceMethodResponse;
 }
+
+export function createDeviceMethodExchange(request: DeviceMethodRequest, response: DeviceMethodResponse): DeviceMethodExchange {
+    return {
+        request: request,
+        response: response
+    };
+}
