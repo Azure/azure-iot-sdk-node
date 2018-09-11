@@ -8,7 +8,7 @@ export type ErrorCallback = (error?: Error) => void;
 export type Callback<TResult> = MultiValueCallback<Error, TResult>;
 
 export function callbackToPromise<TResult>(callBackOperation: (callback: Callback<TResult>) => void): Promise<TResult> {
-  return new Promise((resolve, reject) => {
+  return new Promise<TResult>((resolve, reject) => {
     callBackOperation((error, result) => {
       if (error) {
         return reject(error);
@@ -20,7 +20,7 @@ export function callbackToPromise<TResult>(callBackOperation: (callback: Callbac
 }
 
 export function noErrorCallbackToPromise<TResult>(callBackOperation: (callback: NoErrorCallback<TResult>) => void): Promise<TResult> {
-  return new Promise((resolve, _reject) => {
+  return new Promise<TResult>((resolve, _reject) => {
     callBackOperation((result) => {
       return resolve(result);
     });
@@ -30,7 +30,7 @@ export function noErrorCallbackToPromise<TResult>(callBackOperation: (callback: 
 export function multiValueCallbackToPromise<TResult1, TResult2, TPromiseResult>(
   callBackOperation: (callback: MultiValueCallback<TResult1, TResult2>) => void,
   packResults: (result1: TResult1, result2: TResult2) => TPromiseResult): Promise<TPromiseResult> {
-  return new Promise((resolve, reject) => {
+  return new Promise<TPromiseResult>((resolve, reject) => {
     callBackOperation((result1, result2) => {
       if (result1 instanceof Error) {
         reject(result1);
