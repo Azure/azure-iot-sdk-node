@@ -49,7 +49,7 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
    *
    * @param callback function that will be called with either an error or a set of device credentials that can be used to authenticate with the IoT hub.
    */
-  _getDeviceCredentials(callback: (err: Error, credentials?: TransportConfig) => void): void {
+  _getDeviceCredentials(callback: Callback<TransportConfig>): void {
     if (this._shouldRenewToken()) {
       this._renewToken((err, creds) => {
         if (err) {
@@ -66,7 +66,7 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
     }
   }
 
-  getDeviceCredentials(callback: Callback<TransportConfig>): Promise<TransportConfig> | void {
+  getDeviceCredentials(callback?: Callback<TransportConfig>): Promise<TransportConfig> | void {
     if (callback) {
       return this._getDeviceCredentials(callback);
     }

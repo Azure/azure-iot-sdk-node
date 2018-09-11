@@ -35,12 +35,12 @@ export class SharedAccessSignatureAuthenticationProvider extends EventEmitter im
    *
    * @param callback function that will be called with either an error or a set of device credentials that can be used to authenticate with the IoT hub.
    */
-  _getDeviceCredentials(callback: (err: Error, credentials?: TransportConfig) => void): void {
+  _getDeviceCredentials(callback: Callback<TransportConfig>): void {
     /*Codes_SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_002: [The `getDeviceCredentials` method shall call its callback with a `null` error parameter and the stored `credentials` object containing the current device credentials.]*/
     callback(null, this._credentials);
   }
 
-  getDeviceCredentials(callback: Callback<TransportConfig>): Promise<TransportConfig> | void {
+  getDeviceCredentials(callback?: Callback<TransportConfig>): Promise<TransportConfig> | void {
     if (callback) {
       return this._getDeviceCredentials(callback);
     }
