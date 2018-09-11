@@ -7,14 +7,15 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:ModuleClient');
 
 import * as fs from 'fs';
-import { results, Message, RetryOperation, ConnectionString, AuthenticationProvider, Callback, callbackToPromise } from 'azure-iot-common';
+import { results, Message, RetryOperation, ConnectionString, AuthenticationProvider, Callback, callbackToPromise, multiValueCallbackToPromise } from 'azure-iot-common';
 import { InternalClient, DeviceTransport } from './internal_client';
 import { errors } from 'azure-iot-common';
 import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
 import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
 import { IotEdgeAuthenticationProvider } from './iotedge_authentication_provider';
-import { MethodParams, MethodCallback, MethodClient, DeviceMethodRequest, DeviceMethodResponse } from './device_method';
+import { MethodParams, MethodCallback, MethodClient, DeviceMethodRequest, DeviceMethodResponse, MethodResult, DeviceMethodExchange, createDeviceMethodExchange } from './device_method';
 import { DeviceClientOptions } from './interfaces';
+import { MultiValueCallback } from 'azure-iot-common/lib/promise_utils';
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
   if (callback) callback(error, result);
@@ -101,7 +102,7 @@ export class ModuleClient extends InternalClient {
    * @param message Message to send to the given output
    * @param callback Function to call when the operation has been queued.
    */
-  _sendOutputEvent(outputName: string, message: Message, callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
+  sendOutputEvent(outputName: string, message: Message, callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
     const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       /* Codes_SRS_NODE_MODULE_CLIENT_18_010: [ The `sendOutputEvent` method shall send the event indicated by the `message` argument via the transport associated with the Client instance. ]*/
@@ -111,14 +112,6 @@ export class ModuleClient extends InternalClient {
       /*Codes_SRS_NODE_MODULE_CLIENT_18_019: [ The `sendOutputEvent` method shall not throw if the `callback` is not passed. ]*/
       safeCallback(callback, err, result);
     });
-  }
-
-  sendOutputEvent(outputName: string, message: Message, callback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
-    if (callback) {
-      return this._sendOutputEvent(outputName, message, callback);
-    }
-
-    return callbackToPromise((callback) => this._sendOutputEvent(outputName, message, callback));
   }
 
   /**
@@ -145,9 +138,17 @@ export class ModuleClient extends InternalClient {
    *
    * @param closeCallback Function to call once the transport is disconnected and the client closed.
    */
-  close(closeCallback?: (err?: Error, result?: results.Disconnected) => void): void {
+  _close(closeCallback?: Callback<results.Disconnected>): void {
     this._transport.removeListener('disconnect', this._moduleDisconnectHandler);
     super.close(closeCallback);
+  }
+
+  close(closeCallback?: Callback<results.Disconnected>): Promise<results.Disconnected> | void {
+    if (closeCallback) {
+      return this._close(closeCallback);
+    }
+
+    return callbackToPromise((_callback) => this._close(_callback));
   }
 
   /**
@@ -159,9 +160,9 @@ export class ModuleClient extends InternalClient {
    * @param methodParams  parameters of the direct method call
    * @param callback      callback that will be invoked either with an Error object or the result of the method call.
    */
-  invokeMethod(deviceId: string, methodParams: MethodParams, callback: MethodCallback): void;
-  invokeMethod(deviceId: string, moduleId: string, methodParams: MethodParams, callback: MethodCallback): void;
-  invokeMethod(deviceId: string, moduleIdOrMethodParams: string | MethodParams, methodParamsOrCallback: MethodParams | MethodCallback, callback?: MethodCallback): void {
+  _invokeMethod(deviceId: string, methodParams: MethodParams, callback: MethodCallback): void;
+  _invokeMethod(deviceId: string, moduleId: string, methodParams: MethodParams, callback: MethodCallback): void;
+  _invokeMethod(deviceId: string, moduleIdOrMethodParams: string | MethodParams, methodParamsOrCallback: MethodParams | MethodCallback, callback?: MethodCallback): void {
     /*Codes_SRS_NODE_MODULE_CLIENT_16_093: [`invokeMethod` shall throw a `ReferenceError` if the `deviceId` argument is falsy.]*/
     if (!deviceId) {
       throw new ReferenceError('deviceId cannot be \'' + deviceId + '\'');
@@ -190,14 +191,34 @@ export class ModuleClient extends InternalClient {
     this._methodClient.invokeMethod(deviceId, actualModuleId, actualMethodParams as MethodParams, actualCallback);
   }
 
+  invokeMethod(deviceId: string, methodParams: MethodParams, callback: Callback<MethodResult>): void;
+  invokeMethod(deviceId: string, moduleId: string, methodParams: MethodParams, callback: Callback<MethodResult>): void;
+  invokeMethod(deviceId: string, moduleIdOrMethodParams: string | MethodParams, methodParamsOrCallback: MethodParams | Callback<MethodResult>, callback?: Callback<MethodResult>): Promise<MethodResult> | void {
+    if (callback) {
+      return this._invokeMethod(deviceId, moduleIdOrMethodParams as string, methodParamsOrCallback as MethodParams, callback);
+    } else if ((methodParamsOrCallback instanceof Function)) {
+      return this._invokeMethod(deviceId, moduleIdOrMethodParams as MethodParams, methodParamsOrCallback as Callback<MethodResult>);
+    }
+
+    return callbackToPromise((_callback) => this._invokeMethod(deviceId, methodParamsOrCallback as any, methodParamsOrCallback, _callback));
+  }
+
   /**
    * Registers a callback for a method named `methodName`.
    *
    * @param methodName Name of the method that will be handled by the callback
    * @param callback   Function that shall be called whenever a method request for the method called `methodName` is received.
    */
-  onMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
+  _onMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
     this._onDeviceMethod(methodName, callback);
+  }
+
+  onMethod(methodName: string, callback: MultiValueCallback<DeviceMethodRequest, DeviceMethodResponse>): Promise<DeviceMethodExchange> | void {
+    if (callback) {
+      return this._onMethod(methodName, callback);
+    }
+
+    return multiValueCallbackToPromise((_callback) => this._onMethod(methodName, callback), createDeviceMethodExchange);
   }
 
   /**
@@ -334,7 +355,7 @@ export class ModuleClient extends InternalClient {
    * @param callback      Callback to invoke when the ModuleClient has been constructured or if an
    *                      error occurs while creating the client.
    */
-  static fromEnvironment(transportCtor: any, callback: (err?: Error, client?: ModuleClient) => void): void {
+  static _fromEnvironment(transportCtor: any, callback: (err?: Error, client?: ModuleClient) => void): void {
     // Codes_SRS_NODE_MODULE_CLIENT_13_033: [ The fromEnvironment method shall throw a ReferenceError if the callback argument is falsy or is not a function. ]
     if (!callback || typeof (callback) !== 'function') {
       throw new ReferenceError('callback cannot be \'' + callback + '\'');
@@ -355,6 +376,14 @@ export class ModuleClient extends InternalClient {
     } else {
       ModuleClient._fromEnvironmentEdge(transportCtor, callback);
     }
+  }
+
+  static fromEnvironment(transportCtor: any, callback?: Callback<ModuleClient>): Promise<ModuleClient> | void {
+    if (callback) {
+      return this._fromEnvironment(transportCtor, callback);
+    }
+
+    return callbackToPromise((_callback) => this._fromEnvironmentEdge(transportCtor, _callback));
   }
 
   private static _fromEnvironmentEdge(transportCtor: any, callback: (err?: Error, client?: ModuleClient) => void): void {
