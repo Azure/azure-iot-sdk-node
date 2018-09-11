@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { EventEmitter } from 'events';
-import { AuthenticationProvider, AuthenticationType, SharedAccessSignature, TransportConfig } from 'azure-iot-common';
+import { AuthenticationProvider, AuthenticationType, SharedAccessSignature, TransportConfig, Callback, callbackToPromise } from 'azure-iot-common';
 
 /**
  * Provides an `AuthenticationProvider` object that can be created simply with a shared access signature and is then used by the device client and transports to authenticate
@@ -35,9 +35,17 @@ export class SharedAccessSignatureAuthenticationProvider extends EventEmitter im
    *
    * @param callback function that will be called with either an error or a set of device credentials that can be used to authenticate with the IoT hub.
    */
-  getDeviceCredentials(callback: (err: Error, credentials?: TransportConfig) => void): void {
+  _getDeviceCredentials(callback: (err: Error, credentials?: TransportConfig) => void): void {
     /*Codes_SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_002: [The `getDeviceCredentials` method shall call its callback with a `null` error parameter and the stored `credentials` object containing the current device credentials.]*/
     callback(null, this._credentials);
+  }
+
+  getDeviceCredentials(callback: Callback<TransportConfig>): Promise<TransportConfig> | void {
+    if (callback) {
+      return this._getDeviceCredentials(callback);
+    }
+
+    return callbackToPromise((_callback) => this._getDeviceCredentials(_callback));
   }
 
   /**
