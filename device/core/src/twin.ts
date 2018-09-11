@@ -8,7 +8,7 @@ import * as traverse from 'traverse';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:Twin');
 
-import { RetryPolicy, RetryOperation } from 'azure-iot-common';
+import { RetryPolicy, RetryOperation, Callback, callbackToPromise } from 'azure-iot-common';
 import { DeviceTransport } from './internal_client';
 
 /**
@@ -78,7 +78,7 @@ export class Twin extends EventEmitter {
    *
    * @param callback function that shall be called back with either the twin or an error if the transport fails to retrieve the twin.
    */
-  get(callback: (err: Error, twin?: Twin) => void): void {
+  _get(callback: Callback<Twin>): void {
     const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       this._clearCachedProperties();
@@ -98,6 +98,14 @@ export class Twin extends EventEmitter {
         }
       });
     }, callback);
+  }
+
+  get(callback?: Callback<Twin>): Promise<Twin> | void {
+    if (callback) {
+      return this._get(callback);
+    }
+
+    return callbackToPromise((_callback) => this._get(_callback));
   }
 
   /**
