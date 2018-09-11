@@ -5,7 +5,7 @@
 
 export { DeviceMethodRequest } from './device_method_request';
 export { DeviceMethodResponse } from './device_method_response';
-export { DeviceMethodExchange } from './device_method_exchange';
+export { DeviceMethodExchange, createDeviceMethodExchange } from './device_method_exchange';
 export { MethodClient } from './method_client';
 
 export interface MethodParams {
