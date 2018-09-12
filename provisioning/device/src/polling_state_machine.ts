@@ -4,7 +4,7 @@
 'use strict';
 
 import { EventEmitter } from 'events';
-import { errors } from 'azure-iot-common';
+import { errors, ErrorCallback, errorCallbackToPromise, Callback, callbackToPromise } from 'azure-iot-common';
 import * as machina from 'machina';
 import { ProvisioningDeviceConstants } from './constants';
 import { PollingTransport, RegistrationRequest, DeviceRegistrationResult } from './interfaces';
@@ -237,19 +237,43 @@ export class  PollingStateMachine extends EventEmitter {
     });
   }
 
-  register(request: RegistrationRequest, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any) => void): void {
+  _register(request: RegistrationRequest, callback?: Callback<DeviceRegistrationResult>): void {
     debug('register called for registrationId "' + request.registrationId + '"');
     this._fsm.handle('register', request, callback);
   }
 
-  cancel(callback: (err: Error) => void): void {
+  register(request: RegistrationRequest, callback: Callback<DeviceRegistrationResult>): Promise<DeviceRegistrationResult> | void {
+    if (callback) {
+      return this._register(request, callback);
+    }
+
+    return callbackToPromise((_callback) => this._register(request, _callback));
+  }
+
+  _cancel(callback: ErrorCallback): void {
     debug('cancel called');
     this._fsm.handle('cancel', new errors.OperationCancelledError(''), callback);
   }
 
-  disconnect(callback: (err: Error) => void): void {
+  cancel(callback?: ErrorCallback): Promise<void> | void {
+    if (callback) {
+      return this._cancel(callback);
+    }
+
+    return errorCallbackToPromise((_callback) => this._cancel(_callback));
+  }
+
+  _disconnect(callback: ErrorCallback): void {
     debug('disconnect called');
     this._fsm.handle('disconnect', callback);
+  }
+
+  disconnect(callback?: ErrorCallback): Promise<void> | void {
+    if (callback) {
+      return this._disconnect(callback);
+    }
+
+    return errorCallbackToPromise((_callback) => this._disconnect(_callback));
   }
 }
 
