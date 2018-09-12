@@ -7,13 +7,13 @@ import { Stream } from 'stream';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:InternalClient');
 
-import { AuthenticationProvider, RetryOperation, ConnectionString, results, Callback, ErrorCallback, callbackToPromise } from 'azure-iot-common';
+import { AuthenticationProvider, RetryOperation, ConnectionString, results, Callback, ErrorCallback, callbackToPromise, doubleValueCallbackToPromise, DoubleValueCallback } from 'azure-iot-common';
 import { InternalClient, DeviceTransport } from './internal_client';
 import { BlobUploadClient } from './blob_upload';
 import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
 import { X509AuthenticationProvider } from './x509_authentication_provider';
 import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
-import { DeviceMethodRequest, DeviceMethodResponse, DeviceMethodExchange } from './device_method';
+import { DeviceMethodRequest, DeviceMethodResponse, DeviceMethodExchange, createDeviceMethodExchange } from './device_method';
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
   if (callback) callback(error, result);
@@ -98,7 +98,7 @@ export class Client extends InternalClient {
    *
    * @param closeCallback Function to call once the transport is disconnected and the client closed.
    */
-  _close(closeCallback?: (err?: Error, result?: results.Disconnected) => void): void {
+  _close(closeCallback?: Callback<results.Disconnected>): void {
     this._transport.removeListener('disconnect', this._deviceDisconnectHandler);
     super.close(closeCallback);
   }
@@ -108,7 +108,7 @@ export class Client extends InternalClient {
       return this._close(closeCallback);
     }
 
-    return callbackToPromise((callback) => this._close(callback));
+    return callbackToPromise((_callback) => this._close(_callback));
   }
 
   /**
@@ -117,20 +117,12 @@ export class Client extends InternalClient {
    * @param methodName Name of the method that will be handled by the callback
    * @param callback   Function that shall be called whenever a method request for the method called `methodName` is received.
    */
-  __onDeviceMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
-    this._onDeviceMethod(methodName, callback);
-  }
-
-  onDeviceMethod(methodName: string, callback?: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): Promise<DeviceMethodExchange> | void {
+  onDeviceMethod(methodName: string, callback?: DoubleValueCallback<DeviceMethodRequest, DeviceMethodResponse>): Promise<DeviceMethodExchange> | void {
     if (callback) {
       return this._onDeviceMethod(methodName, callback);
     }
 
-    return new Promise((resolve, reject) => {
-      this._onDeviceMethod(methodName, (deviceMethodRequest, deviceMethodResponse) => {
-        return resolve({ request: deviceMethodRequest, response: deviceMethodResponse });
-      });
-    });
+    return doubleValueCallbackToPromise((_callback) => this._onDeviceMethod(methodName, _callback), createDeviceMethodExchange);
   }
 
   /**
