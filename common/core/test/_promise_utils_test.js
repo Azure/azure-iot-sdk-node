@@ -8,6 +8,7 @@ var callbackToPromise = require('../lib/promise_utils').callbackToPromise;
 var errorCallbackToPromise = require('../lib/promise_utils').errorCallbackToPromise;
 var noErrorCallbackToPromise = require('../lib/promise_utils').noErrorCallbackToPromise;
 var doubleValueCallbackToPromise = require('../lib/promise_utils').doubleValueCallbackToPromise;
+var tripleValueCallbackToPromise = require('../lib/promise_utils').tripleValueCallbackToPromise;
 
 describe('PromiseUtils', () => {
     describe('#callbackToPromise', () => {
@@ -297,6 +298,74 @@ describe('PromiseUtils', () => {
 
             try {
                 const result = await doubleValueCallbackToPromise(functionWithSimpleResult, packFunction);
+                assert.deepEqual(result, returnValue);
+            } catch (error) {
+                assert.fail(error);
+            }
+        });
+    });
+
+    describe('#tripleValueCallbackToPromise', function() {
+        it('rejects when an error is present', function (done) {
+            const error = new Error('sample error');
+            const functionWithErrorAsFirstParameter = (callback) => {
+                callback(error);
+            };
+
+            tripleValueCallbackToPromise(functionWithErrorAsFirstParameter, undefined).then(_ => {
+                done('The promise should be rejected');
+            }, err => {
+                assert.deepEqual(err, error);
+                done();
+            });
+        });
+
+        it('returns single value when callback is invoked', function (done) {
+            const returnValue = { key: 'sample value' }
+            const functionWithErrorAsFirstParameter = (callback) => {
+                callback(undefined, returnValue, undefined);
+            };
+
+            const packFunction = (value1, value2) => { return { val1: value1, val2: value2 }; }
+
+            tripleValueCallbackToPromise(functionWithErrorAsFirstParameter, packFunction).then(result => {
+                assert.deepEqual(result.val1, returnValue);
+                assert.isUndefined(result.val2);
+                done();
+            }).catch(error => {
+                done(error);
+            });
+        });
+
+        it('returns packed result when callback returns two values', function (done) {
+            const returnValue = { return1: 'sample value', return2: 5 }
+            const functionWithTwoReturnValues = (callback) => {
+                callback(undefined, returnValue.return1, returnValue.return2);
+            };
+
+            const packFunction = (value1, value2) => { return { return1: value1, return2: value2 }; }
+
+            tripleValueCallbackToPromise(functionWithTwoReturnValues, packFunction).then(result => {
+                assert.deepEqual(result, returnValue);
+                done();
+            }).catch(error => {
+                done(error);
+            });
+        });
+
+        it('enables async await', async function () {
+            const returnValue = {
+                key: 'value',
+                id: 42
+            };
+            const functionWithSimpleResult = (callback) => {
+                callback(undefined, returnValue);
+            };
+            const packFunction = (value, _) => { return value; }
+
+
+            try {
+                const result = await tripleValueCallbackToPromise(functionWithSimpleResult, packFunction);
                 assert.deepEqual(result, returnValue);
             } catch (error) {
                 assert.fail(error);

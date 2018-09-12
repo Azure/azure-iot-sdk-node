@@ -30,6 +30,14 @@ export type ErrorCallback = (error?: Error) => void;
 export type Callback<TResult> = DoubleValueCallback<Error, TResult>;
 
 /**
+ * Defines type describing regular callback with three results - two are the result values, the other one is Error.
+ *
+ * @template TResult1 - Type of the first result value.
+ * @template TResult2 - Type of the second result value.
+ */
+export type TripleValueCallback<TResult1, TResult2> = (error?: Error, result1?: TResult1, result2?: TResult2) => void;
+
+/**
  * Converts method taking regular callback as a parameter to method returning a Promise.
  *
  * @param {(callback: Callback<TResult>) => void} callBackOperation - Function taking regular callback as a parameter.
@@ -110,7 +118,7 @@ export function noErrorCallbackToPromise<TResult>(callBackOperation: (callback: 
 }
 
 /**
- * Converts method taking callback with two result values and an error as a parameter to method returning a Promise.
+ * Converts method taking callback with two result values (one can be an Error) as a parameter to method returning a Promise.
  * Promise cannot return multiple objects so the return values have to be packed into a single object.
  *
  * @param {(callback: DoubleValueCallback<TResult1, TResult2>) => void} callBackOperation - Function taking callback with two return values and an error as a parameter.
@@ -146,6 +154,46 @@ export function doubleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>
 
       if (result2 instanceof Error) {
         reject(result2);
+      }
+
+      return resolve(packResults(result1, result2));
+    });
+  });
+}
+
+/**
+ * Converts method taking callback with two result values and an error as a parameter to method returning a Promise.
+ * Promise cannot return multiple objects so the return values have to be packed into a single object.
+ *
+ * @param {(callback: DoubleValueCallback<TResult1, TResult2>) => void} callBackOperation - Function taking callback with two return values and an error as a parameter.
+ * @param {(result1: TResult1, result2: TResult2) => TPromiseResult} packResults - Function converting two return values from the callback to a single object of {TPromiseResult} type.
+ * @returns {Promise<TResult>} Promise with result of TResult type.
+ * @template TResult1 - Type of the first result value.
+ * @template TResult2 - Type of the second result value.
+ * @template TPromiseResult - Type of the Promise result value.
+ * @example
+ * // When method takes only callback as the parameter like example:
+ * function foo(callback: Function) {[...]}
+ * // we call
+ * const pack = (result1, result2) => { return { res1: result1, res2: result2 }; };
+ * tripleValueCallbackToPromise((_callback) => foo(_callback), pack);
+ * // We need to create a lambda expression or an anonymous function because this method has to inject its own callback
+ * // and we need to provide a method packing two results into one object which is returned in the Promise.
+ *
+ * // If converted method takes more than callback as its parameter, we need to create a closure. For method defined like
+ * function foo(param: any, callback: Function) {[...]}
+ * // we call
+ * const pack = (result1, result2) => { return { res1: result1, res2: result2 }; };
+ * const param = 42;
+ * tripleValueCallbackToPromise((_callback) => foo(param, _callback), pack).then(result => { console.log(result); }, err => { console.error(error); });
+ */
+export function tripleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>(
+  callBackOperation: (callback: TripleValueCallback<TResult1, TResult2>) => void,
+  packResults: (result1: TResult1, result2: TResult2) => TPromiseResult): Promise<TPromiseResult> {
+  return new Promise<TPromiseResult>((resolve, reject) => {
+    callBackOperation((error, result1, result2) => {
+      if (error) {
+        reject(error);
       }
 
       return resolve(packResults(result1, result2));
