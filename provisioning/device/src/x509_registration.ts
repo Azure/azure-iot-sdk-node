@@ -7,7 +7,7 @@ import { X509ProvisioningTransport, X509SecurityClient } from './interfaces';
 import { PollingStateMachine } from './polling_state_machine';
 import * as dbg from 'debug';
 import { Callback, callbackToPromise, ErrorCallback, errorCallbackToPromise } from 'azure-iot-common';
-import { noErrorCallbackToPromise } from 'azure-iot-common/lib/promise_utils';
+
 const debug = dbg('azure-iot-provisioning-device:X509Registration');
 
 /**
