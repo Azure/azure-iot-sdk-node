@@ -5,6 +5,7 @@
 
 var assert = require('chai').assert;
 var callbackToPromise = require('../lib/promise_utils').callbackToPromise;
+var errorCallbackToPromise = require('../lib/promise_utils').errorCallbackToPromise;
 var noErrorCallbackToPromise = require('../lib/promise_utils').noErrorCallbackToPromise;
 var doubleValueCallbackToPromise = require('../lib/promise_utils').doubleValueCallbackToPromise;
 
@@ -52,7 +53,7 @@ describe('PromiseUtils', () => {
 
         it('returns complex object properly when callback invoked', function (done) {
             const returnValue = {
-                key: "value",
+                key: 'value',
                 id: 42
             };
             const functionWithSimpleResult = (callback) => {
@@ -69,7 +70,7 @@ describe('PromiseUtils', () => {
 
         it('enables async await', async function () {
             const returnValue = {
-                key: "value",
+                key: 'value',
                 id: 42
             };
             const functionWithSimpleResult = (callback) => {
@@ -86,7 +87,7 @@ describe('PromiseUtils', () => {
 
         it('returns complex object properly from long running operation', (done) => {
             const returnValue = {
-                key: "value",
+                key: 'value',
                 id: 42
             };
             const functionWithSimpleResult = (callback) => {
@@ -103,7 +104,7 @@ describe('PromiseUtils', () => {
 
         it('rejects when only error returned', function (done) {
             const error = {
-                "message": "sample message"
+                'message': 'sample message'
             };
             const functionWithEmptyPromise = (callback) => {
                 callback(error);
@@ -119,10 +120,10 @@ describe('PromiseUtils', () => {
 
         it('rejects when error and result returned', function (done) {
             const error = {
-                "message": "sample message"
+                'message': 'sample message'
             };
             const functionWithEmptyPromise = (callback) => {
-                callback(error, "this shouldn't be returned");
+                callback(error, 'this shouldn\'t be returned');
             };
 
             callbackToPromise(functionWithEmptyPromise).then(result => {
@@ -132,11 +133,66 @@ describe('PromiseUtils', () => {
                 done();
             });
         });
+
+        it('returns empty result when action completed successfully and no result returned', function (done) {
+            const functionWithErrorOnly = (callback) => {
+                callback();
+            };
+
+            callbackToPromise(functionWithErrorOnly).then(result => {
+                assert.isUndefined(result);
+                done();
+            }).catch(error => {
+                done(error);
+            });
+        });
+    });
+
+    describe('#errorCallbackToPromise', function () {
+        it('returns empty result when action completed successfully and no result returned', function (done) {
+            const functionWithErrorOnly = (callback) => {
+                callback();
+            };
+
+            errorCallbackToPromise(functionWithErrorOnly).then(result => {
+                assert.isUndefined(result);
+                done();
+            }).catch(error => {
+                done(error);
+            });
+        });
+
+        it('rejects when a parameter passed to callback', function (done) {
+            const result = new Error('sample error');
+            const functionWithErrorOnly = (callback) => {
+                callback(result);
+            };
+
+            errorCallbackToPromise(functionWithErrorOnly).then(result => {
+                done(result);
+            }).catch(error => {
+                assert.equal(error, result)
+                done();
+            });
+        });
+
+        it('enables async await', async function () {
+            const functionWithErrorOnly = (callback) => {
+                callback();
+            };
+
+            try {
+                const result = await errorCallbackToPromise(functionWithErrorOnly);
+                assert.isUndefined(result);
+            } catch (error) {
+                assert.fail(error);
+            }
+        });
     });
 
     describe('#noErrorCallbackToPromise', function () {
         it('returns value when callback invoked', function (done) {
-            const value = "sample value";
+            const value = 'sample value';
             const functionWithValueReturnOnly = (callback) => {
                 callback(value);
             };
@@ -151,7 +207,7 @@ describe('PromiseUtils', () => {
 
         it('enables async await', async function () {
             const returnValue = {
-                key: "value",
+                key: 'value',
                 id: 42
             };
             const functionWithSimpleResult = (callback) => {
@@ -169,13 +225,13 @@ describe('PromiseUtils', () => {
 
     describe('#doubleValueCallbackToPromise', function () {
         it('rejects when the first argument in callback is an error', function (done) {
-            const error = new Error("sample error");
+            const error = new Error('sample error');
             const functionWithErrorAsFirstParameter = (callback) => {
                 callback(error, {});
             };
 
             doubleValueCallbackToPromise(functionWithErrorAsFirstParameter, undefined).then(_ => {
-                done("The promise should be rejected");
+                done('The promise should be rejected');
             }, err => {
                 assert.deepEqual(err, error);
                 done();
@@ -183,13 +239,13 @@ describe('PromiseUtils', () => {
         });
 
         it('rejects when the second argument in callback is an error', function (done) {
-            const error = new Error("sample error");
+            const error = new Error('sample error');
             const functionWithErrorAsSecondParameter = (callback) => {
                 callback({}, error);
             };
 
             doubleValueCallbackToPromise(functionWithErrorAsSecondParameter, undefined).then(_ => {
-                done("The promise should be rejected");
+                done('The promise should be rejected');
             }, err => {
                 assert.deepEqual(err, error);
                 done();
@@ -197,7 +253,7 @@ describe('PromiseUtils', () => {
         });
 
         it('returns single value when callback is invoked', function (done) {
-            const returnValue = { key: "sample value" }
+            const returnValue = { key: 'sample value' }
             const functionWithErrorAsFirstParameter = (callback) => {
                 callback(undefined, returnValue);
             };
@@ -213,7 +269,7 @@ describe('PromiseUtils', () => {
         });
 
         it('returns packed result when callback returns two values', function (done) {
-            const returnValue = { return1: "sample value", return2: 5 }
+            const returnValue = { return1: 'sample value', return2: 5 }
             const functionWithTwoReturnValues = (callback) => {
                 callback(returnValue.return1, returnValue.return2);
             };
@@ -230,7 +286,7 @@ describe('PromiseUtils', () => {
 
         it('enables async await', async function () {
             const returnValue = {
-                key: "value",
+                key: 'value',
                 id: 42
             };
             const functionWithSimpleResult = (callback) => {
