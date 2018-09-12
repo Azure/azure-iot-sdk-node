@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import * as machina from 'machina';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-provisioning-device:TpmRegistration');
-import { anHourFromNow } from 'azure-iot-common';
+import { anHourFromNow, Callback, callbackToPromise, ErrorCallback, errorCallbackToPromise } from 'azure-iot-common';
 import { RegistrationClient, RegistrationResult } from './interfaces';
 import { TpmProvisioningTransport, TpmSecurityClient, TpmRegistrationInfo } from './interfaces';
 import { PollingStateMachine } from './polling_state_machine';
@@ -224,7 +224,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
 
   }
 
-  register(callback: (err?: Error, result?: RegistrationResult) => void): void {
+  _register(callback: (err?: Error, result?: RegistrationResult) => void): void {
     let registrationInfo: TpmRegistrationInfo = {
       endorsementKey: undefined,
       storageRootKey: undefined,
@@ -238,8 +238,24 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
     this._fsm.handle('register', registrationInfo, callback);
   }
 
-  cancel(callback: (err?: Error) => void): void {
+  register(callback?: Callback<RegistrationResult>): Promise<RegistrationResult> | void {
+    if (callback) {
+      return this._register(callback);
+    }
+
+    return callbackToPromise((_callback) => this._register(_callback));
+  }
+
+  _cancel(callback: ErrorCallback): void {
     this._fsm.handle('cancel', callback);
+  }
+
+  cancel(callback?: ErrorCallback): Promise<void> | void {
+    if (callback) {
+      return this._cancel(callback);
+    }
+
+    return errorCallbackToPromise((_callback) => this._cancel(_callback));
   }
 
   private _createRegistrationSas(registrationInfo: TpmRegistrationInfo, callback: (err: Error, sasToken?: string) => void): void {
