@@ -26,8 +26,9 @@ module.exports = {
   AuthenticationType: require('./lib/authentication_provider').AuthenticationType,
   getAgentPlatformString: require('./lib/utils').getAgentPlatformString,
   callbackToPromise: require('./lib/promise_utils').callbackToPromise,
-  errorCallbackToPromise: require('./lib/promise_utils').errorCallbackToPromise,
   doubleValueCallbackToPromise: require('./lib/promise_utils').doubleValueCallbackToPromise,
+  errorCallbackToPromise: require('./lib/promise_utils').errorCallbackToPromise,
+  noErrorCallbackToPromise: require('./lib/promise_utils').noErrorCallbackToPromise,
   Callback: require('./lib/promise_utils').Callback,
   ErrorCallback: require('./lib/promise_utils').ErrorCallback,
   DoubleValueCallback: require('./lib/promise_utils').DoubleValueCallback
