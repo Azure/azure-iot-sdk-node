@@ -4,7 +4,7 @@
 'use strict';
 
 import { EventEmitter } from 'events';
-import { errors, ErrorCallback, errorCallbackToPromise, Callback, callbackToPromise } from 'azure-iot-common';
+import { errors, ErrorCallback, Callback, callbackToPromise, errorCallbackToPromise } from 'azure-iot-common';
 import * as machina from 'machina';
 import { ProvisioningDeviceConstants } from './constants';
 import { PollingTransport, RegistrationRequest, DeviceRegistrationResult } from './interfaces';
@@ -14,7 +14,7 @@ const debug = dbg('azure-iot-provisioning-device:PollingStateMachine');
 /**
  * @private
  */
-export class  PollingStateMachine extends EventEmitter {
+export class PollingStateMachine extends EventEmitter {
   private _fsm: machina.Fsm;
   private _pollingTimer: any;
   private _queryTimer: any;
