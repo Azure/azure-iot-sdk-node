@@ -6,6 +6,8 @@ import { RegistrationClient, RegistrationRequest, RegistrationResult, DeviceRegi
 import { X509ProvisioningTransport, X509SecurityClient } from './interfaces';
 import { PollingStateMachine } from './polling_state_machine';
 import * as dbg from 'debug';
+import { Callback, callbackToPromise, ErrorCallback, errorCallbackToPromise } from 'azure-iot-common';
+import { noErrorCallbackToPromise } from 'azure-iot-common/lib/promise_utils';
 const debug = dbg('azure-iot-provisioning-device:X509Registration');
 
 /**
@@ -34,7 +36,7 @@ export class X509Registration implements RegistrationClient {
    * @param forceRegistration Set to true to force re-registration
    * @param callback function called when registration is complete.
    */
-  register(callback: (err?: Error, result?: RegistrationResult) => void): void {
+  _register(callback: Callback<RegistrationResult>): void {
 
       /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_001: [ `register` shall call `getCertificate` on the security object to acquire the X509 certificate. ] */
       this._securityClient.getCertificate((err, cert)  => {
@@ -69,15 +71,29 @@ export class X509Registration implements RegistrationClient {
     });
   }
 
+  register(callback?: Callback<RegistrationResult>): Promise<RegistrationResult> | void {
+    if (callback) {
+      return this._register(callback);
+    }
+
+    return callbackToPromise((_callback) => this._register(_callback));
+  }
+
   /**
    * Cancels the current registration process.
    *
    * @param callback function called when the registration has already been canceled.
    */
   /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_003: [ `cancel` shall call `endSession` on the transport object. ] */
-  cancel(callback: (err?: Error) => void): void {
+  _cancel(callback: ErrorCallback): void {
     this._transport.cancel(callback);
   }
+
+  cancel(callback?: ErrorCallback): Promise<void> | void {
+    if (callback) {
+      return this._cancel(callback);
+    }
+
+    return errorCallbackToPromise((_callback) => this._cancel(_callback));
+  }
 }
-
-
