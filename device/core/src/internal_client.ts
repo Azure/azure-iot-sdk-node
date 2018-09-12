@@ -5,6 +5,8 @@
 
 import { Stream } from 'stream';
 import { EventEmitter } from 'events';
+import * as fs from 'fs';
+
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:InternalClient');
 
@@ -204,11 +206,22 @@ export abstract class InternalClient extends EventEmitter {
   setOptions(options: DeviceClientOptions, done?: (err?: Error, result?: results.TransportConfigured) => void): void {
     /*Codes_SRS_NODE_INTERNAL_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
     if (!options) throw new ReferenceError('options cannot be falsy.');
+    let localOptions: DeviceClientOptions = {};
+    for (let k in options) {
+      localOptions[k] = options[k];
+    }
+
+    /*Codes_SRS_NODE_INTERNAL_CLIENT_06_001: [The `setOptions` method shall first test if the `ca` property is the name of an already existent file.  If so, it will attempt to read that file as a pem into a string value and pass the string to config object `ca` property.  Otherwise, it is assumed to be a pem string.] */
+    if (localOptions.ca) {
+      if (fs.existsSync(localOptions.ca)) {
+        localOptions.ca = fs.readFileSync(localOptions.ca, 'utf8');
+      }
+    }
 
     // Making this an operation that can be retried because we cannot assume the transport's behavior (whether it's going to disconnect/reconnect, etc).
     const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
-      this._transport.setOptions(options, opCallback);
+      this._transport.setOptions(localOptions, opCallback);
     }, (err) => {
       /*Codes_SRS_NODE_INTERNAL_CLIENT_16_043: [The `done` callback shall be invoked no parameters when it has successfully finished setting the client and/or transport options.]*/
       /*Codes_SRS_NODE_INTERNAL_CLIENT_16_044: [The `done` callback shall be invoked with a standard javascript `Error` object and no result object if the client could not be configured as requested.]*/

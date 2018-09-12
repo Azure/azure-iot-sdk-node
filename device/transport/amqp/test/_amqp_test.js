@@ -23,10 +23,12 @@ describe('Amqp', function () {
   var disconnectHandler = null;
   var fakeTokenAuthenticationProvider = null;
   var fakeX509AuthenticationProvider = null;
+  var fakeX509ModuleAuthenticationProvider = null;
 
   var testMessage = new Message();
   testMessage.transportObj = {};
   var configWithSSLOptions = { host: 'hub.host.name', deviceId: 'deviceId', x509: 'some SSL options' };
+  var configWithModule = { host: 'hub.host.name', deviceId: 'deviceId', moduleId: 'moduleId', x509: 'some SSL options' }
   var simpleSas = 'SharedAccessSignature sr=foo&sig=123&se=123';
   var configWithSAS = { host: 'hub.host.name', deviceId: 'deviceId', sharedAccessSignature: simpleSas};
   var configWithGatewayHostName = { gatewayHostName: 'gateway.host', deviceId: 'deviceId', sharedAccessSignature: simpleSas};
@@ -76,6 +78,15 @@ describe('Amqp', function () {
       },
       setX509Options: sinon.stub()
     };
+
+    fakeX509ModuleAuthenticationProvider = {
+      type: AuthenticationType.X509,
+      getDeviceCredentials: function (callback) {
+        callback(null, configWithModule);
+      },
+      setX509Options: sinon.stub()
+    };
+
 
     transport = new Amqp(fakeTokenAuthenticationProvider, fakeBaseClient);
   });
@@ -384,7 +395,7 @@ describe('Amqp', function () {
         transport.connect(function (err) {
           assert.isNotOk(err);
           assert(fakeBaseClient.connect.called);
-          assert.strictEqual(fakeBaseClient.connect.firstCall.args[0].sslOptions.caFile, 'ca cert');
+          assert.strictEqual(fakeBaseClient.connect.firstCall.args[0].sslOptions.ca, 'ca cert');
           testCallback();
         });
       });
@@ -1073,16 +1084,16 @@ describe('Amqp', function () {
       /*Tests_SRS_NODE_DEVICE_AMQP_16_002: [The `sendEvent` method shall construct an AMQP request using the message passed in argument as the body of the message.]*/
       /*Tests_SRS_NODE_DEVICE_AMQP_16_003: [The `sendEvent` method shall call the `done` callback with a null error object and a MessageEnqueued result object when the message has been successfully sent.]*/
       /*Tests_SRS_NODE_DEVICE_AMQP_18_007: [The `sendOutputEvent` method shall construct an AMQP request using the message passed in argument as the body of the message.]*/
-      /*Tests_SRS_NODE_DEVICE_AMQP_18_012: [The `sendOutputEvent` method  shall set the annotation "x-opt-output-name" on the message to the `outputName`.]*/
+      /*Tests_SRS_NODE_DEVICE_AMQP_18_012: [The `sendOutputEvent` method  shall set the application property "iothub-outputname" on the message to the `outputName`.]*/
       /*Tests_SRS_NODE_DEVICE_AMQP_18_008: [The `sendOutputEvent` method shall call the `done` callback with a null error object and a MessageEnqueued result object when the message has been successfully sent.]*/
-      it ('constructs a request correctly and succeeds correctly', function (testCallback) {
+      it('constructs a request correctly and succeeds correctly', function (testCallback) {
         testConfig.invokeFunction(new Message('test'), function (err, result) {
           var sentMsg = sender.send.firstCall.args[0];
           assert.instanceOf(sentMsg, AmqpMessage);
           assert.instanceOf(result, results.MessageEnqueued);
           assert.strictEqual(sentMsg.body.content.toString(), 'test');
           if (testConfig.expectedOutputName) {
-            assert.strictEqual(sentMsg.message_annotations['x-opt-output-name'], testConfig.expectedOutputName);
+            assert.strictEqual(sentMsg.application_properties['iothub-outputname'], testConfig.expectedOutputName);
           }
           testCallback(err);
         });
@@ -1498,7 +1509,7 @@ describe('Amqp', function () {
     });
   });
 
-  /*Tests_SRS_NODE_DEVICE_AMQP_18_013: [If `amqp` receives a message on the C2D link without an annotation named "x-opt-input-name", it shall emit a "message" event with the message as the event parameter.]*/
+  /*Tests_SRS_NODE_DEVICE_AMQP_18_013: [If `amqp` receives a message on the C2D link, it shall emit a "message" event with the message as the event parameter.]*/
   describe('on(\'message\')', function () {
     it('calls the message handler when message received', function (testCallback) {
       var testText = '__TEST_TEXT__';
@@ -1515,18 +1526,20 @@ describe('Amqp', function () {
     });
   });
 
-  /*Tests_SRS_NODE_DEVICE_AMQP_18_014: [If `amqp` receives a message on the C2D link with an annotation named "x-opt-input-name", it shall emit an "inputMessage" event with the "x-opt-input-name" annotation as the first parameter and the message as the second parameter.]*/
+  /*Tests_SRS_NODE_DEVICE_AMQP_18_014: [If `amqp` receives a message on the input message link, it shall emit an "inputMessage" event with the value of the annotation property "x-opt-input-name" as the first parameter and the agnostic message as the second parameter.]*/
   describe('on(\'inputMessage\')', function () {
     it('calls the message handler when message received', function (testCallback) {
       var testText = '__TEST_TEXT__';
       var testInputName = '__INPUT__';
-      transport.connect(function () {
-        transport.on('inputMessage', function (inputName, msg) {
+      var amqp = new Amqp(fakeX509ModuleAuthenticationProvider, fakeBaseClient);
+
+      amqp.connect(function () {
+        amqp.on('inputMessage', function (inputName, msg) {
           assert.strictEqual(inputName, testInputName);
           assert.strictEqual(msg.data.toString(), testText);
           testCallback();
         });
-        transport.enableInputMessages(function (err) {
+        amqp.enableInputMessages(function (err) {
           assert(!err);
           var amqpMessage = AmqpMessage.fromMessage(new Message(testText));
           amqpMessage.message_annotations = { 'x-opt-input-name': testInputName };

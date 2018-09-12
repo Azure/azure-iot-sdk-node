@@ -304,12 +304,15 @@ export class AmqpTwinClient extends EventEmitter {
     if (this._pendingTwinRequests[message.correlation_id]) {
       const pendingRequestCallback = this._pendingTwinRequests[message.correlation_id];
       delete this._pendingTwinRequests[message.correlation_id];
-      if (message.message_annotations.status >= 200 && message.message_annotations.status <= 300) {
+      if (!message.message_annotations) {
+        let result = (message.body && message.body.content.length > 0) ? JSON.parse(message.body.content) : undefined;
+        pendingRequestCallback(null, result);
+      } else if (message.message_annotations.status >= 200 && message.message_annotations.status <= 300) {
         /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_014: [The `getTwin` method shall parse the body of the received message and call its callback with a `null` error object and the parsed object as a result.]*/
         /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_022: [The `updateTwinReportedProperties` method shall call its callback with no argument when a response is received]*/
         /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_030: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with no argument when a response is received]*/
         /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_035: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback with no argument when a response is received]*/
-        let result = message.body ? JSON.parse(message.body.content) : undefined;
+        let result = (message.body && message.body.content.length > 0) ? JSON.parse(message.body.content) : undefined;
         pendingRequestCallback(null, result);
       } else {
         /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_038: [The `getTwin` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the `status` message annotation is `> 300`.]*/

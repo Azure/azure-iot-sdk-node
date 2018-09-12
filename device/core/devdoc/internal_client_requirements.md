@@ -79,6 +79,8 @@ The `sendEventBatch` method sends a list of event messages to the IoT Hub as the
 
 **SRS_NODE_INTERNAL_CLIENT_16_044: [** The `done` callback shall be invoked with a standard javascript `Error` object and no result object if the client could not be configured as requested. **]**
 
+**SRS_NODE_INTERNAL_CLIENT_06_001: [** The `setOptions` method shall first test if the `ca` property is the name of an already existent file.  If so, it will attempt to read that file as a pem into a string value and pass the string to config object `ca` property.  Otherwise, it is assumed to be a pem string. **]**
+
 #### complete(message, completeCallback)
 
 **SRS_NODE_INTERNAL_CLIENT_16_016: [** The `complete` method shall throw a `ReferenceError` if the `message` parameter is falsy. **]**
