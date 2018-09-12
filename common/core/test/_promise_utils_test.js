@@ -6,7 +6,7 @@
 var assert = require('chai').assert;
 var callbackToPromise = require('../lib/promise_utils').callbackToPromise;
 var noErrorCallbackToPromise = require('../lib/promise_utils').noErrorCallbackToPromise;
-var multiValueCallbackToPromise = require('../lib/promise_utils').multiValueCallbackToPromise;
+var doubleValueCallbackToPromise = require('../lib/promise_utils').doubleValueCallbackToPromise;
 
 describe('PromiseUtils', () => {
     describe('#callbackToPromise', () => {
@@ -167,14 +167,14 @@ describe('PromiseUtils', () => {
         });
     });
 
-    describe('#multiValueCallbackToPromise', function () {
+    describe('#doubleValueCallbackToPromise', function () {
         it('rejects when the first argument in callback is an error', function (done) {
             const error = new Error("sample error");
             const functionWithErrorAsFirstParameter = (callback) => {
                 callback(error, {});
             };
 
-            multiValueCallbackToPromise(functionWithErrorAsFirstParameter, undefined).then(_ => {
+            doubleValueCallbackToPromise(functionWithErrorAsFirstParameter, undefined).then(_ => {
                 done("The promise should be rejected");
             }, err => {
                 assert.deepEqual(err, error);
@@ -188,7 +188,7 @@ describe('PromiseUtils', () => {
                 callback({}, error);
             };
 
-            multiValueCallbackToPromise(functionWithErrorAsSecondParameter, undefined).then(_ => {
+            doubleValueCallbackToPromise(functionWithErrorAsSecondParameter, undefined).then(_ => {
                 done("The promise should be rejected");
             }, err => {
                 assert.deepEqual(err, error);
@@ -204,7 +204,7 @@ describe('PromiseUtils', () => {
 
             const packFunction = (error, value) => { return value; }
 
-            multiValueCallbackToPromise(functionWithErrorAsFirstParameter, packFunction).then(result => {
+            doubleValueCallbackToPromise(functionWithErrorAsFirstParameter, packFunction).then(result => {
                 assert.deepEqual(result, returnValue);
                 done();
             }).catch(error => {
@@ -220,7 +220,7 @@ describe('PromiseUtils', () => {
 
             const packFunction = (value1, value2) => { return { return1: value1, return2: value2 }; }
 
-            multiValueCallbackToPromise(functionWithTwoReturnValues, packFunction).then(result => {
+            doubleValueCallbackToPromise(functionWithTwoReturnValues, packFunction).then(result => {
                 assert.deepEqual(result, returnValue);
                 done();
             }).catch(error => {
@@ -240,7 +240,7 @@ describe('PromiseUtils', () => {
 
 
             try {
-                const result = await multiValueCallbackToPromise(functionWithSimpleResult, packFunction);
+                const result = await doubleValueCallbackToPromise(functionWithSimpleResult, packFunction);
                 assert.deepEqual(result, returnValue);
             } catch (error) {
                 assert.fail(error);

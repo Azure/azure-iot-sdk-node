@@ -35,7 +35,7 @@ export function noErrorCallbackToPromise<TResult>(callBackOperation: (callback: 
   });
 }
 
-export function multiValueCallbackToPromise<TResult1, TResult2, TPromiseResult>(
+export function doubleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>(
   callBackOperation: (callback: DoubleValueCallback<TResult1, TResult2>) => void,
   packResults: (result1: TResult1, result2: TResult2) => TPromiseResult): Promise<TPromiseResult> {
   return new Promise<TPromiseResult>((resolve, reject) => {

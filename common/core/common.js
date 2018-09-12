@@ -27,7 +27,8 @@ module.exports = {
   getAgentPlatformString: require('./lib/utils').getAgentPlatformString,
   callbackToPromise: require('./lib/promise_utils').callbackToPromise,
   errorCallbackToPromise: require('./lib/promise_utils').errorCallbackToPromise,
-  multiValueCallbackToPromise: require('./lib/promise_utils').multiValueCallbackToPromise,
+  doubleValueCallbackToPromise: require('./lib/promise_utils').doubleValueCallbackToPromise,
   Callback: require('./lib/promise_utils').Callback,
-  ErrorCallback: require('./lib/promise_utils').ErrorCallback
+  ErrorCallback: require('./lib/promise_utils').ErrorCallback,
+  DoubleValueCallback: require('./lib/promise_utils').DoubleValueCallback
 };

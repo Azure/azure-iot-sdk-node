@@ -7,7 +7,7 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:ModuleClient');
 
 import * as fs from 'fs';
-import { results, Message, RetryOperation, ConnectionString, AuthenticationProvider, Callback, callbackToPromise, multiValueCallbackToPromise } from 'azure-iot-common';
+import { results, Message, RetryOperation, ConnectionString, AuthenticationProvider, Callback, callbackToPromise, doubleValueCallbackToPromise } from 'azure-iot-common';
 import { InternalClient, DeviceTransport } from './internal_client';
 import { errors } from 'azure-iot-common';
 import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
@@ -15,7 +15,7 @@ import { SharedAccessSignatureAuthenticationProvider } from './sas_authenticatio
 import { IotEdgeAuthenticationProvider } from './iotedge_authentication_provider';
 import { MethodParams, MethodCallback, MethodClient, DeviceMethodRequest, DeviceMethodResponse, MethodResult, DeviceMethodExchange, createDeviceMethodExchange } from './device_method';
 import { DeviceClientOptions } from './interfaces';
-import { MultiValueCallback } from 'azure-iot-common/lib/promise_utils';
+import { DoubleValueCallback } from 'azure-iot-common/lib/promise_utils';
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
   if (callback) callback(error, result);
@@ -213,12 +213,12 @@ export class ModuleClient extends InternalClient {
     this._onDeviceMethod(methodName, callback);
   }
 
-  onMethod(methodName: string, callback: MultiValueCallback<DeviceMethodRequest, DeviceMethodResponse>): Promise<DeviceMethodExchange> | void {
+  onMethod(methodName: string, callback: DoubleValueCallback<DeviceMethodRequest, DeviceMethodResponse>): Promise<DeviceMethodExchange> | void {
     if (callback) {
       return this._onMethod(methodName, callback);
     }
 
-    return multiValueCallbackToPromise((_callback) => this._onMethod(methodName, callback), createDeviceMethodExchange);
+    return doubleValueCallbackToPromise((_callback) => this._onMethod(methodName, callback), createDeviceMethodExchange);
   }
 
   /**
