@@ -7,6 +7,13 @@ import { errors, SharedAccessSignature, ConnectionString } from 'azure-iot-commo
 import { RestApiClient } from 'azure-iot-http-base';
 import { QuerySpecification, Query, QueryCallback } from './query';
 import { IndividualEnrollment, EnrollmentGroup, DeviceRegistrationState, BulkEnrollmentOperation, BulkEnrollmentOperationResult } from './interfaces';
+import { TripleValueCallback, tripleValueCallbackToPromise, errorCallbackToPromise } from 'azure-iot-common/lib/promise_utils';
+import { ResultWithHttpResponse } from 'azure-iot-common/lib/results';
+
+const createIndividualEnrollmentWithHttpResponse = (enrollment, httpRequest) => { return ResultWithHttpResponse.create(enrollment as IndividualEnrollment, httpRequest); };
+const createEnrollmentGroupWithHttpResponse = (group, httpRequest) => { return ResultWithHttpResponse.create(group as EnrollmentGroup, httpRequest); };
+const createDeviceRegistrationStateWithHttpResponse = (state, httpRequest) => { return ResultWithHttpResponse.create(state as DeviceRegistrationState, httpRequest); };
+const createBulkEnrollmentOperationResultWithHttpResponse = (result, httpRequest) => { return ResultWithHttpResponse.create(result as BulkEnrollmentOperationResult, httpRequest); };
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -46,8 +53,16 @@ export class ProvisioningServiceClient {
    * @param {object}   enrollment The device enrollment record.
    * @param {function} callback   Invoked upon completion of the operation.
    */
-  public createOrUpdateIndividualEnrollment(enrollment: IndividualEnrollment, callback?: (err: Error, enrollment?: IndividualEnrollment, response?: any) => void): void {
+  _createOrUpdateIndividualEnrollment(enrollment: IndividualEnrollment, callback?: TripleValueCallback<IndividualEnrollment, any>): void {
     this._createOrUpdate(this._enrollmentsPrefix, enrollment, callback);
+  }
+
+  public createOrUpdateIndividualEnrollment(enrollment: IndividualEnrollment, callback?: TripleValueCallback<IndividualEnrollment, any>): Promise<ResultWithHttpResponse<IndividualEnrollment>> | void {
+    if (callback) {
+      return this._createOrUpdateIndividualEnrollment(enrollment, callback);
+    }
+
+    return tripleValueCallbackToPromise((_callback) => this._createOrUpdateIndividualEnrollment(enrollment, _callback), createIndividualEnrollmentWithHttpResponse);
   }
 
   /**
@@ -57,8 +72,16 @@ export class ProvisioningServiceClient {
    * @param {string | function} etagOrCallback In the case of the first argument being a string this could be an etag (or the callback).
    * @param {function}          deleteCallback Invoked upon completion of the operation.
    */
-  public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): void {
+  public _deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): void {
     this._delete(this._enrollmentsPrefix, enrollmentOrId, etagOrCallback, deleteCallback);
+  }
+
+  public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): Promise<void> | void {
+    if (deleteCallback || etagOrCallback instanceof Function) {
+      return this._deleteIndividualEnrollment(enrollmentOrId, etagOrCallback, deleteCallback);
+    }
+
+    return errorCallbackToPromise((_callback) => this._deleteIndividualEnrollment(enrollmentOrId, etagOrCallback as string, _callback));
   }
 
   /**
@@ -67,8 +90,16 @@ export class ProvisioningServiceClient {
    * @param {string}   id          Registration ID.
    * @param {function} getCallback Invoked upon completion of the operation.
    */
-  public getIndividualEnrollment(id: string, getCallback: (err: Error, enrollmentRecord?: IndividualEnrollment, response?: any ) => void): void {
+  public _getIndividualEnrollment(id: string, getCallback: TripleValueCallback<IndividualEnrollment, any>): void {
     this._get(this._enrollmentsPrefix, id, getCallback);
+  }
+
+  public getIndividualEnrollment(id: string, getCallback?: TripleValueCallback<IndividualEnrollment, any>): Promise<ResultWithHttpResponse<IndividualEnrollment>> | void {
+    if (getCallback) {
+      return this._getIndividualEnrollment(id, getCallback);
+    }
+
+    return tripleValueCallbackToPromise((_callback) => this._getIndividualEnrollment(id, _callback), createIndividualEnrollmentWithHttpResponse);
   }
 
   /**
@@ -77,7 +108,7 @@ export class ProvisioningServiceClient {
    * @param {object}   querySpecification The query specification.
    * @param {number}   pageSize           The maximum number of elements to return per page.
    */
-  createIndividualEnrollmentQuery(querySpecification: QuerySpecification, pageSize?: number): Query{
+  createIndividualEnrollmentQuery(querySpecification: QuerySpecification, pageSize?: number): Query {
     return new Query(this._getEnrollFunc(this._enrollmentsPrefix, querySpecification, pageSize));
   }
 
@@ -87,8 +118,16 @@ export class ProvisioningServiceClient {
    * @param {string}   id       Registration ID.
    * @param {function} callback Invoked upon completion of the operation.
    */
-  public getDeviceRegistrationState(id: string, callback: (err: Error, registrationState?: DeviceRegistrationState, response?: any) => void): void {
+  public _getDeviceRegistrationState(id: string, callback: TripleValueCallback<DeviceRegistrationState, any>): void {
     this._get(this._registrationsPrefix, id, callback);
+  }
+
+  public getDeviceRegistrationState(id: string, callback?: TripleValueCallback<DeviceRegistrationState, any>): Promise<ResultWithHttpResponse<DeviceRegistrationState>> | void {
+    if (callback) {
+      return this._getDeviceRegistrationState(id, callback);
+    }
+
+    return tripleValueCallbackToPromise((_callback) => this._getDeviceRegistrationState(id, _callback), createDeviceRegistrationStateWithHttpResponse);
   }
 
   /**
@@ -97,8 +136,16 @@ export class ProvisioningServiceClient {
    * @param {object}   enrollmentGroup The device enrollment group.
    * @param {function} callback        Invoked upon completion of the operation.
    */
-  public createOrUpdateEnrollmentGroup(enrollmentGroup: EnrollmentGroup, callback?: (err: Error, enrollmentGroup?: EnrollmentGroup, response?: any) => void): void {
+  public _createOrUpdateEnrollmentGroup(enrollmentGroup: EnrollmentGroup, callback?: TripleValueCallback<EnrollmentGroup, any>): void {
     this._createOrUpdate(this._enrollmentGroupsPrefix, enrollmentGroup, callback);
+  }
+
+  public createOrUpdateEnrollmentGroup(enrollmentGroup: EnrollmentGroup, callback?: TripleValueCallback<EnrollmentGroup, any>): Promise<ResultWithHttpResponse<EnrollmentGroup>> | void {
+    if (callback) {
+      return this._createOrUpdateEnrollmentGroup(enrollmentGroup, callback);
+    }
+
+    return tripleValueCallbackToPromise((_callback) => this._createOrUpdateEnrollmentGroup(enrollmentGroup, _callback), createEnrollmentGroupWithHttpResponse);
   }
 
   /**
@@ -108,8 +155,16 @@ export class ProvisioningServiceClient {
    * @param {string | function} etagOrCallback      In the case of the first argument being a string this could be an etag (or the callback).
    * @param {function}          deleteCallback      Invoked upon completion of the operation.
    */
-  public deleteEnrollmentGroup(enrollmentGroupOrId: string | EnrollmentGroup, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): void {
+  public _deleteEnrollmentGroup(enrollmentGroupOrId: string | EnrollmentGroup, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): void {
     this._delete(this._enrollmentGroupsPrefix, enrollmentGroupOrId, etagOrCallback, deleteCallback);
+  }
+
+  public deleteEnrollmentGroup(enrollmentGroupOrId: string | EnrollmentGroup, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): Promise<void> | void {
+    if (deleteCallback || etagOrCallback instanceof Function) {
+      this._deleteEnrollmentGroup(enrollmentGroupOrId, etagOrCallback, deleteCallback);
+    }
+
+    return errorCallbackToPromise((_callback) => this._deleteEnrollmentGroup(enrollmentGroupOrId, etagOrCallback, _callback));
   }
 
   /**
@@ -118,8 +173,16 @@ export class ProvisioningServiceClient {
    * @param {string}   id          IndividualEnrollment group ID.
    * @param {function} getCallback Invoked upon completion of the operation.
    */
-  public getEnrollmentGroup(id: string, getCallback: (err: Error, enrollmentGroup: EnrollmentGroup, response?: any) => void): void {
+  public _getEnrollmentGroup(id: string, getCallback: TripleValueCallback<EnrollmentGroup, any>): void {
     this._get(this._enrollmentGroupsPrefix, id, getCallback);
+  }
+
+  public getEnrollmentGroup(id: string, getCallback?: TripleValueCallback<EnrollmentGroup, any>): Promise<ResultWithHttpResponse<EnrollmentGroup>> | void {
+    if (getCallback) {
+      return this._getEnrollmentGroup(id, getCallback);
+    }
+
+    return tripleValueCallbackToPromise((_callback) => this._getEnrollmentGroup(id, _callback), createEnrollmentGroupWithHttpResponse);
   }
 
   /**
@@ -152,7 +215,7 @@ export class ProvisioningServiceClient {
    * @param {object}   bulkEnrollmentOperation An object that specifies the single kind of CRUD operations on the array of IndividualEnrollment objects that are also part of the object.
    * @param {function} callback      Invoked upon completion of the operation.
    */
-  public runBulkEnrollmentOperation(bulkEnrollmentOperation: BulkEnrollmentOperation, callback?: (err: Error, bulkEnrollmentOperationResult?: BulkEnrollmentOperationResult, response?: any) => void): void {
+  public _runBulkEnrollmentOperation(bulkEnrollmentOperation: BulkEnrollmentOperation, callback?: TripleValueCallback<BulkEnrollmentOperationResult, any>): void {
     /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_038: [The `runBulkEnrollmentOperation` method shall throw `ReferenceError` if the `bulkEnrollmentOperation` argument is falsy.] */
     if (!bulkEnrollmentOperation) {
       throw new ReferenceError('Required bulkEnrollmentOperation parameter was falsy when calling runBulkEnrollmentOperation.');
@@ -184,6 +247,14 @@ export class ProvisioningServiceClient {
     });
   }
 
+  public runBulkEnrollmentOperation(bulkEnrollmentOperation: BulkEnrollmentOperation, callback?: TripleValueCallback<BulkEnrollmentOperationResult, any>): Promise<ResultWithHttpResponse<BulkEnrollmentOperationResult>> | void {
+    if (callback) {
+      return this._runBulkEnrollmentOperation(bulkEnrollmentOperation, callback);
+    }
+
+    return tripleValueCallbackToPromise((_callback) => this._runBulkEnrollmentOperation(bulkEnrollmentOperation, _callback), createBulkEnrollmentOperationResultWithHttpResponse);
+  }
+
   /**
    * @method           module:azure-iot-provisioning-service.ProvisioningServiceClient#deleteDeviceRegistrationState
    * @description      Delete a device registration status.
@@ -191,8 +262,16 @@ export class ProvisioningServiceClient {
    * @param {string | function} etagOrCallback        In the case of the first argument being a string this could be an etag (or the callback).
    * @param {function}          deleteCallback        Invoked upon completion of the operation.
    */
-  public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): void {
+  public _deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): void {
     this._delete(this._registrationsPrefix, idOrRegistrationState, etagOrCallback, deleteCallback);
+  }
+
+  public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): Promise<void> | void {
+    if (deleteCallback || etagOrCallback instanceof Function) {
+      return this._deleteDeviceRegistrationState(idOrRegistrationState, etagOrCallback, deleteCallback);
+    }
+
+    return errorCallbackToPromise((_callback) => this._deleteDeviceRegistrationState(idOrRegistrationState, etagOrCallback, _callback));
   }
 
   private _getEnrollFunc(prefix: string, querySpecification: QuerySpecification, pageSize: number): (continuationToken: string, done: QueryCallback) => void {
