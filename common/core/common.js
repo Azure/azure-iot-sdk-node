@@ -16,6 +16,7 @@ module.exports = {
   endpoint: require('./lib/endpoint.js'),
   errors: require('./lib/errors.js'),
   results: require('./lib/results.js'),
+  ResultWithHttpResponse: require('./lib/results.js').ResultWithHttpResponse,
   Message: require('./lib/message.js').Message,
   SharedAccessSignature: require('./lib/shared_access_signature.js').SharedAccessSignature,
   RetryOperation: require('./lib/retry_operation.js').RetryOperation,

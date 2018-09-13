@@ -159,3 +159,12 @@ export class SharedAccessSignatureUpdated {
     this.needToReconnect = needToReconnect;
   }
 }
+
+export class ResultWithHttpResponse<TResult> {
+  result: TResult;
+  httpResponse: any;
+
+  public static create<TResult>(result: TResult, httpResponse: any): ResultWithHttpResponse<TResult> {
+    return { result: result, httpResponse: httpResponse };
+  }
+}

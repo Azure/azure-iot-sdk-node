@@ -7,6 +7,7 @@ import { Message } from './lib/message';
 export import endpoint = require('./lib/endpoint');
 export import errors = require('./lib/errors');
 export import results = require('./lib/results');
+export { ResultWithHttpResponse } from './lib/results';
 export { anHourFromNow, encodeUriComponentStrict } from './lib/authorization';
 export { ConnectionString } from './lib/connection_string';
 export { Message }
