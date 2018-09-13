@@ -96,13 +96,21 @@ export class Client extends InternalClient {
    *
    * *Note: After calling this method the Client object cannot be reused.*
    *
-   * @param closeCallback Function to call once the transport is disconnected and the client closed.
+   * @param {Callback<results.Disconnected>} closeCallback Function to call once the transport is disconnected and the client closed.
    */
   _close(closeCallback?: Callback<results.Disconnected>): void {
     this._transport.removeListener('disconnect', this._deviceDisconnectHandler);
     super.close(closeCallback);
   }
 
+  /**
+   * Closes the transport connection and destroys the client resources.
+   *
+   * *Note: After calling this method the Client object cannot be reused.*
+   *
+   * @param {Callback<results.Disconnected>} [closeCallback] Optional function to call once the transport is disconnected and the client closed.
+   * @returns {Promise<results.Disconnected> | void} Promise if no callback function was passed, void otherwise.
+   */
   close(closeCallback?: Callback<results.Disconnected>): Promise<results.Disconnected> | void {
     if (closeCallback) {
       return this._close(closeCallback);
