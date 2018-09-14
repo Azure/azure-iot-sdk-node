@@ -183,11 +183,13 @@ export function doubleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>
 }
 
 /**
- * Converts method taking callback with two result values and an error as a parameter to method returning a Promise.
+ * Converts method taking callback with two result values and an error as a parameter to method returning a Promise if userCallback is not specified.
+ * Otherwise, it executes the method with userCallback as the callback.
  * Promise cannot return multiple objects so the return values have to be packed into a single object.
  *
  * @param {(callback: DoubleValueCallback<TResult1, TResult2>) => void} callBackOperation - Function taking callback with two return values and an error as a parameter.
  * @param {(result1: TResult1, result2: TResult2) => TPromiseResult} packResults - Function converting two return values from the callback to a single object of {TPromiseResult} type.
+ * @param {TripleValueCallback<TResult1, TResult2>} [userCallback] - Optional caller-provided callback. The method will not return a Promise if specified.
  * @returns {Promise<TResult>} Promise with result of TResult type.
  * @template TResult1 - Type of the first result value.
  * @template TResult2 - Type of the second result value.
@@ -210,7 +212,12 @@ export function doubleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>
  */
 export function tripleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>(
   callBackOperation: (callback: TripleValueCallback<TResult1, TResult2>) => void,
-  packResults: (result1: TResult1, result2: TResult2) => TPromiseResult): Promise<TPromiseResult> {
+  packResults: (result1: TResult1, result2: TResult2) => TPromiseResult,
+  userCallback?: TripleValueCallback<TResult1, TResult2>): Promise<TPromiseResult> | void {
+  if (userCallback) {
+    return callBackOperation(userCallback);
+  }
+
   return new Promise<TPromiseResult>((resolve, reject) => {
     callBackOperation((error, result1, result2) => {
       if (error) {
