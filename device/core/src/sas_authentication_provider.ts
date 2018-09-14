@@ -27,25 +27,20 @@ export class SharedAccessSignatureAuthenticationProvider extends EventEmitter im
   constructor(credentials: TransportConfig) {
     super();
     /*Codes_SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_001: [The `constructor` shall store the credentials passed in the `credentials` argument.]*/
-    this._credentials  = credentials;
+    this._credentials = credentials;
   }
 
   /**
    * This method is used by the transports to gets the most current device credentials in the form of a `TransportConfig` object.
    *
-   * @param callback function that will be called with either an error or a set of device credentials that can be used to authenticate with the IoT hub.
+   * @param [callback] optional function that will be called with either an error or a set of device credentials that can be used to authenticate with the IoT hub.
+   * @returns {Promise<TransportConfig> | void} Promise if no callback function was passed, void otherwise.
    */
-  _getDeviceCredentials(callback: Callback<TransportConfig>): void {
-    /*Codes_SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_002: [The `getDeviceCredentials` method shall call its callback with a `null` error parameter and the stored `credentials` object containing the current device credentials.]*/
-    callback(null, this._credentials);
-  }
-
   getDeviceCredentials(callback?: Callback<TransportConfig>): Promise<TransportConfig> | void {
-    if (callback) {
-      return this._getDeviceCredentials(callback);
-    }
-
-    return callbackToPromise((_callback) => this._getDeviceCredentials(_callback));
+    return callbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_SAS_AUTHENTICATION_PROVIDER_16_002: [The `getDeviceCredentials` method shall call its callback with a `null` error parameter and the stored `credentials` object containing the current device credentials.]*/
+      _callback(null, this._credentials);
+    }, callback);
   }
 
   /**

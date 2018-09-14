@@ -1,3 +1,5 @@
+import { Callback } from 'azure-iot-common';
+
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
@@ -20,4 +22,4 @@ export interface MethodResult {
   payload: any;
 }
 
-export type MethodCallback = (err?: Error, result?: MethodResult) => void;
+export type MethodCallback = Callback<MethodResult>;

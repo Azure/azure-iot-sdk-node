@@ -47,31 +47,26 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
   /**
    * This method is used by the transports to gets the most current device credentials in the form of a `TransportConfig` object.
    *
-   * @param callback function that will be called with either an error or a set of device credentials that can be used to authenticate with the IoT hub.
+   * @param [callback] optional function that will be called with either an error or a set of device credentials that can be used to authenticate with the IoT hub.
+   * @returns {Promise<TransportConfig> | void} Promise if no callback function was passed, void otherwise.
    */
-  _getDeviceCredentials(callback: Callback<TransportConfig>): void {
-    if (this._shouldRenewToken()) {
-      this._renewToken((err, creds) => {
-        if (err) {
-          callback(err);
-        } else {
-          /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_002: [The `getDeviceCredentials` method shall start a timer that will automatically renew the token every (`tokenValidTimeInSeconds` - `tokenRenewalMarginInSeconds`) seconds if specified, or 45 minutes by default.]*/
-          this._scheduleNextExpiryTimeout();
-          callback(null, creds);
-        }
-      });
-    } else {
-      /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_003: [The `getDeviceCredentials` should call its callback with a `null` first parameter and a `TransportConfig` object as a second parameter, containing the latest valid token it generated.]*/
-      callback(null, this._credentials);
-    }
-  }
-
   getDeviceCredentials(callback?: Callback<TransportConfig>): Promise<TransportConfig> | void {
-    if (callback) {
-      return this._getDeviceCredentials(callback);
-    }
-
-    return callbackToPromise((_callback) => this.getDeviceCredentials(_callback));
+    return callbackToPromise((_callback) => {
+      if (this._shouldRenewToken()) {
+        this._renewToken((err, creds) => {
+          if (err) {
+            _callback(err);
+          } else {
+            /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_002: [The `getDeviceCredentials` method shall start a timer that will automatically renew the token every (`tokenValidTimeInSeconds` - `tokenRenewalMarginInSeconds`) seconds if specified, or 45 minutes by default.]*/
+            this._scheduleNextExpiryTimeout();
+            _callback(null, creds);
+          }
+        });
+      } else {
+        /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_003: [The `getDeviceCredentials` should call its callback with a `null` first parameter and a `TransportConfig` object as a second parameter, containing the latest valid token it generated.]*/
+        callback(null, this._credentials);
+      }
+    }, callback);
   }
 
   /**
