@@ -7,7 +7,7 @@ import { errors } from 'azure-iot-common';
 import * as _ from 'lodash';
 import { DeviceIdentity } from './device';
 import { Registry } from './registry';
-import { Callback } from './interfaces';
+import { IncomingMessageCallback } from './interfaces';
 
 /**
  * @private
@@ -124,7 +124,7 @@ export class Twin implements TwinData {
    *                                identity, and a transport-specific response
    *                                object useful for logging or debugging.
    */
-  get(done: Callback<Twin>): void {
+  get(done: IncomingMessageCallback<Twin>): void {
     /*Codes_SRS_NODE_IOTHUB_TWIN_16_020: [If `this.moduleId` is falsy, the `get` method shall call the `getTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
     - `this.deviceId`
     - `done`]*/
@@ -167,7 +167,7 @@ export class Twin implements TwinData {
    *                                identity, and a transport-specific response
    *                                object useful for logging or debugging.
    */
-  update(patch: any, done: Callback<Twin>): void {
+  update(patch: any, done: IncomingMessageCallback<Twin>): void {
     /*Codes_SRS_NODE_IOTHUB_TWIN_16_019: [If `this.moduleId` is falsy, The `update` method shall call the `updateTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
     - `this.deviceId`
     - `patch`
