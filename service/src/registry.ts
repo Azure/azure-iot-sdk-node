@@ -11,7 +11,7 @@ import { Twin } from './twin';
 import { Query } from './query';
 import { Configuration, ConfigurationContent } from './configuration';
 import { Device } from './device';
-import { Callback } from './interfaces';
+import { IncomingMessageCallback } from './interfaces';
 import { Module } from './module';
 
 // tslint:disable-next-line:no-var-requires
@@ -204,7 +204,7 @@ export class Registry {
    *                                identities, and a transport-specific response
    *                                object useful for logging or debugging.
    */
-  list(done: Callback<Device[]>): void {
+  list(done: IncomingMessageCallback<Device[]>): void {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_029: [The `list` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
     GET /devices?api-version=<version> HTTP/1.1
@@ -399,7 +399,7 @@ export class Registry {
    * @param {Function}    done    The function to call with two arguments: an error object if an error happened,
    *                              (null otherwise) and the list of past jobs as an argument.
    */
-  listJobs(done: Callback<any>): void {
+  listJobs(done: IncomingMessageCallback<any>): void {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_037: [The `listJobs` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
     GET /jobs?api-version=<version> HTTP/1.1
@@ -635,7 +635,7 @@ export class Registry {
    * @param {Function}      done   The callback that will be called with either an Error object or
    *                               the device registry statistics.
    */
-  getRegistryStatistics(done: Callback<Registry.RegistryStatistics>): void {
+  getRegistryStatistics(done: IncomingMessageCallback<Registry.RegistryStatistics>): void {
     const path = '/statistics/devices' + endpoint.versionQueryString();
     this._restApiClient.executeApiCall('GET', path, {}, null, done);
   }
@@ -1108,7 +1108,7 @@ export class Registry {
     this._restApiClient.executeApiCall('DELETE', path, httpHeaders, null, done);
   }
 
-  private _bulkOperation(devices: Registry.DeviceDescription[], done: Callback<any>): void {
+  private _bulkOperation(devices: Registry.DeviceDescription[], done: IncomingMessageCallback<any>): void {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_011: [The `addDevices` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
     POST /devices?api-version=<version> HTTP/1.1
@@ -1147,7 +1147,7 @@ export class Registry {
     this._restApiClient.executeApiCall('POST', path, httpHeaders, devices, done);
   }
 
-  private _processBulkDevices(devices: Registry.DeviceDescription[], operation: Registry.BulkRegistryOperationType, force: boolean, forceTrueAlternative: Registry.BulkRegistryOperationType, forceFalseAlternative: Registry.BulkRegistryOperationType, done: Callback<any>): void {
+  private _processBulkDevices(devices: Registry.DeviceDescription[], operation: Registry.BulkRegistryOperationType, force: boolean, forceTrueAlternative: Registry.BulkRegistryOperationType, forceFalseAlternative: Registry.BulkRegistryOperationType, done: IncomingMessageCallback<any>): void {
     if (!devices) {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_004: [The `addDevices` method shall throw `ReferenceError` if the `devices` argument is falsy.]*/
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_06_025: [The `updateDevices` method shall throw `ReferenceError` if the `devices` argument is falsy.]*/
@@ -1210,7 +1210,7 @@ export class Registry {
     }
   }
 
-  private _executeQueryFunc(sqlQuery: string, pageSize: number): (continuationToken: string, done: Callback<any>) => void {
+  private _executeQueryFunc(sqlQuery: string, pageSize: number): (continuationToken: string, done: IncomingMessageCallback<any>) => void {
     return (continuationToken, done) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_057: [The `_executeQueryFunc` method shall construct an HTTP request as follows:
       ```
