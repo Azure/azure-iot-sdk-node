@@ -9,18 +9,12 @@ import { NoErrorCallback, noErrorCallbackToPromise } from 'azure-iot-common/lib/
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
 
-function _getUserAgentString(done: (agent: string) => void): void {
-  /*Codes_SRS_NODE_DEVICE_UTILS_18_001: [`getUserAgentString` shall call `getAgentPlatformString` to get the platform string.]*/
-  getAgentPlatformString((platformString) => {
-  /*Codes_SRS_NODE_DEVICE_UTILS_18_002: [`getUserAgentString` shall call its `callback` with a string in the form 'azure-iot-device/<packageJson.version>(<platformString>)'.]*/
-  done(packageJson.name + '/' + packageJson.version + ' (' + platformString + ')');
-  });
-}
-
 export function getUserAgentString(done?: NoErrorCallback<string>): Promise<string> | void {
-  if (done) {
-    return _getUserAgentString(done);
-  }
-
-  return noErrorCallbackToPromise((_callback) => _getUserAgentString(_callback));
+  return noErrorCallbackToPromise((_callback) => {
+    /*Codes_SRS_NODE_DEVICE_UTILS_18_001: [`getUserAgentString` shall call `getAgentPlatformString` to get the platform string.]*/
+    getAgentPlatformString((platformString) => {
+      /*Codes_SRS_NODE_DEVICE_UTILS_18_002: [`getUserAgentString` shall call its `callback` with a string in the form 'azure-iot-device/<packageJson.version>(<platformString>)'.]*/
+      _callback(packageJson.name + '/' + packageJson.version + ' (' + platformString + ')');
+    });
+  }, done);
 }
