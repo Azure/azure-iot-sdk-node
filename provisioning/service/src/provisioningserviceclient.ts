@@ -7,20 +7,18 @@ import { errors, SharedAccessSignature, ConnectionString } from 'azure-iot-commo
 import { RestApiClient } from 'azure-iot-http-base';
 import { QuerySpecification, Query, QueryCallback } from './query';
 import { IndividualEnrollment, EnrollmentGroup, DeviceRegistrationState, BulkEnrollmentOperation, BulkEnrollmentOperationResult } from './interfaces';
-import { TripleValueCallback, tripleValueCallbackToPromise, errorCallbackToPromise } from 'azure-iot-common/lib/promise_utils';
-import { ResultWithHttpResponse } from 'azure-iot-common/lib/results';
+import { ErrorCallback, TripleValueCallback, tripleValueCallbackToPromise, errorCallbackToPromise } from 'azure-iot-common/lib/promise_utils';
+import { ResultWithHttpResponse, createResultWithHttpResponse } from 'azure-iot-common/lib/results';
 
-const createIndividualEnrollmentWithHttpResponse = (enrollment, httpRequest) => { return ResultWithHttpResponse.create(enrollment as IndividualEnrollment, httpRequest); };
-const createEnrollmentGroupWithHttpResponse = (group, httpRequest) => { return ResultWithHttpResponse.create(group as EnrollmentGroup, httpRequest); };
-const createDeviceRegistrationStateWithHttpResponse = (state, httpRequest) => { return ResultWithHttpResponse.create(state as DeviceRegistrationState, httpRequest); };
-const createBulkEnrollmentOperationResultWithHttpResponse = (result, httpRequest) => { return ResultWithHttpResponse.create(result as BulkEnrollmentOperationResult, httpRequest); };
+const createIndividualEnrollmentWithHttpResponse = (enrollment, httpRequest) => { return createResultWithHttpResponse(enrollment as IndividualEnrollment, httpRequest); };
+const createEnrollmentGroupWithHttpResponse = (group, httpRequest) => { return createResultWithHttpResponse(group as EnrollmentGroup, httpRequest); };
+const createDeviceRegistrationStateWithHttpResponse = (state, httpRequest) => { return createResultWithHttpResponse(state as DeviceRegistrationState, httpRequest); };
+const createBulkEnrollmentOperationResultWithHttpResponse = (result, httpRequest) => { return createResultWithHttpResponse(result as BulkEnrollmentOperationResult, httpRequest); };
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
 
 const ArgumentError = errors.ArgumentError;
-
-export type DeleteCallback = (err?: Error) => void;
 
 export class ProvisioningServiceClient {
 
@@ -72,11 +70,11 @@ export class ProvisioningServiceClient {
    * @param {string | function} etagOrCallback In the case of the first argument being a string this could be an etag (or the callback).
    * @param {function}          deleteCallback Invoked upon completion of the operation.
    */
-  public _deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): void {
+  public _deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): void {
     this._delete(this._enrollmentsPrefix, enrollmentOrId, etagOrCallback, deleteCallback);
   }
 
-  public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): Promise<void> | void {
+  public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
     if (deleteCallback || etagOrCallback instanceof Function) {
       return this._deleteIndividualEnrollment(enrollmentOrId, etagOrCallback, deleteCallback);
     }
@@ -155,11 +153,11 @@ export class ProvisioningServiceClient {
    * @param {string | function} etagOrCallback      In the case of the first argument being a string this could be an etag (or the callback).
    * @param {function}          deleteCallback      Invoked upon completion of the operation.
    */
-  public _deleteEnrollmentGroup(enrollmentGroupOrId: string | EnrollmentGroup, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): void {
+  public _deleteEnrollmentGroup(enrollmentGroupOrId: string | EnrollmentGroup, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): void {
     this._delete(this._enrollmentGroupsPrefix, enrollmentGroupOrId, etagOrCallback, deleteCallback);
   }
 
-  public deleteEnrollmentGroup(enrollmentGroupOrId: string | EnrollmentGroup, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): Promise<void> | void {
+  public deleteEnrollmentGroup(enrollmentGroupOrId: string | EnrollmentGroup, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
     if (deleteCallback || etagOrCallback instanceof Function) {
       this._deleteEnrollmentGroup(enrollmentGroupOrId, etagOrCallback, deleteCallback);
     }
@@ -262,11 +260,11 @@ export class ProvisioningServiceClient {
    * @param {string | function} etagOrCallback        In the case of the first argument being a string this could be an etag (or the callback).
    * @param {function}          deleteCallback        Invoked upon completion of the operation.
    */
-  public _deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): void {
+  public _deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): void {
     this._delete(this._registrationsPrefix, idOrRegistrationState, etagOrCallback, deleteCallback);
   }
 
-  public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): Promise<void> | void {
+  public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
     if (deleteCallback || etagOrCallback instanceof Function) {
       return this._deleteDeviceRegistrationState(idOrRegistrationState, etagOrCallback, deleteCallback);
     }
@@ -356,9 +354,9 @@ export class ProvisioningServiceClient {
     });
   }
 
-  private _delete(endpointPrefix: string, enrollmentOrIdOrRegistration: string | any, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): void {
+  private _delete(endpointPrefix: string, enrollmentOrIdOrRegistration: string | any, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): void {
     let ifMatch: string;
-    let suppliedCallback: DeleteCallback;
+    let suppliedCallback: ErrorCallback;
     let id: string;
 
     /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_015: [The `deleteIndividualEnrollment` method shall throw `ReferenceError` if the `enrollmentOrId` argument is falsy.] */
