@@ -160,11 +160,11 @@ export class SharedAccessSignatureUpdated {
   }
 }
 
-export class ResultWithHttpResponse<TResult> {
+export type ResultWithHttpResponse<TResult> = {
   result: TResult;
   httpResponse: any;
+};
 
-  public static create<TResult>(result: TResult, httpResponse: any): ResultWithHttpResponse<TResult> {
+export function createResultWithHttpResponse<TResult>(result: TResult, httpResponse: any): ResultWithHttpResponse<TResult> {
     return { result: result, httpResponse: httpResponse };
-  }
 }
