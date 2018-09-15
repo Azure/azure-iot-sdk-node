@@ -11,8 +11,9 @@ import { Twin } from './twin';
 import { Query } from './query';
 import { Configuration, ConfigurationContent } from './configuration';
 import { Device } from './device';
-import { IncomingMessageCallback } from './interfaces';
+import { IncomingMessageCallback, createResultWithMessage } from './interfaces';
 import { Module } from './module';
+import { TripleValueCallback, Callback, tripleValueCallbackToPromise } from 'azure-iot-common/lib/promise_utils';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -62,7 +63,7 @@ export class Registry {
    * @description       Creates a new device identity on an IoT hub.
    * @param {Object}    deviceInfo  The object must include a `deviceId` property
    *                                with a valid device identifier.
-   * @param {Function}  done        The function to call when the operation is
+   * @param {Function}  [done]      The optional function to call when the operation is
    *                                complete. `done` will be called with three
    *                                arguments: an Error object (can be null), a
    *                                {@link module:azure-iothub.Device|Device}
@@ -70,7 +71,10 @@ export class Registry {
    *                                identity, and a transport-specific response
    *                                object useful for logging or debugging.
    */
-  create(deviceInfo: Registry.DeviceDescription, done: Registry.DeviceCallback): void {
+  create(deviceInfo: Registry.DeviceDescription, done?: TripleValueCallback<Device, any>): void {
+    // return tripleValueCallbackToPromise((_callback) => {
+
+    // }, undefined, done);
     if (!deviceInfo) {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_07_001: [The `create` method shall throw `ReferenceError` if the `deviceInfo` argument is falsy. **]*/
       throw new ReferenceError('deviceInfo cannot be \'' + deviceInfo + '\'');
@@ -120,7 +124,7 @@ export class Registry {
    *                                identity, and a transport-specific response
    *                                object useful for logging or debugging.
    */
-  update(deviceInfo: Registry.DeviceDescription, done: Registry.DeviceCallback): void {
+  update(deviceInfo: Registry.DeviceDescription, done: TripleValueCallback<Device, any>): void {
     if (!deviceInfo) {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_043: [The `update` method shall throw `ReferenceError` if the `deviceInfo` argument is falsy.]*/
       throw new ReferenceError('deviceInfo cannot be \'' + deviceInfo + '\'');
@@ -168,7 +172,7 @@ export class Registry {
    *                                identity, and a transport-specific response
    *                                object useful for logging or debugging.
    */
-  get(deviceId: string, done: Registry.DeviceCallback): void {
+  get(deviceId: string, done: TripleValueCallback<Device, any>): void {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_05_006: [The get method shall throw ReferenceError if the supplied deviceId is falsy.]*/
     if (!deviceId) {
       throw new ReferenceError('deviceId is \'' + deviceId + '\'');
@@ -234,7 +238,7 @@ export class Registry {
    *                                response object useful for logging or
    *                                debugging.
    */
-  delete(deviceId: string, done: Registry.ResponseCallback): void {
+  delete(deviceId: string, done: TripleValueCallback<any, any>): void {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_07_007: [The delete method shall throw ReferenceError if the supplied deviceId is falsy.]*/
     if (!deviceId) {
       throw new ReferenceError('deviceId is \'' + deviceId + '\'');
@@ -460,7 +464,7 @@ export class Registry {
    * @param {Function}    done       The callback that will be called with either an Error object or
    *                                 the device twin instance.
    */
-  getTwin(deviceId: string, done: Registry.ResponseCallback): void {
+  getTwin(deviceId: string, done: TripleValueCallback<any, any>): void {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_019: [The `getTwin` method shall throw a `ReferenceError` if the `deviceId` parameter is falsy.]*/
     if (!deviceId) throw new ReferenceError('the \'deviceId\' cannot be falsy');
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_020: [The `getTwin` method shall throw a `ReferenceError` if the `done` parameter is falsy.]*/
@@ -526,7 +530,7 @@ export class Registry {
    * @param {Function}    done       The callback that will be called with either an Error object or
    *                                 the device twin instance.
    */
-  updateTwin(deviceId: string, patch: any, etag: string, done: Registry.ResponseCallback): void {
+  updateTwin(deviceId: string, patch: any, etag: string, done: TripleValueCallback<any, any>): void {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_044: [The `updateTwin` method shall throw a `ReferenceError` if the `deviceId` argument is `undefined`, `null` or an empty string.]*/
     if (deviceId === null || deviceId === undefined || deviceId === '') throw new ReferenceError('deviceId cannot be \'' + deviceId + '\'');
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_045: [The `updateTwin` method shall throw a `ReferenceError` if the `patch` argument is falsy.]*/
@@ -573,7 +577,7 @@ export class Registry {
    *                                  the module twin instance.
    * @throws {ReferenceError}         If the deviceId, moduleId, patch, etag, or done argument is falsy.
    */
-  updateModuleTwin(deviceId: string, moduleId: string, patch: any, etag: string, done: Registry.ResponseCallback): void {
+  updateModuleTwin(deviceId: string, moduleId: string, patch: any, etag: string, done: TripleValueCallback<any, any>): void {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_004: [The `updateModuleTwin` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, `patch`, `etag`,or `done` is falsy. ]*/
     if (!deviceId) throw new ReferenceError('Argument \'deviceId\' cannot be falsy');
     if (!moduleId) throw new ReferenceError('Argument \'moduleId\' cannot be falsy');
@@ -656,7 +660,7 @@ export class Registry {
    * @throws {ReferenceError}             The configuration or done parameter is falsy.
    * @throws {ArgumentError}              The configuration object is missing the id property
    */
-  addConfiguration(configuration: Configuration, done: Registry.ResponseCallback): void {
+  addConfiguration(configuration: Configuration, done: TripleValueCallback<any, any>): void {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_007: [The `addConfiguration` method shall throw a `ReferenceError` exception if `configuration` or `done` is falsy. ]*/
     if (!configuration) throw new ReferenceError('configuration cannot be falsy');
     if (!done) throw new ReferenceError('done cannot be falsy');
@@ -756,9 +760,9 @@ export class Registry {
    *                                      but forceUpdate is not set to true, or the configuration
    *                                      object is missing an id property.
    */
-  updateConfiguration(configuration: Configuration, done: Registry.ResponseCallback): void;
-  updateConfiguration(configuration: Configuration, forceUpdate: boolean, done: Registry.ResponseCallback): void;
-  updateConfiguration(configuration: Configuration, forceUpdateOrDone: boolean | Registry.ResponseCallback, done?: Registry.ResponseCallback): void {
+  updateConfiguration(configuration: Configuration, done: TripleValueCallback<any, any>): void;
+  updateConfiguration(configuration: Configuration, forceUpdate: boolean, done: TripleValueCallback<any, any>): void;
+  updateConfiguration(configuration: Configuration, forceUpdateOrDone: boolean | TripleValueCallback<any, any>, done?: TripleValueCallback<any, any>): void {
     let forceUpdate: boolean;
     if (typeof(forceUpdateOrDone) === 'function') {
       forceUpdate = false;
@@ -819,7 +823,7 @@ export class Registry {
    *
    * @throws {ReferenceError}             The configurationId or done argument is falsy
    */
-  removeConfiguration(configurationId: string, done: Registry.ResponseCallback): void {
+  removeConfiguration(configurationId: string, done: TripleValueCallback<any, any>): void {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_022: [The `removeConfiguration` method shall throw a `ReferenceError` exception if `configurationId` or `done` is falsy. ]*/
     if (!configurationId) throw new ReferenceError('Argument \'configurationId\' cannot be falsy');
     if (!done) throw new ReferenceError('Argument \'done\' cannot be falsy');
@@ -851,7 +855,7 @@ export class Registry {
    *
    * @throws {ReferenceError}       If the deviceId, content, or done argument is falsy.
    */
-  applyConfigurationContentOnDevice(deviceId: string, content: ConfigurationContent, done: Registry.ResponseCallback): void {
+  applyConfigurationContentOnDevice(deviceId: string, content: ConfigurationContent, done: TripleValueCallback<any, any>): void {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_024: [The `applyConfigurationContentOnDevice` method shall throw a `ReferenceError` exception if `deviceId`, `content`, or `done` is falsy. ]*/
     if (!deviceId) throw new ReferenceError('Argument \'deviceId\' cannot be falsy');
     if (!content) throw new ReferenceError('Argument \'content\' cannot be falsy');
@@ -890,7 +894,7 @@ export class Registry {
    * @throws {ReferenceError}       If the module or done argument is falsy.
    * @throws {ArgumentError}        If the module object is missing a deviceId or moduleId value.
    */
-  addModule(module: Module, done: Registry.ResponseCallback): void {
+  addModule(module: Module, done: TripleValueCallback<any, any>): void {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_026: [The `addModule` method shall throw a `ReferenceError` exception if `module` or `done` is falsy. ]*/
     if (!module) throw new ReferenceError('Argument \'module\' cannot be falsy');
     if (!done) throw new ReferenceError('Argument \'done\' cannot be falsy');
@@ -994,9 +998,9 @@ export class Registry {
    *                                forceUpdate is not set to true, or the module
    *                                object is missing it's deviceId or moduleId property.
    */
-  updateModule(module: Module, done: Registry.ResponseCallback): void;
-  updateModule(module: Module, forceUpdate: boolean, done: Registry.ResponseCallback): void;
-  updateModule(module: Module, forceUpdateOrDone: boolean | Registry.ResponseCallback, done?: Registry.ResponseCallback): void {
+  updateModule(module: Module, done: TripleValueCallback<any, any>): void;
+  updateModule(module: Module, forceUpdate: boolean, done: TripleValueCallback<any, any>): void;
+  updateModule(module: Module, forceUpdateOrDone: boolean | TripleValueCallback<any, any>, done?: TripleValueCallback<any, any>): void {
     let forceUpdate: boolean;
     if (typeof(forceUpdateOrDone) === 'function') {
       forceUpdate = false;
@@ -1059,16 +1063,16 @@ export class Registry {
    *
    * @throws {ReferenceError}       If the done deviceId, moduleId, or argument is falsy.
    */
-  removeModule(module: Module, done: Registry.ResponseCallback): void;
-  removeModule(deviceId: string, moduleId: string, done: Registry.ResponseCallback): void;
-  removeModule(moduleOrDeviceId: Module | string, doneOrModuleId: Registry.ResponseCallback | string, done?: Registry.ResponseCallback): void {
+  removeModule(module: Module, done: TripleValueCallback<any, any>): void;
+  removeModule(deviceId: string, moduleId: string, done: TripleValueCallback<any, any>): void;
+  removeModule(moduleOrDeviceId: Module | string, doneOrModuleId: TripleValueCallback<any, any> | string, done?: TripleValueCallback<any, any>): void {
     let moduleId: string;
     let deviceId: string;
     let etag: string;
 
     if (moduleOrDeviceId && ((moduleOrDeviceId as any).moduleId)) { // can't do "instanceof Module" at runtime because Module is an interface
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_041: [if a `Module` object is passed in, `removeModule` shall use the `deviceId`, `moduleId`, and `etag` from the `Module` object.]*/
-      done = doneOrModuleId as Registry.ResponseCallback;
+      done = doneOrModuleId as TripleValueCallback<any, any>;
       let module = moduleOrDeviceId as Module;
       deviceId = module.deviceId;
       moduleId = module.moduleId;
@@ -1349,10 +1353,9 @@ export namespace Registry {
         disabledDeviceCount: number;
     }
 
-    export type DeviceCallback = (err: Error, device?: Device, response?: any) => void;
-    export type ResponseCallback = (err: Error, result?: any, response?: any) => void;
-    export type JobCallback = (err: Error, jobStatus?: JobStatus) => void;
-    export type BulkDeviceIdentityCallback = ( err: Error, result: BulkRegistryOperationResult, response: any) => void;
+    export type ResponseCallback = TripleValueCallback<any, any>;
+    export type JobCallback = Callback<JobStatus>;
+    export type BulkDeviceIdentityCallback = TripleValueCallback<BulkRegistryOperationResult, any>;
 
     export interface DeviceDescription {
       deviceId: string;
