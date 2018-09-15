@@ -55,11 +55,11 @@ export class PollingStateMachine extends EventEmitter {
             this._queryTimer = setTimeout(() => {
               /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_036: [ If `PollingTransport.registrationRequest` does not call its callback within `ProvisioningDeviceConstants.defaultTimeoutInterval` ms, register shall with with a `TimeoutError` error. ] */
               if (this._currentOperationCallback === callback) {
-                  debug('timeout while sending request');
-                  /* tslint:disable:no-empty */
-                  this._fsm.handle('cancel', new errors.TimeoutError(), () => {} );
-                }
-              }, ProvisioningDeviceConstants.defaultTimeoutInterval);
+                debug('timeout while sending request');
+                /* tslint:disable:no-empty */
+                this._fsm.handle('cancel', new errors.TimeoutError(), () => { });
+              }
+            }, ProvisioningDeviceConstants.defaultTimeoutInterval);
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_012: [ `register` shall call `PollingTransport.registrationRequest`. ] */
             this._currentOperationCallback = callback;
             this._transport.registrationRequest(request, (err, result, response, pollingInterval) => {
@@ -170,7 +170,7 @@ export class PollingStateMachine extends EventEmitter {
               debug('timeout while query');
               if (this._currentOperationCallback === callback) {
                 /* tslint:disable:no-empty */
-                this._fsm.handle('cancel', new errors.TimeoutError(), () => {} );
+                this._fsm.handle('cancel', new errors.TimeoutError(), () => { });
               }
             }, ProvisioningDeviceConstants.defaultTimeoutInterval);
             /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_018: [ When the polling interval elapses, `register` shall call `PollingTransport.queryOperationStatus`. ] */
@@ -232,48 +232,30 @@ export class PollingStateMachine extends EventEmitter {
       }
     });
 
-    this._fsm.on('transition',  (data) => {
+    this._fsm.on('transition', (data) => {
       debug('completed transition from ' + data.fromState + ' to ' + data.toState);
     });
   }
 
-  _register(request: RegistrationRequest, callback?: Callback<DeviceRegistrationResult>): void {
-    debug('register called for registrationId "' + request.registrationId + '"');
-    this._fsm.handle('register', request, callback);
-  }
-
   register(request: RegistrationRequest, callback: Callback<DeviceRegistrationResult>): Promise<DeviceRegistrationResult> | void {
-    if (callback) {
-      return this._register(request, callback);
-    }
-
-    return callbackToPromise((_callback) => this._register(request, _callback));
-  }
-
-  _cancel(callback: ErrorCallback): void {
-    debug('cancel called');
-    this._fsm.handle('cancel', new errors.OperationCancelledError(''), callback);
+    return callbackToPromise((_callback) => {
+      debug('register called for registrationId "' + request.registrationId + '"');
+      this._fsm.handle('register', request, _callback);
+    }, callback);
   }
 
   cancel(callback?: ErrorCallback): Promise<void> | void {
-    if (callback) {
-      return this._cancel(callback);
-    }
-
-    return errorCallbackToPromise((_callback) => this._cancel(_callback));
-  }
-
-  _disconnect(callback: ErrorCallback): void {
-    debug('disconnect called');
-    this._fsm.handle('disconnect', callback);
+    return errorCallbackToPromise((_callback) => {
+      debug('cancel called');
+      this._fsm.handle('cancel', new errors.OperationCancelledError(''), _callback);
+    }, callback);
   }
 
   disconnect(callback?: ErrorCallback): Promise<void> | void {
-    if (callback) {
-      return this._disconnect(callback);
-    }
-
-    return errorCallbackToPromise((_callback) => this._disconnect(_callback));
+    return errorCallbackToPromise((_callback) => {
+      debug('disconnect called');
+      this._fsm.handle('disconnect', _callback);
+    }, callback);
   }
 }
 

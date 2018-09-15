@@ -224,38 +224,26 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
 
   }
 
-  _register(callback: (err?: Error, result?: RegistrationResult) => void): void {
-    let registrationInfo: TpmRegistrationInfo = {
-      endorsementKey: undefined,
-      storageRootKey: undefined,
-      request: {
-        registrationId: null,
-        idScope: this._idScope,
-        provisioningHost: this._provisioningHost
-      }
-    };
-
-    this._fsm.handle('register', registrationInfo, callback);
-  }
-
   register(callback?: Callback<RegistrationResult>): Promise<RegistrationResult> | void {
-    if (callback) {
-      return this._register(callback);
-    }
+    return callbackToPromise((_callback) => {
+      let registrationInfo: TpmRegistrationInfo = {
+        endorsementKey: undefined,
+        storageRootKey: undefined,
+        request: {
+          registrationId: null,
+          idScope: this._idScope,
+          provisioningHost: this._provisioningHost
+        }
+      };
 
-    return callbackToPromise((_callback) => this._register(_callback));
-  }
-
-  _cancel(callback: ErrorCallback): void {
-    this._fsm.handle('cancel', callback);
+      this._fsm.handle('register', registrationInfo, _callback);
+    }, callback);
   }
 
   cancel(callback?: ErrorCallback): Promise<void> | void {
-    if (callback) {
-      return this._cancel(callback);
-    }
-
-    return errorCallbackToPromise((_callback) => this._cancel(_callback));
+    return errorCallbackToPromise((_callback) => {
+      this._fsm.handle('cancel', _callback);
+    }, callback);
   }
 
   private _createRegistrationSas(registrationInfo: TpmRegistrationInfo, callback: (err: Error, sasToken?: string) => void): void {
