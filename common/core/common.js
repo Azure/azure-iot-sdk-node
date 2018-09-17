@@ -30,6 +30,7 @@ module.exports = {
   doubleValueCallbackToPromise: require('./lib/promise_utils').doubleValueCallbackToPromise,
   errorCallbackToPromise: require('./lib/promise_utils').errorCallbackToPromise,
   noErrorCallbackToPromise: require('./lib/promise_utils').noErrorCallbackToPromise,
+  tripleValueCallbackToPromise: require('./lib/promise_utils').tripleValueCallbackToPromise,
   Callback: require('./lib/promise_utils').Callback,
   ErrorCallback: require('./lib/promise_utils').ErrorCallback,
   DoubleValueCallback: require('./lib/promise_utils').DoubleValueCallback
