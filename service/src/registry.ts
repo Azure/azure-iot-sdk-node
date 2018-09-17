@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { errors, endpoint, SharedAccessSignature } from 'azure-iot-common';
+import { errors, endpoint, SharedAccessSignature, ResultWithHttpResponse } from 'azure-iot-common';
 import { Agent } from 'https';
 import { RestApiClient } from 'azure-iot-http-base';
 import * as ConnectionString from './connection_string';
@@ -13,7 +13,8 @@ import { Configuration, ConfigurationContent } from './configuration';
 import { Device } from './device';
 import { IncomingMessageCallback, createResultWithMessage } from './interfaces';
 import { Module } from './module';
-import { TripleValueCallback, Callback, tripleValueCallbackToPromise } from 'azure-iot-common/lib/promise_utils';
+import { TripleValueCallback, Callback, tripleValueCallbackToPromise, callbackToPromise } from 'azure-iot-common/lib/promise_utils';
+import { createResultWithHttpResponse } from 'azure-iot-common/lib/results';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -54,7 +55,7 @@ export class Registry {
     // This httpRequestBuilder parameter is used only for unit-testing purposes and should not be used in other situations.
     this._restApiClient = restApiClient || new RestApiClient(config, packageJson.name + '/' + packageJson.version);
     if (this._restApiClient.setOptions) {
-      this._restApiClient.setOptions({http: { agent: new Agent({ keepAlive: true }) } });
+      this._restApiClient.setOptions({ http: { agent: new Agent({ keepAlive: true }) } });
     }
   }
 
@@ -70,43 +71,43 @@ export class Registry {
    *                                object representing the created device
    *                                identity, and a transport-specific response
    *                                object useful for logging or debugging.
+   * @returns {Promise<ResultWithHttpResponse<Device>> | void} Promise if no callback function was passed, void otherwise.
    */
-  create(deviceInfo: Registry.DeviceDescription, done?: TripleValueCallback<Device, any>): void {
-    // return tripleValueCallbackToPromise((_callback) => {
-
-    // }, undefined, done);
-    if (!deviceInfo) {
-      /*Codes_SRS_NODE_IOTHUB_REGISTRY_07_001: [The `create` method shall throw `ReferenceError` if the `deviceInfo` argument is falsy. **]*/
-      throw new ReferenceError('deviceInfo cannot be \'' + deviceInfo + '\'');
-    } else if (!deviceInfo.deviceId) {
-      /*Codes_SRS_NODE_IOTHUB_REGISTRY_07_001: [The create method shall throw ArgumentError if the first argument does not contain a deviceId property.]*/
-      throw new ArgumentError('The object \'deviceInfo\' is missing the property: deviceId');
-    }
-
-    /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_026: [The `create` method shall construct an HTTP request using information supplied by the caller, as follows:
-    ```
-    PUT /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
-    Authorization: <sharedAccessSignature>
-    Content-Type: application/json; charset=utf-8
-    If-Match: *
-    Request-Id: <guid>
-
-    <deviceInfo>
-    ```]*/
-    const path = endpoint.devicePath(encodeURIComponent(deviceInfo.deviceId)) + endpoint.versionQueryString();
-    const httpHeaders = {
-      'Content-Type': 'application/json; charset=utf-8'
-    };
-
-    let normalizedDeviceInfo = JSON.parse(JSON.stringify(deviceInfo));
-    this._normalizeAuthentication(normalizedDeviceInfo);
-    this._restApiClient.executeApiCall('PUT', path, httpHeaders, normalizedDeviceInfo, (err, device, httpResponse) => {
-      if (err) {
-        done(err);
-      } else {
-        done(null, new Device(device), httpResponse);
+  create(deviceInfo: Registry.DeviceDescription, done?: TripleValueCallback<Device, any>): Promise<ResultWithHttpResponse<Device>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      if (!deviceInfo) {
+        /*Codes_SRS_NODE_IOTHUB_REGISTRY_07_001: [The `create` method shall throw `ReferenceError` if the `deviceInfo` argument is falsy. **]*/
+        throw new ReferenceError('deviceInfo cannot be \'' + deviceInfo + '\'');
+      } else if (!deviceInfo.deviceId) {
+        /*Codes_SRS_NODE_IOTHUB_REGISTRY_07_001: [The create method shall throw ArgumentError if the first argument does not contain a deviceId property.]*/
+        throw new ArgumentError('The object \'deviceInfo\' is missing the property: deviceId');
       }
-    });
+
+      /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_026: [The `create` method shall construct an HTTP request using information supplied by the caller, as follows:
+      ```
+      PUT /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
+      Authorization: <sharedAccessSignature>
+      Content-Type: application/json; charset=utf-8
+      If-Match: *
+      Request-Id: <guid>
+
+      <deviceInfo>
+      ```]*/
+      const path = endpoint.devicePath(encodeURIComponent(deviceInfo.deviceId)) + endpoint.versionQueryString();
+      const httpHeaders = {
+        'Content-Type': 'application/json; charset=utf-8'
+      };
+
+      let normalizedDeviceInfo = JSON.parse(JSON.stringify(deviceInfo));
+      this._normalizeAuthentication(normalizedDeviceInfo);
+      this._restApiClient.executeApiCall('PUT', path, httpHeaders, normalizedDeviceInfo, (err, device, httpResponse) => {
+        if (err) {
+          _callback(err);
+        } else {
+          _callback(null, new Device(device), httpResponse);
+        }
+      });
+    }, (d, r) => { return createResultWithHttpResponse(d, r); }, done);
   }
 
   /**
@@ -116,47 +117,50 @@ export class Registry {
    * @param {Object}    deviceInfo  An object which must include a `deviceId`
    *                                property whose value is a valid device
    *                                identifier.
-   * @param {Function}  done        The function to call when the operation is
+   * @param {Function}  [done]      The optional function to call when the operation is
    *                                complete. `done` will be called with three
    *                                arguments: an Error object (can be null), a
    *                                {@link module:azure-iothub.Device|Device}
    *                                object representing the updated device
    *                                identity, and a transport-specific response
    *                                object useful for logging or debugging.
+   * @returns {Promise<ResultWithHttpResponse<Device>> | void} Promise if no callback function was passed, void otherwise.
    */
-  update(deviceInfo: Registry.DeviceDescription, done: TripleValueCallback<Device, any>): void {
-    if (!deviceInfo) {
-      /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_043: [The `update` method shall throw `ReferenceError` if the `deviceInfo` argument is falsy.]*/
-      throw new ReferenceError('deviceInfo cannot be \'' + deviceInfo + '\'');
-    } else if (!deviceInfo.deviceId) {
-      /* Codes_SRS_NODE_IOTHUB_REGISTRY_07_003: [The update method shall throw ArgumentError if the first argument does not contain a deviceId property.]*/
-      throw new ArgumentError('The object \'deviceInfo\' is missing the property: deviceId');
-    }
-
-    /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_027: [The `update` method shall construct an HTTP request using information supplied by the caller, as follows:
-    ```
-    PUT /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
-    Authorization: <config.sharedAccessSignature>
-    Content-Type: application/json; charset=utf-8
-    Request-Id: <guid>
-
-    <deviceInfo>
-    ```]*/
-    const path = endpoint.devicePath(encodeURIComponent(deviceInfo.deviceId)) + endpoint.versionQueryString();
-    const httpHeaders = {
-      'Content-Type': 'application/json; charset=utf-8',
-      'If-Match': '*'
-    };
-
-    let normalizedDeviceInfo = JSON.parse(JSON.stringify(deviceInfo));
-    this._normalizeAuthentication(normalizedDeviceInfo);
-    this._restApiClient.executeApiCall('PUT', path, httpHeaders, normalizedDeviceInfo, (err, device, httpResponse) => {
-      if (err) {
-        done(err);
-      } else {
-        done(null, new Device(device), httpResponse);
+  update(deviceInfo: Registry.DeviceDescription, done?: TripleValueCallback<Device, any>): Promise<ResultWithHttpResponse<Device>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      if (!deviceInfo) {
+        /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_043: [The `update` method shall throw `ReferenceError` if the `deviceInfo` argument is falsy.]*/
+        throw new ReferenceError('deviceInfo cannot be \'' + deviceInfo + '\'');
+      } else if (!deviceInfo.deviceId) {
+        /* Codes_SRS_NODE_IOTHUB_REGISTRY_07_003: [The update method shall throw ArgumentError if the first argument does not contain a deviceId property.]*/
+        throw new ArgumentError('The object \'deviceInfo\' is missing the property: deviceId');
       }
-    });
+
+      /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_027: [The `update` method shall construct an HTTP request using information supplied by the caller, as follows:
+      ```
+      PUT /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
+      Authorization: <config.sharedAccessSignature>
+      Content-Type: application/json; charset=utf-8
+      Request-Id: <guid>
+
+      <deviceInfo>
+      ```]*/
+      const path = endpoint.devicePath(encodeURIComponent(deviceInfo.deviceId)) + endpoint.versionQueryString();
+      const httpHeaders = {
+        'Content-Type': 'application/json; charset=utf-8',
+        'If-Match': '*'
+      };
+
+      let normalizedDeviceInfo = JSON.parse(JSON.stringify(deviceInfo));
+      this._normalizeAuthentication(normalizedDeviceInfo);
+      this._restApiClient.executeApiCall('PUT', path, httpHeaders, normalizedDeviceInfo, (err, device, httpResponse) => {
+        if (err) {
+          _callback(err);
+        } else {
+          _callback(null, new Device(device), httpResponse);
+        }
+      });
+    }, (d, r) => { return createResultWithHttpResponse(d, r); }, done);
   }
 
   /**
@@ -164,42 +168,45 @@ export class Registry {
    * @description       Requests information about an existing device identity
    *                    on an IoT hub.
    * @param {String}    deviceId    The identifier of an existing device identity.
-   * @param {Function}  done        The function to call when the operation is
+   * @param {Function}  [done]      The optional function to call when the operation is
    *                                complete. `done` will be called with three
    *                                arguments: an Error object (can be null), a
    *                                {@link module:azure-iothub.Device|Device}
    *                                object representing the created device
    *                                identity, and a transport-specific response
    *                                object useful for logging or debugging.
+   * @returns {Promise<ResultWithHttpResponse<Device>> | void} Promise if no callback function was passed, void otherwise.
    */
-  get(deviceId: string, done: TripleValueCallback<Device, any>): void {
-    /*Codes_SRS_NODE_IOTHUB_REGISTRY_05_006: [The get method shall throw ReferenceError if the supplied deviceId is falsy.]*/
-    if (!deviceId) {
-      throw new ReferenceError('deviceId is \'' + deviceId + '\'');
-    }
-
-    /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_028: [The `get` method shall construct an HTTP request using information supplied by the caller, as follows:
-    ```
-    GET /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
-    Authorization: <config.sharedAccessSignature>
-    Request-Id: <guid>
-    ```]*/
-    const path = endpoint.devicePath(encodeURIComponent(deviceId)) + endpoint.versionQueryString();
-
-    this._restApiClient.executeApiCall('GET', path, null, null, (err, device, httpResponse) => {
-      if (err) {
-        done(err);
-      } else {
-        done(null, new Device(device), httpResponse);
+  get(deviceId: string, done?: TripleValueCallback<Device, any>): Promise<ResultWithHttpResponse<Device>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_IOTHUB_REGISTRY_05_006: [The get method shall throw ReferenceError if the supplied deviceId is falsy.]*/
+      if (!deviceId) {
+        throw new ReferenceError('deviceId is \'' + deviceId + '\'');
       }
-    });
+
+      /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_028: [The `get` method shall construct an HTTP request using information supplied by the caller, as follows:
+      ```
+      GET /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
+      Authorization: <config.sharedAccessSignature>
+      Request-Id: <guid>
+      ```]*/
+      const path = endpoint.devicePath(encodeURIComponent(deviceId)) + endpoint.versionQueryString();
+
+      this._restApiClient.executeApiCall('GET', path, null, null, (err, device, httpResponse) => {
+        if (err) {
+          _callback(err);
+        } else {
+          _callback(null, new Device(device), httpResponse);
+        }
+      });
+    }, (d, r) => { return createResultWithHttpResponse(d, r); }, done);
   }
 
   /**
    * @method            module:azure-iothub.Registry#list
    * @description       Requests information about the first 1000 device
    *                    identities on an IoT hub.
-   * @param {Function}  done        The function to call when the operation is
+   * @param {Function}  [done]      The optional function to call when the operation is
    *                                complete. `done` will be called with three
    *                                arguments: an Error object (can be null), an
    *                                array of
@@ -207,8 +214,12 @@ export class Registry {
    *                                objects representing the listed device
    *                                identities, and a transport-specific response
    *                                object useful for logging or debugging.
+   * @returns {Promise<ResultWithHttpResponse<Device[]>> | void} Promise if no callback function was passed, void otherwise.
    */
-  list(done: IncomingMessageCallback<Device[]>): void {
+  list(done?: IncomingMessageCallback<Device[]> TODO): Promise<ResultWithHttpResponse<Device[]>> | void {
+    return tripleValueCallbackToPromise(() => {
+
+    }, cre);
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_029: [The `list` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
     GET /devices?api-version=<version> HTTP/1.1
@@ -764,7 +775,7 @@ export class Registry {
   updateConfiguration(configuration: Configuration, forceUpdate: boolean, done: TripleValueCallback<any, any>): void;
   updateConfiguration(configuration: Configuration, forceUpdateOrDone: boolean | TripleValueCallback<any, any>, done?: TripleValueCallback<any, any>): void {
     let forceUpdate: boolean;
-    if (typeof(forceUpdateOrDone) === 'function') {
+    if (typeof (forceUpdateOrDone) === 'function') {
       forceUpdate = false;
       done = forceUpdateOrDone;
     } else {
@@ -916,7 +927,7 @@ export class Registry {
     const preparedModule = JSON.parse(JSON.stringify(module));
     this._normalizeAuthentication(preparedModule);
 
-    const path = `${endpoint.modulePath(encodeURIComponent(preparedModule.deviceId),encodeURIComponent(preparedModule.moduleId))}${endpoint.versionQueryString()}`;
+    const path = `${endpoint.modulePath(encodeURIComponent(preparedModule.deviceId), encodeURIComponent(preparedModule.moduleId))}${endpoint.versionQueryString()}`;
     const httpHeaders = {
       'Content-Type': 'application/json; charset=utf-8'
     };
@@ -979,30 +990,9 @@ export class Registry {
     this._restApiClient.executeApiCall('GET', path, null, null, done);
   }
 
-  /**
-   * @method            module:azure-iothub.Registry#updateModule
-   * @description       Update the given module object in the registry
-   *
-   * @param {Module} module         Module object to update.
-   * @param {boolean} forceUpdate   Set to true to force the update by ignoring the eTag
-   *                                in the Module object (optional. default: false)
-   * @param {Function}  done        The function to call when the operation is
-   *                                complete. `done` will be called with three
-   *                                arguments: an Error object (can be null), the
-   *                                body of the response, and a transport-specific
-   *                                response object useful for logging or
-   *                                debugging.
-   *
-   * @throws {ReferenceError}       If the module or done argument is falsy.
-   * @throws {ArgumentError}        If the module object is missing an etag and
-   *                                forceUpdate is not set to true, or the module
-   *                                object is missing it's deviceId or moduleId property.
-   */
-  updateModule(module: Module, done: TripleValueCallback<any, any>): void;
-  updateModule(module: Module, forceUpdate: boolean, done: TripleValueCallback<any, any>): void;
-  updateModule(module: Module, forceUpdateOrDone: boolean | TripleValueCallback<any, any>, done?: TripleValueCallback<any, any>): void {
+  _updateModule(module: Module, forceUpdateOrDone: boolean | TripleValueCallback<any, any>, done?: TripleValueCallback<any, any>): void {
     let forceUpdate: boolean;
-    if (typeof(forceUpdateOrDone) === 'function') {
+    if (typeof (forceUpdateOrDone) === 'function') {
       forceUpdate = false;
       done = forceUpdateOrDone;
     } else {
@@ -1044,28 +1034,45 @@ export class Registry {
     ```
     ]*/
 
-    const path = `${endpoint.modulePath(encodeURIComponent(preparedModule.deviceId),encodeURIComponent(preparedModule.moduleId))}${endpoint.versionQueryString()}`;
+    const path = `${endpoint.modulePath(encodeURIComponent(preparedModule.deviceId), encodeURIComponent(preparedModule.moduleId))}${endpoint.versionQueryString()}`;
     this._restApiClient.executeApiCall('PUT', path, httpHeaders, preparedModule, done);
   }
 
   /**
-   * @method            module:azure-iothub.Registry#removeModule
-   * @description       Remove the given module from the registry
+   * @method            module:azure-iothub.Registry#updateModule
+   * @description       Update the given module object in the registry
    *
-   * @param {String} deviceId       Device ID that owns the module
-   * @param {String} moduleId       Module ID to remove
-   * @param {Function}  done        The function to call when the operation is
+   * @param {Module} module         Module object to update.
+   * @param {boolean} forceUpdate   Set to true to force the update by ignoring the eTag
+   *                                in the Module object (optional. default: false)
+   * @param {Function}  [done]      The optional function to call when the operation is
    *                                complete. `done` will be called with three
    *                                arguments: an Error object (can be null), the
    *                                body of the response, and a transport-specific
    *                                response object useful for logging or
    *                                debugging.
+   * @returns {Promise<ResultWithHttpResponse<any>> | void} Promise if no callback function was passed, void otherwise.
    *
-   * @throws {ReferenceError}       If the done deviceId, moduleId, or argument is falsy.
+   * @throws {ReferenceError}       If the module or done argument is falsy.
+   * @throws {ArgumentError}        If the module object is missing an etag and
+   *                                forceUpdate is not set to true, or the module
+   *                                object is missing it's deviceId or moduleId property.
    */
-  removeModule(module: Module, done: TripleValueCallback<any, any>): void;
-  removeModule(deviceId: string, moduleId: string, done: TripleValueCallback<any, any>): void;
-  removeModule(moduleOrDeviceId: Module | string, doneOrModuleId: TripleValueCallback<any, any> | string, done?: TripleValueCallback<any, any>): void {
+  updateModule(module: Module, done: TripleValueCallback<any, any>): void;
+  updateModule(module: Module, forceUpdate: boolean, done: TripleValueCallback<any, any>): void;
+  updateModule(module: Module, forceUpdateOrDone: boolean | TripleValueCallback<any, any>, done?: TripleValueCallback<any, any>): Promise<ResultWithHttpResponse<any>> | void {
+    const callback = done || (forceUpdateOrDone instanceof Function ? forceUpdateOrDone : undefined);
+
+    if (callback) {
+      return this._updateModule(module, forceUpdateOrDone, done);
+    }
+
+    return tripleValueCallbackToPromise((_callback) => {
+      this._updateModule(module, forceUpdateOrDone, _callback);
+    }, (r, h) => createResultWithHttpResponse(r, h), callback);
+  }
+
+  _removeModule(moduleOrDeviceId: Module | string, doneOrModuleId: TripleValueCallback<any, any> | string, done?: TripleValueCallback<any, any>): void {
     let moduleId: string;
     let deviceId: string;
     let etag: string;
@@ -1093,7 +1100,7 @@ export class Registry {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_044: [The `removeModule` method shall throw an `ArgumentError` if the `done` parameter is not a function.]*/
     if (typeof deviceId !== 'string') throw new ArgumentError('\'deviceId\' must be a string');
     if (typeof moduleId !== 'string') throw new ArgumentError('\'moduleId\' must be a string');
-    if (typeof(done) !== 'function') throw new ArgumentError('\'done\' must be a function');
+    if (typeof (done) !== 'function') throw new ArgumentError('\'done\' must be a function');
 
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_040: [The `removeModule` method shall construct an HTTP request using information supplied by the caller, as follows:
     ```
@@ -1110,6 +1117,36 @@ export class Registry {
     const path = `${endpoint.modulePath(encodeURIComponent(deviceId), encodeURIComponent(moduleId))}${endpoint.versionQueryString()}`;
 
     this._restApiClient.executeApiCall('DELETE', path, httpHeaders, null, done);
+  }
+
+  /**
+   * @method            module:azure-iothub.Registry#removeModule
+   * @description       Remove the given module from the registry
+   *
+   * @param {String} deviceId       Device ID that owns the module
+   * @param {String} moduleId       Module ID to remove
+   * @param {Function}  [done]      The optional function to call when the operation is
+   *                                complete. `done` will be called with three
+   *                                arguments: an Error object (can be null), the
+   *                                body of the response, and a transport-specific
+   *                                response object useful for logging or
+   *                                debugging.
+   * @returns {Promise<ResultWithHttpResponse<any>> | void} Promise if no callback function was passed, void otherwise.
+   *
+   * @throws {ReferenceError}       If the done deviceId, moduleId, or argument is falsy.
+   */
+  removeModule(module: Module, done: TripleValueCallback<any, any>): void;
+  removeModule(deviceId: string, moduleId: string, done: TripleValueCallback<any, any>): void;
+  removeModule(moduleOrDeviceId: Module | string, doneOrModuleId: TripleValueCallback<any, any> | string, done?: TripleValueCallback<any, any>): Promise<ResultWithHttpResponse<any>> | void {
+    const callback = done || (doneOrModuleId instanceof Function ? doneOrModuleId : undefined);
+
+    if (callback) {
+      return this._removeModule(moduleOrDeviceId, doneOrModuleId, done);
+    }
+
+    return tripleValueCallbackToPromise((_callback) => {
+      this._removeModule(moduleOrDeviceId, doneOrModuleId, _callback);
+    }, (r, h) => createResultWithHttpResponse(r, h), callback);
   }
 
   private _bulkOperation(devices: Registry.DeviceDescription[], done: IncomingMessageCallback<any>): void {
@@ -1263,13 +1300,13 @@ export class Registry {
       }
       ] */
       deviceInfo.authentication = {
-          type: 'sas',
-          symmetricKey: {
-            primaryKey: '',
-            secondaryKey: ''
-          }
-        };
-    /* Codes_SRS_NODE_IOTHUB_REGISTRY_06_029: [** A device information with an authentication object that contains a `type` property is considered normalized.] */
+        type: 'sas',
+        symmetricKey: {
+          primaryKey: '',
+          secondaryKey: ''
+        }
+      };
+      /* Codes_SRS_NODE_IOTHUB_REGISTRY_06_029: [** A device information with an authentication object that contains a `type` property is considered normalized.] */
     } else if (!deviceInfo.authentication.hasOwnProperty('type')) {
       if (deviceInfo.authentication.x509Thumbprint && (deviceInfo.authentication.x509Thumbprint.primaryThumbprint || deviceInfo.authentication.x509Thumbprint.secondaryThumbprint)) {
         /* Codes_SRS_NODE_IOTHUB_REGISTRY_06_030: [A device information with an authentication object that contains the x509Thumbprint property with at least one of `primaryThumbprint` or `secondaryThumbprint` sub-properties will be normalized with a `type` property with value "selfSigned".] */
@@ -1335,44 +1372,44 @@ export class Registry {
 }
 
 export namespace Registry {
-    export interface TransportConfig {
-        host: string;
-        sharedAccessSignature: string | SharedAccessSignature;
-    }
+  export interface TransportConfig {
+    host: string;
+    sharedAccessSignature: string | SharedAccessSignature;
+  }
 
-    export interface JobStatus {
-    }
+  export interface JobStatus {
+  }
 
-    export interface QueryDescription {
-        query: string;
-    }
+  export interface QueryDescription {
+    query: string;
+  }
 
-    export interface RegistryStatistics {
-        totalDeviceCount: number;
-        enabledDeviceCount: number;
-        disabledDeviceCount: number;
-    }
+  export interface RegistryStatistics {
+    totalDeviceCount: number;
+    enabledDeviceCount: number;
+    disabledDeviceCount: number;
+  }
 
-    export type ResponseCallback = TripleValueCallback<any, any>;
-    export type JobCallback = Callback<JobStatus>;
-    export type BulkDeviceIdentityCallback = TripleValueCallback<BulkRegistryOperationResult, any>;
+  export type ResponseCallback = TripleValueCallback<any, any>;
+  export type JobCallback = Callback<JobStatus>;
+  export type BulkDeviceIdentityCallback = TripleValueCallback<BulkRegistryOperationResult, any>;
 
-    export interface DeviceDescription {
-      deviceId: string;
-      capabilities?: Device.Capabilities;
-      [x: string]: any;
-    }
+  export interface DeviceDescription {
+    deviceId: string;
+    capabilities?: Device.Capabilities;
+    [x: string]: any;
+  }
 
-    export interface DeviceRegistryOperationError {
-      deviceId: string;
-      errorCode: Error;
-      errorStatus: string;
-    }
+  export interface DeviceRegistryOperationError {
+    deviceId: string;
+    errorCode: Error;
+    errorStatus: string;
+  }
 
-    export interface BulkRegistryOperationResult {
-      isSuccessful: boolean;
-      errors: DeviceRegistryOperationError[];
-    }
+  export interface BulkRegistryOperationResult {
+    isSuccessful: boolean;
+    errors: DeviceRegistryOperationError[];
+  }
 
-    export type BulkRegistryOperationType = 'create' | 'Update' | 'UpdateIfMatchETag' | 'Delete' | 'DeleteIfMatchETag';
+  export type BulkRegistryOperationType = 'create' | 'Update' | 'UpdateIfMatchETag' | 'Delete' | 'DeleteIfMatchETag';
 }

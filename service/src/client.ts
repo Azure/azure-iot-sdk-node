@@ -81,11 +81,11 @@ export class Client extends EventEmitter {
       },
         (err, result) => {
           if (err) {
-            if (done) done(err);
+            if (_callback) _callback(err);
           } else {
             /*Codes_SRS_NODE_IOTHUB_CLIENT_16_002: [If the transport successfully establishes a connection the `open` method shall subscribe to the `disconnect` event of the transport.]*/
             this._transport.on('disconnect', this._disconnectHandler.bind(this));
-            if (done) done(null, result);
+            if (_callback) _callback(null, result);
           }
         });
     }, (r, m) => { return createResultWithMessage(r, m); }, done);
@@ -246,13 +246,14 @@ export class Client extends EventEmitter {
   invokeDeviceMethod(deviceId: string, methodParams: DeviceMethodParams, done?: IncomingMessageCallback<any>): void;
   invokeDeviceMethod(deviceId: string, moduleId: string, methodParams: DeviceMethodParams, done?: IncomingMessageCallback<any>): void;
   invokeDeviceMethod(deviceId: string, moduleIdOrMethodParams: string | DeviceMethodParams, methodParamsOrDone?: DeviceMethodParams | IncomingMessageCallback<any>, done?: IncomingMessageCallback<any>): Promise<ResultWithIncomingMessage<any>> | void {
-    if (done || methodParamsOrDone instanceof Function) {
+    const callback = done || (methodParamsOrDone instanceof Function ? methodParamsOrDone : undefined);
+    if (callback) {
       return this._invokeDeviceMethod(deviceId, moduleIdOrMethodParams, methodParamsOrDone, done);
     }
 
     return tripleValueCallbackToPromise((_callback) => {
       this._invokeDeviceMethod(deviceId, moduleIdOrMethodParams, methodParamsOrDone, _callback);
-    }, (r: any, m: IncomingMessage) => { return createResultWithMessage(r, m); });
+    }, (r: any, m: IncomingMessage) => { return createResultWithMessage(r, m); }, callback);
   }
 
   /**

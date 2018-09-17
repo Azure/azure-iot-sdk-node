@@ -84,10 +84,10 @@ export class DeviceMethod {
         "payload": <DeviceMethod.params.payload>
       }
       ```]*/
-      /*Codes_SRS_NODE_IOTHUB_DEVICE_METHOD_16_009: [The `invokeOn` method shall invoke the `done` callback with an standard javascript `Error` object if the method execution failed.]*/
-      /*Codes_SRS_NODE_IOTHUB_DEVICE_METHOD_16_010: [The `invokeOn` method shall invoke the `done` callback with a `null` first argument, a result second argument and a transport-specific response third argument if the method execution succeede**/
+      /*Codes_SRS_NODE_IOTHUB_DEVICE_METHOD_16_009: [The `invokeOn` method shall invoke the `_callback` callback with an standard javascript `Error` object if the method execution failed.]*/
+      /*Codes_SRS_NODE_IOTHUB_DEVICE_METHOD_16_010: [The `invokeOn` method shall invoke the `_callback` callback with a `null` first argument, a result second argument and a transport-specific response third argument if the method execution succeede**/
       const totalTimeout = (this.params.responseTimeoutInSeconds + this.params.connectTimeoutInSeconds) * 1000;
-      this._client.executeApiCall('POST', path, headers, this.params, totalTimeout, done);
+      this._client.executeApiCall('POST', path, headers, this.params, totalTimeout, _callback);
     }, (d, r) => { return { device: d, response: r }; }, done);
   }
 
