@@ -64,7 +64,7 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
         });
       } else {
         /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_003: [The `getDeviceCredentials` should call its callback with a `null` first parameter and a `TransportConfig` object as a second parameter, containing the latest valid token it generated.]*/
-        callback(null, this._credentials);
+        _callback(null, this._credentials);
       }
     }, callback);
   }

@@ -26,12 +26,13 @@ export class X509AuthenticationProvider implements AuthenticationProvider {
    * This method is used by the transports to gets the most current device credentials in the form of a `TransportConfig` object.
    *
    * @param [callback] optional function that will be called with either an error or a set of device credentials that can be used to authenticate with the IoT hub.
+   * @returns {Promise<TransportConfig> | void} Promise if no callback function was passed, void otherwise.
    */
   getDeviceCredentials(callback?: Callback<TransportConfig>): Promise<TransportConfig> | void {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_X509_AUTHENTICATION_PROVIDER_16_002: [The `getDeviceCredentials` method shall call its callback with a `null` error object and the stored device credentials as a second argument.]*/
       _callback(null, this._credentials);
-    });
+    }, callback);
   }
 
   /**
