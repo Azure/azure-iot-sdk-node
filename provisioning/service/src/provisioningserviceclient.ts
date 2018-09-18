@@ -126,10 +126,6 @@ export class ProvisioningServiceClient {
     }, createEnrollmentGroupWithHttpResponse, callback);
   }
 
-  public _deleteEnrollmentGroup(enrollmentGroupOrId: string | EnrollmentGroup, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): void {
-    this._delete(this._enrollmentGroupsPrefix, enrollmentGroupOrId, etagOrCallback, deleteCallback);
-  }
-
   /**
    * @method           module:azure-iot-provisioning-service.ProvisioningServiceClient#deleteEnrollmentGroup
    * @description     Delete a device enrollment group.
@@ -144,7 +140,9 @@ export class ProvisioningServiceClient {
       etagOrCallback = undefined;
     }
 
-    return errorCallbackToPromise((_callback) => this._deleteEnrollmentGroup(enrollmentGroupOrId, etagOrCallback, _callback), deleteCallback);
+    return errorCallbackToPromise((_callback) => {
+      this._delete(this._enrollmentGroupsPrefix, enrollmentGroupOrId, etagOrCallback, _callback);
+    }, deleteCallback);
   }
 
   /**
@@ -184,12 +182,12 @@ export class ProvisioningServiceClient {
     return new Query(this._getEnrollFunc(this._registrationsPrefix + encodeURIComponent(enrollmentGroupId) + '/', querySpecification, pageSize));
   }
 
- /**
-  * @method           module:azure-iot-provisioning-service.ProvisioningServiceClient#runBulkEnrollmentOperation
-  * @description      Runs a number CRUD operations on an array of enrollment records.
-  * @param {object}   bulkEnrollmentOperation An object that specifies the single kind of CRUD operations on the array of IndividualEnrollment objects that are also part of the object.
-  * @param {function} callback      Invoked upon completion of the operation.
-  */
+  /**
+   * @method           module:azure-iot-provisioning-service.ProvisioningServiceClient#runBulkEnrollmentOperation
+   * @description      Runs a number CRUD operations on an array of enrollment records.
+   * @param {object}   bulkEnrollmentOperation An object that specifies the single kind of CRUD operations on the array of IndividualEnrollment objects that are also part of the object.
+   * @param {function} callback      Invoked upon completion of the operation.
+   */
   public runBulkEnrollmentOperation(bulkEnrollmentOperation: BulkEnrollmentOperation, callback?: TripleValueCallback<BulkEnrollmentOperationResult, any>): Promise<ResultWithHttpResponse<BulkEnrollmentOperationResult>> | void {
     return tripleValueCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_038: [The `runBulkEnrollmentOperation` method shall throw `ReferenceError` if the `bulkEnrollmentOperation` argument is falsy.] */
@@ -330,6 +328,11 @@ export class ProvisioningServiceClient {
     let suppliedCallback: ErrorCallback;
     let id: string;
 
+    suppliedCallback = deleteCallback || (etagOrCallback instanceof Function ? etagOrCallback : undefined);
+    if (!suppliedCallback) {
+      throw new ArgumentError('No callback was passed.');
+    }
+
     /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_015: [The `deleteIndividualEnrollment` method shall throw `ReferenceError` if the `enrollmentOrId` argument is falsy.] */
     /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_016: [The `deleteEnrollmentGroup` method shall throw `ReferenceError` if the `enrollmentGroupOrId` argument is falsy.] */
     /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_025: [The `deleteDeviceRegistrationState` method shall throw `ReferenceError` if the `idOrRegistrationState` argument is falsy.] */
@@ -344,7 +347,6 @@ export class ProvisioningServiceClient {
       /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_050: [The `deleteDeviceRegistrationState` method, if the first argument is a string, the second argument if present, must be a string or a callback, otherwise shall throw `ArgumentError`.] */
       if (!etagOrCallback) {
         ifMatch = undefined;
-        suppliedCallback = undefined;
       } else if (typeof etagOrCallback === 'string') {
         /*Codes_**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_044: [** The `deleteIndividualEnrollment` method, if the first argument is a string, and the second argument is a string, shall construct an HTTP request using information supplied by the caller as follows:
           DELETE /enrollments/<uri-encoded-enrollmentOrId>?api-version=<version> HTTP/1.1
@@ -362,16 +364,6 @@ export class ProvisioningServiceClient {
           Authorization: <sharedAccessSignature>
           ] */
         ifMatch = etagOrCallback;
-        /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_041: [The `deleteIndividualEnrollment` method, if the first argument is a string and the second argument is a string, the third argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
-        /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_046: [The `deleteEnrollmentGroup` method, if the first argument is a string and the second argument is a string, the third argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
-        /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_051: [The `deleteDeviceRegistrationState` method, if the first argument is a string and the second argument is a string, the third argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
-        if (!deleteCallback) {
-          suppliedCallback = undefined;
-        } else if (typeof deleteCallback !== 'function') {
-          throw new ArgumentError('Third argument of this delete method must be a function.');
-        } else {
-          suppliedCallback = deleteCallback;
-        }
       } else if (typeof etagOrCallback === 'function') {
         /*Codes_**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_043: [** The `deleteIndividualEnrollment` method, if the first argument is a string, and the second argument is NOT a string, shall construct an HTTP request using information supplied by the caller as follows:
           DELETE /enrollments/<uri-encoded-enrollmentOrId>?api-version=<version> HTTP/1.1
@@ -411,17 +403,6 @@ export class ProvisioningServiceClient {
         id = enrollmentOrIdOrRegistration.registrationId;
       } else {
         throw new ArgumentError('Invalid path specified for delete operation.');
-      }
-
-      /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_042: [The `deleteIndividualEnrollment` method, if the first argument is an `IndividualEnrollment` object, the second argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
-      /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_047: [The `deleteEnrollmentGroup` method, if the first argument is an `EnrollmentGroup` object, the second argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
-      /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_052: [The `deleteDeviceRegistrationState` method, if the first argument is an `DeviceRegistrationState` object, the second argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
-      if (!etagOrCallback) {
-        suppliedCallback = undefined;
-      } else if (typeof etagOrCallback !== 'function') {
-        throw new ArgumentError('The second argument of this delete function if present MUST be a function.');
-      } else {
-        suppliedCallback = etagOrCallback;
       }
 
       if (enrollmentOrIdOrRegistration.etag) {
