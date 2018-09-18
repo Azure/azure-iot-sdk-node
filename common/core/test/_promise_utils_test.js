@@ -12,6 +12,21 @@ var tripleValueCallbackToPromise = require('../lib/promise_utils').tripleValueCa
 
 describe('PromiseUtils', () => {
     describe('#callbackToPromise', () => {
+        it('executes user callback when passed', function (done) {
+            const functionWithCallback = (callback) => {
+                callback(undefined, 42);
+            };
+
+            const callback = (error, result) => {
+                assert.equal(result, 42);
+                assert.isUndefined(error);
+                done();
+            };
+
+            const promise = callbackToPromise(functionWithCallback, callback);
+            assert.isUndefined(promise);
+        });
+
         it('returns undefined result for empty callback', function (done) {
             const functionWithEmptyPromise = (callback) => {
                 callback();
@@ -150,6 +165,21 @@ describe('PromiseUtils', () => {
     });
 
     describe('#errorCallbackToPromise', function () {
+        it('executes user callback when passed', function (done) {
+            const error = new Error('sample error');
+            const functionWithCallback = (callback) => {
+                callback(error);
+            };
+
+            const callback = (err) => {
+                assert.equal(err, error);
+                done();
+            };
+
+            const promise = errorCallbackToPromise(functionWithCallback, callback);
+            assert.isUndefined(promise);
+        });
+
         it('returns empty result when action completed successfully and no result returned', function (done) {
             const functionWithErrorOnly = (callback) => {
                 callback();
@@ -192,6 +222,20 @@ describe('PromiseUtils', () => {
     });
 
     describe('#noErrorCallbackToPromise', function () {
+        it('executes user callback when passed', function (done) {
+            const functionWithCallback = (callback) => {
+                callback(42);
+            };
+
+            const callback = (result) => {
+                assert.equal(result, 42);
+                done();
+            };
+
+            const promise = noErrorCallbackToPromise(functionWithCallback, callback);
+            assert.undefined(promise);
+        });
+
         it('returns value when callback invoked', function (done) {
             const value = 'sample value';
             const functionWithValueReturnOnly = (callback) => {
@@ -225,6 +269,21 @@ describe('PromiseUtils', () => {
     });
 
     describe('#doubleValueCallbackToPromise', function () {
+        it('executes user callback when passed', function (done) {
+            const functionWithCallback = (callback) => {
+                callback("result", 42);
+            };
+
+            const callback = (result1, result2) => {
+                assert.equal(result1, "result");
+                assert.equal(result2, 42);
+                done();
+            };
+
+            const promise = doubleValueCallbackToPromise(functionWithCallback, undefined, callback);
+            assert.isUndefined(promise);
+        });
+
         it('rejects when the first argument in callback is an error', function (done) {
             const error = new Error('sample error');
             const functionWithErrorAsFirstParameter = (callback) => {
@@ -306,6 +365,23 @@ describe('PromiseUtils', () => {
     });
 
     describe('#tripleValueCallbackToPromise', function() {
+        it('executes user callback when passed', function (done) {
+            const error = new Error('sample error');
+            const functionWithCallback = (callback) => {
+                callback(error, "result", 42);
+            };
+
+            const callback = (err, result1, result2) => {
+                assert.equal(result1, "result");
+                assert.equal(result2, 42);
+                assert.equal(err, error);
+                done();
+            };
+
+            const promise = tripleValueCallbackToPromise(functionWithCallback, undefined, callback);
+            assert.isUndefined(promise);
+        });
+
         it('rejects when an error is present', function (done) {
             const error = new Error('sample error');
             const functionWithErrorAsFirstParameter = (callback) => {
