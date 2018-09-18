@@ -335,17 +335,18 @@ describe('ProvisioningServiceClient', function() {
         var de = new ProvisioningServiceClient({ host: 'host', sharedAccessSignature: 'sas' });
         assert.throws(function() {
           de[methodUnderTest]('fake-registration', 'etag', 'not the correct type');
-        }, errors.ArgumentError);
+        }, TypeError);
       });
 
       /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_042: [The `deleteIndividualEnrollment` method, if the first argument is an IndividualEnrollment object, the second argument if present, must be a callback, otherwise shall return a Promise.] */
       /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_047: [The `deleteEnrollmentGroup` method, if the first argument is an EnrollmentGroup object, the second argument if present, must be a callback, otherwise shall return a Promise.] */
       /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_052: [The `deleteDeviceRegistrationState` method, if the first argument is an `DeviceRegistrationState` object, the second argument if present, must be a callback, otherwise shall return a Promise.] */
-      it('Throws argument error if first parameter is an object and second parameter is NOT a callback', function() {
+      it('Returns a promise if first parameter is an object and second parameter is NOT a callback', function(done) {
         var de = new ProvisioningServiceClient({ host: 'host', sharedAccessSignature: 'sas' });
-        assert.throws(function() {
-          de[methodUnderTest](firstArgumentObjectNoEtag, 'etag');
-        }, errors.ArgumentError);
+        const promise = de[methodUnderTest](firstArgumentObjectNoEtag, 'etag');
+
+        assert.instanceOf(promise, Promise)
+        promise.then(done).catch(err => done(err));
       });
 
       /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_017: [The `deleteIndividualEnrollment` method, if the first argument is an `IndividualEnrollment` object, shall throw an `ArgumentError`, if the `registrationId` property is falsy.] */
@@ -435,7 +436,7 @@ describe('ProvisioningServiceClient', function() {
         };
 
         var de = new ProvisioningServiceClient({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
-        de[methodUnderTest](firstArgumentObject, testCallback);
+        de[methodUnderTest](firstArgumentObject, undefined, () => { testCallback(); });
       });
 
       /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_024: [The `deleteIndividualEnrollment` method, if the first argument is an `IndividualEnrollment` object, with a falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
