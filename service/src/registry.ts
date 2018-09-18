@@ -13,7 +13,7 @@ import { Configuration, ConfigurationContent } from './configuration';
 import { Device } from './device';
 import { IncomingMessageCallback, createResultWithIncomingMessage, ResultWithIncomingMessage, RawResult, createRawResult } from './interfaces';
 import { Module } from './module';
-import { TripleValueCallback, Callback, tripleValueCallbackToPromise, callbackToPromise } from 'azure-iot-common/lib/promise_utils';
+import { TripleValueCallback, Callback, tripleValueCallbackToPromise } from 'azure-iot-common/lib/promise_utils';
 import { createResultWithHttpResponse } from 'azure-iot-common/lib/results';
 
 // tslint:disable-next-line:no-var-requires

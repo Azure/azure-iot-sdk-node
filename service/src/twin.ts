@@ -7,7 +7,7 @@ import { errors } from 'azure-iot-common';
 import * as _ from 'lodash';
 import { DeviceIdentity } from './device';
 import { Registry } from './registry';
-import { IncomingMessageCallback, ResultWithIncomingMessage, createResultWithMessage } from './interfaces';
+import { IncomingMessageCallback, ResultWithIncomingMessage, createResultWithIncomingMessage } from './interfaces';
 import { tripleValueCallbackToPromise } from 'azure-iot-common/lib/promise_utils';
 
 /**
@@ -156,7 +156,7 @@ export class Twin implements TwinData {
           _callback(null, this, response);
         }
       });
-    }, (t, i) => { return createResultWithMessage(t, i); }, done);
+    }, (t, i) => { return createResultWithIncomingMessage(t, i); }, done);
   }
 
   /**
@@ -205,7 +205,7 @@ export class Twin implements TwinData {
           _callback(null, this, response);
         }
       });
-    }, (t, r) => { return createResultWithMessage(t, r); }, done);
+    }, (t, r) => { return createResultWithIncomingMessage(t, r); }, done);
   }
 
   /*Codes_SRS_NODE_IOTHUB_TWIN_16_015: [The `toJSON` method shall return a copy of the `Twin` object that doesn't contain the `_registry` private property.]*/

@@ -5,7 +5,7 @@
 
 import { Twin } from './twin';
 import { Registry } from './registry';
-import { IncomingMessageCallback, ResultWithIncomingMessage, createResultWithMessage } from './interfaces';
+import { IncomingMessageCallback, ResultWithIncomingMessage, createResultWithIncomingMessage } from './interfaces';
 import { tripleValueCallbackToPromise } from 'azure-iot-common/lib/promise_utils';
 
 /**
@@ -81,7 +81,7 @@ export class Query {
           actualCallback(null, result, response);
         }
       });
-    }, (r, m) => { return createResultWithMessage(r, m); }, done);
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
   /**
@@ -121,6 +121,6 @@ export class Query {
           }
         }
       });
-    }, (r, m) => { return createResultWithMessage(r, m); }, doneCallback);
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, doneCallback);
   }
 }
