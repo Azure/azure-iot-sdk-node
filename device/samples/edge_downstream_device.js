@@ -71,7 +71,7 @@ var connectCallback = function (err) {
 // Provide the Azure IoT device client via setOptions with the X509
 // Edge root CA certificate that was used to setup the Edge runtime
 var options = {
-  ca : fs.readFileSync(edge_ca_cert_path, 'utf-8').toString(),
+  ca : fs.readFileSync(edge_ca_cert_path, 'utf-8'),
 };
 
 client.setOptions(options, function(err) {
