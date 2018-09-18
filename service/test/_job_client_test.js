@@ -100,7 +100,7 @@ describe('JobClient', function() {
     });
   });
 
-  describe('getJob', function() {
+  describe('#getJob', function() {
     /*Tests_SRS_NODE_JOB_CLIENT_16_006: [The `getJob` method shall throw a `ReferenceError` if `jobId` is `null`, `undefined` or an empty string.]*/
     [undefined, null, ''].forEach(function(badValue) {
      testFalsyArg(new JobClient({}).getJob, 'jobId', badValue, [badValue]);
