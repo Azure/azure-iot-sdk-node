@@ -2,8 +2,6 @@
  *! Licensed under the MIT license. See LICENSE file in the project root for full license information.
  */
 
-import { IncomingMessage } from "http";
-
 'use strict';
 
 /**
@@ -163,10 +161,10 @@ export class SharedAccessSignatureUpdated {
 }
 
 export type ResultWithHttpResponse<TResult> = {
-  result: TResult;
+  responseBody: TResult;
   httpResponse: any;
 };
 
-export function createResultWithHttpResponse<TResult>(result: TResult, httpResponse: any): ResultWithHttpResponse<TResult> {
-    return { result: result, httpResponse: httpResponse };
+export function createResultWithHttpResponse<TResult>(responseBody: TResult, httpResponse: any): ResultWithHttpResponse<TResult> {
+    return { responseBody: responseBody, httpResponse: httpResponse };
 }

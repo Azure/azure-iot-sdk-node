@@ -6,30 +6,15 @@
 import { IncomingMessage } from 'http';
 import { TripleValueCallback } from 'azure-iot-common/lib/promise_utils';
 
-/**
- * @private
- */
 export type IncomingMessageCallback<TResult> = TripleValueCallback<TResult, IncomingMessage>;
 
-/**
- * @private
- */
 export type ResultWithIncomingMessage<TResult> = {
     result: TResult,
     message: IncomingMessage
 };
 
-export type RawResult = {
-    responseBody?: any,
-    response?: any
-};
-
 export function createResultWithIncomingMessage<TResult>(result: TResult, message: IncomingMessage): ResultWithIncomingMessage<TResult> {
     return { result: result, message: message };
-}
-
-export function createRawResult(responseBody: any, response: any): RawResult {
-    return { responseBody: responseBody, response: response };
 }
 
 /**

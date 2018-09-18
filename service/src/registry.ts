@@ -11,9 +11,9 @@ import { Twin } from './twin';
 import { Query } from './query';
 import { Configuration, ConfigurationContent } from './configuration';
 import { Device } from './device';
-import { IncomingMessageCallback, createResultWithIncomingMessage, ResultWithIncomingMessage, RawResult, createRawResult } from './interfaces';
+import { IncomingMessageCallback, createResultWithIncomingMessage, ResultWithIncomingMessage } from './interfaces';
 import { Module } from './module';
-import { TripleValueCallback, Callback, tripleValueCallbackToPromise } from 'azure-iot-common/lib/promise_utils';
+import { TripleValueCallback, Callback, HttpResponseCallback, tripleValueCallbackToPromise } from 'azure-iot-common/lib/promise_utils';
 import { createResultWithHttpResponse } from 'azure-iot-common/lib/results';
 
 // tslint:disable-next-line:no-var-requires
@@ -247,9 +247,9 @@ export class Registry {
    *                                the other methods), and a transport-specific
    *                                response object useful for logging or
    *                                debugging.
-   * @returns {Promise<RawResult> | void} Promise if no callback function was passed, void otherwise.
+   * @returns {Promise<ResultWithHttpResponse<any>> | void} Promise if no callback function was passed, void otherwise.
    */
-  delete(deviceId: string, done: TripleValueCallback<any, any>): Promise<RawResult> | void {
+  delete(deviceId: string, done: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
     return tripleValueCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_07_007: [The delete method shall throw ReferenceError if the supplied deviceId is falsy.]*/
       if (!deviceId) {
@@ -269,7 +269,7 @@ export class Registry {
       };
 
       this._restApiClient.executeApiCall('DELETE', path, httpHeaders, null, _callback);
-    }, createRawResult, done);
+    }, createResultWithHttpResponse, done);
   }
 
   /**
@@ -971,29 +971,32 @@ export class Registry {
    *
    * @param {String} deviceId     Device ID that owns the module.
    * @param {String} moduleId     Module ID to retrieve
-   * @param {Function} done       The callback which will be called with either an Error object
+   * @param {Function} [done]     The optional callback which will be called with either an Error object
    *                              or the module:azure-iothub.Module object for the requested module
+   * @returns {Promise<ResultWithHttpResponse<Module>> | void} Promise if no callback function was passed, void otherwise.
    *
    * @throws {ReferenceError}     If the deviceId, moduleId, or done argument is falsy.
    */
-  getModule(deviceId: string, moduleId: string, done: (err: Error, module?: Module, response?: any) => void): void {
-    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_031: [The `getModule` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, or `done` is falsy. ]*/
-    if (!deviceId) throw new ReferenceError('Argument \'deviceId\' cannot be falsy');
-    if (!moduleId) throw new ReferenceError('Argument \'moduleId\' cannot be falsy');
-    if (!done) throw new ReferenceError('Argument \'done\' cannot be falsy');
+  getModule(deviceId: string, moduleId: string, done: HttpResponseCallback<Module>): Promise<ResultWithHttpResponse<Module>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_031: [The `getModule` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, or `done` is falsy. ]*/
+      if (!deviceId) throw new ReferenceError('Argument \'deviceId\' cannot be falsy');
+      if (!moduleId) throw new ReferenceError('Argument \'moduleId\' cannot be falsy');
+      if (!_callback) throw new ReferenceError('Argument \'done\' cannot be falsy');
 
-    /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_032: [The `getModule` method shall construct an HTTP request using information supplied by the caller, as follows:
-    ```
-    get /devices/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
-    Authorization: <sharedAccessSignature>
-    Request-Id: <guid>
-    ```
-    ]*/
-    const path = `${endpoint.modulePath(encodeURIComponent(deviceId), encodeURIComponent(moduleId))}${endpoint.versionQueryString()}`;
-    this._restApiClient.executeApiCall('GET', path, null, null, done);
+      /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_032: [The `getModule` method shall construct an HTTP request using information supplied by the caller, as follows:
+      ```
+      get /devices/<encodeURIComponent(deviceId)>/modules/<encodeURIComponent(moduleId)>?api-version=<version> HTTP/1.1
+      Authorization: <sharedAccessSignature>
+      Request-Id: <guid>
+      ```
+      ]*/
+      const path = `${endpoint.modulePath(encodeURIComponent(deviceId), encodeURIComponent(moduleId))}${endpoint.versionQueryString()}`;
+      this._restApiClient.executeApiCall('GET', path, null, null, _callback);
+    }, (b, r) => { return createResultWithHttpResponse(b, r); }, done);
   }
 
-  _updateModule(module: Module, forceUpdateOrDone: boolean | TripleValueCallback<any, any>, done?: TripleValueCallback<any, any>): void {
+  _updateModule(module: Module, forceUpdateOrDone: boolean | HttpResponseCallback<any>, done?: HttpResponseCallback<any>): void {
     let forceUpdate: boolean;
     if (typeof (forceUpdateOrDone) === 'function') {
       forceUpdate = false;
@@ -1062,8 +1065,8 @@ export class Registry {
    *                                object is missing it's deviceId or moduleId property.
    */
   updateModule(module: Module, done: TripleValueCallback<any, any>): void;
-  updateModule(module: Module, forceUpdate: boolean, done: TripleValueCallback<any, any>): void;
-  updateModule(module: Module, forceUpdateOrDone: boolean | TripleValueCallback<any, any>, done?: TripleValueCallback<any, any>): Promise<ResultWithHttpResponse<any>> | void {
+  updateModule(module: Module, forceUpdate: boolean, done: HttpResponseCallback<any>): void;
+  updateModule(module: Module, forceUpdateOrDone: boolean | HttpResponseCallback<any>, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
     const callback = done || (forceUpdateOrDone instanceof Function ? forceUpdateOrDone : undefined);
 
     if (callback) {
@@ -1072,7 +1075,7 @@ export class Registry {
 
     return tripleValueCallbackToPromise((_callback) => {
       this._updateModule(module, forceUpdateOrDone, _callback);
-    }, (r, h) => createResultWithHttpResponse(r, h), callback);
+    }, (r, h) => createResultWithHttpResponse(r, h));
   }
 
   _removeModule(moduleOrDeviceId: Module | string, doneOrModuleId: TripleValueCallback<any, any> | string, done?: TripleValueCallback<any, any>): void {
@@ -1149,7 +1152,7 @@ export class Registry {
 
     return tripleValueCallbackToPromise((_callback) => {
       this._removeModule(moduleOrDeviceId, doneOrModuleId, _callback);
-    }, (r, h) => createResultWithHttpResponse(r, h), callback);
+    }, (r, h) => createResultWithHttpResponse(r, h));
   }
 
   private _bulkOperation(devices: Registry.DeviceDescription[], done: IncomingMessageCallback<any>): void {
