@@ -60,9 +60,10 @@ describe('ModuleClient', function () {
 
     // Tests_SRS_NODE_MODULE_CLIENT_13_033: [ The fromEnvironment method shall return a Promise if the callback argument is falsy. ]
     [null, undefined].forEach(function(badCallback) {
-      it('returns a Promise callback is falsy or not a function', function() {
+      it('returns a Promise if callback is falsy or not a function', function() {
           const result =  ModuleClient.fromEnvironment(null, badCallback);
-          assert(result, "Promise");
+          assert.instanceOf(result, Promise);
+          result.catch(_ => {});
       });
     });
 
