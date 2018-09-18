@@ -38,6 +38,13 @@ export type Callback<TResult> = DoubleValueCallback<Error, TResult>;
 export type TripleValueCallback<TResult1, TResult2> = (error?: Error, result1?: TResult1, result2?: TResult2) => void;
 
 /**
+ * Defines type describing callback with three results - response, raw HTTP response and an Error.
+ *
+ * @template TResult - Type of the result value.
+ */
+export type HttpResponseCallback<TResult> = TripleValueCallback<TResult, any>;
+
+/**
  * Converts method taking regular callback as a parameter to method returning a Promise if userCallback is not specified.
  * Otherwise, it executes the method with userCallback as the callback.
  *
@@ -60,17 +67,25 @@ export type TripleValueCallback<TResult1, TResult2> = (error?: Error, result1?: 
  */
 export function callbackToPromise<TResult>(callBackOperation: (callback: Callback<TResult>) => void, userCallback?: Callback<TResult>): Promise<TResult> | void {
   if (userCallback) {
+    if (!(userCallback instanceof Function)) {
+      throw new TypeError('Callback has to be a Function');
+    }
+
     return callBackOperation(userCallback);
   }
 
   return new Promise<TResult>((resolve, reject) => {
-    callBackOperation((error, result) => {
-      if (error) {
-        return reject(error);
-      }
+    try {
+      callBackOperation((error, result) => {
+        if (error) {
+          return reject(error);
+        }
 
-      return resolve(result);
-    });
+        return resolve(result);
+      });
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 
@@ -121,6 +136,10 @@ export function errorCallbackToPromise(callBackOperation: (callback: ErrorCallba
  */
 export function noErrorCallbackToPromise<TResult>(callBackOperation: (callback: NoErrorCallback<TResult>) => void, userCallback?: NoErrorCallback<TResult>): Promise<TResult> | void {
   if (userCallback) {
+    if (!(userCallback instanceof Function)) {
+      throw new TypeError('Callback has to be a Function');
+    }
+
     return callBackOperation(userCallback);
   }
 
@@ -164,21 +183,29 @@ export function doubleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>
   packResults: (result1: TResult1, result2: TResult2) => TPromiseResult,
   userCallback?: DoubleValueCallback<TResult1, TResult2>): Promise<TPromiseResult> | void {
   if (userCallback) {
+    if (!(userCallback instanceof Function)) {
+      throw new TypeError('Callback has to be a Function');
+    }
+
     return callBackOperation(userCallback);
   }
 
   return new Promise<TPromiseResult>((resolve, reject) => {
-    callBackOperation((result1, result2) => {
-      if (result1 instanceof Error) {
-        reject(result1);
-      }
+    try {
+      callBackOperation((result1, result2) => {
+        if (result1 instanceof Error) {
+          reject(result1);
+        }
 
-      if (result2 instanceof Error) {
-        reject(result2);
-      }
+        if (result2 instanceof Error) {
+          reject(result2);
+        }
 
-      return resolve(packResults(result1, result2));
-    });
+        return resolve(packResults(result1, result2));
+      });
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 
@@ -215,16 +242,24 @@ export function tripleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>
   packResults: (result1: TResult1, result2: TResult2) => TPromiseResult,
   userCallback?: TripleValueCallback<TResult1, TResult2>): Promise<TPromiseResult> | void {
   if (userCallback) {
+    if (!(userCallback instanceof Function)) {
+      throw new TypeError('Callback has to be a Function');
+    }
+
     return callBackOperation(userCallback);
   }
 
   return new Promise<TPromiseResult>((resolve, reject) => {
-    callBackOperation((error, result1, result2) => {
-      if (error) {
-        reject(error);
-      }
+    try {
+      callBackOperation((error, result1, result2) => {
+        if (error) {
+          reject(error);
+        }
 
-      return resolve(packResults(result1, result2));
-    });
+        resolve(packResults(result1, result2));
+      });
+    } catch (error) {
+      reject(error);
+    }
   });
 }

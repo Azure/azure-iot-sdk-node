@@ -27,6 +27,20 @@ describe('PromiseUtils', () => {
             assert.isUndefined(promise);
         });
 
+        it('throws when user callback is not a Function', function(done) {
+            const functionWithCallback = (callback) => {
+                callback();
+            };
+            const userCallback = 42;
+
+            assert.throws(function() {
+                callbackToPromise(functionWithCallback, userCallback);
+                done("It should never reach this code")
+            }, TypeError);
+
+            done();
+        });
+
         it('returns undefined result for empty callback', function (done) {
             const functionWithEmptyPromise = (callback) => {
                 callback();
@@ -180,6 +194,20 @@ describe('PromiseUtils', () => {
             assert.isUndefined(promise);
         });
 
+        it('throws when user callback is not a Function', function(done) {
+            const functionWithCallback = (callback) => {
+                callback();
+            };
+            const userCallback = 42;
+
+            assert.throws(function() {
+                errorCallbackToPromise(functionWithCallback, userCallback);
+                done("It should never reach this code")
+            }, TypeError);
+
+            done();
+        });
+
         it('returns empty result when action completed successfully and no result returned', function (done) {
             const functionWithErrorOnly = (callback) => {
                 callback();
@@ -236,6 +264,20 @@ describe('PromiseUtils', () => {
             assert.undefined(promise);
         });
 
+        it('throws when user callback is not a Function', function(done) {
+            const functionWithCallback = (callback) => {
+                callback();
+            };
+            const userCallback = 42;
+
+            assert.throws(function() {
+                noErrorCallbackToPromise(functionWithCallback, userCallback);
+                done("It should never reach this code")
+            }, TypeError);
+
+            done();
+        });
+
         it('returns value when callback invoked', function (done) {
             const value = 'sample value';
             const functionWithValueReturnOnly = (callback) => {
@@ -282,6 +324,20 @@ describe('PromiseUtils', () => {
 
             const promise = doubleValueCallbackToPromise(functionWithCallback, undefined, callback);
             assert.isUndefined(promise);
+        });
+
+        it('throws when user callback is not a Function', function(done) {
+            const functionWithCallback = (callback) => {
+                callback();
+            };
+            const userCallback = 42;
+
+            assert.throws(function() {
+                tripleValueCallbackToPromise(functionWithCallback, undefined, userCallback);
+                done("It should never reach this code")
+            }, TypeError);
+
+            done();
         });
 
         it('rejects when the first argument in callback is an error', function (done) {
@@ -380,6 +436,20 @@ describe('PromiseUtils', () => {
 
             const promise = tripleValueCallbackToPromise(functionWithCallback, undefined, callback);
             assert.isUndefined(promise);
+        });
+
+        it('throws when user callback is not a Function', function(done) {
+            const functionWithCallback = (callback) => {
+                callback();
+            };
+            const userCallback = 42;
+
+            assert.throws(function() {
+                tripleValueCallbackToPromise(functionWithCallback, undefined, userCallback);
+                done("It should never reach this code")
+            }, TypeError);
+
+            done();
         });
 
         it('rejects when an error is present', function (done) {
