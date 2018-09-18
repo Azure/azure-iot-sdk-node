@@ -58,10 +58,6 @@ export class ProvisioningServiceClient {
     }, createIndividualEnrollmentWithHttpResponse, callback);
   }
 
-  public _deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): void {
-    this._delete(this._enrollmentsPrefix, enrollmentOrId, etagOrCallback, deleteCallback);
-  }
-
   /**
    * @method           module:azure-iot-provisioning-service.ProvisioningServiceClient#deleteIndividualEnrollment
    * @description      Delete a device enrollment record.
@@ -71,12 +67,14 @@ export class ProvisioningServiceClient {
    * @returns {Promise<void> | void} Promise if no callback function was passed, void otherwise.
    */
   public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
-    const callback = deleteCallback || (etagOrCallback instanceof Function ? etagOrCallback : undefined);
-    if (callback) {
-      return this._deleteIndividualEnrollment(enrollmentOrId, etagOrCallback, deleteCallback);
+    if (!deleteCallback && etagOrCallback instanceof Function) {
+      deleteCallback = etagOrCallback;
+      etagOrCallback = undefined;
     }
 
-    return errorCallbackToPromise((_callback) => this._deleteIndividualEnrollment(enrollmentOrId, etagOrCallback as string, _callback), callback);
+    return errorCallbackToPromise((_callback) => {
+      this._delete(this._enrollmentsPrefix, enrollmentOrId, etagOrCallback, _callback);
+    }, deleteCallback);
   }
 
   /**
@@ -141,11 +139,12 @@ export class ProvisioningServiceClient {
    * @returns {Promise<void> | void} Promise if no callback function was passed, void otherwise.
    */
   public deleteEnrollmentGroup(enrollmentGroupOrId: string | EnrollmentGroup, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
-    if (deleteCallback || etagOrCallback instanceof Function) {
-      this._deleteEnrollmentGroup(enrollmentGroupOrId, etagOrCallback, deleteCallback);
+    if (etagOrCallback instanceof Function) {
+      deleteCallback = etagOrCallback;
+      etagOrCallback = undefined;
     }
 
-    return errorCallbackToPromise((_callback) => this._deleteEnrollmentGroup(enrollmentGroupOrId, etagOrCallback, _callback));
+    return errorCallbackToPromise((_callback) => this._deleteEnrollmentGroup(enrollmentGroupOrId, etagOrCallback, _callback), deleteCallback);
   }
 
   /**
@@ -234,6 +233,11 @@ export class ProvisioningServiceClient {
    * @returns {Promise<void> | void} Promise if no callback function was passed, void otherwise.
    */
   public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
+    if (etagOrCallback instanceof Function) {
+      deleteCallback = etagOrCallback;
+      etagOrCallback = undefined;
+    }
+
     return errorCallbackToPromise((_callback) => {
       this._delete(this._registrationsPrefix, idOrRegistrationState, etagOrCallback, _callback);
     }, deleteCallback);
