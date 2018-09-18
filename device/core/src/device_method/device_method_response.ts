@@ -62,7 +62,7 @@ export class DeviceMethodResponse {
    *
    * @param {Number}    status      A numeric status code to be sent back to the
    *                                service.
-   * @param {Object}    payload     [optional] The payload of the method response.
+   * @param {Object}    [payload]   [optional] The payload of the method response.
    * @param {Function}  [done]      [optional] A callback function which will be
    *                                called once the response has been sent back to
    *                                the service. An error object is passed as an
@@ -75,7 +75,16 @@ export class DeviceMethodResponse {
    *                                service in a previous call to it. This method
    *                                should be called only once.
    */
-  send(status: number, payload?: any, done?: ErrorCallback): Promise<void> | void {
+  send(status: number, payload?: any | ErrorCallback, done?: ErrorCallback): Promise<void> | void {
+    if (typeof (payload) === 'function') {
+      if (done !== undefined) {
+        throw new Error('Callback must be the last argument');
+      } else {
+        done = payload;
+        payload = null;
+      }
+    }
+
     return errorCallbackToPromise((_callback) => {
       // Codes_SRS_NODE_DEVICE_METHOD_RESPONSE_13_009: [ DeviceMethodResponse.send shall throw an Error object if it is called more than once for the same request. ]
       if (this.isResponseComplete) {
@@ -87,14 +96,7 @@ export class DeviceMethodResponse {
         throw new ReferenceError('"status" is "' + status + '". Expected a number.');
       }
 
-      if (typeof (payload) === 'function') {
-        if (_callback !== undefined) {
-          throw new Error('Callback must be the last argument');
-        } else {
-          _callback = payload;
-          payload = null;
-        }
-      }
+
 
       this.status = status;
       this.payload = payload;
