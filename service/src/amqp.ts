@@ -15,7 +15,7 @@ import { Client } from './client';
 import { ServiceReceiver } from './service_receiver.js';
 import { TripleValueCallback, tripleValueCallbackToPromise, Callback } from 'azure-iot-common/lib/promise_utils';
 import { IncomingMessage } from 'http';
-import { ResultWithIncomingMessage, IncomingMessageCallback, createResultWithMessage } from './interfaces.js';
+import { ResultWithIncomingMessage, IncomingMessageCallback, createResultWithIncomingMessage } from './interfaces.js';
 
 const UnauthorizedError = errors.UnauthorizedError;
 const DeviceNotFoundError = errors.DeviceNotFoundError;
@@ -428,7 +428,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
           _callback(null, new results.Connected());
         }
       });
-    }, (r, m) => { return createResultWithMessage(r, m); }, done);
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
   /**
@@ -469,7 +469,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
       /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_002: [The `send` method shall construct an AMQP request using the message passed in argument as the body of the message.]*/
       let amqpMessage = AmqpMessage.fromMessage(message);
       this._fsm.handle('send', amqpMessage, deviceEndpoint, handleResult('AMQP Transport: Could not send message', _callback));
-    }, (r, m) => { return createResultWithMessage(r, m); }, done);
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
   /**
@@ -483,7 +483,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
   getFeedbackReceiver(done?: IncomingMessageCallback<Client.ServiceReceiver>): Promise<ResultWithIncomingMessage<Client.ServiceReceiver>> | void {
     return tripleValueCallbackToPromise((_callback) => {
       this._fsm.handle('getFeedbackReceiver', handleResult('AMQP Transport: Could not get feedback receiver', _callback));
-    }, (r, m) => { return createResultWithMessage(r, m); }, done);
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
   /**
@@ -497,7 +497,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
   getFileNotificationReceiver(done?: IncomingMessageCallback<Client.ServiceReceiver>): Promise<ResultWithIncomingMessage<Client.ServiceReceiver>> | void {
     return tripleValueCallbackToPromise((_callback) => {
       this._fsm.handle('getFileNotificationReceiver', handleResult('AMQP Transport: Could not get file notification receiver', _callback));
-    }, (r, m) => { return createResultWithMessage(r, m); }, done);
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
   /**

@@ -11,7 +11,7 @@ import { Twin } from './twin';
 import { Query } from './query';
 import { Configuration, ConfigurationContent } from './configuration';
 import { Device } from './device';
-import { IncomingMessageCallback, createResultWithMessage } from './interfaces';
+import { IncomingMessageCallback, createResultWithIncomingMessage, ResultWithIncomingMessage, RawResult, createRawResult } from './interfaces';
 import { Module } from './module';
 import { TripleValueCallback, Callback, tripleValueCallbackToPromise, callbackToPromise } from 'azure-iot-common/lib/promise_utils';
 import { createResultWithHttpResponse } from 'azure-iot-common/lib/results';
@@ -216,58 +216,60 @@ export class Registry {
    *                                object useful for logging or debugging.
    * @returns {Promise<ResultWithHttpResponse<Device[]>> | void} Promise if no callback function was passed, void otherwise.
    */
-  list(done?: IncomingMessageCallback<Device[]> TODO): Promise<ResultWithHttpResponse<Device[]>> | void {
-    return tripleValueCallbackToPromise(() => {
+  list(done?: IncomingMessageCallback<Device[]>): Promise<ResultWithIncomingMessage<Device[]>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_029: [The `list` method shall construct an HTTP request using information supplied by the caller, as follows:
+         ```
+         GET /devices?api-version=<version> HTTP/1.1
+         Authorization: <config.sharedAccessSignature>
+         Request-Id: <guid>
+         ```]*/
+      const path = endpoint.devicePath('') + endpoint.versionQueryString();
 
-    }, cre);
-    /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_029: [The `list` method shall construct an HTTP request using information supplied by the caller, as follows:
-    ```
-    GET /devices?api-version=<version> HTTP/1.1
-    Authorization: <config.sharedAccessSignature>
-    Request-Id: <guid>
-    ```]*/
-    const path = endpoint.devicePath('') + endpoint.versionQueryString();
-
-    this._restApiClient.executeApiCall('GET', path, null, null, (err, devices, httpResponse) => {
-      if (err) {
-        done(err);
-      } else {
-        done(null, devices ? devices.map((device) => new Device(device)) : [], httpResponse);
-      }
-    });
+      this._restApiClient.executeApiCall('GET', path, null, null, (err, devices, httpResponse) => {
+        if (err) {
+          _callback(err);
+        } else {
+          _callback(null, devices ? devices.map((device) => new Device(device)) : [], httpResponse);
+        }
+      });
+    }, (r, h) => createResultWithIncomingMessage(r, h), done);
   }
 
   /**
    * @method            module:azure-iothub.Registry#delete
    * @description       Removes an existing device identity from an IoT hub.
    * @param {String}    deviceId    The identifier of an existing device identity.
-   * @param {Function}  done        The function to call when the operation is
+   * @param {Function}  [done]      The optional function to call when the operation is
    *                                complete. `done` will be called with three
    *                                arguments: an Error object (can be null), an
    *                                always-null argument (for consistency with
    *                                the other methods), and a transport-specific
    *                                response object useful for logging or
    *                                debugging.
+   * @returns {Promise<RawResult> | void} Promise if no callback function was passed, void otherwise.
    */
-  delete(deviceId: string, done: TripleValueCallback<any, any>): void {
-    /*Codes_SRS_NODE_IOTHUB_REGISTRY_07_007: [The delete method shall throw ReferenceError if the supplied deviceId is falsy.]*/
-    if (!deviceId) {
-      throw new ReferenceError('deviceId is \'' + deviceId + '\'');
-    }
+  delete(deviceId: string, done: TripleValueCallback<any, any>): Promise<RawResult> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_IOTHUB_REGISTRY_07_007: [The delete method shall throw ReferenceError if the supplied deviceId is falsy.]*/
+      if (!deviceId) {
+        throw new ReferenceError('deviceId is \'' + deviceId + '\'');
+      }
 
-    /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_030: [The `delete` method shall construct an HTTP request using information supplied by the caller, as follows:
-    ```
-    DELETE /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
-    Authorization: <config.sharedAccessSignature>
-    If-Match: *
-    Request-Id: <guid>
-    ```]*/
-    const path = endpoint.devicePath(encodeURIComponent(deviceId)) + endpoint.versionQueryString();
-    const httpHeaders = {
-      'If-Match': '*'
-    };
+      /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_030: [The `delete` method shall construct an HTTP request using information supplied by the caller, as follows:
+      ```
+      DELETE /devices/<encodeURIComponent(deviceInfo.deviceId)>?api-version=<version> HTTP/1.1
+      Authorization: <config.sharedAccessSignature>
+      If-Match: *
+      Request-Id: <guid>
+      ```]*/
+      const path = endpoint.devicePath(encodeURIComponent(deviceId)) + endpoint.versionQueryString();
+      const httpHeaders = {
+        'If-Match': '*'
+      };
 
-    this._restApiClient.executeApiCall('DELETE', path, httpHeaders, null, done);
+      this._restApiClient.executeApiCall('DELETE', path, httpHeaders, null, _callback);
+    }, createRawResult, done);
   }
 
   /**
@@ -283,6 +285,7 @@ export class Registry {
    *                                BulkRegistryOperationResult
    *                                and a transport-specific response object useful
    *                                for logging or debugging.
+   * @returns {Promise<XXX> | void} Promise if no callback function was passed, void otherwise.
    */
   addDevices(devices: Registry.DeviceDescription[], done: Registry.BulkDeviceIdentityCallback): void {
     this._processBulkDevices(devices, 'create', null, null, null, done);

@@ -4,6 +4,9 @@
 'use strict';
 
 import { IndividualEnrollment, EnrollmentGroup, DeviceRegistrationState } from './interfaces';
+import { tripleValueCallbackToPromise, ResultWithHttpResponse } from 'azure-iot-common';
+import { TripleValueCallback } from 'azure-iot-common/lib/promise_utils';
+import { createResultWithHttpResponse } from 'azure-iot-common/lib/results';
 
 /**
  * The query result.
@@ -25,7 +28,7 @@ export interface QuerySpecification {
     query: string;
 }
 
-export type QueryCallback = (err?: Error, result?: QueryResult, response?: any) => void;
+export type QueryCallback = TripleValueCallback<QueryResult, any>;
 
 export class Query {
   continuationToken: string;
@@ -42,14 +45,7 @@ export class Query {
     this.continuationToken = null;
   }
 
-  /**
-   * @method              module:azure-iot-provisioning-service.Query#next
-   * @description         Gets the next page of results for this query.
-   * @param {string}      continuationToken    Continuation Token used for paging through results (optional)
-   * @param {Function}    done                 The callback that will be called with either an Error object or
-   *                                           the results of the query.
-   */
-  next(continuationTokenOrCallback: string | QueryCallback, done?: QueryCallback): void {
+  _next(continuationTokenOrCallback: string | QueryCallback, done?: QueryCallback): void {
     let actualContinuationToken = this.continuationToken;
     let actualCallback: QueryCallback;
 
@@ -71,5 +67,23 @@ export class Query {
         actualCallback(null, result, response);
       }
     });
+  }
+
+  /**
+   * @method              module:azure-iot-provisioning-service.Query#next
+   * @description         Gets the next page of results for this query.
+   * @param {string}      continuationToken    Continuation Token used for paging through results (optional)
+   * @param {Function}    [done]               The optional callback that will be called with either an Error object or
+   *                                           the results of the query.
+   * @returns {Promise<ResultWithHttpResponse<QueryResult>> | void} Promise if no callback function was passed, void otherwise.
+   */
+  next(continuationTokenOrCallback: string | QueryCallback, done?: QueryCallback): Promise<ResultWithHttpResponse<QueryResult>> | void {
+    if (done || continuationTokenOrCallback instanceof Function) {
+      return this._next(continuationTokenOrCallback, done);
+    }
+
+    return tripleValueCallbackToPromise((_callback) => {
+      this._next(continuationTokenOrCallback, _callback);
+    }, (q: QueryResult, h) => createResultWithHttpResponse(q, h));
   }
 }

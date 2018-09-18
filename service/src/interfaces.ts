@@ -14,11 +14,23 @@ export type IncomingMessageCallback<TResult> = TripleValueCallback<TResult, Inco
 /**
  * @private
  */
-export type ResultWithIncomingMessage<TResult> = { result: TResult, message: IncomingMessage };
+export type ResultWithIncomingMessage<TResult> = {
+    result: TResult,
+    message: IncomingMessage
+};
 
-export function createResultWithMessage<TResult>(result: TResult, message: IncomingMessage): ResultWithIncomingMessage<TResult> {
+export type RawResult = {
+    responseBody?: any,
+    response?: any
+};
+
+export function createResultWithIncomingMessage<TResult>(result: TResult, message: IncomingMessage): ResultWithIncomingMessage<TResult> {
     return { result: result, message: message };
-  }
+}
+
+export function createRawResult(responseBody: any, response: any): RawResult {
+    return { responseBody: responseBody, response: response };
+}
 
 /**
  * Describes the parameters that are available for use with direct methods (also called device methods)

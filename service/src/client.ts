@@ -11,7 +11,7 @@ import * as ConnectionString from './connection_string';
 import { Amqp } from './amqp';
 import { DeviceMethod } from './device_method';
 import { RestApiClient } from 'azure-iot-http-base';
-import { DeviceMethodParams, IncomingMessageCallback, createResultWithMessage, ResultWithIncomingMessage } from './interfaces';
+import { DeviceMethodParams, IncomingMessageCallback, createResultWithIncomingMessage, ResultWithIncomingMessage } from './interfaces';
 import { tripleValueCallbackToPromise } from 'azure-iot-common/lib/promise_utils';
 import { IncomingMessage } from 'http';
 
@@ -88,7 +88,7 @@ export class Client extends EventEmitter {
             if (_callback) _callback(null, result);
           }
         });
-    }, (r, m) => { return createResultWithMessage(r, m); }, done);
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
   /**
@@ -118,7 +118,7 @@ export class Client extends EventEmitter {
           if (_callback) _callback(null, result);
         }
       });
-    }, (r, m) => { return createResultWithMessage(r, m); }, done);
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
   /**
@@ -179,7 +179,7 @@ export class Client extends EventEmitter {
           }
         }
       });
-    }, (r, m) => { return createResultWithMessage(r, m); }, done);
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
   _invokeDeviceMethod(deviceId: string, moduleIdOrMethodParams: string | DeviceMethodParams, methodParamsOrDone?: DeviceMethodParams | IncomingMessageCallback<any>, done?: IncomingMessageCallback<any>): void {
@@ -253,7 +253,7 @@ export class Client extends EventEmitter {
 
     return tripleValueCallbackToPromise((_callback) => {
       this._invokeDeviceMethod(deviceId, moduleIdOrMethodParams, methodParamsOrDone, _callback);
-    }, (r: any, m: IncomingMessage) => { return createResultWithMessage(r, m); }, callback);
+    }, (r: any, m: IncomingMessage) => { return createResultWithIncomingMessage(r, m); }, callback);
   }
 
   /**
@@ -289,7 +289,7 @@ export class Client extends EventEmitter {
           }
         }
       });
-    }, (r, m) => { return createResultWithMessage(r, m); }, done);
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
   /**
@@ -319,7 +319,7 @@ export class Client extends EventEmitter {
           }
         }
       });
-    }, (r, m) => { return createResultWithMessage(r, m); }, done);
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
   /**
