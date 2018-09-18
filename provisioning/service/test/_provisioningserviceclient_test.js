@@ -338,9 +338,9 @@ describe('ProvisioningServiceClient', function() {
         }, errors.ArgumentError);
       });
 
-      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_042: [The `deleteIndividualEnrollment` method, if the first argument is an IndividualEnrollment object, the second argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
-      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_047: [The `deleteEnrollmentGroup` method, if the first argument is an EnrollmentGroup object, the second argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
-      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_052: [The `deleteDeviceRegistrationState` method, if the first argument is an `DeviceRegistrationState` object, the second argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_042: [The `deleteIndividualEnrollment` method, if the first argument is an IndividualEnrollment object, the second argument if present, must be a callback, otherwise shall return a Promise.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_047: [The `deleteEnrollmentGroup` method, if the first argument is an EnrollmentGroup object, the second argument if present, must be a callback, otherwise shall return a Promise.] */
+      /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_052: [The `deleteDeviceRegistrationState` method, if the first argument is an `DeviceRegistrationState` object, the second argument if present, must be a callback, otherwise shall return a Promise.] */
       it('Throws argument error if first parameter is an object and second parameter is NOT a callback', function() {
         var de = new ProvisioningServiceClient({ host: 'host', sharedAccessSignature: 'sas' });
         assert.throws(function() {
