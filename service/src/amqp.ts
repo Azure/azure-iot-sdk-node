@@ -8,12 +8,14 @@ import * as dbg from 'debug';
 import * as machina from 'machina';
 import * as async from 'async';
 
-import { anHourFromNow, endpoint, errors, results, SharedAccessSignature, Message } from 'azure-iot-common';
+import { anHourFromNow, endpoint, errors, results, SharedAccessSignature, Message, callbackToPromise } from 'azure-iot-common';
 import { Amqp as Base, AmqpMessage, SenderLink, AmqpBaseTransportConfig } from 'azure-iot-amqp-base';
 import { translateError } from './amqp_service_errors.js';
-import { Callback } from './interfaces';
 import { Client } from './client';
 import { ServiceReceiver } from './service_receiver.js';
+import { TripleValueCallback, tripleValueCallbackToPromise, Callback } from 'azure-iot-common/lib/promise_utils';
+import { IncomingMessage } from 'http';
+import { ResultWithIncomingMessage, IncomingMessageCallback, createResultWithIncomingMessage } from './interfaces.js';
 
 const UnauthorizedError = errors.UnauthorizedError;
 const DeviceNotFoundError = errors.DeviceNotFoundError;
@@ -22,7 +24,7 @@ const debug = dbg('azure-iothub:Amqp');
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
 
-function handleResult(errorMessage: string, done: Callback<any>): Callback<any> {
+function handleResult(errorMessage: string, done: IncomingMessageCallback<any>): IncomingMessageCallback<any> {
   return (err, result) => {
     if (err) {
       /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_018: [All asynchronous instance methods shall call the `done` callback with either no arguments or a first null argument and a second argument that is the result of the operation if the operation succeeded.]*/
@@ -200,7 +202,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
                 debug('CBS initialized');
                 /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_003: [If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter audience, created from the sr of the sas signature, the next parameter of the actual sas, and a callback.]*/
                 const audience = SharedAccessSignature.parse(this._config.sharedAccessSignature.toString(), ['sr', 'sig', 'se']).sr;
-                const applicationSuppliedSas = typeof(this._config.sharedAccessSignature) === 'string';
+                const applicationSuppliedSas = typeof (this._config.sharedAccessSignature) === 'string';
                 const sasToken = applicationSuppliedSas ? this._config.sharedAccessSignature as string : (this._config.sharedAccessSignature as SharedAccessSignature).extend(anHourFromNow());
                 this._amqp.putToken(audience, sasToken, (err) => {
                   if (err) {
@@ -413,34 +415,40 @@ export class Amqp extends EventEmitter implements Client.Transport {
    * @private
    * @method             module:azure-iothub.Amqp#connect
    * @description        Establishes a connection with the IoT Hub instance.
-   * @param {Function}   done   Called when the connection is established of if an error happened.
+   * @param {TripleValueCallback<results.Connected, IncomingMessage>}   [done]   Optional callback called when the connection is established of if an error happened.
+   * @returns {Promise<results.Disconnected> | void} Promise if no callback function was passed, void otherwise.
    */
   /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_019: [The `connect` method shall call the `connect` method of the base AMQP transport and translate its result to the caller into a transport-agnostic object.]*/
-  connect(done?: Client.Callback<results.Connected>): void {
-    this._fsm.handle('connect', (err) => {
-      if (err) {
-        done(translateError('AMQP Transport: Could not connect', err));
-      } else {
-        done(null, new results.Connected());
-      }
-    });
+  connect(done?: TripleValueCallback<results.Connected, IncomingMessage>): Promise<ResultWithIncomingMessage<results.Connected>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      this._fsm.handle('connect', (err) => {
+        if (err) {
+          done(translateError('AMQP Transport: Could not connect', err));
+        } else {
+          _callback(null, new results.Connected());
+        }
+      });
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
   /**
    * @private
    * @method             module:azure-iothub.Amqp#disconnect
    * @description        Disconnects the link to the IoT Hub instance.
-   * @param {Function}   done   Called when disconnected of if an error happened.
+   * @param {Callback<results.Disconnected>}   [done]   Optional callback called when disconnected of if an error happened.
+   * @returns {Promise<results.Disconnected> | void} Promise if no callback function was passed, void otherwise.
    */
   /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_020: [** The `disconnect` method shall call the `disconnect` method of the base AMQP transport and translate its result to the caller into a transport-agnostic object.]*/
-  disconnect(done: Client.Callback<results.Disconnected>): void {
-    this._fsm.handle('disconnect', (err) => {
-      if (err) {
-        done(getTranslatedError(err, 'error while disconnecting'));
-      } else {
-        done(null, new results.Disconnected());
-      }
-    });
+  disconnect(done?: Callback<results.Disconnected>): Promise<results.Disconnected> | void {
+    return callbackToPromise((_callback) => {
+      this._fsm.handle('disconnect', (err) => {
+        if (err) {
+          _callback(getTranslatedError(err, 'error while disconnecting'));
+        } else {
+          _callback(null, new results.Disconnected());
+        }
+      });
+    }, done);
   }
 
   /**
@@ -449,62 +457,74 @@ export class Amqp extends EventEmitter implements Client.Transport {
    * @description        Sends a message to the IoT Hub.
    * @param {Message}  message    The [message]{@linkcode module:common/message.Message}
    *                              to be sent.
-   * @param {Function} done       The callback to be invoked when `send`
+   * @param {Function} [done]     The optional callback to be invoked when `send`
    *                              completes execution.
+   * @returns {Promise<ResultWithIncomingMessage<results.MessageEnqueued>> | void} Promise if no callback function was passed, void otherwise.
    */
   /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_002: [The send method shall construct an AMQP request using the message passed in argument as the body of the message.]*/
   /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_003: [The message generated by the send method should have its “to” field set to "/devices/(uriEncode<deviceId>)/messages/devicebound".]*/
-  send(deviceId: string, message: Message, done: Client.Callback<results.MessageEnqueued>): void {
-    const deviceEndpoint = endpoint.deviceMessagePath(encodeURIComponent(deviceId));
-    /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_002: [The `send` method shall construct an AMQP request using the message passed in argument as the body of the message.]*/
-    let amqpMessage = AmqpMessage.fromMessage(message);
-    this._fsm.handle('send', amqpMessage, deviceEndpoint, handleResult('AMQP Transport: Could not send message', done));
+  send(deviceId: string, message: Message, done?: IncomingMessageCallback<results.MessageEnqueued>): Promise<ResultWithIncomingMessage<results.MessageEnqueued>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      const deviceEndpoint = endpoint.deviceMessagePath(encodeURIComponent(deviceId));
+      /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_002: [The `send` method shall construct an AMQP request using the message passed in argument as the body of the message.]*/
+      let amqpMessage = AmqpMessage.fromMessage(message);
+      this._fsm.handle('send', amqpMessage, deviceEndpoint, handleResult('AMQP Transport: Could not send message', _callback));
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
   /**
    * @private
    * @method             module:azure-iothub.Amqp#getFeedbackReceiver
    * @description        Gets the {@linkcode AmqpReceiver} object that can be used to receive messages from the IoT Hub instance and accept/reject/release them.
-   * @param {Function}   done      Callback used to return the {@linkcode AmqpReceiver} object.
+   * @param {Function}   [done]      Optional callback used to return the {@linkcode AmqpReceiver} object.
+   * @returns {Promise<ResultWithIncomingMessage<Client.ServiceReceiver>> | void} Promise if no callback function was passed, void otherwise.
    */
   /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_013: [The `getFeedbackReceiver` method shall request an `AmqpReceiver` object from the base AMQP transport for the `/messages/serviceBound/feedback` endpoint.]*/
-  getFeedbackReceiver(done: Client.Callback<Client.ServiceReceiver>): void {
-    this._fsm.handle('getFeedbackReceiver', handleResult('AMQP Transport: Could not get feedback receiver', done));
+  getFeedbackReceiver(done?: IncomingMessageCallback<Client.ServiceReceiver>): Promise<ResultWithIncomingMessage<Client.ServiceReceiver>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      this._fsm.handle('getFeedbackReceiver', handleResult('AMQP Transport: Could not get feedback receiver', _callback));
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
   /**
    * @private
    * @method             module:azure-iothub.Amqp#getFileNotificationReceiver
    * @description        Gets the {@linkcode AmqpReceiver} object that can be used to receive messages from the IoT Hub instance and accept/reject/release them.
-   * @param {Function}   done      Callback used to return the {@linkcode AmqpReceiver} object.
+   * @param {Function}   [done]      Optional callback used to return the {@linkcode AmqpReceiver} object.
+   * @returns {Promise<Client.ServiceReceiver> | void} Promise if no callback function was passed, void otherwise.
    */
   /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_016: [The `getFeedbackReceiver` method shall request an `AmqpReceiver` object from the base AMQP transport for the `/messages/serviceBound/filenotifications` endpoint.]*/
-  getFileNotificationReceiver(done: Client.Callback<Client.ServiceReceiver>): void {
-    this._fsm.handle('getFileNotificationReceiver', handleResult('AMQP Transport: Could not get file notification receiver', done));
+  getFileNotificationReceiver(done?: IncomingMessageCallback<Client.ServiceReceiver>): Promise<ResultWithIncomingMessage<Client.ServiceReceiver>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      this._fsm.handle('getFileNotificationReceiver', handleResult('AMQP Transport: Could not get file notification receiver', _callback));
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
   /**
    * @private
    * Updates the shared access signature and puts a new CBS token.
    * @param sharedAccessSignature New shared access signature used to put a new CBS token.
-   * @param callback Function called when the callback has been successfully called.
+   * @param [callback] Optional function called when the callback has been successfully called.
+   * @returns {Promise<results.SharedAccessSignatureUpdated> | void} Promise if no callback function was passed, void otherwise.
    */
-  updateSharedAccessSignature(sharedAccessSignature: string, callback: (err?: Error, result?: results.SharedAccessSignatureUpdated) => void): void {
-    if (!sharedAccessSignature) {
-      /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_039: [The `updateSharedAccessSignature` shall throw a `ReferenceError` if the `sharedAccessSignature` argument is falsy.]*/
-      throw new ReferenceError('sharedAccessSignature cannot be \'' + sharedAccessSignature + '\'');
-    }
-
-    this._config.sharedAccessSignature = sharedAccessSignature;
-    this._fsm.handle('updateSharedAccessSignature', sharedAccessSignature, (err) => {
-      if (err) {
-        /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_017: [** All asynchronous instance methods shall call the `done` callback with a single parameter that is derived from the standard Javascript `Error` object if the operation failed.]*/
-        callback(err);
-      } else {
-        /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_018: [All asynchronous instance methods shall call the `done` callback with either no arguments or a first null argument and a second argument that is the result of the operation if the operation succeeded.]*/
-        callback(null, new results.SharedAccessSignatureUpdated(false));
+  updateSharedAccessSignature(sharedAccessSignature: string, callback?: Callback<results.SharedAccessSignatureUpdated>): Promise<results.SharedAccessSignatureUpdated> | void {
+    return callbackToPromise((_callback) => {
+      if (!sharedAccessSignature) {
+        /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_039: [The `updateSharedAccessSignature` shall throw a `ReferenceError` if the `sharedAccessSignature` argument is falsy.]*/
+        throw new ReferenceError('sharedAccessSignature cannot be \'' + sharedAccessSignature + '\'');
       }
-    });
+
+      this._config.sharedAccessSignature = sharedAccessSignature;
+      this._fsm.handle('updateSharedAccessSignature', sharedAccessSignature, (err) => {
+        if (err) {
+          /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_017: [** All asynchronous instance methods shall call the `_callback` callback with a single parameter that is derived from the standard Javascript `Error` object if the operation failed.]*/
+          _callback(err);
+        } else {
+          /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_018: [All asynchronous instance methods shall call the `_callback` callback with either no arguments or a first null argument and a second argument that is the result of the operation if the operation succeeded.]*/
+          _callback(null, new results.SharedAccessSignatureUpdated(false));
+        }
+      });
+    }, callback);
   }
 
   protected _getConnectionUri(): string {
@@ -521,4 +541,6 @@ export class Amqp extends EventEmitter implements Client.Transport {
       }
     });
   }
+
+
 }

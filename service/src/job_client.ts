@@ -11,6 +11,7 @@ import { RestApiClient } from 'azure-iot-http-base';
 import { DeviceMethod } from './device_method';
 import { Query } from './query';
 import { DeviceMethodParams } from './interfaces';
+import { TripleValueCallback, tripleValueCallbackToPromise } from 'azure-iot-common/lib/promise_utils';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -51,7 +52,7 @@ export class JobClient {
     if (!restApiClient) throw new ReferenceError('restApiClient cannot be \'' + restApiClient + '\'');
     this._restApiClient = restApiClient;
     if (this._restApiClient.setOptions) {
-      this._restApiClient.setOptions({http: { agent: new Agent({ keepAlive: true }) } });
+      this._restApiClient.setOptions({ http: { agent: new Agent({ keepAlive: true }) } });
     }
   }
 
@@ -60,37 +61,40 @@ export class JobClient {
    * @description       Requests information about an existing job.
    *
    * @param {String}    jobId       The identifier of an existing job.
-   * @param {Function}  done        The function to call when the operation is
+   * @param {Function}  [done]      The optional function to call when the operation is
    *                                complete. `done` will be called with three
    *                                arguments: an Error object (can be null), a
    *                                job object, and a transport-specific response
    *                                object useful for logging or debugging.
+   * @returns {Promise<JobStatusResponse>> | void} Promise if no callback function was passed, void otherwise.
    */
-  getJob(jobId: string | number, done: JobClient.JobCallback): void {
+  getJob(jobId: string | number, done?: TripleValueCallback<any, any>): Promise<JobStatusResponse> | void {
     /*Codes_SRS_NODE_JOB_CLIENT_16_006: [The `getJob` method shall throw a `ReferenceError` if `jobId` is `null`, `undefined` or an empty string.]*/
-    if (jobId === undefined || jobId === null || jobId === '') throw new ReferenceError('jobId cannot be \'' + jobId + '\'');
+    return tripleValueCallbackToPromise((_callback) => {
+      if (jobId === undefined || jobId === null || jobId === '') throw new ReferenceError('jobId cannot be \'' + jobId + '\'');
 
-    /*Codes_SRS_NODE_JOB_CLIENT_16_007: [The `getJob` method shall construct the HTTP request as follows:
-    ```
-    GET /jobs/v2/<jobId>?api-version=<version>
-    Authorization: <config.sharedAccessSignature>
-    Content-Type: application/json; charset=utf-8
-    Request-Id: <guid>
-    User-Agent: <sdk-name>/<sdk-version>
-    ```]*/
-    const path = '/jobs/v2/' + jobId + endpoint.versionQueryString();
-    this._restApiClient.executeApiCall('GET', path, null, null, done);
+      /*Codes_SRS_NODE_JOB_CLIENT_16_007: [The `getJob` method shall construct the HTTP request as follows:
+      ```
+      GET /jobs/v2/<jobId>?api-version=<version>
+      Authorization: <config.sharedAccessSignature>
+      Content-Type: application/json; charset=utf-8
+      Request-Id: <guid>
+      User-Agent: <sdk-name>/<sdk-version>
+      ```]*/
+      const path = '/jobs/v2/' + jobId + endpoint.versionQueryString();
+      this._restApiClient.executeApiCall('GET', path, null, null, _callback);
+    }, createJobStatusResponse, done);
   }
 
-/**
- * @method            module:azure-iothub.JobClient#createQuery
- * @description       Creates a query that can be used to return pages of existing job based on type and status.
- *
- * @param {String}    jobType     The type that should be used to filter results.
- * @param {String}    jobStatus   The status that should be used to filter results.
- * @param {Number}    pageSize    The number of elements to return per page.
- */
-  createQuery(jobType?: JobType, jobStatus?: JobStatus, pageSize?: number): Query{
+  /**
+   * @method            module:azure-iothub.JobClient#createQuery
+   * @description       Creates a query that can be used to return pages of existing job based on type and status.
+   *
+   * @param {String}    jobType     The type that should be used to filter results.
+   * @param {String}    jobStatus   The status that should be used to filter results.
+   * @param {Number}    pageSize    The number of elements to return per page.
+   */
+  createQuery(jobType?: JobType, jobStatus?: JobStatus, pageSize?: number): Query {
     return new Query(this._getJobsFunc(jobType, jobStatus, pageSize));
   }
 
@@ -99,26 +103,29 @@ export class JobClient {
    * @description       Cancels an existing job.
    *
    * @param {String}    jobId       The identifier of an existing job.
-   * @param {Function}  done        The function to call when the operation is
+   * @param {Function}  [done]      The optional function to call when the operation is
    *                                complete. `done` will be called with three
    *                                arguments: an Error object (can be null), a
    *                                job object, and a transport-specific response
    *                                object useful for logging or debugging.
+   * @returns {Promise<JobStatusResponse>> | void} Promise if no callback function was passed, void otherwise.
    */
-  cancelJob(jobId: string | number, done: JobClient.JobCallback): void {
+  cancelJob(jobId: string | number, done?: TripleValueCallback<any, any>): Promise<JobStatusResponse> | void {
     /*Codes_SRS_NODE_JOB_CLIENT_16_008: [The `cancelJob` method shall throw a `ReferenceError` if `jobId` is `null`, `undefined` or an empty string.]*/
-    if (jobId === undefined || jobId === null || jobId === '') throw new ReferenceError('jobId cannot be \'' + jobId + '\'');
+    return tripleValueCallbackToPromise((_callback) => {
+      if (jobId === undefined || jobId === null || jobId === '') throw new ReferenceError('jobId cannot be \'' + jobId + '\'');
 
-    /*Codes_SRS_NODE_JOB_CLIENT_16_009: [The `cancelJob` method shall construct the HTTP request as follows:
-    ```
-    POST /jobs/v2/<jobId>/cancel?api-version=<version>
-    Authorization: <config.sharedAccessSignature>
-    Content-Type: application/json; charset=utf-8
-    Request-Id: <guid>
-    User-Agent: <sdk-name>/<sdk-version>
-    ```]*/
-    const path = '/jobs/v2/' + jobId + '/cancel' + endpoint.versionQueryString();
-    this._restApiClient.executeApiCall('POST', path, null, null, done);
+      /*Codes_SRS_NODE_JOB_CLIENT_16_009: [The `cancelJob` method shall construct the HTTP request as follows:
+      ```
+      POST /jobs/v2/<jobId>/cancel?api-version=<version>
+      Authorization: <config.sharedAccessSignature>
+      Content-Type: application/json; charset=utf-8
+      Request-Id: <guid>
+      User-Agent: <sdk-name>/<sdk-version>
+      ```]*/
+      const path = '/jobs/v2/' + jobId + '/cancel' + endpoint.versionQueryString();
+      this._restApiClient.executeApiCall('POST', path, null, null, _callback);
+    }, createJobStatusResponse, done);
   }
 
   /**
@@ -132,93 +139,98 @@ export class JobClient {
    *                                      - methodName          The name of the method that shall be invoked.
    *                                      - payload             [optional] The payload to use for the method call.
    *                                      - responseTimeoutInSeconds [optional] The number of seconds IoT Hub shall wait for the device
-   * @param {Date}      jobStartTime      Time time at which the job should start
-   * @param {Number}    maxExecutionTimeInSeconds  The maximum time alloted for this job to run in seconds.
-   * @param {Function}  done              The function to call when the operation is
+   * @param {Date}      [jobStartTime]      Time time at which the job should start
+   * @param {Number}    [maxExecutionTimeInSeconds]  The maximum time alloted for this job to run in seconds.
+   * @param {Function}  [done]            The optional function to call when the operation is
    *                                      complete. `done` will be called with three
    *                                      arguments: an Error object (can be null), a
    *                                      job object, and a transport-specific response
    *                                      object useful for logging or debugging.
+   * @returns {Promise<JobStatusResponse>> | void} Promise if no callback function was passed, void otherwise.
    *
    * @throws {ReferenceError}   If one or more of the jobId, queryCondition or methodParams arguments are falsy.
    * @throws {ReferenceError}   If methodParams.methodName is falsy.
    * @throws {TypeError}        If the callback is not the last parameter
    */
-  scheduleDeviceMethod(jobId: string | number, queryCondition: string, methodParams: DeviceMethodParams, jobStartTime?: Date | JobClient.JobCallback, maxExecutionTimeInSeconds?: number | JobClient.JobCallback, done?: JobClient.JobCallback): void {
-    /*Codes_SRS_NODE_JOB_CLIENT_16_013: [The `scheduleDeviceMethod` method shall throw a `ReferenceError` if `jobId` is `null`, `undefined` or an empty string.]*/
-    if (jobId === undefined || jobId === null || jobId === '') throw new ReferenceError('jobId cannot be \'' + jobId + '\'');
-    /*Codes_SRS_NODE_JOB_CLIENT_16_014: [The `scheduleDeviceMethod` method shall throw a `ReferenceError` if `queryCondition` is falsy.]*/
-    if (!queryCondition) throw new ReferenceError('queryCondition cannot be \'' + queryCondition + '\'');
+  scheduleDeviceMethod(jobId: string | number, queryCondition: string, methodParams: DeviceMethodParams, jobStartTime?: Date | TripleValueCallback<any, any>, maxExecutionTimeInSeconds?: number | TripleValueCallback<any, any>, done?: TripleValueCallback<any, any>): Promise<JobStatusResponse> | void {
+    const callback = jobStartTime instanceof Function ? jobStartTime : (maxExecutionTimeInSeconds instanceof Function ? maxExecutionTimeInSeconds : done);
 
-    /*Codes_SRS_NODE_JOB_CLIENT_16_029: [The `scheduleDeviceMethod` method shall throw a `ReferenceError` if `methodParams` is falsy.*/
-    if (!methodParams) throw new ReferenceError('methodParams cannot be \'' + methodParams + '\'');
+    return tripleValueCallbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_JOB_CLIENT_16_013: [The `scheduleDeviceMethod` method shall throw a `ReferenceError` if `jobId` is `null`, `undefined` or an empty string.]*/
+      if (jobId === undefined || jobId === null || jobId === '') throw new ReferenceError('jobId cannot be \'' + jobId + '\'');
+      /*Codes_SRS_NODE_JOB_CLIENT_16_014: [The `scheduleDeviceMethod` method shall throw a `ReferenceError` if `queryCondition` is falsy.]*/
+      if (!queryCondition) throw new ReferenceError('queryCondition cannot be \'' + queryCondition + '\'');
 
-    /*Codes_SRS_NODE_JOB_CLIENT_16_015: [The `scheduleDeviceMethod` method shall throw a `ReferenceError` if `methodParams.methodName` is `null`, `undefined` or an empty string.]*/
-    if (methodParams.methodName === undefined || methodParams.methodName === null || methodParams.methodName === '') throw new ReferenceError('methodParams.methodName cannot be \'' + methodParams.methodName + '\'');
+      /*Codes_SRS_NODE_JOB_CLIENT_16_029: [The `scheduleDeviceMethod` method shall throw a `ReferenceError` if `methodParams` is falsy.*/
+      if (!methodParams) throw new ReferenceError('methodParams cannot be \'' + methodParams + '\'');
 
-    /*Codes_SRS_NODE_JOB_CLIENT_16_018: [If `jobStartTime` is a function, `jobStartTime` shall be considered the callback and a `TypeError` shall be thrown if `maxExecutionTimeInSeconds` and/or `done` are not `undefined`.]*/
-    if (typeof jobStartTime === 'function') {
-      if (maxExecutionTimeInSeconds || done) {
-        throw new TypeError('The callback must be the last parameter');
-      } else {
-        done = jobStartTime;
-        jobStartTime = null;
-        maxExecutionTimeInSeconds = null;
+      /*Codes_SRS_NODE_JOB_CLIENT_16_015: [The `scheduleDeviceMethod` method shall throw a `ReferenceError` if `methodParams.methodName` is `null`, `undefined` or an empty string.]*/
+      if (methodParams.methodName === undefined || methodParams.methodName === null || methodParams.methodName === '') throw new ReferenceError('methodParams.methodName cannot be \'' + methodParams.methodName + '\'');
+
+      /*Codes_SRS_NODE_JOB_CLIENT_16_018: [If `jobStartTime` is a function, `jobStartTime` shall be considered the callback and a `TypeError` shall be thrown if `maxExecutionTimeInSeconds` and/or `_callback` are not `undefined`.]*/
+      if (typeof jobStartTime === 'function') {
+        if (maxExecutionTimeInSeconds || done) {
+          throw new TypeError('The callback must be the last parameter');
+        } else {
+          _callback = jobStartTime;
+          jobStartTime = null;
+          maxExecutionTimeInSeconds = null;
+        }
+        /*Codes_SRS_NODE_JOB_CLIENT_16_019: [If `maxExecutionTimeInSeconds` is a function, `maxExecutionTimeInSeconds` shall be considered the callback and a `TypeError` shall be thrown if `_callback` is not `undefined`.]*/
+      } else if (typeof maxExecutionTimeInSeconds === 'function') {
+        if (done) {
+          throw new TypeError('The callback must be the last parameter');
+        } else {
+          _callback = maxExecutionTimeInSeconds;
+          maxExecutionTimeInSeconds = null;
+        }
       }
-    /*Codes_SRS_NODE_JOB_CLIENT_16_019: [If `maxExecutionTimeInSeconds` is a function, `maxExecutionTimeInSeconds` shall be considered the callback and a `TypeError` shall be thrown if `done` is not `undefined`.]*/
-    } else if (typeof maxExecutionTimeInSeconds === 'function') {
-      if (done) {
-        throw new TypeError('The callback must be the last parameter');
-      } else {
-        done = maxExecutionTimeInSeconds;
-        maxExecutionTimeInSeconds = null;
-      }
-    }
 
-    /*Codes_SRS_NODE_JOB_CLIENT_16_030: [The `scheduleDeviceMethod` method shall use the `DeviceMethod.defaultPayload` value if `methodParams.payload` is `undefined`.]*/
+      /*Codes_SRS_NODE_JOB_CLIENT_16_030: [The `scheduleDeviceMethod` method shall use the `DeviceMethod.defaultPayload` value if `methodParams.payload` is `undefined`.]*/
       /*Codes_SRS_NODE_JOB_CLIENT_16_031: [The `scheduleDeviceMethod` method shall use the `DeviceMethod.defaultTimeout` value if `methodParams.responseTimeoutInSeconds` is falsy.]*/
-    const fullMethodParams: DeviceMethodParams = {
-      methodName: methodParams.methodName,
-      payload: methodParams.payload || DeviceMethod.defaultPayload,
-      responseTimeoutInSeconds: methodParams.responseTimeoutInSeconds || DeviceMethod.defaultResponseTimeout
-    };
+      const fullMethodParams: DeviceMethodParams = {
+        methodName: methodParams.methodName,
+        payload: methodParams.payload || DeviceMethod.defaultPayload,
+        responseTimeoutInSeconds: methodParams.responseTimeoutInSeconds || DeviceMethod.defaultResponseTimeout
+      };
 
-    /*Codes_SRS_NODE_JOB_CLIENT_16_020: [The `scheduleDeviceMethod` method shall construct the HTTP request as follows:
-    ```
-    PUT /jobs/v2/<jobId>?api-version=<version>
-    Authorization: <config.sharedAccessSignature>
-    Content-Type: application/json; charset=utf-8
-    Request-Id: <guid>
-    User-Agent: <sdk-name>/<sdk-version>
+      /*Codes_SRS_NODE_JOB_CLIENT_16_020: [The `scheduleDeviceMethod` method shall construct the HTTP request as follows:
+      ```
+      PUT /jobs/v2/<jobId>?api-version=<version>
+      Authorization: <config.sharedAccessSignature>
+      Content-Type: application/json; charset=utf-8
+      Request-Id: <guid>
+      User-Agent: <sdk-name>/<sdk-version>
 
-    {
-      jobId: '<jobId>',
-      type: 'scheduleDirectRequest', // TBC
-      cloudToDeviceMethod: {
-        methodName: '<methodName>',
-        payload: <payload>,           // valid JSON object
-        timeoutInSeconds: methodTimeoutInSeconds // Number
-      },
-      queryCondition: '<queryCondition>', // if the query parameter is a string
-      startTime: <jobStartTime>,          // as an ISO-8601 date string
-      maxExecutionTimeInSeconds: <maxExecutionTimeInSeconds>        // format TBD
-    }
-    ```]*/
-    let jobDesc: JobDescription = {
-      jobId: jobId,
-      type: 'scheduleDeviceMethod',
-      cloudToDeviceMethod: fullMethodParams,
-      startTime: jobStartTime ? (jobStartTime as Date).toISOString() : null,
-      maxExecutionTimeInSeconds: maxExecutionTimeInSeconds as number
-    };
+      {
+        jobId: '<jobId>',
+        type: 'scheduleDirectRequest', // TBC
+        cloudToDeviceMethod: {
+          methodName: '<methodName>',
+          payload: <payload>,           // valid JSON object
+          timeoutInSeconds: methodTimeoutInSeconds // Number
+        },
+        queryCondition: '<queryCondition>', // if the query parameter is a string
+        startTime: <jobStartTime>,          // as an ISO-8601 date string
+        maxExecutionTimeInSeconds: <maxExecutionTimeInSeconds>        // format TBD
+      }
+      ```]*/
+      let jobDesc: JobDescription = {
+        jobId: jobId,
+        type: 'scheduleDeviceMethod',
+        cloudToDeviceMethod: fullMethodParams,
+        startTime: jobStartTime ? (jobStartTime as Date).toISOString() : null,
+        maxExecutionTimeInSeconds: maxExecutionTimeInSeconds as number
+      };
 
-    if (typeof queryCondition === 'string') {
-      jobDesc.queryCondition = queryCondition;
-    } else {
-      throw new TypeError('queryCondition must be a sql WHERE clause string');
-    }
+      if (typeof queryCondition === 'string') {
+        jobDesc.queryCondition = queryCondition;
+      } else {
+        throw new TypeError('queryCondition must be a sql WHERE clause string');
+      }
 
-    this._scheduleJob(jobDesc, done);
+      this._scheduleJob(jobDesc, _callback);
+    }, createJobStatusResponse, callback);
   }
 
   /**
@@ -229,79 +241,85 @@ export class JobClient {
    * @param {String}    queryCondition    A SQL query WHERE clause used to compute the list of devices
    *                                      on which this job should be run.
    * @param {Object}    patch             The twin patch that should be applied to the twins.
-   * @param {Date}      jobStartTime      Time time at which the job should start
-   * @param {Number}    maxExecutionTimeInSeconds  The maximum time alloted for this job to run in seconds.
-   * @param {Function}  done              The function to call when the operation is
+   * @param {Date}      [jobStartTime]      Time time at which the job should start
+   * @param {Number}    [maxExecutionTimeInSeconds]  The maximum time alloted for this job to run in seconds.
+   * @param {Function}  [done]            The optional function to call when the operation is
    *                                      complete. `done` will be called with three
    *                                      arguments: an Error object (can be null), a
    *                                      job object, and a transport-specific response
    *                                      object useful for logging or debugging.
+   * @returns {Promise<JobStatusResponse>> | void} Promise if no callback function was passed, void otherwise.
    *
    * @throws {ReferenceError}   If one or more of the jobId, queryCondition or patch arguments are falsy.
    * @throws {TypeError}        If the callback is not the last parameter
    */
-  scheduleTwinUpdate(jobId: string | number, queryCondition: string, patch: any, jobStartTime?: Date | JobClient.JobCallback, maxExecutionTimeInSeconds?: number | JobClient.JobCallback, done?: JobClient.JobCallback): void {
-    /*Codes_SRS_NODE_JOB_CLIENT_16_021: [The `scheduleTwinUpdate` method shall throw a `ReferenceError` if `jobId` is `null`, `undefined` or an empty string.]*/
-    if (jobId === undefined || jobId === null || jobId === '') throw new ReferenceError('jobId cannot be \'' + jobId + '\'');
-    /*Codes_SRS_NODE_JOB_CLIENT_16_022: [The `scheduleTwinUpdate` method shall throw a `ReferenceError` if `query` is falsy.]*/
-    if (!queryCondition) throw new ReferenceError('queryCondition cannot be \'' + queryCondition + '\'');
-    /*Codes_SRS_NODE_JOB_CLIENT_16_023: [The `scheduleTwinUpdate` method shall throw a `ReferenceError` if `patch` is falsy.]*/
-    if (!patch) throw new ReferenceError('patch cannot be \'' + patch + '\'');
+  scheduleTwinUpdate(jobId: string | number, queryCondition: string, patch: any, jobStartTime?: Date | TripleValueCallback<any, any>, maxExecutionTimeInSeconds?: number | TripleValueCallback<any, any>, done?: TripleValueCallback<any, any>): Promise<JobStatusResponse> | void {
+    const callback = jobStartTime instanceof Function ? jobStartTime : (maxExecutionTimeInSeconds instanceof Function ? maxExecutionTimeInSeconds : done);
 
-    /*Codes_SRS_NODE_JOB_CLIENT_16_024: [If `jobStartTime` is a function, `jobStartTime` shall be considered the callback and a `TypeError` shall be thrown if `maxExecutionTimeInSeconds` and/or `done` are not `undefined`.]*/
-    if (typeof jobStartTime === 'function') {
-      if (maxExecutionTimeInSeconds || done) {
-        throw new TypeError('The callback must be the last parameter');
-      } else {
-        done = jobStartTime;
-        jobStartTime = null;
-        maxExecutionTimeInSeconds = null;
+    return tripleValueCallbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_JOB_CLIENT_16_021: [The `scheduleTwinUpdate` method shall throw a `ReferenceError` if `jobId` is `null`, `undefined` or an empty string.]*/
+      if (jobId === undefined || jobId === null || jobId === '') throw new ReferenceError('jobId cannot be \'' + jobId + '\'');
+      /*Codes_SRS_NODE_JOB_CLIENT_16_022: [The `scheduleTwinUpdate` method shall throw a `ReferenceError` if `query` is falsy.]*/
+      if (!queryCondition) throw new ReferenceError('queryCondition cannot be \'' + queryCondition + '\'');
+      /*Codes_SRS_NODE_JOB_CLIENT_16_023: [The `scheduleTwinUpdate` method shall throw a `ReferenceError` if `patch` is falsy.]*/
+      if (!patch) throw new ReferenceError('patch cannot be \'' + patch + '\'');
+
+      /*Codes_SRS_NODE_JOB_CLIENT_16_024: [If `jobStartTime` is a function, `jobStartTime` shall be considered the callback and a `TypeError` shall be thrown if `maxExecutionTimeInSeconds` and/or `_callback` are not `undefined`.]*/
+      if (typeof jobStartTime === 'function') {
+        if (maxExecutionTimeInSeconds || done) {
+          throw new TypeError('The callback must be the last parameter');
+        } else {
+          _callback = jobStartTime;
+          jobStartTime = null;
+          maxExecutionTimeInSeconds = null;
+        }
+        /*Codes_SRS_NODE_JOB_CLIENT_16_025: [If `maxExecutionTimeInSeconds` is a function, `maxExecutionTimeInSeconds` shall be considered the callback and a `TypeError` shall be thrown if `_callback` is not `undefined`.]*/
+      } else if (typeof maxExecutionTimeInSeconds === 'function') {
+        if (done) {
+          throw new TypeError('The callback must be the last parameter');
+        } else {
+          _callback = maxExecutionTimeInSeconds;
+          maxExecutionTimeInSeconds = null;
+        }
       }
-    /*Codes_SRS_NODE_JOB_CLIENT_16_025: [If `maxExecutionTimeInSeconds` is a function, `maxExecutionTimeInSeconds` shall be considered the callback and a `TypeError` shall be thrown if `done` is not `undefined`.]*/
-    } else if (typeof maxExecutionTimeInSeconds === 'function') {
-      if (done) {
-        throw new TypeError('The callback must be the last parameter');
+
+      let jobDesc: JobDescription = {
+        jobId: jobId,
+        type: 'scheduleUpdateTwin',
+        updateTwin: patch,
+        startTime: jobStartTime ? (jobStartTime as Date).toISOString() : null,
+        maxExecutionTimeInSeconds: maxExecutionTimeInSeconds as number
+      };
+
+      if (typeof queryCondition === 'string') {
+        jobDesc.queryCondition = queryCondition;
       } else {
-        done = maxExecutionTimeInSeconds;
-        maxExecutionTimeInSeconds = null;
+        throw new TypeError('queryCondition must be a sql WHERE clause string');
       }
-    }
 
-    let jobDesc: JobDescription = {
-      jobId: jobId,
-      type: 'scheduleUpdateTwin',
-      updateTwin: patch,
-      startTime: jobStartTime ? (jobStartTime as Date).toISOString() : null,
-      maxExecutionTimeInSeconds: maxExecutionTimeInSeconds as number
-    };
+      /*Codes_SRS_NODE_JOB_CLIENT_16_026: [The `scheduleTwinUpdate` method shall construct the HTTP request as follows:
+      ```
+      PUT /jobs/v2/<jobId>?api-version=<version>
+      Authorization: <config.sharedAccessSignature>
+      Content-Type: application/json; charset=utf-8
+      Request-Id: <guid>
+      User-Agent: <sdk-name>/<sdk-version>
 
-    if (typeof queryCondition === 'string') {
-      jobDesc.queryCondition = queryCondition;
-    } else {
-      throw new TypeError('queryCondition must be a sql WHERE clause string');
-    }
+      {
+        jobId: '<jobId>',
+        type: 'scheduleTwinUpdate', // TBC
+        updateTwin: <patch>                 // Valid JSON object
+        queryCondition: '<queryCondition>', // if the query parameter is a string
+        startTime: <jobStartTime>,          // as an ISO-8601 date string
+        maxExecutionTimeInSeconds: <maxExecutionTimeInSeconds>        // format TBD
+      }
+      ```]*/
+      this._scheduleJob(jobDesc, _callback);
+    }, createJobStatusResponse, callback);
 
-    /*Codes_SRS_NODE_JOB_CLIENT_16_026: [The `scheduleTwinUpdate` method shall construct the HTTP request as follows:
-    ```
-    PUT /jobs/v2/<jobId>?api-version=<version>
-    Authorization: <config.sharedAccessSignature>
-    Content-Type: application/json; charset=utf-8
-    Request-Id: <guid>
-    User-Agent: <sdk-name>/<sdk-version>
-
-    {
-      jobId: '<jobId>',
-      type: 'scheduleTwinUpdate', // TBC
-      updateTwin: <patch>                 // Valid JSON object
-      queryCondition: '<queryCondition>', // if the query parameter is a string
-      startTime: <jobStartTime>,          // as an ISO-8601 date string
-      maxExecutionTimeInSeconds: <maxExecutionTimeInSeconds>        // format TBD
-    }
-    ```]*/
-    this._scheduleJob(jobDesc, done);
   }
 
-  private _getJobsFunc(jobType: JobType, jobStatus: JobStatus, pageSize: number): (continuationToken: string, done: JobClient.JobCallback) => void {
+  private _getJobsFunc(jobType: JobType, jobStatus: JobStatus, pageSize: number): (continuationToken: string, done: TripleValueCallback<any, any>) => void {
     /*Codes_SRS_NODE_JOB_CLIENT_16_035: [The `_getJobsFunc` function shall return a function that can be used by the `Query` object to get a new page of results]*/
     return (continuationToken, done) => {
       /*Codes_SRS_NODE_JOB_CLIENT_16_012: [The `_getJobsFunc` method shall construct the HTTP request as follows:
@@ -326,10 +344,10 @@ export class JobClient {
       }
 
       this._restApiClient.executeApiCall('GET', path, headers, null, done);
-      };
+    };
   }
 
-  private _scheduleJob(jobDesc: JobDescription, done: JobClient.JobCallback): void {
+  private _scheduleJob(jobDesc: JobDescription, done: TripleValueCallback<any, any>): void {
     const path = '/jobs/v2/' + encodeURIComponent(jobDesc.jobId.toString()) + endpoint.versionQueryString();
     const headers = {
       'Content-Type': 'application/json; charset=utf-8'
@@ -396,5 +414,14 @@ export class JobClient {
 }
 
 export namespace JobClient {
-  export type JobCallback = (err: Error, jobStatus?: any, response?: any) => void;
+  export type JobCallback = TripleValueCallback<any, any>; // (err: Error, jobStatus?: any, response?: any) => void;
+}
+
+export type JobStatusResponse = {
+  jobStatus: any;
+  response: any;
+};
+
+export function createJobStatusResponse(jobStatus: any, response: any): JobStatusResponse {
+  return { jobStatus: jobStatus, response: response };
 }

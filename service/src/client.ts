@@ -11,7 +11,9 @@ import * as ConnectionString from './connection_string';
 import { Amqp } from './amqp';
 import { DeviceMethod } from './device_method';
 import { RestApiClient } from 'azure-iot-http-base';
-import { Callback, DeviceMethodParams } from './interfaces';
+import { DeviceMethodParams, IncomingMessageCallback, createResultWithIncomingMessage, ResultWithIncomingMessage } from './interfaces';
+import { tripleValueCallbackToPromise } from 'azure-iot-common/lib/promise_utils';
+import { IncomingMessage } from 'http';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -47,7 +49,7 @@ export class Client extends EventEmitter {
 
     this._restApiClient = restApiClient;
     if (this._restApiClient && this._restApiClient.setOptions) {
-      this._restApiClient.setOptions({http: { agent: new Agent({ keepAlive: true }) } });
+      this._restApiClient.setOptions({ http: { agent: new Agent({ keepAlive: true }) } });
     }
 
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_021: [The `Client` constructor shall initialize the default retry policy to `ExponentialBackoffWithJitter` with a maximum timeout of 4 minutes.]*/
@@ -57,60 +59,66 @@ export class Client extends EventEmitter {
   /**
    * @method            module:azure-iothub.Client#open
    * @description       Opens the connection to an IoT hub.
-   * @param {Function}  done    The function to call when the operation is
+   * @param {Function}  [done]  The optional function to call when the operation is
    *                            complete. `done` will be passed an Error object
    *                            argument, which will be null if the operation
    *                            completed successfully.
+   * @returns {Promise<ResultWithIncomingMessage<results.Connected>> | void} Promise if no callback function was passed, void otherwise.
    */
-  open(done?: Callback<results.Connected>): void {
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_008: [The open method shall open a connection to the IoT Hub that was identified when the Client object was created (e.g., in Client.fromConnectionString).]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_009: [When the open method completes, the callback function (indicated by the done argument) shall be invoked with the following arguments:
-    err - standard JavaScript Error object (or subclass)]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_010: [The argument err passed to the callback done shall be null if the protocol operation was successful.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_011: [Otherwise the argument err shall have a transport property containing implementation-specific response information for use in logging and troubleshooting.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_012: [If the connection is already open when open is called, it shall have no effect—that is, the done callback shall be invoked immediately with a null argument.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_006: [The `open` method should not throw if the `done` callback is not specified.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_022: [The `open` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to connect the transport.]*/
-    const retryOp = new RetryOperation(this._retryPolicy, MAX_RETRY_TIMEOUT);
-    retryOp.retry((retryCallback) => {
-      this._transport.connect(retryCallback);
-    },
-    (err, result) => {
-      if (err) {
-        if (done) done(err);
-      } else {
-        /*Codes_SRS_NODE_IOTHUB_CLIENT_16_002: [If the transport successfully establishes a connection the `open` method shall subscribe to the `disconnect` event of the transport.]*/
-        this._transport.on('disconnect', this._disconnectHandler.bind(this));
-        if (done) done(null, result);
-      }
-    });
+  open(done?: IncomingMessageCallback<results.Connected>): Promise<ResultWithIncomingMessage<results.Connected>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_008: [The open method shall open a connection to the IoT Hub that was identified when the Client object was created (e.g., in Client.fromConnectionString).]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_009: [When the open method completes, the callback function (indicated by the done argument) shall be invoked with the following arguments:
+      err - standard JavaScript Error object (or subclass)]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_010: [The argument err passed to the callback done shall be null if the protocol operation was successful.]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_011: [Otherwise the argument err shall have a transport property containing implementation-specific response information for use in logging and troubleshooting.]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_012: [If the connection is already open when open is called, it shall have no effect—that is, the done callback shall be invoked immediately with a null argument.]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_16_006: [The `open` method should not throw if the `done` callback is not specified.]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_16_022: [The `open` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to connect the transport.]*/
+      const retryOp = new RetryOperation(this._retryPolicy, MAX_RETRY_TIMEOUT);
+      retryOp.retry((retryCallback) => {
+        this._transport.connect(retryCallback);
+      },
+        (err, result) => {
+          if (err) {
+            if (_callback) _callback(err);
+          } else {
+            /*Codes_SRS_NODE_IOTHUB_CLIENT_16_002: [If the transport successfully establishes a connection the `open` method shall subscribe to the `disconnect` event of the transport.]*/
+            this._transport.on('disconnect', this._disconnectHandler.bind(this));
+            if (_callback) _callback(null, result);
+          }
+        });
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
   /**
    * @method            module:azure-iothub.Client#close
    * @description       Closes the connection to an IoT hub.
-   * @param {Function}  done    The function to call when the operation is
+   * @param {Function}  [done]  The optional function to call when the operation is
    *                            complete. `done` will be passed an Error object
    *                            argument, which will be null if the operation
    *                            completed successfully.
+   * @returns {Promise<ResultWithIncomingMessage<results.Disconnected>> | void} Promise if no callback function was passed, void otherwise.
    */
-  close(done?: Callback<results.Disconnected>): void {
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_021: [The close method shall close the connection.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_022: [When the close method completes, the callback function (indicated by the done argument) shall be invoked with the following arguments:
-    err - standard JavaScript Error object (or subclass)]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_023: [The argument err passed to the callback done shall be null if the protocol operation was successful.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_024: [Otherwise the argument err shall have a transport property containing implementation-specific response information for use in logging and troubleshooting.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_025: [If the connection is not open when close is called, it shall have no effect— that is, the done callback shall be invoked immediately with null arguments.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_005: [The `close` method should not throw if the `done` callback is not specified.]*/
-    this._transport.disconnect((err, result) => {
-      if (err) {
-        if (done) done(err);
-      } else {
-        /*Codes_SRS_NODE_IOTHUB_CLIENT_16_003: [The `close` method shall remove the listener that has been attached to the transport `disconnect` event.]*/
-        this._transport.removeAllListeners('disconnect');
-        if (done) done(null, result);
-      }
-    });
+  close(done?: IncomingMessageCallback<results.Disconnected>): Promise<ResultWithIncomingMessage<results.Disconnected>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_021: [The close method shall close the connection.]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_022: [When the close method completes, the callback function (indicated by the done argument) shall be invoked with the following arguments:
+      err - standard JavaScript Error object (or subclass)]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_023: [The argument err passed to the callback _callback shall be null if the protocol operation was successful.]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_024: [Otherwise the argument err shall have a transport property containing implementation-specific response information for use in logging and troubleshooting.]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_025: [If the connection is not open when close is called, it shall have no effect— that is, the _callback callback shall be invoked immediately with null arguments.]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_16_005: [The `close` method should not throw if the `_callback` callback is not specified.]*/
+      this._transport.disconnect((err, result) => {
+        if (err) {
+          if (_callback) _callback(err);
+        } else {
+          /*Codes_SRS_NODE_IOTHUB_CLIENT_16_003: [The `close` method shall remove the listener that has been attached to the transport `disconnect` event.]*/
+          this._transport.removeAllListeners('disconnect');
+          if (_callback) _callback(null, result);
+        }
+      });
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
   /**
@@ -121,80 +129,66 @@ export class Client extends EventEmitter {
    *                              If `message` is not of type
    *                              {@link module:azure-iot-common.Message|Message},
    *                              it will be converted.
-   * @param {Function}  done      The function to call when the operation is
+   * @param {Function}  [done]    The optional function to call when the operation is
    *                              complete. `done` will be called with two
    *                              arguments: an Error object (can be null) and a
    *                              transport-specific response object useful for
    *                              logging or debugging.
+   * @returns {Promise<ResultWithIncomingMessage<results.MessageEnqueued>> | void} Promise if no callback function was passed, void otherwise.
    *
    * @throws {ReferenceError}     If `deviceId` or `message` is null, undefined or empty.
    */
-  send(deviceId: string, message: Message | Message.BufferConvertible, done?: Callback<results.MessageEnqueued>): void {
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_013: [The send method shall throw ReferenceError if the deviceId or message arguments are falsy.]*/
-    if (!deviceId) {
-      throw new ReferenceError('deviceId is \'' + deviceId + '\'');
-    }
-    if (!message) {
-      throw new ReferenceError('message is \'' + message + '\'');
-    }
-
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_014: [The `send` method shall convert the `message` object to type `azure-iot-common.Message` if it is not already of type `azure-iot-common.Message`.]*/
-    if ((<any>message.constructor).name !== 'Message') {
-      /*Codes_SRS_NODE_IOTHUB_CLIENT_18_016: [The `send` method shall throw an `ArgumentError` if the `message` argument is not of type `azure-iot-common.Message` or `azure-iot-common.Message.BufferConvertible`.]*/
-      if (!Message.isBufferConvertible(message)) {
-        throw new errors.ArgumentError('message is not of type Message or Message.BufferConvertible');
+  send(deviceId: string, message: Message | Message.BufferConvertible, done?: IncomingMessageCallback<results.MessageEnqueued>): Promise<ResultWithIncomingMessage<results.MessageEnqueued>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_013: [The send method shall throw ReferenceError if the deviceId or message arguments are falsy.]*/
+      if (!deviceId) {
+        throw new ReferenceError('deviceId is \'' + deviceId + '\'');
       }
-      message = new Message(message as Message.BufferConvertible);
-    }
+      if (!message) {
+        throw new ReferenceError('message is \'' + message + '\'');
+      }
 
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_015: [If the connection has not already been opened (e.g., by a call to open), the send method shall open the connection before attempting to send the message.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_016: [When the send method completes, the callback function (indicated by the done argument) shall be invoked with the following arguments:
-    err - standard JavaScript Error object (or subclass)
-    response - an implementation-specific response object returned by the underlying protocol, useful for logging and troubleshooting]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_017: [The argument err passed to the callback done shall be null if the protocol operation was successful.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_018: [Otherwise the argument err shall have a transport property containing implementation-specific response information for use in logging and troubleshooting.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_019: [If the deviceId has not been registered with the IoT Hub, send shall return an instance of DeviceNotFoundError.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_020: [If the queue which receives messages on behalf of the device is full, send shall return and instance of DeviceMaximumQueueDepthExceededError.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_023: [The `send` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to send the message.]*/
-    const retryOp = new RetryOperation(this._retryPolicy, MAX_RETRY_TIMEOUT);
-    retryOp.retry((retryCallback) => {
-      this._transport.send(deviceId, message as Message, retryCallback);
-    }, (err, result) => {
-      /*Codes_SRS_NODE_IOTHUB_CLIENT_16_030: [The `send` method shall not throw if the `done` callback is falsy.]*/
-      if (done) {
-        if (err) {
-          done(err);
-        } else {
-          done(null, result);
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_014: [The `send` method shall convert the `message` object to type `azure-iot-common.Message` if it is not already of type `azure-iot-common.Message`.]*/
+      if ((<any>message.constructor).name !== 'Message') {
+        /*Codes_SRS_NODE_IOTHUB_CLIENT_18_016: [The `send` method shall throw an `ArgumentError` if the `message` argument is not of type `azure-iot-common.Message` or `azure-iot-common.Message.BufferConvertible`.]*/
+        if (!Message.isBufferConvertible(message)) {
+          throw new errors.ArgumentError('message is not of type Message or Message.BufferConvertible');
         }
+        message = new Message(message as Message.BufferConvertible);
       }
-    });
+
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_015: [If the connection has not already been opened (e.g., by a call to open), the send method shall open the connection before attempting to send the message.]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_016: [When the send method completes, the callback function (indicated by the _callback argument) shall be invoked with the following arguments:
+      err - standard JavaScript Error object (or subclass)
+      response - an implementation-specific response object returned by the underlying protocol, useful for logging and troubleshooting]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_017: [The argument err passed to the callback _callback shall be null if the protocol operation was successful.]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_018: [Otherwise the argument err shall have a transport property containing implementation-specific response information for use in logging and troubleshooting.]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_019: [If the deviceId has not been registered with the IoT Hub, send shall return an instance of DeviceNotFoundError.]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_020: [If the queue which receives messages on behalf of the device is full, send shall return and instance of DeviceMaximumQueueDepthExceededError.]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_16_023: [The `send` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to send the message.]*/
+      const retryOp = new RetryOperation(this._retryPolicy, MAX_RETRY_TIMEOUT);
+      retryOp.retry((retryCallback) => {
+        this._transport.send(deviceId, message as Message, retryCallback);
+      }, (err, result) => {
+        /*Codes_SRS_NODE_IOTHUB_CLIENT_16_030: [The `send` method shall not throw if the `_callback` callback is falsy.]*/
+        if (_callback) {
+          if (err) {
+            _callback(err);
+          } else {
+            _callback(null, result);
+          }
+        }
+      });
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
-  /**
-   * @method            module:azure-iothub.Client#invokeDeviceMethod
-   * @description       Invokes a method on a particular device or module.
-   * @param {String}    deviceId            The identifier of an existing device identity.
-   * @param {String}    moduleId            The identifier of an existing module identity (optional)
-   * @param {Object}    params              An object describing the method and shall have the following properties:
-   *                                        - methodName          The name of the method that shall be invoked.
-   *                                        - payload             [optional] The payload to use for the method call.
-   *                                        - timeoutInSeconds    [optional] The number of seconds IoT Hub shall wait for the device
-   *                                                              to send a response before deeming the method execution a failure.
-   * @param {Function}  done                The callback to call with the result of the method execution.
-   *
-   * @throws {ReferenceError}  If one of the required parameters is null, undefined or empty.
-   * @throws {TypeError}       If one of the parameters is of the wrong type.
-   */
-  invokeDeviceMethod(deviceId: string, methodParams: DeviceMethodParams, done?: Callback<any>): void;
-  invokeDeviceMethod(deviceId: string, moduleId: string, methodParams: DeviceMethodParams, done?: Callback<any>): void;
-  invokeDeviceMethod(deviceId: string, moduleIdOrMethodParams: string | DeviceMethodParams, methodParamsOrDone?: DeviceMethodParams | Callback<any>, done?: Callback<any>): void {
+  _invokeDeviceMethod(deviceId: string, moduleIdOrMethodParams: string | DeviceMethodParams, methodParamsOrDone?: DeviceMethodParams | IncomingMessageCallback<any>, done?: IncomingMessageCallback<any>): void {
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_014: [The `invokeDeviceMethod` method shall throw a `ReferenceError` if `deviceId` is `null`, `undefined` or an empty string.]*/
     if (deviceId === undefined || deviceId === null || deviceId === '') throw new ReferenceError('deviceId cannot be \'' + deviceId + '\'');
 
     let actualModuleId: string = undefined;
     let actualMethodParams: DeviceMethodParams = undefined;
-    let actualCallback: Callback<any> = undefined;
+    let actualCallback: IncomingMessageCallback<any> = undefined;
 
     if (typeof moduleIdOrMethodParams === 'string') {
       actualModuleId = moduleIdOrMethodParams;
@@ -203,7 +197,7 @@ export class Client extends EventEmitter {
     } else {
       // actualModuleId stays undefined
       actualMethodParams = moduleIdOrMethodParams;
-      actualCallback = methodParamsOrDone as Callback<any>;
+      actualCallback = methodParamsOrDone as IncomingMessageCallback<any>;
     }
 
     // Validation of the validity of actualMethodParams is handled in the DeviceMethod constructor.
@@ -234,63 +228,98 @@ export class Client extends EventEmitter {
   }
 
   /**
+   * @method            module:azure-iothub.Client#invokeDeviceMethod
+   * @description       Invokes a method on a particular device or module.
+   * @param {String}    deviceId            The identifier of an existing device identity.
+   * @param {String}    moduleId            The identifier of an existing module identity (optional)
+   * @param {Object}    params              An object describing the method and shall have the following properties:
+   *                                        - methodName          The name of the method that shall be invoked.
+   *                                        - payload             [optional] The payload to use for the method call.
+   *                                        - timeoutInSeconds    [optional] The number of seconds IoT Hub shall wait for the device
+   *                                                              to send a response before deeming the method execution a failure.
+   * @param {Function}  [done]              The optional callback to call with the result of the method execution.
+   * @returns {ResultWithIncomingMessage<any> | void} Promise if no callback function was passed, void otherwise.
+   *
+   * @throws {ReferenceError}  If one of the required parameters is null, undefined or empty.
+   * @throws {TypeError}       If one of the parameters is of the wrong type.
+   */
+  invokeDeviceMethod(deviceId: string, methodParams: DeviceMethodParams, done?: IncomingMessageCallback<any>): void;
+  invokeDeviceMethod(deviceId: string, moduleId: string, methodParams: DeviceMethodParams, done?: IncomingMessageCallback<any>): void;
+  invokeDeviceMethod(deviceId: string, moduleIdOrMethodParams: string | DeviceMethodParams, methodParamsOrDone?: DeviceMethodParams | IncomingMessageCallback<any>, done?: IncomingMessageCallback<any>): Promise<ResultWithIncomingMessage<any>> | void {
+    const callback = done || (methodParamsOrDone instanceof Function ? methodParamsOrDone : undefined);
+    if (callback) {
+      return this._invokeDeviceMethod(deviceId, moduleIdOrMethodParams, methodParamsOrDone, done);
+    }
+
+    return tripleValueCallbackToPromise((_callback) => {
+      this._invokeDeviceMethod(deviceId, moduleIdOrMethodParams, methodParamsOrDone, _callback);
+    }, (r: any, m: IncomingMessage) => { return createResultWithIncomingMessage(r, m); }, callback);
+  }
+
+  /**
    * @method            module:azure-iothub.Client#getFeedbackReceiver
    * @description       Returns a AmqpReceiver object which emits events when new feedback messages are received by the client.
-   * @param {Function}  done      The function to call when the operation is
+   * @param {Function}  [done]    The optional function to call when the operation is
    *                              complete. `done` will be called with two
    *                              arguments: an Error object (can be null) and a
    *                              AmqpReceiver object.
+   * @returns {ResultWithIncomingMessage<Client.ServiceReceiver> | void} Promise if no callback function was passed, void otherwise.
    */
-  getFeedbackReceiver(done: Callback<Client.ServiceReceiver>): void {
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_027: [When the `getFeedbackReceiver` method completes, the callback function (indicated by the `done` argument) shall be invoked with the following arguments:
-    - `err` - standard JavaScript `Error` object (or subclass): `null` if the operation was successful
-    - `receiver` - an `AmqpReceiver` instance: `undefined` if the operation failed]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_030: [The FeedbackReceiver class shall inherit EventEmitter to provide consumers the ability to listen for (and stop listening for) events.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_031: [FeedbackReceiver shall expose the 'errorReceived' event, whose handler shall be called with the following arguments:
-    err – standard JavaScript Error object (or subclass)]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_032: [FeedbackReceiver shall expose the 'message' event, whose handler shall be called with the following arguments when a new feedback message is received from the IoT Hub:
-    message – a JavaScript object containing a batch of one or more feedback records]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_05_033: [getFeedbackReceiver shall return the same instance of Client.FeedbackReceiver every time it is called with a given instance of Client.]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_024: [The `getFeedbackReceiver` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to get a feedback receiver object.]*/
-    const retryOp = new RetryOperation(this._retryPolicy, MAX_RETRY_TIMEOUT);
-    retryOp.retry((retryCallback) => {
-      this._transport.getFeedbackReceiver(retryCallback);
-    }, (err, result) => {
-      if (done) {
-        if (err) {
-          done(err);
-        } else {
-          done(null, result);
+  getFeedbackReceiver(done?: IncomingMessageCallback<Client.ServiceReceiver>): Promise<ResultWithIncomingMessage<Client.ServiceReceiver>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_027: [When the `getFeedbackReceiver` method completes, the callback function (indicated by the `done` argument) shall be invoked with the following arguments:
+          - `err` - standard JavaScript `Error` object (or subclass): `null` if the operation was successful
+          - `receiver` - an `AmqpReceiver` instance: `undefined` if the operation failed]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_030: [The FeedbackReceiver class shall inherit EventEmitter to provide consumers the ability to listen for (and stop listening for) events.]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_031: [FeedbackReceiver shall expose the 'errorReceived' event, whose handler shall be called with the following arguments:
+      err – standard JavaScript Error object (or subclass)]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_032: [FeedbackReceiver shall expose the 'message' event, whose handler shall be called with the following arguments when a new feedback message is received from the IoT Hub:
+      message – a JavaScript object containing a batch of one or more feedback records]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_05_033: [getFeedbackReceiver shall return the same instance of Client.FeedbackReceiver every time it is called with a given instance of Client.]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_16_024: [The `getFeedbackReceiver` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to get a feedback receiver object.]*/
+      const retryOp = new RetryOperation(this._retryPolicy, MAX_RETRY_TIMEOUT);
+      retryOp.retry((retryCallback) => {
+        this._transport.getFeedbackReceiver(retryCallback);
+      }, (err, result) => {
+        if (_callback) {
+          if (err) {
+            _callback(err);
+          } else {
+            _callback(null, result);
+          }
         }
-      }
-    });
+      });
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
   /**
    * @method            module:azure-iothub.Client#getFileNotificationReceiver
    * @description       Returns a AmqpReceiver object which emits events when new file upload notifications are received by the client.
-   * @param {Function}  done      The function to call when the operation is
+   * @param {Function}  [done]    The optional function to call when the operation is
    *                              complete. `done` will be called with two
    *                              arguments: an Error object (can be null) and a
    *                              AmqpReceiver object.
+   * @returns {ResultWithIncomingMessage<Client.ServiceReceiver> | void} Promise if no callback function was passed, void otherwise.
    */
-  getFileNotificationReceiver(done: Callback<Client.ServiceReceiver>): void {
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_001: [When the `getFileNotificationReceiver` method completes, the callback function (indicated by the `done` argument) shall be invoked with the following arguments:
-  - `err` - standard JavaScript `Error` object (or subclass): `null` if the operation was successful
-  - `receiver` - an `AmqpReceiver` instance: `undefined` if the operation failed]*/
-    /*Codes_SRS_NODE_IOTHUB_CLIENT_16_025: [The `getFileNotificationReceiver` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to send the get a feedback receiver object.]*/
-    const retryOp = new RetryOperation(this._retryPolicy, MAX_RETRY_TIMEOUT);
-    retryOp.retry((retryCallback) => {
-      this._transport.getFileNotificationReceiver(retryCallback);
-    }, (err, result) => {
-      if (done) {
-        if (err) {
-          done(err);
-        } else {
-          done(null, result);
+  getFileNotificationReceiver(done?: IncomingMessageCallback<Client.ServiceReceiver>): Promise<ResultWithIncomingMessage<Client.ServiceReceiver>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_16_001: [When the `getFileNotificationReceiver` method completes, the callback function (indicated by the `done` argument) shall be invoked with the following arguments:
+       - `err` - standard JavaScript `Error` object (or subclass): `null` if the operation was successful
+       - `receiver` - an `AmqpReceiver` instance: `undefined` if the operation failed]*/
+      /*Codes_SRS_NODE_IOTHUB_CLIENT_16_025: [The `getFileNotificationReceiver` method shall use the retry policy defined either by default or by a call to `setRetryPolicy` if necessary to send the get a feedback receiver object.]*/
+      const retryOp = new RetryOperation(this._retryPolicy, MAX_RETRY_TIMEOUT);
+      retryOp.retry((retryCallback) => {
+        this._transport.getFileNotificationReceiver(retryCallback);
+      }, (err, result) => {
+        if (_callback) {
+          if (err) {
+            _callback(err);
+          } else {
+            _callback(null, result);
+          }
         }
-      }
-    });
+      });
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
   }
 
   /**
@@ -346,7 +375,7 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_016: [The `fromConnectionString` method shall use the `Transport` constructor passed as argument to instantiate a transport object if it's not falsy.]*/
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_017: [The `fromConnectionString` method shall use the default Transport (Amqp) if the `Transport` optional argument is falsy.]*/
     if (!transportCtor) {
-        transportCtor = Amqp;
+      transportCtor = Amqp;
     }
 
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_015: [The `fromConnectionString` method shall create a new transport instance and pass it a config object formed from the connection string given as argument.]*/
@@ -381,8 +410,8 @@ export class Client extends EventEmitter {
 
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_019: [The `fromSharedAccessSignature` method shall use the `Transport` constructor passed as argument to instantiate a transport object if it's not falsy.]*/
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_020: [The `fromSharedAccessSignature` method shall use the default Transport (Amqp) if the `Transport` optional argument is falsy.]*/
-    if (!transportCtor){
-        transportCtor = Amqp;
+    if (!transportCtor) {
+      transportCtor = Amqp;
     }
 
     const sas = SharedAccessSignature.parse(sharedAccessSignature);
@@ -400,42 +429,41 @@ export class Client extends EventEmitter {
   }
 }
 
-
 export namespace Client {
   export type Callback<T> = (err: Error, result?: T) => void;
   export interface TransportConfigOptions {
     /**
      * Hostname of the Azure IoT hub. (<IoT hub name>.azure-devices.net).
      */
-      host: string;
-      /**
-       * @deprecated This is not used anywhere anymore.
-       * Name of the Azure IoT hub. (The first section of the Azure IoT hub hostname)
-       */
-      hubName?: string;
-      /**
-       * The name of the policy used to connect to the Azure IoT Hub service.
-       */
-      keyName: string;
-      /**
-       * The shared access signature token used to authenticate the connection with the Azure IoT hub.
-       */
-      sharedAccessSignature: string | SharedAccessSignature;
+    host: string;
+    /**
+     * @deprecated This is not used anywhere anymore.
+     * Name of the Azure IoT hub. (The first section of the Azure IoT hub hostname)
+     */
+    hubName?: string;
+    /**
+     * The name of the policy used to connect to the Azure IoT Hub service.
+     */
+    keyName: string;
+    /**
+     * The shared access signature token used to authenticate the connection with the Azure IoT hub.
+     */
+    sharedAccessSignature: string | SharedAccessSignature;
   }
 
   export interface ServiceReceiver extends Receiver {
-      complete(message: Message, done?: Callback<results.MessageCompleted>): void;
-      abandon(message: Message, done?: Callback<results.MessageAbandoned>): void;
-      reject(message: Message, done?: Callback<results.MessageRejected>): void;
+    complete(message: Message, done?: Callback<results.MessageCompleted>): void;
+    abandon(message: Message, done?: Callback<results.MessageAbandoned>): void;
+    reject(message: Message, done?: Callback<results.MessageRejected>): void;
   }
 
   export interface Transport extends EventEmitter {
-      connect(done?: Callback<results.Connected>): void;
-      disconnect(done: Callback<results.Disconnected>): void;
-      send(deviceId: string, message: Message, done?: Callback<results.MessageEnqueued>): void;
-      getFeedbackReceiver(done: Callback<ServiceReceiver>): void;
-      getFileNotificationReceiver(done: Callback<ServiceReceiver>): void;
+    connect(done?: Callback<results.Connected>): void;
+    disconnect(done: Callback<results.Disconnected>): void;
+    send(deviceId: string, message: Message, done?: Callback<results.MessageEnqueued>): void;
+    getFeedbackReceiver(done: Callback<ServiceReceiver>): void;
+    getFileNotificationReceiver(done: Callback<ServiceReceiver>): void;
   }
 
-  export type TransportCtor = new(config: Client.TransportConfigOptions) => Client.Transport;
+  export type TransportCtor = new (config: Client.TransportConfigOptions) => Client.Transport;
 }

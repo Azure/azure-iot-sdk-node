@@ -78,7 +78,6 @@ describe('Device Client', function () {
     });
   });
 
-
   describe('#uploadToBlob', function() {
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_037: [The `uploadToBlob` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
     [undefined, null, ''].forEach(function (blobName) {
@@ -391,14 +390,13 @@ describe('Device Client', function () {
       });
     });
 
-    // Tests_SRS_NODE_DEVICE_CLIENT_13_022: [ onDeviceMethod shall throw a ReferenceError if callback is falsy. ]
+    // Tests_SRS_NODE_DEVICE_CLIENT_13_022: [ onDeviceMethod returns a Promise if callback is falsy. ]
     [undefined, null].forEach(function (callback) {
-      it('throws ReferenceError when callback is "' + callback + '"', function () {
+      it('returns a Promise when callback is "' + callback + '"', function () {
         var transport = new FakeMethodTransport();
         var client = new Client(transport);
-        assert.throws(function () {
-          client.onDeviceMethod('doSomeTests', callback);
-        }, ReferenceError);
+        const promise = client.onDeviceMethod('doSomeTests', callback);
+        assert.typeOf(promise, "Promise");
       });
     });
 

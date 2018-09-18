@@ -4,8 +4,9 @@
 'use strict';
 
 import { Twin } from './twin';
-import { Callback } from './interfaces';
 import { Registry } from './registry';
+import { IncomingMessageCallback, ResultWithIncomingMessage, createResultWithIncomingMessage } from './interfaces';
+import { tripleValueCallbackToPromise } from 'azure-iot-common/lib/promise_utils';
 
 /**
  * Constructs a Query object that provides APIs to trigger the execution of a device query.
@@ -23,7 +24,7 @@ export class Query {
   hasMoreResults: boolean;
 
   private _registry: Registry;
-  private _executeQueryFn: (continuationToken: string, done: Callback<any>) => void;
+  private _executeQueryFn: (continuationToken: string, done: IncomingMessageCallback<any>) => void;
 
   /**
    * @private
@@ -31,7 +32,7 @@ export class Query {
    * @param {Function}       executeQueryFn  The function that should be called to get a new page.
    * @param {Registry}       registry        [optional] Registry client used to create Twin objects (used in nextAsTwin()).
    */
-  constructor(executeQueryFn: (continuationToken: string, done: Callback<any>) => void, registry?: Registry) {
+  constructor(executeQueryFn: (continuationToken: string, done: IncomingMessageCallback<any>) => void, registry?: Registry) {
     if (!executeQueryFn) throw new ReferenceError('executeQueryFn cannot be \'' + executeQueryFn + '\'');
     if (typeof executeQueryFn !== 'function') throw new TypeError('executeQueryFn cannot be \'' + typeof executeQueryFn + '\'');
 
@@ -46,72 +47,82 @@ export class Query {
    * @method              module:azure-iothub.Query#next
    * @description         Gets the next page of results for this query.
    * @param {string}      continuationToken    Continuation Token used for paging through results (optional)
-   * @param {Function}    done                 The callback that will be called with either an Error object or
+   * @param {Function}    [done]               The optional callback that will be called with either an Error object or
    *                                           the results of the query.
+   * @returns {Promise<ResultWithIncomingMessage<any>> | void} Promise if no callback function was passed, void otherwise.
    */
-  next(continuationTokenOrCallback: string | Callback<any>, done?: Callback<any>): void {
-    let actualContinuationToken = this.continuationToken;
-    let actualCallback: Callback<any>;
+  next(continuationTokenOrCallback: string | IncomingMessageCallback<any>, done?: IncomingMessageCallback<any>): Promise<ResultWithIncomingMessage<any>> | void {
+    const callback = done || (continuationTokenOrCallback instanceof Function ? continuationTokenOrCallback : undefined);
 
-    /*Codes_SRS_NODE_SERVICE_QUERY_16_016: [If `continuationToken` is a function and `done` is undefined the `next` method shall assume that `continuationToken` is actually the callback and us it as such (see requirements associated with the `done` parameter)]*/
-    if (typeof continuationTokenOrCallback === 'function' && !done) {
-      actualCallback = continuationTokenOrCallback as Callback<any>;
-    } else {
-      /*Codes_SRS_NODE_SERVICE_QUERY_16_017: [the `next` method shall use the `continuationToken` passed as argument instead of its own property `Query.continuationToken` if it's not falsy.]*/
-      actualContinuationToken = continuationTokenOrCallback as string;
-      actualCallback = done as Callback<any>;
-    }
+    return tripleValueCallbackToPromise((_callback) => {
+      let actualContinuationToken = this.continuationToken;
+      let actualCallback: IncomingMessageCallback<any>;
 
-    this._executeQueryFn(actualContinuationToken, (err, result, response) => {
-      if (err) {
-        /*Codes_SRS_NODE_SERVICE_QUERY_16_008: [The `next` method shall call the `done` callback with a single argument that is an instance of the standard Javascript `Error` object if the request failed.]*/
-        actualCallback(err);
+      /*Codes_SRS_NODE_SERVICE_QUERY_16_016: [If `continuationToken` is a function and `done` is undefined the `next` method shall assume that `continuationToken` is actually the callback and us it as such (see requirements associated with the `done` parameter)]*/
+      if (typeof continuationTokenOrCallback === 'function' && !_callback) {
+        actualCallback = continuationTokenOrCallback as IncomingMessageCallback<any>;
       } else {
-        /*Codes_SRS_NODE_SERVICE_QUERY_16_006: [The `next` method shall set the `Query.continuationToken` property to the `continuationToken` value of the query result.]*/
-        this.continuationToken = response.headers['x-ms-continuation'] as string;
-
-        /*Codes_SRS_NODE_SERVICE_QUERY_16_013: [The `next` method shall set the `Query.hasMoreResults` property to `true` if the `continuationToken` property of the result object is not `null`.]*/
-        /*Codes_SRS_NODE_SERVICE_QUERY_16_014: [The `next` method shall set the `Query.hasMoreResults` property to `false` if the `continuationToken` property of the result object is `null`.]*/
-        this.hasMoreResults = this.continuationToken !== undefined;
-
-        /*Codes_SRS_NODE_SERVICE_QUERY_16_007: [The `next` method shall call the `done` callback with a `null` error object, the results of the query and the response of the underlying transport if the request was successful.]*/
-        actualCallback(null, result, response);
+        /*Codes_SRS_NODE_SERVICE_QUERY_16_017: [the `next` method shall use the `continuationToken` passed as argument instead of its own property `Query.continuationToken` if it's not falsy.]*/
+        actualContinuationToken = continuationTokenOrCallback as string;
+        actualCallback = _callback as IncomingMessageCallback<any>;
       }
-    });
+
+      this._executeQueryFn(actualContinuationToken, (err, result, response) => {
+        if (err) {
+          /*Codes_SRS_NODE_SERVICE_QUERY_16_008: [The `next` method shall call the `_callback` callback with a single argument that is an instance of the standard Javascript `Error` object if the request failed.]*/
+          actualCallback(err);
+        } else {
+          /*Codes_SRS_NODE_SERVICE_QUERY_16_006: [The `next` method shall set the `Query.continuationToken` property to the `continuationToken` value of the query result.]*/
+          this.continuationToken = response.headers['x-ms-continuation'] as string;
+
+          /*Codes_SRS_NODE_SERVICE_QUERY_16_013: [The `next` method shall set the `Query.hasMoreResults` property to `true` if the `continuationToken` property of the result object is not `null`.]*/
+          /*Codes_SRS_NODE_SERVICE_QUERY_16_014: [The `next` method shall set the `Query.hasMoreResults` property to `false` if the `continuationToken` property of the result object is `null`.]*/
+          this.hasMoreResults = this.continuationToken !== undefined;
+
+          /*Codes_SRS_NODE_SERVICE_QUERY_16_007: [The `next` method shall call the `_callback` callback with a `null` error object, the results of the query and the response of the underlying transport if the request was successful.]*/
+          actualCallback(null, result, response);
+        }
+      });
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, callback);
   }
 
   /**
    * @method              module:azure-iothub.Query#nextAsTwin
    * @description         Gets the next page of results for this query and cast them as Twins.
    * @param {string}      continuationToken    Continuation Token used for paging through results (optional)
-   * @param {Function}    done                 The callback that will be called with either an Error object or
+   * @param {Function}    [done]               The optional callback that will be called with either an Error object or
    *                                           the results of the query.
+   * @returns {Promise<ResultWithIncomingMessage<Twin[]>> | void} Promise if no callback function was passed, void otherwise.
    */
-  nextAsTwin(continuationToken: string | Callback<Twin[]>, done?: Callback<Twin[]>): void {
-    /*Codes_SRS_NODE_SERVICE_QUERY_16_016: [If `continuationToken` is a function and `done` is undefined the `next` method shall assume that `continuationToken` is actually the callback and us it as such (see requirements associated with the `done` parameter)]*/
-    if (typeof continuationToken === 'function' && !done) {
-      done = continuationToken;
-      continuationToken = null;
-    }
+  nextAsTwin(continuationToken: string | IncomingMessageCallback<Twin[]>, done?: IncomingMessageCallback<Twin[]>): Promise<ResultWithIncomingMessage<Twin[]>> | void {
+    const doneCallback: IncomingMessageCallback<Twin[]> = continuationToken instanceof Function ? continuationToken : done;
 
-    let ct = continuationToken || this.continuationToken;
-
-    this.next(ct, (err, result, response) => {
-      if (err) {
-        /*Codes_SRS_NODE_SERVICE_QUERY_16_008: [The `next` method shall call the `done` callback with a single argument that is an instance of the standard Javascript `Error` object if the request failed.]*/
-        done(err);
-      } else {
-        if (result) {
-          /*SRS_NODE_SERVICE_QUERY_16_009: [The `nextAsTwin` method shall call the `done` callback with a `null` error object and a collection of `Twin` objects created from the results of the query if the request was successful.]*/
-          const twins = result.map((twinJson) => {
-            return new Twin(twinJson, this._registry);
-          });
-          done(null, twins, response);
-        } else {
-          /*Codes_SRS_NODE_SERVICE_QUERY_16_007: [The `next` method shall call the `done` callback with a `null` error object, the results of the query and the response of the underlying transport if the request was successful.]*/
-          done(null, null, response);
-        }
+    return tripleValueCallbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_SERVICE_QUERY_16_016: [If `continuationToken` is a function and `_callback` is undefined the `next` method shall assume that `continuationToken` is actually the callback and us it as such (see requirements associated with the `done` parameter)]*/
+      if (typeof continuationToken === 'function' && !_callback) {
+        _callback = continuationToken;
+        continuationToken = null;
       }
-    });
+
+      let ct = continuationToken || this.continuationToken;
+
+      this.next(ct, (err, result, response) => {
+        if (err) {
+          /*Codes_SRS_NODE_SERVICE_QUERY_16_008: [The `next` method shall call the `_callback` callback with a single argument that is an instance of the standard Javascript `Error` object if the request failed.]*/
+          _callback(err);
+        } else {
+          if (result) {
+            /*SRS_NODE_SERVICE_QUERY_16_009: [The `nextAsTwin` method shall call the `_callback` callback with a `null` error object and a collection of `Twin` objects created from the results of the query if the request was successful.]*/
+            const twins = result.map((twinJson) => {
+              return new Twin(twinJson, this._registry);
+            });
+            _callback(null, twins, response);
+          } else {
+            /*Codes_SRS_NODE_SERVICE_QUERY_16_007: [The `next` method shall call the `_callback` callback with a `null` error object, the results of the query and the response of the underlying transport if the request was successful.]*/
+            _callback(null, null, response);
+          }
+        }
+      });
+    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, doneCallback);
   }
 }

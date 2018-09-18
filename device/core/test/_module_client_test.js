@@ -49,12 +49,21 @@ describe('ModuleClient', function () {
   });
 
   describe('#fromEnvironment', function() {
-    // Tests_SRS_NODE_MODULE_CLIENT_13_033: [ The fromEnvironment method shall throw a ReferenceError if the callback argument is falsy or is not a function. ]
-    [null, undefined, 'not a function', 20].forEach(function(badCallback) {
+    // Tests_SRS_NODE_MODULE_CLIENT_13_033: [ The fromEnvironment method shall throw a ReferenceError if the callback argument is not a function. ]
+    ['not a function', 20].forEach(function(badCallback) {
       it('throws if callback is falsy or not a function', function() {
         assert.throws(function() {
           return ModuleClient.fromEnvironment(null, badCallback);
         }, ReferenceError);
+      });
+    });
+
+    // Tests_SRS_NODE_MODULE_CLIENT_13_033: [ The fromEnvironment method shall return a Promise if the callback argument is falsy. ]
+    [null, undefined].forEach(function(badCallback) {
+      it('returns a Promise if callback is falsy or not a function', function() {
+          const result =  ModuleClient.fromEnvironment(null, badCallback);
+          assert.instanceOf(result, Promise);
+          result.catch(_ => {});
       });
     });
 
@@ -562,7 +571,7 @@ describe('ModuleClient', function () {
       };
       var fakeMethodParams = { methodName: 'methodName' };
       var client = new ModuleClient(transport, fakeMethodClient);
-      client.invokeMethod('deviceId', 'moduleId', fakeMethodParams);
+      client.invokeMethod('deviceId', 'moduleId', fakeMethodParams, (_) => {});
       assert.isTrue(fakeMethodClient.invokeMethod.calledOnce);
       assert.isTrue(fakeMethodClient.invokeMethod.calledWith('deviceId', 'moduleId', fakeMethodParams));
     });
@@ -776,14 +785,13 @@ describe('ModuleClient', function () {
       });
     });
 
-    // Tests_SRS_NODE_MODULE_CLIENT_13_022: [ onMethod shall throw a ReferenceError if callback is falsy. ]
+    // Tests_SRS_NODE_MODULE_CLIENT_13_022: [ onMethod shall return a Promise if callback is falsy. ]
     [undefined, null].forEach(function (callback) {
-      it('throws ReferenceError when callback is "' + callback + '"', function () {
+      it('returns a Promise when callback is "' + callback + '"', function () {
         var transport = new FakeMethodTransport();
         var client = new ModuleClient(transport);
-        assert.throws(function () {
-          client.onMethod('doSomeTests', callback);
-        }, ReferenceError);
+        const result = client.onMethod('doSomeTests', callback);
+        assert.typeOf(result, "Promise");
       });
     });
 

@@ -4,28 +4,31 @@
 'use strict';
 
 import { IndividualEnrollment, EnrollmentGroup, DeviceRegistrationState } from './interfaces';
+import { tripleValueCallbackToPromise, ResultWithHttpResponse } from 'azure-iot-common';
+import { TripleValueCallback } from 'azure-iot-common/lib/promise_utils';
+import { createResultWithHttpResponse } from 'azure-iot-common/lib/results';
 
 /**
  * The query result.
  */
 export interface QueryResult {
-    /**
-     * The query result items, as a collection.
-     */
-    items: Array<IndividualEnrollment | EnrollmentGroup | DeviceRegistrationState>;
+  /**
+   * The query result items, as a collection.
+   */
+  items: Array<IndividualEnrollment | EnrollmentGroup | DeviceRegistrationState>;
 }
 
 /**
  * A Json query request
  */
 export interface QuerySpecification {
-    /**
-     * The query.
-     */
-    query: string;
+  /**
+   * The query.
+   */
+  query: string;
 }
 
-export type QueryCallback = (err?: Error, result?: QueryResult, response?: any) => void;
+export type QueryCallback = TripleValueCallback<QueryResult, any>;
 
 export class Query {
   continuationToken: string;
@@ -46,30 +49,35 @@ export class Query {
    * @method              module:azure-iot-provisioning-service.Query#next
    * @description         Gets the next page of results for this query.
    * @param {string}      continuationToken    Continuation Token used for paging through results (optional)
-   * @param {Function}    done                 The callback that will be called with either an Error object or
+   * @param {Function}    [done]               The optional callback that will be called with either an Error object or
    *                                           the results of the query.
+   * @returns {Promise<ResultWithHttpResponse<QueryResult>> | void} Promise if no callback function was passed, void otherwise.
    */
-  next(continuationTokenOrCallback: string | QueryCallback, done?: QueryCallback): void {
-    let actualContinuationToken = this.continuationToken;
-    let actualCallback: QueryCallback;
+  next(continuationTokenOrCallback: string | QueryCallback, done?: QueryCallback): Promise<ResultWithHttpResponse<QueryResult>> | void {
+    const callback = done || (continuationTokenOrCallback instanceof Function ? continuationTokenOrCallback : undefined);
 
-    if (typeof continuationTokenOrCallback === 'function' && !done) {
-      actualCallback = continuationTokenOrCallback as QueryCallback;
-    } else {
-      actualContinuationToken = continuationTokenOrCallback as string;
-      actualCallback = done as QueryCallback;
-    }
+    return tripleValueCallbackToPromise((_callback) => {
+      let actualContinuationToken = this.continuationToken;
+      let actualCallback: QueryCallback;
 
-    this._executeQueryFn(actualContinuationToken, (err, result, response) => {
-      if (err) {
-        actualCallback(err);
+      if (typeof continuationTokenOrCallback === 'function' && !done) {
+        actualCallback = continuationTokenOrCallback as QueryCallback;
       } else {
-        this.continuationToken = response.headers['x-ms-continuation'] as string;
-        this.hasMoreResults = this.continuationToken !== undefined;
-
-        /*Codes_SRS_NODE_SERVICE_QUERY_16_007: [The `next` method shall call the `done` callback with a `null` error object, the results of the query and the response of the underlying transport if the request was successful.]*/
-        actualCallback(null, result, response);
+        actualContinuationToken = continuationTokenOrCallback as string;
+        actualCallback = done as QueryCallback;
       }
-    });
+
+      this._executeQueryFn(actualContinuationToken, (err, result, response) => {
+        if (err) {
+          actualCallback(err);
+        } else {
+          this.continuationToken = response.headers['x-ms-continuation'] as string;
+          this.hasMoreResults = this.continuationToken !== undefined;
+
+          /*Codes_SRS_NODE_SERVICE_QUERY_16_007: [The `next` method shall call the `done` callback with a `null` error object, the results of the query and the response of the underlying transport if the request was successful.]*/
+          actualCallback(null, result, response);
+        }
+      });
+    }, (q: QueryResult, h) => createResultWithHttpResponse(q, h), callback);
   }
 }

@@ -7,13 +7,18 @@ import { errors, SharedAccessSignature, ConnectionString } from 'azure-iot-commo
 import { RestApiClient } from 'azure-iot-http-base';
 import { QuerySpecification, Query, QueryCallback } from './query';
 import { IndividualEnrollment, EnrollmentGroup, DeviceRegistrationState, BulkEnrollmentOperation, BulkEnrollmentOperationResult } from './interfaces';
+import { ErrorCallback, TripleValueCallback, tripleValueCallbackToPromise, errorCallbackToPromise } from 'azure-iot-common/lib/promise_utils';
+import { ResultWithHttpResponse, createResultWithHttpResponse } from 'azure-iot-common/lib/results';
+
+const createIndividualEnrollmentWithHttpResponse = (enrollment, httpRequest) => { return createResultWithHttpResponse(enrollment as IndividualEnrollment, httpRequest); };
+const createEnrollmentGroupWithHttpResponse = (group, httpRequest) => { return createResultWithHttpResponse(group as EnrollmentGroup, httpRequest); };
+const createDeviceRegistrationStateWithHttpResponse = (state, httpRequest) => { return createResultWithHttpResponse(state as DeviceRegistrationState, httpRequest); };
+const createBulkEnrollmentOperationResultWithHttpResponse = (result, httpRequest) => { return createResultWithHttpResponse(result as BulkEnrollmentOperationResult, httpRequest); };
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
 
 const ArgumentError = errors.ArgumentError;
-
-export type DeleteCallback = (err?: Error) => void;
 
 export class ProvisioningServiceClient {
 
@@ -44,10 +49,13 @@ export class ProvisioningServiceClient {
    * @method           module:azure-iot-provisioning-service.ProvisioningServiceClient#createOrUpdateIndividualEnrollment
    * @description      Create or update a device enrollment record.
    * @param {object}   enrollment The device enrollment record.
-   * @param {function} callback   Invoked upon completion of the operation.
+   * @param {function} [callback] Invoked upon completion of the operation.
+   * @returns {Promise<ResultWithHttpResponse<IndividualEnrollment>> | void} Promise if no callback function was passed, void otherwise.
    */
-  public createOrUpdateIndividualEnrollment(enrollment: IndividualEnrollment, callback?: (err: Error, enrollment?: IndividualEnrollment, response?: any) => void): void {
-    this._createOrUpdate(this._enrollmentsPrefix, enrollment, callback);
+  public createOrUpdateIndividualEnrollment(enrollment: IndividualEnrollment, callback?: TripleValueCallback<IndividualEnrollment, any>): Promise<ResultWithHttpResponse<IndividualEnrollment>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      this._createOrUpdate(this._enrollmentsPrefix, enrollment, _callback);
+    }, createIndividualEnrollmentWithHttpResponse, callback);
   }
 
   /**
@@ -55,20 +63,31 @@ export class ProvisioningServiceClient {
    * @description      Delete a device enrollment record.
    * @param {string | object}   enrollmentOrId An IndividualEnrollment object or a string containing the registration id.
    * @param {string | function} etagOrCallback In the case of the first argument being a string this could be an etag (or the callback).
-   * @param {function}          deleteCallback Invoked upon completion of the operation.
+   * @param {function}          [deleteCallback] Invoked upon completion of the operation.
+   * @returns {Promise<void> | void} Promise if no callback function was passed, void otherwise.
    */
-  public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): void {
-    this._delete(this._enrollmentsPrefix, enrollmentOrId, etagOrCallback, deleteCallback);
+  public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
+    if (!deleteCallback && etagOrCallback instanceof Function) {
+      deleteCallback = etagOrCallback;
+      etagOrCallback = undefined;
+    }
+
+    return errorCallbackToPromise((_callback) => {
+      this._delete(this._enrollmentsPrefix, enrollmentOrId, etagOrCallback, _callback);
+    }, deleteCallback);
   }
 
   /**
    * @method           module:azure-iot-provisioning-service.ProvisioningServiceClient#getIndividualEnrollment
    * @description      Get a device enrollment record.
    * @param {string}   id          Registration ID.
-   * @param {function} getCallback Invoked upon completion of the operation.
+   * @param {function} [getCallback] Invoked upon completion of the operation.
+   * @returns {Promise<ResultWithHttpResponse<IndividualEnrollment>> | void} Promise if no callback function was passed, void otherwise.
    */
-  public getIndividualEnrollment(id: string, getCallback: (err: Error, enrollmentRecord?: IndividualEnrollment, response?: any ) => void): void {
-    this._get(this._enrollmentsPrefix, id, getCallback);
+  public getIndividualEnrollment(id: string, getCallback?: TripleValueCallback<IndividualEnrollment, any>): Promise<ResultWithHttpResponse<IndividualEnrollment>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      this._get(this._enrollmentsPrefix, id, getCallback);
+    }, createIndividualEnrollmentWithHttpResponse, getCallback);
   }
 
   /**
@@ -77,7 +96,7 @@ export class ProvisioningServiceClient {
    * @param {object}   querySpecification The query specification.
    * @param {number}   pageSize           The maximum number of elements to return per page.
    */
-  createIndividualEnrollmentQuery(querySpecification: QuerySpecification, pageSize?: number): Query{
+  createIndividualEnrollmentQuery(querySpecification: QuerySpecification, pageSize?: number): Query {
     return new Query(this._getEnrollFunc(this._enrollmentsPrefix, querySpecification, pageSize));
   }
 
@@ -85,41 +104,58 @@ export class ProvisioningServiceClient {
    * @method           module:azure-iot-provisioning-service.ProvisioningServiceClient#getDeviceRegistrationState
    * @description      Gets the device registration status.
    * @param {string}   id       Registration ID.
-   * @param {function} callback Invoked upon completion of the operation.
+   * @param {function} [callback] Invoked upon completion of the operation.
+   * @returns {Promise<ResultWithHttpResponse<DeviceRegistrationState>> | void} Promise if no callback function was passed, void otherwise.
    */
-  public getDeviceRegistrationState(id: string, callback: (err: Error, registrationState?: DeviceRegistrationState, response?: any) => void): void {
-    this._get(this._registrationsPrefix, id, callback);
+  public getDeviceRegistrationState(id: string, callback?: TripleValueCallback<DeviceRegistrationState, any>): Promise<ResultWithHttpResponse<DeviceRegistrationState>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      this._get(this._registrationsPrefix, id, _callback);
+    }, createDeviceRegistrationStateWithHttpResponse, callback);
   }
 
   /**
    * @method           module:azure-iot-provisioning-service.ProvisioningServiceClient#createOrUpdateEnrollmentGroup
    * @description      Create or update a device enrollment group.
    * @param {object}   enrollmentGroup The device enrollment group.
-   * @param {function} callback        Invoked upon completion of the operation.
+   * @param {function} [callback]      Invoked upon completion of the operation.
+   * @returns {Promise<ResultWithHttpResponse<DeviceRegistrationState>> | void} Promise if no callback function was passed, void otherwise.
    */
-  public createOrUpdateEnrollmentGroup(enrollmentGroup: EnrollmentGroup, callback?: (err: Error, enrollmentGroup?: EnrollmentGroup, response?: any) => void): void {
-    this._createOrUpdate(this._enrollmentGroupsPrefix, enrollmentGroup, callback);
+  public createOrUpdateEnrollmentGroup(enrollmentGroup: EnrollmentGroup, callback?: TripleValueCallback<EnrollmentGroup, any>): Promise<ResultWithHttpResponse<EnrollmentGroup>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      this._createOrUpdate(this._enrollmentGroupsPrefix, enrollmentGroup, _callback);
+    }, createEnrollmentGroupWithHttpResponse, callback);
   }
 
   /**
    * @method           module:azure-iot-provisioning-service.ProvisioningServiceClient#deleteEnrollmentGroup
    * @description     Delete a device enrollment group.
    * @param {object | string}   enrollmentGroupOrId EnrollmentGroup object or a string containing the enrollment Group Id.
-   * @param {string | function} etagOrCallback      In the case of the first argument being a string this could be an etag (or the callback).
-   * @param {function}          deleteCallback      Invoked upon completion of the operation.
+   * @param {string | function} [etagOrCallback]      In the case of the first argument being a string this could be an etag (or the callback).
+   * @param {function}          [deleteCallback]      Invoked upon completion of the operation.
+   * @returns {Promise<void> | void} Promise if no callback function was passed, void otherwise.
    */
-  public deleteEnrollmentGroup(enrollmentGroupOrId: string | EnrollmentGroup, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): void {
-    this._delete(this._enrollmentGroupsPrefix, enrollmentGroupOrId, etagOrCallback, deleteCallback);
+  public deleteEnrollmentGroup(enrollmentGroupOrId: string | EnrollmentGroup, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
+    if (etagOrCallback instanceof Function) {
+      deleteCallback = etagOrCallback;
+      etagOrCallback = undefined;
+    }
+
+    return errorCallbackToPromise((_callback) => {
+      this._delete(this._enrollmentGroupsPrefix, enrollmentGroupOrId, etagOrCallback, _callback);
+    }, deleteCallback);
   }
 
   /**
    * @method           module:azure-iot-provisioning-service.ProvisioningServiceClient#getEnrollmentGroup
    * @description      Get a device enrollment group.
    * @param {string}   id          IndividualEnrollment group ID.
-   * @param {function} getCallback Invoked upon completion of the operation.
+   * @param {function} [getCallback] Invoked upon completion of the operation.
+   * @returns {ResultWithHttpResponse<EnrollmentGroup> | void} Promise if no callback function was passed, void otherwise.
    */
-  public getEnrollmentGroup(id: string, getCallback: (err: Error, enrollmentGroup: EnrollmentGroup, response?: any) => void): void {
-    this._get(this._enrollmentGroupsPrefix, id, getCallback);
+  public getEnrollmentGroup(id: string, getCallback?: TripleValueCallback<EnrollmentGroup, any>): Promise<ResultWithHttpResponse<EnrollmentGroup>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      this._get(this._enrollmentGroupsPrefix, id, _callback);
+    }, createEnrollmentGroupWithHttpResponse, getCallback);
   }
 
   /**
@@ -143,7 +179,7 @@ export class ProvisioningServiceClient {
     if (!enrollmentGroupId) {
       throw new ReferenceError('Required enrollmentGroupId parameter was falsy.');
     }
-    return new Query(this._getEnrollFunc(this._registrationsPrefix + encodeURIComponent(enrollmentGroupId) + '/' , querySpecification, pageSize));
+    return new Query(this._getEnrollFunc(this._registrationsPrefix + encodeURIComponent(enrollmentGroupId) + '/', querySpecification, pageSize));
   }
 
   /**
@@ -152,36 +188,38 @@ export class ProvisioningServiceClient {
    * @param {object}   bulkEnrollmentOperation An object that specifies the single kind of CRUD operations on the array of IndividualEnrollment objects that are also part of the object.
    * @param {function} callback      Invoked upon completion of the operation.
    */
-  public runBulkEnrollmentOperation(bulkEnrollmentOperation: BulkEnrollmentOperation, callback?: (err: Error, bulkEnrollmentOperationResult?: BulkEnrollmentOperationResult, response?: any) => void): void {
-    /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_038: [The `runBulkEnrollmentOperation` method shall throw `ReferenceError` if the `bulkEnrollmentOperation` argument is falsy.] */
-    if (!bulkEnrollmentOperation) {
-      throw new ReferenceError('Required bulkEnrollmentOperation parameter was falsy when calling runBulkEnrollmentOperation.');
-    }
-
-    const path = this._enrollmentsPrefix + this._versionQueryString();
-
-    const httpHeaders = {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json; charset=utf-8'
-    };
-
-    /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_039: [** The `runBulkEnrollmentOperation` method shall construct an HTTP request using information supplied by the caller as follows:
-      POST /enrollments?api-version=<version> HTTP/1.1
-      Authorization: <sharedAccessSignature>
-      Accept: application/json
-      Content-Type: application/json; charset=utf-8
-
-      <stringified json string of the bulkEnrollmentOperation argument>
-      ] */
-    this._restApiClient.executeApiCall('POST', path, httpHeaders, bulkEnrollmentOperation, (err, bulkEnrollmentOperationResult, httpResponse) => {
-      if (callback) {
-        if (err) {
-          callback(err);
-        } else {
-          callback(null, bulkEnrollmentOperationResult, httpResponse);
-        }
+  public runBulkEnrollmentOperation(bulkEnrollmentOperation: BulkEnrollmentOperation, callback?: TripleValueCallback<BulkEnrollmentOperationResult, any>): Promise<ResultWithHttpResponse<BulkEnrollmentOperationResult>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_038: [The `runBulkEnrollmentOperation` method shall throw `ReferenceError` if the `bulkEnrollmentOperation` argument is falsy.] */
+      if (!bulkEnrollmentOperation) {
+        throw new ReferenceError('Required bulkEnrollmentOperation parameter was falsy when calling runBulkEnrollmentOperation.');
       }
-    });
+
+      const path = this._enrollmentsPrefix + this._versionQueryString();
+
+      const httpHeaders = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json; charset=utf-8'
+      };
+
+      /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_039: [** The `runBulkEnrollmentOperation` method shall construct an HTTP request using information supplied by the caller as follows:
+        POST /enrollments?api-version=<version> HTTP/1.1
+        Authorization: <sharedAccessSignature>
+        Accept: application/json
+        Content-Type: application/json; charset=utf-8
+
+        <stringified json string of the bulkEnrollmentOperation argument>
+        ] */
+      this._restApiClient.executeApiCall('POST', path, httpHeaders, bulkEnrollmentOperation, (err, bulkEnrollmentOperationResult, httpResponse) => {
+        if (callback) {
+          if (err) {
+            _callback(err);
+          } else {
+            _callback(null, bulkEnrollmentOperationResult, httpResponse);
+          }
+        }
+      });
+    }, createBulkEnrollmentOperationResultWithHttpResponse, callback);
   }
 
   /**
@@ -189,10 +227,18 @@ export class ProvisioningServiceClient {
    * @description      Delete a device registration status.
    * @param {object | string}   idOrRegistrationState A string containing the registration id OR an actual DeviceRegistrationState.
    * @param {string | function} etagOrCallback        In the case of the first argument being a string this could be an etag (or the callback).
-   * @param {function}          deleteCallback        Invoked upon completion of the operation.
+   * @param {function}          [deleteCallback]      Invoked upon completion of the operation.
+   * @returns {Promise<void> | void} Promise if no callback function was passed, void otherwise.
    */
-  public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): void {
-    this._delete(this._registrationsPrefix, idOrRegistrationState, etagOrCallback, deleteCallback);
+  public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
+    if (etagOrCallback instanceof Function) {
+      deleteCallback = etagOrCallback;
+      etagOrCallback = undefined;
+    }
+
+    return errorCallbackToPromise((_callback) => {
+      this._delete(this._registrationsPrefix, idOrRegistrationState, etagOrCallback, _callback);
+    }, deleteCallback);
   }
 
   private _getEnrollFunc(prefix: string, querySpecification: QuerySpecification, pageSize: number): (continuationToken: string, done: QueryCallback) => void {
@@ -201,7 +247,7 @@ export class ProvisioningServiceClient {
 
       let headers = {
         'Accept': 'application/json',
-         'Content-Type': 'application/json; charset=utf-8'
+        'Content-Type': 'application/json; charset=utf-8'
       };
 
       if (continuationToken) {
@@ -277,10 +323,15 @@ export class ProvisioningServiceClient {
     });
   }
 
-  private _delete(endpointPrefix: string, enrollmentOrIdOrRegistration: string | any, etagOrCallback?: string | DeleteCallback, deleteCallback?: DeleteCallback): void {
+  private _delete(endpointPrefix: string, enrollmentOrIdOrRegistration: string | any, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): void {
     let ifMatch: string;
-    let suppliedCallback: DeleteCallback;
+    let suppliedCallback: ErrorCallback;
     let id: string;
+
+    suppliedCallback = deleteCallback || (etagOrCallback instanceof Function ? etagOrCallback : undefined);
+    if (!suppliedCallback) {
+      throw new ArgumentError('No callback was passed.');
+    }
 
     /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_015: [The `deleteIndividualEnrollment` method shall throw `ReferenceError` if the `enrollmentOrId` argument is falsy.] */
     /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_016: [The `deleteEnrollmentGroup` method shall throw `ReferenceError` if the `enrollmentGroupOrId` argument is falsy.] */
@@ -296,7 +347,6 @@ export class ProvisioningServiceClient {
       /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_050: [The `deleteDeviceRegistrationState` method, if the first argument is a string, the second argument if present, must be a string or a callback, otherwise shall throw `ArgumentError`.] */
       if (!etagOrCallback) {
         ifMatch = undefined;
-        suppliedCallback = undefined;
       } else if (typeof etagOrCallback === 'string') {
         /*Codes_**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_044: [** The `deleteIndividualEnrollment` method, if the first argument is a string, and the second argument is a string, shall construct an HTTP request using information supplied by the caller as follows:
           DELETE /enrollments/<uri-encoded-enrollmentOrId>?api-version=<version> HTTP/1.1
@@ -314,16 +364,6 @@ export class ProvisioningServiceClient {
           Authorization: <sharedAccessSignature>
           ] */
         ifMatch = etagOrCallback;
-        /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_041: [The `deleteIndividualEnrollment` method, if the first argument is a string and the second argument is a string, the third argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
-        /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_046: [The `deleteEnrollmentGroup` method, if the first argument is a string and the second argument is a string, the third argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
-        /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_051: [The `deleteDeviceRegistrationState` method, if the first argument is a string and the second argument is a string, the third argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
-        if (!deleteCallback) {
-          suppliedCallback = undefined;
-        } else if (typeof deleteCallback !== 'function') {
-          throw new ArgumentError('Third argument of this delete method must be a function.');
-        } else {
-          suppliedCallback = deleteCallback;
-        }
       } else if (typeof etagOrCallback === 'function') {
         /*Codes_**SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_043: [** The `deleteIndividualEnrollment` method, if the first argument is a string, and the second argument is NOT a string, shall construct an HTTP request using information supplied by the caller as follows:
           DELETE /enrollments/<uri-encoded-enrollmentOrId>?api-version=<version> HTTP/1.1
@@ -363,17 +403,6 @@ export class ProvisioningServiceClient {
         id = enrollmentOrIdOrRegistration.registrationId;
       } else {
         throw new ArgumentError('Invalid path specified for delete operation.');
-      }
-
-      /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_042: [The `deleteIndividualEnrollment` method, if the first argument is an `IndividualEnrollment` object, the second argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
-      /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_047: [The `deleteEnrollmentGroup` method, if the first argument is an `EnrollmentGroup` object, the second argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
-      /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_052: [The `deleteDeviceRegistrationState` method, if the first argument is an `DeviceRegistrationState` object, the second argument if present, must be a callback, otherwise shall throw `ArgumentError`.] */
-      if (!etagOrCallback) {
-        suppliedCallback = undefined;
-      } else if (typeof etagOrCallback !== 'function') {
-        throw new ArgumentError('The second argument of this delete function if present MUST be a function.');
-      } else {
-        suppliedCallback = etagOrCallback;
       }
 
       if (enrollmentOrIdOrRegistration.etag) {
@@ -429,7 +458,7 @@ export class ProvisioningServiceClient {
     });
   }
 
-  private _get(endpointPrefix: string, id: string, getCallback: (err: Error, enrollmentOrRegistrationState?: any, response?: any ) => void): void {
+  private _get(endpointPrefix: string, id: string, getCallback: (err: Error, enrollmentOrRegistrationState?: any, response?: any) => void): void {
     /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_030: [The `getIndividualEnrollment` method shall throw `ReferenceError` if the `id` argument is falsy.] */
     /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_031: [The `getEnrollmentGroup` method shall throw `ReferenceError` if the `id` argument is falsy.] */
     /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_032: [The `getDeviceRegistrationState` method shall throw `ReferenceError` if the `id` argument is falsy.] */
@@ -475,8 +504,8 @@ export class ProvisioningServiceClient {
    * @returns {module:azure-iot-provisioning-service.ProvisioningServiceClient}
    */
   static fromConnectionString(value: string): ProvisioningServiceClient {
-     /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_005: [The `fromConnectionString` method shall throw `ReferenceError` if the `value` argument is falsy.]*/
-     if (!value) throw new ReferenceError('value is \'' + value + '\'');
+    /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_005: [The `fromConnectionString` method shall throw `ReferenceError` if the `value` argument is falsy.]*/
+    if (!value) throw new ReferenceError('value is \'' + value + '\'');
 
     const cn = ConnectionString.parse(value);
 

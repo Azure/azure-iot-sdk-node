@@ -10,7 +10,7 @@ import * as fs from 'fs';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:InternalClient');
 
-import { results, errors, Message, X509 } from 'azure-iot-common';
+import { results, errors, Message, X509, callbackToPromise, Callback } from 'azure-iot-common';
 import { SharedAccessSignature as CommonSharedAccessSignature } from 'azure-iot-common';
 import { ExponentialBackOffWithJitter, RetryPolicy, RetryOperation } from 'azure-iot-common';
 import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
@@ -137,141 +137,162 @@ export abstract class InternalClient extends EventEmitter {
     });
   }
 
-  open(openCallback: (err?: Error, result?: results.Connected) => void): void {
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-    retryOp.retry((opCallback) => {
-      this._transport.connect(opCallback);
-    }, (connectErr, connectResult) => {
-      /*Codes_SRS_NODE_INTERNAL_CLIENT_16_060: [The `open` method shall call the `openCallback` callback with a null error object and a `results.Connected()` result object if the transport is already connected, doesn't need to connect or has just connected successfully.]*/
-      safeCallback(openCallback, connectErr, connectResult);
-    });
+  open(openCallback?: Callback<results.Connected>): Promise<results.Connected> | void {
+    return callbackToPromise((_callback) => {
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+        this._transport.connect(opCallback);
+      }, (connectErr, connectResult) => {
+        /*Codes_SRS_NODE_INTERNAL_CLIENT_16_060: [The `open` method shall call the `_callback` callback with a null error object and a `results.Connected()` result object if the transport is already connected, doesn't need to connect or has just connected successfully.]*/
+        safeCallback(_callback, connectErr, connectResult);
+      });
+    }, openCallback);
   }
 
-  sendEvent(message: Message, sendEventCallback?: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-    retryOp.retry((opCallback) => {
-      /*Codes_SRS_NODE_INTERNAL_CLIENT_05_007: [The sendEvent method shall send the event indicated by the message argument via the transport associated with the Client instance.]*/
-      this._transport.sendEvent(message, opCallback);
-    }, (err, result) => {
-      safeCallback(sendEventCallback, err, result);
-    });
+  sendEvent(message: Message, sendEventCallback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
+    return callbackToPromise((_callback) => {
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+        /*Codes_SRS_NODE_INTERNAL_CLIENT_05_007: [The sendEvent method shall send the event indicated by the message argument via the transport associated with the Client instance.]*/
+        this._transport.sendEvent(message, opCallback);
+      }, (err, result) => {
+        safeCallback(_callback, err, result);
+      });
+    }, sendEventCallback);
   }
 
-  sendEventBatch(messages: Message[], sendEventBatchCallback?: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-    retryOp.retry((opCallback) => {
-      /*Codes_SRS_NODE_INTERNAL_CLIENT_05_008: [The sendEventBatch method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance.]*/
-      this._transport.sendEventBatch(messages, opCallback);
-    }, (err, result) => {
-      safeCallback(sendEventBatchCallback, err, result);
-    });
+  sendEventBatch(messages: Message[], sendEventBatchCallback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
+    return callbackToPromise((_callback) => {
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+        /*Codes_SRS_NODE_INTERNAL_CLIENT_05_008: [The sendEventBatch method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance.]*/
+        this._transport.sendEventBatch(messages, opCallback);
+      }, (err, result) => {
+        safeCallback(_callback, err, result);
+      });
+    }, sendEventBatchCallback);
   }
 
-  close(closeCallback?: (err?: Error, result?: results.Disconnected) => void): void {
-    this._closeTransport((err, result) => {
-      safeCallback(closeCallback, err, result);
-    });
+  close(closeCallback?: Callback<results.Disconnected>): Promise<results.Disconnected> | void {
+    return callbackToPromise((_callback) => {
+      this._closeTransport((err, result) => {
+        safeCallback(_callback, err, result);
+      });
+    }, closeCallback);
   }
 
-  setTransportOptions(options: any, done?: (err?: Error, result?: results.TransportConfigured) => void): void {
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_024: [The ‘setTransportOptions’ method shall throw a ‘ReferenceError’ if the options object is falsy] */
-    if (!options) throw new ReferenceError('options cannot be falsy.');
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_025: [The ‘setTransportOptions’ method shall throw a ‘NotImplementedError’ if the transport doesn’t implement a ‘setOption’ method.] */
-    if (typeof this._transport.setOptions !== 'function') throw new errors.NotImplementedError('setOptions does not exist on this transport');
+  setTransportOptions(options: any, done?: Callback<results.TransportConfigured>): Promise<results.TransportConfigured> | void {
+    return callbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_INTERNAL_CLIENT_16_024: [The ‘setTransportOptions’ method shall throw a ‘ReferenceError’ if the options object is falsy] */
+      if (!options) throw new ReferenceError('options cannot be falsy.');
+      /*Codes_SRS_NODE_INTERNAL_CLIENT_16_025: [The ‘setTransportOptions’ method shall throw a ‘NotImplementedError’ if the transport doesn’t implement a ‘setOption’ method.] */
+      if (typeof this._transport.setOptions !== 'function') throw new errors.NotImplementedError('setOptions does not exist on this transport');
 
-    const clientOptions = {
-      http: {
-        receivePolicy: options
-      }
-    };
+      const clientOptions = {
+        http: {
+          receivePolicy: options
+        }
+      };
 
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-    retryOp.retry((opCallback) => {
-      /*Codes_SRS_NODE_INTERNAL_CLIENT_16_021: [The ‘setTransportOptions’ method shall call the ‘setOptions’ method on the transport object.]*/
-      this._transport.setOptions(clientOptions, opCallback);
-    }, (err) => {
-      if (err) {
-        safeCallback(done, err);
-      } else {
-        safeCallback(done, null, new results.TransportConfigured());
-      }
-    });
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+        /*Codes_SRS_NODE_INTERNAL_CLIENT_16_021: [The ‘setTransportOptions’ method shall call the ‘setOptions’ method on the transport object.]*/
+        this._transport.setOptions(clientOptions, opCallback);
+      }, (err) => {
+        if (err) {
+          safeCallback(_callback, err);
+        } else {
+          safeCallback(_callback, null, new results.TransportConfigured());
+        }
+      });
+    }, done);
   }
 
   /**
    * Passes options to the `Client` object that can be used to configure the transport.
    * @param options   A {@link DeviceClientOptions} object.
-   * @param done      The callback to call once the options have been set.
+   * @param [done]      Optional callback to call once the options have been set.
+   * @returns {Promise<results.TransportConfigured> | void} Promise if no callback function was passed, void otherwise.
    */
-  setOptions(options: DeviceClientOptions, done?: (err?: Error, result?: results.TransportConfigured) => void): void {
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
-    if (!options) throw new ReferenceError('options cannot be falsy.');
-    let localOptions: DeviceClientOptions = {};
-    for (let k in options) {
-      localOptions[k] = options[k];
-    }
-
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_06_001: [The `setOptions` method shall first test if the `ca` property is the name of an already existent file.  If so, it will attempt to read that file as a pem into a string value and pass the string to config object `ca` property.  Otherwise, it is assumed to be a pem string.] */
-    if (localOptions.ca) {
-      if (fs.existsSync(localOptions.ca)) {
-        localOptions.ca = fs.readFileSync(localOptions.ca, 'utf8');
+  setOptions(options: DeviceClientOptions, done?: Callback<results.TransportConfigured>): Promise<results.TransportConfigured> | void {
+    return callbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_INTERNAL_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
+      if (!options) throw new ReferenceError('options cannot be falsy.');
+      let localOptions: DeviceClientOptions = {};
+      for (let k in options) {
+        localOptions[k] = options[k];
       }
-    }
 
-    // Making this an operation that can be retried because we cannot assume the transport's behavior (whether it's going to disconnect/reconnect, etc).
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-    retryOp.retry((opCallback) => {
-      this._transport.setOptions(localOptions, opCallback);
-    }, (err) => {
-      /*Codes_SRS_NODE_INTERNAL_CLIENT_16_043: [The `done` callback shall be invoked no parameters when it has successfully finished setting the client and/or transport options.]*/
-      /*Codes_SRS_NODE_INTERNAL_CLIENT_16_044: [The `done` callback shall be invoked with a standard javascript `Error` object and no result object if the client could not be configured as requested.]*/
-      safeCallback(done, err);
-    });
+      /*Codes_SRS_NODE_INTERNAL_CLIENT_06_001: [The `setOptions` method shall first test if the `ca` property is the name of an already existent file.  If so, it will attempt to read that file as a pem into a string value and pass the string to config object `ca` property.  Otherwise, it is assumed to be a pem string.] */
+      if (localOptions.ca) {
+        if (fs.existsSync(localOptions.ca)) {
+          localOptions.ca = fs.readFileSync(localOptions.ca, 'utf8');
+        }
+      }
+
+      // Making this an operation that can be retried because we cannot assume the transport's behavior (whether it's going to disconnect/reconnect, etc).
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+        this._transport.setOptions(localOptions, opCallback);
+      }, (err) => {
+        /*Codes_SRS_NODE_INTERNAL_CLIENT_16_043: [The `_callback` callback shall be invoked no parameters when it has successfully finished setting the client and/or transport options.]*/
+        /*Codes_SRS_NODE_INTERNAL_CLIENT_16_044: [The `_callback` callback shall be invoked with a standard javascript `Error` object and no result object if the client could not be configured as requested.]*/
+        safeCallback(_callback, err);
+      });
+    }, done);
   }
 
-  complete(message: Message, completeCallback: (err?: Error, result?: results.MessageCompleted) => void): void {
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_016: [The ‘complete’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
-    if (!message) throw new ReferenceError('message is \'' + message + '\'');
+  complete(message: Message, completeCallback?: Callback<results.MessageCompleted>): Promise<results.MessageCompleted> | void {
+    return callbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_INTERNAL_CLIENT_16_016: [The ‘complete’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
+      if (!message) throw new ReferenceError('message is \'' + message + '\'');
 
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-    retryOp.retry((opCallback) => {
-      this._transport.complete(message, opCallback);
-    }, (err, result) => {
-      safeCallback(completeCallback, err, result);
-    });
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+        this._transport.complete(message, opCallback);
+      }, (err, result) => {
+        safeCallback(_callback, err, result);
+      });
+    }, completeCallback);
   }
 
-  reject(message: Message, rejectCallback: (err?: Error, result?: results.MessageRejected) => void): void {
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_018: [The reject method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
-    if (!message) throw new ReferenceError('message is \'' + message + '\'');
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-    retryOp.retry((opCallback) => {
-      this._transport.reject(message, opCallback);
-    }, (err, result) => {
-      safeCallback(rejectCallback, err, result);
-    });
+  reject(message: Message, rejectCallback?: Callback<results.MessageRejected>): Promise<results.MessageRejected> | void {
+    return callbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_INTERNAL_CLIENT_16_018: [The reject method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
+      if (!message) throw new ReferenceError('message is \'' + message + '\'');
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+        this._transport.reject(message, opCallback);
+      }, (err, result) => {
+        safeCallback(_callback, err, result);
+      });
+    }, rejectCallback);
   }
 
-  abandon(message: Message, abandonCallback: (err?: Error, result?: results.MessageAbandoned) => void): void {
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_017: [The abandon method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
-    if (!message) throw new ReferenceError('message is \'' + message + '\'');
+  abandon(message: Message, abandonCallback?: Callback<results.MessageAbandoned>): Promise<results.MessageAbandoned> | void {
+    return callbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_INTERNAL_CLIENT_16_017: [The abandon method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
+      if (!message) throw new ReferenceError('message is \'' + message + '\'');
 
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-    retryOp.retry((opCallback) => {
-      this._transport.abandon(message, opCallback);
-    }, (err, result) => {
-      safeCallback(abandonCallback, err, result);
-    });
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+        this._transport.abandon(message, opCallback);
+      }, (err, result) => {
+        safeCallback(_callback, err, result);
+      });
+    }, abandonCallback);
   }
 
-  getTwin(done: (err?: Error, twin?: Twin) => void): void {
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_094: [If this is the first call to `getTwin` the method shall instantiate a new `Twin` object  and pass it the transport currently in use.]*/
-    if (!this._twin) {
-      this._twin = new Twin(this._transport, this._retryPolicy, this._maxOperationTimeout);
-    }
+  getTwin(done: Callback<Twin>): Promise<Twin> | void {
+    return callbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_INTERNAL_CLIENT_16_094: [If this is the first call to `getTwin` the method shall instantiate a new `Twin` object  and pass it the transport currently in use.]*/
+      if (!this._twin) {
+        this._twin = new Twin(this._transport, this._retryPolicy, this._maxOperationTimeout);
+      }
 
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_095: [The `getTwin` method shall call the `get()` method on the `Twin` object currently in use and pass it its `done` argument for a callback.]*/
-    this._twin.get(done);
+      /*Codes_SRS_NODE_INTERNAL_CLIENT_16_095: [The `getTwin` method shall call the `get()` method on the `Twin` object currently in use and pass it its `done` argument for a callback.]*/
+      this._twin.get(_callback);
+    }, done);
   }
 
   /**
@@ -319,8 +340,8 @@ export abstract class InternalClient extends EventEmitter {
       throw new ReferenceError('methodName cannot be \'' + methodName + '\'');
     }
     // Codes_SRS_NODE_INTERNAL_CLIENT_13_024: [ onDeviceMethod shall throw a TypeError if methodName is not a string. ]
-    if (typeof(methodName) !== 'string') {
-      throw new TypeError('methodName\'s type is \'' + typeof(methodName) + '\'. A string was expected.');
+    if (typeof (methodName) !== 'string') {
+      throw new TypeError('methodName\'s type is \'' + typeof (methodName) + '\'. A string was expected.');
     }
 
     // Codes_SRS_NODE_INTERNAL_CLIENT_13_022: [ onDeviceMethod shall throw a ReferenceError if callback is falsy. ]
@@ -329,8 +350,8 @@ export abstract class InternalClient extends EventEmitter {
     }
 
     // Codes_SRS_NODE_INTERNAL_CLIENT_13_025: [ onDeviceMethod shall throw a TypeError if callback is not a Function. ]
-    if (typeof(callback) !== 'function') {
-      throw new TypeError('callback\'s type is \'' + typeof(callback) + '\'. A function reference was expected.');
+    if (typeof (callback) !== 'function') {
+      throw new TypeError('callback\'s type is \'' + typeof (callback) + '\'. A function reference was expected.');
     }
 
     // Codes_SRS_NODE_INTERNAL_CLIENT_13_023: [ onDeviceMethod shall throw an Error if a listener is already subscribed for a given method call. ]
@@ -360,8 +381,8 @@ export abstract class InternalClient extends EventEmitter {
   private _enableMethods(callback: (err?: Error) => void): void {
     if (!this._methodsEnabled) {
       const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-        retryOp.retry((opCallback) => {
-      this._transport.enableMethods(opCallback);
+      retryOp.retry((opCallback) => {
+        this._transport.enableMethods(opCallback);
       }, (err) => {
         if (!err) {
           this._methodsEnabled = true;
@@ -496,4 +517,4 @@ export interface MethodMessage {
   body: Buffer;
 }
 
-export type TransportCtor = new(config: Config) => DeviceTransport;
+export type TransportCtor = new (config: Config) => DeviceTransport;

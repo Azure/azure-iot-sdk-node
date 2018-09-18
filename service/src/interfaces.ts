@@ -4,11 +4,18 @@
 'use strict';
 
 import { IncomingMessage } from 'http';
+import { TripleValueCallback } from 'azure-iot-common/lib/promise_utils';
 
-/**
- * @private
- */
-export type Callback<T> = (err?: Error, result?: T, response?: IncomingMessage) => void;
+export type IncomingMessageCallback<TResult> = TripleValueCallback<TResult, IncomingMessage>;
+
+export type ResultWithIncomingMessage<TResult> = {
+    result: TResult,
+    message: IncomingMessage
+};
+
+export function createResultWithIncomingMessage<TResult>(result: TResult, message: IncomingMessage): ResultWithIncomingMessage<TResult> {
+    return { result: result, message: message };
+}
 
 /**
  * Describes the parameters that are available for use with direct methods (also called device methods)

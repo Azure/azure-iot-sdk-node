@@ -7,7 +7,8 @@ import { errors } from 'azure-iot-common';
 import * as _ from 'lodash';
 import { DeviceIdentity } from './device';
 import { Registry } from './registry';
-import { Callback } from './interfaces';
+import { IncomingMessageCallback, ResultWithIncomingMessage, createResultWithIncomingMessage } from './interfaces';
+import { tripleValueCallbackToPromise } from 'azure-iot-common/lib/promise_utils';
 
 /**
  * @private
@@ -91,7 +92,7 @@ export class Twin implements TwinData {
     /*Codes_SRS_NODE_IOTHUB_TWIN_16_003: [The `Twin(device, registryClient)` constructor shall throw a `ReferenceError` if `registryClient` is falsy.]*/
     if (!registryClient) throw new ReferenceError('\'registryClient\' cannot be \'' + registryClient + '\'');
 
-    if (typeof(device) === 'string') {
+    if (typeof (device) === 'string') {
       /*Codes_SRS_NODE_IOTHUB_TWIN_16_001: [The `Twin(device, registryClient)` constructor shall initialize an empty instance of a `Twin` object and set the `deviceId` base property to the `device` argument if it is a `string`.]*/
       this.deviceId = device;
     } else {
@@ -116,89 +117,95 @@ export class Twin implements TwinData {
   /**
    * @method            module:azure-iothub.Twin.get
    * @description       Gets the latest version of this device twin from the IoT Hub service.
-   * @param {Function}  done        The function to call when the operation is
+   * @param {Function}  [done]      The optional function to call when the operation is
    *                                complete. `done` will be called with three
    *                                arguments: an Error object (can be null), a
    *                                {@link module:azure-iothub.Twin|Twin}
    *                                object representing the created device
    *                                identity, and a transport-specific response
    *                                object useful for logging or debugging.
+   * @returns {Promise<ResultWithIncomingMessage<Twin>> | void} Promise if no callback function was passed, void otherwise.
    */
-  get(done: Callback<Twin>): void {
-    /*Codes_SRS_NODE_IOTHUB_TWIN_16_020: [If `this.moduleId` is falsy, the `get` method shall call the `getTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
-    - `this.deviceId`
-    - `done`]*/
-    /*Codes_SRS_NODE_IOTHUB_TWIN_18_001: [If `this.moduleId` is not falsy, the `get` method shall call the `getModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
-    - `this.deviceId`
-    - `this.moduleId`
-    - `done`]*/
+  get(done?: IncomingMessageCallback<Twin>): Promise<ResultWithIncomingMessage<Twin>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_IOTHUB_TWIN_16_020: [If `this.moduleId` is falsy, the `get` method shall call the `getTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+          - `this.deviceId`
+          - `done`]*/
+      /*Codes_SRS_NODE_IOTHUB_TWIN_18_001: [If `this.moduleId` is not falsy, the `get` method shall call the `getModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+      - `this.deviceId`
+      - `this.moduleId`
+      - `done`]*/
 
-    let get: any;
-    if (this.moduleId) {
-      get = (done) => this._registry.getModuleTwin(this.deviceId, this.moduleId, done);
-    } else {
-      get = (done) => this._registry.getTwin(this.deviceId, done);
-    }
-
-    get((err, result, response) => {
-      if (err) {
-        /*Codes_SRS_NODE_IOTHUB_TWIN_16_022: [The method shall call the `done` callback with an `Error` object if the request failed]*/
-        done(err);
+      let get: any;
+      if (this.moduleId) {
+        get = (done) => this._registry.getModuleTwin(this.deviceId, this.moduleId, done);
       } else {
-        /*Codes_SRS_NODE_IOTHUB_TWIN_16_021: [The method shall copy properties, tags, and etag in the twin returned in the callback of the `Registry` method call into its parent object.]*/
-        this.properties = result.properties;
-        this.tags = result.tags;
-        this.etag = result.etag;
-        /*Codes_SRS_NODE_IOTHUB_TWIN_16_023: [The method shall call the `done` callback with a `null` error object, its parent instance as a second argument and the transport `response` object as a third argument if the request succeeded.]*/
-        done(null, this, response);
+        get = (done) => this._registry.getTwin(this.deviceId, done);
       }
-    });
+
+      get((err, result, response) => {
+        if (err) {
+          /*Codes_SRS_NODE_IOTHUB_TWIN_16_022: [The method shall call the `_callback ` callback with an `Error` object if the request failed]*/
+          _callback(err);
+        } else {
+          /*Codes_SRS_NODE_IOTHUB_TWIN_16_021: [The method shall copy properties, tags, and etag in the twin returned in the callback of the `Registry` method call into its parent object.]*/
+          this.properties = result.properties;
+          this.tags = result.tags;
+          this.etag = result.etag;
+          /*Codes_SRS_NODE_IOTHUB_TWIN_16_023: [The method shall call the `_callback` callback with a `null` error object, its parent instance as a second argument and the transport `response` object as a third argument if the request succeeded.]*/
+          _callback(null, this, response);
+        }
+      });
+    }, (t, i) => { return createResultWithIncomingMessage(t, i); }, done);
   }
 
   /**
    * @method            module:azure-iothub.Twin.update
    * @description       Update the device twin with the patch provided as argument.
    * @param {Object}    patch       Object containing the new values to apply to this device twin.
-   * @param {Function}  done        The function to call when the operation is
+   * @param {Function}  [done]      The optional function to call when the operation is
    *                                complete. `done` will be called with three
    *                                arguments: an Error object (can be null), a
    *                                {@link module:azure-iothub.Twin|Twin}
    *                                object representing the created device
    *                                identity, and a transport-specific response
    *                                object useful for logging or debugging.
+   * @returns {Promise<ResultWithIncomingMessage<Twin>> | void} Promise if no callback function was passed, void otherwise.
    */
-  update(patch: any, done: Callback<Twin>): void {
-    /*Codes_SRS_NODE_IOTHUB_TWIN_16_019: [If `this.moduleId` is falsy, The `update` method shall call the `updateTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
-    - `this.deviceId`
-    - `patch`
-    - `this.etag`
-    - `done`]*/
-    /*Codes_SRS_NODE_IOTHUB_TWIN_18_002: [If `this.moduleId` is not falsy, the `update` method shall call the `updateModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
-    - `this.deviceId`
-    - `this.moduleId`
-    - `patch`
-    - `this.etag`
-    - `done`]*/
-    let update: any;
-    if (this.moduleId) {
-      update = (done) => this._registry.updateModuleTwin(this.deviceId, this.moduleId, patch, this.etag, done);
-    } else {
-      update = (done) => this._registry.updateTwin(this.deviceId, patch, this.etag, done);
-    }
-
-    update((err, result, response) => {
-      if (err) {
-        /*Codes_SRS_NODE_IOTHUB_TWIN_16_022: [The method shall call the `done` callback with an `Error` object if the request failed]*/
-        done(err);
+  update(patch: any, done?: IncomingMessageCallback<Twin>): Promise<ResultWithIncomingMessage<Twin>> | void {
+    return tripleValueCallbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_IOTHUB_TWIN_16_019: [If `this.moduleId` is falsy, The `update` method shall call the `updateTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+      - `this.deviceId`
+      - `patch`
+      - `this.etag`
+      - `done`]*/
+      /*Codes_SRS_NODE_IOTHUB_TWIN_18_002: [If `this.moduleId` is not falsy, the `update` method shall call the `updateModuleTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
+      - `this.deviceId`
+      - `this.moduleId`
+      - `patch`
+      - `this.etag`
+      - `done`]*/
+      let update: any;
+      if (this.moduleId) {
+        update = (done) => this._registry.updateModuleTwin(this.deviceId, this.moduleId, patch, this.etag, done);
       } else {
-        /*Codes_SRS_NODE_IOTHUB_TWIN_16_021: [The method shall copy properties, tags, and etag in the twin returned in the callback of the `Registry` method call into its parent object.]*/
-        this.properties = result.properties;
-        this.tags = result.tags;
-        this.etag = result.etag;
-        /*Codes_SRS_NODE_IOTHUB_TWIN_16_023: [The method shall call the `done` callback with a `null` error object, its parent instance as a second argument and the transport `response` object as a third argument if the request succeeded.]*/
-        done(null, this, response);
+        update = (done) => this._registry.updateTwin(this.deviceId, patch, this.etag, done);
       }
-    });
+
+      update((err, result, response) => {
+        if (err) {
+          /*Codes_SRS_NODE_IOTHUB_TWIN_16_022: [The method shall call the `_callback` callback with an `Error` object if the request failed]*/
+          _callback(err);
+        } else {
+          /*Codes_SRS_NODE_IOTHUB_TWIN_16_021: [The method shall copy properties, tags, and etag in the twin returned in the callback of the `Registry` method call into its parent object.]*/
+          this.properties = result.properties;
+          this.tags = result.tags;
+          this.etag = result.etag;
+          /*Codes_SRS_NODE_IOTHUB_TWIN_16_023: [The method shall call the `_callback` callback with a `null` error object, its parent instance as a second argument and the transport `response` object as a third argument if the request succeeded.]*/
+          _callback(null, this, response);
+        }
+      });
+    }, (t, r) => { return createResultWithIncomingMessage(t, r); }, done);
   }
 
   /*Codes_SRS_NODE_IOTHUB_TWIN_16_015: [The `toJSON` method shall return a copy of the `Twin` object that doesn't contain the `_registry` private property.]*/

@@ -7,13 +7,13 @@ import { Stream } from 'stream';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:InternalClient');
 
-import { AuthenticationProvider, RetryOperation, ConnectionString, results } from 'azure-iot-common';
+import { AuthenticationProvider, RetryOperation, ConnectionString, results, Callback, ErrorCallback, callbackToPromise, doubleValueCallbackToPromise, DoubleValueCallback } from 'azure-iot-common';
 import { InternalClient, DeviceTransport } from './internal_client';
 import { BlobUploadClient } from './blob_upload';
 import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
 import { X509AuthenticationProvider } from './x509_authentication_provider';
 import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
-import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
+import { DeviceMethodRequest, DeviceMethodResponse, DeviceMethodExchange, createDeviceMethodExchange } from './device_method';
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
   if (callback) callback(error, result);
@@ -96,21 +96,25 @@ export class Client extends InternalClient {
    *
    * *Note: After calling this method the Client object cannot be reused.*
    *
-   * @param closeCallback Function to call once the transport is disconnected and the client closed.
+   * @param {Callback<results.Disconnected>} [closeCallback] Optional function to call once the transport is disconnected and the client closed.
+   * @returns {Promise<results.Disconnected> | void} Promise if no callback function was passed, void otherwise.
    */
-  close(closeCallback?: (err?: Error, result?: results.Disconnected) => void): void {
-    this._transport.removeListener('disconnect', this._deviceDisconnectHandler);
-    super.close(closeCallback);
+  close(closeCallback?: Callback<results.Disconnected>): Promise<results.Disconnected> | void {
+    return callbackToPromise((_callback) => {
+      this._transport.removeListener('disconnect', this._deviceDisconnectHandler);
+      super.close(closeCallback);
+    }, closeCallback);
   }
 
   /**
    * Registers a callback for a method named `methodName`.
    *
    * @param methodName Name of the method that will be handled by the callback
-   * @param callback   Function that shall be called whenever a method request for the method called `methodName` is received.
+   * @param [callback] Optional function that shall be called whenever a method request for the method called `methodName` is received.
+   * @returns {Promise<DeviceMethodExchange> | void} Promise if no callback function was passed, void otherwise.
    */
-  onDeviceMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
-    this._onDeviceMethod(methodName, callback);
+  onDeviceMethod(methodName: string, callback?: DoubleValueCallback<DeviceMethodRequest, DeviceMethodResponse>): Promise<DeviceMethodExchange> | void {
+    return doubleValueCallbackToPromise((_callback) => this._onDeviceMethod(methodName, _callback), createDeviceMethodExchange, callback);
   }
 
   /**
@@ -119,26 +123,29 @@ export class Client extends InternalClient {
    * @param {String}   blobName         The name to use for the blob that will be created with the content of the stream.
    * @param {Stream}   stream           The data to that should be uploaded to the blob.
    * @param {Number}   streamLength     The size of the data to that should be uploaded to the blob.
-   * @param {Function} done             The callback to call when the upload is complete.
+   * @param {ErrorCallback} [done]      Optional callback to call when the upload is complete.
+   * @returns {Promise<void> | void}    Promise if no callback function was passed, void otherwise.
    *
    * @throws {ReferenceException} If blobName or stream or streamLength is falsy.
    */
-  uploadToBlob(blobName: string, stream: Stream, streamLength: number, done: (err?: Error) => void): void {
-    /*Codes_SRS_NODE_DEVICE_CLIENT_16_037: [The `uploadToBlob` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
-    if (!blobName) throw new ReferenceError('blobName cannot be \'' + blobName + '\'');
-    /*Codes_SRS_NODE_DEVICE_CLIENT_16_038: [The `uploadToBlob` method shall throw a `ReferenceError` if `stream` is falsy.]*/
-    if (!stream) throw new ReferenceError('stream cannot be \'' + stream + '\'');
-    /*Codes_SRS_NODE_DEVICE_CLIENT_16_039: [The `uploadToBlob` method shall throw a `ReferenceError` if `streamLength` is falsy.]*/
-    if (!streamLength) throw new ReferenceError('streamLength cannot be \'' + streamLength + '\'');
+  uploadToBlob(blobName: string, stream: Stream, streamLength: number, callback?: ErrorCallback): Promise<void> | void {
+    return callbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_16_037: [The `uploadToBlob` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
+      if (!blobName) throw new ReferenceError('blobName cannot be \'' + blobName + '\'');
+      /*Codes_SRS_NODE_DEVICE_CLIENT_16_038: [The `uploadToBlob` method shall throw a `ReferenceError` if `stream` is falsy.]*/
+      if (!stream) throw new ReferenceError('stream cannot be \'' + stream + '\'');
+      /*Codes_SRS_NODE_DEVICE_CLIENT_16_039: [The `uploadToBlob` method shall throw a `ReferenceError` if `streamLength` is falsy.]*/
+      if (!streamLength) throw new ReferenceError('streamLength cannot be \'' + streamLength + '\'');
 
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-    retryOp.retry((opCallback) => {
-      /*Codes_SRS_NODE_DEVICE_CLIENT_16_040: [The `uploadToBlob` method shall call the `done` callback with an `Error` object if the upload fails.]*/
-      /*Codes_SRS_NODE_DEVICE_CLIENT_16_041: [The `uploadToBlob` method shall call the `done` callback no parameters if the upload succeeds.]*/
-      this.blobUploadClient.uploadToBlob(blobName, stream, streamLength, opCallback);
-    }, (err, result) => {
-      safeCallback(done, err, result);
-    });
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+        /*Codes_SRS_NODE_DEVICE_CLIENT_16_040: [The `uploadToBlob` method shall call the `_callback` callback with an `Error` object if the upload fails.]*/
+        /*Codes_SRS_NODE_DEVICE_CLIENT_16_041: [The `uploadToBlob` method shall call the `_callback` callback no parameters if the upload succeeds.]*/
+        this.blobUploadClient.uploadToBlob(blobName, stream, streamLength, opCallback);
+      }, (err, result) => {
+        safeCallback(_callback, err, result);
+      });
+    }, callback);
   }
 
   private _enableC2D(callback: (err?: Error) => void): void {

@@ -7,6 +7,7 @@ import { Message } from './lib/message';
 export import endpoint = require('./lib/endpoint');
 export import errors = require('./lib/errors');
 export import results = require('./lib/results');
+export { ResultWithHttpResponse } from './lib/results';
 export { anHourFromNow, encodeUriComponentStrict } from './lib/authorization';
 export { ConnectionString } from './lib/connection_string';
 export { Message }
@@ -15,6 +16,7 @@ export { RetryOperation } from './lib/retry_operation';
 export { RetryPolicy, NoRetry, ExponentialBackOffWithJitter } from './lib/retry_policy';
 export { AuthenticationProvider, AuthenticationType } from './lib/authentication_provider';
 export { getAgentPlatformString } from './lib/utils';
+export { Callback, ErrorCallback, DoubleValueCallback, HttpResponseCallback, callbackToPromise, doubleValueCallbackToPromise, errorCallbackToPromise, noErrorCallbackToPromise, tripleValueCallbackToPromise } from './lib/promise_utils'
 
 export interface Receiver extends EventEmitter {
     on(type: 'message', func: (msg: Message) => void): this;
