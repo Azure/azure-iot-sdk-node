@@ -172,31 +172,35 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
         fs.unlinkSync('aziotfakepemfile');
       });
 
-      /*Tests_SRS_NODE_INTERNAL_CLIENT_06_001: [The `setOption` method shall first test if the `ca` property is the name of an already existent file.  If so, it will attempt to read that file as a pem into a string value and pass the string to config object `ca` property.  Otherwise, it is assumed to be a pem string.] */
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_06_001: [The `setOptions` method shall assume the `ca` property is the name of an already existent file and it will attempt to read that file as a pem into a string value and pass the string to config object `ca` property.  Otherwise, it is assumed to be a pem string.] */
       it('sets CA cert with contents of file if provided', function (testCallback) {
         var fakeBaseClient = new FakeTransport();
-        fakeBaseClient.setOptions = sinon.stub();
+        fakeBaseClient.setOptions = sinon.stub().callsArg(1);
         var fakeMethodClient = {}
         fakeMethodClient.setOptions = sinon.stub();
         var client = new ClientCtor(fakeBaseClient);
         client._methodClient = fakeMethodClient;
-        client.setOptions({ ca: 'aziotfakepemfile' });
-        assert(fakeBaseClient.setOptions.called);
-        assert.strictEqual(fakeBaseClient.setOptions.firstCall.args[0].ca, 'ca cert');
-        testCallback();
+        client.setOptions({ ca: 'aziotfakepemfile' }, function(err) {
+          assert.isNotOk(err, 'the setOptions passed')
+          assert(fakeBaseClient.setOptions.called);
+          assert.strictEqual(fakeBaseClient.setOptions.firstCall.args[0].ca, 'ca cert');
+          testCallback();
+        });
       });
 
       it('sets CA cert with contents of provided string', function (testCallback) {
         var fakeBaseClient = new FakeTransport();
-        fakeBaseClient.setOptions = sinon.stub();
+        fakeBaseClient.setOptions = sinon.stub().callsArg(1);
         var fakeMethodClient = {}
         fakeMethodClient.setOptions = sinon.stub();
         var client = new ClientCtor(fakeBaseClient);
         client._methodClient = fakeMethodClient;
-        client.setOptions({ ca: 'ca cert' });
-        assert(fakeBaseClient.setOptions.called);
-        assert.strictEqual(fakeBaseClient.setOptions.firstCall.args[0].ca, 'ca cert');
-        testCallback();
+        client.setOptions({ ca: 'ca cert' }, function(err) {
+          assert.isNotOk(err, 'the setOptions passed')
+          assert(fakeBaseClient.setOptions.called);
+          assert.strictEqual(fakeBaseClient.setOptions.firstCall.args[0].ca, 'ca cert');
+          testCallback();
+        });
       });
     });
 
