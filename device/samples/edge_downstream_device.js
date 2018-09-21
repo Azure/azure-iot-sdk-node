@@ -42,7 +42,7 @@ var connectCallback = function (err) {
       // MQTT is simpler: it accepts the message by default, and doesn't support rejecting or abandoning a message.
     });
 
-    // Create a message and send it to the IoT Hub every second
+    // Create a message and send it to the IoT Hub every two seconds
     var sendInterval = setInterval(function () {
       var windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
       var temperature = 20 + (Math.random() * 10); // range: [20, 30]
