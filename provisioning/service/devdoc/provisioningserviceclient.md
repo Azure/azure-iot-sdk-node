@@ -79,27 +79,31 @@ The `deleteIndividualEnrollment` method deletes a device enrollment.
 ```
 DELETE /enrollments/<uri-encoded-enrollmentOrId>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
-``` **]**
+```
+**]**
 
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_044: [** The `deleteIndividualEnrollment` method, if the first argument is a string, and the second argument is a string, shall construct an HTTP request using information supplied by the caller as follows:
 ```
 DELETE /enrollments/<uri-encoded-enrollmentOrId>?api-version=<version> HTTP/1.1
 If-Match: <second argument>
 Authorization: <sharedAccessSignature>
-``` **]**
+```
+**]**
 
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_021: [** The `deleteIndividualEnrollment` method, if the first argument is an `IndividualEnrollment` object, with a non-falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
 ```
 DELETE /enrollments/<uri-encoded-enrollmentOrId.registrationId>?api-version=<version> HTTP/1.1
 If-Match: enrollmentOrId.etag
 Authorization: <sharedAccessSignature>
-``` **]**
+```
+**]**
 
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_024: [** The `deleteIndividualEnrollment` method, if the first argument is an `IndividualEnrollment` object, with a falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
 ```
 DELETE /enrollments/<uri-encoded-enrollmentParameter.registrationId>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
-``` **]**
+```
+**]**
 
 ### deleteEnrollmentGroup(enrollmentGroupOrId, deleteCallback)
 The `deleteEnrollmentGroup` method deletes an enrollment group.
@@ -118,27 +122,31 @@ The `deleteEnrollmentGroup` method deletes an enrollment group.
 ```
 DELETE /enrollmentGroups/<uri-encoded-enrollmentGroupOrId>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
-``` **]**
+```
+**]**
 
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_049: [** The `deleteEnrollmentGroup` method, if the first argument is a string, and the second argument is a string, shall construct an HTTP request using information supplied by the caller as follows:
 ```
 DELETE /enrollmentGroups/<uri-encoded-enrollmentGroupOrId>?api-version=<version> HTTP/1.1
 If-Match: <second argument>
 Authorization: <sharedAccessSignature>
-``` **]**
+```
+**]**
 
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_022: [** The `deleteEnrollmentGroup` method, if the first argument is an `EnrollmentGroup` object, with a non-falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
 ```
 DELETE /enrollmentGroups/<uri-encoded-enrollmentGroupOrId.enrollmentGroupId>?api-version=<version> HTTP/1.1
 If-Match: enrollmentGroupOrId.etag
 Authorization: <sharedAccessSignature>
-``` **]**
+```
+**]**
 
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_023: [** The `deleteEnrollmentGroup` method, if the first argument is an `EnrollmentGroup` object, with a falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
 ```
 DELETE /enrollmentGroups/<uri-encoded-enrollmentGroupOrId.enrollmentGroupId>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
-``` **]**
+```
+**]**
 
 ### deleteDeviceRegistrationState(idOrRegistrationState, deleteCallback)
 The `deleteDeviceRegistrationState` method deletes a registration state.
@@ -157,27 +165,31 @@ The `deleteDeviceRegistrationState` method deletes a registration state.
 ```
 DELETE /registrations/<uri-encoded-idOrRegistrationState>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
-``` **]**
+```
+**]**
 
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_054: [** The `deleteDeviceRegistrationState` method, if the first argument is a string, and the second argument is a string, shall construct an HTTP request using information supplied by the caller as follows:
 ```
 DELETE /registrations/<uri-encoded-idOrRegistrationState>?api-version=<version> HTTP/1.1
 If-Match: <second argument>
 Authorization: <sharedAccessSignature>
-``` **]**
+```
+**]**
 
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_028: [** The `deleteDeviceRegistrationState` method, if the first argument is a `DeviceRegistrationState` object, with a non-falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
 ```
 DELETE /registrations/<uri-encoded-idOrRegistrationState.registrationId>?api-version=<version> HTTP/1.1
 If-Match: idOrRegistrationState.etag
 Authorization: <sharedAccessSignature>
-``` **]**
+```
+**]**
 
 **SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_029: [** The `deleteDeviceRegistrationState` method, if the first argument is a `DeviceRegistrationState` object, with a falsy `etag` property, shall construct an HTTP request using information supplied by the caller as follows:
 ```
 DELETE /registrations/<uri-encoded-idOrRegistrationState.registrationId>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
-``` **]**
+```
+**]**
 
 ### getIndividualEnrollment(id, getCallback)
 The `getIndividualEnrollment` method returns an `IndividualEnrollment` object.
@@ -188,7 +200,8 @@ The `getIndividualEnrollment` method returns an `IndividualEnrollment` object.
 GET /enrollments/<uri-encoded-id>?api-version=<version> HTTP/1.1
 Accept: application/json
 Authorization: <sharedAccessSignature>
-``` **]**
+```
+**]**
 
 ### getEnrollmentGroup(id, getEnrollmentGroupCallback)
 The `getEnrollmentGroup` method returns an `EnrollmentGroup` object
@@ -198,7 +211,8 @@ The `getEnrollmentGroup` method returns an `EnrollmentGroup` object
 ```
 GET /enrollmentGroups/<uri-encoded-id>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
-``` **]**
+```
+**]**
 
 ### getDeviceRegistrationState(id, deviceRegistrationsStateCallback)
 The `getDeviceRegistrationState` returns a `DeviceRegistrationState`.
@@ -208,7 +222,8 @@ The `getDeviceRegistrationState` returns a `DeviceRegistrationState`.
 ```
 GET /registrations/<uri-encoded-id>?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
-``` **]**
+```
+**]**
 
 ### runBulkEnrollmentOperation(bulkEnrollmentOperation, bulkEnrollmentOperationCallback)
 The `runBulkEnrollmentOperation` can perform CRUD operations on IndividualEnrollment objects in bulk.
@@ -223,7 +238,20 @@ Accept: application/json
 Content-Type: application/json; charset=utf-8
 
 <stringified json string of the bulkEnrollmentOperation argument>
-``` **]**
+```
+**]**
+
+### getAttestationMechanism(enrollementId: string, callback: (err: Error, attestationMechanism?: AttestationMechanism) => void): void;
+The `getAttestationMechanism` method gets the `AttestationMechanism` object of a specific enrollment record.
+
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_001: [** The `getAttestationMechanism` method shall throw a `ReferenceError` if the `enrollmentId` parameter is falsy. **]**
+
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_002: [** The `getAttestationMechanism` shall construct an HTTP request using information supplied by the caller as follows:
+```
+POST /enrollments/<encodeUriComponentStrict(enrollmentId)>/?api-version=<version> HTTP/1.1
+Authorization: <sharedAccessSignature>
+```
+**]**
 
 ### Generic HTTP Requirements
 

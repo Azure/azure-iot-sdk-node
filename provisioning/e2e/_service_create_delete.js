@@ -23,8 +23,34 @@ var enrollment = {
   provisioningStatus: "enabled",
   capabilities: {
     iotEdge: true
+  },
+  reprovisionPolicy: {
+    updateHubAssignment: true,
+    migrateDeviceData: true
+  },
+  allocationPolicy: 'custom',
+  customAllocationDefinition: {
+    webhookUrl: 'https://web.hook',
+    apiVersion: '2018-09-01-preview'
   }
 };
+
+var symmetricKeyEnrollment = {
+  registrationId: 'e2e-node-deleteme-psc-' + uuid.v4(),
+  attestation: {
+    type: 'symmetricKey',
+    symmetricKey: {
+      primaryKey: Buffer.from('fakeprimarykeyreallydoesnotmatter').toString('base64'),
+      secondaryKey: Buffer.from('fakesecondarykeyreallydoesnotmatter').toString('base64')
+    }
+  },
+  provisioningStatus: "enabled",
+  reprovisionPolicy: {
+    updateHubAssignment: false,
+    migrateDeviceData: false
+  },
+  allocationPolicy: 'hashed'
+}
 
 var enrollmentGroup = {
   enrollmentGroupId: 'e2e-node-deleteme-psc-' + uuid.v4(),
@@ -38,7 +64,29 @@ var enrollmentGroup = {
       }
     }
   },
-  provisioningStatus: "enabled"
+  provisioningStatus: "enabled",
+  reprovisionPolicy: {
+    updateHubAssignment: true,
+    migrateDeviceData: false
+  },
+  allocationPolicy: 'geoLatency'
+};
+
+var symmetricKeyEnrollmentGroup = {
+  enrollmentGroupId: 'e2e-node-deleteme-psc-' + uuid.v4(),
+  attestation: {
+    type: 'symmetricKey',
+    symmetricKey: {
+      primaryKey: Buffer.from('fakeprimarykeyreallydoesnotmatter').toString('base64'),
+      secondaryKey: Buffer.from('fakesecondarykeyreallydoesnotmatter').toString('base64')
+    }
+  },
+  provisioningStatus: "enabled",
+  reprovisionPolicy: {
+    updateHubAssignment: false,
+    migrateDeviceData: true
+  },
+  allocationPolicy: 'static'
 };
 
 describe('provisioning service client', function () {
@@ -57,19 +105,35 @@ describe('provisioning service client', function () {
   var testSpecification = [
     {
       deleteFunction: serviceClient.deleteIndividualEnrollment.bind(serviceClient),
-      testDescription: 'IndividualEnrollment object',
+      testDescription: 'IndividualEnrollment object with TPM',
       idPropertyName: 'registrationId',
       createFunction: serviceClient.createOrUpdateIndividualEnrollment.bind(serviceClient),
       updateFunction: serviceClient.createOrUpdateIndividualEnrollment.bind(serviceClient),
       enrollmentObject: enrollment
     },
     {
+      deleteFunction: serviceClient.deleteIndividualEnrollment.bind(serviceClient),
+      testDescription: 'IndividualEnrollment object with symmetric keys',
+      idPropertyName: 'registrationId',
+      createFunction: serviceClient.createOrUpdateIndividualEnrollment.bind(serviceClient),
+      updateFunction: serviceClient.createOrUpdateIndividualEnrollment.bind(serviceClient),
+      enrollmentObject: symmetricKeyEnrollment
+    },
+    {
       deleteFunction: serviceClient.deleteEnrollmentGroup.bind(serviceClient),
-      testDescription: 'EnrollmentGroup object',
+      testDescription: 'EnrollmentGroup object with x509',
       idPropertyName: 'enrollmentGroupId',
       createFunction: serviceClient.createOrUpdateEnrollmentGroup.bind(serviceClient),
       updateFunction: serviceClient.createOrUpdateEnrollmentGroup.bind(serviceClient),
       enrollmentObject: enrollmentGroup
+    },
+    {
+      deleteFunction: serviceClient.deleteEnrollmentGroup.bind(serviceClient),
+      testDescription: 'EnrollmentGroup object with symmetric keys',
+      idPropertyName: 'enrollmentGroupId',
+      createFunction: serviceClient.createOrUpdateEnrollmentGroup.bind(serviceClient),
+      updateFunction: serviceClient.createOrUpdateEnrollmentGroup.bind(serviceClient),
+      enrollmentObject: symmetricKeyEnrollmentGroup
     }
   ];
   testSpecification.forEach(function(testConfiguration) {
@@ -158,6 +222,39 @@ describe('provisioning service client', function () {
           assert.equal(updatedEnrollment.provisioningStatus, 'disabled', 'provsioning state not disabled');
           enrollmentToDelete = updatedEnrollment;
           callback();
+        });
+      });
+    });
+
+    describe.skip('#getAttestationMechanism', function () {
+      var enrollmentToVerify;
+      before(function(done) {
+        testConfiguration.createFunction(testConfiguration.enrollmentObject, function(err, returnedEnrollment) {
+          if (err) {
+            debug(err);
+          }
+          assert.isNull(err,'Should be no error from the create');
+          enrollmentToVerify = returnedEnrollment;
+          done();
+        });
+      });
+      after(function(done) {
+        testConfiguration.deleteFunction(enrollmentToVerify, function(err) {
+          if (err) {
+            debug(err);
+          }
+          assert.isNull(err,'Non null response from the delete AFTER create.');
+          done();
+        });
+      });
+      it(testConfiguration.testDescription, function(done) {
+        serviceClient.getAttestationMechanism(enrollmentToVerify[testConfiguration.idPropertyName], function (err, attestationMechanism) {
+          if (err) {
+            debug(err);
+          }
+          assert.isNull(err);
+          assert.deepEqual(testConfiguration.enrollmentObject.attestation, attestationMechanism);
+          done();
         });
       });
     });

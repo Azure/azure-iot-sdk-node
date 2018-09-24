@@ -22,9 +22,28 @@ export interface AttestationMechanism {
    * for enrollment.
    */
   x509?: X509Attestation;
+
+  /**
+   * This property is an object containing the symmetric keys for an enrollment record.
+   */
+  symmetricKey?: SymmetricKeyAttestation;
 }
 
-export type AttestationTypes = 'none' | 'tpm' | 'x509';
+export type AttestationTypes = 'none' | 'tpm' | 'x509' | 'symmetricKey';
+
+/**
+ * Attestation via Symmetric Key.
+ */
+export interface SymmetricKeyAttestation {
+  /**
+   * Primary symmetric key.
+   */
+  primaryKey: string;
+  /**
+   * Secondary symmetric key.
+   */
+  secondaryKey: string;
+}
 
 /**
  * Attestation via TPM.
@@ -243,9 +262,16 @@ export interface DeviceRegistrationState {
    */
   deviceId: string;
   /**
-   * What is the provisioning state of the device at this particular moment.
+   * What is the provisioning state of the device at the moment of the request.
    */
   status: RegistrationStatus;
+  /**
+   * Substatus for 'Assigned' devices. Possible values include:
+   * - 'initialAssignment': Device has been assigned to an IoT hub for the first time.
+   * - 'deviceDataMigrated': Device has been assigned to a different IoT hub and its device data was migrated from the previously assigned IoT hub. Device data was removed from the previously assigned IoT hub.
+   * - 'deviceDataReset':  Device has been assigned to a different IoT hub and its device data was populated from the initial state stored in the enrollment. Device data was removed from the previously assigned IoT hub.
+   */
+  substatus: RegistrationSubstatus;
   /**
    * The last time that this registration status was updated.
    */
@@ -265,7 +291,35 @@ export interface DeviceRegistrationState {
   etag: string;
 }
 
+/**
+ * The provisioning state of the device at the moment of the request.
+ */
 export type RegistrationStatus = 'unassigned' | 'assigning' | 'assigned' | 'failed' | 'disabled';
+
+/**
+ * Substatus for 'Assigned' devices. Possible values include:
+ * - 'initialAssignment': Device has been assigned to an IoT hub for the first time.
+ * - 'deviceDataMigrated': Device has been assigned to a different IoT hub and its device data was migrated from the previously assigned IoT hub. Device data was removed from the previously assigned IoT hub.
+ * - 'deviceDataReset':  Device has been assigned to a different IoT hub and its device data was populated from the initial state stored in the enrollment. Device data was removed from the previously assigned IoT hub.
+ */
+export type RegistrationSubstatus = 'initialAssignment' | 'deviceDataMigrated' | 'deviceDataReset';
+
+/**
+ * The behavior the service should adopt when a device is re-provisioned to another IoT Hub.
+ */
+export interface ReprovisionPolicy {
+  /**
+   * When set to true (default) the Device Provisioning Service will evaluate the device's hub assignment and update it if necessary
+   * for any provisioning request beyond the first from a given device. If set to false the device will stay assigned to its current IoT hub.
+   */
+  updateHubAssignment: boolean;
+  /**
+   * When set to true (default) the Device Provisioning Service will migrate the device data (twin, device capabilities and device id)
+   * from one hub to another during an IoT hub assignment update. If set to false the Device Provisioning Service will reset the device data to its
+   * initial configuration stored in its corresponding enrollment.
+   */
+  migrateDeviceData: boolean;
+}
 
 /**
  * Capabilities of the device that will be provisioned using this enrollment record.
@@ -335,7 +389,40 @@ export interface IndividualEnrollment {
    * The capabilities of the device that will be provisioned using this enrollment record.
    */
   capabilities?: DeviceCapabilities;
+
+  /**
+   * The behavior when a device is re-provisioned to an IoT hub.
+   */
+  reprovisionPolicy?: ReprovisionPolicy;
+
+  /**
+   * The allocation policy of this individual enrollment. This policy overrides the tenant-level allocation policy.
+   * - 'hashed': Linked IoT hubs are equally likely to have devices provisioned to them.
+   * - 'geoLatency':  Devices are provisioned to an IoT hub with the lowest latency to the device.If multiple linked IoT hubs would provide the same lowest latency, the provisioning service hashes devices across those hubs.
+   * - 'static' : Specification of the desired IoT hub in the enrollment list takes priority over the service-level allocation policy.
+   * - 'custom': Devices are provisioned to an IoT hub based on your own custom logic. The provisioning service passes information about the device to the logic, and the logic returns the desired IoT hub as well as the desired initial configuration. We recommend using Azure Functions to host your logic.
+   */
+  allocationPolicy?: AllocationPolicyType;
+
+  /**
+   * The list of names of IoT hubs the device(s) in this resource can be allocated to. It must be a subset of tenant level list of IoT hubs.
+   */
+  iotHubs: string[];
+
+  /**
+   * Custom allocation definition.
+   */
+  customAllocationDefinition?: CustomAllocationDefinition;
 }
+
+/**
+ * The allocation policy of this individual enrollment. This policy overrides the tenant-level allocation policy.
+ * - 'hashed': Linked IoT hubs are equally likely to have devices provisioned to them.
+ * - 'geoLatency':  Devices are provisioned to an IoT hub with the lowest latency to the device.If multiple linked IoT hubs would provide the same lowest latency, the provisioning service hashes devices across those hubs.
+ * - 'static' : Specification of the desired IoT hub in the enrollment list takes priority over the service-level allocation policy.
+ * - 'custom': Devices are provisioned to an IoT hub based on your own custom logic. The provisioning service passes information about the device to the logic, and the logic returns the desired IoT hub as well as the desired initial configuration. We recommend using Azure Functions to host your logic.
+ */
+export type AllocationPolicyType = 'hashed' | 'geoLatency' | 'static' | 'custom';
 
 export type ProvisioningStatus = 'enabled' | 'disabled';
 
@@ -383,6 +470,45 @@ export interface EnrollmentGroup {
    * could include an update or an actual registration.
    */
   lastUpdatedDateTimeUtc: string;
+
+  /**
+   * The behavior when a device is re-provisioned to an IoT hub.
+   */
+  reprovisionPolicy?: ReprovisionPolicy;
+
+  /**
+   * The allocation policy of this enrollment group. This policy overrides the tenant-level allocation policy.
+   * - 'hashed': Linked IoT hubs are equally likely to have devices provisioned to them.
+   * - 'geoLatency':  Devices are provisioned to an IoT hub with the lowest latency to the device.If multiple linked IoT hubs would provide the same lowest latency, the provisioning service hashes devices across those hubs.
+   * - 'static' : Specification of the desired IoT hub in the enrollment list takes priority over the service-level allocation policy.
+   * - 'custom': Devices are provisioned to an IoT hub based on your own custom logic. The provisioning service passes information about the device to the logic, and the logic returns the desired IoT hub as well as the desired initial configuration. We recommend using Azure Functions to host your logic.
+   */
+  allocationPolicy?: AllocationPolicyType;
+
+  /**
+   * The list of names of IoT hubs the device(s) in this resource can be allocated to. It must be a subset of tenant level list of IoT hubs.
+   */
+  iotHubs: string[];
+
+  /**
+   * Custom allocation definition.
+   */
+  customAllocationDefinition?: CustomAllocationDefinition;
+}
+
+/**
+ * Custom allocation definition.
+ */
+export interface CustomAllocationDefinition {
+  /**
+   * The webhook URL used for allocation requests.
+   */
+  webhookUrl: string;
+  /**
+   * The API version of the provisioning service types (such as IndividualEnrollment) sent in the custom allocation request. Supported versions include:
+   * - "2018-09-01-preview"
+   */
+  apiVersion: string;
 }
 
 export interface Metadata {

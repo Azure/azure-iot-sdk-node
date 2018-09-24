@@ -4,9 +4,9 @@
 "use strict";
 
 var assert = require('chai').assert;
-var sinon = require('sinon');
 var errors = require('azure-iot-common').errors;
 var ProvisioningServiceClient = require('../lib/provisioningserviceclient.js').ProvisioningServiceClient;
+var encodeURIComponentStrict = require('azure-iot-common').encodeUriComponentStrict;
 
 var fakeRegistrationId = 'fakeId';
 var fakeDeviceId = 'sample-device';
@@ -58,7 +58,7 @@ var fakeRegistrationNoEtag = {
 };
 
 function _versionQueryString() {
-  return '?api-version=2018-04-01';
+  return '?api-version=2018-09-01-preview';
 }
 
 
@@ -552,6 +552,29 @@ describe('ProvisioningServiceClient', function() {
 
       var de = new ProvisioningServiceClient({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
       de.runBulkEnrollmentOperation(fakeBo, testCallback);
+    });
+  });
+
+  describe('#getAttestationMechanism', function () {
+    [undefined, null, ''].forEach(function(badEnrollmentId) {
+      testFalsyArg('getAttestationMechanism', 'enrollmentId', badEnrollmentId, ReferenceError);
+    });
+
+    testErrorCallback('getAttestationMechanism', 'enrollment-id');
+
+    it('creates a valid HTTP request', function (testCallback) {
+      var testEnrollmentId = 'test-#-enrollment';
+      var fakeHttpHelper = {
+        executeApiCall: function (method, path, httpHeaders, body, done) {
+          assert.equal(method, 'POST');
+          assert.equal(path, '/enrollments/' + encodeURIComponentStrict(testEnrollmentId) + '/attestationmechanism' + _versionQueryString());
+
+          done();
+        }
+      };
+
+      var de = new ProvisioningServiceClient({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
+      de.getAttestationMechanism(testEnrollmentId, testCallback);
     });
   });
 });

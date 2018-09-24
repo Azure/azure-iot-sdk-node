@@ -3,10 +3,10 @@
 
 'use strict';
 
-import { errors, SharedAccessSignature, ConnectionString } from 'azure-iot-common';
+import { errors, SharedAccessSignature, ConnectionString, encodeUriComponentStrict } from 'azure-iot-common';
 import { RestApiClient } from 'azure-iot-http-base';
 import { QuerySpecification, Query, QueryCallback } from './query';
-import { IndividualEnrollment, EnrollmentGroup, DeviceRegistrationState, BulkEnrollmentOperation, BulkEnrollmentOperationResult } from './interfaces';
+import { IndividualEnrollment, EnrollmentGroup, DeviceRegistrationState, BulkEnrollmentOperation, BulkEnrollmentOperationResult, AttestationMechanism } from './interfaces';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -195,6 +195,28 @@ export class ProvisioningServiceClient {
     this._delete(this._registrationsPrefix, idOrRegistrationState, etagOrCallback, deleteCallback);
   }
 
+  /**
+   * Gets the attestation mechanism for an enrollment record.
+   * @param enrollementId Unique identifier of the enrollment.
+   * @param callback Function called when the request is completed, either with an error or with an AttestationMechanism object.
+   */
+  public getAttestationMechanism(enrollementId: string, callback: (err: Error, attestationMechanism?: AttestationMechanism) => void): void {
+    /*SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_001: [The `getAttestationMechanism` method shall throw a `ReferenceError` if the `enrollmentId` parameter is falsy.]*/
+    if (!enrollementId) {
+      throw new ReferenceError('enrollmentId cannot be \'' + enrollementId + '\'');
+    }
+
+    /*SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_002: [The `getAttestationMechanism` shall construct an HTTP request using information supplied by the caller as follows:
+    ```
+    POST /enrollments/<encodeUriComponentStrict(enrollmentId)>/?api-version=<version> HTTP/1.1
+    Authorization: <sharedAccessSignature>
+    ```]*/
+    const path = '/enrollments/' + encodeUriComponentStrict(enrollementId) + '/attestationmechanism' + this._versionQueryString();
+    const headers = {};
+
+    this._restApiClient.executeApiCall('POST', path, headers, undefined, callback);
+  }
+
   private _getEnrollFunc(prefix: string, querySpecification: QuerySpecification, pageSize: number): (continuationToken: string, done: QueryCallback) => void {
     return (continuationToken, done) => {
       const path = prefix + 'query' + this._versionQueryString();
@@ -217,7 +239,7 @@ export class ProvisioningServiceClient {
   }
 
   private _versionQueryString(): string {
-    return '?api-version=2018-04-01';
+    return '?api-version=2018-09-01-preview';
   }
 
   private _createOrUpdate(endpointPrefix: string, enrollment: any, callback?: (err: Error, enrollmentResponse?: any, response?: any) => void): void {
