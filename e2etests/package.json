@@ -56,8 +56,8 @@
     "module_methods": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/module_methods.js",
     "flaky_tests": "npm-run-all -p -l  job_client",
     "phase0_modules": "npm-run-all -p -l module_crud module_messaging module_twin module_methods configurations",
-    "phase1_fast": "npm-run-all -p -l service registry device_acknowledge_tests upload_disconnect authentication method_disconnect",
-    "phase2_slow": "npm-run-all -p -l device_method twin_e2e_tests sas_token_tests device_service twin_disconnect c2d_disconnect d2c_disconnect",
+    "phase1_fast": "npm-run-all -p -l service registry device_acknowledge_tests upload_disconnect authentication",
+    "phase2_slow": "npm-run-all -p -l device_method twin_e2e_tests sas_token_tests device_service c2d_disconnect d2c_disconnect",
     "alltest": "npm run  phase0_modules && npm run phase1_fast && npm run phase2_slow",
     "e2e": "npm -s run lint && npm -s run alltest",
     "test": "npm -s run lint && npm -s run alltest"
