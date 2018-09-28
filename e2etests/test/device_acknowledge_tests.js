@@ -17,6 +17,36 @@ var deviceHttp = require('azure-iot-device-http');
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
+function Rendezvous(done) {
+  this.doneYet = {};
+  this.done = done;
+  this.everybodyDone = true;
+}
+
+Rendezvous.prototype.imIn = function(participant) {
+  if (this.doneYet.hasOwnProperty(participant)) {
+    throw new Error('can not participate more than once');
+  }
+  this.doneYet[participant] = false;
+};
+
+Rendezvous.prototype.imDone = function(participant) {
+  if (Object.keys(this.doneYet).length === 0) {
+    throw new Error('Nobody joined to rendezvous');
+  }
+  if (this.doneYet[participant]) {
+    throw new Error('participant can not say done more than once');
+  }
+  this.doneYet[participant] = true;
+  this.everybodyDone = true;
+  Object.keys(this.doneYet).forEach(function(aParticipant) {
+    this.everybodyDone = this.everybodyDone && this.doneYet[aParticipant];
+  }.bind(this));
+  if (this.everybodyDone) {
+    return this.done();
+  }
+};
+
 [
   DeviceIdentityHelper.createDeviceWithSas,
   DeviceIdentityHelper.createDeviceWithSymmetricKey,
@@ -36,7 +66,6 @@ device_acknowledgment_tests(deviceAmqp.Amqp, DeviceIdentityHelper.createDeviceWi
 function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
   describe('Over ' + deviceTransport.name + ' using ' + createDeviceMethod.name, function () {
     this.timeout(60000);
-
     var serviceClient, deviceClient;
     var provisionedDevice;
 
@@ -61,19 +90,24 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
     });
 
     it('Service sends 1 C2D message and it is re-sent until completed', function (done) {
+      this.timeout(15000);
       var guid = uuid.v4();
+      var deviceClientParticipant = 'deviceClient';
+      var serviceClientParticipant = 'serviceClient';
+      var testRendezvous = new Rendezvous(done);
 
-      var abandonnedOnce = false;
+      var abandonedOnce = false;
       deviceClient.open(function (openErr) {
         if (openErr) {
           done(openErr);
         } else {
+          testRendezvous.imIn(deviceClientParticipant);
           deviceClient.on('message', function (msg) {
             debug('Received a message with guid: ' + msg.data);
             if (msg.data.toString() === guid) {
-              if (!abandonnedOnce) {
+              if (!abandonedOnce) {
                 debug('Abandon the message with guid ' + msg.data);
-                abandonnedOnce = true;
+                abandonedOnce = true;
                 deviceClient.abandon(msg, function (err, result) {
                   if(err) {
                     done(err);
@@ -84,19 +118,25 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
               } else {
                 debug('Complete the message with guid ' + msg.data);
                 deviceClient.complete(msg, function (err, res) {
-                  if(res) {
+                  if (err) {
+                    done(err);
+                  } else if (res) {
                     assert.equal(res.constructor.name, 'MessageCompleted');
+                    deviceClient.removeAllListeners('message');
+                    testRendezvous.imDone(deviceClientParticipant);
+                  } else {
+                    done( new Error('send completed without result'));
                   }
-                  done(err);
                 });
               }
             } else {
               debug('not the message I\'m looking for, completing it to clean the queue (' + msg.data + ')');
               deviceClient.complete(msg, function (err, result) {
                 if (err) {
+                  debug('unexpected message completed with an error');
                   done(err);
                 } else {
-                  if(result) {
+                  if (result) {
                     assert.equal(result.constructor.name, 'MessageCompleted');
                   }
                 }
@@ -107,10 +147,16 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
             if (serviceErr) {
               done(serviceErr);
             } else {
-              serviceClient.send(provisionedDevice.deviceId, guid, function (sendErr) {
+              testRendezvous.imIn(serviceClientParticipant);
+              serviceClient.send(provisionedDevice.deviceId, guid, function (sendErr, result) {
                 debug('Sent one message with guid: ' + guid);
                 if (sendErr) {
                   done(sendErr);
+                } else if (result) {
+                  assert.equal(result.constructor.name, 'MessageEnqueued');
+                  testRendezvous.imDone(serviceClientParticipant);
+                } else {
+                  done(new Error('message service send completed without a result'));
                 }
               });
             }
@@ -121,19 +167,24 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
     });
 
     it('Service sends 1 C2D message and it is re-sent until rejected', function (done) {
+      this.timeout(15000);
       var guid = uuid.v4();
+      var deviceClientParticipant = 'deviceClient';
+      var serviceClientParticipant = 'serviceClient';
+      var testRendezvous = new Rendezvous(done);
 
-      var abandonnedOnce = false;
+      var abandonedOnce = false;
       deviceClient.open(function (openErr) {
         if (openErr) {
           done(openErr);
         } else {
+          testRendezvous.imIn(deviceClientParticipant);
           deviceClient.on('message', function (msg) {
             debug('Received a message with guid: ' + msg.data);
             if (msg.data.toString() === guid) {
-              if (!abandonnedOnce) {
+              if (!abandonedOnce) {
                 debug('Abandon the message with guid ' + msg.data);
-                abandonnedOnce = true;
+                abandonedOnce = true;
                 deviceClient.abandon(msg, function (err, result) {
                   assert.isNull(err);
                   assert.equal(result.constructor.name, 'MessageAbandoned');
@@ -143,7 +194,8 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
                 deviceClient.reject(msg, function (err, res) {
                   assert.isNull(err);
                   assert.equal(res.constructor.name, 'MessageRejected');
-                  done(err);
+                  deviceClient.removeAllListeners('message');
+                  testRendezvous.imDone(deviceClientParticipant);
                 });
               }
             } else {
@@ -158,10 +210,13 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
             if (serviceErr) {
               done(serviceErr);
             } else {
+              testRendezvous.imIn(serviceClientParticipant);
               serviceClient.send(provisionedDevice.deviceId, guid, function (sendErr) {
                 debug('Sent one message with guid: ' + guid);
                 if (sendErr) {
                   done(sendErr);
+                } else {
+                  testRendezvous.imDone(serviceClientParticipant);
                 }
               });
             }

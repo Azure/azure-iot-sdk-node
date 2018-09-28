@@ -18,12 +18,10 @@ phases:
        npm install --global node-gyp
        npm install --global lerna
     displayName: 'Install Dependencies'
-
   - script: |
         lerna bootstrap
         lerna run build
     displayName: 'Bootstrap & Build'
-
   - script: 'lerna run ci'
     displayName: 'Unit & Integration Tests'
     env:
@@ -41,8 +39,12 @@ phases:
       IOT_PROVISIONING_ROOT_CERT: $(LINUX-IOT-PROVISIONING-ROOT-CERT)
       IOT_PROVISIONING_ROOT_CERT_KEY: $(LINUX-IOT-PROVISIONING-ROOT-CERT-KEY)
       IOT_PROVISIONING_SERVICE_CONNECTION_STRING: $(LINUX-IOT-PROVISIONING-SERVICE-CONNECTION-STRING)
+      DPS_CONN_STRING_INVALID_CERT: $(DPS-CONN-STRING-INVALID-CERT)
+      DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT: $(DPS-GLOBAL-DEVICE-ENDPOINT-INVALID-CERT)
+      IOTHUB_CONN_STRING_INVALID_CERT: $(IOTHUB-CONN-STRING-INVALID-CERT)
+      IOTHUB_DEVICE_CONN_STRING_INVALID_CERT: $(IOTHUB-DEVICE-CONN-STRING-INVALID-CERT)
 
-  - task: PublishTestResults@1
+  - task: PublishTestResults@2
     displayName: 'Publish Test Results | Mocha'
     inputs:
       testResultsFiles: 'e2etests/test-results.*.xml'
@@ -69,12 +71,10 @@ phases:
        npm install --global node-gyp
        npm install --global lerna
     displayName: 'Install Dependencies'
-
   - script: |
        call lerna bootstrap
        call lerna run build
     displayName: 'Bootstrap & Build'
-
   - script: 'call lerna run ci'
     displayName: 'Unit & Integration Tests'
     env:
@@ -92,12 +92,15 @@ phases:
       IOT_PROVISIONING_ROOT_CERT: $(WINDOWS-IOT-PROVISIONING-ROOT-CERT)
       IOT_PROVISIONING_ROOT_CERT_KEY: $(WINDOWS-IOT-PROVISIONING-ROOT-CERT-KEY)
       IOT_PROVISIONING_SERVICE_CONNECTION_STRING: $(WINDOWS-IOT-PROVISIONING-SERVICE-CONNECTION-STRING)
+      DPS_CONN_STRING_INVALID_CERT: $(DPS-CONN-STRING-INVALID-CERT)
+      DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT: $(DPS-GLOBAL-DEVICE-ENDPOINT-INVALID-CERT)
+      IOTHUB_CONN_STRING_INVALID_CERT: $(IOTHUB-CONN-STRING-INVALID-CERT)
+      IOTHUB_DEVICE_CONN_STRING_INVALID_CERT: $(IOTHUB-DEVICE-CONN-STRING-INVALID-CERT)
 
-  - task: PublishTestResults@1
+  - task: PublishTestResults@2
     displayName: 'Publish Test Results | Mocha'
     inputs:
       testResultsFiles: 'e2etests/test-results.*.xml'
       mergeTestResults: true
       testRunTitle: 'E2E Tests - Windows'
     condition: succeededOrFailed()
-
