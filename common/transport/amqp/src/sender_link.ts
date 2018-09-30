@@ -314,10 +314,10 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             }
           },
           senderAcceptedEvent: (context: EventContext) => {
-            debug('in sender attached state - accepted event for ' + context.sender.name);
-            const op = this._pendingMessageDictionary
-            [context.delivery.id];
+            debug('in sender attached state - accepted event for ' + context.sender.name + ' deliveryId: ' + context.delivery.id);
+            const op = this._pendingMessageDictionary[context.delivery.id];
             if (op) {
+              debug('deleting operation from the dictionary with id: ' + context.delivery.id);
               delete this._pendingMessageDictionary[context.delivery.id];
               /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_013: [If the message is successfully sent, the `callback` shall be called with a first parameter (error) set to `null` and a second parameter of type `MessageEnqueued`.]*/
               if (op.callback) {
@@ -375,7 +375,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
                   opToSend.callback( null, new results.MessageEnqueued());
                 }
               } else {
-                debug('message placed in dictionary for lookup later.');
+                debug('message placed in dictionary for lookup later - id is: ' + sendDeliveryObject.id);
                 this._pendingMessageDictionary[sendDeliveryObject.id] = opToSend;
               }
             }
