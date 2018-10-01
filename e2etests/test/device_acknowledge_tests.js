@@ -101,9 +101,9 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
           testRendezvous.imIn(deviceClientParticipant);
           deviceClient.on('message', function (msg) {
             debug('Received a message with guid: ' + msg.data);
-            debug('expecting guid: ' + guid);
-            debug('msg.data.toString(): ' + msg.data.toString());
-            debug('msg.data.toString() === guid ' + (msg.data.toString() === guid));
+            debug('+++expecting guid: ' + guid);
+            debug('+++msg.data.toString(): ' + msg.data.toString());
+            debug('+++msg.data.toString() === guid ' + (msg.data.toString() === guid));
             if (msg.data.toString() === guid) {
               if (!abandonedOnce) {
                 debug('Abandon the message with guid ' + msg.data);
@@ -180,6 +180,9 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
           testRendezvous.imIn(deviceClientParticipant);
           deviceClient.on('message', function (msg) {
             debug('Received a message with guid: ' + msg.data);
+            debug('---expecting guid: ' + guid);
+            debug('---msg.data.toString(): ' + msg.data.toString());
+            debug('---msg.data.toString() === guid ' + (msg.data.toString() === guid));
             if (msg.data.toString() === guid) {
               if (!abandonedOnce) {
                 debug('Abandon the message with guid ' + msg.data);
