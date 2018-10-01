@@ -129,7 +129,7 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
                 });
               }
             } else {
-              debug('not the message I\'m looking for, completing it to clean the queue (' + msg.data + ')');
+              debug('+not the message I\'m looking for, completing it to clean the queue (' + msg.data + ')');
               deviceClient.complete(msg, function (err, result) {
                 if (err) {
                   debug('unexpected message completed with an error');
@@ -147,8 +147,9 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
               done(serviceErr);
             } else {
               testRendezvous.imIn(serviceClientParticipant);
+              debug('+sending on message abandon path with guid: ' + guid);
               serviceClient.send(provisionedDevice.deviceId, guid, function (sendErr, result) {
-                debug('Sent one message with guid: ' + guid);
+                debug('+Sent one message with guid: ' + guid);
                 if (sendErr) {
                   done(sendErr);
                 } else if (result) {
@@ -185,14 +186,14 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
             debug('---msg.data.toString() === guid ' + (msg.data.toString() === guid));
             if (msg.data.toString() === guid) {
               if (!abandonedOnce) {
-                debug('Abandon the message with guid ' + msg.data);
+                debug('---Abandon the message with guid ' + msg.data);
                 abandonedOnce = true;
                 deviceClient.abandon(msg, function (err, result) {
                   assert.isNull(err);
                   assert.equal(result.constructor.name, 'MessageAbandoned');
                 });
               } else {
-                debug('Rejects the message with guid ' + msg.data);
+                debug('---Rejects the message with guid ' + msg.data);
                 deviceClient.reject(msg, function (err, res) {
                   assert.isNull(err);
                   assert.equal(res.constructor.name, 'MessageRejected');
@@ -200,7 +201,7 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
                 });
               }
             } else {
-              debug('not the message I\'m looking for, completing it to clean the queue (' + msg.data + ')');
+              debug('---not the message I\'m looking for, completing it to clean the queue (' + msg.data + ')');
               deviceClient.complete(msg, function (err, result) {
                 assert.isNull(err);
                 assert.equal(result.constructor.name, 'MessageCompleted');
@@ -212,9 +213,11 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
               done(serviceErr);
             } else {
               testRendezvous.imIn(serviceClientParticipant);
+              debug('---Sending one abandon/reject message with guid: ' + guid);
               serviceClient.send(provisionedDevice.deviceId, guid, function (sendErr) {
-                debug('Sent one message with guid: ' + guid);
+                debug('---Sent one abandon/reject message with guid: ' + guid);
                 if (sendErr) {
+                  debug('---It had an error.');
                   done(sendErr);
                 } else {
                   testRendezvous.imDone(serviceClientParticipant);
