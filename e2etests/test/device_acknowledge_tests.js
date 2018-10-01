@@ -47,7 +47,7 @@ Rendezvous.prototype.imDone = function(participant) {
   }
 };
 var i = 0;
-for (i = 0; i < 100;i++) {
+for (i = 0; i < 200;i++) {
 [
   DeviceIdentityHelper.createDeviceWithSas,
 ].forEach(function (createDeviceMethod) {
