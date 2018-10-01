@@ -42,6 +42,7 @@ Rendezvous.prototype.imDone = function(participant) {
     this.everybodyDone = this.everybodyDone && this.doneYet[aParticipant];
   }.bind(this));
   if (this.everybodyDone) {
+    debug('***Really calling done for the test.');
     return this.done();
   }
 };
@@ -100,13 +101,13 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
         } else {
           testRendezvous.imIn(deviceClientParticipant);
           deviceClient.on('message', function (msg) {
-            debug('Received a message with guid: ' + msg.data);
+            debug('+++Received a message with guid: ' + msg.data);
             debug('+++expecting guid: ' + guid);
             debug('+++msg.data.toString(): ' + msg.data.toString());
             debug('+++msg.data.toString() === guid ' + (msg.data.toString() === guid));
             if (msg.data.toString() === guid) {
               if (!abandonedOnce) {
-                debug('Abandon the message with guid ' + msg.data);
+                debug('+++Abandon the message with guid ' + msg.data);
                 abandonedOnce = true;
                 deviceClient.abandon(msg, function (err, result) {
                   if(err) {
@@ -116,7 +117,7 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
                   }
                 });
               } else {
-                debug('Complete the message with guid ' + msg.data);
+                debug('+++Complete the message with guid ' + msg.data);
                 deviceClient.complete(msg, function (err, res) {
                   if (err) {
                     done(err);
@@ -126,6 +127,7 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
                       if (closeError) {
                         done(closeError);
                       } else {
+                        debug('+++All done with the client abandon');
                         testRendezvous.imDone(deviceClientParticipant);
                       }
                     });
@@ -135,7 +137,7 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
                 });
               }
             } else {
-              debug('+not the message I\'m looking for, completing it to clean the queue (' + msg.data + ')');
+              debug('+++not the message I\'m looking for, completing it to clean the queue (' + msg.data + ')');
               deviceClient.complete(msg, function (err, result) {
                 if (err) {
                   debug('unexpected message completed with an error');
@@ -160,6 +162,7 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
                   done(sendErr);
                 } else if (result) {
                   assert.equal(result.constructor.name, 'MessageEnqueued');
+                  debug('+++All done on service side the abandon');
                   testRendezvous.imDone(serviceClientParticipant);
                 } else {
                   done(new Error('message service send completed without a result'));
@@ -186,7 +189,7 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
         } else {
           testRendezvous.imIn(deviceClientParticipant);
           deviceClient.on('message', function (msg) {
-            debug('Received a message with guid: ' + msg.data);
+            debug('---Received a message with guid: ' + msg.data);
             debug('---expecting guid: ' + guid);
             debug('---msg.data.toString(): ' + msg.data.toString());
             debug('---msg.data.toString() === guid ' + (msg.data.toString() === guid));
@@ -207,6 +210,7 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
                     if (closeError) {
                       done(closeError);
                     } else {
+                      debug('---All done on the client reject');
                       testRendezvous.imDone(deviceClientParticipant);
                     }
                   });
@@ -232,6 +236,7 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
                   debug('---It had an error.');
                   done(sendErr);
                 } else {
+                  debug('---All done on the service client reject');
                   testRendezvous.imDone(serviceClientParticipant);
                 }
               });
