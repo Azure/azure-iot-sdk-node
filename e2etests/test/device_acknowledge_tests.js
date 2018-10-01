@@ -86,7 +86,7 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
       closeDeviceServiceClients(deviceClient, serviceClient, done);
     });
 
-    it.skip('Service sends 1 C2D message and it is re-sent until completed', function (done) {
+    it('Service sends 1 C2D message and it is re-sent until completed', function (done) {
       this.timeout(15000);
       var guid = uuid.v4();
       var deviceClientParticipant = 'deviceClient';
