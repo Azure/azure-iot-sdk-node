@@ -12,7 +12,6 @@ var assert = require('chai').assert;
 var debug = require('debug')('e2etests');
 var uuid = require('uuid');
 
-var deviceAmqp = require('azure-iot-device-amqp');
 var deviceHttp = require('azure-iot-device-http');
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
@@ -46,15 +45,16 @@ Rendezvous.prototype.imDone = function(participant) {
     return this.done();
   }
 };
-var i = 0;
-for (i = 0; i < 200;i++) {
 [
   DeviceIdentityHelper.createDeviceWithSas,
 ].forEach(function (createDeviceMethod) {
   [
     deviceHttp.Http,
   ].forEach(function (deviceTransport) {
-    device_acknowledgment_tests(deviceTransport, createDeviceMethod);
+    var i = 0;
+    for (i = 0; i < 200;i++) {
+        device_acknowledgment_tests(deviceTransport, createDeviceMethod);
+    }
   });
 });
 
@@ -221,4 +221,3 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
     });
   });
 }
-};
