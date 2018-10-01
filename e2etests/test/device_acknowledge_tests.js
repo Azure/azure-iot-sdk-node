@@ -52,7 +52,7 @@ Rendezvous.prototype.imDone = function(participant) {
     deviceHttp.Http,
   ].forEach(function (deviceTransport) {
     var i = 0;
-    for (i = 0; i < 200;i++) {
+    for (i = 0; i < 60;i++) {
         device_acknowledgment_tests(deviceTransport, createDeviceMethod);
     }
   });
@@ -101,6 +101,9 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
           testRendezvous.imIn(deviceClientParticipant);
           deviceClient.on('message', function (msg) {
             debug('Received a message with guid: ' + msg.data);
+            debug('expecting guid: ' + guid);
+            debug('msg.data.toString(): ' + msg.data.toString());
+            debug('msg.data.toString() === guid ' + (msg.data.toString() === guid));
             if (msg.data.toString() === guid) {
               if (!abandonedOnce) {
                 debug('Abandon the message with guid ' + msg.data);
