@@ -46,22 +46,19 @@ Rendezvous.prototype.imDone = function(participant) {
     return this.done();
   }
 };
-
+var i = 0;
+for (i = 0; i < 100;i++) {
 [
   DeviceIdentityHelper.createDeviceWithSas,
-  DeviceIdentityHelper.createDeviceWithSymmetricKey,
-  DeviceIdentityHelper.createDeviceWithX509SelfSignedCert
 ].forEach(function (createDeviceMethod) {
   [
     deviceHttp.Http,
-    deviceAmqp.Amqp,
-    deviceAmqp.AmqpWs
   ].forEach(function (deviceTransport) {
     device_acknowledgment_tests(deviceTransport, createDeviceMethod);
   });
 });
 
-device_acknowledgment_tests(deviceAmqp.Amqp, DeviceIdentityHelper.createDeviceWithX509CASignedCert);
+// device_acknowledgment_tests(deviceAmqp.Amqp, DeviceIdentityHelper.createDeviceWithX509CASignedCert);
 
 function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
   describe('Over ' + deviceTransport.name + ' using ' + createDeviceMethod.name, function () {
@@ -89,7 +86,7 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
       closeDeviceServiceClients(deviceClient, serviceClient, done);
     });
 
-    it('Service sends 1 C2D message and it is re-sent until completed', function (done) {
+    it.skip('Service sends 1 C2D message and it is re-sent until completed', function (done) {
       this.timeout(15000);
       var guid = uuid.v4();
       var deviceClientParticipant = 'deviceClient';
@@ -224,3 +221,4 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
     });
   });
 }
+};
