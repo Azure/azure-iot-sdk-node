@@ -52,7 +52,7 @@ Rendezvous.prototype.imDone = function(participant) {
     deviceHttp.Http,
   ].forEach(function (deviceTransport) {
     var i = 0;
-    for (i = 0; i < 60;i++) {
+    for (i = 0; i < 120;i++) {
         device_acknowledgment_tests(deviceTransport, createDeviceMethod);
     }
   });
