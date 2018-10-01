@@ -122,8 +122,13 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
                     done(err);
                   } else if (res) {
                     assert.equal(res.constructor.name, 'MessageCompleted');
-                    deviceClient.removeListener('message');
-                    testRendezvous.imDone(deviceClientParticipant);
+                    deviceClient.close(function(closeError) {
+                      if (closeError) {
+                        done(closeError);
+                      } else {
+                        testRendezvous.imDone(deviceClientParticipant);
+                      }
+                    });
                   } else {
                     done( new Error('send completed without result'));
                   }
@@ -198,8 +203,13 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
                 deviceClient.reject(msg, function (err, res) {
                   assert.isNull(err);
                   assert.equal(res.constructor.name, 'MessageRejected');
-                  deviceClient.removeListener('message');
-                  testRendezvous.imDone(deviceClientParticipant);
+                  deviceClient.close(function(closeError) {
+                    if (closeError) {
+                      done(closeError);
+                    } else {
+                      testRendezvous.imDone(deviceClientParticipant);
+                    }
+                  });
                 });
               }
             } else {
