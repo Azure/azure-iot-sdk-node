@@ -48,9 +48,13 @@ Rendezvous.prototype.imDone = function(participant) {
 };
 [
   DeviceIdentityHelper.createDeviceWithSas,
+  DeviceIdentityHelper.createDeviceWithSymmetricKey,
+  DeviceIdentityHelper.createDeviceWithX509SelfSignedCert
 ].forEach(function (createDeviceMethod) {
   [
     deviceHttp.Http,
+    deviceAmqp.Amqp,
+    deviceAmqp.AmqpWs
   ].forEach(function (deviceTransport) {
     var i = 0;
     for (i = 0; i < 120;i++) {
@@ -59,7 +63,7 @@ Rendezvous.prototype.imDone = function(participant) {
   });
 });
 
-// device_acknowledgment_tests(deviceAmqp.Amqp, DeviceIdentityHelper.createDeviceWithX509CASignedCert);
+device_acknowledgment_tests(deviceAmqp.Amqp, DeviceIdentityHelper.createDeviceWithX509CASignedCert);
 
 function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
   describe('Over ' + deviceTransport.name + ' using ' + createDeviceMethod.name, function () {
