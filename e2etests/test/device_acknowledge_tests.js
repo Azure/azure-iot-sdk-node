@@ -137,14 +137,20 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
                 });
               }
             } else {
-              debug('+++not the message I\'m looking for, completing it to clean the queue (' + msg.data + ')');
-              deviceClient.complete(msg, function (err, result) {
+              //
+              // If we are getting a c2d message IN THIS TEST SUITE, the most likely scenario is that
+              // we are getting it on a listener that was pending for an HTTP client.  It is likely to
+              // be the c2d message for another test.  We should abandon it so that the other test
+              // has a chance to deal with it.
+              //
+              debug('+++not the message I\'m looking for, abandon it for the other test (' + msg.data + ')');
+              deviceClient.abandon(msg, function (err, result) {
                 if (err) {
                   debug('unexpected message completed with an error');
                   done(err);
                 } else {
                   if (result) {
-                    assert.equal(result.constructor.name, 'MessageCompleted');
+                    assert.equal(result.constructor.name, 'MessageAbandoned');
                   }
                 }
               });
@@ -217,10 +223,16 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
                 });
               }
             } else {
-              debug('---not the message I\'m looking for, completing it to clean the queue (' + msg.data + ')');
-              deviceClient.complete(msg, function (err, result) {
+              //
+              // If we are getting a c2d message IN THIS TEST SUITE, the most likely scenario is that
+              // we are getting it on a listener that was pending for an HTTP client.  It is likely to
+              // be the c2d message for another test.  We should abandon it so that the other test
+              // has a chance to deal with it.
+              //
+              debug('---not the message I\'m looking for, abandon it for the other test (' + msg.data + ')');
+              deviceClient.abandon(msg, function (err, result) {
                 assert.isNull(err);
-                assert.equal(result.constructor.name, 'MessageCompleted');
+                assert.equal(result.constructor.name, 'MessageAbandoned');
               });
             }
           });
