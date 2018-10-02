@@ -16,13 +16,13 @@
   },
   "devDependencies": {
     "@types/mqtt": "0.0.34",
-    "@types/node": "^8.0.30",
+    "@types/node": "8.9.4",
     "chai": "^4.1.2",
     "es5-shim": "^4.5.9",
-    "nyc": "^12.0.2",
-    "source-map-support": "^0.5.8",
     "mocha": "^5.2.0",
+    "nyc": "^12.0.2",
     "sinon": "^4.0.2",
+    "source-map-support": "^0.5.8",
     "tslint": "^5.1.0",
     "typescript": "2.5.2"
   },
