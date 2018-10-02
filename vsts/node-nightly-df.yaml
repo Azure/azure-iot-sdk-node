@@ -27,7 +27,9 @@ phases:
     env:
       IOTHUB_CONNECTION_STRING: $(LINUX-IOTHUB-CONNECTION-STRING)
 
-  - script: 'lerna run e2e'
+  - script:|
+        cd e2etests
+        npm run device_acknowledge_tests
     displayName: 'E2E Tests'
     env:
       IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
@@ -80,7 +82,9 @@ phases:
     env:
       IOTHUB_CONNECTION_STRING: $(WINDOWS-IOTHUB-CONNECTION-STRING)
 
-  - script: 'lerna run e2e'
+  - script:|
+        cd e2etests
+        npm run device_acknowledge_tests
     displayName: 'E2E Tests'
     env:
       IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
