@@ -12,11 +12,41 @@ var assert = require('chai').assert;
 var debug = require('debug')('e2etests');
 var uuid = require('uuid');
 
-var deviceAmqp = require('azure-iot-device-amqp');
 var deviceHttp = require('azure-iot-device-http');
+var deviceAmqp = require('azure-iot-device-amqp');
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
+function Rendezvous(done) {
+  this.doneYet = {};
+  this.done = done;
+  this.everybodyDone = true;
+}
+
+Rendezvous.prototype.imIn = function(participant) {
+  if (this.doneYet.hasOwnProperty(participant)) {
+    throw new Error('can not participate more than once');
+  }
+  this.doneYet[participant] = false;
+};
+
+Rendezvous.prototype.imDone = function(participant) {
+  if (Object.keys(this.doneYet).length === 0) {
+    throw new Error('Nobody joined to rendezvous');
+  }
+  if (this.doneYet[participant]) {
+    throw new Error('participant can not say done more than once');
+  }
+  this.doneYet[participant] = true;
+  this.everybodyDone = true;
+  Object.keys(this.doneYet).forEach(function(aParticipant) {
+    this.everybodyDone = this.everybodyDone && this.doneYet[aParticipant];
+  }.bind(this));
+  if (this.everybodyDone) {
+    debug('***Really calling done for the test.');
+    return this.done();
+  }
+};
 [
   DeviceIdentityHelper.createDeviceWithSas,
   DeviceIdentityHelper.createDeviceWithSymmetricKey,
@@ -27,7 +57,10 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
     deviceAmqp.Amqp,
     deviceAmqp.AmqpWs
   ].forEach(function (deviceTransport) {
-    device_acknowledgment_tests(deviceTransport, createDeviceMethod);
+    var i = 0;
+    for (i = 0; i < 120;i++) {
+        device_acknowledgment_tests(deviceTransport, createDeviceMethod);
+    }
   });
 });
 
@@ -36,7 +69,6 @@ device_acknowledgment_tests(deviceAmqp.Amqp, DeviceIdentityHelper.createDeviceWi
 function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
   describe('Over ' + deviceTransport.name + ' using ' + createDeviceMethod.name, function () {
     this.timeout(60000);
-
     var serviceClient, deviceClient;
     var provisionedDevice;
 
@@ -61,19 +93,27 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
     });
 
     it('Service sends 1 C2D message and it is re-sent until completed', function (done) {
+      this.timeout(15000);
       var guid = uuid.v4();
+      var deviceClientParticipant = 'deviceClient';
+      var serviceClientParticipant = 'serviceClient';
+      var testRendezvous = new Rendezvous(done);
 
-      var abandonnedOnce = false;
+      var abandonedOnce = false;
       deviceClient.open(function (openErr) {
         if (openErr) {
           done(openErr);
         } else {
+          testRendezvous.imIn(deviceClientParticipant);
           deviceClient.on('message', function (msg) {
-            debug('Received a message with guid: ' + msg.data);
+            debug('+++Received a message with guid: ' + msg.data);
+            debug('+++expecting guid: ' + guid);
+            debug('+++msg.data.toString(): ' + msg.data.toString());
+            debug('+++msg.data.toString() === guid ' + (msg.data.toString() === guid));
             if (msg.data.toString() === guid) {
-              if (!abandonnedOnce) {
-                debug('Abandon the message with guid ' + msg.data);
-                abandonnedOnce = true;
+              if (!abandonedOnce) {
+                debug('+++Abandon the message with guid ' + msg.data);
+                abandonedOnce = true;
                 deviceClient.abandon(msg, function (err, result) {
                   if(err) {
                     done(err);
@@ -82,22 +122,40 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
                   }
                 });
               } else {
-                debug('Complete the message with guid ' + msg.data);
+                debug('+++Complete the message with guid ' + msg.data);
                 deviceClient.complete(msg, function (err, res) {
-                  if(res) {
+                  if (err) {
+                    done(err);
+                  } else if (res) {
                     assert.equal(res.constructor.name, 'MessageCompleted');
+                    deviceClient.close(function(closeError) {
+                      if (closeError) {
+                        done(closeError);
+                      } else {
+                        debug('+++All done with the client abandon');
+                        testRendezvous.imDone(deviceClientParticipant);
+                      }
+                    });
+                  } else {
+                    done( new Error('send completed without result'));
                   }
-                  done(err);
                 });
               }
             } else {
-              debug('not the message I\'m looking for, completing it to clean the queue (' + msg.data + ')');
-              deviceClient.complete(msg, function (err, result) {
+              //
+              // If we are getting a c2d message IN THIS TEST SUITE, the most likely scenario is that
+              // we are getting it on a listener that was pending for an HTTP client.  It is likely to
+              // be the c2d message for another test.  We should abandon it so that the other test
+              // has a chance to deal with it.
+              //
+              debug('+++not the message I\'m looking for, abandon it for the other test (' + msg.data + ')');
+              deviceClient.abandon(msg, function (err, result) {
                 if (err) {
+                  debug('unexpected message completed with an error');
                   done(err);
                 } else {
-                  if(result) {
-                    assert.equal(result.constructor.name, 'MessageCompleted');
+                  if (result) {
+                    assert.equal(result.constructor.name, 'MessageAbandoned');
                   }
                 }
               });
@@ -107,10 +165,18 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
             if (serviceErr) {
               done(serviceErr);
             } else {
-              serviceClient.send(provisionedDevice.deviceId, guid, function (sendErr) {
-                debug('Sent one message with guid: ' + guid);
+              testRendezvous.imIn(serviceClientParticipant);
+              debug('+sending on message abandon path with guid: ' + guid);
+              serviceClient.send(provisionedDevice.deviceId, guid, function (sendErr, result) {
+                debug('+Sent one message with guid: ' + guid);
                 if (sendErr) {
                   done(sendErr);
+                } else if (result) {
+                  assert.equal(result.constructor.name, 'MessageEnqueued');
+                  debug('+++All done on service side the abandon');
+                  testRendezvous.imDone(serviceClientParticipant);
+                } else {
+                  done(new Error('message service send completed without a result'));
                 }
               });
             }
@@ -121,36 +187,57 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
     });
 
     it('Service sends 1 C2D message and it is re-sent until rejected', function (done) {
+      this.timeout(15000);
       var guid = uuid.v4();
+      var deviceClientParticipant = 'deviceClient';
+      var serviceClientParticipant = 'serviceClient';
+      var testRendezvous = new Rendezvous(done);
 
-      var abandonnedOnce = false;
+      var abandonedOnce = false;
       deviceClient.open(function (openErr) {
         if (openErr) {
           done(openErr);
         } else {
+          testRendezvous.imIn(deviceClientParticipant);
           deviceClient.on('message', function (msg) {
-            debug('Received a message with guid: ' + msg.data);
+            debug('---Received a message with guid: ' + msg.data);
+            debug('---expecting guid: ' + guid);
+            debug('---msg.data.toString(): ' + msg.data.toString());
+            debug('---msg.data.toString() === guid ' + (msg.data.toString() === guid));
             if (msg.data.toString() === guid) {
-              if (!abandonnedOnce) {
-                debug('Abandon the message with guid ' + msg.data);
-                abandonnedOnce = true;
+              if (!abandonedOnce) {
+                debug('---Abandon the message with guid ' + msg.data);
+                abandonedOnce = true;
                 deviceClient.abandon(msg, function (err, result) {
                   assert.isNull(err);
                   assert.equal(result.constructor.name, 'MessageAbandoned');
                 });
               } else {
-                debug('Rejects the message with guid ' + msg.data);
+                debug('---Rejects the message with guid ' + msg.data);
                 deviceClient.reject(msg, function (err, res) {
                   assert.isNull(err);
                   assert.equal(res.constructor.name, 'MessageRejected');
-                  done(err);
+                  deviceClient.close(function(closeError) {
+                    if (closeError) {
+                      done(closeError);
+                    } else {
+                      debug('---All done on the client reject');
+                      testRendezvous.imDone(deviceClientParticipant);
+                    }
+                  });
                 });
               }
             } else {
-              debug('not the message I\'m looking for, completing it to clean the queue (' + msg.data + ')');
-              deviceClient.complete(msg, function (err, result) {
+              //
+              // If we are getting a c2d message IN THIS TEST SUITE, the most likely scenario is that
+              // we are getting it on a listener that was pending for an HTTP client.  It is likely to
+              // be the c2d message for another test.  We should abandon it so that the other test
+              // has a chance to deal with it.
+              //
+              debug('---not the message I\'m looking for, abandon it for the other test (' + msg.data + ')');
+              deviceClient.abandon(msg, function (err, result) {
                 assert.isNull(err);
-                assert.equal(result.constructor.name, 'MessageCompleted');
+                assert.equal(result.constructor.name, 'MessageAbandoned');
               });
             }
           });
@@ -158,10 +245,16 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
             if (serviceErr) {
               done(serviceErr);
             } else {
+              testRendezvous.imIn(serviceClientParticipant);
+              debug('---Sending one abandon/reject message with guid: ' + guid);
               serviceClient.send(provisionedDevice.deviceId, guid, function (sendErr) {
-                debug('Sent one message with guid: ' + guid);
+                debug('---Sent one abandon/reject message with guid: ' + guid);
                 if (sendErr) {
+                  debug('---It had an error.');
                   done(sendErr);
+                } else {
+                  debug('---All done on the service client reject');
+                  testRendezvous.imDone(serviceClientParticipant);
                 }
               });
             }
