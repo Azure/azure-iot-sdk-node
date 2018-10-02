@@ -13,6 +13,7 @@ var debug = require('debug')('e2etests');
 var uuid = require('uuid');
 
 var deviceHttp = require('azure-iot-device-http');
+var deviceAmqp = require('azure-iot-device-amqp');
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
