@@ -40,6 +40,7 @@ export function translateError(message: string, amqpError: Error): AmqpTransport
   | "com.microsoft:device-already-exists"      | DeviceAlreadyExistsError             |
   | "com.microsoft:device-container-throttled" | ThrottlingError                      |
   | "com.microsoft:iot-hub-suspended"          | IoTHubSuspendedError                 |
+  | "com.microsoft:iot-hub-not-found-error"    | IotHubNotFoundError                  |
   | "com.microsoft:message-lock-lost"          | DeviceMessageLockLostError           |
   | "com.microsoft:precondition-failed"        | PreconditionFailedError              |
   | "com.microsoft:quota-exceeded"             | IotHubQuotaExceededError             |
@@ -83,6 +84,9 @@ export function translateError(message: string, amqpError: Error): AmqpTransport
         break;
       case 'com.microsoft:iot-hub-suspended':
         error = new errors.IoTHubSuspendedError(message);
+        break;
+      case 'com.microsoft:iot-hub-not-found-error':
+        error = new errors.IotHubNotFoundError(message);
         break;
       case 'com.microsoft:message-lock-lost':
         error = new errors.DeviceMessageLockLostError(message);

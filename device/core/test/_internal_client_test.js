@@ -181,7 +181,7 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
         var client = new ClientCtor(fakeBaseClient);
         client._methodClient = fakeMethodClient;
         client.setOptions({ ca: 'aziotfakepemfile' }, function(err) {
-          assert.isNotOk(err, 'the setOptions passed')
+          assert.isNotOk(err);
           assert(fakeBaseClient.setOptions.called);
           assert.strictEqual(fakeBaseClient.setOptions.firstCall.args[0].ca, 'ca cert');
           testCallback();
@@ -196,7 +196,7 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
         var client = new ClientCtor(fakeBaseClient);
         client._methodClient = fakeMethodClient;
         client.setOptions({ ca: 'ca cert' }, function(err) {
-          assert.isNotOk(err, 'the setOptions passed')
+          assert.isNotOk(err);
           assert(fakeBaseClient.setOptions.called);
           assert.strictEqual(fakeBaseClient.setOptions.firstCall.args[0].ca, 'ca cert');
           testCallback();
