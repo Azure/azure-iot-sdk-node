@@ -171,7 +171,7 @@ delete nullMergeResult.tweedle;
       compare(right, left);
     };
 
-    it('relies on $version starting at 1 and incrementing by 1 each time', function(done) {
+    it.skip('relies on $version starting at 1 and incrementing by 1 each time', function(done) {
       // This test file relies on the behavior or $version.  The production code does not rely on this.
       assert.equal(deviceTwin.properties.desired.$version, 1);
       var firstUpdateReceived = false;

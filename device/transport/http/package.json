@@ -1,38 +1,36 @@
 {
   "name": "azure-iot-device-http",
-  "version": "1.7.1",
+  "version": "1.7.4",
   "description": "HTTP transport for Azure IoT device SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.7.1",
-    "azure-iot-device": "1.7.1",
-    "azure-iot-http-base": "1.7.1",
+    "azure-iot-common": "1.7.4",
+    "azure-iot-device": "1.7.4",
+    "azure-iot-http-base": "1.7.4",
     "debug": "^3.1.0",
     "node-crontab": "^0.0.8"
   },
   "devDependencies": {
-    "@types/node": "^8.0.45",
-    "azure-iothub": "1.7.1",
+    "@types/node": "8.9.4",
+    "azure-iothub": "1.7.4",
     "chai": "^4.1.2",
-    "istanbul": "^0.4.4",
     "mocha": "^5.2.0",
+    "nyc": "^12.0.2",
     "sinon": "^4.0.2",
+    "source-map-support": "^0.5.8",
     "tslint": "^5.1.0",
     "typescript": "2.5.3"
   },
   "scripts": {
     "lint": "tslint --project . -c ../../../tslint.json",
     "build": "tsc",
-    "unittest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test.js",
-    "alltest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test*.js",
-    "unittest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test.js",
-    "alltest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
-    "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
-    "test": "npm -s run lint && npm -s run build && npm -s run unittest",
-    "check-cover": "istanbul check-coverage --statements 92 --branches 82 --lines 93 --functions 91"
+    "test-min": "nyc mocha --reporter dot --require source-map-support/register test/_*_test.js",
+    "test": "nyc mocha --reporter spec --require source-map-support/register test/_*_test.js",
+    "ci": "npm -s run lint && npm -s run build && npm -s run test-min && npm -s run check-cover",
+    "check-cover": "nyc check-coverage --statements 94 --branches 88 --functions 100 --lines 94 "
   },
   "engines": {
     "node": ">= 0.10"
@@ -44,5 +42,22 @@
   "bugs": {
     "url": "https://github.com/Azure/azure-iot-sdk-node/issues"
   },
-  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme"
+  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme",
+  "nyc": {
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "exclude": [
+      "**/*.d.ts",
+      "coverage/",
+      "index.js",
+      "test/"
+    ],
+    "reporter": [
+      "html",
+      "text-summary"
+    ],
+    "all": true
+  }
 }

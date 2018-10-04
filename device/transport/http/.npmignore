@@ -4,3 +4,4 @@ test/
 samples/
 src/
 lib/**/*.map
+.nyc_output

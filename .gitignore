@@ -190,6 +190,7 @@ $RECYCLE.BIN/
 **/node_modules/
 **/.idea/
 **/coverage/
+**/.nyc_output/
 
 # VS Code stuff
 **/typings/**
@@ -235,3 +236,6 @@ build/build_parallel/temp
 
 # lerna
 lerna-debug.log
+
+# mocha
+**/test-results.*.xml

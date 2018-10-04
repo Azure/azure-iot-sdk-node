@@ -5,7 +5,7 @@
 'use strict';
 
 import { errors } from 'azure-iot-common';
-import { Errors as Amqp10Errors } from 'amqp10';
+import { AmqpError } from 'rhea';
 
 /**
  * @private
@@ -40,14 +40,15 @@ export function translateError(message: string, amqpError: Error): AmqpTransport
   | "com.microsoft:device-already-exists"      | DeviceAlreadyExistsError             |
   | "com.microsoft:device-container-throttled" | ThrottlingError                      |
   | "com.microsoft:iot-hub-suspended"          | IoTHubSuspendedError                 |
+  | "com.microsoft:iot-hub-not-found-error"    | IotHubNotFoundError                  |
   | "com.microsoft:message-lock-lost"          | DeviceMessageLockLostError           |
   | "com.microsoft:precondition-failed"        | PreconditionFailedError              |
   | "com.microsoft:quota-exceeded"             | IotHubQuotaExceededError             |
   | "com.microsoft:timeout"                    | ServiceUnavailableError              |
   ]*/
 
-  if ((amqpError as Amqp10Errors.ProtocolError).condition) {
-    switch ((amqpError as Amqp10Errors.ProtocolError).condition) {
+  if ((amqpError as AmqpError).condition) {
+    switch ((amqpError as AmqpError).condition) {
       case 'amqp:internal-error':
         error = new errors.InternalServerError(message);
         break;
@@ -84,6 +85,9 @@ export function translateError(message: string, amqpError: Error): AmqpTransport
       case 'com.microsoft:iot-hub-suspended':
         error = new errors.IoTHubSuspendedError(message);
         break;
+      case 'com.microsoft:iot-hub-not-found-error':
+        error = new errors.IotHubNotFoundError(message);
+        break;
       case 'com.microsoft:message-lock-lost':
         error = new errors.DeviceMessageLockLostError(message);
         break;
@@ -100,8 +104,6 @@ export function translateError(message: string, amqpError: Error): AmqpTransport
         /*Codes_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_002: [If the AMQP error code is unknown, `translateError` should return a generic Javascript `Error` object.]*/
         error = new Error(message);
     }
-  } else if (amqpError instanceof Amqp10Errors.AuthenticationError) {
-    error = new errors.UnauthorizedError(message);
   } else if ((<any>amqpError).code) {
     error = new errors.NotConnectedError(message);
   } else {

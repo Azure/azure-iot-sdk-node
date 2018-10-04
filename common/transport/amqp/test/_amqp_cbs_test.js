@@ -14,10 +14,10 @@ describe('ClaimsBasedSecurityAgent', function() {
     /*Tests_SRS_NODE_AMQP_CBS_16_006: [If given as an argument, the `attach` method shall call `callback` with a standard `Error` object if any link fails to attach.]*/
     it('calls its callback with an error if can NOT establish a sender link', function(testCallback) {
       var testError = new Error();
-      var fakeAmqpClient = new EventEmitter();
-      fakeAmqpClient.createSender = sinon.stub().rejects(testError);
+      var fakeRheaSession = new EventEmitter();
 
-      var cbs = new CBS(fakeAmqpClient);
+      var cbs = new CBS(fakeRheaSession);
+      cbs._senderLink.attach = sinon.stub().callsArgWith(0,testError);
       cbs.attach(function(err) {
         assert.strictEqual(err, testError);
         testCallback();
@@ -27,42 +27,40 @@ describe('ClaimsBasedSecurityAgent', function() {
     /*Tests_SRS_NODE_AMQP_CBS_16_006: [If given as an argument, the `attach` method shall call `callback` with a standard `Error` object if any link fails to attach.]*/
     it('calls its callback with an error if can NOT establish a receiver link', function(testCallback) {
       var testError = new Error();
-      var fakeAmqpClient = new EventEmitter();
-      var fakeSender = new EventEmitter();
-      fakeSender.detach = sinon.stub().resolves();
-      fakeSender.forceDetach = function () {};
-      fakeAmqpClient.createSender = sinon.stub().resolves(fakeSender);
-      fakeAmqpClient.createReceiver = sinon.stub().rejects(testError);
+      var fakeRheaSession = new EventEmitter();
 
-      var cbs = new CBS(fakeAmqpClient);
+      var cbs = new CBS(fakeRheaSession);
+      cbs._senderLink.attach = sinon.stub().callsArg(0);
+      cbs._senderLink.detach = sinon.stub().callsArg(0);
+      cbs._receiverLink.attach = sinon.stub().callsArgWith(0, testError);
       cbs.attach(function(err) {
         assert.strictEqual(err, testError);
+        assert(cbs._senderLink.detach.calledOnce, 'sender is detached if receiver fails to attach');
         testCallback();
       });
     });
 
     /*Tests_SRS_NODE_AMQP_CBS_16_007: [If given as an argument, the `attach` method shall call `callback` with a `null` error object if successful.]*/
     it('calls its callback with no error if successful', function(testCallback) {
-      var fakeAmqpClient = new EventEmitter();
-      var fakeSender = new EventEmitter();
-      fakeSender.detach = sinon.stub().resolves();
-      fakeSender.forceDetach = function () {};
-      var fakeReceiver = new EventEmitter();
-      fakeReceiver.detach = sinon.stub().resolves();
-      fakeReceiver.forceDetach = function () {};
-      sinon.spy(fakeReceiver, 'on');
-      sinon.spy(fakeSender, 'on');
-      fakeAmqpClient.createSender = sinon.stub().resolves(fakeSender);
-      fakeAmqpClient.createReceiver = sinon.stub().resolves(fakeReceiver);
+      var fakeRheaSession = new EventEmitter();
+      var cbs = new CBS(fakeRheaSession);
+      var fakeRheaLink = new EventEmitter();
+      var fakeContext = {receiver: fakeRheaLink};
+      fakeRheaSession.open_receiver = () => {};
+      sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {process.nextTick( () => {fakeRheaLink.emit('receiver_open', fakeContext)});return fakeRheaLink;});
+      cbs._senderLink.attach = sinon.stub().callsArg(0);
+      cbs._senderLink.detach = sinon.stub().callsArg(0);
+      cbs._receiverLink.on = sinon.spy();
+      cbs._receiverLink.attach = sinon.stub().callsArgWith(0);
+      cbs._receiverLink.detach = sinon.stub().callsArgWith(0);
 
-      var cbs = new CBS(fakeAmqpClient);
       cbs.attach(function(err) {
         /*Tests_SRS_NODE_AMQP_CBS_16_003: [`attach` shall attach the sender link.]*/
-        assert(fakeAmqpClient.createSender.calledOnce);
+        assert(cbs._senderLink.attach.calledOnce);
         /*Tests_SRS_NODE_AMQP_CBS_16_004: [`attach` shall attach the receiver link.]*/
-        assert(fakeAmqpClient.createReceiver.calledOnce);
+        assert(cbs._receiverLink.attach.calledOnce);
         /*Tests_SRS_NODE_AMQP_CBS_16_005: [The `attach` method shall set up a listener for responses to put tokens on the `message` event of the receiver link.]*/
-        assert(fakeReceiver.on.calledWith('message'));
+        assert(cbs._receiverLink.on.calledWith('message'));
         assert.isUndefined(err);
         testCallback();
       });
@@ -70,17 +68,25 @@ describe('ClaimsBasedSecurityAgent', function() {
 
     /*Tests_SRS_NODE_AMQP_CBS_16_007: [If given as an argument, the `attach` method shall call `callback` with a `null` error object if successful.]*/
     it('calls the callback immediately if links are already attached', function(testCallback) {
-      var fakeAmqpClient = new EventEmitter();
-      fakeAmqpClient.createReceiver = sinon.stub().resolves(new EventEmitter()),
-      fakeAmqpClient.createSender = sinon.stub().resolves(new EventEmitter())
+      var fakeRheaSession = new EventEmitter();
 
-      var cbs = new CBS(fakeAmqpClient);
+      var cbs = new CBS(fakeRheaSession);
+
+      var fakeRheaLink = new EventEmitter();
+      var fakeContext = {receiver: fakeRheaLink};
+      fakeRheaSession.open_receiver = () => {};
+      sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {process.nextTick( () => {fakeRheaLink.emit('receiver_open', fakeContext)});return fakeRheaLink;});
+      cbs._senderLink.attach = sinon.stub().callsArg(0);
+      cbs._senderLink.detach = sinon.stub().callsArg(0);
+      cbs._receiverLink.attach = sinon.stub().callsArgWith(0);
+      cbs._receiverLink.detach = sinon.stub().callsArgWith(0);
+
       cbs.attach(function() {
-        assert(fakeAmqpClient.createReceiver.calledOnce);
-        assert(fakeAmqpClient.createReceiver.calledOnce);
+        assert(cbs._senderLink.attach.calledOnce);
+        assert(cbs._receiverLink.attach.calledOnce);
         cbs.attach(function() {
-          assert(fakeAmqpClient.createReceiver.calledOnce);
-          assert(fakeAmqpClient.createReceiver.calledOnce);
+          assert(cbs._senderLink.attach.calledOnce);
+          assert(cbs._receiverLink.attach.calledOnce);
           testCallback();
         });
       });
@@ -89,31 +95,42 @@ describe('ClaimsBasedSecurityAgent', function() {
 
   describe('#detach', function() {
     it('Returns immediately and does not throw if already detached', function(testCallback) {
-      var cbs = new CBS({});
+      var fakeRheaSession = new EventEmitter();
+
+      var cbs = new CBS(fakeRheaSession);
       cbs.detach(testCallback);
     });
 
     /*Tests_SRS_NODE_AMQP_CBS_16_008: [`detach` shall detach both sender and receiver links and return the state machine to the `detached` state.]*/
     it('detaches the links if they are attached', function(testCallback) {
-      var fakeAmqpClient = new EventEmitter();
-      var fakeSender = new EventEmitter();
-      fakeSender.detach = sinon.stub().resolves();
-      fakeSender.forceDetach = sinon.stub();
-      var fakeReceiver = new EventEmitter();
-      fakeReceiver.detach = sinon.stub().resolves();
-      fakeReceiver.forceDetach = sinon.stub();
-      fakeAmqpClient.createSender = sinon.stub().resolves(fakeSender);
-      fakeAmqpClient.createReceiver = sinon.stub().resolves(fakeReceiver);
+      var fakeRheaSession = new EventEmitter();
 
-      var cbs = new CBS(fakeAmqpClient);
+      var cbs = new CBS(fakeRheaSession);
+
+      var fakeRheaLink = new EventEmitter();
+      //
+      // We create the open_receiver stub because the receiver always gets an active listener when
+      // the CBS attach method is invoked.
+      //
+      var fakeContext = {receiver: fakeRheaLink};
+      fakeRheaSession.open_receiver = () => {};
+      sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {process.nextTick( () => {fakeRheaLink.emit('receiver_open', fakeContext)});return fakeRheaLink;});
+      cbs._senderLink.attach = sinon.stub().callsArg(0);
+      cbs._senderLink.detach = sinon.stub().callsArg(0);
+      cbs._senderLink.forceDetach = sinon.stub();
+
+      cbs._receiverLink.attach = sinon.stub().callsArgWith(0);
+      cbs._receiverLink.detach = sinon.stub().callsArgWith(0);
+      cbs._receiverLink.forceDetach = sinon.stub();
+
       cbs.attach(function () {
-        assert(fakeAmqpClient.createSender.calledOnce);
-        assert(fakeAmqpClient.createReceiver.calledOnce);
+        assert(cbs._senderLink.attach.calledOnce);
+        assert(cbs._receiverLink.attach.calledOnce);
         cbs.detach(function () {
-          assert(fakeSender.detach.calledOnce);
-          assert(fakeReceiver.detach.calledOnce);
-          assert(fakeSender.forceDetach.notCalled);
-          assert(fakeReceiver.forceDetach.notCalled);
+          assert(cbs._senderLink.detach.calledOnce);
+          assert(cbs._receiverLink.detach.calledOnce);
+          assert(cbs._senderLink.forceDetach.notCalled);
+          assert(cbs._receiverLink.forceDetach.notCalled);
           testCallback();
         });
       });
@@ -121,24 +138,49 @@ describe('ClaimsBasedSecurityAgent', function() {
 
     /*Tests_SRS_NODE_AMQP_CBS_16_008: [`detach` shall detach both sender and receiver links and return the state machine to the `detached` state.]*/
     it('works if called when links are being attached', function(testCallback) {
-      var fakeAmqpClient = new EventEmitter();
-      var fakeSender = new EventEmitter();
-      fakeSender.detach = sinon.stub().resolves();
-      fakeSender.forceDetach = sinon.stub();
-      fakeAmqpClient.createSender = sinon.stub().resolves(fakeSender);
-      fakeAmqpClient.createReceiver = sinon.stub();
+      var fakeRheaSession = new EventEmitter();
 
-      var cbs = new CBS(fakeAmqpClient);
+      var cbs = new CBS(fakeRheaSession);
+
+      var fakeRheaReceiverLink = new EventEmitter();
+      var fakeRheaSenderLink = new EventEmitter();
+      var fakeSenderContext = {sender: fakeRheaSenderLink};
+      fakeRheaSenderLink.close = () => {};
+      sinon.stub(fakeRheaSenderLink, 'close').callsFake(() => {
+        fakeRheaSenderLink.emit('sender_close', fakeSenderContext);
+      });
+      var fakeReceiverContext = {receiver: fakeRheaReceiverLink};
+      fakeRheaSession.open_sender = () => {};
+      sinon.stub(fakeRheaSession, 'open_sender').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaSenderLink.emit('sender_open', fakeSenderContext);
+        });
+        return fakeRheaSenderLink;
+      });
+      fakeRheaSession.open_receiver = () => {};
+      sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaReceiverLink.emit('receiver_open', fakeReceiverContext);
+        });
+        return fakeRheaReceiverLink;
+      });
+      var amqpSenderDetachSpy = sinon.spy(cbs._senderLink, 'detach');
+      var amqpReceiverDetachSpy = sinon.spy(cbs._receiverLink, 'detach');
+      cbs._senderLink.forceDetach = sinon.stub();
+      cbs._receiverLink.forceDetach = sinon.stub();
+
       cbs._senderLink._fsm.on('transition', function (data) {
         if (data.toState === 'attached') {
           cbs.detach(function () {
-            assert(fakeAmqpClient.createSender.calledOnce);
-            assert(fakeSender.detach.calledOnce);
-            assert(fakeSender.forceDetach.notCalled);
+            assert(fakeRheaSession.open_sender.calledOnce, 'open sender not called once');
+            assert(amqpSenderDetachSpy.calledOnce, 'detach NOT invoked on amqp SenderLink');
+            assert(amqpReceiverDetachSpy.calledOnce, 'detach NOT invoked on amqp SenderLink');
+            assert(cbs._senderLink.forceDetach.notCalled, 'force detach invoked on amqp SenderLink');
+            assert(cbs._receiverLink.forceDetach.notCalled, 'force detach invoked on amqp ReceiverLink');
             testCallback();
           });
         }
-      })
+      });
       cbs.attach(function() {});
     });
   });
@@ -154,53 +196,91 @@ describe('ClaimsBasedSecurityAgent', function() {
 
     /*Tests_SRS_NODE_AMQP_CBS_16_022: [The `forceDetach()` method shall call `forceDetach()` on all attached links.]*/
     it('forcefully detach the links if attached', function (testCallback) {
-      var fakeAmqpClient = new EventEmitter();
-      var fakeSender = new EventEmitter();
-      fakeSender.detach = sinon.stub().resolves();
-      fakeSender.forceDetach = sinon.stub();
-      var fakeReceiver = new EventEmitter();
-      fakeReceiver.detach = sinon.stub().resolves();
-      fakeReceiver.forceDetach = sinon.stub();
-      fakeAmqpClient.createSender = sinon.stub().resolves(fakeSender);
-      fakeAmqpClient.createReceiver = sinon.stub().resolves(fakeReceiver);
+      var fakeRheaSession = new EventEmitter();
 
-      var cbs = new CBS(fakeAmqpClient);
+      var cbs = new CBS(fakeRheaSession);
+
+      var fakeRheaReceiverLink = new EventEmitter();
+      var fakeRheaSenderLink = new EventEmitter();
+      var fakeSenderContext = {sender: fakeRheaSenderLink};
+      var fakeReceiverContext = {receiver: fakeRheaReceiverLink};
+      fakeRheaSession.open_sender = () => {};
+      sinon.stub(fakeRheaSession, 'open_sender').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaSenderLink.emit('sender_open', fakeSenderContext);
+        });
+        return fakeRheaSenderLink;
+      });
+      fakeRheaReceiverLink.remove = sinon.stub();
+      fakeRheaSenderLink.remove = sinon.stub();
+      fakeRheaSession.open_receiver = () => {};
+      sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaReceiverLink.emit('receiver_open', fakeReceiverContext);
+        });
+        return fakeRheaReceiverLink;
+      });
+      var amqpSenderForceDetachSpy = sinon.spy(cbs._senderLink, 'forceDetach');
+      var amqpReceiverForceDetachSpy = sinon.spy(cbs._receiverLink, 'forceDetach');
+      cbs._senderLink.detach = sinon.stub();
+      cbs._receiverLink.detach = sinon.stub();
+
       cbs.attach(function () {
-        assert(fakeAmqpClient.createSender.calledOnce);
-        assert(fakeAmqpClient.createReceiver.calledOnce);
+        assert(fakeRheaSession.open_sender.calledOnce, 'open sender NOT called once');
+        assert(fakeRheaSession.open_receiver.calledOnce, 'open receiver NOT called once');
         cbs.forceDetach();
-        assert(fakeSender.forceDetach.calledOnce);
-        assert(fakeReceiver.forceDetach.calledOnce);
-        assert(fakeSender.detach.notCalled);
-        assert(fakeReceiver.detach.notCalled);
+        assert(amqpSenderForceDetachSpy.calledOnce);
+        assert(amqpReceiverForceDetachSpy.calledOnce);
+        assert(cbs._senderLink.detach.notCalled);
+        assert(cbs._senderLink.detach.notCalled);
         testCallback();
       });
     });
 
     /*Tests_SRS_NODE_AMQP_CBS_16_022: [The `forceDetach()` method shall call `forceDetach()` on all attached links.]*/
     it('forcefully detach attached links if called while attaching', function (testCallback) {
-      var fakeAmqpClient = new EventEmitter();
-      var fakeSender = new EventEmitter();
-      fakeSender.detach = sinon.stub().resolves();
-      fakeSender.forceDetach = sinon.stub();
-      var fakeReceiver = new EventEmitter();
-      fakeReceiver.detach = sinon.stub().resolves();
-      fakeReceiver.forceDetach = sinon.stub();
-      fakeAmqpClient.createSender = sinon.stub().resolves(fakeSender);
-      fakeAmqpClient.createReceiver = sinon.stub().resolves(fakeReceiver);
-      sinon.stub(fakeReceiver, "on").callsFake(function (eventName) {
+      var fakeRheaSession = new EventEmitter();
+
+      var cbs = new CBS(fakeRheaSession);
+
+      var fakeRheaReceiverLink = new EventEmitter();
+      var fakeRheaSenderLink = new EventEmitter();
+      var fakeSenderContext = {sender: fakeRheaSenderLink};
+      var fakeReceiverContext = {receiver: fakeRheaReceiverLink};
+      fakeRheaSession.open_sender = () => {};
+      sinon.stub(fakeRheaSession, 'open_sender').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaSenderLink.emit('sender_open', fakeSenderContext);
+        });
+        return fakeRheaSenderLink;
+      });
+      fakeRheaReceiverLink.remove = sinon.stub();
+      fakeRheaSenderLink.remove = sinon.stub();
+      fakeRheaSession.open_receiver = () => {};
+      sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaReceiverLink.emit('receiver_open', fakeReceiverContext);
+        });
+        return fakeRheaReceiverLink;
+      });
+      var amqpSenderForceDetachSpy = sinon.spy(cbs._senderLink, 'forceDetach');
+      var amqpReceiverForceDetachSpy = sinon.spy(cbs._receiverLink, 'forceDetach');
+      cbs._senderLink.detach = sinon.stub();
+      cbs._receiverLink.detach = sinon.stub();
+
+      sinon.stub(fakeRheaReceiverLink, "on").callsFake(function (eventName) {
         if (eventName === 'message') {
           // sender is attached, receiver is attaching since we're registering for messages. good time to trigger a fake forceDetach
+          assert(fakeRheaSession.open_sender.calledOnce, 'open sender NOT called once');
+          assert(fakeRheaSession.open_receiver.calledOnce, 'open receiver NOT called once');
           cbs.forceDetach();
-          assert(fakeSender.forceDetach.calledOnce);
-          assert(fakeReceiver.forceDetach.calledOnce);
-          assert(fakeSender.detach.notCalled);
-          assert(fakeReceiver.detach.notCalled);
+          assert(amqpSenderForceDetachSpy.calledOnce);
+          assert(amqpReceiverForceDetachSpy.calledOnce);
+          assert(cbs._senderLink.detach.notCalled);
+          assert(cbs._senderLink.detach.notCalled);
           testCallback();
         }
       });
-
-      var cbs = new CBS(fakeAmqpClient);
       cbs.attach(function () {});
     });
   });
@@ -227,52 +307,94 @@ describe('ClaimsBasedSecurityAgent', function() {
     });
 
     it('attaches the CBS links if necessary and then succeeds', function(testCallback) {
-      var fakeUuid = uuid.v4();
-      var uuidStub = sinon.stub(uuid,'v4');
-      uuidStub.onCall(0).returns(fakeUuid);
+      var fakeRheaSession = new EventEmitter();
 
-      var fakeAmqpClient = new EventEmitter();
-      var fakeSender = new EventEmitter();
-      fakeSender.send = function() {
-        return new Promise(function (resolve, reject) {
-          resolve();
-          var responseMessage = new AmqpMessage();
-          responseMessage.properties = {};
-          responseMessage.applicationProperties = {};
-          responseMessage.properties.correlationId = fakeUuid;
-          responseMessage.applicationProperties['status-code'] = 200;
-          fakeReceiver.emit('message', responseMessage);
+      var cbs = new CBS(fakeRheaSession);
+
+      var fakeRheaSenderLink = new EventEmitter();
+      fakeRheaSenderLink.sendable = sinon.stub().returns(true);
+      fakeRheaSenderLink.send = sinon.stub().returns({settled: true});
+      var fakeSenderContext = {sender: fakeRheaSenderLink};
+      fakeRheaSenderLink.send = () => {};
+      var fakeRheaReceiverLink = new EventEmitter();
+      var fakeReceiverContext = {receiver: fakeRheaReceiverLink};
+      sinon.stub(fakeRheaSenderLink, 'send').callsFake((messageBeingSent) => {
+        var fakeDeliveryObject = {settled: true};
+        var responseMessage = new AmqpMessage();
+        responseMessage.properties = {};
+        responseMessage.application_properties = {};
+        responseMessage.correlation_id = messageBeingSent.message_id;
+        responseMessage.application_properties['status-code'] = 200;
+        process.nextTick(() => {
+          fakeReceiverContext.message = responseMessage;
+          fakeRheaReceiverLink.emit('message', fakeReceiverContext);
         });
-      };
-      fakeSender.forceDetach = sinon.stub();
+        return fakeDeliveryObject;
+      });
+      fakeRheaSession.open_sender = () => {};
+      sinon.stub(fakeRheaSession, 'open_sender').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaSenderLink.emit('sender_open', fakeSenderContext);
+        });
+        return fakeRheaSenderLink;
+      });
+      fakeRheaSession.open_receiver = () => {};
+      sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaReceiverLink.emit('receiver_open', fakeReceiverContext);
+        });
+        return fakeRheaReceiverLink;
+      });
+      var amqpReceiverAttachSpy = sinon.spy(cbs._receiverLink, 'attach');
+      var amqpSenderAttachSpy = sinon.spy(cbs._senderLink, 'attach');
+      cbs._receiverLink.accept = sinon.stub();
 
-      var fakeReceiver = new EventEmitter();
-      fakeReceiver.accept = sinon.stub();
-      fakeReceiver.forceDetach = sinon.stub();
-      fakeAmqpClient.createSender = sinon.stub().resolves(fakeSender);
-      fakeAmqpClient.createReceiver = sinon.stub().resolves(fakeReceiver);
-
-      var cbs = new CBS(fakeAmqpClient);
+      assert.isFalse(amqpSenderAttachSpy.called, 'amqp SenderLink is attached');
+      assert.isFalse(amqpReceiverAttachSpy.called, 'amqp ReceiverLink is attached');
+      assert.isFalse(fakeRheaSession.open_sender.called, 'senders prior to the putToken');
+      assert.isFalse(fakeRheaSession.open_receiver.called, 'senders prior to the putToken');
       cbs.putToken('audience', 'token', function(err) {
-        uuid.v4.restore();
-        assert(fakeAmqpClient.createSender.calledOnce);
-        assert(fakeAmqpClient.createReceiver.calledOnce);
+        assert.isNotOk(err, 'the put token succeeded');
+        assert(amqpSenderAttachSpy.calledOnce, 'amqp SenderLink attach NOT called once');
+        assert(amqpReceiverAttachSpy.calledOnce, 'amqp ReceiverLink attach NOT called once');
+        assert(fakeRheaSenderLink.send.calledOnce, 'rhea send NOT called once');
+        assert(fakeRheaSession.open_sender.calledOnce, 'more than one sender created');
+        assert(fakeRheaSession.open_receiver.calledOnce, 'more than one receiver created');
         testCallback();
       });
     });
 
     it('fails if it cannot attach the CBS links', function(testCallback) {
+      var fakeRheaSession = new EventEmitter();
+
+      var cbs = new CBS(fakeRheaSession);
       var fakeError = new Error('fake error');
-      var fakeAmqpClient = new EventEmitter();
-      var fakeSender = new EventEmitter();
-      fakeSender.forceDetach = sinon.stub();
 
-      var fakeReceiver = new EventEmitter();
-      fakeReceiver.forceDetach = sinon.stub();
-      fakeAmqpClient.createSender = sinon.stub().rejects(fakeError);
-      fakeAmqpClient.createReceiver = sinon.stub().resolves(fakeReceiver);
+      cbs._senderLink.detach = sinon.stub().callsArg(0);
+      cbs._receiverLink.detach = sinon.stub().callsArg(0);
+      var fakeRheaSenderLink = new EventEmitter();
+      fakeRheaSenderLink.sendable = sinon.stub().returns(true);
+      var fakeSenderContext = {sender: fakeRheaSenderLink};
+      var fakeRheaReceiverLink = new EventEmitter();
+      var fakeReceiverContext = {receiver: fakeRheaReceiverLink};
+      fakeRheaSession.open_sender = () => {};
+      sinon.stub(fakeRheaSession, 'open_sender').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaSenderLink.emit('sender_open', fakeSenderContext);
+        });
+        return fakeRheaSenderLink;
+      });
+      fakeRheaSession.open_receiver = () => {};
+      sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaReceiverLink.error = fakeError;
+          fakeRheaReceiverLink.emit('receiver_error', fakeReceiverContext);
+          fakeRheaReceiverLink.error = undefined;
+          fakeRheaReceiverLink.emit('receiver_close', fakeReceiverContext);
+        });
+        return fakeRheaReceiverLink;
+      });
 
-      var cbs = new CBS(fakeAmqpClient);
       cbs.putToken('audience', 'token', function(err) {
         assert.strictEqual(err, fakeError);
         testCallback();
@@ -280,59 +402,94 @@ describe('ClaimsBasedSecurityAgent', function() {
     });
 
     it('succeeds even if called while the link are being attached', function(testCallback) {
-      var fakeUuid = uuid.v4();
-      var uuidStub = sinon.stub(uuid,'v4');
-      uuidStub.onCall(0).returns(fakeUuid);
-      var fakeAmqpClient = new EventEmitter();
-      var fakeSender = new EventEmitter();
-      fakeSender.send = function() {
-        return new Promise(function (resolve, reject) {
-          resolve();
-          var responseMessage = new AmqpMessage();
-          responseMessage.properties = {};
-          responseMessage.applicationProperties = {};
-          responseMessage.properties.correlationId = fakeUuid;
-          responseMessage.applicationProperties['status-code'] = 200;
-          fakeReceiver.emit('message', responseMessage);
-        });
-      };
-      fakeSender.forceDetach = sinon.stub();
+      var fakeRheaSession = new EventEmitter();
 
-      var fakeReceiver = new EventEmitter();
-      fakeReceiver.accept = sinon.stub();
-      fakeReceiver.forceDetach = sinon.stub();
-      var unlockResolve;
-      fakeAmqpClient.createSender = function() {
-        return new Promise(function (resolve) {
-          unlockResolve = resolve;
-        });
-      };
-      fakeAmqpClient.createReceiver = sinon.stub().resolves(fakeReceiver);
+      var cbs = new CBS(fakeRheaSession);
 
-      var cbs = new CBS(fakeAmqpClient);
+      var fakeRheaSenderLink = new EventEmitter();
+      fakeRheaSenderLink.sendable = sinon.stub().returns(true);
+      fakeRheaSenderLink.send = sinon.stub().returns({settled: true});
+      var fakeSenderContext = {sender: fakeRheaSenderLink};
+      fakeRheaSenderLink.send = () => {};
+      var fakeRheaReceiverLink = new EventEmitter();
+      var fakeReceiverContext = {receiver: fakeRheaReceiverLink};
+      sinon.stub(fakeRheaSenderLink, 'send').callsFake((messageBeingSent) => {
+        var fakeDeliveryObject = {settled: true};
+        var responseMessage = new AmqpMessage();
+        responseMessage.properties = {};
+        responseMessage.application_properties = {};
+        responseMessage.correlation_id = messageBeingSent.message_id;
+        responseMessage.application_properties['status-code'] = 200;
+        process.nextTick(() => {
+          fakeReceiverContext.message = responseMessage;
+          fakeRheaReceiverLink.emit('message', fakeReceiverContext);
+        });
+        return fakeDeliveryObject;
+      });
+      fakeRheaSession.open_sender = () => {};
+      sinon.stub(fakeRheaSession, 'open_sender').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaSenderLink.emit('sender_open', fakeSenderContext);
+        });
+        return fakeRheaSenderLink;
+      });
+      fakeRheaSession.open_receiver = sinon.stub().returns(fakeRheaReceiverLink);
+      cbs._receiverLink.accept = sinon.stub();
+
       cbs.attach();
       cbs.putToken('audience', 'token', function(err) {
-        uuid.v4.restore();
-        testCallback();
+        testCallback(err);
       });
-      unlockResolve(fakeSender);
+      process.nextTick( () => {
+        fakeRheaReceiverLink.emit('receiver_open', fakeReceiverContext);
+      });
     });
 
     it('creates a timer if this is the first pending put token operation', function(testCallback) {
       this.clock = sinon.useFakeTimers();
-      var fakeReceiver = new EventEmitter();
-      var fakeSender = new EventEmitter();
-      fakeSender.send = sinon.stub().resolves();
+      var fakeRheaSession = new EventEmitter();
 
-      var fakeAmqpClient = new EventEmitter();
-      fakeAmqpClient.connect = sinon.stub().resolves(),
-      fakeAmqpClient.createReceiver = sinon.stub().resolves(fakeReceiver),
-      fakeAmqpClient.createSender = sinon.stub().resolves(fakeSender)
+      var cbs = new CBS(fakeRheaSession);
 
-      var cbs = new CBS(fakeAmqpClient);
+      var fakeRheaSenderLink = new EventEmitter();
+      fakeRheaSenderLink.sendable = sinon.stub().returns(true);
+      fakeRheaSenderLink.send = sinon.stub().returns({settled: true});
+      var fakeSenderContext = {sender: fakeRheaSenderLink};
+      fakeRheaSenderLink.send = () => {};
+      var fakeRheaReceiverLink = new EventEmitter();
+      var fakeReceiverContext = {receiver: fakeRheaReceiverLink};
+      sinon.stub(fakeRheaSenderLink, 'send').callsFake((messageBeingSent) => {
+        var fakeDeliveryObject = {settled: true};
+        var responseMessage = new AmqpMessage();
+        responseMessage.properties = {};
+        responseMessage.application_properties = {};
+        responseMessage.correlation_id = messageBeingSent.message_id;
+        responseMessage.application_properties['status-code'] = 200;
+        process.nextTick(() => {
+          fakeReceiverContext.message = responseMessage;
+          fakeRheaReceiverLink.emit('message', fakeReceiverContext);
+        });
+        return fakeDeliveryObject;
+      });
+      fakeRheaSession.open_sender = () => {};
+      sinon.stub(fakeRheaSession, 'open_sender').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaSenderLink.emit('sender_open', fakeSenderContext);
+        });
+        return fakeRheaSenderLink;
+      });
+      fakeRheaSession.open_receiver = () => {};
+      sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaReceiverLink.emit('receiver_open', fakeReceiverContext);
+        });
+        return fakeRheaReceiverLink;
+      });
+      cbs._receiverLink.accept = sinon.stub();
+
       var spyRemoveExpiredPutTokens = sinon.spy(cbs, '_removeExpiredPutTokens');
       cbs.attach(function(err) {
-        assert.isNotOk(err, 'initalization passed');
+        assert.isNotOk(err, 'initialization passed');
         cbs._putToken.numberOfSecondsToTimeout = 120;
         cbs._putToken.putTokenTimeOutExaminationInterval = 10000;
         cbs.putToken('audience','sasToken', function () {});
@@ -348,19 +505,49 @@ describe('ClaimsBasedSecurityAgent', function() {
 
     it('Two putTokens in succession still causes only one invocation of the timer callback', function(testCallback) {
       this.clock = sinon.useFakeTimers();
-      var fakeReceiver = new EventEmitter();
-      var fakeSender = new EventEmitter();
-      fakeSender.send = sinon.stub().resolves();
+      var fakeRheaSession = new EventEmitter();
 
-      var fakeAmqpClient = new EventEmitter();
-      fakeAmqpClient.connect = sinon.stub().resolves(),
-      fakeAmqpClient.createReceiver = sinon.stub().resolves(fakeReceiver),
-      fakeAmqpClient.createSender = sinon.stub().resolves(fakeSender)
+      var cbs = new CBS(fakeRheaSession);
 
-      var cbs = new CBS(fakeAmqpClient);
+      var fakeRheaSenderLink = new EventEmitter();
+      fakeRheaSenderLink.sendable = sinon.stub().returns(true);
+      fakeRheaSenderLink.send = sinon.stub().returns({settled: true});
+      var fakeSenderContext = {sender: fakeRheaSenderLink};
+      fakeRheaSenderLink.send = () => {};
+      var fakeRheaReceiverLink = new EventEmitter();
+      var fakeReceiverContext = {receiver: fakeRheaReceiverLink};
+      sinon.stub(fakeRheaSenderLink, 'send').callsFake((messageBeingSent) => {
+        var fakeDeliveryObject = {settled: true};
+        var responseMessage = new AmqpMessage();
+        responseMessage.properties = {};
+        responseMessage.application_properties = {};
+        responseMessage.correlation_id = messageBeingSent.message_id;
+        responseMessage.application_properties['status-code'] = 200;
+        process.nextTick(() => {
+          fakeReceiverContext.message = responseMessage;
+          fakeRheaReceiverLink.emit('message', fakeReceiverContext);
+        });
+        return fakeDeliveryObject;
+      });
+      fakeRheaSession.open_sender = () => {};
+      sinon.stub(fakeRheaSession, 'open_sender').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaSenderLink.emit('sender_open', fakeSenderContext);
+        });
+        return fakeRheaSenderLink;
+      });
+      fakeRheaSession.open_receiver = () => {};
+      sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaReceiverLink.emit('receiver_open', fakeReceiverContext);
+        });
+        return fakeRheaReceiverLink;
+      });
+      cbs._receiverLink.accept = sinon.stub();
+
       var spyRemoveExpiredPutTokens = sinon.spy(cbs, '_removeExpiredPutTokens');
       cbs.attach(function(err) {
-        assert.isNotOk(err, 'initalization passed');
+        assert.isNotOk(err, 'initialization passed');
         cbs._putToken.numberOfSecondsToTimeout = 120;
         cbs._putToken.putTokenTimeOutExaminationInterval = 10000;
         cbs.putToken('audience','sasToken', function () {});
@@ -396,29 +583,63 @@ describe('ClaimsBasedSecurityAgent', function() {
     it('sends a put token operation', function(testCallback) {
       var fakeUuids = [uuid.v4()];
       var uuidStub = sinon.stub(uuid,'v4');
-      uuidStub.onCall(0).returns(fakeUuids[0]);
-      var fakeReceiver = new EventEmitter();
-      var fakeSender = new EventEmitter();
-      fakeSender.send = sinon.stub().resolves();
+      uuidStub.onCall(2).returns(fakeUuids[0]);
+      var fakeRheaSession = new EventEmitter();
 
-      var fakeAmqpClient = new EventEmitter();
-      fakeAmqpClient.connect = sinon.stub().resolves(),
-      fakeAmqpClient.createReceiver = sinon.stub().resolves(fakeReceiver),
-      fakeAmqpClient.createSender = sinon.stub().resolves(fakeSender)
+      var cbs = new CBS(fakeRheaSession);
+      var responseMessage = {};
 
-      var cbs = new CBS(fakeAmqpClient);
-      var spyRemoveExpiredPutTokens = sinon.spy(cbs, '_removeExpiredPutTokens');
+      var fakeRheaSenderLink = new EventEmitter();
+      fakeRheaSenderLink.sendable = sinon.stub().returns(true);
+      fakeRheaSenderLink.send = sinon.stub().returns({settled: true});
+      var fakeSenderContext = {sender: fakeRheaSenderLink};
+      fakeRheaSenderLink.send = () => {};
+      var fakeRheaReceiverLink = new EventEmitter();
+      var fakeReceiverContext = {receiver: fakeRheaReceiverLink};
+      sinon.stub(fakeRheaSenderLink, 'send').callsFake((messageBeingSent) => {
+        var fakeDeliveryObject = {settled: true};
+        responseMessage = new AmqpMessage();
+        responseMessage.properties = {};
+        responseMessage.application_properties = {};
+        responseMessage.correlation_id = messageBeingSent.message_id;
+        responseMessage.application_properties['status-code'] = 200;
+        process.nextTick(() => {
+          fakeReceiverContext.message = responseMessage;
+          fakeRheaReceiverLink.emit('message', fakeReceiverContext);
+        });
+        return fakeDeliveryObject;
+      });
+      fakeRheaSession.open_sender = () => {};
+      sinon.stub(fakeRheaSession, 'open_sender').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaSenderLink.emit('sender_open', fakeSenderContext);
+        });
+        return fakeRheaSenderLink;
+      });
+      fakeRheaSession.open_receiver = () => {};
+      sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaReceiverLink.emit('receiver_open', fakeReceiverContext);
+        });
+        return fakeRheaReceiverLink;
+      });
+      cbs._receiverLink.accept = sinon.stub();
+
       cbs.attach(function(err) {
-        assert.isNotOk(err, 'initalization passed');
-        cbs.putToken('myaudience', 'my token');
+        assert.isNotOk(err, 'initialization passed');
+        cbs.putToken('myAudience', 'my token');
         uuid.v4.restore();
-        assert.equal(fakeSender.send.args[0][0].applicationProperties.operation, 'put-token', 'operation application property not equal');
-        assert.equal(fakeSender.send.args[0][0].applicationProperties.type, 'servicebus.windows.net:sastoken', 'type application property not equal');
-        assert.equal(fakeSender.send.args[0][0].applicationProperties.name, 'myaudience', 'name application property not equal');
-        assert.equal(fakeSender.send.args[0][0].properties.to, '$cbs', 'to application property not equal');
-        assert.equal(fakeSender.send.args[0][0].properties.messageId, fakeUuids[0], 'messageId n property not equal');
-        assert.equal(fakeSender.send.args[0][0].properties.reply_to, 'cbs', 'reply_to property not equal');
-        assert.isTrue(fakeSender.send.args[0][0].body === 'my token', 'body of put token not the sas token');
+        assert.equal(fakeRheaSenderLink.send.args[0][0].application_properties.operation, 'put-token', 'operation application property not equal');
+        assert.equal(fakeRheaSenderLink.send.args[0][0].application_properties.type, 'servicebus.windows.net:sastoken', 'type application property not equal');
+        assert.equal(fakeRheaSenderLink.send.args[0][0].application_properties.name, 'myAudience', 'name application property not equal');
+        assert.equal(fakeRheaSenderLink.send.args[0][0].to, '$cbs', 'to application property not equal');
+        //
+        // NOTE NOTE: The most likely reason this would fail is that the an change in the number
+        // of uuid.v4 calls were made.
+        //
+        assert.equal(fakeRheaSenderLink.send.args[0][0].message_id, fakeUuids[0], 'messageId n property not equal');
+        assert.equal(fakeRheaSenderLink.send.args[0][0].reply_to, 'cbs', 'reply_to property not equal');
+        assert.isTrue(fakeRheaSenderLink.send.args[0][0].body === 'my token', 'body of put token not the sas token');
         clearTimeout(cbs._putToken.timeoutTimer);
         testCallback();
       });
@@ -428,27 +649,54 @@ describe('ClaimsBasedSecurityAgent', function() {
     it('sends two put tokens erroring the second , ensuring the first remains', function(testCallback) {
       var fakeUuids = [uuid.v4(), uuid.v4()];
       var uuidStub = sinon.stub(uuid,'v4');
-      uuidStub.onCall(0).returns(fakeUuids[0]);
-      uuidStub.onCall(1).returns(fakeUuids[1]);
-      var fakeReceiver = new EventEmitter();
-      var fakeSender = new EventEmitter();
-      fakeSender.send = sinon.stub().resolves();
+      uuidStub.onCall(2).returns(fakeUuids[0]);
+      uuidStub.onCall(3).returns(fakeUuids[1]);
 
-      var fakeAmqpClient = new EventEmitter();
-      fakeAmqpClient.connect = sinon.stub().resolves(),
-      fakeAmqpClient.createReceiver = sinon.stub().resolves(fakeReceiver),
-      fakeAmqpClient.createSender = sinon.stub().resolves(fakeSender)
+      var fakeRheaSession = new EventEmitter();
+      var sendCounts = 0;
 
-      var cbs = new CBS(fakeAmqpClient);
+      var cbs = new CBS(fakeRheaSession);
+
+      var fakeRheaSenderLink = new EventEmitter();
+      fakeRheaSenderLink.sendable = sinon.stub().returns(true);
+      fakeRheaSenderLink.send = sinon.stub().returns({settled: true});
+      var fakeSenderContext = {sender: fakeRheaSenderLink};
+      fakeRheaSenderLink.send = () => {};
+      var fakeRheaReceiverLink = new EventEmitter();
+      var fakeReceiverContext = {receiver: fakeRheaReceiverLink};
+      sinon.stub(fakeRheaSenderLink, 'send').callsFake(() => {
+        sendCounts++;
+        var fakeDeliveryObject = {settled: sendCounts === 1, id: sendCounts};
+        if (sendCounts !== 1) {
+          process.nextTick(() => {
+            fakeRheaSenderLink.emit('rejected', {delivery: {id: 2, remote_state: {error: {condition: 'rejected'}}}, sender: fakeRheaSenderLink})
+          });
+        }
+        return fakeDeliveryObject;
+      });
+      fakeRheaSession.open_sender = () => {};
+      sinon.stub(fakeRheaSession, 'open_sender').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaSenderLink.emit('sender_open', fakeSenderContext);
+        });
+        return fakeRheaSenderLink;
+      });
+      fakeRheaSession.open_receiver = () => {};
+      sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaReceiverLink.emit('receiver_open', fakeReceiverContext);
+        });
+        return fakeRheaReceiverLink;
+      });
+      cbs._receiverLink.accept = sinon.stub();
 
       cbs.attach(function(err) {
-        assert.isNotOk(err, 'initalization passed');
+        assert.isNotOk(err, 'initialization passed');
         cbs.putToken('first audience', 'first token', function () {
           assert.fail('This callback for the first put token should not have been called');
         });
-        fakeSender.send = sinon.stub().rejects('could not send');
         cbs.putToken('second audience', 'second token', function (err) {
-          assert.instanceOf(err, Error);
+          assert(err, 'error not returned on second send');
           //
           // Make sure that the first put token is still outstanding.
           //
@@ -467,22 +715,40 @@ describe('ClaimsBasedSecurityAgent', function() {
       this.clock = sinon.useFakeTimers();
       var fakeUuids = [uuid.v4(), uuid.v4(), uuid.v4()];
       var uuidStub = sinon.stub(uuid,'v4');
-      uuidStub.onCall(0).returns(fakeUuids[0]);
-      uuidStub.onCall(1).returns(fakeUuids[1]);
-      uuidStub.onCall(2).returns(fakeUuids[2]);
-      var fakeReceiver = new EventEmitter();
-      var fakeSender = new EventEmitter();
-      fakeSender.send = sinon.stub().resolves();
+      uuidStub.onCall(2).returns(fakeUuids[0]);
+      uuidStub.onCall(3).returns(fakeUuids[1]);
+      uuidStub.onCall(4).returns(fakeUuids[2]);
 
-      var fakeAmqpClient = new EventEmitter();
-      fakeAmqpClient.connect = sinon.stub().resolves(),
-      fakeAmqpClient.createReceiver = sinon.stub().resolves(fakeReceiver),
-      fakeAmqpClient.createSender = sinon.stub().resolves(fakeSender)
+      this.clock = sinon.useFakeTimers();
+      var fakeRheaSession = new EventEmitter();
 
-      var cbs = new CBS(fakeAmqpClient);
+      var cbs = new CBS(fakeRheaSession);
+
+      var fakeRheaSenderLink = new EventEmitter();
+      fakeRheaSenderLink.sendable = sinon.stub().returns(true);
+      fakeRheaSenderLink.send = sinon.stub().returns({settled: true});
+      var fakeSenderContext = {sender: fakeRheaSenderLink};
+      var fakeRheaReceiverLink = new EventEmitter();
+      var fakeReceiverContext = {receiver: fakeRheaReceiverLink};
+      fakeRheaSenderLink.send = sinon.stub.returns({settled: true});
+      fakeRheaSession.open_sender = () => {};
+      sinon.stub(fakeRheaSession, 'open_sender').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaSenderLink.emit('sender_open', fakeSenderContext);
+        });
+        return fakeRheaSenderLink;
+      });
+      fakeRheaSession.open_receiver = () => {};
+      sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaReceiverLink.emit('receiver_open', fakeReceiverContext);
+        });
+        return fakeRheaReceiverLink;
+      });
+      cbs._receiverLink.accept = sinon.stub();
 
       cbs.attach(function(err) {
-        assert.isNotOk(err, 'initalization passed');
+        assert.isNotOk(err, 'initialization passed');
         cbs._putToken.numberOfSecondsToTimeout = 120;
         cbs._putToken.putTokenTimeOutExaminationInterval = 10000;
         cbs.putToken('first audience', 'first token', function (err) {
@@ -525,28 +791,45 @@ describe('ClaimsBasedSecurityAgent', function() {
       this.clock = sinon.useFakeTimers();
       var fakeUuids = [uuid.v4(), uuid.v4(), uuid.v4()];
       var uuidStub = sinon.stub(uuid,'v4');
-      uuidStub.onCall(0).returns(fakeUuids[0]);
-      uuidStub.onCall(1).returns(fakeUuids[1]);
-      uuidStub.onCall(2).returns(fakeUuids[2]);
+      uuidStub.onCall(2).returns(fakeUuids[0]);
+      uuidStub.onCall(3).returns(fakeUuids[1]);
+      uuidStub.onCall(4).returns(fakeUuids[2]);
+
+      this.clock = sinon.useFakeTimers();
+      var fakeRheaSession = new EventEmitter();
+
+      var cbs = new CBS(fakeRheaSession);
+
+      var fakeRheaSenderLink = new EventEmitter();
+      fakeRheaSenderLink.sendable = sinon.stub().returns(true);
+      fakeRheaSenderLink.send = sinon.stub().returns({settled: true});
+      var fakeSenderContext = {sender: fakeRheaSenderLink};
+      var fakeRheaReceiverLink = new EventEmitter();
+      var fakeReceiverContext = {receiver: fakeRheaReceiverLink};
+      fakeRheaSenderLink.send = sinon.stub.returns({settled: true});
+      fakeRheaSession.open_sender = () => {};
+      sinon.stub(fakeRheaSession, 'open_sender').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaSenderLink.emit('sender_open', fakeSenderContext);
+        });
+        return fakeRheaSenderLink;
+      });
+      fakeRheaSession.open_receiver = () => {};
+      sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaReceiverLink.emit('receiver_open', fakeReceiverContext);
+        });
+        return fakeRheaReceiverLink;
+      });
+      cbs._receiverLink.accept = sinon.stub();
       var responseMessage = new AmqpMessage();
       responseMessage.properties = {};
-      responseMessage.applicationProperties = {};
-      responseMessage.properties.correlationId = fakeUuids[1];
-      responseMessage.applicationProperties['status-code'] = 200;
-      var fakeReceiver = new EventEmitter();
-      fakeReceiver.accept = sinon.spy();
-      var fakeSender = new EventEmitter();
-      fakeSender.send = sinon.stub().resolves();
-
-      var fakeAmqpClient = new EventEmitter();
-      fakeAmqpClient.connect = sinon.stub().resolves(),
-      fakeAmqpClient.createReceiver = sinon.stub().resolves(fakeReceiver),
-      fakeAmqpClient.createSender = sinon.stub().resolves(fakeSender)
-
-      var cbs = new CBS(fakeAmqpClient);
+      responseMessage.application_properties = {};
+      responseMessage.correlation_id = fakeUuids[1];
+      responseMessage.application_properties['status-code'] = 200;
 
       cbs.attach(function(err) {
-        assert.isNotOk(err, 'initalization passed');
+        assert.isNotOk(err, 'initialization passed');
         cbs._putToken.numberOfSecondsToTimeout = 120;
         cbs._putToken.putTokenTimeOutExaminationInterval = 10000;
         cbs.putToken('first audience', 'first token', function (err) {
@@ -575,7 +858,7 @@ describe('ClaimsBasedSecurityAgent', function() {
           // There should be no outstanding put token when this put token is timed out.
           //
           assert.equal(cbs._putToken.outstandingPutTokens.length, 0, 'For the third put token call back invocation outstanding remaining ');
-          assert(fakeReceiver.accept.calledOnce);
+          assert(cbs._receiverLink.accept.calledOnce);
           this.clock.restore();
           testCallback();
         }.bind(this));
@@ -584,7 +867,8 @@ describe('ClaimsBasedSecurityAgent', function() {
           //
           // Emit a put token response which should complete the second put token.
           //
-          fakeReceiver.emit('message', responseMessage);
+          fakeReceiverContext.message = responseMessage;
+          fakeRheaReceiverLink.emit('message', fakeReceiverContext);
           this.clock.tick(10000); // Move forward a bit We should be at 1 minute 40 seconds after the start of the first put token.
           process.nextTick(function () {
             assert.equal(cbs._putToken.outstandingPutTokens.length, 2, 'First time stop after completing the second put token');
@@ -610,75 +894,105 @@ describe('ClaimsBasedSecurityAgent', function() {
 
     /*Tests_SRS_NODE_AMQP_CBS_16_018: [A put token response not equal to 200 will invoke `putTokenCallback` with an error object of UnauthorizedError.]*/
     it('Status result not equal to 200 completes the put token with an error.', function(testCallback) {
-      var fakeUuids = [uuid.v4()];
-      var uuidStub = sinon.stub(uuid,'v4');
-      uuidStub.onCall(0).returns(fakeUuids[0]);
-      var responseMessage = new AmqpMessage();
-      responseMessage.properties = {};
-      responseMessage.applicationProperties = {};
-      responseMessage.properties.correlationId = fakeUuids[0];
-      responseMessage.applicationProperties['status-code'] = 201;
-      responseMessage.applicationProperties['status-description'] = 'cryptic message';
-      var fakeReceiver = new EventEmitter();
-      fakeReceiver.accept = sinon.stub();
-      var fakeSender = new EventEmitter();
-      fakeSender.send = sinon.stub().resolves();
+      var fakeRheaSession = new EventEmitter();
+      var cbs = new CBS(fakeRheaSession);
 
-      var fakeAmqpClient = new EventEmitter();
-      fakeAmqpClient.connect = sinon.stub().resolves(),
-      fakeAmqpClient.createReceiver = sinon.stub().resolves(fakeReceiver),
-      fakeAmqpClient.createSender = sinon.stub().resolves(fakeSender)
-
-      var cbs = new CBS(fakeAmqpClient);
+      var fakeRheaSenderLink = new EventEmitter();
+      fakeRheaSenderLink.sendable = sinon.stub().returns(true);
+      fakeRheaSenderLink.send = () => {};
+      var fakeSenderContext = {sender: fakeRheaSenderLink};
+      var fakeRheaReceiverLink = new EventEmitter();
+      var fakeReceiverContext = {receiver: fakeRheaReceiverLink};
+      sinon.stub(fakeRheaSenderLink, 'send').callsFake((messageBeingSent) => {
+        var fakeDeliveryObject = {settled: true};
+        var responseMessage = new AmqpMessage();
+        responseMessage.properties = {};
+        responseMessage.application_properties = {};
+        responseMessage.correlation_id = messageBeingSent.message_id;
+        responseMessage.application_properties['status-description'] = 'cryptic message';
+        responseMessage.application_properties['status-code'] = 201;
+        process.nextTick(() => {
+          fakeReceiverContext.message = responseMessage;
+          fakeRheaReceiverLink.emit('message', fakeReceiverContext);
+        });
+        return fakeDeliveryObject;
+      });
+      fakeRheaSession.open_sender = () => {};
+      sinon.stub(fakeRheaSession, 'open_sender').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaSenderLink.emit('sender_open', fakeSenderContext);
+        });
+        return fakeRheaSenderLink;
+      });
+      fakeRheaSession.open_receiver = () => {};
+      sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaReceiverLink.emit('receiver_open', fakeReceiverContext);
+        });
+        return fakeRheaReceiverLink;
+      });
+      cbs._receiverLink.accept = sinon.stub();
 
       cbs.attach(function(err) {
-        assert.isNotOk(err, 'initalization passed');
+        assert.isNotOk(err, 'initialization passed');
         cbs.putToken('audience', 'token', function (err, putTokenResult) {
           assert.instanceOf(err, errors.UnauthorizedError);
           assert.isNotOk(putTokenResult,'The result object passed');
           assert.equal(cbs._putToken.outstandingPutTokens.length, 0, 'For put token call nothing should be outstanding.');
-          assert(fakeReceiver.accept.calledOnce);
-          uuid.v4.restore();
+          assert(cbs._receiverLink.accept.calledOnce);
           testCallback();
         });
-        fakeReceiver.emit('message', responseMessage);
       }.bind(this));
     });
 
     it('Do a put token with no callback that completes successfully', function(testCallback) {
-      var fakeUuids = [uuid.v4()];
-      var uuidStub = sinon.stub(uuid,'v4');
-      uuidStub.onCall(0).returns(fakeUuids[0]);
-      var responseMessage = new AmqpMessage();
-      responseMessage.properties = {};
-      responseMessage.applicationProperties = {};
-      responseMessage.properties.correlationId = fakeUuids[0];
-      responseMessage.applicationProperties['status-code'] = 200;
+      var fakeRheaSession = new EventEmitter();
+      var cbs = new CBS(fakeRheaSession);
 
-      var fakeReceiver = new EventEmitter();
-      fakeReceiver.accept = sinon.stub();
-      var fakeSender = new EventEmitter();
-      fakeSender.send = sinon.stub().resolves();
-
-      var fakeAmqpClient = new EventEmitter();
-      fakeAmqpClient.connect = sinon.stub().resolves(),
-      fakeAmqpClient.createReceiver = sinon.stub().resolves(fakeReceiver),
-      fakeAmqpClient.createSender = sinon.stub().resolves(fakeSender)
-
-      var cbs = new CBS(fakeAmqpClient);
+      var responseMessage = {};
+      var fakeRheaSenderLink = new EventEmitter();
+      fakeRheaSenderLink.sendable = sinon.stub().returns(true);
+      fakeRheaSenderLink.send = () => {};
+      var fakeSenderContext = {sender: fakeRheaSenderLink};
+      var fakeRheaReceiverLink = new EventEmitter();
+      var fakeReceiverContext = {receiver: fakeRheaReceiverLink};
+      sinon.stub(fakeRheaSenderLink, 'send').callsFake((messageBeingSent) => {
+        var fakeDeliveryObject = {settled: true};
+        responseMessage = new AmqpMessage();
+        responseMessage.properties = {};
+        responseMessage.application_properties = {};
+        responseMessage.correlation_id = messageBeingSent.message_id;
+        responseMessage.application_properties['status-code'] = 200;
+        return fakeDeliveryObject;
+      });
+      fakeRheaSession.open_sender = () => {};
+      sinon.stub(fakeRheaSession, 'open_sender').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaSenderLink.emit('sender_open', fakeSenderContext);
+        });
+        return fakeRheaSenderLink;
+      });
+      fakeRheaSession.open_receiver = () => {};
+      sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaReceiverLink.emit('receiver_open', fakeReceiverContext);
+        });
+        return fakeRheaReceiverLink;
+      });
+      cbs._receiverLink.accept = sinon.stub();
 
       cbs.attach(function(err) {
-        assert.isNotOk(err, 'initalization passed');
+        assert.isNotOk(err, 'initialization passed');
         cbs.putToken('first audience', 'first token');
         assert.equal(cbs._putToken.outstandingPutTokens.length, 1, 'Should be one put token outstanding.');
         //
         // Emit a put token response which should complete the put token.
         //
-        fakeReceiver.emit('message',responseMessage);
+        fakeReceiverContext.message = responseMessage;
+        fakeRheaReceiverLink.emit('message', fakeReceiverContext);
         process.nextTick(function () {
           assert.equal(cbs._putToken.outstandingPutTokens.length, 0, 'First time stop all should be done');
-          assert(fakeReceiver.accept.calledOnce);
-          uuid.v4.restore();
+          assert(cbs._receiverLink.accept.calledOnce);
           testCallback();
         }.bind(this));
       }.bind(this));
@@ -686,53 +1000,51 @@ describe('ClaimsBasedSecurityAgent', function() {
   });
 
   describe('#events', function() {
-    /*Tests_SRS_NODE_AMQP_CBS_16_016: [If either the sender or receiver link emits an `error` event, the state machine should return to the `detached` state and detach the remaining links, if any.]*/
-    it('goes back to the detached state if the sender link gets detached and emits an error', function(testCallback) {
-      var testError = new Error();
-      var fakeAmqpClient = new EventEmitter();
-      var fakeSender = new EventEmitter();
-      fakeSender.detach = sinon.stub().rejects(); // should not be called
-      fakeSender.forceDetach = sinon.stub();
-      var fakeReceiver = new EventEmitter();
-      fakeReceiver.detach = sinon.stub().resolves();
-      fakeReceiver.forceDetach = sinon.stub();
-      fakeAmqpClient.createSender = sinon.stub().resolves(fakeSender);
-      fakeAmqpClient.createReceiver = sinon.stub().resolves(fakeReceiver);
-
-      var cbs = new CBS(fakeAmqpClient);
-      cbs._fsm.on('transition', function (data) {
-        if (data.toState === 'detached') {
-          assert(fakeReceiver.detach.calledOnce);
-          testCallback();
-        }
+    /*Tests_SRS_NODE_AMQP_CBS_06_001: [If in the attached state, either the sender or the receiver links gets an error, an error of `azure-iot-amqp-base:error-indicated` will have been indicated on the container object and the cbs will remain in the attached state.  The owner of the cbs MUST detach.] */
+    it('remains in the attached state when error emitted to container from link', function(testCallback) {
+      var fakeRheaSession = new EventEmitter();
+      var cbs = new CBS(fakeRheaSession);
+      var fakeAmqpError = {condition: 'fakeAmqpError'};
+      var fakeContainer = new EventEmitter();
+      var detachErrorIndiciated = false;
+      fakeContainer.on('azure-iot-amqp-base:error-indicated', (err) => {
+        detachErrorIndicated = true;
+        assert(err.condition, 'error indicated not an amqp error');
+        assert.strictEqual(err.condition, fakeAmqpError.condition, 'incorrect amqp error indicated');
       });
-      cbs.attach(function() {
-        fakeSender.emit('errorReceived', testError);
-      });
-    });
 
-    /*Tests_SRS_NODE_AMQP_CBS_16_016: [If either the sender or receiver link emits an `error` event, the state machine should return to the `detached` state and detach the remaining links, if any.]*/
-    it('goes back to the detached state if the receiver link gets detached and emits an error', function(testCallback) {
-      var testError = new Error();
-      var fakeAmqpClient = new EventEmitter();
-      var fakeSender = new EventEmitter();
-      fakeSender.detach = sinon.stub().resolves();
-      fakeSender.forceDetach = sinon.stub();
-      var fakeReceiver = new EventEmitter();
-      fakeReceiver.detach = sinon.stub().resolves();
-      fakeReceiver.forceDetach = sinon.stub();
-      fakeAmqpClient.createSender = sinon.stub().resolves(fakeSender);
-      fakeAmqpClient.createReceiver = sinon.stub().resolves(fakeReceiver);
-
-      var cbs = new CBS(fakeAmqpClient);
-      cbs._fsm.on('transition', function (data) {
-        if (data.toState === 'detached') {
-          assert(fakeSender.detach.calledOnce);
-          testCallback();
-        }
+      var fakeRheaSenderLink = new EventEmitter();
+      fakeRheaSenderLink.sendable = sinon.stub().returns(true);
+      fakeRheaSenderLink.send = () => {};
+      var fakeSenderContext = {sender: fakeRheaSenderLink, container: fakeContainer, session: fakeRheaSession};
+      var fakeRheaReceiverLink = new EventEmitter();
+      var fakeReceiverContext = {receiver: fakeRheaReceiverLink, container: fakeContainer, session: fakeRheaSession};
+      fakeRheaSession.open_sender = () => {};
+      sinon.stub(fakeRheaSession, 'open_sender').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaSenderLink.emit('sender_open', fakeSenderContext);
+        });
+        return fakeRheaSenderLink;
       });
-      cbs.attach(function() {
-        fakeReceiver.emit('errorReceived', testError);
+      fakeRheaSession.open_receiver = () => {};
+      sinon.stub(fakeRheaSession, 'open_receiver').callsFake(() => {
+        process.nextTick( () => {
+          fakeRheaReceiverLink.emit('receiver_open', fakeReceiverContext);
+        });
+        return fakeRheaReceiverLink;
+      });
+      cbs._receiverLink.accept = sinon.stub();
+
+      cbs.attach(function(err) {
+        assert.isNotOk(err, 'error was indicated on the attach');
+        assert.strictEqual(cbs._fsm.state, 'attached', 'cbs state machine in an improper state');
+        fakeRheaSenderLink.error = fakeAmqpError;
+        fakeRheaSenderLink.emit('sender_error', fakeSenderContext);
+        fakeRheaSenderLink.error = undefined;
+        fakeRheaSenderLink.emit('sender_close', fakeSenderContext);
+        assert(detachErrorIndicated, 'No error indicated to container');
+        assert.strictEqual(cbs._fsm.state, 'attached', 'cbs state machine improperly transitioned from attach');
+        testCallback();
       });
     });
   });

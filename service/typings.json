@@ -1,7 +1,0 @@
-{
-  "name": "azure-iothub",
-  "main": "iothub.d.ts",
-  "dependencies": {
-    "amqp10": "registry:npm/amqp10#3.3.1+20170124180914"
-  }
-}

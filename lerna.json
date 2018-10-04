@@ -10,9 +10,11 @@
     "service",
     "provisioning/*",
     "provisioning/transport/*",
+    "provisioning/device/samples",
     "security/*",
     "longhaultests",
-    "e2etests"
+    "e2etests",
+    "edge-e2e/wrapper/nodejs-server-server"
   ],
   "version": "0.0.0"
 }

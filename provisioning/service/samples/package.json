@@ -6,10 +6,7 @@
   "license": "MIT",
   "dependencies": {
     "yargs": "^10.1.1",
-    "azure-iot-provisioning-service": "1.2.1"
-  },
-  "scripts": {
-    "build": "echo nothing to do"
+    "azure-iot-provisioning-service": "1.2.4"
   },
   "engines": {
     "node": ">= 0.10"

@@ -25,7 +25,15 @@ The SDK is entirely open-source (as you probably figured out already if you're r
 $ git clone https://github.com/azure/azure-iot-sdk-node
 ```
 
-The SDK ships in a few separate NPM packages that depend on each other. Once the repository has been cloned, some features span accross multiple packages so in order to build and test these features, we need to "link" those package together in a single environment. We use the awesome [lerna.js](https://lernajs.io) to do that, so you have to install this first.
+If you are going to be developing on Windows you will need to install some additional build tools.  In an administrator command prompt:
+
+```
+npm install -g windows-build-tools
+```
+
+This will probably take serveral minutes to run.
+
+The SDK ships in a few separate NPM packages that depend on each other. Once the repository has been cloned, some features span across multiple packages so in order to build and test these features, we need to "link" those package together in a single environment. We use the awesome [lerna.js](https://lernajs.io) to do that, so you have to install this first.  At a prompt with administrative privileges:
 
 ```
 npm install -g lerna
@@ -60,10 +68,6 @@ Please note that running tests and end-to-end tests require having an Azure IoT 
 - **OPENSSL_CONF**: The SDK build script relies on OpenSSL to create certificates and keys so OpenSSL must be in the path and `OPENSSL_CONF` must be set to the path of your `openssl.cnf` configuration file
 - **IOTHUB_CONNECTION_STRING** must be set to a configuration string of your IoT Hub that has rights to create/delete devices and send messages to devices (typically, the one associated with the `iothubowner` policy or equivalent). Connection strings can be found in the settings section of the Azure portal.
 - **STORAGE_CONNECTION_STRING** must be set to an Azure Storage connection string if you want to test bulk import/export of device identities
-- **IOTHUB_X509_DEVICE_ID** must be set to the name of a device that uses x509 certs for authentication.
-- **IOTHUB_X509_CERTIFICATE** must be set to the path of the x509 certificate pem file for this device.
-- **IOTHUB_X509_KEY** must be set to the path of the x509 certificate key pem file for this device.
-- **IOTHUB_X509_PASSPHRASE** must be set to the passphrase of the x509 certificate key for this device.
 - **IOTHUB_CA_ROOT_CERT** must be set to the *base64-encoded content* of the certificate set a custom CA cert provisioned on IoT Hub.
 - **IOTHUB_CA_ROOT_CERT_KEY** must be set to the *base64-encoded content* of the key if the custom CA cert provisioned on IoT Hub.
 - **IOT_PROVISIONING_DEVICE_IDSCOPE** must be set to the idScope of your provisioning service.

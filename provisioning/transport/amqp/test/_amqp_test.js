@@ -43,25 +43,25 @@ describe('Amqp', function () {
     fakeSenderLink.detach = sinon.stub().callsArg(0);
     fakeSenderLink.send = sinon.stub().callsFake((message, callback) => {
       var fakeResponse;
-      if (message.applicationProperties['iotdps-operation-type'] === 'iotdps-register') {
+      if (message.application_properties['iotdps-operation-type'] === 'iotdps-register') {
         fakeResponse = new AmqpMessage();
-        fakeResponse.body = JSON.stringify({
-          operationId: 'fakeOpId',
-          status: 'assigning'
-        });
-        fakeResponse.properties = {
-          correlationId: message.properties.correlationId
+        fakeResponse.body = {
+          content: JSON.stringify({
+            operationId: 'fakeOpId',
+            status: 'assigning'
+          })
         };
+        fakeResponse.correlation_id = message.correlation_id;
       } else {
         fakeResponse = new AmqpMessage();
-        fakeResponse.body = JSON.stringify({
-          operationId: message.applicationProperties['iotdps-operation-id'],
-          status: 'assigned',
-          registrationState: {}
-        });
-        fakeResponse.properties = {
-          correlationId: message.properties.correlationId
+        fakeResponse.body = {
+          content: JSON.stringify({
+            operationId: message.application_properties['iotdps-operation-id'],
+            status: 'assigned',
+            registrationState: {}
+          })
         };
+        fakeResponse.correlation_id = message.correlation_id;
       }
 
       process.nextTick(() => {
@@ -97,7 +97,7 @@ describe('Amqp', function () {
 
     describe('registrationRequest', function () {
       /*Tests_SRS_NODE_PROVISIONING_AMQP_16_002: [The `registrationRequest` method shall connect the AMQP client with the certificate and key given in the `auth` parameter of the previously called `setAuthentication` method.]*/
-      it ('connects the AMQP connection using the X509 certificate', function (testCallback) {
+      it('connects the AMQP connection using the X509 certificate', function (testCallback) {
 
         amqp.registrationRequest({ registrationId: 'fakeRegistrationId' }, function () {
           assert.isTrue(fakeAmqpBase.connect.calledOnce);
@@ -152,7 +152,7 @@ describe('Amqp', function () {
           var attachedLinkEndpoint = fakeAmqpBase.attachReceiverLink.firstCall.args[0];
           var attachedLinkOptions = fakeAmqpBase.attachReceiverLink.firstCall.args[1];
           assert.strictEqual(attachedLinkEndpoint, fakeRequest.idScope +  '/registrations/' + fakeRequest.registrationId);
-          assert.strictEqual(attachedLinkOptions.attach.properties['com.microsoft:api-version'], ProvisioningDeviceConstants.apiVersion);
+          assert.strictEqual(attachedLinkOptions.properties['com.microsoft:api-version'], ProvisioningDeviceConstants.apiVersion);
 
           testCallback();
         });
@@ -169,7 +169,7 @@ describe('Amqp', function () {
         });
       });
 
-      /*Tests_SRS_NODE_PROVISIONING_AMQP_16_005: [The `registrationRequest` method shall send a message on the previously attached sender link with a `correlationId` set to a newly generated UUID and the following application properties:
+      /*Tests_SRS_NODE_PROVISIONING_AMQP_16_005: [The `registrationRequest` method shall send a message on the previously attached sender link with a `correlation_id` set to a newly generated UUID and the following application properties:
       ```
       iotdps-operation-type: iotdps-register;
       iotdps-forceRegistration: <true or false>;
@@ -180,9 +180,9 @@ describe('Amqp', function () {
         amqp.registrationRequest({ registrationId: 'fakeRegistrationId' }, function () {
           assert.isTrue(fakeSenderLink.send.calledOnce);
           var sentMessage = fakeSenderLink.send.firstCall.args[0];
-          assert.strictEqual(sentMessage.applicationProperties['iotdps-operation-type'], 'iotdps-register');
-          assert.strictEqual(sentMessage.applicationProperties['iotdps-forceRegistration'], fakeRequest.forceRegistration);
-          assert.isOk(sentMessage.properties.correlationId);
+          assert.strictEqual(sentMessage.application_properties['iotdps-operation-type'], 'iotdps-register');
+          assert.strictEqual(sentMessage.application_properties['iotdps-forceRegistration'], fakeRequest.forceRegistration);
+          assert.isOk(sentMessage.correlation_id);
           testCallback();
         });
       });
@@ -269,7 +269,7 @@ describe('Amqp', function () {
         });
       });
 
-      /*Tests_SRS_NODE_PROVISIONING_AMQP_16_015: [The `queryOperationStatus` method shall send a message on the pre-attached sender link with a `correlationId` set to a newly generated UUID and the following application properties:
+      /*Tests_SRS_NODE_PROVISIONING_AMQP_16_015: [The `queryOperationStatus` method shall send a message on the pre-attached sender link with a `correlation_id` set to a newly generated UUID and the following application properties:
       ```
       iotdps-operation-type: iotdps-get-operationstatus;
       iotdps-operation-id: <operationId>;
@@ -279,9 +279,9 @@ describe('Amqp', function () {
         amqp.queryOperationStatus(fakeRequest, fakeOperationId, function () {
           assert.isTrue(fakeSenderLink.send.calledOnce);
           var sentMessage = fakeSenderLink.send.firstCall.args[0];
-          assert.strictEqual(sentMessage.applicationProperties['iotdps-operation-type'], 'iotdps-get-operationstatus');
-          assert.strictEqual(sentMessage.applicationProperties['iotdps-operation-id'], fakeOperationId);
-          assert.isOk(sentMessage.properties.correlationId);
+          assert.strictEqual(sentMessage.application_properties['iotdps-operation-type'], 'iotdps-get-operationstatus');
+          assert.strictEqual(sentMessage.application_properties['iotdps-operation-id'], fakeOperationId);
+          assert.isOk(sentMessage.correlation_id);
           testCallback();
         });
       });
@@ -490,13 +490,13 @@ describe('Amqp', function () {
 
     before(function() {
       SaslTpm = sinon.spy(require('../lib/sasl_tpm'), 'SaslTpm');
-      sinon.stub(SaslTpm.prototype, 'getInitFrame');
-      sinon.stub(SaslTpm.prototype, 'getResponseFrame');
+      sinon.stub(SaslTpm.prototype, 'start');
+      sinon.stub(SaslTpm.prototype, 'step');
     });
 
     after(function() {
-      SaslTpm.prototype.getInitFrame.restore();
-      SaslTpm.prototype.getResponseFrame.restore();
+      SaslTpm.prototype.start.restore();
+      SaslTpm.prototype.step.restore();
       SaslTpm.restore();
       SaslTpm = null;
     });

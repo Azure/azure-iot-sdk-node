@@ -62,7 +62,7 @@ describe('endpoint', function () {
   },
   {
     name: 'moduleMessagePath',
-    expected: '/devices/mydevice/modules/mymodule/messages/devicebound',
+    expected: '/devices/mydevice/modules/mymodule/messages/events',
     actual: endpoint.moduleMessagePath(deviceId, moduleId)
   },
   {
