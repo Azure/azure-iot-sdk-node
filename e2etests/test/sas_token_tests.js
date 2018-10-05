@@ -13,6 +13,7 @@ var Message = require('azure-iot-common').Message;
 var SharedAccessSignature = require('azure-iot-device').SharedAccessSignature;
 var ConnectionString = require('azure-iot-device').ConnectionString;
 var DeviceIdentityHelper = require('./device_identity_helper.js');
+var Rendezvous = require('./rendezvous_helper.js').Rendezvous;
 var debug = require('debug')('e2etests:sas_token_tests');
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
@@ -65,9 +66,21 @@ transports.forEach(function (deviceTransport) {
 
       var deviceClient = Client.fromSharedAccessSignature(createNewSas(), deviceTransport);
       var serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString);
+      var finishUp = function() {
+        deviceClient.close(function () {
+          serviceClient.close(function () {
+            testCallback();
+          });
+        });
+      };
 
       deviceClient.open(function (err) {
         if (err) return testCallback(err);
+        var deviceClientParticipant = 'deviceClient';
+        var serviceClientParticipant = 'serviceClient';
+        var testRendezvous = new Rendezvous(finishUp);
+        testRendezvous.imIn(deviceClientParticipant);
+
 
         deviceClient.on('message', function (msg) {
           deviceClient.complete(msg, function (err) {
@@ -79,20 +92,18 @@ transports.forEach(function (deviceTransport) {
 
                 serviceClient.send(provisionedDevice.deviceId, createTestMessage(afterUpdateSas), function (err) {
                   if (err) return testCallback(err);
+                  testRendezvous.imDone(serviceClientParticipant);
                 });
               });
             } else if (msg.data.toString() === afterUpdateSas) {
-              deviceClient.close(function () {
-                serviceClient.close(function () {
-                  testCallback();
-                });
-              });
+              testRendezvous.imDone(deviceClientParticipant);
             }
           });
         });
 
         serviceClient.open(function (err) {
           if (err) return testCallback(err);
+          testRendezvous.imIn(serviceClientParticipant);
           serviceClient.send(provisionedDevice.deviceId, createTestMessage(beforeUpdateSas), function (err) {
             if (err) return testCallback(err);
           });
@@ -112,13 +123,16 @@ transports.forEach(function (deviceTransport) {
       var deviceClient = Client.fromSharedAccessSignature(createNewSas(), deviceTransport);
       var ehClient = eventHubClient.fromConnectionString(hubConnectionString);
 
-      function closeClients (err) {
+      var finishUp = function(err) {
         deviceClient.close(function () {
           ehClient.close().then(function () {
             testCallback(err);
           });
         });
-      }
+      };
+      var deviceClientParticipant = 'deviceClient';
+      var ehClientParticipant = 'ehClient';
+      var testRendezvous = new Rendezvous(finishUp);
 
       var ehReceivers = [];
 
@@ -136,7 +150,7 @@ transports.forEach(function (deviceTransport) {
                 ehReceivers.push(receiver);
                 receiver.on('errorReceived', function(err) {
                   debug('error received on event hubs client: ' + err.toString());
-                  closeClients(err);
+                  finishUp(err);
                 });
                 receiver.on('message', function (eventData) {
                   debug('event hubs client: message received from device: \'' + eventData.annotations['iothub-connection-device-id'] + '\'');
@@ -146,23 +160,24 @@ transports.forEach(function (deviceTransport) {
                       debug('event hubs client: first message received: ' + eventData.body.toString());
                       debug('device client: updating shared access signature');
                       deviceClient.updateSharedAccessSignature(createNewSas(), function (err) {
-                        if (err) return closeClients(err);
+                        if (err) return finishUp(err);
 
                         debug('device client: SAS renewal successful - sending second message: ' + afterSas);
                         deviceClient.sendEvent(createBufferTestMessage(afterSas), function (err) {
+                          if (err) return finishUp(err);
                           debug('second message sent successfully');
-                          Promise.map(ehReceivers, function (recvToClose) {
-                            debug('closing receiver');
-                            return recvToClose.close();
-                          }).then(function () {
-                            debug('receivers closed. closing the clients.');
-                            if (err) return closeClients(err);
-                          });
+                          testRendezvous.imDone(deviceClientParticipant);
                         });
                       });
                     } else if (eventData.body.indexOf(afterSas) === 0) {
                       debug('second message received: ' + eventData.body.toString());
-                      closeClients();
+                      Promise.map(ehReceivers, function (recvToClose) {
+                        debug('closing receiver');
+                        return recvToClose.close();
+                      }).then(function () {
+                        debug('receivers closed. closing the clients.');
+                        testRendezvous.imDone(ehClientParticipant);
+                      });
                     }
                   } else {
                     debug('not a message from the test device');
@@ -175,18 +190,20 @@ transports.forEach(function (deviceTransport) {
           });
         })
         .then(function () {
+          testRendezvous.imIn(ehClientParticipant);
           debug('opening device client');
           return deviceClient.open(function (err) {
-            if (err) return closeClients(err);
+            if (err) return finishUp(err);
+            testRendezvous.imIn(deviceClientParticipant);
             debug('device client opened - sending first message: ' + beforeSas);
             deviceClient.sendEvent(createBufferTestMessage(beforeSas), function (sendErr) {
-              if (sendErr) return closeClients(sendErr);
+              if (sendErr) return finishUp(sendErr);
               debug('device client: first message sent: ' + beforeSas);
             });
           });
         })
         .catch(function (err) {
-          closeClients(err);
+          finishUp(err);
         });
 
     });
