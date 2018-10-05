@@ -1,5 +1,7 @@
 # Microsoft Azure IoT SDK for Node.js
 
+![Build Status](https://azure-iot-sdks.visualstudio.com/azure-iot-sdks/_apis/build/status/node/node-canary)
+
 This repository contains the following SDKs:
 * **Azure IoT Hub Device SDK**: to connect devices to Azure IoT Hub. [API Reference][node-api-device-reference]
 * **Azure IoT Hub Service SDK**: enables developing back-end applications making use of Azure IoT Hub. [API Reference][node-api-service-reference]
@@ -109,4 +111,3 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 [node-api-prov-device-reference]: https://docs.microsoft.com/en-us/javascript/api/azure-iot-provisioning-device/
 [devbox-setup]: doc/node-devbox-setup.md
 [setup-iothub]: https://aka.ms/howtocreateazureiothub
-
