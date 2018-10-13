@@ -20,12 +20,17 @@
     "istanbul": "^0.4.4",
     "jshint": "^2.9.2",
     "mocha": "^3.0.1",
+    "mocha-junit-reporter": "^1.18.0",
+    "mocha-multi-reporters": "^1.1.7",
     "pem": "^1.8.3",
     "sinon": "^1.17.5",
     "tss.js": "0.0.3",
     "uuid": "^3.1.0"
   },
   "scripts": {
+    "server_validation": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json _server_validation.js",
+    "service_create_delete": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json _service_create_delete.js",
+    "provisioning_e2e": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json _provisioning_e2e.js",
     "lint": "jshint --show-non-errors .",
     "alltest": "node node_modules/mocha/bin/_mocha -- _*.js",
     "e2e": "npm -s run lint && npm -s run alltest"
