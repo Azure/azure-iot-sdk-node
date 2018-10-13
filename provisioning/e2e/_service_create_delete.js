@@ -50,7 +50,7 @@ var symmetricKeyEnrollment = {
     migrateDeviceData: false
   },
   allocationPolicy: 'hashed'
-}
+};
 
 var enrollmentGroup = {
   enrollmentGroupId: 'e2e-node-deleteme-psc-' + uuid.v4(),
