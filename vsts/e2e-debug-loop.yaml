@@ -1,0 +1,78 @@
+resources:
+- repo: self
+phases:
+- phase: Phase_1
+  displayName: Ubuntu 16.04
+
+  condition: succeeded()
+  queue:
+    name: Hosted Ubuntu 1604
+  steps:
+  - task: NodeTool@0
+    displayName: 'Use Node 6.x'
+
+
+  - script: 'npm install -g lerna'
+    displayName: 'Install Tools'
+
+  - script: |
+       lerna bootstrap
+       lerna run build
+    displayName: 'Bootstrap & Build'
+
+  - script: |
+       cd $TEST_DIR
+       COUNTER=0
+       while [  $COUNTER -lt $LOOP_COUNT ]; do
+           echo LOOP COUNTER: $COUNTER
+           npm -s run $TEST_SUITE
+           [ $? -eq 0 ] || exit $?
+           let COUNTER=COUNTER+1
+       done
+    displayName: 'Run Specified E2E Test'
+    env:
+      DEBUG: $(DEBUG)
+      LOOP_COUNT: $(LOOP_COUNT)
+      TEST_SUITE: $(TEST_SUITE)
+      TEST_DIR: $(TEST_DIR)
+      IOTHUB_CONNECTION_STRING: $(LINUX-IOTHUB-CONNECTION-STRING)
+      IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
+      IOTHUB_CA_ROOT_CERT_KEY: $(IOTHUB-CA-ROOT-CERT-KEY)
+
+- phase: Phase_2
+  displayName: Windows
+
+  condition: succeeded()
+  queue:
+    name: Hosted
+  steps:
+  - task: NodeTool@0
+    displayName: 'Use Node 8.x'
+    inputs:
+      versionSpec: 8.x
+
+
+  - script: 'npm install -g lerna'
+    displayName: 'Install Tools'
+
+  - script: |
+       call lerna bootstrap
+       call lerna run build
+    displayName: 'Bootstrap & Build'
+
+  - script: |
+       cd %TEST_DIR%
+       FOR /l %%i in (1,1,%LOOP_COUNT%) DO (
+           echo LOOP COUNTER: %%i
+           call npm -s run %TEST_SUITE%
+           if %errorlevel% neq 0 exit /b %errorlevel%
+       )
+    displayName: 'Run Specified E2E Test'
+    env:
+      DEBUG: $(DEBUG)
+      LOOP_COUNT: $(LOOP_COUNT)
+      TEST_SUITE: $(TEST_SUITE)
+      TEST_DIR: $(TEST_DIR)
+      IOTHUB_CONNECTION_STRING: $(WINDOWS-IOTHUB-CONNECTION-STRING)
+      IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
+      IOTHUB_CA_ROOT_CERT_KEY: $(IOTHUB-CA-ROOT-CERT-KEY)

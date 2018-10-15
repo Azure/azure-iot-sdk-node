@@ -33,6 +33,7 @@
   },
   "scripts": {
     "lint": "jshint --show-non-errors .",
+    "server_validation": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/server_validation.js",
     "device_service": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/device_service.js",
     "registry": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/registry.js",
     "file_upload": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/file_upload.js",
@@ -54,10 +55,10 @@
     "module_messaging": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/module_messaging.js",
     "module_twin": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/module_twin.js",
     "module_methods": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/module_methods.js",
-    "flaky_tests": "npm-run-all -p -l  job_client",
+    "flaky_tests": "npm-run-all -p -l  job_client method_disconnect d2c_disconnect twin_disconnect",
     "phase0_modules": "npm-run-all -p -l module_crud module_messaging module_twin module_methods configurations",
-    "phase1_fast": "npm-run-all -p -l service registry device_acknowledge_tests upload_disconnect authentication",
-    "phase2_slow": "npm-run-all -p -l device_method twin_e2e_tests sas_token_tests device_service c2d_disconnect d2c_disconnect",
+    "phase1_fast": "npm-run-all -p -l service registry device_acknowledge_tests upload_disconnect authentication server_validation",
+    "phase2_slow": "npm-run-all -p -l device_method twin_e2e_tests sas_token_tests device_service c2d_disconnect",
     "alltest": "npm run  phase0_modules && npm run phase1_fast && npm run phase2_slow",
     "e2e": "npm -s run lint && npm -s run alltest",
     "test": "npm -s run lint && npm -s run alltest"

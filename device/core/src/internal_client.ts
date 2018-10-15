@@ -228,13 +228,13 @@ export abstract class InternalClient extends EventEmitter {
               localOptions[k] = options[k];
             }
             localOptions.ca = contents;
-            this._invokeSetOptions(localOptions, _callback);
+            this._invokeSetOptions(localOptions, done);
           } else {
-            this._invokeSetOptions(options, _callback);
+            this._invokeSetOptions(options, done);
           }
         });
       } else {
-        this._invokeSetOptions(options, _callback);
+        this._invokeSetOptions(options, done);
       }
     }, done);
   }

@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@types/debug": "0.0.30",
-    "@types/node": "^8.0.37",
+    "@types/node": "8.9.4",
     "@types/traverse": "^0.6.29",
     "chai": "^4.1.2",
     "es5-shim": "^4.5.9",
