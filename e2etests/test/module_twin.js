@@ -14,7 +14,7 @@ var MqttWs = require('azure-iot-device-mqtt').MqttWs;
 var transportsToTest = [ Amqp, AmqpWs, Mqtt, MqttWs ];
 
 describe('module twin', function() {
-  this.timeout(46000);
+  this.timeout(60000);
 
   transportsToTest.forEach(function(Transport) {
     describe('using ' + Transport.name, function() {
@@ -69,7 +69,7 @@ describe('module twin', function() {
             debug('twin.update returned ' + (err ? err : 'success'));
             assert(!err);
           });
-        }, 3000);
+        }, 10000);
       });
 
       it('can send reported properties', function(done) {

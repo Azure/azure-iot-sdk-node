@@ -48,7 +48,8 @@ describe('module methods', function() {
         var methodParams = {
           methodName: methodName,
           payload: requestPayload,
-          responseTimeoutInSeconds: 15
+          connectTimeoutInSeconds: 30,
+          responseTimeoutInSeconds: 45
         };
 
         debug('adding method handler for ' + methodName);

@@ -136,7 +136,8 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
         var methodParams = {
           methodName: methodName,
           payload: testPayload,
-          timeoutInSeconds: 10
+          connectTimeoutInSeconds: 30,
+          responseTimeoutInSeconds: 45
         };
         debug('service sending method call:');
         debug(JSON.stringify(methodParams, null, 2));
