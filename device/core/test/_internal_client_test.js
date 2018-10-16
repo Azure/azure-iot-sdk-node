@@ -181,7 +181,7 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
         var client = new ClientCtor(fakeBaseClient);
         client._methodClient = fakeMethodClient;
         client.setOptions({ ca: 'aziotfakepemfile' }, function(err) {
-          assert.isNotOk(err);
+          assert.isNotOk(err, 'the setOptions passed')
           assert(fakeBaseClient.setOptions.called);
           assert.strictEqual(fakeBaseClient.setOptions.firstCall.args[0].ca, 'ca cert');
           testCallback();
@@ -196,7 +196,7 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
         var client = new ClientCtor(fakeBaseClient);
         client._methodClient = fakeMethodClient;
         client.setOptions({ ca: 'ca cert' }, function(err) {
-          assert.isNotOk(err);
+          assert.isNotOk(err, 'the setOptions passed')
           assert(fakeBaseClient.setOptions.called);
           assert.strictEqual(fakeBaseClient.setOptions.firstCall.args[0].ca, 'ca cert');
           testCallback();
@@ -280,15 +280,6 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
         client.open(function () {
           client.close();
         });
-      });
-
-      it('calls the callback immediately if the client is already disconnected', function (testCallback) {
-        var transport = new FakeTransport();
-        sinon.stub(transport, 'disconnect').callsFake(function () {
-          assert.fail();
-        });
-        var client = new ClientCtor(transport);
-        client.close(testCallback());
       });
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_046: [** The `disconnect` method shall remove the listener that has been attached to the transport `disconnect` event.]*/

@@ -7,13 +7,13 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:ModuleClient');
 
 import * as fs from 'fs';
-import { results, Message, RetryOperation, ConnectionString, AuthenticationProvider } from 'azure-iot-common';
+import { results, Message, RetryOperation, ConnectionString, AuthenticationProvider, Callback, callbackToPromise, DoubleValueCallback } from 'azure-iot-common';
 import { InternalClient, DeviceTransport } from './internal_client';
 import { errors } from 'azure-iot-common';
 import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
 import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
 import { IotEdgeAuthenticationProvider } from './iotedge_authentication_provider';
-import { MethodParams, MethodCallback, MethodClient, DeviceMethodRequest, DeviceMethodResponse } from './device_method';
+import { MethodParams, MethodCallback, MethodClient, DeviceMethodRequest, DeviceMethodResponse, MethodResult } from './device_method';
 import { DeviceClientOptions } from './interfaces';
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
@@ -99,61 +99,62 @@ export class ModuleClient extends InternalClient {
    * Sends an event to the given module output
    * @param outputName Name of the output to send the event to
    * @param message Message to send to the given output
-   * @param callback Function to call when the operation has been queued.
+   * @param [callback] Optional function to call when the operation has been queued.
+   * @returns {Promise<results.MessageEnqueued> | void} Promise if no callback function was passed, void otherwise.
    */
-  sendOutputEvent(outputName: string, message: Message, callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-    retryOp.retry((opCallback) => {
-      /* Codes_SRS_NODE_MODULE_CLIENT_18_010: [ The `sendOutputEvent` method shall send the event indicated by the `message` argument via the transport associated with the Client instance. ]*/
-      this._transport.sendOutputEvent(outputName, message, opCallback);
-    }, (err, result) => {
-      /*Codes_SRS_NODE_MODULE_CLIENT_18_018: [ When the `sendOutputEvent` method completes, the `callback` function shall be invoked with the same arguments as the underlying transport method's callback. ]*/
-      /*Codes_SRS_NODE_MODULE_CLIENT_18_019: [ The `sendOutputEvent` method shall not throw if the `callback` is not passed. ]*/
-      safeCallback(callback, err, result);
-    });
+  sendOutputEvent(outputName: string, message: Message, callback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
+    return callbackToPromise((_callback) => {
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+        /* Codes_SRS_NODE_MODULE_CLIENT_18_010: [ The `sendOutputEvent` method shall send the event indicated by the `message` argument via the transport associated with the Client instance. ]*/
+        this._transport.sendOutputEvent(outputName, message, opCallback);
+      }, (err, result) => {
+        /*Codes_SRS_NODE_MODULE_CLIENT_18_018: [ When the `sendOutputEvent` method completes, the `callback` function shall be invoked with the same arguments as the underlying transport method's callback. ]*/
+        /*Codes_SRS_NODE_MODULE_CLIENT_18_019: [ The `sendOutputEvent` method shall not throw if the `callback` is not passed. ]*/
+        safeCallback(_callback, err, result);
+      });
+    }, callback);
   }
 
   /**
    * Sends an array of events to the given module output
    * @param outputName Name of the output to send the events to
    * @param message Messages to send to the given output
-   * @param callback Function to call when the operations have been queued.
+   * @param [callback] Function to call when the operations have been queued.
+   * @returns {Promise<results.MessageEnqueued> | void} Optional promise if no callback function was passed, void otherwise.
    */
-  sendOutputEventBatch(outputName: string, messages: Message[], callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-    retryOp.retry((opCallback) => {
-      /* Codes_SRS_NODE_MODULE_CLIENT_18_011: [ The `sendOutputEventBatch` method shall send the list of events (indicated by the `messages` argument) via the transport associated with the Client instance. ]*/
-      this._transport.sendOutputEventBatch(outputName, messages, opCallback);
-    }, (err, result) => {
-      /*Codes_SRS_NODE_MODULE_CLIENT_18_021: [ When the `sendOutputEventBatch` method completes the `callback` function shall be invoked with the same arguments as the underlying transport method's callback. ]*/
-      /*Codes_SRS_NODE_MODULE_CLIENT_18_022: [ The `sendOutputEventBatch` method shall not throw if the `callback` is not passed. ]*/
-      safeCallback(callback, err, result);
-    });
+  sendOutputEventBatch(outputName: string, messages: Message[], callback: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
+    return callbackToPromise((_callback) => {
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+        /* Codes_SRS_NODE_MODULE_CLIENT_18_011: [ The `sendOutputEventBatch` method shall send the list of events (indicated by the `messages` argument) via the transport associated with the Client instance. ]*/
+        this._transport.sendOutputEventBatch(outputName, messages, opCallback);
+      }, (err, result) => {
+        /*Codes_SRS_NODE_MODULE_CLIENT_18_021: [ When the `sendOutputEventBatch` method completes the `_callback` function shall be invoked with the same arguments as the underlying transport method's callback. ]*/
+        /*Codes_SRS_NODE_MODULE_CLIENT_18_022: [ The `sendOutputEventBatch` method shall not throw if the `_callback` is not passed. ]*/
+        safeCallback(_callback, err, result);
+      });
+    }, callback);
   }
+
   /**
    * Closes the transport connection and destroys the client resources.
    *
    * *Note: After calling this method the ModuleClient object cannot be reused.*
    *
-   * @param closeCallback Function to call once the transport is disconnected and the client closed.
+   * @param [closeCallback] Optional function to call once the transport is disconnected and the client closed.
+   * @returns {Promise<results.Disconnected> | void} Promise if no callback function was passed, void otherwise.
    */
-  close(closeCallback?: (err?: Error, result?: results.Disconnected) => void): void {
-    this._transport.removeListener('disconnect', this._moduleDisconnectHandler);
-    super.close(closeCallback);
+  close(closeCallback?: Callback<results.Disconnected>): Promise<results.Disconnected> | void {
+    return callbackToPromise((_callback) => {
+      this._transport.removeListener('disconnect', this._moduleDisconnectHandler);
+      super.close(_callback);
+    }, closeCallback);
   }
 
-  /**
-   * Invokes a method on a downstream device or on another module on the same Edge device. Please note that this feature only works when
-   * the module is being run as part of an Edge device.
-   *
-   * @param deviceId      target device identifier
-   * @param moduleId      target module identifier on the device identified with the `deviceId` argument
-   * @param methodParams  parameters of the direct method call
-   * @param callback      callback that will be invoked either with an Error object or the result of the method call.
-   */
-  invokeMethod(deviceId: string, methodParams: MethodParams, callback: MethodCallback): void;
-  invokeMethod(deviceId: string, moduleId: string, methodParams: MethodParams, callback: MethodCallback): void;
-  invokeMethod(deviceId: string, moduleIdOrMethodParams: string | MethodParams, methodParamsOrCallback: MethodParams | MethodCallback, callback?: MethodCallback): void {
+  _invokeMethod(deviceId: string, methodParams: MethodParams, callback: MethodCallback): void;
+  _invokeMethod(deviceId: string, moduleId: string, methodParams: MethodParams, callback: MethodCallback): void;
+  _invokeMethod(deviceId: string, moduleIdOrMethodParams: string | MethodParams, methodParamsOrCallback: MethodParams | MethodCallback, callback?: MethodCallback): void {
     /*Codes_SRS_NODE_MODULE_CLIENT_16_093: [`invokeMethod` shall throw a `ReferenceError` if the `deviceId` argument is falsy.]*/
     if (!deviceId) {
       throw new ReferenceError('deviceId cannot be \'' + deviceId + '\'');
@@ -164,9 +165,9 @@ export class ModuleClient extends InternalClient {
       throw new ReferenceError('The second parameter cannot be \'' + moduleIdOrMethodParams + '\'');
     }
 
-    const actualModuleId     = typeof moduleIdOrMethodParams === 'string' ? moduleIdOrMethodParams : null;
+    const actualModuleId = typeof moduleIdOrMethodParams === 'string' ? moduleIdOrMethodParams : null;
     const actualMethodParams = typeof moduleIdOrMethodParams === 'object' ? moduleIdOrMethodParams : methodParamsOrCallback;
-    const actualCallback     = typeof methodParamsOrCallback === 'function' ? methodParamsOrCallback : callback;
+    const actualCallback = typeof methodParamsOrCallback === 'function' ? methodParamsOrCallback : callback;
 
     /*Codes_SRS_NODE_MODULE_CLIENT_16_095: [`invokeMethod` shall throw a `ReferenceError` if the `deviceId` and `moduleIdOrMethodParams` are strings and the `methodParamsOrCallback` argument is falsy.]*/
     if (!actualMethodParams || typeof actualMethodParams !== 'object') {
@@ -183,27 +184,52 @@ export class ModuleClient extends InternalClient {
   }
 
   /**
+   * Invokes a method on a downstream device or on another module on the same Edge device. Please note that this feature only works when
+   * the module is being run as part of an Edge device.
+   *
+   * @param deviceId      target device identifier
+   * @param moduleId      target module identifier on the device identified with the `deviceId` argument
+   * @param methodParams  parameters of the direct method call
+   * @param [callback]    optional callback that will be invoked either with an Error object or the result of the method call.
+   * @returns {Promise<MethodResult> | void} Promise if no callback function was passed, void otherwise.
+   */
+  invokeMethod(deviceId: string, methodParams: MethodParams, callback: Callback<MethodResult>): void;
+  invokeMethod(deviceId: string, moduleId: string, methodParams: MethodParams, callback: Callback<MethodResult>): void;
+  invokeMethod(deviceId: string, moduleIdOrMethodParams: string | MethodParams, methodParamsOrCallback: MethodParams | Callback<MethodResult>, callback?: Callback<MethodResult>): Promise<MethodResult> | void {
+    if (callback) {
+      return this._invokeMethod(deviceId, moduleIdOrMethodParams as string, methodParamsOrCallback as MethodParams, callback);
+    } else if (methodParamsOrCallback instanceof Function) {
+      return this._invokeMethod(deviceId, moduleIdOrMethodParams as MethodParams, methodParamsOrCallback as Callback<MethodResult>);
+    }
+
+    return callbackToPromise((_callback) => this._invokeMethod(deviceId, methodParamsOrCallback as any, methodParamsOrCallback as MethodParams, _callback));
+  }
+
+  /**
    * Registers a callback for a method named `methodName`.
    *
    * @param methodName Name of the method that will be handled by the callback
-   * @param callback   Function that shall be called whenever a method request for the method called `methodName` is received.
+   * @param callback Function that shall be called whenever a method request for the method called `methodName` is received.
    */
-  onMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
-    this._onDeviceMethod(methodName, callback);
+  onMethod(methodName: string, callback: DoubleValueCallback<DeviceMethodRequest, DeviceMethodResponse>): void {
+      this._onDeviceMethod(methodName, callback);
   }
 
   /**
    * Passes options to the `ModuleClient` object that can be used to configure the transport.
    * @param options   A {@link DeviceClientOptions} object.
-   * @param done      The callback to call once the options have been set.
+   * @param [done]    Optional callback to call once the options have been set.
+   * @returns {Promise<results.TransportConfigured> | void} Promise if no callback function was passed, void otherwise.
    */
-  setOptions(options: DeviceClientOptions, done?: (err?: Error, result?: results.TransportConfigured) => void): void {
-    /*Codes_SRS_NODE_MODULE_CLIENT_16_098: [The `setOptions` method shall call the `setOptions` method with the `options` argument on the `MethodClient` object of the `ModuleClient`.]*/
-    this._methodClient.setOptions(options);
-    /*Codes_SRS_NODE_MODULE_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
-    /*Codes_SRS_NODE_MODULE_CLIENT_16_043: [The `done` callback shall be invoked with no parameters when it has successfully finished setting the client and/or transport options.]*/
-    /*Codes_SRS_NODE_MODULE_CLIENT_16_044: [The `done` callback shall be invoked with a standard javascript `Error` object and no result object if the client could not be configured as requested.]*/
-    super.setOptions(options, done);
+  setOptions(options: DeviceClientOptions, done?: Callback<results.TransportConfigured>): Promise<results.TransportConfigured> | void {
+    return callbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_MODULE_CLIENT_16_098: [The `setOptions` method shall call the `setOptions` method with the `options` argument on the `MethodClient` object of the `ModuleClient`.]*/
+      this._methodClient.setOptions(options);
+      /*Codes_SRS_NODE_MODULE_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
+      /*Codes_SRS_NODE_MODULE_CLIENT_16_043: [The `_callback` callback shall be invoked with no parameters when it has successfully finished setting the client and/or transport options.]*/
+      /*Codes_SRS_NODE_MODULE_CLIENT_16_044: [The `_callback` callback shall be invoked with a standard javascript `Error` object and no result object if the client could not be configured as requested.]*/
+      super.setOptions(options, _callback);
+    }, done);
   }
 
   private _disableInputMessages(callback: (err?: Error) => void): void {
@@ -323,30 +349,33 @@ export class ModuleClient extends InternalClient {
    *     - IOTEDGE_AUTHSCHEME           Authentication scheme to use; must be "sasToken"
    *
    * @param transportCtor Transport protocol used to connect to IoT hub.
-   * @param callback      Callback to invoke when the ModuleClient has been constructured or if an
+   * @param [callback]    Optional callback to invoke when the ModuleClient has been constructured or if an
    *                      error occurs while creating the client.
+   * @returns {Promise<ModuleClient> | void} Promise if no callback function was passed, void otherwise.
    */
-  static fromEnvironment(transportCtor: any, callback: (err?: Error, client?: ModuleClient) => void): void {
-    // Codes_SRS_NODE_MODULE_CLIENT_13_033: [ The fromEnvironment method shall throw a ReferenceError if the callback argument is falsy or is not a function. ]
-    if (!callback || typeof (callback) !== 'function') {
-      throw new ReferenceError('callback cannot be \'' + callback + '\'');
-    }
+  static fromEnvironment(transportCtor: any, callback?: Callback<ModuleClient>): Promise<ModuleClient> | void {
+    return callbackToPromise((_callback) => {
+      // Codes_SRS_NODE_MODULE_CLIENT_13_033: [ The fromEnvironment method shall throw a ReferenceError if the callback argument is falsy or is not a function. ]
+      if (!_callback || typeof (_callback) !== 'function') {
+        throw new ReferenceError('callback cannot be \'' + _callback + '\'');
+      }
 
-    // Codes_SRS_NODE_MODULE_CLIENT_13_026: [ The fromEnvironment method shall invoke callback with a ReferenceError if the transportCtor argument is falsy. ]
-    if (!transportCtor) {
-      callback(new ReferenceError('transportCtor cannot be \'' + transportCtor + '\''));
-      return;
-    }
+      // Codes_SRS_NODE_MODULE_CLIENT_13_026: [ The fromEnvironment method shall invoke callback with a ReferenceError if the transportCtor argument is falsy. ]
+      if (!transportCtor) {
+        _callback(new ReferenceError('transportCtor cannot be \'' + transportCtor + '\''));
+        return;
+      }
 
-    // Codes_SRS_NODE_MODULE_CLIENT_13_028: [ The fromEnvironment method shall delegate to ModuleClient.fromConnectionString if an environment variable called EdgeHubConnectionString or IotHubConnectionString exists. ]
+      // Codes_SRS_NODE_MODULE_CLIENT_13_028: [ The fromEnvironment method shall delegate to ModuleClient.fromConnectionString if an environment variable called EdgeHubConnectionString or IotHubConnectionString exists. ]
 
-    // if the environment has a value for EdgeHubConnectionString then we use that
-    const connectionString = process.env.EdgeHubConnectionString || process.env.IotHubConnectionString;
-    if (connectionString) {
-      ModuleClient._fromEnvironmentNormal(connectionString, transportCtor, callback);
-    } else {
-      ModuleClient._fromEnvironmentEdge(transportCtor, callback);
-    }
+      // if the environment has a value for EdgeHubConnectionString then we use that
+      const connectionString = process.env.EdgeHubConnectionString || process.env.IotHubConnectionString;
+      if (connectionString) {
+        ModuleClient._fromEnvironmentNormal(connectionString, transportCtor, _callback);
+      } else {
+        ModuleClient._fromEnvironmentEdge(transportCtor, _callback);
+      }
+    }, callback);
   }
 
   private static _fromEnvironmentEdge(transportCtor: any, callback: (err?: Error, client?: ModuleClient) => void): void {

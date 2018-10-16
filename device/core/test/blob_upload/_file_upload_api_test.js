@@ -45,9 +45,9 @@ describe('FileUploadApi', function() {
       };
       var testTransport = new Transport();
       var fileUpload = new FileUploadApi(fakeAuthenticationProvider, testTransport);
-      fileUpload.getBlobSharedAccessSignature('blobName', 'sas', function() {});
+      fileUpload.getBlobSharedAccessSignature('blobName', function() {});
       assert.equal(callCount, 1);
-      fileUpload.notifyUploadComplete('correlationId', 'sas', { isSuccess: true, statusCode: 200, statusDescription: 'test' }, function() {});
+      fileUpload.notifyUploadComplete('correlationId', { isSuccess: true, statusCode: 200, statusDescription: 'test' }, function() {});
       assert.equal(callCount, 2);
     });
   });
@@ -58,7 +58,7 @@ describe('FileUploadApi', function() {
       it('throws if blobName is \'' + blobName + '\'', function(){
         var fileUpload = new FileUploadApi(fakeAuthenticationProvider, function() {});
         assert.throws(function() {
-          fileUpload.getBlobSharedAccessSignature(blobName, 'signature', function() {});
+          fileUpload.getBlobSharedAccessSignature(blobName, function() {});
         }, ReferenceError);
       });
     });
@@ -257,7 +257,6 @@ describe('FileUploadApi', function() {
     /*Tests_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_013: [`notifyUploadComplete` shall create a `POST` HTTP request to a path formatted as the following: `/devices/<deviceId>/files/<correlationId>?api-version=<api-version>`]*/
     it('builds a valid path for the HTTP POST request', function() {
       var testCorrelationId = 'correlationId';
-      var testSas = 'testSAS';
       var testUploadResult = { isSuccess: true, statusCode: 200, statusDescription: 'Success' };
 
       var FakeHttpTransport = function() {
@@ -271,7 +270,7 @@ describe('FileUploadApi', function() {
         };
       };
       var fileUpload = new FileUploadApi(fakeAuthenticationProvider, new FakeHttpTransport());
-      fileUpload.notifyUploadComplete(testCorrelationId, testSas, testUploadResult, function() {});
+      fileUpload.notifyUploadComplete(testCorrelationId, testUploadResult, function() {});
     });
 
     /*Tests_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_014: [** The `POST` HTTP request shall have the following headers:

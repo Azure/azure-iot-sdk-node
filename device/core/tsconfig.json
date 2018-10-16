@@ -3,7 +3,10 @@
         "outDir": "./lib",
         "target":"es5",
         "sourceMap": true,
-        "declaration": true
+        "declaration": true,
+        "lib": [
+            "es6"
+        ]
     },
     "include": [
         "./src/**/*.ts"
