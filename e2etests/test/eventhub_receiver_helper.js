@@ -19,12 +19,14 @@ EventHubReceiverHelper.prototype.openClient = function(done) {
   var self = this;
   this.ehClient = eventHubClient.fromConnectionString(hubConnectionString);
   this.ehReceivers = [];
+  // account for potential delays and clock skews
+  var startTime = Date.now() - 5000;
 
   this.ehClient.open()
       .then(self.ehClient.getPartitionIds.bind(self.ehClient))
       .then(function (partitionIds) {
         return partitionIds.map(function (partitionId) {
-          return self.ehClient.createReceiver('$Default', partitionId,{ 'startAfterTime' : Date.now()}).then(function(receiver) {
+          return self.ehClient.createReceiver('$Default', partitionId,{ 'startAfterTime' : startTime }).then(function(receiver) {
             self.ehReceivers.push(receiver);
             receiver.on('errorReceived', function(err) {
               self.emit(err);
