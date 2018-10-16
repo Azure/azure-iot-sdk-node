@@ -6,6 +6,8 @@ import { RegistrationClient, RegistrationRequest, RegistrationResult, DeviceRegi
 import { X509ProvisioningTransport, X509SecurityClient } from './interfaces';
 import { PollingStateMachine } from './polling_state_machine';
 import * as dbg from 'debug';
+import { Callback, callbackToPromise, ErrorCallback, errorCallbackToPromise } from 'azure-iot-common';
+
 const debug = dbg('azure-iot-provisioning-device:X509Registration');
 
 /**
@@ -32,52 +34,56 @@ export class X509Registration implements RegistrationClient {
    *
    * @param registrationId The registration Id for the device
    * @param forceRegistration Set to true to force re-registration
-   * @param callback function called when registration is complete.
+   * @param [callback] optional function called when registration is complete.
+   * @returns {Promise<RegistrationResult> | void} Promise if no callback function was passed, void otherwise.
    */
-  register(callback: (err?: Error, result?: RegistrationResult) => void): void {
+  register(callback?: Callback<RegistrationResult>): Promise<RegistrationResult> | void {
+    return callbackToPromise((_callback) => {
 
       /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_001: [ `register` shall call `getCertificate` on the security object to acquire the X509 certificate. ] */
       this._securityClient.getCertificate((err, cert)  => {
-      if (err) {
-        /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_006: [ If `getCertificate`fails, `register` shall call `callback` with the error ] */
-        debug('security client returned error on cert acquisition');
-        callback(err);
-      } else {
-        let registrationId: string = this._securityClient.getRegistrationId();
-        let request: RegistrationRequest = {
-          registrationId: registrationId,
-          provisioningHost: this._provisioningHost,
-          idScope: this._idScope
-        };
-        /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_004: [ `register` shall pass the certificate into the `setAuthentication` method on the transport ] */
-        this._transport.setAuthentication(cert);
-        /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_002: [ `register` shall call `registerX509` on the transport object and call it's callback with the result of the transport operation. ] */
-        this._pollingStateMachine.register(request, (err?: Error, result?: DeviceRegistrationResult) => {
-          this._pollingStateMachine.disconnect((disconnectErr: Error) => {
-            if (disconnectErr) {
-              debug('error disconnecting.  Ignoring.  ' + disconnectErr);
-            }
-            if (err) {
-              /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_005: [ If `register` on the pollingStateMachine fails, `register` shall call `callback` with the error ] */
-              callback(err);
-            } else {
-              callback(null, result.registrationState);
-            }
+        if (err) {
+          /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_006: [ If `getCertificate`fails, `register` shall call `_callback` with the error ] */
+          debug('security client returned error on cert acquisition');
+          _callback(err);
+        } else {
+          let registrationId: string = this._securityClient.getRegistrationId();
+          let request: RegistrationRequest = {
+            registrationId: registrationId,
+            provisioningHost: this._provisioningHost,
+            idScope: this._idScope
+          };
+          /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_004: [ `register` shall pass the certificate into the `setAuthentication` method on the transport ] */
+          this._transport.setAuthentication(cert);
+          /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_002: [ `register` shall call `registerX509` on the transport object and call it's callback with the result of the transport operation. ] */
+          this._pollingStateMachine.register(request, (err?: Error, result?: DeviceRegistrationResult) => {
+            this._pollingStateMachine.disconnect((disconnectErr: Error) => {
+              if (disconnectErr) {
+                debug('error disconnecting.  Ignoring.  ' + disconnectErr);
+              }
+              if (err) {
+                /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_005: [ If `register` on the pollingStateMachine fails, `register` shall call `_callback` with the error ] */
+                _callback(err);
+              } else {
+                _callback(null, result.registrationState);
+              }
+            });
           });
-        });
-      }
-    });
+        }
+      });
+    }, callback);
   }
 
   /**
    * Cancels the current registration process.
    *
-   * @param callback function called when the registration has already been canceled.
+   * @param [callback] optional function called when the registration has already been canceled.
+   * @returns {Promise<void> | void} Promise if no callback function was passed, void otherwise.
    */
   /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_003: [ `cancel` shall call `endSession` on the transport object. ] */
-  cancel(callback: (err?: Error) => void): void {
-    this._transport.cancel(callback);
+  cancel(callback?: ErrorCallback): Promise<void> | void {
+    return errorCallbackToPromise((_callback) => {
+      this._transport.cancel(_callback);
+    }, callback);
   }
 }
-
-

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { AuthenticationProvider, AuthenticationType, errors, TransportConfig, X509 } from 'azure-iot-common';
+import { AuthenticationProvider, AuthenticationType, errors, TransportConfig, X509, Callback, callbackToPromise } from 'azure-iot-common';
 
 /**
  * Provides an `AuthenticationProvider` object that can be created simply with an X509 certificate and key and is then used by the device client and transports to authenticate
@@ -25,11 +25,14 @@ export class X509AuthenticationProvider implements AuthenticationProvider {
   /**
    * This method is used by the transports to gets the most current device credentials in the form of a `TransportConfig` object.
    *
-   * @param callback function that will be called with either an error or a set of device credentials that can be used to authenticate with the IoT hub.
+   * @param [callback] optional function that will be called with either an error or a set of device credentials that can be used to authenticate with the IoT hub.
+   * @returns {Promise<TransportConfig> | void} Promise if no callback function was passed, void otherwise.
    */
-  getDeviceCredentials(callback: (err: Error, credentials?: TransportConfig) => void): void {
-    /*Codes_SRS_NODE_X509_AUTHENTICATION_PROVIDER_16_002: [The `getDeviceCredentials` method shall call its callback with a `null` error object and the stored device credentials as a second argument.]*/
-    callback(null, this._credentials);
+  getDeviceCredentials(callback?: Callback<TransportConfig>): Promise<TransportConfig> | void {
+    return callbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_X509_AUTHENTICATION_PROVIDER_16_002: [The `getDeviceCredentials` method shall call its callback with a `null` error object and the stored device credentials as a second argument.]*/
+      _callback(null, this._credentials);
+    }, callback);
   }
 
   /**
