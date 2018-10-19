@@ -154,9 +154,9 @@ transports.forEach(function (deviceTransport) {
                 });
                 receiver.on('message', function (eventData) {
                   debug('event hubs client: message received from device: \'' + eventData.annotations['iothub-connection-device-id'] + '\'');
-                  debug('event hubs client: message is: ' + eventData.body.toString());
+                  debug('event hubs client: message is: ' + ((eventData.body) ? (eventData.body.toString()) : '(no body)'));
                   if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
-                    if (eventData.body.indexOf(beforeSas) === 0) {
+                    if (eventData.body && eventData.body.indexOf(beforeSas) === 0) {
                       debug('event hubs client: first message received: ' + eventData.body.toString());
                       debug('device client: updating shared access signature');
                       deviceClient.updateSharedAccessSignature(createNewSas(), function (err) {
@@ -169,7 +169,7 @@ transports.forEach(function (deviceTransport) {
                           testRendezvous.imDone(deviceClientParticipant);
                         });
                       });
-                    } else if (eventData.body.indexOf(afterSas) === 0) {
+                    } else if (eventData.body && eventData.body.indexOf(afterSas) === 0) {
                       debug('second message received: ' + eventData.body.toString());
                       Promise.map(ehReceivers, function (recvToClose) {
                         debug('closing receiver');
