@@ -166,11 +166,6 @@ export class MqttBase extends EventEmitter {
       throw new ReferenceError('Invalid topic');
     }
 
-    /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_019: [The `publish` method shall throw a `ReferenceError` if the payload is falsy.]*/
-    if (!payload) {
-      throw new ReferenceError('Invalid payload');
-    }
-
     this._fsm.handle('publish', topic, payload, options, done);
   }
 
