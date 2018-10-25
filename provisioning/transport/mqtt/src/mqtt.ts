@@ -11,7 +11,7 @@ const debug = dbg('azure-iot-provisioning-device-mqtt:Mqtt');
 
 import { MqttBase, MqttBaseTransportConfig } from 'azure-iot-mqtt-base';
 import { errors, X509 } from 'azure-iot-common';
-import { X509ProvisioningTransport } from 'azure-iot-provisioning-device';
+import { X509ProvisioningTransport, SymmetricKeyProvisioningTransport } from 'azure-iot-provisioning-device';
 import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure-iot-provisioning-device';
 import { RegistrationRequest, DeviceRegistrationResult } from 'azure-iot-provisioning-device';
 import { translateError } from 'azure-iot-provisioning-device';
@@ -25,11 +25,12 @@ const responseTopic: string = '$dps/registrations/res/#';
 /**
  * Transport used to provision a device over MQTT.
  */
-export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
+export class Mqtt extends EventEmitter implements X509ProvisioningTransport, SymmetricKeyProvisioningTransport {
   private _mqttBase: MqttBase;
   private _config: ProvisioningTransportOptions = {};
   private _fsm: machina.Fsm;
   private _auth: X509;
+  private _sas: string;
   private _subscribed: boolean;
 
   private _operations: {
@@ -253,6 +254,13 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
     this._auth = auth;
   }
 
+  /**
+   * @private
+   */
+  setSharedAccessSignature(sas: string): void {
+    this._sas = sas;
+  }
+
   protected _getConnectionUri(request: RegistrationRequest): string {
     return 'mqtts://' + request.provisioningHost;
   }
@@ -269,6 +277,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
       clientId: request.registrationId,
       clean: true,
       x509: this._auth,
+      sharedAccessSignature: this._sas,
       username: request.idScope + '/registrations/' + request.registrationId + '/api-version=' + ProvisioningDeviceConstants.apiVersion + '&ClientVersion=' + encodeURIComponent(ProvisioningDeviceConstants.userAgent),
       uri: this._getConnectionUri(request)
     };
