@@ -15,8 +15,6 @@ describe("DeviceMethodRequest", function() {
             const request = new DeviceMethodRequest("requestId", "methodName");
             const response = new DeviceMethodResponse("otherRequestId", {});
             const exchange = createDeviceMethodExchange(request, response);
-
-            console.log(exchange);
             assert.deepEqual(request, exchange.request);
             assert.deepEqual(response, exchange.response);
         });
