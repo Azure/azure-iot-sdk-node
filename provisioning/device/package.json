@@ -9,7 +9,7 @@
   "dependencies": {
     "azure-iot-common": "1.8.0",
     "debug": "^3.0.1",
-    "machina": "^2.0.1"
+    "machina": "^4.0.1"
   },
   "devDependencies": {
     "@types/node": "^7.0.5",

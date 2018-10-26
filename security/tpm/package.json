@@ -10,7 +10,7 @@
     "azure-iot-common": "1.8.0",
     "debug": "^3.0.1",
     "base32-encode": "^1.0.0",
-    "machina": "^2.0.1",
+    "machina": "^4.0.1",
     "tss.js": "^0.0.3",
     "array-equal": "^1.0.0"
   },
