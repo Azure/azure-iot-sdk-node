@@ -48,6 +48,7 @@ describe('Authentication', function() {
   });
 
   describe('ConnectionString', function() {
+    // running timer/resource left after these tests
     transports.forEach(function (Transport) {
       it('Gets an UnauthorizedError over ' + Transport.name + ' if the primary key is invalid', function(testCallback) {
         var invalidPrimaryKey = new Buffer('invalidPrimaryKey').toString('base64');
@@ -82,6 +83,7 @@ describe('Authentication', function() {
   });
 
   describe('DeviceId', function() {
+    // running timer/resource left after these tests
     transports.forEach(function(Transport) {
       [{
         reason: 'improperly formed',
@@ -106,7 +108,7 @@ describe('Authentication', function() {
     });
   });
 
-  describe('X509', function() {
+  describe.only('X509', function() {
     var x509testDeviceId = 'nodee2etestDeviceAuthx509-' + uuid.v4();
     var x509goodCert = '';
     var x509goodKey = '';

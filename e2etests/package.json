@@ -50,7 +50,7 @@
     "twin_e2e_tests": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/twin_e2e_tests.js",
     "device_method": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/device_method.js",
     "job_client": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/job_client.js",
-    "authentication": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/authentication.js",
+    "authentication": "mocha --exit --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/authentication.js",
     "configurations": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/configurations.js",
     "module_crud": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/module_crud.js",
     "module_messaging": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/module_messaging.js",
