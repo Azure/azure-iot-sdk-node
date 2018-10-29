@@ -84,7 +84,7 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
       });
     });
 
-    // nuke the test device after every test
+    // delete the test device identity after every test
     afterEach(function (done) {
       if (!!deviceClient) {
         debug('disconnecting device client...');

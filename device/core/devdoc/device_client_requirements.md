@@ -1,6 +1,6 @@
 # Client requirements (Device client)
 
-The `Client` class is the historical client object that is used by devices to connect to IoT Hub and Edge Hub. Modules use the `ModuleClient` class.
+The `Client` class is the historical client object that is used by devices to connect to Azure IoT Hub and Azure IoT Edge. Modules use the `ModuleClient` class.
 
 ## Overview
 
