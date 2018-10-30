@@ -16,12 +16,12 @@
   },
   "devDependencies": {
     "@types/node": "^7.0.5",
-    "chai": "^3.5.0",
-    "istanbul": "^0.4.4",
-    "jshint": "^2.9.2",
+    "chai": "^4.2.0",
+    "istanbul": "^0.4.5",
+    "jshint": "^2.9.6",
     "mocha": "^5.2.0",
-    "sinon": "^1.17.5",
-    "tslint": "^5.1.0",
+    "sinon": "^7.1.0",
+    "tslint": "^5.11.0",
     "typescript": "2.2.2"
   },
   "scripts": {

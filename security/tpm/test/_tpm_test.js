@@ -255,8 +255,8 @@ describe('tpm', function () {
       readPublicStub.withArgs(TpmSecurityClient._idKeyPersistentHandle).callsArgWith(1, fakeIdKey);
       var lastResponseStub = sinon.stub(tpm, 'getLastResponseCode');
       lastResponseStub.returns(tss.TPM_RC.SUCCESS);
-      var getPropsAndHashAlgStub = sinon.stub(client, '_getPropsAndHashAlg').callsArgWith(0,tss.TPM_ALG_ID.SHA256, fakeGoodProps);
-      var hmacStub = sinon.stub(tpm, 'HMAC', (handle, dataToSign, alg, signCallback) => {
+      sinon.stub(client, '_getPropsAndHashAlg').callsArgWith(0,tss.TPM_ALG_ID.SHA256, fakeGoodProps);
+      sinon.stub(tpm, 'HMAC').callsFake((handle, dataToSign, alg, signCallback) => {
         var hash = crypto.createHash('sha256');
         hash.update(dataToSign);
         var signature = hash.digest();
@@ -292,16 +292,16 @@ describe('tpm', function () {
       readPublicStub.withArgs(TpmSecurityClient._idKeyPersistentHandle).callsArgWith(1, fakeIdKey);
       var lastResponseStub = sinon.stub(tpm, 'getLastResponseCode');
       lastResponseStub.returns(tss.TPM_RC.SUCCESS);
-      var getPropsAndHashAlgStub = sinon.stub(client, '_getPropsAndHashAlg').callsArgWith(0,tss.TPM_ALG_ID.SHA256, fakeGoodProps);
-      var hmacStartStub = sinon.stub(tpm, 'HMAC_Start', (handle, signature, alg, startCallback) => {
+      sinon.stub(client, '_getPropsAndHashAlg').callsArgWith(0,tss.TPM_ALG_ID.SHA256, fakeGoodProps);
+      sinon.stub(tpm, 'HMAC_Start').callsFake((handle, signature, alg, startCallback) => {
         var hash = crypto.createHash('sha256');
         startCallback(hash);
       });
-      var hmacSequenceUpdateStub = sinon.stub(tpm, 'SequenceUpdate', (hSequence, dataToSign, updateCallback) => {
+      var hmacSequenceUpdateStub = sinon.stub(tpm, 'SequenceUpdate').callsFake((hSequence, dataToSign, updateCallback) => {
         hSequence.update(dataToSign);
         updateCallback();
       });
-      var hmacSequenceCompleteStub = sinon.stub(tpm, 'SequenceComplete', (hSequence, dataToSign, completeHandle, completeCallback) => {
+      sinon.stub(tpm, 'SequenceComplete').callsFake((hSequence, dataToSign, completeHandle, completeCallback) => {
         hSequence.update(dataToSign);
         var signature = hSequence.digest();
         var response = {
