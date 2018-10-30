@@ -7,7 +7,7 @@ import { Stream } from 'stream';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:InternalClient');
 
-import { AuthenticationProvider, RetryOperation, ConnectionString, results, Callback, ErrorCallback, callbackToPromise, DoubleValueCallback } from 'azure-iot-common';
+import { AuthenticationProvider, RetryOperation, ConnectionString, results, Callback, ErrorCallback, callbackToPromise } from 'azure-iot-common';
 import { InternalClient, DeviceTransport } from './internal_client';
 import { BlobUploadClient } from './blob_upload';
 import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
@@ -112,7 +112,7 @@ export class Client extends InternalClient {
    * @param methodName Name of the method that will be handled by the callback
    * @param callback Function that shall be called whenever a method request for the method called `methodName` is received.
    */
-  onDeviceMethod(methodName: string, callback: DoubleValueCallback<DeviceMethodRequest, DeviceMethodResponse>): void {
+  onDeviceMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
     this._onDeviceMethod(methodName, callback);
   }
 
