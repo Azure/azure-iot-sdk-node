@@ -1,0 +1,25 @@
+{
+  "tool": "Credential Scanner",
+  "suppressions": [
+    {
+      "placeholder": "XLU2ibNOYBbld3FpFIOHbPZv3Thp4wfK%2BcqZpJz66hE%3D",
+      "_justification": "Fake shared access signature token"
+    },
+    {
+      "placeholder": "kcWxXAK2OAaAoq2oCkaGzX2NMqDB8nCyNuq2fPYCDhk%3D",
+      "_justification": "Fake shared access signature token"
+    },
+    {
+      "placeholder": "wM3XiP6gD960IxP7J5WHqnxQHEcWC6YaQCtoMT%2BkKHc%3D",
+      "_justification": "Fake shared access signature token"
+    },
+    {
+      "placeholder": "bYz5R2IFTaejB6pgYOxns2mw6lcuA4VSy8kJbYQp0Sc%3D",
+      "_justification": "Fake shared access signature token"
+    },
+    {
+      "placeholder": "88JmrIsVYOGmRSjCO1x1LLbv0K001Gikh1rjfJqbQXA%3D",
+      "_justification": "Fake shared access signature token"
+    }
+  ]
+}
