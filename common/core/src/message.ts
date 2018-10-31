@@ -90,7 +90,7 @@ export class Message {
   getData(): Message.BufferConvertible {
     /*Codes_SRS_NODE_IOTHUB_MESSAGE_07_003: [The getData function shall return a representation of the body of the message as the type that was presented during construction.]*/
     return this.data;
-  };
+  }
 
   /**
    * Gets the data passed to the constructor as a [Buffer]{@link https://nodejs.org/api/globals.html#globals_class_buffer}
@@ -105,7 +105,7 @@ export class Message {
       /*Codes_SRS_NODE_IOTHUB_MESSAGE_07_002: [If the data message is of any other type then the data will be converted to a Buffer object and returned.]*/
       return new Buffer(this.data);
     }
-  };
+  }
 
   /**
    * Returns true if the given object is of type {@link Message.BufferConvertible}.  Objects of type {@link Message.BufferConvertible} can be passed into the {@link Message} constructor.

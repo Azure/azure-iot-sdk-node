@@ -292,7 +292,7 @@ export function httpCallbackToPromise<TResult>(
   callbackOperation: (callback: HttpResponseCallback<TResult>) => void,
   callback?: HttpResponseCallback<TResult>): Promise<ResultWithHttpResponse<TResult>> | void {
   return tripleValueCallbackToPromise(callbackOperation, (b, r) => createResultWithHttpResponse(b, r), callback);
-};
+}
 
 /**
  * @private
