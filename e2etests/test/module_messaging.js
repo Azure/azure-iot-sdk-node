@@ -16,7 +16,7 @@ var MqttWs = require('azure-iot-device-mqtt').MqttWs;
 var transportsToTest = [ Amqp, AmqpWs, Mqtt, MqttWs ];
 
 describe('module messaging', function() {
-  this.timeout(46000);
+  this.timeout(60000);
 
   transportsToTest.forEach(function(Transport) {
     describe('using ' + Transport.name, function() {

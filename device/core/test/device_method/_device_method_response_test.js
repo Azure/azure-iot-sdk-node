@@ -85,7 +85,7 @@ describe('DeviceMethodResponse', function() {
 
         // test & assert
         assert.throws(function() {
-          res.send(status);
+          res.send(status, undefined, function(err) {});
         }, ReferenceError);
       });
     });
@@ -114,7 +114,7 @@ describe('DeviceMethodResponse', function() {
       // test & assert
       res.send(200);
       assert.throws(function() {
-        res.send(202);
+        res.send(202, undefined, function(err) {});
       }, Error);
     });
 

@@ -63,8 +63,6 @@ The `disconnect` method closes the connection to the server.
 
 **SRS_NODE_COMMON_MQTT_BASE_16_018: [** The `publish` method shall throw a `ReferenceError` if the topic is falsy. **]**
 
-**SRS_NODE_COMMON_MQTT_BASE_16_019: [** The `publish` method shall throw a `ReferenceError` if the payload is falsy. **]**
-
 **SRS_NODE_COMMON_MQTT_BASE_16_020: [** The `publish` method shall call the callback with a `NotConnectedError` if the connection hasn't been established prior to calling `publish`. **]**
 
 **SRS_NODE_COMMON_MQTT_BASE_16_021: [** The  `publish` method shall call `publish` on the mqtt client object and call the `callback` argument with `null` and the `puback` object if it succeeds. **]**

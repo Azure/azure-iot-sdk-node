@@ -100,10 +100,10 @@ describe('JobClient', function() {
     });
   });
 
-  describe('getJob', function() {
+  describe('#getJob', function() {
     /*Tests_SRS_NODE_JOB_CLIENT_16_006: [The `getJob` method shall throw a `ReferenceError` if `jobId` is `null`, `undefined` or an empty string.]*/
     [undefined, null, ''].forEach(function(badValue) {
-     testFalsyArg(new JobClient({}).getJob, 'jobId', badValue, [badValue]);
+     testFalsyArg(new JobClient({}).getJob, 'jobId', badValue, [badValue, () => {}]);
     });
 
     /*Tests_SRS_NODE_JOB_CLIENT_16_007: [The `getJob` method shall construct the HTTP request as follows:
@@ -234,10 +234,10 @@ describe('JobClient', function() {
     });
   });
 
-  describe('cancelJob', function() {
+  describe('#cancelJob', function() {
     /*Tests_SRS_NODE_JOB_CLIENT_16_008: [The `cancelJob` method shall throw a `ReferenceError` if `jobId` is `null`, `undefined` or an empty string.]*/
     [undefined, null, ''].forEach(function(badValue) {
-      testFalsyArg(new JobClient({}).cancelJob, 'jobId', badValue, [badValue]);
+      testFalsyArg(new JobClient({}).cancelJob, 'jobId', badValue, [badValue, () => {}]);
     });
 
     /*Tests_SRS_NODE_JOB_CLIENT_16_009: [The `cancelJob` method shall construct the HTTP request as follows:
@@ -263,7 +263,7 @@ describe('JobClient', function() {
     testCallback('cancelJob', ['jobId']);
   });
 
-  describe('scheduleDeviceMethod', function() {
+  describe('#scheduleDeviceMethod', function() {
     var goodParams = {
       methodName: 'name',
       responseTimeoutInSeconds: 15,
@@ -272,26 +272,26 @@ describe('JobClient', function() {
 
     /*Tests_SRS_NODE_JOB_CLIENT_16_013: [The `scheduleDeviceMethod` method shall throw a `ReferenceError` if `jobId` is `null`, `undefined` or an empty string.]*/
     [undefined, null, ''].forEach(function(badJobId) {
-      testFalsyArg(new JobClient({}).scheduleDeviceMethod, 'jobId', badJobId, [badJobId, 'SELECT * FROM devices', goodParams]);
+      testFalsyArg(new JobClient({}).scheduleDeviceMethod, 'jobId', badJobId, [badJobId, 'SELECT * FROM devices', goodParams, () => {}]);
     });
 
     /*Tests_SRS_NODE_JOB_CLIENT_16_014: [The `scheduleDeviceMethod` method shall throw a `ReferenceError` if `queryCondition` is falsy.]*/
     [undefined, null, ''].forEach(function(badQuery) {
-      testFalsyArg(new JobClient({}).scheduleDeviceMethod, 'queryCondition', badQuery, ['id', badQuery, goodParams]);
+      testFalsyArg(new JobClient({}).scheduleDeviceMethod, 'queryCondition', badQuery, ['id', badQuery, goodParams, () => {}]);
     });
 
     /*Tests_SRS_NODE_JOB_CLIENT_16_029: [The `scheduleDeviceMethod` method shall throw a `ReferenceError` if `methodParams` is falsy.]*/
     [undefined, null].forEach(function(badParams) {
-      testFalsyArg(new JobClient({}).scheduleDeviceMethod, 'methodParams', badParams, ['id', 'SELECT * FROM devices', badParams]);
+      testFalsyArg(new JobClient({}).scheduleDeviceMethod, 'methodParams', badParams, ['id', 'SELECT * FROM devices', badParams, () => {}]);
     });
 
     /*Tests_SRS_NODE_JOB_CLIENT_16_015: [The `scheduleDeviceMethod` method shall throw a `ReferenceError` if `methodParams.methodName` is `null`, `undefined` or an empty string.]*/
     [undefined, null, ''].forEach(function(badMethodName) {
-      testFalsyArg(new JobClient({}).scheduleDeviceMethod, 'methodParams.methodName', badMethodName, ['id', 'SELECT * FROM devices', { methodName: badMethodName }]);
+      testFalsyArg(new JobClient({}).scheduleDeviceMethod, 'methodParams.methodName', badMethodName, ['id', 'SELECT * FROM devices', { methodName: badMethodName }, () => {}]);
     });
 
     [42, {}, function() {}].forEach(function(badQueryType) {
-      testBadTypeArg(new JobClient({}).scheduleDeviceMethod, 'queryCondition', badQueryType, ['id', badQueryType, { methodName: 'name' }, new Date(), 3600]);
+      testBadTypeArg(new JobClient({}).scheduleDeviceMethod, 'queryCondition', badQueryType, ['id', badQueryType, { methodName: 'name' }, new Date(), 3600, () => {}]);
     });
 
     it('throws a TypeError if the callback is not the last parameter', function() {
@@ -376,21 +376,21 @@ describe('JobClient', function() {
 
     /*Tests_SRS_NODE_JOB_CLIENT_16_021: [The `scheduleTwinUpdate` method shall throw a `ReferenceError` if `jobId` is `null`, `undefined` or an empty string.]*/
     [undefined, null, ''].forEach(function(badValue) {
-      testFalsyArg(new JobClient({}).scheduleTwinUpdate, 'jobId', badValue, [badValue, 'SELECT * FROM devices', goodPatch]);
+      testFalsyArg(new JobClient({}).scheduleTwinUpdate, 'jobId', badValue, [badValue, 'SELECT * FROM devices', goodPatch, () => {}]);
     });
 
     /*Tests_SRS_NODE_JOB_CLIENT_16_022: [The `scheduleTwinUpdate` method shall throw a `ReferenceError` if `queryCondition` is falsy.]*/
     [undefined, null, ''].forEach(function(badValue) {
-      testFalsyArg(new JobClient({}).scheduleTwinUpdate, 'queryCondition', badValue, ['id', badValue, goodPatch]);
+      testFalsyArg(new JobClient({}).scheduleTwinUpdate, 'queryCondition', badValue, ['id', badValue, goodPatch, () => {}]);
     });
 
     /*Tests_SRS_NODE_JOB_CLIENT_16_023: [The `scheduleTwinUpdate` method shall throw a `ReferenceError` if `patch` is falsy.]*/
     [undefined, null, ''].forEach(function(badValue) {
-      testFalsyArg(new JobClient({}).scheduleTwinUpdate, 'patch', badValue, ['id', 'SELECT * FROM devices', badValue]);
+      testFalsyArg(new JobClient({}).scheduleTwinUpdate, 'patch', badValue, ['id', 'SELECT * FROM devices', badValue, () => {}]);
     });
 
     [42, {}, function() {}].forEach(function(badQueryType) {
-      testBadTypeArg(new JobClient({}).scheduleTwinUpdate, 'queryCondition', badQueryType, ['id', badQueryType, { tags: null }, new Date(), 3600]);
+      testBadTypeArg(new JobClient({}).scheduleTwinUpdate, 'queryCondition', badQueryType, ['id', badQueryType, { tags: null }, new Date(), 3600, () => {}]);
     });
 
     it('throws a TypeError if the callback is not the last parameter', function() {

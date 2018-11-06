@@ -46,7 +46,7 @@ var maximumMessageSize = ((256*1024)-512);
 });
 
 function device_service_tests(deviceTransport, createDeviceMethod) {
-  describe('Over ' + deviceTransport.name + ' using device/service clients c2d', function () {
+  describe('Over ' + deviceTransport.name + ' using device/service clients c2d with ' + createDeviceMethod.name + ' authentication', function () {
     this.timeout(60000);
 
     var serviceClient, deviceClient;
@@ -158,7 +158,7 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
     });
   });
 
-  describe('Over ' + deviceTransport.name + ' using device/eventhub clients - messaging', function () {
+  describe('Over ' + deviceTransport.name + ' using device/eventhub clients - messaging with ' + createDeviceMethod.name + ' authentication', function () {
     this.timeout(60000);
 
     var deviceClient, ehClient, ehReceivers, provisionedDevice;

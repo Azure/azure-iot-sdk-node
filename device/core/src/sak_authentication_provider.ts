@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { EventEmitter } from 'events';
-import { AuthenticationProvider, AuthenticationType, ConnectionString, SharedAccessSignature, errors, TransportConfig, encodeUriComponentStrict } from 'azure-iot-common';
+import { AuthenticationProvider, AuthenticationType, ConnectionString, SharedAccessSignature, errors, TransportConfig, encodeUriComponentStrict, Callback, callbackToPromise } from 'azure-iot-common';
 
 /**
  * Provides an `AuthenticationProvider` object that can be created simply with a connection string and is then used by the device client and transports to authenticate
@@ -47,23 +47,26 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
   /**
    * This method is used by the transports to gets the most current device credentials in the form of a `TransportConfig` object.
    *
-   * @param callback function that will be called with either an error or a set of device credentials that can be used to authenticate with the IoT hub.
+   * @param [callback] optional function that will be called with either an error or a set of device credentials that can be used to authenticate with the IoT hub.
+   * @returns {Promise<TransportConfig> | void} Promise if no callback function was passed, void otherwise.
    */
-  getDeviceCredentials(callback: (err: Error, credentials?: TransportConfig) => void): void {
-    if (this._shouldRenewToken()) {
-      this._renewToken((err, creds) => {
-        if (err) {
-          callback(err);
-        } else {
-          /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_002: [The `getDeviceCredentials` method shall start a timer that will automatically renew the token every (`tokenValidTimeInSeconds` - `tokenRenewalMarginInSeconds`) seconds if specified, or 45 minutes by default.]*/
-          this._scheduleNextExpiryTimeout();
-          callback(null, creds);
-        }
-      });
-    } else {
-      /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_003: [The `getDeviceCredentials` should call its callback with a `null` first parameter and a `TransportConfig` object as a second parameter, containing the latest valid token it generated.]*/
-      callback(null, this._credentials);
-    }
+  getDeviceCredentials(callback?: Callback<TransportConfig>): Promise<TransportConfig> | void {
+    return callbackToPromise((_callback) => {
+      if (this._shouldRenewToken()) {
+        this._renewToken((err, creds) => {
+          if (err) {
+            _callback(err);
+          } else {
+            /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_002: [The `getDeviceCredentials` method shall start a timer that will automatically renew the token every (`tokenValidTimeInSeconds` - `tokenRenewalMarginInSeconds`) seconds if specified, or 45 minutes by default.]*/
+            this._scheduleNextExpiryTimeout();
+            _callback(null, creds);
+          }
+        });
+      } else {
+        /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_003: [The `getDeviceCredentials` should call its callback with a `null` first parameter and a `TransportConfig` object as a second parameter, containing the latest valid token it generated.]*/
+        _callback(null, this._credentials);
+      }
+    }, callback);
   }
 
   /**

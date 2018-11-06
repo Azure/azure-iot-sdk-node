@@ -121,7 +121,7 @@ createDevice((err, deviceConnectionString) => {
         debug('error starting d2c_sender: ' + err.toString());
         clearTimeout(endTimeout);
         deleteDevice(() => {
-          debug('test device deleted. Exiting.')
+          debug('test device deleted. Exiting.');
           process.exit(ERROR_EXIT_CODE);
         });
       } else {

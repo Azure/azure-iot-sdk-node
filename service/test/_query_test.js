@@ -151,6 +151,27 @@ describe('Query', function() {
         testCallback();
       });
     });
+
+    it('returns a Promise when no callback is passed', function(testCallback) {
+      const fakeContinuationToken = 'continuationToken';
+      const fakeResponse = {
+        statusCode: 200,
+        headers: {
+          'x-ms-continuation': fakeContinuationToken
+        }
+      };
+      const fakeExecuteFn = sinon.stub().callsArgWith(1, null, [], fakeResponse);
+
+      const query = new Query(fakeExecuteFn);
+
+      const promise = query.next("continuationToken");
+      assert.typeOf(promise, "Promise");
+      promise.then(res => {
+        assert.deepEqual(res.message, fakeResponse);
+        assert.isDefined(res.result);
+        testCallback();
+      }).catch(err => testCallback(err));
+    });
   });
 
   describe('#nextAsTwin', function() {
@@ -206,6 +227,27 @@ describe('Query', function() {
         assert.isNull(result);
         testCallback();
       });
+    });
+
+    it('returns a Promise when no callback is passed', function(testCallback) {
+      const fakeContinuationToken = 'continuationToken';
+      const fakeResponse = {
+        statusCode: 200,
+        headers: {
+          'x-ms-continuation': fakeContinuationToken
+        }
+      };
+      const fakeExecuteFn = sinon.stub().callsArgWith(1, null, [], fakeResponse);
+
+      const query = new Query(fakeExecuteFn);
+
+      const promise = query.nextAsTwin("continuationToken");
+      assert.typeOf(promise, "Promise");
+      promise.then(res => {
+        assert.deepEqual(res.message, fakeResponse);
+        assert.isDefined(res.result);
+        testCallback();
+      }).catch(err => testCallback(err));
     });
   });
 });

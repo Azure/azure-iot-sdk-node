@@ -46,7 +46,7 @@ export class SharedAccessSignature {
     this.se = expiry;
     this.sig = authorization.encodeUriComponentStrict(authorization.hmacHash(this._key, authorization.stringToSign(this.sr, this.se.toString())));
     return this.toString();
-  };
+  }
 
   /**
    * @method          module:azure-iot-common.SharedAccessSignature#toString
@@ -67,7 +67,7 @@ export class SharedAccessSignature {
     });
 
     return sas;
-  };
+  }
 
   /**
    * @method          module:azure-iot-common.SharedAccessSignature.create
@@ -113,7 +113,7 @@ export class SharedAccessSignature {
     /*Codes_SRS_NODE_COMMON_SAS_05_012: [The sig property shall be the result of URL-encoding the value <signature>.]*/
     sas.sig = authorization.encodeUriComponentStrict(authorization.hmacHash(sas._key, authorization.stringToSign(sas.sr, sas.se.toString())));
     return sas;
-  };
+  }
 
 
 /**
@@ -194,5 +194,5 @@ static createWithSigningFunction(credentials: authorization.TransportConfig, exp
 
     /*Codes_SRS_NODE_COMMON_SAS_05_007: [The generated SharedAccessSignature object shall be returned to the caller.]*/
     return sas;
-  };
+  }
 }

@@ -35,7 +35,7 @@ export class Properties {
       this.propertyList.push({ key: itemKey, value: itemValue });
       return true;
     }
-  };
+  }
 
   /**
    * Returns the key-value pair corresponding to the given index.
@@ -50,7 +50,7 @@ export class Properties {
 
     /*Codes_SRS_NODE_IOTHUB_PROPERTIES_13_001: [ If the supplied index is less than zero or greater than or equal to the property map length then it shall return undefined. ]*/
     return undefined;
-  };
+  }
 
   /**
    * Returns the value property of the element that has the given key.
@@ -66,7 +66,7 @@ export class Properties {
 
     /*Codes_SRS_NODE_IOTHUB_PROPERTIES_16_001: [`Properties.getValue` should return `undefined` if no element within the `propertyList` array contains `key`.]*/
     return undefined;
-  };
+  }
 
   /**
    * Returns the number of items in the collection.
@@ -74,5 +74,5 @@ export class Properties {
   /* Codes_SRS_NODE_IOTHUB_PROPERTIES_07_002: [Properties.Count shall return the number of items in the Properties map.] */
   count(): number {
     return this.propertyList.length;
-  };
-};
+  }
+}

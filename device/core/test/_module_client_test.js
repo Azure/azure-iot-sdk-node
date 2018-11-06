@@ -48,41 +48,50 @@ describe('ModuleClient', function () {
     });
   });
 
-  describe('#fromEnvironment', function() {
-    // Tests_SRS_NODE_MODULE_CLIENT_13_033: [ The fromEnvironment method shall throw a ReferenceError if the callback argument is falsy or is not a function. ]
-    [null, undefined, 'not a function', 20].forEach(function(badCallback) {
-      it('throws if callback is falsy or not a function', function() {
-        assert.throws(function() {
+  describe('#fromEnvironment', function () {
+    // Tests_SRS_NODE_MODULE_CLIENT_13_033: [ The fromEnvironment method shall throw a ReferenceError if the callback argument is not a function. ]
+    ['not a function', 20].forEach(function (badCallback) {
+      it('throws if callback is falsy or not a function', function () {
+        assert.throws(function () {
           return ModuleClient.fromEnvironment(null, badCallback);
-        }, ReferenceError);
+        }, TypeError);
+      });
+    });
+
+    // Tests_SRS_NODE_MODULE_CLIENT_13_033: [ The fromEnvironment method shall return a Promise if the callback argument is falsy. ]
+    [null, undefined].forEach(function (badCallback) {
+      it('returns a Promise if callback is falsy or not a function', function () {
+        const result = ModuleClient.fromEnvironment(null, badCallback);
+        assert.instanceOf(result, Promise);
+        result.catch(_ => {});
       });
     });
 
     // Tests_SRS_NODE_MODULE_CLIENT_13_026: [ The fromEnvironment method shall invoke callback with a ReferenceError if the transportCtor argument is falsy. ]
-    [null, undefined].forEach(function(badTransport) {
-      it('fails if the transportCtor is falsy', function() {
-        ModuleClient.fromEnvironment(badTransport, function(err) {
+    [null, undefined].forEach(function (badTransport) {
+      it('fails if the transportCtor is falsy', function () {
+        ModuleClient.fromEnvironment(badTransport, function (err) {
           assert.instanceOf(err, ReferenceError);
         });
       });
     });
 
     // Tests_SRS_NODE_MODULE_CLIENT_13_028: [ The fromEnvironment method shall delegate to ModuleClient.fromConnectionString if an environment variable called EdgeHubConnectionString or IotHubConnectionString exists. ]
-    ['EdgeHubConnectionString', 'IotHubConnectionString'].forEach(function(envName) {
-      describe('calls ModuleClient.fromConnectionString', function() {
+    ['EdgeHubConnectionString', 'IotHubConnectionString'].forEach(function (envName) {
+      describe('calls ModuleClient.fromConnectionString', function () {
         var stub;
-        beforeEach(function() {
+        beforeEach(function () {
           stub = sinon.stub(ModuleClient, 'fromConnectionString').returns(42);
           process.env[envName] = 'cs';
         });
 
-        afterEach(function() {
+        afterEach(function () {
           stub.restore();
           delete process.env[envName];
         });
 
-        it('if env ' + envName + ' is defined', function() {
-          ModuleClient.fromEnvironment(function() {}, function(err, client) {
+        it('if env ' + envName + ' is defined', function () {
+          ModuleClient.fromEnvironment(function () {}, function (err, client) {
             assert.isNotOk(err);
             assert.strictEqual(client, 42);
             assert.strictEqual(stub.called, true);
@@ -197,7 +206,7 @@ describe('ModuleClient', function () {
     });
 
     // Tests_SRS_NODE_MODULE_CLIENT_13_029: [ If environment variables EdgeHubConnectionString and IotHubConnectionString do not exist then the following environment variables must be defined: IOTEDGE_WORKLOADURI, IOTEDGE_DEVICEID, IOTEDGE_MODULEID, IOTEDGE_IOTHUBHOSTNAME, IOTEDGE_AUTHSCHEME and IOTEDGE_MODULEGENERATIONID. ]
-    describe('validates required env vars', function() {
+    describe('validates required env vars', function () {
       var requiredVars = [
         'IOTEDGE_WORKLOADURI',
         'IOTEDGE_DEVICEID',
@@ -208,7 +217,7 @@ describe('ModuleClient', function () {
       ];
       var varIndex = 0;
 
-      beforeEach(function() {
+      beforeEach(function () {
         // add a value for all vars in requiredVars to the environment except
         // for the one at varIndex
         for (var index = 0; index < requiredVars.length; index++) {
@@ -219,16 +228,16 @@ describe('ModuleClient', function () {
         varIndex++;
       });
 
-      afterEach(function() {
+      afterEach(function () {
         // delete all the vars
         for (var index = 0; index < requiredVars.length; index++) {
           delete process.env[requiredVars[index]];
         }
       });
 
-      requiredVars.forEach(function(_, index) {
-        it('fails if env var ' + requiredVars[index] + ' is not defined', function() {
-          ModuleClient.fromEnvironment(function() {}, function(err) {
+      requiredVars.forEach(function (_, index) {
+        it('fails if env var ' + requiredVars[index] + ' is not defined', function () {
+          ModuleClient.fromEnvironment(function () {}, function (err) {
             assert.isOk(err);
             assert.instanceOf(err, ReferenceError);
           });
@@ -237,13 +246,13 @@ describe('ModuleClient', function () {
     });
 
     // Tests_SRS_NODE_MODULE_CLIENT_13_030: [ The value for the environment variable IOTEDGE_AUTHSCHEME must be sasToken. ]
-    describe('check IOTEDGE_AUTHSCHEME', function() {
+    describe('check IOTEDGE_AUTHSCHEME', function () {
       var requiredVars = ['IOTEDGE_WORKLOADURI', 'IOTEDGE_DEVICEID', 'IOTEDGE_MODULEID', 'IOTEDGE_IOTHUBHOSTNAME', 'IOTEDGE_MODULEGENERATIONID'];
 
       var getTrustBundleStub;
       var createWithSigningFunctionStub;
 
-      beforeEach(function() {
+      beforeEach(function () {
         for (var index = 0; index < requiredVars.length; index++) {
           process.env[requiredVars[index]] = '42';
         }
@@ -256,7 +265,7 @@ describe('ModuleClient', function () {
           .callsArgWith(3, null, 'sas token');
       });
 
-      afterEach(function() {
+      afterEach(function () {
         // delete all the vars
         for (var index = 0; index < requiredVars.length; index++) {
           delete process.env[requiredVars[index]];
@@ -268,30 +277,30 @@ describe('ModuleClient', function () {
         createWithSigningFunctionStub.restore();
       });
 
-      it('fails if value is not sasToken', function() {
+      it('fails if value is not sasToken', function () {
         process.env['IOTEDGE_AUTHSCHEME'] = 'NotSasToken';
-        ModuleClient.fromEnvironment(function() {}, function(err) {
+        ModuleClient.fromEnvironment(function () {}, function (err) {
           assert.isOk(err);
           assert.instanceOf(err, ReferenceError);
         });
       });
 
-      it('auth scheme value is case insensitive', function() {
+      it('auth scheme value is case insensitive', function () {
         process.env['IOTEDGE_AUTHSCHEME'] = 'SASTOKEN';
-        ModuleClient.fromEnvironment(function(provider) {
+        ModuleClient.fromEnvironment(function (provider) {
           assert.strictEqual(provider._authConfig.authScheme, 'SASTOKEN');
           return {
-            on: function() {},
-            setOptions: function() {}
+            on: function () {},
+            setOptions: function () {}
           };
-        }, function(err, client) {
+        }, function (err, client) {
           assert.isNotOk(err);
           assert.isOk(client);
         });
       });
     });
 
-    describe('check create', function() {
+    describe('check create', function () {
       var env = [
         ['IOTEDGE_WORKLOADURI', 'unix:///var/run/iotedge.w.sock'],
         ['IOTEDGE_DEVICEID', 'd1'],
@@ -305,8 +314,8 @@ describe('ModuleClient', function () {
       var getTrustBundleStub;
       var createWithSigningFunctionStub;
 
-      beforeEach(function() {
-        env.forEach(function(e) {
+      beforeEach(function () {
+        env.forEach(function (e) {
           process.env[e[0]] = e[1];
         });
 
@@ -317,8 +326,8 @@ describe('ModuleClient', function () {
           .callsArgWith(3, null, 'sas token');
       });
 
-      afterEach(function() {
-        env.forEach(function(e) {
+      afterEach(function () {
+        env.forEach(function (e) {
           delete process.env[e[0]];
         });
 
@@ -328,13 +337,13 @@ describe('ModuleClient', function () {
 
       // Tests_SRS_NODE_MODULE_CLIENT_13_032: [ The fromEnvironment method shall create a new IotEdgeAuthenticationProvider object and pass this to the transport constructor. ]
       // Tests_SRS_NODE_MODULE_CLIENT_13_031: [ The fromEnvironment method shall invoke the callback with a new instance of the ModuleClient object. ]
-      it('creates IotEdgeAuthenticationProvider', function(testCallback) {
+      it('creates IotEdgeAuthenticationProvider', function (testCallback) {
         var transport = {
           on: sinon.stub(),
           setOptions: sinon.stub()
         };
         var transportStub = sinon.stub().returns(transport);
-        ModuleClient.fromEnvironment(transportStub, function(err, client) {
+        ModuleClient.fromEnvironment(transportStub, function (err, client) {
           assert.isNotOk(err);
           assert.strictEqual(transportStub.called, true);
           var provider = transportStub.args[0][0];
@@ -354,7 +363,7 @@ describe('ModuleClient', function () {
       });
     });
 
-    describe('trust bundle', function() {
+    describe('trust bundle', function () {
       var env = [
         ['IOTEDGE_WORKLOADURI', 'unix:///var/run/iotedge.w.sock'],
         ['IOTEDGE_DEVICEID', 'd1'],
@@ -368,8 +377,8 @@ describe('ModuleClient', function () {
       var getTrustBundleStub;
       var createWithSigningFunctionStub;
 
-      beforeEach(function() {
-        env.forEach(function(e) {
+      beforeEach(function () {
+        env.forEach(function (e) {
           process.env[e[0]] = e[1];
         });
 
@@ -380,8 +389,8 @@ describe('ModuleClient', function () {
           .callsArgWith(3, null, 'sas token');
       });
 
-      afterEach(function() {
-        env.forEach(function(e) {
+      afterEach(function () {
+        env.forEach(function (e) {
           delete process.env[e[0]];
         });
 
@@ -390,13 +399,13 @@ describe('ModuleClient', function () {
       });
 
       // Tests_SRS_NODE_MODULE_CLIENT_13_035: [ If the client is running in edge mode then the IotEdgeAuthenticationProvider.getTrustBundle method shall be invoked to retrieve the CA cert and the returned value shall be set as the CA cert for the transport via the transport's setOptions method passing in the CA value for the ca property in the options object. ]
-      it('sets cert on transport', function(testCallback) {
+      it('sets cert on transport', function (testCallback) {
         var transport = {
           on: sinon.stub(),
           setOptions: sinon.stub()
         };
         var transportStub = sinon.stub().returns(transport);
-        ModuleClient.fromEnvironment(transportStub, function(err, client) {
+        ModuleClient.fromEnvironment(transportStub, function (err, client) {
           assert.isNotOk(err);
           assert.strictEqual(transportStub.called, true);
           var provider = transportStub.args[0][0];
@@ -419,7 +428,7 @@ describe('ModuleClient', function () {
       });
     });
 
-    describe('trust bundle', function() {
+    describe('trust bundle', function () {
       var env = [
         ['IOTEDGE_WORKLOADURI', 'unix:///var/run/iotedge.w.sock'],
         ['IOTEDGE_DEVICEID', 'd1'],
@@ -433,8 +442,8 @@ describe('ModuleClient', function () {
       var getTrustBundleStub;
       var createWithSigningFunctionStub;
 
-      beforeEach(function() {
-        env.forEach(function(e) {
+      beforeEach(function () {
+        env.forEach(function (e) {
           process.env[e[0]] = e[1];
         });
 
@@ -445,8 +454,8 @@ describe('ModuleClient', function () {
           .callsArgWith(3, null, 'sas token');
       });
 
-      afterEach(function() {
-        env.forEach(function(e) {
+      afterEach(function () {
+        env.forEach(function (e) {
           delete process.env[e[0]];
         });
 
@@ -454,13 +463,13 @@ describe('ModuleClient', function () {
         createWithSigningFunctionStub.restore();
       });
 
-      it('fails if getTrustBundle fails', function(testCallback) {
+      it('fails if getTrustBundle fails', function (testCallback) {
         var transport = {
           on: sinon.stub(),
           setOptions: sinon.stub()
         };
         var transportStub = sinon.stub().returns(transport);
-        ModuleClient.fromEnvironment(transportStub, function(err, client) {
+        ModuleClient.fromEnvironment(transportStub, function (err, client) {
           assert.isOk(err);
           assert.strictEqual(err, 'whoops');
           assert.strictEqual(getTrustBundleStub.called, true);
@@ -471,15 +480,15 @@ describe('ModuleClient', function () {
     });
   });
 
-  ['sendOutputEvent', 'sendOutputEventBatch'].forEach(function(funcName) {
-    describe('#' + funcName, function() {
+  ['sendOutputEvent', 'sendOutputEventBatch'].forEach(function (funcName) {
+    describe('#' + funcName, function () {
       /*Tests_SRS_NODE_MODULE_CLIENT_18_019: [The `sendOutputEvent` method shall not throw if the `callback` is not passed. ]*/
       /*Tests_SRS_NODE_MODULE_CLIENT_18_022: [The `sendOutputEventBatch` method shall not throw if the `callback` is not passed. ]*/
-      it('doesn\'t throw if no callback is given and the method exists on the transport', function() {
+      it('doesn\'t throw if no callback is given and the method exists on the transport', function () {
         var transport = new FakeTransport();
         var client = new ModuleClient(transport);
-        client.open(function() {
-          assert.doesNotThrow(function() {
+        client.open(function () {
+          assert.doesNotThrow(function () {
             client[funcName]('message');
           });
         });
@@ -494,7 +503,9 @@ describe('ModuleClient', function () {
         var transport = new FakeTransport();
         var client = new ModuleClient(transport);
         assert.throws(function () {
-          client.invokeMethod(badDeviceId, 'moduleId', { methodName: 'method' }, function () {});
+          client.invokeMethod(badDeviceId, 'moduleId', {
+            methodName: 'method'
+          }, function () {});
         }, ReferenceError);
       });
     });
@@ -505,7 +516,9 @@ describe('ModuleClient', function () {
         var transport = new FakeTransport();
         var client = new ModuleClient(transport);
         assert.throws(function () {
-          client.invokeMethod('deviceId', badModuleId, { methodName: 'method' }, function () {});
+          client.invokeMethod('deviceId', badModuleId, {
+            methodName: 'method'
+          }, function () {});
         }, ReferenceError);
       });
     });
@@ -537,7 +550,9 @@ describe('ModuleClient', function () {
         var transport = new FakeTransport();
         var client = new ModuleClient(transport);
         assert.throws(function () {
-          client.invokeMethod('deviceId', 'moduleId', { methodName: badMethodName }, function () {});
+          client.invokeMethod('deviceId', 'moduleId', {
+            methodName: badMethodName
+          }, function () {});
         }, errors.ArgumentError);
       });
     });
@@ -547,9 +562,11 @@ describe('ModuleClient', function () {
       var fakeMethodClient = {
         invokeMethod: sinon.stub()
       };
-      var fakeMethodParams = { methodName: 'methodName' };
+      var fakeMethodParams = {
+        methodName: 'methodName'
+      };
       var client = new ModuleClient(transport, fakeMethodClient);
-      client.invokeMethod('deviceId', fakeMethodParams, function() {});
+      client.invokeMethod('deviceId', fakeMethodParams, function () {});
       assert.isTrue(fakeMethodClient.invokeMethod.calledOnce);
       assert.isTrue(fakeMethodClient.invokeMethod.calledWith('deviceId', null, fakeMethodParams));
     });
@@ -560,9 +577,11 @@ describe('ModuleClient', function () {
       var fakeMethodClient = {
         invokeMethod: sinon.stub()
       };
-      var fakeMethodParams = { methodName: 'methodName' };
+      var fakeMethodParams = {
+        methodName: 'methodName'
+      };
       var client = new ModuleClient(transport, fakeMethodClient);
-      client.invokeMethod('deviceId', 'moduleId', fakeMethodParams);
+      client.invokeMethod('deviceId', 'moduleId', fakeMethodParams, (_) => {});
       assert.isTrue(fakeMethodClient.invokeMethod.calledOnce);
       assert.isTrue(fakeMethodClient.invokeMethod.calledWith('deviceId', 'moduleId', fakeMethodParams));
     });
@@ -573,7 +592,7 @@ describe('ModuleClient', function () {
     it('emits a message event when a message is received', function (done) {
       var fakeTransport = new FakeTransport();
       var client = new ModuleClient(fakeTransport);
-      client.on('inputMessage', function(inputName,msg) {
+      client.on('inputMessage', function (inputName, msg) {
         /*Tests_SRS_NODE_MODULE_CLIENT_18_013: [ The `inputMessage` event parameters shall be the inputName for the message and a `Message` object. ]*/
         assert.strictEqual(inputName, 'fakeInputName');
         assert.strictEqual(msg.constructor.name, 'Message');
@@ -584,13 +603,11 @@ describe('ModuleClient', function () {
     });
   });
 
-  [
-    {
-      eventName: 'inputMessage',
-      enableFunc: 'enableInputMessages',
-      disableFunc: 'disableInputMessages'
-    }
-  ].forEach(function(testConfig) {
+  [{
+    eventName: 'inputMessage',
+    enableFunc: 'enableInputMessages',
+    disableFunc: 'disableInputMessages'
+  }].forEach(function (testConfig) {
     describe('#on(\'' + testConfig.eventName + '\')', function () {
       /*Tests_SRS_NODE_MODULE_CLIENT_18_014: [ The client shall start listening for messages from the service whenever there is a listener subscribed to the `inputMessage` event. ]*/
       it('starts listening for messages when a listener subscribes to the message event', function () {
@@ -600,8 +617,8 @@ describe('ModuleClient', function () {
 
         // Calling 'on' twice to make sure it's called only once on the receiver.
         // It works because the test will fail if the test callback is called multiple times, and it's called for every time the testConfig.eventName event is subscribed on the receiver.
-        client.on(testConfig.eventName, function () { });
-        client.on(testConfig.eventName, function () { });
+        client.on(testConfig.eventName, function () {});
+        client.on(testConfig.eventName, function () {});
         assert.isTrue(fakeTransport[testConfig.enableFunc].calledOnce);
       });
 
@@ -613,12 +630,12 @@ describe('ModuleClient', function () {
         sinon.spy(fakeTransport, 'removeAllListeners');
 
         var client = new ModuleClient(fakeTransport);
-        var listener1 = function () { };
-        var listener2 = function () { };
+        var listener1 = function () {};
+        var listener2 = function () {};
         client.on(testConfig.eventName, listener1);
         client.on(testConfig.eventName, listener2);
 
-        process.nextTick(function() {
+        process.nextTick(function () {
           client.removeListener(testConfig.eventName, listener1);
           assert.isTrue(fakeTransport[testConfig.disableFunc].notCalled);
           client.removeListener(testConfig.eventName, listener2);
@@ -631,14 +648,16 @@ describe('ModuleClient', function () {
       it('emits an error if it fails to start listening for messages', function (testCallback) {
         var fakeTransport = new FakeTransport();
         var fakeError = new Error('fake');
-        sinon.stub(fakeTransport, testConfig.enableFunc).callsFake(function (callback) { callback(fakeError); });
+        sinon.stub(fakeTransport, testConfig.enableFunc).callsFake(function (callback) {
+          callback(fakeError);
+        });
         var client = new ModuleClient(fakeTransport);
         client.on('error', function (err) {
           assert.strictEqual(err, fakeError);
           testCallback();
         })
 
-        client.on(testConfig.eventName, function () { });
+        client.on(testConfig.eventName, function () {});
         assert.isTrue(fakeTransport[testConfig.enableFunc].calledOnce);
       });
 
@@ -647,14 +666,16 @@ describe('ModuleClient', function () {
         var fakeTransport = new FakeTransport();
         var fakeError = new Error('fake');
         sinon.spy(fakeTransport, testConfig.enableFunc);
-        sinon.stub(fakeTransport, testConfig.disableFunc).callsFake(function (callback) { callback(fakeError); });
+        sinon.stub(fakeTransport, testConfig.disableFunc).callsFake(function (callback) {
+          callback(fakeError);
+        });
         var client = new ModuleClient(fakeTransport);
         client.on('error', function (err) {
           assert.strictEqual(err, fakeError);
           testCallback();
         })
 
-        client.on(testConfig.eventName, function () { });
+        client.on(testConfig.eventName, function () {});
         assert.isTrue(fakeTransport[testConfig.enableFunc].calledOnce);
         client.removeAllListeners(testConfig.eventName);
         assert.isTrue(fakeTransport[testConfig.disableFunc].calledOnce);
@@ -672,7 +693,7 @@ describe('ModuleClient', function () {
       it('throws is options is ' + options, function () {
         var client = new ModuleClient(new EventEmitter(), fakeMethodClient);
         assert.throws(function () {
-          client.setOptions(options, function () { });
+          client.setOptions(options, function () {});
         }, ReferenceError);
       });
     });
@@ -727,7 +748,9 @@ describe('ModuleClient', function () {
       // causes a mock method event to be raised
       this.emitMethodCall = function (methodName) {
         this.emit('method_' + methodName, {
-          methods: { methodName: methodName },
+          methods: {
+            methodName: methodName
+          },
           body: JSON.stringify(''),
           requestId: '42'
         });
@@ -760,7 +783,7 @@ describe('ModuleClient', function () {
         var transport = new FakeMethodTransport();
         var client = new ModuleClient(transport);
         assert.throws(function () {
-          client.onMethod(methodName, function () { });
+          client.onMethod(methodName, function () {});
         }, ReferenceError);
       });
     });
@@ -771,7 +794,7 @@ describe('ModuleClient', function () {
         var transport = new FakeMethodTransport();
         var client = new ModuleClient(transport);
         assert.throws(function () {
-          client.onMethod(methodName, function () { });
+          client.onMethod(methodName, function () {});
         }, TypeError);
       });
     });
@@ -804,11 +827,12 @@ describe('ModuleClient', function () {
       var transport = new FakeMethodTransport();
       var client = new ModuleClient(transport);
       client.open(function () {
-        client.onMethod('firstMethod', function () { }); // This will connect the method receiver
+        client.onMethod('firstMethod', function () {}); // This will connect the method receiver
         client.onMethod('reboot', function () {
           done();
         });
       });
+      2
 
       // test
       transport.emitMethodCall('reboot');
@@ -823,7 +847,7 @@ describe('ModuleClient', function () {
       transport.on('newListener', callback);
 
       // test
-      client.onMethod('reboot', function () { });
+      client.onMethod('reboot', function () {});
 
       // assert
       assert.isTrue(callback.withArgs('method_reboot').calledOnce);
@@ -837,25 +861,27 @@ describe('ModuleClient', function () {
       // setup
       var transport = new FakeMethodTransport();
       var client = new ModuleClient(transport);
-      client.onMethod('reboot', function () { });
+      client.onMethod('reboot', function () {});
 
       // test
       // assert
       assert.throws(function () {
-        client.onMethod('reboot', function () { });
+        client.onMethod('reboot', function () {});
       });
     });
 
     it('emits an error if the transport fails to enable the methods feature', function (testCallback) {
       var transport = new FakeMethodTransport();
       var fakeError = new Error('fake');
-      sinon.stub(transport, 'enableMethods').callsFake(function (callback) { callback(fakeError); });
+      sinon.stub(transport, 'enableMethods').callsFake(function (callback) {
+        callback(fakeError);
+      });
       var client = new ModuleClient(transport);
       client.on('error', function (err) {
         assert.strictEqual(err, fakeError);
         testCallback();
       })
-      client.onMethod('firstMethod', function () { }); // This will connect the method receiver
+      client.onMethod('firstMethod', function () {}); // This will connect the method receiver
     });
   });
 
@@ -863,8 +889,12 @@ describe('ModuleClient', function () {
     var fakeTransport, fakeRetryPolicy;
     beforeEach(function () {
       fakeRetryPolicy = {
-        shouldRetry: function () { return true; },
-        nextRetryTimeout: function () { return 1; }
+        shouldRetry: function () {
+          return true;
+        },
+        nextRetryTimeout: function () {
+          return 1;
+        }
       };
 
       fakeTransport = new EventEmitter();
@@ -876,7 +906,7 @@ describe('ModuleClient', function () {
     it('reenables device methods after being disconnected if methods were enabled', function () {
       var client = new ModuleClient(fakeTransport);
       client.setRetryPolicy(fakeRetryPolicy);
-      client.onMethod('method', function () { });
+      client.onMethod('method', function () {});
       assert.isTrue(fakeTransport.enableMethods.calledOnce);
       fakeTransport.emit('disconnect', new errors.TimeoutError()); // timeouts can be retried
       assert.isTrue(fakeTransport.enableMethods.calledTwice);
@@ -894,7 +924,7 @@ describe('ModuleClient', function () {
 
       client.setRetryPolicy(fakeRetryPolicy);
       client._maxOperationTimeout = 1;
-      client.onMethod('method', function () { });
+      client.onMethod('method', function () {});
       assert.isTrue(fakeTransport.enableMethods.calledOnce);
       fakeTransport.enableMethods = sinon.stub().callsArgWith(0, fakeError);
       fakeTransport.emit('disconnect', new errors.TimeoutError()); // timeouts can be retried

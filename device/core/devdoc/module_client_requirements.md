@@ -1,6 +1,6 @@
 # ModuleClient requirements
 
-The `ModuleClient` class is used to connect modules to Azure IoT Hub and Azure Edge hub. Devices use the `Client` class.
+The `ModuleClient` class is used to connect modules to Azure IoT Hub and Azure IoT Edge. Devices use the `Client` class.
 
 ## Overview
 
