@@ -4,10 +4,10 @@
 'use strict';
 
 import { Stream } from 'stream';
-import { AuthenticationProvider, errorCallbackToPromise, ErrorCallback } from 'azure-iot-common';
+import { AuthenticationProvider, errorCallbackToPromise, ErrorCallback, TripleValueCallback, Callback } from 'azure-iot-common';
 
 import { BlobUploadResult } from './blob_upload_result';
-import { BlobUploader as DefaultBlobUploader } from './blob_uploader';
+import { BlobUploader as DefaultBlobUploader, BlobResponse } from './blob_uploader';
 import { FileUploadApi as DefaultFileUploadApi } from './file_upload_api';
 
 import * as errors from './blob_upload_errors';
@@ -27,7 +27,7 @@ export interface UploadParams {
  * @private
  */
 export interface FileUpload {
-  getBlobSharedAccessSignature(blobName: string, done: (err: Error, uploadParams?: UploadParams) => void): void;
+  getBlobSharedAccessSignature(blobName: string, done?: Callback<UploadParams>): void;
   notifyUploadComplete(correlationId: string, uploadResult: BlobUploadResult, done: (err?: Error) => void): void;
 }
 
@@ -35,7 +35,7 @@ export interface FileUpload {
  * @private
  */
 export interface BlobUploader {
-  uploadToBlob(uploadParams: UploadParams, stream: Stream, streamLength: number, done: (err: Error, body?: any, result?: { statusCode: number, body: string }) => void): void;
+  uploadToBlob(uploadParams: UploadParams, stream: Stream, streamLength: number, done?: TripleValueCallback<any, BlobResponse>): void;
 }
 
 /**

@@ -11,8 +11,16 @@ import { tripleValueCallbackToPromise, TripleValueCallback } from 'azure-iot-com
 /**
  * @private
  */
+export type BlobResponse = {
+  statusCode: number,
+  body: string
+};
+
+/**
+ * @private
+ */
 export interface BlobService {
-    createBlockBlobFromStream(containerName: string, blobName: string, stream: Stream, streamLength: number, done: (err: Error, body?: any, result?: { statusCode: number, body: string }) => void): void;
+    createBlockBlobFromStream(containerName: string, blobName: string, stream: Stream, streamLength: number, done: (err: Error, body?: any, result?: BlobResponse) => void): void;
 }
 
 /**
@@ -38,7 +46,7 @@ export class BlobUploader implements BlobUploaderInterface {
     }
   }
 
-  uploadToBlob(blobInfo: UploadParams, stream: Stream, streamLength: number, done: TripleValueCallback<any, { statusCode: number, body: string }>): Promise<any> | void {
+  uploadToBlob(blobInfo: UploadParams, stream: Stream, streamLength: number, done?: TripleValueCallback<any, BlobResponse>): Promise<{ body: any, result: BlobResponse }> | void {
     tripleValueCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_16_001: [`uploadToBlob` shall throw a `ReferenceError` if `blobInfo` is falsy.]*/
       if (!blobInfo) throw new ReferenceError('blobInfo cannot be \'' + blobInfo + '\'');
