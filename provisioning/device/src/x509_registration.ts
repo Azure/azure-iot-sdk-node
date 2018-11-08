@@ -57,7 +57,7 @@ export class X509Registration implements RegistrationClient {
           this._transport.setAuthentication(cert);
           /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_002: [ `register` shall call `registerX509` on the transport object and call it's callback with the result of the transport operation. ] */
           this._pollingStateMachine.register(request, (err?: Error, result?: DeviceRegistrationResult) => {
-            this._pollingStateMachine.disconnect((disconnectErr: Error) => {
+            this._pollingStateMachine.disconnect((disconnectErr?: Error) => {
               if (disconnectErr) {
                 debug('error disconnecting.  Ignoring.  ' + disconnectErr);
               }

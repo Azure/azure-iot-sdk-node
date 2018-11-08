@@ -418,8 +418,8 @@ export class Amqp extends EventEmitter implements Client.Transport {
    * @returns {Promise<results.Disconnected> | void} Promise if no callback function was passed, void otherwise.
    */
   /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_019: [The `connect` method shall call the `connect` method of the base AMQP transport and translate its result to the caller into a transport-agnostic object.]*/
-  connect(done?: TripleValueCallback<results.Connected, IncomingMessage>): Promise<ResultWithIncomingMessage<results.Connected>> | void {
-    return tripleValueCallbackToPromise((_callback) => {
+  connect(done?: Callback<results.Connected>): Promise<results.Connected> | void {
+    return callbackToPromise((_callback) => {
       this._fsm.handle('connect', (err) => {
         if (err) {
           _callback(translateError('AMQP Transport: Could not connect', err));
@@ -427,7 +427,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
           _callback(null, new results.Connected());
         }
       });
-    }, (r, m) => { return createResultWithIncomingMessage(r, m); }, done);
+    }, done);
   }
 
   /**
