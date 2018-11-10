@@ -61,12 +61,12 @@ export class ProvisioningServiceClient {
    * @returns {Promise<void> | void} Promise if no callback function was passed, void otherwise.
    */
   public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
-    if (deleteCallback && !(deleteCallback instanceof Function)) {
+    if (deleteCallback && !((typeof deleteCallback) === 'function')) {
       throw new ArgumentError('Callback has to be a Function');
     }
 
-    if (!deleteCallback && etagOrCallback instanceof Function) {
-      deleteCallback = etagOrCallback;
+    if (!deleteCallback && ((typeof etagOrCallback) === 'function')) {
+      deleteCallback = etagOrCallback as ErrorCallback;
       etagOrCallback = undefined;
     }
 
@@ -133,12 +133,12 @@ export class ProvisioningServiceClient {
    * @returns {Promise<void> | void} Promise if no callback function was passed, void otherwise.
    */
   public deleteEnrollmentGroup(enrollmentGroupOrId: string | EnrollmentGroup, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
-    if (deleteCallback && !(deleteCallback instanceof Function)) {
+    if (deleteCallback && !((typeof deleteCallback) === 'function')) {
       throw new ArgumentError('Callback has to be a Function');
     }
 
-    if (etagOrCallback instanceof Function) {
-      deleteCallback = etagOrCallback;
+    if ((typeof etagOrCallback) === 'function') {
+      deleteCallback = etagOrCallback as ErrorCallback;
       etagOrCallback = undefined;
     }
 
@@ -233,12 +233,12 @@ export class ProvisioningServiceClient {
    * @returns {Promise<void> | void} Promise if no callback function was passed, void otherwise.
    */
   public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
-    if (deleteCallback && !(deleteCallback instanceof Function)) {
+    if (deleteCallback && !((typeof deleteCallback) === 'function')) {
       throw new ArgumentError('Callback has to be a Function');
     }
 
-    if (etagOrCallback instanceof Function) {
-      deleteCallback = etagOrCallback;
+    if ((typeof etagOrCallback) === 'function') {
+      deleteCallback = etagOrCallback as ErrorCallback;
       etagOrCallback = undefined;
     }
 
@@ -334,7 +334,7 @@ export class ProvisioningServiceClient {
     let suppliedCallback: ErrorCallback;
     let id: string;
 
-    suppliedCallback = deleteCallback || (etagOrCallback instanceof Function ? etagOrCallback : undefined);
+    suppliedCallback = deleteCallback || (((typeof etagOrCallback) === 'function') ? etagOrCallback as ErrorCallback : undefined);
     if (!suppliedCallback) {
       throw new ArgumentError('No callback was passed.');
     }
