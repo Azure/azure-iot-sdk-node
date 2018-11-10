@@ -71,7 +71,7 @@ export type HttpResponseCallback<TResult> = TripleValueCallback<TResult, any>;
  */
 export function callbackToPromise<TResult>(callBackOperation: (callback: Callback<TResult>) => void, userCallback?: Callback<TResult>): Promise<TResult> | void {
   if (userCallback) {
-    if (!(userCallback instanceof Function)) {
+    if (!((typeof userCallback) === 'function')) {
       throw new TypeError('Callback has to be a Function');
     }
 
@@ -144,7 +144,7 @@ export function errorCallbackToPromise(callBackOperation: (callback: ErrorCallba
  */
 export function noErrorCallbackToPromise<TResult>(callBackOperation: (callback: NoErrorCallback<TResult>) => void, userCallback?: NoErrorCallback<TResult>): Promise<TResult> | void {
   if (userCallback) {
-    if (!(userCallback instanceof Function)) {
+    if (!((typeof userCallback) === 'function')) {
       throw new TypeError('Callback has to be a Function');
     }
 
@@ -193,7 +193,7 @@ export function doubleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>
   packResults: (result1: TResult1, result2: TResult2) => TPromiseResult,
   userCallback?: DoubleValueCallback<TResult1, TResult2>): Promise<TPromiseResult> | void {
   if (userCallback) {
-    if (!(userCallback instanceof Function)) {
+    if (!((typeof userCallback) === 'function')) {
       throw new TypeError('Callback has to be a Function');
     }
 
@@ -254,7 +254,7 @@ export function tripleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>
   packResults: (result1: TResult1, result2: TResult2) => TPromiseResult,
   userCallback?: TripleValueCallback<TResult1, TResult2>): Promise<TPromiseResult> | void {
   if (userCallback) {
-    if (!(userCallback instanceof Function)) {
+    if (!((typeof userCallback) === 'function')) {
       throw new TypeError('Callback has to be a Function');
     }
 
