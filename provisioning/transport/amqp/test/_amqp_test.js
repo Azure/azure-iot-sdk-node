@@ -9,6 +9,7 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 var AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
 var errors = require('azure-iot-common').errors;
+var results = require('azure-iot-common').results;
 var ProvisioningDeviceConstants = require('azure-iot-provisioning-device').ProvisioningDeviceConstants;
 var Amqp = require('../lib/amqp.js').Amqp;
 var Builder = require('buffer-builder');
@@ -187,6 +188,18 @@ describe('Amqp', function () {
         });
       });
 
+      /*Tests_SRS_NODE_PROVISIONING_AMQP_06_001: [ The `registrationRequest` disposition is an `instanceof` common errors InternalServerError or ThrottlingError, the result.status shall be set to 'assigning', and the callback invoked with *no* error. ] */
+      ['amqp:internal-error', 'com.microsoft:device-container-throttled'].forEach(function(originalError) {
+        it ('calls its callback with results.status of \'assigning\' if the returned error was ' + originalError, function (testCallback) {
+          fakeSenderLink.send = sinon.stub().callsArgWith(1, {condition: originalError }, new results.MessageRejected());
+          amqp.registrationRequest(fakeRequest, function (err, result) {
+            assert.isNotOk(err);
+            assert.equal(result.status, 'assigning');
+            testCallback();
+          });
+        });
+      })
+
       /*Tests_SRS_NODE_PROVISIONING_AMQP_16_011: [The `registrationRequest` method shall call its callback with an error if the transport fails to send the request message.]*/
       it ('calls its callback with an error if sending the message fails', function (testCallback) {
         fakeSenderLink.send = sinon.stub().callsArgWith(1, fakeError);
@@ -285,6 +298,19 @@ describe('Amqp', function () {
           testCallback();
         });
       });
+
+      /*Tests_SRS_NODE_PROVISIONING_AMQP_06_002: [ The `queryOperationStatus` disposition is an `instanceof` common errors InternalServerError or ThrottlingError, the result.status shall be set to 'assigning', and the callback invoked with *no* error. ] */
+      ['amqp:internal-error', 'com.microsoft:device-container-throttled'].forEach(function(originalError) {
+        it ('calls its callback with results.status of \'assigning\' if the returned error was ' + originalError, function (testCallback) {
+          fakeSenderLink.send = sinon.stub().callsArgWith(1, {condition: originalError }, new results.MessageRejected());
+          amqp.queryOperationStatus(fakeRequest, fakeOperationId, function (err, result) {
+            assert.isNotOk(err);
+            assert.equal(result.status, 'assigning');
+            testCallback();
+          });
+        });
+      })
+
 
       /*Tests_SRS_NODE_PROVISIONING_AMQP_16_021: [The `queryOperationStatus` method shall call its callback with an error if the transport fails to send the request message.]*/
       it ('calls its callback with an error if sending the message fails', function (testCallback) {

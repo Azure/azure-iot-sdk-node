@@ -43,6 +43,8 @@ Queries the dps to obtain a buffer that may be used as a symmetric key to perfor
 
 **SRS_NODE_PROVISIONING_HTTP_18_009: [** `registrationRequest` shall PUT the registration request to 'https://{provisioningHost}/{idScope}/registrations/{registrationId}/register' **]**
 
+**SRS_NODE_PROVISIONING_HTTP_06_006: [** If the `registrationRequest` response contains a status code >= 429, the result.status value will be set with `assigning` and the callback will be invoked with *no* error object. **]**
+
 **SRS_NODE_PROVISIONING_HTTP_18_014: [** If the Http response has a failed status code, `registrationRequest` shall use `translateError` to translate this to a common error object **]**
 
 **SRS_NODE_PROVISIONING_HTTP_18_044: [** If the Http request fails for any reason, `registrationRequest` shall call `callback`, passing the error along with the `result` and `response` objects. **]**
@@ -62,6 +64,8 @@ Queries the dps to obtain a buffer that may be used as a symmetric key to perfor
 **SRS_NODE_PROVISIONING_HTTP_18_021: [** If an X509 cert if provided, `queryOperationStatus` shall include it in the Http authorization header. **]**
 
 **SRS_NODE_PROVISIONING_HTTP_18_022: [** `queryOperationStatus` shall send a GET operation sent to 'https://{provisioningHost}/{idScope}/registrations/{registrationId}/operations/{operationId}' **]**
+
+ **SRS_NODE_PROVISIONING_HTTP_06_007: [** If the `queryOperationStatus` response contains a status code >= 429, the result.status value will be set with `assigning` and the callback will be invoked with *no* error object. **]**
 
 **SRS_NODE_PROVISIONING_HTTP_18_026: [** If the Http response has a failed status code, `queryOperationStatus` shall use `translateError` to translate this to a common error object **]**
 

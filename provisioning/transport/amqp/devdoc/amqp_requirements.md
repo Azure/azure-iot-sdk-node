@@ -39,6 +39,8 @@ iotdps-forceRegistration: <true or false>;
 ```
  **]**
 
+**SRS_NODE_PROVISIONING_AMQP_06_001: [** The `registrationRequest` disposition is an `instanceof` common errors InternalServerError or ThrottlingError, the result.status shall be set to 'assigning', and the callback invoked with *no* error. **]**
+
 **SRS_NODE_PROVISIONING_AMQP_16_006: [** The `registrationRequest` method shall listen for the response on the receiver link and accept it when it comes. **]**
 
 **SRS_NODE_PROVISIONING_AMQP_16_007: [** The `registrationRequest` method shall call its callback with a `RegistrationResult` object parsed from the body of the response message which `correlation_id` matches the `correlation_id` of the request message sent on the sender link. **]**
@@ -77,6 +79,8 @@ iotdps-operation-type: iotdps-get-operationstatus;
 iotdps-operation-id: <operationId>;
 ```
 **]**
+
+**SRS_NODE_PROVISIONING_AMQP_06_002: [** The `queryOperationStatus` disposition is an `instanceof` common errors InternalServerError or ThrottlingError, the result.status shall be set to 'assigning', and the callback invoked with *no* error. **]**
 
 **SRS_NODE_PROVISIONING_AMQP_16_016: [** The `queryOperationStatus` method shall listen for the response on the receiver link and accept it when it comes. **]**
 

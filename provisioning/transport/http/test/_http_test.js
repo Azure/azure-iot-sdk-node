@@ -298,12 +298,38 @@ describe('Http', function() {
       it ('uses translateError on http response code', function(callback) {
         http.setAuthentication(fakeX509);
         op.invoke(function(err) {
-          assert.instanceOf(err, errors.InternalServerError);
+          assert.instanceOf(err, errors.ArgumentError);
           callback();
         });
-        respond_x509(null, fakeAssignedResponse, 500);
+        respond_x509(null, fakeAssignedResponse, 400);
       });
     });
+  });
+
+  describe('#transient error retry', function() {
+
+    it ('registrationRequest status >= 429 produces no error and result.status = \'assigning\'', function(callback) {
+      http.setAuthentication(fakeX509);
+      http.registrationRequest(fakeRequest, function(err, result) {
+        /*Tests_SRS_NODE_PROVISIONING_HTTP_06_006: [ If the `registrationRequest` response contains a status code >= 429, the result.status value will be set with `assigning` and the callback will be invoked with *no* error object. ] */
+        assert.isNotOk(err);
+        assert.equal(result.status, 'assigning');
+        callback();
+      });
+      respond_x509(null, {fake: 'oh yeah'}, 429);
+    });
+
+    it ('queryOperationStatus status >= 429 produces no error and result.status = \'assigning\'', function(callback) {
+      http.setAuthentication(fakeX509);
+      http.queryOperationStatus(fakeRequest, fakeOperationId, function(err, result) {
+        /*Codes_SRS_NODE_PROVISIONING_HTTP_06_007: [ If the `queryOperationStatus` response contains a status code >= 429, the result.status value will be set with `assigning` and the callback will be invoked with *no* error object. ] */
+        assert.isNotOk(err);
+        assert.equal(result.status, 'assigning');
+        callback();
+      });
+      respond_x509(null, {fake: 'oh yeah'}, 429);
+    });
+
   });
 
   describe('use sas token in request', function() {

@@ -166,15 +166,25 @@ describe('Mqtt', function () {
       });
     });
 
+    it ('status >= 429 produces no error and result.status = \'assigning\'', function(callback) {
+      mqtt.registrationRequest(fakeRequest, function(err, result) {
+        /*Tests_SRS_NODE_PROVISIONING_MQTT_06_001: [ If `registrationRequest` receives a response that contains a status code >= 429, the result.status value will be set with `assigning` and the callback will be invoked with *no* error object. ] */
+        assert.isNotOk(err);
+        assert.equal(result.status, 'assigning');
+        callback();
+      });
+      respond(fakeBase.publish.firstCall, 429);
+    });
+
     it ('translates errors based on status code', function(callback) {
       mqtt.registrationRequest(fakeRequest, function(err) {
         /* Tests_SRS_NODE_PROVISIONING_MQTT_18_015: [ When `registrationRequest` receives an error from the service, it shall call `callback` passing in the error.] */
-        /* Tests_SRS_NODE_PROVISIONING_MQTT_18_012: [ If `registrationRequest` receives a response with status >= 300, it shall consider the request failed and create an error using `translateError`.] */
-        assert.instanceOf(err, errors.IotHubQuotaExceededError);
+        /* Tests_SRS_NODE_PROVISIONING_MQTT_18_012: [ If `registrationRequest` receives a response with status >= 300 and < 429, it shall consider the request failed and create an error using `translateError`.] */
+        assert.instanceOf(err, errors.ArgumentError);
         callback();
       });
 
-      respond(fakeBase.publish.firstCall, 429);
+      respond(fakeBase.publish.firstCall, 400);
     });
 
     /* Tests_SRS_NODE_PROVISIONING_MQTT_18_013: [ When `registrationRequest` receives a successful response from the service, it shall call `callback` passing in null and the response.] */
@@ -208,17 +218,27 @@ describe('Mqtt', function () {
 
     });
 
+    it ('status >= 429 produces no error and result.status = \'assigning\'', function(callback) {
+      mqtt.queryOperationStatus(fakeRequest, fakeOperationId, function(err, result) {
+        /*Tests_SRS_NODE_PROVISIONING_MQTT_06_002: [ If `queryOperationStatus` receives a response that contains a status code >= 429, the result.status value will be set with `assigning` and the callback will be invoked with *no* error object. ] */
+        assert.isNotOk(err);
+        assert.equal(result.status, 'assigning');
+        callback();
+      });
+      respond(fakeBase.publish.firstCall, 429);
+    });
+
     it ('returns a wrapped error', function(callback) {
       mqtt.queryOperationStatus(fakeRequest, fakeOperationId, function(err) {
         /* Tests_SRS_NODE_PROVISIONING_MQTT_18_029: [ When `queryOperationStatus` receives an error from the service, it shall call `callback` passing in the error.] */
-        /* Tests_SRS_NODE_PROVISIONING_MQTT_18_026: [ If `queryOperationStatus` receives a response with status >= 300, it shall consider the query failed and create an error using `translateError`.] */
-        assert.instanceOf(err, errors.InternalServerError);
+        /* Tests_SRS_NODE_PROVISIONING_MQTT_18_026: [ If `queryOperationStatus` receives a response with status >= 300 and < 429, it shall consider the query failed and create an error using `translateError`.] */
+        assert.instanceOf(err, errors.ArgumentError);
         callback();
       });
-      respond(fakeBase.publish.firstCall, 500);
+      respond(fakeBase.publish.firstCall, 400);
     });
 
-    it ('returns failure if publish faile', function(callback) {
+    it ('returns failure if publish failed', function(callback) {
       fakeBase.publish = sinon.stub().callsArgWith(3, new Error(fakeErrorText));
       mqtt.queryOperationStatus(fakeRequest, fakeOperationId, function(err) {
         /* Tests_SRS_NODE_PROVISIONING_MQTT_18_018: [ If the publish fails, `queryOperationStatus` shall call `callback` passing in the error.] */

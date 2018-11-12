@@ -64,10 +64,15 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport {
             /* Codes_SRS_NODE_PROVISIONING_MQTT_18_013: [ When `registrationRequest` receives a successful response from the service, it shall call `callback` passing in null and the response.] */
             /* Codes_SRS_NODE_PROVISIONING_MQTT_18_027: [ When `queryOperationStatus` receives a successful response from the service, it shall call `callback` passing in null and the response.] */
             handler(null, payloadJson);
+          } else if (status >= 429) {
+            /*Codes_SRS_NODE_PROVISIONING_MQTT_06_001: [ If `registrationRequest` receives a response that contains a status code >= 429, the result.status value will be set with `assigning` and the callback will be invoked with *no* error object. ] */
+            /*Codes_SRS_NODE_PROVISIONING_MQTT_06_002: [ If `queryOperationStatus` receives a response that contains a status code >= 429, the result.status value will be set with `assigning` and the callback will be invoked with *no* error object. ] */
+            payloadJson.status = 'assigning';
+            handler(null, payloadJson);
           } else {
-            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_012: [ If `registrationRequest` receives a response with status >= 300, it shall consider the request failed and create an error using `translateError`.] */
+            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_012: [ If `registrationRequest` receives a response with status >= 300 and < 429, it shall consider the request failed and create an error using `translateError`.] */
             /* Codes_SRS_NODE_PROVISIONING_MQTT_18_015: [ When `registrationRequest` receives an error from the service, it shall call `callback` passing in the error.] */
-            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_026: [ If `queryOperationStatus` receives a response with status >= 300, it shall consider the query failed and create an error using `translateError`.] */
+            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_026: [ If `queryOperationStatus` receives a response with status >= 300 and < 429, it shall consider the query failed and create an error using `translateError`.] */
             /* Codes_SRS_NODE_PROVISIONING_MQTT_18_029: [ When `queryOperationStatus` receives an error from the service, it shall call `callback` passing in the error.] */
             handler(translateError('incoming message failure', status, payloadJson, { topic: topic, payload: payloadJson }));
           }
