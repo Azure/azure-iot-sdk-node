@@ -14,7 +14,9 @@ var incompleteConnectionStrings = {
 
 var invalidConnectionStrings = {
   BothSharedAccessKeyAndx509:'DeviceId=id;HostName=name;SharedAccessKey=key;x509=true',
-  NeitherSharedAccessKeyNorx509: 'DeviceId=id;HostName=name'
+  BothSharedAccessKeyAndSharedAccessSignature:'DeviceId=id;HostName=name;SharedAccessKey=key;SharedAccessSignature=key',
+  BothSharedAccessSignatureAndx509:'DeviceId=id;HostName=name;SharedAccessSignature=key;x509=true',
+  NeitherSharedAccessKeyNorSharedAccessSignatureNorx509: 'DeviceId=id;HostName=name'
 };
 
 describe('ConnectionString', function () {
@@ -35,8 +37,11 @@ describe('ConnectionString', function () {
       }, ArgumentError);
     });
 
-    /*Codes_SRS_NODE_DEVICE_CONNSTR_16_001: [It shall throw `ArgumentError` if `SharedAccessKey` and `x509` are present at the same time or if none of them are present.]*/
-    ['BothSharedAccessKeyAndx509', 'NeitherSharedAccessKeyNorx509'].forEach(function(key) {
+    /*Tests_SRS_NODE_DEVICE_CONNSTR_16_001: [It shall throw `ArgumentError` if `SharedAccessKey` and `x509` are present at the same time.]*/
+    /*Tests_SRS_NODE_DEVICE_CONNSTR_16_006: [It shall throw `ArgumentError` if `SharedAccessSignature` and `x509` are present at the same time.]*/
+    /*Tests_SRS_NODE_DEVICE_CONNSTR_16_007: [It shall throw `ArgumentError` if `SharedAccessKey` and `SharedAccessSignature` are present at the same time.]*/
+    /*Tests_SRS_NODE_DEVICE_CONNSTR_16_008: [It shall throw `ArgumentError` if none of `SharedAccessKey`, `SharedAccessSignature` and `x509` are present.]*/
+    ['BothSharedAccessKeyAndx509', 'BothSharedAccessKeyAndSharedAccessSignature', 'BothSharedAccessSignatureAndx509', 'NeitherSharedAccessKeyNorx509'].forEach(function(key) {
       it('throws if the connection string is invalid because ' + key, function() {
         assert.throws(function() {
           ConnectionString.parse(invalidConnectionStrings[key]);
