@@ -153,7 +153,7 @@ export class JobClient {
    * @throws {TypeError}        If the callback is not the last parameter
    */
   scheduleDeviceMethod(jobId: string | number, queryCondition: string, methodParams: DeviceMethodParams, jobStartTime?: Date | TripleValueCallback<any, any>, maxExecutionTimeInSeconds?: number | TripleValueCallback<any, any>, done?: TripleValueCallback<any, any>): Promise<JobStatusResponse> | void {
-    const callback = jobStartTime instanceof Function ? jobStartTime : (maxExecutionTimeInSeconds instanceof Function ? maxExecutionTimeInSeconds : done);
+    const callback = (typeof jobStartTime === 'function') ? jobStartTime as TripleValueCallback<any, any> : ((typeof maxExecutionTimeInSeconds === 'function') ? maxExecutionTimeInSeconds as TripleValueCallback<any, any> : done);
 
     return tripleValueCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_JOB_CLIENT_16_013: [The `scheduleDeviceMethod` method shall throw a `ReferenceError` if `jobId` is `null`, `undefined` or an empty string.]*/
@@ -254,7 +254,7 @@ export class JobClient {
    * @throws {TypeError}        If the callback is not the last parameter
    */
   scheduleTwinUpdate(jobId: string | number, queryCondition: string, patch: any, jobStartTime?: Date | TripleValueCallback<any, any>, maxExecutionTimeInSeconds?: number | TripleValueCallback<any, any>, done?: TripleValueCallback<any, any>): Promise<JobStatusResponse> | void {
-    const callback = jobStartTime instanceof Function ? jobStartTime : (maxExecutionTimeInSeconds instanceof Function ? maxExecutionTimeInSeconds : done);
+    const callback = (typeof jobStartTime === 'function') ? jobStartTime as TripleValueCallback<any, any> : ((typeof maxExecutionTimeInSeconds === 'function') ? maxExecutionTimeInSeconds as TripleValueCallback<any, any> : done);
 
     return tripleValueCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_JOB_CLIENT_16_021: [The `scheduleTwinUpdate` method shall throw a `ReferenceError` if `jobId` is `null`, `undefined` or an empty string.]*/

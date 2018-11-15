@@ -246,7 +246,7 @@ export class Client extends EventEmitter {
   invokeDeviceMethod(deviceId: string, methodParams: DeviceMethodParams, done?: IncomingMessageCallback<any>): void;
   invokeDeviceMethod(deviceId: string, moduleId: string, methodParams: DeviceMethodParams, done?: IncomingMessageCallback<any>): void;
   invokeDeviceMethod(deviceId: string, moduleIdOrMethodParams: string | DeviceMethodParams, methodParamsOrDone?: DeviceMethodParams | IncomingMessageCallback<any>, done?: IncomingMessageCallback<any>): Promise<ResultWithIncomingMessage<any>> | void {
-    const callback = done || (methodParamsOrDone instanceof Function ? methodParamsOrDone : undefined);
+    const callback = done || ((typeof methodParamsOrDone === 'function') ? methodParamsOrDone as IncomingMessageCallback<any> : undefined);
     if (callback) {
       return this._invokeDeviceMethod(deviceId, moduleIdOrMethodParams, methodParamsOrDone, done);
     }

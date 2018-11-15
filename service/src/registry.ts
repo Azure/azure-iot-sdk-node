@@ -862,7 +862,7 @@ export class Registry {
   updateConfiguration(configuration: Configuration, done: HttpResponseCallback<any>): void;
   updateConfiguration(configuration: Configuration, forceUpdate: boolean, done?: HttpResponseCallback<any>): void;
   updateConfiguration(configuration: Configuration, forceUpdateOrDone: boolean | HttpResponseCallback<any>, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
-    const callback = done || (forceUpdateOrDone instanceof Function ? forceUpdateOrDone : undefined);
+    const callback = done || ((typeof forceUpdateOrDone === 'function') ? forceUpdateOrDone : undefined);
 
     if (callback) {
       return this._updateConfiguration(configuration, forceUpdateOrDone, done);
@@ -1121,7 +1121,7 @@ export class Registry {
   updateModule(module: Module, done: TripleValueCallback<any, any>): void;
   updateModule(module: Module, forceUpdate: boolean, done: HttpResponseCallback<any>): void;
   updateModule(module: Module, forceUpdateOrDone: boolean | HttpResponseCallback<any>, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
-    const callback = done || (forceUpdateOrDone instanceof Function ? forceUpdateOrDone : undefined);
+    const callback = done || ((typeof forceUpdateOrDone === 'function') ? forceUpdateOrDone : undefined);
 
     if (callback) {
       return this._updateModule(module, forceUpdateOrDone, done);
@@ -1198,10 +1198,10 @@ export class Registry {
   removeModule(module: Module, done: TripleValueCallback<any, any>): void;
   removeModule(deviceId: string, moduleId: string, done: TripleValueCallback<any, any>): void;
   removeModule(moduleOrDeviceId: Module | string, doneOrModuleId: HttpResponseCallback<any> | string, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
-    const callback = done || (doneOrModuleId instanceof Function ? doneOrModuleId : undefined);
+    const callback = done || ((typeof doneOrModuleId === 'function') ? doneOrModuleId : undefined);
 
     if (callback) {
-      return this._removeModule(moduleOrDeviceId, doneOrModuleId, callback);
+      return this._removeModule(moduleOrDeviceId, doneOrModuleId, callback as HttpResponseCallback<any>);
     }
 
     return httpCallbackToPromise((_callback) => {
