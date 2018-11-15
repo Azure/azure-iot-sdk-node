@@ -3,6 +3,8 @@
 
 'use strict';
 
+import { BlobResponse } from './blob_uploader';
+
 /**
  * @private
  * @class         module:azure-iot-device.BlobUploadResult
@@ -47,7 +49,7 @@ export class BlobUploadResult {
   /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_16_010: [If `err` is null but `body` and `reponse` are provided, the `BlobUploadResult` error shall have the `statusCode` property set to the HTTP status code of the blob upload response.]*/
   /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_16_011: [If `err` is null but `body` and `reponse` are provided, the `BlobUploadResult` error shall have the `statusDescription` property set to the HTTP response body of the blob upload response.]*/
   /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_16_012: [If `err` is null and `body` and/or `response` is/are falsy, `fromAzureStorageCallbackArgs` shall throw a `ReferenceError`.]*/
-  static fromAzureStorageCallbackArgs(err?: Error, body?: any, response?: { statusCode: number, body: string }): BlobUploadResult {
+  static fromAzureStorageCallbackArgs(err?: Error, body?: any, response?: BlobResponse): BlobUploadResult {
     if (!err && (!body || !response)) throw new ReferenceError('if err is null, body and response must be supplied');
     let uploadResult: BlobUploadResult;
     if (err) {
