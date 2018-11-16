@@ -53,13 +53,13 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
   getDeviceCredentials(callback?: Callback<TransportConfig>): Promise<TransportConfig> | void {
     return callbackToPromise((_callback) => {
       if (this._shouldRenewToken()) {
-        this._renewToken((err, creds) => {
+        this._renewToken((err, credentials) => {
           if (err) {
             _callback(err);
           } else {
             /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_002: [The `getDeviceCredentials` method shall start a timer that will automatically renew the token every (`tokenValidTimeInSeconds` - `tokenRenewalMarginInSeconds`) seconds if specified, or 45 minutes by default.]*/
             this._scheduleNextExpiryTimeout();
-            _callback(null, creds);
+            _callback(null, credentials);
           }
         });
       } else {

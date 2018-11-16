@@ -198,7 +198,7 @@ export class ModuleClient extends InternalClient {
   invokeMethod(deviceId: string, moduleIdOrMethodParams: string | MethodParams, methodParamsOrCallback: MethodParams | Callback<MethodResult>, callback?: Callback<MethodResult>): Promise<MethodResult> | void {
     if (callback) {
       return this._invokeMethod(deviceId, moduleIdOrMethodParams as string, methodParamsOrCallback as MethodParams, callback);
-    } else if (methodParamsOrCallback instanceof Function) {
+    } else if (typeof methodParamsOrCallback === 'function') {
       return this._invokeMethod(deviceId, moduleIdOrMethodParams as MethodParams, methodParamsOrCallback as Callback<MethodResult>);
     }
 

@@ -224,6 +224,7 @@ provisioning/device/lib/
 
 security/x509/lib
 security/tpm/lib
+security/symmetric/lib
 
 service/lib
 

@@ -6,6 +6,7 @@
 var async = require('async');
 var uuid = require('uuid');
 var assert = require('chai').assert;
+var crypto = require('crypto');
 var debug = require('debug')('azure-iot-provisioning-device-e2e');
 var Http = require('azure-iot-provisioning-device-http').Http;
 var Amqp = require('azure-iot-provisioning-device-amqp').Amqp;
@@ -18,6 +19,7 @@ var X509Security = require('azure-iot-security-x509').X509Security;
 var Registry = require('azure-iothub').Registry;
 var certHelper = require('./cert_helper');
 var TpmSecurityClient = require('azure-iot-security-tpm').TpmSecurityClient;
+var SymmetricKeySecurityClient = require('azure-iot-security-symmetric-key').SymmetricKeySecurityClient;
 var TssJs = require("tss.js");
 
 var idScope = process.env.IOT_PROVISIONING_DEVICE_IDSCOPE;
@@ -32,6 +34,8 @@ var registry = Registry.fromConnectionString(registryConnectionString);
 var X509IndividualTransports = [ Http, Amqp, AmqpWs, Mqtt, MqttWs ];
 var X509GroupTransports = [ Http, Amqp, Mqtt, MqttWs ]; // AmqpWs is disabled because of an occasional ECONNRESET error when closing the socket. See Task 2233264.
 var TpmIndividualTransports = [ Http, Amqp, AmqpWs ];
+var SymmetricKeyIndividualTransports = [ Http, Amqp, AmqpWs, Mqtt, MqttWs ];
+var SymmetricKeyGroupTransports = [ Http, Amqp, AmqpWs, Mqtt, MqttWs ];
 
 var rootCert = {
   cert: new Buffer(process.env.IOT_PROVISIONING_ROOT_CERT,"base64").toString('ascii'),
@@ -348,6 +352,158 @@ var TpmIndividual = function() {
   };
 };
 
+var SymmetricKeyIndividual = function() {
+
+  var self = this;
+  var securityClient;
+
+  this.transports = SymmetricKeyIndividualTransports;
+
+  this.initialize = function (callback) {
+    var id = uuid.v4();
+    self.deviceId = 'deleteme_provisioning_node_e2e_' + id;
+    self.registrationId = 'reg-' + id;
+    self.primaryKey = new Buffer(uuid.v4()).toString('base64');
+    securityClient = new SymmetricKeySecurityClient(self.registrationId, self.primaryKey);
+    callback();
+  };
+
+  this.enroll = function (callback) {
+    self._testProp = uuid.v4();
+    var enrollment = {
+      registrationId: self.registrationId,
+      deviceId: self.deviceId,
+      attestation: {
+        type: 'symmetricKey',
+        symmetricKey: {
+          primaryKey: self.primaryKey,
+          secondaryKey: new Buffer(uuid.v4()).toString('base64')
+        }
+      },
+      provisioningStatus: "enabled",
+      initialTwin: {
+        properties: {
+          desired: {
+            testProp: self._testProp
+          }
+        }
+      }
+    };
+
+    provisioningServiceClient.createOrUpdateIndividualEnrollment(enrollment, function (err) {
+      if (err) {
+        callback(err);
+      } else {
+        callback();
+      }
+    });
+  };
+
+  this.register = function (Transport, callback) {
+    var transport = new Transport();
+    var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
+    provisioningDeviceClient.register(function (err, result) {
+      callback(err, result);
+    });
+  };
+
+  this.cleanup = function (callback) {
+    debug('deleting enrollment');
+    provisioningServiceClient.deleteIndividualEnrollment(self.registrationId, function (err) {
+      if (err) {
+        debug('ignoring deleteIndividualEnrollment error');
+      }
+      debug('deleting device');
+      registry.delete(self.deviceId, function (err) {
+        if (err) {
+          debug('ignoring delete error');
+        }
+        debug('done with Symmetric Key individual cleanup');
+        callback();
+      });
+    });
+  };
+};
+
+function computeDerivedSymmetricKey(masterKey, regId) {
+  return crypto.createHmac('SHA256', Buffer.from(masterKey, 'base64'))
+    .update(regId, 'utf8')
+    .digest('base64');
+}
+
+var SymmetricKeyGroup = function() {
+
+  var self = this;
+  var securityClient;
+
+  this.transports = SymmetricKeyGroupTransports;
+
+  this.initialize = function (callback) {
+    var id = uuid.v4();
+    self.groupId = 'deleteme-node-' + id;
+    self.registrationId = 'reg-' + id;
+    self.deviceId = self.registrationId;
+    self.primaryKey = new Buffer(uuid.v4()).toString('base64');
+    callback();
+  };
+
+  this.enroll = function (callback) {
+    self._testProp = uuid.v4();
+    var enrollment = {
+      enrollmentGroupId: self.groupId,
+      attestation: {
+        type: 'symmetricKey',
+        symmetricKey: {
+          primaryKey: self.primaryKey,
+          secondaryKey: new Buffer(uuid.v4()).toString('base64')
+        }
+      },
+      provisioningStatus: "enabled",
+      initialTwin: {
+        properties: {
+          desired: {
+            testProp: self._testProp
+          }
+        }
+      }
+    };
+
+    provisioningServiceClient.createOrUpdateEnrollmentGroup(enrollment, function (err) {
+      if (err) {
+        callback(err);
+      } else {
+        callback();
+      }
+    });
+  };
+
+  this.register = function (Transport, callback) {
+    var transport = new Transport();
+    securityClient = new SymmetricKeySecurityClient(self.registrationId, computeDerivedSymmetricKey(self.primaryKey, self.registrationId));
+    var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
+    provisioningDeviceClient.register(function (err, result) {
+      callback(err, result);
+    });
+  };
+
+  this.cleanup = function (callback) {
+    debug('deleting enrollment');
+    provisioningServiceClient.deleteEnrollmentGroup(self.groupId, function (err) {
+      if (err) {
+        debug('ignoring deleteEnrollmentGroup error');
+      }
+      debug('deleting device');
+      registry.delete(self.deviceId, function (err) {
+        if (err) {
+          debug('ignoring delete error');
+        }
+        debug('done with Symmetric Key group cleanup');
+        callback();
+      });
+    });
+  };
+};
+
 describe('IoT Provisioning', function() {
   this.timeout(120000);
   before(createAllCerts);
@@ -359,6 +515,14 @@ describe('IoT Provisioning', function() {
       testObj: new TpmIndividual()
     },
     */
+    {
+      testName: 'Symmetric Key individual enrollment',
+      testObj: new SymmetricKeyIndividual()
+    },
+    {
+      testName: 'Symmetric Key group enrollment',
+      testObj: new SymmetricKeyGroup()
+    },
     {
       testName: 'x509 individual enrollment with Self Signed Certificate',
       testObj: new X509Individual()

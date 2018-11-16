@@ -61,12 +61,12 @@ export class ProvisioningServiceClient {
    * @returns {Promise<void> | void} Promise if no callback function was passed, void otherwise.
    */
   public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
-    if (deleteCallback && !(deleteCallback instanceof Function)) {
+    if (deleteCallback && !(typeof deleteCallback === 'function')) {
       throw new ArgumentError('Callback has to be a Function');
     }
 
-    if (!deleteCallback && etagOrCallback instanceof Function) {
-      deleteCallback = etagOrCallback;
+    if (!deleteCallback && (typeof etagOrCallback === 'function')) {
+      deleteCallback = etagOrCallback as ErrorCallback;
       etagOrCallback = undefined;
     }
 
@@ -84,7 +84,7 @@ export class ProvisioningServiceClient {
    */
   public getIndividualEnrollment(id: string, getCallback?: HttpResponseCallback<IndividualEnrollment>): Promise<ResultWithHttpResponse<IndividualEnrollment>> | void {
     return httpCallbackToPromise((_callback) => {
-      this._get(this._enrollmentsPrefix, id, getCallback);
+      this._get(this._enrollmentsPrefix, id, _callback);
     }, getCallback);
   }
 
@@ -133,12 +133,12 @@ export class ProvisioningServiceClient {
    * @returns {Promise<void> | void} Promise if no callback function was passed, void otherwise.
    */
   public deleteEnrollmentGroup(enrollmentGroupOrId: string | EnrollmentGroup, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
-    if (deleteCallback && !(deleteCallback instanceof Function)) {
+    if (deleteCallback && !(typeof deleteCallback === 'function')) {
       throw new ArgumentError('Callback has to be a Function');
     }
 
-    if (etagOrCallback instanceof Function) {
-      deleteCallback = etagOrCallback;
+    if (typeof etagOrCallback === 'function') {
+      deleteCallback = etagOrCallback as ErrorCallback;
       etagOrCallback = undefined;
     }
 
@@ -233,12 +233,12 @@ export class ProvisioningServiceClient {
    * @returns {Promise<void> | void} Promise if no callback function was passed, void otherwise.
    */
   public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
-    if (deleteCallback && !(deleteCallback instanceof Function)) {
+    if (deleteCallback && !(typeof deleteCallback === 'function')) {
       throw new ArgumentError('Callback has to be a Function');
     }
 
-    if (etagOrCallback instanceof Function) {
-      deleteCallback = etagOrCallback;
+    if (typeof etagOrCallback === 'function') {
+      deleteCallback = etagOrCallback as ErrorCallback;
       etagOrCallback = undefined;
     }
 
@@ -357,10 +357,10 @@ export class ProvisioningServiceClient {
 
   private _delete(endpointPrefix: string, enrollmentOrIdOrRegistration: string | any, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): void {
     let ifMatch: string;
-    let suppliedCallback: ErrorCallback;
+    let suppliedCallback: ErrorCallback | undefined;
     let id: string;
 
-    suppliedCallback = deleteCallback || (etagOrCallback instanceof Function ? etagOrCallback : undefined);
+    suppliedCallback = deleteCallback || ((typeof etagOrCallback === 'function') ? etagOrCallback as ErrorCallback : undefined);
     if (!suppliedCallback) {
       throw new ArgumentError('No callback was passed.');
     }
@@ -490,7 +490,7 @@ export class ProvisioningServiceClient {
     });
   }
 
-  private _get(endpointPrefix: string, id: string, getCallback: (err: Error, enrollmentOrRegistrationState?: any, response?: any) => void): void {
+  private _get(endpointPrefix: string, id: string, getCallback: HttpResponseCallback<DeviceRegistrationState> | HttpResponseCallback<IndividualEnrollment> | HttpResponseCallback<EnrollmentGroup>): void {
     /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_030: [The `getIndividualEnrollment` method shall throw `ReferenceError` if the `id` argument is falsy.] */
     /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_031: [The `getEnrollmentGroup` method shall throw `ReferenceError` if the `id` argument is falsy.] */
     /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_032: [The `getDeviceRegistrationState` method shall throw `ReferenceError` if the `id` argument is falsy.] */
@@ -516,11 +516,12 @@ export class ProvisioningServiceClient {
       GET /registrations/<uri-encoded-id>?api-version=<version> HTTP/1.1
       Authorization: <sharedAccessSignature>
       ] */
-    this._restApiClient.executeApiCall('GET', path, httpHeaders, null, (err, enrollmentOrRegistrationState, httpResponse) => {
+    this._restApiClient.executeApiCall('GET', path, httpHeaders, null, (err?: Error, enrollmentOrRegistrationState?: DeviceRegistrationState | IndividualEnrollment | EnrollmentGroup, httpResponse?: any) => {
+      const callback = (getCallback as HttpResponseCallback<DeviceRegistrationState | IndividualEnrollment | EnrollmentGroup>);
       if (err) {
-        getCallback(err);
+        callback(err);
       } else {
-        getCallback(null, enrollmentOrRegistrationState, httpResponse);
+        callback(null, enrollmentOrRegistrationState, httpResponse);
       }
     });
   }
