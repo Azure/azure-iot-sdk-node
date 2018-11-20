@@ -12,7 +12,7 @@ import { Amqp } from './amqp';
 import { DeviceMethod } from './device_method';
 import { RestApiClient } from 'azure-iot-http-base';
 import { DeviceMethodParams, IncomingMessageCallback, createResultWithIncomingMessage, ResultWithIncomingMessage } from './interfaces';
-import { tripleValueCallbackToPromise } from 'azure-iot-common';
+import { Callback, tripleValueCallbackToPromise } from 'azure-iot-common';
 import { IncomingMessage } from 'http';
 
 // tslint:disable-next-line:no-var-requires
@@ -188,7 +188,7 @@ export class Client extends EventEmitter {
 
     let actualModuleId: string = undefined;
     let actualMethodParams: DeviceMethodParams = undefined;
-    let actualCallback: IncomingMessageCallback<any> = undefined;
+    let actualCallback: IncomingMessageCallback<any> | undefined = undefined;
 
     if (typeof moduleIdOrMethodParams === 'string') {
       actualModuleId = moduleIdOrMethodParams;
@@ -430,7 +430,6 @@ export class Client extends EventEmitter {
 }
 
 export namespace Client {
-  export type Callback<T> = (err: Error, result?: T) => void;
   export interface TransportConfigOptions {
     /**
      * Hostname of the Azure IoT hub. (<IoT hub name>.azure-devices.net).
