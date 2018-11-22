@@ -102,6 +102,8 @@ export class ModuleClient extends InternalClient {
    * @param [callback] Optional function to call when the operation has been queued.
    * @returns {Promise<results.MessageEnqueued> | void} Promise if no callback function was passed, void otherwise.
    */
+  sendOutputEvent(outputName: string, message: Message, callback: Callback<results.MessageEnqueued>): void;
+  sendOutputEvent(outputName: string, message: Message): Promise<results.MessageEnqueued>;
   sendOutputEvent(outputName: string, message: Message, callback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
     return callbackToPromise((_callback) => {
       const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
@@ -123,7 +125,9 @@ export class ModuleClient extends InternalClient {
    * @param [callback] Function to call when the operations have been queued.
    * @returns {Promise<results.MessageEnqueued> | void} Optional promise if no callback function was passed, void otherwise.
    */
-  sendOutputEventBatch(outputName: string, messages: Message[], callback: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
+  sendOutputEventBatch(outputName: string, messages: Message[], callback: Callback<results.MessageEnqueued>): void;
+  sendOutputEventBatch(outputName: string, messages: Message[]): Promise<results.MessageEnqueued>;
+  sendOutputEventBatch(outputName: string, messages: Message[], callback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
     return callbackToPromise((_callback) => {
       const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
@@ -145,6 +149,8 @@ export class ModuleClient extends InternalClient {
    * @param [closeCallback] Optional function to call once the transport is disconnected and the client closed.
    * @returns {Promise<results.Disconnected> | void} Promise if no callback function was passed, void otherwise.
    */
+  close(closeCallback: Callback<results.Disconnected>): void;
+  close(): Promise<results.Disconnected>;
   close(closeCallback?: Callback<results.Disconnected>): Promise<results.Disconnected> | void {
     return callbackToPromise((_callback) => {
       this._transport.removeListener('disconnect', this._moduleDisconnectHandler);
@@ -195,14 +201,16 @@ export class ModuleClient extends InternalClient {
    */
   invokeMethod(deviceId: string, methodParams: MethodParams, callback: Callback<MethodResult>): void;
   invokeMethod(deviceId: string, moduleId: string, methodParams: MethodParams, callback: Callback<MethodResult>): void;
-  invokeMethod(deviceId: string, moduleIdOrMethodParams: string | MethodParams, methodParamsOrCallback: MethodParams | Callback<MethodResult>, callback?: Callback<MethodResult>): Promise<MethodResult> | void {
+  invokeMethod(deviceId: string, methodParams: MethodParams): Promise<MethodResult>;
+  invokeMethod(deviceId: string, moduleId: string, methodParams: MethodParams): Promise<MethodResult>;
+  invokeMethod(deviceId: string, moduleIdOrMethodParams: string | MethodParams, methodParamsOrCallback?: MethodParams | Callback<MethodResult>, callback?: Callback<MethodResult>): Promise<MethodResult> | void {
     if (callback) {
       return this._invokeMethod(deviceId, moduleIdOrMethodParams as string, methodParamsOrCallback as MethodParams, callback);
     } else if (typeof methodParamsOrCallback === 'function') {
       return this._invokeMethod(deviceId, moduleIdOrMethodParams as MethodParams, methodParamsOrCallback as Callback<MethodResult>);
     }
 
-    return callbackToPromise((_callback) => this._invokeMethod(deviceId, methodParamsOrCallback as any, methodParamsOrCallback as MethodParams, _callback));
+    return callbackToPromise((_callback) => this._invokeMethod(deviceId, moduleIdOrMethodParams as any, methodParamsOrCallback as MethodParams, _callback));
   }
 
   /**
@@ -221,6 +229,8 @@ export class ModuleClient extends InternalClient {
    * @param [done]    Optional callback to call once the options have been set.
    * @returns {Promise<results.TransportConfigured> | void} Promise if no callback function was passed, void otherwise.
    */
+  setOptions(options: DeviceClientOptions, done: Callback<results.TransportConfigured>): void;
+  setOptions(options: DeviceClientOptions): Promise<results.TransportConfigured>;
   setOptions(options: DeviceClientOptions, done?: Callback<results.TransportConfigured>): Promise<results.TransportConfigured> | void {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_MODULE_CLIENT_16_098: [The `setOptions` method shall call the `setOptions` method with the `options` argument on the `MethodClient` object of the `ModuleClient`.]*/
@@ -303,7 +313,7 @@ export class ModuleClient extends InternalClient {
    *
    * @returns {module:azure-iothub.Client}
    */
-  static fromSharedAccessSignature(sharedAccessSignature: string, transportCtor: any): any {
+  static fromSharedAccessSignature(sharedAccessSignature: string, transportCtor: any): ModuleClient {
     /*Codes_SRS_NODE_MODULE_CLIENT_16_029: [The fromSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature argument is falsy.] */
     if (!sharedAccessSignature) throw new ReferenceError('sharedAccessSignature is \'' + sharedAccessSignature + '\'');
 
@@ -319,7 +329,7 @@ export class ModuleClient extends InternalClient {
    * @param authenticationProvider  Object used to obtain the authentication parameters for the IoT hub.
    * @param transportCtor           Transport protocol used to connect to IoT hub.
    */
-  static fromAuthenticationProvider(authenticationProvider: AuthenticationProvider, transportCtor: any): any {
+  static fromAuthenticationProvider(authenticationProvider: AuthenticationProvider, transportCtor: any): ModuleClient {
     /*Codes_SRS_NODE_MODULE_CLIENT_16_089: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `authenticationProvider` argument is falsy.]*/
     if (!authenticationProvider) {
       throw new ReferenceError('authenticationMethod cannot be \'' + authenticationProvider + '\'');
@@ -353,6 +363,8 @@ export class ModuleClient extends InternalClient {
    *                      error occurs while creating the client.
    * @returns {Promise<ModuleClient> | void} Promise if no callback function was passed, void otherwise.
    */
+  static fromEnvironment(transportCtor: any, callback: Callback<ModuleClient>): void;
+  static fromEnvironment(transportCtor: any): Promise<ModuleClient>;
   static fromEnvironment(transportCtor: any, callback?: Callback<ModuleClient>): Promise<ModuleClient> | void {
     return callbackToPromise((_callback) => {
       // Codes_SRS_NODE_MODULE_CLIENT_13_033: [ The fromEnvironment method shall throw a ReferenceError if the callback argument is falsy or is not a function. ]

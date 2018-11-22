@@ -27,15 +27,18 @@ export interface UploadParams {
  * @private
  */
 export interface FileUpload {
-  getBlobSharedAccessSignature(blobName: string, done?: Callback<UploadParams>): void;
+  getBlobSharedAccessSignature(blobName: string, done: Callback<UploadParams>): void;
+  getBlobSharedAccessSignature(blobName: string): Promise<UploadParams>;
   notifyUploadComplete(correlationId: string, uploadResult: BlobUploadResult, done: (err?: Error) => void): void;
+  notifyUploadComplete(correlationId: string, uploadResult: BlobUploadResult): Promise<void>;
 }
 
 /**
  * @private
  */
 export interface BlobUploader {
-  uploadToBlob(uploadParams: UploadParams, stream: Stream, streamLength: number, done?: TripleValueCallback<any, BlobResponse>): void;
+  uploadToBlob(uploadParams: UploadParams, stream: Stream, streamLength: number, done: TripleValueCallback<any, BlobResponse>): void;
+  uploadToBlob(uploadParams: UploadParams, stream: Stream, streamLength: number): Promise<any>;
 }
 
 /**
@@ -43,6 +46,7 @@ export interface BlobUploader {
  */
 export interface BlobUpload {
   uploadToBlob(blobName: string, stream: Stream, streamLength: number, done: (err?: Error) => void): void;
+  uploadToBlob(blobName: string, stream: Stream, streamLength: number): Promise<void>;
 }
 
 /**
@@ -65,6 +69,8 @@ export class BlobUploadClient implements BlobUpload {
     this._blobUploader = blobUploader ? blobUploader : new DefaultBlobUploader();
   }
 
+  uploadToBlob(blobName: string, stream: Stream, streamLength: number, done: ErrorCallback): void;
+  uploadToBlob(blobName: string, stream: Stream, streamLength: number): Promise<void>;
   uploadToBlob(blobName: string, stream: Stream, streamLength: number, done?: ErrorCallback): Promise<void> | void {
     return errorCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_004: [`uploadToBlob` shall obtain a blob SAS token using the IoT Hub service file upload API endpoint.]*/

@@ -79,6 +79,8 @@ export class Twin extends EventEmitter {
    * @param [callback] optional function that shall be called back with either the twin or an error if the transport fails to retrieve the twin.
    * @returns {Promise<Twin> | void} Promise if no callback function was passed, void otherwise.
    */
+  get(callback: Callback<Twin>): void;
+  get(): Promise<Twin>;
   get(callback?: Callback<Twin>): Promise<Twin> | void {
     return callbackToPromise((_callback) => {
       const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);

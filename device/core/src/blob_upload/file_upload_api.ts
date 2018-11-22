@@ -37,6 +37,8 @@ export class FileUploadApi implements FileUploadInterface {
         this.http = httpTransport ? httpTransport : new DefaultHttpTransport();
     }
 
+    getBlobSharedAccessSignature(blobName: string, done: Callback<UploadParams>): void;
+    getBlobSharedAccessSignature(blobName: string): Promise<UploadParams>;
     getBlobSharedAccessSignature(blobName: string, done?: Callback<UploadParams>): Promise<UploadParams> | void {
         return callbackToPromise((_callback) => {
             /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_004: [`getBlobSharedAccessSignature` shall throw a `ReferenceError` if `blobName` is falsy.]*/
@@ -93,6 +95,8 @@ export class FileUploadApi implements FileUploadInterface {
         }, done);
     }
 
+    notifyUploadComplete(correlationId: string, uploadResult: BlobUploadResult, done: ErrorCallback): void;
+    notifyUploadComplete(correlationId: string, uploadResult: BlobUploadResult): Promise<void>;
     notifyUploadComplete(correlationId: string, uploadResult: BlobUploadResult, done?: ErrorCallback): Promise<void> | void {
         return errorCallbackToPromise((_callback) => {
             /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_010: [`notifyUploadComplete` shall throw a `ReferenceError` if `correlationId` is falsy.]*/

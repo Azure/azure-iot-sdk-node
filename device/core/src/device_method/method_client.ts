@@ -26,6 +26,8 @@ export class MethodClient {
     };
   }
 
+  invokeMethod(deviceId: string, moduleId: string, methodParams: MethodParams, callback: MethodCallback): void;
+  invokeMethod(deviceId: string, moduleId: string, methodParams: MethodParams): Promise<MethodResult>;
   invokeMethod(deviceId: string, moduleId: string, methodParams: MethodParams, callback?: MethodCallback): Promise<MethodResult> | void {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_DEVICE_METHOD_CLIENT_16_006: [The `invokeMethod` method shall get the latest credentials by calling `getDeviceCredentials` on the `AuthenticationProvider` object.]*/
