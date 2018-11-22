@@ -75,6 +75,9 @@ export class DeviceMethodResponse {
    *                                service in a previous call to it. This method
    *                                should be called only once.
    */
+  send(status: number, payload: any, done: ErrorCallback): void;
+  send(status: number, done: ErrorCallback): void;
+  send(status: number, payload?: any): Promise<void>;
   send(status: number, payload?: any | ErrorCallback, done?: ErrorCallback): Promise<void> | void {
     if (typeof (payload) === 'function') {
       if (done !== undefined) {

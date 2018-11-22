@@ -46,6 +46,8 @@ export class BlobUploader implements BlobUploaderInterface {
     }
   }
 
+  uploadToBlob(blobInfo: UploadParams, stream: Stream, streamLength: number, done: TripleValueCallback<any, BlobResponse>): void;
+  uploadToBlob(blobInfo: UploadParams, stream: Stream, streamLength: number): Promise<{ body: any, result: BlobResponse }>;
   uploadToBlob(blobInfo: UploadParams, stream: Stream, streamLength: number, done?: TripleValueCallback<any, BlobResponse>): Promise<{ body: any, result: BlobResponse }> | void {
     tripleValueCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_16_001: [`uploadToBlob` shall throw a `ReferenceError` if `blobInfo` is falsy.]*/

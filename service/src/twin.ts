@@ -125,6 +125,8 @@ export class Twin implements TwinData {
    *                                object useful for logging or debugging.
    * @returns {Promise<ResultWithIncomingMessage<Twin>> | void} Promise if no callback function was passed, void otherwise.
    */
+  get(done: IncomingMessageCallback<Twin>): void;
+  get(): Promise<ResultWithIncomingMessage<Twin>>;
   get(done?: IncomingMessageCallback<Twin>): Promise<ResultWithIncomingMessage<Twin>> | void {
     return tripleValueCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_TWIN_16_020: [If `this.moduleId` is falsy, the `get` method shall call the `getTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
@@ -171,6 +173,8 @@ export class Twin implements TwinData {
    *                                object useful for logging or debugging.
    * @returns {Promise<ResultWithIncomingMessage<Twin>> | void} Promise if no callback function was passed, void otherwise.
    */
+  update(patch: any, done: IncomingMessageCallback<Twin>): void;
+  update(patch: any): Promise<ResultWithIncomingMessage<Twin>>;
   update(patch: any, done?: IncomingMessageCallback<Twin>): Promise<ResultWithIncomingMessage<Twin>> | void {
     return tripleValueCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_TWIN_16_019: [If `this.moduleId` is falsy, The `update` method shall call the `updateTwin` method of the `Registry` instance stored in `_registry` property with the following parameters:
