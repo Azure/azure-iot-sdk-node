@@ -37,6 +37,8 @@ export class X509Registration implements RegistrationClient {
    * @param [callback] optional function called when registration is complete.
    * @returns {Promise<RegistrationResult> | void} Promise if no callback function was passed, void otherwise.
    */
+  register(callback: Callback<RegistrationResult>): void;
+  register(): Promise<RegistrationResult>;
   register(callback?: Callback<RegistrationResult>): Promise<RegistrationResult> | void {
     return callbackToPromise((_callback) => {
 
@@ -81,6 +83,8 @@ export class X509Registration implements RegistrationClient {
    * @returns {Promise<void> | void} Promise if no callback function was passed, void otherwise.
    */
   /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_003: [ `cancel` shall call `endSession` on the transport object. ] */
+  cancel(callback: ErrorCallback): void;
+  cancel(): Promise<void>;
   cancel(callback?: ErrorCallback): Promise<void> | void {
     return errorCallbackToPromise((_callback) => {
       this._transport.cancel(_callback);

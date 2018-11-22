@@ -65,6 +65,8 @@ export class Client extends EventEmitter {
    *                            completed successfully.
    * @returns {Promise<ResultWithIncomingMessage<results.Connected>> | void} Promise if no callback function was passed, void otherwise.
    */
+  open(done: IncomingMessageCallback<results.Connected>): void;
+  open(): Promise<ResultWithIncomingMessage<results.Connected>>;
   open(done?: IncomingMessageCallback<results.Connected>): Promise<ResultWithIncomingMessage<results.Connected>> | void {
     return tripleValueCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_CLIENT_05_008: [The open method shall open a connection to the IoT Hub that was identified when the Client object was created (e.g., in Client.fromConnectionString).]*/
@@ -100,6 +102,8 @@ export class Client extends EventEmitter {
    *                            completed successfully.
    * @returns {Promise<ResultWithIncomingMessage<results.Disconnected>> | void} Promise if no callback function was passed, void otherwise.
    */
+  close(done: IncomingMessageCallback<results.Disconnected>): void;
+  close(): Promise<ResultWithIncomingMessage<results.Disconnected>>;
   close(done?: IncomingMessageCallback<results.Disconnected>): Promise<ResultWithIncomingMessage<results.Disconnected>> | void {
     return tripleValueCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_CLIENT_05_021: [The close method shall close the connection.]*/
@@ -138,6 +142,8 @@ export class Client extends EventEmitter {
    *
    * @throws {ReferenceError}     If `deviceId` or `message` is null, undefined or empty.
    */
+  send(deviceId: string, message: Message | Message.BufferConvertible, done: IncomingMessageCallback<results.MessageEnqueued>): void;
+  send(deviceId: string, message: Message | Message.BufferConvertible): Promise<ResultWithIncomingMessage<results.MessageEnqueued>>;
   send(deviceId: string, message: Message | Message.BufferConvertible, done?: IncomingMessageCallback<results.MessageEnqueued>): Promise<ResultWithIncomingMessage<results.MessageEnqueued>> | void {
     return tripleValueCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_CLIENT_05_013: [The send method shall throw ReferenceError if the deviceId or message arguments are falsy.]*/
@@ -245,6 +251,8 @@ export class Client extends EventEmitter {
    */
   invokeDeviceMethod(deviceId: string, methodParams: DeviceMethodParams, done?: IncomingMessageCallback<any>): void;
   invokeDeviceMethod(deviceId: string, moduleId: string, methodParams: DeviceMethodParams, done?: IncomingMessageCallback<any>): void;
+  invokeDeviceMethod(deviceId: string, methodParams: DeviceMethodParams): Promise<ResultWithIncomingMessage<any>>;
+  invokeDeviceMethod(deviceId: string, moduleId: string, methodParams: DeviceMethodParams): Promise<ResultWithIncomingMessage<any>>;
   invokeDeviceMethod(deviceId: string, moduleIdOrMethodParams: string | DeviceMethodParams, methodParamsOrDone?: DeviceMethodParams | IncomingMessageCallback<any>, done?: IncomingMessageCallback<any>): Promise<ResultWithIncomingMessage<any>> | void {
     const callback = done || ((typeof methodParamsOrDone === 'function') ? methodParamsOrDone as IncomingMessageCallback<any> : undefined);
     if (callback) {
@@ -265,6 +273,8 @@ export class Client extends EventEmitter {
    *                              AmqpReceiver object.
    * @returns {ResultWithIncomingMessage<Client.ServiceReceiver> | void} Promise if no callback function was passed, void otherwise.
    */
+  getFeedbackReceiver(done: IncomingMessageCallback<Client.ServiceReceiver>): void;
+  getFeedbackReceiver(): Promise<ResultWithIncomingMessage<Client.ServiceReceiver>>;
   getFeedbackReceiver(done?: IncomingMessageCallback<Client.ServiceReceiver>): Promise<ResultWithIncomingMessage<Client.ServiceReceiver>> | void {
     return tripleValueCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_CLIENT_05_027: [When the `getFeedbackReceiver` method completes, the callback function (indicated by the `done` argument) shall be invoked with the following arguments:
@@ -301,6 +311,8 @@ export class Client extends EventEmitter {
    *                              AmqpReceiver object.
    * @returns {ResultWithIncomingMessage<Client.ServiceReceiver> | void} Promise if no callback function was passed, void otherwise.
    */
+  getFileNotificationReceiver(done: IncomingMessageCallback<Client.ServiceReceiver>): void;
+  getFileNotificationReceiver(): Promise<ResultWithIncomingMessage<Client.ServiceReceiver>>;
   getFileNotificationReceiver(done?: IncomingMessageCallback<Client.ServiceReceiver>): Promise<ResultWithIncomingMessage<Client.ServiceReceiver>> | void {
     return tripleValueCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_CLIENT_16_001: [When the `getFileNotificationReceiver` method completes, the callback function (indicated by the `done` argument) shall be invoked with the following arguments:

@@ -99,6 +99,8 @@ export class Client extends InternalClient {
    * @param {Callback<results.Disconnected>} [closeCallback] Optional function to call once the transport is disconnected and the client closed.
    * @returns {Promise<results.Disconnected> | void} Promise if no callback function was passed, void otherwise.
    */
+  close(closeCallback: Callback<results.Disconnected>): void;
+  close(): Promise<results.Disconnected>;
   close(closeCallback?: Callback<results.Disconnected>): Promise<results.Disconnected> | void {
     return callbackToPromise((_callback) => {
       this._transport.removeListener('disconnect', this._deviceDisconnectHandler);
@@ -127,6 +129,8 @@ export class Client extends InternalClient {
    *
    * @throws {ReferenceException} If blobName or stream or streamLength is falsy.
    */
+  uploadToBlob(blobName: string, stream: Stream, streamLength: number, callback: ErrorCallback): void;
+  uploadToBlob(blobName: string, stream: Stream, streamLength: number): Promise<void>;
   uploadToBlob(blobName: string, stream: Stream, streamLength: number, callback?: ErrorCallback): Promise<void> | void {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_DEVICE_CLIENT_16_037: [The `uploadToBlob` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
@@ -186,7 +190,7 @@ export class Client extends InternalClient {
    *
    * @returns {module:azure-iot-device.Client}
    */
-  static fromConnectionString(connStr: string, transportCtor: any): any {
+  static fromConnectionString(connStr: string, transportCtor: any): Client {
     /*Codes_SRS_NODE_DEVICE_CLIENT_05_003: [The fromConnectionString method shall throw ReferenceError if the connStr argument is falsy.]*/
     if (!connStr) throw new ReferenceError('connStr is \'' + connStr + '\'');
 
@@ -222,7 +226,7 @@ export class Client extends InternalClient {
    *
    * @returns {module:azure-iothub.Client}
    */
-  static fromSharedAccessSignature(sharedAccessSignature: string, transportCtor: any): any {
+  static fromSharedAccessSignature(sharedAccessSignature: string, transportCtor: any): Client {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_029: [The fromSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature argument is falsy.] */
     if (!sharedAccessSignature) throw new ReferenceError('sharedAccessSignature is \'' + sharedAccessSignature + '\'');
 
@@ -239,7 +243,7 @@ export class Client extends InternalClient {
    * @param authenticationProvider  Object used to obtain the authentication parameters for the IoT hub.
    * @param transportCtor           Transport protocol used to connect to IoT hub.
    */
-  static fromAuthenticationProvider(authenticationProvider: AuthenticationProvider, transportCtor: any): any {
+  static fromAuthenticationProvider(authenticationProvider: AuthenticationProvider, transportCtor: any): Client {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_089: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `authenticationProvider` argument is falsy.]*/
     if (!authenticationProvider) {
       throw new ReferenceError('authenticationMethod cannot be \'' + authenticationProvider + '\'');

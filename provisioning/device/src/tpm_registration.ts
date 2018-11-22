@@ -224,6 +224,8 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
 
   }
 
+  register(callback: Callback<RegistrationResult>): void;
+  register(): Promise<RegistrationResult>;
   register(callback?: Callback<RegistrationResult>): Promise<RegistrationResult> | void {
     return callbackToPromise((_callback) => {
       let registrationInfo: TpmRegistrationInfo = {
@@ -240,6 +242,8 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
     }, callback);
   }
 
+  cancel(callback: ErrorCallback): void;
+  cancel(): Promise<void>;
   cancel(callback?: ErrorCallback): Promise<void> | void {
     return errorCallbackToPromise((_callback) => {
       this._fsm.handle('cancel', _callback);
