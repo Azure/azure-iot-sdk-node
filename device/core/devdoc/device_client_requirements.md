@@ -27,6 +27,8 @@ class Client extends InternalClient {
 
 **SRS_NODE_DEVICE_CLIENT_16_093: [** The `fromConnectionString` method shall create a new `X509AuthorizationProvider` object with the connection string passed as argument if it contains an X509 parameter and pass this object to the transport constructor. **]**
 
+**SRS_NODE_DEVICE_CLIENT_16_094: [** The `fromConnectionString` method shall create a new `SharedAccessSignatureAuthenticationProvider` object with the connection string passed as argument if it contains a SharedAccessSignature parameter and pass this object to the transport constructor. **]**
+
 ### fromSharedAccessSignature
 
 **SRS_NODE_DEVICE_CLIENT_16_029: [** The `fromSharedAccessSignature` method shall throw a `ReferenceError` if the sharedAccessSignature argument is falsy. **]**
