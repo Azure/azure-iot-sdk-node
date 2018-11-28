@@ -197,6 +197,9 @@ export class Client extends InternalClient {
 
     if (cn.SharedAccessKey) {
       authenticationProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString(connStr);
+    } else if (cn.SharedAccessSignature) {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_16_094: [The `fromConnectionString` method shall create a new `SharedAccessSignatureAuthenticationProvider` object with the connection string passed as argument if it contains a SharedAccessSignature parameter and pass this object to the transport constructor.]*/
+      authenticationProvider = SharedAccessSignatureAuthenticationProvider.fromSharedAccessSignature(cn.SharedAccessSignature);
     } else {
       /*Codes_SRS_NODE_DEVICE_CLIENT_16_093: [The `fromConnectionString` method shall create a new `X509AuthorizationProvider` object with the connection string passed as argument if it contains an X509 parameter and pass this object to the transport constructor.]*/
       authenticationProvider = new X509AuthenticationProvider({

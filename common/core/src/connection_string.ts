@@ -48,6 +48,12 @@ export class ConnectionString {
   // tslint:disable-next-line:variable-name
   GatewayHostName?: string;
   /**
+   * A shared access signature which encapsulates "device connect" permissions on an IoT hub.
+   * @memberof {azure-iot-common.ConnectionString}
+   */
+  // tslint:disable-next-line:variable-name
+  SharedAccessSignature?: string;
+  /**
    * This property exists only if a device uses x509 certificates for authentication and if it exists, will be set to True.
    * @memberof {azure-iot-common.ConnectionString}
    */

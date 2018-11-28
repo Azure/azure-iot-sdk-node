@@ -17,9 +17,18 @@ export function parse(source: string): ConnectionString {
   /*Codes_SRS_NODE_DEVICE_CONNSTR_05_001: [The parse method shall return the result of calling azure-iot-common.ConnectionString.parse.]*/
   /*Codes_SRS_NODE_DEVICE_CONNSTR_05_002: [It shall throw ArgumentError if any of 'HostName' or 'DeviceId' fields are not found in the source argument.]*/
   const connectionString = ConnectionString.parse(source, ['HostName', 'DeviceId']);
-  /*Codes_SRS_NODE_DEVICE_CONNSTR_16_001: [It shall throw `ArgumentError` if `SharedAccessKey` and `x509` are present at the same time or if none of them are present.]*/
-  if ((connectionString.SharedAccessKey && connectionString.x509) || (!connectionString.SharedAccessKey && !connectionString.x509)) {
+  /*Codes_SRS_NODE_DEVICE_CONNSTR_16_001: [It shall throw `ArgumentError` if `SharedAccessKey` and `x509` are present at the same time.]*/
+  /*Codes_SRS_NODE_DEVICE_CONNSTR_16_006: [It shall throw `ArgumentError` if `SharedAccessKey` and `SharedAccessSignature` are present at the same time.]*/
+  /*Codes_SRS_NODE_DEVICE_CONNSTR_16_007: [It shall throw `ArgumentError` if `SharedAccessSignature` and `x509` are present at the same time.]*/
+  /*Codes_SRS_NODE_DEVICE_CONNSTR_16_008: [It shall throw `ArgumentError` if none of `SharedAccessKey`, `SharedAccessSignature` and `x509` are present.]*/
+  if (connectionString.SharedAccessKey && connectionString.x509) {
     throw new errors.ArgumentError('The connection string must contain either a SharedAccessKey or x509=true');
+  } else if (connectionString.SharedAccessKey && connectionString.SharedAccessSignature) {
+    throw new errors.ArgumentError('The connection string must contain either a SharedAccessKey or SharedAccessSignature');
+  } else if (connectionString.SharedAccessSignature && connectionString.x509) {
+    throw new errors.ArgumentError('The connection string must contain either a SharedAccessSignature or x509=true');
+  } else if ((!connectionString.SharedAccessKey && !connectionString.SharedAccessSignature && !connectionString.x509)) {
+    throw new errors.ArgumentError('The connection string must contain either a SharedAccessKey, SharedAccessSignature or x509=true');
   }
 
   return connectionString;
