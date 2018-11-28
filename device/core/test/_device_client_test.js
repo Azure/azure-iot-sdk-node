@@ -13,6 +13,7 @@ var Message = require('azure-iot-common').Message;
 var errors = require('azure-iot-common').errors;
 var results = require('azure-iot-common').results;
 var X509AuthenticationProvider = require('../lib/x509_authentication_provider').X509AuthenticationProvider;
+var SharedAccessSignatureAuthenticationProvider = require('../lib/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider;
 var Client = require('../lib/device_client').Client;
 
 describe('Device Client', function () {
@@ -57,6 +58,15 @@ describe('Device Client', function () {
       var x509ConnectionString = 'HostName=host;DeviceId=id;x509=true';
       Client.fromConnectionString(x509ConnectionString, function (authProvider) {
         assert.instanceOf(authProvider, X509AuthenticationProvider);
+        testCallback();
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_094: [The `fromConnectionString` method shall create a new `SharedAccessSignatureAuthenticationProvider` object with the connection string passed as argument if it contains a SharedAccessSignature parameter and pass this object to the transport constructor.]*/
+    it('creates a SharedAccessSignatureAuthenticationProvider and passes it to the transport', function (testCallback) {
+      var SharedAccessSignatureConnectionString = 'HostName=host;DeviceId=id;SharedAccessSignature=' + sharedAccessSignature;
+      Client.fromConnectionString(SharedAccessSignatureConnectionString, function (authProvider) {
+        assert.instanceOf(authProvider, SharedAccessSignatureAuthenticationProvider);
         testCallback();
       });
     });
