@@ -1,4 +1,4 @@
-import {Registry, ConnectionString as ServiceConnectionString} from 'azure-iothub';
+import { Registry } from 'azure-iothub';
 import * as uuid from 'uuid';
 import * as dbg from 'debug';
 const debug = dbg('ts-e2e-utils');

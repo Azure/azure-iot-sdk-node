@@ -9,6 +9,8 @@ import { NoErrorCallback, noErrorCallbackToPromise } from 'azure-iot-common';
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
 
+export function getUserAgentString(done: NoErrorCallback<string>): void;
+export function getUserAgentString(): Promise<string>;
 export function getUserAgentString(done?: NoErrorCallback<string>): Promise<string> | void {
   return noErrorCallbackToPromise((_callback) => {
     /*Codes_SRS_NODE_DEVICE_UTILS_18_001: [`getUserAgentString` shall call `getAgentPlatformString` to get the platform string.]*/

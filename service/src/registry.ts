@@ -72,6 +72,8 @@ export class Registry {
    *                                object useful for logging or debugging.
    * @returns {Promise<ResultWithHttpResponse<Device>> | void} Promise if no callback function was passed, void otherwise.
    */
+  create(deviceInfo: Registry.DeviceDescription, done: HttpResponseCallback<Device>): void;
+  create(deviceInfo: Registry.DeviceDescription): Promise<ResultWithHttpResponse<Device>>;
   create(deviceInfo: Registry.DeviceDescription, done?: HttpResponseCallback<Device>): Promise<ResultWithHttpResponse<Device>> | void {
     return httpCallbackToPromise((_callback) => {
       if (!deviceInfo) {
@@ -125,6 +127,8 @@ export class Registry {
    *                                object useful for logging or debugging.
    * @returns {Promise<ResultWithHttpResponse<Device>> | void} Promise if no callback function was passed, void otherwise.
    */
+  update(deviceInfo: Registry.DeviceDescription, done: HttpResponseCallback<Device>): void;
+  update(deviceInfo: Registry.DeviceDescription): Promise<ResultWithHttpResponse<Device>>;
   update(deviceInfo: Registry.DeviceDescription, done?: HttpResponseCallback<Device>): Promise<ResultWithHttpResponse<Device>> | void {
     return httpCallbackToPromise((_callback) => {
       if (!deviceInfo) {
@@ -176,6 +180,8 @@ export class Registry {
    *                                object useful for logging or debugging.
    * @returns {Promise<ResultWithHttpResponse<Device>> | void} Promise if no callback function was passed, void otherwise.
    */
+  get(deviceId: string, done: HttpResponseCallback<Device>): void;
+  get(deviceId: string): Promise<ResultWithHttpResponse<Device>>;
   get(deviceId: string, done?: HttpResponseCallback<Device>): Promise<ResultWithHttpResponse<Device>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_05_006: [The get method shall throw ReferenceError if the supplied deviceId is falsy.]*/
@@ -215,6 +221,8 @@ export class Registry {
    *                                object useful for logging or debugging.
    * @returns {Promise<ResultWithHttpResponse<Device[]>> | void} Promise if no callback function was passed, void otherwise.
    */
+  list(done: HttpResponseCallback<Device[]>): void;
+  list(): Promise<ResultWithHttpResponse<Device[]>>;
   list(done?: HttpResponseCallback<Device[]>): Promise<ResultWithHttpResponse<Device[]>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_029: [The `list` method shall construct an HTTP request using information supplied by the caller, as follows:
@@ -248,6 +256,8 @@ export class Registry {
    *                                debugging.
    * @returns {Promise<ResultWithHttpResponse<any>> | void} Promise if no callback function was passed, void otherwise.
    */
+  delete(deviceId: string, done: HttpResponseCallback<any>): void;
+  delete(deviceId: string): Promise<ResultWithHttpResponse<any>>;
   delete(deviceId: string, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_07_007: [The delete method shall throw ReferenceError if the supplied deviceId is falsy.]*/
@@ -286,6 +296,8 @@ export class Registry {
    *                                for logging or debugging.
    * @returns {Promise<ResultWithHttpResponse<Registry.BulkRegistryOperationResult>> | void} Promise if no callback function was passed, void otherwise.
    */
+  addDevices(devices: Registry.DeviceDescription[], done: HttpResponseCallback<Registry.BulkRegistryOperationResult>): void;
+  addDevices(devices: Registry.DeviceDescription[]): Promise<ResultWithHttpResponse<Registry.BulkRegistryOperationResult>>;
   addDevices(devices: Registry.DeviceDescription[], done?: HttpResponseCallback<Registry.BulkRegistryOperationResult>): Promise<ResultWithHttpResponse<Registry.BulkRegistryOperationResult>> | void {
     return httpCallbackToPromise((_callback) => {
       this._processBulkDevices(devices, 'create', null, null, null, _callback);
@@ -310,6 +322,8 @@ export class Registry {
    *                                for logging or debugging.
    * @returns {Promise<ResultWithHttpResponse<Registry.BulkRegistryOperationResult>> | void} Promise if no callback function was passed, void otherwise.
    */
+  updateDevices(devices: Registry.DeviceDescription[], forceUpdate: boolean, done: HttpResponseCallback<Registry.BulkRegistryOperationResult>): void;
+  updateDevices(devices: Registry.DeviceDescription[], forceUpdate: boolean): Promise<ResultWithHttpResponse<Registry.BulkRegistryOperationResult>>;
   updateDevices(devices: Registry.DeviceDescription[], forceUpdate: boolean, done?: HttpResponseCallback<Registry.BulkRegistryOperationResult>): Promise<ResultWithHttpResponse<Registry.BulkRegistryOperationResult>> | void {
     return httpCallbackToPromise((_callback) => {
       this._processBulkDevices(devices, null, forceUpdate, 'Update', 'UpdateIfMatchETag', _callback);
@@ -334,6 +348,8 @@ export class Registry {
    *                                for logging or debugging.
    * @returns {Promise<ResultWithHttpResponse<Registry.BulkRegistryOperationResult>> | void} Promise if no callback function was passed, void otherwise.
    */
+  removeDevices(devices: Registry.DeviceDescription[], forceRemove: boolean, done: HttpResponseCallback<Registry.BulkRegistryOperationResult>): void;
+  removeDevices(devices: Registry.DeviceDescription[], forceRemove: boolean): Promise<ResultWithHttpResponse<Registry.BulkRegistryOperationResult>>;
   removeDevices(devices: Registry.DeviceDescription[], forceRemove: boolean, done?: HttpResponseCallback<Registry.BulkRegistryOperationResult>): Promise<ResultWithHttpResponse<Registry.BulkRegistryOperationResult>> | void {
     return httpCallbackToPromise((_callback) => {
       this._processBulkDevices(devices, null, forceRemove, 'Delete', 'DeleteIfMatchETag', _callback);
@@ -349,6 +365,8 @@ export class Registry {
    *                                              an error happened, (null otherwise) and the job status that can be used to track progress of the devices import.
    * @returns {Promise<Registry.JobStatus> | void} Promise if no callback function was passed, void otherwise.
    */
+  importDevicesFromBlob(inputBlobContainerUri: string, outputBlobContainerUri: string, done: Callback<Registry.JobStatus>): void;
+  importDevicesFromBlob(inputBlobContainerUri: string, outputBlobContainerUri: string): Promise<Registry.JobStatus>;
   importDevicesFromBlob(inputBlobContainerUri: string, outputBlobContainerUri: string, done?: Callback<Registry.JobStatus>): Promise<Registry.JobStatus> | void {
     return callbackToPromise((_callback) => {
       /* Codes_SRS_NODE_IOTHUB_REGISTRY_16_001: [A ReferenceError shall be thrown if importBlobContainerUri is falsy] */
@@ -392,6 +410,8 @@ export class Registry {
    *                                              an error happened, (null otherwise) and the job status that can be used to track progress of the devices export.
    * @returns {Promise<Registry.JobStatus> | void} Promise if no callback function was passed, void otherwise.
    */
+  exportDevicesToBlob(outputBlobContainerUri: string, excludeKeys: boolean, done: Callback<Registry.JobStatus>): void;
+  exportDevicesToBlob(outputBlobContainerUri: string, excludeKeys: boolean): Promise<Registry.JobStatus>;
   exportDevicesToBlob(outputBlobContainerUri: string, excludeKeys: boolean, done?: Callback<Registry.JobStatus>): Promise<Registry.JobStatus> | void {
     return callbackToPromise((_callback) => {
       /* Codes_SRS_NODE_IOTHUB_REGISTRY_16_004: [A ReferenceError shall be thrown if outputBlobContainerUri is falsy] */
@@ -431,6 +451,8 @@ export class Registry {
    *                              (null otherwise) and the list of past jobs as an argument.
    * @returns {Promise<ResultWithHttpResponse<any>> | void} Promise if no callback function was passed, void otherwise.
    */
+  listJobs(done: HttpResponseCallback<any>): void;
+  listJobs(): Promise<ResultWithHttpResponse<any>>;
   listJobs(done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_037: [The `listJobs` method shall construct an HTTP request using information supplied by the caller, as follows:
@@ -453,7 +475,9 @@ export class Registry {
    *                              (null otherwise) and the status of the job whose identifier was passed as an argument.
    * @returns {Promise<Registry.JobStatus> | void} Promise if no callback function was passed, void otherwise.
    */
-  getJob(jobId: string, done: Callback<Registry.JobStatus>): Promise<Registry.JobStatus> | void {
+  getJob(jobId: string, done: Callback<Registry.JobStatus>): void;
+  getJob(jobId: string): Promise<Registry.JobStatus>;
+  getJob(jobId: string, done?: Callback<Registry.JobStatus>): Promise<Registry.JobStatus> | void {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_006: [A ReferenceError shall be thrown if jobId is falsy] */
       if (!jobId) throw new ReferenceError('jobId cannot be falsy');
@@ -477,6 +501,8 @@ export class Registry {
    *                              (null otherwise) and the (cancelled) status of the job whose identifier was passed as an argument.
    * @returns {Promise<Registry.JobStatus> | void} Promise if no callback function was passed, void otherwise.
    */
+  cancelJob(jobId: string, done: Callback<Registry.JobStatus>): void;
+  cancelJob(jobId: string): Promise<Registry.JobStatus>;
   cancelJob(jobId: string, done?: Callback<Registry.JobStatus>): Promise<Registry.JobStatus> | void {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_012: [A ReferenceError shall be thrown if the jobId is falsy] */
@@ -501,6 +527,8 @@ export class Registry {
    *                                 the device twin instance.
    * @returns {Promise<ResultWithHttpResponse<any>> | void} Promise if no callback function was passed, void otherwise.
    */
+  getTwin(deviceId: string, done: HttpResponseCallback<any>): void;
+  getTwin(deviceId: string): Promise<ResultWithHttpResponse<any>>;
   getTwin(deviceId: string, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_019: [The `getTwin` method shall throw a `ReferenceError` if the `deviceId` parameter is falsy.]*/
@@ -534,6 +562,8 @@ export class Registry {
    * @throws {ReferenceError}       If the deviceId, moduleId, or done argument is falsy.
    * @returns {Promise<ResultWithHttpResponse<Twin>> | void} Promise if no callback function was passed, void otherwise.
    */
+  getModuleTwin(deviceId: string, moduleId: string, done: HttpResponseCallback<Twin>): void;
+  getModuleTwin(deviceId: string, moduleId: string): Promise<ResultWithHttpResponse<Twin>>;
   getModuleTwin(deviceId: string, moduleId: string, done?: HttpResponseCallback<Twin>): Promise<ResultWithHttpResponse<Twin>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_001: [The `getModuleTwin` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, or `done` is falsy. ]*/
@@ -570,6 +600,8 @@ export class Registry {
    *                                 the device twin instance.
    * @returns {Promise<ResultWithHttpResponse<any>> | void} Promise if no callback function was passed, void otherwise.
    */
+  updateTwin(deviceId: string, patch: any, etag: string, done: HttpResponseCallback<any>): void;
+  updateTwin(deviceId: string, patch: any, etag: string): Promise<ResultWithHttpResponse<any>>;
   updateTwin(deviceId: string, patch: any, etag: string, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_044: [The `updateTwin` method shall throw a `ReferenceError` if the `deviceId` argument is `undefined`, `null` or an empty string.]*/
@@ -620,6 +652,8 @@ export class Registry {
    * @returns {Promise<ResultWithHttpResponse<any>> | void} Promise if no callback function was passed, void otherwise.
    * @throws {ReferenceError}         If the deviceId, moduleId, patch, etag, or done argument is falsy.
    */
+  updateModuleTwin(deviceId: string, moduleId: string, patch: any, etag: string, done: HttpResponseCallback<any>): void;
+  updateModuleTwin(deviceId: string, moduleId: string, patch: any, etag: string): Promise<ResultWithHttpResponse<any>>;
   updateModuleTwin(deviceId: string, moduleId: string, patch: any, etag: string, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_004: [The `updateModuleTwin` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, `patch`, `etag`,or `done` is falsy. ]*/
@@ -684,6 +718,8 @@ export class Registry {
    *                                 the device registry statistics.
    * @returns {Promise<ResultWithHttpResponse<Registry.RegistryStatistics>> | void} Promise if no callback function was passed, void otherwise.
    */
+  getRegistryStatistics(done: HttpResponseCallback<Registry.RegistryStatistics>): void;
+  getRegistryStatistics(): Promise<ResultWithHttpResponse<Registry.RegistryStatistics>>;
   getRegistryStatistics(done?: HttpResponseCallback<Registry.RegistryStatistics>): Promise<ResultWithHttpResponse<Registry.RegistryStatistics>> | void {
     return httpCallbackToPromise((_callback) => {
       const path = '/statistics/devices' + endpoint.versionQueryString();
@@ -708,6 +744,8 @@ export class Registry {
    * @throws {ReferenceError}             The configuration or done parameter is falsy.
    * @throws {ArgumentError}              The configuration object is missing the id property
    */
+  addConfiguration(configuration: Configuration, done: HttpResponseCallback<any>): void;
+  addConfiguration(configuration: Configuration): Promise<ResultWithHttpResponse<any>>;
   addConfiguration(configuration: Configuration, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_007: [The `addConfiguration` method shall throw a `ReferenceError` exception if `configuration` or `done` is falsy. ]*/
@@ -749,6 +787,8 @@ export class Registry {
    *
    * @throws {ReferenceError}             The configurationId or done argument is falsy
    */
+  getConfiguration(configurationId: string, done: HttpResponseCallback<Configuration>): void;
+  getConfiguration(configurationId: string): Promise<ResultWithHttpResponse<Configuration>>;
   getConfiguration(configurationId: string, done?: HttpResponseCallback<Configuration>): Promise<ResultWithHttpResponse<Configuration>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_011: [The `getConfiguration` method shall throw a `ReferenceError` exception if `configurationId` is falsy. ]*/
@@ -777,6 +817,8 @@ export class Registry {
    *
    * @throws {ReferenceError}             The done argument is falsy
    */
+  getConfigurations(done: HttpResponseCallback<Configuration[]>): void;
+  getConfigurations(): Promise<ResultWithHttpResponse<Configuration[]>>;
   getConfigurations(done?: HttpResponseCallback<Configuration[]>): Promise<ResultWithHttpResponse<Configuration[]>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_014: [The `getConfigurations` method shall construct an HTTP request using information supplied by the caller, as follows:
@@ -860,8 +902,10 @@ export class Registry {
    *                                      object is missing an id property.
    */
   updateConfiguration(configuration: Configuration, done: HttpResponseCallback<any>): void;
-  updateConfiguration(configuration: Configuration, forceUpdate: boolean, done?: HttpResponseCallback<any>): void;
-  updateConfiguration(configuration: Configuration, forceUpdateOrDone: boolean | HttpResponseCallback<any>, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
+  updateConfiguration(configuration: Configuration, forceUpdate: boolean, done: HttpResponseCallback<any>): void;
+  updateConfiguration(configuration: Configuration, forceUpdate: boolean): Promise<ResultWithHttpResponse<any>>;
+  updateConfiguration(configuration: Configuration): Promise<ResultWithHttpResponse<any>>;
+  updateConfiguration(configuration: Configuration, forceUpdateOrDone?: boolean | HttpResponseCallback<any>, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
     const callback = done || ((typeof forceUpdateOrDone === 'function') ? forceUpdateOrDone : undefined);
 
     if (callback) {
@@ -886,6 +930,8 @@ export class Registry {
    *
    * @throws {ReferenceError}             The configurationId or done argument is falsy
    */
+  removeConfiguration(configurationId: string, done: HttpResponseCallback<any>): void;
+  removeConfiguration(configurationId: string): Promise<ResultWithHttpResponse<any>>;
   removeConfiguration(configurationId: string, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_022: [The `removeConfiguration` method shall throw a `ReferenceError` exception if `configurationId` or `done` is falsy. ]*/
@@ -920,6 +966,8 @@ export class Registry {
    *
    * @throws {ReferenceError}       If the deviceId, content, or done argument is falsy.
    */
+  applyConfigurationContentOnDevice(deviceId: string, content: ConfigurationContent, done: HttpResponseCallback<any>): void;
+  applyConfigurationContentOnDevice(deviceId: string, content: ConfigurationContent): Promise<ResultWithHttpResponse<any>>;
   applyConfigurationContentOnDevice(deviceId: string, content: ConfigurationContent, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_024: [The `applyConfigurationContentOnDevice` method shall throw a `ReferenceError` exception if `deviceId`, `content`, or `done` is falsy. ]*/
@@ -961,6 +1009,8 @@ export class Registry {
    * @throws {ReferenceError}       If the module or done argument is falsy.
    * @throws {ArgumentError}        If the module object is missing a deviceId or moduleId value.
    */
+  addModule(module: Module, done: HttpResponseCallback<any>): void;
+  addModule(module: Module): Promise<ResultWithHttpResponse<any>>;
   addModule(module: Module, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_026: [The `addModule` method shall throw a `ReferenceError` exception if `module` or `done` is falsy. ]*/
@@ -1003,6 +1053,8 @@ export class Registry {
    *
    * @throws {ReferenceError}     If the deviceId or done argument is falsy.
    */
+  getModulesOnDevice(deviceId: string, done: HttpResponseCallback<Module[]>): void;
+  getModulesOnDevice(deviceId: string): Promise<ResultWithHttpResponse<Module[]>>;
   getModulesOnDevice(deviceId: string, done?: HttpResponseCallback<Module[]>): Promise<ResultWithHttpResponse<Module[]>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_029: [The `getModulesOnDevice` method shall throw a `ReferenceError` exception if `deviceId` or `done` is falsy. ]*/
@@ -1032,6 +1084,8 @@ export class Registry {
    *
    * @throws {ReferenceError}     If the deviceId, moduleId, or done argument is falsy.
    */
+  getModule(deviceId: string, moduleId: string, done: HttpResponseCallback<Module>): void;
+  getModule(deviceId: string, moduleId: string): Promise<ResultWithHttpResponse<Module>>;
   getModule(deviceId: string, moduleId: string, done?: HttpResponseCallback<Module>): Promise<ResultWithHttpResponse<Module>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_031: [The `getModule` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, or `done` is falsy. ]*/
@@ -1120,7 +1174,9 @@ export class Registry {
    */
   updateModule(module: Module, done: TripleValueCallback<any, any>): void;
   updateModule(module: Module, forceUpdate: boolean, done: HttpResponseCallback<any>): void;
-  updateModule(module: Module, forceUpdateOrDone: boolean | HttpResponseCallback<any>, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
+  updateModule(module: Module, forceUpdate: boolean): Promise<ResultWithHttpResponse<any>>;
+  updateModule(module: Module): Promise<ResultWithHttpResponse<any>>;
+  updateModule(module: Module, forceUpdateOrDone?: boolean | HttpResponseCallback<any>, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
     const callback = done || ((typeof forceUpdateOrDone === 'function') ? forceUpdateOrDone : undefined);
 
     if (callback) {
@@ -1197,7 +1253,9 @@ export class Registry {
    */
   removeModule(module: Module, done: TripleValueCallback<any, any>): void;
   removeModule(deviceId: string, moduleId: string, done: TripleValueCallback<any, any>): void;
-  removeModule(moduleOrDeviceId: Module | string, doneOrModuleId: HttpResponseCallback<any> | string, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
+  removeModule(moduleOrDeviceId: Module | string, moduleId: string): Promise<ResultWithHttpResponse<any>>;
+  removeModule(moduleOrDeviceId: Module | string): Promise<ResultWithHttpResponse<any>>;
+  removeModule(moduleOrDeviceId: Module | string, doneOrModuleId?: HttpResponseCallback<any> | string, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
     const callback = done || ((typeof doneOrModuleId === 'function') ? doneOrModuleId : undefined);
 
     if (callback) {

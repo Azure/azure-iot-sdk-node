@@ -237,13 +237,17 @@ export class PollingStateMachine extends EventEmitter {
     });
   }
 
-  register(request: RegistrationRequest, callback: Callback<DeviceRegistrationResult>): Promise<DeviceRegistrationResult> | void {
+  register(request: RegistrationRequest, callback: Callback<DeviceRegistrationResult>): void;
+  register(request: RegistrationRequest): Promise<DeviceRegistrationResult>;
+  register(request: RegistrationRequest, callback?: Callback<DeviceRegistrationResult>): Promise<DeviceRegistrationResult> | void {
     return callbackToPromise((_callback) => {
       debug('register called for registrationId "' + request.registrationId + '"');
       this._fsm.handle('register', request, _callback);
     }, callback);
   }
 
+  cancel(callback: ErrorCallback): void;
+  cancel(): Promise<void>;
   cancel(callback?: ErrorCallback): Promise<void> | void {
     return errorCallbackToPromise((_callback) => {
       debug('cancel called');
@@ -251,6 +255,8 @@ export class PollingStateMachine extends EventEmitter {
     }, callback);
   }
 
+  disconnect(callback: ErrorCallback): void;
+  disconnect(): Promise<void>;
   disconnect(callback?: ErrorCallback): Promise<void> | void {
     return errorCallbackToPromise((_callback) => {
       debug('disconnect called');

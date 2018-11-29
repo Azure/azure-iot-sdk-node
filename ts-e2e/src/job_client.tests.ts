@@ -1,31 +1,29 @@
-import {Client as DeviceClient, ConnectionString as DeviceConnectionString} from 'azure-iot-device';
-import {Mqtt as DeviceMqtt} from 'azure-iot-device-mqtt';
-import {Message, results} from 'azure-iot-common';
-import {ConnectionString, JobClient, Registry} from 'azure-iothub';
+import { Client as DeviceClient } from 'azure-iot-device';
+import { Mqtt as DeviceMqtt } from 'azure-iot-device-mqtt';
+import { ConnectionString, JobClient, Registry } from 'azure-iothub';
 import * as uuid from 'uuid';
-import * as fs from 'fs';
-import * as testUtils from './testUtils';
 import { assert } from 'chai';
 import * as dbg from 'debug';
 const debug = dbg('ts-e2e-jobclient');
 
- describe('JobClient', function() {
+ describe('JobClient', () => {
+  // tslint:disable:no-invalid-this
   this.timeout(120000);
 
   const testDeviceId = '0000node-e2etests-JobClient-' + uuid.v4();
   let testDevice = null;
   let testDeviceConnectionString = null;
 
-  function continueWith(testCallback, next) {
-    return function(err, result) {
+  const continueWith = (next) => {
+    return (err, result) => {
       if (err) throw err;
       return next(result);
     };
-  }
+  };
 
   before((beforeCallback) => {
     const registry = Registry.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
-    registry.create({ deviceId: testDeviceId }, continueWith(beforeCallback, function(result) {
+    registry.create({ deviceId: testDeviceId }, continueWith((result) => {
       testDevice = result;
       const host = ConnectionString.parse(process.env.IOTHUB_CONNECTION_STRING).HostName;
       testDeviceConnectionString = 'HostName=' + host + ';DeviceId=' + testDevice.deviceId + ';SharedAccessKey=' + testDevice.authentication.symmetricKey.primaryKey;
@@ -35,9 +33,9 @@ const debug = dbg('ts-e2e-jobclient');
   });
 
   after((afterCallback) => {
-    if(testDevice) {
+    if (testDevice) {
       const registry = Registry.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
-      registry.delete(testDeviceId, function(err) {
+      registry.delete(testDeviceId, (err) => {
         debug('deleted device with id: ' + testDevice.deviceId);
         afterCallback(err);
       });
@@ -47,12 +45,12 @@ const debug = dbg('ts-e2e-jobclient');
     }
   });
 
-  function waitForJobStatus(jobClient, jobId, desiredJobStatus, callback) {
+  const waitForJobStatus = (jobClient, jobId, desiredJobStatus, callback) => {
     const intervalInMs = 3000;
     const waitFunction = () => {
-      jobClient.getJob(jobId, continueWith(callback, function(job) {
+      jobClient.getJob(jobId, continueWith((job) => {
         debug('Got job ' + jobId + ' status: ' + job.status);
-        if(job.status === desiredJobStatus) {
+        if (job.status === desiredJobStatus) {
           callback(null, job);
         } else if (job.status === 'failed' || job.status === 'cancelled'){
           callback(new Error('Job ' + jobId + ' status is: ' + job.status));
@@ -63,10 +61,10 @@ const debug = dbg('ts-e2e-jobclient');
       }));
     };
     setTimeout(waitFunction, intervalInMs);
-  }
+  };
 
   describe('scheduleTwinUpdate', () => {
-    it('schedules a twin update job with a sql query and succeeds', function(testCallback) {
+    it('schedules a twin update job with a sql query and succeeds', (testCallback) => {
       const jobClient = JobClient.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
       const testJobId = uuid.v4();
       const testTwinPatch = {
@@ -79,10 +77,10 @@ const debug = dbg('ts-e2e-jobclient');
 
       debug('scheduling a twin update job with a sql query with the id: ' + testJobId);
       debug('Query: ' + 'deviceId = \'' + testDeviceId + '\'');
-      jobClient.scheduleTwinUpdate(testJobId, 'deviceId = \'' + testDeviceId + '\'', testTwinPatch, new Date(Date.now()), 120, continueWith(testCallback, () => {
-        waitForJobStatus(jobClient, testJobId, 'completed', continueWith(testCallback, () => {
+      jobClient.scheduleTwinUpdate(testJobId, 'deviceId = \'' + testDeviceId + '\'', testTwinPatch, new Date(Date.now()), 120, continueWith(() => {
+        waitForJobStatus(jobClient, testJobId, 'completed', continueWith(() => {
           const registry = Registry.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
-          registry.getTwin(testDeviceId, continueWith(testCallback, function(twin) {
+          registry.getTwin(testDeviceId, continueWith((twin) => {
             assert.equal(twin.tags.key, testTwinPatch.tags.key);
             testCallback();
           }));
@@ -90,7 +88,7 @@ const debug = dbg('ts-e2e-jobclient');
       }));
     });
 
-    it('schedules a twin update job and cancels it', function(testCallback) {
+    it('schedules a twin update job and cancels it', (testCallback) => {
       const jobClient = JobClient.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
       const testJobId = uuid.v4();
       const fakePatch = {
@@ -101,12 +99,12 @@ const debug = dbg('ts-e2e-jobclient');
           reported: {}
         }
       };
-      jobClient.scheduleTwinUpdate(testJobId, 'deviceId = \'' + testDeviceId + '\'', fakePatch, new Date(Date.now() + 3600000), 120, continueWith(testCallback, (job) => {
+      jobClient.scheduleTwinUpdate(testJobId, 'deviceId = \'' + testDeviceId + '\'', fakePatch, new Date(Date.now() + 3600000), 120, continueWith((job) => {
         assert.strictEqual(job.jobId, testJobId);
         assert.strictEqual(job.status, 'queued');
         debug('cancelling job ' + testJobId);
-        jobClient.cancelJob(testJobId, continueWith(testCallback, () => {
-          waitForJobStatus(jobClient, testJobId, 'cancelled', continueWith(testCallback, () => {
+        jobClient.cancelJob(testJobId, continueWith(() => {
+          waitForJobStatus(jobClient, testJobId, 'cancelled', continueWith(() => {
             testCallback();
           }));
         }));
@@ -121,24 +119,24 @@ const debug = dbg('ts-e2e-jobclient');
       timeoutInSeconds: 30
     };
 
-    it('schedules a device method job with a sql query and succeeds', function(testCallback) {
+    it('schedules a device method job with a sql query and succeeds', (testCallback) => {
       const jobClient = JobClient.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
       const testJobId = uuid.v4();
       let methodResponseWasSent = false;
       const deviceClient = DeviceClient.fromConnectionString(testDeviceConnectionString, DeviceMqtt);
-      deviceClient.open(continueWith(testCallback, () => {
-        deviceClient.onDeviceMethod(testDeviceMethod.methodName, function(request, response) {
-          response.send(200, continueWith(testCallback, () => {
+      deviceClient.open(continueWith(() => {
+        deviceClient.onDeviceMethod(testDeviceMethod.methodName, (request, response) => {
+          response.send(200, continueWith(() => {
             methodResponseWasSent = true;
           }));
         });
 
         debug('scheduling a device method job with a sql query with the id: ' + testJobId);
         debug('Query: ' + 'deviceId = \'' + testDeviceId + '\'');
-        jobClient.scheduleDeviceMethod(testJobId, 'deviceId = \'' + testDeviceId + '\'', testDeviceMethod, new Date(Date.now()), 120, continueWith(testCallback, () => {
-          waitForJobStatus(jobClient, testJobId, 'completed', continueWith(testCallback, () => {
+        jobClient.scheduleDeviceMethod(testJobId, 'deviceId = \'' + testDeviceId + '\'', testDeviceMethod, new Date(Date.now()), 120, continueWith(() => {
+          waitForJobStatus(jobClient, testJobId, 'completed', continueWith(() => {
             const registry = Registry.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
-            registry.getTwin(testDeviceId, continueWith(testCallback, () => {
+            registry.getTwin(testDeviceId, continueWith(() => {
               assert.isTrue(methodResponseWasSent);
               testCallback();
             }));
@@ -147,17 +145,15 @@ const debug = dbg('ts-e2e-jobclient');
       }));
     });
 
-    it('schedules a device method job and cancels it', function(testCallback) {
+    it('schedules a device method job and cancels it', (testCallback) => {
       const jobClient = JobClient.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
       const testJobId = uuid.v4();
-      jobClient.scheduleDeviceMethod(testJobId, 'deviceId = \'' + testDeviceId + '\'', testDeviceMethod, new Date(Date.now() + 3600000), 120, continueWith(testCallback, function(job) {
+      jobClient.scheduleDeviceMethod(testJobId, 'deviceId = \'' + testDeviceId + '\'', testDeviceMethod, new Date(Date.now() + 3600000), 120, continueWith((job) => {
         assert.strictEqual(job.jobId, testJobId);
         assert.strictEqual(job.status, 'queued');
         debug('cancelling job ' + testJobId);
-        jobClient.cancelJob(testJobId, continueWith(testCallback, () => {
-          waitForJobStatus(jobClient, testJobId, 'cancelled', continueWith(testCallback, () => {
-            testCallback();
-          }));
+        jobClient.cancelJob(testJobId, continueWith(() => {
+          waitForJobStatus(jobClient, testJobId, 'cancelled', continueWith(testCallback));
         }));
       }));
     });

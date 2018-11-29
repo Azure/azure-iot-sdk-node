@@ -51,7 +51,11 @@ export class Query {
    *                                           the results of the query.
    * @returns {Promise<ResultWithHttpResponse<QueryResult>> | void} Promise if no callback function was passed, void otherwise.
    */
-  next(continuationTokenOrCallback: string | QueryCallback, done?: QueryCallback): Promise<ResultWithHttpResponse<QueryResult>> | void {
+  next(done: QueryCallback): void;
+  next(continuationToken: string, done: QueryCallback): void;
+  next(): Promise<ResultWithHttpResponse<QueryResult>>;
+  next(continuationToken: string): Promise<ResultWithHttpResponse<QueryResult>>;
+  next(continuationTokenOrCallback?: string | QueryCallback, done?: QueryCallback): Promise<ResultWithHttpResponse<QueryResult>> | void {
     const callback = done || ((typeof continuationTokenOrCallback === 'function') ? continuationTokenOrCallback : undefined);
 
     return httpCallbackToPromise((_callback) => {
