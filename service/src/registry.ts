@@ -410,7 +410,7 @@ export class Registry {
    *                                              an error happened, (null otherwise) and the job status that can be used to track progress of the devices export.
    * @returns {Promise<Registry.JobStatus> | void} Promise if no callback function was passed, void otherwise.
    */
-  exportDevicesToBlob(outputBlobContainerUri: string, excludeKeys: boolean, done: Callback<Registry.JobStatus>):  void;
+  exportDevicesToBlob(outputBlobContainerUri: string, excludeKeys: boolean, done: Callback<Registry.JobStatus>): void;
   exportDevicesToBlob(outputBlobContainerUri: string, excludeKeys: boolean): Promise<Registry.JobStatus>;
   exportDevicesToBlob(outputBlobContainerUri: string, excludeKeys: boolean, done?: Callback<Registry.JobStatus>): Promise<Registry.JobStatus> | void {
     return callbackToPromise((_callback) => {
