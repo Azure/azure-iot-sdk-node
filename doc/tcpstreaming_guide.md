@@ -1,16 +1,18 @@
-# TCP Streaming Support in IoT Hub NodeJS SDK
+# IoT Hub Device Streams NodeJS SDK
 **[Private Preview Use Only:** Do not share or re-distribute SDK code, documentation or samples in this private repo.**]**
 
+**[Note:** this feautre was previously known as "TCP streaming".**]**
+
 ## Overview
-Azure IoT Hub's *TCP streams* facilitate the creation of a secure bi-directional TCP tunnel for a variety of cloud-to-device communication scenarios. For more information see the main documentation page [here](https://github.com/Azure/azure-iot-sdk-csharp-tcpstreaming/blob/master/doc/tcpstreaming_guide.md) (contact [rezas@microsoft.com](mailto:rezas@microsoft.com) if you cannot open the link).
+Azure IoT Hub's *device streams* facilitate the creation of a secure bi-directional TCP tunnel for a variety of cloud-to-device communication scenarios. For more information see the main documentation page [here](https://github.com/Azure/azure-iot-sdk-csharp-tcpstreaming/blob/master/doc/tcpstreaming_guide.md) (contact [rezas@microsoft.com](mailto:rezas@microsoft.com) if you cannot open the link).
 
 The present SDK adds service-side support for streaming in NodeJS. This functionality is compatible with the [C](https://github.com/Azure/azure-iot-sdk-c-tcpstreaming/tree/tcpstreaming/doc/tcpstreaming_guide.md) or [C#](https://github.com/Azure/azure-iot-sdk-csharp-tcpstreaming/blob/tcpstreaming/doc/tcpstreaming_guide.md) device-side streaming functionality.
 
 ## What is covered in this guide
 * Instructions to set up your development environment;
 * Instructions to build the SDK and samples;
-* Instructions to run sample echo programs demonstrating the use of TCP streams in Cloud-to-Device (C2D) flows.
-* Instructions to run sample proxy programs demonstrating tunneling SSH or RDP sessions to a device over a C2D TCP stream.
+* Instructions to run sample echo programs demonstrating the use of IoT device streams in Cloud-to-Device (C2D) flows.
+* Instructions to run sample proxy programs demonstrating tunneling SSH or RDP sessions to a device over a C2D stream.
 
 ## Pre-requisites
 * NodeJS version 8 - see [here](https://nodejs.org/dist/latest-v8.x/) for Version 8 release and [here](https://nodejs.org/en/download/) for installation instructions
