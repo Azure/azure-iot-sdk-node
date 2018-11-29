@@ -266,7 +266,7 @@ export class JobClient {
   scheduleTwinUpdate(jobId: string | number, queryCondition: string, patch: any, jobStartTime: Date, maxExecutionTimeInSeconds: number, done: TripleValueCallback<any, any>): void;
   scheduleTwinUpdate(jobId: string | number, queryCondition: string, patch: any, jobStartTime: Date, done: TripleValueCallback<any, any>): void;
   scheduleTwinUpdate(jobId: string | number, queryCondition: string, patch: any, done: TripleValueCallback<any, any>): void;
-  scheduleTwinUpdate(jobId: string | number, queryCondition: string, patch: any, jobStartTime: Date, maxExecutionTimeInSeconds?: number | TripleValueCallback<any, any>): Promise<JobStatusResponse>;
+  scheduleTwinUpdate(jobId: string | number, queryCondition: string, patch: any, jobStartTime: Date, maxExecutionTimeInSeconds?: number): Promise<JobStatusResponse>;
   scheduleTwinUpdate(jobId: string | number, queryCondition: string, patch: any, jobStartTime: Date): Promise<JobStatusResponse>;
   scheduleTwinUpdate(jobId: string | number, queryCondition: string, patch: any): Promise<JobStatusResponse>;
   scheduleTwinUpdate(jobId: string | number, queryCondition: string, patch: any, jobStartTime?: Date | TripleValueCallback<any, any>, maxExecutionTimeInSeconds?: number | TripleValueCallback<any, any>, done?: TripleValueCallback<any, any>): Promise<JobStatusResponse> | void {

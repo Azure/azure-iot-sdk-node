@@ -69,8 +69,6 @@ export type HttpResponseCallback<TResult> = TripleValueCallback<TResult, any>;
  * const param = 42;
  * callbackToPromise((_callback) => foo(param, _callback)).then(result => { console.log(result); }, error => { console.error(error); });
  */
-export function callbackToPromise<TResult>(callBackOperation: (callback: Callback<TResult>) => void, userCallback: Callback<TResult>): void;
-export function callbackToPromise<TResult>(callBackOperation: (callback: Callback<TResult>) => void): Promise<TResult>;
 export function callbackToPromise<TResult>(callBackOperation: (callback: Callback<TResult>) => void, userCallback?: Callback<TResult>): Promise<TResult> | void {
   if (userCallback) {
     if (!(typeof userCallback === 'function')) {

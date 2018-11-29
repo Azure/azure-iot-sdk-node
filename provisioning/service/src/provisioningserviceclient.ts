@@ -64,7 +64,7 @@ export class ProvisioningServiceClient {
    */
   public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etag: string, deleteCallback: ErrorCallback): void;
   public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, deleteCallback: ErrorCallback): void;
-  public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etagOr: string): Promise<void>;
+  public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etag: string): Promise<void>;
   public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment): Promise<void>;
   public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
     if (deleteCallback && !(typeof deleteCallback === 'function')) {
@@ -254,7 +254,7 @@ export class ProvisioningServiceClient {
    */
   public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etag: string, deleteCallback: ErrorCallback): void;
   public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, deleteCallback: ErrorCallback): void;
-  public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etagOrCallback: string): Promise<void>;
+  public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etag: string): Promise<void>;
   public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState): Promise<void>;
   public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
     if (deleteCallback && !(typeof deleteCallback === 'function')) {
