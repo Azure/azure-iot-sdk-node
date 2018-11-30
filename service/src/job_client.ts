@@ -68,6 +68,8 @@ export class JobClient {
    *                                object useful for logging or debugging.
    * @returns {Promise<JobStatusResponse>> | void} Promise if no callback function was passed, void otherwise.
    */
+  getJob(jobId: string | number, done: TripleValueCallback<any, any>): void;
+  getJob(jobId: string | number): Promise<JobStatusResponse>;
   getJob(jobId: string | number, done?: TripleValueCallback<any, any>): Promise<JobStatusResponse> | void {
     /*Codes_SRS_NODE_JOB_CLIENT_16_006: [The `getJob` method shall throw a `ReferenceError` if `jobId` is `null`, `undefined` or an empty string.]*/
     return tripleValueCallbackToPromise((_callback) => {
@@ -110,6 +112,8 @@ export class JobClient {
    *                                object useful for logging or debugging.
    * @returns {Promise<JobStatusResponse>> | void} Promise if no callback function was passed, void otherwise.
    */
+  cancelJob(jobId: string | number, done: TripleValueCallback<any, any>): void;
+  cancelJob(jobId: string | number): Promise<JobStatusResponse>;
   cancelJob(jobId: string | number, done?: TripleValueCallback<any, any>): Promise<JobStatusResponse> | void {
     /*Codes_SRS_NODE_JOB_CLIENT_16_008: [The `cancelJob` method shall throw a `ReferenceError` if `jobId` is `null`, `undefined` or an empty string.]*/
     return tripleValueCallbackToPromise((_callback) => {
@@ -152,6 +156,12 @@ export class JobClient {
    * @throws {ReferenceError}   If methodParams.methodName is falsy.
    * @throws {TypeError}        If the callback is not the last parameter
    */
+  scheduleDeviceMethod(jobId: string | number, queryCondition: string, methodParams: DeviceMethodParams, jobStartTime: Date, maxExecutionTimeInSeconds: number, done: TripleValueCallback<any, any>): void;
+  scheduleDeviceMethod(jobId: string | number, queryCondition: string, methodParams: DeviceMethodParams, jobStartTime: Date, done: TripleValueCallback<any, any>): void;
+  scheduleDeviceMethod(jobId: string | number, queryCondition: string, methodParams: DeviceMethodParams, done: TripleValueCallback<any, any>): void;
+  scheduleDeviceMethod(jobId: string | number, queryCondition: string, methodParams: DeviceMethodParams, jobStartTime: Date, maxExecutionTimeInSeconds: number): Promise<JobStatusResponse>;
+  scheduleDeviceMethod(jobId: string | number, queryCondition: string, methodParams: DeviceMethodParams, jobStartTime: Date): Promise<JobStatusResponse>;
+  scheduleDeviceMethod(jobId: string | number, queryCondition: string, methodParams: DeviceMethodParams): Promise<JobStatusResponse>;
   scheduleDeviceMethod(jobId: string | number, queryCondition: string, methodParams: DeviceMethodParams, jobStartTime?: Date | TripleValueCallback<any, any>, maxExecutionTimeInSeconds?: number | TripleValueCallback<any, any>, done?: TripleValueCallback<any, any>): Promise<JobStatusResponse> | void {
     const callback = (typeof jobStartTime === 'function') ? jobStartTime as TripleValueCallback<any, any> : ((typeof maxExecutionTimeInSeconds === 'function') ? maxExecutionTimeInSeconds as TripleValueCallback<any, any> : done);
 
@@ -253,6 +263,12 @@ export class JobClient {
    * @throws {ReferenceError}   If one or more of the jobId, queryCondition or patch arguments are falsy.
    * @throws {TypeError}        If the callback is not the last parameter
    */
+  scheduleTwinUpdate(jobId: string | number, queryCondition: string, patch: any, jobStartTime: Date, maxExecutionTimeInSeconds: number, done: TripleValueCallback<any, any>): void;
+  scheduleTwinUpdate(jobId: string | number, queryCondition: string, patch: any, jobStartTime: Date, done: TripleValueCallback<any, any>): void;
+  scheduleTwinUpdate(jobId: string | number, queryCondition: string, patch: any, done: TripleValueCallback<any, any>): void;
+  scheduleTwinUpdate(jobId: string | number, queryCondition: string, patch: any, jobStartTime: Date, maxExecutionTimeInSeconds?: number): Promise<JobStatusResponse>;
+  scheduleTwinUpdate(jobId: string | number, queryCondition: string, patch: any, jobStartTime: Date): Promise<JobStatusResponse>;
+  scheduleTwinUpdate(jobId: string | number, queryCondition: string, patch: any): Promise<JobStatusResponse>;
   scheduleTwinUpdate(jobId: string | number, queryCondition: string, patch: any, jobStartTime?: Date | TripleValueCallback<any, any>, maxExecutionTimeInSeconds?: number | TripleValueCallback<any, any>, done?: TripleValueCallback<any, any>): Promise<JobStatusResponse> | void {
     const callback = (typeof jobStartTime === 'function') ? jobStartTime as TripleValueCallback<any, any> : ((typeof maxExecutionTimeInSeconds === 'function') ? maxExecutionTimeInSeconds as TripleValueCallback<any, any> : done);
 

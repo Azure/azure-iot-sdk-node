@@ -27,6 +27,8 @@ export class ServiceReceiver extends EventEmitter implements Client.ServiceRecei
     });
   }
 
+  complete(message: Message, done: Callback<results.MessageCompleted>): void;
+  complete(message: Message): Promise<results.MessageCompleted>;
   complete(message: Message, done?: Callback<results.MessageCompleted>): Promise<results.MessageCompleted> | void {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_SERVICE_RECEIVER_16_003: [The `complete` method shall call the `complete` method on the `ReceiverLink` object and pass it the `AmqpMessage` stored within the `transportObj` property of the `Message` object as well as the `done` callback passed as argument.]*/
@@ -34,6 +36,8 @@ export class ServiceReceiver extends EventEmitter implements Client.ServiceRecei
     }, done);
   }
 
+  abandon(message: Message, done: Callback<results.MessageAbandoned>): void;
+  abandon(message: Message): Promise<results.MessageAbandoned>;
   abandon(message: Message, done?: Callback<results.MessageAbandoned>): Promise<results.MessageAbandoned> | void {
     /*Codes_SRS_NODE_SERVICE_RECEIVER_16_004: [The `abandon` method shall call the `abandon` method on the `ReceiverLink` object and pass it the `AmqpMessage` stored within the `transportObj` property of the `Message` object as well as the `done` callback passed as argument.]*/
     return callbackToPromise((_callback) => {
@@ -41,6 +45,8 @@ export class ServiceReceiver extends EventEmitter implements Client.ServiceRecei
     }, done);
   }
 
+  reject(message: Message, done: Callback<results.MessageRejected>): void;
+  reject(message: Message): Promise<results.MessageRejected>;
   reject(message: Message, done?: Callback<results.MessageRejected>): Promise<results.MessageRejected> | void {
     /*Codes_SRS_NODE_SERVICE_RECEIVER_16_005: [The `reject` method shall call the `reject` method on the `ReceiverLink` object and pass it the `AmqpMessage` stored within the `transportObj` property of the `Message` object as well as the `done` callback passed as argument.]*/
     return callbackToPromise((_callback) => {
@@ -48,7 +54,9 @@ export class ServiceReceiver extends EventEmitter implements Client.ServiceRecei
     }, done);
   }
 
-  detach(callback: ErrorCallback): Promise<void> | void {
+  detach(callback: ErrorCallback): void;
+  detach(): Promise<void>;
+  detach(callback?: ErrorCallback): Promise<void> | void {
     /*Codes_SRS_NODE_SERVICE_RECEIVER_16_008: [The `detach` method shall call the `detach` method on the `ReceiverLink` object and pass it its `callback` argument.]*/
     return errorCallbackToPromise((_callback) => {
       this._receiver.detach(_callback);

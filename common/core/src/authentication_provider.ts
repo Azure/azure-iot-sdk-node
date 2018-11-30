@@ -24,5 +24,6 @@ export enum AuthenticationType {
  */
 export interface AuthenticationProvider {
   type: AuthenticationType;
-  getDeviceCredentials(callback?: Callback<TransportConfig>): Promise<TransportConfig> | void;
+  getDeviceCredentials(callback: Callback<TransportConfig>): void;
+  getDeviceCredentials(): Promise<TransportConfig>;
 }

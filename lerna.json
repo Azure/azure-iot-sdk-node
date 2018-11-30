@@ -14,7 +14,8 @@
     "security/*",
     "longhaultests",
     "e2etests",
-    "edge-e2e/wrapper/nodejs-server-server"
+    "edge-e2e/wrapper/nodejs-server-server",
+    "ts-e2e"
   ],
   "version": "0.0.0"
 }

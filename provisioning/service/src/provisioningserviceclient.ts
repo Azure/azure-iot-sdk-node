@@ -46,6 +46,8 @@ export class ProvisioningServiceClient {
    * @param {function} [callback] Invoked upon completion of the operation.
    * @returns {Promise<ResultWithHttpResponse<IndividualEnrollment>> | void} Promise if no callback function was passed, void otherwise.
    */
+  public createOrUpdateIndividualEnrollment(enrollment: IndividualEnrollment, callback: HttpResponseCallback<IndividualEnrollment>): void;
+  public createOrUpdateIndividualEnrollment(enrollment: IndividualEnrollment): Promise<ResultWithHttpResponse<IndividualEnrollment>>;
   public createOrUpdateIndividualEnrollment(enrollment: IndividualEnrollment, callback?: HttpResponseCallback<IndividualEnrollment>): Promise<ResultWithHttpResponse<IndividualEnrollment>> | void {
     return httpCallbackToPromise((_callback) => {
       this._createOrUpdate(this._enrollmentsPrefix, enrollment, _callback);
@@ -60,6 +62,10 @@ export class ProvisioningServiceClient {
    * @param {function}          [deleteCallback] Invoked upon completion of the operation.
    * @returns {Promise<void> | void} Promise if no callback function was passed, void otherwise.
    */
+  public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etag: string, deleteCallback: ErrorCallback): void;
+  public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, deleteCallback: ErrorCallback): void;
+  public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etag: string): Promise<void>;
+  public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment): Promise<void>;
   public deleteIndividualEnrollment(enrollmentOrId: string | IndividualEnrollment, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
     if (deleteCallback && !(typeof deleteCallback === 'function')) {
       throw new ArgumentError('Callback has to be a Function');
@@ -82,6 +88,8 @@ export class ProvisioningServiceClient {
    * @param {function} [getCallback] Invoked upon completion of the operation.
    * @returns {Promise<ResultWithHttpResponse<IndividualEnrollment>> | void} Promise if no callback function was passed, void otherwise.
    */
+  public getIndividualEnrollment(id: string, getCallback: HttpResponseCallback<IndividualEnrollment>): void;
+  public getIndividualEnrollment(id: string): Promise<ResultWithHttpResponse<IndividualEnrollment>>;
   public getIndividualEnrollment(id: string, getCallback?: HttpResponseCallback<IndividualEnrollment>): Promise<ResultWithHttpResponse<IndividualEnrollment>> | void {
     return httpCallbackToPromise((_callback) => {
       this._get(this._enrollmentsPrefix, id, _callback);
@@ -105,6 +113,8 @@ export class ProvisioningServiceClient {
    * @param {function} [callback] Invoked upon completion of the operation.
    * @returns {Promise<ResultWithHttpResponse<DeviceRegistrationState>> | void} Promise if no callback function was passed, void otherwise.
    */
+  public getDeviceRegistrationState(id: string, callback: HttpResponseCallback<DeviceRegistrationState>): void;
+  public getDeviceRegistrationState(id: string): Promise<ResultWithHttpResponse<DeviceRegistrationState>>;
   public getDeviceRegistrationState(id: string, callback?: HttpResponseCallback<DeviceRegistrationState>): Promise<ResultWithHttpResponse<DeviceRegistrationState>> | void {
     return httpCallbackToPromise((_callback) => {
       this._get(this._registrationsPrefix, id, _callback);
@@ -118,6 +128,8 @@ export class ProvisioningServiceClient {
    * @param {function} [callback]      Invoked upon completion of the operation.
    * @returns {Promise<ResultWithHttpResponse<DeviceRegistrationState>> | void} Promise if no callback function was passed, void otherwise.
    */
+  public createOrUpdateEnrollmentGroup(enrollmentGroup: EnrollmentGroup, callback: HttpResponseCallback<EnrollmentGroup>): void;
+  public createOrUpdateEnrollmentGroup(enrollmentGroup: EnrollmentGroup): Promise<ResultWithHttpResponse<EnrollmentGroup>>;
   public createOrUpdateEnrollmentGroup(enrollmentGroup: EnrollmentGroup, callback?: HttpResponseCallback<EnrollmentGroup>): Promise<ResultWithHttpResponse<EnrollmentGroup>> | void {
     return httpCallbackToPromise((_callback) => {
       this._createOrUpdate(this._enrollmentGroupsPrefix, enrollmentGroup, _callback);
@@ -132,6 +144,10 @@ export class ProvisioningServiceClient {
    * @param {function}          [deleteCallback]      Invoked upon completion of the operation.
    * @returns {Promise<void> | void} Promise if no callback function was passed, void otherwise.
    */
+  public deleteEnrollmentGroup(enrollmentGroupOrId: string | EnrollmentGroup, etag: string, deleteCallback: ErrorCallback): void;
+  public deleteEnrollmentGroup(enrollmentGroupOrId: string | EnrollmentGroup, deleteCallback: ErrorCallback): void;
+  public deleteEnrollmentGroup(enrollmentGroupOrId: string | EnrollmentGroup, etag: string): Promise<void>;
+  public deleteEnrollmentGroup(enrollmentGroupOrId: string | EnrollmentGroup): Promise<void>;
   public deleteEnrollmentGroup(enrollmentGroupOrId: string | EnrollmentGroup, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
     if (deleteCallback && !(typeof deleteCallback === 'function')) {
       throw new ArgumentError('Callback has to be a Function');
@@ -154,6 +170,8 @@ export class ProvisioningServiceClient {
    * @param {function} [getCallback] Invoked upon completion of the operation.
    * @returns {ResultWithHttpResponse<EnrollmentGroup> | void} Promise if no callback function was passed, void otherwise.
    */
+  public getEnrollmentGroup(id: string, getCallback: HttpResponseCallback<EnrollmentGroup>): void;
+  public getEnrollmentGroup(id: string): Promise<ResultWithHttpResponse<EnrollmentGroup>>;
   public getEnrollmentGroup(id: string, getCallback?: HttpResponseCallback<EnrollmentGroup>): Promise<ResultWithHttpResponse<EnrollmentGroup>> | void {
     return httpCallbackToPromise((_callback) => {
       this._get(this._enrollmentGroupsPrefix, id, _callback);
@@ -190,6 +208,8 @@ export class ProvisioningServiceClient {
    * @param {object}   bulkEnrollmentOperation An object that specifies the single kind of CRUD operations on the array of IndividualEnrollment objects that are also part of the object.
    * @param {function} callback      Invoked upon completion of the operation.
    */
+  public runBulkEnrollmentOperation(bulkEnrollmentOperation: BulkEnrollmentOperation, callback: HttpResponseCallback<BulkEnrollmentOperationResult>): void;
+  public runBulkEnrollmentOperation(bulkEnrollmentOperation: BulkEnrollmentOperation): Promise<ResultWithHttpResponse<BulkEnrollmentOperationResult>>;
   public runBulkEnrollmentOperation(bulkEnrollmentOperation: BulkEnrollmentOperation, callback?: HttpResponseCallback<BulkEnrollmentOperationResult>): Promise<ResultWithHttpResponse<BulkEnrollmentOperationResult>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_038: [The `runBulkEnrollmentOperation` method shall throw `ReferenceError` if the `bulkEnrollmentOperation` argument is falsy.] */
@@ -232,6 +252,10 @@ export class ProvisioningServiceClient {
    * @param {function}          [deleteCallback]      Invoked upon completion of the operation.
    * @returns {Promise<void> | void} Promise if no callback function was passed, void otherwise.
    */
+  public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etag: string, deleteCallback: ErrorCallback): void;
+  public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, deleteCallback: ErrorCallback): void;
+  public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etag: string): Promise<void>;
+  public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState): Promise<void>;
   public deleteDeviceRegistrationState(idOrRegistrationState: string | DeviceRegistrationState, etagOrCallback?: string | ErrorCallback, deleteCallback?: ErrorCallback): Promise<void> | void {
     if (deleteCallback && !(typeof deleteCallback === 'function')) {
       throw new ArgumentError('Callback has to be a Function');

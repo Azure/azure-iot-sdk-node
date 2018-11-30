@@ -122,7 +122,7 @@ export abstract class InternalClient extends EventEmitter {
   err - null
   response - a transport-specific response object]*/
 
-  updateSharedAccessSignature(sharedAccessSignature: string, updateSasCallback?: (err?: Error, result?: results.SharedAccessSignatureUpdated) => void): void {
+  updateSharedAccessSignature(sharedAccessSignature: string, updateSasCallback?: Callback<results.SharedAccessSignatureUpdated>): void {
     /*Codes_SRS_NODE_INTERNAL_CLIENT_16_031: [The updateSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature parameter is falsy.]*/
     if (!sharedAccessSignature) throw new ReferenceError('sharedAccessSignature is falsy');
 
@@ -137,6 +137,8 @@ export abstract class InternalClient extends EventEmitter {
     });
   }
 
+  open(openCallback: Callback<results.Connected>): void;
+  open(): Promise<results.Connected>;
   open(openCallback?: Callback<results.Connected>): Promise<results.Connected> | void {
     return callbackToPromise((_callback) => {
       const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
@@ -149,6 +151,8 @@ export abstract class InternalClient extends EventEmitter {
     }, openCallback);
   }
 
+  sendEvent(message: Message, sendEventCallback: Callback<results.MessageEnqueued>): void;
+  sendEvent(message: Message): Promise<results.MessageEnqueued>;
   sendEvent(message: Message, sendEventCallback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
     return callbackToPromise((_callback) => {
       const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
@@ -161,6 +165,8 @@ export abstract class InternalClient extends EventEmitter {
     }, sendEventCallback);
   }
 
+  sendEventBatch(messages: Message[], sendEventBatchCallback: Callback<results.MessageEnqueued>): void;
+  sendEventBatch(messages: Message[]): Promise<results.MessageEnqueued>;
   sendEventBatch(messages: Message[], sendEventBatchCallback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
     return callbackToPromise((_callback) => {
       const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
@@ -173,6 +179,8 @@ export abstract class InternalClient extends EventEmitter {
     }, sendEventBatchCallback);
   }
 
+  close(closeCallback: Callback<results.Disconnected>): void;
+  close(): Promise<results.Disconnected>;
   close(closeCallback?: Callback<results.Disconnected>): Promise<results.Disconnected> | void {
     return callbackToPromise((_callback) => {
       this._closeTransport((err, result) => {
@@ -181,6 +189,8 @@ export abstract class InternalClient extends EventEmitter {
     }, closeCallback);
   }
 
+  setTransportOptions(options: any, done: Callback<results.TransportConfigured>): void;
+  setTransportOptions(options: any): Promise<results.TransportConfigured>;
   setTransportOptions(options: any, done?: Callback<results.TransportConfigured>): Promise<results.TransportConfigured> | void {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_INTERNAL_CLIENT_16_024: [The ‘setTransportOptions’ method shall throw a ‘ReferenceError’ if the options object is falsy] */
@@ -214,6 +224,8 @@ export abstract class InternalClient extends EventEmitter {
    * @param [done]    The optional callback to call once the options have been set.
    * @returns {Promise<results.TransportConfigured> | void} Promise if no callback function was passed, void otherwise.
    */
+  setOptions(options: DeviceClientOptions, done: Callback<results.TransportConfigured>): void;
+  setOptions(options: DeviceClientOptions): Promise<results.TransportConfigured>;
   setOptions(options: DeviceClientOptions, done?: Callback<results.TransportConfigured>): Promise<results.TransportConfigured> | void {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_INTERNAL_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
@@ -239,6 +251,8 @@ export abstract class InternalClient extends EventEmitter {
     }, done);
   }
 
+  complete(message: Message, completeCallback: Callback<results.MessageCompleted>): void;
+  complete(message: Message): Promise<results.MessageCompleted>;
   complete(message: Message, completeCallback?: Callback<results.MessageCompleted>): Promise<results.MessageCompleted> | void {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_INTERNAL_CLIENT_16_016: [The ‘complete’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
@@ -253,6 +267,8 @@ export abstract class InternalClient extends EventEmitter {
     }, completeCallback);
   }
 
+  reject(message: Message, rejectCallback: Callback<results.MessageRejected>): void;
+  reject(message: Message): Promise<results.MessageRejected>;
   reject(message: Message, rejectCallback?: Callback<results.MessageRejected>): Promise<results.MessageRejected> | void {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_INTERNAL_CLIENT_16_018: [The reject method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
@@ -266,6 +282,8 @@ export abstract class InternalClient extends EventEmitter {
     }, rejectCallback);
   }
 
+  abandon(message: Message, abandonCallback: Callback<results.MessageAbandoned>): void;
+  abandon(message: Message): Promise<results.MessageAbandoned>;
   abandon(message: Message, abandonCallback?: Callback<results.MessageAbandoned>): Promise<results.MessageAbandoned> | void {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_INTERNAL_CLIENT_16_017: [The abandon method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
@@ -280,7 +298,9 @@ export abstract class InternalClient extends EventEmitter {
     }, abandonCallback);
   }
 
-  getTwin(done: Callback<Twin>): Promise<Twin> | void {
+  getTwin(done: Callback<Twin>): void;
+  getTwin(): Promise<Twin>;
+  getTwin(done?: Callback<Twin>): Promise<Twin> | void {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_INTERNAL_CLIENT_16_094: [If this is the first call to `getTwin` the method shall instantiate a new `Twin` object  and pass it the transport currently in use.]*/
       if (!this._twin) {

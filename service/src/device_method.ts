@@ -60,6 +60,8 @@ export class DeviceMethod {
    *                                debugging.
    * @returns {Promise<{ device?: any, response?: any }> | void} Promise if no callback function was passed, void otherwise.
    */
+  invokeOn(deviceId: string, done: TripleValueCallback<any, any>): void;
+  invokeOn(deviceId: string): Promise<{ device?: any, response?: any }>;
   invokeOn(deviceId: string, done?: TripleValueCallback<any, any>): Promise<{ device?: any, response?: any }> | void {
     return tripleValueCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_DEVICE_METHOD_16_008: [The `invokeOn` method shall throw a `ReferenceError` if `deviceId` is `null`, `undefined` or an empty string.]*/
@@ -105,6 +107,8 @@ export class DeviceMethod {
    *                                debugging.
    * @returns {Promise<{ device?: any, response?: any }> | void} Promise if no callback function was passed, void otherwise.
    */
+  invokeOnModule(deviceId: string, moduleId: string, done: TripleValueCallback<any, any>): void;
+  invokeOnModule(deviceId: string, moduleId: string): Promise<{ device?: any, response?: any }>;
   invokeOnModule(deviceId: string, moduleId: string, done?: TripleValueCallback<any, any>): Promise<{ device?: any, response?: any }> | void {
     return tripleValueCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_DEVICE_METHOD_18_001: [The `invokeOnModule` method shall throw a `ReferenceError` if `deviceId` or `moduleId` is falsy. ]*/
