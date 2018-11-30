@@ -506,7 +506,7 @@ export interface CustomAllocationDefinition {
   webhookUrl: string;
   /**
    * The API version of the provisioning service types (such as IndividualEnrollment) sent in the custom allocation request. Supported versions include:
-   * - "2018-09-01-preview"
+   * - "2018-11-01"
    */
   apiVersion: string;
 }
