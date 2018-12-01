@@ -1,34 +1,33 @@
-import {Client as DeviceClient, ConnectionString as DeviceConnectionString} from 'azure-iot-device';
-import {Amqp as DeviceAmqp, AmqpWs as DeviceAmqpWs} from 'azure-iot-device-amqp';
-import {Mqtt as DeviceMqtt, MqttWs as DeviceMqttWs} from 'azure-iot-device-mqtt';
-import {Http as DeviceHttp} from 'azure-iot-device-http';
-import {Message} from 'azure-iot-common';
-import {Client as ServiceClient, ConnectionString as ServiceConnectionString} from 'azure-iothub';
+import { Client as DeviceClient, ConnectionString as DeviceConnectionString } from 'azure-iot-device';
+import { Amqp as DeviceAmqp, AmqpWs as DeviceAmqpWs } from 'azure-iot-device-amqp';
+import { Mqtt as DeviceMqtt, MqttWs as DeviceMqttWs } from 'azure-iot-device-mqtt';
+import { Http as DeviceHttp } from 'azure-iot-device-http';
+import { Message } from 'azure-iot-common';
+import { Client as ServiceClient, ConnectionString as ServiceConnectionString } from 'azure-iothub';
 import * as uuid from 'uuid';
 import * as testUtils from './testUtils';
-import * as mocha from 'mocha';
 import * as dbg from 'debug';
 const debug = dbg('ts-e2e-c2d');
 
-describe('C2D', function() {
+describe('C2D', () => {
+  // tslint:disable:no-invalid-this
   this.timeout(60000);
   const testDevice2 = testUtils.createTestDevice();
 
   const hostName = ServiceConnectionString.parse(process.env.IOTHUB_CONNECTION_STRING).HostName;
-  const testDeviceCS2 = DeviceConnectionString.createWithSharedAccessKey(hostName, testDevice2.deviceId, testDevice2.authentication.symmetricKey.primaryKey)
+  const testDeviceCS2 = DeviceConnectionString.createWithSharedAccessKey(hostName, testDevice2.deviceId, testDevice2.authentication.symmetricKey.primaryKey);
 
-  before(function(beforeCallback) {
+  before((beforeCallback) => {
     testUtils.addTestDeviceToRegistry(testDevice2, beforeCallback);
   });
 
-  after(function(afterCallback) {
+  after((afterCallback) => {
     testUtils.removeTestDeviceFromRegistry(testDevice2, afterCallback);
   });
 
   [DeviceAmqp, DeviceAmqpWs, DeviceMqtt, DeviceMqttWs, DeviceHttp].forEach((transportCtor: any) => {
-    describe('Over ' + transportCtor.name, function() {
+    describe('Over ' + transportCtor.name, () => {
       let deviceClient: DeviceClient;
-      let serviceClient: ServiceClient;
 
       beforeEach((beforeEachCallback) => {
         deviceClient = DeviceClient.fromConnectionString(testDeviceCS2, transportCtor);
@@ -47,7 +46,7 @@ describe('C2D', function() {
         });
       });
 
-      it('can receive a C2D message', function(testCallback) {
+      it('can receive a C2D message', (testCallback) => {
         let testMessage = new Message('testMessage');
         testMessage.messageId = uuid.v4();
         let sendOK = false;

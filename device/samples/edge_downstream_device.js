@@ -13,7 +13,7 @@ var Message = require('azure-iot-device').Message;
 
 // 1) Obtain the connection string for your downstream device and to it
 //    append this string GatewayHostName=<edge device hostname>;
-// 2) The edge device hostname is the hostname set in the config.yaml of the Edge device
+// 2) The Azure IoT Edge device hostname is the hostname set in the config.yaml of the Azure IoT Edge device
 //    to which this sample will connect to.
 //
 // The resulting string should look like the following

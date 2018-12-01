@@ -84,7 +84,7 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
       });
     });
 
-    // nuke the test device after every test
+    // delete the test device identity after every test
     afterEach(function (done) {
       if (!!deviceClient) {
         debug('disconnecting device client...');
@@ -136,7 +136,8 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
         var methodParams = {
           methodName: methodName,
           payload: testPayload,
-          timeoutInSeconds: 10
+          connectTimeoutInSeconds: 30,
+          responseTimeoutInSeconds: 45
         };
         debug('service sending method call:');
         debug(JSON.stringify(methodParams, null, 2));

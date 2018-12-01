@@ -1,6 +1,6 @@
 {
   "name": "azure-iothub",
-  "version": "1.7.4",
+  "version": "1.8.2",
   "description": "Azure IoT SDK - IoT Hub",
   "author": "Microsoft Corporation",
   "license": "MIT",
@@ -8,13 +8,13 @@
   "typings": "iothub.d.ts",
   "dependencies": {
     "async": "^2.6.1",
-    "azure-iot-amqp-base": "2.0.0",
-    "azure-iot-common": "1.7.4",
-    "azure-iot-http-base": "1.7.4",
+    "azure-iot-amqp-base": "2.1.2",
+    "azure-iot-common": "1.8.2",
+    "azure-iot-http-base": "1.8.2",
     "debug": "^3.1.0",
     "lodash": "^4.17.10",
     "rhea": "^0.2.17",
-    "machina": "^2.0.1"
+    "machina": "^4.0.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",
@@ -37,7 +37,7 @@
     "alltest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
     "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
     "test": "npm -s run lint && npm -s run build && npm -s run unittest",
-    "check-cover": "istanbul check-coverage --statements 97 --branches 93  --lines 98 --functions 93",
+    "check-cover": "istanbul check-coverage --statements 96 --branches 92  --lines 97 --functions 90",
     "cover": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js"
   },
   "engines": {

@@ -269,16 +269,6 @@ describe('MqttBase', function () {
       });
     });
 
-    /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_019: [The `publish` method shall throw a `ReferenceError` if the payload is falsy.]*/
-    [null, undefined, ''].forEach(function (payload) {
-      it('throws if payload is \'' + payload + '\'', function () {
-        var transport = new MqttBase(new FakeMqtt());
-        assert.throws(function () {
-          transport.publish('topic', payload, function () {});
-        }, ReferenceError, 'Invalid payload');
-      });
-    });
-
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_020: [The `publish` method shall call the callback with a `NotConnectedError` if the connection hasn't been established prior to calling `publish`.]*/
     it('fails with a NotConnectedError if the MQTT connection is not active', function (testCallback) {
       var transport = new MqttBase(new FakeMqtt());

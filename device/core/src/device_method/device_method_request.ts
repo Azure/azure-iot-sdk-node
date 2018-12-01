@@ -42,6 +42,9 @@ export class DeviceMethodRequest {
 
     this.requestId = requestId;
     this.methodName = methodName;
-    this.payload = JSON.parse(body.toString());
+
+    if (body) {
+      this.payload = JSON.parse(body.toString());
+    }
   }
 }

@@ -1,8 +1,9 @@
-import {Registry} from 'azure-iothub';
+import { Registry } from 'azure-iothub';
 import * as uuid from 'uuid';
 import { assert } from 'chai';
 
-describe('Registry', function() {
+describe('Registry', () => {
+  // tslint:disable:no-invalid-this
   this.timeout(60000);
   it('creates a device -> gets it -> updates it -> deletes it', (testCallback) => {
     const testDeviceId = uuid.v4();

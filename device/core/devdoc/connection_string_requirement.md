@@ -29,7 +29,13 @@ The `parse` static method returns a new instance of the `ConnectionString` objec
 
 **SRS_NODE_DEVICE_CONNSTR_05_002: [** It shall throw `ArgumentError` if any of `HostName` or `DeviceId` fields are not found in the source argument.**]**
 
-**SRS_NODE_DEVICE_CONNSTR_16_001: [** It shall throw `ArgumentError` if `SharedAccessKey` and `x509` are present at the same time or if none of them are present. **]**
+**SRS_NODE_DEVICE_CONNSTR_16_001: [** It shall throw `ArgumentError` if `SharedAccessKey` and `x509` are present at the same time. **]**
+
+**SRS_NODE_DEVICE_CONNSTR_16_006: [** It shall throw `ArgumentError` if `SharedAccessSignature` and `x509` are present at the same time. **]**
+
+**SRS_NODE_DEVICE_CONNSTR_16_007: [** It shall throw `ArgumentError` if `SharedAccessKey` and `SharedAccessSignature` are present at the same time. **]**
+
+**SRS_NODE_DEVICE_CONNSTR_16_008: [** It shall throw `ArgumentError` if none of `SharedAccessKey`, `SharedAccessSignature` and `x509` are present. **]**
 
 ### createWithSharedAccessKey(hostName, deviceId, sharedAccessKey) [static]
 

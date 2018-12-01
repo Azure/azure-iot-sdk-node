@@ -13,6 +13,7 @@ var Message = require('azure-iot-common').Message;
 var errors = require('azure-iot-common').errors;
 var results = require('azure-iot-common').results;
 var X509AuthenticationProvider = require('../lib/x509_authentication_provider').X509AuthenticationProvider;
+var SharedAccessSignatureAuthenticationProvider = require('../lib/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider;
 var Client = require('../lib/device_client').Client;
 
 describe('Device Client', function () {
@@ -60,6 +61,15 @@ describe('Device Client', function () {
         testCallback();
       });
     });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_16_094: [The `fromConnectionString` method shall create a new `SharedAccessSignatureAuthenticationProvider` object with the connection string passed as argument if it contains a SharedAccessSignature parameter and pass this object to the transport constructor.]*/
+    it('creates a SharedAccessSignatureAuthenticationProvider and passes it to the transport', function (testCallback) {
+      var SharedAccessSignatureConnectionString = 'HostName=host;DeviceId=id;SharedAccessSignature=' + sharedAccessSignature;
+      Client.fromConnectionString(SharedAccessSignatureConnectionString, function (authProvider) {
+        assert.instanceOf(authProvider, SharedAccessSignatureAuthenticationProvider);
+        testCallback();
+      });
+    });
   });
 
   describe('#fromSharedAccessSignature', function () {
@@ -77,7 +87,6 @@ describe('Device Client', function () {
       assert.instanceOf(client, Client);
     });
   });
-
 
   describe('#uploadToBlob', function() {
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_037: [The `uploadToBlob` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
@@ -404,7 +413,7 @@ describe('Device Client', function () {
 
     // Tests_SRS_NODE_DEVICE_CLIENT_13_025: [ onDeviceMethod shall throw a TypeError if callback is not a Function. ]
     ['not_a_function', 42].forEach(function (callback) {
-      it('throws ReferenceError when callback is "' + callback + '"', function () {
+      it('throws TypeError when callback is "' + callback + '"', function () {
         var transport = new FakeMethodTransport();
         var client = new Client(transport);
         assert.throws(function () {

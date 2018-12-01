@@ -3,7 +3,7 @@ const debug = dbg('azure-iot-device:TPMAuthenticationProvider');
 
 import { EventEmitter } from 'events';
 import * as machina from 'machina';
-import { AuthenticationType, SharedAccessSignature, errors, TransportConfig, AuthenticationProvider } from 'azure-iot-common';
+import { AuthenticationType, SharedAccessSignature, errors, TransportConfig, AuthenticationProvider, Callback, callbackToPromise } from 'azure-iot-common';
 import { TpmSecurityClient } from './tpm';
 
 /**
@@ -106,8 +106,12 @@ export class TpmAuthenticationProvider extends EventEmitter implements Authentic
     });
   }
 
-  getDeviceCredentials(callback: (err: Error, credentials?: TransportConfig) => void): void {
-    this._fsm.handle('getDeviceCredentials', callback);
+  getDeviceCredentials(): Promise<TransportConfig>;
+  getDeviceCredentials(callback: Callback<TransportConfig>): void;
+  getDeviceCredentials(callback?: Callback<TransportConfig>): void | Promise<TransportConfig> {
+    return callbackToPromise((_callback) => {
+      this._fsm.handle('getDeviceCredentials', _callback);
+    }, callback);
   }
 
   updateSharedAccessSignature(sharedAccessSignature: string): void {

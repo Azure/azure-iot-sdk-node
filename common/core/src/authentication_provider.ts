@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { TransportConfig } from './authorization';
+import { Callback } from './promise_utils';
 
 /**
  * Designate the type of authentication used by an `AuthenticationProvider`.
@@ -23,5 +24,6 @@ export enum AuthenticationType {
  */
 export interface AuthenticationProvider {
   type: AuthenticationType;
-  getDeviceCredentials(callback: (err: Error, credentials?: TransportConfig) => void): void;
+  getDeviceCredentials(callback: Callback<TransportConfig>): void;
+  getDeviceCredentials(): Promise<TransportConfig>;
 }

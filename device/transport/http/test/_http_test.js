@@ -20,7 +20,7 @@ FakeHttp.prototype.buildRequest = function (method, path, httpHeaders, host, ssl
     end: function () {
       if (this.messageCount > 0) {
         this.messageCount--;
-        done(null, "foo", { statusCode: 204 });
+        done(null, "foo", { statusCode: 200 });
       } else {
         done(null, "", { statusCode: 204 });
       }
@@ -478,10 +478,11 @@ describe('HttpReceiver', function () {
           return {
             write: function () { },
             end: function () {
-              buildRequestCallback();
+              buildRequestCallback(null, '', { statusCode: 204 });
             }
           };
-        }
+        },
+        toMessage: function() {}
       };
       http.receive();
       assert.isTrue(fakeAuthenticationProvider.getDeviceCredentials.calledOnce);
@@ -541,7 +542,7 @@ describe('HttpReceiver', function () {
           end: function () {
             if (this.messageCount > 0) {
               this.messageCount--;
-              done(null, "foo", { statusCode: 204 });
+              done(null, "foo", { statusCode: 200 });
             } else {
               done(null, "", { statusCode: 204 });
             }
@@ -710,7 +711,7 @@ describe('HttpReceiver', function () {
             return {
               write: function () { },
               end: function () {
-                buildRequestCallback(null, {}, { statusCode: 204 });
+                buildRequestCallback(null, {}, { statusCode: 200 });
               }
             };
           }

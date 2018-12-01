@@ -282,15 +282,6 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
         });
       });
 
-      it('calls the callback immediately if the client is already disconnected', function (testCallback) {
-        var transport = new FakeTransport();
-        sinon.stub(transport, 'disconnect').callsFake(function () {
-          assert.fail();
-        });
-        var client = new ClientCtor(transport);
-        client.close(testCallback());
-      });
-
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_046: [** The `disconnect` method shall remove the listener that has been attached to the transport `disconnect` event.]*/
       it('unsubscribes for the \'disconnect\' event when disconnecting', function (done) {
         var transport = new FakeTransport();

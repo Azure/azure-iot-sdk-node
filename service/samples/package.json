@@ -6,7 +6,7 @@
   "author": "Microsoft Corp.",
   "license": "MIT",
   "dependencies": {
-    "azure-iothub": "1.7.4",
+    "azure-iothub": "1.8.2",
     "azure-storage": "^2.8.1",
     "websocket-stream": "^5.1.2"
   }
