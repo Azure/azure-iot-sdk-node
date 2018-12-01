@@ -153,7 +153,8 @@ export class RestApiClient {
         /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_009: [If the HTTP request is successful the `executeApiCall` method shall parse the JSON response received and call the `done` callback with a `null` first argument, the parsed result as a second argument and the HTTP response object itself as a third argument.]*/
         /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_038: [If the HTTP request is successful and the `content-type` is not set or is set to something else than `application/json`, the `executeApiCall` method shall use the body of the response as is for the `result` object.]*/
         let result = responseBody;
-        if (responseBody && response.headers['content-type'].indexOf('application/json') >= 0) {
+        const contentTypeHeader = response.headers ? response.headers['content-type'] || response.headers['Content-Type'] : undefined;
+        if (responseBody && contentTypeHeader && contentTypeHeader.indexOf('application/json') >= 0) {
           /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_037: [If the HTTP request is successful and the `content-type` header of the response starts with `application/json` the `executeApiCall` method shall parse the body of the response and provide the `result` as an object.]*/
           result = JSON.parse(responseBody);
         }
