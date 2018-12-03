@@ -23,7 +23,7 @@ The present SDK adds service-side support for streaming in NodeJS. This function
 ## Build the SDK and samples
 - Clone the SDK repository:
 ```
-  git clone https://github.com/Azure/azure-iot-sdk-node-tcpstreaming
+  git clone -b master-fi-1130 https://github.com/Azure/azure-iot-sdk-node-tcpstreaming
 ```
 
 - Build the SDK
