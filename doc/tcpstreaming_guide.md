@@ -47,7 +47,7 @@ Assuming the device-side program is running, follow the steps below to run the s
 - Provide your service credentials and device ID as environment variables.
 ```
   export IOTHUB_CONNECTION_STRING="<provide_your_service_connection_string>"
-  export STREAMING_TARGET_DEVICE="<provide_ip_or_host_of_your_device>"
+  export STREAMING_TARGET_DEVICE="<provide_your_device_id>"
 ```
 (Use `SET` if you run in windows cmd prompt and make sure you remove the quotes).
 
@@ -65,7 +65,7 @@ Assuming the device-local proxy is running, follow the steps below to run the se
 - Provide your service credentials, the target device ID where SSH daemon runs, and the port number for the proxy running on the device as environment variables.
 ```
   export IOTHUB_CONNECTION_STRING="<provide_your_service_connection_string>"
-  export STREAMING_TARGET_DEVICE="<provide_ip_or_host_of_your_device>"
+  export STREAMING_TARGET_DEVICE="<provide_your_device_id>"
   export PROXY_PORT=2222
 ```
 (Use `SET` if you run in windows cmd prompt and make sure you remove the quotes).
@@ -82,7 +82,7 @@ Assuming the device-local proxy is running, follow the steps below to run the se
 - Provide your service credentials, the target device ID, and the port number for the proxy running on the device as environment variables.
 ```
   export IOTHUB_CONNECTION_STRING="<provide_your_service_connection_string>"
-  export STREAMING_TARGET_DEVICE="<provide_ip_or_host_of_your_device>"
+  export STREAMING_TARGET_DEVICE="<provide_your_device_id>"
   export PROXY_PORT=2222
 ```
 (Use `SET` if you run in windows cmd prompt and make sure you remove the quotes).
