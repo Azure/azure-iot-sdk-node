@@ -33,7 +33,7 @@ http.on('message', function(msg) {
 });
 
 http.on('errorReceived', function(err) {
-  console.log(Error: ' + err.message);
+  console.log('Error: ' + err.message);
 });
 ```
 
