@@ -629,12 +629,12 @@ describe('ProvisioningServiceClient', function () {
     });
   });
 
-  describe('#getAttestationMechanism', function () {
+  describe('#getIndividualEnrollmentAttestationMechanism', function () {
     [undefined, null, ''].forEach(function(badEnrollmentId) {
-      testFalsyArg('getAttestationMechanism', 'enrollmentId', badEnrollmentId, ReferenceError);
+      testFalsyArg('getIndividualEnrollmentAttestationMechanism', 'enrollmentId', badEnrollmentId, ReferenceError);
     });
 
-    testErrorCallback('getAttestationMechanism', 'enrollment-id');
+    testErrorCallback('getIndividualEnrollmentAttestationMechanism', 'enrollment-id');
 
     it('creates a valid HTTP request', function (testCallback) {
       var testEnrollmentId = 'test-#-enrollment';
@@ -648,7 +648,30 @@ describe('ProvisioningServiceClient', function () {
       };
 
       var de = new ProvisioningServiceClient({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
-      de.getAttestationMechanism(testEnrollmentId, testCallback);
+      de.getIndividualEnrollmentAttestationMechanism(testEnrollmentId, testCallback);
+    });
+  });
+
+  describe('#getEnrollmentGroupAttestationMechanism', function () {
+    [undefined, null, ''].forEach(function(badEnrollmentId) {
+      testFalsyArg('getEnrollmentGroupAttestationMechanism', 'enrollmentGroupId', badEnrollmentId, ReferenceError);
+    });
+
+    testErrorCallback('getEnrollmentGroupAttestationMechanism', 'enrollment-id');
+
+    it('creates a valid HTTP request', function (testCallback) {
+      var testEnrollmentGroupId = 'test-#-enrollment';
+      var fakeHttpHelper = {
+        executeApiCall: function (method, path, httpHeaders, body, done) {
+          assert.equal(method, 'POST');
+          assert.equal(path, '/enrollmentgroups/' + encodeURIComponentStrict(testEnrollmentGroupId) + '/attestationmechanism' + _versionQueryString());
+
+          done();
+        }
+      };
+
+      var de = new ProvisioningServiceClient({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
+      de.getEnrollmentGroupAttestationMechanism(testEnrollmentGroupId, testCallback);
     });
   });
 });

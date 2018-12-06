@@ -241,14 +241,26 @@ Content-Type: application/json; charset=utf-8
 ```
 **]**
 
-### getAttestationMechanism(enrollementId: string, callback: (err: Error, attestationMechanism?: AttestationMechanism) => void): void;
-The `getAttestationMechanism` method gets the `AttestationMechanism` object of a specific enrollment record.
+### getIndividualEnrollmentAttestationMechanism(enrollementId: string, callback: (err: Error, attestationMechanism?: AttestationMechanism) => void): void;
+The `getIndividualEnrollmentAttestationMechanism` method gets the `AttestationMechanism` object of a specific enrollment record.
 
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_001: [** The `getAttestationMechanism` method shall throw a `ReferenceError` if the `enrollmentId` parameter is falsy. **]**
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_001: [** The `getIndividualEnrollmentAttestationMechanism` method shall throw a `ReferenceError` if the `enrollmentId` parameter is falsy. **]**
 
-**SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_002: [** The `getAttestationMechanism` shall construct an HTTP request using information supplied by the caller as follows:
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_002: [** The `getIndividualEnrollmentAttestationMechanism` shall construct an HTTP request using information supplied by the caller as follows:
 ```
 POST /enrollments/<encodeUriComponentStrict(enrollmentId)>/?api-version=<version> HTTP/1.1
+Authorization: <sharedAccessSignature>
+```
+**]**
+
+### getEnrollmentGroupAttestationMechanism(enrollementGroupId: string, callback: (err: Error, attestationMechanism?: AttestationMechanism) => void): void;
+The `getEnrollmentGroupAttestationMechanism` method gets the `AttestationMechanism` object of a specific enrollment record.
+
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_003: [** The `getEnrollmentGroupAttestationMechanism` method shall throw a `ReferenceError` if the `enrollementGroupId` parameter is falsy. **]**
+
+**SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_004: [** The `getEnrollmentGroupAttestationMechanism` shall construct an HTTP request using information supplied by the caller as follows:
+```
+POST /enrollmentgroups/<encodeUriComponentStrict(enrollmentGroupId)>/?api-version=<version> HTTP/1.1
 Authorization: <sharedAccessSignature>
 ```
 **]**

@@ -272,23 +272,53 @@ export class ProvisioningServiceClient {
   }
 
   /**
-   * Gets the attestation mechanism for an enrollment record.
+   * Gets the attestation mechanism for an IndividualEnrollment record.
    * @param enrollementId Unique identifier of the enrollment.
    * @param callback Function called when the request is completed, either with an error or with an AttestationMechanism object.
    * @returns {Promise<ResultWithHttpResponse<AttestationMechanism>> | void} Promise if no callback function was passed, void otherwise.
    */
-  public getAttestationMechanism(enrollementId: string, callback?: HttpResponseCallback<AttestationMechanism>): Promise<ResultWithHttpResponse<AttestationMechanism>> | void  {
-    /*SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_001: [The `getAttestationMechanism` method shall throw a `ReferenceError` if the `enrollmentId` parameter is falsy.]*/
+    public getIndividualEnrollmentAttestationMechanism(enrollementId: string, callback: HttpResponseCallback<AttestationMechanism>): void;
+    public getIndividualEnrollmentAttestationMechanism(enrollementId: string): Promise<ResultWithHttpResponse<AttestationMechanism>>;
+    public getIndividualEnrollmentAttestationMechanism(enrollementId: string, callback?: HttpResponseCallback<AttestationMechanism>): Promise<ResultWithHttpResponse<AttestationMechanism>> | void  {
+    /*SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_001: [The `getIndividualEnrollmentAttestationMechanism` method shall throw a `ReferenceError` if the `enrollmentId` parameter is falsy.]*/
     if (!enrollementId) {
       throw new ReferenceError('enrollmentId cannot be \'' + enrollementId + '\'');
     }
 
-    /*SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_002: [The `getAttestationMechanism` shall construct an HTTP request using information supplied by the caller as follows:
+    /*SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_002: [The `getIndividualEnrollmentAttestationMechanism` shall construct an HTTP request using information supplied by the caller as follows:
     ```
     POST /enrollments/<encodeUriComponentStrict(enrollmentId)>/?api-version=<version> HTTP/1.1
     Authorization: <sharedAccessSignature>
     ```]*/
     const path = '/enrollments/' + encodeUriComponentStrict(enrollementId) + '/attestationmechanism' + this._versionQueryString();
+    const headers = {};
+
+    return httpCallbackToPromise((_callback) => {
+      // for some reason we have to specify types in this callback to avoid the typescript compiler complaining about not using AttestationMechanism (even if it's in the method signature)
+      this._restApiClient.executeApiCall('POST', path, headers, undefined, _callback);
+    }, callback);
+  }
+
+  /**
+   * Gets the attestation mechanism for an EnrollmentGroup record.
+   * @param enrollementGroupId Unique identifier of the EnrollmentGroup.
+   * @param callback Function called when the request is completed, either with an error or with an AttestationMechanism object.
+   * @returns {Promise<ResultWithHttpResponse<AttestationMechanism>> | void} Promise if no callback function was passed, void otherwise.
+   */
+  public getEnrollmentGroupAttestationMechanism(enrollmentGroupId: string, callback: HttpResponseCallback<AttestationMechanism>): void;
+  public getEnrollmentGroupAttestationMechanism(enrollmentGroupId: string): Promise<ResultWithHttpResponse<AttestationMechanism>>;
+  public getEnrollmentGroupAttestationMechanism(enrollmentGroupId: string, callback?: HttpResponseCallback<AttestationMechanism>): Promise<ResultWithHttpResponse<AttestationMechanism>> | void  {
+    /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_003: [The `getEnrollmentGroupAttestationMechanism` method shall throw a `ReferenceError` if the `enrollementGroupId` parameter is falsy.]*/
+    if (!enrollmentGroupId) {
+      throw new ReferenceError('enrollmentGroupId cannot be \'' + enrollmentGroupId + '\'');
+    }
+
+    /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_004: [The `getEnrollmentGroupAttestationMechanism` shall construct an HTTP request using information supplied by the caller as follows:
+    ```
+    POST /enrollmentgroups/<encodeUriComponentStrict(enrollmentGroupId)>/?api-version=<version> HTTP/1.1
+    Authorization: <sharedAccessSignature>
+    ```]*/
+    const path = '/enrollmentgroups/' + encodeUriComponentStrict(enrollmentGroupId) + '/attestationmechanism' + this._versionQueryString();
     const headers = {};
 
     return httpCallbackToPromise((_callback) => {
