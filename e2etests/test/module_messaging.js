@@ -58,10 +58,18 @@ describe('module messaging', function() {
                 done();
               }
             });
-            debug('sending message');
-            testModule.deviceClient.sendEvent(new Message(testOutputText), function(err) {
-              debug('sendEvent returned ' + (err ? err : 'success'));
-            });
+            // Make sure the above on is fully set up.
+            setTimeout(function() {
+              debug('sending message');
+              testModule.deviceClient.sendEvent(new Message(testOutputText), function(err) {
+                if (err) {
+                  debug('module send event returned ' + err);
+                  done(err);
+                } else {
+                  debug('module send event completed without error');
+                }
+              });
+            },5000);
           }
         });
       });
