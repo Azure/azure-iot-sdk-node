@@ -287,7 +287,7 @@ export class ProvisioningServiceClient {
 
     /*SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_002: [The `getIndividualEnrollmentAttestationMechanism` shall construct an HTTP request using information supplied by the caller as follows:
     ```
-    POST /enrollments/<encodeUriComponentStrict(enrollmentId)>/?api-version=<version> HTTP/1.1
+    POST /enrollments/<encodeUriComponentStrict(enrollmentId)>/attestationmechanism?api-version=<version> HTTP/1.1
     Authorization: <sharedAccessSignature>
     ```]*/
     const path = '/enrollments/' + encodeUriComponentStrict(enrollementId) + '/attestationmechanism' + this._versionQueryString();
@@ -315,7 +315,7 @@ export class ProvisioningServiceClient {
 
     /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_004: [The `getEnrollmentGroupAttestationMechanism` shall construct an HTTP request using information supplied by the caller as follows:
     ```
-    POST /enrollmentgroups/<encodeUriComponentStrict(enrollmentGroupId)>/?api-version=<version> HTTP/1.1
+    POST /enrollmentgroups/<encodeUriComponentStrict(enrollmentGroupId)>/attestationmechanism?api-version=<version> HTTP/1.1
     Authorization: <sharedAccessSignature>
     ```]*/
     const path = '/enrollmentgroups/' + encodeUriComponentStrict(enrollmentGroupId) + '/attestationmechanism' + this._versionQueryString();
