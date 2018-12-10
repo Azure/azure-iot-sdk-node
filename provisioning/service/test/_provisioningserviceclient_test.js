@@ -58,7 +58,7 @@ var fakeRegistrationNoEtag = {
 };
 
 function _versionQueryString() {
-  return '?api-version=2018-09-01-preview';
+  return '?api-version=2018-11-01';
 }
 
 
@@ -629,13 +629,22 @@ describe('ProvisioningServiceClient', function () {
     });
   });
 
-  describe('#getAttestationMechanism', function () {
+
+  describe('#getIndividualEnrollmentAttestationMechanism', function () {
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_001: [The `getIndividualEnrollmentAttestationMechanism` method shall throw a `ReferenceError` if the `enrollmentId` parameter is falsy.]*/
     [undefined, null, ''].forEach(function(badEnrollmentId) {
-      testFalsyArg('getAttestationMechanism', 'enrollmentId', badEnrollmentId, ReferenceError);
+      testFalsyArg('getIndividualEnrollmentAttestationMechanism', 'enrollmentId', badEnrollmentId, ReferenceError);
     });
 
-    testErrorCallback('getAttestationMechanism', 'enrollment-id');
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_036: [If any device enrollment operation method encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript `Error` object with a text description of the error (err.message). ]*/
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_037: [When any registry operation method receives an HTTP response with a status code >= 300, it shall invoke the `done` callback function with an error translated using the requirements detailed in `registry_http_errors_requirements.md` ]*/
+    testErrorCallback('getIndividualEnrollmentAttestationMechanism', 'enrollment-id');
 
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_002: [** The `getIndividualEnrollmentAttestationMechanism` shall construct an HTTP request using information supplied by the caller as follows:
+    ```
+    POST /enrollments/<encodeUriComponentStrict(enrollmentId)>/attestationmechanism?api-version=<version> HTTP/1.1
+    Authorization: <sharedAccessSignature>
+    ```]*/
     it('creates a valid HTTP request', function (testCallback) {
       var testEnrollmentId = 'test-#-enrollment';
       var fakeHttpHelper = {
@@ -648,7 +657,39 @@ describe('ProvisioningServiceClient', function () {
       };
 
       var de = new ProvisioningServiceClient({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
-      de.getAttestationMechanism(testEnrollmentId, testCallback);
+      de.getIndividualEnrollmentAttestationMechanism(testEnrollmentId, testCallback);
+    });
+  });
+
+
+  describe('#getEnrollmentGroupAttestationMechanism', function () {
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_003: [The `getEnrollmentGroupAttestationMechanism` method shall throw a `ReferenceError` if the `enrollementGroupId` parameter is falsy.]*/
+    [undefined, null, ''].forEach(function(badEnrollmentId) {
+      testFalsyArg('getEnrollmentGroupAttestationMechanism', 'enrollmentGroupId', badEnrollmentId, ReferenceError);
+    });
+
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_036: [If any device enrollment operation method encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript `Error` object with a text description of the error (err.message). ]*/
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_037: [When any registry operation method receives an HTTP response with a status code >= 300, it shall invoke the `done` callback function with an error translated using the requirements detailed in `registry_http_errors_requirements.md` ]*/
+    testErrorCallback('getEnrollmentGroupAttestationMechanism', 'enrollment-id');
+
+    /*Tests_SRS_NODE_PROVISIONING_SERVICE_CLIENT_16_004: [** The `getEnrollmentGroupAttestationMechanism` shall construct an HTTP request using information supplied by the caller as follows:
+    ```
+    POST /enrollmentgroups/<encodeUriComponentStrict(enrollmentGroupId)>/attestationmechanism?api-version=<version> HTTP/1.1
+    Authorization: <sharedAccessSignature>
+    ```]*/
+    it('creates a valid HTTP request', function (testCallback) {
+      var testEnrollmentGroupId = 'test-#-enrollment';
+      var fakeHttpHelper = {
+        executeApiCall: function (method, path, httpHeaders, body, done) {
+          assert.equal(method, 'POST');
+          assert.equal(path, '/enrollmentgroups/' + encodeURIComponentStrict(testEnrollmentGroupId) + '/attestationmechanism' + _versionQueryString());
+
+          done();
+        }
+      };
+
+      var de = new ProvisioningServiceClient({ host: 'host', sharedAccessSignature: 'sas' }, fakeHttpHelper);
+      de.getEnrollmentGroupAttestationMechanism(testEnrollmentGroupId, testCallback);
     });
   });
 });
