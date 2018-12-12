@@ -122,31 +122,31 @@ describe('Client', function () {
     /*Tests_SRS_NODE_IOTHUB_CLIENT_05_013: [The send method shall throw ReferenceError if the deviceId or message arguments are falsy.]*/
     it('throws if deviceId is falsy', function () {
       assert.throws(function () {
-        testSubject.send();
+        testSubject.send(undefined, {}, () => { });
       }, ReferenceError, 'deviceId is \'undefined\'');
     });
 
     /*Tests_SRS_NODE_IOTHUB_CLIENT_05_013: [The send method shall throw ReferenceError if the deviceId or message arguments are falsy.]*/
     it('throws if message is falsy', function () {
       assert.throws(function () {
-        testSubject.send('id');
+        testSubject.send('id', undefined, () => { });
       }, ReferenceError, 'message is \'undefined\'');
     });
 
     /*Tests_SRS_NODE_IOTHUB_CLIENT_16_030: [The `send` method shall not throw if the `done` callback is falsy.]*/
-    it('does not throw if done is falsy', function () {
+    it('returns a Promise done is falsy', function () {
       var simulatedAmqp = new SimulatedAmqp();
       var client = new Client(simulatedAmqp);
-      assert.doesNotThrow(function () {
-        client.send('id', new Message('msg'));
-      });
+      const promise = client.send('id', new Message('msg'));
+      assert.instanceOf(promise, Promise);
+      promise.catch(console.log);
     });
 
     /*Tests_SRS_NODE_IOTHUB_CLIENT_18_016: [The `send` method shall throw an `ArgumentError` if the `message` argument is not of type `azure-iot-common.Message` or `azure-iot-common.Message.BufferConvertible`.]*/
     badSendParameters.forEach(function(testConfig) {
       it('throws if message is of type ' + testConfig.name, function() {
         assert.throws(function () {
-          testSubject.send('id', testConfig.obj);
+          testSubject.send('id', testConfig.obj, () => { });
         }, errors.ArgumentError);
       });
     });

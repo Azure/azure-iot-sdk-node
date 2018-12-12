@@ -81,7 +81,7 @@ Additionally, some of the iothub-ness of the MQTT transport (such as username cr
 To support modules, we update the MqttBase TransportConfig to remove the coincidental overlap and make the conversion of hub configuration to mqtt configuration explicit.
 
 Specific justifications:
-1. The old notion of `host` is broken because it was used to create both the URI and the username.  For Edge, the GateWayHostName is used to construct the URI and the hostname in the connection string is used to build the username.  Building the URI and userId belong in upper layers, so I moved it there.
+1. The old notion of `host` is broken because it was used to create both the URI and the username.  For Azure IoT Edge, the GateWayHostName is used to construct the URI and the hostname in the connection string is used to build the username.  Building the URI and userId belong in upper layers, so I moved it there.
 2. The old notion of `deviceId` is broken.  It was previously used as the MQTT clientId.  For Modules, the clientId is "deviceId/moduleId", so I made the field name explicit.
 3. The optional `username` field was a hack for DPS, but MQTT base would still construct the userName based on IotHub rules.  Since userName is different for device/module connections, I just moved all this logic up to the device transport.
 4. The `uri` field needed to be created at an upper level because of #1.  This also allows a cleaner MqttWs implementation.

@@ -104,7 +104,7 @@ describe('RestApiClient', function() {
           return {
             write: function() {},
             end: function() {
-              requestCallback();
+              requestCallback(null, '', {});
             }
           };
         }
@@ -141,7 +141,7 @@ describe('RestApiClient', function() {
             },
             write: function() {},
             end: function() {
-              requestCallback();
+              requestCallback(null, '', {});
             }
           };
         }
@@ -159,7 +159,7 @@ describe('RestApiClient', function() {
             setTimeout: function() {},
             write: function() {},
             end: function() {
-              requestCallback();
+              requestCallback(null, '', {});
             }
           };
         }
@@ -225,7 +225,7 @@ describe('RestApiClient', function() {
             write: function() {},
             end: function() {
               assert.strictEqual(requestOptions.port, 2000);
-              requestCallback();
+              requestCallback(null, '', {});
             }
           };
         }
@@ -246,7 +246,7 @@ describe('RestApiClient', function() {
             },
             write: function() {},
             end: function() {
-              requestCallback();
+              requestCallback(null, '', {});
             }
           };
         }
@@ -288,7 +288,7 @@ describe('RestApiClient', function() {
                 assert.equal(body, testRequestBody);
               },
               end: function() {
-                requestCallback();
+                requestCallback(null, '', {});
               }
             };
           }
@@ -340,7 +340,7 @@ describe('RestApiClient', function() {
             setTimeout: function() {},
             write: function() {},
             end: function() {
-              requestCallback(null, JSON.stringify(fakeResponseBody), fakeResponse);
+              requestCallback(null, fakeResponseBody, fakeResponse);
             }
           };
         }
@@ -417,7 +417,7 @@ describe('RestApiClient', function() {
               assert.equal(body, JSON.stringify(testRequestBody));
             },
             end: function() {
-              requestCallback();
+              requestCallback(null, '', {});
             }
           };
         }
@@ -443,7 +443,7 @@ describe('RestApiClient', function() {
               assert.equal(body, testRequestBody);
             },
             end: function() {
-              requestCallback();
+              requestCallback(null, '', {});
             }
           };
         }
@@ -467,7 +467,7 @@ describe('RestApiClient', function() {
               assert.equal(body, testRequestBody);
             },
             end: function() {
-              requestCallback();
+              requestCallback(null, '', {});
             }
           };
         }
@@ -521,7 +521,7 @@ describe('RestApiClient', function() {
             return {
               write: function() { },
               end: function() {
-                requestCallback();
+                requestCallback(null, '', {});
               }
             };
           }

@@ -1,4 +1,4 @@
-# Microsoft Azure IoT SDK for Node.js Edge module sample
+# Azure IoT Edge: node.js module sample
 
 This folder contains a set of Dockerfiles which can be used to crate an Azure IoT Edge module using node.js which can be deployed and run inside of an Azure IoT Edge environment
 

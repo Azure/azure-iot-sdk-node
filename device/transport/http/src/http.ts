@@ -384,7 +384,11 @@ export class Http extends EventEmitter implements DeviceTransport {
           drainRequester.on('nextRequest', () => {
             const request = this._http.buildRequest('GET', path + endpoint.versionQueryString(), httpHeaders, config.host, config.x509, (err, body, res) => {
               if (!err) {
-                if (body) {
+                //
+                // A status code of 200 indicates an actual message returned.
+                // A status code of 204 indicates that there actually wasn't a message in the c2d queue.
+                //
+                if (res.statusCode === 200) {
                   const msg = this._http.toMessage(res, body);
                   if (this._opts.drain) {
                     drainRequester.emit('nextRequest');
@@ -694,7 +698,7 @@ export class Http extends EventEmitter implements DeviceTransport {
         /*Codes_SRS_NODE_DEVICE_HTTP_05_008: [If any Http method encounters an error before it can send the request, it shall invoke the done callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
         const request = this._http.buildRequest(method, path, httpHeaders, config.host, config.x509, (err, body, response) => {
           if (done) {
-            if (!err && response.statusCode === 204) {
+            if (!err && response.statusCode < 300) {
               const result = new resultConstructor(response);
               done(null, result);
             } else {

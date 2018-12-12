@@ -39,4 +39,4 @@ export function getAgentPlatformString(callback: (platformString?: string) => vo
     /*Codes_SRS_NODE_COMMON_UTILS_18_008: [`getAgentPlatformString` shall call its `callback` with the string '<nodejs version>;<os version>;<CPU architecture>'.]*/
     callback(ver.join('; '));
   }
-};
+}

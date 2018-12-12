@@ -1,6 +1,6 @@
 # Microsoft Azure IoT SDK for Node.js modules-preview branch for Microsoft Edge modules.
 
-This branch of the Azure IoT SDK for Node.js contains code to use the Mqtt protocol to act as a Microsoft Azure Edge module and talk to a Microsoft Azure Edge hub instance.
+This branch of the Azure IoT SDK for Node.js contains code to use the Mqtt protocol to act as a Microsoft Azure IoT Edge module and talk to a Microsoft Azure IoT Edge hub instance.
 
 ## Important note
 This code is not currently published on NPM.  In order to use these modules, you need to use the versions in this branch.  Instructions for working with this code outside of the NPM repository can be found [here](./doc/node-devbox-setup.md)
