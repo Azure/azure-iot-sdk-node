@@ -80,7 +80,7 @@ describe('Http', function() {
     if (err) {
       done(err);
     } else {
-      done(null, JSON.stringify(body), { statusCode: statusCode });
+      done(null, JSON.stringify(body), { statusCode: statusCode, headers: { 'content-type': 'application/json' } });
     }
   };
 
@@ -339,5 +339,3 @@ describe('Http', function() {
   });
 
 });
-
-
