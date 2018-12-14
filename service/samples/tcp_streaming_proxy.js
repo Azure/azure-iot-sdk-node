@@ -18,29 +18,26 @@ var proxyServer = net.createServer(function (socket) {
 
   var streamInit = {
     streamName: 'TestStream',
-    contentType: 'text/plain',
-    contentEncoding: 'utf-8',
     connectTimeoutInSeconds: 30,
-    responseTimeoutInSeconds: 30,
-    payload: undefined
+    responseTimeoutInSeconds: 30
   }
-  
+
   var client = ServiceClient.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
-  
+
   console.log('initiating stream');
   client.initiateStream(process.env.STREAMING_TARGET_DEVICE, streamInit, function(err, result) {
     if (err) {
       console.error('error initiating TCP stream: ' + err.toString());
     } else {
       console.log('results received from the device: ' + JSON.stringify(result, null, 2));
-  
+
       var ws = websocket(result.uri, { headers: { 'Authorization': 'Bearer ' + result.authorizationToken} });
       console.log('got websocket - creating local server on port ' + process.env.PROXY_PORT);
-  
+
       socket.pipe(ws);
-      ws.pipe(socket);    
+      ws.pipe(socket);
     }
-  });  
+  });
 });
 
 proxyServer.on('error', function (err) {

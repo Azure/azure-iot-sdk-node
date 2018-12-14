@@ -456,17 +456,12 @@ describe('Client', function () {
 
     iothub-streaming-connect-timeout-in-seconds: <streamInitiation.connectTimeoutInSeconds>
     iothub-streaming-response-timeout-in-seconds: <streamInitiation.responseTimeoutInSeconds>
-    Content-Type: <streamInitiation.contentType>
-    Content-Encoding: <streamInitiation.contentEncoding>
-
-    streamInitiation.payload
     ```]*/
     it('sends a well-formatted HTTP request', function (testCallback) {
       var fakeDeviceId = 'fakeDevice';
       var fakeStreamInitiation = {
         connectTimeoutInSeconds: 42,
         responseTimeoutInSeconds: 1337,
-        payload: 'payload',
         streamName: 'streamName'
       };
       var fakeResponse = {
@@ -475,9 +470,6 @@ describe('Client', function () {
           'iothub-streaming-is-accepted': 'True',
           'iothub-streaming-url': 'wss://test',
           'iothub-streaming-authToken': 'token',
-          'iothub-streaming-ip-address': '127.0.0.1',
-          'Content-Type': 'application/json',
-          'Content-Encoding': 'utf-8'
         }
       };
       var fakeResult = "";
@@ -487,7 +479,6 @@ describe('Client', function () {
           assert.strictEqual(path, '/twins/' + fakeDeviceId + '/streams/' + fakeStreamInitiation.streamName + '?api-version=' + endpoint.apiVersion);
           assert.strictEqual(headers['iothub-streaming-connect-timeout-in-seconds'], fakeStreamInitiation.connectTimeoutInSeconds);
           assert.strictEqual(headers['iothub-streaming-response-timeout-in-seconds'], fakeStreamInitiation.responseTimeoutInSeconds);
-          assert.strictEqual(body, fakeStreamInitiation.payload);
           /*Tests_SRS_NODE_IOTHUB_CLIENT_16_034: [The `initiateStream` method shall have a custom timeout set to the value in milliseconds of the sum of the streamInitiation.connectTimeoutInSeconds and streamInitiation.responseTimeoutInSeconds.]*/
           assert.strictEqual(timeout, 1000 * (fakeStreamInitiation.connectTimeoutInSeconds + fakeStreamInitiation.responseTimeoutInSeconds));
           callback(null, fakeResult, fakeResponse);
@@ -503,17 +494,12 @@ describe('Client', function () {
     /*Tests_SRS_NODE_IOTHUB_CLIENT_16_036: [The `initiateStream` method shall create a `StreamInitiationResult` object from the received HTTP response as follows:
     streamInitiationResult.authorizationToken: response.headers['iothub-streaming-auth-token']
     streamInitiationResult.uri: response.headers['iothub-streaming-url']
-    streamInitiationResult.contentType: response.headers['Content-Type']
-    streamInitiationResult.contentEncoding: response.headers['Content-Encoding']
-    streamInitiationResult.data: response body
-    streamInitiationResult.ipAddress: response.headers['iothub-streaming-ip-address']
     streamInitiationResult.isAccepted: true if response.headers['iothub-streaming-is-accepted'] is 'True', false otherwise.]*/
     it('calls the callback with a well-formed response', function (testCallback) {
       var fakeDeviceId = 'fakeDevice';
       var fakeStreamInitiation = {
         connectTimeoutInSeconds: 42,
         responseTimeoutInSeconds: 1337,
-        payload: 'payload',
         streamName: 'streamName'
       };
       var fakeResponse = {
@@ -522,15 +508,11 @@ describe('Client', function () {
           'iothub-streaming-is-accepted': 'True',
           'iothub-streaming-url': 'wss://test',
           'iothub-streaming-authToken': 'token',
-          'iothub-streaming-ip-address': '127.0.0.1',
-          'Content-Type': 'application/json',
-          'Content-Encoding': 'utf-8'
         }
       };
-      var fakeResult = "";
       var fakeRestClient = {
         executeApiCall: function(method, path, headers, body, timeout, callback) {
-          callback(null, fakeResult, fakeResponse);
+          callback(null, undefined, fakeResponse);
         }
       };
 
@@ -539,13 +521,9 @@ describe('Client', function () {
         if (err) {
           testCallback(err);
         } else {
-          assert.strictEqual(result.contentType, fakeResponse.headers['Content-Type']);
-          assert.strictEqual(result.contentEncoding, fakeResponse.headers['Content-Encoding']);
           assert.strictEqual(result.uri, fakeResponse.headers['iothub-streaming-url']);
-          assert.strictEqual(result.ipAddress, fakeResponse.headers['iothub-streaming-ip-address']);
           assert.strictEqual(result.authorizationToken, fakeResponse.headers['iothub-streaming-auth-token']);
           assert.strictEqual(result.isAccepted, true);
-          assert.strictEqual(result.data, fakeResult);
           testCallback();
         }
       });
@@ -557,7 +535,6 @@ describe('Client', function () {
       var fakeStreamInitiation = {
         connectTimeoutInSeconds: 42,
         responseTimeoutInSeconds: 1337,
-        payload: 'payload',
         streamName: 'streamName'
       };
       var fakeRestClient = {

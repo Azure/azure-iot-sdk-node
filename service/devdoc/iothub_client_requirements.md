@@ -195,10 +195,6 @@ POST /twins/encodeUriComponentStrict(<deviceId>)/streams/encodeUriComponentStric
 
 iothub-streaming-connect-timeout-in-seconds: <streamInitiation.connectTimeoutInSeconds>
 iothub-streaming-response-timeout-in-seconds: <streamInitiation.responseTimeoutInSeconds>
-Content-Type: <streamInitiation.contentType>
-Content-Encoding: <streamInitiation.contentEncoding>
-
-streamInitiation.payload
 ``` **]**
 
 **SRS_NODE_IOTHUB_CLIENT_16_034: [** The `initiateStream` method shall have a custom timeout set to the value in milliseconds of the sum of the streamInitiation.connectTimeoutInSeconds and streamInitiation.responseTimeoutInSeconds. **]**
@@ -206,10 +202,6 @@ streamInitiation.payload
 **SRS_NODE_IOTHUB_CLIENT_16_036: [** The `initiateStream` method shall create a `StreamInitiationResult` object from the received HTTP response as follows:
 streamInitiationResult.authorizationToken: response.headers['iothub-streaming-auth-token']
 streamInitiationResult.uri: response.headers['iothub-streaming-url']
-streamInitiationResult.contentType: response.headers['Content-Type']
-streamInitiationResult.contentEncoding: response.headers['Content-Encoding']
-streamInitiationResult.data: response body
-streamInitiationResult.ipAddress: response.headers['iothub-streaming-ip-address']
 streamInitiationResult.isAccepted: true if response.headers['iothub-streaming-is-accepted'] is 'True', false otherwise. **]**
 
 **SRS_NODE_IOTHUB_CLIENT_16_035: [** The `initiateStream` method shall call its callback with an error if the RestApiClient fails to execute the API call. **]**

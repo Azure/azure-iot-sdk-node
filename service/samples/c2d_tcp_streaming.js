@@ -8,11 +8,8 @@ var ServiceClient = require('azure-iothub').Client;
 
 var streamInit = {
   streamName: 'TestStream',
-  contentType: 'application/json',
-  contentEncoding: 'utf-8',
   connectTimeoutInSeconds: 30,
   responseTimeoutInSeconds: 30,
-  payload: undefined
 }
 
 var client = ServiceClient.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);

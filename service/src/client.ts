@@ -385,15 +385,9 @@ export class Client extends EventEmitter {
 
     iothub-streaming-connect-timeout-in-seconds: <streamInitiation.connectTimeoutInSeconds>
     iothub-streaming-response-timeout-in-seconds: <streamInitiation.responseTimeoutInSeconds>
-    Content-Type: <streamInitiation.contentType>
-    Content-Encoding: <streamInitiation.contentEncoding>
-
-    streamInitiation.payload
     ```]*/
     const path = '/twins/' + encodeUriComponentStrict(deviceId) + '/streams/' + streamInitiation.streamName + '?api-version=' + endpoint.apiVersion;
     const httpHeaders = {
-      'Content-Type': streamInitiation.contentType,
-      'Content-Encoding': streamInitiation.contentEncoding,
       'iothub-streaming-connect-timeout-in-seconds': streamInitiation.connectTimeoutInSeconds,
       'iothub-streaming-response-timeout-in-seconds': streamInitiation.responseTimeoutInSeconds
     };
@@ -401,7 +395,7 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_IOTHUB_CLIENT_16_034: [The `initiateStream` method shall have a custom timeout set to the value in milliseconds of the sum of the streamInitiation.connectTimeoutInSeconds and streamInitiation.responseTimeoutInSeconds.]*/
     const requestTimeout = 1000 * (streamInitiation.connectTimeoutInSeconds + streamInitiation.responseTimeoutInSeconds);
 
-    this._restApiClient.executeApiCall('POST', path, httpHeaders, streamInitiation.payload, requestTimeout, (err, result, response) => {
+    this._restApiClient.executeApiCall('POST', path, httpHeaders, undefined, requestTimeout, (err, result, response) => {
       if (err) {
         /*Codes_SRS_NODE_IOTHUB_CLIENT_16_035: [The `initiateStream` method shall call its callback with an error if the RestApiClient fails to execute the API call.]*/
         callback(err);
@@ -409,10 +403,6 @@ export class Client extends EventEmitter {
         /*Codes_SRS_NODE_IOTHUB_CLIENT_16_036: [The `initiateStream` method shall create a `StreamInitiationResult` object from the received HTTP response as follows:
         streamInitiationResult.authorizationToken: response.headers['iothub-streaming-auth-token']
         streamInitiationResult.uri: response.headers['iothub-streaming-url']
-        streamInitiationResult.contentType: response.headers['Content-Type']
-        streamInitiationResult.contentEncoding: response.headers['Content-Encoding']
-        streamInitiationResult.data: response body
-        streamInitiationResult.ipAddress: response.headers['iothub-streaming-ip-address']
         streamInitiationResult.isAccepted: true if response.headers['iothub-streaming-is-accepted'] is 'True', false otherwise.]*/
         const streamInitResult = StreamInitiationResult.fromHttpResponse(response.headers, result);
         callback(null, streamInitResult);
