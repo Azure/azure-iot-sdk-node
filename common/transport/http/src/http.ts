@@ -143,7 +143,6 @@ export class Http {
       httpOptions.key = (x509Options as X509).key;
       httpOptions.passphrase = (x509Options as X509).passphrase;
       httpOptions.clientCertEngine = (x509Options as X509).clientCertEngine;
-      httpOptions.secureProtocol = (x509Options as X509).secureProtocol;
     }
 
     if (this._options && this._options.ca) {
