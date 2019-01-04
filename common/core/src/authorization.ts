@@ -99,7 +99,8 @@ export interface X509 {
    * Passphrase used to decode the key associated with the X509 certificate.
    */
   passphrase?: string;
-
+  clientCertEngine?: string;
+  secureProtocol?: string;
   /**
    * @private
    */
