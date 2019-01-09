@@ -6,7 +6,7 @@
 import { EventEmitter } from 'events';
 import { HttpTransportError, RestApiClient, Http as Base } from 'azure-iot-http-base';
 import { X509, errors } from 'azure-iot-common';
-import { X509ProvisioningTransport, TpmProvisioningTransport } from 'azure-iot-provisioning-device';
+import { X509ProvisioningTransport, TpmProvisioningTransport, SymmetricKeyProvisioningTransport } from 'azure-iot-provisioning-device';
 import { RegistrationRequest, DeviceRegistrationResult } from 'azure-iot-provisioning-device';
 import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure-iot-provisioning-device';
 import { translateError } from 'azure-iot-provisioning-device';
@@ -21,12 +21,12 @@ const _defaultHeaders = {
 /**
  * Transport used to provision a device over HTTP.
  */
-export class Http extends EventEmitter implements X509ProvisioningTransport, TpmProvisioningTransport {
+export class Http extends EventEmitter implements X509ProvisioningTransport, TpmProvisioningTransport, SymmetricKeyProvisioningTransport {
   private _restApiClient: RestApiClient;
   private _httpBase: Base;
   private _config: ProvisioningTransportOptions = {};
   private _auth: X509;
-  private _sasToken: string;
+  private _sas: string;
   private _tpmPublicKeys: {
     endorsementKey: string,
     storageRootKey: string
@@ -49,7 +49,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
    *
    */
   respondToAuthenticationChallenge(request: RegistrationRequest, sasToken: string, callback: (err?: Error) => void): void {
-      this._sasToken = sasToken;
+      this._sas = sasToken;
       callback();
   }
 
@@ -112,6 +112,14 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
 
   /**
    * @private
+   */
+  setSharedAccessSignature(sas: string): void {
+    this._sas = sas;
+  }
+
+
+  /**
+   * @private
    *
    */
   setTransportOptions(options: ProvisioningTransportOptions): void {
@@ -167,8 +175,8 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
       Content-Type: application/json; charset=utf-8 ] */
     let httpHeaders = JSON.parse(JSON.stringify(_defaultHeaders));
 
-    if (this._sasToken) {
-      httpHeaders.Authorization = this._sasToken;
+    if (this._sas) {
+      httpHeaders.Authorization = this._sas;
     }
 
     debug('submitting PUT for ' + request.registrationId + ' to ' + path);
@@ -209,8 +217,8 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
       Content-Type: application/json; charset=utf-8 ] */
     let httpHeaders = JSON.parse(JSON.stringify(_defaultHeaders));
 
-    if (this._sasToken) {
-      httpHeaders.Authorization = this._sasToken;
+    if (this._sas) {
+      httpHeaders.Authorization = this._sas;
     }
 
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_022: [ `queryOperationStatus` shall send a GET operation sent to 'https://{provisioningHost}/{idScope}/registrations/{registrationId}/operations/{operationId}'  ] */

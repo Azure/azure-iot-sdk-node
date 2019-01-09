@@ -104,7 +104,7 @@ describe('RestApiClient', function() {
           return {
             write: function() {},
             end: function() {
-              requestCallback();
+              requestCallback(null, '', { statusCode: 200 });
             }
           };
         }
@@ -141,7 +141,7 @@ describe('RestApiClient', function() {
             },
             write: function() {},
             end: function() {
-              requestCallback();
+              requestCallback(null, '', { statusCode: 200 });
             }
           };
         }
@@ -159,7 +159,7 @@ describe('RestApiClient', function() {
             setTimeout: function() {},
             write: function() {},
             end: function() {
-              requestCallback();
+              requestCallback(null, '', { statusCode: 200 });
             }
           };
         }
@@ -225,7 +225,7 @@ describe('RestApiClient', function() {
             write: function() {},
             end: function() {
               assert.strictEqual(requestOptions.port, 2000);
-              requestCallback();
+              requestCallback(null, '', { statusCode: 200 });
             }
           };
         }
@@ -246,7 +246,7 @@ describe('RestApiClient', function() {
             },
             write: function() {},
             end: function() {
-              requestCallback();
+              requestCallback(null, '', { statusCode: 200 });
             }
           };
         }
@@ -288,7 +288,7 @@ describe('RestApiClient', function() {
                 assert.equal(body, testRequestBody);
               },
               end: function() {
-                requestCallback();
+                requestCallback(null, '', { statusCode: 200 });
               }
             };
           }
@@ -299,9 +299,14 @@ describe('RestApiClient', function() {
       });
     });
 
-    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_009: [If the HTTP request is successful the `executeApiCall` method shall parse the JSON response received and call the `done` callback with a `null` first argument, the parsed result as a second argument and the HTTP response object itself as a third argument.]*/
-    it('calls the done callback with null, a result and a response if the request succeeds', function (testCallback) {
-      var fakeResponse = { statusCode: 200 };
+    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_009: [If the HTTP request is successful and the content-type header contains `application/json` the `executeApiCall` method shall parse the JSON response received and call the `done` callback with a `null` first argument, the parsed result as a second argument and the HTTP response object itself as a third argument.]*/
+    it('calls the done callback with null, a result and a response if the request succeeds and is valid JSON', function (testCallback) {
+      var fakeResponse = {
+        statusCode: 200,
+        headers: {
+          'content-type': 'application/json'
+        }
+      };
       var fakeResponseBody = {
         foo: 'bar'
       };
@@ -322,6 +327,39 @@ describe('RestApiClient', function() {
       client.executeApiCall('GET', '/test/path', null, null, function(err, result, response) {
         assert.isNull(err);
         assert.deepEqual(result, fakeResponseBody);
+        assert.equal(response, fakeResponse);
+        testCallback();
+      });
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_037: [If parsing the body of the HTTP response as JSON fails, the `done` callback shall be called with the SyntaxError thrown as a first argument, an `undefined` second argument, and the HTTP response object itself as a third argument.]*/
+    it('calls the done callback with a SyntaxError, an undefined result and a response if the request succeeds and is NOT valid JSON', function (testCallback) {
+      var fakeResponse = {
+        statusCode: 200,
+        headers: {
+          'content-type': 'application/json'
+        }
+      };
+      // this response was actually generated once from invalid C SDK code. It could happen :)
+      // it seems as though the service does not unpack the response payload, which means we could get a 200 OK with invalid JSON in the body.
+      var fakeResponseBody = "{ \"status\": 200, \"payload\": { }";
+
+      var fakeHttpHelper = {
+        buildRequest: function(method, path, headers, host, requestCallback) {
+          return {
+            setTimeout: function() {},
+            write: function() {},
+            end: function() {
+              requestCallback(null, fakeResponseBody, fakeResponse);
+            }
+          };
+        }
+      };
+
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
+      client.executeApiCall('GET', '/test/path', null, null, function(err, result, response) {
+        assert.instanceOf(err, SyntaxError);
+        assert.isUndefined(result);
         assert.equal(response, fakeResponse);
         testCallback();
       });
@@ -389,7 +427,7 @@ describe('RestApiClient', function() {
               assert.equal(body, JSON.stringify(testRequestBody));
             },
             end: function() {
-              requestCallback();
+              requestCallback(null, '', { statusCode: 200 });
             }
           };
         }
@@ -415,7 +453,7 @@ describe('RestApiClient', function() {
               assert.equal(body, testRequestBody);
             },
             end: function() {
-              requestCallback();
+              requestCallback(null, '', { statusCode: 200 });
             }
           };
         }
@@ -439,7 +477,7 @@ describe('RestApiClient', function() {
               assert.equal(body, testRequestBody);
             },
             end: function() {
-              requestCallback();
+              requestCallback(null, '', { statusCode: 200 });
             }
           };
         }
@@ -493,7 +531,7 @@ describe('RestApiClient', function() {
             return {
               write: function() { },
               end: function() {
-                requestCallback();
+                requestCallback(null, '', { statusCode: 200 });
               }
             };
           }
