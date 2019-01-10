@@ -156,8 +156,9 @@ export class RestApiClient {
         let parseError = null;
         const contentTypeHeader = response.headers ? response.headers['content-type'] || response.headers['Content-Type'] : undefined;
         const expectJson = contentTypeHeader && contentTypeHeader.indexOf('application/json') >= 0;
-        if (responseBody && expectJson ) {
+        if (responseBody && expectJson) {
           try {
+            /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_037: [If the HTTP request is successful and the `content-type` header of the response starts with `application/json` the `executeApiCall` method shall parse the body of the response and provide the `result` as an object.]*/
             result = JSON.parse(responseBody);
           } catch (ex) {
             if (ex instanceof SyntaxError) {
@@ -167,8 +168,6 @@ export class RestApiClient {
               throw ex;
             }
           }
-          /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_037: [If the HTTP request is successful and the `content-type` header of the response starts with `application/json` the `executeApiCall` method shall parse the body of the response and provide the `result` as an object.]*/
-          result = JSON.parse(responseBody);
         }
         /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_039: [If parsing the body of the HTTP response as JSON fails, the `done` callback shall be called with the SyntaxError thrown as a first argument, an `undefined` second argument, and the HTTP response object itself as a third argument.]*/
         done(parseError, result, response);
