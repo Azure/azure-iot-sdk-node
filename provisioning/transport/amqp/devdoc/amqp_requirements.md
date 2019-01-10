@@ -12,9 +12,19 @@ These methods are used by the other objects of the SDK but are not public API fo
 
 **SRS_NODE_PROVISIONING_AMQP_16_001: [** The certificate and key passed as properties of the `auth` argument shall be used to connect to the Device Provisioning Service endpoint, when a registration request or registration operation status request are made. **]**
 
+## setSharedAccessSignature(sas: string): void
+
+**SRS_NODE_PROVISIONING_AMQP_06_001: [** The sas passed shall be saved into the current transport object. **]**
 
 ## registrationRequest(request: RegistrationRequest, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void
 ---
+
+**SRS_NODE_PROVISIONING_AMQP_06_002: [** The `registrationRequest` method shall connect the amqp client, if utilizing the passed in sas from setSharedAccessSignature, shall in the connect options set the username to:
+```
+<scopeId>/registrations/<registrationId>
+```
+and shall set the password to the passed in sas token.
+ **]**
 
 **SRS_NODE_PROVISIONING_AMQP_16_002: [** The `registrationRequest` method shall connect the AMQP client with the certificate and key given in the `auth` parameter of the previously called `setAuthentication` method. **]**
 

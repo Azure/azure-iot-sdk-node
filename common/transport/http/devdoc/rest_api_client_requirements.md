@@ -62,6 +62,8 @@ The `executeApiCall` method builds the HTTP request using the passed arguments a
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_038: [** If the HTTP request is successful and the `content-type` is not set or is set to something else than `application/json`, the `executeApiCall` method shall use the body of the response as is for the `result` object. **]**
 
+**SRS_NODE_IOTHUB_REST_API_CLIENT_16_039: [** If parsing the body of the HTTP response as JSON fails, the `done` callback shall be called with the SyntaxError thrown as a first argument, an `undefined` second argument, and the HTTP response object itself as a third argument. **]**
+
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_010: [** If the HTTP request fails with an error code >= 300 the `executeApiCall` method shall translate the HTTP error into a transport-agnostic error using the `translateError` method and call the `done` callback with the resulting error as the only argument. **]**
 
 **SRS_NODE_IOTHUB_REST_API_CLIENT_16_011: [** If the HTTP request fails without an HTTP error code the `executeApiCall` shall call the `done` callback with the error itself as the only argument. **]**

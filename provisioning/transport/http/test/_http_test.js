@@ -306,6 +306,15 @@ describe('Http', function() {
     });
   });
 
+  describe('use symmetric key setSharedAccessSignature', function() {
+    it('setSharedAccessSignature', function(callback) {
+      var fakeSas = 'fake sas';
+      http.setSharedAccessSignature(fakeSas);
+      assert(http._sas, fakeSas);
+      callback();
+    });
+  });
+
   describe('use sas token in request', function() {
     it('registrationRequest', function(callback) {
       http.respondToAuthenticationChallenge(fakeRequest, 'a fake SasToken', function() {
