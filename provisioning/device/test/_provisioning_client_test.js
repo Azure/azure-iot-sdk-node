@@ -33,6 +33,11 @@ var fakeTpmSecurity = {
   cancel:function() {}
 };
 
+var fakeSymmetricKeySecurity = {
+  getRegistrationId: function() {},
+  createSharedAccessSignature: function() {}
+};
+
 var fakeInvalidSecurity = {};
 
 var fakeX509Transport = {
@@ -45,6 +50,10 @@ var fakeX509Transport = {
 
 var fakeTpmTransport = {
   getAuthenticationChallenge: function() {},
+};
+
+var fakeSymmetricKeyTransport = {
+  setSharedAccessSignature: function() {}
 };
 
 var fakeProvisioningHost = 'fake_host';
@@ -82,7 +91,7 @@ describe('ProvisioningDeviceClient', function () {
     /* Tests_SRS_PROVISIONING_CLIENT_18_002: [ If `securityClient` implements `X509SecurityClient` and the `transport` does not implement `X509ProvisioningTransport`, then `create` shall throw a `ArgumentError` expectation. ] */
     it ('throws when passed an x509 security object and non-x509 transport', function() {
       assert.throws(function() {
-        ProvisioningDeviceClient.create(fakeProvisioningHost, fakeIdScope, fakeX509Transport, fakeTpmSecurity);
+        ProvisioningDeviceClient.create(fakeProvisioningHost, fakeIdScope, fakeTpmTransport, fakeX509Security);
       }, errors.ArgumentError);
     });
 
@@ -95,11 +104,24 @@ describe('ProvisioningDeviceClient', function () {
     /* Tests_SRS_PROVISIONING_CLIENT_18_004: [ If `securityClient` implements `TPMSecurityClient` and the `transport` dos not implement `TPMProvisioningTransport`, then `create` shall throw a `ArgumentError` expectation. ] */
     it ('throws when passed a TPM security object and non-TPM transport', function() {
       assert.throws(function() {
-        ProvisioningDeviceClient.create(fakeProvisioningHost, fakeIdScope, fakeTpmTransport, fakeX509Security);
+        ProvisioningDeviceClient.create(fakeProvisioningHost, fakeIdScope, fakeX509Transport, fakeTpmSecurity);
       }, errors.ArgumentError);
     });
 
-    /* Tests_SRS_PROVISIONING_CLIENT_18_005: [ If `securityClient` dos not implement `X509ProvisioningTransport` or `TPMProvisioningTransport`, then `create` shall show an `ArgumentError` exception. ] */
+    /* Tests_SRS_PROVISIONING_CLIENT_06_003: [If `securityClient` implements `SymmetricKeySecurityClient` and the `transport` implements `SymmetricKeyProvisioningTransport`, then `create` shall return an `SymmetricKeyRegistration` object.] */
+    it ('correctly returns an SymmetricKeyRegistrationObject', function() {
+      var client = ProvisioningDeviceClient.create(fakeProvisioningHost, fakeIdScope, fakeSymmetricKeyTransport, fakeSymmetricKeySecurity);
+      assert.equal(client.constructor.name, 'SymmetricKeyRegistration' )
+    });
+
+    /* Tests_SRS_PROVISIONING_CLIENT_06_004: [If `securityClient` implements `SymmetricKeySecurityClient` and the `transport` does not implement `SymmetricKeyProvisioningTransport`, then `create` shall throw an `ArgumentError` exception.] */
+    it ('throws when passed a Symmetric Key security object and non-Symmetric Key transport', function() {
+      assert.throws(function() {
+        ProvisioningDeviceClient.create(fakeProvisioningHost, fakeIdScope, fakeTpmTransport, fakeSymmetricKeySecurity);
+      }, errors.ArgumentError);
+    });
+
+    /* Tests_SRS_PROVISIONING_CLIENT_18_005: [ If `securityClient` does not implement `X509SecurityClient`, `TPMSecurityClient`,  or `SymmetricKeySecurityClient` then `create` shall show an `ArgumentError` exception. ] */
     it ('throws when passed an invalid securityClient object', function() {
       assert.throws(function() {
         ProvisioningDeviceClient.create(fakeProvisioningHost, fakeIdScope, fakeTpmTransport, fakeInvalidSecurity);

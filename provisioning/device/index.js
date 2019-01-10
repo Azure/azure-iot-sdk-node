@@ -4,7 +4,7 @@
 'use strict';
 
 /**
- * The `azure-iot-provisioning-device` module provides access to the Azure Device Provisoning Service.
+ * The `azure-iot-provisioning-device` module provides access to the Azure Device Provisioning Service.
  *
  * @module azure-iot-provisioning-device
  * @requires module:azure-iot-common
@@ -16,6 +16,7 @@ module.exports = {
   RegistrationResult: require('./lib/interfaces').RegistrationResult,
   DeviceRegistrationResult: require('./lib/interfaces').DeviceRegistrationResult,
   X509ProvisioningTransport: require('./lib/interfaces').X509ProvisioningTransport,
+  SymmetricKeyProvisioningTransport: require('./lib/interfaces').SymmetricKeyProvisioningTransport,
   PollingStateMachine: require('./lib/polling_state_machine').PollingStateMachine,
   ProvisioningDeviceClient: require('./lib/client').ProvisioningDeviceClient,
   ProvisioningDeviceConstants: require('./lib/constants').ProvisioningDeviceConstants,
