@@ -26,7 +26,7 @@ var correctDisconnectMessage = function(err, done) {
   }
 };
 
-describe('DPS service client', function() {
+describe('Invalid Certificate Validation', function() {
   var enrollment1 = {
     registrationId: 'first',
     attestation: {

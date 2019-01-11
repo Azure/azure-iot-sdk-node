@@ -1,13 +1,13 @@
 {
   "name": "azure-iot-provisioning-device",
-  "version": "1.4.3",
+  "version": "1.5.0",
   "description": "Azure Device Provisioning SDK device client",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.8.3",
+    "azure-iot-common": "1.9.0",
     "debug": "^3.0.1",
     "machina": "^4.0.1"
   },
@@ -29,7 +29,7 @@
     "alltest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
     "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
     "test": "npm -s run lint && npm -s run build && npm -s run unittest",
-    "check-cover": "istanbul check-coverage --statements 84 --branches 63 --functions 73 --lines 85"
+    "check-cover": "istanbul check-coverage --statements 87 --branches 69 --functions 77 --lines 88"
   },
   "engines": {
     "node": ">= 0.10"

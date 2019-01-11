@@ -23,7 +23,7 @@ export class ProvisioningDeviceConstants {
   /**
    * apiVersion to use while communicating with service.
    */
-  static apiVersion: string = '2017-11-15';
+  static apiVersion: string = '2018-11-01';
 
   /**
    * default timeout to use when communicating with the service

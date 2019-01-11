@@ -150,9 +150,24 @@ export class RestApiClient {
           done(err);
         }
       } else {
-        /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_009: [If the HTTP request is successful the `executeApiCall` method shall parse the JSON response received and call the `done` callback with a `null` first argument, the parsed result as a second argument and the HTTP response object itself as a third argument.]*/
-        const result = responseBody ? JSON.parse(responseBody) : '';
-        done(null, result, response);
+        /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_009: [If the HTTP request is successful and the content-type header contains `application/json` the `executeApiCall` method shall parse the JSON response received and call the `done` callback with a `null` first argument, the parsed result as a second argument and the HTTP response object itself as a third argument.]*/
+        let result = '';
+        let parseError = null;
+        /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_037: [If parsing the body of the HTTP response as JSON fails, the `done` callback shall be called with the SyntaxError thrown as a first argument, an `undefined` second argument, and the HTTP response object itself as a third argument.]*/
+        const expectJson = response.headers && response.headers['content-type'] && response.headers['content-type'].indexOf('application/json') >= 0;
+        if (responseBody && expectJson) {
+          try {
+            result = JSON.parse(responseBody);
+          } catch (ex) {
+            if (ex instanceof SyntaxError) {
+              parseError = ex;
+              result = undefined;
+            } else {
+              throw ex;
+            }
+          }
+        }
+        done(parseError, result, response);
       }
     };
 

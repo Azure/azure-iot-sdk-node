@@ -4,7 +4,8 @@
 
 import { X509Registration } from './x509_registration';
 import { TpmRegistration } from './tpm_registration';
-import { RegistrationClient, X509ProvisioningTransport, TpmProvisioningTransport, X509SecurityClient, TpmSecurityClient } from './interfaces';
+import { SymmetricKeyRegistration } from './symmetric_registration';
+import { RegistrationClient, X509ProvisioningTransport, TpmProvisioningTransport, X509SecurityClient, TpmSecurityClient, SymmetricKeyProvisioningTransport, SymmetricKeySecurityClient } from './interfaces';
 import { errors } from 'azure-iot-common';
 
 /**
@@ -22,19 +23,21 @@ export class ProvisioningDeviceClient {
    *                          [azure-iot-provisioning-device-amqp.AmqpWs]{@link module:azure-iot-provisioning-device-amqp.AmqpWs}
    *                          [azure-iot-provisioning-device-mqtt.Mqtt]{@link module:azure-iot-provisioning-device-mqtt.Mqtt}
    *                          [azure-iot-provisioning-device-mqtt.MqttWs]{@link module:azure-iot-provisioning-device-mqtt.MqttWs}
-   * @param securityClient    Instance of Scurity client object implementing either the
+   * @param securityClient    Instance of Security client object implementing either the
    *                          [X509SecurityClient]{@link module:azure-iot-provisioning-device:X509SecurityClient} or the
    *                          [TpmSecurityClient]{@link module:azure-iot-provisioning-device:TpmSecurityClient} interface.
+   *                          [SymmetricKeySecurityClient]{@link module:azure-iot-provisioning-device:SymmetricKeySecurityClient} interface.
    *                          Suggested implementations of these interfaces include
    *                          [X509Security]{@link module:azure-iot-security-x509.X509Security} or
    *                          [TpmSecurityClient]{@link module:azure-iot-security-tpm.TpmSecurityClient}
+   *                          [SymmetricKeySecurityClient]{@link module:azure-iot-security-symmetric-key.SymmetricKeySecurityClient}
    *
    * @returns                 An object supporting the [RegistrationClient]{@link module:azure-iot-provisioning-device:RegistrationClient}
    *                          interface which can be usd to register the device/
    *
    * @
    */
-  static create(provisioningHost: string, idScope: string, transport: X509ProvisioningTransport | TpmProvisioningTransport, securityClient: X509SecurityClient | TpmSecurityClient): RegistrationClient {
+  static create(provisioningHost: string, idScope: string, transport: X509ProvisioningTransport | TpmProvisioningTransport | SymmetricKeyProvisioningTransport, securityClient: X509SecurityClient | TpmSecurityClient | SymmetricKeySecurityClient): RegistrationClient {
     /*Codes_SRS_PROVISIONING_CLIENT_06_001: [The `create` method shall throw `ReferenceError` if the `provisioningHost` argument is falsy.] */
     if (!provisioningHost) {
       throw new ReferenceError('Required argument provisioningHost not present.');
@@ -49,6 +52,8 @@ export class ProvisioningDeviceClient {
     const isX509Transport: boolean = ((transport as X509ProvisioningTransport).setAuthentication !== undefined);
     const isTpmSecurity: boolean = ((securityClient as TpmSecurityClient).getEndorsementKey !== undefined);
     const isTpmTransport: boolean = ((transport as TpmProvisioningTransport).getAuthenticationChallenge !== undefined);
+    const isSymmetricKeySecurity: boolean = ((securityClient as SymmetricKeySecurityClient).createSharedAccessSignature !== undefined);
+    const isSymmetricKeyTransport: boolean = ((transport as SymmetricKeyProvisioningTransport).setSharedAccessSignature !== undefined);
 
     if (isX509Security) {
       if (isX509Transport) {
@@ -66,8 +71,17 @@ export class ProvisioningDeviceClient {
         /* Codes_SRS_PROVISIONING_CLIENT_18_004: [ If `securityClient` implements `TPMSecurityClient` and the `transport` dos not implement `TPMProvisioningTransport`, then `create` shall throw an `ArgumentError` exception. ] */
         throw new errors.ArgumentError('Transport does not support TPM authentication');
       }
+    } else if (isSymmetricKeySecurity) {
+      if (isSymmetricKeyTransport) {
+        /* Codes_SRS_PROVISIONING_CLIENT_06_003: [If `securityClient` implements `SymmetricKeySecurityClient` and the `transport` implements `SymmetricKeyProvisioningTransport`, then `create` shall return an `SymmetricKeyRegistration` object.] */
+        return new SymmetricKeyRegistration(provisioningHost, idScope, transport as SymmetricKeyProvisioningTransport, securityClient as SymmetricKeySecurityClient);
+
+      } else {
+        /* Codes_SRS_PROVISIONING_CLIENT_06_004: [If `securityClient` implements `SymmetricKeySecurityClient` and the `transport` does not implement `SymmetricKeyProvisioningTransport`, then `create` shall throw an `ArgumentError` exception.] */
+        throw new errors.ArgumentError('Transport does not support SymmetricKey authentication');
+      }
     } else {
-      /* Codes_SRS_PROVISIONING_CLIENT_18_005: [ If `securityClient` dos not implement `X509ProvisioningTransport` or `TPMProvisioningTransport`, then `create` shall show an `ArgumentError` exception. ] */
+      /* Codes_SRS_PROVISIONING_CLIENT_18_005: [ If `securityClient` does not implement `X509SecurityClient`, `TPMSecurityClient`,  or `SymmetricKeySecurityClient` then `create` shall show an `ArgumentError` exception. ] */
       throw new errors.ArgumentError('Invalid security object');
     }
   }
