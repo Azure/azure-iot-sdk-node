@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { X509 } from 'azure-iot-common';
+import { X509, Callback, SharedAccessSignature } from 'azure-iot-common';
 
 /**
  * Configuration options for provisioning transports.  Passed into the transport's setTransportOptions function.
@@ -187,4 +187,20 @@ export interface TpmSecurityClient {
   signWithIdentity(toSign: Buffer, callback: (err: Error, signedData?: Buffer) => void): void;
   activateIdentityKey(key: Buffer, callback: (err: Error) => void): void;
   getRegistrationId(callback: (err: Error, registrationId?: string) => void): void;
+}
+
+/**
+ * @private
+ */
+export interface SymmetricKeyProvisioningTransport extends PollingTransport {
+  setSharedAccessSignature(sas: string): void;
+}
+
+/**
+ * @private
+ * Public API exposed by the Symmetric Key security client object.  This is only useful if you're writing your own security client.
+ */
+export interface SymmetricKeySecurityClient {
+  getRegistrationId(callback?: Callback<string>): Promise<string> | void;
+  createSharedAccessSignature(idScope: string, callback?: Callback<SharedAccessSignature>): Promise<SharedAccessSignature> | void;
 }

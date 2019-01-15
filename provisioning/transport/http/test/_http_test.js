@@ -80,7 +80,7 @@ describe('Http', function() {
     if (err) {
       done(err);
     } else {
-      done(null, JSON.stringify(body), { statusCode: statusCode });
+      done(null, JSON.stringify(body), { statusCode: statusCode, headers: { 'content-type': 'application/json' } });
     }
   };
 
@@ -306,6 +306,15 @@ describe('Http', function() {
     });
   });
 
+  describe('use symmetric key setSharedAccessSignature', function() {
+    it('setSharedAccessSignature', function(callback) {
+      var fakeSas = 'fake sas';
+      http.setSharedAccessSignature(fakeSas);
+      assert(http._sas, fakeSas);
+      callback();
+    });
+  });
+
   describe('use sas token in request', function() {
     it('registrationRequest', function(callback) {
       http.respondToAuthenticationChallenge(fakeRequest, 'a fake SasToken', function() {
@@ -330,5 +339,3 @@ describe('Http', function() {
   });
 
 });
-
-

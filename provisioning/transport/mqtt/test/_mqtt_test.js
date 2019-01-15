@@ -77,6 +77,15 @@ describe('Mqtt', function () {
     invoke: function(callback) { mqtt.queryOperationStatus(fakeRequest, fakeOperationId, callback); }
   };
 
+  describe('use symmetric key setSharedAccessSignature', function() {
+    it('setSharedAccessSignature', function(callback) {
+      var fakeSas = 'fake sas';
+      mqtt.setSharedAccessSignature(fakeSas);
+      assert(mqtt._sas, fakeSas);
+      callback();
+    });
+  });
+
   describe('connecting', function() {
 
     /* Tests_SRS_NODE_PROVISIONING_MQTT_18_002: [ If the transport is not connected, `registrationRequest` shall connect it and subscribe to the response topic.] */
