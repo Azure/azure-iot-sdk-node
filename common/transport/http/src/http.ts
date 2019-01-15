@@ -142,6 +142,7 @@ export class Http {
       httpOptions.cert = (x509Options as X509).cert;
       httpOptions.key = (x509Options as X509).key;
       httpOptions.passphrase = (x509Options as X509).passphrase;
+      httpOptions.clientCertEngine = (x509Options as X509).clientCertEngine;
     }
 
     if (this._options && this._options.ca) {
@@ -231,7 +232,7 @@ export class Http {
   isX509Options(options: any): boolean {
     return !!options && typeof(options) === 'object' &&
       (options.cert || options.key || options.passphrase ||
-        options.certFile || options.keyFile);
+        options.certFile || options.keyFile || options.clientCertEngine);
   }
 
   /**
