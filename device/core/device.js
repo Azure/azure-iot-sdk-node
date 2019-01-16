@@ -56,5 +56,7 @@ module.exports = {
   SharedAccessKeyAuthenticationProvider: require('./lib/sak_authentication_provider').SharedAccessKeyAuthenticationProvider,
   Twin: require('./lib/twin').Twin,
   TwinProperties: require('./lib/twin').TwinProperties,
-  getUserAgentString: require('./lib/utils').getUserAgentString
+  getUserAgentString: require('./lib/utils').getUserAgentString,
+  EdgedAuthConfig: require('./lib/iotedge_authentication_provider').EdgedAuthConfig,
+  IotEdgeAuthenticationProvider: require('./lib/iotedge_authentication_provider').IotEdgeAuthenticationProvider
 };
