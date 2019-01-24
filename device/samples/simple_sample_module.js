@@ -6,23 +6,18 @@
 var Protocol = require('azure-iot-device-mqtt').Mqtt;
 var ModuleClient = require('azure-iot-device').ModuleClient;
 var Message = require('azure-iot-device').Message;
-var fs = require('fs');
-var connectionString = process.env.EdgeHubConnectionString;
 
-var client = ModuleClient.fromConnectionString(connectionString, Protocol);
-console.log('got client');
-
-client.on('error', function (err) {
-  console.error(err.message);
-});
-
-client.setOptions({
-  ca: fs.readFileSync(process.env.EdgeModuleCACertificateFile).toString('ascii')
-}, function(err) {
+ModuleClient.fromEnvironment(Protocol, function (err, client) {
   if (err) {
-    console.log('error:' + err);
+    console.error("Could not create client: " + err.toString());
+    process.exit(-1);
   } else {
-    // connect to the edge instance
+    console.log('got client');
+
+    client.on('error', function (err) {
+      console.error(err.message);
+    });
+
     client.open(function (err) {
       if (err) {
         console.error('Could not connect: ' + err.message);
@@ -31,7 +26,6 @@ client.setOptions({
 
         // Act on input messages to the module.
         client.on('inputMessage', function (inputName, msg) {
-
           client.complete(msg, printResultFor('completed'));
 
           if (inputName === 'deviceControl') {
@@ -42,20 +36,21 @@ client.setOptions({
             console.log(msg.getBytes.toString('ascii'));
           }
         });
+
+        // Create a message and send it every two seconds
+        setInterval(function () {
+          var temperature = 20 + (Math.random() * 10); // range: [20, 30]
+          var temperatureAlert = (temperature > 28) ? 'true' : 'false';
+          var data = JSON.stringify({ deviceId: 'myFirstDevice', temperature: temperature, temperatureAlert: temperatureAlert });
+          var message = new Message(data);
+          console.log('Sending message: ' + message.getData());
+          client.sendOutputEvent('temperature', message, printResultFor('sendOutputEvent'));
+        }, 2000);
       }
     });
-
-    // Create a message and send it every two seconds
-    setInterval(function () {
-      var temperature = 20 + (Math.random() * 10); // range: [20, 30]
-      var temperatureAlert = (temperature > 28) ? 'true' : 'false';
-      var data = JSON.stringify({ deviceId: 'myFirstDevice', temperature: temperature, temperatureAlert: temperatureAlert });
-      var message = new Message(data);
-      console.log('Sending message: ' + message.getData());
-      client.sendOutputEvent('temperature', message, printResultFor('sendOutputEvent'));
-    }, 2000);
   }
 });
+
 
 // Helper function to print results in the console
 function printResultFor(op) {
