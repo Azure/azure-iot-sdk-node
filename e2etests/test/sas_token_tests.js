@@ -7,7 +7,8 @@ var uuid = require('uuid');
 var Promise = require('bluebird');
 
 var serviceSdk = require('azure-iothub');
-var eventHubClient = require('azure-event-hubs').Client;
+var EventHubClient = require('@azure/event-hubs').EventHubClient;
+var EventPosition = require('@azure/event-hubs').EventPosition;
 var Client = require('azure-iot-device').Client;
 var Message = require('azure-iot-common').Message;
 var SharedAccessSignature = require('azure-iot-device').SharedAccessSignature;
@@ -121,7 +122,7 @@ transports.forEach(function (deviceTransport) {
       }
 
       var deviceClient = Client.fromSharedAccessSignature(createNewSas(), deviceTransport);
-      var ehClient = eventHubClient.fromConnectionString(hubConnectionString);
+      var ehClient = undefined;
 
       var finishUp = function(err) {
         deviceClient.close(function () {
@@ -134,78 +135,69 @@ transports.forEach(function (deviceTransport) {
       var ehClientParticipant = 'ehClient';
       var testRendezvous = new Rendezvous(finishUp);
 
-      var ehReceivers = [];
+      var onEventHubError = function(err) {
+        debug('error received on event hubs client: ' + err.toString());
+        finishUp(err);
+      };
+
+      var onEventHubMessage = function (eventData) {
+        debug('event hubs client: message received from device: \'' + eventData.annotations['iothub-connection-device-id'] + '\'');
+        debug('event hubs client: message is: ' + ((eventData.body) ? (eventData.body.toString()) : '(no body)'));
+        if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
+          if (eventData.body && eventData.body.indexOf(beforeSas) === 0) {
+            debug('event hubs client: first message received: ' + eventData.body.toString());
+            debug('device client: updating shared access signature');
+            deviceClient.updateSharedAccessSignature(createNewSas(), function (err) {
+              if (err) return finishUp(err);
+
+              debug('device client: SAS renewal successful - sending second message: ' + afterSas);
+              deviceClient.sendEvent(createBufferTestMessage(afterSas), function (err) {
+                if (err) return finishUp(err);
+                debug('second message sent successfully');
+                testRendezvous.imDone(deviceClientParticipant);
+              });
+            });
+          } else if (eventData.body && eventData.body.indexOf(afterSas) === 0) {
+            debug('second message received: ' + eventData.body.toString());
+            testRendezvous.imDone(ehClientParticipant);
+          }
+        } else {
+          debug('not a message from the test device');
+        }
+      };
 
       debug('opening event hubs client');
       var monitorStartTime = new Date(Date.now() - 30000);
-      ehClient.open()
-        .then(ehClient.getPartitionIds.bind(ehClient))
-        .then(function (partitionIds) {
-          debug('partition ids: ' + partitionIds.join(', '));
-          return Promise.map(partitionIds, function (partitionId) {
-            debug('creating receiver for partition id: ' + partitionId);
-            return new Promise(function (resolve) {
-              return ehClient.createReceiver('$Default', partitionId,{ 'startAfterTime' : monitorStartTime}).then(function(receiver) {
-                debug('receiver created for partition id: ' + partitionId);
-                ehReceivers.push(receiver);
-                receiver.on('errorReceived', function(err) {
-                  debug('error received on event hubs client: ' + err.toString());
-                  finishUp(err);
-                });
-                receiver.on('message', function (eventData) {
-                  debug('event hubs client: message received from device: \'' + eventData.annotations['iothub-connection-device-id'] + '\'');
-                  debug('event hubs client: message is: ' + ((eventData.body) ? (eventData.body.toString()) : '(no body)'));
-                  if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
-                    if (eventData.body && eventData.body.indexOf(beforeSas) === 0) {
-                      debug('event hubs client: first message received: ' + eventData.body.toString());
-                      debug('device client: updating shared access signature');
-                      deviceClient.updateSharedAccessSignature(createNewSas(), function (err) {
-                        if (err) return finishUp(err);
-
-                        debug('device client: SAS renewal successful - sending second message: ' + afterSas);
-                        deviceClient.sendEvent(createBufferTestMessage(afterSas), function (err) {
-                          if (err) return finishUp(err);
-                          debug('second message sent successfully');
-                          testRendezvous.imDone(deviceClientParticipant);
-                        });
-                      });
-                    } else if (eventData.body && eventData.body.indexOf(afterSas) === 0) {
-                      debug('second message received: ' + eventData.body.toString());
-                      Promise.map(ehReceivers, function (recvToClose) {
-                        debug('closing receiver');
-                        return recvToClose.close();
-                      }).then(function () {
-                        debug('receivers closed. closing the clients.');
-                        testRendezvous.imDone(ehClientParticipant);
-                      });
-                    }
-                  } else {
-                    debug('not a message from the test device');
-                  }
-                });
-                debug('receiver event handlers configured for partition: ' + partitionId);
-                resolve();
-              });
-            });
-          });
-        })
-        .then(function () {
-          testRendezvous.imIn(ehClientParticipant);
-          debug('opening device client');
-          return deviceClient.open(function (err) {
-            if (err) return finishUp(err);
-            testRendezvous.imIn(deviceClientParticipant);
-            debug('device client opened - sending first message: ' + beforeSas);
-            deviceClient.sendEvent(createBufferTestMessage(beforeSas), function (sendErr) {
-              if (sendErr) return finishUp(sendErr);
-              debug('device client: first message sent: ' + beforeSas);
-            });
-          });
-        })
-        .catch(function (err) {
-          finishUp(err);
+      EventHubClient.createFromIotHubConnectionString(hubConnectionString)
+      .then(function (client) {
+        ehClient = client;
+        testRendezvous.imIn(ehClientParticipant);
+      }).then(function () {
+        return ehClient.getPartitionIds();
+      }).then(function (partitionIds) {
+        partitionIds.forEach(function (partitionId) {
+          ehClient.receive(partitionId, onEventHubMessage, onEventHubError, { eventPosition: EventPosition.fromEnqueuedTime(monitorStartTime) });
         });
-
+        return new Promise(function (resolve) {
+          setTimeout(function () {
+            resolve();
+          }, 3000);
+        });
+      }).then(function () {
+        deviceClient.open(function (err) {
+          if (err) return finishUp(err);
+          testRendezvous.imIn(deviceClientParticipant);
+          debug('device client opened - sending first message: ' + beforeSas);
+          deviceClient.sendEvent(createBufferTestMessage(beforeSas), function (sendErr) {
+            if (sendErr) return finishUp(sendErr);
+            debug('device client: first message sent: ' + beforeSas);
+          });
+        });
+        return null;
+      })
+      .catch(function (err) {
+        finishUp(err);
+      });
     });
   });
 });

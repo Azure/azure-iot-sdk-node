@@ -6,13 +6,15 @@
 var assert = require('chai').assert;
 var debug = require('debug')('e2etests:emptyd2cc2d');
 var uuid = require('uuid');
+var uuidBuffer = require('uuid-buffer');
 
 var serviceSdk = require('azure-iothub');
 var Message = require('azure-iot-common').Message;
 var createDeviceClient = require('./testUtils.js').createDeviceClient;
 var closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
 var closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubClients;
-var eventHubClient = require('azure-event-hubs').Client;
+var EventHubClient = require('@azure/event-hubs').EventHubClient;
+var EventPosition = require('@azure/event-hubs').EventPosition;
 var DeviceIdentityHelper = require('./device_identity_helper.js');
 var Rendezvous = require('./rendezvous_helper.js').Rendezvous;
 
@@ -128,7 +130,7 @@ function empty_message_tests(deviceTransport, createDeviceMethod) {
   describe('Over ' + deviceTransport.name + ' using device/eventhub clients - messaging', function () {
     this.timeout(120000);
 
-    var deviceClient, ehClient, ehReceivers, provisionedDevice;
+    var deviceClient, ehClient, provisionedDevice;
 
     before(function (beforeCallback) {
       createDeviceMethod(function (err, testDeviceInfo) {
@@ -142,16 +144,15 @@ function empty_message_tests(deviceTransport, createDeviceMethod) {
     });
 
     beforeEach(function () {
-      ehClient = eventHubClient.fromConnectionString(hubConnectionString);
       deviceClient = createDeviceClient(deviceTransport, provisionedDevice);
-      ehReceivers = [];
     });
 
     afterEach(function (done) {
-      closeDeviceEventHubClients(deviceClient, ehClient, ehReceivers, done);
+      closeDeviceEventHubClients(deviceClient, ehClient, done);
     });
 
     it('Device sends a message of zero size and it is received by the service', function (done) {
+      var startAfterTime = Date.now() - 10000;
       var deviceClientParticipant = 'deviceClient';
       var ehClientParticipant = 'ehClient';
       var testRendezvous = new Rendezvous(done);
@@ -163,47 +164,66 @@ function empty_message_tests(deviceTransport, createDeviceMethod) {
       var uuidData = uuid.v4();
       var message = new Message('');
       message.messageId = uuidData;
-      ehClient.open()
-        .then(function() {testRendezvous.imIn(ehClientParticipant);})
-        .then(ehClient.getPartitionIds.bind(ehClient))
-        .then(function (partitionIds) {
-          return partitionIds.map(function (partitionId) {
-            return ehClient.createReceiver('$Default', partitionId, { 'startAfterTime' : Date.now() }).then(function(receiver) {
-              ehReceivers.push(receiver);
-              receiver.on('errorReceived', function(err) {
-                done(err);
-              });
-              receiver.on('message', function (eventData) {
-                  if ((eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) &&
-                      (eventData.systemProperties.messageId === uuidData) &&
-                      (!eventData.body || (eventData.body.length === 0))) {
-                    receiver.removeAllListeners();
-                    testRendezvous.imDone(ehClientParticipant);
-                  } else {
-                    debug('Incoming device id is: '+ eventData.systemProperties['iothub-connection-device-id']);
-                  }
-                });
-            });
-          });
-        })
-        .then(function () {
-          deviceClient.open(function (openErr) {
-            if (openErr) {
-              done(openErr);
-            } else {
-              testRendezvous.imIn(deviceClientParticipant);
-              deviceClient.sendEvent(message, function (sendErr) {
-                if (sendErr) {
-                  done(sendErr);
-                } else {
-                  testRendezvous.imDone(deviceClientParticipant);
-                }
-              });
-            }
-          });
-        })
-        .catch(done);
-    });
 
+      var onEventHubMessage = function (eventData) {
+        if ((eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId)) {
+          var receivedMsgId = typeof eventData.properties.message_id === 'string' ? eventData.properties.message_id : uuidBuffer.toString(eventData.properties.message_id);
+          if (receivedMsgId === uuidData) {
+            if(!eventData.body || (eventData.body.length === 0)) {
+              debug('received correct empty message');
+              testRendezvous.imDone(ehClientParticipant);
+            } else {
+              debug('received test message but it is not empty');
+              done(new Error('Received message is not empty'));
+            }
+          } else {
+            debug('received message from test device but messageId does not match. actual: ' + receivedMsgId + '; expected: ' + uuidData);
+          }
+        } else {
+          debug('Received message from device: ' + eventData.annotations['iothub-connection-device-id'] + ' when expecting it from: ' + provisionedDevice.deviceId);
+        }
+      };
+
+      var onEventHubError = function (err) {
+        debug('Error from Event Hub Client Receiver: ' + err.toString());
+        done(err);
+      };
+
+      EventHubClient.createFromIotHubConnectionString(hubConnectionString)
+      .then(function (client) {
+        ehClient = client;
+        testRendezvous.imIn(ehClientParticipant);
+      }).then(function () {
+        return ehClient.getPartitionIds();
+      }).then(function (partitionIds) {
+        partitionIds.forEach(function (partitionId) {
+          ehClient.receive(partitionId, onEventHubMessage, onEventHubError, { eventPosition: EventPosition.fromEnqueuedTime(startAfterTime) });
+        });
+        return new Promise(function (resolve) {
+          setTimeout(function () {
+            resolve();
+          }, 3000);
+        });
+      }).then(function () {
+        deviceClient.open(function (openErr) {
+          if (openErr) {
+            debug('error opening the device client: ' + openErr.toString());
+            done(openErr);
+          } else {
+            testRendezvous.imIn(deviceClientParticipant);
+            deviceClient.sendEvent(message, function (sendErr) {
+              if (sendErr) {
+                debug('error sending empty message: ' + sendErr.toString());
+                done(sendErr);
+              } else {
+                debug('empty message sent with messageId: ' + message.messageId)
+                testRendezvous.imDone(deviceClientParticipant);
+              }
+            });
+          }
+        });
+      })
+      .catch(done);
+    });
   });
 }
