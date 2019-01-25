@@ -15,7 +15,7 @@ var closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubCl
 var EventHubClient = require('@azure/event-hubs').EventHubClient;
 var EventPosition = require('@azure/event-hubs').EventPosition;
 var DeviceIdentityHelper = require('./device_identity_helper.js');
-var RendezVous = require('./rendezvous_helper').Rendezvous
+var RendezVous = require('./rendezvous_helper').Rendezvous;
 
 var deviceAmqp = require('azure-iot-device-amqp');
 var deviceMqtt = require('azure-iot-device-mqtt');

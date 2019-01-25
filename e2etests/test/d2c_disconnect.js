@@ -207,7 +207,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
             deviceClient.on('disconnect', disconnectHandler);
             deviceClient.sendEvent(originalMessage, function (sendErr) {
               if (sendErr) {
-                debug('error sending the initial message: ' + err.toString());
+                debug('error sending the initial message: ' + sendErr.toString());
                 testCallback(sendErr);
               } else {
                 debug('initial message sent');

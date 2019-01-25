@@ -122,7 +122,7 @@ transports.forEach(function (deviceTransport) {
       }
 
       var deviceClient = Client.fromSharedAccessSignature(createNewSas(), deviceTransport);
-      var ehClient = undefined;
+      var ehClient;
 
       var finishUp = function(err) {
         deviceClient.close(function () {

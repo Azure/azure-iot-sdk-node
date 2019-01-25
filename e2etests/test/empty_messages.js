@@ -216,7 +216,7 @@ function empty_message_tests(deviceTransport, createDeviceMethod) {
                 debug('error sending empty message: ' + sendErr.toString());
                 done(sendErr);
               } else {
-                debug('empty message sent with messageId: ' + message.messageId)
+                debug('empty message sent with messageId: ' + message.messageId);
                 testRendezvous.imDone(deviceClientParticipant);
               }
             });
