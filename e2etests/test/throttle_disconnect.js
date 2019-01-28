@@ -11,7 +11,8 @@ var deviceAmqp = require('azure-iot-device-amqp');
 var Message = require('azure-iot-common').Message;
 var createDeviceClient = require('./testUtils.js').createDeviceClient;
 var closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubClients;
-var eventHubClient = require('azure-event-hubs').Client;
+var EventHubClient = require('@azure/event-hubs').EventHubClient;
+var EventPosition = require('@azure/event-hubs').EventPosition;
 var errors = require('azure-iot-common').errors;
 var NoRetry = require('azure-iot-common').NoRetry;
 var DeviceIdentityHelper = require('./device_identity_helper.js');
@@ -57,9 +58,9 @@ var protocolAndTermination = [
 
 
 protocolAndTermination.forEach( function (testConfiguration) {
-  describe(testConfiguration.transport.name + ' using device/eventhub clients - disconnect d2c', function () {
+  describe(testConfiguration.transport.name + ' using device/eventhub clients - throttling', function () {
     this.timeout(60000);
-    var deviceClient, ehClient, senderInterval, ehReceivers, provisionedDevice;
+    var deviceClient, ehClient, provisionedDevice;
 
     before(function (beforeCallback) {
       DeviceIdentityHelper.createDeviceWithSas(function (err, testDeviceInfo) {
@@ -73,14 +74,11 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     beforeEach(function () {
-      ehClient = eventHubClient.fromConnectionString(hubConnectionString);
       deviceClient = createDeviceClient(testConfiguration.transport, provisionedDevice);
-      senderInterval = null;
-      ehReceivers = [];
     });
 
     afterEach(function (testCallback) {
-      closeDeviceEventHubClients(deviceClient, ehClient, ehReceivers, testCallback);
+      closeDeviceEventHubClients(deviceClient, ehClient, testCallback);
       if (sendMessageTimeout !== null) clearTimeout(sendMessageTimeout);
     });
 
@@ -155,6 +153,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
       var originalMessages = [];
       var messagesReceived = 0;
       var messagesSent = 0;
+
       var d2cMessageSender = function() {
         debug('Sending message number: ' + (messagesSent + 1));
         if (messagesSent >= numberOfD2CMessages) {
@@ -189,59 +188,71 @@ protocolAndTermination.forEach( function (testConfiguration) {
         originalMessages[i].messageId = uuidData;
         originalMessages[i].alreadyReceived = false;
       }
-      ehClient.open()
-              .then(ehClient.getPartitionIds.bind(ehClient))
-              .then(function (partitionIds) {
-                return partitionIds.map(function (partitionId) {
-                  return ehClient.createReceiver('$Default', partitionId, { 'startAfterTime' : Date.now() }).then(function (receiver) {
-                    ehReceivers.push(receiver);
-                    receiver.on('errorReceived', function(err) {
-                      testCallback(err);
-                    });
-                    receiver.on('message', function (eventData) {
-                        if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
-                          debug('did get a message for this device.');
-                          if (findMessage(eventData, originalMessages)) {
-                            debug('It was one of the messages we sent.');
-                            if (messagesReceived++ === 0) {
-                              debug('It was the first message.');
-                              var terminateMessage = new Message('');
-                              terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
-                              terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
-                              terminateMessage.properties.add('AzIoTHub_FaultOperationDurationInSecs', testConfiguration.durationInSeconds);
-                              terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
-                              deviceClient.sendEvent(terminateMessage, function (sendErr) {
-                                debug('at the callback for the fault injection send, err is:' + sendErr);
-                              });
-                            }
-                            if (messagesReceived === numberOfD2CMessages) {
-                              testCallback();
-                            } else {
-                              sendMessageTimeout = setTimeout(d2cMessageSender.bind(this), 1000);
-                            }
-                          } else {
-                            debug('eventData message id doesn\'t match any stored message id');
-                          }
-                        } else {
-                          debug('Incoming device id is: ' + eventData.annotations['iothub-connection-device-id']);
-                        }
-                      });
-                  });
-                });
-              })
-              .then(function () {
-                deviceClient.open(function (openErr) {
-                  if (openErr) {
-                    testCallback(openErr);
-                  } else {
-                    deviceClient.on('disconnect', function () {
-                      testCallback(new Error('unexpected disconnect'));
-                    });
-                    d2cMessageSender();
-                  }
-                });
-              })
-              .catch(testCallback);
-          });
+
+      var onEventHubMessage = function (eventData) {
+        if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
+          debug('did get a message for this device.');
+          if (findMessage(eventData, originalMessages)) {
+            debug('It was one of the messages we sent.');
+            if (messagesReceived++ === 0) {
+              debug('It was the first message.');
+              var terminateMessage = new Message('');
+              terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
+              terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
+              terminateMessage.properties.add('AzIoTHub_FaultOperationDurationInSecs', testConfiguration.durationInSeconds);
+              terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
+              deviceClient.sendEvent(terminateMessage, function (sendErr) {
+                debug('at the callback for the fault injection send, err is:' + sendErr);
+              });
+            }
+            if (messagesReceived === numberOfD2CMessages) {
+              testCallback();
+            } else {
+              sendMessageTimeout = setTimeout(d2cMessageSender.bind(this), 1000);
+            }
+          } else {
+            debug('eventData message id doesn\'t match any stored message id');
+          }
+        } else {
+          debug('Incoming device id is: ' + eventData.annotations['iothub-connection-device-id']);
+        }
+      };
+
+      var onEventHubError = function (err) {
+        testCallback(err);
+      };
+
+      debug('opening event hubs client');
+      var startAfterTime = new Date(Date.now() - 30000);
+      EventHubClient.createFromIotHubConnectionString(hubConnectionString)
+      .then(function (client) {
+        ehClient = client;
+      }).then(function () {
+        return ehClient.getPartitionIds();
+      }).then(function (partitionIds) {
+        partitionIds.forEach(function (partitionId) {
+          ehClient.receive(partitionId, onEventHubMessage, onEventHubError, { eventPosition: EventPosition.fromEnqueuedTime(startAfterTime) });
+        });
+        return new Promise(function (resolve) {
+          setTimeout(function () {
+            resolve();
+          }, 3000);
+        });
+      }).then(function () {
+        deviceClient.open(function (openErr) {
+          if (openErr) {
+            testCallback(openErr);
+          } else {
+            deviceClient.on('disconnect', function () {
+              testCallback(new Error('unexpected disconnect'));
+            });
+            d2cMessageSender();
+          }
+        });
+      }).catch(function (err) {
+        debug('Event Hub client error: ' + err.toString());
+        testCallback(err);
+      });
+    });
   });
 });
