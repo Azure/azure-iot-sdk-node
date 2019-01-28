@@ -12,8 +12,10 @@ var Message = require('azure-iot-common').Message;
 var createDeviceClient = require('./testUtils.js').createDeviceClient;
 var closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
 var closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubClients;
-var eventHubClient = require('azure-event-hubs').Client;
+var EventHubClient = require('@azure/event-hubs').EventHubClient;
+var EventPosition = require('@azure/event-hubs').EventPosition;
 var DeviceIdentityHelper = require('./device_identity_helper.js');
+var RendezVous = require('./rendezvous_helper').Rendezvous;
 
 var deviceAmqp = require('azure-iot-device-amqp');
 var deviceMqtt = require('azure-iot-device-mqtt');
@@ -158,10 +160,10 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
     });
   });
 
-  describe('Over ' + deviceTransport.name + ' using device/eventhub clients - messaging with ' + createDeviceMethod.name + ' authentication', function () {
+  describe('Over ' + deviceTransport.name + ' using device/eventhub clients - d2c with ' + createDeviceMethod.name + ' authentication', function () {
     this.timeout(60000);
 
-    var deviceClient, ehClient, ehReceivers, provisionedDevice;
+    var deviceClient, ehClient, provisionedDevice;
 
     before(function (beforeCallback) {
       createDeviceMethod(function (err, testDeviceInfo) {
@@ -175,30 +177,21 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
     });
 
     beforeEach(function () {
-      ehClient = eventHubClient.fromConnectionString(hubConnectionString);
       deviceClient = createDeviceClient(deviceTransport, provisionedDevice);
-      ehReceivers = [];
     });
 
     afterEach(function (done) {
-      closeDeviceEventHubClients(deviceClient, ehClient, ehReceivers, done);
+      closeDeviceEventHubClients(deviceClient, ehClient, done);
     });
 
     it('Device sends a message of maximum size and it is received by the service', function (done) {
-      var receivingSideDone = false;
-      var sendingSideDone = false;
-      function tryFinish(done)
-      {
-        if (receivingSideDone && sendingSideDone)
-        {
-          done();
-        }
-      }
       this.timeout(120000);
+      var rdv = new RendezVous(done);
       //
       // The size of non payload is calculated based on the value of the messageId value size
       // and then on the application property value size plus one for the application property name.
       //
+      var startAfterTime = Date.now() - 5000;
       var uuidData = uuid.v4();
       var sizeOfNonPayload = (2*uuidData.length) + 1;
       var bufferSize = maximumMessageSize - sizeOfNonPayload;
@@ -210,50 +203,61 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
       message.messageId = uuidData;
       message.properties.add('a', uuidData);
       buffer.fill(uuidData);
-      ehClient.open()
-              .then(ehClient.getPartitionIds.bind(ehClient))
-              .then(function (partitionIds) {
-                return partitionIds.map(function (partitionId) {
-                  return ehClient.createReceiver('$Default', partitionId,{ 'startAfterTime' : Date.now()}).then(function(receiver) {
-                    ehReceivers.push(receiver);
-                    receiver.on('errorReceived', function(err) {
-                      done(err);
-                    });
-                    receiver.on('message', function (eventData) {
-                        if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
-                          if ((eventData.body.length === bufferSize) && (eventData.body.indexOf(uuidData) === 0)) {
-                            receiver.removeAllListeners();
-                            receivingSideDone = true;
-                            debug('trying to finish from the receiving side');
-                            tryFinish(done);
-                          } else {
-                            debug('eventData.body: ' + eventData.body + ' doesn\'t match: ' + uuidData);
-                          }
-                        } else {
-                          debug('Incoming device id is: '+eventData.systemProperties['iothub-connection-device-id']);
-                        }
-                      });
-                  });
-                });
-              })
-              .then(function () {
-                deviceClient.open(function (openErr) {
-                  if (openErr) {
-                    done(openErr);
-                  } else {
-                    //need to add properties test when the event hubs node sdk supports it.
-                    deviceClient.sendEvent(message, function (sendErr) {
-                      if (sendErr) {
-                        done(sendErr);
-                      }
-                      sendingSideDone = true;
-                      debug('trying to finish from the sending side');
-                      tryFinish(done);
-                    });
-                  }
-                });
-              })
-              .catch(done);
-          });
+
+      var onEventHubMessage = function (eventData) {
+        if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
+          if ((eventData.body.length === bufferSize) && (eventData.body.indexOf(uuidData) === 0)) {
+            debug('trying to finish from the receiving side');
+            rdv.imDone('ehClient');
+          } else {
+            debug('eventData.body: ' + eventData.body + ' doesn\'t match: ' + uuidData);
+          }
+        } else {
+          debug('Incoming device id is: ' + eventData.annotations['iothub-connection-device-id']);
+        }
+      };
+
+      var onEventHubError = function (err) {
+        debug('Error from Event Hub Client Receiver: ' + err.toString());
+        done(err);
+      };
+
+      EventHubClient.createFromIotHubConnectionString(hubConnectionString)
+      .then(function (client) {
+        ehClient = client;
+        rdv.imIn('ehClient');
+      }).then(function () {
+        return ehClient.getPartitionIds();
+      }).then(function (partitionIds) {
+        partitionIds.forEach(function (partitionId) {
+          ehClient.receive(partitionId, onEventHubMessage, onEventHubError, { eventPosition: EventPosition.fromEnqueuedTime(startAfterTime) });
+        });
+        return new Promise(function (resolve) {
+          setTimeout(function () {
+            resolve();
+          }, 3000);
+        });
+      }).then(function () {
+        deviceClient.open(function (openErr) {
+          rdv.imIn('deviceClient');
+          if (openErr) {
+            done(openErr);
+          } else {
+            //need to add properties test when the event hubs node sdk supports it.
+            deviceClient.sendEvent(message, function (sendErr) {
+              if (sendErr) {
+                done(sendErr);
+              }
+              debug('trying to finish from the sending side');
+              rdv.imDone('deviceClient');
+            });
+          }
+        });
+      })
+      .catch(function (err) {
+        debug('Error thrown by Event Hubs client: ' + err.toString());
+        done(err);
+      });
+    });
   });
 }
