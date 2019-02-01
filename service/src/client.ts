@@ -259,9 +259,15 @@ export class Client extends EventEmitter {
       return this._invokeDeviceMethod(deviceId, moduleIdOrMethodParams, methodParamsOrDone, done);
     }
 
-    return tripleValueCallbackToPromise((_callback) => {
-      this._invokeDeviceMethod(deviceId, moduleIdOrMethodParams, methodParamsOrDone, _callback);
-    }, (r: any, m: IncomingMessage) => { return createResultWithIncomingMessage(r, m); }, callback);
+    if (typeof moduleIdOrMethodParams === 'string') {
+      return tripleValueCallbackToPromise((_callback) => {
+        this._invokeDeviceMethod(deviceId, moduleIdOrMethodParams, methodParamsOrDone, _callback);
+      }, (r: any, m: IncomingMessage) => { return createResultWithIncomingMessage(r, m); }, callback);
+    } else {
+      return tripleValueCallbackToPromise((_callback) => {
+        this._invokeDeviceMethod(deviceId, moduleIdOrMethodParams, _callback);
+      }, (r: any, m: IncomingMessage) => { return createResultWithIncomingMessage(r, m); }, callback);
+    }
   }
 
   /**
