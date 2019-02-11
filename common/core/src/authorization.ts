@@ -101,6 +101,11 @@ export interface X509 {
   passphrase?: string;
 
   /**
+   * Name of an OpenSSL engine which can provide the client certificate.
+   */
+  clientCertEngine?: string;
+
+  /**
    * @private
    */
 

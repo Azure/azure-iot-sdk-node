@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-var Promise = require('bluebird');
 var deviceSdk = require('azure-iot-device');
 
 function createDeviceClient(deviceTransport, provisionedDevice) {
@@ -46,32 +45,31 @@ function closeDeviceServiceClients(deviceClient, serviceClient, done) {
   });
 }
 
-function closeDeviceEventHubClients(deviceClient, eventHubClient, ehReceivers, done) {
+function closeDeviceEventHubClients(deviceClient, eventHubClient, done) {
   var eventHubErr = null;
   var deviceErr = null;
-  Promise.map(ehReceivers, function (recvToClose) {
-    recvToClose.removeAllListeners();
-    return recvToClose.close();
-  }).then(function () {
-    return eventHubClient.close();
-  }).then(function () {
-    eventHubErr = deviceErr;
-    eventHubClient = null;
-    if (!deviceClient) {
-      done(eventHubErr);
-    }
-  }).catch(function (err) {
-    eventHubErr = err;
-    eventHubClient = null;
-    if (!deviceClient) {
-      done(eventHubErr);
-    }
-  });
-  if (!deviceClient) {
-    if (!eventHubClient) {
-      done();
-    }
-  } else {
+
+  if (!deviceClient && !eventHubClient) {
+    done();
+  }
+
+  if (eventHubClient) {
+    eventHubClient.close().then(function () {
+      eventHubErr = deviceErr;
+      eventHubClient = null;
+      if (!deviceClient) {
+        done(eventHubErr);
+      }
+    }).catch(function (err) {
+      eventHubErr = err;
+      eventHubClient = null;
+      if (!deviceClient) {
+        done(eventHubErr);
+      }
+    });
+  }
+
+  if (deviceClient) {
     deviceClient.close(function (err) {
       deviceErr = err || eventHubErr;
       deviceClient = null;

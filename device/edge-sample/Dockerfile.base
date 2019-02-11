@@ -1,6 +1,0 @@
-FROM node:6-alpine
-
-COPY . /APP 
-WORKDIR /APP
-
-CMD ["node", "edge_sample_module.js"]

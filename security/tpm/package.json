@@ -1,21 +1,22 @@
 {
   "name": "azure-iot-security-tpm",
-  "version": "1.5.0",
+  "version": "1.5.3",
   "description": "Azure IoT TPM security client",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.9.0",
+    "azure-iot-common": "1.9.3",
     "debug": "^3.0.1",
     "base32-encode": "^1.0.0",
+    "debug": "^3.0.1",
     "machina": "^4.0.1",
-    "tss.js": "^0.0.3",
-    "array-equal": "^1.0.0"
+    "tss.js": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^7.0.5",
+    "array-equal": "^1.0.0",
     "chai": "^4.2.0",
     "istanbul": "^0.4.5",
     "jshint": "^2.9.6",
@@ -33,7 +34,7 @@
     "alltest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
     "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
     "test": "npm -s run lint && npm -s run build && npm -s run unittest",
-    "check-cover": "istanbul check-coverage --statements 69 --branches 69 --functions 69 --lines 68"
+    "check-cover": "istanbul check-coverage --statements 71 --branches 55 --functions 76 --lines 71"
   },
   "engines": {
     "node": ">= 0.10"

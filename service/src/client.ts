@@ -250,8 +250,8 @@ export class Client extends EventEmitter {
    * @throws {ReferenceError}  If one of the required parameters is null, undefined or empty.
    * @throws {TypeError}       If one of the parameters is of the wrong type.
    */
-  invokeDeviceMethod(deviceId: string, methodParams: DeviceMethodParams, done?: IncomingMessageCallback<any>): void;
-  invokeDeviceMethod(deviceId: string, moduleId: string, methodParams: DeviceMethodParams, done?: IncomingMessageCallback<any>): void;
+  invokeDeviceMethod(deviceId: string, methodParams: DeviceMethodParams, done: IncomingMessageCallback<any>): void;
+  invokeDeviceMethod(deviceId: string, moduleId: string, methodParams: DeviceMethodParams, done: IncomingMessageCallback<any>): void;
   invokeDeviceMethod(deviceId: string, methodParams: DeviceMethodParams): Promise<ResultWithIncomingMessage<any>>;
   invokeDeviceMethod(deviceId: string, moduleId: string, methodParams: DeviceMethodParams): Promise<ResultWithIncomingMessage<any>>;
   invokeDeviceMethod(deviceId: string, moduleIdOrMethodParams: string | DeviceMethodParams, methodParamsOrDone?: DeviceMethodParams | IncomingMessageCallback<any>, done?: IncomingMessageCallback<any>): Promise<ResultWithIncomingMessage<any>> | void {

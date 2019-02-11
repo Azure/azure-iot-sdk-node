@@ -5,23 +5,18 @@
 
 var Protocol = require('azure-iot-device-mqtt').Mqtt;
 var ModuleClient = require('azure-iot-device').ModuleClient;
-var fs = require('fs');
 
-var connectionString = process.env.EdgeHubConnectionString;
-
-var client = ModuleClient.fromConnectionString(connectionString, Protocol);
-console.log('got client');
-
-client.on('error', function (err) {
-  console.error(err.message);
-});
-
-client.setOptions({
-  ca: fs.readFileSync(process.env.EdgeModuleCACertificateFile).toString('ascii')
-}, function(err) {
+ModuleClient.fromEnvironment(Protocol, function (err, client) {
   if (err) {
-    console.log('error:' + err);
+    console.error("Could not create client: " + err.toString());
+    process.exit(-1);
   } else {
+    console.log('got client');
+
+    client.on('error', function (err) {
+      console.error(err.message);
+    });
+
     // connect to the edge instance
     client.open(function (err) {
       if (err) {

@@ -59,7 +59,7 @@ describe('Http', function() {
     pathPrefix:'/fakeIdScope/registrations/fakeRegistrationId/operations/fakeOperationId'
   };
 
-  this.timeout(100);
+  this.timeout(1000);
 
   beforeEach(function() {
     fakeHttpRequest = {

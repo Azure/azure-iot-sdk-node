@@ -120,6 +120,19 @@ describe('Http', function() {
       callback();
     });
 
+    it('uses x509 options if client certificate engine is specified', function(callback) {
+      const http = new Http();
+      const clientCertEngine = 'SecureStorageEngine.so';
+      const x509Options = {
+        clientCertEngine
+      };
+      
+      http.setOptions(fakeOptions);
+      http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, x509Options, function() {});
+      assert.strictEqual(https.request.args[0][0].clientCertEngine, clientCertEngine);
+      callback();
+    });
+
     it('populates the ca if provided in the options', function (callback) {
       var http = new Http();
       var fakeCA = 'ca';

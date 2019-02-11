@@ -1,13 +1,13 @@
 {
   "name": "azure-iot-security-symmetric-key",
-  "version": "1.5.0",
+  "version": "1.5.3",
   "description": "Azure IoT Symmetric Key Security Client",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.9.0",
+    "azure-iot-common": "1.9.3",
     "debug": "^3.0.1"
   },
   "devDependencies": {
