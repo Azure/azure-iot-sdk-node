@@ -11,7 +11,6 @@ var uuid = require('uuid');
 
 var pem = require('pem');
 var Registry = require('azure-iothub').Registry;
-var chalk = require('chalk');
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
@@ -24,9 +23,10 @@ var host = ConnectionString.parse(hubConnectionString).HostName;
 function setupDevice(deviceDescription, provisionDescription, done) {
   registry.create(deviceDescription, function (err) {
     if (err) {
-      console.log(chalk.red('Device was NOT successfully created: ') + deviceDescription.deviceId);
+      debug('Failed to create device identity: ' + deviceDescription.deviceId + ' : ' + err.toString());
       done(err);
     } else {
+      debug('Device created: ' + deviceDescription.deviceId);
       done(null, provisionDescription);
     }
   });
@@ -161,41 +161,23 @@ function createSASDevice(deviceId, done) {
   );
 }
 
-function createDeviceSafe(deviceId, createDevice, callback) {
-  registry.get(deviceId, function(err) {
-    if (!err || err.constructor.name !== 'DeviceNotFoundError') {
-      var errMessageText = 'error creating e2e test device ' + deviceId + ' ' + (err ? err.constructor.name : 'device already exists');
-      console.log(chalk.red(errMessageText));
-    } else {
-      createDevice(deviceId, function(err, deviceInfo){
-        if (err) {
-          console.log(chalk.red('Could not create certificates or device: ' + err.message));
-          callback(err);
-        } else {
-          callback(null, deviceInfo);
-        }
-      });
-    }
-  });
-}
-
 function deleteDevice(deviceId, callback) {
   registry.delete(deviceId, callback);
 }
 
 module.exports = {
   createDeviceWithX509SelfSignedCert: function (callback) {
-    createDeviceSafe('0000e2etest-delete-me-node-x509-' + uuid.v4(), createCertDevice, callback);
+    createCertDevice('0000e2etest-delete-me-node-x509-' + uuid.v4(), callback);
   },
   createDeviceWithSymmetricKey: function (callback) {
-    createDeviceSafe('0000e2etest-delete-me-node-key-' + uuid.v4(), createKeyDevice, callback);
+    createKeyDevice('0000e2etest-delete-me-node-key-' + uuid.v4(), callback);
   },
   createDeviceWithSas: function (callback) {
-    createDeviceSafe('0000e2etest-delete-me-node-sas-' + uuid.v4(), createSASDevice, callback);
+    createSASDevice('0000e2etest-delete-me-node-sas-' + uuid.v4(), callback);
   },
   createDeviceWithX509CASignedCert: function (callback) {
     // max number of letters for this is
-    createDeviceSafe('00e2e-del-me-node-CACert-' + uuid.v4(), createCACertDevice, callback);
+    createCACertDevice('00e2e-del-me-node-CACert-' + uuid.v4(), callback);
   },
   deleteDevice: deleteDevice
 };
