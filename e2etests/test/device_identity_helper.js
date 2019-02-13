@@ -8,6 +8,7 @@ var deviceSas = require('azure-iot-device').SharedAccessSignature;
 var anHourFromNow = require('azure-iot-common').anHourFromNow;
 
 var uuid = require('uuid');
+var debug = require('debug')('e2etests:DeviceIdentityHelper');
 
 var pem = require('pem');
 var Registry = require('azure-iothub').Registry;
