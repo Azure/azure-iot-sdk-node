@@ -4,19 +4,17 @@
 'use strict';
 
 var Registry = require('azure-iothub').Registry;
-var ConnectionString = require('azure-iothub').ConnectionString;
 var debug = require('debug')('e2etests:twin_disconnect');
 var Message = require('azure-iot-common').Message;
-var deviceSdk = require('azure-iot-device');
 var deviceMqtt = require('azure-iot-device-mqtt');
 var deviceAmqp = require('azure-iot-device-amqp');
 var uuid = require('uuid');
-var assert = require('chai').assert;
 var NoRetry = require('azure-iot-common').NoRetry;
+var DeviceIdentityHelper = require('./device_identity_helper.js');
+var createDeviceClient = require('./testUtils.js').createDeviceClient;
+var Rendezvous = require('./rendezvous_helper.js').Rendezvous;
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
-
-var setTwinMoreNewPropsTimeout;
 
 var doConnectTest = function doConnectTest(doIt) {
   return doIt ? it : it.skip;
@@ -95,175 +93,236 @@ var protocolAndTermination = [
   },
 ];
 
-
-var newProps = {
-  foo : 1,
-  bar : {
-    baz : 2,
-    tweedle : {
-      dee : 3
-    }
-  }
-};
-
-var moreNewProps = {
-  bar : {
-    baz : 3
-  }
-};
-
-var nullMergeResult = JSON.parse(JSON.stringify(newProps));
-delete nullMergeResult.tweedle;
-
 protocolAndTermination.forEach( function (testConfiguration) {
   describe(testConfiguration.transport.name + ' using device/service clients - disconnect twin', function () {
 
     this.timeout(60000);
-    var deviceClient, deviceTwin;
-    var serviceTwin;
+    // test clients
+    var deviceClient, deviceTwin, serviceTwin;
+
+    // timeouts that could trigger test callbacks
+    var twinUpdateAfterFaultInjectionTimeout, faultInjectionTimeout;
 
     var deviceDescription;
+    var registry = Registry.fromConnectionString(hubConnectionString);
+
+    before(function (beforeCallback) {
+      debug('creating test device...');
+      DeviceIdentityHelper.createDeviceWithSas(function (err, testDeviceInfo) {
+        if (err) {
+          debug('failed to create test device: ' + err.toString());
+          beforeCallback(err);
+        } else {
+          debug('test device created: ' + testDeviceInfo.deviceId);
+          deviceDescription = testDeviceInfo;
+          beforeCallback(err);
+        }
+      });
+    });
+
+    after(function (afterCallback) {
+      debug('deleting device: ' + deviceDescription.deviceId);
+      DeviceIdentityHelper.deleteDevice(deviceDescription.deviceId, function (err) {
+        if (err) {
+          debug('failed to delete test device: ' + err.toString());
+          afterCallback(err);
+        } else {
+          debug('test device deleted');
+          afterCallback();
+        }
+      });
+    });
 
     beforeEach(function (done) {
-      setTwinMoreNewPropsTimeout = null;
-      var host = ConnectionString.parse(hubConnectionString).HostName;
-      var pkey = new Buffer(uuid.v4()).toString('base64');
-      var deviceId = '0000e2etest-delete-me-twin-e2e-disconnect-' + uuid.v4();
+      twinUpdateAfterFaultInjectionTimeout = null;
+      faultInjectionTimeout = null;
+      deviceClient = createDeviceClient(testConfiguration.transport, deviceDescription);
 
-      deviceDescription = {
-        deviceId:  deviceId,
-        status: 'enabled',
-          authentication: {
-          symmetricKey: {
-            primaryKey: pkey,
-            secondaryKey: new Buffer(uuid.v4()).toString('base64')
-          }
-        },
-        connectionString: 'HostName=' + host + ';DeviceId=' + deviceId + ';SharedAccessKey=' + pkey
-      };
-
-      var registry = Registry.fromConnectionString(hubConnectionString);
-
-      registry.create(deviceDescription, function (err) {
-        if (err) return done(err);
-
-        deviceClient = deviceSdk.Client.fromConnectionString(deviceDescription.connectionString, testConfiguration.transport);
-
-        deviceClient.open(function(err) {
-          if (err) return done(err);
+      debug('connecting device client');
+      deviceClient.open(function(err) {
+        if (err) {
+          debug('error connecting device: ' + deviceDescription.deviceId + ' : ' + err.toString());
+          done(err);
+        } else {
           deviceClient.getTwin(function(err, twin) {
-            if (err) return done(err);
-            deviceTwin = twin;
-
-            registry.getTwin(deviceDescription.deviceId, function(err, twin) {
-              if (err) return done(err);
-              serviceTwin = twin;
-              done();
-            });
+            if (err) {
+              debug('failed to get the twin for the device: ' + err.toString());
+              done(err);
+            } else {
+              debug('got device twin');
+              deviceTwin = twin;
+              debug('getting twin on the service side');
+              registry.getTwin(deviceDescription.deviceId, function(err, twin) {
+                if (err) {
+                  debug('failed to get the device twin with the registry API: ' + err.toString());
+                  done(err);
+                } else {
+                  debug('Got device twin on the service side.');
+                  serviceTwin = twin;
+                  done();
+                }
+              });
+            }
           });
-        });
+        }
       });
     });
 
     afterEach(function (done) {
-      if (setTwinMoreNewPropsTimeout) clearTimeout(setTwinMoreNewPropsTimeout);
-      if (deviceClient) {
-        deviceClient.close(function(err) {
-          if (err) return done(err);
+      if (twinUpdateAfterFaultInjectionTimeout) {
+        debug('clearing twinUpdateAfterFaultInjectionTimeout');
+        clearTimeout(twinUpdateAfterFaultInjectionTimeout);
+      }
 
-          var registry = Registry.fromConnectionString(hubConnectionString);
-          registry.delete(deviceDescription.deviceId, function(err) {
-            if (err) return done(err);
+      if (faultInjectionTimeout) {
+        debug('clearing faultInjectionTimeout');
+        clearTimeout(faultInjectionTimeout);
+      }
+
+      if (deviceClient) {
+        deviceTwin = null;
+        serviceTwin = null;
+        deviceClient.close(function(err) {
+          deviceClient = null;
+          if (err) {
+            debug('failed to close the device client: ' + err.toString());
+            done(err);
+          } else {
+            debug('device client successfully closed.');
             done();
-          });
+          }
         });
       } else {
+        debug('no device client to close.');
         done();
       }
     });
 
     doConnectTest(testConfiguration.testEnabled)('Simple twin update: device receives it, and' + testConfiguration.closeReason + 'which is noted by the iot hub client', function(testCallback) {
       this.timeout(120000);
+
+      var rdv = new Rendezvous(testCallback);
+      var deviceClientIdentifier = 'deviceClient';
+      var serviceTwinUpdateIdentifier = 'serviceTwin';
+      rdv.imIn(deviceClientIdentifier);
+      rdv.imIn(serviceTwinUpdateIdentifier);
+
+      var faultInjectionTestPropertyValue = uuid.v4();
       deviceClient.setRetryPolicy(new NoRetry());
-      debug('about to connect a disconnect listener.');
+
+      debug('attaching disconnect event handler');
       deviceClient.on('disconnect', function () {
-        debug('We did get a disconnect message');
-        if (deviceTwin.properties.desired.$version === 2) {
-          testCallback();
+        debug('We did get a disconnect event');
+        if (deviceTwin.properties.desired.testProp === faultInjectionTestPropertyValue) {
+          rdv.imDone(deviceClientIdentifier);
         } else {
-          testCallback(new Error('unexpected disconnect'));
+          testCallback(new Error('unexpected disconnect for device: ' + deviceDescription.deviceId));
         }
       });
-      assert.equal(deviceTwin.properties.desired.$version, 1);
+      debug('attaching desired properties change handler');
+      debug('will trigger fault injection when test property value is: ' + faultInjectionTestPropertyValue);
       deviceTwin.on('properties.desired', function() {
-        if (deviceTwin.properties.desired.$version === 1) {
-          debug('received notification for desired property v1. nothing to do');
-        } else if (deviceTwin.properties.desired.$version === 2) {
+        if (deviceTwin.properties.desired.testProp === faultInjectionTestPropertyValue) {
           var terminateMessage = new Message(' ');
           terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
           terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
           terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
           debug('sending fault injection message');
           deviceClient.sendEvent(terminateMessage, function (sendErr) {
-            debug('at the callback for the fault injection send, err is:' + sendErr);
+            if (sendErr) {
+              debug('fault injection error: ' + sendErr.toString());
+            } else {
+              debug('fault injection successful');
+            }
           });
-        } else if (deviceTwin.properties.desired.$version >= 2) {
-          testCallback(new Error('incorrect property version received - ' + deviceTwin.properties.desired.$version));
+        } else {
+          debug('received notification for desired property change. testProperty: ' + deviceTwin.properties.desired.testProp);
         }
       });
 
       // giving a few seconds for the twin subscription to happen before we send the update.
-      setTimeout(function () {
+      debug('waiting 3 seconds before triggering a twin update from the service API');
+      faultInjectionTimeout = setTimeout(function () {
         debug('Updating twin properties');
-        serviceTwin.update( { properties : { desired : newProps } }, function(err) {
-          debug('twin properties updated. version should now be 2');
-          if (err) return testCallback(err);
+        serviceTwin.update( { properties : { desired : { testProp: faultInjectionTestPropertyValue } } }, function(err) {
+          if (err) {
+            debug('Twin update failed for device: ' + deviceDescription.deviceId + '. Error updating twin for fault injection: ' + err.toString());
+            err.message += '; test device: ' + deviceDescription.deviceId;
+            testCallback(err);
+          } else {
+            debug('twin properties updated to trigger fault injection with value: ' + faultInjectionTestPropertyValue);
+            rdv.imDone(serviceTwinUpdateIdentifier);
+          }
         });
       }, 3000);
     });
 
     doConnectTest(testConfiguration.testEnabled)('Simple twin update: device receives it, and' + testConfiguration.closeReason + 'which is NOT noted by the iot hub client', function(testCallback) {
       this.timeout(120000);
-      debug('about to connect a disconnect listener.');
+
+      var rdv = new Rendezvous(testCallback);
+      var deviceClientIdentifier = 'deviceClient';
+      var serviceTwinUpdateIdentifier = 'serviceTwin';
+      rdv.imIn(deviceClientIdentifier);
+      rdv.imIn(serviceTwinUpdateIdentifier);
+
+      var faultInjectionTestPropertyValue = uuid.v4();
+      var afterFaultInjectionTestPropertyValue = uuid.v4();
+
+      debug('attaching disconnect event handler');
       deviceClient.on('disconnect', function () {
-        debug('We did get a disconnect message');
+        debug('Unexpected disconnect event');
         testCallback(new Error('unexpected disconnect'));
       });
-      var setTwinMoreNewProps = function() {
-        serviceTwin.update( { properties : { desired : moreNewProps } }, function(err) {
-          debug('At the timeout delayed update');
-          if (err) return testCallback(err);
+
+      var setTwinPropsAfterFaultInjection = function() {
+        serviceTwin.update( { properties : { desired : { testProp: afterFaultInjectionTestPropertyValue } } }, function(err) {
+          if (err) {
+            err.message += '; test device: ' + deviceDescription.deviceId;
+            testCallback(err);
+          } else {
+            debug('sent new property update after fault injection');
+            rdv.imDone(serviceTwinUpdateIdentifier);
+          }
         });
       };
-      assert.equal(deviceTwin.properties.desired.$version,1);
+
+      debug('attaching desired properties update handler');
       deviceTwin.on('properties.desired', function() {
-        if (deviceTwin.properties.desired.$version === 1) {
-          debug('received notification for desired property v1. nothing to do');
-        } else if (deviceTwin.properties.desired.$version === 2) {
+        if (deviceTwin.properties.desired.testProp === faultInjectionTestPropertyValue) {
           var terminateMessage = new Message(' ');
           terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
           terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
           terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
           debug('sending fault injection message');
           deviceClient.sendEvent(terminateMessage, function (sendErr) {
-            debug('at the callback for the fault injection send, err is:' + sendErr);
+            if (sendErr) {
+              debug('error at fault injection for device: ' + deviceDescription.deviceId + ' : ' + sendErr.toString());
+            } else {
+              debug('fault injection succeeded for device: ' + deviceDescription.deviceId);
+            }
           });
-          setTwinMoreNewPropsTimeout = setTimeout(setTwinMoreNewProps, (testConfiguration.delayInSeconds + 5) * 1000);
-        } else if (deviceTwin.properties.desired.$version === 3) {
-          debug('received notification for desired property v3. test is successful.');
-          testCallback();
+          twinUpdateAfterFaultInjectionTimeout = setTimeout(setTwinPropsAfterFaultInjection, (testConfiguration.delayInSeconds + 5) * 1000);
+        } else if (deviceTwin.properties.desired.testProp === afterFaultInjectionTestPropertyValue) {
+          debug('received notification for desired property after fault injection.');
+          rdv.imDone(deviceClientIdentifier);
         } else {
-          debug('incorrect property version received. exiting test with an error.');
-          testCallback(new Error('incorrect property version received - ' + deviceTwin.properties.desired.$version));
+          debug('ignoring test property value: ' + deviceTwin.properties.desired.testProp);
         }
       });
 
       // giving a few seconds for the twin subscription to happen before we send the update.
-      setTimeout(function () {
-        debug('Updating twin properties');
-        serviceTwin.update( { properties : { desired : newProps } }, function(err) {
-          debug('twin properties updated. version should now be 2');
-          if (err) return testCallback(err);
+      debug('waiting 3 seconds before twin update that will trigger the fault injection.');
+      faultInjectionTimeout = setTimeout(function () {
+        debug('updating twin property for fault injection');
+        serviceTwin.update( { properties : { desired : { testProp: faultInjectionTestPropertyValue } } }, function(err) {
+          if (err) {
+            debug('failed to update twin for fault injection for device: ' + deviceDescription.deviceId + ' : ' + err.toString());
+            err.message += '; deviceId: ' + deviceDescription.deviceId;
+            testCallback(err);
+          } else {
+            debug('successfully sent twin update that will trigger fault injection');
+          }
         });
       }, 3000);
     });
