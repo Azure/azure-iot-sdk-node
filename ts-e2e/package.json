@@ -12,23 +12,24 @@
   "author": "Microsoft Corporation",
   "license": "MIT",
   "dependencies": {
+    "@azure/event-hubs": "^1.0.8",
     "@types/chai": "^3.5.1",
     "@types/debug": "0.0.29",
     "@types/mocha": "^2.2.41",
     "@types/node": "^7.0.8",
     "@types/uuid": "^2.0.29",
-    "azure-event-hubs": "0.0.8",
-    "azure-iot-common": "^1.9.0",
-    "azure-iot-device": "^1.9.0",
-    "azure-iot-device-amqp": "^1.9.0",
-    "azure-iot-device-http": "^1.9.0",
-    "azure-iot-device-mqtt": "^1.9.0",
+    "azure-iot-common": "^1.9.3",
+    "azure-iot-device": "^1.9.3",
+    "azure-iot-device-amqp": "^1.9.3",
+    "azure-iot-device-http": "^1.9.3",
+    "azure-iot-device-mqtt": "^1.9.3",
     "azure-iothub": "^1.10.0-preview.0",
     "chai": "^3.5.0",
     "debug": "^2.6.6",
     "mocha": "^5.2.0",
     "tslint": "^5.11.0",
     "typescript": "^3.1.6",
-    "uuid": "^3.0.1"
+    "uuid": "^3.0.1",
+    "uuid-buffer": "^1.0.3"
   }
 }

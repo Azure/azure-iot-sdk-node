@@ -52,7 +52,6 @@ function testFalsyArg(methodUnderTest, argName, argValue, ExpectedErrorType) {
 
 
 describe('tpm', function () {
-
   describe('getEndorsementKey', function() {
     it('returns the endorsement key', function(done) {
       /*Tests_SRS_NODE_TPM_SECURITY_CLIENT_06_006: [The `getEndorsementKey` function shall query the TPM hardware and return the `endorsementKey` in the callback.] */
@@ -61,11 +60,9 @@ describe('tpm', function () {
       connectStub.callsArgWith(0);
       var client = new TpmSecurityClient(undefined, tpm);
       var readPublicStub = sinon.stub(tpm, 'ReadPublic');
-      readPublicStub.withArgs(TpmSecurityClient._ekPersistentHandle).callsArgWith(1, fakeEkKey);
-      readPublicStub.withArgs(TpmSecurityClient._srkPersistentHandle).callsArgWith(1, fakeSrkKey);
-      readPublicStub.withArgs(TpmSecurityClient._idKeyPersistentHandle).callsArgWith(1, fakeIdKey);
-      var lastResponseStub = sinon.stub(tpm, 'getLastResponseCode');
-      lastResponseStub.returns(tss.TPM_RC.SUCCESS);
+      readPublicStub.withArgs(TpmSecurityClient._ekPersistentHandle).callsArgWith(1, undefined, fakeEkKey);
+      readPublicStub.withArgs(TpmSecurityClient._srkPersistentHandle).callsArgWith(1, undefined, fakeSrkKey);
+      readPublicStub.withArgs(TpmSecurityClient._idKeyPersistentHandle).callsArgWith(1, undefined, fakeIdKey);
       client.getEndorsementKey((err, localEk) => {
         assert.deepEqual(localEk, fakeEkKey.outPublic.asTpm2B(), 'Invalid endorsement key returned.');
         done();
@@ -95,16 +92,13 @@ describe('tpm', function () {
       connectStub.callsArgWith(0);
       var client = new TpmSecurityClient(undefined, tpm);
       var readPublicStub = sinon.stub(tpm, 'ReadPublic');
-      readPublicStub.withArgs(TpmSecurityClient._ekPersistentHandle).callsArgWith(1, fakeEkKey);
-      readPublicStub.withArgs(TpmSecurityClient._srkPersistentHandle).callsArgWith(1, fakeSrkKey);
-      readPublicStub.withArgs(TpmSecurityClient._idKeyPersistentHandle).callsArgWith(1, fakeIdKey);
-      var lastResponseStub = sinon.stub(tpm, 'getLastResponseCode');
-      lastResponseStub.returns(tss.TPM_RC.SUCCESS);
-      lastResponseStub.onCall(0).returns(tss.TPM_RC.BAD_TAG);
+      readPublicStub.withArgs(TpmSecurityClient._ekPersistentHandle).callsArgWith(1, new tss.TpmError(tss.TPM_RC.BAD_TAG, '', ''));
+      readPublicStub.withArgs(TpmSecurityClient._srkPersistentHandle).callsArgWith(1, undefined, fakeSrkKey);
+      readPublicStub.withArgs(TpmSecurityClient._idKeyPersistentHandle).callsArgWith(1, undefined, fakeIdKey);
       var createPrimaryStub = sinon.stub(tpm, 'CreatePrimary');
-      createPrimaryStub.callsArgWith(5, fakeCreatedEkKey);
-      var evictControlStub = sinon.stub(tpm, 'EvictControl').callsArg(3);
-      var flushContextStub = sinon.stub(tpm, 'FlushContext').callsArg(1);
+      createPrimaryStub.callsArgWith(5, undefined, fakeCreatedEkKey);
+      sinon.stub(tpm, 'EvictControl').callsArg(3);
+      sinon.stub(tpm, 'FlushContext').callsArg(1);
       client.getEndorsementKey((err, localEk) => {
         assert.deepEqual(localEk, fakeCreatedEkKey.outPublic.asTpm2B(), 'Invalid endorsement key returned.');
         done();
@@ -120,11 +114,9 @@ describe('tpm', function () {
       connectStub.callsArgWith(0);
       var client = new TpmSecurityClient(undefined, tpm);
       var readPublicStub = sinon.stub(tpm, 'ReadPublic');
-      readPublicStub.withArgs(TpmSecurityClient._ekPersistentHandle).callsArgWith(1, fakeEkKey);
-      readPublicStub.withArgs(TpmSecurityClient._srkPersistentHandle).callsArgWith(1, fakeSrkKey);
-      readPublicStub.withArgs(TpmSecurityClient._idKeyPersistentHandle).callsArgWith(1, fakeIdKey);
-      var lastResponseStub = sinon.stub(tpm, 'getLastResponseCode');
-      lastResponseStub.returns(tss.TPM_RC.SUCCESS);
+      readPublicStub.withArgs(TpmSecurityClient._ekPersistentHandle).callsArgWith(1, undefined, fakeEkKey);
+      readPublicStub.withArgs(TpmSecurityClient._srkPersistentHandle).callsArgWith(1, undefined, fakeSrkKey);
+      readPublicStub.withArgs(TpmSecurityClient._idKeyPersistentHandle).callsArgWith(1, undefined, fakeIdKey);
       client.getStorageRootKey((err, localSrk) => {
         assert.deepEqual(localSrk, fakeSrkKey.outPublic.asTpm2B(), 'Invalid endorsement key returned.');
         done();
@@ -157,16 +149,13 @@ describe('tpm', function () {
       connectStub.callsArgWith(0);
       var client = new TpmSecurityClient(undefined, tpm);
       var readPublicStub = sinon.stub(tpm, 'ReadPublic');
-      readPublicStub.withArgs(TpmSecurityClient._ekPersistentHandle).callsArgWith(1, fakeEkKey);
-      readPublicStub.withArgs(TpmSecurityClient._srkPersistentHandle).callsArgWith(1, fakeSrkKey);
-      readPublicStub.withArgs(TpmSecurityClient._idKeyPersistentHandle).callsArgWith(1, fakeIdKey);
-      var lastResponseStub = sinon.stub(tpm, 'getLastResponseCode');
-      lastResponseStub.returns(tss.TPM_RC.SUCCESS);
-      lastResponseStub.onCall(1).returns(tss.TPM_RC.BAD_TAG);
+      readPublicStub.withArgs(TpmSecurityClient._ekPersistentHandle).callsArgWith(1, undefined, fakeEkKey);
+      readPublicStub.withArgs(TpmSecurityClient._srkPersistentHandle).callsArgWith(1, new tss.TpmError(tss.TPM_RC.BAD_TAG, '', ''));
+      readPublicStub.withArgs(TpmSecurityClient._idKeyPersistentHandle).callsArgWith(1, undefined, fakeIdKey);
       var createPrimaryStub = sinon.stub(tpm, 'CreatePrimary');
-      createPrimaryStub.callsArgWith(5, fakeCreatedSrkKey);
-      var evictControlStub = sinon.stub(tpm, 'EvictControl').callsArg(3);
-      var flushContextStub = sinon.stub(tpm, 'FlushContext').callsArg(1);
+      createPrimaryStub.callsArgWith(5, undefined, fakeCreatedSrkKey);
+      sinon.stub(tpm, 'EvictControl').callsArg(3);
+      sinon.stub(tpm, 'FlushContext').callsArg(1);
       client.getStorageRootKey((err, localSrk) => {
         assert.deepEqual(localSrk, fakeCreatedSrkKey.outPublic.asTpm2B(), 'Invalid storage root key returned.');
         done();
@@ -187,14 +176,10 @@ describe('tpm', function () {
       connectStub.callsArgWith(0);
       var client = new TpmSecurityClient(undefined, tpm);
       var readPublicStub = sinon.stub(tpm, 'ReadPublic');
-      readPublicStub.withArgs(TpmSecurityClient._ekPersistentHandle).callsArgWith(1, fakeEkKey);
-      readPublicStub.withArgs(TpmSecurityClient._srkPersistentHandle).callsArgWith(1, fakeSrkKey);
-      readPublicStub.withArgs(TpmSecurityClient._idKeyPersistentHandle).callsArgWith(1, fakeIdKey);
-      var lastResponseStub = sinon.stub(tpm, 'getLastResponseCode');
-      lastResponseStub.onCall(0).returns(tss.TPM_RC.SUCCESS);
-      lastResponseStub.onCall(1).returns(tss.TPM_RC.SUCCESS);
-      lastResponseStub.onCall(2).returns(tss.TPM_RC.BAD_TAG);
-      client.signWithIdentity([1], (err, signResult) => {
+      readPublicStub.withArgs(TpmSecurityClient._ekPersistentHandle).callsArgWith(1, undefined, fakeEkKey);
+      readPublicStub.withArgs(TpmSecurityClient._srkPersistentHandle).callsArgWith(1, undefined, fakeSrkKey);
+      readPublicStub.withArgs(TpmSecurityClient._idKeyPersistentHandle).callsArgWith(1, new tss.TpmError(tss.TPM_RC.BAD_TAG));
+      client.signWithIdentity([1], (err) => {
         assert.instanceOf(err, common.errors.InvalidOperationError, 'should indicate invalid operation if active notIdentityKey called first.');
         done();
       });
@@ -202,9 +187,12 @@ describe('tpm', function () {
 
     it('correctly deals with error during tpm connection', function(done) {
       /*Tests_SRS_NODE_TPM_SECURITY_CLIENT_06_013: [If `signWithIdentity` is invoked without a previous successful invocation of `activateIdentityKey`, the callback will be invoked with `err` of `InvalidOperationError`.] */
-      var tpm = new tss.Tpm();
-      var client = new TpmSecurityClient('registration', tpm);
-      client.signWithIdentity([1], (err, signResult) => {
+      var fakeTssTpm = {
+        connect: sinon.stub().throws(new Error('connect failed'))
+      };
+
+      var client = new TpmSecurityClient('registration', fakeTssTpm);
+      client.signWithIdentity([1], (err) => {
         assert.isOk(err, 'should be an error from the connection portion of starting the tpm');
         done();
       });
@@ -220,13 +208,11 @@ describe('tpm', function () {
       connectStub.callsArgWith(0);
       var client = new TpmSecurityClient(undefined, tpm);
       var readPublicStub = sinon.stub(tpm, 'ReadPublic');
-      readPublicStub.withArgs(TpmSecurityClient._ekPersistentHandle).callsArgWith(1, fakeEkKey);
-      readPublicStub.withArgs(TpmSecurityClient._srkPersistentHandle).callsArgWith(1, fakeSrkKey);
-      readPublicStub.withArgs(TpmSecurityClient._idKeyPersistentHandle).callsArgWith(1, fakeIdKey);
-      var lastResponseStub = sinon.stub(tpm, 'getLastResponseCode');
-      lastResponseStub.returns(tss.TPM_RC.SUCCESS);
-      var getPropsAndHashAlgStub = sinon.stub(client, '_getPropsAndHashAlg').callsArgWith(0,tss.TPM_ALG_ID.SHA256, fakeBadProps);
-      client.signWithIdentity(dataToSign, (err, signedData) => {
+      readPublicStub.withArgs(TpmSecurityClient._ekPersistentHandle).callsArgWith(1, undefined, fakeEkKey);
+      readPublicStub.withArgs(TpmSecurityClient._srkPersistentHandle).callsArgWith(1, undefined, fakeSrkKey);
+      readPublicStub.withArgs(TpmSecurityClient._idKeyPersistentHandle).callsArgWith(1, undefined, fakeIdKey);
+      sinon.stub(client, '_getPropsAndHashAlg').callsArgWith(0, tss.TPM_ALG_ID.SHA256, fakeBadProps);
+      client.signWithIdentity(dataToSign, (err) => {
         assert.instanceOf(err, common.errors.SecurityDeviceError, 'should be an error from the signWithIdentity');
         done();
       });
@@ -250,17 +236,15 @@ describe('tpm', function () {
       connectStub.callsArgWith(0);
       var client = new TpmSecurityClient(undefined, tpm);
       var readPublicStub = sinon.stub(tpm, 'ReadPublic');
-      readPublicStub.withArgs(TpmSecurityClient._ekPersistentHandle).callsArgWith(1, fakeEkKey);
-      readPublicStub.withArgs(TpmSecurityClient._srkPersistentHandle).callsArgWith(1, fakeSrkKey);
-      readPublicStub.withArgs(TpmSecurityClient._idKeyPersistentHandle).callsArgWith(1, fakeIdKey);
-      var lastResponseStub = sinon.stub(tpm, 'getLastResponseCode');
-      lastResponseStub.returns(tss.TPM_RC.SUCCESS);
-      sinon.stub(client, '_getPropsAndHashAlg').callsArgWith(0,tss.TPM_ALG_ID.SHA256, fakeGoodProps);
+      readPublicStub.withArgs(TpmSecurityClient._ekPersistentHandle).callsArgWith(1, undefined, fakeEkKey);
+      readPublicStub.withArgs(TpmSecurityClient._srkPersistentHandle).callsArgWith(1, undefined, fakeSrkKey);
+      readPublicStub.withArgs(TpmSecurityClient._idKeyPersistentHandle).callsArgWith(1, undefined, fakeIdKey);
+      sinon.stub(client, '_getPropsAndHashAlg').callsArgWith(0, null, tss.TPM_ALG_ID.SHA256, fakeGoodProps);
       sinon.stub(tpm, 'HMAC').callsFake((handle, dataToSign, alg, signCallback) => {
         var hash = crypto.createHash('sha256');
         hash.update(dataToSign);
         var signature = hash.digest();
-        signCallback(signature);
+        signCallback(null, signature);
       });
       client.signWithIdentity(dataToSign, (err, signedData) => {
         assert.isNotOk(err, 'error is not falsy in the signing');
@@ -287,15 +271,13 @@ describe('tpm', function () {
       var connectStub = sinon.stub(tpm, 'connect');
       connectStub.callsArgWith(0);
       var readPublicStub = sinon.stub(tpm, 'ReadPublic');
-      readPublicStub.withArgs(TpmSecurityClient._ekPersistentHandle).callsArgWith(1, fakeEkKey);
-      readPublicStub.withArgs(TpmSecurityClient._srkPersistentHandle).callsArgWith(1, fakeSrkKey);
-      readPublicStub.withArgs(TpmSecurityClient._idKeyPersistentHandle).callsArgWith(1, fakeIdKey);
-      var lastResponseStub = sinon.stub(tpm, 'getLastResponseCode');
-      lastResponseStub.returns(tss.TPM_RC.SUCCESS);
-      sinon.stub(client, '_getPropsAndHashAlg').callsArgWith(0,tss.TPM_ALG_ID.SHA256, fakeGoodProps);
+      readPublicStub.withArgs(TpmSecurityClient._ekPersistentHandle).callsArgWith(1, undefined, fakeEkKey);
+      readPublicStub.withArgs(TpmSecurityClient._srkPersistentHandle).callsArgWith(1, undefined, fakeSrkKey);
+      readPublicStub.withArgs(TpmSecurityClient._idKeyPersistentHandle).callsArgWith(1, undefined, fakeIdKey);
+      sinon.stub(client, '_getPropsAndHashAlg').callsArgWith(0, null, tss.TPM_ALG_ID.SHA256, fakeGoodProps);
       sinon.stub(tpm, 'HMAC_Start').callsFake((handle, signature, alg, startCallback) => {
         var hash = crypto.createHash('sha256');
-        startCallback(hash);
+        startCallback(null, hash);
       });
       var hmacSequenceUpdateStub = sinon.stub(tpm, 'SequenceUpdate').callsFake((hSequence, dataToSign, updateCallback) => {
         hSequence.update(dataToSign);
@@ -307,7 +289,7 @@ describe('tpm', function () {
         var response = {
           result: signature
         };
-        completeCallback(response);
+        completeCallback(null, response);
       });
       client.signWithIdentity(dataToSign, (err, signedData) => {
         assert.isNotOk(err, 'error is not falsy in the signing');
