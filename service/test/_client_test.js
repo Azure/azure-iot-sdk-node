@@ -491,6 +491,38 @@ describe('Client', function () {
       });
     });
 
+    it('returns a promise if no callback is specified', function (testCallback) {
+      var fakeDeviceId = 'fakeDevice';
+      var fakeStreamInitiation = {
+        connectTimeoutInSeconds: 42,
+        responseTimeoutInSeconds: 1337,
+        streamName: 'streamName'
+      };
+      var fakeResponse = {
+        statusCode: 200,
+        headers: {
+          'iothub-streaming-is-accepted': 'True',
+          'iothub-streaming-url': 'wss://test',
+          'iothub-streaming-authToken': 'token',
+        }
+      };
+      var fakeRestClient = {
+        executeApiCall: function(method, path, headers, body, timeout, callback) {
+          callback(null, undefined, fakeResponse);
+        }
+      };
+
+      var client = new Client(new EventEmitter(), fakeRestClient);
+      var resultPromise = client.initiateStream(fakeDeviceId, fakeStreamInitiation);
+      assert.instanceOf(resultPromise, Promise);
+      resultPromise.then(function (result) {
+        assert.strictEqual(result.uri, fakeResponse.headers['iothub-streaming-url']);
+        assert.strictEqual(result.authorizationToken, fakeResponse.headers['iothub-streaming-auth-token']);
+        assert.strictEqual(result.isAccepted, true);
+        testCallback();
+      });
+    });
+
     /*Tests_SRS_NODE_IOTHUB_CLIENT_16_036: [The `initiateStream` method shall create a `StreamInitiationResult` object from the received HTTP response as follows:
     streamInitiationResult.authorizationToken: response.headers['iothub-streaming-auth-token']
     streamInitiationResult.uri: response.headers['iothub-streaming-url']
