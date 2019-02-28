@@ -578,33 +578,67 @@ export class Amqp {
               }
             };
 
-            detachLink(this._cbs, () => {
-              let remainingLinks = [];
-              for (let senderEndpoint in this._senders) {
-                if (this._senders.hasOwnProperty(senderEndpoint)) {
-                  remainingLinks.push(this._senders[senderEndpoint]);
-                  delete this._senders[senderEndpoint];
-                }
+            let remainingLinks = [];
+            for (let senderEndpoint in this._senders) {
+              if (this._senders.hasOwnProperty(senderEndpoint)) {
+                remainingLinks.push(this._senders[senderEndpoint]);
+                delete this._senders[senderEndpoint];
               }
+            }
 
-              for (let receiverEndpoint in this._receivers) {
-                if (this._receivers.hasOwnProperty(receiverEndpoint)) {
-                  remainingLinks.push(this._receivers[receiverEndpoint]);
-                    delete this._receivers[receiverEndpoint];
-                }
+            for (let receiverEndpoint in this._receivers) {
+              if (this._receivers.hasOwnProperty(receiverEndpoint)) {
+                remainingLinks.push(this._receivers[receiverEndpoint]);
+                  delete this._receivers[receiverEndpoint];
               }
+            }
 
-              /*Codes_SRS_NODE_COMMON_AMQP_16_034: [The `disconnect` method shall detach all open links before disconnecting the underlying AMQP client.]*/
-              async.each(remainingLinks, detachLink, () => {
-                sessionEnd((sessionError) => {
-                  disconnect((disconnectError) => {
-                    manageConnectionHandlers('removeListener');
-                    const finalError = err || sessionError || disconnectError;
-                    this._fsm.transition('disconnected', disconnectCallback, finalError);
+            //
+            // Depending on the mode of failure it is possible that no network activity is occurring.
+            // However, the SDK *might* not have noticed that yet.
+            //
+            // If this happens then rundown code will simply hang waiting for a response which will never
+            // occur.
+            //
+            // To deal with this, we encapsulate the rundown code in a function and we invoke it.
+            //
+            // First, however, we will spin off a timer to execute the very same rundown code in 45 seconds, but that
+            // function invocation will use API that do NOT expect a reply.
+            //
+            // If the initial function invocation actually doesn't hang due to lack of communication, it's
+            // last action will be to clear the timeout and consequently the timeout invocation call to the
+            // rundown code will NOT occur.
+            //
+            let rerunWithForceTimer: any = undefined;
+            const rundownConnection = (force: boolean) => {
+              //
+              // Note that _disconnectionOccurred could already be true on the first run (the NON setTimer invocation).
+              // Thus, we don't simply want to set it to the value of force.
+              //
+              if (force) {
+                this._disconnectionOccurred = true;
+              }
+              detachLink(this._cbs, () => {
+                /*Codes_SRS_NODE_COMMON_AMQP_16_034: [The `disconnect` method shall detach all open links before disconnecting the underlying AMQP client.]*/
+                async.each(remainingLinks, detachLink, () => {
+                  sessionEnd((sessionError) => {
+                    disconnect((disconnectError) => {
+                      clearTimeout(rerunWithForceTimer);
+                      manageConnectionHandlers('removeListener');
+                      const finalError = err || sessionError || disconnectError;
+                      this._fsm.transition('disconnected', disconnectCallback, finalError);
+                    });
                   });
                 });
               });
-            });
+            };
+
+            /*Codes_SRS_NODE_COMMON_AMQP_06_007: [While disconnecting, if the run down does not complete within 45 seconds, the code will be re-run with `forceDetach`es.]*/
+            rerunWithForceTimer = setTimeout(() => {
+              debug('the normal rundown expired without completion.  Do it again with force detaches.');
+              rundownConnection(true);
+            }, 45000);
+            rundownConnection(false);
           },
           session_close: (context: EventContext) => {
             let err = this._indicatedSessionError;

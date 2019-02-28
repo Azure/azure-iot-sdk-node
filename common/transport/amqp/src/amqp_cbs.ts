@@ -66,7 +66,7 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
   private _senderLink: SenderLink;
   private _receiverLink: ReceiverLink;
   private _putToken: PutTokenStatus = new PutTokenStatus();
-  private _putTokenQueue: {
+  private _putTokensNotYetSent: {
     audience: string,
     token: string,
     callback: (err?: Error) => void
@@ -82,17 +82,18 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
     /*Codes_SRS_NODE_AMQP_CBS_16_002: [The `constructor` shall instantiate a `ReceiverLink` object for the `$cbs` endpoint.]*/
     this._receiverLink = new ReceiverLink(ClaimsBasedSecurityAgent._putTokenReceivingEndpoint, null, this._rheaSession);
 
-    this._putTokenQueue = [];
+    this._putTokensNotYetSent = [];
 
     this._fsm = new machina.Fsm({
       initialState: 'detached',
       states: {
         detached: {
           _onEnter: (callback, err) => {
-            let tokenOperation = this._putTokenQueue.shift();
+            clearTimeout(this._putToken.timeoutTimer); // In the detached state there should be no outstanding put tokens.
+            let tokenOperation = this._putTokensNotYetSent.shift();
             while (tokenOperation) {
               tokenOperation.callback(err);
-              tokenOperation = this._putTokenQueue.shift();
+              tokenOperation = this._putTokensNotYetSent.shift();
             }
 
             /*Codes_SRS_NODE_AMQP_CBS_16_006: [If given as an argument, the `attach` method shall call `callback` with a standard `Error` object if any link fails to attach.]*/
@@ -107,7 +108,7 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
           /*Tests_SRS_NODE_AMQP_CBS_16_021: [The `forceDetach()` method shall return immediately if no link is attached.]*/
           forceDetach: () => { return; },
           putToken: (audience, token, callback) => {
-            this._putTokenQueue.push({
+            this._putTokensNotYetSent.push({
               audience: audience,
               token: token,
               callback: callback
@@ -179,7 +180,7 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
             this._fsm.transition('detached');
           },
           putToken: (audience, token, callback) => {
-            this._putTokenQueue.push({
+            this._putTokensNotYetSent.push({
               audience: audience,
               token: token,
               callback: callback
@@ -191,10 +192,10 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
             if (callback) {
               callback();
             }
-            let tokenOperation = this._putTokenQueue.shift();
+            let tokenOperation = this._putTokensNotYetSent.shift();
             while (tokenOperation) {
               this._fsm.handle('putToken', tokenOperation.audience, tokenOperation.token, tokenOperation.callback);
-              tokenOperation = this._putTokenQueue.shift();
+              tokenOperation = this._putTokensNotYetSent.shift();
             }
           },
           /*Codes_SRS_NODE_AMQP_CBS_06_001: [If in the attached state, either the sender or the receiver links gets an error, an error of `azure-iot-amqp-base:error-indicated` will have been indicated on the container object and the cbs will remain in the attached state.  The owner of the cbs MUST detach.] */

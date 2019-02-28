@@ -602,13 +602,60 @@ describe('Amqp', function () {
 
       amqp.connect({uri: 'uri'}, function() {
         amqp.disconnect(function(err) {
-          if (err) testCallback(err);
-          else {
-            testCallback();
-          }
+          testCallback(err);
         });
       });
     });
+
+    /*Tests_SRS_NODE_COMMON_AMQP_06_007: [While disconnecting, if the run down does not complete within 45 seconds, the code will be re-run with `forceDetach`es.]*/
+    it('Re-invokes the rundown if no responses on network within timeout', function(testCallback) {
+      this.clock = sinon.useFakeTimers();
+      var amqp = new Amqp();
+      var fakeConnection = new EventEmitter();
+      fakeConnection.name = 'connection';
+      var fakeConnectionContext = {connection: fakeConnection};
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
+      var fakeSession = new EventEmitter();
+      fakeSession.name = 'session';
+      var fakeSessionContext = {connection: fakeConnection, session: fakeSession};
+      fakeConnection.create_session = sinon.stub().returns(fakeSession);
+      fakeConnection.close = () => {};
+      sinon.stub(fakeConnection, 'close').callsFake(() => {process.nextTick(() => {fakeConnection.emit('connection_close', fakeConnectionContext)})});
+      fakeSession.close = () => {};
+      sinon.stub(fakeSession, 'close').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_close', fakeSessionContext)})});
+      fakeSession.open = () => {};
+      sinon.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
+
+      var fakeSender = {
+        detach: sinon.stub(),
+        forceDetach: sinon.stub()
+      };
+      var fakeReceiver = {
+        detach: sinon.stub(),
+        forceDetach: sinon.stub()
+      };
+
+      amqp.connect({uri: 'uri'}, function() {
+        amqp._senders.fake_sender_endpoint = fakeSender;
+        amqp._receivers.fake_receiver_endpoint = fakeReceiver;
+        amqp.disconnect(function(err) {
+          assert(fakeSender.detach.calledOnce);
+          assert(fakeSender.forceDetach.calledOnce);
+          assert(fakeReceiver.detach.calledOnce);
+          assert(fakeReceiver.forceDetach.calledOnce);
+          testCallback(err);
+        }.bind(this));
+        //
+        // The detaches should have been called but the removes should not yet have been called.
+        //
+        assert(fakeSender.detach.calledOnce);
+        assert(fakeSender.forceDetach.notCalled);
+        assert(fakeReceiver.detach.calledOnce);
+        assert(fakeReceiver.forceDetach.notCalled);
+        this.clock.tick(46000);
+      }.bind(this));
+    });
+
 
     /*Tests_SRS_NODE_COMMON_AMQP_16_005: [The disconnect method shall call the `done` callback and pass the error as a parameter if the disconnection is unsuccessful]*/
     it('calls the done callback with an error if there\'s an error while disconnecting', function(testCallback) {

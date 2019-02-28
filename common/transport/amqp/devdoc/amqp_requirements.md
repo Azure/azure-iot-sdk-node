@@ -141,3 +141,5 @@ Configures a `ReceiverLink` object to use the endpoint passed as a parameter and
 
 ### All methods
 **SRS_NODE_COMMON_AMQP_16_011: [** All methods should treat the `done` callback argument as optional and not throw if it is not passed as argument. **]**
+
+**SRS_NODE_COMMON_AMQP_06_007: [** While disconnecting, if the run down does not complete within 45 seconds, the code will be re-run with `forceDetach`es. **]**
