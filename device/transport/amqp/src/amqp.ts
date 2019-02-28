@@ -81,7 +81,9 @@ export class Amqp extends EventEmitter implements DeviceTransport {
         this._fsm.handle('updateSharedAccessSignature', newCredentials.sharedAccessSignature, (err) => {
           if (err) {
             /*Codes_SRS_NODE_DEVICE_AMQP_16_058: [If the `putToken` operation initiated upon receiving a `newTokenAvailable` event fails, a `disconnect` event shall be emitted with the error from the failed `putToken` operation.]*/
+            debug('Error updating the shared access signature');
             this._fsm.handle('disconnect', () => {
+              debug('emitting the disconnect event in response to a update signature failure');
               this.emit('disconnect', err);
             });
           }
