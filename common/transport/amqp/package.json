@@ -18,7 +18,6 @@
   },
   "devDependencies": {
     "@types/async": "^2.0.42",
-    "@types/lodash.merge": "^4.6.3",
     "@types/node": "8.9.4",
     "chai": "^4.1.2",
     "istanbul": "^0.4.5",
