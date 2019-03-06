@@ -1,16 +1,15 @@
 {
   "name": "azure-iot-security-tpm",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "description": "Azure IoT TPM security client",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.9.3",
+    "azure-iot-common": "1.9.4",
     "debug": "^3.0.1",
     "base32-encode": "^1.0.0",
-    "debug": "^3.0.1",
     "machina": "^4.0.1",
     "tss.js": "^1.1.0"
   },
