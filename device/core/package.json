@@ -9,10 +9,10 @@
   "dependencies": {
     "azure-iot-common": "1.9.4",
     "azure-iot-http-base": "1.9.4",
-    "azure-storage": "^2.8.1",
-    "debug": "^3.1.0",
-    "lodash": "^4.17.10",
-    "machina": "^4.0.1",
+    "azure-storage": "^2.10.2",
+    "debug": "^4.1.1",
+    "lodash": "^4.17.11",
+    "machina": "^4.0.2",
     "traverse": "^0.6.6"
   },
   "devDependencies": {
@@ -23,7 +23,7 @@
     "es5-shim": "^4.5.9",
     "istanbul": "^0.4.5",
     "mocha": "^5.2.0",
-    "sinon": "^4.0.2",
+    "sinon": "^7.2.7",
     "tslint": "^5.7.0",
     "typescript": "2.5.3"
   },

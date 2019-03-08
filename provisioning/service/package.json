@@ -9,15 +9,15 @@
   "dependencies": {
     "azure-iot-common": "1.9.4",
     "azure-iot-http-base": "1.9.4",
-    "debug": "^3.1.0"
+    "debug": "^4.1.1"
   },
   "devDependencies": {
-    "@types/debug": "0.0.29",
+    "@types/debug": "4.1.2",
     "@types/node": "^7.0.5",
     "chai": "^3.5.0",
     "istanbul": "^0.4.4",
     "mocha": "^5.2.0",
-    "sinon": "^1.17.5",
+    "sinon": "^7.2.7",
     "tslint": "^5.1.0",
     "typescript": "2.2.2"
   },

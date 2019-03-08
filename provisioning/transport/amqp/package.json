@@ -7,13 +7,13 @@
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "async": "^2.6.0",
+    "async": "^2.6.2",
     "azure-iot-amqp-base": "2.2.4",
     "azure-iot-common": "1.9.4",
     "azure-iot-provisioning-device": "1.5.4",
     "bluebird": "^3.5.0",
     "buffer-builder": "^0.2.0",
-    "debug": "^3.0.1",
+    "debug": "^4.1.1",
     "machina": "^4.0.1",
     "uuid": "^3.1.0"
   },
@@ -23,7 +23,7 @@
     "chai": "^4.1.2",
     "istanbul": "^0.4.4",
     "mocha": "^5.2.0",
-    "sinon": "^4.1.2",
+    "sinon": "^7.2.7",
     "tslint": "^5.1.0",
     "typescript": "2.6.2"
   },

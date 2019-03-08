@@ -15,7 +15,7 @@
   "license": "mit",
   "private": true,
   "dependencies": {
-    "async": "^2.6.1",
+    "async": "^2.6.2",
     "azure-event-hubs": "0.0.8",
     "azure-iot-common": "1.9.4",
     "azure-iot-device": "1.9.4",
