@@ -8,7 +8,7 @@
   "typings": "index.d.ts",
   "dependencies": {
     "azure-iot-common": "1.9.4",
-    "debug": "^3.0.1",
+    "debug": "^4.1.1",
     "machina": "^4.0.1"
   },
   "devDependencies": {
@@ -16,7 +16,7 @@
     "chai": "^3.5.0",
     "istanbul": "^0.4.4",
     "mocha": "^5.2.0",
-    "sinon": "^1.17.5",
+    "sinon": "^7.2.7",
     "tslint": "^5.1.0",
     "typescript": "2.2.2"
   },

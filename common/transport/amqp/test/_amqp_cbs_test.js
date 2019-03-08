@@ -730,7 +730,7 @@ describe('ClaimsBasedSecurityAgent', function() {
       var fakeSenderContext = {sender: fakeRheaSenderLink};
       var fakeRheaReceiverLink = new EventEmitter();
       var fakeReceiverContext = {receiver: fakeRheaReceiverLink};
-      fakeRheaSenderLink.send = sinon.stub.returns({settled: true});
+      fakeRheaSenderLink.send = sinon.stub().returns({settled: true});
       fakeRheaSession.open_sender = () => {};
       sinon.stub(fakeRheaSession, 'open_sender').callsFake(() => {
         process.nextTick( () => {
@@ -806,7 +806,7 @@ describe('ClaimsBasedSecurityAgent', function() {
       var fakeSenderContext = {sender: fakeRheaSenderLink};
       var fakeRheaReceiverLink = new EventEmitter();
       var fakeReceiverContext = {receiver: fakeRheaReceiverLink};
-      fakeRheaSenderLink.send = sinon.stub.returns({settled: true});
+      fakeRheaSenderLink.send = sinon.stub().returns({settled: true});
       fakeRheaSession.open_sender = () => {};
       sinon.stub(fakeRheaSession, 'open_sender').callsFake(() => {
         process.nextTick( () => {
