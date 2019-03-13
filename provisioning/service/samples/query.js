@@ -6,8 +6,8 @@
 var provisioningServiceClient = require('azure-iot-provisioning-service').ProvisioningServiceClient;
 
 var argv = require('yargs')
-  .usage('Usage: $0 --connectionstring <DEVICE PROVISIONING CONNECTION STRING> ')
-  .option('connectionstring', {
+  .usage('Usage: $0 --connectionString <DEVICE PROVISIONING CONNECTION STRING> ')
+  .option('connectionString', {
     alias: 'c',
     describe: 'The connection string for the Device Provisioning instance',
     type: 'string',
