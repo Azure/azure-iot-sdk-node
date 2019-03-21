@@ -494,6 +494,12 @@ export interface EnrollmentGroup {
    * Custom allocation definition.
    */
   customAllocationDefinition?: CustomAllocationDefinition;
+
+  /**
+   * The capabilities of the devices that will be provisioned using this group enrollment record.
+   */
+  capabilities?: DeviceCapabilities;
+
 }
 
 /**

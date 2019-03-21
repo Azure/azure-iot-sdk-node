@@ -82,6 +82,9 @@ var symmetricKeyEnrollmentGroup = {
     }
   },
   provisioningStatus: "enabled",
+  capabilities: {
+    iotEdge: true
+  },
   reprovisionPolicy: {
     updateHubAssignment: false,
     migrateDeviceData: true
