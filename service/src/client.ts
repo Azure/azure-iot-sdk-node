@@ -239,10 +239,12 @@ export class Client extends EventEmitter {
    * @param {String}    deviceId            The identifier of an existing device identity.
    * @param {String}    moduleId            The identifier of an existing module identity (optional)
    * @param {Object}    params              An object describing the method and shall have the following properties:
-   *                                        - methodName          The name of the method that shall be invoked.
-   *                                        - payload             [optional] The payload to use for the method call.
-   *                                        - timeoutInSeconds    [optional] The number of seconds IoT Hub shall wait for the device
-   *                                                              to send a response before deeming the method execution a failure.
+   *                                        - methodName                  The name of the method that shall be invoked.
+   *                                        - payload                     [optional] The payload to use for the method call.
+   *                                        - responseTimeoutInSeconds    [optional] The number of seconds IoT Hub shall wait for the device
+   *                                                                      to send a response before deeming the method execution a failure.
+   *                                        - connectTimeoutInSeconds     [optional] The number of seconds IoT Hub shall wait for the service
+   *                                                                      to connect to the device before declaring the device is unreachable.
    * @param {Function}  [done]              The optional callback to call with the result of the method execution.
    * @returns {ResultWithIncomingMessage<any> | void} Promise if no callback function was passed, void otherwise.
    *
