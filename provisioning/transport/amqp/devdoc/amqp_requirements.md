@@ -26,6 +26,12 @@ These methods are used by the other objects of the SDK but are not public API fo
 and shall set the password to the passed in sas token.
  **]**
 
+**SRS_NODE_PROVISIONING_AMQP_06_003: [** The `registrationRequest` will send a body in the message which contains a stringified JSON object with a `registrationId` property. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_06_004: [** The `registrationRequest` will, if utilizing TPM attestation, send a `tpm` property with the endorsement and storage key in the JSON body. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_06_005: [** The `registrationRequest` will, if utilizing custom allocation data, send a `payload` property in the JSON body. **]**
+
 **SRS_NODE_PROVISIONING_AMQP_16_002: [** The `registrationRequest` method shall connect the AMQP client with the certificate and key given in the `auth` parameter of the previously called `setAuthentication` method. **]**
 
 **SRS_NODE_PROVISIONING_AMQP_16_003: [** The `registrationRequest` method shall attach a sender link on the `<idScope>/registrations/<registrationId>` endpoint with the following properties:

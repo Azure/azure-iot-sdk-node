@@ -52,6 +52,29 @@ describe('X509Registration', function () {
       });
     });
 
+    /* Tests_SRS_NODE_DPS_X509_REGISTRATION_06_001: [ If `setProvisioningPayload` is invoked prior to invoking `register` than the `payload` property of the `RegistrationRequest` shall be set to the argument provided to the `setProvisioningPayload`.] */
+    it ('sets the payload property if specified', function(callback) {
+      var transport = {
+        setAuthentication: sinon.spy(),
+      };
+      var security = {
+        getCertificate: sinon.stub().callsArgWith(0, null, fakeX509Cert),
+        getRegistrationId: sinon.stub().returns(fakeRegistrationId)
+      };
+      var fakeProvisioningPayload = {a: 'b'};
+      var clientObj = new X509Registration(fakeProvisioningHost, fakeIdScope, transport, security);
+      clientObj._pollingStateMachine.register = sinon.stub().callsArgWith(1, null, { registrationState: fakeResponse } );
+      clientObj.setProvisioningPayload(fakeProvisioningPayload);
+      clientObj.register(function(err, response) {
+        assert.isNotOk(err);
+        assert.strictEqual(response, fakeResponse);
+        assert(clientObj._pollingStateMachine.register.calledOnce);
+        assert.strictEqual(clientObj._pollingStateMachine.register.firstCall.args[0].payload, fakeProvisioningPayload);
+        callback();
+      });
+    });
+
+
     /* Tests_SRS_NODE_DPS_X509_REGISTRATION_18_006: [ If `getCertificate`fails, `register` shall call `callback` with the error ] */
     it ('fails if getCertificate fails', function(callback) {
       var security = {

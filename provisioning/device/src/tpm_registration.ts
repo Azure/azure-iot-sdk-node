@@ -5,6 +5,7 @@ const debug = dbg('azure-iot-provisioning-device:TpmRegistration');
 import { anHourFromNow, Callback, callbackToPromise, ErrorCallback, errorCallbackToPromise } from 'azure-iot-common';
 import { RegistrationClient, RegistrationResult } from './interfaces';
 import { TpmProvisioningTransport, TpmSecurityClient, TpmRegistrationInfo } from './interfaces';
+import { ProvisioningPayload } from './interfaces';
 import { PollingStateMachine } from './polling_state_machine';
 
 /**
@@ -17,6 +18,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
   private _provisioningHost: string;
   private _idScope: string;
   private _pollingStateMachine: PollingStateMachine;
+  private _provisioningPayload: ProvisioningPayload;
 
   constructor(provisioningHost: string, idScope: string, transport: TpmProvisioningTransport, securityClient: TpmSecurityClient) {
     super();
@@ -224,6 +226,15 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
 
   }
 
+  /**
+   * Sets the custom payload for registration that will be sent to the custom allocation policy implemented in an Azure Function.
+   *
+   * @param payload The payload sent to the provisioning service at registration.
+   */
+  setProvisioningPayload( payload: ProvisioningPayload): void {
+    this._provisioningPayload = payload;
+  }
+
   register(callback: Callback<RegistrationResult>): void;
   register(): Promise<RegistrationResult>;
   register(callback?: Callback<RegistrationResult>): Promise<RegistrationResult> | void {
@@ -237,7 +248,10 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
           provisioningHost: this._provisioningHost
         }
       };
-
+      /* Codes_SRS_NODE_DPS_TPM_REGISTRATION_06_001: [ If `setProvisioningPayload` is invoked prior to invoking `register` than the `payload` property of the `RegistrationRequest` shall be set to the argument provided to the `setProvisioningPayload`.] */
+      if (this._provisioningPayload) {
+        registrationInfo.request.payload = this._provisioningPayload;
+      }
       this._fsm.handle('register', registrationInfo, _callback);
     }, callback);
   }

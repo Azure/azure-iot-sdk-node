@@ -3,9 +3,10 @@
 
 export { ProvisioningTransportOptions } from './lib/interfaces';
 export { RegistrationRequest, RegistrationResult, DeviceRegistrationResult } from './lib/interfaces';
+export { DeviceRegistration, TpmAttestation } from './lib/interfaces';
 export { X509ProvisioningTransport} from './lib/interfaces';
-export { SymmetricKeyProvisioningTransport} from './lib/interfaces';
-export { TpmProvisioningTransport,TpmRegistrationInfo, TpmRegistrationResult } from './lib/interfaces';
+export { SymmetricKeyProvisioningTransport } from './lib/interfaces';
+export { TpmProvisioningTransport, TpmRegistrationInfo, TpmRegistrationResult } from './lib/interfaces';
 export { PollingStateMachine } from './lib/polling_state_machine';
 export { ProvisioningDeviceClient } from './lib/client';
 export { ProvisioningDeviceConstants } from './lib/constants';

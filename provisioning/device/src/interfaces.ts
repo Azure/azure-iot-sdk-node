@@ -4,6 +4,7 @@
 'use strict';
 
 import { X509, Callback, SharedAccessSignature } from 'azure-iot-common';
+import { X509Registration } from './x509_registration';
 
 /**
  * Configuration options for provisioning transports.  Passed into the transport's setTransportOptions function.
@@ -43,6 +44,11 @@ export interface RegistrationRequest {
    * true to force re-registration
    */
   forceRegistration?: boolean;
+
+  /**
+   * Custom payload passed to the provisioning service.
+   */
+  payload?: ProvisioningPayload;
 }
 
 /**
@@ -67,9 +73,50 @@ export interface DeviceRegistrationState {
    */
   status: RegistrationStatus;
   /**
+   * TPM registration result
+   */
+  tpm?: TpmRegistrationResult;
+  /**
+   * x509 registration result
+   */
+  x509?: X509Registration;
+  /**
    * other values returned by the provisioning service
    */
   [key: string]: any;
+}
+
+/**
+ * Attestation via TPM.
+ */
+export interface TpmAttestation {
+  /**
+   * The endorsement key is an encryption key that is permanently embedded in the Trusted Platform Module (TPM)
+   * security hardware, generally at the time of manufacture. This private portion of the endorsement key is never
+   * released outside of the TPM. The public portion of the endorsement key helps to recognize a genuine TPM.
+   *
+   * The endorsement key is a base64 encoded value.
+   */
+  endorsementKey: string;
+  /**
+   * The storage root key is embedded in the Trusted Platform Module (TPM) security hardware.
+   * It is used to protect TPM keys created by applications, so that these keys cannot be used without the TPM.
+   * Unlike the endorsement key (which is generally created when the TPM is manufactured), the storage root key
+   * is created when you take ownership of the TPM. This means that if you clear the TPM and a new user takes ownership,
+   * a new storage root key is created.
+   *
+   * The storageRootKey is a base64 encoded value.
+   */
+  storageRootKey?: string;
+}
+
+/**
+ * structure used to during device registration.
+ */
+export interface DeviceRegistration {
+  registrationId: string;
+  tpm?: TpmAttestation;
+  payload?: ProvisioningPayload;
 }
 
 /**
@@ -203,4 +250,12 @@ export interface SymmetricKeyProvisioningTransport extends PollingTransport {
 export interface SymmetricKeySecurityClient {
   getRegistrationId(callback?: Callback<string>): Promise<string> | void;
   createSharedAccessSignature(idScope: string, callback?: Callback<SharedAccessSignature>): Promise<SharedAccessSignature> | void;
+}
+
+/**
+ * @private
+ * Payload passed to the provisioning service.
+ */
+export interface ProvisioningPayload {
+  [key: string]: any;
 }
