@@ -38,6 +38,7 @@ var provisioningSecurityClient = new SymmetricKeySecurityClient(registrationId, 
 
 var provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvisioningTransport(), provisioningSecurityClient);
 // Register the device.
+provisioningClient.setProvisioningPayload({a: 'b'});
 provisioningClient.register(function(err, result) {
   if (err) {
     console.log("error registering device: " + err);
@@ -45,6 +46,7 @@ provisioningClient.register(function(err, result) {
     console.log('registration succeeded');
     console.log('assigned hub=' + result.assignedHub);
     console.log('deviceId=' + result.deviceId);
+    console.log('payload=' + JSON.stringify(result.payload));
     var connectionString = 'HostName=' + result.assignedHub + ';DeviceId=' + result.deviceId + ';SharedAccessKey=' + symmetricKey;
     var hubClient = Client.fromConnectionString(connectionString, iotHubTransport);
 

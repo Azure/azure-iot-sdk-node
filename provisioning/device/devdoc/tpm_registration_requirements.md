@@ -33,6 +33,8 @@ The `register` method completes the authentication and registration flow for the
 - a callback that will handle an optional error if the operation fails.
 **]**
 
+**SRS_NODE_DPS_TPM_REGISTRATION_06_001: [** If `setProvisioningPayload` is invoked prior to invoking `register` than the `payload` property of the `RegistrationRequest` shall be set to the argument provided to the `setProvisioningPayload`. **]**
+
 **SRS_NODE_DPS_TPM_REGISTRATION_16_005: [** The `register` method shall create a signature for the initial SAS token by signing the following payload with the session key and the `TpmSecurityClient`:
 ```
 <idScope>/registrations/<registrationId>\n<expiryTimeUtc>

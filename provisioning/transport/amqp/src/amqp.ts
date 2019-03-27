@@ -12,9 +12,10 @@ const debug = dbg('azure-iot-provisioning-device-amqp:Amqp');
 
 import { X509, errors } from 'azure-iot-common';
 import { ProvisioningTransportOptions, X509ProvisioningTransport, TpmProvisioningTransport, SymmetricKeyProvisioningTransport, RegistrationRequest, RegistrationResult, ProvisioningDeviceConstants } from 'azure-iot-provisioning-device';
+import { DeviceRegistration } from 'azure-iot-provisioning-device';
 import { Amqp as Base, SenderLink, ReceiverLink, AmqpMessage, AmqpBaseTransportConfig } from 'azure-iot-amqp-base';
 import { GetSasTokenCallback, SaslTpm } from './sasl_tpm';
-
+import { message as rheaMessage } from 'rhea';
 /**
  * @private
  */
@@ -287,8 +288,22 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
             iotdps-forceRegistration: <true or false>;
             ```
             ]*/
+
             let requestMessage = new AmqpMessage();
-            requestMessage.body = '';
+            /*Codes_SRS_NODE_PROVISIONING_AMQP_06_003: [ The `registrationRequest` will send a body in the message which contains a stringified JSON object with a `registrationId` property.] */
+            let requestBody: DeviceRegistration = {registrationId: request.registrationId};
+            /*Codes_SRS_NODE_PROVISIONING_AMQP_06_004: [The `registrationRequest` will, if utilizing TPM attestation, send a `tpm` property with the endorsement and storage key in the JSON body.] */
+            if (this._endorsementKey) {
+              requestBody.tpm = {endorsementKey: this._endorsementKey.toString('base64')};
+              if (this._storageRootKey) {
+                requestBody.tpm.storageRootKey = this._storageRootKey.toString('base64');
+              }
+            }
+            /*Codes_SRS_NODE_PROVISIONING_AMQP_06_005: [The `registrationRequest` will, if utilizing custom allocation data, send a `payload` property in the JSON body.] */
+            if (request.payload) {
+              requestBody.payload = request.payload;
+            }
+            requestMessage.body = rheaMessage.data_section(new Buffer(JSON.stringify(requestBody)));
             requestMessage.application_properties = {};
             requestMessage.application_properties[MessagePropertyNames.OperationType] = DeviceOperations.Register;
             requestMessage.application_properties[MessagePropertyNames.ForceRegistration] = !!request.forceRegistration;

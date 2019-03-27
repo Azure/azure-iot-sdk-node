@@ -31,7 +31,7 @@ var enrollment = {
   allocationPolicy: 'custom',
   customAllocationDefinition: {
     webhookUrl: 'https://web.hook',
-    apiVersion: '2018-11-01'
+    apiVersion: '2019-03-31'
   }
 };
 

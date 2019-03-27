@@ -13,7 +13,7 @@ import { MqttBase, MqttBaseTransportConfig } from 'azure-iot-mqtt-base';
 import { errors, X509 } from 'azure-iot-common';
 import { X509ProvisioningTransport, SymmetricKeyProvisioningTransport } from 'azure-iot-provisioning-device';
 import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure-iot-provisioning-device';
-import { RegistrationRequest, DeviceRegistrationResult } from 'azure-iot-provisioning-device';
+import { DeviceRegistration, RegistrationRequest, DeviceRegistrationResult } from 'azure-iot-provisioning-device';
 import { translateError } from 'azure-iot-provisioning-device';
 
 
@@ -335,8 +335,16 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
   private _sendRegistrationRequest(request: RegistrationRequest, rid: string, callback: (err?: Error, result?: any) => void): void {
     this._operations[rid] = callback;
 
+    /*Codes_SRS_NODE_PROVISIONING_MQTT_06_001: [The `registrationRequest` will send a body in the message which contains a stringified JSON object with a `registrationId` property.] */
+    let requestBody: DeviceRegistration = { registrationId : request.registrationId };
+
+    /*Codes_SRS_NODE_PROVISIONING_MQTT_06_002: [The `registrationRequest` will, if utilizing custom allocation data, send a `payload` property in the JSON body.] */
+    if (request.payload) {
+      requestBody.payload = request.payload;
+    }
+    debug('registration publish: ' + '$dps/registrations/PUT/iotdps-register/?$rid=' + rid + ' body: ' + JSON.stringify(requestBody));
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_003: [ `registrationRequest` shall publish to '$dps/registrations/PUT/iotdps-register/?$rid<rid>'.] */
-    this._mqttBase.publish('$dps/registrations/PUT/iotdps-register/?$rid=' + rid, ' ', { qos: 1 } , (err) => {
+    this._mqttBase.publish('$dps/registrations/PUT/iotdps-register/?$rid=' + rid, JSON.stringify(requestBody), { qos: 1 } , (err) => {
       /* Codes_SRS_NODE_PROVISIONING_MQTT_18_004: [ If the publish fails, `registrationRequest` shall call `callback` passing in the error.] */
       if (err) {
         delete this._operations[rid];

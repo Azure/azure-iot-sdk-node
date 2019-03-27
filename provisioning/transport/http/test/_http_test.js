@@ -9,6 +9,22 @@ var Http = require('../lib/http.js').Http;
 var errors = require('azure-iot-common').errors;
 var ProvisioningDeviceConstants = require('azure-iot-provisioning-device').ProvisioningDeviceConstants;
 
+var simpleBody = {registrationId: 'fakeRegistrationId'};
+var fakeEk = '__FAKE_KEY__';
+var fakeSrk = '__FAKE_STORAGE_KEY__';
+var payload = {a: '__DAta__'};
+var bodyWithTpm = {
+  registrationId: 'fakeRegistrationId',
+  tpm: {
+    endorsementKey: (new Buffer(fakeEk)).toString('base64'),
+    storageRootKey: (new Buffer(fakeSrk)).toString('base64')
+  }
+};
+var bodyWithPayload = {
+  registrationId: 'fakeRegistrationId',
+  payload: payload
+};
+
 describe('Http', function() {
   var http;
   var fakeBase;
@@ -226,6 +242,45 @@ describe('Http', function() {
         assert.oneOf(err, [null, undefined]);
         var path = fakeBase.buildRequest.firstCall.args[1];
         assert.notStrictEqual(-1, path.indexOf('forceRegistration=true'));
+        callback();
+      });
+      respond_x509(null, fakeAssignedResponse, 200);
+    });
+
+    /*Tests_SRS_NODE_PROVISIONING_HTTP_06_006: [The `registrationRequest` will send a body in the message which contains a stringified JSON object with a `registrationId` property.] */
+    it ('includes a body', function(callback) {
+      http.setAuthentication(fakeX509);
+      http.registrationRequest(fakeRequest, function(err) {
+        assert.oneOf(err, [null, undefined]);
+        var body = fakeHttpRequest.write.firstCall.args[0];
+        assert.equal(body, JSON.stringify(simpleBody));
+        callback();
+      });
+      respond_x509(null, fakeAssignedResponse, 200);
+    });
+
+    /*Tests_SRS_NODE_PROVISIONING_HTTP_06_007: [The `registrationRequest` will, if utilizing TPM attestation, send a `tpm` property with the endorsement and storage key in the JSON body.] */
+    it ('includes a tpm in the body if tpm info set.', function(callback) {
+      http.setAuthentication(fakeX509);
+      http.setTpmInformation(new Buffer(fakeEk), new Buffer(fakeSrk));
+      http.registrationRequest(fakeRequest, function(err) {
+        assert.oneOf(err, [null, undefined]);
+        var body = fakeHttpRequest.write.firstCall.args[0];
+        assert.equal(body, JSON.stringify(bodyWithTpm));
+        callback();
+      });
+      respond_x509(null, fakeAssignedResponse, 200);
+    });
+
+    /*Tests_SRS_NODE_PROVISIONING_HTTP_06_008: [The `registrationRequest` will, if utilizing custom allocation data, send a `payload` property in the JSON body.] */
+    it ('sends a body with a payload property', function(callback) {
+      http.setAuthentication(fakeX509);
+      fakeRequest.payload = payload;
+      http.registrationRequest(fakeRequest, function(err) {
+        delete fakeRequest.payload;
+        assert.oneOf(err, [null, undefined]);
+        var body = fakeHttpRequest.write.firstCall.args[0];
+        assert.equal(body, JSON.stringify(bodyWithPayload));
         callback();
       });
       respond_x509(null, fakeAssignedResponse, 200);

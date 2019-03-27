@@ -3,6 +3,7 @@
 
 'use strict';
 import { RegistrationClient, RegistrationRequest, RegistrationResult, DeviceRegistrationResult } from './interfaces';
+import { ProvisioningPayload } from './interfaces';
 import { X509ProvisioningTransport, X509SecurityClient } from './interfaces';
 import { PollingStateMachine } from './polling_state_machine';
 import * as dbg from 'debug';
@@ -20,6 +21,7 @@ export class X509Registration implements RegistrationClient {
   private _provisioningHost: string;
   private _idScope: string;
   private _pollingStateMachine: PollingStateMachine;
+  private _provisioningPayload: ProvisioningPayload;
 
   constructor(provisioningHost: string, idScope: string, transport: X509ProvisioningTransport, securityClient: X509SecurityClient) {
     this._provisioningHost = provisioningHost;
@@ -27,6 +29,15 @@ export class X509Registration implements RegistrationClient {
     this._transport = transport;
     this._securityClient = securityClient;
     this._pollingStateMachine = new PollingStateMachine(this._transport);
+  }
+
+  /**
+   * Sets the custom payload for registration that will be sent to the custom allocation policy implemented in an Azure Function.
+   *
+   * @param payload The payload sent to the provisioning service at registration.
+   */
+  setProvisioningPayload( payload: ProvisioningPayload): void {
+    this._provisioningPayload = payload;
   }
 
   /**
@@ -55,6 +66,10 @@ export class X509Registration implements RegistrationClient {
             provisioningHost: this._provisioningHost,
             idScope: this._idScope
           };
+          /* Codes_SRS_NODE_DPS_X509_REGISTRATION_06_001: [ If `setProvisioningPayload` is invoked prior to invoking `register` than the `payload` property of the `RegistrationRequest` shall be set to the argument provided to the `setProvisioningPayload`.] */
+          if (this._provisioningPayload) {
+            request.payload = this._provisioningPayload;
+          }
           /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_004: [ `register` shall pass the certificate into the `setAuthentication` method on the transport ] */
           this._transport.setAuthentication(cert);
           /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_002: [ `register` shall call `registerX509` on the transport object and call it's callback with the result of the transport operation. ] */

@@ -12,6 +12,23 @@ var errors = require('azure-iot-common').errors;
 var ProvisioningDeviceConstants = require('azure-iot-provisioning-device').ProvisioningDeviceConstants;
 var Amqp = require('../lib/amqp.js').Amqp;
 var Builder = require('buffer-builder');
+var rheaMessage = require('rhea').message;
+
+var simpleBody = {registrationId: 'fakeRegistrationId'};
+var fakeEk = '__FAKE_KEY__';
+var fakeSrk = '__FAKE_STORAGE_KEY__';
+var payload = {a: '__DAta__'};
+var bodyWithTpm = {
+  registrationId: 'fakeRegistrationId',
+  tpm: {
+    endorsementKey: (new Buffer(fakeEk)).toString('base64'),
+    storageRootKey: (new Buffer(fakeSrk)).toString('base64')
+  }
+};
+var bodyWithPayload = {
+  registrationId: 'fakeRegistrationId',
+  payload: payload
+};
 
 describe('Amqp', function () {
   var fakeSenderLink, fakeReceiverLink, fakeAmqpBase, amqp;
@@ -203,6 +220,43 @@ describe('Amqp', function () {
           assert.strictEqual(sentMessage.application_properties['iotdps-operation-type'], 'iotdps-register');
           assert.strictEqual(sentMessage.application_properties['iotdps-forceRegistration'], fakeRequest.forceRegistration);
           assert.isOk(sentMessage.correlation_id);
+          testCallback();
+        });
+      });
+
+      /*Tests_SRS_NODE_PROVISIONING_AMQP_06_003: [ The `registrationRequest` will send a body in the message which contains a stringified JSON object with a `registrationId` property.] */
+      it ('Sends a body', function (testCallback) {
+
+        amqp.registrationRequest({ registrationId: 'fakeRegistrationId' }, function () {
+          assert.isTrue(fakeSenderLink.send.calledOnce);
+          var sentMessage = fakeSenderLink.send.firstCall.args[0];
+          var encodedBody = rheaMessage.data_section(new Buffer(JSON.stringify(simpleBody)));
+          assert.deepEqual(sentMessage.body, encodedBody);
+          testCallback();
+        });
+      });
+
+      /*Tests_SRS_NODE_PROVISIONING_AMQP_06_004: [The `registrationRequest` will, if utilizing TPM attestation, send a `tpm` property with the endorsement and storage key in the JSON body.] */
+      it ('Sends a body with a tpm property', function (testCallback) {
+
+        amqp.setTpmInformation(new Buffer(fakeEk), new Buffer(fakeSrk));
+        amqp.registrationRequest({ registrationId: 'fakeRegistrationId' }, function () {
+          assert.isTrue(fakeSenderLink.send.calledOnce);
+          var sentMessage = fakeSenderLink.send.firstCall.args[0];
+          var encodedBody = rheaMessage.data_section(new Buffer(JSON.stringify(bodyWithTpm)));
+          assert.deepEqual(sentMessage.body, encodedBody);
+          testCallback();
+        });
+      });
+
+      /*Tests_SRS_NODE_PROVISIONING_AMQP_06_005: [The `registrationRequest` will, if utilizing custom allocation data, send a `payload` property in the JSON body.] */
+      it ('Sends a body with a payload property', function (testCallback) {
+
+        amqp.registrationRequest({ registrationId: 'fakeRegistrationId', payload: payload }, function () {
+          assert.isTrue(fakeSenderLink.send.calledOnce);
+          var sentMessage = fakeSenderLink.send.firstCall.args[0];
+          var encodedBody = rheaMessage.data_section(new Buffer(JSON.stringify(bodyWithPayload)));
+          assert.deepEqual(sentMessage.body, encodedBody);
           testCallback();
         });
       });
