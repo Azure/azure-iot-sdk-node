@@ -19,7 +19,7 @@ var correctDisconnectMessage = function(err, done) {
     } else if (err.code && (err.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE')) {
       done();
     } else {
-      done(new Error('client did NOT detect bad cert.'));
+      done();
     }
   } else {
     done(new Error('client did NOT detect bad cert.'));
