@@ -11,6 +11,14 @@ var errors = require('azure-iot-common').errors;
 var Mqtt = require('../lib/mqtt').Mqtt;
 var MqttWs = require('../lib/mqtt_ws').MqttWs;
 
+var simpleBody = {registrationId: 'fakeRegistrationId'};
+var payload = {a: '__DAta__'};
+var bodyWithPayload = {
+  registrationId: 'fakeRegistrationId',
+  payload: payload
+};
+
+
 describe('Mqtt', function () {
   var fakeBase;
   var mqtt;
@@ -198,6 +206,31 @@ describe('Mqtt', function () {
         /* Tests_SRS_NODE_PROVISIONING_MQTT_18_010: [ When waiting for responses, `registrationRequest` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>.] */
       respond(fakeBase.publish.firstCall);
     });
+
+    /*Tests_SRS_NODE_PROVISIONING_MQTT_06_001: [The `registrationRequest` will send a body in the message which contains a stringified JSON object with a `registrationId` property.] */
+    it ('includes a body', function(callback) {
+      mqtt.registrationRequest(fakeRequest, function(err, result) {
+        assert.oneOf(err, [null, undefined]);
+        assert.deepEqual(result, fakeResponse);
+        callback();
+      });
+      assert.isOk(fakeBase.publish.firstCall.args[1], JSON.stringify(simpleBody));
+      respond(fakeBase.publish.firstCall);
+    });
+
+    /*Tests_SRS_NODE_PROVISIONING_MQTT_06_002: [The `registrationRequest` will, if utilizing custom allocation data, send a `payload` property in the JSON body.] */
+    it ('sends a body with a payload property', function(callback) {
+      fakeRequest.payload = payload;
+      mqtt.registrationRequest(fakeRequest, function(err, result) {
+        delete fakeRequest.payload;
+        assert.oneOf(err, [null, undefined]);
+        assert.deepEqual(result, fakeResponse);
+        callback();
+      });
+      assert.isOk(fakeBase.publish.firstCall.args[1], JSON.stringify(simpleBody));
+      respond(fakeBase.publish.firstCall);
+    });
+
   });
 
   describe('#queryOperationStatus', function() {

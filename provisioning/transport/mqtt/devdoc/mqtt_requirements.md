@@ -26,6 +26,9 @@ These methods are used by the other objects of the SDK but are not public API fo
 
 **SRS_NODE_PROVISIONING_MQTT_18_015: [** When `registrationRequest` receives an error from the service, it shall call `callback` passing in the error. **]**
 
+**SRS_NODE_PROVISIONING_MQTT_06_001: [** The `registrationRequest` will send a body in the message which contains a stringified JSON object with a `registrationId` property. **]**
+
+**SRS_NODE_PROVISIONING_MQTT_06_002: [** The `registrationRequest` will, if utilizing custom allocation data, send a `payload` property in the JSON body. **]**
 
 ## queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, responseBody?: any, result?: any, pollingInterval?: number) => void): void
 

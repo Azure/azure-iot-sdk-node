@@ -51,6 +51,13 @@ Queries the dps to obtain a buffer that may be used as a symmetric key to perfor
 
 **SRS_NODE_PROVISIONING_HTTP_18_043: [** If `cancel` is called while the registration request is in progress, `register` shall call the `callback` with an `OperationCancelledError` error. **]**
 
+**SRS_NODE_PROVISIONING_HTTP_06_006: [** The `registrationRequest` will send a body in the message which contains a stringified JSON object with a `registrationId` property. **]**
+
+**SRS_NODE_PROVISIONING_HTTP_06_007: [** The `registrationRequest` will, if utilizing TPM attestation, send a `tpm` property with the endorsement and storage key in the JSON body. **]**
+
+**SRS_NODE_PROVISIONING_HTTP_06_008: [** The `registrationRequest` will, if utilizing custom allocation data, send a `payload` property in the JSON body. **]**
+
+
 ### queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void;
 
 **SRS_NODE_PROVISIONING_HTTP_18_037: [** `queryOperationStatus` shall include the current `api-version` as a URL query string value named 'api-version'. **]**

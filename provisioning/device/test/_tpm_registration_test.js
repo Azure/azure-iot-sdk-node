@@ -23,6 +23,7 @@ describe('TpmRegistration', function () {
       provisioningHost: fakeProvisioningHost,
       idScope: fakeIdScope
     }
+    var fakeProvisioningPayload = {a: 'b'};
 
     var fakeTpmChallenge = Buffer.from('fakeSessionKey','base64');
 
@@ -89,6 +90,18 @@ describe('TpmRegistration', function () {
         testCallback();
       });
     });
+
+    /*Tests_SRS_NODE_DPS_TPM_REGISTRATION_06_001: [ If `setProvisioningPayload` is invoked prior to invoking `register` than the `payload` property of the `RegistrationRequest` shall be set to the argument provided to the `setProvisioningPayload`.] */
+    it('sets the payload property if specified', function (testCallback) {
+      tpmReg.setProvisioningPayload(fakeProvisioningPayload);
+      tpmReg.register(function () {
+        assert.isTrue(fakeProvisioningTransport.getAuthenticationChallenge.calledOnce);
+        var authArg = fakeProvisioningTransport.getAuthenticationChallenge.firstCall.args[0];
+        assert.strictEqual(authArg.payload, fakeProvisioningPayload);
+        testCallback();
+      });
+    });
+
 
     /*Tests_SRS_NODE_DPS_TPM_REGISTRATION_16_004: [The `register` method shall store the session key in the TPM by calling the `activateIdentityKey` method of the `TpmSecurityClient` object passed to the constructor with the following arguments:
     - `sessionKey`: the session key returned by the previous call to `TpmProvisioningTransport.getAuthenticationChallenge`

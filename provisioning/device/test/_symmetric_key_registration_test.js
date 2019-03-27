@@ -42,6 +42,7 @@ describe('Symmetric Key Registration', function () {
       });
     });
 
+
     /* Tests_SRS_NODE_DPS_SYMMETRIC_REGISTRATION_06_008: [ `register` shall invoke `createSharedAccessSignature` method on the security object to acquire a sas token object. ] */
     it('shall invoke createSharedAccessSignature', function(callback) {
       var transport = {
@@ -59,6 +60,28 @@ describe('Symmetric Key Registration', function () {
         assert.strictEqual(response, fakeResponse);
         assert(security.createSharedAccessSignature.calledOnce);
         assert(security.createSharedAccessSignature.firstCall.args[0],fakeIdScope);
+        callback();
+      });
+    });
+
+    /* Tests_SRS_NODE_DPS_SYMMETRIC_REGISTRATION_06_012: [ If `setProvisioningPayload` is invoked prior to invoking `register` than the `payload` property of the `RegistrationRequest` shall be set to the argument provided to the `setProvisioningPayload`.] */
+    it('sets the payload property if specified', function(callback) {
+      var transport = {
+        setSharedAccessSignature: sinon.spy(),
+      };
+      var security = {
+        createSharedAccessSignature: sinon.stub().callsArgWith(1, null, fakeSasToken),
+        getRegistrationId: sinon.stub().callsArgWith(0, null, fakeRegistrationId)
+      };
+      var fakePayload = {a: 'b'};
+      var clientObj = new SymmetricKeyRegistration(fakeProvisioningHost, fakeIdScope, transport, security);
+      clientObj.setProvisioningPayload(fakePayload);
+      clientObj._pollingStateMachine.register = sinon.stub().callsArgWith(1, null, { registrationState: fakeResponse } );
+      clientObj._pollingStateMachine.disconnect = sinon.stub().callsArgWith(0,null);
+      clientObj.register(function(err, response) {
+        assert.isNotOk(err);
+        assert.strictEqual(response, fakeResponse);
+        assert.strictEqual(clientObj._pollingStateMachine.register.firstCall.args[0].payload, fakePayload);
         callback();
       });
     });

@@ -6,8 +6,8 @@
 import { EventEmitter } from 'events';
 import { HttpTransportError, RestApiClient, Http as Base } from 'azure-iot-http-base';
 import { X509, errors } from 'azure-iot-common';
-import { X509ProvisioningTransport, TpmProvisioningTransport, SymmetricKeyProvisioningTransport } from 'azure-iot-provisioning-device';
-import { RegistrationRequest, DeviceRegistrationResult } from 'azure-iot-provisioning-device';
+import { X509ProvisioningTransport, TpmProvisioningTransport, SymmetricKeyProvisioningTransport, DeviceRegistration } from 'azure-iot-provisioning-device';
+import { RegistrationRequest, DeviceRegistrationResult, TpmAttestation } from 'azure-iot-provisioning-device';
 import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure-iot-provisioning-device';
 import { translateError } from 'azure-iot-provisioning-device';
 import * as dbg from 'debug';
@@ -27,10 +27,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
   private _config: ProvisioningTransportOptions = {};
   private _auth: X509;
   private _sas: string;
-  private _tpmPublicKeys: {
-    endorsementKey: string,
-    storageRootKey: string
-  };
+  private _tpmPublicKeys: TpmAttestation;
 
   /**
    * @private
@@ -156,10 +153,17 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_007: [ If an X509 cert if provided, `registrationRequest` shall include it in the Http authorization header. ] */
     this._ensureRestApiClient(request);
 
-    let requestBody: any = { registrationId : request.registrationId };
+    /*Codes_SRS_NODE_PROVISIONING_HTTP_06_006: [The `registrationRequest` will send a body in the message which contains a stringified JSON object with a `registrationId` property.] */
+    let requestBody: DeviceRegistration = { registrationId : request.registrationId };
 
+    /*Codes_SRS_NODE_PROVISIONING_HTTP_06_007: [The `registrationRequest` will, if utilizing TPM attestation, send a `tpm` property with the endorsement and storage key in the JSON body.] */
     if (this._tpmPublicKeys) {
       requestBody.tpm = this._tpmPublicKeys;
+    }
+
+    /*Codes_SRS_NODE_PROVISIONING_HTTP_06_008: [The `registrationRequest` will, if utilizing custom allocation data, send a `payload` property in the JSON body.] */
+    if (request.payload) {
+      requestBody.payload = request.payload;
     }
 
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_005: [ `registrationRequest` shall include the current `api-version` as a URL query string value named 'api-version'. ] */

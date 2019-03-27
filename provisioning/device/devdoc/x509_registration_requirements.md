@@ -17,6 +17,8 @@ The `X509Registration` class is used to control the registration flow of an X509
 
 The `register` method completes the authentication and registration flow for the user.
 
+**SRS_NODE_DPS_X509_REGISTRATION_06_001: [** If `setProvisioningPayload` is invoked prior to invoking `register` than the `payload` property of the `RegistrationRequest` shall be set to the argument provided to the `setProvisioningPayload`. **]**
+
 **SRS_NODE_DPS_X509_REGISTRATION_18_001: [** `register` shall call `getCertificate` on the security object to acquire the X509 certificate. **]**
 
 **SRS_NODE_DPS_X509_REGISTRATION_18_006: [** If `getCertificate`fails, `register` shall call `callback` with the error **]**

@@ -23,6 +23,8 @@ The `register` method completes the authentication and registration flow for the
 
 **SRS_NODE_DPS_SYMMETRIC_REGISTRATION_06_008: [** `register` shall invoke `createSharedAccessSignature` method on the security object to acquire a sas token object. **]**
 
+**SRS_NODE_DPS_SYMMETRIC_REGISTRATION_06_012: [** If `setProvisioningPayload` is invoked prior to invoking `register` than the `payload` property of the `RegistrationRequest` shall be set to the argument provided to the `setProvisioningPayload`. **]**
+
 **SRS_NODE_DPS_SYMMETRIC_REGISTRATION_06_009: [** If the `createSharedAccessSignature` fails, the `register` shall call the `_callback` with the error. **]**
 
 **SRS_NODE_DPS_SYMMETRIC_REGISTRATION_06_004: [** `register` shall pass the SAS into the `setSharedAccessSignature` method on the transport. **]**

@@ -20,5 +20,7 @@ module.exports = {
   PollingStateMachine: require('./lib/polling_state_machine').PollingStateMachine,
   ProvisioningDeviceClient: require('./lib/client').ProvisioningDeviceClient,
   ProvisioningDeviceConstants: require('./lib/constants').ProvisioningDeviceConstants,
-  translateError: require('./lib/provisioning_errors').translateError
+  translateError: require('./lib/provisioning_errors').translateError,
+  DeviceRegistration: require('./lib/interfaces').DeviceRegistration,
+  TpmAttestation: require('./lib/interfaces').TpmAttestation
 };
