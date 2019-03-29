@@ -42,27 +42,10 @@ A module can also support methods using the existing method API.
 
 ## Sample Code.
 
-Some sample code can be found in this branch in the [device/core/samples](./device/core/samples/) directory:
+Some sample code can be found in the [device/samples](./device/samples/) directory:
 * simple_sample_module.js has an example of on('inputMessage') and sendOutputEvent functionality.
 * simple_sample_module_twin.js has an example of module twin functionality.
 * simple_sample_module_method.js has an example of module method functionality.
-
-Sample code for a docker container can be found in the [device/edge_sample](./device/edge-sample/) directory. Checkout the [readme](./device/edge-sample/readme.md) to learn more
-
-## Future changes
-
-The samples all have a block of code at the top which retrieves a certificate from the container file system and passes it down to the transport.  For now, you should consider this to be boilerplate code.  The APIs used here will likely changed and replaced with different boilerplate code in a future drop:
-```
-var authProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString(connectionString);
-authProvider.getDeviceCredentials(function(err, credentials) {
-  if (err) {
-    throw new Error('unexpected: getDeviceCredentials failure');
-  } else {
-    credentials.ca = fs.readFileSync(process.env.EdgeModuleCACertificateFile).toString('ascii');
-  }
-});
-var client = Client.fromAuthenticationProvider(authProvider, Protocol);
-```
 
 [tutorial-simulate-device-windows]: https://docs.microsoft.com/en-us/azure/iot-edge/tutorial-simulate-device-windows
 [tutorial-simulate-device-linux]: https://docs.microsoft.com/en-us/azure/iot-edge/tutorial-simulate-device-linux
