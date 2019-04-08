@@ -77,7 +77,7 @@ saving cert with chain to intermediateCa1_fullchain.pem.
 To create a test device cert based on a CA cert, you need to pass the "device" command along with the common name of your device and the common name of the parent certificate.
 
 ```
-F:\repos\node\provisioning\tools>node create_test_cert.js root "Device 42" "Intermediate CA 2"
+F:\repos\node\provisioning\tools>node create_test_cert.js device "Device 42" "Intermediate CA 2"
 creating certificate with common name=Device 42
 saving cert to device42_cert.pem.
 saving key to device42_key.pem.
@@ -88,7 +88,7 @@ saving cert with chain to device42_fullchain.pem.
 To create a test self signed device certificate, you need to pass the "device" command along with the common name of your device, and without the name of a parent certificate.
 
 ```
-F:\repos\node\provisioning\tools>node create_test_cert.js root "Device 43"
+F:\repos\node\provisioning\tools>node create_test_cert.js device "Device 43"
 creating certificate with common name=Device 43
 saving cert to device43_cert.pem.
 saving key to device43_key.pem.
