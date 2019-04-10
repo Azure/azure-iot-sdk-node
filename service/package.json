@@ -1,6 +1,6 @@
 {
   "name": "azure-iothub",
-  "version": "1.9.4",
+  "version": "1.9.5",
   "description": "Azure IoT SDK - IoT Hub",
   "author": "Microsoft Corporation",
   "license": "MIT",
@@ -8,9 +8,9 @@
   "typings": "iothub.d.ts",
   "dependencies": {
     "async": "^2.6.2",
-    "azure-iot-amqp-base": "2.2.4",
-    "azure-iot-common": "1.9.4",
-    "azure-iot-http-base": "1.9.4",
+    "azure-iot-amqp-base": "2.2.5",
+    "azure-iot-common": "1.9.5",
+    "azure-iot-http-base": "1.9.5",
     "debug": "^4.1.1",
     "lodash": "^4.17.11",
     "rhea": "^1.0.2",
