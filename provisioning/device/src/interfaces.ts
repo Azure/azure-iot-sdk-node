@@ -195,6 +195,10 @@ export interface RegistrationClient {
    * Cancel the registration process if it is in progress.
    */
   cancel(callback: (err?: Error) => void): void;
+  /**
+   * Sets the custom payload for registration that will be sent to the custom allocation policy implemented in an Azure Function.
+   */
+  setProvisioningPayload( payload: ProvisioningPayload): void;
 }
 
 /**

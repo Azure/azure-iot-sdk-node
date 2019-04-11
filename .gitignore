@@ -224,6 +224,7 @@ provisioning/transport/amqp/lib/
 provisioning/transport/http/lib/
 provisioning/transport/mqtt/lib/
 provisioning/device/lib/
+provisioning/device/ts-samples/lib
 
 security/x509/lib
 security/tpm/lib
