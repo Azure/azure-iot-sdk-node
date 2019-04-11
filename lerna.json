@@ -11,6 +11,7 @@
     "provisioning/*",
     "provisioning/transport/*",
     "provisioning/device/samples",
+    "provisioning/device/ts-samples",
     "security/*",
     "longhaultests",
     "e2etests",
