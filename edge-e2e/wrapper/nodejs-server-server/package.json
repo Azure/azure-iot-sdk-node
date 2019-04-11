@@ -25,8 +25,8 @@
     "azure-iothub": "1.9.5",
     "bluebird": "^3.3.0",
     "connect": "^3.2.0",
-    "js-yaml": "^3.3.0",
-    "swagger-tools": "0.10.1"
+    "js-yaml": "^3.13.1",
+    "swagger-tools": "^0.10.4"
   },
   "devDependencies": {
     "jshint": "^2.9.2"
