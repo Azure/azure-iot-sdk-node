@@ -37,9 +37,9 @@ let provisioningSecurityClient = new SymmetricKeySecurityClient(registrationId, 
 let provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvisioningTransport(), provisioningSecurityClient);
 // Register the device.
 provisioningClient.setProvisioningPayload({a: 'b'});
-provisioningClient.register(function(err, result) {
+provisioningClient.register((err, result) => {
   if (err) {
-    console.log("error registering device: " + err);
+    console.log('error registering device: ' + err);
   } else {
     console.log('registration succeeded');
     console.log('assigned hub=' + result.assignedHub);
@@ -48,15 +48,14 @@ provisioningClient.register(function(err, result) {
     let connectionString = 'HostName=' + result.assignedHub + ';DeviceId=' + result.deviceId + ';SharedAccessKey=' + symmetricKey;
     let hubClient = Client.fromConnectionString(connectionString, iotHubTransport);
 
-    hubClient.open(function(err) {
+    hubClient.open((err) => {
       if (err) {
         console.error('Could not connect: ' + err.message);
       } else {
         console.log('Client connected');
         let message = new Message('Hello world');
-        hubClient.sendEvent(message, function(err, res) {
+        hubClient.sendEvent(message, (err, res) => {
           if (err) console.log('send error: ' + err.toString());
-          //if (res) console.log('send status: ' + res.constructor.name);
           process.exit(1);
         });
       }
