@@ -65,6 +65,10 @@ module.exports = [
     },
     {
         "taskType": "packageJsonUpdateVersions",
+        "filePath": "provisioning/device/ts-samples/package.json"
+    },
+    {
+        "taskType": "packageJsonUpdateVersions",
         "filePath": "provisioning/transport/http/package.json"
     },
     {
