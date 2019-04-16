@@ -12,6 +12,7 @@ import { RetryPolicy } from './retry_policy';
 export class RetryOperation {
   private _policy: RetryPolicy;
   private _retryCount: number = 0;
+  // tslint:disable-next-line
   private _currentTimeout: any;
   private _totalRetryTime: number = 0;
   private _maxTimeout: number;

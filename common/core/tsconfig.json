@@ -4,6 +4,7 @@
         "target":"es5",
         "sourceMap": true,
         "declaration": true,
+        "noUnusedLocals": false,
         "lib": [ "es6" ]
     },
     "include": [

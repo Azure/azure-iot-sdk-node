@@ -28,6 +28,7 @@ interface DeliveryRecord {
 /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_003: [** The `ReceiverLink` class shall implement the `AmqpLink` interface.]*/
 export class ReceiverLink  extends EventEmitter implements AmqpLink {
   private _linkAddress: string;
+  /* tslint:disable:no-unused-variable */
   private _linkOptions: ReceiverOptions;
   private _rheaReceiver: Receiver;
   private _fsm: machina.Fsm;

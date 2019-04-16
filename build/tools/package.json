@@ -5,8 +5,7 @@
   "description": "Build tools for the Azure IoT Hub Node.js SDK Build",
   "main": "create_certs.js",
   "scripts": {
-    "lint": "jshint --show-non-errors . && tslint -c ../../tslint.json \"{lib,.}/*.ts\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "jshint --show-non-errors . && tslint -c ../../tslint.json \"{lib,.}/*.ts\""
   },
   "repository": {
     "type": "git",

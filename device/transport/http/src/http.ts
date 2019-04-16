@@ -477,7 +477,7 @@ export class Http extends EventEmitter implements DeviceTransport {
           this._receiverStarted = true;
         } else if (this._opts.at) {
           /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_003: [if opts.at is set, messages shall be received at the Date and time specified.]*/
-          const at = new Date(this._opts.at).getTime();
+          const at = this._opts.at.getTime();
           const diff = Math.max(at - Date.now(), 0);
           this._timeoutObj = setTimeout(this.receive.bind(this), diff);
           this._receiverStarted = true;

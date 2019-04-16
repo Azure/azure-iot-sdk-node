@@ -12,11 +12,13 @@ phases:
     displayName: 'Use Node 6.x'
 
 
-  - script: 'npm install -g lerna'
+  - script: |
+      npm install -g lerna
+      npm install
     displayName: 'Install Tools'
 
   - script: |
-       lerna bootstrap
+       lerna bootstrap --hoist
        lerna run build
     displayName: 'Bootstrap & Build'
 
@@ -62,11 +64,13 @@ phases:
       versionSpec: 8.x
 
 
-  - script: 'npm install -g lerna'
+  - script: |
+      npm install -g lerna
+      npm install
     displayName: 'Install Tools'
 
   - script: |
-       call lerna bootstrap
+       call lerna bootstrap --hoist
        call lerna run build
     displayName: 'Bootstrap & Build'
 

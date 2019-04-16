@@ -4,6 +4,7 @@
 'use strict';
 
 var assert = require('chai').assert;
+var expect = require('chai').expect;
 var sinon = require('sinon');
 var Http = require('../lib/http.js').Http;
 var errors = require('azure-iot-common').errors;
@@ -189,7 +190,9 @@ describe('Http', function() {
     it('request fails if bad json returned', function(callback) {
       http.setTpmInformation(Buffer.from('fakeEndorsementKey'), Buffer.from('fakeStorageRootKey'));
       http.getAuthenticationChallenge(fakeRequest, function(err) {
-        assert.deepEqual(err, new errors.FormatError('The server did NOT respond with an appropriately formatted authentication blob.'), 'Invalid error returned in callback');
+        expect(err, 'Invalid error returned in callback')
+            .to.be.an.instanceOf(errors.FormatError)
+            .and.have.property('message', 'The server did NOT respond with an appropriately formatted authentication blob.')
         callback();
       });
       respond_bad_json_tpm(new errors.UnauthorizedError('fake error text'), 1, 401);
@@ -198,7 +201,9 @@ describe('Http', function() {
     it('request fails if authentication challenge incorrect type', function(callback) {
       http.setTpmInformation(Buffer.from('fakeEndorsementKey'), Buffer.from('fakeStorageRootKey'));
       http.getAuthenticationChallenge(fakeRequest, function(err) {
-        assert.deepEqual(err, new errors.FormatError('The server did NOT respond with an appropriately formatted authentication blob.'), 'Invalid error returned in callback');
+        expect(err, 'Invalid error returned in callback')
+            .to.be.an.instanceOf(errors.FormatError)
+            .and.have.property('message', 'The server did NOT respond with an appropriately formatted authentication blob.')
         callback();
       });
       respond_bad_type_tpm(new errors.UnauthorizedError('fake error text'), 1, 401);

@@ -14,15 +14,15 @@
     "node-crontab": "^0.0.8"
   },
   "devDependencies": {
-    "@types/node": "8.9.4",
+    "@types/node": "^9.3.0",
     "azure-iothub": "1.9.6",
-    "chai": "^4.1.2",
+    "chai": "^4.2.0",
     "mocha": "^5.2.0",
     "nyc": "^13.3.0",
     "sinon": "^7.2.7",
     "source-map-support": "^0.5.8",
-    "tslint": "^5.1.0",
-    "typescript": "2.5.3"
+    "tslint": "^5.9.1",
+    "typescript": "2.9.2"
   },
   "scripts": {
     "lint": "tslint --project . -c ../../../tslint.json",
@@ -30,7 +30,7 @@
     "test-min": "nyc mocha --reporter dot --require source-map-support/register test/_*_test.js",
     "test": "nyc mocha --reporter spec --require source-map-support/register test/_*_test.js",
     "ci": "npm -s run lint && npm -s run build && npm -s run test-min && npm -s run check-cover",
-    "check-cover": "nyc check-coverage --statements 94 --branches 88 --functions 100 --lines 94 "
+    "check-cover": "nyc check-coverage --statements 93 --branches 88 --functions 100 --lines 93 "
   },
   "engines": {
     "node": ">= 0.10"

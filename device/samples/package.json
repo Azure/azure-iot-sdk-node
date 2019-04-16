@@ -17,7 +17,6 @@
     "jshint": "^2.9.6"
   },
   "scripts": {
-    "lint": "jshint --show-non-errors .",
-    "test": "npm -s run lint"
+    "lint": "jshint --show-non-errors ."
   }
 }
