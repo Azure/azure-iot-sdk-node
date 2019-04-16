@@ -201,6 +201,157 @@ describe('Client', function () {
     });
   });
 
+  describe('invokeDeviceMethod as promise', function() {
+
+    it ('Can fulfill a promise when using moduleId and methodParams', function(testCallback) {
+      var fakeMethodParams = {
+        methodName: 'method',
+        payload: null,
+        timeoutInSeconds: 42
+      };
+
+      var fakeResult = { foo: 'bar' };
+      var fakeResponse = { statusCode: 200 };
+      var fakeRestClient = {
+        executeApiCall: function(method, path, headers, body, timeout, callback) {
+          callback(null, fakeResult, fakeResponse);
+        }
+      };
+      var client = new Client({}, fakeRestClient);
+      client.invokeDeviceMethod('fakeDeviceId', 'fakeModuleId', fakeMethodParams).then((promiseResult) => {
+        assert.strictEqual(promiseResult.result, fakeResult);
+        assert.strictEqual(promiseResult.message, fakeResponse);
+        testCallback();
+      })
+      .catch((err) => {
+        assert.fail('promise incorrectly rejected');
+      });
+    });
+
+    it ('Can reject a promise when using using moduleId and methodParams with promise rejected', function(testCallback) {
+      var fakeMethodParams = {
+        methodName: 'method',
+        payload: null,
+        timeoutInSeconds: 42
+      };
+
+      var fakeError = new Error('good error');
+      var fakeResult = { foo: 'bar' };
+      var fakeResponse = { statusCode: 200 };
+      var fakeRestClient = {
+        executeApiCall: function(method, path, headers, body, timeout, callback) {
+          callback(fakeError);
+        }
+      };
+      var client = new Client({}, fakeRestClient);
+      client.invokeDeviceMethod('fakeDeviceId', 'fakeModuleId', fakeMethodParams).then((promiseResult) => {
+        assert.fail('promise incorrectly fulfilled');
+      })
+      .catch((err) => {
+        assert.strictEqual(err, fakeError);
+        testCallback();
+      });
+    });
+
+    it ('Can fulfill the promise when only passing a methodParams argument', function(testCallback) {
+      var fakeMethodParams = {
+        methodName: 'method',
+        payload: null,
+        timeoutInSeconds: 42
+      };
+
+      var fakeResult = { foo: 'bar' };
+      var fakeResponse = { statusCode: 200 };
+      var fakeRestClient = {
+        executeApiCall: function(method, path, headers, body, timeout, callback) {
+          callback(null, fakeResult, fakeResponse);
+        }
+      };
+      var client = new Client({}, fakeRestClient);
+      client.invokeDeviceMethod('fakeDeviceId', fakeMethodParams).then((promiseResult) => {
+        assert.strictEqual(promiseResult.result, fakeResult);
+        assert.strictEqual(promiseResult.message, fakeResponse);
+        testCallback();
+      })
+      .catch((err) => {
+        assert.fail('promise incorrectly rejected');
+      });
+    });
+
+    it ('Can reject the promise when only passing a methodParams argument', function(testCallback) {
+      var fakeMethodParams = {
+        methodName: 'method',
+        payload: null,
+        timeoutInSeconds: 42
+      };
+
+      var fakeError = new Error('good error');
+      var fakeResult = { foo: 'bar' };
+      var fakeResponse = { statusCode: 200 };
+      var fakeRestClient = {
+        executeApiCall: function(method, path, headers, body, timeout, callback) {
+          callback(fakeError);
+        }
+      };
+      var client = new Client({}, fakeRestClient);
+      client.invokeDeviceMethod('fakeDeviceId', fakeMethodParams).then((promiseResult) => {
+        assert.fail('promise incorrectly fulfilled');
+      })
+      .catch((err) => {
+        assert.strictEqual(err, fakeError);
+        testCallback();
+      });
+    });
+
+    [undefined, null, '', {}, 42].forEach(function(badMethod) {
+      it ('throws ReferenceError when using moduleId and methodParams is \'' +  badMethod + '\'', function(testCallback) {
+        var client = new Client({}, {});
+        client.invokeDeviceMethod('fakeDeviceId', 'fakeModuleId', badMethod).then((promiseResult) => {
+          assert.fail('promise incorrectly fulfilled');
+        }).catch((err) => {
+          assert.instanceOf(err, ReferenceError);
+          testCallback();
+        });
+      });
+    });
+
+    [{methodName: 4}].forEach(function(badMethodType) {
+      it ('throws TypeError when using moduleId and methodParams has type of \'' + badMethodType + '\'', function(testCallback) {
+        var client = new Client({}, {});
+        client.invokeDeviceMethod('fakeDeviceId', 'fakeModuleId', badMethodType).then((promiseResult) => {
+          assert.fail('promise incorrectly fulfilled');
+        }).catch((err) => {
+          assert.instanceOf(err, TypeError);
+          testCallback();
+        });
+      });
+    });
+
+    [undefined, null, '', {}, 42].forEach(function(badMethod) {
+      it ('throws ReferenceError when NOT using moduleId and methodParams has type of \'' + badMethod + '\'', function(testCallback) {
+        var client = new Client({}, {});
+        client.invokeDeviceMethod('fakeDeviceId', badMethod).then((promiseResult) => {
+          assert.fail('promise incorrectly fulfilled');
+        }).catch((err) => {
+          assert.instanceOf(err, ReferenceError);
+          testCallback();
+        });
+      });
+    });
+
+    [{methodName: 4}].forEach(function(badMethodType) {
+      it ('throws TypeError when NOT using moduleId and methodParams has type of \'' + badMethodType + '\'', function(testCallback) {
+        var client = new Client({}, {});
+        client.invokeDeviceMethod('fakeDeviceId', badMethodType).then((promiseResult) => {
+          assert.fail('promise incorrectly fulfilled');
+        }).catch((err) => {
+          assert.instanceOf(err, TypeError);
+          testCallback();
+        });
+      });
+    });
+  });
+
   [
     { functionUnderTest: function(client, param, callback) { client.invokeDeviceMethod('deviceId', param, callback); } },
     { functionUnderTest: function(client, param, callback) { client.invokeDeviceMethod('deviceId', 'moduleId', param, callback); } },
