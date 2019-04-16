@@ -257,13 +257,31 @@ export class Client extends EventEmitter {
   invokeDeviceMethod(deviceId: string, moduleId: string, methodParams: DeviceMethodParams): Promise<ResultWithIncomingMessage<any>>;
   invokeDeviceMethod(deviceId: string, moduleIdOrMethodParams: string | DeviceMethodParams, methodParamsOrDone?: DeviceMethodParams | IncomingMessageCallback<any>, done?: IncomingMessageCallback<any>): Promise<ResultWithIncomingMessage<any>> | void {
     const callback = done || ((typeof methodParamsOrDone === 'function') ? methodParamsOrDone as IncomingMessageCallback<any> : undefined);
+    let moduleId: string;
+    let methodParams: DeviceMethodParams;
     if (callback) {
       return this._invokeDeviceMethod(deviceId, moduleIdOrMethodParams, methodParamsOrDone, done);
+    } else {
+      if (typeof moduleIdOrMethodParams === 'string') {
+        moduleId = moduleIdOrMethodParams;
+        if (methodParamsOrDone) {
+          methodParams = methodParamsOrDone as DeviceMethodParams;
+        }
+      } else {
+        moduleId = undefined;
+        methodParams = moduleIdOrMethodParams as DeviceMethodParams;
+      }
     }
 
-    return tripleValueCallbackToPromise((_callback) => {
-      this._invokeDeviceMethod(deviceId, moduleIdOrMethodParams, methodParamsOrDone, _callback);
-    }, (r: any, m: IncomingMessage) => { return createResultWithIncomingMessage(r, m); }, callback);
+    if (moduleId) {
+      return tripleValueCallbackToPromise((_callback) => {
+        this._invokeDeviceMethod(deviceId, moduleId, methodParams, _callback);
+      }, (r: any, m: IncomingMessage) => { return createResultWithIncomingMessage(r, m); }, callback);
+    } else {
+      return tripleValueCallbackToPromise((_callback) => {
+        this._invokeDeviceMethod(deviceId, methodParams, _callback);
+      }, (r: any, m: IncomingMessage) => { return createResultWithIncomingMessage(r, m); }, callback);
+    }
   }
 
   /**
