@@ -1,6 +1,7 @@
 coverage/
 devdoc/
 test/
+ts-samples/
 samples/
 src/
 lib/**/*.map
