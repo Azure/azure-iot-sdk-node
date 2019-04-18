@@ -17,9 +17,10 @@ phases:
   - script: |
        npm install --global node-gyp
        npm install --global lerna
+       npm install
     displayName: 'Install Dependencies'
   - script: |
-        lerna bootstrap
+        lerna bootstrap --hoist
         lerna run build
     displayName: 'Bootstrap & Build'
   - script: 'lerna run ci'
@@ -70,9 +71,10 @@ phases:
        runas.exe /savecred /user:administrator
        npm install --global node-gyp
        npm install --global lerna
+       npm install
     displayName: 'Install Dependencies'
   - script: |
-       call lerna bootstrap
+       call lerna bootstrap --hoist
        call lerna run build
     displayName: 'Bootstrap & Build'
   - script: 'call lerna run ci'

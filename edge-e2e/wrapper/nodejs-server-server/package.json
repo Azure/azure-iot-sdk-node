@@ -23,12 +23,12 @@
     "azure-iot-device-http": "1.9.6",
     "azure-iot-device-mqtt": "1.9.6",
     "azure-iothub": "1.9.6",
-    "bluebird": "^3.3.0",
+    "bluebird": "^3.5.2",
     "connect": "^3.2.0",
     "js-yaml": "^3.13.1",
     "swagger-tools": "^0.10.4"
   },
   "devDependencies": {
-    "jshint": "^2.9.2"
+    "jshint": "^2.9.6"
   }
 }

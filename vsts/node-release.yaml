@@ -25,6 +25,7 @@ phases:
   - script: |
        npm install --global node-gyp
        npm install --global lerna
+       npm install
     displayName: 'Install Dependencies'
 
   - task: Npm@1
@@ -42,7 +43,7 @@ phases:
     displayName: Create Release Branch
 
   - script: |
-        lerna bootstrap
+        lerna bootstrap --hoist
         lerna run build
     displayName: 'Bootstrap & Build'
 

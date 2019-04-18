@@ -22,6 +22,6 @@
     "azure-iot-device-mqtt": "^1.1.7",
     "network": "^0.3.2",
     "yargs": "^7.0.2",
-    "uuid": "^3.0.1"
+    "uuid": "^3.3.2"
   }
 }

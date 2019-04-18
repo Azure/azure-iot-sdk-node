@@ -4,6 +4,7 @@
 'use strict';
 
 import * as async from 'async';
+import timeout from 'async/timeout';
 import * as uuid from 'uuid';
 import * as dbg from 'debug';
 const debug = dbg('longhaul:d2c_sender');
@@ -81,7 +82,7 @@ export class D2CSender extends EventEmitter {
     let msg = new Message(id);
     msg.messageId = id;
     debug('sending message with id: ' + id);
-    async.timeout(this._client.sendEvent.bind(this._client), this._sendTimeout)(msg, (err) => {
+    timeout(this._client.sendEvent.bind(this._client), this._sendTimeout)(msg, (err) => {
       if (err) {
         debug('error sending message: ' + id + ': ' + err.message);
         this.emit('error', err);

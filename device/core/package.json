@@ -16,24 +16,24 @@
     "traverse": "^0.6.6"
   },
   "devDependencies": {
-    "@types/debug": "0.0.30",
-    "@types/node": "8.9.4",
+    "@types/debug": "^4.1.1",
+    "@types/node": "^9.3.0",
     "@types/traverse": "^0.6.29",
-    "chai": "^4.1.2",
-    "es5-shim": "^4.5.9",
+    "chai": "^4.2.0",
+    "es5-shim": "^4.5.12",
     "istanbul": "^0.4.5",
     "mocha": "^5.2.0",
     "sinon": "^7.2.7",
-    "tslint": "^5.7.0",
-    "typescript": "2.5.3"
+    "tslint": "^5.9.1",
+    "typescript": "2.9.2"
   },
   "scripts": {
     "lint": "tslint --project . -c ../../tslint.json",
     "build": "tsc",
-    "unittest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot \"test/**/_*_test.js\"",
-    "alltest-min": "istanbul cover --report none node_modules/mocha/bin/_mocha -- --reporter dot \"test/**/_*_test*.js\"",
-    "unittest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec \"test/**/_*_test.js\"",
-    "alltest": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter spec \"test/**/_*_test*.js\"",
+    "unittest-min": "istanbul cover --report none ../../node_modules/mocha/bin/_mocha -- --reporter dot \"test/**/_*_test.js\"",
+    "alltest-min": "istanbul cover --report none ../../node_modules/mocha/bin/_mocha -- --reporter dot \"test/**/_*_test*.js\"",
+    "unittest": "istanbul cover ../../node_modules/mocha/bin/_mocha -- --reporter spec \"test/**/_*_test.js\"",
+    "alltest": "istanbul cover ../../node_modules/mocha/bin/_mocha -- --reporter spec \"test/**/_*_test*.js\"",
     "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
     "test": "npm -s run lint && npm -s run build && npm -s run unittest",
     "check-cover": "istanbul check-coverage --statements 95 --branches 86 --lines 97 --functions 92"

@@ -5,6 +5,7 @@
 'use strict';
 import * as uuid from 'uuid';
 import * as async from 'async';
+import timeout from 'async/timeout';
 import * as dbg from 'debug';
 const debug = dbg('longhaul:main');
 
@@ -56,7 +57,7 @@ switch (process.env.DEVICE_PROTOCOL) {
 
 const createDevice = (callback) => {
   debug('creating device: ' + deviceId);
-  async.timeout(registry.create.bind(registry), MAX_CREATE_TIME)({ deviceId: deviceId }, (err, deviceInfo) => {
+  timeout(registry.create.bind(registry), MAX_CREATE_TIME)({ deviceId: deviceId }, (err, deviceInfo) => {
     if (err) {
       debug('error creating device: ' + deviceId + ':' + err.toString());
       callback(err);
@@ -70,7 +71,7 @@ const createDevice = (callback) => {
 
 const deleteDevice = (callback) => {
   debug('deleting device: ' + deviceId);
-  async.timeout(registry.delete.bind(registry), MAX_DELETE_TIME)(deviceId, (err) => {
+  timeout(registry.delete.bind(registry), MAX_DELETE_TIME)(deviceId, (err) => {
     if (err) {
       debug('error deleting the test device: ' + err.toString());
     } else {
@@ -87,7 +88,7 @@ createDevice((err, deviceConnectionString) => {
     const sender = new D2CSender(deviceConnectionString, protocol, SEND_INTERVAL, SEND_TIMEOUT);
 
     const stopSender = (callback) => {
-      async.timeout(sender.stop.bind(sender), MAX_STOP_TIME)((err) =>  {
+      timeout(sender.stop.bind(sender), MAX_STOP_TIME)((err) =>  {
         if (err) {
           debug('error stopping the sender: ' + err.toString());
         } else {
@@ -116,7 +117,7 @@ createDevice((err, deviceConnectionString) => {
     }, MAX_EXECUTION_TIME);
 
     debug('starting d2c_sender');
-    async.timeout(sender.start.bind(sender), MAX_START_TIME)((err) => {
+    timeout(sender.start.bind(sender), MAX_START_TIME)((err) => {
       if (err) {
         debug('error starting d2c_sender: ' + err.toString());
         clearTimeout(endTimeout);
