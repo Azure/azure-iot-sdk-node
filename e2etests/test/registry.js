@@ -281,15 +281,11 @@ describe('Registry', function () {
             scopedDeviceCreateResult.deviceScope = uuid.v4();
             registry.update(scopedDeviceCreateResult, function(updateErr) {
               assert(updateErr, 'Scoped device was incorrectly allowed to update its scope property.');
-              var edgeDeleteResult;
-              var scopedDeleteResult;
-              registry.delete(edgeCreateResult.deviceId, function (err) {
-                edgeDeleteResult = err;
+              registry.delete(edgeCreateResult.deviceId, function (edgeDeleteError) {
+                registry.delete(scopedDeviceCreateResult.deviceId, function (scopedDeleteError) {
+                  done(edgeDeleteError || scopedDeleteError);
+                });
               });
-              registry.delete(scopedDeviceCreateResult.deviceId, function (err) {
-                scopedDeleteResult = err;
-              });
-              done(edgeDeleteResult || scopedDeleteResult);
             });
           }
         });
