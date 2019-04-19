@@ -234,6 +234,69 @@ describe('Registry', function () {
     });
   });
 
+  it('Can create an edge and device scope relationship', function (done){
+    var registry = Registry.fromConnectionString(hubConnectionString);
+
+    var edgeDevice = {
+      deviceId: 'delete-me-' + uuid.v4(),
+      authentication: {
+        symmetricKey: {
+          primaryKey: new Buffer("1234567890qwerty").toString('base64'),
+          secondaryKey: new Buffer("ytrewq0987654321").toString('base64')
+        }
+      },
+      status: "enabled",
+      capabilities: {
+        iotEdge: true
+      }
+    };
+
+    var scopedDevice = {
+      deviceId: 'delete-me-' + uuid.v4(),
+      authentication: {
+        symmetricKey: {
+          primaryKey: new Buffer("1234567890qwerty").toString('base64'),
+          secondaryKey: new Buffer("ytrewq0987654321").toString('base64')
+        }
+      },
+      status: "enabled"
+    };
+
+    registry.create(edgeDevice, function(edgeCreateErr, edgeCreateResult) {
+      if (edgeCreateErr) {
+        done(edgeCreateErr);
+      } else {
+        debug('Created edge device: ', edgeCreateResult.deviceId);
+        assert(edgeCreateResult.capabilities.iotEdge, 'Created edge device does not contain correct capabilities.');
+        assert(edgeCreateResult.deviceScope, 'Created edge device does not contain a scope value.');
+        scopedDevice.deviceScope = edgeCreateResult.deviceScope;
+        registry.create(scopedDevice, function(scopedDeviceCreateError, scopedDeviceCreateResult) {
+          if (scopedDeviceCreateError) {
+            registry.delete(edgeCreateResult.deviceId, function() {
+              done(scopedDeviceCreateError);
+            });
+          } else {
+            debug('Created scoped device: ', scopedDeviceCreateResult.deviceId);
+            assert.equal(scopedDeviceCreateResult.deviceScope, scopedDevice.deviceScope, 'Created scoped device does not contain correct scope.');
+            scopedDeviceCreateResult.deviceScope = uuid.v4();
+            registry.update(scopedDeviceCreateResult, function(updateErr) {
+              assert(updateErr, 'Scoped device was incorrectly allowed to update its scope property.');
+              var edgeDeleteResult;
+              var scopedDeleteResult;
+              registry.delete(edgeCreateResult.deviceId, function (err) {
+                edgeDeleteResult = err;
+              });
+              registry.delete(scopedDeviceCreateResult.deviceId, function (err) {
+                scopedDeleteResult = err;
+              });
+              done(edgeDeleteResult || scopedDeleteResult);
+            });
+          }
+        });
+      }
+    });
+  });
+
 
   it.skip('Imports then exports devices', function(done) {
     this.timeout(120000);

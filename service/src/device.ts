@@ -21,6 +21,7 @@ export interface DeviceIdentity {
   cloudToDeviceMessageCount?: string;
   authentication?: Device.Authentication;
   capabilities?: Device.Capabilities;
+  deviceScope?: string;
 }
 
 
