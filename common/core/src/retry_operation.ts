@@ -12,8 +12,6 @@ import { RetryPolicy } from './retry_policy';
 export class RetryOperation {
   private _policy: RetryPolicy;
   private _retryCount: number = 0;
-  // tslint:disable-next-line
-  private _currentTimeout: any;
   private _totalRetryTime: number = 0;
   private _maxTimeout: number;
 
@@ -48,7 +46,7 @@ export class RetryOperation {
             if (this._totalRetryTime > this._maxTimeout || nextRetryTimeout < 0) {
               finalCallback(err);
             } else {
-              this._currentTimeout = setTimeout(retryOperation, nextRetryTimeout);
+              setTimeout(retryOperation, nextRetryTimeout);
             }
           } else {
             /*Codes_SRS_NODE_COMMON_RETRY_OPERATION_16_004: [If the `operation` fails and should not be retried, the `finalCallback` should be called with the last error as the only parameter. ]*/

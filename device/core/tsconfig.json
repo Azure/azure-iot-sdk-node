@@ -6,7 +6,8 @@
         "declaration": true,
         "lib": [
             "es6"
-        ]
+        ],
+        "noUnusedLocals": true
     },
     "include": [
         "./src/**/*.ts"

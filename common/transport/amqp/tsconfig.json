@@ -3,7 +3,8 @@
         "outDir": "./lib",
         "target":"es5",
         "sourceMap": true,
-        "declaration": true
+        "declaration": true,
+        "noUnusedLocals": true
     },
     "include": [
         "./src/**/*.ts"

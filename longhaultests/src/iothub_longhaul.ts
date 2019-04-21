@@ -4,7 +4,6 @@
 
 'use strict';
 import * as uuid from 'uuid';
-import * as async from 'async';
 import timeout from 'async/timeout';
 import * as dbg from 'debug';
 const debug = dbg('longhaul:main');

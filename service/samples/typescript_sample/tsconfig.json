@@ -5,6 +5,7 @@
     "moduleResolution": "node",
     "removeComments": false,
     "noImplicitAny": true,
-    "suppressImplicitAnyIndexErrors": true
+    "suppressImplicitAnyIndexErrors": true,
+    "noUnusedLocals": true
   }
 }
