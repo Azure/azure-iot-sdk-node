@@ -597,7 +597,7 @@ export class Amqp {
             // Depending on the mode of failure it is possible that no network activity is occurring.
             // However, the SDK *might* not have noticed that yet.
             //
-            // If this happens then rundown code will simply hang waiting for a response which will never
+            // If this happens then rundown code will simply stall waiting for a response which will never
             // occur.
             //
             // To deal with this, we encapsulate the rundown code in a function and we invoke it.
@@ -605,7 +605,7 @@ export class Amqp {
             // First, however, we will spin off a timer to execute the very same rundown code in 45 seconds, but that
             // function invocation will use API that do NOT expect a reply.
             //
-            // If the initial function invocation actually doesn't hang due to lack of communication, it's
+            // If the initial function invocation actually doesn't stall due to lack of communication, it's
             // last action will be to clear the timeout and consequently the timeout invocation call to the
             // rundown code will NOT occur.
             //

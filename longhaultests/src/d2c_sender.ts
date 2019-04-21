@@ -3,7 +3,6 @@
 
 'use strict';
 
-import * as async from 'async';
 import timeout from 'async/timeout';
 import * as uuid from 'uuid';
 import * as dbg from 'debug';

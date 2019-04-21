@@ -5,5 +5,6 @@
     "sourceRoot": "src",
     "sourceMap": true,
     "moduleResolution": "node",
+    "noUnusedLocals": true
   }
 }
