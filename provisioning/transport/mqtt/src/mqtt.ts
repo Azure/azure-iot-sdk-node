@@ -6,6 +6,7 @@
 import { EventEmitter } from 'events';
 import * as uuid from 'uuid';
 import * as machina from 'machina';
+import * as queryString from 'querystring';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-provisioning-device-mqtt:Mqtt');
 
@@ -52,11 +53,12 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
 
       /* Codes_SRS_NODE_PROVISIONING_MQTT_18_010: [ When waiting for responses, `registrationRequest` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>.] */
       /* Codes_SRS_NODE_PROVISIONING_MQTT_18_024: [ When waiting for responses, `queryOperationStatus` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>.] */
-      let match = topic.match(/^\$dps\/registrations\/res\/(.*)\/\?\$rid=(.*)$/);
+      let match = topic.match(/^\$dps\/registrations\/res\/(.*)\/\?(.*)$/);
+      let queryParameters = queryString.parse(match[2]);
 
-      if (!!match && match.length === 3) {
+      if (!!match && match.length === 3 && queryParameters.$rid) {
         let status: number = Number(match[1]);
-        let rid: string = match[2];
+        let rid: string = queryParameters.$rid.toString();
         if (this._operations[rid]) {
           let payloadJson: any = JSON.parse(payloadString);
           let handler = this._operations[rid];
