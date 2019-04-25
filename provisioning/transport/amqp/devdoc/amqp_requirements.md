@@ -55,6 +55,10 @@ iotdps-forceRegistration: <true or false>;
 ```
  **]**
 
+**SRS_NODE_PROVISIONING_AMQP_06_007: [** If the `registrationRequest` send request is rejected with an `InternalError` or `ThrottlingError`, the result.status value will be set with `registering` and the callback will be invoked with *no* error object. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_06_009: [** If the `registrationRequest` rejection error contains the info property`retry-after`, it will be interpreted as the number of seconds that should elapse before the next attempted operation.  Otherwise default. **]**
+
 **SRS_NODE_PROVISIONING_AMQP_16_006: [** The `registrationRequest` method shall listen for the response on the receiver link and accept it when it comes. **]**
 
 **SRS_NODE_PROVISIONING_AMQP_16_007: [** The `registrationRequest` method shall call its callback with a `RegistrationResult` object parsed from the body of the response message which `correlation_id` matches the `correlation_id` of the request message sent on the sender link. **]**
@@ -94,6 +98,10 @@ iotdps-operation-id: <operationId>;
 ```
 **]**
 
+**SRS_NODE_PROVISIONING_AMQP_06_006: [** If the `queryOperationStatus` send request is rejected with an `InternalError` or `ThrottlingError`, the result.status value will be set with `assigning` and the callback will be invoked with *no* error object. **]**
+
+**SRS_NODE_PROVISIONING_AMQP_06_008: [** If the `queryOperationsStatus` rejection error contains the info property`retry-after`, it will be interpreted as the number of seconds that should elapse before the next attempted operation.  Otherwise default. **]**
+
 **SRS_NODE_PROVISIONING_AMQP_16_016: [** The `queryOperationStatus` method shall listen for the response on the receiver link and accept it when it comes. **]**
 
 **SRS_NODE_PROVISIONING_AMQP_16_017: [** The `queryOperationStatus` method shall call its callback with a `RegistrationResult` object parsed from the body of the response message which `correlation_id` matches the `correlation_id` of the request message sent on the sender link. **]**
@@ -106,6 +114,8 @@ iotdps-operation-id: <operationId>;
 
 **SRS_NODE_PROVISIONING_AMQP_16_021: [** The `queryOperationStatus` method shall call its callback with an error if the transport fails to send the request message. **]**
 
+## operation response
+**SRS_NODE_PROVISIONING_AMQP_06_010: [** If the amqp response to a request contains the application property`retry-after`, it will be interpreted as the number of seconds that should elapse before the next attempted operation.  Otherwise default. **]**
 
 ## disconnect(callback: (err?: Error) => void): void
 ---
@@ -118,7 +128,7 @@ iotdps-operation-id: <operationId>;
 
 **SRS_NODE_PROVISIONING_AMQP_16_025: [** `disconnect` shall call its callback with the error passed from the first unsuccessful detach/disconnect operation if one of those fail. **]**
 
-**SRS_NODE_PROVISIONING_AMQP_18_009: [** `disconnect` shall disonnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. **]**
+**SRS_NODE_PROVISIONING_AMQP_18_009: [** `disconnect` shall disconnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. **]**
 
 **SRS_NODE_PROVISIONING_AMQP_18_001: [** `disconnect` shall cause a `registrationRequest` operation that is in progress to call its callback passing an `OperationCancelledError` object. **]**
 
@@ -144,7 +154,7 @@ iotdps-operation-id: <operationId>;
 ## setTpmInformation(endorsementKey: Buffer, storageRootKey: Buffer): void;
 ---
 
-**SRS_NODE_PROVISIONING_AMQP_18_010: [** The `endorsmentKey` and `storageRootKey` passed into `setTpmInformation` shall be used when getting the athentication challenge from the AMQP service. **]**
+**SRS_NODE_PROVISIONING_AMQP_18_010: [** The `endorsementKey` and `storageRootKey` passed into `setTpmInformation` shall be used when getting the authentication challenge from the AMQP service. **]**
 
 
 ## getAuthenticationChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: TpmChallenge) => void): void;
@@ -166,7 +176,7 @@ iotdps-operation-id: <operationId>;
 ## respondToAuthenticationChallenge(request: RegistrationRequest, sasToken: string, callback: (err?: Error) => void): void;
 ---
 
-**SRS_NODE_PROVISIONING_AMQP_18_017: [** `respondToAuthenticationChallenge` shall call `callback` with an `InvalidOperationError` if called before calling `getAthenticationChallenge`. **]**
+**SRS_NODE_PROVISIONING_AMQP_18_017: [** `respondToAuthenticationChallenge` shall call `callback` with an `InvalidOperationError` if called before calling `getAuthenticationChallenge`. **]**
 
 **SRS_NODE_PROVISIONING_AMQP_18_018: [** `respondToAuthenticationChallenge` shall respond to the auth challenge to the service in the form "<0><sasToken>" where <0> is a zero byte. **]**
 

@@ -18,6 +18,7 @@ const _defaultHeaders = {
   'Content-Type' : 'application/json; charset=utf-8'
 };
 
+const _retryAfterPropertyName = 'retry-after';
 /**
  * Transport used to provision a device over HTTP.
  */
@@ -192,11 +193,21 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
         debug('error executing PUT: ' + err.toString());
         callback(err, result, response);
       } else {
-        debug('PUT response received:');
+        debug('PUT result received:');
         debug(JSON.stringify(result));
+        debug('PUT response.headers received:');
+        debug(JSON.stringify(response.headers));
+        let retryAfterInMilliseconds: number = this._config.pollingInterval;
+        /*Codes_SRS_NODE_PROVISIONING_HTTP_06_011: [ If the `registrationRequest` response contains the `header` `retry-after`, it will be interpreted as the number of seconds that should elapse before the next attempted operation.] */
+        if (response.headers && response.headers[_retryAfterPropertyName]) {
+          retryAfterInMilliseconds = Number(response.headers[_retryAfterPropertyName]) * 1000;
+        }
         if (response.statusCode < 300) {
           /* Codes_SRS_NODE_PROVISIONING_HTTP_18_045: [ If the Http request succeeds, `registrationRequest` shall call `callback`, passing a `null` error along with the `result` and `response` objects. ] */
-          callback(null, result, response, this._config.pollingInterval);
+          callback(null, result, response, retryAfterInMilliseconds);
+        } else if (response.statusCode >= 429) {
+          /*Codes_SRS_NODE_PROVISIONING_HTTP_06_012: [ If the `registrationRequest` response contains a status code >= 429, the result.status value will be set with `registering` and the callback will be invoked with *no* error object.] */
+          callback(null, {status: 'registering'} as any, response, retryAfterInMilliseconds);
         } else {
           /* Codes_SRS_NODE_PROVISIONING_HTTP_18_014: [ If the Http response has a failed status code, `registrationRequest` shall use `translateError` to translate this to a common error object ] */
           /* Codes_SRS_NODE_PROVISIONING_HTTP_18_044: [ If the Http request fails for any reason, `registrationRequest` shall call `callback`, passing the error along with the `result` and `response` objects. ] */
@@ -233,11 +244,21 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
         debug('error executing GET: ' + err.toString());
         callback(err, result, response);
       } else {
-        debug('GET response received:');
+        debug('GET result received:');
         debug(JSON.stringify(result));
+        debug('GET response.headers received:');
+        debug(JSON.stringify(response.headers));
+        /* Codes_SRS_NODE_PROVISIONING_HTTP_06_010: [If the `queryOperationStatus` response contains the `header` `retry-after`, it will be interpreted as the number of seconds that should elapse before the next attempt at the `queryOperationStatus` operation.] */
+        let retryAfterInMilliseconds: number = this._config.pollingInterval;
+        if (response.headers && response.headers[_retryAfterPropertyName]) {
+          retryAfterInMilliseconds = Number(response.headers[_retryAfterPropertyName]) * 1000;
+        }
         if (response.statusCode < 300) {
           /* Codes_SRS_NODE_PROVISIONING_HTTP_18_039: [ If the Http request succeeds, `queryOperationStatus` shall call `callback`, passing a `null` error along with the `result` and `response` objects. ] */
-          callback(null, result, response, this._config.pollingInterval);
+          callback(null, result, response, retryAfterInMilliseconds);
+        } else if (response.statusCode >= 429) {
+          /* Codes_SRS_NODE_PROVISIONING_HTTP_06_009: [If the `queryOperationStatus` response contains a status code >= 429, the result.status value will be set with `assigning` and the callback will be invoked with *no* error object.]*/
+          callback(null, {status: 'assigning', operationId: operationId}, response, retryAfterInMilliseconds);
         } else {
           /* Codes_SRS_NODE_PROVISIONING_HTTP_18_026: [ If the Http response has a failed status code, `queryOperationStatus` shall use `translateError` to translate this to a common error object ] */
           /* Codes_SRS_NODE_PROVISIONING_HTTP_18_038: [ If the Http request fails for any reason, `queryOperationStatus` shall call `callback`, passing the error along with the `result` and `response` objects. ] */

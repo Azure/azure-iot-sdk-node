@@ -13,7 +13,7 @@ const debug = dbg('azure-iot-provisioning-device-amqp:Amqp');
 import { X509, errors } from 'azure-iot-common';
 import { ProvisioningTransportOptions, X509ProvisioningTransport, TpmProvisioningTransport, SymmetricKeyProvisioningTransport, RegistrationRequest, RegistrationResult, ProvisioningDeviceConstants } from 'azure-iot-provisioning-device';
 import { DeviceRegistration } from 'azure-iot-provisioning-device';
-import { Amqp as Base, SenderLink, ReceiverLink, AmqpMessage, AmqpBaseTransportConfig } from 'azure-iot-amqp-base';
+import { Amqp as Base, SenderLink, ReceiverLink, AmqpMessage, AmqpBaseTransportConfig, translateError, AmqpTransportError } from 'azure-iot-amqp-base';
 import { GetSasTokenCallback, SaslTpm } from './sasl_tpm';
 import { message as rheaMessage } from 'rhea';
 /**
@@ -23,8 +23,9 @@ enum MessagePropertyNames {
     OperationType = 'iotdps-operation-type',
     OperationId = 'iotdps-operation-id',
     Status = 'iotdps-status',
-    ForceRegistration = 'iotdps-forceRegistration'
-}
+    ForceRegistration = 'iotdps-forceRegistration',
+    retryAfter = 'retry-after'
+  }
 
 /**
  * @private
@@ -53,6 +54,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
   private _receiverLink: ReceiverLink;
   private _senderLink: SenderLink;
 
+
   private _operations: {
     [key: string]: (err?: Error, result?: RegistrationResult, transportResponse?: AmqpMessage, pollingInterval?: number) => void;
   } = {};
@@ -73,9 +75,19 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
       /*Codes_SRS_NODE_PROVISIONING_AMQP_16_017: [The `queryOperationStatus` method shall call its callback with a `RegistrationResult` object parsed from the body of the response message which `correlation_id` matches the `correlation_id` of the request message sent on the sender link.]*/
       const registrationResult = JSON.parse(msg.body.content);
       if (this._operations[msg.correlation_id]) {
+        debug('Got the registration/operationStatus message we were looking for.');
         const requestCallback = this._operations[msg.correlation_id];
         delete this._operations[msg.correlation_id];
-        requestCallback(null, registrationResult, msg, this._config.pollingInterval);
+        let retryAfterInMilliseconds: number;
+        /*Codes_SRS_NODE_PROVISIONING_AMQP_06_010: [If the amqp response to a request contains the application property`retry-after`, it will be interpreted as the number of seconds that should elapse before the next attempted operation.  Otherwise default.] */
+        if (msg.application_properties && msg.application_properties[MessagePropertyNames.retryAfter]) {
+          retryAfterInMilliseconds = Number(msg.application_properties[MessagePropertyNames.retryAfter]) * 1000;
+          debug('registration/operation retry after value of: ' + msg.application_properties[MessagePropertyNames.retryAfter]);
+        } else {
+          debug('registration/operation retry after value defaulting.');
+          retryAfterInMilliseconds = this._config.pollingInterval;
+        }
+        requestCallback(null, registrationResult, msg, retryAfterInMilliseconds);
       } else {
         debug('ignoring message with unknown correlation_id');
       }
@@ -116,7 +128,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
             });
           },
           getAuthenticationChallenge: (request, callback) => this._amqpStateMachine.transition('connectingTpm', request, callback),
-          /*Codes_SRS_NODE_PROVISIONING_AMQP_18_017: [ `respondToAuthenticationChallenge` shall call `callback` with an `InvalidOperationError` if called before calling `getAthenticationChallenge`. ]*/
+          /*Codes_SRS_NODE_PROVISIONING_AMQP_18_017: [ `respondToAuthenticationChallenge` shall call `callback` with an `InvalidOperationError` if called before calling `getAuthenticationChallenge`. ]*/
           respondToAuthenticationChallenge: (request, sasToken, callback) => callback(new errors.InvalidOperationError('Cannot respond to challenge while disconnected.')),
           /*Codes_SRS_NODE_PROVISIONING_AMQP_18_003: [ `cancel` shall call its callback immediately if the AMQP connection is disconnected. ] */
           cancel: (callback) => callback(),
@@ -161,7 +173,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
             this._cancelAllOperations();
             this._amqpStateMachine.transition('disconnecting', null, null, callback);
           },
-          /*Codes_SRS_NODE_PROVISIONING_AMQP_18_009: [ `disconnect` shall disonnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. ] */
+          /*Codes_SRS_NODE_PROVISIONING_AMQP_18_009: [ `disconnect` shall disconnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. ] */
           disconnect: (callback) => {
             this._cancelAllOperations();
             this._amqpStateMachine.transition('disconnecting', null, null, callback);
@@ -196,7 +208,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
             this._cancelAllOperations();
             this._amqpStateMachine.transition('disconnecting', null, null, callback);
           },
-          /*Codes_SRS_NODE_PROVISIONING_AMQP_18_009: [ `disconnect` shall disonnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. ] */
+          /*Codes_SRS_NODE_PROVISIONING_AMQP_18_009: [ `disconnect` shall disconnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. ] */
           disconnect: (callback) => {
             this._cancelAllOperations();
             this._amqpStateMachine.transition('disconnecting', null, null, callback);
@@ -271,7 +283,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
             this._cancelAllOperations();
             this._amqpStateMachine.transition('disconnecting', null, null, callback);
           },
-          /*Codes_SRS_NODE_PROVISIONING_AMQP_18_009: [ `disconnect` shall disonnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. ] */
+          /*Codes_SRS_NODE_PROVISIONING_AMQP_18_009: [ `disconnect` shall disconnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. ] */
           disconnect: (callback) => {
             this._cancelAllOperations();
             this._amqpStateMachine.transition('disconnecting', null, null, callback);
@@ -314,8 +326,23 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
             this._senderLink.send(requestMessage, (err) => {
               if (err) {
                 delete this._operations[requestMessage.correlation_id];
-                /*Codes_SRS_NODE_PROVISIONING_AMQP_16_011: [The `registrationRequest` method shall call its callback with an error if the transport fails to send the request message.]*/
-                callback(err);
+                const translatedError = translateError('registration failure', err);
+                /*Codes_SRS_NODE_PROVISIONING_AMQP_06_007: [If the `registrationRequest` send request is rejected with an `InternalError` or `ThrottlingError`, the result.status value will be set with `registering` and the callback will be invoked with *no* error object.] */
+                if ((translatedError instanceof errors.InternalServerError) || ((translatedError as AmqpTransportError) instanceof errors.ThrottlingError)) {
+                  debug('retryable error on registration: ' + err.name);
+                  let retryAfterInMilliseconds: number;
+                  /*Codes_SRS_NODE_PROVISIONING_AMQP_06_009: [If the `registrationRequest` rejection error contains the info property`retry-after`, it will be interpreted as the number of seconds that should elapse before the next attempted operation.  Otherwise default.] */
+                  if ((err as any).info && (err as any).info[MessagePropertyNames.retryAfter]) {
+                    retryAfterInMilliseconds = Number(((err as any).info[MessagePropertyNames.retryAfter] as string)) * 1000;
+                  } else {
+                    retryAfterInMilliseconds = this._config.pollingInterval;
+                  }
+                  callback(null, {status: 'registering'}, null, retryAfterInMilliseconds);
+                } else {
+                  debug('non-retryable error on registration: ' + err.name);
+                  /*Codes_SRS_NODE_PROVISIONING_AMQP_16_011: [The `registrationRequest` method shall call its callback with an error if the transport fails to send the request message.]*/
+                  callback(err);
+                }
               } else {
                 debug('registration request sent with correlation_id: ' + requestMessage.correlation_id);
               }
@@ -340,8 +367,23 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
             this._senderLink.send(requestMessage, (err) => {
               if (err) {
                 delete this._operations[requestMessage.correlation_id];
-                /*Codes_SRS_NODE_PROVISIONING_AMQP_16_021: [The `queryOperationStatus` method shall call its callback with an error if the transport fails to send the request message.]*/
-                callback(err);
+                const translatedError = translateError('query operation status failure', err);
+                /*Codes_SRS_NODE_PROVISIONING_AMQP_06_006: [If the `queryOperationStatus` send request is rejected with an `InternalError` or `ThrottlingError`, the result.status value will be set with `assigning` and the callback will be invoked with *no* error object.] */
+                if ((translatedError instanceof errors.InternalServerError) || ((translatedError as AmqpTransportError) instanceof errors.ThrottlingError)) {
+                  debug('retryable error on queryOperationStatus: ' + err.name);
+                  let retryAfterInMilliseconds: number;
+                  /*Codes_SRS_NODE_PROVISIONING_AMQP_06_008: [If the `queryOperationsStatus` rejection error contains the info property`retry-after`, it will be interpreted as the number of seconds that should elapse before the next attempted operation.  Otherwise default.] */
+                  if ((err as any).info && (err as any).info[MessagePropertyNames.retryAfter]) {
+                    retryAfterInMilliseconds = Number(((err as any).info[MessagePropertyNames.retryAfter] as string)) * 1000;
+                  } else {
+                    retryAfterInMilliseconds = this._config.pollingInterval;
+                  }
+                  callback(null, {status: 'assigning', operationId: operationId}, null, retryAfterInMilliseconds);
+                } else {
+                  debug('non-retryable error on queryOperationStatus: ' + err.name);
+                  /*Codes_SRS_NODE_PROVISIONING_AMQP_16_021: [The `queryOperationStatus` method shall call its callback with an error if the transport fails to send the request message.]*/
+                  callback(err);
+                }
               } else {
                 debug('registration status request sent with correlation_id: ' + requestMessage.correlation_id);
               }
@@ -481,7 +523,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
   /**
    * @private
    */
-  /*Codes_SRS_NODE_PROVISIONING_AMQP_18_010: [ The `endorsmentKey` and `storageRootKey` passed into `setTpmInformation` shall be used when getting the athentication challenge from the AMQP service. ]*/
+  /*Codes_SRS_NODE_PROVISIONING_AMQP_18_010: [ The `endorsementKey` and `storageRootKey` passed into `setTpmInformation` shall be used when getting the authentication challenge from the AMQP service. ]*/
   setTpmInformation(endorsementKey: Buffer, storageRootKey: Buffer): void {
     this._endorsementKey = endorsementKey;
     this._storageRootKey = storageRootKey;
