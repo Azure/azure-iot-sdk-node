@@ -91,14 +91,18 @@ export class PollingStateMachine extends EventEmitter {
             } else {
               debug('received response from service:' + JSON.stringify(result));
               switch (result.status.toLowerCase()) {
+                case 'registering': {
+                  /*Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_06_001: [If `PollingTransport.registrationRequest` succeeds with status==registering, `register` shall wait, then attempt `PollingTransport.registrationRequest` again.] */
+                  this._fsm.transition('waitingToPoll', request, null, pollingInterval, callback);
+                  break;
+                }
                 case 'assigned': {
                   this._fsm.transition('responseComplete', result, response, callback);
                   break;
                 }
                 case 'assigning': {
-                  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_015: [ If `PollingTransport.registrationRequest` succeeds with status==Assigning, it shall emit an 'operationStatus' event and begin polling for operation status requests. ] */
-                  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_021: [ If `PollingTransport.queryOperationStatus` succeeds with status==Assigning, `register` shall emit an 'operationStatus' event and begin polling for operation status requests. ] */
-                  this.emit('operationStatus', result);
+                  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_015: [ If `PollingTransport.registrationRequest` succeeds with status==Assigning, it shall begin polling for operation status requests. ] */
+                  /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_021: [ If `PollingTransport.queryOperationStatus` succeeds with status==Assigning, `register` shall begin polling for operation status requests. ] */
                   this._fsm.transition('waitingToPoll', request, result.operationId, pollingInterval, callback);
                   break;
                 }
@@ -128,10 +132,9 @@ export class PollingStateMachine extends EventEmitter {
         responseComplete: {
           _onEnter: (result, response, callback) => {
             this._currentOperationCallback = null;
-            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_014: [ If `PollingTransport.registrationRequest` succeeds with status==Assigned, it shall emit an 'operationStatus' event and call `callback` with null, the response body, and the protocol-specific result. ] */
-            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_020: [ If `PollingTransport.queryOperationStatus` succeeds with status==Assigned, `register` shall emit an 'operationStatus' event and complete and pass the body of the response and the protocol-specific result to the `callback`. ] */
-            this.emit('operationStatus', result);
-            this._fsm.transition('idle', null, result, response, callback);
+            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_014: [ If `PollingTransport.registrationRequest` succeeds with status==Assigned, it shall call `callback` with null, the response body, and the protocol-specific result. ] */
+            /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_020: [ If `PollingTransport.queryOperationStatus` succeeds with status==Assigned, `register` shall complete and pass the body of the response and the protocol-specific result to the `callback`. ] */
+           this._fsm.transition('idle', null, result, response, callback);
           },
           '*': () => this._fsm.deferUntilTransition()
         },
@@ -146,7 +149,15 @@ export class PollingStateMachine extends EventEmitter {
           _onEnter: (request, operationId, pollingInterval, callback) => {
             debug('waiting for ' + pollingInterval + ' ms');
             this._pollingTimer = setTimeout(() => {
-              this._fsm.transition('polling', request, operationId, pollingInterval, callback);
+              if (operationId) {
+                this._fsm.transition('polling', request, operationId, pollingInterval, callback);
+              } else {
+                //
+                // retrying registration must necessarily have a falsy operation id.  If they had
+                // an operation id they wouldn't need to retry!
+                //
+                this._fsm.transition('sendingRegistrationRequest', request, callback);
+              }
             }, pollingInterval);
           },
           cancel: (cancelledOpErr, callback) => {

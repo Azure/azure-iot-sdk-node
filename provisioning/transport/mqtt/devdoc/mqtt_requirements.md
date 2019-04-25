@@ -20,7 +20,11 @@ These methods are used by the other objects of the SDK but are not public API fo
 
 **SRS_NODE_PROVISIONING_MQTT_18_010: [** When waiting for responses, `registrationRequest` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>. **]**
 
-**SRS_NODE_PROVISIONING_MQTT_18_012: [** If `registrationRequest` receives a response with status >= 300, it shall consider the request failed and create an error using `translateError`. **]**
+**SRS_NODE_PROVISIONING_MQTT_06_006: [** If the response to the `registrationRequest` contains a query parameter of `retry-after` that value * 1000 shall be the value of `callback` `pollingInterval` argument, otherwise default. **]**
+
+**SRS_NODE_PROVISIONING_MQTT_18_012: [** If `registrationRequest` receives a response with status >= 300 and <429, it shall consider the request failed and create an error using `translateError`. **]**
+
+**SRS_NODE_PROVISIONING_MQTT_06_003: [** When `registrationRequest` receives a response with status >429, it shall invoke `callback` with a result object containing property `status` with a value `registering` and no `operationId` property. **]**
 
 **SRS_NODE_PROVISIONING_MQTT_18_013: [** When `registrationRequest` receives a successful response from the service, it shall call `callback` passing in null and the response. **]**
 
@@ -40,7 +44,12 @@ These methods are used by the other objects of the SDK but are not public API fo
 
 **SRS_NODE_PROVISIONING_MQTT_18_024: [** When waiting for responses, `queryOperationStatus` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>. **]**
 
-**SRS_NODE_PROVISIONING_MQTT_18_026: [** If `queryOperationStatus` receives a response with status >= 300, it shall consider the query failed and create an error using `translateError`. **]**
+**SRS_NODE_PROVISIONING_MQTT_06_005: [** If the response to the `queryOperationStatus` contains a query parameter of `retry-after` that value * 1000 shall be the value of `callback` `pollingInterval` argument, otherwise default. **]**
+
+**SRS_NODE_PROVISIONING_MQTT_18_026: [** If `queryOperationStatus` receives a response with status >= 300 and <429, it shall consider the query failed and create an error using `translateError`. **]**
+
+**SRS_NODE_PROVISIONING_MQTT_06_004: [** When `queryOperationStatus` receives a response with status >429, it shall invoke `callback` with a result object containing property `status` with a value `assigning` and `operationId` property with value of the passed to the request.
+ **]**
 
 **SRS_NODE_PROVISIONING_MQTT_18_027: [** When `queryOperationStatus` receives a successful response from the service, it shall call `callback` passing in null and the response. **]**
 
@@ -98,7 +107,7 @@ These requirements apply whenever the transport connection is established
 
 
 ## transport disconnection
-These requirements apply whenever the transport is disonnected.
+These requirements apply whenever the transport is disconnected.
 
 **SRS_NODE_PROVISIONING_MQTT_18_044: [** When Disconnecting, `Mqtt` shall call _`mqttBase.unsubscribe`. **]**
 

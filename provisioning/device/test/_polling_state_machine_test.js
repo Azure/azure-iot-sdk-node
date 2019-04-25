@@ -19,7 +19,7 @@ var fakeRequest = {
 var fakeError = new Error(fakeErrorText);
 
 var waitingForNetworkIo = function () { return sinon.spy(function () { }); };
-var registrationRequestReturnsAssigning = function(pollingInterval) { return sinon.stub().callsArgWith(1, null, { status: 'Assigning' }, null, pollingInterval || 0); };
+var registrationRequestReturnsAssigning = function(pollingInterval) { return sinon.stub().callsArgWith(1, null, { status: 'Assigning', operationId: '1' }, null, pollingInterval || 0); };
 var registrationRequestReturnsAssigned = function() { return sinon.stub().callsArgWith(1, null, { status: 'Assigned' }); };
 var registrationRequestReturnsFailed = function() { return sinon.stub().callsArgWith(1, null, { status: 'Failed' }); };
 var registrationRequestReturnsFailure = function() { return sinon.stub().callsArgWith(1, new Error(fakeErrorText)); };
@@ -29,18 +29,31 @@ var operationStatusReturnsFailed = function() { return sinon.stub().callsArgWith
 var operationStatusReturnsFailure = function() { return sinon.stub().callsArgWith(2, new Error(fakeErrorText)); };
 var operationStatusReturnsBadResponse = function() { return sinon.stub().callsArgWith(2, null, { status: fakeBadStatus }); };
 var operationStatusReturnsAssigningThenAssigned = function () {
-  var callCount = 0;
-  return sinon.spy(function (request, operationId, callback) {
-    callCount++;
-    if (callCount === 1) {
-      callback(null, { status: 'Assigning' }, null, 0);
-    } else if (callCount === 2) {
+  var stub = sinon.spy(function (request, operationId, callback) {
+    if (stub.callCount === 1) {
+      callback(null, { status: 'Assigning', operationId: '1' }, null, 0);
+    } else if (stub.callCount === 2) {
       callback(null, { status: 'Assigned' });
     } else {
       assert(false, 'second status query returned Assigned.  There should not be a third status query');
     }
   });
+  return stub;
 };
+
+var registrationRequestReturnsRegistering = function () {
+  var stub = sinon.spy(function (request, callback) {
+    if (stub.callCount === 1) {
+      callback(null, { status: 'registering' }, null, 0);
+    } else if (stub.callCount === 2) {
+      callback(null, { status: 'Assigned' });
+    } else {
+      assert(false, 'second status registration returned Assigned.  There should not be a third registration');
+    }
+  });
+  return stub;
+};
+
 
 describe('polling state machine', function () {
   this.timeout(1000);
@@ -88,7 +101,7 @@ describe('polling state machine', function () {
         });
       });
 
-      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_014: [ If `PollingTransport.registrationRequest` succeeds with status==Assigned, it shall emit an 'operationStatus' event and  call `callback` with null, the response body, and the protocol-specific result. ] */
+      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_014: [ If `PollingTransport.registrationRequest` succeeds with status==Assigned, it shall call `callback` with null, the response body, and the protocol-specific result. ] */
       it ('and returns success if it succeeds with status===\'Assigned\'', function (testCallback) {
         callRegisterWithDefaultArgs(function (err,responseBody) {
           assert.oneOf(err, [null, undefined]);
@@ -97,8 +110,8 @@ describe('polling state machine', function () {
         });
       });
 
-      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_015: [ If `PollingTransport.registrationRequest` succeeds with status==Assigning, it shall emit an 'operationStatus' event and begin polling for operation status requests. ] */
-      it('and starts polling if it succeeds with status===\'Assigning\'', function (testCallback) {
+      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_015: [ If `PollingTransport.registrationRequest` succeeds with status==Assigning, it shall begin polling for operation status requests. ] */
+      it ('and starts polling if it succeeds with status===\'Assigning\'', function (testCallback) {
         machine._transport.registrationRequest = registrationRequestReturnsAssigning();
         machine._transport.queryOperationStatus = waitingForNetworkIo();
         callRegisterWithDefaultArgs(function () {});
@@ -108,6 +121,16 @@ describe('polling state machine', function () {
           machine.disconnect();
           testCallback();
         }, 2);
+      });
+
+      /*Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_06_001: [If `PollingTransport.registrationRequest` succeeds with status==registering, `register` shall wait, then attempt `PollingTransport.registrationRequest` again.] */
+      it('and polls if it succeeds with status===\'registering\'', function (testCallback) {
+        machine._transport.registrationRequest = registrationRequestReturnsRegistering();
+        callRegisterWithDefaultArgs(function () {});
+        setTimeout(function () {
+          assert(machine._transport.registrationRequest.calledTwice);
+          testCallback();
+        }, 10);
       });
 
       /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_016: [ If `PollingTransport.registrationRequest` succeeds with an unknown status, `register` shall fail with a `SyntaxError` and pass the response body and the protocol-specific result to the `callback`. ] */
@@ -129,15 +152,6 @@ describe('polling state machine', function () {
         });
       });
 
-
-      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_014: [ If `PollingTransport.registrationRequest` succeeds with status==Assigned, it shall emit an 'operationStatus' event and  call `callback` with null, the response body, and the protocol-specific result. ] */
-      it('and fires an operationStatus event if it succeeds', function (testCallback) {
-        machine.on('operationStatus', function (body) {
-          assert.strictEqual(body.status, 'Assigned');
-          testCallback();
-        });
-        callRegisterWithDefaultArgs(function () { });
-      });
     });
 
     /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_018: [ When the polling interval elapses, `register` shall call `PollingTransport.queryOperationStatus`. ] */
@@ -157,7 +171,7 @@ describe('polling state machine', function () {
         });
       });
 
-      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_020: [ If `PollingTransport.queryOperationStatus` succeeds with status==Assigned, `register` shall complete and pass the body of the response and the protocol-spefic result to the `callback`. ] */
+      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_020: [ If `PollingTransport.queryOperationStatus` succeeds with status==Assigned, `register` shall complete and pass the body of the response and the protocol-specific result to the `callback`. ] */
       it ('and returns success if it succeeds with status===\'Assigned\'', function (testCallback) {
         callRegisterWithDefaultArgs(function (err, responseBody) {
           assert.oneOf(err, [null, undefined]);
@@ -166,7 +180,7 @@ describe('polling state machine', function () {
         });
       });
 
-      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_021: [ If `PollingTransport.queryOperationStatus` succeeds with status==Assigning, `register` shall emit an 'operationStatus' event and begin polling for operation status requests. ] */
+      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_021: [ If `PollingTransport.queryOperationStatus` succeeds with status==Assigning, `register` shall begin polling for operation status requests. ] */
       it ('and continues polling if it succeeds with status===\'Assigning\'', function (testCallback) {
         machine._transport.queryOperationStatus = operationStatusReturnsAssigningThenAssigned();
 
@@ -196,18 +210,6 @@ describe('polling state machine', function () {
         });
       });
 
-      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_029: [ If `PollingTransport.queryOperationStatus` succeeds with status==Failed, it shall fail with a `DeviceRegistrationFailedError` error ] */
-
-      /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_021: [ If `PollingTransport.queryOperationStatus` succeeds with status==Assigned, `register` shall emit an 'operationStatus' event and begin polling for operation status requests. ] */
-      it ('and fires an operationStatus event if it succeeds', function (testCallback) {
-        var handler = sinon.stub();
-        machine.on('operationStatus', handler);
-        callRegisterWithDefaultArgs(function (err) {
-          assert.oneOf(err, [null, undefined]);
-          assert(handler.calledTwice);
-          testCallback();
-        });
-      });
     });
 
     /* Tests_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_024: [ If `register` is called while a different request is in progress, it shall fail with an `InvalidOperationError`. ] */
@@ -381,7 +383,7 @@ describe('polling state machine', function () {
     [
       {
         name: 'registrationRequest',
-        preconfigure: () => {
+        preConfigure: () => {
           machine._transport.registrationRequest = sinon.stub();
         },
         assert: () => {
@@ -391,7 +393,7 @@ describe('polling state machine', function () {
       },
       {
         name: 'polling',
-        preconfigure: () => {
+        preConfigure: () => {
           machine._transport.registrationRequest = registrationRequestReturnsAssigning(1000);
         },
         assert: () => {
@@ -401,7 +403,7 @@ describe('polling state machine', function () {
       },
       {
         name: 'queryOperationStatus',
-        preconfigure: () => {
+        preConfigure: () => {
           machine._transport.registrationRequest = registrationRequestReturnsAssigning();
           machine._transport.queryOperationStatus = sinon.stub();
         },
@@ -414,7 +416,7 @@ describe('polling state machine', function () {
     ].forEach(function(op) {
       it ('cancels ' + op.name + ' and disconnects', function (testCallback) {
         var registerCallbackCalled = false;
-        op.preconfigure();
+        op.preConfigure();
 
         callRegisterWithDefaultArgs(function(err) {
           assert.instanceOf(err, errors.OperationCancelledError);
@@ -441,7 +443,7 @@ describe('polling state machine', function () {
     [
       {
         name: 'registrationRequest',
-        preconfigure: () => {
+        preConfigure: () => {
           machine._transport.registrationRequest = sinon.stub();
         },
         assert: () => {
@@ -451,7 +453,7 @@ describe('polling state machine', function () {
       },
       {
         name: 'queryOperationStatus',
-        preconfigure: () => {
+        preConfigure: () => {
           machine._transport.registrationRequest = registrationRequestReturnsAssigning();
           machine._transport.queryOperationStatus = sinon.stub();
         },
@@ -464,7 +466,7 @@ describe('polling state machine', function () {
       it ('happens if ' + op.name + ' never returns', function (testCallback) {
         var clock = sinon.useFakeTimers();
         var registerCallbackCalled = false;
-        op.preconfigure();
+        op.preConfigure();
 
         callRegisterWithDefaultArgs(function(err) {
           assert.instanceOf(err, errors.TimeoutError);;

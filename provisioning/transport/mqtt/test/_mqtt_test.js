@@ -191,12 +191,12 @@ describe('Mqtt', function () {
     it ('translates errors based on status code', function(callback) {
       mqtt.registrationRequest(fakeRequest, function(err) {
         /* Tests_SRS_NODE_PROVISIONING_MQTT_18_015: [ When `registrationRequest` receives an error from the service, it shall call `callback` passing in the error.] */
-        /* Tests_SRS_NODE_PROVISIONING_MQTT_18_012: [ If `registrationRequest` receives a response with status >= 300, it shall consider the request failed and create an error using `translateError`.] */
-        assert.instanceOf(err, errors.IotHubQuotaExceededError);
+        /* Tests_SRS_NODE_PROVISIONING_MQTT_18_012: [ If `registrationRequest` receives a response with status >= 300 and <429, it shall consider the request failed and create an error using `translateError`.] */
+        assert.instanceOf(err, errors.ArgumentError);
         callback();
       });
 
-      respond(fakeBase.publish.firstCall, 429);
+      respond(fakeBase.publish.firstCall, 400);
     });
 
     /* Tests_SRS_NODE_PROVISIONING_MQTT_18_013: [ When `registrationRequest` receives a successful response from the service, it shall call `callback` passing in null and the response.] */
@@ -206,10 +206,24 @@ describe('Mqtt', function () {
         assert.deepEqual(result, fakeResponse);
         callback();
       });
-        /* Tests_SRS_NODE_PROVISIONING_MQTT_18_003: [ `registrationRequest` shall publish to '$dps/registrations/PUT/iotdps-register/?$rid<rid>'.] */
-        assert.isOk(fakeBase.publish.firstCall.args[0].match(/^\$dps\/registrations\/PUT\/iotdps-register\/\?\$rid=/));
-        /* Tests_SRS_NODE_PROVISIONING_MQTT_18_010: [ When waiting for responses, `registrationRequest` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>.] */
+      /* Tests_SRS_NODE_PROVISIONING_MQTT_18_003: [ `registrationRequest` shall publish to '$dps/registrations/PUT/iotdps-register/?$rid<rid>'.] */
+      assert.isOk(fakeBase.publish.firstCall.args[0].match(/^\$dps\/registrations\/PUT\/iotdps-register\/\?\$rid=/));
+      /* Tests_SRS_NODE_PROVISIONING_MQTT_18_010: [ When waiting for responses, `registrationRequest` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>.] */
       respond(fakeBase.publish.firstCall);
+    });
+
+    /*Tests_SRS_NODE_PROVISIONING_MQTT_06_003: [ When `registrationRequest` receives a response with status >429, it shall invoke `callback` with a result object containing property `status` with a value `registering` and no `operationId` property.] */
+    it ('Service returns a >= 429 error so transport returns registering', function(callback) {
+      mqtt.registrationRequest(fakeRequest, function(err, result) {
+        assert.oneOf(err, [null, undefined]);
+        assert.strictEqual(result.status, 'registering');
+        assert.isNotOk(result.operationId);
+        callback();
+      });
+      /* Tests_SRS_NODE_PROVISIONING_MQTT_18_003: [ `registrationRequest` shall publish to '$dps/registrations/PUT/iotdps-register/?$rid<rid>'.] */
+      assert.isOk(fakeBase.publish.firstCall.args[0].match(/^\$dps\/registrations\/PUT\/iotdps-register\/\?\$rid=/));
+      /* Tests_SRS_NODE_PROVISIONING_MQTT_18_010: [ When waiting for responses, `registrationRequest` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>.] */
+      respond(fakeBase.publish.firstCall, 429);
     });
 
     /*Tests_SRS_NODE_PROVISIONING_MQTT_06_001: [The `registrationRequest` will send a body in the message which contains a stringified JSON object with a `registrationId` property.] */
@@ -276,10 +290,11 @@ describe('Mqtt', function () {
     });
 
     [
-      '$rid=123', // Unknown request id. Previous test inserts a particular uuid into the transport
-      ''          // No request id at all
+      '$rid=123',   // Unknown request id. Previous 'can parse topic with multiple' test injected a particular uuid into the transport
+      'random=123', // Only parameter is unrecognized.
+      ''            // No request id at all
     ].forEach(function(theQueryString) {
-      it ('Will not respond give topics that are unacceptable', function(callback) {
+      it ('Will not respond given topics that are unacceptable', function(callback) {
         var stubCallback = sinon.spy();
         mqtt.queryOperationStatus(fakeRequest, fakeOperationId, stubCallback);
         extendedResponse(theQueryString);
@@ -291,20 +306,63 @@ describe('Mqtt', function () {
     it ('returns a wrapped error', function(callback) {
       mqtt.queryOperationStatus(fakeRequest, fakeOperationId, function(err) {
         /* Tests_SRS_NODE_PROVISIONING_MQTT_18_029: [ When `queryOperationStatus` receives an error from the service, it shall call `callback` passing in the error.] */
-        /* Tests_SRS_NODE_PROVISIONING_MQTT_18_026: [ If `queryOperationStatus` receives a response with status >= 300, it shall consider the query failed and create an error using `translateError`.] */
-        assert.instanceOf(err, errors.InternalServerError);
+        /* Tests_SRS_NODE_PROVISIONING_MQTT_18_026: [ If `queryOperationStatus` receives a response with status >= 300 and <429, it shall consider the query failed and create an error using `translateError`.] */
+        assert.instanceOf(err, errors.UnauthorizedError);
         callback();
       });
-      respond(fakeBase.publish.firstCall, 500);
+      respond(fakeBase.publish.firstCall, 401);
     });
 
-    it ('returns failure if publish faile', function(callback) {
+    /*Tests_SRS_NODE_PROVISIONING_MQTT_06_004: [ When `queryOperationStatus` receives a response with status >429, it shall invoke `callback` with a result object containing property `status` with a value `assigning` and `operationId` property with value of the passed to the request.] */
+    it ('Service returns a >= 429 error so transport returns assigning', function(callback) {
+      mqtt.queryOperationStatus(fakeRequest, fakeOperationId, function(err, result) {
+        assert.oneOf(err, [null, undefined]);
+        assert.strictEqual(result.status, 'assigning');
+        assert.equal(result.operationId, fakeOperationId);
+      });
+      assert.isOk(fakeBase.publish.firstCall.args[0].match(/^\$dps\/registrations\/GET\/iotdps-get-operationstatus\/\?\$rid=(.*)\&operationId=/));
+      respond(fakeBase.publish.firstCall, 429);
+      callback();
+    });
+
+
+    it ('returns failure if publish fails', function(callback) {
       fakeBase.publish = sinon.stub().callsArgWith(3, new Error(fakeErrorText));
       mqtt.queryOperationStatus(fakeRequest, fakeOperationId, function(err) {
         /* Tests_SRS_NODE_PROVISIONING_MQTT_18_018: [ If the publish fails, `queryOperationStatus` shall call `callback` passing in the error.] */
         assert.instanceOf(err, Error);
         assert.strictEqual(err.message, fakeErrorText);
         callback();
+      });
+    });
+  });
+
+  describe('#polling interval', function() {
+    /* Tests_SRS_NODE_PROVISIONING_MQTT_06_005: [ If the response to the `queryOperationStatus` contains a query parameter of `retry-after` that value * 1000 shall be the value of `callback` `pollingInterval` argument, otherwise default.] */
+    /* Tests_SRS_NODE_PROVISIONING_MQTT_06_006: [ If the response to the `registrationRequest` contains a query parameter of `retry-after` that value * 1000 shall be the value of `callback` `pollingInterval` argument, otherwise default.] */
+    [
+      registrationRequest,
+      queryOperationStatus
+    ].forEach(function(op) {
+      var configPollingInterval = 4000;
+      var dpsPollingInterval = 5;
+      [
+        '$rid=123&retry-after=' + dpsPollingInterval.toString() + '&something=89',
+        'something=89&$rid=123'
+      ].forEach(function(theQueryString) {
+        it ('On poll-able result for ' + op.name + ', ' + ((theQueryString.indexOf('retry-after') === -1) ? ('uses default for polling interval when dps does not provide one.') : ('uses polling interval provided by dps.')), function(callback) {
+          var fakeUuids = [uuid.v4()];
+          var uuidStub = sinon.stub(uuid,'v4');
+          uuidStub.returns(fakeUuids[0]);
+          mqtt.setTransportOptions({pollingInterval: configPollingInterval});
+          op.invoke(function(err, result, response, pollingInterval) {
+            uuid.v4.restore();
+            assert.oneOf(err, [null, undefined]);
+            assert.equal((theQueryString.indexOf('retry-after') === -1) ? (configPollingInterval) : (dpsPollingInterval*1000), pollingInterval);
+            callback();
+          });
+          extendedResponse(theQueryString.replace('$rid=123', '$rid='+fakeUuids[0]));
+        });
       });
     });
   });

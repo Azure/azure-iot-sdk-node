@@ -55,7 +55,7 @@ var x509RegistrationId;
 
 var createAllCerts = function(callback) {
   var id = uuid.v4();
-  x509DeviceId = 'deleteme_provisioning_node_e2e_' + id;
+  x509DeviceId = 'deleteMe_provisioning_node_e2e_' + id;
   x509RegistrationId = 'reg-' + id;
 
   async.waterfall([
@@ -257,7 +257,7 @@ var X509Group = function(certFactory) {
       if (err) {
         debug('ignoring delete error');
       }
-      debug('deletingchenrollment group');
+      debug('deleting enrollment group');
       provisioningServiceClient.deleteEnrollmentGroup(self._groupId, function(err) {
         if (err) {
           debug('ignoring deleteEnrollmentGroup error');
@@ -280,7 +280,7 @@ var TpmIndividual = function() {
 
   this.initialize = function (callback) {
     var id = uuid.v4();
-    self.deviceId = 'deleteme_provisioning_node_e2e_' + id;
+    self.deviceId = 'deleteMe_provisioning_node_e2e_' + id;
     self.registrationId = 'reg-' + id;
       if (!tpm) {
       tpm = new TssJs.Tpm(false);
@@ -361,7 +361,7 @@ var SymmetricKeyIndividual = function() {
 
   this.initialize = function (callback) {
     var id = uuid.v4();
-    self.deviceId = 'deleteme_provisioning_node_e2e_' + id;
+    self.deviceId = 'deleteMe_provisioning_node_e2e_' + id;
     self.registrationId = 'reg-' + id;
     self.primaryKey = new Buffer(uuid.v4()).toString('base64');
     securityClient = new SymmetricKeySecurityClient(self.registrationId, self.primaryKey);
@@ -440,7 +440,7 @@ var SymmetricKeyGroup = function() {
 
   this.initialize = function (callback) {
     var id = uuid.v4();
-    self.groupId = 'deleteme-node-' + id;
+    self.groupId = 'deleteMe-node-' + id;
     self.registrationId = 'reg-' + id;
     self.deviceId = self.registrationId;
     self.primaryKey = new Buffer(uuid.v4()).toString('base64');

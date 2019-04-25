@@ -63,6 +63,14 @@ describe('Http', function() {
     }
   };
 
+  var fakeAssigningResponse = {
+    status: 'Assigning',
+    registrationState: {
+      assignedHub: 'fakeHub',
+      deviceId: 'fakeDeviceId'
+    }
+  };
+
   var registrationRequest = {
     name: 'registrationRequest',
     invoke: function(callback) { http.registrationRequest(fakeRequest, callback); },
@@ -92,12 +100,21 @@ describe('Http', function() {
     http = new Http(fakeBase);
   });
 
-  var respond_x509 = function(err, body, statusCode) {
+  var respond_x509 = function(err, body, statusCode, retryAfterInSeconds) {
     var done = fakeBase.buildRequest.firstCall.args[5]; // index is 4 for non-x509 calls. optional args FTL
     if (err) {
       done(err);
     } else {
-      done(null, JSON.stringify(body), { statusCode: statusCode, headers: { 'content-type': 'application/json' } });
+      var headers = {};
+      if (retryAfterInSeconds) {
+        headers = {
+          'content-type': 'application/json',
+          'retry-after' : retryAfterInSeconds.toString()
+        };
+      } else {
+        headers = {'content-type': 'application/json'};
+      }
+      done(null, JSON.stringify(body), { statusCode: statusCode, headers });
     }
   };
 
@@ -293,6 +310,58 @@ describe('Http', function() {
 
   });
 
+  describe('#polling interval', function() {
+    /*Tests_SRS_NODE_PROVISIONING_HTTP_06_011: [ If the `registrationRequest` response contains the `header` `retry-after`, it will be interpreted as the number of seconds that should elapse before the next attempted operation.] */
+    /*Tests_SRS_NODE_PROVISIONING_HTTP_06_010: [If the `queryOperationStatus` response contains the `header` `retry-after`, it will be interpreted as the number of seconds that should elapse before the next attempt at the `queryOperationStatus` operation.] */
+    [
+      registrationRequest,
+      queryOperationStatus
+    ].forEach(function(op) {
+      var configPollingInterval = 4000;
+      var dpsPollingInterval = 5;
+      [
+        dpsPollingInterval,0
+      ].forEach(function(retryAfterValue) {
+        it ('On poll-able result for ' + op.name + ', ' + ((retryAfterValue) ?  ('uses polling interval provided by dps.') : ('uses default for polling interval when dps does not provide one.')), function(callback) {
+          http.setAuthentication(fakeX509);
+          http.setTransportOptions({pollingInterval: configPollingInterval});
+          op.invoke(function(err, result, response, pollingInterval) {
+            assert.oneOf(err, [null, undefined]);
+            assert.equal((retryAfterValue) ? (dpsPollingInterval*1000) : (configPollingInterval), pollingInterval);
+            callback();
+          });
+          respond_x509(null, fakeAssigningResponse, 204, retryAfterValue);
+        });
+      });
+    });
+  });
+
+  describe('#retrying queryOperationStatus', function() {
+    /* Tests_SRS_NODE_PROVISIONING_HTTP_06_009: [If the `queryOperationStatus` response contains a status code >= 429, the result.status value will be set with `assigning` and the callback will be invoked with *no* error object.]*/
+    it ('On status >= 429 operation will return a status of \'assigning\'', function(callback) {
+      http.setAuthentication(fakeX509);
+      http.queryOperationStatus(fakeRequest, fakeOperationId, function(err, result, response) {
+        assert.oneOf(err, [null, undefined]);
+        assert.equal(result.status, 'assigning');
+        callback();
+      });
+      respond_x509(null, fakeAssigningResponse, 429);
+    });
+  });
+
+  describe('#retrying registrationRequest', function() {
+    /*Tests_SRS_NODE_PROVISIONING_HTTP_06_012: [ If the `registrationRequest` response contains a status code >= 429, the result.status value will be set with `registering` and the callback will be invoked with *no* error object.] */
+    it ('On status >= 429 operation will return a status of \'registering\'', function(callback) {
+      http.setAuthentication(fakeX509);
+      http.registrationRequest(fakeRequest, function(err, result, response) {
+        assert.oneOf(err, [null, undefined]);
+        assert.equal(result.status, 'registering');
+        callback();
+      });
+      respond_x509(null, fakeAssigningResponse, 429);
+    });
+  });
+
   [
     registrationRequest,
     queryOperationStatus
@@ -358,10 +427,10 @@ describe('Http', function() {
       it ('uses translateError on http response code', function(callback) {
         http.setAuthentication(fakeX509);
         op.invoke(function(err) {
-          assert.instanceOf(err, errors.InternalServerError);
+          assert.instanceOf(err, errors.UnauthorizedError);
           callback();
         });
-        respond_x509(null, fakeAssignedResponse, 500);
+        respond_x509(null, fakeAssignedResponse, 401);
       });
     });
   });

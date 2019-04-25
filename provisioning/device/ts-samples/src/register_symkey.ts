@@ -5,10 +5,10 @@ import { Mqtt as iotHubTransport } from 'azure-iot-device-mqtt';
 import { Client } from 'azure-iot-device';
 import { Message } from 'azure-iot-device';
 
-import { Http as ProvisioningTransport } from 'azure-iot-provisioning-device-http';
+// import { Http as ProvisioningTransport } from 'azure-iot-provisioning-device-http';
 // import { Amqp as ProvisioningTransport } from 'azure-iot-provisioning-device-amqp';
 // import { AmqpWs as ProvisioningTransport } from 'azure-iot-provisioning-device-amqp';
-// import { Mqtt as ProvisioningTransport } from 'azure-iot-provisioning-device-mqtt';
+import { Mqtt as ProvisioningTransport } from 'azure-iot-provisioning-device-mqtt';
 // import { MqttWs as ProvisioningTransport } from 'azure-iot-provisioning-device-mqtt';
 // Feel free to change the preceding import statement to anyone of the following if you would like to try another protocol.
 

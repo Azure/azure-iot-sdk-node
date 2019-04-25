@@ -35,7 +35,11 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
   private _subscribed: boolean;
 
   private _operations: {
-    [key: string]: (err?: Error, payload?: any) => void;
+    [key: string]: {
+      handler: (err?: Error, payload?: any, pollingInterval?: number) => void,
+      statusString: string,
+      operationId?: string
+    };
   } = {};
 
   /**
@@ -49,36 +53,53 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
     const responseHandler = (topic: string, payload: any) => {
       let payloadString: string = payload.toString('ascii');
       debug('message received on ' + topic);
-      debug(payloadString);
+      debug('request payload is: ' + payloadString);
 
       /* Codes_SRS_NODE_PROVISIONING_MQTT_18_010: [ When waiting for responses, `registrationRequest` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>.] */
       /* Codes_SRS_NODE_PROVISIONING_MQTT_18_024: [ When waiting for responses, `queryOperationStatus` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>.] */
       let match = topic.match(/^\$dps\/registrations\/res\/(.*)\/\?(.*)$/);
-      let queryParameters = queryString.parse(match[2]);
 
-      if (!!match && match.length === 3 && queryParameters.$rid) {
-        let status: number = Number(match[1]);
-        let rid: string = queryParameters.$rid as string;
-        if (this._operations[rid]) {
-          let payloadJson: any = JSON.parse(payloadString);
-          let handler = this._operations[rid];
-          delete this._operations[rid];
-          if (status < 300) {
-            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_013: [ When `registrationRequest` receives a successful response from the service, it shall call `callback` passing in null and the response.] */
-            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_027: [ When `queryOperationStatus` receives a successful response from the service, it shall call `callback` passing in null and the response.] */
-            handler(null, payloadJson);
+      if (!!match && match.length === 3) {
+        let queryParameters = queryString.parse(match[2]);
+        if (queryParameters.$rid) {
+          let rid: string = queryParameters.$rid as string;
+          if (this._operations[rid]) {
+            let status: number = Number(match[1]);
+            let payloadJson: any = JSON.parse(payloadString);
+            let handler = this._operations[rid].handler;
+            let statusString = this._operations[rid].statusString;
+            let operationId = this._operations[rid].operationId;
+            let retryAfterInMilliseconds: number = this._config.pollingInterval;
+            const retryParameter = 'retry-after';
+            /* Codes_SRS_NODE_PROVISIONING_MQTT_06_005: [ If the response to the `queryOperationStatus` contains a query parameter of `retry-after` that value * 1000 shall be the value of `callback` `pollingInterval` argument, otherwise default.] */
+            /* Codes_SRS_NODE_PROVISIONING_MQTT_06_006: [ If the response to the `registrationRequest` contains a query parameter of `retry-after` that value * 1000 shall be the value of `callback` `pollingInterval` argument, otherwise default.] */
+            if (queryParameters[retryParameter]) {
+              retryAfterInMilliseconds = Number(queryParameters[retryParameter]) * 1000;
+            }
+            delete this._operations[rid];
+            if (status < 300) {
+              /* Codes_SRS_NODE_PROVISIONING_MQTT_18_013: [ When `registrationRequest` receives a successful response from the service, it shall call `callback` passing in null and the response.] */
+              /* Codes_SRS_NODE_PROVISIONING_MQTT_18_027: [ When `queryOperationStatus` receives a successful response from the service, it shall call `callback` passing in null and the response.] */
+              handler(null, payloadJson, retryAfterInMilliseconds);
+            } else if (status >= 429) {
+              /*Codes_SRS_NODE_PROVISIONING_MQTT_06_003: [ When `registrationRequest` receives a response with status >429, it shall invoke `callback` with a result object containing property `status` with a value `registering` and no `operationId` property.] */
+              /*Codes_SRS_NODE_PROVISIONING_MQTT_06_004: [ When `queryOperationStatus` receives a response with status >429, it shall invoke `callback` with a result object containing property `status` with a value `assigning` and `operationId` property with value of the passed to the request.] */
+              handler(null, {status: statusString, operationId: operationId}, retryAfterInMilliseconds);
+            } else {
+              /* Codes_SRS_NODE_PROVISIONING_MQTT_18_012: [ If `registrationRequest` receives a response with status >= 300 and <429, it shall consider the request failed and create an error using `translateError`.] */
+              /* Codes_SRS_NODE_PROVISIONING_MQTT_18_015: [ When `registrationRequest` receives an error from the service, it shall call `callback` passing in the error.] */
+              /* Codes_SRS_NODE_PROVISIONING_MQTT_18_026: [ If `queryOperationStatus` receives a response with status >= 300 and <429, it shall consider the query failed and create an error using `translateError`.] */
+              /* Codes_SRS_NODE_PROVISIONING_MQTT_18_029: [ When `queryOperationStatus` receives an error from the service, it shall call `callback` passing in the error.] */
+              handler(translateError('incoming message failure', status, payloadJson, { topic: topic, payload: payloadJson }));
+            }
           } else {
-            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_012: [ If `registrationRequest` receives a response with status >= 300, it shall consider the request failed and create an error using `translateError`.] */
-            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_015: [ When `registrationRequest` receives an error from the service, it shall call `callback` passing in the error.] */
-            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_026: [ If `queryOperationStatus` receives a response with status >= 300, it shall consider the query failed and create an error using `translateError`.] */
-            /* Codes_SRS_NODE_PROVISIONING_MQTT_18_029: [ When `queryOperationStatus` receives an error from the service, it shall call `callback` passing in the error.] */
-            handler(translateError('incoming message failure', status, payloadJson, { topic: topic, payload: payloadJson }));
+            debug('received an unknown request id: ' + rid + ' topic: ' + topic);
           }
         } else {
-          debug('received an unknown request id: ' + rid + ' topic: ' + topic);
+          debug('received message with no request id. Topic is: ' + topic);
         }
       } else {
-        debug('received a topic string with improper content: ' + topic);
+        debug('received a topic string with insufficient content: ' + topic);
       }
     };
 
@@ -102,8 +123,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
             }
           },
           registrationRequest: (request, rid, callback) => {
-            this._operations[rid] = callback;
-
+            this._operations[rid] = {handler: callback, statusString: 'registering'};
             /* Codes_SRS_NODE_PROVISIONING_MQTT_18_002: [ If the transport is not connected, `registrationRequest` shall connect it and subscribe to the response topic.] */
             this._fsm.handle('connect', request, (err) => {
               if (err) {
@@ -114,8 +134,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
             });
           },
           queryOperationStatus: (request, rid, operationId, callback) => {
-            this._operations[rid] = callback;
-
+            this._operations[rid] = {handler: callback, statusString: 'assigning', operationId: operationId};
             /* Codes_SRS_NODE_PROVISIONING_MQTT_18_016: [ If the transport is not connected, `queryOperationStatus` shall connect it and subscribe to the response topic.] */
             this._fsm.handle('connect', request, (err) => {
               if (err) {
@@ -157,11 +176,13 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
         connected: {
           _onEnter: (err, request, result, callback) => callback(err, result, request),
           registrationRequest: (request, rid, callback) => {
+            this._operations[rid] = {handler: callback, statusString: 'registering'};
             this._sendRegistrationRequest(request, rid, (err, result) => {
               callback(err, result, request);
             });
           },
           queryOperationStatus: (request, rid, operationId, callback) => {
+            this._operations[rid] = {handler: callback, statusString: 'assigning', operationId: operationId};
             this._sendOperationStatusQuery(request, rid, operationId, (err, result) => {
               callback(err, result, request);
             });
@@ -213,12 +234,12 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
    */
   registrationRequest(request: RegistrationRequest, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void {
     let rid = uuid.v4();
-
-    this._fsm.handle('registrationRequest', request, rid, (err, result) => {
+    debug('registration request given id of: ' + rid);
+    this._fsm.handle('registrationRequest', request, rid, (err, result, pollingInterval) => {
       if (err) {
         callback(err);
       } else {
-        callback(null, result, null, this._config.pollingInterval);
+        callback(null, result, null, pollingInterval);
       }
     });
   }
@@ -228,12 +249,12 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
    */
   queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void {
     let rid = uuid.v4();
-
-    this._fsm.handle('queryOperationStatus', request, rid, operationId, (err, result) => {
+    debug('query operation request given id of: ' + rid);
+    this._fsm.handle('queryOperationStatus', request, rid, operationId, (err, result, pollingInterval) => {
       if (err) {
         callback(err);
       } else {
-        callback(null, result, null, this._config.pollingInterval);
+        callback(null, result, null, pollingInterval);
       }
     });
   }
@@ -339,8 +360,6 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
   }
 
   private _sendRegistrationRequest(request: RegistrationRequest, rid: string, callback: (err?: Error, result?: any) => void): void {
-    this._operations[rid] = callback;
-
     /*Codes_SRS_NODE_PROVISIONING_MQTT_06_001: [The `registrationRequest` will send a body in the message which contains a stringified JSON object with a `registrationId` property.] */
     let requestBody: DeviceRegistration = { registrationId : request.registrationId };
 
@@ -353,6 +372,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
     this._mqttBase.publish('$dps/registrations/PUT/iotdps-register/?$rid=' + rid, JSON.stringify(requestBody), { qos: 1 } , (err) => {
       /* Codes_SRS_NODE_PROVISIONING_MQTT_18_004: [ If the publish fails, `registrationRequest` shall call `callback` passing in the error.] */
       if (err) {
+        debug('received an error from the registration publish: ' + err.name);
         delete this._operations[rid];
         callback(err);
       }
@@ -360,11 +380,11 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
  }
 
   private _sendOperationStatusQuery(request: RegistrationRequest, rid: string, operationId: string, callback: (err?: Error, result?: any) => void): void {
-    this._operations[rid] = callback;
-
+    debug('operationStatus publish ' + '$dps/registrations/GET/iotdps-get-operationstatus/?$rid=' + rid + '&operationId=' + operationId);
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_017: [ `queryOperationStatus` shall publish to $dps/registrations/GET/iotdps-get-operationstatus/?$rid=<rid>&operationId=<operationId>.] */
     this._mqttBase.publish('$dps/registrations/GET/iotdps-get-operationstatus/?$rid=' + rid + '&operationId=' + operationId, ' ', { qos: 1 }, (err) => {
       if (err) {
+        debug('received an error from the operationStatus publish: ' + err.name);
         /* Codes_SRS_NODE_PROVISIONING_MQTT_18_018: [ If the publish fails, `queryOperationStatus` shall call `callback` passing in the error */
         delete this._operations[rid];
         callback(err);
@@ -378,7 +398,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
   private _cancelAllOperations(): void {
     for (let op in this._operations) {
       debug('cancelling ' + op);
-      let callback = this._operations[op];
+      let callback = this._operations[op].handler;
       delete this._operations[op];
       process.nextTick(() => {
         callback(new errors.OperationCancelledError());

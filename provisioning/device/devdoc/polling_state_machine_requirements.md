@@ -17,11 +17,13 @@ Register round-trips one step of the registration process, not returning until a
 
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_012: [** `register` shall call `PollingTransport.registrationRequest`. **]**
 
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_06_001: [** If `PollingTransport.registrationRequest` succeeds with status==registering, `register` shall wait, then attempt `PollingTransport.registrationRequest` again. **]**
+
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_013: [** If `PollingTransport.registrationRequest` fails, `register` shall fail. **]**
 
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_014: [** If `PollingTransport.registrationRequest` succeeds with status==Assigned, it shall emit an 'operationStatus' event and call `callback` with null, the response body, and the protocol-specific result. **]**
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_014: [** If `PollingTransport.registrationRequest` succeeds with status==Assigned, it shall call `callback` with null, the response body, and the protocol-specific result. **]**
 
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_015: [** If `PollingTransport.registrationRequest` succeeds with status==Assigning, it shall emit an 'operationStatus' event and begin polling for operation status requests. **]**
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_015: [** If `PollingTransport.registrationRequest` succeeds with status==Assigning, it shall begin polling for operation status requests. **]**
 
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_016: [** If `PollingTransport.registrationRequest` succeeds  with an unknown status, `register` shall fail with a `SyntaxError` and pass the response body and the protocol-specific result to the `callback`. **]**
 
@@ -33,9 +35,9 @@ Register round-trips one step of the registration process, not returning until a
 
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_019: [** If `PollingTransport.queryOperationStatus` fails, `register` shall fail. **]**
 
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_020: [** If `PollingTransport.queryOperationStatus` succeeds with status==Assigned, `register` shall complete and pass the body of the response and the protocol-spefic result to the `callback`. **]**
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_020: [** If `PollingTransport.queryOperationStatus` succeeds with status==Assigned, `register` shall complete and pass the body of the response and the protocol-specific result to the `callback`. **]**
 
-**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_021: [** If `PollingTransport.queryOperationStatus` succeeds with status==Assigning, `register` shall emit an 'operationStatus' event and begin polling for operation status requests. **]**
+**SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_021: [** If `PollingTransport.queryOperationStatus` succeeds with status==Assigning, `register` shall begin polling for operation status requests. **]**
 
 **SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_029: [** If `PollingTransport.queryOperationStatus` succeeds with status==Failed, it shall fail with a `ProvisioningRegistrationFailedError` error **]**
 

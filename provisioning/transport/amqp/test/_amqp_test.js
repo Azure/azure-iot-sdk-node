@@ -14,6 +14,29 @@ var Amqp = require('../lib/amqp.js').Amqp;
 var Builder = require('buffer-builder');
 var rheaMessage = require('rhea').message;
 
+var retryAfterProperty = 'retry-after';
+var internalServerError = {
+  condition: 'amqp:internal-error',
+  info: {
+    'retry-after': '42'
+  }
+};
+
+var throttlingError = {
+  condition: 'com.microsoft:device-container-throttled',
+  info: {
+    'retry-after': '42'
+  }
+};
+
+var internalServerErrorNoRetryAfter = {
+  condition: 'amqp:internal-error'
+};
+
+var throttlingErrorNoRetryAfter = {
+  condition: 'com.microsoft:device-container-throttled'
+};
+
 var simpleBody = {registrationId: 'fakeRegistrationId'};
 var fakeEk = '__FAKE_KEY__';
 var fakeSrk = '__FAKE_STORAGE_KEY__';
@@ -68,7 +91,15 @@ describe('Amqp', function () {
             status: 'assigning'
           })
         };
-        fakeResponse.correlation_id = message.correlation_id;
+        if (fakeSenderLink.giveBadCorrelationId) {
+          fakeResponse.correlation_id = 'Will not match anything';
+        } else {
+          fakeResponse.correlation_id = message.correlation_id;
+        }
+        if (fakeSenderLink.insertARetryAfter) {
+          fakeResponse.application_properties = {};
+          fakeResponse.application_properties[retryAfterProperty] = '42';
+        }
       } else {
         fakeResponse = new AmqpMessage();
         fakeResponse.body = {
@@ -81,9 +112,7 @@ describe('Amqp', function () {
         fakeResponse.correlation_id = message.correlation_id;
       }
 
-      process.nextTick(() => {
-        fakeReceiverLink.emit ('message', fakeResponse);
-      });
+      fakeReceiverLink.emit ('message', fakeResponse);
       callback();
     });
 
@@ -261,6 +290,49 @@ describe('Amqp', function () {
         });
       });
 
+      [
+        internalServerError,
+        throttlingError
+      ].forEach(function(retryableError) {
+        /*Tests_SRS_NODE_PROVISIONING_AMQP_06_007: [If the `registrationRequest` send request is rejected with an `InternalError` or `ThrottlingError`, the result.status value will be set with `registering` and the callback will be invoked with *no* error object.] */
+        it ('registerRequest calls its callback with an NO error and status of \'registering\' if sending message rejected with ' + retryableError.condition, function (testCallback) {
+          fakeSenderLink.send = sinon.stub().callsArgWith(1, retryableError);
+
+          amqp.registrationRequest({ registrationId: 'fakeRegistrationId' }, function (err, result, response, pollingInterval) {
+            assert.isTrue(fakeSenderLink.send.calledOnce);
+            assert.isNotOk(err);
+            assert.equal(result.status, 'registering');
+            assert.isOk(pollingInterval);
+            testCallback();
+          });
+        });
+      });
+
+      [
+        internalServerError,
+        throttlingError,
+        internalServerErrorNoRetryAfter,
+        throttlingErrorNoRetryAfter
+      ].forEach(function(retryableError) {
+        let dpsProvidedInterval = 5;
+        let defaultPollingInterval  = 4000;
+        /*Tests_SRS_NODE_PROVISIONING_AMQP_06_009: [If the `registrationRequest` rejection error contains the info property`retry-after`, it will be interpreted as the number of seconds that should elapse before the next attempted operation.  Otherwise default.] */
+        it ('Retryable registerRequest polling interval ' + ((retryableError.info) ? ('given by the dps service.') : ('defaults when dps does not provide it.')) , function (testCallback) {
+          if (retryableError.info) {
+            retryableError.info[retryAfterProperty] = dpsProvidedInterval.toString();
+          }
+          fakeSenderLink.send = sinon.stub().callsArgWith(1, retryableError);
+          amqp.setTransportOptions({pollingInterval: defaultPollingInterval})
+          amqp.registrationRequest({ registrationId: 'fakeRegistrationId' }, function (err, result, response, pollingInterval) {
+            assert.isTrue(fakeSenderLink.send.calledOnce);
+            assert.isNotOk(err);
+            assert.equal(result.status, 'registering');
+            assert.equal(((retryableError.info) ? (dpsProvidedInterval * 1000) : (defaultPollingInterval)), pollingInterval);
+            testCallback();
+          });
+        });
+      });
+
       /*Tests_SRS_NODE_PROVISIONING_AMQP_16_011: [The `registrationRequest` method shall call its callback with an error if the transport fails to send the request message.]*/
       it ('calls its callback with an error if sending the message fails', function (testCallback) {
         fakeSenderLink.send = sinon.stub().callsArgWith(1, fakeError);
@@ -360,6 +432,49 @@ describe('Amqp', function () {
         });
       });
 
+      [
+        internalServerError,
+        throttlingError
+      ].forEach(function(retryableError) {
+        /*Tests_SRS_NODE_PROVISIONING_AMQP_06_006: [If the `queryOperationStatus` send request is rejected with an `InternalError` or `ThrottlingError`, the result.status value will be set with `assigning` and the callback will be invoked with *no* error object.] */
+        it ('queryOperationstatus calls its callback with an NO error and status of \'assigning\' if sending message rejected with ' + retryableError.condition, function (testCallback) {
+          fakeSenderLink.send = sinon.stub().callsArgWith(1, retryableError);
+
+          amqp.queryOperationStatus(fakeRequest, fakeOperationId,function (err, result, response, pollingInterval) {
+            assert.isTrue(fakeSenderLink.send.calledOnce);
+            assert.isNotOk(err);
+            assert.equal(result.status, 'assigning');
+            assert.isOk(pollingInterval);
+            testCallback();
+          });
+        });
+      });
+
+      [
+        internalServerError,
+        throttlingError,
+        internalServerErrorNoRetryAfter,
+        throttlingErrorNoRetryAfter
+      ].forEach(function(retryableError) {
+        let dpsProvidedInterval = 5;
+        let defaultPollingInterval  = 4000;
+        /*Tests_SRS_NODE_PROVISIONING_AMQP_06_008: [If the `queryOperationsStatus` rejection error contains the info property`retry-after`, it will be interpreted as the number of seconds that should elapse before the next attempted operation.  Otherwise default.] */
+        it ('Retryable queryOperationStatus polling interval ' + ((retryableError.info) ? ('given by the dps service.') : ('defaults when dps does not provide it.')) , function (testCallback) {
+          if (retryableError.info) {
+            retryableError.info[retryAfterProperty] = dpsProvidedInterval.toString();
+          }
+          fakeSenderLink.send = sinon.stub().callsArgWith(1, retryableError);
+          amqp.setTransportOptions({pollingInterval: defaultPollingInterval})
+          amqp.queryOperationStatus(fakeRequest, fakeOperationId, function (err, result, response, pollingInterval) {
+            assert.isTrue(fakeSenderLink.send.calledOnce);
+            assert.isNotOk(err);
+            assert.equal(result.status, 'assigning');
+            assert.equal(((retryableError.info) ? (dpsProvidedInterval * 1000) : (defaultPollingInterval)), pollingInterval);
+            testCallback();
+          });
+        });
+      });
+
       /*Tests_SRS_NODE_PROVISIONING_AMQP_16_021: [The `queryOperationStatus` method shall call its callback with an error if the transport fails to send the request message.]*/
       it ('calls its callback with an error if sending the message fails', function (testCallback) {
         fakeSenderLink.send = sinon.stub().callsArgWith(1, fakeError);
@@ -367,6 +482,47 @@ describe('Amqp', function () {
         amqp.queryOperationStatus(fakeRequest, fakeOperationId, function (err) {
           assert.isTrue(fakeSenderLink.send.calledOnce);
           assert.strictEqual(err, fakeError);
+          testCallback();
+        });
+      });
+    });
+
+    describe('general response handling', function() {
+      /*Tests_SRS_NODE_PROVISIONING_AMQP_16_007: [The `registrationRequest` method shall call its callback with a `RegistrationResult` object parsed from the body of the response message which `correlation_id` matches the `correlation_id` of the request message sent on the sender link.]*/
+      /*Tests_SRS_NODE_PROVISIONING_AMQP_06_010: [If the amqp response to a request contains the application property`retry-after`, it will be interpreted as the number of seconds that should elapse before the next attempted operation.  Otherwise default.] */
+      it ('registerRequest will return an \'assigning\' status', function (testCallback) {
+        amqp.setTransportOptions({pollingInterval: 4321});
+        amqp.registrationRequest(fakeRequest, function(err, result, response, pollingInterval) {
+          assert.isNotOk(err);
+          assert.strictEqual(result.status, 'assigning');
+          assert.strictEqual(pollingInterval, 4321);
+          testCallback();
+        });
+      });
+
+      /*Tests_SRS_NODE_PROVISIONING_AMQP_16_017: [The `queryOperationStatus` method shall call its callback with a `RegistrationResult` object parsed from the body of the response message which `correlation_id` matches the `correlation_id` of the request message sent on the sender link.]*/
+      it ('operationStatusRequest will return an \'assigned\' status', function (testCallback) {
+        amqp.queryOperationStatus(fakeRequest, fakeOperationId, function(err, result, response) {
+          assert.isNotOk(err);
+          assert.strictEqual(result.status, 'assigned');
+          testCallback();
+        });
+      });
+
+      it ('message with unrecognized correlation id will not be processed as a response.', function(testCallback) {
+        fakeSenderLink.giveBadCorrelationId = true;
+        var stubCallback = sinon.spy();
+        amqp.registrationRequest(fakeRequest, stubCallback);
+        assert(stubCallback.notCalled);
+        testCallback();
+      });
+
+      /*Tests_SRS_NODE_PROVISIONING_AMQP_06_010: [If the amqp response to a request contains the application property`retry-after`, it will be interpreted as the number of seconds that should elapse before the next attempted operation.  Otherwise default.] */
+      it ('registerRequest will use retry-after if supplied by the service', function (testCallback) {
+        amqp.setTransportOptions({pollingInterval: 4321});
+        fakeSenderLink.insertARetryAfter = true;
+        amqp.registrationRequest(fakeRequest, function(err, result, response, pollingInterval) {
+          assert.strictEqual(pollingInterval, 42000);
           testCallback();
         });
       });
@@ -471,7 +627,7 @@ describe('Amqp', function () {
           amqp.disconnect(function() {});
         });
 
-        /*Tests_SRS_NODE_PROVISIONING_AMQP_18_009: [ `disconnect` shall disonnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. ] */
+        /*Tests_SRS_NODE_PROVISIONING_AMQP_18_009: [ `disconnect` shall disconnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. ] */
         it ( 'disconnects and cancels ' + op.name + ' operation if called while connecting', function(testCallback) {
           fakeAmqpBase.attachSenderLink = sinon.stub();
 
@@ -527,7 +683,7 @@ describe('Amqp', function () {
         });
 
         /*Tests_SRS_NODE_PROVISIONING_AMQP_18_005: [ `cancel` shall disconnect the AMQP connection and cancel the operation that initiated a connection if called while the connection is in process. ] */
-        it ( 'disconnects and cancels ' + op.name + ' operation if called while ataching links', function(testCallback) {
+        it ( 'disconnects and cancels ' + op.name + ' operation if called while attaching links', function(testCallback) {
           fakeAmqpBase.attachSenderLink = sinon.stub();
 
           op.invoke(function (err) {
@@ -614,7 +770,7 @@ describe('Amqp', function () {
 
     describe('respondToAuthenticationChallenge', function() {
 
-      /*Tests_SRS_NODE_PROVISIONING_AMQP_18_017: [ `respondToAuthenticationChallenge` shall call `callback` with an `InvalidOperationError` if called before calling `getAthenticationChallenge`. ]*/
+      /*Tests_SRS_NODE_PROVISIONING_AMQP_18_017: [ `respondToAuthenticationChallenge` shall call `callback` with an `InvalidOperationError` if called before calling `getAuthenticationChallenge`. ]*/
       it ('fails if called too early', function(callback) {
         amqp.respondToAuthenticationChallenge(fakeRequest, fakeSasToken, function(err) {
           assert.instanceOf(err, errors.InvalidOperationError);
