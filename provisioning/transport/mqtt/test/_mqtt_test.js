@@ -6,6 +6,7 @@
 var EventEmitter = require('events').EventEmitter;
 var assert = require('chai').assert;
 var sinon = require('sinon');
+var uuid = require('uuid');
 var ProvisioningDeviceConstants = require('azure-iot-provisioning-device').ProvisioningDeviceConstants;
 var errors = require('azure-iot-common').errors;
 var Mqtt = require('../lib/mqtt').Mqtt;
@@ -64,6 +65,10 @@ describe('Mqtt', function () {
 
     fakeBase.emit('message', '$dps/registrations/res/' + status + '/?$rid=' + rid, JSON.stringify(fakeResponse));
   };
+
+  var extendedResponse = function(queryString) {
+    fakeBase.emit('message', '$dps/registrations/res/200/?' + queryString, JSON.stringify(fakeResponse));
+  }
 
   var twoCallsRequired = function(callback) {
     var count = 0;
@@ -248,6 +253,39 @@ describe('Mqtt', function () {
       respond(fakeBase.publish.firstCall);
       callback();
 
+    });
+
+    [
+      '$rid=123&retry-after=456&something=89',
+      'retry-after=456&$rid=123&something=89',
+      'retry-after=456&something=89&$rid=123'
+    ].forEach(function(theQueryString) {
+      it ('can parse topic with multiple query parameters', function(callback) {
+        var fakeUuids = [uuid.v4()];
+        var uuidStub = sinon.stub(uuid,'v4');
+        uuidStub.returns(fakeUuids[0]);
+
+        mqtt.queryOperationStatus(fakeRequest, fakeOperationId, function(err, result) {
+          uuid.v4.restore();
+          assert.oneOf(err, [null, undefined]);
+          assert.deepEqual(result, fakeResponse);
+          callback();
+        });
+        extendedResponse(theQueryString.replace('$rid=123', '$rid='+fakeUuids[0]));
+      });
+    });
+
+    [
+      '$rid=123', // Unknown request id. Previous test inserts a particular uuid into the transport
+      ''          // No request id at all
+    ].forEach(function(theQueryString) {
+      it ('Will not respond give topics that are unacceptable', function(callback) {
+        var stubCallback = sinon.spy();
+        mqtt.queryOperationStatus(fakeRequest, fakeOperationId, stubCallback);
+        extendedResponse(theQueryString);
+        assert(stubCallback.notCalled);
+        callback();
+      });
     });
 
     it ('returns a wrapped error', function(callback) {

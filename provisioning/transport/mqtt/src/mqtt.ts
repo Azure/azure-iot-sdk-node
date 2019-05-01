@@ -7,6 +7,7 @@ import { EventEmitter } from 'events';
 import * as uuid from 'uuid';
 import * as machina from 'machina';
 import * as dbg from 'debug';
+import * as queryString from 'querystring';
 const debug = dbg('azure-iot-provisioning-device-mqtt:Mqtt');
 
 import { MqttBase, MqttBaseTransportConfig } from 'azure-iot-mqtt-base';
@@ -52,11 +53,12 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
 
       /* Codes_SRS_NODE_PROVISIONING_MQTT_18_010: [ When waiting for responses, `registrationRequest` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>.] */
       /* Codes_SRS_NODE_PROVISIONING_MQTT_18_024: [ When waiting for responses, `queryOperationStatus` shall watch for messages with a topic named $dps/registrations/res/<status>/?$rid=<rid>.] */
-      let match = topic.match(/^\$dps\/registrations\/res\/(.*)\/\?\$rid=(.*)$/);
+      let match = topic.match(/^\$dps\/registrations\/res\/(.*)\/\?(.*)$/);
+      let queryParameters = queryString.parse(match[2]);
 
-      if (!!match && match.length === 3) {
+      if (!!match && match.length === 3 && queryParameters.$rid) {
         let status: number = Number(match[1]);
-        let rid: string = match[2];
+        let rid: string = queryParameters.$rid as string;
         if (this._operations[rid]) {
           let payloadJson: any = JSON.parse(payloadString);
           let handler = this._operations[rid];
@@ -72,7 +74,11 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
             /* Codes_SRS_NODE_PROVISIONING_MQTT_18_029: [ When `queryOperationStatus` receives an error from the service, it shall call `callback` passing in the error.] */
             handler(translateError('incoming message failure', status, payloadJson, { topic: topic, payload: payloadJson }));
           }
+        } else {
+          debug('received an unknown request id: ' + rid + ' topic: ' + topic);
         }
+      } else {
+        debug('received a topic string with improper content: ' + topic);
       }
     };
 
