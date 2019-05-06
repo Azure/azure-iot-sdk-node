@@ -1,10 +1,38 @@
-bar.txt			   foo.txt	       readme.md
-build			   lerna.json	       readme-modules.md
-CODE_OF_CONDUCT.md	   LICENSE	       scripts
-common			   longhaultests       security
-credscan_suppression.json  lts_branches.png    service
-device			   mocha-reports.json  thirdpartynotice.txt
-doc			   network_e2e	       ts-e2e
-e2etests		   package.json        tslint.json
-edge-e2e		   package-lock.json   vsts
-feature_matrix.md	   provisioning
+total 280
+drwxrwxr-x 18 bertk bertk  4096 May  6 14:05 .
+drwxrwxr-x 11 bertk bertk  4096 Apr 30 11:27 ..
+-rw-rw-r--  1 bertk bertk     0 May  6 14:16 bar.txt
+drwxrwxr-x  3 bertk bertk  4096 Feb  4 23:32 build
+-rw-rw-r--  1 bertk bertk   332 Feb  4 23:32 CODE_OF_CONDUCT.md
+drwxrwxr-x  4 bertk bertk  4096 Feb  4 23:32 common
+-rw-rw-r--  1 bertk bertk   787 Feb  4 23:32 credscan_suppression.json
+drwxrwxr-x  7 bertk bertk  4096 Feb  4 23:32 device
+drwxrwxr-x  2 bertk bertk  4096 Feb  4 23:32 doc
+drwxrwxr-x  3 bertk bertk  4096 May  6 12:51 e2etests
+drwxrwxr-x  3 bertk bertk  4096 Feb  4 23:32 edge-e2e
+-rw-rw-r--  1 bertk bertk 15969 Feb  4 23:32 feature_matrix.md
+-rw-rw-r--  1 bertk bertk     4 May  6 13:46 foo.txt
+drwxrwxr-x  8 bertk bertk  4096 May  6 14:05 .git
+-rw-rw-r--  1 bertk bertk   852 Feb  4 23:32 .gitattributes
+drwxrwxr-x  2 bertk bertk  4096 Feb  4 23:32 .github
+-rw-rw-r--  1 bertk bertk  3638 Apr 16 16:01 .gitignore
+-rw-rw-r--  1 bertk bertk    28 Feb  4 23:32 .jshintignore
+-rw-rw-r--  1 bertk bertk   370 Feb  4 23:32 .jshintrc
+-rw-rw-r--  1 bertk bertk   453 Apr 16 16:01 lerna.json
+-rw-rw-r--  1 bertk bertk  1159 Feb  4 23:32 LICENSE
+drwxrwxr-x  3 bertk bertk  4096 May  6 12:51 longhaultests
+-rw-rw-r--  1 bertk bertk 22466 Feb  4 23:32 lts_branches.png
+-rw-rw-r--  1 bertk bertk   169 Feb  4 23:32 mocha-reports.json
+drwxrwxr-x  3 bertk bertk  4096 Feb  4 23:32 network_e2e
+-rw-rw-r--  1 bertk bertk    95 May  6 12:51 package.json
+-rw-rw-r--  1 bertk bertk 97709 May  6 12:51 package-lock.json
+drwxrwxr-x  7 bertk bertk  4096 Feb  4 23:32 provisioning
+-rw-rw-r--  1 bertk bertk  9145 Feb  4 23:32 readme.md
+-rw-rw-r--  1 bertk bertk  2367 Apr 16 16:01 readme-modules.md
+drwxrwxr-x  3 bertk bertk  4096 Apr 16 13:12 scripts
+drwxrwxr-x  5 bertk bertk  4096 Feb  4 23:32 security
+drwxrwxr-x  6 bertk bertk  4096 May  6 12:51 service
+-rw-rw-r--  1 bertk bertk  6127 Feb  4 23:32 thirdpartynotice.txt
+drwxrwxr-x  3 bertk bertk  4096 May  6 12:51 ts-e2e
+-rw-rw-r--  1 bertk bertk  2196 May  6 12:51 tslint.json
+drwxrwxr-x  2 bertk bertk  4096 May  6 12:51 vsts
