@@ -1,7 +1,7 @@
 total 280
 drwxrwxr-x 18 bertk bertk  4096 May  6 14:05 .
 drwxrwxr-x 11 bertk bertk  4096 Apr 30 11:27 ..
--rw-rw-r--  1 bertk bertk     0 May  6 14:19 bar.txt
+-rw-rw-r--  1 bertk bertk     0 May  6 14:24 bar.txt
 drwxrwxr-x  3 bertk bertk  4096 Feb  4 23:32 build
 -rw-rw-r--  1 bertk bertk   332 Feb  4 23:32 CODE_OF_CONDUCT.md
 drwxrwxr-x  4 bertk bertk  4096 Feb  4 23:32 common
@@ -12,7 +12,7 @@ drwxrwxr-x  3 bertk bertk  4096 May  6 12:51 e2etests
 drwxrwxr-x  3 bertk bertk  4096 Feb  4 23:32 edge-e2e
 -rw-rw-r--  1 bertk bertk 15969 Feb  4 23:32 feature_matrix.md
 -rw-rw-r--  1 bertk bertk     4 May  6 13:46 foo.txt
-drwxrwxr-x  8 bertk bertk  4096 May  6 14:16 .git
+drwxrwxr-x  8 bertk bertk  4096 May  6 14:19 .git
 -rw-rw-r--  1 bertk bertk   852 Feb  4 23:32 .gitattributes
 drwxrwxr-x  2 bertk bertk  4096 Feb  4 23:32 .github
 -rw-rw-r--  1 bertk bertk  3638 Apr 16 16:01 .gitignore
