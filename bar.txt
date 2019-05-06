@@ -1,0 +1,10 @@
+bar.txt			   foo.txt	       readme.md
+build			   lerna.json	       readme-modules.md
+CODE_OF_CONDUCT.md	   LICENSE	       scripts
+common			   longhaultests       security
+credscan_suppression.json  lts_branches.png    service
+device			   mocha-reports.json  thirdpartynotice.txt
+doc			   network_e2e	       ts-e2e
+e2etests		   package.json        tslint.json
+edge-e2e		   package-lock.json   vsts
+feature_matrix.md	   provisioning
