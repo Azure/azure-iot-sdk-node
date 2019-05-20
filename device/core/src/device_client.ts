@@ -104,7 +104,7 @@ export class Client extends InternalClient {
   close(closeCallback?: Callback<results.Disconnected>): Promise<results.Disconnected> | void {
     return callbackToPromise((_callback) => {
       this._transport.removeListener('disconnect', this._deviceDisconnectHandler);
-      super.close(closeCallback);
+      super.close(_callback);
     }, closeCallback);
   }
 
