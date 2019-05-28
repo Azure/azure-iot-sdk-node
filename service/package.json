@@ -1,6 +1,6 @@
 {
   "name": "azure-iothub",
-  "version": "1.9.9",
+  "version": "2.0.0",
   "description": "Azure IoT SDK - IoT Hub",
   "author": "Microsoft Corporation",
   "license": "MIT",
@@ -9,8 +9,8 @@
   "dependencies": {
     "async": "^2.6.2",
     "azure-iot-amqp-base": "2.2.9",
-    "azure-iot-common": "1.9.9",
-    "azure-iot-http-base": "1.9.9",
+    "azure-iot-common": "2.0.0",
+    "azure-iot-http-base": "2.0.0",
     "debug": "^4.1.1",
     "lodash": "^4.17.11",
     "rhea": "^1.0.2",
