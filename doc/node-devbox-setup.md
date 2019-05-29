@@ -42,7 +42,7 @@ npm install -g lerna
 Once lerna is installed, you can set up your development environment by running the `bootstrap command` at the root of the repository: This will install all dependencies and link packages together.
 
 ```
-lerna bootstrap
+lerna bootstrap --hoist
 ```
 
 If you want to build/run the code, you'll need to compile the packages:
