@@ -234,7 +234,7 @@ describe('Registry', function () {
     });
   });
 
-  it.skip ('Can create an edge and device scope relationship', function (done){
+  it('Can create an edge and device scope relationship', function (done){
     var registry = Registry.fromConnectionString(hubConnectionString);
 
     var edgeDevice = {
