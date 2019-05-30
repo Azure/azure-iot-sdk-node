@@ -9,17 +9,22 @@ Instructions for using the npm packages can be found here:
 
 ## Prerequisites
 
-In order to work on the Azure IoT SDK for Node.js you must have Node.js installed. You can get Node.js from [here][node-download]. If you're running linux and want to install Node.js using a package manager, please refer to [these instructions][node-linux]. The Azure IoT SDK for Node.js supports Node.js version 6 and up. It may still work with older versions (Node 0.10, 0.12 and 4) but our dependencies are dropping support for those versions since they have been end-of-lifed, so we cannot guarantee full support for these anymore.
+- [**Node.js**][node-download]
 
-If you'd like to be able to switch from one Node.js version to another you can also use [Node Version Switcher][nvs].
+- [**OpenSSL**][openssl]
 
-In order to be able to create and test x509 certificates using our build scripts, you will also need to have [OpenSSL][openssl] installed.
+
+If you're running linux and want to install Node.js using a package manager, please refer to [these instructions][node-linux]. The Azure IoT SDK for Node.js supports Node.js version 6 and up. It may still work with older versions (Node 0.10, 0.12 and 4) but our dependencies are dropping support for those versions since they have been end-of-lifed, so we cannot guarantee full support for these anymore.
+
+The [Node Version Switcher][nvs] can be used if you would like to be able to switch from one Node.js version to another.
+
+In order to be able to create and test x509 certificates using our build scripts, you will also need to have OpenSSL installed.
 
 <a name="devenv"/>
 
 ## Setup your development environment
 
-The SDK is entirely open-source (as you probably figured out already if you're reading this on Github). Downloading the whole SDK source code is as simple as cloning the repository:
+The SDK is entirely open-source. Downloading the whole SDK source code is as simple as cloning the repository:
 
 ```
 $ git clone https://github.com/azure/azure-iot-sdk-node
@@ -33,13 +38,13 @@ npm install -g windows-build-tools
 
 This will probably take serveral minutes to run.
 
-The SDK ships in a few separate NPM packages that depend on each other. Once the repository has been cloned, some features span across multiple packages so in order to build and test these features, we need to "link" those package together in a single environment. We use the awesome [lerna.js](https://lernajs.io) to do that, so you have to install this first.  At a prompt with administrative privileges:
+The SDK ships in multiple NPM packages that depend on one another. We use [lerna.js](https://lernajs.io) to "link" those package together in a single environment. At a prompt with administrative privileges:
 
 ```
 npm install -g lerna
 ```
 
-Once lerna is installed, you can set up your development environment by running the `bootstrap command` at the root of the repository: This will install all dependencies and link packages together.
+Once lerna is installed, you can set up your development environment by running the `bootstrap command` at the root of the repository. This installs all dependencies and links packages together. We add the `--hoist` option to eliminate duplicate dependencies and reduce the time and space requirements of the cloned repository.
 
 ```
 lerna bootstrap --hoist
@@ -51,17 +56,19 @@ If you want to build/run the code, you'll need to compile the packages:
 lerna run build
 ```
 
-If you want to run the tests:
+If you want to run the tests, add the necessary environment variables (described below) then execute:
 
 ```
 lerna run ci
 ```
 
-and the end-to-end tests:
+Same with the end-to-end tests:
 
 ```
 lerna run e2e
 ```
+
+### Environment variables for testing
 
 Please note that running tests and end-to-end tests require having an Azure IoT hub and an Azure IoT Hub Provisioning service setup and the proper environment variables configured. Here is the list of all the environment variables as well as how we use them:
 
