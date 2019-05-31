@@ -72,20 +72,20 @@ lerna run e2e
 
 Please note that running tests and end-to-end tests require having an Azure IoT hub and an Azure IoT Hub Provisioning service setup and the proper environment variables configured. Here is the list of all the environment variables as well as how we use them:
 
-- **OPENSSL_CONF**: The SDK build script relies on OpenSSL to create certificates and keys so OpenSSL must be in the path and `OPENSSL_CONF` must be set to the path of your `openssl.cnf` configuration file
-- **IOTHUB_CONNECTION_STRING** must be set to a configuration string of your IoT Hub that has rights to create/delete devices and send messages to devices (typically, the one associated with the `iothubowner` policy or equivalent). Connection strings can be found in the settings section of the Azure portal.
-- **STORAGE_CONNECTION_STRING** must be set to an Azure Storage connection string if you want to test bulk import/export of device identities
-- **IOTHUB_CA_ROOT_CERT** must be set to the *base64-encoded content* of the certificate set a custom CA cert provisioned on IoT Hub.
-- **IOTHUB_CA_ROOT_CERT_KEY** must be set to the *base64-encoded content* of the key if the custom CA cert provisioned on IoT Hub.
-- **IOT_PROVISIONING_DEVICE_IDSCOPE** must be set to the idScope of your provisioning service.
-- **IOT_PROVISIONING_DEVICE_ENDPOINT** must be set to the public endpoint of your provisioning service or the global endpoint.
-- **IOT_PROVISIONING_SERVICE_CONNECTION_STRING** must be set to the connection string of your provisioning service.
-- **IOT_PROVISIONING_ROOT_CERT** must be set to the *base64-encoded content* of a root certificate used to test the group enrollments feature of the device provisioning service
-- **IOT_PROVISIONING_ROOT_CERT_KEY** must be set to the *base64-encoded content* of the key associated with the group enrollment root certificate.
-- **DPS_CONN_STRING_INVALID_CERT** must be set to a connection string for a DPS instance, such that DNS resolution for the server specified in the connection string will direct to a server which does **not** present a matching certificate during TLS connection establishment.
-- **DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT** must be set to a DPS global endpoint, such that DNS resolution for the server specified in the string will direct to a server which does **not** present a matching certificate during TLS connection establishment.
-- **IOTHUB_CONN_STRING_INVALID_CERT** must be set to a connection string for an IoT Hub instance, such that DNS resolution for the server specified in the connection string will direct to a server which does **not** present a matching certificate during TLS connection establishment.
-- **IOTHUB_DEVICE_CONN_STRING_INVALID_CERT** must be set to a connection string for an IoT Device, such that DNS resolution for the server specified in the connection string will direct to a server which does **not** present a matching certificate during TLS connection establishment.
+- **OPENSSL_CONF:** The SDK build script relies on OpenSSL to create certificates and keys so OpenSSL must be in the path and `OPENSSL_CONF` must be set to the path of your `openssl.cnf` configuration file.
+- **IOTHUB_CONNECTION_STRING:** must be set to a configuration string of your IoT Hub that has rights to create/delete devices and send messages to devices (typically, the one associated with the `iothubowner` policy or equivalent). Connection strings can be found in the settings section of the Azure portal.
+- **STORAGE_CONNECTION_STRING:** must be set to an Azure Storage connection string if you want to test bulk import/export of device identities.
+- **IOTHUB_CA_ROOT_CERT:** must be set to the *base64-encoded content* of the certificate set a custom CA cert provisioned on IoT Hub.
+- **IOTHUB_CA_ROOT_CERT_KEY:** must be set to the *base64-encoded content* of the key if the custom CA cert provisioned on IoT Hub.
+- **IOT_PROVISIONING_DEVICE_IDSCOPE:** must be set to the idScope of your provisioning service.
+- **IOT_PROVISIONING_DEVICE_ENDPOINT:** must be set to the public endpoint of your provisioning service or the global endpoint.
+- **IOT_PROVISIONING_SERVICE_CONNECTION_STRING:** must be set to the connection string of your provisioning service.
+- **IOT_PROVISIONING_ROOT_CERT:** must be set to the *base64-encoded content* of a root certificate used to test the group enrollments feature of the device provisioning service
+- **IOT_PROVISIONING_ROOT_CERT_KEY:** must be set to the *base64-encoded content* of the key associated with the group enrollment root certificate.
+- **DPS_CONN_STRING_INVALID_CERT:** must be set to a connection string for a DPS instance, such that DNS resolution for the server specified in the connection string will direct to a server which does **not** present a matching certificate during TLS connection establishment.
+- **DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT:** must be set to a DPS global endpoint, such that DNS resolution for the server specified in the string will direct to a server which does **not** present a matching certificate during TLS connection establishment.
+- **IOTHUB_CONN_STRING_INVALID_CERT:** must be set to a connection string for an IoT Hub instance, such that DNS resolution for the server specified in the connection string will direct to a server which does **not** present a matching certificate during TLS connection establishment.
+- **IOTHUB_DEVICE_CONN_STRING_INVALID_CERT:** must be set to a connection string for an IoT Device, such that DNS resolution for the server specified in the connection string will direct to a server which does **not** present a matching certificate during TLS connection establishment.
 
 
 ## Running the samples
