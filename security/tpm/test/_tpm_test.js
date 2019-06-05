@@ -12,29 +12,29 @@ var equals = require('array-equal');
 
 var fakeEkKey = {
   outPublic: {
-    asTpm2B: () => {return new Buffer('fakeEndorsement');}
+    asTpm2B: () => {return Buffer.from('fakeEndorsement');}
   }
 };
 var fakeCreatedEkKey = {
   outPublic: {
-    asTpm2B: () => {return new Buffer('fakeCreatedEndorsement');},
+    asTpm2B: () => {return Buffer.from('fakeCreatedEndorsement');},
   },
   handle: TpmSecurityClient._ekPersistentHandle
 };
 var fakeSrkKey = {
   outPublic: {
-    asTpm2B: () => {return new Buffer('fakeStorageRoot');}
+    asTpm2B: () => {return Buffer.from('fakeStorageRoot');}
   }
 };
 var fakeCreatedSrkKey = {
   outPublic: {
-    asTpm2B: () => {return new Buffer('fakeCreatedStorageRoot');},
+    asTpm2B: () => {return Buffer.from('fakeCreatedStorageRoot');},
   },
   handle: TpmSecurityClient._srkPersistentHandle
 };
 var fakeIdKey = {
   outPublic: {
-    asTpm2B: () => {return new Buffer('fakeIdentity');}
+    asTpm2B: () => {return Buffer.from('fakeIdentity');}
   },
   parameters: {scheme: {hashAlg: 5}}
 };
@@ -203,7 +203,7 @@ describe('tpm', function () {
         tpmProperty: []
       };
       var tpm = new tss.Tpm();
-      var dataToSign = new Buffer('ab');
+      var dataToSign = Buffer.from('ab');
       var connectStub = sinon.stub(tpm, 'connect');
       connectStub.callsArgWith(0);
       var client = new TpmSecurityClient(undefined, tpm);
@@ -227,7 +227,7 @@ describe('tpm', function () {
           }
         ]
       };
-      var dataToSign = new Buffer('a');
+      var dataToSign = Buffer.from('a');
       var hashForEndValue = crypto.createHash('sha256');
       hashForEndValue.update(dataToSign);
       var shaOfDataToSign = hashForEndValue.digest();
@@ -262,7 +262,7 @@ describe('tpm', function () {
           }
         ]
       };
-      var dataToSign = new Buffer('abc');
+      var dataToSign = Buffer.from('abc');
       var hashForEndValue = crypto.createHash('sha256');
       hashForEndValue.update(dataToSign);
       var shaOfDataToSign = hashForEndValue.digest();

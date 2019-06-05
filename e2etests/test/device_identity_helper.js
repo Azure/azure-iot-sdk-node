@@ -16,8 +16,8 @@ var Registry = require('azure-iothub').Registry;
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 var registry = Registry.fromConnectionString(hubConnectionString);
-var CARootCert = new Buffer(process.env.IOTHUB_CA_ROOT_CERT, 'base64').toString('ascii');
-var CARootCertKey = new Buffer(process.env.IOTHUB_CA_ROOT_CERT_KEY, 'base64').toString('ascii');
+var CARootCert = Buffer.from(process.env.IOTHUB_CA_ROOT_CERT, 'base64').toString('ascii');
+var CARootCertKey = Buffer.from(process.env.IOTHUB_CA_ROOT_CERT_KEY, 'base64').toString('ascii');
 
 var host = ConnectionString.parse(hubConnectionString).HostName;
 
@@ -116,7 +116,7 @@ function createCACertDevice(deviceId, done) {
 }
 
 function createKeyDevice(deviceId, done) {
-  var pkey = new Buffer(uuid.v4()).toString('base64');
+  var pkey = Buffer.from(uuid.v4()).toString('base64');
   setupDevice(
     {
       deviceId: deviceId,
@@ -125,7 +125,7 @@ function createKeyDevice(deviceId, done) {
         type: 'sas',
         symmetricKey: {
           primaryKey: pkey,
-          secondaryKey: new Buffer(uuid.v4()).toString('base64')
+          secondaryKey: Buffer.from(uuid.v4()).toString('base64')
         }
       }
     },
@@ -140,7 +140,7 @@ function createKeyDevice(deviceId, done) {
 }
 
 function createSASDevice(deviceId, done) {
-  var pkey = new Buffer(uuid.v4()).toString('base64');
+  var pkey = Buffer.from(uuid.v4()).toString('base64');
   setupDevice(
     {
       deviceId: deviceId,
@@ -149,7 +149,7 @@ function createSASDevice(deviceId, done) {
         type: 'sas',
         symmetricKey: {
           primaryKey: pkey,
-          secondaryKey: new Buffer(uuid.v4()).toString('base64')
+          secondaryKey: Buffer.from(uuid.v4()).toString('base64')
         }
       }
     },

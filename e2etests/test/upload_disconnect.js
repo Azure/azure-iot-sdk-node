@@ -35,7 +35,7 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
     before(function (beforeCallback) {
       testFilesConfig.forEach(function(fileConfig) {
-        var fileContent = new Buffer(fileConfig.fileSizeInKb * 1024);
+        var fileContent = Buffer.alloc(fileConfig.fileSizeInKb * 1024);
         fileContent.fill(uuid.v4());
         fs.writeFileSync(fileConfig.fileName, fileContent);
       });

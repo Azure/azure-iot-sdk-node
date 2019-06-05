@@ -57,7 +57,7 @@ describe('DeviceMethod', function() {
     });
 
     /*Tests_SRS_NODE_IOTHUB_DEVICE_METHOD_16_015: [The `DeviceMethod` constructor shall set the `DeviceMethod.params.payload` property value to the `params.payload` argument value or to the default (`null`) if the `payload` argument is `null` or `undefined`.]*/
-    [-1, 0, '', {}, { foo: 'bar' }, 'foo', new Buffer([0xDE, 0xAD, 0xBE, 0xEF])].forEach(function(goodPayload) {
+    [-1, 0, '', {}, { foo: 'bar' }, 'foo', Buffer.from([0xDE, 0xAD, 0xBE, 0xEF])].forEach(function(goodPayload) {
       it('sets the DeviceMethod.params.payload property to the params.payload argument value: \'' + goodPayload.toString() + '\'', function() {
         var method = new DeviceMethod({ methodName: 'foo', payload: goodPayload, responseTimeoutInSeconds: 42 }, {});
         assert.equal(method.params.payload, goodPayload);
@@ -229,7 +229,7 @@ describe('DeviceMethod', function() {
       }
       ```
       ]*/
-      [-1, 0, '', {}, { foo: 'bar' }, 'one line', new Buffer([0xDE, 0xAD, 0xBE, 0xEF])].forEach(function(goodPayload) {
+      [-1, 0, '', {}, { foo: 'bar' }, 'one line', Buffer.from([0xDE, 0xAD, 0xBE, 0xEF])].forEach(function(goodPayload) {
         it('builds a correct request when the payload is ' + goodPayload.toString(), function(testCallback) {
           var fakeMethodParams = {
             methodName: 'method',
@@ -257,7 +257,7 @@ describe('DeviceMethod', function() {
         });
       });
 
-      [-1, 0, '', {}, { foo: 'bar' }, 'one line', new Buffer([0xDE, 0xAD, 0xBE, 0xEF])].forEach(function(goodPayload) {
+      [-1, 0, '', {}, { foo: 'bar' }, 'one line', Buffer.from([0xDE, 0xAD, 0xBE, 0xEF])].forEach(function(goodPayload) {
         it('builds a correct request when the payload is ' + goodPayload.toString(), function(testCallback) {
           var fakeMethodParams = {
             methodName: 'method',

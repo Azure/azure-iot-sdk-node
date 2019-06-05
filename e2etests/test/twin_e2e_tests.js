@@ -57,7 +57,7 @@ delete nullMergeResult.tweedle;
     var registry = Registry.fromConnectionString(hubConnectionString);
 
     before(function (done) {
-      var pkey = new Buffer(uuid.v4()).toString('base64');
+      var pkey = Buffer.from(uuid.v4()).toString('base64');
       var deviceId = '0000e2etest-delete-me-twin-e2e-' + protocolCtor.name + '-'  + uuid.v4();
 
       deviceDescription = {
@@ -66,7 +66,7 @@ delete nullMergeResult.tweedle;
           authentication: {
           symmetricKey: {
             primaryKey: pkey,
-            secondaryKey: new Buffer(uuid.v4()).toString('base64')
+            secondaryKey: Buffer.from(uuid.v4()).toString('base64')
           }
         },
         connectionString: 'HostName=' + host + ';DeviceId=' + deviceId + ';SharedAccessKey=' + pkey

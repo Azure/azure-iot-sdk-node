@@ -349,7 +349,7 @@ export class AmqpTwinClient extends EventEmitter {
     //
     amqpMessage.correlation_id = correlationId;
     if (body) {
-      amqpMessage.body = rhea.message.data_section(new Buffer(body));
+      amqpMessage.body = rhea.message.data_section(Buffer.from(body));
     }
 
     this._pendingTwinRequests[correlationId] = callback;

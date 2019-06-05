@@ -315,7 +315,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
             if (request.payload) {
               requestBody.payload = request.payload;
             }
-            requestMessage.body = rheaMessage.data_section(new Buffer(JSON.stringify(requestBody)));
+            requestMessage.body = rheaMessage.data_section(Buffer.from(JSON.stringify(requestBody)));
             requestMessage.application_properties = {};
             requestMessage.application_properties[MessagePropertyNames.OperationType] = DeviceOperations.Register;
             requestMessage.application_properties[MessagePropertyNames.ForceRegistration] = !!request.forceRegistration;
