@@ -38,37 +38,4 @@ In most cases on Windows you will also need to define the OPENSSL_CONF environme
 ## Create local links between packages
 The purpose of this step is to create links between our packages in their respective `node_modules` folders instead of installing them from the npm global repository. Once this script is done, all package folders within the repository point to each other and you can start running the tests.
 
-This is done by running the following script from a command line prompt:
-```
-build\dev-setup.cmd
-```
-or on Mac/Linux:
-```
-build/dev-setup.sh
-```
-
-## Run all the tests
-Since the SDK is written using plain javascript there is no compile step, so running the build script from the command line is the easiest way to run the tests in the same way our gated build system would:
-```
-build\build.cmd --integration-tests --e2e-tests
-```
-or on Mac/Linux
-```
-build\build.sh --integration-tests --e2e-tests
-```
-
-The `--integration-tests` flag ensures all tests (including integration and end-to-end) are run. If you omit it, it will run only unit tests.
-
-This script will output the result of all the tests as they run. If a test fails it will show the error. the exit code of this script is `0` if all tests passed, `1` if one or more failed.
-
-## Tear down the environment
-If you want to remove the links created between the package folders, you can clean up your environment by running the teardown script:
-```
-build\dev-teardown.cmd
-```
-or on Mac/Linux
-```
-build/dev-teardown.sh
-```
-
 
