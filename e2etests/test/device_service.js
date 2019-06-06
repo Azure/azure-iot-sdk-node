@@ -195,7 +195,7 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
       var uuidData = uuid.v4();
       var sizeOfNonPayload = (2*uuidData.length) + 1;
       var bufferSize = maximumMessageSize - sizeOfNonPayload;
-      var buffer = Buffer.from(bufferSize);
+      var buffer = Buffer.alloc(bufferSize);
       var message = new Message(buffer);
       debug(' message max send: size of non playload ' + sizeOfNonPayload);
       debug(' message max send: buffersize ' + bufferSize);
