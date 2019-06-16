@@ -1,12 +1,18 @@
 const IoTHubTokenCredentials = require('azure-iot-digitaltwin-service').IoTHubTokenCredentials;
-const ModelRepoClient  = require('azure-iot-digitaltwin-model-repository').DigitalTwinRepositoryService;
+const ModelRepositoryClient  = require('azure-iot-digitaltwin-model-repository').DigitalTwinRepositoryService;
 
+// Simple example of how to:
+// - create a Model Repository Client the ModelRepositoryClient constructor
+// - get a model from the repository
 async function main() {
-  const creds = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
-  const repoClient = new ModelRepoClient(creds);
-  const modelId = 'urn:model:id';
+  // IoT Hub connection string has to be set to system environment variable IOTHUB_CONNECTION_STRING
+  const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
+  const repositoryClient = new ModelRepositoryClient(credentials);
 
-  const model = await repoClient.getModel(modelId);
+  const modelId = '<URN:MODEL_ID_GOES_HERE>';
+  const model = await repositoryClient.getModel(modelId);
+
+  // Print the model
   console.log(JSON.stringify(model, null, 2));
 }
 

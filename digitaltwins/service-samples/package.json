@@ -2,7 +2,7 @@
   "name": "azure-iot-digitaltwin-service-samples",
   "version": "1.0.0-preview.2",
   "description": "Samples for the azure-iot-digitaltwin-service client library",
-  "main": "get_interfaces.js",
+  "main": "get_digital_twin.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
