@@ -18,6 +18,7 @@ phases:
   - script: |
        npm install --global node-gyp
        npm install --global lerna
+       npm install --global autorest
        npm install
     displayName: 'Install Dependencies'
   - script: |
