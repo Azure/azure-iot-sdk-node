@@ -59,7 +59,7 @@ describe('DPS registration client', function() {
     describe('Over ' + DeviceTransport.name, function () {
       var X509Security = require('azure-iot-security-x509').X509Security;
       var ProvisioningDeviceClient = require('azure-iot-provisioning-device').ProvisioningDeviceClient;
-      it('Should fail to register a device', function(done) {
+      it.skip ('Should fail to register a device', function(done) {
         this.timeout(30000);
         var transport = new DeviceTransport();
         var securityClient = new X509Security('abcd', deviceCert);
