@@ -54,9 +54,7 @@ In the repository, you will find a set of simple samples that will help you get 
 
 ## Platforms compatibility
 
-The Azure IoT SDK for Node.js *should work* with versions of Node.js as old as v0.10.x. this being said, a lot of dependencies are slowly dropping support for these older versions and we really have no control over that.
-
-It is recommended to update to at least a [current or active version](https://nodejs.org/en/about/releases/) of Node.js. (v10.x.x. as of 15/05/2019)
+The Azure IoT SDK for [Node.js](https://nodejs.org/en/about/releases/) supports the LTS and Current versions of the Node.js runtime.
 
 ## Contribution, feedback and issues
 
