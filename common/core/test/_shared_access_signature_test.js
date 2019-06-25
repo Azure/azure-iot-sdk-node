@@ -9,7 +9,7 @@ var ArgumentError = require('../lib/errors.js').ArgumentError;
 var FormatError = require('../lib/errors.js').FormatError;
 var SharedAccessSignature = require('../lib/shared_access_signature.js').SharedAccessSignature;
 
-var key = new Buffer('password').toString('base64');
+var key = Buffer.from('password').toString('base64');
 
 describe('SharedAccessSignature', function () {
   describe('#create', function () {

@@ -38,8 +38,8 @@ var SymmetricKeyIndividualTransports = [ Http, Amqp, AmqpWs, Mqtt, MqttWs ];
 var SymmetricKeyGroupTransports = [ Http, Amqp, AmqpWs, Mqtt, MqttWs ];
 
 var rootCert = {
-  cert: new Buffer(process.env.IOT_PROVISIONING_ROOT_CERT,"base64").toString('ascii'),
-  key: new Buffer(process.env.IOT_PROVISIONING_ROOT_CERT_KEY,"base64").toString('ascii'),
+  cert: Buffer.from(process.env.IOT_PROVISIONING_ROOT_CERT,"base64").toString('ascii'),
+  key: Buffer.from(process.env.IOT_PROVISIONING_ROOT_CERT_KEY,"base64").toString('ascii'),
 };
 var selfSignedCert;
 var certWithoutChain;
@@ -213,7 +213,7 @@ var X509Group = function(certFactory) {
         x509: {
           signingCertificates: {
             primary: {
-              certificate: new Buffer(self._enrollmentCert.cert).toString('base64')
+              certificate: Buffer.from(self._enrollmentCert.cert).toString('base64')
             }
           }
         }
@@ -363,7 +363,7 @@ var SymmetricKeyIndividual = function() {
     var id = uuid.v4();
     self.deviceId = 'deleteMe_provisioning_node_e2e_' + id;
     self.registrationId = 'reg-' + id;
-    self.primaryKey = new Buffer(uuid.v4()).toString('base64');
+    self.primaryKey = Buffer.from(uuid.v4()).toString('base64');
     securityClient = new SymmetricKeySecurityClient(self.registrationId, self.primaryKey);
     callback();
   };
@@ -377,7 +377,7 @@ var SymmetricKeyIndividual = function() {
         type: 'symmetricKey',
         symmetricKey: {
           primaryKey: self.primaryKey,
-          secondaryKey: new Buffer(uuid.v4()).toString('base64')
+          secondaryKey: Buffer.from(uuid.v4()).toString('base64')
         }
       },
       provisioningStatus: "enabled",
@@ -443,7 +443,7 @@ var SymmetricKeyGroup = function() {
     self.groupId = 'deleteMe-node-' + id;
     self.registrationId = 'reg-' + id;
     self.deviceId = self.registrationId;
-    self.primaryKey = new Buffer(uuid.v4()).toString('base64');
+    self.primaryKey = Buffer.from(uuid.v4()).toString('base64');
     callback();
   };
 
@@ -455,7 +455,7 @@ var SymmetricKeyGroup = function() {
         type: 'symmetricKey',
         symmetricKey: {
           primaryKey: self.primaryKey,
-          secondaryKey: new Buffer(uuid.v4()).toString('base64')
+          secondaryKey: Buffer.from(uuid.v4()).toString('base64')
         }
       },
       provisioningStatus: "enabled",

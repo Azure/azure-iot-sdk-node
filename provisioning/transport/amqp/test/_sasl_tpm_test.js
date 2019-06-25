@@ -9,13 +9,13 @@ var Builder = require('buffer-builder');
 
 describe( 'SaslTpm', function () {
   this.timeout(100);
-  var fakeBuffer1 = new Buffer('__FAKE_BUFFER_NUMBER_1__');
-  var fakeBuffer2 = new Buffer('__FAKE_BUFFER_NUMBER_2_WITH_EXTRA_STUFF__');
-  var fakeBuffer3 = new Buffer('__FAKE_BUFFER_NUMBER_3_WITH_EVEN_MORE_EXTRA_STUFF__');
+  var fakeBuffer1 = Buffer.from('__FAKE_BUFFER_NUMBER_1__');
+  var fakeBuffer2 = Buffer.from('__FAKE_BUFFER_NUMBER_2_WITH_EXTRA_STUFF__');
+  var fakeBuffer3 = Buffer.from('__FAKE_BUFFER_NUMBER_3_WITH_EVEN_MORE_EXTRA_STUFF__');
   var fakeIdScope = '__IDSCOPE__';
   var fakeRegistrationId = '__REQUEST_ID__';
-  var fakeEndorsementKey = new Buffer('__FAKE_ENDORSEMENT_KEY__');
-  var fakeStorageRootKey = new Buffer('__FAKE_STORAGE_ROOT_KEY__');
+  var fakeEndorsementKey = Buffer.from('__FAKE_ENDORSEMENT_KEY__');
+  var fakeStorageRootKey = Buffer.from('__FAKE_STORAGE_ROOT_KEY__');
   var emptyChallengeResponse = Buffer.from([0]);
   var fakeError = new Error('__FAKE_ERROR_TEXT__');
   var fakeSasToken = '__FAKE_SAS_TOKEN__';
@@ -66,7 +66,7 @@ describe( 'SaslTpm', function () {
     /*Tests_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_003: [ If `step` is called with a 1 byte challenge, it shall resolve with the the initial response that was passed into the constructor. ] */
     it('calls its callback with the initial response on first call', function(callback) {
       var sasl = new SaslTpm(fakeIdScope, fakeRegistrationId, fakeEndorsementKey, fakeStorageRootKey, function() {});
-      sasl.step(challengeFromBuffer(1, new Buffer('')), function(err, response) {
+      sasl.step(challengeFromBuffer(1, Buffer.from('')), function(err, response) {
         assert.deepEqual(response, fakeFirstResponse);
         callback();
       });

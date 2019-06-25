@@ -103,7 +103,7 @@ export class Message {
       return this.data;
     } else {
       /*Codes_SRS_NODE_IOTHUB_MESSAGE_07_002: [If the data message is of any other type then the data will be converted to a Buffer object and returned.]*/
-      return new Buffer(this.data);
+      return Buffer.from(this.data);
     }
   }
 

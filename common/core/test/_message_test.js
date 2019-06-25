@@ -24,7 +24,7 @@ describe('message', function () {
 
     /*Tests_SRS_NODE_IOTHUB_MESSAGE_07_001: [If the data message that is store is of type Buffer then the data object will get returned unaltered.]*/
     it('returns a Buffer when the underlying data is a Buffer', function () {
-      var original = new Buffer(stringTestMsg);
+      var original = Buffer.from(stringTestMsg);
       var message = new Message(original);
       var buffer = message.getBytes();
       assert.instanceOf(buffer, Buffer);
@@ -45,7 +45,7 @@ describe('message', function () {
 
     /*Tests_SRS_NODE_IOTHUB_MESSAGE_18_001: [`isBufferConvertible` shall return `true` if `obj` is a `Buffer`, a `string`, an `Array`, or an `ArrayBuffer`.]*/
     [
-      { obj: new Buffer('foo'), name: 'Buffer' },
+      { obj: Buffer.from('foo'), name: 'Buffer' },
       { obj: 'foo', name: 'string' },
       { obj: [], name: 'Array' },
       { obj: new ArrayBuffer(), name: 'ArrayBuffer' }

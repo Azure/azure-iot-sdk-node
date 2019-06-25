@@ -23,8 +23,8 @@ var deviceIdWithKeys = {
   deviceId: uuid.v4(),
   authentication: {
     symmetricKey: {
-      primaryKey: new Buffer("1234567890qwerty").toString('base64'),
-      secondaryKey: new Buffer("ytrewq0987654321").toString('base64')
+      primaryKey: Buffer.from("1234567890qwerty").toString('base64'),
+      secondaryKey: Buffer.from("ytrewq0987654321").toString('base64')
     }
   },
   status: "disabled"
@@ -192,7 +192,7 @@ describe('Registry', function () {
 
   it('Updates the device and gets it', function (done) {
     var registry = Registry.fromConnectionString(hubConnectionString);
-    deviceIdWithKeys.authentication.symmetricKey.secondaryKey = new Buffer('qwertyuiopasdfghjkl').toString('base64');
+    deviceIdWithKeys.authentication.symmetricKey.secondaryKey = Buffer.from('qwertyuiopasdfghjkl').toString('base64');
     registry.update(deviceIdWithKeys, function (updateErr, updatedDevice) {
       if (updateErr) {
         done(updateErr);
@@ -241,8 +241,8 @@ describe('Registry', function () {
       deviceId: 'delete-me-' + uuid.v4(),
       authentication: {
         symmetricKey: {
-          primaryKey: new Buffer("1234567890qwerty").toString('base64'),
-          secondaryKey: new Buffer("ytrewq0987654321").toString('base64')
+          primaryKey: Buffer.from("1234567890qwerty").toString('base64'),
+          secondaryKey: Buffer.from("ytrewq0987654321").toString('base64')
         }
       },
       status: "enabled",
@@ -255,8 +255,8 @@ describe('Registry', function () {
       deviceId: 'delete-me-' + uuid.v4(),
       authentication: {
         symmetricKey: {
-          primaryKey: new Buffer("1234567890qwerty").toString('base64'),
-          secondaryKey: new Buffer("ytrewq0987654321").toString('base64')
+          primaryKey: Buffer.from("1234567890qwerty").toString('base64'),
+          secondaryKey: Buffer.from("ytrewq0987654321").toString('base64')
         }
       },
       status: "enabled"
@@ -314,8 +314,8 @@ describe('Registry', function () {
         id: deviceId,
         authentication: {
           symmetricKey: {
-            primaryKey: new Buffer(uuid.v4()).toString('base64'),
-            secondaryKey: new Buffer(uuid.v4()).toString('base64')
+            primaryKey: Buffer.from(uuid.v4()).toString('base64'),
+            secondaryKey: Buffer.from(uuid.v4()).toString('base64')
           }
         },
         status: 'enabled'
@@ -543,8 +543,8 @@ describe('Registry', function () {
         status: 'disabled',
         authentication: {
           symmetricKey: {
-            primaryKey: new Buffer(uuid.v4()).toString('base64'),
-            secondaryKey: new Buffer(uuid.v4()).toString('base64')
+            primaryKey: Buffer.from(uuid.v4()).toString('base64'),
+            secondaryKey: Buffer.from(uuid.v4()).toString('base64')
           }
         }
       },
@@ -553,8 +553,8 @@ describe('Registry', function () {
         status: 'disabled',
         authentication: {
           symmetricKey: {
-            primaryKey: new Buffer(uuid.v4()).toString('base64'),
-            secondaryKey: new Buffer(uuid.v4()).toString('base64')
+            primaryKey: Buffer.from(uuid.v4()).toString('base64'),
+            secondaryKey: Buffer.from(uuid.v4()).toString('base64')
           }
         }
       },
@@ -563,8 +563,8 @@ describe('Registry', function () {
         status: 'disabled',
         authentication: {
           symmetricKey: {
-            primaryKey: new Buffer(uuid.v4()).toString('base64'),
-            secondaryKey: new Buffer(uuid.v4()).toString('base64')
+            primaryKey: Buffer.from(uuid.v4()).toString('base64'),
+            secondaryKey: Buffer.from(uuid.v4()).toString('base64')
           }
         }
       }

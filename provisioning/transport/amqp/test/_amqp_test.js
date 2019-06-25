@@ -44,8 +44,8 @@ var payload = {a: '__DAta__'};
 var bodyWithTpm = {
   registrationId: 'fakeRegistrationId',
   tpm: {
-    endorsementKey: (new Buffer(fakeEk)).toString('base64'),
-    storageRootKey: (new Buffer(fakeSrk)).toString('base64')
+    endorsementKey: (Buffer.from(fakeEk)).toString('base64'),
+    storageRootKey: (Buffer.from(fakeSrk)).toString('base64')
   }
 };
 var bodyWithPayload = {
@@ -259,7 +259,7 @@ describe('Amqp', function () {
         amqp.registrationRequest({ registrationId: 'fakeRegistrationId' }, function () {
           assert.isTrue(fakeSenderLink.send.calledOnce);
           var sentMessage = fakeSenderLink.send.firstCall.args[0];
-          var encodedBody = rheaMessage.data_section(new Buffer(JSON.stringify(simpleBody)));
+          var encodedBody = rheaMessage.data_section(Buffer.from(JSON.stringify(simpleBody)));
           assert.deepEqual(sentMessage.body, encodedBody);
           testCallback();
         });
@@ -268,11 +268,11 @@ describe('Amqp', function () {
       /*Tests_SRS_NODE_PROVISIONING_AMQP_06_004: [The `registrationRequest` will, if utilizing TPM attestation, send a `tpm` property with the endorsement and storage key in the JSON body.] */
       it ('Sends a body with a tpm property', function (testCallback) {
 
-        amqp.setTpmInformation(new Buffer(fakeEk), new Buffer(fakeSrk));
+        amqp.setTpmInformation(Buffer.from(fakeEk), Buffer.from(fakeSrk));
         amqp.registrationRequest({ registrationId: 'fakeRegistrationId' }, function () {
           assert.isTrue(fakeSenderLink.send.calledOnce);
           var sentMessage = fakeSenderLink.send.firstCall.args[0];
-          var encodedBody = rheaMessage.data_section(new Buffer(JSON.stringify(bodyWithTpm)));
+          var encodedBody = rheaMessage.data_section(Buffer.from(JSON.stringify(bodyWithTpm)));
           assert.deepEqual(sentMessage.body, encodedBody);
           testCallback();
         });
@@ -284,7 +284,7 @@ describe('Amqp', function () {
         amqp.registrationRequest({ registrationId: 'fakeRegistrationId', payload: payload }, function () {
           assert.isTrue(fakeSenderLink.send.calledOnce);
           var sentMessage = fakeSenderLink.send.firstCall.args[0];
-          var encodedBody = rheaMessage.data_section(new Buffer(JSON.stringify(bodyWithPayload)));
+          var encodedBody = rheaMessage.data_section(Buffer.from(JSON.stringify(bodyWithPayload)));
           assert.deepEqual(sentMessage.body, encodedBody);
           testCallback();
         });
@@ -712,9 +712,9 @@ describe('Amqp', function () {
   });
 
   describe('TPM', function() {
-    var fakeEndorsementKey = new Buffer('__FAKE_EK__');
-    var fakeStorageRootKey = new Buffer('__FAKE_SRK__');
-    var fakeAuthenticationKey = new Buffer('__FAKE_AUTH_KEY__');
+    var fakeEndorsementKey = Buffer.from('__FAKE_EK__');
+    var fakeStorageRootKey = Buffer.from('__FAKE_SRK__');
+    var fakeAuthenticationKey = Buffer.from('__FAKE_AUTH_KEY__');
     var fakeSasToken = '__FAKE_SAS_TOKEN__';
     var SaslTpm;
 

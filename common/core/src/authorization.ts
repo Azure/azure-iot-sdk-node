@@ -34,7 +34,7 @@ export function stringToSign(resourceUri: string, expiry: string): string {
 /*Codes_SRS_NODE_COMMON_AUTHORIZATION_05_005: [<signature> shall be an HMAC-SHA256 hash of <stringToSign>, which is then base64-encoded.]*/
 /*Codes_SRS_NODE_COMMON_AUTHORIZATION_05_011: [The crypto algorithm should directly convert from base64 encoded password buffer to ensure JS compatibility]*/
 export function hmacHash(password: string, stringToSign: string): string {
-  let hmac = crypto.createHmac('sha256', new Buffer(password, 'base64'));
+  let hmac = crypto.createHmac('sha256', Buffer.from(password, 'base64'));
   hmac.update(stringToSign);
   return hmac.digest('base64');
 }

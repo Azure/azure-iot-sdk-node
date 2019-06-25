@@ -20,8 +20,8 @@ export function createTestDevice(): TestDevice {
     status: 'enabled',
     authentication: {
       symmetricKey: {
-        primaryKey: new Buffer(uuid.v4()).toString('base64'),
-        secondaryKey: new Buffer(uuid.v4()).toString('base64')
+        primaryKey: Buffer.from(uuid.v4()).toString('base64'),
+        secondaryKey: Buffer.from(uuid.v4()).toString('base64')
       }
     }
   };
