@@ -12,7 +12,7 @@ var RetryOperation = require('../lib/retry_operation.js').RetryOperation;
 describe('RetryOperation', function () {
   describe('retry', function () {
     it('uses the RetryPolicy passed to the constructor', function (testCallback) {
-      // This policy should be able to try twice (t = 0; t = 1).
+      // This policy should be able to try two or 3 times (initial, t = 0 (immediate); t = 1).
       var testPolicy = {
         nextRetryTimeout: sinon.stub().returns(1),
         shouldRetry: sinon.stub().returns(true)
@@ -24,9 +24,9 @@ describe('RetryOperation', function () {
       testOperation.retry(function (callback) {
         actualOperation(callback);
       }, function (finalErr) {
-        assert(actualOperation.calledTwice);
-        assert(testPolicy.nextRetryTimeout.calledTwice);
-        assert(testPolicy.shouldRetry.calledTwice);
+        assert.isBelow(actualOperation.callCount, 3);
+        assert.isBelow(testPolicy.nextRetryTimeout.callCount, 3);
+        assert.isBelow(testPolicy.shouldRetry.callCount, 3);
         assert.strictEqual(finalErr, testError);
         testCallback();
       });
@@ -52,7 +52,7 @@ describe('RetryOperation', function () {
     });
 
     it('does not retry past the maximum timeout', function (testCallback) {
-      // This policy should be able to try only 3 times (t = 0; t = 2; t = 4)
+      // This policy should be able to try only 3 or 4 times (initial, t = 0 (immediate retry); t = 2; t = 4) depending on execution speed. never 5.
       var testPolicy = {
         nextRetryTimeout: sinon.stub().returns(2),
         shouldRetry: sinon.stub().returns(true)
@@ -64,8 +64,8 @@ describe('RetryOperation', function () {
       testOperation.retry(function (callback) {
         actualOperation(callback);
       }, function (finalErr) {
-        assert(actualOperation.calledThrice);
-        assert(testPolicy.nextRetryTimeout.calledThrice);
+        assert.isBelow(actualOperation.callCount, 5);
+        assert.isBelow(testPolicy.nextRetryTimeout.callCount, 5);
         assert.strictEqual(finalErr, testError);
         testCallback();
       });
