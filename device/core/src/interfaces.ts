@@ -16,6 +16,10 @@ import { Agent } from 'https';
  * @see {DeviceClientOptions}
  */
 export interface AmqpTransportOptions {
+  /**
+   * Optional [Agent]{@link https://nodejs.org/api/https.html#https_class_https_agent} object to use with AMQP-WS connections
+   */
+  webSocketAgent?: Agent;
 }
 
 /**
@@ -124,7 +128,7 @@ export interface DeviceClientOptions extends X509 {
   http?: HttpTransportOptions;
 
   /**
-   * Optional object with options specific to the Mqtt transport
+   * Optional object with options specific to the Amqp transport
    */
   amqp?: AmqpTransportOptions;
 }
