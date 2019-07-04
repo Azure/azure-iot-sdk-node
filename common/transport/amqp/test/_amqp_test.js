@@ -163,6 +163,7 @@ describe('Amqp', function () {
       });
     });
 
+    /*Tests_SRS_NODE_COMMON_AMQP_99_043: [The `connect` method shall set the `config.sslOptions.agent` option based on the `amqp.webSocketAgent` object passed in the `options` structure via the `setOptions` function.]*/
     it('uses the agent passed into setOptions', function (testCallback) {
       var actualAgent;
       var fakeAgent = '__FAKE_AGENT__';

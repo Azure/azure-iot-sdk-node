@@ -63,6 +63,7 @@ A done callback.
 
 **SRS_NODE_COMMON_AMQP_16_003: [**If given as an argument, the connect method shall call the `done` callback with a standard `Error` object if the connection or link/listener establishment fails.**]**
 
+**SRS_NODE_COMMON_AMQP_99_043: [**The `connect` method shall set the `config.sslOptions.agent` option based on the `amqp.webSocketAgent` object passed in the `options` structure via the `setOptions` function.**]**
 
 ### disconnect(done)
 Disconnects the application or device from the IoT Hub instance.
