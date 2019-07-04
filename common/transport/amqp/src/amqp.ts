@@ -707,7 +707,8 @@ export class Amqp {
     connectionParameters.host = parsedUrl.hostname;
     connectionParameters.reconnect = false;
     if (parsedUrl.protocol === 'wss:') {
-      if (config.sslOptions && this._options && this._options.amqp && this._options.amqp.webSocketAgent) {
+      if (this._options && this._options.amqp && this._options.amqp.webSocketAgent) {
+        config.sslOptions = config.sslOptions || { };
         config.sslOptions.agent = this._options.amqp.webSocketAgent;
       }
       let webSocket = require('ws');
