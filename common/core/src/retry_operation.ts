@@ -5,6 +5,8 @@
 
 import * as errors from './errors';
 import { RetryPolicy } from './retry_policy';
+import * as dbg from 'debug';
+const debug = dbg('azure-iot-common:RetryOperation');
 
 /**
  * Implements the necessary logic to retry operations such as connecting, receiving C2D messages, sending telemetry, twin updates, etc.
@@ -12,8 +14,9 @@ import { RetryPolicy } from './retry_policy';
 export class RetryOperation {
   private _policy: RetryPolicy;
   private _retryCount: number = 0;
-  private _totalRetryTime: number = 0;
   private _maxTimeout: number;
+  private _operationStartTime: number;
+  private _operationExpiryTime: number;
 
   /**
    * Creates an instance of {@link azure-iot-common.RetryOperation.}
@@ -41,14 +44,16 @@ export class RetryOperation {
           if (this._policy.shouldRetry(err)) {
             /*Codes_SRS_NODE_COMMON_RETRY_OPERATION_16_005: [If the `operation` fails and should be retried, the time at which to try again the `operation` should be computed using the `nextRetryTimeout` method of the policy passed to the constructor. ]*/
             let nextRetryTimeout = this._policy.nextRetryTimeout(this._retryCount, (err instanceof errors.ThrottlingError));
-            this._totalRetryTime += nextRetryTimeout;
             /*Codes_SRS_NODE_COMMON_RETRY_OPERATION_16_006: [The `operation` should not be retried past the `maxTimeout` parameter passed to the constructor.]*/
-            if (this._totalRetryTime > this._maxTimeout || nextRetryTimeout < 0) {
+            if (Date.now() >= this._operationExpiryTime || nextRetryTimeout < 0) {
+              debug('Past the maximum timeout for the operation. failing with the latest error.');
               finalCallback(err);
             } else {
+              debug('Will retry after: ' + nextRetryTimeout + ' milliseconds');
               setTimeout(retryOperation, nextRetryTimeout);
             }
           } else {
+            debug('Error: ' + err.toString() + ' is not retriable');
             /*Codes_SRS_NODE_COMMON_RETRY_OPERATION_16_004: [If the `operation` fails and should not be retried, the `finalCallback` should be called with the last error as the only parameter. ]*/
             finalCallback(err);
           }
@@ -58,6 +63,10 @@ export class RetryOperation {
         }
       });
     };
+    this._operationStartTime = Date.now();
+    this._operationExpiryTime = this._operationStartTime + this._maxTimeout;
+    debug('Operation start time: ' + this._operationStartTime + ' - Will stop retrying after: ' + this._operationExpiryTime);
+
     retryOperation();
   }
 

@@ -120,6 +120,26 @@ describe('SenderLink', function() {
       });
     });
 
+    // Bugfix for https://github.com/Azure/azure-iot-sdk-node/issues/569
+    /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_027: [If the state machine is not in the attached state and the link is force-detached before successfully attaching , the send callback shall be called with the error passed to forceDetach]*/
+    it('does not throw if the link is forceDetached while auto-attaching and fails the send operation with the error provided by forceDetach', function (testCallback) {
+      var fakeError = new Error('fake');
+      var fakeRheaLink = new EventEmitter();
+      var fakeContext = {sender: fakeRheaLink};
+      fakeRheaLink.name = 'rheaSenderLink';
+      var fakeRheaSession = new EventEmitter();
+      fakeRheaSession.open_sender = sinon.stub().returns(fakeRheaLink);
+
+      var link = new SenderLink('link', {}, fakeRheaSession);
+      link.send(new AmqpMessage(''), function(err) {
+        assert(fakeRheaSession.open_sender.calledOnce);
+        assert.strictEqual(err, fakeError);
+        testCallback();
+      });
+
+      link.forceDetach(fakeError);
+    });
+
     /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_010: [The `send` method shall use the link created by the underlying `rhea` to send the specified `message` to the IoT hub.]*/
     /*Tests_SRS_NODE_AMQP_SENDER_LINK_16_013: [If the message is successfully sent, the `callback` shall be called with a first parameter (error) set to `null` and a second parameter of type `MessageEnqueued`.]*/
     it('sends the message passed as argument and calls the callback if successful', function(testCallback) {

@@ -100,7 +100,7 @@ describe('Client', function () {
   });
 
   var goodSendParameters = [
-    { obj: new Buffer('foo'), name: 'Buffer' },
+    { obj: Buffer.from('foo'), name: 'Buffer' },
     { obj: 'foo', name: 'string' },
     { obj: [], name: 'Array' },
     { obj: new ArrayBuffer(), name: 'ArrayBuffer' }

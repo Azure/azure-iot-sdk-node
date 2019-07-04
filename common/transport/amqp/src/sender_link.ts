@@ -194,7 +194,16 @@ export class SenderLink extends EventEmitter implements AmqpLink {
               //
               // We are depending on the attach path to process the send queue when it is done attaching.
               //
-              this._fsm.handle('attach');
+              this._fsm.handle('attach', (err) => {
+                /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_027: [If the state machine is not in the attached state and the link is force-detached before successfully attaching , the send callback shall be called with the error passed to forceDetach]*/
+                if (err) {
+                  debug('failed to auto-attach, likely because a forceDetach happened: ' + err.toString());
+                  // no need to handle transitions, failing to attach will automatically revert to detached and take care of unsent messages.
+                } else {
+                  debug('link was auto-attached.');
+                  // no need to handle transitions here either, a successful attach will already set us in the attached state and take care of unsent messages.
+                }
+              });
             }
           }
         },

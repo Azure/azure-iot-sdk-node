@@ -21,7 +21,7 @@ describe('File upload', () => {
   };
 
   before((beforeCallback) => {
-    let fileContent = new Buffer(fileConfig.fileSizeInKb * 1024);
+    let fileContent = Buffer.alloc(fileConfig.fileSizeInKb * 1024);
     fileContent.fill(uuid.v4());
     fs.writeFileSync(fileConfig.fileName, fileContent);
     testUtils.addTestDeviceToRegistry(testDevice, beforeCallback);

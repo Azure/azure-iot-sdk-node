@@ -219,7 +219,7 @@ describe('AmqpTwinClient', function () {
           status: 200
         },
         correlation_id: fakeSenderLink.send.firstCall.args[0].correlation_id,
-        body: rhea.message.data_section(new Buffer(JSON.stringify(fakeTwin)))
+        body: rhea.message.data_section(Buffer.from(JSON.stringify(fakeTwin)))
       });
     });
 

@@ -253,7 +253,7 @@ export class Http extends EventEmitter implements DeviceTransport {
             let body = '[';
 
             messages.forEach((message, index) => {
-              const buffMsg = new Buffer(<any>message.getData());
+              const buffMsg = Buffer.from(<any>message.getData());
 
               if (index > 0) body += ',';
 

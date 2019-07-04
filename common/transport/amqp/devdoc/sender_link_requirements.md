@@ -57,6 +57,8 @@ The `SenderLink` class implements a state machine that manages the underlying `r
 
 **SRS_NODE_AMQP_SENDER_LINK_16_011: [** If the state machine is not in the `attached` state, the `SenderLink` object shall attach the link first and then send the message. **]**
 
+**SRS_NODE_AMQP_SENDER_LINK_16_027: [** If the state machine is not in the attached state and the link is force-detached before successfully attaching , the send callback shall be called with the error passed to forceDetach **]**
+
 **SRS_NODE_AMQP_SENDER_LINK_16_012: [** If the message cannot be sent the `callback` shall be called with an `Error` object describing the AMQP error reported by the service. **]**
 
 **SRS_NODE_AMQP_SENDER_LINK_16_013: [** If the message is successfully sent, the `callback` shall be called with a first parameter (error) set to `null` and a second parameter of type `MessageEnqueued`. **]**

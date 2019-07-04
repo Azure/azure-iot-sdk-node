@@ -17,8 +17,8 @@ var payload = {a: '__DAta__'};
 var bodyWithTpm = {
   registrationId: 'fakeRegistrationId',
   tpm: {
-    endorsementKey: (new Buffer(fakeEk)).toString('base64'),
-    storageRootKey: (new Buffer(fakeSrk)).toString('base64')
+    endorsementKey: (Buffer.from(fakeEk)).toString('base64'),
+    storageRootKey: (Buffer.from(fakeSrk)).toString('base64')
   }
 };
 var bodyWithPayload = {
@@ -284,7 +284,7 @@ describe('Http', function() {
     /*Tests_SRS_NODE_PROVISIONING_HTTP_06_007: [The `registrationRequest` will, if utilizing TPM attestation, send a `tpm` property with the endorsement and storage key in the JSON body.] */
     it ('includes a tpm in the body if tpm info set.', function(callback) {
       http.setAuthentication(fakeX509);
-      http.setTpmInformation(new Buffer(fakeEk), new Buffer(fakeSrk));
+      http.setTpmInformation(Buffer.from(fakeEk), Buffer.from(fakeSrk));
       http.registrationRequest(fakeRequest, function(err) {
         assert.oneOf(err, [null, undefined]);
         var body = fakeHttpRequest.write.firstCall.args[0];

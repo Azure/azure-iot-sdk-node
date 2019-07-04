@@ -46,8 +46,8 @@ describe('Invalid Certificate Validation', function() {
 
 describe('DPS registration client', function() {
   var deviceCert = {
-    cert: new Buffer(process.env.IOTHUB_CA_ROOT_CERT, 'base64').toString('ascii'),
-    key: new Buffer(process.env.IOTHUB_CA_ROOT_CERT_KEY, 'base64').toString('ascii')
+    cert: Buffer.from(process.env.IOTHUB_CA_ROOT_CERT, 'base64').toString('ascii'),
+    key: Buffer.from(process.env.IOTHUB_CA_ROOT_CERT_KEY, 'base64').toString('ascii')
   };
   [
     httpModule.Http,
