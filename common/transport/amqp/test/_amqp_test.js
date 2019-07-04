@@ -163,6 +163,45 @@ describe('Amqp', function () {
       });
     });
 
+    it('uses the agent passed into setOptions', function (testCallback) {
+      var actualAgent;
+      var fakeAgent = '__FAKE_AGENT__';
+      var amqp = new Amqp();
+      sinon.stub(amqp._rheaContainer, 'websocket_connect').callsFake(() => {
+        return sinon.stub().callsFake((uri, protocols, options) => {
+          actualAgent = options.agent;
+        });
+      });
+      var fakeConnection = new EventEmitter();
+      fakeConnection.name = 'connection';
+      var fakeConnectionContext = {connection: fakeConnection};
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => {
+        process.nextTick(() => {
+          amqp._rheaConnection.emit('connection_open', fakeConnectionContext);
+        });
+        return fakeConnection;
+      });
+      var fakeSession = new EventEmitter();
+      var fakeSessionContext = {session: fakeSession};
+      fakeConnection.create_session = sinon.stub().returns(fakeSession);
+      fakeSession.open = () => {};
+      sinon.stub(fakeSession, 'open').callsFake(() => {
+        process.nextTick(() => {
+          fakeSession.emit('session_open', fakeSessionContext);
+        });
+      });
+      amqp.setOptions({amqp: { webSocketAgent: fakeAgent }});
+      amqp.connect({uri: 'wss://uri', sslOptions: { }}, function(err) {
+        if (err) {
+          testCallback(err);
+        }
+        else {
+          assert.strictEqual(actualAgent, fakeAgent);
+          testCallback();
+        }
+      });
+    });
+
     describe('#session begin', function() {
       it('invokes the connect callback with an error if the session begin fails', (testCallback) => {
         var amqp = new Amqp();
