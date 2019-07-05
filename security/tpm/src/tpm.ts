@@ -27,7 +27,7 @@ export class TpmSecurityClient  {
 
   private static readonly _ekTemplate: TPMT_PUBLIC = new TPMT_PUBLIC(TPM_ALG_ID.SHA256,
     TPMA_OBJECT.restricted | TPMA_OBJECT.decrypt | TPMA_OBJECT.fixedTPM | TPMA_OBJECT.fixedParent | TPMA_OBJECT.adminWithPolicy | TPMA_OBJECT.sensitiveDataOrigin,
-    new Buffer('837197674484b3f81a90cc8d46a5d724fd52d76e06520b64f2a1da1b331469aa', 'hex'),
+    Buffer.from('837197674484b3f81a90cc8d46a5d724fd52d76e06520b64f2a1da1b331469aa', 'hex'),
     new tss.TPMS_RSA_PARMS(TpmSecurityClient._aes128SymDef, new tss.TPMS_NULL_ASYM_SCHEME(), 2048, 0),
     new tss.TPM2B_PUBLIC_KEY_RSA());
 
@@ -395,7 +395,7 @@ export class TpmSecurityClient  {
               });
             }
           };
-          this._tpm.withSession(tss.NullPwSession).HMAC_Start(TpmSecurityClient._idKeyPersistentHandle, new Buffer(0), idKeyHashAlg, (err: tss.TpmError, hSeq: TPM_HANDLE) => {
+          this._tpm.withSession(tss.NullPwSession).HMAC_Start(TpmSecurityClient._idKeyPersistentHandle, Buffer.alloc(0), idKeyHashAlg, (err: tss.TpmError, hSeq: TPM_HANDLE) => {
             const rc = err ? err.responseCode : TPM_RC.SUCCESS;
             debug('HMAC_Start returned: ' + TPM_RC[rc]);
             if (err) {

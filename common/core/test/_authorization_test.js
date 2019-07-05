@@ -6,7 +6,7 @@
 var assert = require('chai').assert;
 var authorization = require('../lib/authorization.js');
 
-var key = new Buffer('password').toString('base64');
+var key = Buffer.from('password').toString('base64');
 
 describe('authorization', function () {
   describe('#stringToSign', function () {

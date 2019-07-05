@@ -117,7 +117,7 @@ transports.forEach(function (deviceTransport) {
       var afterSas = uuid.v4();
 
       function createBufferTestMessage(uuidData) {
-        var buffer = new Buffer(uuidData);
+        var buffer = Buffer.from(uuidData);
         return new Message(buffer);
       }
 

@@ -122,11 +122,15 @@ export class MqttBase extends EventEmitter {
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_033: [The `updateSharedAccessSignature` method shall disconnect and reconnect the mqtt client with the new `sharedAccessSignature`.]*/
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_035: [The `updateSharedAccessSignature` method shall call the `callback` argument with no parameters if the operation succeeds.]*/
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_036: [The `updateSharedAccessSignature` method shall call the `callback` argument with an `Error` if the operation fails.]*/
+            debug('disconnecting mqtt client');
             this._disconnectClient(false, () => {
+              debug('mqtt client disconnected - reconnecting');
               this._connectClient((err, connack) => {
                 if (err) {
+                  debug('failed to reconnect the client: ' + err.toString());
                   this._fsm.transition('disconnected', callback, err);
                 } else {
+                  debug('mqtt client reconnected successfully');
                   this._fsm.transition('connected', callback, connack);
                 }
               });

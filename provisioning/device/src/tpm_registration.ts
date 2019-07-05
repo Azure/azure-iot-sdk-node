@@ -277,7 +277,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
     ]*/
     const expiryTimeUtc = anHourFromNow();
     const audience = encodeURIComponent(registrationInfo.request.idScope + '/registrations/' + registrationInfo.request.registrationId);
-    const payload = new Buffer(audience + '\n' + expiryTimeUtc.toString());
+    const payload = Buffer.from(audience + '\n' + expiryTimeUtc.toString());
 
     this._securityClient.signWithIdentity(payload, (err, signedBytes) => {
       if (err) {

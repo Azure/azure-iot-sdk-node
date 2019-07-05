@@ -27,7 +27,7 @@ describe('File upload - HTTP transport', function () {
 
   before(function(beforeCallback) {
     testFilesConfig.forEach(function(fileConfig) {
-      var fileContent = new Buffer(fileConfig.fileSizeInKb * 1024);
+      var fileContent = Buffer.alloc(fileConfig.fileSizeInKb * 1024);
       fileContent.fill(uuid.v4());
       fs.writeFileSync(fileConfig.fileName, fileContent);
     });

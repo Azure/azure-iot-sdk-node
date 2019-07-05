@@ -51,7 +51,7 @@ describe('Authentication', function() {
     // running timer/resource left after these tests
     transports.forEach(function (Transport) {
       it('Gets an UnauthorizedError over ' + Transport.name + ' if the primary key is invalid', function(testCallback) {
-        var invalidPrimaryKey = new Buffer('invalidPrimaryKey').toString('base64');
+        var invalidPrimaryKey = Buffer.from('invalidPrimaryKey').toString('base64');
         var invalidConnectionString = DeviceConnectionString.createWithSharedAccessKey(hostName, testDeviceId, invalidPrimaryKey);
         var deviceClient = DeviceClient.fromConnectionString(invalidConnectionString, Transport);
         deviceClient.sendEvent(new Message('testMessage'), function(err) {

@@ -333,7 +333,7 @@ describe('Mqtt as MqttReceiver', function () {
           receiver.on('method_Reboot', callback);
 
           // test
-          payload = new Buffer('Here\'s some payload');
+          payload = Buffer.from('Here\'s some payload');
           fakeMqttBase.emit('message',
             '$iothub/methods/POST/Reboot?$rid=1&k1=v1&k2=v2&k3=v3',
             payload
