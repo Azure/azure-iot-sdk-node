@@ -23,7 +23,7 @@ var doConnectTest = function doConnectTest(doIt) {
   return doIt ? it : it.skip;
 };
 
-var numberOfD2CMessages = 5;
+var numberOfD2CMessages = 3;
 var sendMessageTimeout = null;
 
 var protocolAndTermination = [
@@ -331,7 +331,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
             if (allMessagesReceived()) {
               rdv.imDone('ehClient');
             } else {
-              sendMessageTimeout = setTimeout(sendNextMessage, 3000);
+              sendMessageTimeout = setTimeout(sendNextMessage, 6000);
             }
           } else {
             debug('eventhubs client: eventData doesn\'t match: ' + eventData.body.toString());
