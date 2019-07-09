@@ -304,7 +304,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
               debug('device client: fault injection succeeded for device: ' + deviceDescription.deviceId);
             }
           });
-          twinUpdateAfterFaultInjectionTimeout = setTimeout(setTwinPropsAfterFaultInjection, (testConfiguration.delayInSeconds + 5) * 1000);
+          twinUpdateAfterFaultInjectionTimeout = setTimeout(setTwinPropsAfterFaultInjection, (testConfiguration.delayInSeconds + 10) * 1000);
         } else if (deviceTwin.properties.desired.testProp === afterFaultInjectionTestPropertyValue) {
           debug('device client: received notification for desired property after fault injection.');
           rdv.imDone(deviceClientIdentifier);
