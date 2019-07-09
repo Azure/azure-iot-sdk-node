@@ -19,7 +19,7 @@ var DeviceIdentityHelper = require('./device_identity_helper.js');
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
-var numberOfC2DMessages = 5;
+var numberOfC2DMessages = 3;
 var sendMessageTimeout = null;
 
 var doConnectTest = function doConnectTest(doIt) {
@@ -260,16 +260,16 @@ protocolAndTermination.forEach( function (testConfiguration) {
       var sendMessage = function (messageId) {
         serviceClient.send(provisionedDevice.deviceId, originalMessages[messageId].message, function (sendErr) {
           if (sendErr) {
-            debug('failed to send message with id: ' + messageId + ': ' + sendErr.toString());
+            debug('service client: failed to send message with id: ' + messageId + ': ' + sendErr.toString());
             testCallback(sendErr);
           } else {
-            debug('message sent: ' + messageId);
+            debug('service client: message sent: ' + messageId);
             originalMessages[messageId].sent = true;
             if (allDone()) {
-              debug('all messages have been sent and received!');
+              debug('service client: all messages have been sent and received!');
               testCallback();
             } else {
-              debug('still not done!');
+              debug('service client: still not done!');
             }
           }
         });
@@ -302,7 +302,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
             //
             // It doesn't matter whether this was a message we want, complete it so that the message queue stays clean.
             //
-            debug('c2d message received with id: ' + receivedMessage.messageId);
+            debug('device client: c2d message received with id: ' + receivedMessage.messageId);
             deviceClient.complete(receivedMessage, function (err, result) {
               if (err) {
                 debug('error while settling (accept) the message: ' + err.toString());
@@ -321,34 +321,34 @@ protocolAndTermination.forEach( function (testConfiguration) {
                     terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
                     terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
                     terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
-                    debug('Injecting fault: ' + testConfiguration.operationType);
+                    debug('device client: Injecting fault: ' + testConfiguration.operationType);
                     faultInjected = true;
                     deviceClient.sendEvent(terminateMessage, function (sendErr) {
-                      debug('at the callback for the fault injection send, err is:' + sendErr);
+                      debug('device client: at the callback for the fault injection send, err is:' + sendErr);
                     });
                   }
 
                   if (allDone()) {
-                    debug('all messages have been received. test successful');
+                    debug('device client: all messages have been received. test successful');
                     testCallback();
                   } else {
-                    debug('scheduling next message in 3 seconds');
-                    sendMessageTimeout = setTimeout(sendNextMessage, 3000);
+                    debug('device client: scheduling next message in 6 seconds');
+                    sendMessageTimeout = setTimeout(sendNextMessage, 6000);
                   }
                 } else {
-                  debug('received an unanticipated message, id: ' + receivedMessage.messageId + ' data: ' + receivedMessage.data.toString());
+                  debug('device client: received an unanticipated message, id: ' + receivedMessage.messageId + ' data: ' + receivedMessage.data.toString());
                 }
               }
             });
           });
-          debug('connecting service client...');
+          debug('service client: connecting...');
           serviceClient.open(function (serviceErr) {
             if (serviceErr) {
-              debug('Failed to connect servic client:' + serviceErr.toString());
+              debug('service client: Failed to connect:' + serviceErr.toString());
               testCallback(serviceErr);
             } else {
-              debug('service client connected');
-              debug('sending first message');
+              debug('service client: connected');
+              debug('service client: sending first message');
               sendNextMessage();
             }
           });
