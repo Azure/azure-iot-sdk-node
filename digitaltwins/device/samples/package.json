@@ -1,0 +1,24 @@
+{
+  "name": "azure-iot-digitaltwin-device-samples",
+  "version": "1.0.0-preview",
+  "description": "Samples for the azure-iot-digitaltwin-device client library",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/azure/azure-iot-sdk-node-digitaltwins.git"
+  },
+  "author": "Microsoft Corp.",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/azure/azure-iot-sdk-node-digitaltwins/issues"
+  },
+  "homepage": "https://github.com/azure/azure-iot-sdk-node-digitaltwins#readme",
+  "dependencies": {
+    "azure-iot-device": "1.9.9",
+    "azure-iot-common": "1.9.9",
+    "azure-iot-device-mqtt": "1.9.9",
+    "azure-iot-digitaltwin-device": "1.0.0-preview"
+  }
+}

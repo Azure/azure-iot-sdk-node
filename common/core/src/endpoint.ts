@@ -4,7 +4,7 @@
 
 'use strict';
 
-export const apiVersion = '2019-03-30';
+export const apiVersion = '2019-07-01-preview';
 
 export function devicePath(deviceId: string): string {
   return '/devices/' + deviceId;

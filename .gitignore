@@ -232,6 +232,9 @@ security/symmetric/lib
 
 service/lib
 
+digitaltwins/device/dist
+digitaltwins/device/ts-samples/dist
+
 ts-e2e/lib
 
 longhaultests/lib
