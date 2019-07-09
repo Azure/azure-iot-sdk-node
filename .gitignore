@@ -236,6 +236,9 @@ ts-e2e/lib
 
 longhaultests/lib
 
+digitaltwins/service/dist
+digitaltwins/model_repository/dist
+
 # Build artifacts
 build/build_parallel/temp
 

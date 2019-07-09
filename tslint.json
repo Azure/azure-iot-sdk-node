@@ -57,5 +57,11 @@
         "semicolon": [true, "always"],
         "variable-name": [true, "check-format", "allow-leading-underscore", "ban-keywords"],
         "whitespace": [true, "check-branch", "check-decl", "check-operator", "check-module", "check-seperator", "check-type"]
+    },
+    "linterOptions": {
+        "exclude": [
+            "digitaltwins/service/src/pl/**/*.ts",
+            "digitaltwins/model_repository/src/pl/**/*.ts"
+        ]
     }
 }

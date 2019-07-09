@@ -16,7 +16,10 @@
     "longhaultests",
     "e2etests",
     "edge-e2e/wrapper/nodejs-server-server",
-    "ts-e2e"
+    "ts-e2e",
+    "digitaltwins/service",
+    "digitaltwins/model_repository",
+    "digitaltwins/service-samples"
   ],
   "version": "0.0.0",
   "maxBuffer": 1048576
