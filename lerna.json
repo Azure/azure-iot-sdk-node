@@ -17,6 +17,9 @@
     "e2etests",
     "edge-e2e/wrapper/nodejs-server-server",
     "ts-e2e",
+    "digitaltwins/device",
+    "digitaltwins/device/samples",
+    "digitaltwins/device/ts-samples",
     "digitaltwins/service",
     "digitaltwins/model_repository",
     "digitaltwins/service-samples"

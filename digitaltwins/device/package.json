@@ -1,0 +1,51 @@
+{
+  "name": "azure-iot-digitaltwin-device",
+  "version": "1.0.0-preview",
+  "description": "Azure IoT Digital Twin Device Client",
+  "author": "Microsoft Corporation",
+  "license": "MIT",
+  "main": "index.js",
+  "typings": "index.d.ts",
+  "dependencies": {
+    "azure-iot-device": "1.9.9",
+    "azure-iot-common": "1.9.9",
+    "azure-iot-mqtt-base": "1.9.9",
+    "debug": "^4.1.1",
+    "lodash": "^4.17.11",
+    "traverse": "^0.6.6"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.1",
+    "@types/node": "^9.3.0",
+    "@types/traverse": "^0.6.29",
+    "chai": "^4.2.0",
+    "es5-shim": "^4.5.12",
+    "sinon": "^7.2.7",
+    "istanbul": "^0.4.5",
+    "mocha": "^5.2.0",
+    "tslint": "^5.9.1",
+    "typescript": "2.9.2"
+  },
+  "scripts": {
+    "lint": "tslint --project . -c ../../tslint.json",
+    "build": "tsc",
+    "unittest-min": "istanbul cover --report none ../../node_modules/mocha/bin/_mocha -- --reporter dot \"test/**/_*_test.js\"",
+    "alltest-min": "istanbul cover --report none ../../node_modules/mocha/bin/_mocha -- --reporter dot \"test/**/_*_test*.js\"",
+    "unittest": "istanbul cover ../../node_modules/mocha/bin/_mocha -- --reporter spec \"test/**/_*_test.js\"",
+    "alltest": "istanbul cover ../../node_modules/mocha/bin/_mocha -- --reporter spec \"test/**/_*_test*.js\"",
+    "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
+    "test": "npm -s run lint && npm -s run build && npm -s run unittest",
+    "check-cover": "istanbul check-coverage --statements 1 --branches 1 --lines 1 --functions 1"
+  },
+  "engines": {
+    "node": ">= 0.10"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Azure/azure-iot-sdk-node.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Azure/azure-iot-sdk-node/issues"
+  },
+  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme"
+}
