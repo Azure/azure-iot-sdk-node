@@ -212,45 +212,45 @@ protocolAndTermination.forEach( function (testConfiguration) {
 
       debug('attaching disconnect event handler');
       deviceClient.on('disconnect', function () {
-        debug('We did get a disconnect event');
+        debug('device client: disconnect event');
         if (deviceTwin.properties.desired.testProp === faultInjectionTestPropertyValue) {
           rdv.imDone(deviceClientIdentifier);
         } else {
-          testCallback(new Error('unexpected disconnect for device: ' + deviceDescription.deviceId));
+          testCallback(new Error('device client: unexpected disconnect for device: ' + deviceDescription.deviceId));
         }
       });
-      debug('attaching desired properties change handler');
-      debug('will trigger fault injection when test property value is: ' + faultInjectionTestPropertyValue);
+      debug('device client: attaching desired properties change handler');
+      debug('device client: will trigger fault injection when test property value is: ' + faultInjectionTestPropertyValue);
       deviceTwin.on('properties.desired', function() {
         if (deviceTwin.properties.desired.testProp === faultInjectionTestPropertyValue) {
           var terminateMessage = new Message(' ');
           terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
           terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
           terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
-          debug('sending fault injection message');
+          debug('device client: sending fault injection message');
           deviceClient.sendEvent(terminateMessage, function (sendErr) {
             if (sendErr) {
-              debug('fault injection error: ' + sendErr.toString());
+              debug('device client: fault injection error: ' + sendErr.toString());
             } else {
-              debug('fault injection successful');
+              debug('device client: fault injection successful');
             }
           });
         } else {
-          debug('received notification for desired property change. testProperty: ' + deviceTwin.properties.desired.testProp);
+          debug('device client: received notification for desired property change. testProperty: ' + deviceTwin.properties.desired.testProp);
         }
       });
 
       // giving a few seconds for the twin subscription to happen before we send the update.
-      debug('waiting 3 seconds before triggering a twin update from the service API');
+      debug('service client: waiting 3 seconds before triggering a twin update from the service API');
       faultInjectionTimeout = setTimeout(function () {
-        debug('Updating twin properties');
+        debug('service client: Updating twin properties');
         serviceTwin.update( { properties : { desired : { testProp: faultInjectionTestPropertyValue } } }, function(err) {
           if (err) {
-            debug('Twin update failed for device: ' + deviceDescription.deviceId + '. Error updating twin for fault injection: ' + err.toString());
+            debug('service client: Twin update failed for device: ' + deviceDescription.deviceId + '. Error updating twin for fault injection: ' + err.toString());
             err.message += '; test device: ' + deviceDescription.deviceId;
             testCallback(err);
           } else {
-            debug('twin properties updated to trigger fault injection with value: ' + faultInjectionTestPropertyValue);
+            debug('service client: twin properties updated to trigger fault injection with value: ' + faultInjectionTestPropertyValue);
             rdv.imDone(serviceTwinUpdateIdentifier);
           }
         });
@@ -276,52 +276,54 @@ protocolAndTermination.forEach( function (testConfiguration) {
       });
 
       var setTwinPropsAfterFaultInjection = function() {
+        debug('service client: updating twin after fault injection');
         serviceTwin.update( { properties : { desired : { testProp: afterFaultInjectionTestPropertyValue } } }, function(err) {
           if (err) {
+            debug('service client: error updating property after fault injection: ' + err.toString());
             err.message += '; test device: ' + deviceDescription.deviceId;
             testCallback(err);
           } else {
-            debug('sent new property update after fault injection');
+            debug('service client: sent new property update after fault injection');
             rdv.imDone(serviceTwinUpdateIdentifier);
           }
         });
       };
 
-      debug('attaching desired properties update handler');
+      debug('device client: attaching desired properties update handler');
       deviceTwin.on('properties.desired', function() {
         if (deviceTwin.properties.desired.testProp === faultInjectionTestPropertyValue) {
           var terminateMessage = new Message(' ');
           terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
           terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
           terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
-          debug('sending fault injection message');
+          debug('device client: sending fault injection message');
           deviceClient.sendEvent(terminateMessage, function (sendErr) {
             if (sendErr) {
-              debug('error at fault injection for device: ' + deviceDescription.deviceId + ' : ' + sendErr.toString());
+              debug('device client: error at fault injection for device: ' + deviceDescription.deviceId + ' : ' + sendErr.toString());
             } else {
-              debug('fault injection succeeded for device: ' + deviceDescription.deviceId);
+              debug('device client: fault injection succeeded for device: ' + deviceDescription.deviceId);
             }
           });
-          twinUpdateAfterFaultInjectionTimeout = setTimeout(setTwinPropsAfterFaultInjection, (testConfiguration.delayInSeconds + 5) * 1000);
+          twinUpdateAfterFaultInjectionTimeout = setTimeout(setTwinPropsAfterFaultInjection, (testConfiguration.delayInSeconds + 10) * 1000);
         } else if (deviceTwin.properties.desired.testProp === afterFaultInjectionTestPropertyValue) {
-          debug('received notification for desired property after fault injection.');
+          debug('device client: received notification for desired property after fault injection.');
           rdv.imDone(deviceClientIdentifier);
         } else {
-          debug('ignoring test property value: ' + deviceTwin.properties.desired.testProp);
+          debug('device client: ignoring test property value: ' + deviceTwin.properties.desired.testProp);
         }
       });
 
       // giving a few seconds for the twin subscription to happen before we send the update.
-      debug('waiting 3 seconds before twin update that will trigger the fault injection.');
+      debug('service client: waiting 3 seconds before twin update that will trigger the fault injection.');
       faultInjectionTimeout = setTimeout(function () {
-        debug('updating twin property for fault injection');
+        debug('service client: updating twin property for fault injection');
         serviceTwin.update( { properties : { desired : { testProp: faultInjectionTestPropertyValue } } }, function(err) {
           if (err) {
-            debug('failed to update twin for fault injection for device: ' + deviceDescription.deviceId + ' : ' + err.toString());
+            debug('service client: failed to update twin for fault injection for device: ' + deviceDescription.deviceId + ' : ' + err.toString());
             err.message += '; deviceId: ' + deviceDescription.deviceId;
             testCallback(err);
           } else {
-            debug('successfully sent twin update that will trigger fault injection');
+            debug('service client: successfully sent twin update that will trigger fault injection');
           }
         });
       }, 3000);

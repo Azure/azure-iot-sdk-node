@@ -1,0 +1,53 @@
+{
+  "name": "azure-iot-digitaltwin-model-repository",
+  "version": "1.0.0-preview.0",
+  "description": "Azure IoT Digital Twins Model Repository Preview",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "generate-pl": "autorest --force --typescript --add-credentials --model-enum-as-union --license-header=MICROSOFT_MIT_NO_VERSION --source-code-folder-path='' --output-folder=src/pl --input-file=src/service.json",
+    "compile": "tsc",
+    "lint": "tslint --project . -c ../../tslint.json",
+    "build": "npm -s run lint && npm -s run compile",
+    "test-min": "echo \"no test\"",
+    "test": "echo \"no test\"",
+    "check-cover": "istanbul check-coverage --statements 1 --branches 1  --lines 1 --functions 1",
+    "ci": "npm -s run build && npm -s run test-min"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/azure/azure-iot-sdk-node-digitaltwins.git"
+  },
+  "keywords": [
+    "Azure",
+    "IoT",
+    "Digital",
+    "Twins"
+  ],
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "src/**/*.ts",
+    "tsconfig.json"
+  ],
+  "author": "Microsoft Corp.",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/azure/azure-iot-sdk-node-digitaltwins/issues"
+  },
+  "homepage": "https://github.com/azure/azure-iot-sdk-node-digitaltwins#readme",
+  "devDependencies": {
+    "autorest": "^2.0.4283",
+    "istanbul": "^0.4.5",
+    "mocha": "^6.1.4",
+    "tslint": "^5.16.0",
+    "typescript": "^3.4.5"
+  },
+  "dependencies": {
+    "@azure/ms-rest-js": "^1.8.13",
+    "azure-iot-common": "^1.9.9",
+    "tslib": "^1.9.3"
+  }
+}
