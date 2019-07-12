@@ -128,7 +128,7 @@ export interface DeviceClientOptions extends X509 {
   http?: HttpTransportOptions;
 
   /**
-   * Optional object with options specific to the Mqtt transport
+   * Optional object with options specific to the Amqp transport
    */
   amqp?: AmqpTransportOptions;
 }

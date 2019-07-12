@@ -400,6 +400,17 @@ describe('Amqp', function () {
         });
       });
 
+      /*Tests_SRS_NODE_DEVICE_AMQP_99_084: [ The connect method shall set the HTTPS agent on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
+      it('sets HTTPS agent if provided', function (testCallback) {
+        transport.setOptions({ amqp: { webSocketAgent: 'https agent' } });
+        transport.connect(function (err) {
+          assert.isNotOk(err);
+          assert(fakeBaseClient.connect.called);
+          assert.strictEqual(fakeBaseClient.connect.firstCall.args[0].sslOptions.agent, 'https agent');
+          testCallback();
+        });
+      });
+
       it('sets gateway host name if provided', function (testCallback) {
         fakeTokenAuthenticationProvider.getDeviceCredentials = sinon.stub().callsArgWith(0, null, configWithGatewayHostName);
         transport.connect(function (err) {
