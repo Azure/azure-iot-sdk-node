@@ -23,7 +23,7 @@ var doConnectTest = function doConnectTest(doIt) {
   return doIt ? it : it.skip;
 };
 
-var numberOfD2CMessages = 5;
+var numberOfD2CMessages = 3;
 var sendMessageTimeout = null;
 
 var protocolAndTermination = [
@@ -146,38 +146,39 @@ protocolAndTermination.forEach( function (testConfiguration) {
       originalMessage.messageId = uuidData;
 
       var disconnectHandler = function () {
-        debug('Device client disconnected');
+        debug('device client: disconnected');
         deviceClient.removeListener('disconnect', disconnectHandler);
         if (messageReceived) {
           rdv.imDone('deviceClient');
         } else {
-          testCallback(new Error('device client disconnected but the original message was not received.'));
+          testCallback(new Error('device client: disconnected but the original message was not received.'));
         }
       };
       var onEventHubError = function(err) {
-        debug('Event Hubs client error: ' + err.toString());
+        debug('eventhubs client: error: ' + err.toString());
         testCallback(err);
       };
       var onEventHubMessage = function (eventData) {
         if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
-          debug('received a message from the test device');
+          debug('eventhubs client: received a message from the test device: ' + provisionedDevice.deviceId);
           var received_message_uuid = eventData.properties && eventData.properties.message_id && uuidBuffer.toString(eventData.properties.message_id);
           if (received_message_uuid && received_message_uuid === originalMessage.messageId) {
             rdv.imDone('ehClient');
-            debug('received the sent message - send the fault packet');
+            debug('eventhubs client: received the sent message');
+            debug('device client: send the fault packet');
             messageReceived = true;
             var terminateMessage = new Message('');
             terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
             terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
             terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
             deviceClient.sendEvent(terminateMessage, function (sendErr) {
-              debug('at the callback for the fault injection send, err is:' + sendErr);
+              debug('device client: at the callback for the fault injection send, err is:' + sendErr);
             });
           } else {
-            debug('eventData doesn\'t match: ' + originalMessage.messageId);
+            debug('eventhubs client: eventData doesn\'t match: ' + originalMessage.messageId);
           }
         } else {
-          debug('Incoming device id is: ' + eventData.annotations['iothub-connection-device-id']);
+          debug('eventhubs client: ignoring message from: ' + eventData.annotations['iothub-connection-device-id']);
         }
       };
 
@@ -188,29 +189,36 @@ protocolAndTermination.forEach( function (testConfiguration) {
         deviceClient = createDeviceClient(testConfiguration.transport, provisionedDevice);
         deviceClient.setRetryPolicy(new NoRetry());
       }).then(function () {
+        debug('eventhubs client: connected. getting partition ids');
         return ehClient.getPartitionIds();
       }).then(function (partitionIds) {
+        debug('eventhubs client: got partition ids. setting up receivers');
         partitionIds.forEach(function (partitionId) {
           ehClient.receive(partitionId, onEventHubMessage, onEventHubError, { eventPosition: EventPosition.fromEnqueuedTime(testStart) });
         });
+        debug('eventhubs client: receivers started: waiting 3 seconds before starting device client');
         return new Promise(function (resolve) {
           setTimeout(function () {
             resolve();
           }, 3000);
         });
       }).then(function () {
+        debug('device client: connecting...');
         deviceClient.open(function (openErr) {
           if (openErr) {
+            debug('device client: error connecting: ' + openErr.toString());
             testCallback(openErr);
           } else {
             rdv.imIn('deviceClient');
+            debug('device client: connected');
             deviceClient.on('disconnect', disconnectHandler);
+            debug('device client: sending: ' + originalMessage.messageId);
             deviceClient.sendEvent(originalMessage, function (sendErr) {
               if (sendErr) {
-                debug('error sending the initial message: ' + sendErr.toString());
+                debug('device client: error sending the initial message: ' + sendErr.toString());
                 testCallback(sendErr);
               } else {
-                debug('initial message sent');
+                debug('device client: initial message sent');
               }
             });
           }
@@ -259,18 +267,19 @@ protocolAndTermination.forEach( function (testConfiguration) {
       };
 
       var sendMessage = function (messageId) {
+        debug('device client: sending ' + messageId);
         deviceClient.sendEvent(originalMessages[messageId].message, function (sendErr) {
           if (sendErr) {
-            debug('failed to send message with id: ' + messageId + ': ' + sendErr.toString());
+            debug('device client: failed to send message with id: ' + messageId + ': ' + sendErr.toString());
             testCallback(sendErr);
           } else {
-            debug('message sent: ' + messageId);
+            debug('device client: message sent: ' + messageId);
             originalMessages[messageId].sent = true;
             if (allMessagesSent()) {
-              debug('all messages have been sent!');
+              debug('device client: all messages have been sent!');
               rdv.imDone('deviceClient');
             } else {
-              debug('device client still has messages to send!');
+              debug('device client: still has messages to send!');
             }
           }
         });
@@ -281,39 +290,40 @@ protocolAndTermination.forEach( function (testConfiguration) {
           if (originalMessages[messageId].sent) {
             continue;
           } else {
-            debug('Sending message with id: ' + messageId);
+            debug('device client: found an unsent message: ' + messageId);
             return sendMessage(messageId);
           }
         }
-        debug('all messages have been sent.');
+        debug('device client: all messages seem to have been sent');
       };
 
       var startAfterTime = Date.now() - 5000;
       debug('starting to listen to messages received since: ' + new Date(startAfterTime).toISOString());
 
       var onEventHubError = function(err) {
-        debug('EventHubClient error: ' + err.toString());
+        debug('eventhubs client: error: ' + err.toString());
         testCallback(err);
       };
 
       var onEventHubMessage = function (eventData) {
         if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
-          debug('did get a message for this device.');
+          debug('eventhubs client: received a message from the test device: ' + provisionedDevice.deviceId);
           var receivedMessageId = eventData.body.toString();
           if (originalMessages[receivedMessageId]) {
-            debug('It was one of the messages we sent: ' + receivedMessageId);
+            debug('eventhubs client: It was one of the messages we sent: ' + receivedMessageId);
             originalMessages[receivedMessageId].received = true;
             if (!faultInjected) {
-              debug('Fault has not been injected yet. Failing now...');
+              debug('eventhubs client: Fault has not been injected yet.');
+              debug('device client: injecting fault now...');
               var terminateMessage = new Message('');
               terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
               terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
               terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
               faultInjected = true;
               deviceClient.sendEvent(terminateMessage, function (sendErr) {
-                debug('fault injection message sent');
+                debug('device client: fault injection message sent');
                 if (sendErr) {
-                  debug('error at fault injection:' + sendErr);
+                  debug('device client: error at fault injection:' + sendErr);
                 }
               });
             }
@@ -321,13 +331,13 @@ protocolAndTermination.forEach( function (testConfiguration) {
             if (allMessagesReceived()) {
               rdv.imDone('ehClient');
             } else {
-              sendMessageTimeout = setTimeout(sendNextMessage, 3000);
+              sendMessageTimeout = setTimeout(sendNextMessage, 6000);
             }
           } else {
-            debug('eventData message id doesn\'t match any stored message id');
+            debug('eventhubs client: eventData doesn\'t match: ' + eventData.body.toString());
           }
         } else {
-          debug('Incoming device id is: ' + eventData.annotations['iothub-connection-device-id']);
+          debug('eventhubs client: ignoring message from: ' + eventData.annotations['iothub-connection-device-id']);
         }
       };
 
@@ -337,25 +347,29 @@ protocolAndTermination.forEach( function (testConfiguration) {
         rdv.imIn('ehClient');
         deviceClient = createDeviceClient(testConfiguration.transport, provisionedDevice);
       }).then(function () {
+        debug('eventhubs client: connected. getting partition ids');
         return ehClient.getPartitionIds();
       }).then(function (partitionIds) {
+        debug('eventhubs client: got partition ids. setting up receivers');
         partitionIds.forEach(function (partitionId) {
           ehClient.receive(partitionId, onEventHubMessage, onEventHubError, { eventPosition: EventPosition.fromEnqueuedTime(startAfterTime) });
         });
+        debug('eventhubs client: receivers started: waiting 3 seconds before starting device client');
         return new Promise(function (resolve) {
           setTimeout(function () {
             resolve();
           }, 3000);
         });
       }).then(function () {
+        debug('device client: connecting...');
         deviceClient.open(function (openErr) {
           if (openErr) {
-            debug('error connecting the device client');
+            debug('device client: error: ' + openErr.toString());
             testCallback(openErr);
           } else {
             rdv.imIn('deviceClient');
             deviceClient.on('disconnect', function () {
-              debug('Device client disconnect event should not fire during this test');
+              debug('device client: disconnect event fired. that\'s a test failure.');
               testCallback(new Error('unexpected disconnect'));
             });
             sendNextMessage();
@@ -363,7 +377,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
         });
       })
       .catch(function (err) {
-        debug('caught event hub error: ' + err.toString());
+        debug('eventhubs client: error: ' + err.toString());
         testCallback(err);
       });
     });
