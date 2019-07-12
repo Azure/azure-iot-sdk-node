@@ -116,7 +116,6 @@ export class Amqp {
   // Structure containing the connection information needed such as uri, ssl (cert) etc.
   //
   private _config: AmqpBaseTransportConfig;
-  private _options: any;
 
   /*Codes_SRS_NODE_COMMON_AMQP_16_001: [The Amqp constructor shall accept two parameters:
     A Boolean indicating whether the client should automatically settle messages:
@@ -707,11 +706,6 @@ export class Amqp {
     connectionParameters.host = parsedUrl.hostname;
     connectionParameters.reconnect = false;
     if (parsedUrl.protocol === 'wss:') {
-      /*Codes_SRS_NODE_COMMON_AMQP_99_043: [The `connect` method shall set the `config.sslOptions.agent` option based on the `amqp.webSocketAgent` object passed in the `options` structure via the `setOptions` function.]*/
-      if (this._options && this._options.amqp && this._options.amqp.webSocketAgent) {
-        config.sslOptions = config.sslOptions || { };
-        config.sslOptions.agent = this._options.amqp.webSocketAgent;
-      }
       let webSocket = require('ws');
       let ws = this._rheaContainer.websocket_connect(webSocket);
       connectionParameters.connection_details = ws(config.uri, 'AMQPWSB10', config.sslOptions );
@@ -837,10 +831,6 @@ export class Amqp {
 
   putToken(audience: string, token: string, callback: (err?: Error) => void): void {
     this._fsm.handle('putToken', audience, token, callback);
-  }
-
-  setOptions(options: any): void {
-    this._options = options;
   }
 
   private _detachLink(link: AmqpLink, detachCallback: GenericAmqpBaseCallback<any>): void {
