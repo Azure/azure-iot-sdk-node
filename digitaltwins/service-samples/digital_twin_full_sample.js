@@ -74,7 +74,7 @@ async function main() {
         properties: {
           [propertyName]: {
             desired: {
-              value: [propertyValue]
+              value: propertyValue
             }
           }
         }

@@ -27,7 +27,7 @@ async function main() {
   const propertyName = '<PROPERTY_NAME_GOES_HERE>';
   const propertyValue = 42;
   try {
-    const updatedDigitalTwin = await digitalTwinServiceClient.updateDigitalTwinProperty(deviceDescription.deviceId, componentName, propertyName, propertyValue);
+    const updatedDigitalTwin = await digitalTwinServiceClient.updateDigitalTwinProperty(deviceId, componentName, propertyName, propertyValue);
 
     // Print updated Twin
     console.log(JSON.stringify(updatedDigitalTwin.interfaces, null, 2));

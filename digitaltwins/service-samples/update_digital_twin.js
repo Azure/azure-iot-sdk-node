@@ -28,12 +28,12 @@ async function main() {
   const propertyName = '<PROPERTY_NAME_GOES_HERE>';
   const propertyValue = 42;
   const patch = {
-    interfaces: {
+    components: {
       [componentName]: {
         properties: {
           [propertyName]: {
             desired: {
-              value: [propertyValue]
+              value: propertyValue
             }
           }
         }
@@ -43,7 +43,7 @@ async function main() {
 
   // Update digital twin and verify the update
   try {
-    const updatedDigitalTwin = await digitalTwinServiceClient.updateDigitalTwin(deviceDescription.deviceId, patch);
+    const updatedDigitalTwin = await digitalTwinServiceClient.updateDigitalTwin(deviceId, patch);
 
     // Print updated Twin
     console.log(JSON.stringify(updatedDigitalTwin.interfaces, null, 2));
