@@ -1,5 +1,5 @@
 const IoTHubTokenCredentials = require('azure-iot-digitaltwin-service').IoTHubTokenCredentials;
-const ModelRepositoryClient  = require('azure-iot-digitaltwin-model-repository').DigitalTwinRepositoryService;
+const ModelRepositoryClient = require('azure-iot-digitaltwin-model-repository').DigitalTwinRepositoryService;
 
 // Simple example of how to:
 // - create a Model Repository Client the ModelRepositoryClient constructor

@@ -241,6 +241,7 @@ longhaultests/lib
 
 digitaltwins/service/dist
 digitaltwins/model_repository/dist
+digitaltwins/model_repository_provisioning/dist
 
 # Build artifacts
 build/build_parallel/temp

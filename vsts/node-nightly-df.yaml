@@ -15,17 +15,15 @@ phases:
     displayName: 'Use Node 10.15.x'
     inputs:
       versionSpec: '10.15.x'
-
   - script: |
-       npm install --global node-gyp
-       npm install --global lerna
-       npm install --global autorest
-       npm install
+      npm install --global node-gyp
+      npm install --global lerna
+      npm install
     displayName: 'Install Dependencies'
 
   - script: |
-        lerna bootstrap --hoist
-        lerna run build
+      lerna bootstrap --hoist
+      lerna run build
     displayName: 'Bootstrap & Build'
 
   - script: 'lerna run ci'
@@ -34,22 +32,29 @@ phases:
       IOTHUB_CONNECTION_STRING: $(LINUX-IOTHUB-CONNECTION-STRING)
 
   - script: 'lerna run e2e'
+  - script: |
+      cd digitaltwins/service
+      npm -s run ci
+    displayName: 'Unit Tests: Service'
+  - script: |
+      cd digitaltwins/model_repository
+      npm -s run ci
+    displayName: 'Unit Tests: Model Repository'
+  - script: |
+      cd digitaltwins/device
+      npm -s run ci
+    displayName: 'Unit Tests: Device'
+  - script: |
+      cd digitaltwins/service-samples
+      npm -s run lint
+    displayName: 'Linter: Samples'
+  - script: |
+      cd digitaltwins/e2e
+      npm -s run e2e
     displayName: 'E2E Tests'
     env:
-      IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
-      IOTHUB_CA_ROOT_CERT_KEY: $(IOTHUB-CA-ROOT-CERT-KEY)
-      IOT_PROVISIONING_DEVICE_ENDPOINT: $(IOT-PROVISIONING-DEVICE-ENDPOINT)
-      IOTHUB_CONNECTION_STRING: $(LINUX-IOTHUB-CONNECTION-STRING)
-      STORAGE_CONNECTION_STRING: $(LINUX-STORAGE-CONNECTION-STRING)
-      IOT_PROVISIONING_DEVICE_IDSCOPE: $(LINUX-IOT-PROVISIONING-DEVICE-IDSCOPE)
-      IOT_PROVISIONING_ROOT_CERT: $(LINUX-IOT-PROVISIONING-ROOT-CERT)
-      IOT_PROVISIONING_ROOT_CERT_KEY: $(LINUX-IOT-PROVISIONING-ROOT-CERT-KEY)
-      IOT_PROVISIONING_SERVICE_CONNECTION_STRING: $(LINUX-IOT-PROVISIONING-SERVICE-CONNECTION-STRING)
-      DPS_CONN_STRING_INVALID_CERT: $(DPS-CONN-STRING-INVALID-CERT)
-      DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT: $(DPS-GLOBAL-DEVICE-ENDPOINT-INVALID-CERT)
-      IOTHUB_CONN_STRING_INVALID_CERT: $(IOTHUB-CONN-STRING-INVALID-CERT)
-      IOTHUB_DEVICE_CONN_STRING_INVALID_CERT: $(IOTHUB-DEVICE-CONN-STRING-INVALID-CERT)
-
+      IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)
+      AZURE_IOT_PRIVATE_MODEL_REPOSITORY_CONNECTION_STRING: $(AZURE-IOT-PRIVATE-MODEL-REPOSITORY-CONNECTION-STRING)
   - task: PublishTestResults@2
     displayName: 'Publish Test Results | Mocha'
     inputs:
@@ -87,22 +92,33 @@ phases:
       IOTHUB_CONNECTION_STRING: $(WINDOWS-IOTHUB-CONNECTION-STRING)
 
   - script: 'lerna run e2e'
+  - powershell: |
+       lerna bootstrap --hoist
+       lerna run build
+    displayName: 'Bootstrap & Build'
+  - script: |
+        cd digitaltwins/service
+        call npm -s run ci
+    displayName: 'Unit Tests: Service'
+  - script: |
+      cd digitaltwins/model_repository
+      call npm -s run ci
+    displayName: 'Unit Tests: Model Repository'
+  - script: |
+      cd digitaltwins/device
+      call npm -s run ci
+    displayName: 'Unit Tests: Device'
+  - script: |
+      cd digitaltwins/service-samples
+      call npm -s run lint
+    displayName: 'Linter: Samples'
+  - script: |
+      cd digitaltwins/e2e
+      call npm -s run e2e
     displayName: 'E2E Tests'
     env:
-      IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
-      IOTHUB_CA_ROOT_CERT_KEY: $(IOTHUB-CA-ROOT-CERT-KEY)
-      IOT_PROVISIONING_DEVICE_ENDPOINT: $(IOT-PROVISIONING-DEVICE-ENDPOINT)
-      IOTHUB_CONNECTION_STRING: $(WINDOWS-IOTHUB-CONNECTION-STRING)
-      STORAGE_CONNECTION_STRING: $(WINDOWS-STORAGE-CONNECTION-STRING)
-      IOT_PROVISIONING_DEVICE_IDSCOPE: $(WINDOWS-IOT-PROVISIONING-DEVICE-IDSCOPE)
-      IOT_PROVISIONING_ROOT_CERT: $(WINDOWS-IOT-PROVISIONING-ROOT-CERT)
-      IOT_PROVISIONING_ROOT_CERT_KEY: $(WINDOWS-IOT-PROVISIONING-ROOT-CERT-KEY)
-      IOT_PROVISIONING_SERVICE_CONNECTION_STRING: $(WINDOWS-IOT-PROVISIONING-SERVICE-CONNECTION-STRING)
-      DPS_CONN_STRING_INVALID_CERT: $(DPS-CONN-STRING-INVALID-CERT)
-      DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT: $(DPS-GLOBAL-DEVICE-ENDPOINT-INVALID-CERT)
-      IOTHUB_CONN_STRING_INVALID_CERT: $(IOTHUB-CONN-STRING-INVALID-CERT)
-      IOTHUB_DEVICE_CONN_STRING_INVALID_CERT: $(IOTHUB-DEVICE-CONN-STRING-INVALID-CERT)
-
+      IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)
+      AZURE_IOT_PRIVATE_MODEL_REPOSITORY_CONNECTION_STRING: $(AZURE-IOT-PRIVATE-MODEL-REPOSITORY-CONNECTION-STRING)
   - task: PublishTestResults@2
     displayName: 'Publish Test Results | Mocha'
     inputs:
