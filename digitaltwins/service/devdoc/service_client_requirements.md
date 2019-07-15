@@ -93,6 +93,25 @@ class DigitalTwinServiceClient
 
 **SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_026: [** The `updateDigitalTwin` method shall call the `updateInterfaces` method of the protocol layer with the given arguments including eTag. **]**
 
+**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_028: [** The `patch` argument of the `updateDigitalTwin` method should be a JSON string using the following format:
+ const patch = {
+    interfaces: {
+      [componentName]: {
+        properties: {
+          [propertyName]: {
+            desired: {
+              value: propertyValue
+            }
+          }
+        }
+      }
+    }
+  };
+  The componentName should be an existing component's name.
+  The propertyName could be existing or new.
+  The patch should contain difference to a previously reported twin only (e.g. patch).
+ **]**
+
 ## updateDigitalTwinProperty
 
 **SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_014: [** The `updateDigitalTwinProperty` method shall call the `updateInterfaces` method of the protocol layer. **]**
@@ -104,6 +123,12 @@ class DigitalTwinServiceClient
 **SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_024: [** The `updateDigitalTwinProperty` method shall return a promise if there is no callback passed. **]**
 
 **SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_027: [** The `updateDigitalTwinProperty` method shall call the `updateInterfaces` method of the protocol layer including eTag. **]**
+
+**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_028: [** The `updateDigitalTwinProperty` method receives the following arguments:
+  const componentName - an existing component's name.
+  const propertyName - the property what need to be updated or created.
+  const property value - the reported value of the property.
+ **]**
 
 ## invokeCommand
 
