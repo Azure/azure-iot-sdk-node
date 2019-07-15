@@ -1,0 +1,39 @@
+{
+  "name": "azure-iot-digitaltwin-e2e",
+  "version": "1.0.0-preview.0",
+  "description": "Azure IoT Digital Twins End-to-End tests",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "lint": "eslint -c ../../.eslintrc.json .",
+    "digitaltwins_commands": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json digitaltwin_commands.js",
+    "digitaltwins_telemetry": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json digitaltwin_telemetry.js",
+    "digitaltwins_properties": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json digitaltwin_properties.js",
+    "model_repository_crud": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json model_repository_crud.js",
+    "e2e": "npm -s run lint && npm -s run model_repository_crud"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/azure/azure-iot-sdk-node-digitaltwins.git"
+  },
+  "author": "Microsoft Corporation",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/azure/azure-iot-sdk-node-digitaltwins/issues"
+  },
+  "homepage": "https://github.com/azure/azure-iot-sdk-node-digitaltwins#readme",
+  "dependencies": {
+    "eslint": "^6.0.1",
+    "eslint-config-google": "^0.13.0",
+    "mocha": "^6.1.4",
+    "mocha-junit-reporter": "^1.18.0",
+    "mocha-multi-reporters": "^1.1.7",
+    "chai": "^4.2.0",
+    "debug": "^4.1.1",
+    "azure-iot-common": "^1.9.9",
+    "azure-iothub": "^1.9.9",
+    "@azure/event-hubs": "^1.0.8",
+    "azure-iot-digitaltwin-model-repository": "^1.0.0-preview.0",
+    "azure-iot-digitaltwin-service": "^1.0.0-preview.2"
+  }
+}

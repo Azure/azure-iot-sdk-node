@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 const IoTHubTokenCredentials = require('azure-iot-digitaltwin-service').IoTHubTokenCredentials;
-const DigitalTwinServiceClient  = require('azure-iot-digitaltwin-service').DigitalTwinServiceClient;
+const DigitalTwinServiceClient = require('azure-iot-digitaltwin-service').DigitalTwinServiceClient;
 
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
@@ -13,7 +13,7 @@ async function main() {
   // Twin enabled device must be exist on the IoT Hub
   const deviceId = '<DEVICE_ID_GOES_HERE>';
 
-  // Create service client 
+  // Create service client
   const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
   const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
@@ -24,10 +24,10 @@ async function main() {
   console.log(JSON.stringify(digitalTwin.interfaces, null, 2));
 
   // Create patch
-  var componentName = '<COMPONENT_NAME_GOES_HERE>';
-  var propertyName = '<PROPERTY_NAME_GOES_HERE>';
-  var propertyValue = 42;
-  var patch = {
+  const componentName = '<COMPONENT_NAME_GOES_HERE>';
+  const propertyName = '<PROPERTY_NAME_GOES_HERE>';
+  const propertyValue = 42;
+  const patch = {
     interfaces: {
       [componentName]: {
         properties: {
@@ -42,15 +42,14 @@ async function main() {
   };
 
   // Update digital twin and verify the update
-  try{
-    var updatedDigitalTwin = await digitalTwinServiceClient.updateDigitalTwin(deviceDescription.deviceId, patch);
+  try {
+    const updatedDigitalTwin = await digitalTwinServiceClient.updateDigitalTwin(deviceDescription.deviceId, patch);
 
     // Print updated Twin
     console.log(JSON.stringify(updatedDigitalTwin.interfaces, null, 2));
-  }
-  catch (err){
+  } catch (err) {
     console.log(err);
   }
 };
-  
+
 main();

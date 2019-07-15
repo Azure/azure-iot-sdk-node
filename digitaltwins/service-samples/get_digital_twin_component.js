@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 const IoTHubTokenCredentials = require('azure-iot-digitaltwin-service').IoTHubTokenCredentials;
-const DigitalTwinServiceClient  = require('azure-iot-digitaltwin-service').DigitalTwinServiceClient;
+const DigitalTwinServiceClient = require('azure-iot-digitaltwin-service').DigitalTwinServiceClient;
 
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
@@ -13,7 +13,7 @@ async function main() {
   const deviceId = '<DEVICE_ID_GOES_HERE>';
   const componentName = '<COMPONENT_NAME_GOES_HERE>';
 
-  // Create service client 
+  // Create service client
   const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
   const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
@@ -23,5 +23,5 @@ async function main() {
   // Print the component
   console.log(JSON.stringify(digitalTwinComponent, null, 2));
 };
-  
+
 main();

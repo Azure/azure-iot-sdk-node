@@ -22,7 +22,8 @@
     "digitaltwins/device/ts-samples",
     "digitaltwins/service",
     "digitaltwins/model_repository",
-    "digitaltwins/service-samples"
+    "digitaltwins/service-samples",
+    "digitaltwins/e2e"
   ],
   "version": "0.0.0",
   "maxBuffer": 1048576
