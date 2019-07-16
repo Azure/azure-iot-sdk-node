@@ -292,7 +292,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
                   //   config.sslOptions = config.sslOptions || {};
                   //   config.sslOptions.ca = this._options.ca;
                   // }
-                  if (this._options) {                    
+                  if (this._options) {
                     config.sslOptions = config.sslOptions || {};
                     /*Codes_SRS_NODE_DEVICE_AMQP_13_002: [ The connect method shall set the CA cert on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
                     if (this._options.ca) {
