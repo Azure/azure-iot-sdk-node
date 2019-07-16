@@ -175,7 +175,7 @@ export class DigitalTwinServiceClient {
   updateDigitalTwin(digitalTwinId: string, patch: Models.DigitalTwinInterfacesPatch, eTag?: string): Promise<DigitalTwinResponse>;
   updateDigitalTwin(digitalTwinId: string, patch: Models.DigitalTwinInterfacesPatch, eTagOrCallback?: string | TripleValueCallback<DigitalTwin, msRest.WebResource>, callback?: TripleValueCallback<DigitalTwin, msRest.WebResource>): void;
   updateDigitalTwin(digitalTwinId: string, patch: Models.DigitalTwinInterfacesPatch, eTagOrCallback?: string | TripleValueCallback<DigitalTwin, msRest.WebResource>, callback?: TripleValueCallback<DigitalTwin, msRest.WebResource>): void | Promise<DigitalTwinResponse> {
-    let servicePatch = ConvertPatch(patch);
+    const servicePatch = ConvertPatch(patch);
     if (typeof eTagOrCallback !== 'function') {
       return tripleValueCallbackToPromise<DigitalTwin, msRest.WebResource, DigitalTwinResponse>((_callback) => {
         const options = {ifMatch: eTagOrCallback} as Models.DigitalTwinUpdateInterfacesOptionalParams;

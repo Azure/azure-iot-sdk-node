@@ -95,7 +95,7 @@ class DigitalTwinServiceClient
 
 **SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_028: [** The `patch` argument of the `updateDigitalTwin` method should be a JSON string using the following format:
  const patch = {
-    interfaces: {
+    components: {
       [componentName]: {
         properties: {
           [propertyName]: {
