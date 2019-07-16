@@ -109,7 +109,7 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
 
     describe('#setTransportOptions', function () {
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_021: [The ‘setTransportOptions’ method shall call the ‘setOptions’ method on the transport object.]*/
-      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_022: [The ‘done’ callback shall be invoked with a null error object and a ‘TransportConfigured’ object nce the transport has been configured.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_022: [The ‘done’ callback shall be invoked with a null error object and a ‘TransportConfigured’ object once the transport has been configured.]*/
       it('calls the setOptions method on the transport object and gives it the options parameter', function (done) {
         var testOptions = { foo: 42 };
         var dummyTransport = new FakeTransport();
@@ -201,6 +201,24 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
           assert.strictEqual(fakeBaseClient.setOptions.firstCall.args[0].ca, 'ca cert');
           testCallback();
         });
+      });
+
+      it('productInfo properly sets string', function (done) {
+        var testOptions = { productInfo: 'test'};
+        var dummyTransport = new FakeTransport();
+        sinon.stub(dummyTransport, 'setOptions').callsFake(function (options, callback) {
+          assert.strictEqual(options.productInfo, testOptions.productInfo);
+          callback(null, new results.TransportConfigured());
+        });
+
+        var client = new ClientCtor(dummyTransport);
+        client.setOptions(testOptions, function (err, results) {
+          if (err) {
+            done(err);
+          } else {
+            done();
+          }
+        }); 
       });
     });
 

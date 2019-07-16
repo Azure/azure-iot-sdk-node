@@ -158,11 +158,17 @@ Host: <config.host>
 
 **SRS_NODE_DEVICE_HTTP_RECEIVER_16_017: [**If `opts.drain` is true all messages in the queue should be pulled at once.**]**
 
-**SRS_NODE_DEVICE_HTTP_RECEIVER_16_018: [**If `opts.drain` is false, only one message shall be received at a time**]**
+**SRS_NODE_DEVICE_HTTP_RECEIVER_16_018: [**If `opts.drain` is false, only one message shall be received at a time **]**
 
-**SRS_NODE_DEVICE_HTTP_RECEIVER_16_019: [**If the receiver is already running with a previous configuration, the existing receiver should be restarted with the new configuration**]**
+**SRS_NODE_DEVICE_HTTP_RECEIVER_16_019: [**If the receiver is already running with a previous configuration, the existing receiver should be restarted with the new configuration **]**
 
-**SRS_NODE_DEVICE_HTTP_RECEIVER_16_023: [**If `opts.manualPolling` is true, messages shall be received only when receive() is called**]**
+**SRS_NODE_DEVICE_HTTP_RECEIVER_16_023: [**If `opts.manualPolling` is true, messages shall be received only when receive() is called **]**
+
+**SRS_NODE_DEVICE_HTTP_41_001: [** The HTTP transport should use the productInfo string in the `options` object if present **]**
+
+**SRS_NODE_DEVICE_HTTP_41_002: [** `productInfo` should be set in the HTTP User-Agent Header if set using `setOptions` **]**
+
+**SRS_NODE_DEVICE_HTTP_41_003: [** `productInfo` must be set before `http._ensureAgentString` is invoked for the first time **]**
 
 ### abandon(message, done)
 
