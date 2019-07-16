@@ -6,10 +6,11 @@
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-digitaltwin-device:Client');
 
+import { DigitalTwinInterface as SdkInformation } from './sdkinformation';
 import { callbackToPromise, ErrorCallback, Message } from 'azure-iot-common';
 import { Client, Twin, DeviceMethodRequest, DeviceMethodResponse } from 'azure-iot-device';
 import { BaseInterface } from './base_interface';
-import { azureDigitalTwinTelemetryProperty, azureDigitalTwinCommandProperty, azureDigitalTwinReadOnlyProperty, azureDigitalTwinReadWriteProperty,
+import { azureDigitalTwinTelemetry, azureDigitalTwinCommand, azureDigitalTwinReadOnlyProperty, azureDigitalTwinReadWriteProperty,
          Telemetry, TelemetryPromise, TelemetryCallback,
          ReadOnlyProperty, ReadOnlyPropertyReportCallback, ReadOnlyPropertyReportPromise,
          CommandRequest, CommandResponse, CommandUpdateCallback, CommandUpdatePromise, CommandCallback,
@@ -17,12 +18,38 @@ import { azureDigitalTwinTelemetryProperty, azureDigitalTwinCommandProperty, azu
          ReadWritePropertyResponse, ReadWriteProperty
         } from './interface_types';
 
+/**
+ * @private
+ * The name of the application property that contains the interface id as its value.
+ */
 const messageInterfaceIdProperty: string = '$.ifid';
+/**
+ * @private
+ * The name of the application property that contains the component name (a specific
+ * interface instance) as its value.
+ */
 const messageComponentProperty: string = '$.ifname';
+/**
+ * @private
+ * The Digital Twin application property name whose value communicates what the item is.
+ * For instance, a telemetry, or registration model information.
+ */
 const messageSchemaProperty: string = '$.schema';
+/**
+ * @private
+ * Prefixes the component name in various objects, like command names.
+ */
 const componentPrefix: string = '$iotin:';
+/**
+ * @private
+ * Prefixes the actual data object in various Digital Twin objects, like command names.
+ */
 const commandComponentCommandNameSeparator = '*';
 
+/**
+ * @private
+ * Read the following comments.
+ */
 //
 // An array of these items will be created for each component.
 //
@@ -32,7 +59,7 @@ const commandComponentCommandNameSeparator = '*';
 //
 interface CommandInformation {
   component: BaseInterface;
-  commandPropertyName: string;
+  commandName: string;
   //
   // The name that is passed to the underlying device client method client.
   // It is formed from the component name and command property name.
@@ -47,6 +74,10 @@ interface CommandInformation {
   methodCallback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void;
 }
 
+/**
+ * @private
+ * Read the following comments.
+ */
 //
 // An array of these items will be created for each component.
 //
@@ -77,6 +108,10 @@ interface ReadWriteInformation {
   prefixAndComponentName: string;
 }
 
+/**
+ * @private
+ * Read the following comments.
+ */
 //
 // These are the values of a dictionary created within the Digital Twin client.
 // The dictionary key is the component name.
@@ -100,21 +135,17 @@ interface ComponentInformation {
   readWriteProperties: ReadWriteInformation[];
 }
 
+/**
+ * @private
+ * Utilized by the SDK Information interface to obtain the version information.
+ */
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
 
-class SdkInformation extends BaseInterface {
-  language: ReadOnlyProperty;
-  version: ReadOnlyProperty;
-  vendor: ReadOnlyProperty;
-  constructor(componentName: string, interfaceId: string) {
-    super(componentName, interfaceId);
-    this.language = new ReadOnlyProperty();
-    this.version = new ReadOnlyProperty();
-    this.vendor = new ReadOnlyProperty();
-  }
-}
-
+/**
+ * @private
+ * An instantiation of the SDK information interface.
+ */
 const sdkInformation = new SdkInformation('urn_azureiot_Client_SDKInformation', 'urn:azureiot:Client:SDKInformation:1');
 
 export class DigitalTwinClient {
@@ -162,16 +193,16 @@ export class DigitalTwinClient {
       if (newComponent[individualProperty] && newComponent[individualProperty].azureDigitalTwinType) {
         debug(newComponent.componentName + '.' + individualProperty + ' is of type: ' + newComponent[individualProperty].azureDigitalTwinType);
         switch (newComponent[individualProperty].azureDigitalTwinType) {
-          case azureDigitalTwinTelemetryProperty: {
+          case azureDigitalTwinTelemetry: {
             //
             // This instantiates a 'send' method for this telemetry property that invokes the lower level clients send function.  The
             // instantiated function will format the message appropriately and add any necessary transport/digital twin properties to
             // the message.
             //
-            (newComponent[individualProperty] as Telemetry).send = this._returnTelemetryPropertySendMethod(newComponent.componentName, newComponent.interfaceId, individualProperty);
+            (newComponent[individualProperty] as Telemetry).send = this._returnTelemetrySendMethod(newComponent.componentName, newComponent.interfaceId, individualProperty);
             break;
           }
-          case azureDigitalTwinCommandProperty: {
+          case azureDigitalTwinCommand: {
             //
             // Must have defined an application defined callback for the commands of this component.
             //
@@ -223,8 +254,8 @@ export class DigitalTwinClient {
    * @param registerCallback        If provided, will be invoked on completion of registration, otherwise a promise will be returned.
    */
   register(registerCallback: ErrorCallback): void;
-  register(): Promise<any>;
-  register(registerCallback?: ErrorCallback): Promise<any> | void {
+  register(): Promise<void>;
+  register(registerCallback?: ErrorCallback): Promise<void> | void {
     return callbackToPromise((_callback) => {
       this._register((err) => {_callback(err);});
     }, registerCallback);
@@ -252,11 +283,11 @@ export class DigitalTwinClient {
     });
   }
 
-  private _createCommandInformation(component: BaseInterface, commandPropertyName: string): CommandInformation  {
+  private _createCommandInformation(component: BaseInterface, commandName: string): CommandInformation  {
     return {
       component: component,
-      commandPropertyName: commandPropertyName,
-      methodName: componentPrefix + component.componentName + commandComponentCommandNameSeparator + commandPropertyName,
+      commandName: commandName,
+      methodName: componentPrefix + component.componentName + commandComponentCommandNameSeparator + commandName,
       //
       // Create a function that will be used as the handler for IoT Hub method callbacks.
       // This instantiated function will create request and response objects suitable for
@@ -266,12 +297,12 @@ export class DigitalTwinClient {
         const commandRequest: CommandRequest = {
           component: component,
           componentName: component.componentName,
-          commandName: commandPropertyName,
+          commandName: commandName,
           payload: request.payload.commandRequest.value
         };
         const commandResponse: CommandResponse = {
           acknowledge: (status: number, payload?: any, callback?: ErrorCallback) => response.send(status, payload, callback as ErrorCallback),
-          update: this._returnCommandPropertyUpdateMethod(component.componentName, component.interfaceId, commandPropertyName, request.payload.commandRequest.requestId)
+          update: this._returnCommandUpdateMethod(component.componentName, component.interfaceId, commandName, request.payload.commandRequest.requestId)
          };
         (component.commandCallback as CommandCallback)(commandRequest, commandResponse);
       }
@@ -283,9 +314,9 @@ export class DigitalTwinClient {
   // In this case the returned method is used to update the status of
   // a Digital Twin async command.
   //
-  private _returnCommandPropertyUpdateMethod(componentName: string, interfaceId: string, commandPropertyName: string, requestId: string): CommandUpdateCallback | CommandUpdatePromise {
+  private _returnCommandUpdateMethod(componentName: string, interfaceId: string, commandName: string, requestId: string): CommandUpdateCallback | CommandUpdatePromise {
     return (status: number, payload: any, callback?: ErrorCallback) =>
-      this._sendCommandUpdate(componentName, interfaceId, commandPropertyName, requestId, status, payload, callback as ErrorCallback);
+      this._sendCommandUpdate(componentName, interfaceId, commandName, requestId, status, payload, callback as ErrorCallback);
   }
 
   /**
@@ -293,7 +324,7 @@ export class DigitalTwinClient {
    * @description                       Sends a command update message component/command.
    * @param componentName               Name of the instance for this interface.
    * @param interfaceId                 The id (in URN format) for the interface.
-   * @param commandPropertyName         The name of the particular command updating its status.
+   * @param commandName                 The name of the particular command updating its status.
    * @param requestId                   The id supplied by the Digital Twin Service that uniquely identifies
    *                                    this particular invocation of the command.
    * @param status                      An http code specifying the status of the command.
@@ -301,9 +332,9 @@ export class DigitalTwinClient {
    * @param commandCallback (optional)  If present, the callback to be invoked on completion of the update,
    *                                    otherwise a promise is returned.
    */
-  private _sendCommandUpdate(componentName: string, interfaceId: string, commandPropertyName: string, requestId: string, status: number, payload: any, commandCallback: ErrorCallback): void;
-  private _sendCommandUpdate(componentName: string, interfaceId: string, commandPropertyName: string, requestId: string, status: number, payload: any): Promise<void>;
-  private _sendCommandUpdate(componentName: string, interfaceId: string, commandPropertyName: string, requestId: string, status: number,payload: any, commandCallback?: ErrorCallback): Promise<void> | void {
+  private _sendCommandUpdate(componentName: string, interfaceId: string, commandName: string, requestId: string, status: number, payload: any, commandCallback: ErrorCallback): void;
+  private _sendCommandUpdate(componentName: string, interfaceId: string, commandName: string, requestId: string, status: number, payload: any): Promise<void>;
+  private _sendCommandUpdate(componentName: string, interfaceId: string, commandName: string, requestId: string, status: number,payload: any, commandCallback?: ErrorCallback): Promise<void> | void {
 
     //
     // There is NO WAY that this function could be invoked prior to registration.
@@ -319,7 +350,7 @@ export class DigitalTwinClient {
         JSON.stringify(payload)
       );
       updateMessage.properties.add(commandUpdateSchemaProperty, 'asyncResult');
-      updateMessage.properties.add(commandUpdateCommandNameProperty, commandPropertyName);
+      updateMessage.properties.add(commandUpdateCommandNameProperty, commandName);
       updateMessage.properties.add(commandUpdateRequestIdProperty, requestId);
       updateMessage.properties.add(commandUpdateStatusCodeProperty, status.toString());
       updateMessage.properties.add(messageInterfaceIdProperty, interfaceId);
@@ -335,7 +366,7 @@ export class DigitalTwinClient {
   // In this case the returned function is used to set telemetry values
   // for a Digital Twin telemetry property.
   //
-  private _returnTelemetryPropertySendMethod(componentName: string, interfaceId: string, telemetryName: string): TelemetryPromise | TelemetryCallback {
+  private _returnTelemetrySendMethod(componentName: string, interfaceId: string, telemetryName: string): TelemetryPromise | TelemetryCallback {
     return (value, callback) => this._sendTelemetry(componentName, interfaceId, telemetryName, value, callback);
   }
 
