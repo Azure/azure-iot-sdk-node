@@ -78,10 +78,10 @@ let dtClient = new DigitalTwinClient(dcm, client);
 
 const main = async () => {
   try {
-    await environmentalSensor.humid.send(7.2);
+    await environmentalSensor.humid.send(7.3);
     await environmentalSensor.temp.send(65.5);
     await environmentalSensor.state.report('on');
-    await sampleDeviceInfo.fwVersion.report('firmware-revision-1.0.2fwawa');
+    await sampleDeviceInfo.fwVersion.report('firmware-revision-1.0.2f');
     await sampleDeviceInfo.manufacturer.report('Sample Manufacturer for Azure IoT C SDK enabled device');
     await sampleDeviceInfo.model.report('Sample Model 123');
     await sampleDeviceInfo.oem.report('Contoso');
