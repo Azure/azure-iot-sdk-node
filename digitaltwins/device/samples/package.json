@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-digitaltwin-device-samples",
-  "version": "1.0.0-preview",
+  "version": "1.0.0-preview.0",
   "description": "Samples for the azure-iot-digitaltwin-device client library",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -19,6 +19,6 @@
     "azure-iot-device": "1.9.9",
     "azure-iot-common": "1.9.9",
     "azure-iot-device-mqtt": "1.9.9",
-    "azure-iot-digitaltwin-device": "1.0.0-preview"
+    "azure-iot-digitaltwin-device": "1.0.0-preview.0"
   }
 }
