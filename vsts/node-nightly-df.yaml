@@ -45,9 +45,18 @@ phases:
       npm -s run ci
     displayName: 'Unit Tests: Device'
   - script: |
-      cd digitaltwins/service-samples
+      cd digitaltwins/samples/service
       npm -s run lint
-    displayName: 'Linter: Samples'
+    displayName: 'Linter: Service Samples'
+  - script: |
+      cd digitaltwins/samples/model_repository
+      npm -s run lint
+    displayName: 'Linter: Model Repo Samples'
+  - script: |
+      cd digitaltwins/samples/device/typescript
+      npm -s run lint
+      npm -s run build
+    displayName: 'Linter: Device Samples'
   - script: |
       cd digitaltwins/e2e
       npm -s run e2e
@@ -109,9 +118,18 @@ phases:
       call npm -s run ci
     displayName: 'Unit Tests: Device'
   - script: |
-      cd digitaltwins/service-samples
+      cd digitaltwins/samples/service
       call npm -s run lint
-    displayName: 'Linter: Samples'
+    displayName: 'Linter: Service Samples'
+  - script: |
+      cd digitaltwins/samples/model_repository
+      call npm -s run lint
+    displayName: 'Linter: Model Repo Samples'
+  - script: |
+      cd digitaltwins/samples/device/typescript
+      call npm -s run lint
+      call npm -s run build
+    displayName: 'Linter: Device Samples'
   - script: |
       cd digitaltwins/e2e
       call npm -s run e2e

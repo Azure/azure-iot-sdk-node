@@ -1,6 +1,6 @@
 import { Client } from 'azure-iot-device';
 import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
-import { DigitalTwinClient, CommandCallback, ReadWritePropertyChangedCallback, BaseInterface } from 'azure-iot-digitaltwin-device';
+import { DigitalTwinClient, CommandCallback, ReadWritePropertyChangedCallback, BaseInterface } from 'azure-iot-digitaltwins-device';
 import { DigitalTwinInterface as EnvironmentalSensor } from './environmentalinterface';
 import { DigitalTwinInterface as SampleDeviceInfo } from './deviceinfointerface';
 

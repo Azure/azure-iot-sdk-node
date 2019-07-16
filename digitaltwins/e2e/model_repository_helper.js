@@ -4,7 +4,7 @@
 
 'use strict';
 
-const DigitalTwinRepositoryService = require('azure-iot-digitaltwin-model-repository').DigitalTwinRepositoryService;
+const DigitalTwinRepositoryService = require('azure-iot-digitaltwins-model-repository').DigitalTwinRepositoryService;
 const ModelRepositoryCredentials = require('./model_repository_credentials').ModelRepositoryCredentials;
 const modelRepositoryApiVersion = '2019-07-01-Preview';
 const privateRepositoryConnectionString = process.env.AZURE_IOT_PRIVATE_MODEL_REPOSITORY_CONNECTION_STRING;

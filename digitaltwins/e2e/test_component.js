@@ -2,11 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 'use strict';
 
-const BaseInterface = require('azure-iot-digitaltwin-device').BaseInterface;
-const Telemetry = require('azure-iot-digitaltwin-device').Telemetry;
-const ReadOnlyProperty = require('azure-iot-digitaltwin-device').ReadOnlyProperty;
-const ReadWriteProperty = require('azure-iot-digitaltwin-device').ReadWriteProperty;
-const Command = require('azure-iot-digitaltwin-device').Command;
+const BaseInterface = require('azure-iot-digitaltwins-device').BaseInterface;
+const Telemetry = require('azure-iot-digitaltwins-device').Telemetry;
+const ReadOnlyProperty = require('azure-iot-digitaltwins-device').ReadOnlyProperty;
+const ReadWriteProperty = require('azure-iot-digitaltwins-device').ReadWriteProperty;
+const Command = require('azure-iot-digitaltwins-device').Command;
 
 const interfaceId = 'urn:microsoft:azureiot:nodesdk:e2etest:1';
 

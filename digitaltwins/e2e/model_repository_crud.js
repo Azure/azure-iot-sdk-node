@@ -3,7 +3,7 @@
 'use strict';
 const assert = require('chai').assert;
 const debug = require('debug')('digitaltwinse2e:crud');
-const DigitalTwinRepositoryService = require('azure-iot-digitaltwin-model-repository').DigitalTwinRepositoryService;
+const DigitalTwinRepositoryService = require('azure-iot-digitaltwins-model-repository').DigitalTwinRepositoryService;
 const ModelRepositoryCredentials = require('./model_repository_credentials').ModelRepositoryCredentials;
 const interfaceDocument = require('./dtdl/test_interface');
 

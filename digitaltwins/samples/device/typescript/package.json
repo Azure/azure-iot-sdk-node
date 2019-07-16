@@ -1,5 +1,5 @@
 {
-  "name": "azure-iot-digitaltwin-ts-samples",
+  "name": "azure-iot-digitaltwins-ts-samples",
   "version": "1.0.0-preview",
   "description": "Azure IoT SDK - Digital Twin Client typescript samples",
   "author": "Microsoft Corporation",
@@ -8,14 +8,14 @@
     "azure-iot-device": "1.9.9",
     "azure-iot-common": "1.9.9",
     "azure-iot-device-mqtt": "1.9.9",
-    "azure-iot-digitaltwin-device": "1.0.0-preview.0"
+    "azure-iot-digitaltwins-device": "1.0.0-preview.0"
   },
   "devDependencies": {
     "tslint": "^5.9.1",
     "typescript": "2.9.2"
   },
   "scripts": {
-    "lint": "tslint --project . -c ../../../tslint.json",
+    "lint": "tslint --project . -c ../../../../tslint.json",
     "build": "tsc"
   },
   "engines": {

@@ -1,17 +1,14 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-const IoTHubTokenCredentials = require('azure-iot-digitaltwin-service').IoTHubTokenCredentials;
+const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubTokenCredentials;
 const RegistryManager = require('azure-iothub').Registry;
-const DigitalTwinServiceClient = require('azure-iot-digitaltwin-service').DigitalTwinServiceClient;
-// const ModelRepositoryClient = require('azure-iot-digitaltwin-model-repository').DigitalTwinRepositoryService;
+const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 const uuid = require('uuid');
 
 // Example of how to:
 // - create a Digital Twin enabled Device using the RegistryManager
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
-// - create a Model Repository Client using the ModelRepositoryClient constructor
-// - create a Model using the ModelRepositoryClient
 // - get the Digital Twin
 // - get a single Digital Twin Component by name
 // - update the Digital Twin with patch
@@ -23,11 +20,8 @@ async function main() {
   // Create registry manager client for managing devices
   const registryManagerClient = RegistryManager.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
 
-  // Create credentials for repository client and digital twin service client
+  // Create credentials for digital twin service client
   const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
-
-  // Create repository client
-  // const repositoryClient = new ModelRepositoryClient(credentials);
 
   // Create digital twin service client
   const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
