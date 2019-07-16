@@ -278,23 +278,19 @@ export class Amqp extends EventEmitter implements DeviceTransport {
                   this._d2cEndpoint = endpoint.deviceEventPath(credentials.deviceId);
                   this._messageEventName = 'message';
                 }
-
-                getUserAgentString((userAgentString) => {
+                /*Tests_SRS_NODE_DEVICE_AMQP_41_001: [ The AMQP transport should use the productInfo string in the `options` object if present ]*/
+                /*Tests_SRS_NODE_DEVICE_AMQP_41_002: [ The connect method shall set the productInfo on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
+                const customInfo = (this._options && this._options.productInfo) ? this._options.productInfo : '';
+                getUserAgentString(customInfo, (userAgentString) => {
                   const config: AmqpBaseTransportConfig = {
                     uri: this._getConnectionUri(credentials),
                     sslOptions: credentials.x509,
                     userAgentString: userAgentString
                   };
-                  if (this._options) {
+                  /*Codes_SRS_NODE_DEVICE_AMQP_13_002: [ The connect method shall set the CA cert on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
+                  if (this._options && this._options.ca) {
                     config.sslOptions = config.sslOptions || {};
-                    /*Codes_SRS_NODE_DEVICE_AMQP_13_002: [ The connect method shall set the CA cert on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
-                    if (this._options.ca) {
-                      config.sslOptions.ca = this._options.ca;
-                    }
-                    /*Codes_SRS_NODE_DEVICE_AMQP_99_084: [ The connect method shall set the HTTPS agent on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
-                    if (this._options.amqp && this._options.amqp.webSocketAgent) {
-                      config.sslOptions.agent = this._options.amqp.webSocketAgent;
-                    }
+                    config.sslOptions.ca = this._options.ca;
                   }
                   this._amqp.connect(config, (err, connectResult) => {
                     if (err) {
@@ -687,6 +683,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
         throw new errors.InvalidOperationError('cannot set X509 options when using token-based authentication');
       }
     }
+
 
     /*Codes_SRS_NODE_DEVICE_AMQP_13_001: [ The setOptions method shall save the options passed in. ]*/
     this._options = options;

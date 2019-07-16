@@ -205,6 +205,13 @@ The `reject` method is there for compatibility purposes with other transports bu
 
 **SRS_NODE_DEVICE_MQTT_16_070: [** The `setOptions` method shall call its callback with the error returned by `getDeviceCredentials` if it fails to return the credentials. **]**
 
+**_SRS_NODE_DEVICE_MQTT_41_001: [** The MQTT transport should use the productInfo string in the `options` object if present **]**
+
+**_SRS_NODE_DEVICE_MQTT_41_002: [** The MQTT constructor shall append the productInfo to the `username` property of the `config` object. **]**
+
+**_SRS_NODE_DEVICE_MQTT_41_003: [** `productInfo` must be set before `mqtt._ensureAgentString` is invoked for the first time **]**
+
+
 ### onDeviceMethod(methodName, methodCallback)
 
 **SRS_NODE_DEVICE_MQTT_16_066: [** The `methodCallback` parameter shall be called whenever a `method_<methodName>` is emitted and device methods have been enabled. **]**

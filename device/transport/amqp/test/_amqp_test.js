@@ -15,6 +15,7 @@ var errors = require('azure-iot-common').errors;
 var results = require('azure-iot-common').results;
 var AuthenticationType = require('azure-iot-common').AuthenticationType;
 
+
 describe('Amqp', function () {
   var transport = null;
   var receiver = null;
@@ -398,15 +399,17 @@ describe('Amqp', function () {
           assert.strictEqual(fakeBaseClient.connect.firstCall.args[0].sslOptions.ca, 'ca cert');
           testCallback();
         });
-      });
-
-      /*Tests_SRS_NODE_DEVICE_AMQP_99_084: [ The connect method shall set the HTTPS agent on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
-      it('sets HTTPS agent if provided', function (testCallback) {
-        transport.setOptions({ amqp: { webSocketAgent: 'https agent' } });
+      });      
+      
+  
+      /*Tests_SRS_NODE_DEVICE_AMQP_41_002: [ The connect method shall set the productInfo on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
+      it('sets productInfo if provided', function (testCallback) {
+        var options = { productInfo: 'test: THIS IS A TEST'};
+        transport.setOptions(options);
         transport.connect(function (err) {
           assert.isNotOk(err);
           assert(fakeBaseClient.connect.called);
-          assert.strictEqual(fakeBaseClient.connect.firstCall.args[0].sslOptions.agent, 'https agent');
+          assert(fakeBaseClient.connect.firstCall.args[0].userAgentString.includes(options.productInfo));
           testCallback();
         });
       });
@@ -881,9 +884,15 @@ describe('Amqp', function () {
       });
 
       /*Tests_SRS_NODE_DEVICE_AMQP_13_001: [ The setOptions method shall save the options passed in. ]*/
-      it('saves options', function () {
+      it('saves CA options', function () {
         transport.setOptions({ ca: 'ca cert' });
         assert.strictEqual(transport._options.ca, 'ca cert');
+      });
+
+      /*Tests_SRS_NODE_DEVICE_AMQP_41_001: [The AMQP transport should use the productInfo string in the `options` object if present]*/
+      it('saves productInfo options', function () {
+        transport.setOptions({ productInfo: 'customer user agent information' });
+        assert.strictEqual(transport._options.productInfo, 'customer user agent information');
       });
     });
 
