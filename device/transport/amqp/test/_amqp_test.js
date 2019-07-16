@@ -399,8 +399,8 @@ describe('Amqp', function () {
           assert.strictEqual(fakeBaseClient.connect.firstCall.args[0].sslOptions.ca, 'ca cert');
           testCallback();
         });
-      });      
-      
+      });
+
       /*Tests_SRS_NODE_DEVICE_AMQP_99_084: [ The connect method shall set the HTTPS agent on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
       it('sets HTTPS agent if provided', function (testCallback) {
         transport.setOptions({ amqp: { webSocketAgent: 'https agent' } });
