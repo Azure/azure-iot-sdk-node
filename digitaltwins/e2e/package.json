@@ -31,9 +31,16 @@
     "chai": "^4.2.0",
     "debug": "^4.1.1",
     "azure-iot-common": "^1.9.9",
+    "azure-iot-device": "^1.9.9",
+    "azure-iot-device-mqtt": "^1.9.9",
     "azure-iothub": "^1.9.9",
     "@azure/event-hubs": "^1.0.8",
     "azure-iot-digitaltwin-model-repository": "^1.0.0-preview.0",
-    "azure-iot-digitaltwin-service": "^1.0.0-preview.2"
+    "azure-iot-digitaltwin-service": "^1.0.0-preview.2",
+    "azure-iot-digitaltwin-device": "^1.0.0-preview.0"
+  },
+  "devDependencies": {
+    "eslint": "^6.0.1",
+    "eslint-config-google": "^0.13.0"
   }
 }

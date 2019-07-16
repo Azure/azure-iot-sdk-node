@@ -32,7 +32,7 @@ async function main() {
 
   const modelRepoClient = new ModelRepoClient(creds, {
     baseUri: 'https://' + resource,
-    deserializationContentTypes: {// application/ld+json isn't supported by autorest by default, which is why we need these options
+    deserializationContentTypes: { // application/ld+json isn't supported by autorest by default, which is why we need these options
       json: [
         'application/ld+json',
         'application/json',
@@ -41,7 +41,7 @@ async function main() {
     }
   });
 
-  const models = await modelRepoClient.search({searchKeyword: 'ModelDiscovery', modelFilterType: 'interface'}, apiVersion);
+  const models = await modelRepoClient.search({ searchKeyword: 'ModelDiscovery', modelFilterType: 'interface' }, apiVersion);
   console.log(JSON.stringify(models.results, null, 2));
 
   const modelDiscovery = await modelRepoClient.getModel('urn:azureiot:ModelDiscovery:ModelInformation:1', apiVersion);

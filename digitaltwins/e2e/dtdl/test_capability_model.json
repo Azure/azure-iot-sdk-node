@@ -1,0 +1,12 @@
+{
+  "@id": "urn:microsoft:azureiot:nodesdk:e2etest:cm:1",
+  "@type": "CapabilityModel",
+  "displayName": "Test capability Model",
+  "implements": [
+    {
+      "name": "testComponent",
+      "schema": "urn:microsoft:azureiot:nodesdk:e2etest:1"
+    }
+  ],
+  "@context": "http://azureiot.com/v1/contexts/CapabilityModel.json"
+}
