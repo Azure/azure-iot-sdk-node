@@ -6,7 +6,7 @@
 import {
   BaseInterface,
   ReadOnlyProperty
-} from 'azure-iot-digitaltwin-device';
+} from 'azure-iot-digitaltwins-device';
 
 export class DigitalTwinInterface extends BaseInterface {
   fwVersion: ReadOnlyProperty;

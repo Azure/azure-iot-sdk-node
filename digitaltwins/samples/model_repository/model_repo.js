@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-const ModelRepoClient = require('azure-iot-digitaltwin-model-repository').DigitalTwinRepositoryService;
+const ModelRepoClient = require('azure-iot-digitaltwins-model-repository').DigitalTwinRepositoryService;
 const AuthorizationHeader = require('@azure/ms-rest-js').Constants.HeaderConstants.AUTHORIZATION;
 const crypto = require('crypto');
 

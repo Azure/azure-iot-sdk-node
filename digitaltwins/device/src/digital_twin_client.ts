@@ -4,7 +4,7 @@
 'use strict';
 
 import * as dbg from 'debug';
-const debug = dbg('azure-iot-digitaltwin-device:Client');
+const debug = dbg('azure-iot-digitaltwins-device:Client');
 
 import { DigitalTwinInterface as SdkInformation } from './sdkinformation';
 import { callbackToPromise, ErrorCallback, Message } from 'azure-iot-common';
@@ -174,7 +174,7 @@ export class DigitalTwinClient {
   }
 
   /**
-   * @method                        module:azure-iot-digitaltwin-device.DigitalTwinClient.addComponent
+   * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.addComponent
    * @description                   Adds the component to the Digital Twin client.  This will not cause
    *                                any network activity.  This is a synchronous method.
    * @param newComponent            The object for a particular component.
@@ -249,7 +249,7 @@ export class DigitalTwinClient {
   }
 
   /**
-   * @method                        module:azure-iot-digitaltwin-device.DigitalTwinClient.register
+   * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.register
    * @description                   Registers the already provided components with the service.
    * @param registerCallback        If provided, will be invoked on completion of registration, otherwise a promise will be returned.
    */

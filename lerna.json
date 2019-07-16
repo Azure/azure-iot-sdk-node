@@ -18,12 +18,13 @@
     "edge-e2e/wrapper/nodejs-server-server",
     "ts-e2e",
     "digitaltwins/device",
-    "digitaltwins/device/samples",
-    "digitaltwins/device/ts-samples",
     "digitaltwins/service",
     "digitaltwins/model_repository",
-    "digitaltwins/service-samples",
-    "digitaltwins/e2e"
+    "digitaltwins/e2e",
+    "digitaltwins/samples/device/javascript",
+    "digitaltwins/samples/device/typescript",
+    "digitaltwins/samples/service",
+    "digitaltwins/samples/model_repository"
   ],
   "version": "0.0.0",
   "maxBuffer": 1048576

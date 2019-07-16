@@ -1,5 +1,5 @@
 {
-  "name": "azure-iot-digitaltwin-e2e",
+  "name": "azure-iot-digitaltwins-e2e",
   "version": "1.0.0-preview.0",
   "description": "Azure IoT Digital Twins End-to-End tests",
   "main": "index.js",
@@ -35,9 +35,9 @@
     "azure-iot-device-mqtt": "^1.9.9",
     "azure-iothub": "^1.9.9",
     "@azure/event-hubs": "^1.0.8",
-    "azure-iot-digitaltwin-model-repository": "^1.0.0-preview.0",
-    "azure-iot-digitaltwin-service": "^1.0.0-preview.2",
-    "azure-iot-digitaltwin-device": "^1.0.0-preview.0"
+    "azure-iot-digitaltwins-model-repository": "^1.0.0-preview.0",
+    "azure-iot-digitaltwins-service": "^1.0.0-preview.0",
+    "azure-iot-digitaltwins-device": "^1.0.0-preview.0"
   },
   "devDependencies": {
     "eslint": "^6.0.1",

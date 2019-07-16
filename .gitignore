@@ -232,16 +232,14 @@ security/symmetric/lib
 
 service/lib
 
-digitaltwins/device/dist
-digitaltwins/device/ts-samples/dist
-
 ts-e2e/lib
 
 longhaultests/lib
 
+digitaltwins/device/dist
+digitaltwins/samples/device/typescript/dist
 digitaltwins/service/dist
 digitaltwins/model_repository/dist
-digitaltwins/model_repository_provisioning/dist
 
 # Build artifacts
 build/build_parallel/temp

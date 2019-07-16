@@ -1,5 +1,5 @@
 {
-  "name": "azure-iot-digitaltwin-device",
+  "name": "azure-iot-digitaltwins-device",
   "version": "1.0.0-preview.0",
   "description": "Azure IoT Digital Twin Device Client",
   "author": "Microsoft Corporation",
