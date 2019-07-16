@@ -288,9 +288,20 @@ export class Amqp extends EventEmitter implements DeviceTransport {
                     userAgentString: userAgentString
                   };
                   /*Codes_SRS_NODE_DEVICE_AMQP_13_002: [ The connect method shall set the CA cert on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
-                  if (this._options && this._options.ca) {
+                  // if (this._options && this._options.ca) {
+                  //   config.sslOptions = config.sslOptions || {};
+                  //   config.sslOptions.ca = this._options.ca;
+                  // }
+                  if (this._options) {                    
                     config.sslOptions = config.sslOptions || {};
-                    config.sslOptions.ca = this._options.ca;
+                    /*Codes_SRS_NODE_DEVICE_AMQP_13_002: [ The connect method shall set the CA cert on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
+                    if (this._options.ca) {
+                      config.sslOptions.ca = this._options.ca;
+                    }
+                    /*Codes_SRS_NODE_DEVICE_AMQP_99_084: [ The connect method shall set the HTTPS agent on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
+                    if (this._options.amqp && this._options.amqp.webSocketAgent) {
+                      config.sslOptions.agent = this._options.amqp.webSocketAgent;
+                    }
                   }
                   this._amqp.connect(config, (err, connectResult) => {
                     if (err) {

@@ -82,6 +82,8 @@ The `connect` method establishes a connection with the Azure IoT Hub instance.
 
 **SRS_NODE_DEVICE_AMQP_13_002: [** The `connect` method shall set the CA cert on the options object when calling the underlying connection object's connect method if it was supplied. **]**
 
+**SRS_NODE_DEVICE_AMQP_99_084: [** The `connect` method shall set the HTTPS agent on the options object when calling the underlying connection object's connect method if it was supplied. **]** 
+
 **SRS_NODE_DEVICE_AMQP_41_001: [** The AMQP transport should use the productInfo string in the `options` object if present **]**
 
 **SRS_NODE_DEVICE_AMQP_41_002: [** The connect method shall set the productInfo on the options object when calling the underlying connection object's connect method if it was supplied. **]**
