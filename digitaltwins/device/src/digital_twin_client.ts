@@ -570,11 +570,23 @@ export class DigitalTwinClient {
             registerCallback(getTwinError);
           } else {
             this._twin = twinResult as Twin;
-            sdkInformation.language.report('Node.js');
-            sdkInformation.version.report(packageJson.name + '/' + packageJson.version);
-            sdkInformation.vendor.report('Microsoft Corporation');
             this._initialReadWritePropertyProcessing();
-            registerCallback();
+            sdkInformation.language.report('Node.js', (err?: Error) => {
+              if (err) {
+                debug('Error updating the SDK language: ' + err.toString());
+              }
+              sdkInformation.version.report(packageJson.name + '/' + packageJson.version, (err?: Error) => {
+                if (err) {
+                  debug('Error updating the SDK version: ' + err.toString());
+                }
+                sdkInformation.vendor.report('Microsoft Corporation', (err?: Error) => {
+                  if (err) {
+                    debug('Error updating the SDK vendor: ' + err.toString());
+                  }
+                  registerCallback();
+                });
+              });
+            });
           }
         });
       }
