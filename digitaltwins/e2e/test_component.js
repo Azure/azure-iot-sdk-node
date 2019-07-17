@@ -13,8 +13,6 @@ const interfaceId = 'urn:microsoft:azureiot:nodesdk:e2etest:1';
 module.exports.TestComponent = class TestComponent extends BaseInterface {
   constructor(name, propertyCallback, commandCallback) {
     super(name, interfaceId, propertyCallback, commandCallback);
-    this.interfaceId = interfaceId;
-    this.componentName = name;
     this.telemetry = new Telemetry();
     this.readOnlyProperty = new ReadOnlyProperty();
     this.readWriteProperty = new ReadWriteProperty();
