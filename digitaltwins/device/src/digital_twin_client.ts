@@ -396,8 +396,8 @@ export class DigitalTwinClient {
   //
   private _returnPropertyReportMethod(componentName: string, interfaceId: string, propertyName: string): PropertyReportPromise | PropertyReportCallback {
     return (propertyValue, responseOrCallback, callback) => {
-      this._reportProperty(componentName, interfaceId, propertyName, propertyValue, responseOrCallback as DesiredStateResponse, callback as ErrorCallback);
-    }
+      return this._reportProperty(componentName, interfaceId, propertyName, propertyValue, responseOrCallback as DesiredStateResponse, callback as ErrorCallback);
+    };
   }
 
   /**
@@ -421,7 +421,7 @@ export class DigitalTwinClient {
         actualCallback = responseOrCallback as ErrorCallback;
         actualResponse = undefined;
       } else {
-        actualResponse = responseOrCallback as DesiredStateResponse
+        actualResponse = responseOrCallback as DesiredStateResponse;
         actualCallback = callback as ErrorCallback;
       }
     }
@@ -431,12 +431,12 @@ export class DigitalTwinClient {
       let componentPart = componentPrefix + componentName;
       let propertyContent: any = {
         value: propertyValue
-      }
+      };
 
       if (actualResponse) {
-        propertyContent.sc = actualResponse.code,
-        propertyContent.sd = actualResponse.description,
-        propertyContent.sv = actualResponse.version
+        propertyContent.sc = actualResponse.code;
+        propertyContent.sd = actualResponse.description;
+        propertyContent.sv = actualResponse.version;
       }
 
       let patch = {
@@ -445,9 +445,7 @@ export class DigitalTwinClient {
         }
       };
 
-      return this._twin.properties.reported.update(patch, (reportError: Error) => {
-        return _callback(reportError);
-      });
+      this._twin.properties.reported.update(patch, _callback);
     }, actualCallback);
   }
 

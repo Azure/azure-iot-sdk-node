@@ -103,15 +103,6 @@ describe('Digital Twin Properties', function () {
         return testComponent.readOnlyProperty.report(valueForReadOnlyProperty);
       })
       .then(() => {
-        debug('Waiting 2 seconds for the twin to update.');
-        return new Promise(function (resolve) {
-          setTimeout(function () {
-            debug('Done waiting for the twin to update.');
-            resolve();
-          }, 2000);
-        });
-      })
-      .then(() => {
         debug('Getting the digital twin.');
         return digitalTwinServiceClient.getDigitalTwin(createdDevice.deviceId);
       })
@@ -171,24 +162,21 @@ describe('Digital Twin Properties', function () {
           debug('error reporting update: ' + err.toString());
           closeClients(deviceClient, err);
         } else {
-          debug('waiting 2 seconds before checking the service side');
-          setTimeout(() => {
-            debug('service client: getting digital twin');
-            digitalTwinServiceClient.getDigitalTwin(createdDevice.deviceId, (err, updatedDigitalTwin) => {
-              if (err) {
-                debug('service client: error getting digital twin: ' + err.toString());
-                closeClients(deviceClient, err);
-              } else {
-                debug('service client: got digital twin');
-                assert.strictEqual(updatedDigitalTwin.components.testComponent.properties.writableProperty.reported.value, desiredPropertyValue);
-                assert.strictEqual(updatedDigitalTwin.components.testComponent.properties.writableProperty.reported.desiredState.code, 200);
-                assert.strictEqual(updatedDigitalTwin.components.testComponent.properties.writableProperty.reported.desiredState.description, 'test');
-                assert.strictEqual(updatedDigitalTwin.components.testComponent.properties.writableProperty.reported.desiredState.version, version);
-                debug('all digital twin properties match - test successful');
-                closeClients(deviceClient);
-              }
-            });
-          }, 2000);
+          debug('service client: getting digital twin');
+          digitalTwinServiceClient.getDigitalTwin(createdDevice.deviceId, (err, updatedDigitalTwin) => {
+            if (err) {
+              debug('service client: error getting digital twin: ' + err.toString());
+              closeClients(deviceClient, err);
+            } else {
+              debug('service client: got digital twin');
+              assert.strictEqual(updatedDigitalTwin.components.testComponent.properties.writableProperty.reported.value, desiredPropertyValue);
+              assert.strictEqual(updatedDigitalTwin.components.testComponent.properties.writableProperty.reported.desiredState.code, 200);
+              assert.strictEqual(updatedDigitalTwin.components.testComponent.properties.writableProperty.reported.desiredState.description, 'test');
+              assert.strictEqual(updatedDigitalTwin.components.testComponent.properties.writableProperty.reported.desiredState.version, version);
+              debug('all digital twin properties match - test successful');
+              closeClients(deviceClient);
+            }
+          });
         }
       });
     };
@@ -264,24 +252,21 @@ describe('Digital Twin Properties', function () {
             debug('error responding to desired property update: ' + err.toString());
             closeClients(deviceClient, err);
           } else {
-            debug('waiting 2 seconds to get the twin on the service side');
-            setTimeout(() => {
-              debug('service client: getting the digital twin');
-              digitalTwinServiceClient.getDigitalTwin(createdDevice.deviceId, (err, updatedDigitalTwin) => {
-                if (err) {
-                  debug('service client: error getting the digital twin: ' + err.toString());
-                  closeClients(deviceClient, err);
-                } else {
-                  debug('got digital twin');
-                  assert.strictEqual(updatedDigitalTwin.components.testComponent.properties.writableProperty.reported.value, desiredPropertyValue);
-                  assert.strictEqual(updatedDigitalTwin.components.testComponent.properties.writableProperty.reported.desiredState.code, 200);
-                  assert.strictEqual(updatedDigitalTwin.components.testComponent.properties.writableProperty.reported.desiredState.description, 'test');
-                  assert.strictEqual(updatedDigitalTwin.components.testComponent.properties.writableProperty.reported.desiredState.version, version);
-                  debug('all digital twin properties match: test successful');
-                  closeClients(deviceClient);
-                }
-              });
-            }, 2000);
+            debug('service client: getting the digital twin');
+            digitalTwinServiceClient.getDigitalTwin(createdDevice.deviceId, (err, updatedDigitalTwin) => {
+              if (err) {
+                debug('service client: error getting the digital twin: ' + err.toString());
+                closeClients(deviceClient, err);
+              } else {
+                debug('got digital twin');
+                assert.strictEqual(updatedDigitalTwin.components.testComponent.properties.writableProperty.reported.value, desiredPropertyValue);
+                assert.strictEqual(updatedDigitalTwin.components.testComponent.properties.writableProperty.reported.desiredState.code, 200);
+                assert.strictEqual(updatedDigitalTwin.components.testComponent.properties.writableProperty.reported.desiredState.description, 'test');
+                assert.strictEqual(updatedDigitalTwin.components.testComponent.properties.writableProperty.reported.desiredState.version, version);
+                debug('all digital twin properties match: test successful');
+                closeClients(deviceClient);
+              }
+            });
           }
         });
       } else {

@@ -16,5 +16,6 @@ module.exports.TestComponent = class TestComponent extends BaseInterface {
     this.readOnlyProperty = new Property();
     this.writableProperty = new Property(true);
     this.syncCommand = new Command();
+    this.asyncCommand = new Command();
   }
 };
