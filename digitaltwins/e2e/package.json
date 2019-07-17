@@ -31,14 +31,14 @@
     "mocha-multi-reporters": "^1.1.7",
     "chai": "^4.2.0",
     "debug": "^4.1.1",
-    "azure-iot-common": "^1.9.9",
-    "azure-iot-device": "^1.9.9",
-    "azure-iot-device-mqtt": "^1.9.9",
-    "azure-iothub": "^1.9.9",
+    "azure-iot-common": "1.12.0-preview.0",
+    "azure-iot-device": "1.12.0-preview.0",
+    "azure-iot-device-mqtt": "1.12.0-preview.0",
+    "azure-iothub": "1.12.0-preview.0",
     "@azure/event-hubs": "^1.0.8",
-    "azure-iot-digitaltwins-model-repository": "^1.0.0-preview.0",
-    "azure-iot-digitaltwins-service": "^1.0.0-preview.0",
-    "azure-iot-digitaltwins-device": "^1.0.0-preview.0"
+    "azure-iot-digitaltwins-model-repository": "1.0.0-preview.0",
+    "azure-iot-digitaltwins-service": "1.0.0-preview.0",
+    "azure-iot-digitaltwins-device": "1.0.0-preview.0"
   },
   "devDependencies": {
     "eslint": "^6.0.1",

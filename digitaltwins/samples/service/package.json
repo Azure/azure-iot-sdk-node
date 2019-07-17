@@ -18,8 +18,8 @@
   },
   "homepage": "https://github.com/azure/azure-iot-sdk-node-digitaltwins#readme",
   "dependencies": {
-    "azure-iot-digitaltwins-service": "^1.0.0-preview.0",
-    "azure-iothub": "^1.9.9"
+    "azure-iot-digitaltwins-service": "1.0.0-preview.0",
+    "azure-iothub": "1.12.0-preview.0"
   },
   "devDependencies": {
     "eslint": "^6.0.1",

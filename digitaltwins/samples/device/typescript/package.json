@@ -1,13 +1,13 @@
 {
   "name": "azure-iot-digitaltwins-ts-samples",
-  "version": "1.0.0-preview",
+  "version": "1.0.0-preview.0",
   "description": "Azure IoT SDK - Digital Twin Client typescript samples",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "dependencies": {
-    "azure-iot-device": "1.9.9",
-    "azure-iot-common": "1.9.9",
-    "azure-iot-device-mqtt": "1.9.9",
+    "azure-iot-device": "1.12.0-preview.0",
+    "azure-iot-common": "1.12.0-preview.0",
+    "azure-iot-device-mqtt": "1.12.0-preview.0",
     "azure-iot-digitaltwins-device": "1.0.0-preview.0"
   },
   "devDependencies": {
