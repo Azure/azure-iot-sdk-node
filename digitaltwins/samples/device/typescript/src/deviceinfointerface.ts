@@ -8,7 +8,7 @@ import {
   Property
 } from 'azure-iot-digitaltwins-device';
 
-export class DigitalTwinInterface extends BaseInterface {
+export class DeviceInformation extends BaseInterface {
   fwVersion: Property;
   manufacturer: Property;
   model: Property;

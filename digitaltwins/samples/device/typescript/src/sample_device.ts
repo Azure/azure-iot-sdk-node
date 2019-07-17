@@ -1,8 +1,8 @@
 import { Client } from 'azure-iot-device';
 import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
 import { DigitalTwinClient, CommandCallback, PropertyChangedCallback, BaseInterface } from 'azure-iot-digitaltwins-device';
-import { DigitalTwinInterface as EnvironmentalSensor } from './environmentalinterface';
-import { DigitalTwinInterface as SampleDeviceInfo } from './deviceinfointerface';
+import { EnvironmentalSensor } from './environmentalinterface';
+import { DeviceInformation } from './deviceinfointerface';
 
 let environmentCommandCallback: CommandCallback = (request, response) => {
   console.log('Callback for command for environment interface');
@@ -68,13 +68,13 @@ let environmentReadWriteCallback: PropertyChangedCallback = (interfaceObject: Ba
 };
 
 let environmentalSensor = new EnvironmentalSensor('environmentalSensor', environmentReadWriteCallback, environmentCommandCallback );
-let sampleDeviceInfo = new SampleDeviceInfo('sampleDeviceInfo');
+let sampleDeviceInfo = new DeviceInformation('sampleDeviceInfo');
 
 const client = Client.fromConnectionString(process.argv[2], Protocol);
 
-const dcm = 'urn:azureiot:testdevicecapabilitymodel:1';
+const capabilityModel = 'urn:azureiot:testdevicecapabilitymodel:1';
 
-let dtClient = new DigitalTwinClient(dcm, client);
+let dtClient = new DigitalTwinClient(capabilityModel, client);
 
 const main = async () => {
   try {

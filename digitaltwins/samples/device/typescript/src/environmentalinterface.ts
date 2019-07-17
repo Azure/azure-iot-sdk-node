@@ -12,7 +12,7 @@ import {
   CommandCallback
 } from 'azure-iot-digitaltwins-device';
 
-export class DigitalTwinInterface extends BaseInterface {
+export class EnvironmentalSensor extends BaseInterface {
   temp: Telemetry;
   humid: Telemetry;
   state: Property;
