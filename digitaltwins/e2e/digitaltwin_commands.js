@@ -27,7 +27,7 @@ const credentials = new IoTHubTokenCredentials(hubConnectionString);
 
 const TestComponent = require('./test_component').TestComponent;
 
-describe('Digital Twin Invoke Command', function() {
+describe('Digital Twin Invoke Command', function () {
   const deviceDescription = {
     deviceId: 'node-e2e-digitaltwin-invoke-command-' + uuid.v4()
   };
@@ -37,7 +37,7 @@ describe('Digital Twin Invoke Command', function() {
   const invokeCommandResponse = 'testInvokeCommandResponse';
   let createdDevice;
 
-  before('creating device identity: ' + deviceDescription.deviceId, function(done) {
+  before('creating device identity: ' + deviceDescription.deviceId, function (done) {
     this.timeout(60000); // eslint-disable-line no-invalid-this
     debug('creating test device: ' + deviceDescription.deviceId);
     Registry.fromConnectionString(hubConnectionString).create(deviceDescription
@@ -58,12 +58,12 @@ describe('Digital Twin Invoke Command', function() {
     });
   });
 
-  after('deleting device identity: ' + deviceDescription.deviceId, function(done) {
+  after('deleting device identity: ' + deviceDescription.deviceId, function (done) {
     this.timeout(60000); // eslint-disable-line no-invalid-this
     Registry.fromConnectionString(hubConnectionString).delete(deviceDescription.deviceId, done);
   });
 
-  it('invoke command received by the device client', function(done) {
+  it('invoke command received by the device client', function (done) {
     this.timeout(160000); // eslint-disable-line no-invalid-this
 
     // test device client
@@ -72,7 +72,7 @@ describe('Digital Twin Invoke Command', function() {
     const deviceClient = DeviceClient.fromSharedAccessSignature(deviceSas, Mqtt);
     const digitalTwinClient = new DigitalTwinDeviceClient(capabilityModelDocument['@id'], deviceClient);
 
-    const commandCallback = function(request, response) {
+    const commandCallback = function (request, response) {
       debug('command handler invoked');
       assert.isNotNull(request);
       assert.strictEqual(request.commandName, invokeCommandName);
@@ -80,7 +80,7 @@ describe('Digital Twin Invoke Command', function() {
       response.acknowledge(200, invokeCommandResponse, (err) => {
         if (err) {
           console.log('responding to the testInvokeCommand command failed.');
-          deviceClient.close(function() {
+          deviceClient.close(function () {
             debug('device client closed');
             done(err);
           });
@@ -90,27 +90,27 @@ describe('Digital Twin Invoke Command', function() {
 
     const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-    const testComponent = new TestComponent(testComponentName, function() {}, commandCallback);
+    const testComponent = new TestComponent(testComponentName, function () {}, commandCallback);
     digitalTwinClient.addComponent(testComponent);
     digitalTwinClient.register()
-        .then(function() {
-          return digitalTwinServiceClient.invokeCommand(deviceDescription.deviceId, testComponentName, invokeCommandName, invokeCommandArgument);
-        })
-        .then(function(response) {
-          assert.strictEqual(200, response.statusCode);
-          assert.strictEqual(invokeCommandResponse, response.result);
-        })
-        .then(function() {
-          return deviceClient.close();
-        })
-        .then(function() {
-          done();
-        })
-        .catch((err) => {
-          deviceClient.close(function() {
-            debug('device client closed');
-            done(err);
-          });
+      .then(function () {
+        return digitalTwinServiceClient.invokeCommand(deviceDescription.deviceId, testComponentName, invokeCommandName, invokeCommandArgument);
+      })
+      .then(function (response) {
+        assert.strictEqual(200, response.statusCode);
+        assert.strictEqual(invokeCommandResponse, response.result);
+      })
+      .then(function () {
+        return deviceClient.close();
+      })
+      .then(function () {
+        done();
+      })
+      .catch((err) => {
+        deviceClient.close(function () {
+          debug('device client closed');
+          done(err);
         });
+      });
   });
 });
