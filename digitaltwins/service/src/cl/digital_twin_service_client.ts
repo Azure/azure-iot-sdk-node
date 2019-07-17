@@ -63,15 +63,15 @@ export class ModelResponse extends Model {
 }
 
 export class CommandResult {
-  statusCode?: number;
   result?: any;
+  statusCode?: number;
   requestId?: string;
 
-  constructor(result: Models.DigitalTwinInvokeInterfaceCommandResponse) {
+  constructor(result: Models.DigitalTwinInvokeInterfaceCommandResponse, statusCode?: number, requestId?: string) {
     if (result) {
-      this.statusCode = result.xMsCommandStatuscode;
-      this.result = result.body;
-      this.requestId = result.xMsRequestId;
+      this.result = result;
+      this.statusCode = statusCode;
+      this.requestId = requestId;
     }
   }
 }
@@ -79,8 +79,8 @@ export class CommandResult {
 export class CommandResultResponse extends CommandResult{
   _response?: msRest.WebResource;
 
-  constructor(result: Models.DigitalTwinInvokeInterfaceCommandResponse, webResource?: msRest.WebResource) {
-    super (result);
+  constructor(result: Models.DigitalTwinInvokeInterfaceCommandResponse, statusCode?: number, requestId?: string, webResource?: msRest.WebResource) {
+    super (result, statusCode, requestId);
     this._response = webResource;
   }
 }
@@ -234,9 +234,14 @@ export class DigitalTwinServiceClient {
   invokeCommand(digitalTwinId: string, componentName: string, commandName: string, argument: string, callback: TripleValueCallback<CommandResult, msRest.WebResource>): void;
   invokeCommand(digitalTwinId: string, componentName: string, commandName: string, argument: string, callback?: TripleValueCallback<CommandResult, msRest.WebResource>): void | Promise<CommandResultResponse> {
     return tripleValueCallbackToPromise<CommandResult, msRest.WebResource, CommandResultResponse>((_callback) => {
-      this._pl.digitalTwin.invokeInterfaceCommand(digitalTwinId, componentName, commandName, argument, (err, result, response) => {
-        let commandResult: CommandResult = new CommandResult(result);
-        _callback(err as Error, commandResult, response);
+      this._pl.digitalTwin.invokeInterfaceCommand(digitalTwinId, componentName, commandName, argument, (err, result, request, response) => {
+          let commandResult: CommandResult;
+          if ((!response) || (!request)) {
+            commandResult = new CommandResult(result);
+          } else {
+            commandResult = new CommandResult(result, Number(response.headers.get('x-ms-command-statuscode')), response.headers.get('x-ms-request-id'));
+          }
+        _callback(err as Error, commandResult, result);
       });
     }, (commandResult, response) => createResultWithWebResource<CommandResult>(commandResult, response), callback as TripleValueCallback<CommandResult, msRest.WebResource>);
   }
