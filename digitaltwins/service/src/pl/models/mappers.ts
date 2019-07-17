@@ -1057,12 +1057,6 @@ export const DesiredState: msRest.CompositeMapper = {
           name: "Number"
         }
       },
-      subCode: {
-        serializedName: "subCode",
-        type: {
-          name: "Number"
-        }
-      },
       version: {
         serializedName: "version",
         type: {

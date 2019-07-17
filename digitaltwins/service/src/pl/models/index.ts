@@ -324,26 +324,27 @@ export interface PropertyContainer {
  */
 export interface ExportImportDevice {
   /**
-   * @member {string} [id]
+   * @member {string} [id] Device Id is always required
    */
   id?: string;
   /**
-   * @member {string} [moduleId]
+   * @member {string} [moduleId] ModuleId is applicable to modules only
    */
   moduleId?: string;
   /**
-   * @member {string} [eTag]
+   * @member {string} [eTag] ETag parameter is only used for pre-conditioning
+   * the update when importMode is updateIfMatchETag
    */
   eTag?: string;
   /**
-   * @member {ImportMode} [importMode] Possible values include:
-   * 'createOrUpdate', 'create', 'update', 'updateIfMatchETag',
-   * 'createOrUpdateIfMatchETag', 'delete', 'deleteIfMatchETag', 'updateTwin',
-   * 'updateTwinIfMatchETag'
+   * @member {ImportMode} [importMode] Possible values include: 'create',
+   * 'update', 'updateIfMatchETag', 'delete', 'deleteIfMatchETag',
+   * 'updateTwin', 'updateTwinIfMatchETag'
    */
   importMode?: ImportMode;
   /**
-   * @member {Status1} [status] Possible values include: 'enabled', 'disabled'
+   * @member {Status1} [status] Status is optional and defaults to enabled.
+   * Possible values include: 'enabled', 'disabled'
    */
   status?: Status1;
   /**
@@ -351,11 +352,14 @@ export interface ExportImportDevice {
    */
   statusReason?: string;
   /**
-   * @member {AuthenticationMechanism} [authentication]
+   * @member {AuthenticationMechanism} [authentication] Authentication
+   * parameter is optional and defaults to SAS if not provided. In that case,
+   * we auto-generate primary/secondary access keys
    */
   authentication?: AuthenticationMechanism;
   /**
-   * @member {string} [twinETag]
+   * @member {string} [twinETag] twinETag parameter is only used for
+   * pre-conditioning the update when importMode is updateTwinIfMatchETag
    */
   twinETag?: string;
   /**
@@ -363,11 +367,13 @@ export interface ExportImportDevice {
    */
   tags?: { [propertyName: string]: any };
   /**
-   * @member {PropertyContainer} [properties]
+   * @member {PropertyContainer} [properties] Properties are optional and
+   * defaults to empty object
    */
   properties?: PropertyContainer;
   /**
-   * @member {DeviceCapabilities} [capabilities]
+   * @member {DeviceCapabilities} [capabilities] Capabilities param is optional
+   * and defaults to no capability
    */
   capabilities?: DeviceCapabilities;
   /**
@@ -434,7 +440,10 @@ export interface DeviceRegistryOperationError {
    * 'DigitalTwinInterfaceNotFound', 'QueryStoreClusterNotFound',
    * 'DeviceNotOnline', 'DeviceConnectionClosedRemotely', 'EnrollmentNotFound',
    * 'DeviceRegistrationNotFound', 'AsyncOperationNotFound',
-   * 'EnrollmentGroupNotFound', 'ConfigurationNotFound', 'GroupNotFound',
+   * 'EnrollmentGroupNotFound', 'DeviceRecordNotFound', 'GroupRecordNotFound',
+   * 'DeviceGroupNotFound', 'ProvisioningSettingsNotFound',
+   * 'ProvisioningRecordNotFound', 'LinkedHubNotFound',
+   * 'CertificateAuthorityNotFound', 'ConfigurationNotFound', 'GroupNotFound',
    * 'DigitalTwinModelNotFound', 'InterfaceNameModelNotFound',
    * 'GenericMethodNotAllowed', 'OperationNotAllowedInCurrentState',
    * 'ImportDevicesNotSupported', 'BulkAddDevicesNotSupported',
@@ -442,6 +451,9 @@ export interface DeviceRegistryOperationError {
    * 'CallbackSubscriptionConflict', 'ModelAlreadyExists', 'DeviceLocked',
    * 'DeviceJobAlreadyExists', 'JobAlreadyExists', 'EnrollmentConflict',
    * 'EnrollmentGroupConflict', 'RegistrationStatusConflict',
+   * 'DeviceRecordConflict', 'GroupRecordConflict', 'DeviceGroupConflict',
+   * 'ProvisioningSettingsConflict', 'ProvisioningRecordConflict',
+   * 'LinkedHubConflict', 'CertificateAuthorityConflict',
    * 'ModuleAlreadyExistsOnDevice', 'ConfigurationAlreadyExists',
    * 'ApplyConfigurationAlreadyInProgressOnDevice',
    * 'DigitalTwinModelAlreadyExists',
@@ -833,10 +845,6 @@ export interface DesiredState {
    * @member {number} [code] Status code for the operation.
    */
   code?: number;
-  /**
-   * @member {number} [subCode] Sub status code for the status.
-   */
-  subCode?: number;
   /**
    * @member {number} [version] Version of the desired value received.
    */
@@ -1563,13 +1571,12 @@ export type Status = 'enabled' | 'disabled';
 
 /**
  * Defines values for ImportMode.
- * Possible values include: 'createOrUpdate', 'create', 'update', 'updateIfMatchETag',
- * 'createOrUpdateIfMatchETag', 'delete', 'deleteIfMatchETag', 'updateTwin',
- * 'updateTwinIfMatchETag'
+ * Possible values include: 'create', 'update', 'updateIfMatchETag', 'delete', 'deleteIfMatchETag',
+ * 'updateTwin', 'updateTwinIfMatchETag'
  * @readonly
  * @enum {string}
  */
-export type ImportMode = 'createOrUpdate' | 'create' | 'update' | 'updateIfMatchETag' | 'createOrUpdateIfMatchETag' | 'delete' | 'deleteIfMatchETag' | 'updateTwin' | 'updateTwinIfMatchETag';
+export type ImportMode = 'create' | 'update' | 'updateIfMatchETag' | 'delete' | 'deleteIfMatchETag' | 'updateTwin' | 'updateTwinIfMatchETag';
 
 /**
  * Defines values for Status1.
@@ -1614,13 +1621,18 @@ export type Status1 = 'enabled' | 'disabled';
  * 'ModuleNotFound', 'AzureTableStoreNotFound', 'IotHubFailingOver', 'FeatureNotSupported',
  * 'DigitalTwinInterfaceNotFound', 'QueryStoreClusterNotFound', 'DeviceNotOnline',
  * 'DeviceConnectionClosedRemotely', 'EnrollmentNotFound', 'DeviceRegistrationNotFound',
- * 'AsyncOperationNotFound', 'EnrollmentGroupNotFound', 'ConfigurationNotFound', 'GroupNotFound',
- * 'DigitalTwinModelNotFound', 'InterfaceNameModelNotFound', 'GenericMethodNotAllowed',
- * 'OperationNotAllowedInCurrentState', 'ImportDevicesNotSupported', 'BulkAddDevicesNotSupported',
- * 'GenericConflict', 'DeviceAlreadyExists', 'LinkCreationConflict',
- * 'CallbackSubscriptionConflict', 'ModelAlreadyExists', 'DeviceLocked', 'DeviceJobAlreadyExists',
- * 'JobAlreadyExists', 'EnrollmentConflict', 'EnrollmentGroupConflict',
- * 'RegistrationStatusConflict', 'ModuleAlreadyExistsOnDevice', 'ConfigurationAlreadyExists',
+ * 'AsyncOperationNotFound', 'EnrollmentGroupNotFound', 'DeviceRecordNotFound',
+ * 'GroupRecordNotFound', 'DeviceGroupNotFound', 'ProvisioningSettingsNotFound',
+ * 'ProvisioningRecordNotFound', 'LinkedHubNotFound', 'CertificateAuthorityNotFound',
+ * 'ConfigurationNotFound', 'GroupNotFound', 'DigitalTwinModelNotFound',
+ * 'InterfaceNameModelNotFound', 'GenericMethodNotAllowed', 'OperationNotAllowedInCurrentState',
+ * 'ImportDevicesNotSupported', 'BulkAddDevicesNotSupported', 'GenericConflict',
+ * 'DeviceAlreadyExists', 'LinkCreationConflict', 'CallbackSubscriptionConflict',
+ * 'ModelAlreadyExists', 'DeviceLocked', 'DeviceJobAlreadyExists', 'JobAlreadyExists',
+ * 'EnrollmentConflict', 'EnrollmentGroupConflict', 'RegistrationStatusConflict',
+ * 'DeviceRecordConflict', 'GroupRecordConflict', 'DeviceGroupConflict',
+ * 'ProvisioningSettingsConflict', 'ProvisioningRecordConflict', 'LinkedHubConflict',
+ * 'CertificateAuthorityConflict', 'ModuleAlreadyExistsOnDevice', 'ConfigurationAlreadyExists',
  * 'ApplyConfigurationAlreadyInProgressOnDevice', 'DigitalTwinModelAlreadyExists',
  * 'DigitalTwinModelExistsWithOtherModelType', 'InterfaceNameModelAlreadyExists',
  * 'GenericPreconditionFailed', 'PreconditionFailed', 'DeviceMessageLockLost',
@@ -1645,7 +1657,7 @@ export type Status1 = 'enabled' | 'disabled';
  * @readonly
  * @enum {string}
  */
-export type ErrorCode = 'InvalidErrorCode' | 'GenericBadRequest' | 'InvalidProtocolVersion' | 'DeviceInvalidResultCount' | 'InvalidOperation' | 'ArgumentInvalid' | 'ArgumentNull' | 'IotHubFormatError' | 'DeviceStorageEntitySerializationError' | 'BlobContainerValidationError' | 'ImportWarningExistsError' | 'InvalidSchemaVersion' | 'DeviceDefinedMultipleTimes' | 'DeserializationError' | 'BulkRegistryOperationFailure' | 'DefaultStorageEndpointNotConfigured' | 'InvalidFileUploadCorrelationId' | 'ExpiredFileUploadCorrelationId' | 'InvalidStorageEndpoint' | 'InvalidMessagingEndpoint' | 'InvalidFileUploadCompletionStatus' | 'InvalidStorageEndpointOrBlob' | 'RequestCanceled' | 'InvalidStorageEndpointProperty' | 'EtagDoesNotMatch' | 'RequestTimedOut' | 'UnsupportedOperationOnReplica' | 'NullMessage' | 'ConnectionForcefullyClosedOnNewConnection' | 'InvalidDeviceScope' | 'ConnectionForcefullyClosedOnFaultInjection' | 'ConnectionRejectedOnFaultInjection' | 'InvalidRouteTestInput' | 'InvalidSourceOnRoute' | 'RoutingNotEnabled' | 'InvalidContentEncodingOrType' | 'InvalidEndorsementKey' | 'InvalidRegistrationId' | 'InvalidStorageRootKey' | 'InvalidEnrollmentGroupId' | 'TooManyEnrollments' | 'RegistrationIdDefinedMultipleTimes' | 'CustomAllocationFailed' | 'CustomAllocationIotHubNotSpecified' | 'CustomAllocationUnauthorizedAccess' | 'CannotRegisterModuleToModule' | 'TenantHubRoutingNotEnabled' | 'InvalidConfigurationTargetCondition' | 'InvalidConfigurationContent' | 'CannotModifyImmutableConfigurationContent' | 'InvalidConfigurationCustomMetricsQuery' | 'InvalidPnPInterfaceDefinition' | 'InvalidPnPDesiredProperties' | 'InvalidPnPReportedProperties' | 'InvalidPnPWritableReportedProperties' | 'GenericUnauthorized' | 'IotHubNotFound' | 'IotHubUnauthorizedAccess' | 'IotHubUnauthorized' | 'ElasticPoolNotFound' | 'SystemModuleModifyUnauthorizedAccess' | 'GenericForbidden' | 'IotHubSuspended' | 'IotHubQuotaExceeded' | 'JobQuotaExceeded' | 'DeviceMaximumQueueDepthExceeded' | 'IotHubMaxCbsTokenExceeded' | 'DeviceMaximumActiveFileUploadLimitExceeded' | 'DeviceMaximumQueueSizeExceeded' | 'RoutingEndpointResponseForbidden' | 'InvalidMessageExpiryTime' | 'OperationNotAvailableInCurrentTier' | 'DeviceModelMaxPropertiesExceeded' | 'DeviceModelMaxIndexablePropertiesExceeded' | 'IotDpsSuspended' | 'IotDpsSuspending' | 'GenericNotFound' | 'DeviceNotFound' | 'JobNotFound' | 'QuotaMetricNotFound' | 'SystemPropertyNotFound' | 'AmqpAddressNotFound' | 'RoutingEndpointResponseNotFound' | 'CertificateNotFound' | 'ElasticPoolTenantHubNotFound' | 'ModuleNotFound' | 'AzureTableStoreNotFound' | 'IotHubFailingOver' | 'FeatureNotSupported' | 'DigitalTwinInterfaceNotFound' | 'QueryStoreClusterNotFound' | 'DeviceNotOnline' | 'DeviceConnectionClosedRemotely' | 'EnrollmentNotFound' | 'DeviceRegistrationNotFound' | 'AsyncOperationNotFound' | 'EnrollmentGroupNotFound' | 'ConfigurationNotFound' | 'GroupNotFound' | 'DigitalTwinModelNotFound' | 'InterfaceNameModelNotFound' | 'GenericMethodNotAllowed' | 'OperationNotAllowedInCurrentState' | 'ImportDevicesNotSupported' | 'BulkAddDevicesNotSupported' | 'GenericConflict' | 'DeviceAlreadyExists' | 'LinkCreationConflict' | 'CallbackSubscriptionConflict' | 'ModelAlreadyExists' | 'DeviceLocked' | 'DeviceJobAlreadyExists' | 'JobAlreadyExists' | 'EnrollmentConflict' | 'EnrollmentGroupConflict' | 'RegistrationStatusConflict' | 'ModuleAlreadyExistsOnDevice' | 'ConfigurationAlreadyExists' | 'ApplyConfigurationAlreadyInProgressOnDevice' | 'DigitalTwinModelAlreadyExists' | 'DigitalTwinModelExistsWithOtherModelType' | 'InterfaceNameModelAlreadyExists' | 'GenericPreconditionFailed' | 'PreconditionFailed' | 'DeviceMessageLockLost' | 'JobRunPreconditionFailed' | 'InflightMessagesInLink' | 'GenericRequestEntityTooLarge' | 'MessageTooLarge' | 'TooManyDevices' | 'TooManyModulesOnDevice' | 'ConfigurationCountLimitExceeded' | 'DigitalTwinModelCountLimitExceeded' | 'GenericUnsupportedMediaType' | 'IncompatibleDataType' | 'GenericTooManyRequests' | 'ThrottlingException' | 'ThrottleBacklogLimitExceeded' | 'ThrottlingBacklogTimeout' | 'ThrottlingMaxActiveJobCountExceeded' | 'ClientClosedRequest' | 'GenericServerError' | 'ServerError' | 'JobCancelled' | 'StatisticsRetrievalError' | 'ConnectionForcefullyClosed' | 'InvalidBlobState' | 'BackupTimedOut' | 'AzureStorageTimeout' | 'GenericTimeout' | 'InvalidThrottleParameter' | 'EventHubLinkAlreadyClosed' | 'ReliableBlobStoreError' | 'RetryAttemptsExhausted' | 'AzureTableStoreError' | 'CheckpointStoreNotFound' | 'DocumentDbInvalidReturnValue' | 'ReliableDocDbStoreStoreError' | 'ReliableBlobStoreTimeoutError' | 'ConfigReadFailed' | 'InvalidContainerReceiveLink' | 'InvalidPartitionEpoch' | 'RestoreTimedOut' | 'StreamReservationFailure' | 'UnexpectedPropertyValue' | 'OrchestrationOperationFailed' | 'ModelRepoEndpointError' | 'ResolutionError' | 'GenericBadGateway' | 'InvalidResponseWhileProxying' | 'GenericServiceUnavailable' | 'ServiceUnavailable' | 'PartitionNotFound' | 'IotHubActivationFailed' | 'ServerBusy' | 'IotHubRestoring' | 'ReceiveLinkOpensThrottled' | 'ConnectionUnavailable' | 'DeviceUnavailable' | 'ConfigurationNotAvailable' | 'GroupNotAvailable' | 'GenericGatewayTimeout' | 'GatewayTimeout';
+export type ErrorCode = 'InvalidErrorCode' | 'GenericBadRequest' | 'InvalidProtocolVersion' | 'DeviceInvalidResultCount' | 'InvalidOperation' | 'ArgumentInvalid' | 'ArgumentNull' | 'IotHubFormatError' | 'DeviceStorageEntitySerializationError' | 'BlobContainerValidationError' | 'ImportWarningExistsError' | 'InvalidSchemaVersion' | 'DeviceDefinedMultipleTimes' | 'DeserializationError' | 'BulkRegistryOperationFailure' | 'DefaultStorageEndpointNotConfigured' | 'InvalidFileUploadCorrelationId' | 'ExpiredFileUploadCorrelationId' | 'InvalidStorageEndpoint' | 'InvalidMessagingEndpoint' | 'InvalidFileUploadCompletionStatus' | 'InvalidStorageEndpointOrBlob' | 'RequestCanceled' | 'InvalidStorageEndpointProperty' | 'EtagDoesNotMatch' | 'RequestTimedOut' | 'UnsupportedOperationOnReplica' | 'NullMessage' | 'ConnectionForcefullyClosedOnNewConnection' | 'InvalidDeviceScope' | 'ConnectionForcefullyClosedOnFaultInjection' | 'ConnectionRejectedOnFaultInjection' | 'InvalidRouteTestInput' | 'InvalidSourceOnRoute' | 'RoutingNotEnabled' | 'InvalidContentEncodingOrType' | 'InvalidEndorsementKey' | 'InvalidRegistrationId' | 'InvalidStorageRootKey' | 'InvalidEnrollmentGroupId' | 'TooManyEnrollments' | 'RegistrationIdDefinedMultipleTimes' | 'CustomAllocationFailed' | 'CustomAllocationIotHubNotSpecified' | 'CustomAllocationUnauthorizedAccess' | 'CannotRegisterModuleToModule' | 'TenantHubRoutingNotEnabled' | 'InvalidConfigurationTargetCondition' | 'InvalidConfigurationContent' | 'CannotModifyImmutableConfigurationContent' | 'InvalidConfigurationCustomMetricsQuery' | 'InvalidPnPInterfaceDefinition' | 'InvalidPnPDesiredProperties' | 'InvalidPnPReportedProperties' | 'InvalidPnPWritableReportedProperties' | 'GenericUnauthorized' | 'IotHubNotFound' | 'IotHubUnauthorizedAccess' | 'IotHubUnauthorized' | 'ElasticPoolNotFound' | 'SystemModuleModifyUnauthorizedAccess' | 'GenericForbidden' | 'IotHubSuspended' | 'IotHubQuotaExceeded' | 'JobQuotaExceeded' | 'DeviceMaximumQueueDepthExceeded' | 'IotHubMaxCbsTokenExceeded' | 'DeviceMaximumActiveFileUploadLimitExceeded' | 'DeviceMaximumQueueSizeExceeded' | 'RoutingEndpointResponseForbidden' | 'InvalidMessageExpiryTime' | 'OperationNotAvailableInCurrentTier' | 'DeviceModelMaxPropertiesExceeded' | 'DeviceModelMaxIndexablePropertiesExceeded' | 'IotDpsSuspended' | 'IotDpsSuspending' | 'GenericNotFound' | 'DeviceNotFound' | 'JobNotFound' | 'QuotaMetricNotFound' | 'SystemPropertyNotFound' | 'AmqpAddressNotFound' | 'RoutingEndpointResponseNotFound' | 'CertificateNotFound' | 'ElasticPoolTenantHubNotFound' | 'ModuleNotFound' | 'AzureTableStoreNotFound' | 'IotHubFailingOver' | 'FeatureNotSupported' | 'DigitalTwinInterfaceNotFound' | 'QueryStoreClusterNotFound' | 'DeviceNotOnline' | 'DeviceConnectionClosedRemotely' | 'EnrollmentNotFound' | 'DeviceRegistrationNotFound' | 'AsyncOperationNotFound' | 'EnrollmentGroupNotFound' | 'DeviceRecordNotFound' | 'GroupRecordNotFound' | 'DeviceGroupNotFound' | 'ProvisioningSettingsNotFound' | 'ProvisioningRecordNotFound' | 'LinkedHubNotFound' | 'CertificateAuthorityNotFound' | 'ConfigurationNotFound' | 'GroupNotFound' | 'DigitalTwinModelNotFound' | 'InterfaceNameModelNotFound' | 'GenericMethodNotAllowed' | 'OperationNotAllowedInCurrentState' | 'ImportDevicesNotSupported' | 'BulkAddDevicesNotSupported' | 'GenericConflict' | 'DeviceAlreadyExists' | 'LinkCreationConflict' | 'CallbackSubscriptionConflict' | 'ModelAlreadyExists' | 'DeviceLocked' | 'DeviceJobAlreadyExists' | 'JobAlreadyExists' | 'EnrollmentConflict' | 'EnrollmentGroupConflict' | 'RegistrationStatusConflict' | 'DeviceRecordConflict' | 'GroupRecordConflict' | 'DeviceGroupConflict' | 'ProvisioningSettingsConflict' | 'ProvisioningRecordConflict' | 'LinkedHubConflict' | 'CertificateAuthorityConflict' | 'ModuleAlreadyExistsOnDevice' | 'ConfigurationAlreadyExists' | 'ApplyConfigurationAlreadyInProgressOnDevice' | 'DigitalTwinModelAlreadyExists' | 'DigitalTwinModelExistsWithOtherModelType' | 'InterfaceNameModelAlreadyExists' | 'GenericPreconditionFailed' | 'PreconditionFailed' | 'DeviceMessageLockLost' | 'JobRunPreconditionFailed' | 'InflightMessagesInLink' | 'GenericRequestEntityTooLarge' | 'MessageTooLarge' | 'TooManyDevices' | 'TooManyModulesOnDevice' | 'ConfigurationCountLimitExceeded' | 'DigitalTwinModelCountLimitExceeded' | 'GenericUnsupportedMediaType' | 'IncompatibleDataType' | 'GenericTooManyRequests' | 'ThrottlingException' | 'ThrottleBacklogLimitExceeded' | 'ThrottlingBacklogTimeout' | 'ThrottlingMaxActiveJobCountExceeded' | 'ClientClosedRequest' | 'GenericServerError' | 'ServerError' | 'JobCancelled' | 'StatisticsRetrievalError' | 'ConnectionForcefullyClosed' | 'InvalidBlobState' | 'BackupTimedOut' | 'AzureStorageTimeout' | 'GenericTimeout' | 'InvalidThrottleParameter' | 'EventHubLinkAlreadyClosed' | 'ReliableBlobStoreError' | 'RetryAttemptsExhausted' | 'AzureTableStoreError' | 'CheckpointStoreNotFound' | 'DocumentDbInvalidReturnValue' | 'ReliableDocDbStoreStoreError' | 'ReliableBlobStoreTimeoutError' | 'ConfigReadFailed' | 'InvalidContainerReceiveLink' | 'InvalidPartitionEpoch' | 'RestoreTimedOut' | 'StreamReservationFailure' | 'UnexpectedPropertyValue' | 'OrchestrationOperationFailed' | 'ModelRepoEndpointError' | 'ResolutionError' | 'GenericBadGateway' | 'InvalidResponseWhileProxying' | 'GenericServiceUnavailable' | 'ServiceUnavailable' | 'PartitionNotFound' | 'IotHubActivationFailed' | 'ServerBusy' | 'IotHubRestoring' | 'ReceiveLinkOpensThrottled' | 'ConnectionUnavailable' | 'DeviceUnavailable' | 'ConfigurationNotAvailable' | 'GroupNotAvailable' | 'GenericGatewayTimeout' | 'GatewayTimeout';
 
 /**
  * Defines values for WarningCode.

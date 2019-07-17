@@ -11,7 +11,7 @@
     "build": "npm -s run lint && npm -s run compile",
     "test-min": "istanbul cover --report none ./node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test.js",
     "test": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test.js",
-    "check-cover": "istanbul check-coverage --statements 84 --branches 54  --lines 85 --functions 53",
+    "check-cover": "istanbul check-coverage --statements 84 --branches 57  --lines 85 --functions 54",
     "ci": "npm -s run build && npm -s run test-min && npm -s run check-cover"
   },
   "repository": {

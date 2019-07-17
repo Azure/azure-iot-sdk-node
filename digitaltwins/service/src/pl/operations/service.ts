@@ -630,19 +630,19 @@ export class Service {
    * @param [options] The optional parameters
    * @returns Promise<msRest.RestResponse>
    */
-  setFaultInjection(value: string, options?: msRest.RequestOptionsBase): Promise<msRest.RestResponse>;
+  setFaultInjection(value: Models.FaultInjectionProperties, options?: msRest.RequestOptionsBase): Promise<msRest.RestResponse>;
   /**
    * @param value
    * @param callback The callback
    */
-  setFaultInjection(value: string, callback: msRest.ServiceCallback<void>): void;
+  setFaultInjection(value: Models.FaultInjectionProperties, callback: msRest.ServiceCallback<void>): void;
   /**
    * @param value
    * @param options The optional parameters
    * @param callback The callback
    */
-  setFaultInjection(value: string, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<void>): void;
-  setFaultInjection(value: string, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<void>, callback?: msRest.ServiceCallback<void>): Promise<msRest.RestResponse> {
+  setFaultInjection(value: Models.FaultInjectionProperties, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<void>): void;
+  setFaultInjection(value: Models.FaultInjectionProperties, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<void>, callback?: msRest.ServiceCallback<void>): Promise<msRest.RestResponse> {
     return this.client.sendOperationRequest(
       {
         value,
@@ -1652,11 +1652,8 @@ const setFaultInjectionOperationSpec: msRest.OperationSpec = {
   requestBody: {
     parameterPath: "value",
     mapper: {
-      required: true,
-      serializedName: "value",
-      type: {
-        name: "String"
-      }
+      ...Mappers.FaultInjectionProperties,
+      required: true
     }
   },
   responses: {

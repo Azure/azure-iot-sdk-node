@@ -684,7 +684,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/FaultInjectionProperties"
             }
           },
           {
@@ -1885,21 +1885,22 @@
       "type": "object",
       "properties": {
         "id": {
+          "description": "Device Id is always required",
           "type": "string"
         },
         "moduleId": {
+          "description": "ModuleId is applicable to modules only",
           "type": "string"
         },
         "eTag": {
+          "description": "ETag parameter is only used for pre-conditioning the update when importMode is updateIfMatchETag",
           "type": "string"
         },
         "importMode": {
           "enum": [
-            "createOrUpdate",
             "create",
             "update",
             "updateIfMatchETag",
-            "createOrUpdateIfMatchETag",
             "delete",
             "deleteIfMatchETag",
             "updateTwin",
@@ -1908,6 +1909,7 @@
           "type": "string"
         },
         "status": {
+          "description": "Status is optional and defaults to enabled",
           "enum": [
             "enabled",
             "disabled"
@@ -1918,9 +1920,11 @@
           "type": "string"
         },
         "authentication": {
-          "$ref": "#/definitions/AuthenticationMechanism"
+          "$ref": "#/definitions/AuthenticationMechanism",
+          "description": "Authentication parameter is optional and defaults to SAS if not provided. In that case, we auto-generate primary/secondary access keys"
         },
         "twinETag": {
+          "description": "twinETag parameter is only used for pre-conditioning the update when importMode is updateTwinIfMatchETag",
           "type": "string"
         },
         "tags": {
@@ -1930,10 +1934,12 @@
           }
         },
         "properties": {
-          "$ref": "#/definitions/PropertyContainer"
+          "$ref": "#/definitions/PropertyContainer",
+          "description": "Properties are optional and defaults to empty object"
         },
         "capabilities": {
-          "$ref": "#/definitions/DeviceCapabilities"
+          "$ref": "#/definitions/DeviceCapabilities",
+          "description": "Capabilities param is optional and defaults to no capability"
         },
         "deviceScope": {
           "type": "string"
@@ -2092,6 +2098,13 @@
             "DeviceRegistrationNotFound",
             "AsyncOperationNotFound",
             "EnrollmentGroupNotFound",
+            "DeviceRecordNotFound",
+            "GroupRecordNotFound",
+            "DeviceGroupNotFound",
+            "ProvisioningSettingsNotFound",
+            "ProvisioningRecordNotFound",
+            "LinkedHubNotFound",
+            "CertificateAuthorityNotFound",
             "ConfigurationNotFound",
             "GroupNotFound",
             "DigitalTwinModelNotFound",
@@ -2111,6 +2124,13 @@
             "EnrollmentConflict",
             "EnrollmentGroupConflict",
             "RegistrationStatusConflict",
+            "DeviceRecordConflict",
+            "GroupRecordConflict",
+            "DeviceGroupConflict",
+            "ProvisioningSettingsConflict",
+            "ProvisioningRecordConflict",
+            "LinkedHubConflict",
+            "CertificateAuthorityConflict",
             "ModuleAlreadyExistsOnDevice",
             "ConfigurationAlreadyExists",
             "ApplyConfigurationAlreadyInProgressOnDevice",
@@ -2571,11 +2591,6 @@
         "code": {
           "format": "int32",
           "description": "Status code for the operation.",
-          "type": "integer"
-        },
-        "subCode": {
-          "format": "int32",
-          "description": "Sub status code for the status.",
           "type": "integer"
         },
         "version": {
