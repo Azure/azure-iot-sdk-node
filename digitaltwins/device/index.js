@@ -5,10 +5,10 @@
 module.exports = {
   DigitalTwinClient: require('./dist/digital_twin_client').DigitalTwinClient,
   BaseInterface: require('./dist/base_interface').BaseInterface,
-  TelemetryProperty: require('./dist/interface_types').Telemetry,
+  Telemetry: require('./dist/interface_types').Telemetry,
   ReadWritePropertyChangedCallback: require('./dist/interface_types').ReadWritePropertyChangedCallback,
-  CommandPropertyCallback: require('./dist/interface_types').CommandCallback,
+  CommandCallback: require('./dist/interface_types').CommandCallback,
   ReadOnlyProperty: require('./dist/interface_types').ReadOnlyProperty,
   ReadWriteProperty: require('./dist/interface_types').ReadWriteProperty,
-  CommandProperty: require('./dist/interface_types').Command
+  Command: require('./dist/interface_types').Command
 };
