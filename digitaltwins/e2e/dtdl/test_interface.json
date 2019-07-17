@@ -32,6 +32,19 @@
         "name": "responseProperty",
         "schema": "string"
       }
+    },
+    {
+      "@type": "Command",
+      "name": "asyncCommand",
+      "commandType": "asynchronous",
+      "request": {
+        "name": "requestProperty",
+        "schema": "string"
+      },
+      "response": {
+        "name": "responseProperty",
+        "schema": "string"
+      }
     }
   ],
   "@context": "http://azureiot.com/v1/contexts/Interface.json"
