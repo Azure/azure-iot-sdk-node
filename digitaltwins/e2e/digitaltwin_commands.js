@@ -13,9 +13,9 @@ const Mqtt = require('azure-iot-device-mqtt').Mqtt;
 const DeviceSas = require('azure-iot-device').SharedAccessSignature;
 const DeviceClient = require('azure-iot-device').Client;
 
-const IoTHubTokenCredentials = require('azure-iot-digitaltwin-service').IoTHubTokenCredentials;
-const DigitalTwinDeviceClient = require('azure-iot-digitaltwin-device').DigitalTwinClient;
-const DigitalTwinServiceClient = require('azure-iot-digitaltwin-service').DigitalTwinServiceClient;
+const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubTokenCredentials;
+const DigitalTwinDeviceClient = require('azure-iot-digitaltwins-device').DigitalTwinClient;
+const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 
 const createModel = require('./model_repository_helper').createModel;
 const interfaceDocument = require('./dtdl/test_interface');
