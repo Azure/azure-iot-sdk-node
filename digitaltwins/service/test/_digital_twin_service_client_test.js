@@ -458,21 +458,33 @@
   /*Test_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_018: [The `invokeCommand` method shall call the callback with an error parameter if a callback is passed..]*/
   it('invokeCommand calls invokeInterfaceCommand on the PL client', function (testCallback) {
     var testTwinId = 'digitalTwinId';
-    var testCommandResponse = {
-      xMsCommandStatuscode: number = 42,
-      xMsRequestId: string = 'testRequestId',
-      body: any = 'testBody'
+
+    var testResult = 'testResult';
+    var testRequest = 'testRequest';
+    var statusCode = 200;
+    var requestId = '1234';
+    var testResponse = {
+      headers: {
+        get: function (key) {
+          if (key === 'x-ms-command-statuscode') {
+            return statusCode;
+          } else {
+            return requestId;
+          }
+        }
+      }
     };
     var expectedTestCommandResponse = {
-      statusCode: number = 42,
-      requestId: string = 'testRequestId',
-      result: any = 'testBody'
+      statusCode: number = statusCode,
+      requestId: string = requestId,
+      result: any = testResult
     };
+
     var testComponentName = 'testComponentName';
-    var testCommandName = 'testCommandName';
+    var testCommandName = 'testCommandName';``
     var testArgument = 123456;
     var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.invokeInterfaceCommand = sinon.stub().callsArgWith(4, null, testCommandResponse);
+    testClient._pl.digitalTwin.invokeInterfaceCommand = sinon.stub().callsArgWith(4, null, testResult, testRequest, testResponse);
     testClient.invokeCommand(testTwinId, testComponentName, testCommandName, testArgument, function (err, result) {
       assert.isTrue(testClient._pl.digitalTwin.invokeInterfaceCommand.calledWith(testTwinId, testComponentName, testCommandName, testArgument));
       assert.isNull(err);

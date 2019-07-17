@@ -77,9 +77,13 @@ describe('Digital Twin Invoke Command', function() {
       assert.isNotNull(request);
       assert.strictEqual(request.commandName, invokeCommandName);
       console.log('invoked command: ' + invokeCommandName);
-      response.acknowledge(300, invokeCommandResponse, (err) => {
+      response.acknowledge(200, invokeCommandResponse, (err) => {
         if (err) {
           console.log('responding to the testInvokeCommand command failed.');
+          deviceClient.close(function() {
+            debug('device client closed');
+            done(err);
+          });
         }
       });
     };
@@ -93,7 +97,7 @@ describe('Digital Twin Invoke Command', function() {
           return digitalTwinServiceClient.invokeCommand(deviceDescription.deviceId, testComponentName, invokeCommandName, invokeCommandArgument);
         })
         .then(function(response) {
-          assert.strictEqual(300, response.statusCode);
+          assert.strictEqual(200, response.statusCode);
           assert.strictEqual(invokeCommandResponse, response.result);
         })
         .then(function() {
