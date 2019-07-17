@@ -6,34 +6,33 @@
 import {
   BaseInterface,
   Command,
-  ReadOnlyProperty,
-  ReadWriteProperty,
+  Property,
   Telemetry,
-  ReadWritePropertyChangedCallback,
+  PropertyChangedCallback,
   CommandCallback
 } from 'azure-iot-digitaltwins-device';
 
 export class DigitalTwinInterface extends BaseInterface {
   temp: Telemetry;
   humid: Telemetry;
-  state: ReadOnlyProperty;
+  state: Property;
   blink: Command;
   turnOn: Command;
   turnOff: Command;
   runDiagnostics: Command;
-  name: ReadWriteProperty;
-  brightness: ReadWriteProperty;
+  name: Property;
+  brightness: Property;
 
-  constructor(component: string, readWritePropertyChangedCallback?: ReadWritePropertyChangedCallback, commandCallback?: CommandCallback) {
-    super(component, 'urn:contoso:com:EnvironmentalSensor:1', readWritePropertyChangedCallback, commandCallback);
+  constructor(component: string, propertyChangedCallback?: PropertyChangedCallback, commandCallback?: CommandCallback) {
+    super(component, 'urn:contoso:com:EnvironmentalSensor:1', propertyChangedCallback, commandCallback);
     this.temp = new Telemetry();
     this.humid = new Telemetry();
-    this.state = new ReadOnlyProperty();
+    this.state = new Property();
     this.blink = new Command();
     this.turnOff = new Command();
     this.turnOn = new Command();
     this.runDiagnostics = new Command();
-    this.name = new ReadWriteProperty();
-    this.brightness = new ReadWriteProperty();
+    this.name = new Property(true);
+    this.brightness = new Property(true);
   }
 }

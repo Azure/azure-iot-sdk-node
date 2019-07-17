@@ -5,50 +5,50 @@
 
 import {
   BaseInterface,
-  ReadOnlyProperty
+  Property
 } from 'azure-iot-digitaltwins-device';
 
 export class DigitalTwinInterface extends BaseInterface {
-  fwVersion: ReadOnlyProperty;
-  manufacturer: ReadOnlyProperty;
-  model: ReadOnlyProperty;
-  oem: ReadOnlyProperty;
-  osName: ReadOnlyProperty;
-  osVersion: ReadOnlyProperty;
-  processorArchitecture: ReadOnlyProperty;
-  processorType: ReadOnlyProperty;
-  processorManufacturer: ReadOnlyProperty;
-  totalStorage: ReadOnlyProperty;
-  totalMemory: ReadOnlyProperty;
-  boardManufacturer: ReadOnlyProperty;
-  boardPart: ReadOnlyProperty;
-  serialNumber: ReadOnlyProperty;
-  connectivity: ReadOnlyProperty;
-  hwInterface: ReadOnlyProperty;
-  secureHardware: ReadOnlyProperty;
-  batteryRuntime: ReadOnlyProperty;
-  batteryRemaining: ReadOnlyProperty;
+  fwVersion: Property;
+  manufacturer: Property;
+  model: Property;
+  oem: Property;
+  osName: Property;
+  osVersion: Property;
+  processorArchitecture: Property;
+  processorType: Property;
+  processorManufacturer: Property;
+  totalStorage: Property;
+  totalMemory: Property;
+  boardManufacturer: Property;
+  boardPart: Property;
+  serialNumber: Property;
+  connectivity: Property;
+  hwInterface: Property;
+  secureHardware: Property;
+  batteryRuntime: Property;
+  batteryRemaining: Property;
 
   constructor(component: string) {
     super(component, 'urn:azureiot:DeviceInformation:1');
-    this.fwVersion = new ReadOnlyProperty();
-    this.manufacturer = new ReadOnlyProperty();
-    this.model = new ReadOnlyProperty();
-    this.oem = new ReadOnlyProperty();
-    this.osName = new ReadOnlyProperty();
-    this.osVersion = new ReadOnlyProperty();
-    this.processorArchitecture = new ReadOnlyProperty();
-    this.processorType = new ReadOnlyProperty();
-    this.processorManufacturer = new ReadOnlyProperty();
-    this.totalStorage = new ReadOnlyProperty();
-    this.totalMemory = new ReadOnlyProperty();
-    this.boardManufacturer = new ReadOnlyProperty();
-    this.boardPart = new ReadOnlyProperty();
-    this.serialNumber = new ReadOnlyProperty();
-    this.connectivity = new ReadOnlyProperty();
-    this.hwInterface = new ReadOnlyProperty();
-    this.secureHardware = new ReadOnlyProperty();
-    this.batteryRuntime = new ReadOnlyProperty();
-    this.batteryRemaining = new ReadOnlyProperty();
+    this.fwVersion = new Property();
+    this.manufacturer = new Property();
+    this.model = new Property();
+    this.oem = new Property();
+    this.osName = new Property();
+    this.osVersion = new Property();
+    this.processorArchitecture = new Property();
+    this.processorType = new Property();
+    this.processorManufacturer = new Property();
+    this.totalStorage = new Property();
+    this.totalMemory = new Property();
+    this.boardManufacturer = new Property();
+    this.boardPart = new Property();
+    this.serialNumber = new Property();
+    this.connectivity = new Property();
+    this.hwInterface = new Property();
+    this.secureHardware = new Property();
+    this.batteryRuntime = new Property();
+    this.batteryRemaining = new Property();
   }
 }
