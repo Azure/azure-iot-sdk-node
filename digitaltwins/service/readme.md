@@ -4,9 +4,9 @@
 This client library lets you connect to your Azure IoT Hub and manage your Digital Twins.
 It complements the `azure-iothub` package that covers the initial set of Azure IoT Hub APIs (identity registry, service client, etc)
 
-The Azure IoT Digital Twin Service SDK for Node.js helps you build applications that interact with your twin enabled devices and manage their twin document.
+The Azure IoT Digital Twins Service SDK for Node.js helps you build applications that interact with your twin enabled devices and manage their twin document.
 
-[![npm version](https://badge.fury.io/js/azure-iothub.svg)](https://badge.fury.io/js/azure-iothub)
+[![npm version](https://badge.fury.io/js/azure-iot-digitaltwins-service.svg)](https://badge.fury.io/js/azure-iot-digitaltwins-service)
 
 ## Prerequisites
 
@@ -16,25 +16,25 @@ You need to install the [Node.js][nodejs_lnk] JavaScript runtime environment to 
 
 ## Installation
 
-`npm install azure-iot-digitaltwin-service` to get the latest version.
+`npm install azure-iot-digitaltwins-service` to get the latest version.
 
  Features
 
-* Get the twin document of an existing device
-* Get a single component of an existing device's twin
+* Get the twin of an existing device
+* Get a single component of an existing device digital twin
 * Get a model from the Model Repository
-* Update twin document of an existing device
-* Update a single property of an existing twin
+* Update digital twin of an existing device
+* Update a single property of an existing digital twin
 * Invoke a command on a device
 
 ## How to use the Azure IoT service SDK for Node.js
 
-Once you have installed the package as indicated above, you can start using the features of the Digital Twin Service SDK in your code. Below is a code snippet showing how to create a Service Client and get the twin document of a device:
+Once you have installed the package as indicated above, you can start using the features of the Digital Twins Service SDK in your code. Below is a code snippet showing how to create a Service Client and get the twin document of a device:
 
 Note that for this sample to work, you will need to [setup your IoT hub][lnk-setup-iot-hub] and retrieve credentials for the service app.
 
 ```js
-const DigitalTwinServiceClient = require('azure-iot-digitaltwin-service').DigitalTwinServiceClient;
+const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 
 const deviceId = '<DEVICE_ID_GOES_HERE>';
 const iotHubConnecti = '<IOTHUB_CONNECTION_STRING_GOES_HERE>';
@@ -67,13 +67,13 @@ Check out the [samples][samples] for details on the various features of the Serv
 
 ## Directory structure
 
-Digital Twin Service SDK folders:
+Digital Twins Service SDK folders:
 
-### /digitialtwins/service/devdoc
+### /digitaltwins/service/devdoc
 
 Development requirements documentation
 
-### /digitialtwins/service/src
+### /digitaltwins/service/src
 
 Code for the library
 
@@ -81,7 +81,7 @@ Code for the library
 
 Set of simple samples showing how to use the features of the Digital Twin Service SDK
 
-### /digitialtwins/service/test
+### /digitaltwins/service/test
 
 Test files
 
