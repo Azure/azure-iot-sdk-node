@@ -10,12 +10,10 @@ import { DigitalTwinInterface as SdkInformation } from './sdkinformation';
 import { callbackToPromise, ErrorCallback, Message } from 'azure-iot-common';
 import { Client, Twin, DeviceMethodRequest, DeviceMethodResponse } from 'azure-iot-device';
 import { BaseInterface } from './base_interface';
-import { azureDigitalTwinTelemetry, azureDigitalTwinCommand, azureDigitalTwinReadOnlyProperty, azureDigitalTwinReadWriteProperty,
+import { azureDigitalTwinTelemetry, azureDigitalTwinCommand, azureDigitalTwinProperty,
          Telemetry, TelemetryPromise, TelemetryCallback,
-         ReadOnlyProperty, ReadOnlyPropertyReportCallback, ReadOnlyPropertyReportPromise,
-         CommandRequest, CommandResponse, CommandUpdateCallback, CommandUpdatePromise, CommandCallback,
-         ReadWritePropertyChangedCallback, ReadWritePropertyUpdateCallback, ReadWritePropertyUpdatePromise,
-         ReadWritePropertyResponse, ReadWriteProperty
+         Property, PropertyReportCallback, PropertyReportPromise, PropertyChangedCallback, DesiredStateResponse,
+         CommandRequest, CommandResponse, CommandUpdateCallback, CommandUpdatePromise, CommandCallback
         } from './interface_types';
 
 /**
@@ -48,15 +46,11 @@ const commandComponentCommandNameSeparator = '*';
 
 /**
  * @private
- * Read the following comments.
+ * An array of these items will be created for each component.
+ * At registration time, the registration code will sweep through all of the
+ * registered components and within each component will utilize the data here to
+ * enable a method handler for each command.
  */
-//
-// An array of these items will be created for each component.
-//
-// At registration time, the registration code will sweep through all of the
-// registered components and within each component will utilize the data here to
-// enable a method handler for each command.
-//
 interface CommandInformation {
   component: BaseInterface;
   commandName: string;
@@ -76,29 +70,28 @@ interface CommandInformation {
 
 /**
  * @private
- * Read the following comments.
+ *
+ *
+ * An array of these items will be created for each component.
+ *
+ * At registration time, the registration code will sweep through all of the
+ * registered components and within each component will utilize the data here to
+ * process each read/write property.
+ *
+ * This are two separate things that must be done post registration.
+ *
+ * 1) Obtain (if they exist) both the desired and reported "value"s of each
+ * property.  They should be supplied to the components r/w callback.  The
+ * version property is also obtained.  The callback is free to act however it
+ * choses (including doing a new "update" on the property).
+ *
+ * 2) Set a callback for delta updates of each r/w property.  This callback will
+ * be used to invoke the components r/w callback (The same one as invoked in "1)"").
+ * For delta updates the reported property value will NOT supplied.
  */
-//
-// An array of these items will be created for each component.
-//
-// At registration time, the registration code will sweep through all of the
-// registered components and within each component will utilize the data here to
-// process each read/write property.
-//
-// This are two separate things that must be done post registration.
-//
-// 1) Obtain (if they exist) both the desired and reported "value"s of each
-// property.  They should be supplied to the components r/w callback.  The
-// version property is also obtained.  The callback is free to act however it
-// choses (including doing a new "update" on the property).
-//
-// 2) Set a callback for delta updates of each r/w property.  This callback will
-// be used to invoke the components r/w callback (The same one as invoked in "1)"").
-// For delta updates the reported property value will NOT supplied.
-//
-interface ReadWriteInformation {
+interface WritablePropertyInformation {
   component: BaseInterface;
-  readWritePropertyName: string;
+  propertyName: string;
   //
   // This is part of the path to get to this particular r/w property in the
   // twin.
@@ -110,12 +103,9 @@ interface ReadWriteInformation {
 
 /**
  * @private
- * Read the following comments.
+ * These are the values of a dictionary created within the Digital Twin client.
+ * The dictionary key is the component name.
  */
-//
-// These are the values of a dictionary created within the Digital Twin client.
-// The dictionary key is the component name.
-//
 interface ComponentInformation {
   //
   // Utilized to insure that an component isn't used before registration.
@@ -130,9 +120,9 @@ interface ComponentInformation {
   // An array of information for each command defined by the interface.
   commandProperties: CommandInformation[];
   //
-  // An array of information for each read/write property defined by the interface.
+  // An array of information for each writable property defined by the interface.
   //
-  readWriteProperties: ReadWriteInformation[];
+  writableProperties: WritablePropertyInformation[];
 }
 
 /**
@@ -186,7 +176,7 @@ export class DigitalTwinClient {
     this._components[newComponent.componentName] = {
       component: newComponent,
       commandProperties: [],
-      readWriteProperties: [],
+      writableProperties: [],
       registered: false
     };
     Object.keys(newComponent).forEach((individualProperty) => {
@@ -216,26 +206,24 @@ export class DigitalTwinClient {
             }
             break;
           }
-          case azureDigitalTwinReadOnlyProperty: {
+          case azureDigitalTwinProperty: {
+            if ((newComponent[individualProperty] as Property).writable) {
+              //
+              // Must have defined a callback for the property updates of this component.
+              //
+              if (newComponent.propertyChangedCallback) {
+                this._components[newComponent.componentName].writableProperties.push(this._createWritablePropertyInformation(newComponent, individualProperty));
+              } else {
+                throw new Error('Component ' + newComponent.componentName + ' does not have a property update callback specified');
+              }
+            }
+
             //
-            // This instantiates a 'report' method for this read only property that invokes the lower level clients twin reporting.  The
+            // This instantiates a 'report' method for this property that invokes the lower level clients twin reporting.  The
             // instantiated function will format the message appropriately and add any necessary transport/digital twin properties to
             // the message.
             //
-            (newComponent[individualProperty] as ReadOnlyProperty).report  = this._returnReadOnlyPropertyReportMethod(newComponent.componentName, newComponent.interfaceId, individualProperty);
-            break;
-          }
-          case azureDigitalTwinReadWriteProperty: {
-            //
-            // Must have defined a callback for the read write properties of this component.
-            //
-            if (newComponent.readWritePropertyChangedCallback) {
-              (newComponent[individualProperty] as ReadWriteProperty).update =
-                this._returnReadWritePropertyUpdateMethod(newComponent.componentName, newComponent.interfaceId, individualProperty);
-              this._components[newComponent.componentName].readWriteProperties.push(this._createReadWriteInformation(newComponent, individualProperty));
-            } else {
-              throw new Error('Component ' + newComponent.componentName + ' does not have a property update callback specified');
-            }
+            (newComponent[individualProperty] as Property).report  = this._returnPropertyReportMethod(newComponent.componentName, newComponent.interfaceId, individualProperty);
             break;
           }
           default: {
@@ -403,85 +391,70 @@ export class DigitalTwinClient {
 
   //
   // Yet another of several methods that create and return a method.
-  // In this case the returned method is used to report read only property
+  // In this case the returned method is used to update a property
   // values.
   //
-  private _returnReadOnlyPropertyReportMethod(componentName: string, interfaceId: string, propertyName: string): ReadOnlyPropertyReportPromise | ReadOnlyPropertyReportCallback {
-    return (value, callback) => this._reportProperty(componentName, interfaceId, propertyName, value, callback as ErrorCallback);
+  private _returnPropertyReportMethod(componentName: string, interfaceId: string, propertyName: string): PropertyReportPromise | PropertyReportCallback {
+    return (propertyValue, responseOrCallback, callback) => {
+      this._reportProperty(componentName, interfaceId, propertyName, propertyValue, responseOrCallback as DesiredStateResponse, callback as ErrorCallback);
+    }
   }
 
   /**
    * @method                        private _reportProperty
-   * @description                   Sends the value of a reported read only property to the Digital Twin.
+   * @description                   Sends the value of a reported property to the Digital Twin.
    * @param componentName           Name of the instance for this interface.
    * @param interfaceId             The id (in URN format) for the interface.
-   * @param propertyName            Name of the particular read only property.
-   * @param property                The object to be sent.
+   * @param propertyName            Name of the particular property.
+   * @param propertyValue           The object to be sent.
    * @param callback (optional)     If present, the callback to be invoked on completion of the telemetry,
    *                                otherwise a promise is returned.
    */
-  private _reportProperty(componentName: string, interfaceId: string, propertyName: string, property: any, reportCallback: ErrorCallback): void;
-  private _reportProperty(componentName: string, interfaceId: string, propertyName: string, property: any): Promise<void>;
-  private _reportProperty(componentName: string, interfaceId: string, propertyName: string, property: any, reportCallback?: ErrorCallback): Promise<void> | void {
+  private _reportProperty(componentName: string, interfaceId: string, propertyName: string, propertyValue: any, responseOrCallback: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): void;
+  private _reportProperty(componentName: string, interfaceId: string, propertyName: string, propertyValue: any, response?: DesiredStateResponse): Promise<void>;
+  private _reportProperty(componentName: string, interfaceId: string, propertyName: string, propertyValue: any, responseOrCallback?: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): Promise<void> | void {
+    let actualResponse: DesiredStateResponse | undefined;
+    let actualCallback: ErrorCallback | undefined;
+
+    if (responseOrCallback) {
+      if (typeof responseOrCallback === 'function') {
+        actualCallback = responseOrCallback as ErrorCallback;
+        actualResponse = undefined;
+      } else {
+        actualResponse = responseOrCallback as DesiredStateResponse
+        actualCallback = callback as ErrorCallback;
+      }
+    }
 
     return callbackToPromise((_callback) => {
       if (!this._components[componentName].registered) throw new Error(componentName + ' is not registered');
       let componentPart = componentPrefix + componentName;
-      let patch: any = {};
-      patch[componentPart] = {};
-      patch[componentPart][propertyName] = {value: {}};
-      patch[componentPart][propertyName].value = property;
-      return this._twin.properties.reported.update(patch, (reportError: Error) => {
-        return _callback(reportError);
-      });
-    }, reportCallback);
-  }
+      let propertyContent: any = {
+        value: propertyValue
+      }
 
-  //
-  // Yet another of several methods that create and return a method.
-  // In this case the returned method is used to update read write property
-  // values.
-  //
-  private _returnReadWritePropertyUpdateMethod(componentName: string, interfaceId: string, readWritePropertyName: string): ReadWritePropertyUpdateCallback | ReadWritePropertyUpdatePromise {
-    return (propertyValue, response, callback) => this._reportReadWriteProperty(componentName, interfaceId, readWritePropertyName, propertyValue, response, callback);
-  }
+      if (actualResponse) {
+        propertyContent.sc = actualResponse.code,
+        propertyContent.sd = actualResponse.description,
+        propertyContent.sv = actualResponse.version
+      }
 
-  /**
-   * @method                              private _reportReadWriteProperty
-   * @description                         Sends the value of a reported read write property to the Digital Twin.
-   * @param componentName                 Name of the instance for this interface.
-   * @param interfaceId                   The id (in URN format) for the interface.
-   * @param propertyName                  Name of the particular read only property.
-   * @param property                      The object to be sent.
-   * @param response                      The response status object for a read write.
-   * @param reportCallback (optional)     If present, the callback to be invoked on completion of the telemetry,
-   *                                      otherwise a promise is returned.
-   */
-  private _reportReadWriteProperty(componentName: string, interfaceId: string, propertyName: string, property: any, response: ReadWritePropertyResponse, reportCallback: ErrorCallback): void;
-  private _reportReadWriteProperty(componentName: string, interfaceId: string, propertyName: string, property: any, response: ReadWritePropertyResponse): Promise<void>;
-  private _reportReadWriteProperty(componentName: string, interfaceId: string, propertyName: string, property: any, response: ReadWritePropertyResponse, reportCallback?: ErrorCallback): Promise<void> | void {
-
-    return callbackToPromise((_callback) => {
-      if (!this._components[componentName].registered) throw new Error(componentName + ' is not registered');
-      let prefixAndComponentName = componentPrefix + componentName;
-      let patch: any = {};
-      patch[prefixAndComponentName] = {};
-      patch[prefixAndComponentName][propertyName] = {
-        value: property,
-        sc: response.statusCode,
-        sd: response.statusDescription,
-        sv: response.responseVersion
+      let patch = {
+        [componentPart]: {
+          [propertyName]: propertyContent
+        }
       };
+
       return this._twin.properties.reported.update(patch, (reportError: Error) => {
         return _callback(reportError);
       });
-    }, reportCallback);
+    }, actualCallback);
   }
 
-  private _createReadWriteInformation(component: BaseInterface, readWritePropertyName: string): ReadWriteInformation  {
+  private _createWritablePropertyInformation(component: BaseInterface, propertyName: string): WritablePropertyInformation  {
     return {
       component: component,
-      readWritePropertyName: readWritePropertyName,
+      propertyName: propertyName,
       prefixAndComponentName: componentPrefix + component.componentName,
     };
   }
@@ -495,24 +468,24 @@ export class DigitalTwinClient {
     }
   }
 
-  private _initialReadWritePropertyProcessing(): void {
+  private _initialWritablePropertyProcessing(): void {
     Object.keys(this._components).forEach((componentName) => {
-      this._components[componentName].readWriteProperties.forEach((rwi) => {
+      this._components[componentName].writableProperties.forEach((rwi) => {
         //
-        // Get the desired value of the read write property (R/W) if it exists.  If we get one also try
+        // Get the desired value of the writable property (R/W) if it exists.  If we get one also try
         // to get the reported version of the R/W if it exists.
         //
-        const desiredPart = this._getReportedOrDesiredPropertyValue('desired', rwi.prefixAndComponentName, rwi.readWritePropertyName);
+        const desiredPart = this._getReportedOrDesiredPropertyValue('desired', rwi.prefixAndComponentName, rwi.propertyName);
         const versionProperty = '$version';
         if (desiredPart) {
-          const reportedPart = this._getReportedOrDesiredPropertyValue('reported', rwi.prefixAndComponentName, rwi.readWritePropertyName);
-          (rwi.component.readWritePropertyChangedCallback as ReadWritePropertyChangedCallback)(rwi.component, rwi.readWritePropertyName, reportedPart, desiredPart, this._twin.properties.desired[versionProperty]);
+          const reportedPart = this._getReportedOrDesiredPropertyValue('reported', rwi.prefixAndComponentName, rwi.propertyName);
+          (rwi.component.propertyChangedCallback as PropertyChangedCallback)(rwi.component, rwi.propertyName, reportedPart, desiredPart, this._twin.properties.desired[versionProperty]);
         }
         //
         // Setup the callback for delta changes.
         //
-        this._twin.on('properties.desired.' + rwi.prefixAndComponentName + '.' + rwi.readWritePropertyName, (delta) => {
-          (rwi.component.readWritePropertyChangedCallback as ReadWritePropertyChangedCallback)(rwi.component, rwi.readWritePropertyName, null, delta.value, this._twin.properties.desired[versionProperty]);
+        this._twin.on('properties.desired.' + rwi.prefixAndComponentName + '.' + rwi.propertyName, (delta) => {
+          (rwi.component.propertyChangedCallback as PropertyChangedCallback)(rwi.component, rwi.propertyName, null, delta.value, this._twin.properties.desired[versionProperty]);
         });
       });
     });
@@ -570,7 +543,7 @@ export class DigitalTwinClient {
             registerCallback(getTwinError);
           } else {
             this._twin = twinResult as Twin;
-            this._initialReadWritePropertyProcessing();
+            this._initialWritablePropertyProcessing();
             sdkInformation.language.report('Node.js', (err?: Error) => {
               if (err) {
                 debug('Error updating the SDK language: ' + err.toString());

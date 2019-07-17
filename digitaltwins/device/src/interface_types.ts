@@ -11,13 +11,9 @@ import { BaseInterface } from './base_interface';
 export type Callback = (err?: Error) => void;
 
 /*
- * Name for the type that represents a ReadOnlyProperty
+ * Name for the type that represents a Property
  */
-export const azureDigitalTwinReadOnlyProperty = 'ReadOnlyProperty';
-/*
- * Name for the type that represents a ReadWriteProperty
- */
-export const azureDigitalTwinReadWriteProperty = 'ReadWriteProperty';
+export const azureDigitalTwinProperty = 'Property';
 /*
  * Name for the type that represents a Telemetry
  */
@@ -28,139 +24,99 @@ export const azureDigitalTwinTelemetry = 'Telemetry';
 export const azureDigitalTwinCommand = 'Command';
 
 /*
- * Used to represent the read only property type for Digital Twins.
+ * Used to represent the property type for Digital Twins.
  */
-export class ReadOnlyProperty {
+export class Property {
   /*
-   * Holds the type for ReadOnlyProperty
+   * Holds the type for Property
    */
-  azureDigitalTwinType: 'ReadOnlyProperty';
+  azureDigitalTwinType: 'Property';
+
+  /**
+   * Indicates whether the property is writable by the service
+   */
+  writable: boolean;
   /*
    * The method used by Digital Twin application to communicate the
-   * value of a ReadOnlyProperty.
+   * value of a Property.
    *
-   * Will have a signature of ReadOnlyPropertyReportPromise or ReadOnlyPropertyReportCallback.
+   * Will have a signature of PropertyReportPromise or PropertyReportCallback.
    */
   report: any;
-  constructor() {
-    this.azureDigitalTwinType = 'ReadOnlyProperty';
+  constructor(writable?: boolean) {
+    this.azureDigitalTwinType = 'Property';
+    this.writable = !!writable;
   }
 }
 
 /*
- * Signature for public method for reporting read property change
+ * Signature for public method for reporting property changes
  * that utilize a promise instead of callback.
  *
- * This is used for a ReadOnlyProperty .report method.
+ * This is used for a Property .report method.
  *
- * @param   propertyValue           The value that the ReadOnlyProperty should be set to
+ * @param   propertyValue           The value that the Property should be set to
  *                                  in the Digital Twin.
  * @returns {Promise<void>}         Promise if no callback function was passed, void otherwise.
  */
-export type ReadOnlyPropertyReportPromise = (propertyValue: any) => Promise<void>;
+export type PropertyReportPromise = (propertyValue: any, propertyResponse?: DesiredStateResponse) => Promise<void>;
 
 /*
- * Signature for public method for reporting read property change
+ * Signature for public method for reporting property changes
  * that utilize a callback instead of promise.
  *
- * This is used for a ReadOnlyProperty .report method.
+ * This is used for a Property .report method.
  *
- * @param   propertyValue           The value that the ReadOnlyProperty should be set to
+ * @param   propertyValue           The value that the Property should be set to
  *                                  in the Digital Twin.
  * @parm    callback                Function to be invoked when the operation to report
- *                                  the ReadOnlyProperty has completed successfully or
+ *                                  the Property has completed successfully or
  *                                  with an Error.
  */
-export type ReadOnlyPropertyReportCallback = (propertyValue: any, callback?: Callback) => void;
-
-/*
- * Used to represent the read write property type for Digital Twins.
- */
-export class ReadWriteProperty {
-  /*
-   * Holds the type for ReadWriteProperty
-   */
-  azureDigitalTwinType: 'ReadWriteProperty';
-  /*
-   * The method used by Digital Twin application to communicate the
-   * value of a ReadWriteProperty.
-   *
-   * Will have a signature of ReadWritePropertyUpdatePromise or ReadWritePropertyUpdateCallback.
-   */
-  update: any;
-  constructor() {
-    this.azureDigitalTwinType = 'ReadWriteProperty';
-  }
-}
+export type PropertyReportCallback = (propertyValue: any, propertyResponse?: DesiredStateResponse, callback?: Callback) => void;
 
 /*
  * Object provided by application code to report the status
- * of an update to a ReadWriteProperty.
+ * of an update to a writable property.
  */
-export interface ReadWritePropertyResponse {
+export interface DesiredStateResponse {
   /*
    * The version this update is based on.
    */
-  responseVersion: number;
+  version: number;
   /*
    * An HTTP value such as 200, 401, 500.
    */
-  statusCode: number;
+  code: number;
   /*
    * A description of what the response is trying to communicate.
    * This could be something like: "Invalid value specified for property."
    * or "Executing phase 2 of runDiagnostics."
    */
-  statusDescription: string;
+  description: string;
 }
 
 /*
- * Signature for public method for updating read write property
- * that utilize a callback instead of promise.
- *
- * This is used for a ReadWriteProperty .update method.
- *
- * @param   propertyValue           The value that the ReadWriteProperty should be set to
- *                                  in the Digital Twin.
- * @parm    callback                Function to be invoked when the operation to report
- *                                  the ReadWriteProperty has completed successfully or
- *                                  with an Error.
- */
-export type ReadWritePropertyUpdateCallback = (propertyValue: any, response: ReadWritePropertyResponse, callback: Callback) => void;
-
-/*
- * Signature for public method for updating a read write property
- * that utilize a promise instead of callback.
- *
- * This is used for a ReadWriteProperty .update method.
- *
- * @param   propertyValue           The value that the ReadWriteProperty should be set to
- *                                  in the Digital Twin.
- * @returns {Promise<void>}         Promise if no callback function was passed, void otherwise.
- */
-export type ReadWritePropertyUpdatePromise = (propertyValue: any, response: ReadWritePropertyResponse) => Promise<void>;
-
-/*
- * Signature for the application function which will be invoked for handling read write properties.
- * This application supplied function will invoked for each ReadWriteProperty subsequent to
+ * Signature for the application function which will be invoked for handling writable property changes.
+ * This application supplied function will invoked for each Property subsequent to
  * registration.  In addition it will be invoke each time the property is updated service side.
  *
  * This callback must be given in the BaseInterface object constructor if there are any
- * read write properties.
+ * properties that are writable by the service.
  *
  * @param   BaseInterface           The object that is an extension of the BaseInterface which contains
- *                                  the read write properties this callback will handle.
- * @param   propertyName            The particular property name of the ReadWriteProperty which has been
+ *                                  the properties this callback will handle.
+ * @param   propertyName            The particular property name of the Property which has been
  *                                  updated service side, or post registration.
  * @param   reportedValue           The reported value in the Digital Twin.  This could be useful
  *                                  in that the application might not need to update if the value is the
  *                                  same as the desired value.  NOTE: This will ONLY be provided on the
  *                                  invocation post registration.
- * @param   desiredValue            The value of the read write property as set by a service side application.
+ * @param   desiredValue            The value of the property as set by a service side application.
  * @param   version                 The value of the version property for the desired properties of the Digital
  *                                  Twin.
  */
-export type ReadWritePropertyChangedCallback = (interfaceObject: BaseInterface, propertyName: string, reportedValue: any, desiredValue: any, version: number) => void;
+export type PropertyChangedCallback = (interfaceObject: BaseInterface, propertyName: string, reportedValue: any, desiredValue: any, version: number) => void;
 
 /*
  * Used to represent the Telemetry property type for Digital Twins.

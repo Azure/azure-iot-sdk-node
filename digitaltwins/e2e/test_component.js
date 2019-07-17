@@ -4,8 +4,7 @@
 
 const BaseInterface = require('azure-iot-digitaltwins-device').BaseInterface;
 const Telemetry = require('azure-iot-digitaltwins-device').Telemetry;
-const ReadOnlyProperty = require('azure-iot-digitaltwins-device').ReadOnlyProperty;
-const ReadWriteProperty = require('azure-iot-digitaltwins-device').ReadWriteProperty;
+const Property = require('azure-iot-digitaltwins-device').Property;
 const Command = require('azure-iot-digitaltwins-device').Command;
 
 const interfaceId = 'urn:microsoft:azureiot:nodesdk:e2etest:1';
@@ -14,8 +13,8 @@ module.exports.TestComponent = class TestComponent extends BaseInterface {
   constructor(name, propertyCallback, commandCallback) {
     super(name, interfaceId, propertyCallback, commandCallback);
     this.telemetry = new Telemetry();
-    this.readOnlyProperty = new ReadOnlyProperty();
-    this.readWriteProperty = new ReadWriteProperty();
+    this.readOnlyProperty = new Property();
+    this.writableProperty = new Property(true);
     this.syncCommand = new Command();
   }
 };

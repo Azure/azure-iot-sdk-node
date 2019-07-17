@@ -16,7 +16,7 @@
     },
     {
       "@type": "Property",
-      "name": "readWriteProperty",
+      "name": "writableProperty",
       "writable": true,
       "schema": "string"
     },

@@ -1,16 +1,16 @@
-import { ReadWritePropertyChangedCallback, CommandCallback } from './interface_types';
+import { PropertyChangedCallback, CommandCallback } from './interface_types';
 
 export class BaseInterface {
   readonly interfaceId: string ;
   readonly componentName: string;
-  readonly readWritePropertyChangedCallback: ReadWritePropertyChangedCallback | undefined;
+  readonly propertyChangedCallback: PropertyChangedCallback | undefined;
   readonly commandCallback: CommandCallback | undefined;
   [key: string]: any;
 
-  constructor(componentName: string, interfaceId: string, readWritePropertyChangedCallback?: ReadWritePropertyChangedCallback, commandCallback?: CommandCallback) {
+  constructor(componentName: string, interfaceId: string, propertyChangedCallback?: PropertyChangedCallback, commandCallback?: CommandCallback) {
     this.componentName = componentName;
     this.interfaceId = interfaceId;
-    this.readWritePropertyChangedCallback = readWritePropertyChangedCallback;
+    this.propertyChangedCallback = propertyChangedCallback;
     this.commandCallback = commandCallback;
   }
 }

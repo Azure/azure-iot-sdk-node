@@ -4,20 +4,20 @@
 'use strict';
 
 import { BaseInterface } from './base_interface';
-import { ReadOnlyProperty } from './interface_types';
+import { Property } from './interface_types';
 
 /**
  * @private
  * A class to model the SDK Information interface.
  */
 export class DigitalTwinInterface extends BaseInterface {
-  language: ReadOnlyProperty;
-  version: ReadOnlyProperty;
-  vendor: ReadOnlyProperty;
+  language: Property;
+  version: Property;
+  vendor: Property;
   constructor(componentName: string, interfaceId: string) {
     super(componentName, interfaceId);
-    this.language = new ReadOnlyProperty();
-    this.version = new ReadOnlyProperty();
-    this.vendor = new ReadOnlyProperty();
+    this.language = new Property();
+    this.version = new Property();
+    this.vendor = new Property();
   }
 }

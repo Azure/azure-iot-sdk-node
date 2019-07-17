@@ -1,6 +1,6 @@
 import { Client } from 'azure-iot-device';
 import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
-import { DigitalTwinClient, CommandCallback, ReadWritePropertyChangedCallback, BaseInterface } from 'azure-iot-digitaltwins-device';
+import { DigitalTwinClient, CommandCallback, PropertyChangedCallback, BaseInterface } from 'azure-iot-digitaltwins-device';
 import { DigitalTwinInterface as EnvironmentalSensor } from './environmentalinterface';
 import { DigitalTwinInterface as SampleDeviceInfo } from './deviceinfointerface';
 
@@ -57,8 +57,8 @@ let environmentCommandCallback: CommandCallback = (request, response) => {
   }
 };
 
-let environmentReadWriteCallback: ReadWritePropertyChangedCallback = (interfaceObject: BaseInterface, propertyName: string, reportedValue: any, desiredValue: any, version: number) => {
-  interfaceObject[propertyName].update(desiredValue + ' the boss', {responseVersion: version, statusCode: 200, statusDescription: 'a promotion'}, (err: Error) => {
+let environmentReadWriteCallback: PropertyChangedCallback = (interfaceObject: BaseInterface, propertyName: string, reportedValue: any, desiredValue: any, version: number) => {
+  interfaceObject[propertyName].report(desiredValue + ' the boss', {responseVersion: version, statusCode: 200, statusDescription: 'a promotion'}, (err: Error) => {
     if (err) {
       console.log('did not do the update');
     } else {
