@@ -43,6 +43,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
   private _fsm: machina.Fsm;
   private _topics: { [key: string]: TopicDescription };
   private _userAgentString: string;
+  private _productInfo: string;
 
   /**
    * @private
@@ -485,6 +486,17 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_015: [The `setOptions` method shall throw an `ArgumentError` if the `cert` property is populated but the device uses symmetric key authentication.]*/
     if (this._authenticationProvider.type === AuthenticationType.Token && options.cert) throw new errors.ArgumentError('Cannot set x509 options on a device that uses token authentication.');
 
+    /*Codes_SRS_NODE_DEVICE_MQTT_41_001: [The MQTT transport should use the productInfo string in the `options` object if present]*/
+    if (options.productInfo) {
+      // To enforce proper use of the productInfo option, if the setOption is called after HTTP calls have already been made (therefore _userAgentString already set) an error is thrown.
+      if (this._userAgentString) {
+        /*Codes_SRS_NODE_DEVICE_MQTT_41_003: [`productInfo` must be set before `mqtt._ensureAgentString` is invoked for the first time]*/
+        throw Error('Ensure you call setOption for productInfo before initiating any connection to IoT Hub');
+      } else {
+        this._productInfo = options.productInfo;
+      }
+    }
+
     this._mqtt.setOptions(options);
 
     if (!options.cert) {
@@ -660,6 +672,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_016: [If the connection string does not specify a `gatewayHostName` value, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_054: [If a `gatewayHostName` is specified in the connection string, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<gatewayhostname>`. ]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_055: [The Mqtt constructor shall initialize the `username` property of the `config` object to '<host>/<clientId>/api-version=<version>&DeviceClientType=<agentString>'. ]*/
+    /*Tests_SRS_NODE_DEVICE_MQTT_41_002: [The MQTT constructor shall append the productInfo to the `username` property of the `config` object.]*/
     let baseConfig: MqttBaseTransportConfig = {
       uri: 'mqtts://' + (credentials.gatewayHostName || credentials.host),
       username: credentials.host + '/' + clientId +
@@ -741,8 +754,8 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     /*Codes_SRS_NODE_DEVICE_MQTT_18_065: [`disableInputMessages` shall unsubscribe from the topic for inputMessages. ]*/
     this._mqtt.unsubscribe(topic.name, (err) => {
       topic.subscribed = !err;
-      /*Tests_SRS_NODE_DEVICE_MQTT_16_054: [`disableC2D` shall call its callback with no arguments when the `UNSUBACK` packet is received.]*/
-      /*Tests_SRS_NODE_DEVICE_MQTT_16_055: [`disableMethods` shall call its callback with no arguments when the `UNSUBACK` packet is received.]*/
+      /*Codes_SRS_NODE_DEVICE_MQTT_16_054: [`disableC2D` shall call its callback with no arguments when the `UNSUBACK` packet is received.]*/
+      /*Codes_SRS_NODE_DEVICE_MQTT_16_055: [`disableMethods` shall call its callback with no arguments when the `UNSUBACK` packet is received.]*/
       /*Codes_SRS_NODE_DEVICE_MQTT_18_066: [`disableInputMessages` shall call its callback with no arguments when the `UNSUBACK` packet is received. ]*/
       /*Codes_SRS_NODE_DEVICE_MQTT_16_043: [`disableC2D` shall call its callback with an `Error` if an error is received while unsubscribing.]*/
       /*Codes_SRS_NODE_DEVICE_MQTT_16_046: [`disableMethods` shall call its callback with an `Error` if an error is received while unsubscribing.]*/
@@ -925,11 +938,12 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     return topic;
   }
 
-   private _ensureAgentString(done: () => void): void {
+  private _ensureAgentString(done: () => void): void {
     if (this._userAgentString) {
       done();
     } else {
-      getUserAgentString((agent) => {
+      const customInfo = (this._productInfo) ? this._productInfo : '';
+      getUserAgentString(customInfo, (agent) => {
         this._userAgentString = agent;
         done();
       });

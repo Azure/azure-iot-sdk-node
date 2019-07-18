@@ -16,6 +16,10 @@ import { Agent } from 'https';
  * @see {DeviceClientOptions}
  */
 export interface AmqpTransportOptions {
+  /**
+   * Optional [Agent]{@link https://nodejs.org/api/https.html#https_class_https_agent} object to use with AMQP-WS connections
+   */
+  webSocketAgent?: Agent;
 }
 
 /**
@@ -114,17 +118,23 @@ export interface DeviceClientOptions extends X509 {
   ca?: string;
 
   /**
-   * Optional object with options specific to the Mqtt transport
+   * Custom user defined information to be appended to existing User Agent information. The User Agent Identification information
+   * is used predominantly by Microsoft internally for identifying metadata related to Device Client usage for Azure IoT.
    */
-  mqtt?: MqttTransportOptions;
+  productInfo?: string;
 
   /**
-   * Optional object with options specific to the Mqtt transport
+   * Optional object with options specific to the MQTT transport
    */
-  http?: HttpTransportOptions;
+   mqtt?: MqttTransportOptions;
 
   /**
-   * Optional object with options specific to the Mqtt transport
+   * Optional object with options specific to the HTTP transport
+   */
+   http?: HttpTransportOptions;
+
+  /**
+   * Optional object with options specific to the AMQP transport
    */
   amqp?: AmqpTransportOptions;
 }
