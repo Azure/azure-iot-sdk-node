@@ -88,7 +88,7 @@ Test files
 [nodejs_lnk]: https://nodejs.org/
 [nodejs_dwld_lnk]: https://nodejs.org/en/download/
 [npm_lnk]:https://docs.npmjs.com/getting-started/what-is-npm
-[samples]: ././samples/service
+[samples]: ../samples/service
 [lnk-setup-iot-hub]: https://aka.ms/howtocreateazureiothub
 [node-api-reference]: https://docs.microsoft.com/en-us/javascript/api/azure-iothub/
 [iot-dev-center]: http://azure.com/iotdev
