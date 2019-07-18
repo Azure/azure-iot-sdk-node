@@ -17,6 +17,8 @@ var FakeHttp = function () { };
 
 FakeHttp.prototype.buildRequest = function (method, path, httpHeaders, host, sslOptions, done) {
   return {
+    write: function () {
+    },
     end: function () {
       if (this.messageCount > 0) {
         this.messageCount--;
@@ -35,6 +37,7 @@ FakeHttp.prototype.setMessageCount = function (messageCount) {
 };
 
 FakeHttp.prototype.setOptions = function(options, callback) {
+
   if (callback) callback();
 };
 
@@ -335,6 +338,7 @@ describe('Http', function () {
         receivePolicy: {interval: 1}
       }
     };
+    var fakeProductInfoString = 'fakeProductInfoString';
 
     /*Tests_SRS_NODE_DEVICE_HTTP_16_005: [If `done` has been specified the `setOptions` method shall call the `done` callback with no arguments when successful.]*/
     it('calls the done callback with no arguments if successful', function(done) {
@@ -349,11 +353,57 @@ describe('Http', function () {
         transport.setOptions({});
       });
     });
+
+    /*Tests_SRS_NODE_DEVICE_HTTP_41_001: [ The HTTP transport should use the productInfo string in the `options` object if present ]*/
+    /*Tests_SRS_NODE_DEVICE_HTTP_41_002: [ `productInfo` should be set in the HTTP User-Agent Header if set using `setOptions` ]*/
+    it('productInfo is included in the \'User-Agent\' header during the HTTP buildRequest', function() {
+      var MockHttp = {
+        setOptions: function () {},
+        buildRequest: function() {}
+      };
+      var spy = sinon.stub(MockHttp, 'buildRequest').returns({
+        write: function() {},
+        end: function() {}
+      });
+      
+      var http = new Http(fakeAuthenticationProvider, MockHttp);
+      http.setOptions({ productInfo: fakeProductInfoString });
+      assert.exists(http._productInfo);
+
+      var msg = new Message('fakeBody');
+
+      http.sendEvent(msg, () => {});
+
+      var actualUserAgent = http._http.buildRequest.args[0][2]['User-Agent'];
+      assert(actualUserAgent.includes(fakeProductInfoString));
+    });
+    
+    /*Tests_SRS_NODE_DEVICE_HTTP_41_003: [`productInfo` must be set before `http._ensureAgentString` is invoked for the first time]*/
+    it('throws if productInfo is set after HTTP has established a connection', function() {
+      var MockHttp = {
+        setOptions: function () {},
+        buildRequest: function() {}
+      };
+      var spy = sinon.stub(MockHttp, 'buildRequest').returns({
+        write: function() {},
+        end: function() {}
+      });
+      
+      var http = new Http(fakeAuthenticationProvider, MockHttp);
+      var msg = new Message('fakeBody');
+      
+      http.sendEvent(msg, () => {
+        assert.throws(() => {http.setOptions({ productInfo: fakeProductInfoString });
+        });
+      });
+    });
+
+
   });
 
   describe('#updateSharedAccessSignature', function() {
-    /*Codes_SRS_NODE_DEVICE_HTTP_16_006: [The updateSharedAccessSignature method shall save the new shared access signature given as a parameter to its configuration.] */
-    /*Codes_SRS_NODE_DEVICE_HTTP_16_007: [The updateSharedAccessSignature method shall call the `done` callback with a null error object and a SharedAccessSignatureUpdated object as a result, indicating that the client does not need to reestablish the transport connection.] */
+    /*Tests_SRS_NODE_DEVICE_HTTP_16_006: [The updateSharedAccessSignature method shall save the new shared access signature given as a parameter to its configuration.] */
+    /*Tests_SRS_NODE_DEVICE_HTTP_16_007: [The updateSharedAccessSignature method shall call the `done` callback with a null error object and a SharedAccessSignatureUpdated object as a result, indicating that the client does not need to reestablish the transport connection.] */
     it('updates its configuration object with the new shared access signature', function(done) {
       var transportWithoutReceiver = new Http(fakeAuthenticationProvider);
       var newSas = 'newsas';

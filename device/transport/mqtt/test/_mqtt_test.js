@@ -39,6 +39,7 @@ describe('Mqtt', function () {
     fakeMqttBase.subscribe = sinon.stub().callsArg(2);
     fakeMqttBase.unsubscribe = sinon.stub().callsArg(1);
     fakeMqttBase.updateSharedAccessSignature = sinon.stub().callsArg(1);
+    fakeMqttBase.setOptions = sinon.stub().callsFake(() => {});
   });
 
   afterEach(function () {
@@ -488,6 +489,7 @@ describe('Mqtt', function () {
       x509: fakeX509Options
     };
 
+
     var fakeX509AuthenticationProvider;
 
     beforeEach(function () {
@@ -555,7 +557,52 @@ describe('Mqtt', function () {
         testCallback();
       });
     });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_41_001: [The MQTT transport should use the productInfo string in the `options` object if present]*/
+    /*Tests_SRS_NODE_DEVICE_MQTT_41_002: [The MQTT constructor shall append the productInfo to the `username` property of the `config` object.]*/
+    it('sets options for productInfo', function(testCallback) {
+      var fakeProductInfoString = 'fakeProductInfoString';
+      var fakeProductInfoOptions = {productInfo: fakeProductInfoString}
+      var connectCallback;
+      fakeMqttBase.connect = sinon.stub().callsFake(function (config, callback) {
+        connectCallback = callback;
+      });
+      var mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      mqtt.setOptions(fakeProductInfoOptions, function (err) {
+        assert.strictEqual(mqtt._productInfo, fakeProductInfoOptions.productInfo);
+        getUserAgentString(fakeProductInfoString, function(userAgentString) {
+          var expectedUsername = 'host.name/deviceId/' + endpoint.versionQueryString() + '&DeviceClientType=' + encodeURIComponent(userAgentString);
+          mqtt.connect(function () {
+            assert.strictEqual(fakeMqttBase.connect.firstCall.args[0]['username'], expectedUsername);      
+            testCallback();
+          });
+          connectCallback();
+        });
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_41_003: [`productInfo` must be set before `mqtt._ensureAgentString` is invoked for the first time]*/
+    it('throws if productInfo is set after mqtt connects', function(testCallback) {
+      var fakeProductInfoString = 'fakeProductInfoString';
+      var fakeProductInfoOptions = {productInfo: fakeProductInfoString}
+      var connectCallback;
+      fakeMqttBase.connect = sinon.stub().callsFake(function (config, callback) {
+        connectCallback = callback;
+      });
+      var mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      getUserAgentString(fakeProductInfoString, function(userAgentString) {
+        var expectedUsername = 'host.name/deviceId/' + endpoint.versionQueryString() + '&DeviceClientType=' + encodeURIComponent(userAgentString);
+        mqtt.connect(function () {
+          assert.throw(function () {
+            mqtt.setOptions(fakeProductInfoOptions, function (err) {});
+          });
+          testCallback();
+        });
+        connectCallback();
+      });
+    });
   });
+
 
   describe('#connect', function() {
     /* Tests_SRS_NODE_DEVICE_MQTT_12_004: [The connect method shall call the connect method on MqttBase */
@@ -608,7 +655,7 @@ describe('Mqtt', function () {
           fieldValueToCheck: 'host.name/deviceId/' + endpoint.versionQueryString() + '&DeviceClientType=' + encodeURIComponent(userAgentString)
         }
       ].forEach(function (testConfig) {
-        it('sets the ' + testConfig.fieldNameToCheck + ' to \'' + testConfig.fieldValueToCheck + '\'', function (testCallback) {
+        it ('sets the ' + testConfig.fieldNameToCheck + ' to \'' + testConfig.fieldValueToCheck + '\'', function (testCallback) {
           if (testConfig.fieldNameToSet) {
             fakeConfig[testConfig.fieldNameToSet] = testConfig.fieldValueToSet;
           }
