@@ -234,7 +234,9 @@ export class ModuleClient extends InternalClient {
   setOptions(options: DeviceClientOptions, done?: Callback<results.TransportConfigured>): Promise<results.TransportConfigured> | void {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_MODULE_CLIENT_16_098: [The `setOptions` method shall call the `setOptions` method with the `options` argument on the `MethodClient` object of the `ModuleClient`.]*/
-      this._methodClient.setOptions(options);
+      if (this._methodClient) {
+        this._methodClient.setOptions(options);
+      }
       /*Codes_SRS_NODE_MODULE_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
       /*Codes_SRS_NODE_MODULE_CLIENT_16_043: [The `_callback` callback shall be invoked with no parameters when it has successfully finished setting the client and/or transport options.]*/
       /*Codes_SRS_NODE_MODULE_CLIENT_16_044: [The `_callback` callback shall be invoked with a standard javascript `Error` object and no result object if the client could not be configured as requested.]*/

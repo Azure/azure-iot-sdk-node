@@ -313,7 +313,11 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             let error = this._indicatedError; // This could be undefined.
             this._indicatedError = undefined;
             this._senderCloseOccurred = true;
-            debug('in sender attached state - close event for ' + context.sender.name + ' already indicated error is: ' + this._getErrorName(error));
+            if (error) {
+              debug('in sender attached state - close event for ' + context.sender.name + ' already indicated error is: ' + this._getErrorName(error));
+            } else {
+              debug('in sender attached state - close event for ' + context.sender.name);
+            }
             /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_016: [If an error happened that caused the link to be detached, the sender link shall call emit an `error` event with that error/] */
             if (error) {
               context.container.emit('azure-iot-amqp-base:error-indicated', error);
