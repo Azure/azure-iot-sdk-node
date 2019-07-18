@@ -4,8 +4,8 @@
   "description": "Samples for the azure-iot-digitaltwins-service client library",
   "main": "get_digital_twin.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint -c ../../../.eslintrc.json ."
+    "lint": "eslint -c ../../../.eslintrc.json .",
+    "ci": "npm -s run lint"
   },
   "repository": {
     "type": "git",
