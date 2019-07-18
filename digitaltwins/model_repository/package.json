@@ -30,7 +30,9 @@
     "dist/**/*.d.ts",
     "dist/**/*.d.ts.map",
     "src/**/*.ts",
-    "tsconfig.json"
+    "tsconfig.json",
+    "index.js",
+    "index.d.ts"
   ],
   "author": "Microsoft Corp.",
   "license": "MIT",

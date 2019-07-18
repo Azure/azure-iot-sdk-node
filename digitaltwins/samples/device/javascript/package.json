@@ -3,7 +3,8 @@
   "version": "1.0.0-preview.0",
   "description": "Samples for the azure-iot-digitaltwins-device client library",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint -c ../../../../.eslintrc.json .",
+    "ci": "npm -s run lint"
   },
   "repository": {
     "type": "git",
@@ -20,5 +21,9 @@
     "azure-iot-common": "1.12.0-preview.0",
     "azure-iot-device-mqtt": "1.12.0-preview.0",
     "azure-iot-digitaltwins-device": "1.0.0-preview.0"
+  },
+  "devDependencies": {
+    "eslint": "^6.0.1",
+    "eslint-config-google": "^0.13.0"
   }
 }

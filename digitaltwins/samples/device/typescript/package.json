@@ -16,7 +16,8 @@
   },
   "scripts": {
     "lint": "tslint --project . -c ../../../../tslint.json",
-    "build": "tsc"
+    "build": "tsc",
+    "ci": "npm -s run lint && npm -s run build"
   },
   "engines": {
     "node": ">= 0.10"
