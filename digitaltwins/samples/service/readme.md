@@ -13,8 +13,15 @@ You should have [Node.js](https://nodejs.org/en/) installed.
   - To download the client libraries from NPM, simply run `npm install`
   - if you've downloaded the client libraries manually, simply run:
       (dont't forget to replace <path-to> with the actual path to the package and <preview-version> with the version of the packages you downloaded)
+      ```shell
+      npm install <path-to>/azure-iot-common-<preview-version>
+      npm install <path-to>/azure-iot-digitaltwins-service-<preview-version>
       ```
-      $ npm install <path-to>/azure-iot-digitaltwins-service-<preview-version>
+      and  if you want to run the query sample (which relies on the azure-iothub package):
+      ```shell
+      npm install <path-to>/azure-iot-http-base-<preview-version>
+      npm install <path-to>/azure-iot-amqp-base-<preview-version>
+      npm install <path-to>/azure-iothub-<preview-version>
       ```
 3. Set the following environment variables:
 ```shell
@@ -25,8 +32,8 @@ set IOTHUB_CONNECTION_STRING=<your IoT Hub connection string>
 
 4. Run the sample with the following command:
 
-```
-$ node <sample_name.js>
+```shell
+node <sample_name.js>
 ```
 
 ## What do these samples do?
@@ -37,3 +44,4 @@ $ node <sample_name.js>
 - `get_model.js` gets a model from the global repository.
 - `update_digital_twin_property.js` updates a single writable property on a digital twin.
 - `update_digital_twin.js` creates a patch to updates multiple writable properties on a digital twin, potentially on multiple components.
+- `query_interface.js` runs a query that returns all devices implementing a specific interface.
