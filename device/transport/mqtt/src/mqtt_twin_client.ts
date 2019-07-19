@@ -254,9 +254,14 @@ export class MqttTwinClient extends EventEmitter {
         delete this._pendingTwinRequests[query.$rid];
         // should we really ignore the status code?
         const responseBody = message.toString();
+        const parsedMessage = responseBody ? JSON.parse(responseBody) : undefined;
         /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_007: [When a message is received on the response topic with an `$rid` property in the query string of the topic matching the one that was sent on the request topic, the `callback` shall be called with a `null` error object and the parsed content of the response message.]*/
         /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_017: [When a message is received on the response topic with an `$rid` property in the query string of the topic matching the one that was sent on the request topic, the `callback` shall be called with a `null` error object.]*/
-        requestCallback(null, responseBody ? JSON.parse(responseBody) : undefined);
+        if (parsedMessage && parsedMessage.errorCode) {
+          requestCallback(new Error(parsedMessage.message));
+        } else {
+          requestCallback(null, parsedMessage);
+        }
       } else {
         debug('received a response for a request we do not know about: ' + query.$rid);
       }
