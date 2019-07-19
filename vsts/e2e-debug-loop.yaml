@@ -9,9 +9,9 @@ phases:
     name: Hosted Ubuntu 1604
   steps:
   - task: NodeTool@0
-    displayName: 'Use Node 6.x'
-
-
+    displayName: 'Use Node 10.15.x'
+    inputs:
+      versionSpec: '10.15.x'
   - script: |
       npm install -g lerna
       npm install
@@ -61,9 +61,7 @@ phases:
   - task: NodeTool@0
     displayName: 'Use Node 8.x'
     inputs:
-      versionSpec: 8.x
-
-
+      versionSpec: '8.x'
   - script: |
       npm install -g lerna
       npm install
