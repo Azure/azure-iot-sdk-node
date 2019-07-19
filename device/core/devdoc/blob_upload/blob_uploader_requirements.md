@@ -38,6 +38,10 @@ fs.stat(filePath, function (err, fileStats) {
 
 **SRS_NODE_DEVICE_BLOB_UPLOAD_06_002: [** `BlobUploader` should delay load azure-storage into the storageAPI property if `storageApi` is falsy **]**
 
+## setProxy(proxy)
+
+**SRS_NODE_DEVICE_BLOB_UPLOAD_99_009: [** `setProxy` shall store the provided proxy. **]**
+
 ## uploadToBlob(blobInfo, stream, streamSize, done)
 **SRS_NODE_DEVICE_BLOB_UPLOAD_16_001: [** `uploadToBlob` shall throw a `ReferenceError` if `blobInfo` is falsy. **]**
 
@@ -46,5 +50,7 @@ fs.stat(filePath, function (err, fileStats) {
 **SRS_NODE_DEVICE_BLOB_UPLOAD_16_003: [** `uploadToBlob` shall throw a `ReferenceError` if `streamSize` is falsy. **]**
 
 **SRS_NODE_DEVICE_BLOB_UPLOAD_16_004: [** `uploadToBlob` shall throw an `ArgumentError` if `blobInfo` is missing one or more of the following properties: `hostName`, `containerName`, `blobName`, `sasToken`). **]**
+
+**SRS_NODE_DEVICE_BLOB_UPLOAD_99_010: [** `uploadToBlob` shall set the blob service proxy if proxy is defined. **]**
 
 **SRS_NODE_DEVICE_BLOB_UPLOAD_16_005: [** `uploadToBlob` shall call the `done` calback with the result of the storage api call. **]**

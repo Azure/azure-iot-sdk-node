@@ -20,6 +20,7 @@ export type BlobResponse = {
  * @private
  */
 export interface BlobService {
+    setProxy(proxy: any): void;
     createBlockBlobFromStream(containerName: string, blobName: string, stream: Stream, streamLength: number, done: (err: Error, body?: any, result?: BlobResponse) => void): void;
 }
 
@@ -35,6 +36,7 @@ export interface StorageApi {
  */
 export class BlobUploader implements BlobUploaderInterface {
   storageApi: StorageApi;
+  proxy: any;
 
   constructor(storageApi?: StorageApi) { // TODO: interface
     if (storageApi) {
@@ -44,6 +46,11 @@ export class BlobUploader implements BlobUploaderInterface {
       /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_06_001: [`BlobUploader` should denote delay loading with null for the storageApi property if `storageApi` is falsy]*/
       this.storageApi = null;
     }
+  }
+
+  setProxy(proxy: any): void {
+    /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_99_009: [`setProxy` shall store the provided proxy.]]*/
+    this.proxy = proxy;
   }
 
   uploadToBlob(blobInfo: UploadParams, stream: Stream, streamLength: number, done: TripleValueCallback<any, BlobResponse>): void;
@@ -67,6 +74,10 @@ export class BlobUploader implements BlobUploaderInterface {
         this.storageApi = require('azure-storage');
       }
       const blobService = this.storageApi.createBlobServiceWithSas(blobInfo.hostName, blobInfo.sasToken);
+      if (this.proxy) {
+        /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_99_010: [`uploadToBlob` shall set the blob service proxy if proxy is defined.]*/
+        blobService.setProxy(this.proxy);
+      }
       /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_16_005: [`uploadToBlob` shall call the `_callback` calback with the result of the storage api call.]*/
       blobService.createBlockBlobFromStream(blobInfo.containerName, blobInfo.blobName, stream, streamLength, _callback);
     }, ((body, result) => { return { body: body, result: result }; }), done);

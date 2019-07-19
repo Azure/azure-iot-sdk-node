@@ -38,6 +38,7 @@ export interface FileUpload {
  * @private
  */
 export interface BlobUploader {
+  setProxy(proxy: any): void;
   uploadToBlob(uploadParams: UploadParams, stream: Stream, streamLength: number, done: TripleValueCallback<any, BlobResponse>): void;
   uploadToBlob(uploadParams: UploadParams, stream: Stream, streamLength: number): Promise<any>;
 }

@@ -4,6 +4,7 @@
 'use strict';
 
 var assert = require('chai').assert;
+var sinon = require('sinon');
 var stream = require('stream');
 var ArgumentError = require('azure-iot-common').errors.ArgumentError;
 var BlobUploader = require('../../lib/blob_upload/blob_uploader.js').BlobUploader;
@@ -138,6 +139,20 @@ describe('BlobUploader', function() {
         assert.equal(err, 'fakeError');
         assert.equal(body, 'fakeBody');
         assert.equal(response, 'fakeResponse');
+        done();
+      });
+    });
+
+    it('sets blob service proxy if it has been set', function (done) {
+      /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_99_009: [`setProxy` shall store the provided proxy.]]*/
+      /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_99_010: [`uploadToBlob` shall set the blob service proxy if proxy is defined.]*/
+      var fakeProxy = '__FAKE_PROXY__';
+      var fakeBlobService = { setProxy: sinon.spy(), createBlockBlobFromStream: function (containerName, blobName, stream, streamLength, callback) { callback(); } };
+      var fakeStorageApi = { createBlobServiceWithSas: function () { return fakeBlobService; } };
+      var uploader = new BlobUploader(fakeStorageApi);
+      uploader.setProxy(fakeProxy);
+      uploader.uploadToBlob(fakeBlobInfo, fakeStream, 42, function () {
+        assert.isTrue(fakeBlobService.setProxy.calledWith(fakeProxy));
         done();
       });
     });
