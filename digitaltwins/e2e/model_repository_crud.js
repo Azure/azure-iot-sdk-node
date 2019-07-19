@@ -3,12 +3,23 @@
 'use strict';
 const assert = require('chai').assert;
 const debug = require('debug')('digitaltwinse2e:crud');
+const uuid = require('uuid');
 const DigitalTwinRepositoryService = require('azure-iot-digitaltwins-model-repository').DigitalTwinRepositoryService;
 const ModelRepositoryCredentials = require('./model_repository_credentials').ModelRepositoryCredentials;
 const interfaceDocument = require('./dtdl/test_interface');
 
 const apiVersion = '2019-07-01-Preview';
 const privateRepositoryConnectionString = process.env.AZURE_IOT_PRIVATE_MODEL_REPOSITORY_CONNECTION_STRING;
+
+function createUniqueDocument() {
+  let testInterfaceDocument = JSON.parse(JSON.stringify(interfaceDocument));
+  let idParts = testInterfaceDocument['@id'].split(':');
+  const uniqueId = uuid.v4().split('-')[0];
+  idParts.splice(idParts.length - 1, 0, uniqueId);
+  testInterfaceDocument['@id'] = idParts.join(':');
+  debug('created unique test model with id: ' + testInterfaceDocument['@id']);
+  return testInterfaceDocument;
+}
 
 describe('Private Model Repository CRUD operations', function () {
   let modelRepositoryClient; let creds;
@@ -49,24 +60,25 @@ describe('Private Model Repository CRUD operations', function () {
   it('can create, get and delete a model in a private repository', function () {
     this.timeout(60000); // eslint-disable-line no-invalid-this
     let createdEtag;
-    debug('creating model: ' + interfaceDocument['@id']);
-    return modelRepositoryClient.createOrUpdateMetamodel(interfaceDocument['@id'], apiVersion, interfaceDocument, {
+    const testInterfaceDocument = createUniqueDocument();
+    debug('creating model: ' + testInterfaceDocument['@id']);
+    return modelRepositoryClient.createOrUpdateMetamodel(testInterfaceDocument['@id'], apiVersion, testInterfaceDocument, {
       repositoryId: creds.getRepositoryId()
     }).then((createResponse) => {
       debug('model creation succeeded');
       assert.isNotNull(createResponse.eTag);
       assert.isNotNull(createResponse.xMsRequestId);
       createdEtag = createResponse.eTag;
-      debug('getting model: ' + interfaceDocument['@id']);
-      return modelRepositoryClient.getModel(interfaceDocument['@id'], apiVersion, {
+      debug('getting model: ' + testInterfaceDocument['@id']);
+      return modelRepositoryClient.getModel(testInterfaceDocument['@id'], apiVersion, {
         repositoryId: creds.getRepositoryId()
       });
     }).then((getResponse) => {
       debug('got a model');
       assert.strictEqual(getResponse.eTag, createdEtag);
-      assert.strictEqual(getResponse.xMsModelId, interfaceDocument['@id']);
+      assert.strictEqual(getResponse.xMsModelId, testInterfaceDocument['@id']);
       debug('deleting model...');
-      return modelRepositoryClient.deleteMetamodel(interfaceDocument['@id'], creds.getRepositoryId(), apiVersion);
+      return modelRepositoryClient.deleteMetamodel(testInterfaceDocument['@id'], creds.getRepositoryId(), apiVersion);
     }).then((deleteResponse) => {
       debug('model deleted');
       assert.isNotNull(deleteResponse.xMsRequestId);
@@ -80,17 +92,18 @@ describe('Private Model Repository CRUD operations', function () {
   it('can create, search, update then delete an existing model in a private repository', function () {
     this.timeout(60000); // eslint-disable-line no-invalid-this
     let createdEtag;
-    debug('creating model: ' + interfaceDocument['@id']);
-    return modelRepositoryClient.createOrUpdateMetamodel(interfaceDocument['@id'], apiVersion, interfaceDocument, {
+    const testInterfaceDocument = createUniqueDocument();
+    debug('creating model: ' + testInterfaceDocument['@id']);
+    return modelRepositoryClient.createOrUpdateMetamodel(testInterfaceDocument['@id'], apiVersion, testInterfaceDocument, {
       repositoryId: creds.getRepositoryId()
     }).then((createResponse) => {
       debug('model creation succeeded');
       assert.isNotNull(createResponse.eTag);
       assert.isNotNull(createResponse.xMsRequestId);
       createdEtag = createResponse.eTag;
-      debug('searching model: ' + interfaceDocument['@id']);
+      debug('searching model: ' + testInterfaceDocument['@id']);
       const searchOptions = {
-        searchKeyword: interfaceDocument['@id'],
+        searchKeyword: testInterfaceDocument['@id'],
         modelFilterType: 'interface'
       };
       return modelRepositoryClient.search(searchOptions, apiVersion, {
@@ -98,14 +111,14 @@ describe('Private Model Repository CRUD operations', function () {
       });
     }).then((searchResponse) => {
       debug('got results');
-      interfaceDocument.contents.push(
+      testInterfaceDocument.contents.push(
         {
           '@type': 'Property',
           'name': 'aNewProperty',
           'writable': false,
           'schema': 'string'
         },);
-      return modelRepositoryClient.createOrUpdateMetamodel(interfaceDocument['@id'], apiVersion, interfaceDocument, {
+      return modelRepositoryClient.createOrUpdateMetamodel(testInterfaceDocument['@id'], apiVersion, testInterfaceDocument, {
         repositoryId: creds.getRepositoryId(),
         ifMatch: createdEtag
       });
@@ -113,7 +126,7 @@ describe('Private Model Repository CRUD operations', function () {
       debug('model updated.');
       assert.isString(updateResponse.xMsRequestId);
       debug('deleting model...');
-      return modelRepositoryClient.deleteMetamodel(interfaceDocument['@id'], creds.getRepositoryId(), apiVersion);
+      return modelRepositoryClient.deleteMetamodel(testInterfaceDocument['@id'], creds.getRepositoryId(), apiVersion);
     }).then((deleteResponse) => {
       debug('model deleted');
       assert.isNotNull(deleteResponse.xMsRequestId);
