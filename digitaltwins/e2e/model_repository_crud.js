@@ -12,8 +12,8 @@ const apiVersion = '2019-07-01-Preview';
 const privateRepositoryConnectionString = process.env.AZURE_IOT_PRIVATE_MODEL_REPOSITORY_CONNECTION_STRING;
 
 function createUniqueDocument() {
-  let testInterfaceDocument = JSON.parse(JSON.stringify(interfaceDocument));
-  let idParts = testInterfaceDocument['@id'].split(':');
+  const testInterfaceDocument = JSON.parse(JSON.stringify(interfaceDocument));
+  const idParts = testInterfaceDocument['@id'].split(':');
   const uniqueId = uuid.v4().split('-')[0];
   idParts.splice(idParts.length - 1, 0, uniqueId);
   testInterfaceDocument['@id'] = idParts.join(':');
