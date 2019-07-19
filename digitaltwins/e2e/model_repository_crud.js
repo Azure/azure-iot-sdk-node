@@ -42,7 +42,7 @@ describe('Private Model Repository CRUD operations', function () {
       })
       .catch((err) => {
         debug('error getting ' + modelInformationUrn + ': ' + err.toString());
-        throw err;
+        return Promise.reject(err);
       });
   });
 
@@ -73,7 +73,7 @@ describe('Private Model Repository CRUD operations', function () {
       return Promise.resolve();
     }).catch((err) => {
       debug(err.toString());
-      throw err;
+      return Promise.reject(err);
     });
   });
 
@@ -120,7 +120,7 @@ describe('Private Model Repository CRUD operations', function () {
       return Promise.resolve();
     }).catch((err) => {
       debug(err.toString());
-      throw err;
+      return Promise.reject(err);
     });
   });
 });
@@ -154,7 +154,7 @@ describe('Global Model Repository CRUD operations', function () {
       })
       .catch((err) => {
         debug('error getting ' + modelInformationUrn + ': ' + err.toString());
-        throw err;
+        return Promise.reject(err);
       });
   });
 
