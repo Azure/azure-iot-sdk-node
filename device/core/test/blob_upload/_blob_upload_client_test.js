@@ -10,11 +10,13 @@ var BlobUploadNotificationError = require('../../lib/blob_upload').BlobUploadNot
 var BlobSasError = require('../../lib/blob_upload').BlobSasError;
 
 var FakeFileUploadApi = function() {
+  this.setOptions = sinon.spy();
   this.getBlobSharedAccessSignature = sinon.spy();
   this.notifyUploadComplete = sinon.spy();
 };
 
 var FakeBlobUploader = function() {
+  this.setProxy = sinon.spy();
   this.uploadToBlob = sinon.spy();
 };
 
@@ -52,6 +54,28 @@ describe('BlobUploadClient', function() {
     });
 
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_003: [If specified, `BlobUploadClient` shall use the `blobUploader` passed as a parameter instead of the default one.]*/
+  });
+
+  describe('#setOptions', function () {
+    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_99_011: [`setOptions` shall set `fileUploadApi` options.]*/
+    it('sets file upload API options', function () {
+      var fakeOptions = '__FAKE_OPTIONS__';
+      var fakeFileUpload = new FakeFileUploadApi();
+      var client = new BlobUploadClient(fakeConfig, fakeFileUpload, null);
+      client.setOptions(fakeOptions);
+      assert.isTrue(fakeFileUpload.setOptions.calledWith(fakeOptions));
+    });
+  });
+
+  describe('#setFileUploadProxy', function () {
+    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_99_012: [** `setFileUploadProxy` shall set `blobUploader` proxy.]*/
+    it('sets blob uploader proxy', function () {
+      var fakeProxy = '__FAKE_PROXY__';
+      var fakeBlobUploader = new FakeBlobUploader();
+      var client = new BlobUploadClient(fakeConfig, null, fakeBlobUploader);
+      client.setFileUploadProxy(fakeProxy);
+      assert.isTrue(fakeBlobUploader.setProxy.calledWith(fakeProxy));
+    });
   });
 
   describe('#uploadToBlob', function() {

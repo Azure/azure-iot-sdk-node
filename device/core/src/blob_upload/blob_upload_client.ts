@@ -47,6 +47,8 @@ export interface BlobUploader {
  * @private
  */
 export interface BlobUpload {
+  setOptions(options: any): void;
+  setFileUploadProxy(proxy: any): void;
   uploadToBlob(blobName: string, stream: Stream, streamLength: number, done: (err?: Error) => void): void;
   uploadToBlob(blobName: string, stream: Stream, streamLength: number): Promise<void>;
 }
@@ -69,6 +71,20 @@ export class BlobUploadClient implements BlobUpload {
 
     /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_003: [If specified, `BlobUploadClient` shall use the `blobUploader` passed as a parameter instead of the default one.]*/
     this._blobUploader = blobUploader ? blobUploader : new DefaultBlobUploader();
+  }
+
+  setOptions(options: any): void {
+    if (this._fileUploadApi) {
+      /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_99_011: [`setOptions` shall set `fileUploadApi` options.]*/
+      this._fileUploadApi.setOptions(options);
+    }
+  }
+
+  setFileUploadProxy(proxy: any): void {
+    if (this._blobUploader) {
+      /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_99_012: [** `setFileUploadProxy` shall set `blobUploader` proxy.]*/
+      this._blobUploader.setProxy(proxy);
+    }
   }
 
   uploadToBlob(blobName: string, stream: Stream, streamLength: number, done: ErrorCallback): void;
