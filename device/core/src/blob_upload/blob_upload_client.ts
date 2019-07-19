@@ -27,6 +27,7 @@ export interface UploadParams {
  * @private
  */
 export interface FileUpload {
+  setOptions(options: any): void;
   getBlobSharedAccessSignature(blobName: string, done: Callback<UploadParams>): void;
   getBlobSharedAccessSignature(blobName: string): Promise<UploadParams>;
   notifyUploadComplete(correlationId: string, uploadResult: BlobUploadResult, done: (err?: Error) => void): void;
