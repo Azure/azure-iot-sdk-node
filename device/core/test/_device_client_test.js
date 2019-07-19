@@ -333,6 +333,28 @@ describe('Device Client', function () {
         done();
       });
     });
+
+    it('calls setOptions of blob uploader with supplied options', function (done) {
+      /*Tests_SRS_NODE_DEVICE_CLIENT_99_103: [The `setOptions` method shall set `blobUploadClient` options.]*/
+      var fakeOptions = '__FAKE_OPTIONS__';
+      var fakeBlobUploader = { setOptions: sinon.fake() };
+      var client = new Client(new FakeTransport(), null, fakeBlobUploader);
+      client.setOptions(fakeOptions, function () {
+        assert.isTrue(fakeBlobUploader.setOptions.calledWith(fakeOptions));
+        done();
+      });
+    });
+
+    it ('calls setFileUploadProxy of blob uploader if fileUploadProxy is set in options', function (done) {
+      /*Tests_SRS_NODE_DEVICE_CLIENT_99_104: [The `setOptions` method shall set `blobUploadClient` proxy if `fileUploadProxy` is defined in options.]*/
+      var fakeOptions = { fileUploadProxy: '__FAKE_PROXY__' };
+      var fakeBlobUploader = { setOptions: function() {}, setFileUploadProxy: sinon.fake() };
+      var client = new Client(new FakeTransport(), null, fakeBlobUploader);
+      client.setOptions(fakeOptions, function () {
+        assert.isTrue(fakeBlobUploader.setFileUploadProxy.calledWith(fakeOptions.fileUploadProxy));
+        done();
+      });
+    });
   });
 
   describe('#onDeviceMethod', function () {

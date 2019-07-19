@@ -14,6 +14,7 @@ import { SharedAccessSignatureAuthenticationProvider } from './sas_authenticatio
 import { X509AuthenticationProvider } from './x509_authentication_provider';
 import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
 import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
+import { DeviceClientOptions } from './interfaces';
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
   if (callback) callback(error, result);
@@ -104,6 +105,21 @@ export class Client extends InternalClient {
     };
 
     this._transport.on('disconnect', this._deviceDisconnectHandler);
+  }
+
+  setOptions(options: DeviceClientOptions, done: Callback<results.TransportConfigured>): void;
+  setOptions(options: DeviceClientOptions): Promise<results.TransportConfigured>;
+  setOptions(options: DeviceClientOptions, done?: Callback<results.TransportConfigured>): Promise<results.TransportConfigured> | void {
+    if (!options) throw new ReferenceError('options cannot be falsy.');
+    if (this.blobUploadClient) {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_99_103: [The `setOptions` method shall set `blobUploadClient` options.]*/
+      this.blobUploadClient.setOptions(options);
+      if (options.fileUploadProxy) {
+        /*Codes_SRS_NODE_DEVICE_CLIENT_99_104: [The `setOptions` method shall set `blobUploadClient` proxy if `fileUploadProxy` is defined in options.]*/
+        this.blobUploadClient.setFileUploadProxy(options.fileUploadProxy);
+      }
+    }
+    return super.setOptions(options, done);
   }
 
   /**
