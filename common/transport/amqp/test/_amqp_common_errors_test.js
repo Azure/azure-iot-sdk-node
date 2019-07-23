@@ -42,6 +42,7 @@ describe('translateError', function() {
     { errorDescription: 'com.microsoft:device-already-exists', errorMessage: 'Device already exists', expectedErrorType: errors.DeviceAlreadyExistsError },
     { errorDescription: 'com.microsoft:device-container-throttled', errorMessage: 'Throttled', expectedErrorType: errors.ThrottlingError },
     { errorDescription: 'com.microsoft:iot-hub-suspended', errorMessage: 'IoT hub suspended', expectedErrorType: errors.IoTHubSuspendedError },
+    { errorDescription: 'com.microsoft:iot-hub-not-found-error', errorMessage: 'IoT hub suspended', expectedErrorType: errors.IotHubNotFoundError },
     { errorDescription: 'com.microsoft:message-lock-lost', errorMessage: 'Message lock lost', expectedErrorType: errors.DeviceMessageLockLostError },
     { errorDescription: 'com.microsoft:precondition-failed', errorMessage: 'Precondition failed', expectedErrorType: errors.PreconditionFailedError },
     { errorDescription: 'com.microsoft:quota-exceeded', errorMessage: 'Quota exceeded', expectedErrorType: errors.IotHubQuotaExceededError },
