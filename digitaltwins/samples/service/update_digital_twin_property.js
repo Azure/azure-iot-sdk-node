@@ -6,7 +6,7 @@ const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').Digit
 
 const deviceId = '<DEVICE_ID_GOES_HERE>';
 const componentName = '<COMPONENT_NAME_GOES_HERE>'; // for the environmental sensor, try "environmentalSensor"
-const propertyName = '<PROPERTY_NAME_GOES_HERE>';   // for the environmental sensor, try "brightness"
+const propertyName = '<PROPERTY_NAME_GOES_HERE>'; // for the environmental sensor, try "brightness"
 const propertyValue = '<PROPERTY_VALUE_GOES_HERE>'; // for the environmental sensor, try 42 (note that this is a number, not a string, so don't include quotes).
 
 // Simple example of how to:
