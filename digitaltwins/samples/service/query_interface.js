@@ -9,6 +9,7 @@ const interfaceId = '<INTERFACE_ID_GOES_HERE>'; // suggestion to find your envir
 
 async function main() {
   const registryClient = Registry.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
+  console.log('querying devices that have interface ' + interfaceId + '...');
   const query = registryClient.createQuery('SELECT * from devices  WHERE has_interface(\'' + interfaceId + '\')');
   while (query.hasMoreResults) {
     const queryResponse = await query.next(query.continuationToken);

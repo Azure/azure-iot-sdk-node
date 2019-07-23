@@ -20,11 +20,9 @@ async function main() {
   const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
   const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-  // Get digital twin
-  const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
-
+  console.log('invoking command ' + commandName + ' on component ' + componentName + ' for device ' + deviceId + '...');
   // Invoke a command
-  const digitalTwinCommandResult = await digitalTwinServiceClient.invokeCommand(digitalTwin.Id, componentName, commandName, commandArgument);
+  const digitalTwinCommandResult = await digitalTwinServiceClient.invokeCommand(deviceId, componentName, commandName, commandArgument);
 
   // Print result of the command
   console.log(JSON.stringify(digitalTwinCommandResult, null, 2));
