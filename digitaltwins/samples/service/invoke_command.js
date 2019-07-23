@@ -5,8 +5,8 @@ const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubT
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 
 const deviceId = '<DEVICE_ID_GOES_HERE>';
-const componentName = '<COMPONENT_NAME_GOES_HERE>';     // for the environmental sensor, you can try "environmentalSensor"
-const commandName = '<COMMAND_NAME_GOES_HERE>';         // for the environmental sensor, you can try "blink", "turnOff" or "turnOn"
+const componentName = '<COMPONENT_NAME_GOES_HERE>'; // for the environmental sensor, you can try "environmentalSensor"
+const commandName = '<COMMAND_NAME_GOES_HERE>'; // for the environmental sensor, you can try "blink", "turnOff" or "turnOn"
 const commandArgument = '<COMMAND_ARGUMENT_GOES_HERE>'; // for the environmental sensor, it really doesn't matter. any string will do.
 
 // Simple example of how to:
