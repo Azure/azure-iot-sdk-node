@@ -70,7 +70,7 @@ let environmentReadWriteCallback: PropertyChangedCallback = (interfaceObject: Ba
 let environmentalSensor = new EnvironmentalSensor('environmentalSensor', environmentReadWriteCallback, environmentCommandCallback );
 let sampleDeviceInfo = new DeviceInformation('sampleDeviceInfo');
 
-const client = Client.fromConnectionString(process.argv[2], Protocol);
+const client = Client.fromConnectionString(process.env.DEVICE_CONNECTION_STRING as string, Protocol);
 
 const capabilityModel = 'urn:azureiot:testdevicecapabilitymodel:1';
 

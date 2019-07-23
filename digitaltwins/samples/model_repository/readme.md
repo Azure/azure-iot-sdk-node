@@ -10,13 +10,12 @@ You should have [Node.js](https://nodejs.org/en/) installed.
 ## How to install the sample
 
 1. Download the files in this folder
-2. Install the dependencies:
-  - To download the client libraries from NPM, simply run `npm install`
-  - if you've downloaded the client libraries manually, simply run:
-      (dont't forget to replace <path-to> with the actual path to the package and <preview-version> with the version of the packages you downloaded)
-      ```
-      $ npm install <path-to>/azure-iot-digitaltwins-model-repository-<preview-version>
-      ```
+2. Install the dependencies by opening a terminal that contains the sample you downloaded and the `package.json` file and type:
+
+```shell
+npm install
+```
+
 3. Set the following environment variables:
 ```shell
 set AZURE_IOT_MODEL_REPO_ID=<your private repository id>

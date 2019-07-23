@@ -24,7 +24,7 @@ const commandHandler = (request, response) => {
 
 const environmentalSensor = new EnvironmentalSensor('environmentalSensor', propertyUpdateHandler, commandHandler);
 
-const deviceClient = DeviceClient.fromConnectionString(process.argv[2], Mqtt);
+const deviceClient = DeviceClient.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Mqtt);
 
 const capabilityModel = 'urn:azureiot:samplemodel:1';
 
