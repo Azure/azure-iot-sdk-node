@@ -18,18 +18,12 @@ async function main() {
   const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
   const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
+  console.log('getting full digital twin for device ' + deviceId + '...');
   // Get digital twin
   const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
 
-  // Print device capabilities
-  console.log(JSON.stringify(digitalTwin, null, 2));
-
-  // List components by name
-  for (const componentName in digitalTwin.components) {
-    if (digitalTwin.components.hasOwnProperty(componentName)) {
-      console.log(JSON.stringify(digitalTwin.components[componentName]));
-    }
-  }
+  // Print digital twin components
+  console.log(JSON.stringify(digitalTwin.components, null, 2));
 };
 
 main();

@@ -32,9 +32,15 @@ async function main() {
   const digitalTwinClient = new DigitalTwinClient(capabilityModel, deviceClient);
   digitalTwinClient.addComponent(environmentalSensor);
   await digitalTwinClient.register();
+
+  // send telemetry
   await environmentalSensor.temp.send(65.5);
   await environmentalSensor.humid.send(12.2);
   console.log('Done sending telemetry.');
+
+  // report a property
+  await environmentalSensor.state.report('online');
+  console.log('reported state property as online');
 };
 
 main();
