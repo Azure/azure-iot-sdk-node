@@ -42,7 +42,7 @@ describe('translateError', function() {
     { errorDescription: 'com.microsoft:device-already-exists', errorMessage: 'Device already exists', expectedErrorType: errors.DeviceAlreadyExistsError },
     { errorDescription: 'com.microsoft:device-container-throttled', errorMessage: 'Throttled', expectedErrorType: errors.ThrottlingError },
     { errorDescription: 'com.microsoft:iot-hub-suspended', errorMessage: 'IoT hub suspended', expectedErrorType: errors.IoTHubSuspendedError },
-    { errorDescription: 'com.microsoft:iot-hub-not-found-error', errorMessage: 'IoT hub suspended', expectedErrorType: errors.IotHubNotFoundError },
+    { errorDescription: 'com.microsoft:iot-hub-not-found-error', errorMessage: 'IoT hub not found', expectedErrorType: errors.IotHubNotFoundError },
     { errorDescription: 'com.microsoft:message-lock-lost', errorMessage: 'Message lock lost', expectedErrorType: errors.DeviceMessageLockLostError },
     { errorDescription: 'com.microsoft:precondition-failed', errorMessage: 'Precondition failed', expectedErrorType: errors.PreconditionFailedError },
     { errorDescription: 'com.microsoft:quota-exceeded', errorMessage: 'Quota exceeded', expectedErrorType: errors.IotHubQuotaExceededError },
@@ -94,6 +94,15 @@ describe('translateError', function() {
       */
       assert.equal(err.message, message);
       assert.equal(err.amqpError, error);
+    });
+
+    it('returns a generic error object appended with a message if the error type is unknown and an embedded message is present', function () {
+      var message = 'generic error message';
+      var specific_message = 'specific error message';
+      let testErr = { error: { message: { message: specific_message }}};    
+      var err = translateError(message, testErr.error);
+      console.log(err.message);
+      assert.equal(err.message, message + '. ' + specific_message);
     });
   });
 });
