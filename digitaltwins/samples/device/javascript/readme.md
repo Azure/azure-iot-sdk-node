@@ -9,22 +9,23 @@ You should have [Node.js](https://nodejs.org/en/) installed.
 ## How to install the sample
 
 1. Download the files in this folder
-2. Install the dependencies:
-  - To download the client libraries from NPM, simply run `npm install`
-  - if you've downloaded the client libraries manually, simply run `npm install <package.tgz>` for the following packages: *azure-iot-common*, *azure-iot-device*, *azure-iot-device-mqtt* and *azure-iot-digitaltwins-device*
+2. Install the dependencies by opening a terminal that contains the sample you downloaded and the `package.json` file and type:
 
-      (dont't forget to replace <path-to> with the actual path to the package and <preview-version> with the version of the packages you downloaded)
-      ```
-      $ npm install <path-to>/azure-iot-common-<preview-version>.tgz
-      $ npm install <path-to>/azure-iot-device-<preview-version>.tgz
-      $ npm install <path-to>/azure-iot-device-mqtt-<preview-version>.tgz
-      $ npm install <path-to>/azure-iot-digitaltwins-device-<preview-version>.tgz
-      ```
-
-3. Run the sample with the following command:
-
+```shell
+npm install
 ```
-$ node simple_sample.js <DEVICE_CONNECTION_STRING>
+
+3. Set the following environment variables:
+
+```shell
+set IOTHUB_CONNECTION_STRING=<your IoT Hub connection string>
+```
+*use `export` instead of `set` if you're running MacOS or Linux.*
+
+4. Run the sample with the following command:
+
+```shell
+node simple_sample.js
 ```
 
 ## What does this sample do?

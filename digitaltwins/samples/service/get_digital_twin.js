@@ -4,6 +4,8 @@
 const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubTokenCredentials;
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 
+const deviceId = '<DEVICE_ID_GOES_HERE>';
+
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
 // - get the Digital Twin
@@ -11,7 +13,6 @@ const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').Digit
 async function main() {
   // IoT Hub connection string has to be set to system environment variable IOTHUB_CONNECTION_STRING
   // Twin enabled device must be exist on the IoT Hub
-  const deviceId = '<DEVICE_ID_GOES_HERE>';
 
   // Create digital twin service client
   const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
