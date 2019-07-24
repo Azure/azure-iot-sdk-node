@@ -6,7 +6,7 @@ describe('IoTHubTokenCredentials', function () {
   describe('getHubName', function () {
     it('returns the Azure IoT hub hostname contained in the connection string', function () {
       var testHostName = 'host.name';
-      var testConnectionString = 'HostName=' + testHostName + ';SharedAccessKeyName=service;SharedAccessKey=' + new Buffer('testkey').toString('base64');
+      var testConnectionString = 'HostName=' + testHostName + ';SharedAccessKeyName=service;SharedAccessKey=' + Buffer.from('testkey').toString('base64');
       var testCreds = new IoTHubTokenCredentials(testConnectionString);
       assert.strictEqual(testCreds.getHubName(), testHostName);
     });
@@ -14,7 +14,7 @@ describe('IoTHubTokenCredentials', function () {
 
   describe('signRequest', function () {
     it('adds a shared access signature in the authorization header', function (testCallback) {
-      var testConnectionString = 'HostName=host.name;SharedAccessKeyName=service;SharedAccessKey=' + new Buffer('testkey').toString('base64');
+      var testConnectionString = 'HostName=host.name;SharedAccessKeyName=service;SharedAccessKey=' + Buffer.from('testkey').toString('base64');
       var testCreds = new IoTHubTokenCredentials(testConnectionString);
       var testRequest = {
         headers: {

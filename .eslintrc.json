@@ -1,0 +1,26 @@
+{
+    "env": {
+        "commonjs": true,
+        "es6": true,
+        "node": true
+    },
+    "extends": [
+        "google"
+    ],
+    "globals": {
+        "Atomics": "readonly",
+        "SharedArrayBuffer": "readonly"
+    },
+    "parserOptions": {
+        "ecmaVersion": 2018
+    },
+    "rules": {
+        "linebreak-style": 0,
+        "max-len": 0,
+        "require-jsdoc": 0,
+        "comma-dangle": 0,
+        "indent": ["error", 2],
+        "space-before-function-paren": ["error", {"anonymous": "always","named": "never"}],
+        "object-curly-spacing": ["error", "always"]
+    }
+}

@@ -1,6 +1,6 @@
 {
-  "name": "azure-iot-digitaltwin-service",
-  "version": "1.0.0-preview.2",
+  "name": "azure-iot-digitaltwins-service",
+  "version": "1.0.0-preview.0",
   "description": "Azure IoT Digital Twins Preview",
   "main": "index.js",
   "types": "index.d.ts",
@@ -11,7 +11,7 @@
     "build": "npm -s run lint && npm -s run compile",
     "test-min": "istanbul cover --report none ./node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test.js",
     "test": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test.js",
-    "check-cover": "istanbul check-coverage --statements 100 --branches 100  --lines 100 --functions 100",
+    "check-cover": "istanbul check-coverage --statements 84 --branches 57  --lines 85 --functions 54",
     "ci": "npm -s run build && npm -s run test-min && npm -s run check-cover"
   },
   "repository": {
@@ -30,7 +30,9 @@
     "dist/**/*.d.ts",
     "dist/**/*.d.ts.map",
     "src/**/*.ts",
-    "tsconfig.json"
+    "tsconfig.json",
+    "index.js",
+    "index.d.ts"
   ],
   "author": "Microsoft Corp.",
   "license": "MIT",
@@ -47,7 +49,7 @@
   },
   "dependencies": {
     "@azure/ms-rest-js": "^1.8.13",
-    "azure-iot-common": "^1.9.9",
+    "azure-iot-common": "1.12.0-preview.0",
     "tslib": "^1.9.3"
   }
 }

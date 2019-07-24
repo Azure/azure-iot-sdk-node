@@ -1,5 +1,5 @@
 {
-  "name": "azure-iot-digitaltwin-model-repository",
+  "name": "azure-iot-digitaltwins-model-repository",
   "version": "1.0.0-preview.0",
   "description": "Azure IoT Digital Twins Model Repository Preview",
   "main": "index.js",
@@ -30,7 +30,9 @@
     "dist/**/*.d.ts",
     "dist/**/*.d.ts.map",
     "src/**/*.ts",
-    "tsconfig.json"
+    "tsconfig.json",
+    "index.js",
+    "index.d.ts"
   ],
   "author": "Microsoft Corp.",
   "license": "MIT",
@@ -47,7 +49,7 @@
   },
   "dependencies": {
     "@azure/ms-rest-js": "^1.8.13",
-    "azure-iot-common": "^1.9.9",
+    "azure-iot-common": "1.12.0-preview.0",
     "tslib": "^1.9.3"
   }
 }
