@@ -4,6 +4,21 @@
 const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubTokenCredentials;
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 
+const deviceId = '<DEVICE_ID_GOES_HERE>';
+const patch = {
+  components: {
+    '<COMPONENT_NAME_GOES_HERE>': { // for the environmental sensor, try "environmentalSensor"
+      properties: {
+        '<PROPERTY_NAME_GOES_HERE>': { // for the environmental sensor, try "brightness"
+          desired: {
+            value: '<PROPERTY_VALUE_GOES_HERE>' // for the environmental sensor, try 42 (note that this is a number, not a string, so don't include quotes).
+          }
+        }
+      }
+    }
+  }
+};
+
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
 // - create a patch for modifying the Digital Twin
@@ -11,7 +26,6 @@ const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').Digit
 async function main() {
   // IoT Hub connection string has to be set to system environment variable IOTHUB_CONNECTION_STRING
   // Twin enabled device must be exist on the IoT Hub
-  const deviceId = '<DEVICE_ID_GOES_HERE>';
 
   // Create service client
   const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
@@ -21,32 +35,14 @@ async function main() {
   const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
 
   // Print original Twin
-  console.log(JSON.stringify(digitalTwin.interfaces, null, 2));
-
-  // Create patch
-  const componentName = '<COMPONENT_NAME_GOES_HERE>';
-  const propertyName = '<PROPERTY_NAME_GOES_HERE>';
-  const propertyValue = 42;
-  const patch = {
-    components: {
-      [componentName]: {
-        properties: {
-          [propertyName]: {
-            desired: {
-              value: propertyValue
-            }
-          }
-        }
-      }
-    }
-  };
+  console.log(JSON.stringify(digitalTwin.components, null, 2));
 
   // Update digital twin and verify the update
   try {
     const updatedDigitalTwin = await digitalTwinServiceClient.updateDigitalTwin(deviceId, patch);
 
     // Print updated Twin
-    console.log(JSON.stringify(updatedDigitalTwin.interfaces, null, 2));
+    console.log(JSON.stringify(updatedDigitalTwin.components, null, 2));
   } catch (err) {
     console.log(err);
   }

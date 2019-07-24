@@ -72,6 +72,7 @@ export class Http extends EventEmitter implements DeviceTransport {
   private _timeoutObj: number;
   private _receiverStarted: boolean;
   private _userAgentString: string;
+  private _productInfo: string;
 
   /**
    * @private
@@ -159,6 +160,7 @@ export class Http extends EventEmitter implements DeviceTransport {
           done(err);
         } else {
           const path = endpoint.deviceEventPath(encodeUriComponentStrict(config.deviceId));
+          /*Codes_SRS_NODE_DEVICE_HTTP_41_002: [ `productInfo` should be set in the HTTP User-Agent Header if set using `setOptions` ]*/
           let httpHeaders = {
             'iothub-to': path,
             'User-Agent': this._userAgentString
@@ -325,11 +327,20 @@ export class Http extends EventEmitter implements DeviceTransport {
       });
     }
 
+    /*Codes_SRS_NODE_DEVICE_HTTP_41_001: [ The HTTP transport should use the productInfo string in the `options` object if present ]*/
+    if (options.productInfo) {
+      // To enforce proper use of the productInfo option, if the setOption is called after HTTP calls have already been made (therefore _userAgentString already set) an error is thrown.
+      if (this._userAgentString) {
+        /*Codes_SRS_NODE_DEVICE_HTTP_41_003: [ `productInfo` must be set before `http._ensureAgentString` is invoked for the first time ]*/
+        throw Error('Ensure you call setOption for productInfo before initiating any connection to IoT Hub');
+      } else {
+        this._productInfo = options.productInfo;
+      }
+    }
+
     /*Codes_SRS_NODE_DEVICE_HTTP_16_010: [`setOptions` should not throw if `done` has not been specified.]*/
     /*Codes_SRS_NODE_DEVICE_HTTP_16_005: [If `done` has been specified the `setOptions` method shall call the `done` callback with no arguments when successful.]*/
     /*Codes_SRS_NODE_DEVICE_HTTP_16_009: [If `done` has been specified the `setOptions` method shall call the `done` callback with a standard javascript `Error` object when unsuccessful.]*/
-    this._http.setOptions(options);
-
     this._http.setOptions(options);
 
     // setOptions used to exist both on Http and HttpReceiver with different options class. In order not to break backward compatibility we have
@@ -786,10 +797,11 @@ export class Http extends EventEmitter implements DeviceTransport {
     if (this._userAgentString) {
       done();
     } else {
-      getUserAgentString((agent) => {
+      getUserAgentString(this._productInfo, (agent) => {
         this._userAgentString = agent;
         done();
       });
     }
   }
 }
+

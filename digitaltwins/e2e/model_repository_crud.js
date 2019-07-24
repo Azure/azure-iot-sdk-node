@@ -3,12 +3,23 @@
 'use strict';
 const assert = require('chai').assert;
 const debug = require('debug')('digitaltwinse2e:crud');
+const uuid = require('uuid');
 const DigitalTwinRepositoryService = require('azure-iot-digitaltwins-model-repository').DigitalTwinRepositoryService;
 const ModelRepositoryCredentials = require('./model_repository_credentials').ModelRepositoryCredentials;
 const interfaceDocument = require('./dtdl/test_interface');
 
 const apiVersion = '2019-07-01-Preview';
 const privateRepositoryConnectionString = process.env.AZURE_IOT_PRIVATE_MODEL_REPOSITORY_CONNECTION_STRING;
+
+function createUniqueDocument() {
+  const testInterfaceDocument = JSON.parse(JSON.stringify(interfaceDocument));
+  const idParts = testInterfaceDocument['@id'].split(':');
+  const uniqueId = uuid.v4().split('-')[0];
+  idParts.splice(idParts.length - 1, 0, uniqueId);
+  testInterfaceDocument['@id'] = idParts.join(':');
+  debug('created unique test model with id: ' + testInterfaceDocument['@id']);
+  return testInterfaceDocument;
+}
 
 describe('Private Model Repository CRUD operations', function () {
   let modelRepositoryClient; let creds;
@@ -42,85 +53,102 @@ describe('Private Model Repository CRUD operations', function () {
       })
       .catch((err) => {
         debug('error getting ' + modelInformationUrn + ': ' + err.toString());
-        throw err;
+        return Promise.reject(err);
       });
   });
 
   it('can create, get and delete a model in a private repository', function () {
     this.timeout(60000); // eslint-disable-line no-invalid-this
     let createdEtag;
-    debug('creating model: ' + interfaceDocument['@id']);
-    return modelRepositoryClient.createOrUpdateMetamodel(interfaceDocument['@id'], apiVersion, interfaceDocument, {
-      repositoryId: creds.getRepositoryId()
+    const testInterfaceDocument = createUniqueDocument();
+    debug('creating model: ' + testInterfaceDocument['@id']);
+    return modelRepositoryClient.createOrUpdateMetamodel(testInterfaceDocument['@id'], apiVersion, testInterfaceDocument, {
+      'repositoryId': creds.getRepositoryId(),
+      'xMsClientRequestId': uuid.v4(),
+      'x-ms-client-source': 'nodesdke2etests'
     }).then((createResponse) => {
       debug('model creation succeeded');
       assert.isNotNull(createResponse.eTag);
       assert.isNotNull(createResponse.xMsRequestId);
       createdEtag = createResponse.eTag;
-      debug('getting model: ' + interfaceDocument['@id']);
-      return modelRepositoryClient.getModel(interfaceDocument['@id'], apiVersion, {
-        repositoryId: creds.getRepositoryId()
+      debug('getting model: ' + testInterfaceDocument['@id']);
+      return modelRepositoryClient.getModel(testInterfaceDocument['@id'], apiVersion, {
+        'repositoryId': creds.getRepositoryId(),
+        'xMsClientRequestId': uuid.v4(),
+        'x-ms-client-source': 'nodesdke2etests'
       });
     }).then((getResponse) => {
       debug('got a model');
       assert.strictEqual(getResponse.eTag, createdEtag);
-      assert.strictEqual(getResponse.xMsModelId, interfaceDocument['@id']);
+      assert.strictEqual(getResponse.xMsModelId, testInterfaceDocument['@id']);
       debug('deleting model...');
-      return modelRepositoryClient.deleteMetamodel(interfaceDocument['@id'], creds.getRepositoryId(), apiVersion);
+      return modelRepositoryClient.deleteMetamodel(testInterfaceDocument['@id'], creds.getRepositoryId(), apiVersion, {
+        'xMsClientRequestId': uuid.v4(),
+        'x-ms-client-source': 'nodesdke2etests'
+      });
     }).then((deleteResponse) => {
       debug('model deleted');
       assert.isNotNull(deleteResponse.xMsRequestId);
       return Promise.resolve();
     }).catch((err) => {
       debug(err.toString());
-      throw err;
+      return Promise.reject(err);
     });
   });
 
   it('can create, search, update then delete an existing model in a private repository', function () {
     this.timeout(60000); // eslint-disable-line no-invalid-this
     let createdEtag;
-    debug('creating model: ' + interfaceDocument['@id']);
-    return modelRepositoryClient.createOrUpdateMetamodel(interfaceDocument['@id'], apiVersion, interfaceDocument, {
-      repositoryId: creds.getRepositoryId()
+    const testInterfaceDocument = createUniqueDocument();
+    debug('creating model: ' + testInterfaceDocument['@id']);
+    return modelRepositoryClient.createOrUpdateMetamodel(testInterfaceDocument['@id'], apiVersion, testInterfaceDocument, {
+      'repositoryId': creds.getRepositoryId(),
+      'xMsClientRequestId': uuid.v4(),
+      'x-ms-client-source': 'nodesdke2etests'
     }).then((createResponse) => {
       debug('model creation succeeded');
       assert.isNotNull(createResponse.eTag);
       assert.isNotNull(createResponse.xMsRequestId);
       createdEtag = createResponse.eTag;
-      debug('searching model: ' + interfaceDocument['@id']);
+      debug('searching model: ' + testInterfaceDocument['@id']);
       const searchOptions = {
-        searchKeyword: interfaceDocument['@id'],
+        searchKeyword: testInterfaceDocument['@id'],
         modelFilterType: 'interface'
       };
       return modelRepositoryClient.search(searchOptions, apiVersion, {
-        repositoryId: creds.getRepositoryId()
+        'repositoryId': creds.getRepositoryId(),
+        'xMsClientRequestId': uuid.v4(),
+        'x-ms-client-source': 'nodesdke2etests'
       });
     }).then((searchResponse) => {
       debug('got results');
-      interfaceDocument.contents.push(
+      testInterfaceDocument.contents.push(
         {
           '@type': 'Property',
           'name': 'aNewProperty',
           'writable': false,
           'schema': 'string'
         },);
-      return modelRepositoryClient.createOrUpdateMetamodel(interfaceDocument['@id'], apiVersion, interfaceDocument, {
-        repositoryId: creds.getRepositoryId(),
-        ifMatch: createdEtag
+      return modelRepositoryClient.createOrUpdateMetamodel(testInterfaceDocument['@id'], apiVersion, testInterfaceDocument, {
+        'repositoryId': creds.getRepositoryId(),
+        'ifMatch': createdEtag,
+        'xMsClientRequestId': uuid.v4(),
+        'x-ms-client-source': 'nodesdke2etests'
       });
     }).then((updateResponse) => {
       debug('model updated.');
       assert.isString(updateResponse.xMsRequestId);
       debug('deleting model...');
-      return modelRepositoryClient.deleteMetamodel(interfaceDocument['@id'], creds.getRepositoryId(), apiVersion);
+      return modelRepositoryClient.deleteMetamodel(testInterfaceDocument['@id'], creds.getRepositoryId(), apiVersion, {
+        'xMsClientRequestId': uuid.v4(),
+        'x-ms-client-source': 'nodesdke2etests' });
     }).then((deleteResponse) => {
       debug('model deleted');
       assert.isNotNull(deleteResponse.xMsRequestId);
       return Promise.resolve();
     }).catch((err) => {
       debug(err.toString());
-      throw err;
+      return Promise.reject(err);
     });
   });
 });
@@ -145,7 +173,10 @@ describe('Global Model Repository CRUD operations', function () {
     this.timeout(60000); // eslint-disable-line no-invalid-this
     const modelInformationUrn = 'urn:azureiot:ModelDiscovery:ModelInformation:1';
     debug('getting model: ' + modelInformationUrn);
-    return modelRepositoryClient.getModel(modelInformationUrn, apiVersion)
+    return modelRepositoryClient.getModel(modelInformationUrn, apiVersion, {
+      'xMsClientRequestId': uuid.v4(),
+      'x-ms-client-source': 'nodesdke2etests'
+    })
       .then((getResponse) => {
         debug('got a model');
         assert.strictEqual(getResponse.xMsModelId, modelInformationUrn);
@@ -154,7 +185,7 @@ describe('Global Model Repository CRUD operations', function () {
       })
       .catch((err) => {
         debug('error getting ' + modelInformationUrn + ': ' + err.toString());
-        throw err;
+        return Promise.reject(err);
       });
   });
 
