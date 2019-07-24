@@ -257,6 +257,7 @@ export class MqttTwinClient extends EventEmitter {
         const parsedMessage = responseBody ? JSON.parse(responseBody) : undefined;
         /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_007: [When a message is received on the response topic with an `$rid` property in the query string of the topic matching the one that was sent on the request topic, the `callback` shall be called with a `null` error object and the parsed content of the response message.]*/
         /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_017: [When a message is received on the response topic with an `$rid` property in the query string of the topic matching the one that was sent on the request topic, the `callback` shall be called with a `null` error object.]*/
+        /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_41_001: [The `callback` shall be called with a Error object containing the error message if the `parsedMessage` contains an errorCode.]*/
         if (parsedMessage && parsedMessage.errorCode) {
           requestCallback(new Error(parsedMessage.message));
         } else {

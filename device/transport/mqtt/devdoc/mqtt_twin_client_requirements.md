@@ -71,6 +71,9 @@ The `updateTwinReportedProperties` publishes an update to the reported propertie
 
 **SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_018: [** If an error happen while publishing the request message, the `callback` shall be called with the translated version of this error obtained by using the `translateError` method of the `azure-iot-mqtt-base` package. **]**
 
+**SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_41_001: [** The `callback` shall be called with a Error object containing the error message if the `parsedMessage` contains an errorCode. **]**
+
+
 ### enableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void;
 
 **SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_019: [** The `enableTwinDesiredPropertiesUpdates` shall subscribe to the `$iothub/twin/PATCH/properties/desired/#` topic using the `MqttBase.subscribe` method if it hasn't been subscribed to already. **]**

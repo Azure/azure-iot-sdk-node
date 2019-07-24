@@ -266,6 +266,32 @@ describe('MqttTwinClient', function () {
       assert.strictEqual(fakeMqttBase.publish.firstCall.args[1], JSON.stringify(fakePatch));
     });
 
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_41_001: [The `callback` shall be called with a Error object containing the error message if the `parsedMessage` contains an errorCode.]*/
+    it('calls its callback with an error when the response contains an errorcode', function (testCallback) {
+      var fakeTwin = {
+        fake: 'twin'
+      };
+
+      fakeMqttBase.publish = sinon.stub().callsFake(function (topic, body, options, callback) {
+        var requestId = topic.split('=')[1];
+        var fakeResponseTopic = '$iothub/twin/res/200?$rid=' + requestId;
+        callback();
+        fakeMqttBase.emit('message', fakeResponseTopic, body);
+      });
+
+      var twinClient = new MqttTwinClient(fakeMqttBase);
+      var fakeTwin = {
+        fake: 'patch',
+        errorCode: 'fakeErrorCode'
+      };
+      twinClient.updateTwinReportedProperties(fakeTwin, function (err, twin) {
+        assert.instanceOf(err, Error);
+        assert(!twin);
+        testCallback();
+      });
+    });
+
     /*Tests_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_017: [When a message is received on the response topic with an `$rid` property in the query string of the topic matching the one that was sent on the request topic, the `callback` shall be called with a `null` error object.]*/
     it('calls its callback with the response when it is received', function (testCallback) {
       var fakeTwin = {
