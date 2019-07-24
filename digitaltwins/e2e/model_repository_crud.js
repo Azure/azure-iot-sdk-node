@@ -63,7 +63,9 @@ describe('Private Model Repository CRUD operations', function () {
     const testInterfaceDocument = createUniqueDocument();
     debug('creating model: ' + testInterfaceDocument['@id']);
     return modelRepositoryClient.createOrUpdateMetamodel(testInterfaceDocument['@id'], apiVersion, testInterfaceDocument, {
-      repositoryId: creds.getRepositoryId()
+      repositoryId: creds.getRepositoryId(),
+      xMsClientRequestId: uuid.v4(),
+      'x-ms-client-source': 'nodesdke2etests'
     }).then((createResponse) => {
       debug('model creation succeeded');
       assert.isNotNull(createResponse.eTag);
@@ -71,14 +73,19 @@ describe('Private Model Repository CRUD operations', function () {
       createdEtag = createResponse.eTag;
       debug('getting model: ' + testInterfaceDocument['@id']);
       return modelRepositoryClient.getModel(testInterfaceDocument['@id'], apiVersion, {
-        repositoryId: creds.getRepositoryId()
+        repositoryId: creds.getRepositoryId(),
+        xMsClientRequestId: uuid.v4(),
+        'x-ms-client-source': 'nodesdke2etests'
       });
     }).then((getResponse) => {
       debug('got a model');
       assert.strictEqual(getResponse.eTag, createdEtag);
       assert.strictEqual(getResponse.xMsModelId, testInterfaceDocument['@id']);
       debug('deleting model...');
-      return modelRepositoryClient.deleteMetamodel(testInterfaceDocument['@id'], creds.getRepositoryId(), apiVersion);
+      return modelRepositoryClient.deleteMetamodel(testInterfaceDocument['@id'], creds.getRepositoryId(), apiVersion, {
+        xMsClientRequestId: uuid.v4(),
+        'x-ms-client-source': 'nodesdke2etests'
+      });
     }).then((deleteResponse) => {
       debug('model deleted');
       assert.isNotNull(deleteResponse.xMsRequestId);
@@ -95,7 +102,9 @@ describe('Private Model Repository CRUD operations', function () {
     const testInterfaceDocument = createUniqueDocument();
     debug('creating model: ' + testInterfaceDocument['@id']);
     return modelRepositoryClient.createOrUpdateMetamodel(testInterfaceDocument['@id'], apiVersion, testInterfaceDocument, {
-      repositoryId: creds.getRepositoryId()
+      repositoryId: creds.getRepositoryId(),
+      xMsClientRequestId: uuid.v4(),
+      'x-ms-client-source': 'nodesdke2etests'
     }).then((createResponse) => {
       debug('model creation succeeded');
       assert.isNotNull(createResponse.eTag);
@@ -107,7 +116,9 @@ describe('Private Model Repository CRUD operations', function () {
         modelFilterType: 'interface'
       };
       return modelRepositoryClient.search(searchOptions, apiVersion, {
-        repositoryId: creds.getRepositoryId()
+        repositoryId: creds.getRepositoryId(),
+        xMsClientRequestId: uuid.v4(),
+        'x-ms-client-source': 'nodesdke2etests'
       });
     }).then((searchResponse) => {
       debug('got results');
@@ -120,13 +131,17 @@ describe('Private Model Repository CRUD operations', function () {
         },);
       return modelRepositoryClient.createOrUpdateMetamodel(testInterfaceDocument['@id'], apiVersion, testInterfaceDocument, {
         repositoryId: creds.getRepositoryId(),
-        ifMatch: createdEtag
+        ifMatch: createdEtag,
+        xMsClientRequestId: uuid.v4(),
+        'x-ms-client-source': 'nodesdke2etests'
       });
     }).then((updateResponse) => {
       debug('model updated.');
       assert.isString(updateResponse.xMsRequestId);
       debug('deleting model...');
-      return modelRepositoryClient.deleteMetamodel(testInterfaceDocument['@id'], creds.getRepositoryId(), apiVersion);
+      return modelRepositoryClient.deleteMetamodel(testInterfaceDocument['@id'], creds.getRepositoryId(), apiVersion, {
+        xMsClientRequestId: uuid.v4(),
+        'x-ms-client-source': 'nodesdke2etests'});
     }).then((deleteResponse) => {
       debug('model deleted');
       assert.isNotNull(deleteResponse.xMsRequestId);
@@ -158,7 +173,10 @@ describe('Global Model Repository CRUD operations', function () {
     this.timeout(60000); // eslint-disable-line no-invalid-this
     const modelInformationUrn = 'urn:azureiot:ModelDiscovery:ModelInformation:1';
     debug('getting model: ' + modelInformationUrn);
-    return modelRepositoryClient.getModel(modelInformationUrn, apiVersion)
+    return modelRepositoryClient.getModel(modelInformationUrn, apiVersion, {
+      xMsClientRequestId: uuid.v4(),
+      'x-ms-client-source': 'nodesdke2etests'
+    })
       .then((getResponse) => {
         debug('got a model');
         assert.strictEqual(getResponse.xMsModelId, modelInformationUrn);
