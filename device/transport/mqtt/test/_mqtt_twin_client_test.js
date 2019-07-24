@@ -287,7 +287,7 @@ describe('MqttTwinClient', function () {
       };
       twinClient.updateTwinReportedProperties(fakeTwin, function (err, twin) {
         assert.instanceOf(err, Error);
-        assert(!twin);
+        assert.isUndefined(twin);
         testCallback();
       });
     });
