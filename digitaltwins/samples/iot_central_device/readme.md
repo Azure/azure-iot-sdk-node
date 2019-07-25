@@ -18,11 +18,18 @@ npm install
 3. Set the following environment variables:
 
 ```shell
-set DEVICE_CONNECTION_STRING=<your device connection string>
+set AZURE_IOT_PROVISIONING_REGISTRATION_ID=<your device registration id>
+set AZURE_IOT_PROVISIONING_ID_SCOPE=<your iot central application scope id>
+set AZURE_IOT_PROVISIONING_KEY=<your device symmetric key>
+set AZURE_IOT_PROVISIONING_ENDPOINT=<the global azure iot provisioning endpoint>
 ```
 *use `export` instead of `set` if you're running MacOS or Linux.*
 
-4. Run the sample with the following command:
+4. Modify the samples to fit your IoT Central application:
+- In `environmentalinterface.js`, change the interface id to the one you created in your IoT Central solution.
+- In `sample_device.js` change the capability model id to the one you created in your IoT Central solution.
+
+5. Run the sample with the following command:
 
 ```shell
 node sample_device.js
@@ -33,6 +40,8 @@ node sample_device.js
 `environmentalinterface.js` shows how to create a component class based on the Environmental Sensor interface published in the global model repository.
 
 `sample_device.js` shows how to:
+- instantiate a `ProvisioningDeviceClient` to proceed with the device regisration.
+- use the result of the registration to create a device connection string that will be used by the `DigitalTwinClient` to connect
 - instantiate the `DigitalTwinClient`
 - instantiate the component created with `environmentalinterface.js`
 - Combine them together to send telmetry, handle commands, and handle property updates.

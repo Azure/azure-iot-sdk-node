@@ -1,8 +1,7 @@
 {
-  "name": "azure-iot-digitaltwins-service-samples",
+  "name": "azure-iot-digitaltwins-pnp-device-provisioning-samples",
   "version": "1.0.0-preview.0",
-  "description": "Samples for the azure-iot-digitaltwins-service client library",
-  "main": "get_digital_twin.js",
+  "description": "Samples for the azure-iot-digitaltwins-device client library",
   "scripts": {
     "lint": "eslint -c ../../../.eslintrc.json .",
     "ci": "npm -s run lint"
@@ -18,9 +17,13 @@
   },
   "homepage": "https://github.com/azure/azure-iot-sdk-node-digitaltwins#readme",
   "dependencies": {
-    "azure-iot-digitaltwins-service": "1.0.0-preview.0",
-    "azure-iothub": "1.12.0-preview.0",
-    "@azure/event-hubs": "^2.1.1"
+    "azure-iot-device": "1.12.0-preview.0",
+    "azure-iot-common": "1.12.0-preview.0",
+    "azure-iot-device-mqtt": "1.12.0-preview.0",
+    "azure-iot-digitaltwins-device": "1.0.0-preview.0",
+    "azure-iot-provisioning-device": "1.8.0-preview.0",
+    "azure-iot-provisioning-device-mqtt": "1.8.0-preview.0",
+    "azure-iot-security-symmetric-key": "1.8.0-preview.0"
   },
   "devDependencies": {
     "eslint": "^6.0.1",
