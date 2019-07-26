@@ -76,24 +76,24 @@ interface CommandInformation {
  *
  * At registration time, the registration code will sweep through all of the
  * registered components and within each component will utilize the data here to
- * process each read/write property.
+ * process each write enabled property.
  *
  * This are two separate things that must be done post registration.
  *
  * 1) Obtain (if they exist) both the desired and reported "value"s of each
- * property.  They should be supplied to the components r/w callback.  The
+ * property.  They should be supplied to the components property changed callback.  The
  * version property is also obtained.  The callback is free to act however it
  * choses (including doing a new "update" on the property).
  *
- * 2) Set a callback for delta updates of each r/w property.  This callback will
- * be used to invoke the components r/w callback (The same one as invoked in "1)"").
+ * 2) Set a callback for delta updates of each writable property.  This callback will
+ * be used to invoke the components property changed callback (The same one as invoked in "1)").
  * For delta updates the reported property value will NOT supplied.
  */
 interface WritablePropertyInformation {
   component: BaseInterface;
   propertyName: string;
   //
-  // This is part of the path to get to this particular r/w property in the
+  // This is part of the path to get to this particular writable property in the
   // twin.
   //
   // (Used in both the "reported" and "desired" paths.)
@@ -157,6 +157,10 @@ export class DigitalTwinClient {
   //
   private _twin: Twin;
   constructor(capabilityModel: string, client: Client) {
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_001: [Will throw `ReferenceError` if `capabilityModel` argument is falsy.] */
+    if (!capabilityModel) throw new ReferenceError('capabilityModel must not be falsy');
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_002: [Will throw `ReferenceError` if the constructor `client` argument is falsy.] */
+    if (!client) throw new ReferenceError('client must not be falsy');
     this._capabilityModel = capabilityModel;
     this._client = client;
     this._twin = {} as Twin;
@@ -170,8 +174,13 @@ export class DigitalTwinClient {
    * @param newComponent            The object for a particular component.
    */
   addComponent(newComponent: BaseInterface): void {
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_003: [Will throw `ReferenceError` if the `newComponent` argument is falsy.] */
+    if (!newComponent) throw new ReferenceError('newComponent is \'' + newComponent + '\'');
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_004: [Will throw `ReferenceError` if the `newComponent` argument `interfaceId` property is falsy.] */
     if (!newComponent.interfaceId) throw new ReferenceError('interfaceId is \'' + newComponent.interfaceId + '\'');
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_005: [Will throw `ReferenceError` if the `newComponent` argument `componentName` property is falsy.] */
     if (!newComponent.componentName) throw new ReferenceError('component is \'' + newComponent.componentName + '\'');
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_006: [Will throw `Error` if the `newComponent` argument property `componentName` property value is used by a previously added component.] */
     if (this._components[newComponent.componentName]) throw new Error('component ' + newComponent.componentName + ' is already added.');
     this._components[newComponent.componentName] = {
       component: newComponent,
@@ -202,6 +211,7 @@ export class DigitalTwinClient {
             if (newComponent.commandCallback) {
               this._components[newComponent.componentName].commandProperties.push(this._createCommandInformation(newComponent, individualProperty));
             } else {
+              /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_007: [Will throw `Error` if the `newComponent` has a property of type `Command` but no defined `CommandCallback`.] */
               throw new Error('Component ' + newComponent.componentName + ' does not have a command callback specified');
             }
             break;
@@ -214,6 +224,7 @@ export class DigitalTwinClient {
               if (newComponent.propertyChangedCallback) {
                 this._components[newComponent.componentName].writableProperties.push(this._createWritablePropertyInformation(newComponent, individualProperty));
               } else {
+                /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_008: [Will throw `Error` if the `newComponent` has a writable property but no defined `PropertyChangedCallback`.] */
                 throw new Error('Component ' + newComponent.componentName + ' does not have a property update callback specified');
               }
             }
@@ -227,6 +238,7 @@ export class DigitalTwinClient {
             break;
           }
           default: {
+            /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_009: [Will throw `TypeError` if the `newComponent` has a property `azureDigitalTwinType` with an unrecognized type.] */
             throw new TypeError('Unrecognized Azure Digital Twin Type');
           }
         }
@@ -245,7 +257,8 @@ export class DigitalTwinClient {
   register(): Promise<void>;
   register(registerCallback?: ErrorCallback): Promise<void> | void {
     return callbackToPromise((_callback) => {
-      this._register((err) => {_callback(err);});
+      // this._register((err) => {_callback(err);});
+      this._register(_callback);
     }, registerCallback);
   }
 
@@ -266,6 +279,7 @@ export class DigitalTwinClient {
   private _enableAllCommands(): void {
     Object.keys(this._components).forEach((componentName) => {
       this._components[componentName].commandProperties.forEach((commandInformation) => {
+        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_012: [For each property in a component with type `Command`, a device method will be enabled with a name of the form '$iotin:' followed by the component name followed by '*' followed by the property name.] */
         this._client.onDeviceMethod(commandInformation.methodName, commandInformation.methodCallback);
       });
     });
@@ -470,8 +484,8 @@ export class DigitalTwinClient {
     Object.keys(this._components).forEach((componentName) => {
       this._components[componentName].writableProperties.forEach((rwi) => {
         //
-        // Get the desired value of the writable property (R/W) if it exists.  If we get one also try
-        // to get the reported version of the R/W if it exists.
+        // Get the desired value of the writable property  if it exists.  If we get one also try
+        // to get the reported version of the writable if it exists.
         //
         const desiredPart = this._getReportedOrDesiredPropertyValue('desired', rwi.prefixAndComponentName, rwi.propertyName);
         const versionProperty = '$version';
@@ -498,20 +512,31 @@ export class DigitalTwinClient {
    *                                3) It will enable all commands for all components.
    *                                4) It will get the twin.
    *                                5) If permitted, send the SDK information.
-   *                                6) It will get all of the RW properties current desired properties
-   *                                7) It will set up delta handlers for each RW property.
+   *                                6) It will get all of the writable properties current desired properties
+   *                                7) It will set up delta handlers for each writable property.
    *
    * @param registerCallback        The callback to be invoked on completion of the registration.
    */
   private _register(registerCallback: (err?: Error) => void): void {
     debug('about to begin the interface registration.');
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_010: [** Will send a telemetry message with the following properties and payload to perform the registration:
+      payload:
+      {modelInformation:
+        capabilityModelId: <capabilityModelURN>,
+        interfaces: {
+          <componentName>: <interfaceId>
+        }
+      }
+      message application properties:
+      $.ifid : 'urn:azureiot:ModelDiscovery:ModelInformation:1'
+      $.ifname: 'urn_azureiot_ModelDiscovery_ModelInformation'
+      $.schema: 'modelInformation'
+      contentType: 'application/json'
+      **]
+    */
     const modelInterfaceId = 'urn:azureiot:ModelDiscovery:ModelInformation:1';
     const modelComponentName = 'urn_azureiot_ModelDiscovery_ModelInformation';
     const registrationSchema = 'modelInformation';
-
-    if (!this._capabilityModel) {
-      return registerCallback(new Error('No capability model available.'));
-    }
 
     let registrationObject: any = {};
     registrationObject = {
@@ -532,6 +557,7 @@ export class DigitalTwinClient {
     registrationMessage.contentType = 'application/json';
     this._client.sendEvent(registrationMessage, (registrationError) => {
       if (registrationError) {
+        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_011: [Will indicate an error via a callback or by promise rejection if the registration message fails.] */
         return registerCallback(registrationError);
       } else {
         this._setAllComponentsRegistered();
@@ -542,6 +568,10 @@ export class DigitalTwinClient {
           } else {
             this._twin = twinResult as Twin;
             this._initialWritablePropertyProcessing();
+            //
+            // Intentionally letting a failure of SDK information report
+            // be ignored.
+            //
             sdkInformation.language.report('Node.js', (err?: Error) => {
               if (err) {
                 debug('Error updating the SDK language: ' + err.toString());
