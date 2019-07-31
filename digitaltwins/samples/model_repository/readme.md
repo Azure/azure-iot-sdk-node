@@ -16,12 +16,9 @@ You should have [Node.js](https://nodejs.org/en/) installed.
 npm install
 ```
 
-3. Set the following environment variables:
+3. Set the following environment variable:
 ```shell
-set AZURE_IOT_MODEL_REPO_ID=<your private repository id>
-set AZURE_IOT_MODEL_REPO_KEY_ID=<your private repository key id>
-set AZURE_IOT_MODEL_REPO_KEY_SECRET=<your private repository key>
-set AZURE_IOT_MODEL_REPO_HOSTNAME=<the repository hostname in your region>
+set AZURE_IOT_MODEL_REPOSITORY_CONNECTION_STRING=<your private repository connection string>
 ```
 *use `export` instead of `set` if you're running MacOS or Linux.*
 
