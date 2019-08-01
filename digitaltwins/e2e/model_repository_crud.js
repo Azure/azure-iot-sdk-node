@@ -62,7 +62,7 @@ describe('Private Model Repository CRUD operations', function () {
     let createdEtag;
     const testInterfaceDocument = createUniqueDocument();
     debug('creating model: ' + testInterfaceDocument['@id']);
-    return modelRepositoryClient.createOrUpdateMetamodel(testInterfaceDocument['@id'], apiVersion, testInterfaceDocument, {
+    return modelRepositoryClient.createOrUpdateModel(testInterfaceDocument['@id'], apiVersion, testInterfaceDocument, {
       'repositoryId': creds.getRepositoryId(),
       'xMsClientRequestId': uuid.v4(),
       'x-ms-client-source': 'nodesdke2etests'
@@ -82,7 +82,7 @@ describe('Private Model Repository CRUD operations', function () {
       assert.strictEqual(getResponse.eTag, createdEtag);
       assert.strictEqual(getResponse.xMsModelId, testInterfaceDocument['@id']);
       debug('deleting model...');
-      return modelRepositoryClient.deleteMetamodel(testInterfaceDocument['@id'], creds.getRepositoryId(), apiVersion, {
+      return modelRepositoryClient.deleteModel(testInterfaceDocument['@id'], creds.getRepositoryId(), apiVersion, {
         'xMsClientRequestId': uuid.v4(),
         'x-ms-client-source': 'nodesdke2etests'
       });
@@ -101,7 +101,7 @@ describe('Private Model Repository CRUD operations', function () {
     let createdEtag;
     const testInterfaceDocument = createUniqueDocument();
     debug('creating model: ' + testInterfaceDocument['@id']);
-    return modelRepositoryClient.createOrUpdateMetamodel(testInterfaceDocument['@id'], apiVersion, testInterfaceDocument, {
+    return modelRepositoryClient.createOrUpdateModel(testInterfaceDocument['@id'], apiVersion, testInterfaceDocument, {
       'repositoryId': creds.getRepositoryId(),
       'xMsClientRequestId': uuid.v4(),
       'x-ms-client-source': 'nodesdke2etests'
@@ -115,7 +115,7 @@ describe('Private Model Repository CRUD operations', function () {
         searchKeyword: testInterfaceDocument['@id'],
         modelFilterType: 'interface'
       };
-      return modelRepositoryClient.search(searchOptions, apiVersion, {
+      return modelRepositoryClient.searchModel(searchOptions, apiVersion, {
         'repositoryId': creds.getRepositoryId(),
         'xMsClientRequestId': uuid.v4(),
         'x-ms-client-source': 'nodesdke2etests'
@@ -129,7 +129,7 @@ describe('Private Model Repository CRUD operations', function () {
           'writable': false,
           'schema': 'string'
         },);
-      return modelRepositoryClient.createOrUpdateMetamodel(testInterfaceDocument['@id'], apiVersion, testInterfaceDocument, {
+      return modelRepositoryClient.createOrUpdateModel(testInterfaceDocument['@id'], apiVersion, testInterfaceDocument, {
         'repositoryId': creds.getRepositoryId(),
         'ifMatch': createdEtag,
         'xMsClientRequestId': uuid.v4(),
@@ -139,7 +139,7 @@ describe('Private Model Repository CRUD operations', function () {
       debug('model updated.');
       assert.isString(updateResponse.xMsRequestId);
       debug('deleting model...');
-      return modelRepositoryClient.deleteMetamodel(testInterfaceDocument['@id'], creds.getRepositoryId(), apiVersion, {
+      return modelRepositoryClient.deleteModel(testInterfaceDocument['@id'], creds.getRepositoryId(), apiVersion, {
         'xMsClientRequestId': uuid.v4(),
         'x-ms-client-source': 'nodesdke2etests' });
     }).then((deleteResponse) => {

@@ -10,7 +10,7 @@
     "digitaltwins_telemetry": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json digitaltwin_telemetry.js",
     "digitaltwins_properties": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json digitaltwin_properties.js",
     "model_repository_crud": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json model_repository_crud.js",
-    "alltest": "npm run  model_repository_crud && npm run digitaltwins_commands && npm run digitaltwins_properties",
+    "alltest": "npm run  model_repository_crud && npm run digitaltwins_commands && npm run digitaltwins_properties && npm run digitaltwins_telemetry",
     "e2e": "npm -s run lint && npm -s run alltest"
   },
   "repository": {
