@@ -88,10 +88,113 @@ contentType: 'application/json'
 ```
  **]**
 
-<<<<<<< HEAD
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_011: [** Will indicate an error via a callback or by promise rejection if the registration message fails. **]**
-=======
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_011: [** Will indicate an error via a callback or by promise rejection if the registration message fails. **]**
 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_012: [** For each property in a component with type `Command`, a device method will be enabled with a name of the form '$iotin:' followed by the component name followed by '*' followed by the property name. **]**
->>>>>>> b7639f5c17a68992667d8bbf31dd554daedc773d
+
+### Commands
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_013: [** For commands, the `commandCallback` will be invoked with `request` and `response` arguments with the following properties.
+```
+request:
+  {
+    component: component,
+    componentName: component.componentName
+    commandName: command property name
+    payload: payload of request
+  }
+
+response:
+  {
+    acknowledge: method that invokes device method send api with arguments
+         status,
+         payload,
+         callback or if undefined returns a promise
+    update: method that will invoke the device client send api with arguments
+        device message,
+        callback, or if undefined returns a promise
+  }
+```
+ **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_014: [**The command callback should be able to invoke the `acknowledge` method and receive (if supplied) a callback upon completion. **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_023: [** The command callback should be able to invoke the `acknowledge` method, with no `payload` argument, and receive (if supplied) a callback upon completion. **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_015: [**The command callback should be able to invoke the `acknowledge` method with no callback and utilize the returned promise that resolves. **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_024: [** The command callback should be able to invoke the `acknowledge` method, with no `payload` or callback arguments, and utilize the returned promise that resolves. **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_016: [**The command callback should be able to invoke the `acknowledge` method and receive (if supplied) a callback with an error if the `acknowledge` failed. **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_025: [** The command callback should be able to invoke the `acknowledge` method, with no `payload` argument, and receive (if supplied) a callback with an error if the `acknowledge` failed. **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_017: [**The command callback should be able to invoke the `acknowledge` method with no callback and utilize the returned promise that rejects. **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_026: [** The command callback should be able to invoke the `acknowledge` method, with no `payload` or callback arguments, and utilize the returned promise that rejects. **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_018: [** The command callback should be able to invoke the `update` method and receive (if supplied) a callback upon completion. **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_027: [** The command callback should be able to invoke the `update` method, with no `payload` argument, and receive (if supplied) a callback upon completion. **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_019: [** The command callback should be able to invoke the `update` method with no callback and utilize the returned promise that resolves. **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_028: [** The command callback should be able to invoke the `update` method, with no `payload` or callback arguments, and utilize the returned promise that resolves. **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_020: [** The command callback should be able to invoke the `update` method and receive (if supplied) a callback with an error if the `update` failed. **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_029: [** The command callback should be able to invoke the `update` method, with no `payload` argument, and receive (if supplied) a callback with an error if the `update` failed. **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_021: [** The command callback should be able to invoke the `update` method with no callback and utilize the returned promise that rejects. **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_030: [** The command callback should be able to invoke the `update` method, with no `payload` or callback arguments, and utilize the returned promise that rejects. **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_022: [** Within the command callback, the application can invoke the `update` method which in turn will invoke the device client `sendEvent` method with the following message:
+```
+payload:
+This JSON stringified value of the payload parameter.
+
+message application properties:
+'iothub-message-schema' : 'asyncResult'
+'iothub-command-name': <command name>
+'iothub-command-request-id': request.payload.commandRequest.requestId of the method request
+'iothub-command-statuscode': statusCode argument of the update method
+'$.ifid': components interface id
+'$.ifname': components name
+contentType: 'application/json'
+```
+ **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_031: [** Within the command callback, the application can invoke the `update` method, with no `payload` argument or payload argument set to undefined or null, which in turn will invoke the device client `sendEvent` method with a message payload of ' '. **]**
+
+### Telemetry
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_034: [** Subsequent to addComponent a Telemetry will have a report method. **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_032: [** A telemetry will send a device message with the following format:
+```
+payload: {<telemetry property name>: value}
+message application properties:
+contentType: 'application/json'
+$.ifid: <interface id>
+$.ifname: <component name>
+$.schema: <telemetry property name>
+```
+**]**
+
+### Property (writable)
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_033: [** Subsequent to addComponent a writable property will have a report method. **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_035: [** Subsequent to the register, a writable property will have an event listener on the `properties.desired.$iotin:<componentName>.<propertyName>` **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_036: [** Following the initial get of the twin, the writable properties will have their desired values retrieved, provided they exist, provided to the property changed callback along with the current desired version value.
+ **]**
+
+ **SRS_NODE_DIGITAL_TWIN_DEVICE_06_037: [** Initially, if it exists, provide the reported property also to the property change callback. **]**
+
+ **SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [** Properties may invoke the method `report` with a value to produce a patch to the reported properties. **]**
+
+ **SRS_NODE_DIGITAL_TWIN_DEVICE_06_039: [** Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties. **]**
+
+ **SRS_NODE_DIGITAL_TWIN_DEVICE_06_040: [** A change to the desired property will invoke the property change callback with the change value and version. **]**
