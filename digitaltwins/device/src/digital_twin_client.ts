@@ -7,7 +7,7 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-digitaltwins-device:Client');
 
 import { DigitalTwinInterface as SdkInformation } from './sdkinformation';
-import { callbackToPromise, ErrorCallback, Message } from 'azure-iot-common';
+import { callbackToPromise, errorCallbackToPromise, ErrorCallback, Message } from 'azure-iot-common';
 import { Client, Twin, DeviceMethodRequest, DeviceMethodResponse } from 'azure-iot-device';
 import { BaseInterface } from './base_interface';
 import { azureDigitalTwinTelemetry, azureDigitalTwinCommand, azureDigitalTwinProperty,
@@ -198,6 +198,7 @@ export class DigitalTwinClient {
             // instantiated function will format the message appropriately and add any necessary transport/digital twin properties to
             // the message.
             //
+            /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_034: [ Subsequent to addComponent a Telemetry will have a report method.] */
             (newComponent[individualProperty] as Telemetry).send = this._returnTelemetrySendMethod(newComponent.componentName, newComponent.interfaceId, individualProperty);
             break;
           }
@@ -234,6 +235,7 @@ export class DigitalTwinClient {
             // instantiated function will format the message appropriately and add any necessary transport/digital twin properties to
             // the message.
             //
+            /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_033: [** Subsequent to addComponent a writable property will have a report method.] */
             (newComponent[individualProperty] as Property).report  = this._returnPropertyReportMethod(newComponent.componentName, newComponent.interfaceId, individualProperty);
             break;
           }
@@ -256,10 +258,7 @@ export class DigitalTwinClient {
   register(registerCallback: ErrorCallback): void;
   register(): Promise<void>;
   register(registerCallback?: ErrorCallback): Promise<void> | void {
-    return callbackToPromise((_callback) => {
-      // this._register((err) => {_callback(err);});
-      this._register(_callback);
-    }, registerCallback);
+    return errorCallbackToPromise((_callback) => this._register(_callback), registerCallback as ErrorCallback);
   }
 
   //
@@ -286,6 +285,27 @@ export class DigitalTwinClient {
   }
 
   private _createCommandInformation(component: BaseInterface, commandName: string): CommandInformation  {
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_013: [** For commands, the `commandCallback` will be invoked with `request` and `response` arguments with the following properties.
+      request:
+        {
+          component: component,
+          componentName: component.componentName
+          commandName: command property name
+          payload: payload of request
+        }
+
+      response:
+        {
+          acknowledge: function that invokes device method send api with arguments
+                status,
+                payload,
+                callback or if undefined returns a promise
+          update: function that will invoke the device client send api with arguments
+              device message,
+              callback, or if undefined returns a promise
+        }
+      **]
+    */
     return {
       component: component,
       commandName: commandName,
@@ -303,7 +323,23 @@ export class DigitalTwinClient {
           payload: request.payload.commandRequest.value
         };
         const commandResponse: CommandResponse = {
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_014: [The command callback should be able to invoke the `acknowledge` method and receive (if supplied) a callback upon completion.] */
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_023: [The command callback should be able to invoke the `acknowledge` method, with no `payload` argument, and receive (if supplied) a callback upon completion.] */
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_015: [The command callback should be able to invoke the `acknowledge` method with no callback and utilize the returned promise that resolves.] */
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_024: [The command callback should be able to invoke the `acknowledge` method, with no `payload` or callback arguments, and utilize the returned promise that resolves.] */
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_016: [The command callback should be able to invoke the `acknowledge` method and receive (if supplied) a callback with an error if the `acknowledge` failed.] */
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_025: [The command callback should be able to invoke the `acknowledge` method, with no `payload` argument, and receive (if supplied) a callback with an error if the `acknowledge` failed.] */
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_017: [The command callback should be able to invoke the `acknowledge` method with no callback and utilize the returned promise that rejects.] */
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_026: [The command callback should be able to invoke the `acknowledge` method, with no `payload` or callback arguments, and utilize the returned promise that rejects.] */
           acknowledge: (status: number, payload?: any, callback?: ErrorCallback) => response.send(status, payload, callback as ErrorCallback),
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_018: [The command callback should be able to invoke the `update` method and receive (if supplied) a callback upon completion.] */
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_027: [The command callback should be able to invoke the `update` method, with no `payload` argument, and receive (if supplied) a callback upon completion.] */
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_019: [The command callback should be able to invoke the `update` method with no callback and utilize the returned promise that resolves.] */
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_028: [The command callback should be able to invoke the `update` method, with no `payload` or callback arguments, and utilize the returned promise that resolves.] */
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_020: [The command callback should be able to invoke the `update` method and receive (if supplied) a callback with an error if the `update` failed.] */
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_029: [The command callback should be able to invoke the `update` method, with no `payload` argument, and receive (if supplied) a callback with an error if the `update` failed.] */
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_021: [The command callback should be able to invoke the `update` method with no callback and utilize the returned promise that rejects.] */
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_030: [The command callback should be able to invoke the `update` method, with no `payload` or callback arguments, and utilize the returned promise that rejects.] */
           update: this._returnCommandUpdateMethod(component.componentName, component.interfaceId, commandName, request.payload.commandRequest.requestId)
          };
         (component.commandCallback as CommandCallback)(commandRequest, commandResponse);
@@ -338,6 +374,21 @@ export class DigitalTwinClient {
   private _sendCommandUpdate(componentName: string, interfaceId: string, commandName: string, requestId: string, status: number, payload: any): Promise<void>;
   private _sendCommandUpdate(componentName: string, interfaceId: string, commandName: string, requestId: string, status: number,payload: any, commandCallback?: ErrorCallback): Promise<void> | void {
 
+    /*
+      Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_022: [Within the command callback, the application can invoke the `update` method which in turn will invoke the device client `sendEvent` method with the following message:
+      payload:
+      This JSON stringified value of the payload parameter.
+
+      message application properties:
+      'iothub-message-schema' : 'asyncResult'
+      'iothub-command-name': <command name>
+      'iothub-command-request-id': request.payload.commandRequest.requestId of the method request
+      'iothub-command-statuscode': statusCode argument of the update method
+      '$.ifid': components interface id
+      '$.ifname': components name
+      contentType: 'application/json'
+      ]
+     */
     //
     // There is NO WAY that this function could be invoked prior to registration.
     // No need to test if registered.
@@ -348,8 +399,9 @@ export class DigitalTwinClient {
     const commandUpdateStatusCodeProperty = 'iothub-command-statuscode';
     return callbackToPromise((_callback) => {
       debug('about to begin the command update telemetry.');
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_031: [Within the command callback, the application can invoke the `update` method, with no `payload` argument or payload argument set to undefined or null, which in turn will invoke the device client `sendEvent` method with a message payload of 'null'. ] */
       let updateMessage = new Message(
-        JSON.stringify(payload)
+        JSON.stringify(payload || null)
       );
       updateMessage.properties.add(commandUpdateSchemaProperty, 'asyncResult');
       updateMessage.properties.add(commandUpdateCommandNameProperty, commandName);
@@ -357,6 +409,7 @@ export class DigitalTwinClient {
       updateMessage.properties.add(commandUpdateStatusCodeProperty, status.toString());
       updateMessage.properties.add(messageInterfaceIdProperty, interfaceId);
       updateMessage.properties.add(messageComponentProperty, componentName);
+      updateMessage.contentType = 'application/json';
       this._client.sendEvent(updateMessage, (updateError) => {
         return _callback(updateError);
       });
@@ -385,7 +438,15 @@ export class DigitalTwinClient {
   private _sendTelemetry(componentName: string, interfaceId: string, telemetryName: string, telemetryValue: any, sendCallback: ErrorCallback): void;
   private _sendTelemetry(componentName: string, interfaceId: string, telemetryName: string, telemetryValue: any): Promise<void>;
   private _sendTelemetry(componentName: string, interfaceId: string, telemetryName: string, telemetryValue: any, sendCallback?: ErrorCallback): Promise<void> | void {
-
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_032: [** A telemetry will send a device message with the following format:
+        payload: {<telemetry property name>: value}
+        message application properties:
+        contentType: 'application/json'
+        $.ifid: <interface id>
+        $.ifname: <component name>
+        $.schema: <telemetry property name>
+        **]
+      */
     return callbackToPromise((_callback) => {
       debug('about to begin the interface telemetry.');
       if (!this._components[componentName].registered) throw new Error(componentName + ' is not registered');
@@ -442,11 +503,13 @@ export class DigitalTwinClient {
 
     return callbackToPromise((_callback) => {
       if (!this._components[componentName].registered) throw new Error(componentName + ' is not registered');
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [** Properties may invoke the method `report` with a value to produce a patch to the reported properties. **] */
       let componentPart = componentPrefix + componentName;
       let propertyContent: any = {
         value: propertyValue
       };
 
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_039: [** Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties. **] */
       if (actualResponse) {
         propertyContent.sc = actualResponse.code;
         propertyContent.sd = actualResponse.description;
@@ -472,7 +535,8 @@ export class DigitalTwinClient {
   }
 
   private _getReportedOrDesiredPropertyValue(reportedOrDesired: 'reported' | 'desired', componentPart: string, propertyPart: string): any {
-    if (this._twin.properties[reportedOrDesired][componentPart] &&
+    if (this._twin.properties[reportedOrDesired] &&
+        this._twin.properties[reportedOrDesired][componentPart] &&
         this._twin.properties[reportedOrDesired][componentPart][propertyPart]) {
       return this._twin.properties[reportedOrDesired][componentPart][propertyPart].value;
     } else {
@@ -490,13 +554,17 @@ export class DigitalTwinClient {
         const desiredPart = this._getReportedOrDesiredPropertyValue('desired', rwi.prefixAndComponentName, rwi.propertyName);
         const versionProperty = '$version';
         if (desiredPart) {
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_037: [Initially, if it exists, provide the reported property also to the property change callback.] */
           const reportedPart = this._getReportedOrDesiredPropertyValue('reported', rwi.prefixAndComponentName, rwi.propertyName);
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_036: [Following the initial get of the twin, the writable properties will have their desired values retrieved, provided they exist, provided to the property changed callback along with the current desired version value.] */
           (rwi.component.propertyChangedCallback as PropertyChangedCallback)(rwi.component, rwi.propertyName, reportedPart, desiredPart, this._twin.properties.desired[versionProperty]);
         }
         //
         // Setup the callback for delta changes.
         //
+        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_035: [Subsequent to the register, a writable property will have an event listener on the `properties.desired.$iotin:<componentName>.<propertyName>`] */
         this._twin.on('properties.desired.' + rwi.prefixAndComponentName + '.' + rwi.propertyName, (delta) => {
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_040: [A change to the desired property will invoke the property change callback with the change value and version.] */
           (rwi.component.propertyChangedCallback as PropertyChangedCallback)(rwi.component, rwi.propertyName, null, delta.value, this._twin.properties.desired[versionProperty]);
         });
       });
@@ -564,7 +632,7 @@ export class DigitalTwinClient {
         this._enableAllCommands();
         this._client.getTwin((getTwinError, twinResult) => {
           if (getTwinError) {
-            registerCallback(getTwinError);
+            return registerCallback(getTwinError);
           } else {
             this._twin = twinResult as Twin;
             this._initialWritablePropertyProcessing();
@@ -584,7 +652,7 @@ export class DigitalTwinClient {
                   if (err) {
                     debug('Error updating the SDK vendor: ' + err.toString());
                   }
-                  registerCallback();
+                  return registerCallback();
                 });
               });
             });
