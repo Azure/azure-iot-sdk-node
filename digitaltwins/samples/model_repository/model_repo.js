@@ -47,7 +47,7 @@ async function main() {
   });
 
   try {
-    const models = await modelRepoClient.search({ searchKeyword: 'ModelDiscovery', modelFilterType: 'interface' }, apiVersion);
+    const models = await modelRepoClient.searchModel({ searchKeyword: 'ModelDiscovery', modelFilterType: 'interface' }, apiVersion);
     console.log(JSON.stringify(models.results, null, 2));
 
     const modelDiscovery = await modelRepoClient.getModel('urn:azureiot:ModelDiscovery:ModelInformation:1', apiVersion);

@@ -4,7 +4,7 @@
 const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubTokenCredentials;
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 
-const modelId = '<MODEL_ID_NAME_GOES_HERE>'; // suggestion: urn:azureiot:Client:SDKInformation
+const modelId = '<MODEL_ID_NAME_GOES_HERE>'; // suggestion: urn:azureiot:Client:SDKInformation:1
 
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor

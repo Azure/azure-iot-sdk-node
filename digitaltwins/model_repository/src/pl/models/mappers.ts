@@ -69,8 +69,8 @@ export const ModelInformation: msRest.CompositeMapper = {
           name: "String"
         }
       },
-      id: {
-        serializedName: "id",
+      urnId: {
+        serializedName: "urnId",
         type: {
           name: "String"
         }
@@ -84,7 +84,7 @@ export const ModelInformation: msRest.CompositeMapper = {
       version: {
         serializedName: "version",
         type: {
-          name: "String"
+          name: "Number"
         }
       },
       type: {
@@ -117,8 +117,8 @@ export const ModelInformation: msRest.CompositeMapper = {
           name: "DateTime"
         }
       },
-      lastUpdated: {
-        serializedName: "lastUpdated",
+      updatedOn: {
+        serializedName: "updatedOn",
         type: {
           name: "DateTime"
         }
@@ -207,11 +207,11 @@ export const GetModelHeaders: msRest.CompositeMapper = {
   }
 };
 
-export const CreateOrUpdateMetamodelHeaders: msRest.CompositeMapper = {
-  serializedName: "createorupdatemetamodel-headers",
+export const CreateOrUpdateModelHeaders: msRest.CompositeMapper = {
+  serializedName: "createorupdatemodel-headers",
   type: {
     name: "Composite",
-    className: "CreateOrUpdateMetamodelHeaders",
+    className: "CreateOrUpdateModelHeaders",
     modelProperties: {
       xMsRequestId: {
         serializedName: "x-ms-request-id",
@@ -229,11 +229,11 @@ export const CreateOrUpdateMetamodelHeaders: msRest.CompositeMapper = {
   }
 };
 
-export const DeleteMetamodelHeaders: msRest.CompositeMapper = {
-  serializedName: "deletemetamodel-headers",
+export const DeleteModelHeaders: msRest.CompositeMapper = {
+  serializedName: "deletemodel-headers",
   type: {
     name: "Composite",
-    className: "DeleteMetamodelHeaders",
+    className: "DeleteModelHeaders",
     modelProperties: {
       xMsRequestId: {
         serializedName: "x-ms-request-id",
@@ -245,11 +245,11 @@ export const DeleteMetamodelHeaders: msRest.CompositeMapper = {
   }
 };
 
-export const SearchHeaders: msRest.CompositeMapper = {
-  serializedName: "search-headers",
+export const SearchModelHeaders: msRest.CompositeMapper = {
+  serializedName: "searchmodel-headers",
   type: {
     name: "Composite",
-    className: "SearchHeaders",
+    className: "SearchModelHeaders",
     modelProperties: {
       xMsRequestId: {
         serializedName: "x-ms-request-id",

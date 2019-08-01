@@ -22,7 +22,7 @@ module.exports.createModel = function (modelDocument) {
     }
   });
 
-  return modelRepositoryClient.createOrUpdateMetamodel(modelDocument['@id'], modelRepositoryApiVersion, modelDocument, {
+  return modelRepositoryClient.createOrUpdateModel(modelDocument['@id'], modelRepositoryApiVersion, modelDocument, {
     repositoryId: creds.getRepositoryId()
   });
 };

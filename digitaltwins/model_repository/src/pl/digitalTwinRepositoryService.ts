@@ -25,24 +25,22 @@ class DigitalTwinRepositoryService extends DigitalTwinRepositoryServiceContext {
   }
 
   /**
-   * @summary Returns a DigitalTwin model object for the given \"id\".\r\nIf \"expand\" is present in
-   * the query parameters and \"id\" is for a capability model then it returns\r\nthe capability
-   * model with expanded interface definitions.
-   * @param modelId Model id Ex: <example>urn:contoso:com:temparaturesensor:1</example>
-   * @param apiVersion Version of the Api. Must be 2019-07-01-preview
+   * @summary Gets a DigitalTwin model object for the given digital twin model id.
+   * @param modelId Digital twin model id Ex: <example>urn:contoso:com:temparaturesensor:1</example>
+   * @param apiVersion Api version string.
    * @param [options] The optional parameters
    * @returns Promise<Models.GetModelResponse>
    */
   getModel(modelId: string, apiVersion: string, options?: Models.DigitalTwinRepositoryServiceGetModelOptionalParams): Promise<Models.GetModelResponse>;
   /**
-   * @param modelId Model id Ex: <example>urn:contoso:com:temparaturesensor:1</example>
-   * @param apiVersion Version of the Api. Must be 2019-07-01-preview
+   * @param modelId Digital twin model id Ex: <example>urn:contoso:com:temparaturesensor:1</example>
+   * @param apiVersion Api version string.
    * @param callback The callback
    */
   getModel(modelId: string, apiVersion: string, callback: msRest.ServiceCallback<any>): void;
   /**
-   * @param modelId Model id Ex: <example>urn:contoso:com:temparaturesensor:1</example>
-   * @param apiVersion Version of the Api. Must be 2019-07-01-preview
+   * @param modelId Digital twin model id Ex: <example>urn:contoso:com:temparaturesensor:1</example>
+   * @param apiVersion Api version string.
    * @param options The optional parameters
    * @param callback The callback
    */
@@ -59,30 +57,30 @@ class DigitalTwinRepositoryService extends DigitalTwinRepositoryServiceContext {
   }
 
   /**
-   * @summary Creates or updates the DigitalTwin Model in the repository.
-   * @param modelId Model id Ex: <example>urn:contoso:TemparatureSensor:1</example>
-   * @param apiVersion Version of the Api. Must be 2019-07-01-preview
+   * @summary Creates or updates a DigitalTwin Model in a repository.
+   * @param modelId Digital twin model id Ex: <example>urn:contoso:TemparatureSensor:1</example>
+   * @param apiVersion Api version string.
    * @param content Model definition in Digital Twin Definition Language format.
    * @param [options] The optional parameters
-   * @returns Promise<Models.CreateOrUpdateMetamodelResponse>
+   * @returns Promise<Models.CreateOrUpdateModelResponse>
    */
-  createOrUpdateMetamodel(modelId: string, apiVersion: string, content: any, options?: Models.DigitalTwinRepositoryServiceCreateOrUpdateMetamodelOptionalParams): Promise<Models.CreateOrUpdateMetamodelResponse>;
+  createOrUpdateModel(modelId: string, apiVersion: string, content: any, options?: Models.DigitalTwinRepositoryServiceCreateOrUpdateModelOptionalParams): Promise<Models.CreateOrUpdateModelResponse>;
   /**
-   * @param modelId Model id Ex: <example>urn:contoso:TemparatureSensor:1</example>
-   * @param apiVersion Version of the Api. Must be 2019-07-01-preview
+   * @param modelId Digital twin model id Ex: <example>urn:contoso:TemparatureSensor:1</example>
+   * @param apiVersion Api version string.
    * @param content Model definition in Digital Twin Definition Language format.
    * @param callback The callback
    */
-  createOrUpdateMetamodel(modelId: string, apiVersion: string, content: any, callback: msRest.ServiceCallback<void>): void;
+  createOrUpdateModel(modelId: string, apiVersion: string, content: any, callback: msRest.ServiceCallback<void>): void;
   /**
-   * @param modelId Model id Ex: <example>urn:contoso:TemparatureSensor:1</example>
-   * @param apiVersion Version of the Api. Must be 2019-07-01-preview
+   * @param modelId Digital twin model id Ex: <example>urn:contoso:TemparatureSensor:1</example>
+   * @param apiVersion Api version string.
    * @param content Model definition in Digital Twin Definition Language format.
    * @param options The optional parameters
    * @param callback The callback
    */
-  createOrUpdateMetamodel(modelId: string, apiVersion: string, content: any, options: Models.DigitalTwinRepositoryServiceCreateOrUpdateMetamodelOptionalParams, callback: msRest.ServiceCallback<void>): void;
-  createOrUpdateMetamodel(modelId: string, apiVersion: string, content: any, options?: Models.DigitalTwinRepositoryServiceCreateOrUpdateMetamodelOptionalParams | msRest.ServiceCallback<void>, callback?: msRest.ServiceCallback<void>): Promise<Models.CreateOrUpdateMetamodelResponse> {
+  createOrUpdateModel(modelId: string, apiVersion: string, content: any, options: Models.DigitalTwinRepositoryServiceCreateOrUpdateModelOptionalParams, callback: msRest.ServiceCallback<void>): void;
+  createOrUpdateModel(modelId: string, apiVersion: string, content: any, options?: Models.DigitalTwinRepositoryServiceCreateOrUpdateModelOptionalParams | msRest.ServiceCallback<void>, callback?: msRest.ServiceCallback<void>): Promise<Models.CreateOrUpdateModelResponse> {
     return this.sendOperationRequest(
       {
         modelId,
@@ -90,38 +88,38 @@ class DigitalTwinRepositoryService extends DigitalTwinRepositoryServiceContext {
         content,
         options
       },
-      createOrUpdateMetamodelOperationSpec,
-      callback) as Promise<Models.CreateOrUpdateMetamodelResponse>;
+      createOrUpdateModelOperationSpec,
+      callback) as Promise<Models.CreateOrUpdateModelResponse>;
   }
 
   /**
-   * @summary Deletes a digital twin model from the repository.
+   * @summary Deletes a Digital twin model from the repository.
    * @param modelId Model id Ex: <example>urn:contoso:com:temparaturesensor:1</example>
-   * @param repositoryId To access private repo, repositoryId is the repo id. Delete is not allowed
-   * for public repository.
-   * @param apiVersion Version of the Api. Must be 2019-07-01-preview
+   * @param repositoryId Private repository id. To access global repository, caller should not
+   * specify this value.
+   * @param apiVersion Api version string.
    * @param [options] The optional parameters
-   * @returns Promise<Models.DeleteMetamodelResponse>
+   * @returns Promise<Models.DeleteModelResponse>
    */
-  deleteMetamodel(modelId: string, repositoryId: string, apiVersion: string, options?: Models.DigitalTwinRepositoryServiceDeleteMetamodelOptionalParams): Promise<Models.DeleteMetamodelResponse>;
+  deleteModel(modelId: string, repositoryId: string, apiVersion: string, options?: Models.DigitalTwinRepositoryServiceDeleteModelOptionalParams): Promise<Models.DeleteModelResponse>;
   /**
    * @param modelId Model id Ex: <example>urn:contoso:com:temparaturesensor:1</example>
-   * @param repositoryId To access private repo, repositoryId is the repo id. Delete is not allowed
-   * for public repository.
-   * @param apiVersion Version of the Api. Must be 2019-07-01-preview
+   * @param repositoryId Private repository id. To access global repository, caller should not
+   * specify this value.
+   * @param apiVersion Api version string.
    * @param callback The callback
    */
-  deleteMetamodel(modelId: string, repositoryId: string, apiVersion: string, callback: msRest.ServiceCallback<void>): void;
+  deleteModel(modelId: string, repositoryId: string, apiVersion: string, callback: msRest.ServiceCallback<void>): void;
   /**
    * @param modelId Model id Ex: <example>urn:contoso:com:temparaturesensor:1</example>
-   * @param repositoryId To access private repo, repositoryId is the repo id. Delete is not allowed
-   * for public repository.
-   * @param apiVersion Version of the Api. Must be 2019-07-01-preview
+   * @param repositoryId Private repository id. To access global repository, caller should not
+   * specify this value.
+   * @param apiVersion Api version string.
    * @param options The optional parameters
    * @param callback The callback
    */
-  deleteMetamodel(modelId: string, repositoryId: string, apiVersion: string, options: Models.DigitalTwinRepositoryServiceDeleteMetamodelOptionalParams, callback: msRest.ServiceCallback<void>): void;
-  deleteMetamodel(modelId: string, repositoryId: string, apiVersion: string, options?: Models.DigitalTwinRepositoryServiceDeleteMetamodelOptionalParams | msRest.ServiceCallback<void>, callback?: msRest.ServiceCallback<void>): Promise<Models.DeleteMetamodelResponse> {
+  deleteModel(modelId: string, repositoryId: string, apiVersion: string, options: Models.DigitalTwinRepositoryServiceDeleteModelOptionalParams, callback: msRest.ServiceCallback<void>): void;
+  deleteModel(modelId: string, repositoryId: string, apiVersion: string, options?: Models.DigitalTwinRepositoryServiceDeleteModelOptionalParams | msRest.ServiceCallback<void>, callback?: msRest.ServiceCallback<void>): Promise<Models.DeleteModelResponse> {
     return this.sendOperationRequest(
       {
         modelId,
@@ -129,50 +127,52 @@ class DigitalTwinRepositoryService extends DigitalTwinRepositoryServiceContext {
         apiVersion,
         options
       },
-      deleteMetamodelOperationSpec,
-      callback) as Promise<Models.DeleteMetamodelResponse>;
+      deleteModelOperationSpec,
+      callback) as Promise<Models.DeleteModelResponse>;
   }
 
   /**
-   * @summary Searches pnp models for given search options.
-   * It searches in the "Description, DisplayName, Comment and Id" metadata.
-   * @param searchOptions Set SearchOption.searchKeyword to search models with the keyword.
-   * Set the "SearchOptions.modelFilterType" to restrict to a type of DigitalTwin model (Ex:
-   * Interface or CapabilityModel).
-   * Default it returns all the models.
-   * @param apiVersion Version of the Api. Must be 2019-07-01-preview
+   * @summary Searches repository for Digital twin models matching supplied search options.
+   * @param searchOptions searchKeyword: To search models with the keyword.
+   * modelFilterType: To filter a type of Digital twin models (Ex: Interface or CapabilityModel).
+   * pageSize: Page size per request.
+   * continuationToken: When there are more results than a page size, server responds with a
+   * continuation token. Supply this token to retrieve next page results.
+   * @param apiVersion Api version string.
    * @param [options] The optional parameters
-   * @returns Promise<Models.SearchResponse2>
+   * @returns Promise<Models.SearchModelResponse>
    */
-  search(searchOptions: Models.SearchOptions, apiVersion: string, options?: Models.DigitalTwinRepositoryServiceSearchOptionalParams): Promise<Models.SearchResponse2>;
+  searchModel(searchOptions: Models.SearchOptions, apiVersion: string, options?: Models.DigitalTwinRepositoryServiceSearchModelOptionalParams): Promise<Models.SearchModelResponse>;
   /**
-   * @param searchOptions Set SearchOption.searchKeyword to search models with the keyword.
-   * Set the "SearchOptions.modelFilterType" to restrict to a type of DigitalTwin model (Ex:
-   * Interface or CapabilityModel).
-   * Default it returns all the models.
-   * @param apiVersion Version of the Api. Must be 2019-07-01-preview
+   * @param searchOptions searchKeyword: To search models with the keyword.
+   * modelFilterType: To filter a type of Digital twin models (Ex: Interface or CapabilityModel).
+   * pageSize: Page size per request.
+   * continuationToken: When there are more results than a page size, server responds with a
+   * continuation token. Supply this token to retrieve next page results.
+   * @param apiVersion Api version string.
    * @param callback The callback
    */
-  search(searchOptions: Models.SearchOptions, apiVersion: string, callback: msRest.ServiceCallback<Models.SearchResponse>): void;
+  searchModel(searchOptions: Models.SearchOptions, apiVersion: string, callback: msRest.ServiceCallback<Models.SearchResponse>): void;
   /**
-   * @param searchOptions Set SearchOption.searchKeyword to search models with the keyword.
-   * Set the "SearchOptions.modelFilterType" to restrict to a type of DigitalTwin model (Ex:
-   * Interface or CapabilityModel).
-   * Default it returns all the models.
-   * @param apiVersion Version of the Api. Must be 2019-07-01-preview
+   * @param searchOptions searchKeyword: To search models with the keyword.
+   * modelFilterType: To filter a type of Digital twin models (Ex: Interface or CapabilityModel).
+   * pageSize: Page size per request.
+   * continuationToken: When there are more results than a page size, server responds with a
+   * continuation token. Supply this token to retrieve next page results.
+   * @param apiVersion Api version string.
    * @param options The optional parameters
    * @param callback The callback
    */
-  search(searchOptions: Models.SearchOptions, apiVersion: string, options: Models.DigitalTwinRepositoryServiceSearchOptionalParams, callback: msRest.ServiceCallback<Models.SearchResponse>): void;
-  search(searchOptions: Models.SearchOptions, apiVersion: string, options?: Models.DigitalTwinRepositoryServiceSearchOptionalParams | msRest.ServiceCallback<Models.SearchResponse>, callback?: msRest.ServiceCallback<Models.SearchResponse>): Promise<Models.SearchResponse2> {
+  searchModel(searchOptions: Models.SearchOptions, apiVersion: string, options: Models.DigitalTwinRepositoryServiceSearchModelOptionalParams, callback: msRest.ServiceCallback<Models.SearchResponse>): void;
+  searchModel(searchOptions: Models.SearchOptions, apiVersion: string, options?: Models.DigitalTwinRepositoryServiceSearchModelOptionalParams | msRest.ServiceCallback<Models.SearchResponse>, callback?: msRest.ServiceCallback<Models.SearchResponse>): Promise<Models.SearchModelResponse> {
     return this.sendOperationRequest(
       {
         searchOptions,
         apiVersion,
         options
       },
-      searchOperationSpec,
-      callback) as Promise<Models.SearchResponse2>;
+      searchModelOperationSpec,
+      callback) as Promise<Models.SearchModelResponse>;
   }
 }
 
@@ -207,7 +207,7 @@ const getModelOperationSpec: msRest.OperationSpec = {
   serializer
 };
 
-const createOrUpdateMetamodelOperationSpec: msRest.OperationSpec = {
+const createOrUpdateModelOperationSpec: msRest.OperationSpec = {
   httpMethod: "PUT",
   path: "models/{modelId}",
   urlParameters: [
@@ -233,20 +233,20 @@ const createOrUpdateMetamodelOperationSpec: msRest.OperationSpec = {
   },
   responses: {
     201: {
-      headersMapper: Mappers.CreateOrUpdateMetamodelHeaders
+      headersMapper: Mappers.CreateOrUpdateModelHeaders
     },
     204: {
-      headersMapper: Mappers.CreateOrUpdateMetamodelHeaders
+      headersMapper: Mappers.CreateOrUpdateModelHeaders
     },
     412: {
-      headersMapper: Mappers.CreateOrUpdateMetamodelHeaders
+      headersMapper: Mappers.CreateOrUpdateModelHeaders
     },
     default: {}
   },
   serializer
 };
 
-const deleteMetamodelOperationSpec: msRest.OperationSpec = {
+const deleteModelOperationSpec: msRest.OperationSpec = {
   httpMethod: "DELETE",
   path: "models/{modelId}",
   urlParameters: [
@@ -261,14 +261,14 @@ const deleteMetamodelOperationSpec: msRest.OperationSpec = {
   ],
   responses: {
     204: {
-      headersMapper: Mappers.DeleteMetamodelHeaders
+      headersMapper: Mappers.DeleteModelHeaders
     },
     default: {}
   },
   serializer
 };
 
-const searchOperationSpec: msRest.OperationSpec = {
+const searchModelOperationSpec: msRest.OperationSpec = {
   httpMethod: "POST",
   path: "models/search",
   queryParameters: [
@@ -288,7 +288,7 @@ const searchOperationSpec: msRest.OperationSpec = {
   responses: {
     200: {
       bodyMapper: Mappers.SearchResponse,
-      headersMapper: Mappers.SearchHeaders
+      headersMapper: Mappers.SearchModelHeaders
     },
     default: {}
   },
