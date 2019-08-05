@@ -29,7 +29,7 @@ phases:
     displayName: 'Unit & Integration Tests'
     env:
       IOTHUB_CONNECTION_STRING: $(LINUX-IOTHUB-CONNECTION-STRING)
-    enabled: 'false'
+    enabled: false
 
   - script: 'lerna run e2e'
     displayName: 'E2E Tests'
@@ -47,7 +47,7 @@ phases:
       DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT: $(DPS-GLOBAL-DEVICE-ENDPOINT-INVALID-CERT)
       IOTHUB_CONN_STRING_INVALID_CERT: $(IOTHUB-CONN-STRING-INVALID-CERT)
       IOTHUB_DEVICE_CONN_STRING_INVALID_CERT: $(IOTHUB-DEVICE-CONN-STRING-INVALID-CERT)
-    enabled: 'false'
+    enabled: false
 
   - task: PublishTestResults@2
     displayName: 'Publish Test Results | Mocha'
@@ -56,7 +56,7 @@ phases:
       mergeTestResults: true
       testRunTitle: 'E2E Tests - Linux'
     condition: succeededOrFailed()
-    enabled: 'false'
+    enabled: false
 
 - phase: Phase_1
   displayName: Windows Build - Node 8
@@ -85,7 +85,7 @@ phases:
     displayName: 'Unit & Integration Tests'
     env:
       IOTHUB_CONNECTION_STRING: $(WINDOWS-IOTHUB-CONNECTION-STRING)
-    enabled: 'false'
+    enabled: false
 
   - script: 'lerna run e2e'
     displayName: 'E2E Tests'
@@ -103,7 +103,7 @@ phases:
       DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT: $(DPS-GLOBAL-DEVICE-ENDPOINT-INVALID-CERT)
       IOTHUB_CONN_STRING_INVALID_CERT: $(IOTHUB-CONN-STRING-INVALID-CERT)
       IOTHUB_DEVICE_CONN_STRING_INVALID_CERT: $(IOTHUB-DEVICE-CONN-STRING-INVALID-CERT)
-    enabled: 'false'
+    enabled: false
 
   - task: PublishTestResults@2
     displayName: 'Publish Test Results | Mocha'
@@ -112,4 +112,4 @@ phases:
       mergeTestResults: true
       testRunTitle: 'E2E Tests - Windows'
     condition: succeededOrFailed()
-  enabled: 'false'
+  enabled: false
