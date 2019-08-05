@@ -4,8 +4,8 @@ This folder contains all the samples for the Azure Digital Twins Public Preview.
 
 **device** contains all the samples for the `azure-iot-digitaltwins-device` package to create an Azure IoT Plug-and-Play device client:
 
-- Implement interfaces and instantiate them as components for this device
-- register this device, with its capability model and components using the `DigitalTwinClient` class.
+- Implement interfaces and instantiate them as interface instance for this device
+- register this device, with its capability model and interface instance using the `DigitalTwinClient` class.
 - send telemetry, act on commands, receive writable property updates and report property changes.
 
 Please refer to the [device samples readme](./device/readme.md) for more details.

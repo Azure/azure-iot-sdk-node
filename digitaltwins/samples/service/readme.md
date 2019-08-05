@@ -32,10 +32,10 @@ node <sample_name.js>
 
 ## What do these samples do?
 
-- `invoke_command.js` invokes a command on a device component.
+- `invoke_command.js` invokes a command on a device interface instance.
 - `get_digital_twin.js` gets the digital twin for a specific device.
-- `get_digital_twin_component.js` gets the data for a specific component of a specific device.
+- `get_digital_twin_interface_instance.js` gets the data for a specific interface instance of a specific device.
 - `get_model.js` gets a model from the global repository.
 - `update_digital_twin_property.js` updates a single writable property on a digital twin.
-- `update_digital_twin.js` creates a patch to updates multiple writable properties on a digital twin, potentially on multiple components.
+- `update_digital_twin.js` creates a patch to updates multiple writable properties on a digital twin, potentially on multiple interface instance.
 - `query_interface.js` runs a query that returns all devices implementing a specific interface.

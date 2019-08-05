@@ -5,11 +5,11 @@ const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubT
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 
 const deviceId = '<DEVICE_ID_GOES_HERE>';
-const componentName = '<COMPONENT_NAME_GOES_HERE>'; // for the environmental sensor, try "environmentalSensor"
+const interfaceInstanceName = 'environmentalSensor'; // for the environmental sensor, try "environmentalSensor"
 
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
-// - get a single Digital Twin Component by name
+// - get a single Digital Twin Interface Instance by name
 async function main() {
   // IoT Hub connection string has to be set to system environment variable IOTHUB_CONNECTION_STRING
   // Twin enabled device must be exist on the IoT Hub
@@ -19,12 +19,12 @@ async function main() {
   const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
   const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-  console.log('getting ' + componentName + ' on device ' + deviceId + '...');
-  // Get component by name
-  const partialDigitalTwin = await digitalTwinServiceClient.getDigitalTwinComponent(deviceId, componentName);
+  console.log('getting ' + interfaceInstanceName + ' on device ' + deviceId + '...');
+  // Get interface instance by name
+  const partialDigitalTwin = await digitalTwinServiceClient.getDigitalTwinInterfaceInstance(deviceId, interfaceInstanceName);
 
-  // Print the component
-  console.log(JSON.stringify(partialDigitalTwin.components, null, 2));
+  // Print the interface instance
+  console.log(JSON.stringify(partialDigitalTwin.interfaces, null, 2));
 };
 
 main();
