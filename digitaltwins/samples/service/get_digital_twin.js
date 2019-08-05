@@ -23,7 +23,7 @@ async function main() {
   const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
 
   // Print digital twin components
-  console.log(JSON.stringify(digitalTwin.components, null, 2));
+  console.log(JSON.stringify(digitalTwin.interfaces, null, 2));
 };
 
 main();

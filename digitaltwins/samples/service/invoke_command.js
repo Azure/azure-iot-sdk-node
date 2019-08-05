@@ -5,7 +5,7 @@ const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubT
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 
 const deviceId = '<DEVICE_ID_GOES_HERE>';
-const componentName = '<COMPONENT_NAME_GOES_HERE>'; // for the environmental sensor, you can try "environmentalSensor"
+const interfaceInstanceName = '<INTERFACE_INSTANCE_NAME_GOES_HERE>'; // for the environmental sensor, you can try "environmentalSensor"
 const commandName = '<COMMAND_NAME_GOES_HERE>'; // for the environmental sensor, you can try "blink", "turnOff" or "turnOn"
 const commandArgument = '<COMMAND_ARGUMENT_GOES_HERE>'; // for the environmental sensor, it really doesn't matter. any string will do.
 
@@ -20,9 +20,9 @@ async function main() {
   const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
   const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-  console.log('invoking command ' + commandName + ' on component ' + componentName + ' for device ' + deviceId + '...');
+  console.log('invoking command ' + commandName + ' on interface ' + interfaceInstanceName + ' for device ' + deviceId + '...');
   // Invoke a command
-  const digitalTwinCommandResult = await digitalTwinServiceClient.invokeCommand(deviceId, componentName, commandName, commandArgument);
+  const digitalTwinCommandResult = await digitalTwinServiceClient.invokeCommand(deviceId, interfaceInstanceName, commandName, commandArgument);
 
   // Print result of the command
   console.log(JSON.stringify(digitalTwinCommandResult, null, 2));

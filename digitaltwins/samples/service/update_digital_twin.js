@@ -6,8 +6,8 @@ const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').Digit
 
 const deviceId = '<DEVICE_ID_GOES_HERE>';
 const patch = {
-  components: {
-    '<COMPONENT_NAME_GOES_HERE>': { // for the environmental sensor, try "environmentalSensor"
+  interfaces: {
+    '<INTERFACE_INSTANCE_NAME_GOES_HERE>': { // for the environmental sensor, try "environmentalSensor"
       properties: {
         '<PROPERTY_NAME_GOES_HERE>': { // for the environmental sensor, try "brightness"
           desired: {
@@ -35,14 +35,14 @@ async function main() {
   const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
 
   // Print original Twin
-  console.log(JSON.stringify(digitalTwin.components, null, 2));
+  console.log(JSON.stringify(digitalTwin.interfaces, null, 2));
 
   // Update digital twin and verify the update
   try {
     const updatedDigitalTwin = await digitalTwinServiceClient.updateDigitalTwin(deviceId, patch);
 
     // Print updated Twin
-    console.log(JSON.stringify(updatedDigitalTwin.components, null, 2));
+    console.log(JSON.stringify(updatedDigitalTwin.interfaces, null, 2));
   } catch (err) {
     console.log(err);
   }

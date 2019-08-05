@@ -12,9 +12,9 @@ class DigitalTwinServiceClient
   getDigitalTwin(digitalTwinId: string, callback: Callback<Models.DigitalTwinGetInterfacesResponse>): void;
   getDigitalTwin(digitalTwinId: string, callback?: Callback<Models.DigitalTwinGetInterfacesResponse>): void | Promise<Models.DigitalTwinGetInterfacesResponse> {
 
-  getDigitalTwinComponent(digitalTwinId: string, componentName: string): Promise<Models.DigitalTwinGetInterfaceResponse>;
-  getDigitalTwinComponent(digitalTwinId: string, componentName: string, callback: Callback<Models.DigitalTwinGetInterfaceResponse>): void;
-  getDigitalTwinComponent(digitalTwinId: string, componentName: string, callback?: Callback<Models.DigitalTwinGetInterfaceResponse>): void | Promise<Models.DigitalTwinGetInterfaceResponse> {
+  getDigitalTwinInterfaceInstance(digitalTwinId: string, interfaceInstanceName: string): Promise<Models.DigitalTwinGetInterfaceResponse>;
+  getDigitalTwinInterfaceInstance(digitalTwinId: string, interfaceInstanceName: string, callback: Callback<Models.DigitalTwinGetInterfaceResponse>): void;
+  getDigitalTwinInterfaceInstance(digitalTwinId: string, interfaceInstanceName: string, callback?: Callback<Models.DigitalTwinGetInterfaceResponse>): void | Promise<Models.DigitalTwinGetInterfaceResponse> {
 
   getDigitalTwinModel(modelId: string): Promise<Models.DigitalTwinGetDigitalTwinModelResponse>;
   getDigitalTwinModel(modelId: string, callback: Callback<Models.DigitalTwinGetDigitalTwinModelResponse>): void;
@@ -24,13 +24,13 @@ class DigitalTwinServiceClient
   updateDigitalTwin(digitalTwinId: string, patch: Models.DigitalTwinInterfacesPatch, callback: Callback<Models.DigitalTwinUpdateInterfacesResponse>): void;
   updateDigitalTwin(digitalTwinId: string, patch: Models.DigitalTwinInterfacesPatch, callback?: Callback<Models.DigitalTwinUpdateInterfacesResponse>): void | Promise<Models.DigitalTwinUpdateInterfacesResponse> {
 
-  updateDigitalTwinProperty(digitalTwinId: string, componentName: string, propertyName: string, propertyValue: string): Promise<Models.DigitalTwinUpdateInterfacesResponse>;
-  updateDigitalTwinProperty(digitalTwinId: string, componentName: string, propertyName: string, propertyValue: string, callback: Callback<Models.DigitalTwinUpdateInterfacesResponse>): void;
-  updateDigitalTwinProperty(digitalTwinId: string, componentName: string, propertyName: string, propertyValue: string, callback?: Callback<Models.DigitalTwinUpdateInterfacesResponse>): void | Promise<Models.DigitalTwinUpdateInterfacesResponse> {
+  updateDigitalTwinProperty(digitalTwinId: string, interfaceInstanceName: string, propertyName: string, propertyValue: string): Promise<Models.DigitalTwinUpdateInterfacesResponse>;
+  updateDigitalTwinProperty(digitalTwinId: string, interfaceInstanceName: string, propertyName: string, propertyValue: string, callback: Callback<Models.DigitalTwinUpdateInterfacesResponse>): void;
+  updateDigitalTwinProperty(digitalTwinId: string, interfaceInstanceName: string, propertyName: string, propertyValue: string, callback?: Callback<Models.DigitalTwinUpdateInterfacesResponse>): void | Promise<Models.DigitalTwinUpdateInterfacesResponse> {
 
-  invokeCommand(digitalTwinId: string, componentName: string, commandName: string, argument: string): Promise<Models.DigitalTwinInvokeInterfaceCommandResponse>;
-  invokeCommand(digitalTwinId: string, componentName: string, commandName: string, argument: string, callback: Callback<Models.DigitalTwinInvokeInterfaceCommandResponse>): void;
-  invokeCommand(digitalTwinId: string, componentName: string, commandName: string, argument: string, callback?: Callback<Models.DigitalTwinInvokeInterfaceCommandResponse>): void | Promise<Models.DigitalTwinInvokeInterfaceCommandResponse> {
+  invokeCommand(digitalTwinId: string, interfaceInstanceName: string, commandName: string, argument: string): Promise<Models.DigitalTwinInvokeInterfaceCommandResponse>;
+  invokeCommand(digitalTwinId: string, interfaceInstanceName: string, commandName: string, argument: string, callback: Callback<Models.DigitalTwinInvokeInterfaceCommandResponse>): void;
+  invokeCommand(digitalTwinId: string, interfaceInstanceName: string, commandName: string, argument: string, callback?: Callback<Models.DigitalTwinInvokeInterfaceCommandResponse>): void | Promise<Models.DigitalTwinInvokeInterfaceCommandResponse> {
 }
 ```
 
@@ -39,10 +39,10 @@ class DigitalTwinServiceClient
 ```javascript
   const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
   const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceDescription.deviceId);
-  const digitalTwinComponent = await digitalTwinServiceClient.getDigitalTwinComponent(deviceDescription.deviceId, componentName);
+  const digitalTwinInterfaceInstance = await digitalTwinServiceClient.getDigitalTwinInterfaceInstance(deviceDescription.deviceId, interfaceInstanceName);
   const digitalTwinModel = await digitalTwinServiceClient.getDigitalTwinModel(modelId);
   var updatedDigitalTwin = await digitalTwinServiceClient.updateDigitalTwin(deviceDescription.deviceId, patch, digitalTwin.eTag);
-  var digitalTwinCommandResult = await digitalTwinServiceClient.invokeCommand(digitalTwin.Id, digitalTwinComponentName, digitalTwinCommandName, digitalTwinArgument);
+  var digitalTwinCommandResult = await digitalTwinServiceClient.invokeCommand(digitalTwin.Id, digitalTwinInterfaceInstanceName, digitalTwinCommandName, digitalTwinArgument);
 ```
 
 ## Public API
@@ -61,15 +61,15 @@ class DigitalTwinServiceClient
 
 **SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_020: [** The `getDigitalTwin` method shall return a promise if there is no callback passed. **]**
 
-## getDigitalTwinComponent
+## getDigitalTwinInterfaceInstance
 
-**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_005: [** The `getDigitalTwinComponent` method shall call the `getInterface` method of the protocol layer with the given arguments. **]**
+**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_005: [** The `getDigitalTwinInterfaceInstance` method shall call the `getInterface` method of the protocol layer with the given arguments. **]**
 
-**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_006: [** The `getDigitalTwinComponent` method shall call the callback with an error parameter if a callback is passed. **]**
+**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_006: [** The `getDigitalTwinInterfaceInstance` method shall call the callback with an error parameter if a callback is passed. **]**
 
-**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_007: [** The `getDigitalTwinComponent` method shall return error if the method of the protocol layer failed. **]**
+**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_007: [** The `getDigitalTwinInterfaceInstance` method shall return error if the method of the protocol layer failed. **]**
 
-**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_021: [** The `getDigitalTwinComponent` method shall return a promise if there is no callback passed. **]**
+**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_021: [** The `getDigitalTwinInterfaceInstance` method shall return a promise if there is no callback passed. **]**
 
 ## getDigitalTwinModel
 
@@ -95,8 +95,8 @@ class DigitalTwinServiceClient
 
 **SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_028: [** The `patch` argument of the `updateDigitalTwin` method should be a JSON string using the following format:
  const patch = {
-    components: {
-      [componentName]: {
+    interfaces: {
+      [interfaceInstanceName]: {
         properties: {
           [propertyName]: {
             desired: {
@@ -107,7 +107,7 @@ class DigitalTwinServiceClient
       }
     }
   };
-  The componentName should be an existing component's name.
+  The interfaceInstanceName should be an existing interfaceInstance's name.
   The propertyName could be existing or new.
   The patch should contain difference to a previously reported twin only (e.g. patch).
  **]**
@@ -125,7 +125,7 @@ class DigitalTwinServiceClient
 **SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_027: [** The `updateDigitalTwinProperty` method shall call the `updateInterfaces` method of the protocol layer including eTag. **]**
 
 **SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_028: [** The `updateDigitalTwinProperty` method receives the following arguments:
-  const componentName - an existing component's name.
+  const interfaceInstanceName - an existing interfaceInstance's name.
   const propertyName - the property what need to be updated or created.
   const property value - the reported value of the property.
  **]**
