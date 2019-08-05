@@ -2,31 +2,34 @@ name: $(BuildID)_$(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Re
 resources:
 - repo: self
   clean: true
+
 phases:
 - phase: Phase_2
   displayName: Ubuntu 1604 - Node 6
-
   condition: succeededOrFailed()
   queue:
     name: Hosted Ubuntu 1604
+
   steps:
   - task: NodeTool@0
     displayName: 'Use Node 6.x'
-
 
   - script: |
        npm install --global node-gyp
        npm install --global lerna
        npm install
     displayName: 'Install Dependencies'
+
   - script: |
         lerna bootstrap --hoist
         lerna run build
     displayName: 'Bootstrap & Build'
+
   - script: 'lerna run ci'
     displayName: 'Unit & Integration Tests'
     env:
       IOTHUB_CONNECTION_STRING: $(LINUX-IOTHUB-CONNECTION-STRING)
+    enabled: 'false'
 
   - script: 'lerna run e2e'
     displayName: 'E2E Tests'
@@ -44,6 +47,7 @@ phases:
       DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT: $(DPS-GLOBAL-DEVICE-ENDPOINT-INVALID-CERT)
       IOTHUB_CONN_STRING_INVALID_CERT: $(IOTHUB-CONN-STRING-INVALID-CERT)
       IOTHUB_DEVICE_CONN_STRING_INVALID_CERT: $(IOTHUB-DEVICE-CONN-STRING-INVALID-CERT)
+    enabled: 'false'
 
   - task: PublishTestResults@2
     displayName: 'Publish Test Results | Mocha'
@@ -52,11 +56,10 @@ phases:
       mergeTestResults: true
       testRunTitle: 'E2E Tests - Linux'
     condition: succeededOrFailed()
-
+    enabled: 'false'
 
 - phase: Phase_1
   displayName: Windows Build - Node 8
-
   condition: succeededOrFailed()
   queue:
     name: Hosted
@@ -66,21 +69,23 @@ phases:
     inputs:
       versionSpec: 8.x
 
-
   - powershell: |
        runas.exe /savecred /user:administrator
        npm install --global node-gyp
        npm install --global lerna
        npm install
     displayName: 'Install Dependencies'
+
   - script: |
        call lerna bootstrap --hoist
        call lerna run build
     displayName: 'Bootstrap & Build'
+
   - script: 'call lerna run ci'
     displayName: 'Unit & Integration Tests'
     env:
       IOTHUB_CONNECTION_STRING: $(WINDOWS-IOTHUB-CONNECTION-STRING)
+    enabled: 'false'
 
   - script: 'lerna run e2e'
     displayName: 'E2E Tests'
@@ -98,6 +103,7 @@ phases:
       DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT: $(DPS-GLOBAL-DEVICE-ENDPOINT-INVALID-CERT)
       IOTHUB_CONN_STRING_INVALID_CERT: $(IOTHUB-CONN-STRING-INVALID-CERT)
       IOTHUB_DEVICE_CONN_STRING_INVALID_CERT: $(IOTHUB-DEVICE-CONN-STRING-INVALID-CERT)
+    enabled: 'false'
 
   - task: PublishTestResults@2
     displayName: 'Publish Test Results | Mocha'
@@ -106,3 +112,4 @@ phases:
       mergeTestResults: true
       testRunTitle: 'E2E Tests - Windows'
     condition: succeededOrFailed()
+  enabled: 'false'
