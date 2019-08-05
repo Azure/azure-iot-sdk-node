@@ -1,28 +1,33 @@
 name: $(BuildID)_$(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+
 resources:
 - repo: self
   clean: true
+
 phases:
-- phase: Phase_2
+
+- phase: Ubuntu
   displayName: Ubuntu 1604 - Node 6
 
   condition: succeededOrFailed()
   queue:
     name: Hosted Ubuntu 1604
+
   steps:
   - task: NodeTool@0
     displayName: 'Use Node 6.x'
-
 
   - script: |
        npm install --global node-gyp
        npm install --global lerna
        npm install
     displayName: 'Install Dependencies'
+
   - script: |
         lerna bootstrap --hoist
         lerna run build
     displayName: 'Bootstrap & Build'
+
   - script: 'lerna run ci'
     displayName: 'Unit & Integration Tests'
     env:
@@ -53,19 +58,18 @@ phases:
       testRunTitle: 'E2E Tests - Linux'
     condition: succeededOrFailed()
 
-
-- phase: Phase_1
+- phase: Windows
   displayName: Windows Build - Node 8
 
   condition: succeededOrFailed()
   queue:
     name: Hosted
+    
   steps:
   - task: NodeTool@0
     displayName: 'Use Node 8.x'
     inputs:
       versionSpec: 8.x
-
 
   - powershell: |
        runas.exe /savecred /user:administrator
@@ -73,10 +77,12 @@ phases:
        npm install --global lerna
        npm install
     displayName: 'Install Dependencies'
+
   - script: |
        call lerna bootstrap --hoist
        call lerna run build
     displayName: 'Bootstrap & Build'
+
   - script: 'call lerna run ci'
     displayName: 'Unit & Integration Tests'
     env:
@@ -106,3 +112,14 @@ phases:
       mergeTestResults: true
       testRunTitle: 'E2E Tests - Windows'
     condition: succeededOrFailed()
+
+  - powershell: $(Build.SourcesDirectory)/scripts/npm-pack.ps1
+    displayName: NPM Pack
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: $(Agent.RootDirectory)/tgz
+      artifactName: drop
+
+
+
