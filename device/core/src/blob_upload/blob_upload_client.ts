@@ -38,7 +38,6 @@ export interface FileUpload {
  * @private
  */
 export interface BlobUploader {
-  setProxy(proxy: any): void;
   uploadToBlob(uploadParams: UploadParams, stream: Stream, streamLength: number, done: TripleValueCallback<any, BlobResponse>): void;
   uploadToBlob(uploadParams: UploadParams, stream: Stream, streamLength: number): Promise<any>;
 }
@@ -48,7 +47,6 @@ export interface BlobUploader {
  */
 export interface BlobUpload {
   setOptions(options: any): void;
-  setFileUploadProxy(proxy: any): void;
   uploadToBlob(blobName: string, stream: Stream, streamLength: number, done: (err?: Error) => void): void;
   uploadToBlob(blobName: string, stream: Stream, streamLength: number): Promise<void>;
 }
@@ -77,13 +75,6 @@ export class BlobUploadClient implements BlobUpload {
     if (this._fileUploadApi) {
       /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_99_011: [`setOptions` shall set `fileUploadApi` options.]*/
       this._fileUploadApi.setOptions(options);
-    }
-  }
-
-  setFileUploadProxy(proxy: any): void {
-    if (this._blobUploader) {
-      /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_99_012: [** `setFileUploadProxy` shall set `blobUploader` proxy.]*/
-      this._blobUploader.setProxy(proxy);
     }
   }
 

@@ -124,11 +124,6 @@ export interface DeviceClientOptions extends X509 {
   productInfo?: string;
 
   /**
-   * Optional proxy server to use when uploading files
-   */
-  fileUploadProxy?: string;
-
-  /**
    * Optional object with options specific to the MQTT transport
    */
    mqtt?: MqttTransportOptions;

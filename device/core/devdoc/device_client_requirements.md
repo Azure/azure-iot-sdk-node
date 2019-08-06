@@ -51,8 +51,6 @@ class Client extends InternalClient {
 
 **SRS_NODE_DEVICE_CLIENT_99_103: [** The `setOptions` method shall set `blobUploadClient` options. **]**
 
-**SRS_NODE_DEVICE_CLIENT_99_104: [** The `setOptions` method shall set `blobUploadClient` proxy if `fileUploadProxy` is defined in options. **]**
-
 ### uploadToBlob(blobName, stream, done)
 
 **SRS_NODE_DEVICE_CLIENT_16_037: [** The `uploadToBlob` method shall throw a `ReferenceError` if `blobName` is falsy. **]**

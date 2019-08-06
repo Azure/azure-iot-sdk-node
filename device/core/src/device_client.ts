@@ -114,10 +114,6 @@ export class Client extends InternalClient {
     if (this.blobUploadClient) {
       /*Codes_SRS_NODE_DEVICE_CLIENT_99_103: [The `setOptions` method shall set `blobUploadClient` options.]*/
       this.blobUploadClient.setOptions(options);
-      if (options.fileUploadProxy) {
-        /*Codes_SRS_NODE_DEVICE_CLIENT_99_104: [The `setOptions` method shall set `blobUploadClient` proxy if `fileUploadProxy` is defined in options.]*/
-        this.blobUploadClient.setFileUploadProxy(options.fileUploadProxy);
-      }
     }
     return super.setOptions(options, done);
   }

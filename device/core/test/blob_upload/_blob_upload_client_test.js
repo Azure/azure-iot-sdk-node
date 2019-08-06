@@ -67,17 +67,6 @@ describe('BlobUploadClient', function() {
     });
   });
 
-  describe('#setFileUploadProxy', function () {
-    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_99_012: [** `setFileUploadProxy` shall set `blobUploader` proxy.]*/
-    it('sets blob uploader proxy', function () {
-      var fakeProxy = '__FAKE_PROXY__';
-      var fakeBlobUploader = new FakeBlobUploader();
-      var client = new BlobUploadClient(fakeConfig, null, fakeBlobUploader);
-      client.setFileUploadProxy(fakeProxy);
-      assert.isTrue(fakeBlobUploader.setProxy.calledWith(fakeProxy));
-    });
-  });
-
   describe('#uploadToBlob', function() {
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_004: [`uploadToBlob` shall obtain a blob SAS token using the IoT Hub service file upload API endpoint.]*/
     it('gets the Blob SAS token from the File Upload API', function() {
