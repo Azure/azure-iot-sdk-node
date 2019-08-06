@@ -119,7 +119,7 @@ phases:
       artifactName: 'node'
 
   - powershell: |
-      . $(System.DefaultWorkingDirectory)/node/release-node.ps1
+      . $(System.ArtifactsDirectory)/scripts/node/release-node.ps1
       $outputFolder = $env:output
       npm-pack -Sources $env:sources -Output $outputFolder
     displayName: 'npm pack'
