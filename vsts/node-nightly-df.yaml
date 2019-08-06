@@ -137,7 +137,7 @@ phases:
     condition: eq(variables.release, True)
     inputs:
       PathtoPublish: $(Build.ArtifactStagingDirectory)\_out
-      ArtifactName: $(Date:yyyyMMdd)
+      ArtifactName: format('{0:yyyyMMdd}', pipeline.startTime)
       publishLocation: 'Container'
 
 #  - task: AzureFileCopy@2
