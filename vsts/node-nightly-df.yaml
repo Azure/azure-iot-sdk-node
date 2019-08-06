@@ -107,3 +107,22 @@ phases:
 #      mergeTestResults: true
 #      testRunTitle: 'E2E Tests - Windows'
 #    condition: succeededOrFailed()
+
+  - task: DownloadBuildArtifacts@0
+    inputs:
+      buildType: 'specific'
+      project: 'f9b79625-2860-4d92-a4ee-57b03fabfd10' # azure-iot-sdks
+      pipeline: '311' # iot-sdks-internals-scripts pipeline
+      buildVersionToDownload: 'latest'
+      downloadType: 'single'
+      downloadPath: '$(System.ArtifactsDirectory)/scripts'
+      artifactName: 'node'
+
+  - powershell: |
+      . $(System.DefaultWorkingDirectory)/node/release-node.ps1
+      $outputFolder = $env:output
+      npm-pack -Sources $env:sources -Output $outputFolder
+    displayName: 'npm pack'
+    env:
+      sources: $(Build.SourcesDirectory)
+      output: $(Build.SourcesDirectory)\_out
