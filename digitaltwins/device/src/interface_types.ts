@@ -239,11 +239,11 @@ export interface CommandRequest {
    * The object that is an extension of the BaseInterface which contains
    * the command properties this callback will handle.
    */
-  component: BaseInterface;
+  interfaceInstance: BaseInterface;
   /*
    * The name of the interface instance for the commands that this callback will handle.
    */
-  componentName: string;
+  interfaceInstanceName: string;
   /*
    * The name of the command property that is to be invoked.
    */
