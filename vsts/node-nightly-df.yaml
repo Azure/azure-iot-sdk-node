@@ -3,6 +3,9 @@ resources:
 - repo: self
   clean: true
 
+variables:
+  publish: true
+
 phases:
 - phase: Phase_2
   displayName: Ubuntu 1604 - Node 6
@@ -112,7 +115,7 @@ phases:
     inputs:
       buildType: 'specific'
       project: 'f9b79625-2860-4d92-a4ee-57b03fabfd10' # azure-iot-sdks
-      pipeline: '311' # iot-sdks-internals-scripts pipeline
+      pipeline: '311' # iot-sdks-internals-scripts-clone pipeline
       buildVersionToDownload: 'latest'
       downloadType: 'single'
       downloadPath: '$(System.ArtifactsDirectory)/scripts'
@@ -132,3 +135,14 @@ phases:
       PathtoPublish: $(Build.ArtifactStagingDirectory)\_out
       ArtifactName: 'drop'
       publishLocation: 'Container'
+    enabled: $(publish)
+
+  - task: AzureFileCopy@2
+    displayName: 'Copy Release Artifacts to Partner Release Pipeline'
+    inputs:
+      SourcePath: $(Build.ArtifactStagingDirectory)\_out
+      azureSubscription: azuresdkpartnerdrops
+      Destination: AzureBlob
+      storage: azuresdkpartnerdrops
+      ContainerName: 'drops/azure-iot-sdk/node/'
+    enabled: false
