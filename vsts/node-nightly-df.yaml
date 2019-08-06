@@ -132,7 +132,7 @@ phases:
       PathtoPublish: $(Build.ArtifactStagingDirectory)\_out
       ArtifactName: $(Date:yyyyMMdd)
       publishLocation: 'Container'
-    condition: eq(variables.publish, True)
+    condition: eq(variables.release, True)
 
   - task: AzureFileCopy@2
     displayName: 'Copy Release Artifacts to Partner Release Pipeline'
@@ -142,5 +142,5 @@ phases:
       Destination: AzureBlob
       storage: azuresdkpartnerdrops
       ContainerName: 'drops/azure-iot-sdk/node/'
-    condition: eq(variables.publish, True)
+    condition: eq(variables.release, True)
     enabled: false
