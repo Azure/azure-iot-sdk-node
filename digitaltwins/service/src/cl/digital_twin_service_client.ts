@@ -9,43 +9,11 @@ import { tripleValueCallbackToPromise, TripleValueCallback } from 'azure-iot-com
 import { IoTHubTokenCredentials } from '../auth/iothub_token_credentials';
 import * as msRest from '@azure/ms-rest-js';
 
-export class DigitalTwin {
-  interfaces?: Models.DigitalTwinInterfaces;
+export type DigitalTwin = Models.DigitalTwinInterfaces | undefined;
+export type DigitalTwinResponse = DigitalTwin & {_response: msRest.WebResource};
 
-  constructor(protocolLayerResult?: Models.DigitalTwinInterfaces) {
-    if (protocolLayerResult) {
-      this.interfaces = protocolLayerResult.interfaces;
-    }
-  }
-}
-
-export class DigitalTwinResponse extends DigitalTwin {
-  _response?: msRest.WebResource;
-
-  constructor(protocolLayerResult?: Models.DigitalTwinInterfaces, webResource?: msRest.WebResource) {
-    super (protocolLayerResult);
-    this._response = webResource;
-  }
-}
-
-export class Model {
-  body?: any;
-
-  constructor (protocolLayerResult?: any) {
-    if (protocolLayerResult) {
-      this.body = protocolLayerResult.body;
-    }
-  }
-}
-
-export class ModelResponse extends Model {
-  _response?: msRest.WebResource;
-
-  constructor(protocolLayerBody?: any, webResource?: msRest.WebResource) {
-    super (protocolLayerBody);
-    this._response = webResource;
-  }
-}
+export type Model = Models.DigitalTwinGetDigitalTwinModelResponse;
+export type ModelResponse = Model & {_response: msRest.WebResource};
 
 export class CommandResult {
   result?: any;
@@ -98,7 +66,7 @@ export class DigitalTwinServiceClient {
   getDigitalTwin(digitalTwinId: string, callback?: TripleValueCallback<DigitalTwin, msRest.WebResource>): void | Promise<DigitalTwinResponse> {
     return tripleValueCallbackToPromise<DigitalTwin, msRest.WebResource, DigitalTwinResponse>((_callback) => {
       this._pl.digitalTwin.getInterfaces(digitalTwinId, (err, result, response) => {
-        let digitalTwin: DigitalTwin = new DigitalTwin(result);
+        let digitalTwin: DigitalTwin = result;
         _callback(err as Error, digitalTwin, response);
       });
     }, (digitalTwin, response) => createResultWithWebResource<DigitalTwin>(digitalTwin, response), callback as TripleValueCallback<DigitalTwin, msRest.WebResource>);
@@ -113,7 +81,7 @@ export class DigitalTwinServiceClient {
   getDigitalTwinInterfaceInstance(digitalTwinId: string, interfaceInstanceName: string, callback?: TripleValueCallback<DigitalTwin, msRest.WebResource>): void | Promise<DigitalTwinResponse> {
     return tripleValueCallbackToPromise<DigitalTwin, msRest.WebResource, DigitalTwinResponse>((_callback) => {
       this._pl.digitalTwin.getInterface(digitalTwinId, interfaceInstanceName, (err, result, response) => {
-        let digitalTwin: DigitalTwin = new DigitalTwin(result);
+        let digitalTwin: DigitalTwin = result;
         _callback(err as Error, digitalTwin, response);
       });
     }, (digitalTwin, response) => createResultWithWebResource<DigitalTwin>(digitalTwin, response), callback as TripleValueCallback<DigitalTwin, msRest.WebResource>);
@@ -128,7 +96,7 @@ export class DigitalTwinServiceClient {
   getModel(modelId: string, callback?: TripleValueCallback<Model, msRest.WebResource>): void | Promise<ModelResponse> {
     return tripleValueCallbackToPromise<Model, msRest.WebResource, ModelResponse>((_callback) => {
       this._pl.digitalTwin.getDigitalTwinModel(modelId, (err, result, response) => {
-        let model: Model = new Model(result);
+        let model: Model = result;
         _callback(err as Error, model, response);
       });
     }, (model, response) => createResultWithWebResource<Model>(model, response), callback as TripleValueCallback<Model, msRest.WebResource>);
@@ -164,14 +132,14 @@ export class DigitalTwinServiceClient {
       return tripleValueCallbackToPromise<DigitalTwin, msRest.WebResource, DigitalTwinResponse>((_callback) => {
         const options = {ifMatch: eTagOrCallback} as Models.DigitalTwinUpdateInterfacesOptionalParams;
         this._pl.digitalTwin.updateInterfaces(digitalTwinId, patch, options, (err, result, response) => {
-          let digitalTwin: DigitalTwin = new DigitalTwin(result);
+          let digitalTwin: DigitalTwin = result;
           _callback(err as Error, digitalTwin, response);
         });
       }, (digitalTwin, response) => createResultWithWebResource<DigitalTwin>(digitalTwin, response), callback as TripleValueCallback<DigitalTwin, msRest.WebResource>);
     } else {
       return tripleValueCallbackToPromise<DigitalTwin, msRest.WebResource, DigitalTwinResponse>((_callback) => {
         this._pl.digitalTwin.updateInterfaces(digitalTwinId, patch, (err, result, response) => {
-          let digitalTwin: DigitalTwin = new DigitalTwin(result);
+          let digitalTwin: DigitalTwin = result;
           _callback(err as Error, digitalTwin, response);
         });
       }, (digitalTwin, response) => createResultWithWebResource<DigitalTwin>(digitalTwin, response), eTagOrCallback as TripleValueCallback<DigitalTwin, msRest.WebResource>);

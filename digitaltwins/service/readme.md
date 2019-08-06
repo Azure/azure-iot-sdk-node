@@ -21,7 +21,7 @@ You need to install the [Node.js][nodejs_lnk] JavaScript runtime environment to 
  Features
 
 * Get the twin of an existing device
-* Get a single interfaceInstance of an existing device digital twin
+* Get a single interface instance of an existing device digital twin
 * Get a model from the Model Repository
 * Update digital twin of an existing device
 * Update a single property of an existing digital twin
