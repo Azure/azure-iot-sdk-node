@@ -159,7 +159,6 @@ message application properties:
 'iothub-command-name': <command name>
 'iothub-command-request-id': request.payload.commandRequest.requestId of the method request
 'iothub-command-statuscode': statusCode argument of the update method
-'$.ifid': interfaceInstances interface id
 '$.ifname': interfaceInstances name
 contentType: 'application/json'
 ```
@@ -176,7 +175,6 @@ contentType: 'application/json'
 payload: {<telemetry property name>: value}
 message application properties:
 contentType: 'application/json'
-$.ifid: <interface id>
 $.ifname: <interfaceInstance name>
 $.schema: <telemetry property name>
 ```

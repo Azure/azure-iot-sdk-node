@@ -384,7 +384,6 @@ export class DigitalTwinClient {
       'iothub-command-name': <command name>
       'iothub-command-request-id': request.payload.commandRequest.requestId of the method request
       'iothub-command-statuscode': statusCode argument of the update method
-      '$.ifid': interfaceInstances interface id
       '$.ifname': interfaceInstances name
       contentType: 'application/json'
       ]
@@ -407,7 +406,6 @@ export class DigitalTwinClient {
       updateMessage.properties.add(commandUpdateCommandNameProperty, commandName);
       updateMessage.properties.add(commandUpdateRequestIdProperty, requestId);
       updateMessage.properties.add(commandUpdateStatusCodeProperty, status.toString());
-      updateMessage.properties.add(messageInterfaceIdProperty, interfaceId);
       updateMessage.properties.add(messageInterfaceInstanceProperty, interfaceInstanceName);
       updateMessage.contentType = 'application/json';
       this._client.sendEvent(updateMessage, (updateError) => {
@@ -442,7 +440,6 @@ export class DigitalTwinClient {
         payload: {<telemetry property name>: value}
         message application properties:
         contentType: 'application/json'
-        $.ifid: <interface id>
         $.ifname: <interfaceInstance name>
         $.schema: <telemetry property name>
         **]
@@ -454,7 +451,6 @@ export class DigitalTwinClient {
       let telemetryMessage = new Message(
         JSON.stringify(newObject)
       );
-      telemetryMessage.properties.add(messageInterfaceIdProperty, interfaceId);
       telemetryMessage.properties.add(messageInterfaceInstanceProperty, interfaceInstanceName);
       telemetryMessage.properties.add(messageSchemaProperty, telemetryName);
       telemetryMessage.contentType =  'application/json';

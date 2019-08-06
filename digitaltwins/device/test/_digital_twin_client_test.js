@@ -402,7 +402,6 @@ describe('Digital Twin Client', function () {
       payload: {<telemetry property name>: value}
       message application properties:
       contentType: 'application/json'
-      $.ifid: <interface id>
       $.ifname: <interfaceInstance name>
       $.schema: <telemetry property name>
       **]
@@ -419,7 +418,6 @@ describe('Digital Twin Client', function () {
           assert.isOk(telemetryPayload[telemetryName]);
           assert.strictEqual(telemetryPayload[telemetryName], 42);
           assert.strictEqual(telemetryMessage.contentType, 'application/json');
-          assert.strictEqual(telemetryMessage.properties.getValue('$.ifid'), 'urn:contoso:com:something:1');
           assert.strictEqual(telemetryMessage.properties.getValue('$.ifname'), 'abc');
           assert.strictEqual(telemetryMessage.properties.getValue('$.schema'), telemetryName);
           done();
@@ -836,7 +834,6 @@ describe('Digital Twin Client', function () {
       'iothub-command-name': <command name>
       'iothub-command-request-id': request.payload.commandRequest.requestId of the method request
       'iothub-command-statuscode': statusCode argument of the update method
-      '$.ifid': interfaceInstances interface id
       '$.ifname': interfaceInstances name
       contentType: 'application/json'
       ]
@@ -857,7 +854,6 @@ describe('Digital Twin Client', function () {
             assert.strictEqual(message.properties.getValue('iothub-message-schema'), 'asyncResult');
             assert.strictEqual(message.properties.getValue('iothub-command-request-id'), '43');
             assert.strictEqual(message.properties.getValue('iothub-command-statuscode'), '200');
-            assert.strictEqual(message.properties.getValue('$.ifid'), 'urn:contoso:com:something:1');
             assert.strictEqual(message.properties.getValue('$.ifname'), 'fakeInterfaceInstanceName');
             fakeDone();
           });
