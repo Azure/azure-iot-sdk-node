@@ -112,6 +112,8 @@ class DigitalTwinServiceClient
   The patch should contain difference to a previously reported twin only (e.g. patch).
  **]**
 
+**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_030: [** The `updateDigitalTwin` method shall return a promise if eTag is passed and there is no callback passed.] **]**
+
 ## updateDigitalTwinProperty
 
 **SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_014: [** The `updateDigitalTwinProperty` method shall call the `updateInterfaces` method of the protocol layer. **]**
@@ -124,7 +126,7 @@ class DigitalTwinServiceClient
 
 **SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_027: [** The `updateDigitalTwinProperty` method shall call the `updateInterfaces` method of the protocol layer including eTag. **]**
 
-**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_028: [** The `updateDigitalTwinProperty` method receives the following arguments:
+**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_029: [** The `updateDigitalTwinProperty` method receives the following arguments:
   const interfaceInstanceName - an existing interface instance's name.
   const propertyName - the property what need to be updated or created.
   const property value - the reported value of the property.
