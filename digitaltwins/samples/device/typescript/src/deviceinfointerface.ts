@@ -29,8 +29,8 @@ export class DeviceInformation extends BaseInterface {
   batteryRuntime: Property;
   batteryRemaining: Property;
 
-  constructor(component: string) {
-    super(component, 'urn:azureiot:DeviceInformation:1');
+  constructor(interfaceInstanceName: string) {
+    super(interfaceInstanceName, 'urn:azureiot:DeviceInformation:1');
     this.fwVersion = new Property();
     this.manufacturer = new Property();
     this.model = new Property();

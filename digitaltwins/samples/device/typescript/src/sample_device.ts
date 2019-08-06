@@ -107,12 +107,12 @@ const main = async () => {
 
 };
 
-dtClient.addComponent(environmentalSensor);
-dtClient.addComponent(sampleDeviceInfo);
+dtClient.addInterfaceInstance(environmentalSensor);
+dtClient.addInterfaceInstance(sampleDeviceInfo);
 
 dtClient.register()
   .then(() => {
-    console.log('registered the components.');
+    console.log('registered the interfaceInstances.');
     main();
   })
   .catch(() => {console.log('the registration failed.');});

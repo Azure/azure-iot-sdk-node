@@ -1,7 +1,7 @@
 # azure-iot-digitaltwins-device.DigitalTwinClient Requirements
 
 ## Overview
-`DigitalTwinClient` provides api to add components (named interfaces), and then register those components with the IoT Hub.  The Digital Twin Client instantiates methods on the various Digital Twin Types to perform telemetry and property value reports.  In addition, it provides the ability to receive command invocations from service side requests as well as notification of updates to write enabled properties in the components.
+`DigitalTwinClient` provides api to add interfaceInstances (named interfaces), and then register those interfaceInstances with the IoT Hub.  The Digital Twin Client instantiates methods on the various Digital Twin Types to perform telemetry and property value reports.  In addition, it provides the ability to receive command invocations from service side requests as well as notification of updates to write enabled properties in the interfaceInstances.
 
 ## Example usage
 
@@ -12,9 +12,9 @@ const Mqtt = require('azure-iot-device-mqtt').Mqtt;
 
 const EnvironmentalSensor = require('./environmentalinterface').EnvironmentalSensor;
 
-const propertyUpdateHandler = (component, propertyName, reportedValue, desiredValue, version) => {
+const propertyUpdateHandler = (interfaceInstance, propertyName, reportedValue, desiredValue, version) => {
   console.log('Received an update for ' + propertyName + ': ' + JSON.stringify(desiredValue));
-  component[propertyName].report(desiredValue, {
+  interfaceInstance[propertyName].report(desiredValue, {
     code: 200,
     description: 'helpful descriptive text',
     version: version
@@ -24,7 +24,7 @@ const propertyUpdateHandler = (component, propertyName, reportedValue, desiredVa
 };
 
 const commandHandler = (request, response) => {
-  console.log('received command: ' + request.commandName + ' for component: ' + request.componentName);
+  console.log('received command: ' + request.commandName + ' for interfaceInstance: ' + request.interfaceInstanceName);
   response.acknowledge(200, 'helpful response text')
     .then(() => console.log('acknowledgement succeeded.'))
     .catch(() => console.log('acknowledgement failed'));
@@ -38,7 +38,7 @@ const capabilityModel = 'urn:azureiot:samplemodel:1';
 
 async function main() {
   const digitalTwinClient = new DigitalTwinClient(capabilityModel, deviceClient);
-  digitalTwinClient.addComponent(environmentalSensor);
+  digitalTwinClient.addInterfaceInstance(environmentalSensor);
   await digitalTwinClient.register();
   await environmentalSensor.temp.send(65.5);
   await environmentalSensor.humid.send(12.2);
@@ -56,16 +56,16 @@ Creates a new instance of a Digital Twin Device Client.  An IoT Hub Device Clien
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_001: [** Will throw `ReferenceError` if `capabilityModel` argument is falsy. **]**
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_002: [** Will throw `ReferenceError` if the constructor `client` argument is falsy. **]**
 
-### addComponent
-Adds the component to the Digital Twin client.
+### addInterfaceInstance
+Adds the interfaceInstance to the Digital Twin client.
 
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_003: [** Will throw `ReferenceError` if the `newComponent` argument is falsy. **]**
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_004: [** Will throw `ReferenceError` if the `newComponent` argument `interfaceId` property is falsy. **]**
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_005: [** Will throw `ReferenceError` if the `newComponent` argument `componentName` property is falsy. **]**
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_006: [** Will throw `Error` if the `newComponent` argument property `componentName` property value is used by a previously added component. **]**
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_007: [** Will throw `Error` if the `newComponent` has a property of type `Command` but no defined `CommandCallback`. **]**
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_008: [** Will throw `Error` if the `newComponent` has a writable property but no defined `PropertyChangedCallback`. **]**
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_009: [** Will throw `TypeError` if the `newComponent` has a property `azureDigitalTwinType` with an unrecognized type. **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_003: [** Will throw `ReferenceError` if the `newInterfaceInstance` argument is falsy. **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_004: [** Will throw `ReferenceError` if the `newInterfaceInstance` argument `interfaceId` property is falsy. **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_005: [** Will throw `ReferenceError` if the `newInterfaceInstance` argument `interfaceInstanceName` property is falsy. **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_006: [** Will throw `Error` if the `newInterfaceInstance` argument property `interfaceInstanceName` property value is used by a previously added interfaceInstance. **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_007: [** Will throw `Error` if the `newInterfaceInstance` has a property of type `Command` but no defined `CommandCallback`. **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_008: [** Will throw `Error` if the `newInterfaceInstance` has a writable property but no defined `PropertyChangedCallback`. **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_009: [** Will throw `TypeError` if the `newInterfaceInstance` has a property `azureDigitalTwinType` with an unrecognized type. **]**
 
 ### register
 Sends a registration message to the service.  Sets up handlers for all writable property changes. Sets up handlers for commands.  Sends property reports for SDK Information.  Can be invoked as to return a promise or returning void but invoking a callback upon completion.
@@ -77,7 +77,7 @@ payload:
 {modelInformation:
   capabilityModelId: <capabilityModelURN>,
   interfaces: {
-    <componentName>: <interfaceId>
+    <interfaceInstanceName>: <interfaceId>
   }
 }
 message application properties:
@@ -90,7 +90,7 @@ contentType: 'application/json'
 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_011: [** Will indicate an error via a callback or by promise rejection if the registration message fails. **]**
 
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_012: [** For each property in a component with type `Command`, a device method will be enabled with a name of the form '$iotin:' followed by the component name followed by '*' followed by the property name. **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_012: [** For each property in an interfaceInstance with type `Command`, a device method will be enabled with a name of the form '$iotin:' followed by the interfaceInstance name followed by '*' followed by the property name. **]**
 
 ### Commands
 
@@ -98,8 +98,8 @@ contentType: 'application/json'
 ```
 request:
   {
-    component: component,
-    componentName: component.componentName
+    interfaceInstance: interfaceInstance,
+    interfaceInstanceName: interfaceInstance.interfaceInstanceName
     commandName: command property name
     payload: payload of request
   }
@@ -159,8 +159,8 @@ message application properties:
 'iothub-command-name': <command name>
 'iothub-command-request-id': request.payload.commandRequest.requestId of the method request
 'iothub-command-statuscode': statusCode argument of the update method
-'$.ifid': components interface id
-'$.ifname': components name
+'$.ifid': interfaceInstances interface id
+'$.ifname': interfaceInstances name
 contentType: 'application/json'
 ```
  **]**
@@ -169,7 +169,7 @@ contentType: 'application/json'
 
 ### Telemetry
 
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_034: [** Subsequent to addComponent a Telemetry will have a report method. **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_034: [** Subsequent to addInterfaceInstance a Telemetry will have a report method. **]**
 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_032: [** A telemetry will send a device message with the following format:
 ```
@@ -177,16 +177,16 @@ payload: {<telemetry property name>: value}
 message application properties:
 contentType: 'application/json'
 $.ifid: <interface id>
-$.ifname: <component name>
+$.ifname: <interfaceInstance name>
 $.schema: <telemetry property name>
 ```
 **]**
 
 ### Property (writable)
 
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_033: [** Subsequent to addComponent a writable property will have a report method. **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_033: [** Subsequent to addInterfaceInstance a writable property will have a report method. **]**
 
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_035: [** Subsequent to the register, a writable property will have an event listener on the `properties.desired.$iotin:<componentName>.<propertyName>` **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_035: [** Subsequent to the register, a writable property will have an event listener on the `properties.desired.$iotin:<interfaceInstanceName>.<propertyName>` **]**
 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_036: [** Following the initial get of the twin, the writable properties will have their desired values retrieved, provided they exist, provided to the property changed callback along with the current desired version value.
  **]**

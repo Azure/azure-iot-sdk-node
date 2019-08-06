@@ -9,7 +9,7 @@ const Command = require('azure-iot-digitaltwins-device').Command;
 
 const interfaceId = 'urn:microsoft:azureiot:nodesdk:e2etest:1';
 
-module.exports.TestComponent = class TestComponent extends BaseInterface {
+module.exports.TestInterfaceInstance = class TestInterfaceInstance extends BaseInterface {
   constructor(name, propertyCallback, commandCallback) {
     super(name, interfaceId, propertyCallback, commandCallback);
     this.telemetry = new Telemetry();

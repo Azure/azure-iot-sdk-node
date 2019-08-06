@@ -23,10 +23,10 @@ import { azureDigitalTwinTelemetry, azureDigitalTwinCommand, azureDigitalTwinPro
 const messageInterfaceIdProperty: string = '$.ifid';
 /**
  * @private
- * The name of the application property that contains the component name (a specific
+ * The name of the application property that contains the interfaceInstance name (a specific
  * interface instance) as its value.
  */
-const messageComponentProperty: string = '$.ifname';
+const messageInterfaceInstanceProperty: string = '$.ifname';
 /**
  * @private
  * The Digital Twin application property name whose value communicates what the item is.
@@ -35,28 +35,28 @@ const messageComponentProperty: string = '$.ifname';
 const messageSchemaProperty: string = '$.schema';
 /**
  * @private
- * Prefixes the component name in various objects, like command names.
+ * Prefixes the interfaceInstance name in various objects, like command names.
  */
-const componentPrefix: string = '$iotin:';
+const interfaceInstancePrefix: string = '$iotin:';
 /**
  * @private
  * Prefixes the actual data object in various Digital Twin objects, like command names.
  */
-const commandComponentCommandNameSeparator = '*';
+const commandInterfaceInstanceCommandNameSeparator = '*';
 
 /**
  * @private
- * An array of these items will be created for each component.
+ * An array of these items will be created for each interfaceInstance.
  * At registration time, the registration code will sweep through all of the
- * registered components and within each component will utilize the data here to
+ * registered interfaceInstances and within each interfaceInstance will utilize the data here to
  * enable a method handler for each command.
  */
 interface CommandInformation {
-  component: BaseInterface;
+  interfaceInstance: BaseInterface;
   commandName: string;
   //
   // The name that is passed to the underlying device client method client.
-  // It is formed from the component name and command property name.
+  // It is formed from the interfaceInstance name and command property name.
   methodName: string;
   //
   // An IoT client method handler.  We use these to implement the
@@ -72,25 +72,25 @@ interface CommandInformation {
  * @private
  *
  *
- * An array of these items will be created for each component.
+ * An array of these items will be created for each interfaceInstance.
  *
  * At registration time, the registration code will sweep through all of the
- * registered components and within each component will utilize the data here to
+ * registered interfaceInstances and within each interfaceInstance will utilize the data here to
  * process each write enabled property.
  *
  * This are two separate things that must be done post registration.
  *
  * 1) Obtain (if they exist) both the desired and reported "value"s of each
- * property.  They should be supplied to the components property changed callback.  The
+ * property.  They should be supplied to the interfaceInstances property changed callback.  The
  * version property is also obtained.  The callback is free to act however it
  * choses (including doing a new "update" on the property).
  *
  * 2) Set a callback for delta updates of each writable property.  This callback will
- * be used to invoke the components property changed callback (The same one as invoked in "1)").
+ * be used to invoke the interfaceInstances property changed callback (The same one as invoked in "1)").
  * For delta updates the reported property value will NOT supplied.
  */
 interface WritablePropertyInformation {
-  component: BaseInterface;
+  interfaceInstance: BaseInterface;
   propertyName: string;
   //
   // This is part of the path to get to this particular writable property in the
@@ -98,24 +98,24 @@ interface WritablePropertyInformation {
   //
   // (Used in both the "reported" and "desired" paths.)
   //
-  prefixAndComponentName: string;
+  prefixAndInterfaceInstanceName: string;
 }
 
 /**
  * @private
  * These are the values of a dictionary created within the Digital Twin client.
- * The dictionary key is the component name.
+ * The dictionary key is the interfaceInstance name.
  */
-interface ComponentInformation {
+interface InterfaceInstanceInformation {
   //
-  // Utilized to insure that an component isn't used before registration.
+  // Utilized to insure that an interfaceInstance isn't used before registration.
   //
   registered: boolean;
   //
-  // The actual object that defines a component.  These can be imported and constructed
+  // The actual object that defines an interfaceInstance.  These can be imported and constructed
   // or built up on the fly.
   //
-  component: BaseInterface;
+  interfaceInstance: BaseInterface;
   //
   // An array of information for each command defined by the interface.
   commandProperties: CommandInformation[];
@@ -140,9 +140,9 @@ const sdkInformation = new SdkInformation('urn_azureiot_Client_SDKInformation', 
 
 export class DigitalTwinClient {
   //
-  // Dictionary of each component and the associated interface.
+  // Dictionary of each interfaceInstance and the associated interface.
   //
-  private _components: {[key: string]: ComponentInformation} = {};
+  private _interfaceInstances: {[key: string]: InterfaceInstanceInformation} = {};
   //
   // Each Digital Twin client can have only one capability model associated with it.
   // The dcm is in URN format.
@@ -164,69 +164,69 @@ export class DigitalTwinClient {
     this._capabilityModel = capabilityModel;
     this._client = client;
     this._twin = {} as Twin;
-    this.addComponent(sdkInformation);
+    this.addInterfaceInstance(sdkInformation);
   }
 
   /**
-   * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.addComponent
-   * @description                   Adds the component to the Digital Twin client.  This will not cause
+   * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.addInterfaceInstance
+   * @description                   Adds the interfaceInstance to the Digital Twin client.  This will not cause
    *                                any network activity.  This is a synchronous method.
-   * @param newComponent            The object for a particular component.
+   * @param newInterfaceInstance            The object for a particular interfaceInstance.
    */
-  addComponent(newComponent: BaseInterface): void {
-    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_003: [Will throw `ReferenceError` if the `newComponent` argument is falsy.] */
-    if (!newComponent) throw new ReferenceError('newComponent is \'' + newComponent + '\'');
-    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_004: [Will throw `ReferenceError` if the `newComponent` argument `interfaceId` property is falsy.] */
-    if (!newComponent.interfaceId) throw new ReferenceError('interfaceId is \'' + newComponent.interfaceId + '\'');
-    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_005: [Will throw `ReferenceError` if the `newComponent` argument `componentName` property is falsy.] */
-    if (!newComponent.componentName) throw new ReferenceError('component is \'' + newComponent.componentName + '\'');
-    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_006: [Will throw `Error` if the `newComponent` argument property `componentName` property value is used by a previously added component.] */
-    if (this._components[newComponent.componentName]) throw new Error('component ' + newComponent.componentName + ' is already added.');
-    this._components[newComponent.componentName] = {
-      component: newComponent,
+  addInterfaceInstance(newInterfaceInstance: BaseInterface): void {
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_003: [Will throw `ReferenceError` if the `newInterfaceInstance` argument is falsy.] */
+    if (!newInterfaceInstance) throw new ReferenceError('newInterfaceInstance is \'' + newInterfaceInstance + '\'');
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_004: [Will throw `ReferenceError` if the `newInterfaceInstance` argument `interfaceId` property is falsy.] */
+    if (!newInterfaceInstance.interfaceId) throw new ReferenceError('interfaceId is \'' + newInterfaceInstance.interfaceId + '\'');
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_005: [Will throw `ReferenceError` if the `newInterfaceInstance` argument `interfaceInstanceName` property is falsy.] */
+    if (!newInterfaceInstance.interfaceInstanceName) throw new ReferenceError('interfaceInstance is \'' + newInterfaceInstance.interfaceInstanceName + '\'');
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_006: [Will throw `Error` if the `newInterfaceInstance` argument property `interfaceInstanceName` property value is used by a previously added interfaceInstance.] */
+    if (this._interfaceInstances[newInterfaceInstance.interfaceInstanceName]) throw new Error('interfaceInstance ' + newInterfaceInstance.interfaceInstanceName + ' is already added.');
+    this._interfaceInstances[newInterfaceInstance.interfaceInstanceName] = {
+      interfaceInstance: newInterfaceInstance,
       commandProperties: [],
       writableProperties: [],
       registered: false
     };
-    Object.keys(newComponent).forEach((individualProperty) => {
-      if (newComponent[individualProperty] && newComponent[individualProperty].azureDigitalTwinType) {
-        debug(newComponent.componentName + '.' + individualProperty + ' is of type: ' + newComponent[individualProperty].azureDigitalTwinType);
-        switch (newComponent[individualProperty].azureDigitalTwinType) {
+    Object.keys(newInterfaceInstance).forEach((individualProperty) => {
+      if (newInterfaceInstance[individualProperty] && newInterfaceInstance[individualProperty].azureDigitalTwinType) {
+        debug(newInterfaceInstance.interfaceInstanceName + '.' + individualProperty + ' is of type: ' + newInterfaceInstance[individualProperty].azureDigitalTwinType);
+        switch (newInterfaceInstance[individualProperty].azureDigitalTwinType) {
           case azureDigitalTwinTelemetry: {
             //
             // This instantiates a 'send' method for this telemetry property that invokes the lower level clients send function.  The
             // instantiated function will format the message appropriately and add any necessary transport/digital twin properties to
             // the message.
             //
-            /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_034: [ Subsequent to addComponent a Telemetry will have a report method.] */
-            (newComponent[individualProperty] as Telemetry).send = this._returnTelemetrySendMethod(newComponent.componentName, newComponent.interfaceId, individualProperty);
+            /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_034: [ Subsequent to addInterfaceInstance a Telemetry will have a report method.] */
+            (newInterfaceInstance[individualProperty] as Telemetry).send = this._returnTelemetrySendMethod(newInterfaceInstance.interfaceInstanceName, newInterfaceInstance.interfaceId, individualProperty);
             break;
           }
           case azureDigitalTwinCommand: {
             //
-            // Must have defined an application defined callback for the commands of this component.
+            // Must have defined an application defined callback for the commands of this interfaceInstance.
             //
             // We use the _createCommandInformation method to instantiate an IoT Hub device method handler that will invoke application command callback.
-            // We save this in a structure created for this component so that at registration time we can enable the IoT Hub device method handler.
+            // We save this in a structure created for this interfaceInstance so that at registration time we can enable the IoT Hub device method handler.
             //
-            if (newComponent.commandCallback) {
-              this._components[newComponent.componentName].commandProperties.push(this._createCommandInformation(newComponent, individualProperty));
+            if (newInterfaceInstance.commandCallback) {
+              this._interfaceInstances[newInterfaceInstance.interfaceInstanceName].commandProperties.push(this._createCommandInformation(newInterfaceInstance, individualProperty));
             } else {
-              /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_007: [Will throw `Error` if the `newComponent` has a property of type `Command` but no defined `CommandCallback`.] */
-              throw new Error('Component ' + newComponent.componentName + ' does not have a command callback specified');
+              /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_007: [Will throw `Error` if the `newInterfaceInstance` has a property of type `Command` but no defined `CommandCallback`.] */
+              throw new Error('InterfaceInstance ' + newInterfaceInstance.interfaceInstanceName + ' does not have a command callback specified');
             }
             break;
           }
           case azureDigitalTwinProperty: {
-            if ((newComponent[individualProperty] as Property).writable) {
+            if ((newInterfaceInstance[individualProperty] as Property).writable) {
               //
-              // Must have defined a callback for the property updates of this component.
+              // Must have defined a callback for the property updates of this interfaceInstance.
               //
-              if (newComponent.propertyChangedCallback) {
-                this._components[newComponent.componentName].writableProperties.push(this._createWritablePropertyInformation(newComponent, individualProperty));
+              if (newInterfaceInstance.propertyChangedCallback) {
+                this._interfaceInstances[newInterfaceInstance.interfaceInstanceName].writableProperties.push(this._createWritablePropertyInformation(newInterfaceInstance, individualProperty));
               } else {
-                /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_008: [Will throw `Error` if the `newComponent` has a writable property but no defined `PropertyChangedCallback`.] */
-                throw new Error('Component ' + newComponent.componentName + ' does not have a property update callback specified');
+                /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_008: [Will throw `Error` if the `newInterfaceInstance` has a writable property but no defined `PropertyChangedCallback`.] */
+                throw new Error('InterfaceInstance ' + newInterfaceInstance.interfaceInstanceName + ' does not have a property update callback specified');
               }
             }
 
@@ -235,24 +235,24 @@ export class DigitalTwinClient {
             // instantiated function will format the message appropriately and add any necessary transport/digital twin properties to
             // the message.
             //
-            /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_033: [** Subsequent to addComponent a writable property will have a report method.] */
-            (newComponent[individualProperty] as Property).report  = this._returnPropertyReportMethod(newComponent.componentName, newComponent.interfaceId, individualProperty);
+            /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_033: [** Subsequent to addInterfaceInstance a writable property will have a report method.] */
+            (newInterfaceInstance[individualProperty] as Property).report  = this._returnPropertyReportMethod(newInterfaceInstance.interfaceInstanceName, newInterfaceInstance.interfaceId, individualProperty);
             break;
           }
           default: {
-            /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_009: [Will throw `TypeError` if the `newComponent` has a property `azureDigitalTwinType` with an unrecognized type.] */
+            /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_009: [Will throw `TypeError` if the `newInterfaceInstance` has a property `azureDigitalTwinType` with an unrecognized type.] */
             throw new TypeError('Unrecognized Azure Digital Twin Type');
           }
         }
       } else {
-        debug(newComponent.componentName + '.' + individualProperty + ' is NOT of interest.');
+        debug(newInterfaceInstance.interfaceInstanceName + '.' + individualProperty + ' is NOT of interest.');
       }
     });
   }
 
   /**
    * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.register
-   * @description                   Registers the already provided components with the service.
+   * @description                   Registers the already provided interfaceInstances with the service.
    * @param registerCallback        If provided, will be invoked on completion of registration, otherwise a promise will be returned.
    */
   register(registerCallback: ErrorCallback): void;
@@ -262,34 +262,34 @@ export class DigitalTwinClient {
   }
 
   //
-  // Simple private function that sweeps through all the components subsequent to registration and marks them as
+  // Simple private function that sweeps through all the interfaceInstances subsequent to registration and marks them as
   // registered.
   //
-  private _setAllComponentsRegistered(): void {
-    Object.keys(this._components).forEach((componentName) => {
-      this._components[componentName].registered = true;
+  private _setAllInterfaceInstancesRegistered(): void {
+    Object.keys(this._interfaceInstances).forEach((interfaceInstanceName) => {
+      this._interfaceInstances[interfaceInstanceName].registered = true;
     });
   }
 
   //
-  // A not quite as simple function that sweeps through all of the components subsequent to registration and
+  // A not quite as simple function that sweeps through all of the interfaceInstances subsequent to registration and
   // enables method handlers for each command.
   //
   private _enableAllCommands(): void {
-    Object.keys(this._components).forEach((componentName) => {
-      this._components[componentName].commandProperties.forEach((commandInformation) => {
-        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_012: [For each property in a component with type `Command`, a device method will be enabled with a name of the form '$iotin:' followed by the component name followed by '*' followed by the property name.] */
+    Object.keys(this._interfaceInstances).forEach((interfaceInstanceName) => {
+      this._interfaceInstances[interfaceInstanceName].commandProperties.forEach((commandInformation) => {
+        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_012: [For each property in an interfaceInstance with type `Command`, a device method will be enabled with a name of the form '$iotin:' followed by the interfaceInstance name followed by '*' followed by the property name.] */
         this._client.onDeviceMethod(commandInformation.methodName, commandInformation.methodCallback);
       });
     });
   }
 
-  private _createCommandInformation(component: BaseInterface, commandName: string): CommandInformation  {
+  private _createCommandInformation(interfaceInstance: BaseInterface, commandName: string): CommandInformation  {
     /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_013: [** For commands, the `commandCallback` will be invoked with `request` and `response` arguments with the following properties.
       request:
         {
-          component: component,
-          componentName: component.componentName
+          interfaceInstance: interfaceInstance,
+          interfaceInstanceName: interfaceInstance.interfaceInstanceName
           commandName: command property name
           payload: payload of request
         }
@@ -307,9 +307,9 @@ export class DigitalTwinClient {
       **]
     */
     return {
-      component: component,
+      interfaceInstance: interfaceInstance,
       commandName: commandName,
-      methodName: componentPrefix + component.componentName + commandComponentCommandNameSeparator + commandName,
+      methodName: interfaceInstancePrefix + interfaceInstance.interfaceInstanceName + commandInterfaceInstanceCommandNameSeparator + commandName,
       //
       // Create a function that will be used as the handler for IoT Hub method callbacks.
       // This instantiated function will create request and response objects suitable for
@@ -317,8 +317,8 @@ export class DigitalTwinClient {
       //
       methodCallback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => {
         const commandRequest: CommandRequest = {
-          component: component,
-          componentName: component.componentName,
+          interfaceInstance: interfaceInstance,
+          interfaceInstanceName: interfaceInstance.interfaceInstanceName,
           commandName: commandName,
           payload: request.payload.commandRequest.value
         };
@@ -340,9 +340,9 @@ export class DigitalTwinClient {
           /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_029: [The command callback should be able to invoke the `update` method, with no `payload` argument, and receive (if supplied) a callback with an error if the `update` failed.] */
           /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_021: [The command callback should be able to invoke the `update` method with no callback and utilize the returned promise that rejects.] */
           /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_030: [The command callback should be able to invoke the `update` method, with no `payload` or callback arguments, and utilize the returned promise that rejects.] */
-          update: this._returnCommandUpdateMethod(component.componentName, component.interfaceId, commandName, request.payload.commandRequest.requestId)
+          update: this._returnCommandUpdateMethod(interfaceInstance.interfaceInstanceName, interfaceInstance.interfaceId, commandName, request.payload.commandRequest.requestId)
          };
-        (component.commandCallback as CommandCallback)(commandRequest, commandResponse);
+        (interfaceInstance.commandCallback as CommandCallback)(commandRequest, commandResponse);
       }
     };
   }
@@ -352,15 +352,15 @@ export class DigitalTwinClient {
   // In this case the returned method is used to update the status of
   // a Digital Twin async command.
   //
-  private _returnCommandUpdateMethod(componentName: string, interfaceId: string, commandName: string, requestId: string): CommandUpdateCallback | CommandUpdatePromise {
+  private _returnCommandUpdateMethod(interfaceInstanceName: string, interfaceId: string, commandName: string, requestId: string): CommandUpdateCallback | CommandUpdatePromise {
     return (status: number, payload: any, callback?: ErrorCallback) =>
-      this._sendCommandUpdate(componentName, interfaceId, commandName, requestId, status, payload, callback as ErrorCallback);
+      this._sendCommandUpdate(interfaceInstanceName, interfaceId, commandName, requestId, status, payload, callback as ErrorCallback);
   }
 
   /**
    * @method                            private _sendCommandUpdate
-   * @description                       Sends a command update message component/command.
-   * @param componentName               Name of the instance for this interface.
+   * @description                       Sends a command update message interfaceInstance/command.
+   * @param interfaceInstanceName               Name of the instance for this interface.
    * @param interfaceId                 The id (in URN format) for the interface.
    * @param commandName                 The name of the particular command updating its status.
    * @param requestId                   The id supplied by the Digital Twin Service that uniquely identifies
@@ -370,9 +370,9 @@ export class DigitalTwinClient {
    * @param commandCallback (optional)  If present, the callback to be invoked on completion of the update,
    *                                    otherwise a promise is returned.
    */
-  private _sendCommandUpdate(componentName: string, interfaceId: string, commandName: string, requestId: string, status: number, payload: any, commandCallback: ErrorCallback): void;
-  private _sendCommandUpdate(componentName: string, interfaceId: string, commandName: string, requestId: string, status: number, payload: any): Promise<void>;
-  private _sendCommandUpdate(componentName: string, interfaceId: string, commandName: string, requestId: string, status: number,payload: any, commandCallback?: ErrorCallback): Promise<void> | void {
+  private _sendCommandUpdate(interfaceInstanceName: string, interfaceId: string, commandName: string, requestId: string, status: number, payload: any, commandCallback: ErrorCallback): void;
+  private _sendCommandUpdate(interfaceInstanceName: string, interfaceId: string, commandName: string, requestId: string, status: number, payload: any): Promise<void>;
+  private _sendCommandUpdate(interfaceInstanceName: string, interfaceId: string, commandName: string, requestId: string, status: number,payload: any, commandCallback?: ErrorCallback): Promise<void> | void {
 
     /*
       Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_022: [Within the command callback, the application can invoke the `update` method which in turn will invoke the device client `sendEvent` method with the following message:
@@ -384,8 +384,8 @@ export class DigitalTwinClient {
       'iothub-command-name': <command name>
       'iothub-command-request-id': request.payload.commandRequest.requestId of the method request
       'iothub-command-statuscode': statusCode argument of the update method
-      '$.ifid': components interface id
-      '$.ifname': components name
+      '$.ifid': interfaceInstances interface id
+      '$.ifname': interfaceInstances name
       contentType: 'application/json'
       ]
      */
@@ -408,7 +408,7 @@ export class DigitalTwinClient {
       updateMessage.properties.add(commandUpdateRequestIdProperty, requestId);
       updateMessage.properties.add(commandUpdateStatusCodeProperty, status.toString());
       updateMessage.properties.add(messageInterfaceIdProperty, interfaceId);
-      updateMessage.properties.add(messageComponentProperty, componentName);
+      updateMessage.properties.add(messageInterfaceInstanceProperty, interfaceInstanceName);
       updateMessage.contentType = 'application/json';
       this._client.sendEvent(updateMessage, (updateError) => {
         return _callback(updateError);
@@ -421,41 +421,41 @@ export class DigitalTwinClient {
   // In this case the returned function is used to set telemetry values
   // for a Digital Twin telemetry property.
   //
-  private _returnTelemetrySendMethod(componentName: string, interfaceId: string, telemetryName: string): TelemetryPromise | TelemetryCallback {
-    return (value, callback) => this._sendTelemetry(componentName, interfaceId, telemetryName, value, callback);
+  private _returnTelemetrySendMethod(interfaceInstanceName: string, interfaceId: string, telemetryName: string): TelemetryPromise | TelemetryCallback {
+    return (value, callback) => this._sendTelemetry(interfaceInstanceName, interfaceId, telemetryName, value, callback);
   }
 
   /**
    * @method                        private _sendTelemetry
    * @description                   Sends a named telemetry message for a supplied interface.
-   * @param componentName           Name of the instance for this interface.
+   * @param interfaceInstanceName           Name of the instance for this interface.
    * @param interfaceId             The id (in URN format) for the interface.
    * @param telemetryName           Name of the particular telemetry.
    * @param telemetryValue          The object to be sent.
    * @param callback (optional)     If present, the callback to be invoked on completion of the telemetry,
    *                                otherwise a promise is returned.
    */
-  private _sendTelemetry(componentName: string, interfaceId: string, telemetryName: string, telemetryValue: any, sendCallback: ErrorCallback): void;
-  private _sendTelemetry(componentName: string, interfaceId: string, telemetryName: string, telemetryValue: any): Promise<void>;
-  private _sendTelemetry(componentName: string, interfaceId: string, telemetryName: string, telemetryValue: any, sendCallback?: ErrorCallback): Promise<void> | void {
+  private _sendTelemetry(interfaceInstanceName: string, interfaceId: string, telemetryName: string, telemetryValue: any, sendCallback: ErrorCallback): void;
+  private _sendTelemetry(interfaceInstanceName: string, interfaceId: string, telemetryName: string, telemetryValue: any): Promise<void>;
+  private _sendTelemetry(interfaceInstanceName: string, interfaceId: string, telemetryName: string, telemetryValue: any, sendCallback?: ErrorCallback): Promise<void> | void {
       /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_032: [** A telemetry will send a device message with the following format:
         payload: {<telemetry property name>: value}
         message application properties:
         contentType: 'application/json'
         $.ifid: <interface id>
-        $.ifname: <component name>
+        $.ifname: <interfaceInstance name>
         $.schema: <telemetry property name>
         **]
       */
     return callbackToPromise((_callback) => {
       debug('about to begin the interface telemetry.');
-      if (!this._components[componentName].registered) throw new Error(componentName + ' is not registered');
+      if (!this._interfaceInstances[interfaceInstanceName].registered) throw new Error(interfaceInstanceName + ' is not registered');
       let newObject: any = {[telemetryName]: telemetryValue};
       let telemetryMessage = new Message(
         JSON.stringify(newObject)
       );
       telemetryMessage.properties.add(messageInterfaceIdProperty, interfaceId);
-      telemetryMessage.properties.add(messageComponentProperty, componentName);
+      telemetryMessage.properties.add(messageInterfaceInstanceProperty, interfaceInstanceName);
       telemetryMessage.properties.add(messageSchemaProperty, telemetryName);
       telemetryMessage.contentType =  'application/json';
       this._client.sendEvent(telemetryMessage, (telemetryError) => {
@@ -469,25 +469,25 @@ export class DigitalTwinClient {
   // In this case the returned method is used to update a property
   // values.
   //
-  private _returnPropertyReportMethod(componentName: string, interfaceId: string, propertyName: string): PropertyReportPromise | PropertyReportCallback {
+  private _returnPropertyReportMethod(interfaceInstanceName: string, interfaceId: string, propertyName: string): PropertyReportPromise | PropertyReportCallback {
     return (propertyValue, responseOrCallback, callback) => {
-      return this._reportProperty(componentName, interfaceId, propertyName, propertyValue, responseOrCallback as DesiredStateResponse, callback as ErrorCallback);
+      return this._reportProperty(interfaceInstanceName, interfaceId, propertyName, propertyValue, responseOrCallback as DesiredStateResponse, callback as ErrorCallback);
     };
   }
 
   /**
    * @method                        private _reportProperty
    * @description                   Sends the value of a reported property to the Digital Twin.
-   * @param componentName           Name of the instance for this interface.
+   * @param interfaceInstanceName           Name of the instance for this interface.
    * @param interfaceId             The id (in URN format) for the interface.
    * @param propertyName            Name of the particular property.
    * @param propertyValue           The object to be sent.
    * @param callback (optional)     If present, the callback to be invoked on completion of the telemetry,
    *                                otherwise a promise is returned.
    */
-  private _reportProperty(componentName: string, interfaceId: string, propertyName: string, propertyValue: any, responseOrCallback: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): void;
-  private _reportProperty(componentName: string, interfaceId: string, propertyName: string, propertyValue: any, response?: DesiredStateResponse): Promise<void>;
-  private _reportProperty(componentName: string, interfaceId: string, propertyName: string, propertyValue: any, responseOrCallback?: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): Promise<void> | void {
+  private _reportProperty(interfaceInstanceName: string, interfaceId: string, propertyName: string, propertyValue: any, responseOrCallback: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): void;
+  private _reportProperty(interfaceInstanceName: string, interfaceId: string, propertyName: string, propertyValue: any, response?: DesiredStateResponse): Promise<void>;
+  private _reportProperty(interfaceInstanceName: string, interfaceId: string, propertyName: string, propertyValue: any, responseOrCallback?: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): Promise<void> | void {
     let actualResponse: DesiredStateResponse | undefined;
     let actualCallback: ErrorCallback | undefined;
 
@@ -502,9 +502,9 @@ export class DigitalTwinClient {
     }
 
     return callbackToPromise((_callback) => {
-      if (!this._components[componentName].registered) throw new Error(componentName + ' is not registered');
+      if (!this._interfaceInstances[interfaceInstanceName].registered) throw new Error(interfaceInstanceName + ' is not registered');
       /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [** Properties may invoke the method `report` with a value to produce a patch to the reported properties. **] */
-      let componentPart = componentPrefix + componentName;
+      let interfaceInstancePart = interfaceInstancePrefix + interfaceInstanceName;
       let propertyContent: any = {
         value: propertyValue
       };
@@ -517,7 +517,7 @@ export class DigitalTwinClient {
       }
 
       let patch = {
-        [componentPart]: {
+        [interfaceInstancePart]: {
           [propertyName]: propertyContent
         }
       };
@@ -526,46 +526,46 @@ export class DigitalTwinClient {
     }, actualCallback);
   }
 
-  private _createWritablePropertyInformation(component: BaseInterface, propertyName: string): WritablePropertyInformation  {
+  private _createWritablePropertyInformation(interfaceInstance: BaseInterface, propertyName: string): WritablePropertyInformation  {
     return {
-      component: component,
+      interfaceInstance: interfaceInstance,
       propertyName: propertyName,
-      prefixAndComponentName: componentPrefix + component.componentName,
+      prefixAndInterfaceInstanceName: interfaceInstancePrefix + interfaceInstance.interfaceInstanceName,
     };
   }
 
-  private _getReportedOrDesiredPropertyValue(reportedOrDesired: 'reported' | 'desired', componentPart: string, propertyPart: string): any {
+  private _getReportedOrDesiredPropertyValue(reportedOrDesired: 'reported' | 'desired', interfaceInstancePart: string, propertyPart: string): any {
     if (this._twin.properties[reportedOrDesired] &&
-        this._twin.properties[reportedOrDesired][componentPart] &&
-        this._twin.properties[reportedOrDesired][componentPart][propertyPart]) {
-      return this._twin.properties[reportedOrDesired][componentPart][propertyPart].value;
+        this._twin.properties[reportedOrDesired][interfaceInstancePart] &&
+        this._twin.properties[reportedOrDesired][interfaceInstancePart][propertyPart]) {
+      return this._twin.properties[reportedOrDesired][interfaceInstancePart][propertyPart].value;
     } else {
       return null;
     }
   }
 
   private _initialWritablePropertyProcessing(): void {
-    Object.keys(this._components).forEach((componentName) => {
-      this._components[componentName].writableProperties.forEach((rwi) => {
+    Object.keys(this._interfaceInstances).forEach((interfaceInstanceName) => {
+      this._interfaceInstances[interfaceInstanceName].writableProperties.forEach((rwi) => {
         //
         // Get the desired value of the writable property  if it exists.  If we get one also try
         // to get the reported version of the writable if it exists.
         //
-        const desiredPart = this._getReportedOrDesiredPropertyValue('desired', rwi.prefixAndComponentName, rwi.propertyName);
+        const desiredPart = this._getReportedOrDesiredPropertyValue('desired', rwi.prefixAndInterfaceInstanceName, rwi.propertyName);
         const versionProperty = '$version';
         if (desiredPart) {
           /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_037: [Initially, if it exists, provide the reported property also to the property change callback.] */
-          const reportedPart = this._getReportedOrDesiredPropertyValue('reported', rwi.prefixAndComponentName, rwi.propertyName);
+          const reportedPart = this._getReportedOrDesiredPropertyValue('reported', rwi.prefixAndInterfaceInstanceName, rwi.propertyName);
           /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_036: [Following the initial get of the twin, the writable properties will have their desired values retrieved, provided they exist, provided to the property changed callback along with the current desired version value.] */
-          (rwi.component.propertyChangedCallback as PropertyChangedCallback)(rwi.component, rwi.propertyName, reportedPart, desiredPart, this._twin.properties.desired[versionProperty]);
+          (rwi.interfaceInstance.propertyChangedCallback as PropertyChangedCallback)(rwi.interfaceInstance, rwi.propertyName, reportedPart, desiredPart, this._twin.properties.desired[versionProperty]);
         }
         //
         // Setup the callback for delta changes.
         //
-        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_035: [Subsequent to the register, a writable property will have an event listener on the `properties.desired.$iotin:<componentName>.<propertyName>`] */
-        this._twin.on('properties.desired.' + rwi.prefixAndComponentName + '.' + rwi.propertyName, (delta) => {
+        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_035: [Subsequent to the register, a writable property will have an event listener on the `properties.desired.$iotin:<interfaceInstanceName>.<propertyName>`] */
+        this._twin.on('properties.desired.' + rwi.prefixAndInterfaceInstanceName + '.' + rwi.propertyName, (delta) => {
           /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_040: [A change to the desired property will invoke the property change callback with the change value and version.] */
-          (rwi.component.propertyChangedCallback as PropertyChangedCallback)(rwi.component, rwi.propertyName, null, delta.value, this._twin.properties.desired[versionProperty]);
+          (rwi.interfaceInstance.propertyChangedCallback as PropertyChangedCallback)(rwi.interfaceInstance, rwi.propertyName, null, delta.value, this._twin.properties.desired[versionProperty]);
         });
       });
     });
@@ -576,8 +576,8 @@ export class DigitalTwinClient {
    * @description                   Performs multiple tasks.
    *                                1) Send a telemetry message with a registration object
    *                                   This will be the first network activity of the client.
-   *                                2) Given success, it will mark all the components as registered.
-   *                                3) It will enable all commands for all components.
+   *                                2) Given success, it will mark all the interfaceInstances as registered.
+   *                                3) It will enable all commands for all interfaceInstances.
    *                                4) It will get the twin.
    *                                5) If permitted, send the SDK information.
    *                                6) It will get all of the writable properties current desired properties
@@ -592,7 +592,7 @@ export class DigitalTwinClient {
       {modelInformation:
         capabilityModelId: <capabilityModelURN>,
         interfaces: {
-          <componentName>: <interfaceId>
+          <interfaceInstanceName>: <interfaceId>
         }
       }
       message application properties:
@@ -603,7 +603,7 @@ export class DigitalTwinClient {
       **]
     */
     const modelInterfaceId = 'urn:azureiot:ModelDiscovery:ModelInformation:1';
-    const modelComponentName = 'urn_azureiot_ModelDiscovery_ModelInformation';
+    const modelInterfaceInstanceName = 'urn_azureiot_ModelDiscovery_ModelInformation';
     const registrationSchema = 'modelInformation';
 
     let registrationObject: any = {};
@@ -614,13 +614,13 @@ export class DigitalTwinClient {
       }
     };
 
-    registrationObject.modelInformation.interfaces[modelComponentName] = modelInterfaceId;
-    Object.keys(this._components).forEach((componentName) => {
-      registrationObject.modelInformation.interfaces[componentName] = this._components[componentName].component.interfaceId;
+    registrationObject.modelInformation.interfaces[modelInterfaceInstanceName] = modelInterfaceId;
+    Object.keys(this._interfaceInstances).forEach((interfaceInstanceName) => {
+      registrationObject.modelInformation.interfaces[interfaceInstanceName] = this._interfaceInstances[interfaceInstanceName].interfaceInstance.interfaceId;
     });
     let registrationMessage = new Message(JSON.stringify(registrationObject));
     registrationMessage.properties.add(messageInterfaceIdProperty, modelInterfaceId);
-    registrationMessage.properties.add(messageComponentProperty, modelComponentName);
+    registrationMessage.properties.add(messageInterfaceInstanceProperty, modelInterfaceInstanceName);
     registrationMessage.properties.add(messageSchemaProperty, registrationSchema);
     registrationMessage.contentType = 'application/json';
     this._client.sendEvent(registrationMessage, (registrationError) => {
@@ -628,7 +628,7 @@ export class DigitalTwinClient {
         /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_011: [Will indicate an error via a callback or by promise rejection if the registration message fails.] */
         return registerCallback(registrationError);
       } else {
-        this._setAllComponentsRegistered();
+        this._setAllInterfaceInstancesRegistered();
         this._enableAllCommands();
         this._client.getTwin((getTwinError, twinResult) => {
           if (getTwinError) {

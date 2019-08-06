@@ -4,8 +4,8 @@ The **javascript** and **typescript** folders contain two implementations of a s
 They show how to:
 
 - Implement the environmental sensor interface
-- Create a component for this interface
-- Use the digital twin device client to register this component and interact with the Digital Twins services.
+- Create an interfaceInstance for this interface
+- Use the digital twin device client to register this interfaceInstance and interact with the Digital Twins services.
 
 Please note that the `DigitalTwinClient` depends on the `Client` class from `azure-iot-device` to communicate with the hub. The sample shows how to compose these two together.
 

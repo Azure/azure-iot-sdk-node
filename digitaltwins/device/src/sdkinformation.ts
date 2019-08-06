@@ -14,8 +14,8 @@ export class DigitalTwinInterface extends BaseInterface {
   language: Property;
   version: Property;
   vendor: Property;
-  constructor(componentName: string, interfaceId: string) {
-    super(componentName, interfaceId);
+  constructor(interfaceInstanceName: string, interfaceId: string) {
+    super(interfaceInstanceName, interfaceId);
     this.language = new Property();
     this.version = new Property();
     this.vendor = new Property();
