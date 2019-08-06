@@ -37,5 +37,5 @@ node <sample_name.js>
 - `get_digital_twin_interface_instance.js` gets the data for a specific interface instance of a specific device.
 - `get_model.js` gets a model from the global repository.
 - `update_digital_twin_property.js` updates a single writable property on a digital twin.
-- `update_digital_twin.js` creates a patch to updates multiple writable properties on a digital twin, potentially on multiple interface instance.
+- `update_digital_twin.js` creates a patch to updates multiple writable properties on a digital twin, potentially on multiple interface instances.
 - `query_interface.js` runs a query that returns all devices implementing a specific interface.

@@ -5,7 +5,7 @@ const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubT
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 
 const deviceId = '<DEVICE_ID_GOES_HERE>';
-const interfaceInstanceName = 'environmentalSensor'; // for the environmental sensor, try "environmentalSensor"
+const interfaceInstanceName = '<INTERFACE_INSTANCE_NAME_GOES_HERE>'; // for the environmental sensor, try "environmentalSensor"
 
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor

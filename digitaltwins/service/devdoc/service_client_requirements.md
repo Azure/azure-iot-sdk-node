@@ -107,7 +107,7 @@ class DigitalTwinServiceClient
       }
     }
   };
-  The interfaceInstanceName should be an existing interfaceInstance's name.
+  The interfaceInstanceName should be an existing interface instance's name.
   The propertyName could be existing or new.
   The patch should contain difference to a previously reported twin only (e.g. patch).
  **]**
@@ -125,7 +125,7 @@ class DigitalTwinServiceClient
 **SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_027: [** The `updateDigitalTwinProperty` method shall call the `updateInterfaces` method of the protocol layer including eTag. **]**
 
 **SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_028: [** The `updateDigitalTwinProperty` method receives the following arguments:
-  const interfaceInstanceName - an existing interfaceInstance's name.
+  const interfaceInstanceName - an existing interface instance's name.
   const propertyName - the property what need to be updated or created.
   const property value - the reported value of the property.
  **]**
