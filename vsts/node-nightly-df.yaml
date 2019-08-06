@@ -121,7 +121,7 @@ phases:
   - powershell: |
       . $(System.ArtifactsDirectory)/scripts/node/release-node.ps1
       $outputFolder = $env:output
-      npm-pack -Sources $env:sources -Output $outputFolder
+      Build-Artifacts -Sources $env:sources -Output $outputFolder
     displayName: 'npm pack'
     env:
       sources: $(Build.SourcesDirectory)
