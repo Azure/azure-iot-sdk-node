@@ -35,9 +35,9 @@ const Mqtt = require('azure-iot-device-mqtt').Mqtt;
 
 const EnvironmentalSensor = require('./environmentalinterface').EnvironmentalSensor;
 
-const propertyUpdateHandler = (component, propertyName, reportedValue, desiredValue, version) => {
+const propertyUpdateHandler = (interfaceInstance, propertyName, reportedValue, desiredValue, version) => {
   console.log('Received an update for ' + propertyName + ': ' + JSON.stringify(desiredValue));
-  component[propertyName].report(desiredValue, {
+  interfaceInstance[propertyName].report(desiredValue, {
     code: 200,
     description: 'helpful descriptive text',
     version: version
@@ -47,7 +47,7 @@ const propertyUpdateHandler = (component, propertyName, reportedValue, desiredVa
 };
 
 const commandHandler = (request, response) => {
-  console.log('received command: ' + request.commandName + ' for component: ' + request.componentName);
+  console.log('received command: ' + request.commandName + ' for interfaceInstance: ' + request.interfaceInstanceName);
   response.acknowledge(200, 'helpful response text')
     .then(() => console.log('acknowledgement succeeded.'))
     .catch(() => console.log('acknowledgement failed'));
@@ -61,7 +61,7 @@ const capabilityModel = 'urn:azureiot:samplemodel:1';
 
 async function main() {
   const digitalTwinClient = new DigitalTwinClient(capabilityModel, deviceClient);
-  digitalTwinClient.addComponent(environmentalSensor);
+  digitalTwinClient.addInterfaceInstance(environmentalSensor);
   await digitalTwinClient.register();
   await environmentalSensor.temp.send(65.5);
   await environmentalSensor.humid.send(12.2);
