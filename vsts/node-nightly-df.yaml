@@ -25,35 +25,37 @@ phases:
         lerna run build
     displayName: 'Bootstrap & Build'
 
-#  - script: 'lerna run ci'
-#    displayName: 'Unit & Integration Tests'
-#    env:
-#      IOTHUB_CONNECTION_STRING: $(LINUX-IOTHUB-CONNECTION-STRING)
-#
-#  - script: 'lerna run e2e'
-#    displayName: 'E2E Tests'
-#    env:
-#      IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
-#      IOTHUB_CA_ROOT_CERT_KEY: $(IOTHUB-CA-ROOT-CERT-KEY)
-#      IOT_PROVISIONING_DEVICE_ENDPOINT: $(IOT-PROVISIONING-DEVICE-ENDPOINT)
-#      IOTHUB_CONNECTION_STRING: $(LINUX-IOTHUB-CONNECTION-STRING)
-#      STORAGE_CONNECTION_STRING: $(LINUX-STORAGE-CONNECTION-STRING)
-#      IOT_PROVISIONING_DEVICE_IDSCOPE: $(LINUX-IOT-PROVISIONING-DEVICE-IDSCOPE)
-#      IOT_PROVISIONING_ROOT_CERT: $(LINUX-IOT-PROVISIONING-ROOT-CERT)
-#      IOT_PROVISIONING_ROOT_CERT_KEY: $(LINUX-IOT-PROVISIONING-ROOT-CERT-KEY)
-#      IOT_PROVISIONING_SERVICE_CONNECTION_STRING: $(LINUX-IOT-PROVISIONING-SERVICE-CONNECTION-STRING)
-#      DPS_CONN_STRING_INVALID_CERT: $(DPS-CONN-STRING-INVALID-CERT)
-#      DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT: $(DPS-GLOBAL-DEVICE-ENDPOINT-INVALID-CERT)
-#      IOTHUB_CONN_STRING_INVALID_CERT: $(IOTHUB-CONN-STRING-INVALID-CERT)
-#      IOTHUB_DEVICE_CONN_STRING_INVALID_CERT: $(IOTHUB-DEVICE-CONN-STRING-INVALID-CERT)
-#
-#  - task: PublishTestResults@2
-#    displayName: 'Publish Test Results | Mocha'
-#    inputs:
-#      testResultsFiles: 'e2etests/test-results.*.xml'
-#      mergeTestResults: true
-#      testRunTitle: 'E2E Tests - Linux'
-#    condition: succeededOrFailed()
+  - script: 'lerna run ci'
+    displayName: 'Unit & Integration Tests'
+    condition: eq(variables.test, True)
+    env:
+      IOTHUB_CONNECTION_STRING: $(LINUX-IOTHUB-CONNECTION-STRING)
+
+  - script: 'lerna run e2e'
+    displayName: 'E2E Tests'
+    condition: eq(variables.test, True)
+    env:
+      IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
+      IOTHUB_CA_ROOT_CERT_KEY: $(IOTHUB-CA-ROOT-CERT-KEY)
+      IOT_PROVISIONING_DEVICE_ENDPOINT: $(IOT-PROVISIONING-DEVICE-ENDPOINT)
+      IOTHUB_CONNECTION_STRING: $(LINUX-IOTHUB-CONNECTION-STRING)
+      STORAGE_CONNECTION_STRING: $(LINUX-STORAGE-CONNECTION-STRING)
+      IOT_PROVISIONING_DEVICE_IDSCOPE: $(LINUX-IOT-PROVISIONING-DEVICE-IDSCOPE)
+      IOT_PROVISIONING_ROOT_CERT: $(LINUX-IOT-PROVISIONING-ROOT-CERT)
+      IOT_PROVISIONING_ROOT_CERT_KEY: $(LINUX-IOT-PROVISIONING-ROOT-CERT-KEY)
+      IOT_PROVISIONING_SERVICE_CONNECTION_STRING: $(LINUX-IOT-PROVISIONING-SERVICE-CONNECTION-STRING)
+      DPS_CONN_STRING_INVALID_CERT: $(DPS-CONN-STRING-INVALID-CERT)
+      DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT: $(DPS-GLOBAL-DEVICE-ENDPOINT-INVALID-CERT)
+      IOTHUB_CONN_STRING_INVALID_CERT: $(IOTHUB-CONN-STRING-INVALID-CERT)
+      IOTHUB_DEVICE_CONN_STRING_INVALID_CERT: $(IOTHUB-DEVICE-CONN-STRING-INVALID-CERT)
+
+  - task: PublishTestResults@2
+    displayName: 'Publish Test Results | Mocha'
+    condition: eq(variables.test, True)
+    inputs:
+      testResultsFiles: 'e2etests/test-results.*.xml'
+      mergeTestResults: true
+      testRunTitle: 'E2E Tests - Linux'
 
 - phase: Phase_1
   displayName: Windows Build - Node 8
@@ -78,37 +80,40 @@ phases:
        call lerna run build
     displayName: 'Bootstrap & Build'
 
-#  - script: 'call lerna run ci'
-#    displayName: 'Unit & Integration Tests'
-#    env:
-#      IOTHUB_CONNECTION_STRING: $(WINDOWS-IOTHUB-CONNECTION-STRING)
-#
-#  - script: 'lerna run e2e'
-#    displayName: 'E2E Tests'
-#    env:
-#      IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
-#      IOTHUB_CA_ROOT_CERT_KEY: $(IOTHUB-CA-ROOT-CERT-KEY)
-#      IOT_PROVISIONING_DEVICE_ENDPOINT: $(IOT-PROVISIONING-DEVICE-ENDPOINT)
-#      IOTHUB_CONNECTION_STRING: $(WINDOWS-IOTHUB-CONNECTION-STRING)
-#      STORAGE_CONNECTION_STRING: $(WINDOWS-STORAGE-CONNECTION-STRING)
-#      IOT_PROVISIONING_DEVICE_IDSCOPE: $(WINDOWS-IOT-PROVISIONING-DEVICE-IDSCOPE)
-#      IOT_PROVISIONING_ROOT_CERT: $(WINDOWS-IOT-PROVISIONING-ROOT-CERT)
-#      IOT_PROVISIONING_ROOT_CERT_KEY: $(WINDOWS-IOT-PROVISIONING-ROOT-CERT-KEY)
-#      IOT_PROVISIONING_SERVICE_CONNECTION_STRING: $(WINDOWS-IOT-PROVISIONING-SERVICE-CONNECTION-STRING)
-#      DPS_CONN_STRING_INVALID_CERT: $(DPS-CONN-STRING-INVALID-CERT)
-#      DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT: $(DPS-GLOBAL-DEVICE-ENDPOINT-INVALID-CERT)
-#      IOTHUB_CONN_STRING_INVALID_CERT: $(IOTHUB-CONN-STRING-INVALID-CERT)
-#      IOTHUB_DEVICE_CONN_STRING_INVALID_CERT: $(IOTHUB-DEVICE-CONN-STRING-INVALID-CERT)
-#
-#  - task: PublishTestResults@2
-#    displayName: 'Publish Test Results | Mocha'
-#    inputs:
-#      testResultsFiles: 'e2etests/test-results.*.xml'
-#      mergeTestResults: true
-#      testRunTitle: 'E2E Tests - Windows'
-#    condition: succeededOrFailed()
+  - script: 'call lerna run ci'
+    displayName: 'Unit & Integration Tests'
+    condition: eq(variables.test, True)
+    env:
+      IOTHUB_CONNECTION_STRING: $(WINDOWS-IOTHUB-CONNECTION-STRING)
+
+  - script: 'lerna run e2e'
+    displayName: 'E2E Tests'
+    condition: eq(variables.test, True)
+    env:
+      IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
+      IOTHUB_CA_ROOT_CERT_KEY: $(IOTHUB-CA-ROOT-CERT-KEY)
+      IOT_PROVISIONING_DEVICE_ENDPOINT: $(IOT-PROVISIONING-DEVICE-ENDPOINT)
+      IOTHUB_CONNECTION_STRING: $(WINDOWS-IOTHUB-CONNECTION-STRING)
+      STORAGE_CONNECTION_STRING: $(WINDOWS-STORAGE-CONNECTION-STRING)
+      IOT_PROVISIONING_DEVICE_IDSCOPE: $(WINDOWS-IOT-PROVISIONING-DEVICE-IDSCOPE)
+      IOT_PROVISIONING_ROOT_CERT: $(WINDOWS-IOT-PROVISIONING-ROOT-CERT)
+      IOT_PROVISIONING_ROOT_CERT_KEY: $(WINDOWS-IOT-PROVISIONING-ROOT-CERT-KEY)
+      IOT_PROVISIONING_SERVICE_CONNECTION_STRING: $(WINDOWS-IOT-PROVISIONING-SERVICE-CONNECTION-STRING)
+      DPS_CONN_STRING_INVALID_CERT: $(DPS-CONN-STRING-INVALID-CERT)
+      DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT: $(DPS-GLOBAL-DEVICE-ENDPOINT-INVALID-CERT)
+      IOTHUB_CONN_STRING_INVALID_CERT: $(IOTHUB-CONN-STRING-INVALID-CERT)
+      IOTHUB_DEVICE_CONN_STRING_INVALID_CERT: $(IOTHUB-DEVICE-CONN-STRING-INVALID-CERT)
+
+  - task: PublishTestResults@2
+    displayName: 'Publish Test Results | Mocha'
+    condition: eq(variables.test, True)
+    inputs:
+      testResultsFiles: 'e2etests/test-results.*.xml'
+      mergeTestResults: true
+      testRunTitle: 'E2E Tests - Windows'
 
   - task: DownloadBuildArtifacts@0
+    condition: eq(variables.release, True)
     inputs:
       buildType: 'specific'
       project: 'f9b79625-2860-4d92-a4ee-57b03fabfd10' # azure-iot-sdks
@@ -123,24 +128,25 @@ phases:
       $outputFolder = $env:output
       Build-Artifacts -Sources $env:sources -Output $outputFolder
     displayName: 'npm pack'
+    condition: eq(variables.release, True)
     env:
       sources: $(Build.SourcesDirectory)
       output: $(Build.ArtifactStagingDirectory)\_out
 
   - task: PublishBuildArtifacts@1
+    condition: eq(variables.release, True)
     inputs:
       PathtoPublish: $(Build.ArtifactStagingDirectory)\_out
       ArtifactName: $(Date:yyyyMMdd)
       publishLocation: 'Container'
-    condition: eq(variables.release, True)
 
   - task: AzureFileCopy@2
     displayName: 'Copy Release Artifacts to Partner Release Pipeline'
+    condition: eq(variables.release, True)
     inputs:
       SourcePath: $(Build.ArtifactStagingDirectory)\_out
       azureSubscription: azuresdkpartnerdrops
       Destination: AzureBlob
       storage: azuresdkpartnerdrops
       ContainerName: 'drops/azure-iot-sdk/node/'
-    condition: eq(variables.release, True)
     enabled: false
