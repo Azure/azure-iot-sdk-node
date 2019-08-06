@@ -3,9 +3,6 @@ resources:
 - repo: self
   clean: true
 
-variables:
-  publish: true
-
 phases:
 - phase: Phase_2
   displayName: Ubuntu 1604 - Node 6
@@ -135,7 +132,7 @@ phases:
       PathtoPublish: $(Build.ArtifactStagingDirectory)\_out
       ArtifactName: 'drop'
       publishLocation: 'Container'
-    enabled: $(publish)
+    condition: eq(variables.publish, True)
 
   - task: AzureFileCopy@2
     displayName: 'Copy Release Artifacts to Partner Release Pipeline'
