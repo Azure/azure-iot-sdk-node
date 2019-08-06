@@ -130,7 +130,7 @@ phases:
   - task: PublishBuildArtifacts@1
     inputs:
       PathtoPublish: $(Build.ArtifactStagingDirectory)\_out
-      ArtifactName: 'drop'
+      ArtifactName: $(Date:yyyyMMdd)
       publishLocation: 'Container'
     condition: eq(variables.publish, True)
 
@@ -142,4 +142,5 @@ phases:
       Destination: AzureBlob
       storage: azuresdkpartnerdrops
       ContainerName: 'drops/azure-iot-sdk/node/'
+    condition: eq(variables.publish, True)
     enabled: false
