@@ -125,4 +125,10 @@ phases:
     displayName: 'npm pack'
     env:
       sources: $(Build.SourcesDirectory)
-      output: $(Build.SourcesDirectory)\_out
+      output: $(Build.ArtifactStagingDirectory)\_out
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: $(Build.ArtifactStagingDirectory)\_out
+      ArtifactName: 'drop'
+      publishLocation: 'Container'
