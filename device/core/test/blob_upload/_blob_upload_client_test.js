@@ -16,7 +16,6 @@ var FakeFileUploadApi = function() {
 };
 
 var FakeBlobUploader = function() {
-  this.setProxy = sinon.spy();
   this.uploadToBlob = sinon.spy();
 };
 
