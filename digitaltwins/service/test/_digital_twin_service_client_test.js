@@ -77,12 +77,12 @@ describe('DigitalTwinServiceClient', function () {
   /* Test_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_006: [The `getDigitalTwinInterfaceInstance` method shall call the callback with an error parameter if a callback is passed..]*/
   it('getDigitalTwinInterfaceInstance calls getInterface on the PL client', function (testCallback) {
     var testTwinId = 'digitalTwinId';
-    var testInterfaceInstanceName = 'testInterfaceInstanceName';
+    var testInterfaceInstanceName = 'testInterfaceInstanceName';   
     var testDigitalTwin = {
       interfaces: {
-        interfaceInstanceName: testInterfaceInstanceName
+        interfaceInstanceName: {}
       },
-      version: 'first'
+      version: 1234
     };
     var testResponse = {
       parsedHeaders: {
@@ -91,10 +91,10 @@ describe('DigitalTwinServiceClient', function () {
     };
     var expectedTestDigitalTwin = {
       interfaces: {
-        interfaceInstanceName: testInterfaceInstanceName
+        interfaceInstanceName: {}
       },
       eTag: '001',
-      version: 'first'
+      version: 1234
     };
     var testClient = new DigitalTwinServiceClient(testCredentials);
     testClient._pl.digitalTwin.getInterface = sinon.stub().callsArgWith(2, null, testDigitalTwin, null, testResponse);
@@ -212,7 +212,7 @@ describe('DigitalTwinServiceClient', function () {
           }
         }
       },
-      version: 'first'
+      version: 1234
     };
     var testResponse = {
       parsedHeaders: {
@@ -230,7 +230,7 @@ describe('DigitalTwinServiceClient', function () {
         }
       },
       eTag: '001',
-      version: 'first'
+      version: 1234
     };
 
     var testClient = new DigitalTwinServiceClient(testCredentials);
