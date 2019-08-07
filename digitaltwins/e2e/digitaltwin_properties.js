@@ -108,10 +108,10 @@ describe('Digital Twin Properties', function () {
       })
       .then((serviceTwin) => {
         let currentValueOfProperty = null;
-        if (serviceTwin.components[interfaceInstanceName].properties.readOnlyProperty &&
-            serviceTwin.components[interfaceInstanceName].properties.readOnlyProperty.reported &&
-            serviceTwin.components[interfaceInstanceName].properties.readOnlyProperty.reported.value) {
-          currentValueOfProperty = serviceTwin.components[interfaceInstanceName].properties.readOnlyProperty.reported.value;
+        if (serviceTwin.interfaces[interfaceInstanceName].properties.readOnlyProperty &&
+            serviceTwin.interfaces[interfaceInstanceName].properties.readOnlyProperty.reported &&
+            serviceTwin.interfaces[interfaceInstanceName].properties.readOnlyProperty.reported.value) {
+          currentValueOfProperty = serviceTwin.interfaces[interfaceInstanceName].properties.readOnlyProperty.reported.value;
         }
         if (currentValueOfProperty !== valueForReadOnlyProperty) {
           debug('Did not match the expected guid.');
@@ -169,10 +169,10 @@ describe('Digital Twin Properties', function () {
               closeClients(deviceClient, err);
             } else {
               debug('service client: got digital twin');
-              assert.strictEqual(updatedDigitalTwin.components.testInterfaceInstance.properties.writableProperty.reported.value, desiredPropertyValue);
-              assert.strictEqual(updatedDigitalTwin.components.testInterfaceInstance.properties.writableProperty.reported.desiredState.code, 200);
-              assert.strictEqual(updatedDigitalTwin.components.testInterfaceInstance.properties.writableProperty.reported.desiredState.description, 'test');
-              assert.strictEqual(updatedDigitalTwin.components.testInterfaceInstance.properties.writableProperty.reported.desiredState.version, version);
+              assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.reported.value, desiredPropertyValue);
+              assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.reported.desiredState.code, 200);
+              assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.reported.desiredState.description, 'test');
+              assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.reported.desiredState.version, version);
               debug('all digital twin properties match - test successful');
               closeClients(deviceClient);
             }
@@ -193,7 +193,7 @@ describe('Digital Twin Properties', function () {
       }).then(() => {
         debug('crafting patch and sending it');
         const patch = {
-          components: {
+          interfaces: {
             testInterfaceInstance: {
               properties: {
                 writableProperty: {
@@ -207,7 +207,7 @@ describe('Digital Twin Properties', function () {
         };
         return digitalTwinServiceClient.updateDigitalTwin(createdDevice.deviceId, patch);
       }).then((updatedDigitalTwin) => {
-        assert.strictEqual(updatedDigitalTwin.components.testInterfaceInstance.properties.writableProperty.desired.value, desiredPropertyValue);
+        assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.desired.value, desiredPropertyValue);
         debug('service client: twin successfully updated with desired property value: ' + desiredPropertyValue);
       })
       .catch((err) => {
@@ -259,10 +259,10 @@ describe('Digital Twin Properties', function () {
                 closeClients(deviceClient, err);
               } else {
                 debug('got digital twin');
-                assert.strictEqual(updatedDigitalTwin.components.testInterfaceInstance.properties.writableProperty.reported.value, desiredPropertyValue);
-                assert.strictEqual(updatedDigitalTwin.components.testInterfaceInstance.properties.writableProperty.reported.desiredState.code, 200);
-                assert.strictEqual(updatedDigitalTwin.components.testInterfaceInstance.properties.writableProperty.reported.desiredState.description, 'test');
-                assert.strictEqual(updatedDigitalTwin.components.testInterfaceInstance.properties.writableProperty.reported.desiredState.version, version);
+                assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.reported.value, desiredPropertyValue);
+                assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.reported.desiredState.code, 200);
+                assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.reported.desiredState.description, 'test');
+                assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.reported.desiredState.version, version);
                 debug('all digital twin properties match: test successful');
                 closeClients(deviceClient);
               }
@@ -287,7 +287,7 @@ describe('Digital Twin Properties', function () {
         debug('updating property directly');
         return digitalTwinServiceClient.updateDigitalTwinProperty(createdDevice.deviceId, 'testInterfaceInstance', 'writableProperty', desiredPropertyValue);
       }).then((updatedDigitalTwin) => {
-        assert.strictEqual(updatedDigitalTwin.components.testInterfaceInstance.properties.writableProperty.desired.value, desiredPropertyValue);
+        assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.desired.value, desiredPropertyValue);
         debug('service client: twin successfully updated with desired property value: ' + desiredPropertyValue);
       })
       .catch((err) => {
