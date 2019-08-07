@@ -4,6 +4,7 @@
 'use strict';
 
 var assert = require('chai').assert;
+var sinon = require('sinon');
 var endpoint = require('azure-iot-common').endpoint;
 var FileUploadApi = require('../../lib/blob_upload/file_upload_api.js').FileUploadApi;
 var packageJson = require('../../package.json');
@@ -49,6 +50,17 @@ describe('FileUploadApi', function() {
       assert.equal(callCount, 1);
       fileUpload.notifyUploadComplete('correlationId', { isSuccess: true, statusCode: 200, statusDescription: 'test' }, function() {});
       assert.equal(callCount, 2);
+    });
+  });
+
+  describe('#setOptions', function () {
+    /*Tests_SRS_NODE_FILE_UPLOAD_ENDPOINT_99_020: [`setOptions` shall set provided transport options.`]*/
+    it('sets provided transport options', function () {
+      var fakeOptions = '__FAKE_OPTIONS__';
+      var fakeTransport = { setOptions: sinon.spy() };
+      var fileUpload = new FileUploadApi(fakeAuthenticationProvider, fakeTransport);
+      fileUpload.setOptions(fakeOptions);
+      assert.isTrue(fakeTransport.setOptions.calledWith(fakeOptions));
     });
   });
 
