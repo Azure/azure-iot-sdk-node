@@ -13,7 +13,7 @@ export type DigitalTwin = Models.DigitalTwinInterfaces & Models.DigitalTwinGetIn
 export type DigitalTwinResponse = Models.DigitalTwinGetInterfacesResponse | undefined;
 
 export type Model = Models.DigitalTwinGetDigitalTwinModelResponse;
-export type ModelResponse = Model & {_response: msRest.HttpResponse};
+export type ModelResponse = Model & {_response: msRest.HttpOperationResponse};
 
 export interface CommandResult {
   result?: any;
@@ -22,10 +22,10 @@ export interface CommandResult {
 }
 
 export interface CommandResultResponse extends CommandResult {
-  _response?: msRest.HttpResponse;
+  _response?: msRest.HttpOperationResponse;
 }
 
-export function createResultWithHttpResponse<TArg, TResult>(result: TArg, response: msRest.HttpResponse): TResult {
+export function createResultWithHttpOperationResponse<TArg, TResult>(result: TArg, response: msRest.HttpOperationResponse): TResult {
   (result as any)._response = response;
   return <any>result;
 }
@@ -49,9 +49,9 @@ export class DigitalTwinServiceClient {
   /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_004: [The `getDigitalTwin` method shall return error if the method of the protocol layer failed.]*/
   /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_020: [The `getDigitalTwin` method shall return a promise if there is no callback passed.]*/
   getDigitalTwin(digitalTwinId: string): Promise<DigitalTwinResponse>;
-  getDigitalTwin(digitalTwinId: string, callback: TripleValueCallback<DigitalTwin, msRest.HttpResponse>): void;
-  getDigitalTwin(digitalTwinId: string, callback?: TripleValueCallback<DigitalTwin, msRest.HttpResponse>): void | Promise<DigitalTwinResponse> {
-    return tripleValueCallbackToPromise<DigitalTwin, msRest.HttpResponse, DigitalTwinResponse>((_callback) => {
+  getDigitalTwin(digitalTwinId: string, callback: TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>): void;
+  getDigitalTwin(digitalTwinId: string, callback?: TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>): void | Promise<DigitalTwinResponse> {
+    return tripleValueCallbackToPromise<DigitalTwin, msRest.HttpOperationResponse, DigitalTwinResponse>((_callback) => {
       this._pl.digitalTwin.getInterfaces(digitalTwinId, (err, result, request, response) => {
         let digitalTwin: DigitalTwin = {
           interfaces: result ? result.interfaces : undefined,
@@ -60,7 +60,7 @@ export class DigitalTwinServiceClient {
         };
         _callback(err as Error, digitalTwin, response);
       });
-    }, (digitalTwin, response) => createResultWithHttpResponse<DigitalTwin, DigitalTwinResponse>(digitalTwin, response), callback as TripleValueCallback<DigitalTwin, msRest.HttpResponse>);
+    }, (digitalTwin, response) => createResultWithHttpOperationResponse<DigitalTwin, DigitalTwinResponse>(digitalTwin, response), callback as TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>);
   }
 
   /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_005: [The `getDigitalTwinInterfaceInstance` method shall call the `getInterface` method of the protocol layer with the given arguments.]*/
@@ -68,9 +68,9 @@ export class DigitalTwinServiceClient {
   /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_007: [The `getDigitalTwinInterfaceInstance` method shall return error if the method of the protocol layer failed.]*/
   /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_021: [The `getDigitalTwinInterfaceInstance` method shall return a promise if there is no callback passed.]*/
   getDigitalTwinInterfaceInstance(digitalTwinId: string, interfaceInstanceName: string): Promise<DigitalTwinResponse>;
-  getDigitalTwinInterfaceInstance(digitalTwinId: string, interfaceInstanceName: string, callback: TripleValueCallback<DigitalTwin, msRest.HttpResponse>): void;
-  getDigitalTwinInterfaceInstance(digitalTwinId: string, interfaceInstanceName: string, callback?: TripleValueCallback<DigitalTwin, msRest.HttpResponse>): void | Promise<DigitalTwinResponse> {
-    return tripleValueCallbackToPromise<DigitalTwin, msRest.HttpResponse, DigitalTwinResponse>((_callback) => {
+  getDigitalTwinInterfaceInstance(digitalTwinId: string, interfaceInstanceName: string, callback: TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>): void;
+  getDigitalTwinInterfaceInstance(digitalTwinId: string, interfaceInstanceName: string, callback?: TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>): void | Promise<DigitalTwinResponse> {
+    return tripleValueCallbackToPromise<DigitalTwin, msRest.HttpOperationResponse, DigitalTwinResponse>((_callback) => {
       this._pl.digitalTwin.getInterface(digitalTwinId, interfaceInstanceName, (err, result, request, response) => {
         let digitalTwin: DigitalTwin = {
           interfaces: result ? result.interfaces : undefined,
@@ -79,7 +79,7 @@ export class DigitalTwinServiceClient {
         };
         _callback(err as Error, digitalTwin, response);
       });
-    }, (digitalTwin, response) => createResultWithHttpResponse<DigitalTwin, DigitalTwinResponse>(digitalTwin, response), callback as TripleValueCallback<DigitalTwin, msRest.HttpResponse>);
+    }, (digitalTwin, response) => createResultWithHttpOperationResponse<DigitalTwin, DigitalTwinResponse>(digitalTwin, response), callback as TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>);
   }
 
   /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_008: [The `getDigitalTwinModel` method shall call the `getDigitalTwinModel` method of the protocol layer with the given argument.]*/
@@ -87,14 +87,14 @@ export class DigitalTwinServiceClient {
   /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_010: [The `getDigitalTwinModel` method shall return error if the method of the protocol layer failed.]*/
   /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_022: [The `getDigitalTwinModel` method shall return a promise if there is no callback passed.]*/
   getModel(modelId: string): Promise<ModelResponse>;
-  getModel(modelId: string, callback: TripleValueCallback<Model, msRest.HttpResponse>): void;
-  getModel(modelId: string, callback?: TripleValueCallback<Model, msRest.HttpResponse>): void | Promise<ModelResponse> {
-    return tripleValueCallbackToPromise<Model, msRest.HttpResponse, ModelResponse>((_callback) => {
+  getModel(modelId: string, callback: TripleValueCallback<Model, msRest.HttpOperationResponse>): void;
+  getModel(modelId: string, callback?: TripleValueCallback<Model, msRest.HttpOperationResponse>): void | Promise<ModelResponse> {
+    return tripleValueCallbackToPromise<Model, msRest.HttpOperationResponse, ModelResponse>((_callback) => {
       this._pl.digitalTwin.getDigitalTwinModel(modelId, (err, result, request, response) => {
         let model: Model = result;
         _callback(err as Error, model, response);
       });
-    }, (model, response) => createResultWithHttpResponse<Model, ModelResponse>(model, response), callback as TripleValueCallback<Model, msRest.HttpResponse>);
+    }, (model, response) => createResultWithHttpOperationResponse<Model, ModelResponse>(model, response), callback as TripleValueCallback<Model, msRest.HttpOperationResponse>);
   }
 
   /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_011: [The `updateDigitalTwin` method shall call the `updateInterfaces` method of the protocol layer with the given arguments.]*/
@@ -122,13 +122,13 @@ export class DigitalTwinServiceClient {
   The patch should contain difference to a previously reported twin only (e.g. patch).
   **]*/
   updateDigitalTwin(digitalTwinId: string, patch: Models.DigitalTwinInterfacesPatch, eTag?: string): Promise<DigitalTwinResponse>;
-  updateDigitalTwin(digitalTwinId: string, patch: Models.DigitalTwinInterfacesPatch, eTagOrCallback?: string | TripleValueCallback<DigitalTwin, msRest.HttpResponse>, callback?: TripleValueCallback<DigitalTwin, msRest.HttpResponse>): void;
-  updateDigitalTwin(digitalTwinId: string, patch: Models.DigitalTwinInterfacesPatch, eTagOrCallback?: string | TripleValueCallback<DigitalTwin, msRest.HttpResponse>, callback?: TripleValueCallback<DigitalTwin, msRest.HttpResponse>): void | Promise<DigitalTwinResponse> {
+  updateDigitalTwin(digitalTwinId: string, patch: Models.DigitalTwinInterfacesPatch, eTagOrCallback?: string | TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>, callback?: TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>): void;
+  updateDigitalTwin(digitalTwinId: string, patch: Models.DigitalTwinInterfacesPatch, eTagOrCallback?: string | TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>, callback?: TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>): void | Promise<DigitalTwinResponse> {
     const actualCallback = typeof eTagOrCallback === 'function' ? eTagOrCallback : callback;
     const actualEtag = typeof eTagOrCallback !== 'function' ? eTagOrCallback : undefined;
     const options = actualEtag ? {ifMatch: actualEtag} : undefined;
 
-    return tripleValueCallbackToPromise<DigitalTwin, msRest.HttpResponse, DigitalTwinResponse>((_callback) => {
+    return tripleValueCallbackToPromise<DigitalTwin, msRest.HttpOperationResponse, DigitalTwinResponse>((_callback) => {
       this._pl.digitalTwin.updateInterfaces(digitalTwinId, patch, options as Models.DigitalTwinUpdateInterfacesOptionalParams, (err, result, request, response) => {
         let digitalTwin: DigitalTwin = {
           interfaces: result ? result.interfaces : undefined,
@@ -137,7 +137,7 @@ export class DigitalTwinServiceClient {
         };
         _callback(err as Error, digitalTwin, response);
       });
-    }, (digitalTwin, response) => createResultWithHttpResponse<DigitalTwin, DigitalTwinResponse>(digitalTwin, response), actualCallback as TripleValueCallback<DigitalTwin, msRest.HttpResponse>);
+    }, (digitalTwin, response) => createResultWithHttpOperationResponse<DigitalTwin, DigitalTwinResponse>(digitalTwin, response), actualCallback as TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>);
   }
 
   /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_014: [The `updateDigitalTwinProperty` method shall call the `updateInterfaces` method of the protocol layer.]*/
@@ -150,8 +150,8 @@ export class DigitalTwinServiceClient {
   const propertyName - the property what need to be updated or created.
   const property value - the reported value of the property.]*/
   updateDigitalTwinProperty(digitalTwinId: string, interfaceInstanceName: string, propertyName: string, propertyValue: any, eTag?: string): Promise<DigitalTwinResponse>;
-  updateDigitalTwinProperty(digitalTwinId: string, interfaceInstanceName: string, propertyName: string, propertyValue: any, eTagOrCallback?: string | TripleValueCallback<DigitalTwin, msRest.HttpResponse>, callback?: TripleValueCallback<DigitalTwin, msRest.HttpResponse>): void;
-  updateDigitalTwinProperty(digitalTwinId: string, interfaceInstanceName: string, propertyName: string, propertyValue: any, eTagOrCallback?: string | TripleValueCallback<DigitalTwin, msRest.HttpResponse>, callback?: TripleValueCallback<DigitalTwin, msRest.HttpResponse>): void | Promise<DigitalTwinResponse> {
+  updateDigitalTwinProperty(digitalTwinId: string, interfaceInstanceName: string, propertyName: string, propertyValue: any, eTagOrCallback?: string | TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>, callback?: TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>): void;
+  updateDigitalTwinProperty(digitalTwinId: string, interfaceInstanceName: string, propertyName: string, propertyValue: any, eTagOrCallback?: string | TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>, callback?: TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>): void | Promise<DigitalTwinResponse> {
     let patch: Models.DigitalTwinInterfacesPatch = {
       interfaces: {
         [interfaceInstanceName]: {
@@ -177,9 +177,9 @@ export class DigitalTwinServiceClient {
   /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_019: [The `invokeCommand` method shall return error if the method of the protocol layer failed.]*/
   /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_025: [The `invokeCommand` method shall return a promise if there is no callback passed.]*/
   invokeCommand(digitalTwinId: string, interfaceInstanceName: string, commandName: string, argument: string): Promise<CommandResultResponse>;
-  invokeCommand(digitalTwinId: string, interfaceInstanceName: string, commandName: string, argument: string, callback: TripleValueCallback<CommandResult, msRest.HttpResponse>): void;
-  invokeCommand(digitalTwinId: string, interfaceInstanceName: string, commandName: string, argument: string, callback?: TripleValueCallback<CommandResult, msRest.HttpResponse>): void | Promise<CommandResultResponse> {
-    return tripleValueCallbackToPromise<CommandResult, msRest.HttpResponse, CommandResultResponse>((_callback) => {
+  invokeCommand(digitalTwinId: string, interfaceInstanceName: string, commandName: string, argument: string, callback: TripleValueCallback<CommandResult, msRest.HttpOperationResponse>): void;
+  invokeCommand(digitalTwinId: string, interfaceInstanceName: string, commandName: string, argument: string, callback?: TripleValueCallback<CommandResult, msRest.HttpOperationResponse>): void | Promise<CommandResultResponse> {
+    return tripleValueCallbackToPromise<CommandResult, msRest.HttpOperationResponse, CommandResultResponse>((_callback) => {
       this._pl.digitalTwin.invokeInterfaceCommand(digitalTwinId, interfaceInstanceName, commandName, argument, (err, result, request, response) => {
           let commandResult: CommandResult;
           if ((!response) || (!request)) {
@@ -193,6 +193,6 @@ export class DigitalTwinServiceClient {
           }
         _callback(err as Error, commandResult, result);
       });
-    }, (commandResult, response) => createResultWithHttpResponse<CommandResult, CommandResultResponse>(commandResult, response), callback as TripleValueCallback<CommandResult, msRest.HttpResponse>);
+    }, (commandResult, response) => createResultWithHttpOperationResponse<CommandResult, CommandResultResponse>(commandResult, response), callback as TripleValueCallback<CommandResult, msRest.HttpOperationResponse>);
   }
 }
