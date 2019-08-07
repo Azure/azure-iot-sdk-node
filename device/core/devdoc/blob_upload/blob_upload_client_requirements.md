@@ -14,6 +14,10 @@ Initializes a new instance of the `BlobUploadClient` class.
 
 **SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_003: [** If specified, `BlobUploadClient` shall use the `blobUploader` passed as a parameter instead of the default one. **]**
 
+## setOptions(options)
+
+**SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_99_011: [** `setOptions` shall set `fileUploadApi` options. **]**
+
 ## uploadToBlob(blobName, stream, streamLength, done)
 Uploads the specified stream to the specified blob.
 

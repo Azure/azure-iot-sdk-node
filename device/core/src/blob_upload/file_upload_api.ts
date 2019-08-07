@@ -37,6 +37,13 @@ export class FileUploadApi implements FileUploadInterface {
         this.http = httpTransport ? httpTransport : new DefaultHttpTransport();
     }
 
+    setOptions(options: any): void {
+        if (this.http) {
+            /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_99_020: [`setOptions` shall set provided transport options.`]*/
+            this.http.setOptions(options);
+        }
+    }
+
     getBlobSharedAccessSignature(blobName: string, done: Callback<UploadParams>): void;
     getBlobSharedAccessSignature(blobName: string): Promise<UploadParams>;
     getBlobSharedAccessSignature(blobName: string, done?: Callback<UploadParams>): Promise<UploadParams> | void {

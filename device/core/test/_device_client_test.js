@@ -333,6 +333,17 @@ describe('Device Client', function () {
         done();
       });
     });
+
+    it('calls setOptions of blob uploader with supplied options', function (done) {
+      /*Tests_SRS_NODE_DEVICE_CLIENT_99_103: [The `setOptions` method shall set `blobUploadClient` options.]*/
+      var fakeOptions = '__FAKE_OPTIONS__';
+      var fakeBlobUploader = { setOptions: sinon.fake() };
+      var client = new Client(new FakeTransport(), null, fakeBlobUploader);
+      client.setOptions(fakeOptions, function () {
+        assert.isTrue(fakeBlobUploader.setOptions.calledWith(fakeOptions));
+        done();
+      });
+    });
   });
 
   describe('#onDeviceMethod', function () {

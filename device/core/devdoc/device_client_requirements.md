@@ -47,6 +47,10 @@ class Client extends InternalClient {
 
 **SRS_NODE_DEVICE_CLIENT_16_091: [** The `fromAuthenticationProvider` method shall return a `Client` object configured with a new instance of a transport created using the `transportCtor` argument. **]**
 
+### setOptions(options, done)
+
+**SRS_NODE_DEVICE_CLIENT_99_103: [** The `setOptions` method shall set `blobUploadClient` options. **]**
+
 ### uploadToBlob(blobName, stream, done)
 
 **SRS_NODE_DEVICE_CLIENT_16_037: [** The `uploadToBlob` method shall throw a `ReferenceError` if `blobName` is falsy. **]**

@@ -32,7 +32,7 @@
     "test-min": "nyc mocha --reporter dot --require source-map-support/register test/_*_test.js",
     "test": "nyc mocha --reporter spec --require source-map-support/register test/_*_test.js",
     "ci": "npm -s run lint && npm -s run build && npm -s run test-min && npm -s run check-cover",
-    "check-cover": "nyc check-coverage --statements 97 --branches 89 --functions 98 --lines 97"
+    "check-cover": "nyc check-coverage --statements 97 --branches 91 --functions 98 --lines 97"
   },
   "engines": {
     "node": ">= 0.10"
