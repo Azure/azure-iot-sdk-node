@@ -53,6 +53,7 @@ phases:
       testResultsFiles: 'e2etests/test-results.*.xml'
       mergeTestResults: true
       testRunTitle: 'E2E Tests - Linux'
+    condition: succeededOrFailed()
 
 - phase: Phase_1
   displayName: Windows Build - Node 8
@@ -105,6 +106,7 @@ phases:
       testResultsFiles: 'e2etests/test-results.*.xml'
       mergeTestResults: true
       testRunTitle: 'E2E Tests - Windows'
+    condition: succeededOrFailed()
 
   - task: DownloadBuildArtifacts@0
     condition: coalesce(variables.release, False)
