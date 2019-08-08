@@ -7,8 +7,6 @@ phases:
 - phase: Phase_2
   displayName: Ubuntu 1604 - Node 6
   condition: succeededOrFailed()
-  variables:
-    publish: coalesce(variables.release, False)
   queue:
     name: Hosted Ubuntu 1604
 
@@ -115,7 +113,7 @@ phases:
       testRunTitle: 'E2E Tests - Windows'
 
   - task: DownloadBuildArtifacts@0
-    condition: eq(variables.publish, True)
+    condition: coalesce(variables.release, False)
     inputs:
       buildType: 'specific'
       project: 'f9b79625-2860-4d92-a4ee-57b03fabfd10' # azure-iot-sdks
@@ -130,13 +128,13 @@ phases:
       $outputFolder = $env:output
       Build-Artifacts -Sources $env:sources -Output $outputFolder
     displayName: 'npm pack'
-    condition: eq(variables.publish, True)
+    condition: coalesce(variables.release, False)
     env:
       sources: $(Build.SourcesDirectory)
       output: $(Build.ArtifactStagingDirectory)\_out
 
   - task: PublishBuildArtifacts@1
-    condition: eq(variables.publish, True)
+    condition: coalesce(variables.release, False)
     inputs:
       PathtoPublish: $(Build.ArtifactStagingDirectory)\_out
       ArtifactName: drop
@@ -144,7 +142,7 @@ phases:
 
   - task: AzureFileCopy@2
     displayName: 'Copy Release Artifacts to Partner Release Pipeline'
-    condition: eq(variables.publish, True)
+    condition: coalesce(variables.release, False)
     inputs:
       SourcePath: $(Build.ArtifactStagingDirectory)\_out
       azureSubscription: azuresdkpartnerdrops
