@@ -8,7 +8,7 @@ phases:
   displayName: Ubuntu 1604 - Node 6
   condition: succeededOrFailed()
   variables:
-    publish: ${{ ne(Null, variables[release]) }}
+    publish: ${{ coalesce(variables.release, False) }}
   queue:
     name: Hosted Ubuntu 1604
 
