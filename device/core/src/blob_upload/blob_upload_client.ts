@@ -27,6 +27,7 @@ export interface UploadParams {
  * @private
  */
 export interface FileUpload {
+  setOptions(options: any): void;
   getBlobSharedAccessSignature(blobName: string, done: Callback<UploadParams>): void;
   getBlobSharedAccessSignature(blobName: string): Promise<UploadParams>;
   notifyUploadComplete(correlationId: string, uploadResult: BlobUploadResult, done: (err?: Error) => void): void;
@@ -45,6 +46,7 @@ export interface BlobUploader {
  * @private
  */
 export interface BlobUpload {
+  setOptions(options: any): void;
   uploadToBlob(blobName: string, stream: Stream, streamLength: number, done: (err?: Error) => void): void;
   uploadToBlob(blobName: string, stream: Stream, streamLength: number): Promise<void>;
 }
@@ -67,6 +69,13 @@ export class BlobUploadClient implements BlobUpload {
 
     /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_003: [If specified, `BlobUploadClient` shall use the `blobUploader` passed as a parameter instead of the default one.]*/
     this._blobUploader = blobUploader ? blobUploader : new DefaultBlobUploader();
+  }
+
+  setOptions(options: any): void {
+    if (this._fileUploadApi) {
+      /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_99_011: [`setOptions` shall set `fileUploadApi` options.]*/
+      this._fileUploadApi.setOptions(options);
+    }
   }
 
   uploadToBlob(blobName: string, stream: Stream, streamLength: number, done: ErrorCallback): void;
