@@ -27,13 +27,11 @@ phases:
 
   - script: 'lerna run ci'
     displayName: 'Unit & Integration Tests'
-    condition: eq(variables.test, True)
     env:
       IOTHUB_CONNECTION_STRING: $(LINUX-IOTHUB-CONNECTION-STRING)
 
   - script: 'lerna run e2e'
     displayName: 'E2E Tests'
-    condition: eq(variables.test, True)
     env:
       IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
       IOTHUB_CA_ROOT_CERT_KEY: $(IOTHUB-CA-ROOT-CERT-KEY)
@@ -51,7 +49,6 @@ phases:
 
   - task: PublishTestResults@2
     displayName: 'Publish Test Results | Mocha'
-    condition: eq(variables.test, True)
     inputs:
       testResultsFiles: 'e2etests/test-results.*.xml'
       mergeTestResults: true
@@ -82,13 +79,11 @@ phases:
 
   - script: 'call lerna run ci'
     displayName: 'Unit & Integration Tests'
-    condition: eq(variables.test, True)
     env:
       IOTHUB_CONNECTION_STRING: $(WINDOWS-IOTHUB-CONNECTION-STRING)
 
   - script: 'lerna run e2e'
     displayName: 'E2E Tests'
-    condition: eq(variables.test, True)
     env:
       IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
       IOTHUB_CA_ROOT_CERT_KEY: $(IOTHUB-CA-ROOT-CERT-KEY)
@@ -106,7 +101,6 @@ phases:
 
   - task: PublishTestResults@2
     displayName: 'Publish Test Results | Mocha'
-    condition: eq(variables.test, True)
     inputs:
       testResultsFiles: 'e2etests/test-results.*.xml'
       mergeTestResults: true
