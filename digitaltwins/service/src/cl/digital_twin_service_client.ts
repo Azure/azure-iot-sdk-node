@@ -60,7 +60,8 @@ export interface CommandResultResponse extends CommandResult {
  * Helper function to create extended result type
  */
 function createResultWithHttpOperationResponse<TArg, TResult>(result: TArg, response: msRest.HttpOperationResponse): TResult {
-  (result as any)._response = response;
+  if (result)
+    (result as any)._response = response;
   return <any>result;
 }
 
