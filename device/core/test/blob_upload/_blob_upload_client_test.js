@@ -126,7 +126,7 @@ describe('BlobUploadClient', function() {
       client.uploadToBlob(fakeBlobName, fakeStream, fakeStreamLength, function() {});
     });
 
-    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_008: [`uploadToBlob` shall notify the result of a blob upload to the IoT Hub service using the file upload API endpoint.]*/
+    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_006: [`uploadToBlob` shall notify the result of a blob upload to the IoT Hub service using the file upload API endpoint.]*/
     it('sends the file uploaded notification once done with the upload', function() {
       var fakeStream = new stream.Readable();
       var fakeFileUpload = new FakeFileUploadApi();
@@ -154,8 +154,8 @@ describe('BlobUploadClient', function() {
       assert(fakeFileUpload.notifyUploadComplete.calledWith(fakeBlobInfo.correlationId));
     });
 
-    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_009: [`uploadToBlob` shall call the `done` callback with a `BlobUploadNotificationError` if notifying the IoT Hub instance of the transfer outcome fails.]*/
-    it('sends the file uploaded notification once done with the upload', function(done) {
+    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_005: [`uploadToBlob` shall call the `done` callback with a `BlobUploadNotificationError` if notifying the IoT Hub instance of the transfer outcome fails.]*/
+    it('calls the done callback with BlobUploadNotificationError if notifying the IoT Hub instance of the transfer outcome fails', function(done) {
       var fakeStream = new stream.Readable();
       var fakeFileUpload = new FakeFileUploadApi();
       var fakeBlobUploader = new FakeBlobUploader();
@@ -188,7 +188,145 @@ describe('BlobUploadClient', function() {
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_010: [`uploadToBlob` shall call the `done` callback with no arguments if IoT Hub was successfully notified of the blob upload outcome, regardless of the success state of the transfer itself.]*/
+        /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_005: [`uploadToBlob` shall call the `done` callback with a `BlobUploadNotificationError` if notifying the IoT Hub instance of the transfer outcome fails.]*/
+    it('calls the done callback with BlobUploadNotificationError if notifying the IoT Hub instance of the transfer outcome fails but the upload succeeds', function(done) {
+      var fakeStream = new stream.Readable();
+      var fakeFileUpload = new FakeFileUploadApi();
+      var fakeBlobUploaderSuccess = new FakeBlobUploader();
+      var fakeBlobUploaderFailure = new FakeBlobUploader();
+      var fakeBlobName = 'blobName';
+      var fakeStreamLength = 42;
+      var fakeBlobInfo = {
+        correlationId: 'correlationId',
+        blobName: fakeBlobName,
+        containerName: 'container',
+        hostName: 'host.name',
+        sasToken: 'sasToken'
+      };
+
+      fakeFileUpload.getBlobSharedAccessSignature = function(blobName, callback) {
+        callback(null, fakeBlobInfo);
+      };
+
+      fakeFileUpload.notifyUploadComplete = function(correlationId, result, callback) {
+        callback(new Error('could not notify hub'));
+      };
+
+      fakeBlobUploaderSuccess.uploadToBlob = function(blobInfo, stream, streamLength, callback) {
+        callback(null, 'deviceId/' + fakeBlobName,  { statusCode: 200, body: 'Success' });
+      };
+
+      var clientuploadsuccess = new BlobUploadClient(fakeConfig, fakeFileUpload, fakeBlobUploaderSuccess);
+      clientuploadsuccess.uploadToBlob(fakeBlobName, fakeStream, fakeStreamLength, function(err) {
+        assert.strictEqual(err.name, 'BlobUploadNotificationError');
+        done();
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_007: [`uploadToBlob` shall call the `done` callback with a `BlobUploadNotificationError` if notifying the IoT Hub instance of the transfer outcome fails.]*/
+    it('calls the done callback with BlobUploadNotificationError if notifying the IoT Hub instance of the transfer outcome fails and the upload fails', function(done) {
+      var fakeStream = new stream.Readable();
+      var fakeFileUpload = new FakeFileUploadApi();
+      var fakeBlobUploaderFailure = new FakeBlobUploader();
+      var fakeBlobName = 'blobName';
+      var fakeStreamLength = 42;
+      var fakeBlobInfo = {
+        correlationId: 'correlationId',
+        blobName: fakeBlobName,
+        containerName: 'container',
+        hostName: 'host.name',
+        sasToken: 'sasToken'
+      };
+
+      fakeFileUpload.getBlobSharedAccessSignature = function(blobName, callback) {
+        callback(null, fakeBlobInfo);
+      };
+
+      fakeFileUpload.notifyUploadComplete = function(correlationId, result, callback) {
+        callback(new Error('could not notify hub'));
+      };
+
+      fakeBlobUploaderFailure.uploadToBlob = function(blobInfo, stream, streamLength, callback) {
+        callback(BlobUploadNotificationError, 'deviceId/' + fakeBlobName,  { statusCode: 400, body: 'Random Error Code that is not 2xx' });
+      };
+
+      var client = new BlobUploadClient(fakeConfig, fakeFileUpload, fakeBlobUploaderFailure);
+      client.uploadToBlob(fakeBlobName, fakeStream, fakeStreamLength, function(err) {
+        assert.strictEqual(err.name, 'BlobUploadNotificationError');
+        done();
+      });
+    });
+        
+
+    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_005: [`uploadToBlob` shall call the `done` callback with a `BlobUploadNotificationError` if the data transfer fails.]*/
+    it('calls the done callback with a BlobUploadNotificationError if the data transfer fails but the IoT Hub notification succeeds', function(done) {
+      var fakeStream = new stream.Readable();
+      var fakeFileUpload = new FakeFileUploadApi();
+      var fakeBlobUploader = new FakeBlobUploader();
+      var fakeBlobName = 'blobName';
+      var fakeStreamLength = 42;
+      var fakeBlobInfo = {
+        correlationId: 'correlationId',
+        blobName: fakeBlobName,
+        containerName: 'container',
+        hostName: 'host.name',
+        sasToken: 'sasToken'
+      };
+
+      fakeFileUpload.getBlobSharedAccessSignature = function(blobName, callback) {
+        callback(null, fakeBlobInfo);
+      };
+
+      fakeFileUpload.notifyUploadComplete = function(correlationId, result, callback) {
+        callback(null);
+      };
+
+      fakeBlobUploader.uploadToBlob = function(blobInfo, stream, streamLength, callback) {
+        callback(BlobUploadNotificationError, 'deviceId/' + fakeBlobName,  { statusCode: 400, body: 'Random Error Code that is not 2xx' });
+      };
+
+      var client = new BlobUploadClient(fakeConfig, fakeFileUpload, fakeBlobUploader);
+      client.uploadToBlob(fakeBlobName, fakeStream, fakeStreamLength, function(err) {
+        assert.strictEqual(err.name, 'BlobUploadNotificationError');
+        done();
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_005: [`uploadToBlob` shall call the `done` callback with a `BlobUploadNotificationError` if the data transfer fails.]*/
+    it('calls the done callback with a BlobUploadNotificationError if the data transfer fails and the IoT Hub notification fails', function(done) {
+      var fakeStream = new stream.Readable();
+      var fakeFileUpload = new FakeFileUploadApi();
+      var fakeBlobUploader = new FakeBlobUploader();
+      var fakeBlobName = 'blobName';
+      var fakeStreamLength = 42;
+      var fakeBlobInfo = {
+        correlationId: 'correlationId',
+        blobName: fakeBlobName,
+        containerName: 'container',
+        hostName: 'host.name',
+        sasToken: 'sasToken'
+      };
+
+      fakeFileUpload.getBlobSharedAccessSignature = function(blobName, callback) {
+        callback(null, fakeBlobInfo);
+      };
+
+      fakeFileUpload.notifyUploadComplete = function(correlationId, result, callback) {
+        callback(Error);
+      };
+
+      fakeBlobUploader.uploadToBlob = function(blobInfo, stream, streamLength, callback) {
+        callback(BlobUploadNotificationError, 'deviceId/' + fakeBlobName,  { statusCode: 400, body: 'Random Error Code that is not 2xx' });
+      };
+
+      var client = new BlobUploadClient(fakeConfig, fakeFileUpload, fakeBlobUploader);
+      client.uploadToBlob(fakeBlobName, fakeStream, fakeStreamLength, function(err) {
+        assert.strictEqual(err.name, 'BlobUploadNotificationError');
+        done();
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_004: [`uploadToBlob` shall call the `_callback` callback with no arguments if the blob upload succeeded, and IoT Hub was successfully notified of the blob upload outcome.]*/
     it('calls the done callback with no arguments if the upload as completed successfully and IoT Hub has been notified.', function(done) {
       var fakeStream = new stream.Readable();
       var fakeFileUpload = new FakeFileUploadApi();
