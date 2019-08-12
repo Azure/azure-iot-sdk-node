@@ -57,7 +57,11 @@ export class BlobUploadResult {
       const statusDescription = response ? response.body : err.message;
       uploadResult = new BlobUploadResult(false, statusCode, statusDescription);
     } else {
-      uploadResult = new BlobUploadResult(true, response.statusCode, response.body);
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          uploadResult = new BlobUploadResult(true, response.statusCode, response.body);
+        } else {
+          uploadResult = new BlobUploadResult(false, response.statusCode, response.body);
+        }
     }
 
     return uploadResult;
