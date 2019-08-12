@@ -27,8 +27,14 @@ Uploads the specified stream to the specified blob.
 
 **SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_006: [** `uploadToBlob` shall upload the stream to the specified blob using its BlobUploader instance. **]**
 
-**SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_008: [** `uploadToBlob` shall notify the result of a blob upload to the IoT Hub service using the file upload API endpoint. **]**
+**SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_001: [** `uploadToBlob` shall notify the result of a blob upload to the IoT Hub service using the file upload API endpoint, regardless of the data transfer callback's error status. **]**
 
-**SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_009: [** `uploadToBlob` shall call the `done` callback with a `BlobUploadNotificationError` if notifying the IoT Hub instance of the transfer outcome fails. **]**
+**SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_002: [** `uploadToBlob` shall call the `_callback` callback with a `BlobUploadNotificationError` if the blob upload failed. **]**
 
-**SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_010: [** `uploadToBlob` shall call the `done` callback with no arguments if IoT Hub was successfully notified of the blob upload outcome, regardless of the success state of the transfer itself. **]**
+**SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_003: [** `uploadToBlob` shall call the `_callback` callback with a `BlobUploadNotificationError` if notifying the IoT Hub instance of the transfer outcome fails. **]**
+
+**SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_004: [** `uploadToBlob` shall call the `_callback` callback with no arguments if the blob upload succeeded, and IoT Hub was successfully notified of the blob upload outcome. **]**
+
+**SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_005: [** `uploadToBlob` shall call the `done` callback with a `BlobUploadNotificationError` if notifying the IoT Hub instance of the transfer outcome fails. **]**
+
+**SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_006: [** `uploadToBlob` shall call the `done` callback with no arguments if IoT Hub was successfully notified of the blob upload outcome, regardless of the success state of the transfer itself. **]**
