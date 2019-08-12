@@ -17,8 +17,8 @@ export class EnvironmentalSensor extends BaseInterface {
   humid: Telemetry;
   state: Property;
   blink: Command;
-  turnOn: Command;
   turnOff: Command;
+  turnOn: Command;
   runDiagnostics: Command;
   name: Property;
   brightness: Property;

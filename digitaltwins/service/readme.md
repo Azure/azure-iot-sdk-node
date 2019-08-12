@@ -37,7 +37,7 @@ Note that for this sample to work, you will need to [setup your IoT hub][lnk-set
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 
 const deviceId = '<DEVICE_ID_GOES_HERE>';
-const iotHubConnecti = '<IOTHUB_CONNECTION_STRING_GOES_HERE>';
+const iotHubConnectionString = '<IOTHUB_CONNECTION_STRING_GOES_HERE>';
 
 // Create digital twin service client
 const credentials = new IoTHubTokenCredentials(iotHubConnectionString);
