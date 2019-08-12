@@ -97,7 +97,14 @@ export class DigitalTwinServiceClient {
     this._creds = creds;
     this._pl = new PLClient(this._creds, {
       baseUri: 'https://' + this._creds.getHubName(),
-      apiVersion: this._apiVersion
+      apiVersion: this._apiVersion,
+      deserializationContentTypes: { // application/ld+json isn't supported by autorest by default, which is why we need these options
+        json: [
+          'application/ld+json',
+          'application/json',
+          'text/json'
+        ]
+      }
     });
   }
 
