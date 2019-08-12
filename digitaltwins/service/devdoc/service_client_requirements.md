@@ -7,30 +7,44 @@ The `DigitalTwinServiceClient` class provides methods to interact with a device'
 ## Public interface
 
 ```typescript
+type DigitalTwin = Models.DigitalTwinInterfaces & Models.DigitalTwinGetInterfacesHeaders | undefined;
+type DigitalTwinResponse = Models.DigitalTwinGetInterfacesResponse | undefined;
+type Model = Models.DigitalTwinGetDigitalTwinModelResponse;
+type ModelResponse = Model & {_response: msRest.HttpOperationResponse};
+interface CommandResult {
+  result?: any;
+  statusCode?: number;
+  requestId?: string;
+}
+interface CommandResultResponse extends CommandResult {
+  _response?: msRest.HttpOperationResponse;
+}
+
 class DigitalTwinServiceClient
-  getDigitalTwin(digitalTwinId: string): Promise<Models.DigitalTwinGetInterfacesResponse>;
-  getDigitalTwin(digitalTwinId: string, callback: Callback<Models.DigitalTwinGetInterfacesResponse>): void;
-  getDigitalTwin(digitalTwinId: string, callback?: Callback<Models.DigitalTwinGetInterfacesResponse>): void | Promise<Models.DigitalTwinGetInterfacesResponse> {
 
-  getDigitalTwinInterfaceInstance(digitalTwinId: string, interfaceInstanceName: string): Promise<Models.DigitalTwinGetInterfaceResponse>;
-  getDigitalTwinInterfaceInstance(digitalTwinId: string, interfaceInstanceName: string, callback: Callback<Models.DigitalTwinGetInterfaceResponse>): void;
-  getDigitalTwinInterfaceInstance(digitalTwinId: string, interfaceInstanceName: string, callback?: Callback<Models.DigitalTwinGetInterfaceResponse>): void | Promise<Models.DigitalTwinGetInterfaceResponse> {
+  getDigitalTwin(digitalTwinId: string): Promise<DigitalTwinResponse>;
+  getDigitalTwin(digitalTwinId: string, callback: Callback<DigitalTwinResponse>): void;
+  getDigitalTwin(digitalTwinId: string, callback?: Callback<DigitalTwinResponse>): void | Promise<DigitalTwinResponse> {
 
-  getDigitalTwinModel(modelId: string): Promise<Models.DigitalTwinGetDigitalTwinModelResponse>;
-  getDigitalTwinModel(modelId: string, callback: Callback<Models.DigitalTwinGetDigitalTwinModelResponse>): void;
-  getDigitalTwinModel(modelId: string, callback?: Callback<Models.DigitalTwinGetDigitalTwinModelResponse>): void | Promise<Models.DigitalTwinGetDigitalTwinModelResponse> {
+  getDigitalTwinInterfaceInstance(digitalTwinId: string, interfaceInstanceName: string): Promise<DigitalTwinResponse>;
+  getDigitalTwinInterfaceInstance(digitalTwinId: string, interfaceInstanceName: string, callback: Callback<DigitalTwinResponse>): void;
+  getDigitalTwinInterfaceInstance(digitalTwinId: string, interfaceInstanceName: string, callback?: Callback<DigitalTwinResponse>): void | Promise<DigitalTwinResponse> {
 
-  updateDigitalTwin(digitalTwinId: string, patch: Models.DigitalTwinInterfacesPatch): Promise<Models.DigitalTwinUpdateInterfacesResponse>;
-  updateDigitalTwin(digitalTwinId: string, patch: Models.DigitalTwinInterfacesPatch, callback: Callback<Models.DigitalTwinUpdateInterfacesResponse>): void;
-  updateDigitalTwin(digitalTwinId: string, patch: Models.DigitalTwinInterfacesPatch, callback?: Callback<Models.DigitalTwinUpdateInterfacesResponse>): void | Promise<Models.DigitalTwinUpdateInterfacesResponse> {
+  getModel(modelId: string): Promise<ModelResponse>;
+  getModel(modelId: string, callback: Callback<ModelResponse>): void;
+  getModel(modelId: string, callback?: Callback<ModelResponse>): void | Promise<ModelResponse> {
 
-  updateDigitalTwinProperty(digitalTwinId: string, interfaceInstanceName: string, propertyName: string, propertyValue: string): Promise<Models.DigitalTwinUpdateInterfacesResponse>;
-  updateDigitalTwinProperty(digitalTwinId: string, interfaceInstanceName: string, propertyName: string, propertyValue: string, callback: Callback<Models.DigitalTwinUpdateInterfacesResponse>): void;
-  updateDigitalTwinProperty(digitalTwinId: string, interfaceInstanceName: string, propertyName: string, propertyValue: string, callback?: Callback<Models.DigitalTwinUpdateInterfacesResponse>): void | Promise<Models.DigitalTwinUpdateInterfacesResponse> {
+  updateDigitalTwin(digitalTwinId: string, patch: Models.DigitalTwinInterfacesPatch): Promise<DigitalTwinResponse>;
+  updateDigitalTwin(digitalTwinId: string, patch: Models.DigitalTwinInterfacesPatch, callback: Callback<DigitalTwinResponse>): void;
+  updateDigitalTwin(digitalTwinId: string, patch: Models.DigitalTwinInterfacesPatch, callback?: Callback<DigitalTwinResponse>): void | Promise<DigitalTwinResponse> {
 
-  invokeCommand(digitalTwinId: string, interfaceInstanceName: string, commandName: string, argument: string): Promise<Models.DigitalTwinInvokeInterfaceCommandResponse>;
-  invokeCommand(digitalTwinId: string, interfaceInstanceName: string, commandName: string, argument: string, callback: Callback<Models.DigitalTwinInvokeInterfaceCommandResponse>): void;
-  invokeCommand(digitalTwinId: string, interfaceInstanceName: string, commandName: string, argument: string, callback?: Callback<Models.DigitalTwinInvokeInterfaceCommandResponse>): void | Promise<Models.DigitalTwinInvokeInterfaceCommandResponse> {
+  updateDigitalTwinProperty(digitalTwinId: string, interfaceInstanceName: string, propertyName: string, propertyValue: string): Promise<DigitalTwinResponse>;
+  updateDigitalTwinProperty(digitalTwinId: string, interfaceInstanceName: string, propertyName: string, propertyValue: string, callback: Callback<DigitalTwinResponse>): void;
+  updateDigitalTwinProperty(digitalTwinId: string, interfaceInstanceName: string, propertyName: string, propertyValue: string, callback?: Callback<DigitalTwinResponse>): void | Promise<DigitalTwinResponse> {
+
+  invokeCommand(digitalTwinId: string, interfaceInstanceName: string, commandName: string, argument: string): Promise<CommandResultResponse>;
+  invokeCommand(digitalTwinId: string, interfaceInstanceName: string, commandName: string, argument: string, callback: Callback<CommandResultResponse>): void;
+  invokeCommand(digitalTwinId: string, interfaceInstanceName: string, commandName: string, argument: string, callback?: Callback<CommandResultResponse>): void | Promise<CommandResultResponse> {
 }
 ```
 
@@ -40,7 +54,7 @@ class DigitalTwinServiceClient
   const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
   const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceDescription.deviceId);
   const digitalTwinInterfaceInstance = await digitalTwinServiceClient.getDigitalTwinInterfaceInstance(deviceDescription.deviceId, interfaceInstanceName);
-  const digitalTwinModel = await digitalTwinServiceClient.getDigitalTwinModel(modelId);
+  const digitalTwinModel = await digitalTwinServiceClient.getModel(modelId);
   var updatedDigitalTwin = await digitalTwinServiceClient.updateDigitalTwin(deviceDescription.deviceId, patch, digitalTwin.eTag);
   var digitalTwinCommandResult = await digitalTwinServiceClient.invokeCommand(digitalTwin.Id, digitalTwinInterfaceInstanceName, digitalTwinCommandName, digitalTwinArgument);
 ```
@@ -71,15 +85,15 @@ class DigitalTwinServiceClient
 
 **SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_021: [** The `getDigitalTwinInterfaceInstance` method shall return a promise if there is no callback passed. **]**
 
-## getDigitalTwinModel
+## getModel
 
-**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_008: [** The `getDigitalTwinModel` method shall call the `getDigitalTwinModel` method of the protocol layer with the given argument. **]**
+**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_008: [** The `getModel` method shall call the `getDigitalTwinModel` method of the protocol layer with the given argument. **]**
 
-**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_009: [** The `getDigitalTwinModel` method shall call the callback with an error parameter if a callback is passed. **]**
+**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_009: [** The `getModel` method shall call the callback with an error parameter if a callback is passed. **]**
 
-**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_010: [** The `getDigitalTwinModel` method shall return error if the method of the protocol layer failed. **]**
+**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_010: [** The `getModel` method shall return error if the method of the protocol layer failed. **]**
 
-**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_022: [** The `getDigitalTwinModel` method shall return a promise if there is no callback passed. **]**
+**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_022: [** The `getModel` method shall return a promise if there is no callback passed. **]**
 
 ## updateDigitalTwin
 

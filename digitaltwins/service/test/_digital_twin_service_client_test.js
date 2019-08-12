@@ -135,9 +135,9 @@ describe('DigitalTwinServiceClient', function () {
     assert.isNotNull(returnedPromise);
   });
 
-  /* Test_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_008: [The `getDigitalTwinModel` method shall call the `getDigitalTwinModel` method of the protocol layer with the given argument.]*/
-  /* Test_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_009: [The `getDigitalTwinModel` method shall call the callback with an error parameter if a callback is passed..]*/
-  it('getDigitalTwinModel calls getDigitalTwinModel on the PL client', function (testCallback) {
+  /* Test_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_008: [The `getModel` method shall call the `getDigitalTwinModel` method of the protocol layer with the given argument.]*/
+  /* Test_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_009: [The `getModel` method shall call the callback with an error parameter if a callback is passed..]*/
+  it('getModel calls getDigitalTwinModel on the PL client', function (testCallback) {
     var testModelId = 'modelId';
     var testDigitalTwinModel = {
       body: 42,
@@ -152,8 +152,8 @@ describe('DigitalTwinServiceClient', function () {
     });
   });
 
-  /* Test_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_010: [The `getDigitalTwinModel` method shall return error if the method of the protocol layer failed.]*/
-  it('getDigitalTwinModel calls its callback with an error if the PL client fails', function (testCallback) {
+  /* Test_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_010: [The `getModel` method shall return error if the method of the protocol layer failed.]*/
+  it('getModel calls its callback with an error if the PL client fails', function (testCallback) {
     var testModelId = 'modelId';
     var testError = new Error('fake error');
     var testClient = new DigitalTwinServiceClient(testCredentials);
@@ -165,8 +165,8 @@ describe('DigitalTwinServiceClient', function () {
     });
   });
 
-  /* Test_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_022: [The `getDigitalTwinModel` method shall return a promise if there is no callback passed.]*/
-  it('getDigitalTwinModel shall return a promise if there is no callback passed', async () => {
+  /* Test_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_022: [The `getModel` method shall return a promise if there is no callback passed.]*/
+  it('getModel shall return a promise if there is no callback passed', async () => {
     var testModelId = 'modelId';
     var testDigitalTwinModel = {
       interfaces: {
