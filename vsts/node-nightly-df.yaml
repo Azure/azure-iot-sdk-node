@@ -2,6 +2,7 @@ name: $(BuildID)_$(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Re
 resources:
 - repo: self
   clean: true
+
 phases:
 - phase: Phase_2
   displayName: Ubuntu 1604 - Node 10.15.x
@@ -9,6 +10,7 @@ phases:
   condition: succeededOrFailed()
   queue:
     name: Hosted Ubuntu 1604
+
   steps:
   - task: NodeTool@0
     displayName: 'Use Node 10.15.x'
@@ -19,10 +21,12 @@ phases:
        npm install --global lerna
        npm install
     displayName: 'Install Dependencies'
+
   - script: |
         lerna bootstrap --hoist
         lerna run build
     displayName: 'Bootstrap & Build'
+
   - script: 'lerna run ci'
     displayName: 'Unit & Integration Tests'
     env:
@@ -53,10 +57,8 @@ phases:
       testRunTitle: 'E2E Tests - Linux'
     condition: succeededOrFailed()
 
-
 - phase: Phase_1
   displayName: Windows Build - Node 8
-
   condition: succeededOrFailed()
   queue:
     name: Hosted
@@ -71,10 +73,12 @@ phases:
        npm install --global lerna
        npm install
     displayName: 'Install Dependencies'
+
   - script: |
        call lerna bootstrap --hoist
        call lerna run build
     displayName: 'Bootstrap & Build'
+
   - script: 'call lerna run ci'
     displayName: 'Unit & Integration Tests'
     env:
@@ -104,3 +108,41 @@ phases:
       mergeTestResults: true
       testRunTitle: 'E2E Tests - Windows'
     condition: succeededOrFailed()
+
+  - task: DownloadBuildArtifacts@0
+    condition: coalesce(variables.release, False)
+    inputs:
+      buildType: 'specific'
+      project: 'f9b79625-2860-4d92-a4ee-57b03fabfd10' # azure-iot-sdks
+      pipeline: '296' # iot-sdks-internals-scripts pipeline
+      buildVersionToDownload: 'latest'
+      downloadType: 'single'
+      downloadPath: '$(System.ArtifactsDirectory)/scripts'
+      artifactName: 'node'
+
+  - powershell: |
+      . $(System.ArtifactsDirectory)/scripts/node/release-node.ps1
+      $outputFolder = $env:output
+      Build-Artifacts -Sources $env:sources -Output $outputFolder
+    displayName: 'npm pack'
+    condition: coalesce(variables.release, False)
+    env:
+      sources: $(Build.SourcesDirectory)
+      output: $(Build.ArtifactStagingDirectory)\_out
+
+  - task: PublishBuildArtifacts@1
+    condition: coalesce(variables.release, False)
+    inputs:
+      PathtoPublish: $(Build.ArtifactStagingDirectory)\_out
+      ArtifactName: drop
+      publishLocation: 'Container'
+
+  - task: AzureFileCopy@2
+    displayName: 'Copy Release Artifacts to Partner Release Pipeline'
+    condition: coalesce(variables.release, False)
+    inputs:
+      SourcePath: $(Build.ArtifactStagingDirectory)\_out
+      azureSubscription: azuresdkpartnerdrops
+      Destination: AzureBlob
+      storage: azuresdkpartnerdrops
+      ContainerName: 'drops/azure-iot-sdk/node/'
