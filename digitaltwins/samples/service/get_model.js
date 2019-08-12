@@ -19,7 +19,9 @@ async function main() {
 
   // Get digital twin model
   const digitalTwinModel = await digitalTwinServiceClient.getModel(modelId);
-  console.log(JSON.stringify(digitalTwinModel, null, 2));
+  const idName = '@id';
+  console.log('ModelId: ' + JSON.stringify(digitalTwinModel[idName], null, 2));
+  console.log('Model: ' + JSON.stringify(digitalTwinModel.contents, null, 2));
 };
 
 main();
