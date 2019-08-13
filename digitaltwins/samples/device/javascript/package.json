@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-digitaltwins-device-samples",
-  "version": "1.0.0-preview.0",
+  "version": "1.0.0-preview.1",
   "description": "Samples for the azure-iot-digitaltwins-device client library",
   "scripts": {
     "lint": "eslint -c ../../../../.eslintrc.json .",
@@ -17,10 +17,10 @@
   },
   "homepage": "https://github.com/azure/azure-iot-sdk-node-digitaltwins#readme",
   "dependencies": {
-    "azure-iot-device": "1.12.0-preview.0",
-    "azure-iot-common": "1.12.0-preview.0",
-    "azure-iot-device-mqtt": "1.12.0-preview.0",
-    "azure-iot-digitaltwins-device": "1.0.0-preview.0"
+    "azure-iot-device": "1.12.0-preview.1",
+    "azure-iot-common": "1.12.0-preview.1",
+    "azure-iot-device-mqtt": "1.12.0-preview.1",
+    "azure-iot-digitaltwins-device": "1.0.0-preview.1"
   },
   "devDependencies": {
     "eslint": "^6.0.1",
