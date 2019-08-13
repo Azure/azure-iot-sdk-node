@@ -35,4 +35,4 @@ node sample_device.js
 `sample_device.js` shows how to:
 - instantiate the `DigitalTwinClient`
 - instantiate the interfaceInstance created with `environmentalinterface.js`
-- Combine them together to send telmetry, handle commands, and handle property updates.
+- Combine them together to send telemetry, handle commands, and handle property updates.
