@@ -7,19 +7,19 @@
   "main": "main.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.10.1",
+    "azure-iot-common": "^1.10.1",
     "debug": "^4.1.1",
     "machina": "^4.0.2",
     "mqtt": "^2.18.8"
   },
   "devDependencies": {
-    "@types/node": "^9.3.0",
+    "@types/node": "^9.6.50",
     "chai": "^4.2.0",
     "es5-shim": "^4.5.12",
     "istanbul": "^0.4.5",
     "mocha": "^5.2.0",
-    "sinon": "^7.2.7",
-    "tslint": "^5.9.1",
+    "sinon": "^7.4.1",
+    "tslint": "^5.18.0",
     "typescript": "2.9.2"
   },
   "scripts": {

@@ -17,18 +17,18 @@
   "dependencies": {
     "async": "^2.6.2",
     "azure-event-hubs": "0.0.8",
-    "azure-iot-common": "1.10.1",
-    "azure-iot-device": "1.11.0",
-    "azure-iot-device-amqp": "1.10.1",
-    "azure-iot-device-http": "1.10.1",
-    "azure-iot-device-mqtt": "1.10.1",
-    "azure-iothub": "1.10.1",
+    "azure-iot-common": "^1.10.1",
+    "azure-iot-device": "^1.11.0",
+    "azure-iot-device-amqp": "^1.10.1",
+    "azure-iot-device-http": "^1.10.1",
+    "azure-iot-device-mqtt": "^1.10.1",
+    "azure-iothub": "^1.10.1",
     "bluebird": "^3.5.2",
     "connect": "^3.2.0",
     "js-yaml": "^3.13.1",
     "swagger-tools": "^0.10.4"
   },
   "devDependencies": {
-    "jshint": "^2.9.6"
+    "jshint": "^2.10.2"
   }
 }

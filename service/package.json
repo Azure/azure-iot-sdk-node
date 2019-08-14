@@ -8,24 +8,24 @@
   "typings": "iothub.d.ts",
   "dependencies": {
     "async": "^2.6.2",
-    "azure-iot-amqp-base": "2.2.11",
-    "azure-iot-common": "1.10.1",
-    "azure-iot-http-base": "1.9.10",
+    "azure-iot-amqp-base": "^2.2.11",
+    "azure-iot-common": "^1.10.1",
+    "azure-iot-http-base": "^1.9.10",
     "debug": "^4.1.1",
     "lodash": "^4.17.11",
-    "rhea": "^1.0.2",
-    "machina": "^4.0.2"
+    "machina": "^4.0.2",
+    "rhea": "^1.0.2"
   },
   "devDependencies": {
+    "@types/debug": "^4.1.5",
+    "@types/node": "^9.6.50",
     "chai": "^4.2.0",
-    "sinon": "^7.2.7",
     "istanbul": "^0.4.5",
-    "jshint": "^2.9.6",
+    "jshint": "^2.10.2",
     "mocha": "^5.2.0",
-    "tslint": "^5.9.1",
+    "sinon": "^7.4.1",
+    "tslint": "^5.18.0",
     "typescript": "2.9.2",
-    "@types/node": "^9.3.0",
-    "@types/debug": "^4.1.1",
     "uuid": "^3.3.2"
   },
   "scripts": {

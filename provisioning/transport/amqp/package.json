@@ -8,9 +8,9 @@
   "typings": "index.d.ts",
   "dependencies": {
     "async": "^2.6.2",
-    "azure-iot-amqp-base": "2.2.11",
-    "azure-iot-common": "1.10.1",
-    "azure-iot-provisioning-device": "1.6.1",
+    "azure-iot-amqp-base": "^2.2.11",
+    "azure-iot-common": "^1.10.1",
+    "azure-iot-provisioning-device": "^1.6.1",
     "buffer-builder": "^0.2.0",
     "debug": "^4.1.1",
     "machina": "^4.0.2",
@@ -18,12 +18,12 @@
     "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "@types/node": "^9.3.0",
+    "@types/node": "^9.6.50",
     "chai": "^4.2.0",
     "istanbul": "^0.4.5",
     "mocha": "^5.2.0",
-    "sinon": "^7.2.7",
-    "tslint": "^5.9.1",
+    "sinon": "^7.4.1",
+    "tslint": "^5.18.0",
     "typescript": "2.9.2"
   },
   "scripts": {
