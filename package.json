@@ -4,7 +4,10 @@
 		"istanbul": "^0.4.5",
 		"mocha": "^5.2.0"
 	},
-	"engines" : {
-		"node" : ">=8.0.0"
+	"engines": {
+		"node": ">=8.0.0"
+	},
+	"dependencies": {
+		"azure-iot-device": "^1.11.0"
 	}
 }
