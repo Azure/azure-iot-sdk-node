@@ -6,8 +6,8 @@
 var iothub = require('azure-iothub');
 var azureStorage = require('azure-storage');
 
-var iothubConnectionString = '[IoT Connection String]';
-var storageConnectionString = '[Storage Connection String]';
+var iothubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+var storageConnectionString = process.env.STORAGE_CONNECTION_STRING;
 
 var registry = iothub.Registry.fromConnectionString(iothubConnectionString);
 var blobSvc = azureStorage.createBlobService(storageConnectionString);

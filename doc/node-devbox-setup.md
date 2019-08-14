@@ -88,22 +88,29 @@ Please note that running tests and end-to-end tests require having an Azure IoT 
 - **IOTHUB_DEVICE_CONN_STRING_INVALID_CERT:** must be set to a connection string for an IoT Device, such that DNS resolution for the server specified in the connection string will direct to a server which does **not** present a matching certificate during TLS connection establishment.
 
 
-## Running the samples
+## Running the samples in the samples folder
 
-The device and service SDKs samples are located in their respective folders. The samples are **not** linked to other packages at the same time as the rest of the SDK, in order to leave the choice for the customers to run them of the published packages or the local versions. The simplest way to run the samples is to use published packages.
+The device and service SDKs samples are located in their respective folders. If you build and run the samples in the samples folder after running `lerna bootstrap` then the samples will be linked to local 'packages' at the same time as the rest of the SDK.
 
-```
+```bash
 $ cd device/samples
-$ npm install
 ```
 
-Then, depending on which sample you want to run, you'll have to edit this particular file and replace the connection string placeholder with the connection string of the device (or IoT hub) that you want to test.
+Then, add the environment variable `DEVICE_CONNECTION_STRING` to your terminal session. Depending on the sample, you may have to add more credentials such as a storage key. You can open the sample file to check.
+
+```bash
+$ export DEVICE_CONNECTION_STRING="<YourIoTHubDeviceConnectionString>"
+```
 
 Once this is done, just run it like any other node script:
 
-```
+```bash
 $ node simple_sample_device.js
 ```
+
+### Running the samples NOT in the samples folder
+
+[Refer to the readme in the samples folder, linked here.][samples-readme]
 
 ## Going further
 
@@ -124,3 +131,4 @@ To learn how to run the unit, integration and E2E tests, [read this](./node-test
 [node-linux]: https://nodejs.org/en/download/package-manager/
 [nvs]: https://github.com/jasongin/nvs
 [openssl]: https://www.openssl.org/
+[samples-readme]: ../device/samples/readme.md

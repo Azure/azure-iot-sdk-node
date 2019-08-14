@@ -5,7 +5,7 @@
 
 var Client = require('azure-iothub').Client;
 
-var connectionString = '[IoT Hub connection string]';
+var connectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 var client = Client.fromConnectionString(connectionString);
 

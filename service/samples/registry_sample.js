@@ -5,7 +5,7 @@
 
 var iothub = require('azure-iothub');
 
-var connectionString = '[IoT Connection String]';
+var connectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 var registry = iothub.Registry.fromConnectionString(connectionString);
 

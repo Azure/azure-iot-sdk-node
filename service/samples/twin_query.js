@@ -4,7 +4,7 @@
 
 var Registry = require('azure-iothub').Registry;
 
-var connectionString = '<IOTHUB CONNECTION STRING>';
+var connectionString = process.env.IOTHUB_CONNECTION_STRING;
 var registry = Registry.fromConnectionString(connectionString);
 
 var query = registry.createQuery('SELECT * FROM devices', 100);
