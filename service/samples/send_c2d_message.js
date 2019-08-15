@@ -6,7 +6,7 @@
 var Client = require('azure-iothub').Client;
 var Message = require('azure-iot-common').Message;
 
-var connectionString = '[IoT Hub Connection String]';
+var connectionString = process.env.IOTHUB_CONNECTION_STRING;
 var targetDevice = '[Target device that will receive the message]';
 
 var client = Client.fromConnectionString(connectionString);

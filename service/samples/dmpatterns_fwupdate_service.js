@@ -6,16 +6,16 @@ var Registry = require('azure-iothub').Registry;
 var Client = require('azure-iothub').Client;
 var async = require('async');
 
-// receive the IoT Hub connection string as a command line parameter
-if (process.argv.length < 4) {
-  console.error('Usage: node dmpatterns_fwupdate_service.js <<IoT Hub Connection String>> <<targetDeviceId>>');
+// receive the target device ID as a command line parameter
+if (process.argv.length < 3) {
+  console.error('Usage: node dmpatterns_fwupdate_service.js <<targetDeviceId>>');
   process.exit(1);
 }
 
-var connectionString = process.argv[2];
+var connectionString = process.env.IOTHUB_CONNECTION_STRING;
+var deviceToUpdate = process.argv[2];
 var registry = Registry.fromConnectionString(connectionString);
 var client = Client.fromConnectionString(connectionString);
-var deviceToUpdate = process.argv[3];
 
 // Service entry point: Initiate the firmware update process on the device using a device method
 async.waterfall([

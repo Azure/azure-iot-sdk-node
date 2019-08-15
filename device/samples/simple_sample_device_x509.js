@@ -14,13 +14,13 @@ var Message = require('azure-iot-device').Message;
 
 // String containing Hostname and Device Id in the following format:
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;x509=true"
-var connectionString = '<DEVICE CONNECTION STRING WITH x509=true>';
-var certFile = '<PATH-TO-CERTIFICATE-FILE>';
-var keyFile = '<PATH-TO-KEY-FILE>';
-var passphrase = '<KEY PASSPHRASE IF ANY>';
+var deviceConnectionString = process.env.X509_DEVICE_CONNECTION_STRING; 
+var certFile = process.env.PATH_TO_CERTIFICATE_FILE;
+var keyFile = process.env.PATH_TO_KEY_FILE;
+var passphrase = process.env.KEY_PASSPHRASE_OR_EMPTY; // Key Passphrase if one exists.
 
 // fromConnectionString must specify a transport constructor, coming from any transport package.
-var client = Client.fromConnectionString(connectionString, Protocol);
+var client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
 var connectCallback = function (err) {
   if (err) {

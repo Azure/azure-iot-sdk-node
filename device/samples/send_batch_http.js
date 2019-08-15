@@ -8,8 +8,8 @@ var Message = require('azure-iot-device').Message;
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
-var connectionString = '[IoT Hub device connection string]';
-var client = clientFromConnectionString(connectionString);
+var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+var client = clientfromConnectionString(deviceConnectionString);
 
 // Create two messages and send them to the IoT hub as a batch.
 var data = [
