@@ -7,14 +7,8 @@ var Protocol = require('azure-iot-device-mqtt').Mqtt;
 var url = require('url');
 var async = require('async');
 
-// receive the IoT Hub device connection string as a command line parameter
-if(process.argv.length < 3) {
-  console.error('Usage: node dmpatterns_fwupdate_device.js <<IoT Hub Device Connection String>>');
-  process.exit(1);
-}
-
-var connectionString = process.argv[2];
-var client = Client.fromConnectionString(connectionString, Protocol);
+var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+var client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
 client.open(function(err) {
   if (!err) {
