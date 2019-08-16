@@ -11,10 +11,10 @@
     "azure-iot-device-http": "1.10.1",
     "azure-iot-device-mqtt": "1.10.1",
     "es5-shim": "^4.5.12",
-    "lodash": "^4.17.11"
+    "lodash": "^4.17.15"
   },
   "devDependencies": {
-    "jshint": "^2.9.6"
+    "jshint": "^2.10.2"
   },
   "scripts": {
     "lint": "jshint --show-non-errors ."
