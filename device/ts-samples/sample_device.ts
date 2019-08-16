@@ -7,7 +7,7 @@ import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
 // import { Http as Protocol } from 'azure-iot-device-http';
 
 
-var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
 const client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
 client.open(() => {
