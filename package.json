@@ -8,6 +8,6 @@
 		"node": ">=8.0.0"
 	},
 	"dependencies": {
-		"azure-iot-device": "^1.11.0"
+		"azure-iot-device": "1.11.0"
 	}
 }

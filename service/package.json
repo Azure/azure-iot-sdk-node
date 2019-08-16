@@ -8,9 +8,9 @@
   "typings": "iothub.d.ts",
   "dependencies": {
     "async": "^2.6.2",
-    "azure-iot-amqp-base": "^2.2.11",
-    "azure-iot-common": "^1.10.1",
-    "azure-iot-http-base": "^1.9.10",
+    "azure-iot-amqp-base": "2.2.11",
+    "azure-iot-common": "1.10.1",
+    "azure-iot-http-base": "1.9.10",
     "debug": "^4.1.1",
     "lodash": "^4.17.15",
     "machina": "^4.0.2",
