@@ -401,6 +401,31 @@ delete nullMergeResult.tweedle;
       mergeTags(newProps, moreNewProps, "*", mergeResult, done);
     });
 
+    it('service can send a desired property using actual eTag', function (done) {
+      (async () => {
+        let rsp;
+        rsp = await registry.getTwin(deviceDescription.deviceId);
+        rsp = await registry.updateTwin(deviceDescription.deviceId, { properties: { desired: { telemetryInterval: 100 } } }, rsp.responseBody.etag);
+        assert(rsp.responseBody.properties.desired.telemetryInterval, 100);
+        done();
+      })();
+    });
+
+    it('service sending invalid eTag gets an error', function (done) {
+      (async () => {
+        let rsp;
+        rsp = await registry.getTwin(deviceDescription.deviceId);
+        try {
+          rsp = await registry.updateTwin(deviceDescription.deviceId, { properties: { desired: { telemetryInterval: 100 } } }, 'abc');
+          assert.fail('Twin service update should fail on invalid eTag');
+        } catch (err) {
+          assert(err.name, 'InvalidEtagError');
+          done();
+        }
+      })();
+    });
+
+
     it('can send reported properties to the service after renewing the sas token', function(done) {
       var newSas = deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
       debug('updating the shared access signature for device: ' + deviceDescription.deviceId);

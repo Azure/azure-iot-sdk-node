@@ -624,7 +624,7 @@ export class Registry {
       const path = '/twins/' + encodeURIComponent(deviceId) + endpoint.versionQueryString();
       const headers = {
         'Content-Type': 'application/json; charset=utf-8',
-        'If-Match': etag
+        'If-Match': '"' + etag + '"'
       };
 
       this._restApiClient.executeApiCall('PATCH', path, headers, patch, (err, newTwin, response) => {
@@ -675,7 +675,7 @@ export class Registry {
       const path = `/twins/${encodeURIComponent(deviceId)}/modules/${encodeURIComponent(moduleId)}${endpoint.versionQueryString()}`;
       const headers = {
         'Content-Type': 'application/json; charset=utf-8',
-        'If-Match': etag
+        'If-Match': '"' + etag + '"'
       };
 
       this._restApiClient.executeApiCall('PATCH', path, headers, patch, (err, newTwin, response) => {
