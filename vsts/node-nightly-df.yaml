@@ -5,14 +5,16 @@ resources:
 
 phases:
 - phase: Phase_2
-  displayName: Ubuntu 1604 - Node 6
+  displayName: Ubuntu 1604 - Node 10.15.x
   condition: succeededOrFailed()
   queue:
     name: Hosted Ubuntu 1604
 
   steps:
   - task: NodeTool@0
-    displayName: 'Use Node 6.x'
+    displayName: 'Use Node 10.15.x'
+    inputs:
+      versionSpec: '10.15.x'
 
   - script: |
        npm install --global node-gyp
