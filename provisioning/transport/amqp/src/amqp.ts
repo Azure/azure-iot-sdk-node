@@ -144,6 +144,9 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
               sslOptions: this._x509Auth,
               userAgentString: ProvisioningDeviceConstants.userAgent
             };
+            /*Codes_SRS_NODE_PROVISIONING_AMQP_99_026: [The `registrationRequest` method shall connect the AMQP client with the agent given in the `webSocketAgent` parameter of the previously called `setTransportOptions` method.]*/
+            config.sslOptions = config.sslOptions || {};
+            config.sslOptions.agent = this._config.webSocketAgent;
             if (this._sas) {
               /*Codes_SRS_NODE_PROVISIONING_AMQP_06_002: [** The `registrationRequest` method shall connect the amqp client, if utilizing the passed in sas from setSharedAccessSignature, shall in the connect options set the username to:
                 ```
@@ -480,7 +483,8 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
    */
   setTransportOptions(options: ProvisioningTransportOptions): void {
     [
-      'pollingInterval'
+      'pollingInterval',
+      'webSocketAgent'
     ].forEach((optionName) => {
       if (options.hasOwnProperty(optionName)) {
         this._config[optionName] = options[optionName];

@@ -171,6 +171,17 @@ describe('Amqp', function () {
         });
       });
 
+      /*Tests_SRS_NODE_PROVISIONING_AMQP_99_026: [The `registrationRequest` method shall connect the AMQP client with the agent given in the `webSocketAgent` parameter of the previously called `setTransportOptions` method.]*/
+      it('connects the AMQ connection on using the agent set in transport options', function (testCallback) {
+        var expectedAgent = '__FAKE_AGENT__';
+        amqp.setTransportOptions({webSocketAgent: expectedAgent});
+        amqp.registrationRequest({ registrationId: 'fakeRegistrationId' }, function () {
+          var actualAgent = fakeAmqpBase.connect.getCall(0).args[0].sslOptions.agent;
+          assert.equal(actualAgent, expectedAgent);
+          testCallback();
+        });
+      });
+
       /*Tests_SRS_NODE_PROVISIONING_AMQP_16_008: [The `registrationRequest` method shall call its callback with an error if the transport fails to connect.]*/
       it ('calls its callback with an error if it fails to connect', function (testCallback) {
         fakeAmqpBase.connect = sinon.stub().callsArgWith(1, fakeError);
