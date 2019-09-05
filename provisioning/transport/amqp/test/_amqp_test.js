@@ -171,7 +171,7 @@ describe('Amqp', function () {
         });
       });
 
-      /*Tests_SRS_NODE_PROVISIONING_AMQP_99_026: [The `registrationRequest` method shall connect the AMQP client with the agent given in the `webSocketAgent` parameter of the previously called `setTransportOptions` method.]*/
+      /*Tests_SRS_NODE_PROVISIONING_AMQP_99_001: [The `registrationRequest` method shall connect the AMQP client with the agent given in the `webSocketAgent` parameter of the previously called `setTransportOptions` method.]*/
       it('connects the AMQ connection on using the agent set in transport options', function (testCallback) {
         var expectedAgent = '__FAKE_AGENT__';
         amqp.setTransportOptions({webSocketAgent: expectedAgent});

@@ -144,7 +144,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
               sslOptions: this._x509Auth,
               userAgentString: ProvisioningDeviceConstants.userAgent
             };
-            /*Codes_SRS_NODE_PROVISIONING_AMQP_99_026: [The `registrationRequest` method shall connect the AMQP client with the agent given in the `webSocketAgent` parameter of the previously called `setTransportOptions` method.]*/
+            /*Codes_SRS_NODE_PROVISIONING_AMQP_99_001: [The `registrationRequest` method shall connect the AMQP client with the agent given in the `webSocketAgent` parameter of the previously called `setTransportOptions` method.]*/
             config.sslOptions = config.sslOptions || {};
             config.sslOptions.agent = this._config.webSocketAgent;
             if (this._sas) {
