@@ -20,11 +20,10 @@ You need to install the [Node.js][nodejs_lnk] JavaScript runtime environment to 
 
 ## Installation
 
-`npm install azure-iot-digitaltwins@pnp-preview` to get the latest version.
-
-You also need to install the device client and the MQTT transport that support the digital twin client:
+To get the latest version you need to install this package as well as the device client and the MQTT transport that support the digital twin client:
 
 ```shell
+npm install azure-iot-digitaltwins-device@pnp-preview
 npm install azure-iot-device@pnp-preview
 npm install azure-iot-device-mqtt@pnp-preview
 ```
