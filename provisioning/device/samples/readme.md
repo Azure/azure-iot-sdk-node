@@ -68,7 +68,7 @@ When you have a certificate change containing a root certificate and several opt
 
 At the very least, your root certificate needs to be uploaded to your Device Provisioning Service blade in the Azure portal, and it needs to be verified.
 
-Once the group is created and the certificates have been uploaded and verified, you can use [register_x509.js][register-x509] to register the device.  When running this sample, you'll need to replace the '[provisioning host]' '[id scope]', '[registration id'], '[cert filename]', and '[key filename]' values in the code with your specific values.
+Once the group is created and the certificates have been uploaded and verified, you can use [register_x509.js][register-x509] to register the device.  When running this sample, you'll need to replace the '[provisioning host]' '[id scope]', '[registration id'], '[cert filename]', and '[key filename]' values in the code with your specific values.  Please refer to guidance here for these values: https://docs.microsoft.com/en-us/azure/iot-dps/quick-create-simulated-device-x509-node#simulate-the-device
 
 When registering a device via group enrollment, the cert may need to include the certificate chain that links it back to a verified certificate.
 
