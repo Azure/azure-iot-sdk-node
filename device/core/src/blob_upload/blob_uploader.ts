@@ -5,8 +5,34 @@
 
 import { Stream } from 'stream';
 import { errors } from 'azure-iot-common';
-import { UploadParams, BlobUploader as BlobUploaderInterface } from './blob_upload_client';
 import { tripleValueCallbackToPromise, TripleValueCallback } from 'azure-iot-common';
+
+
+/**
+ * @private
+ */
+export interface UploadParams {
+  hostName?: string;
+  containerName?: string;
+  blobName?: string;
+  sasToken?: string;
+  correlationId: string;
+}
+
+/**
+ * @private
+ */
+export interface BlobUploaderInterface {
+  uploadToBlob(uploadParams: UploadParams, stream: Stream, streamLength: number, done: TripleValueCallback<any, BlobResponse>): void;
+  uploadToBlob(uploadParams: UploadParams, stream: Stream, streamLength: number): Promise<any>;
+}
+
+/**
+ * @private
+ */
+export interface Aborter {
+  timeout(time: number): any;
+}
 
 /**
  * @private
@@ -20,14 +46,18 @@ export type BlobResponse = {
  * @private
  */
 export interface BlobService {
-    createBlockBlobFromStream(containerName: string, blobName: string, stream: Stream, streamLength: number, done: (err: Error, body?: any, result?: BlobResponse) => void): void;
+  createBlockBlobFromStream(containerName: string, blobName: string, stream: Stream, streamLength: number, done: (err: Error, body?: any, result?: BlobResponse) => void): void;
 }
 
 /**
  * @private
  */
 export interface StorageApi {
-    createBlobServiceWithSas(hostName: string, sasToken: string): BlobService;
+  BlockBlobURL: any;
+  Aborter: Aborter;
+  StorageURL: any;
+  AnonymousCredential: any;
+  uploadStreamToBlockBlob: any;
 }
 
 /**
@@ -62,13 +92,31 @@ export class BlobUploader implements BlobUploaderInterface {
         throw new errors.ArgumentError('Invalid upload parameters');
       }
 
+      // this is only an option for testing purposes.
       if (!this.storageApi) {
         /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_06_002: [`BlobUploader` should delay load azure-storage into the storageAPI property if `storageApi` is falsy]*/
-        this.storageApi = require('azure-storage');
+        this.storageApi = require('@azure/storage-blob');
       }
-      const blobService = this.storageApi.createBlobServiceWithSas(blobInfo.hostName, blobInfo.sasToken);
-      /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_16_005: [`uploadToBlob` shall call the `_callback` calback with the result of the storage api call.]*/
-      blobService.createBlockBlobFromStream(blobInfo.containerName, blobInfo.blobName, stream, streamLength, _callback);
+
+      const pipeline = this.storageApi.StorageURL.newPipeline(new this.storageApi.AnonymousCredential(), {
+        // httpClient: myHTTPClient,
+        // logger: MyLogger
+        retryOptions: { maxTries: 4 },
+        telemetry: { value: 'Upload To Blob via Node.js IoT Client' },
+        keepAliveOptions: {
+          enable: false
+        }
+      });
+      const blockBlobURL = new this.storageApi.BlockBlobURL(`https://${blobInfo.hostName}/${blobInfo.containerName}/${blobInfo.blobName}${blobInfo.sasToken}`, pipeline);
+      const uploadPromise = this.storageApi.uploadStreamToBlockBlob(this.storageApi.Aborter.timeout(30 * 60 * 1000), stream, blockBlobURL, streamLength, 20, { progress: (ev) => console.log(ev) });
+      uploadPromise
+      .then((uploadBlobResponse: any) => {
+        /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_16_005: [`uploadToBlob` shall call the `_callback` calback with the result of the storage api call.]*/
+        _callback(null, uploadBlobResponse);
+      })
+      .catch((err: Error) => {
+        _callback(err, null);
+      });
     }, ((body, result) => { return { body: body, result: result }; }), done);
   }
 }

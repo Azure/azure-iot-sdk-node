@@ -9,12 +9,12 @@ const debug = dbg('azure-iot-device:DeviceClient');
 
 import { AuthenticationProvider, RetryOperation, ConnectionString, results, Callback, ErrorCallback, callbackToPromise } from 'azure-iot-common';
 import { InternalClient, DeviceTransport } from './internal_client';
-import { BlobUploadClient } from './blob_upload';
+import { BlobUploadClient, UploadParams, BlobUploadResult, DefaultFileUploadApi, FileUploadInterface } from './blob_upload';
 import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
 import { X509AuthenticationProvider } from './x509_authentication_provider';
 import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
 import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
-import { DeviceClientOptions } from './interfaces';
+import { DeviceClientOptions, BlobUploadCommonResponseStub } from './interfaces';
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
   if (callback) callback(error, result);
@@ -30,7 +30,10 @@ function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Er
 export class Client extends InternalClient {
   private _c2dEnabled: boolean;
   private _deviceDisconnectHandler: (err?: Error, result?: any) => void;
-  private blobUploadClient: BlobUploadClient; // Casing is wrong and should be corrected.
+  private _blobUploadClient: BlobUploadClient;
+  private _blobStorageUploadParams: UploadParams;
+  private _fileUploadApi: FileUploadInterface;
+
   /**
    * @constructor
    * @param {Object}  transport         An object that implements the interface
@@ -38,11 +41,13 @@ export class Client extends InternalClient {
    *                                    {@link azure-iot-device-http.Http|Http}.
    * @param {string}  connStr           A connection string (optional: when not provided, updateSharedAccessSignature must be called to set the SharedAccessSignature token directly).
    * @param {Object}  blobUploadClient  An object that is capable of uploading a stream to a blob.
+   * @param {Object}  fileUploadApi     An object that is used for communicating with IoT Hub for Blob Storage related actions.
    */
-  constructor(transport: DeviceTransport, connStr?: string, blobUploadClient?: BlobUploadClient) {
+  constructor(transport: DeviceTransport, connStr?: string, blobUploadClient?: BlobUploadClient, fileUploadApi?: FileUploadInterface) {
     super(transport, connStr);
-    this.blobUploadClient = blobUploadClient;
+    this._blobUploadClient = blobUploadClient;
     this._c2dEnabled = false;
+    this._fileUploadApi = fileUploadApi;
 
     this.on('removeListener', (eventName) => {
       if (eventName === 'message' && this.listeners('message').length === 0) {
@@ -111,9 +116,9 @@ export class Client extends InternalClient {
   setOptions(options: DeviceClientOptions): Promise<results.TransportConfigured>;
   setOptions(options: DeviceClientOptions, done?: Callback<results.TransportConfigured>): Promise<results.TransportConfigured> | void {
     if (!options) throw new ReferenceError('options cannot be falsy.');
-    if (this.blobUploadClient) {
+    if (this._blobUploadClient) {
       /*Codes_SRS_NODE_DEVICE_CLIENT_99_103: [The `setOptions` method shall set `blobUploadClient` options.]*/
-      this.blobUploadClient.setOptions(options);
+      this._blobUploadClient.setOptions(options);
     }
     return super.setOptions(options, done);
   }
@@ -171,12 +176,78 @@ export class Client extends InternalClient {
       retryOp.retry((opCallback) => {
         /*Codes_SRS_NODE_DEVICE_CLIENT_16_040: [The `uploadToBlob` method shall call the `_callback` callback with an `Error` object if the upload fails.]*/
         /*Codes_SRS_NODE_DEVICE_CLIENT_16_041: [The `uploadToBlob` method shall call the `_callback` callback no parameters if the upload succeeds.]*/
-        this.blobUploadClient.uploadToBlob(blobName, stream, streamLength, opCallback);
+        this._blobUploadClient.uploadToBlob(blobName, stream, streamLength, opCallback);
       }, (err, result) => {
         safeCallback(_callback, err, result);
       });
     }, callback);
   }
+
+  /**
+   * @description      The `getBlobSharedAccessSignature` gets the linked storage account SAS Token from IoT Hub
+   *
+   * @param {String}    blobName                The name to use for the blob that will be created with the content of the stream.
+   * @param {Callback}  [callback]              Optional callback to call when the upload is complete.
+   * @returns {Promise<UploadParams> | void}    Promise if no callback function was passed, void otherwise.
+   *
+   * @throws {ReferenceException} If blobName is falsy.
+   */
+  getBlobSharedAccessSignature(blobName: string, callback: Callback<UploadParams>): void;
+  getBlobSharedAccessSignature(blobName: string): Promise<UploadParams>;
+  getBlobSharedAccessSignature(blobName: string, callback?: Callback<UploadParams>): Promise<UploadParams> | void {
+    return callbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_41_001: [The `getBlobSharedAccessSignature` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
+      if (!blobName) throw new ReferenceError('blobName cannot be \'' + blobName + '\'');
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+        /*Codes_SRS_NODE_DEVICE_CLIENT_41_002: [The `getBlobSharedAccessSignature` method shall call the `getBlobSharedAccessSignature` method in the instantiated `_fileUploadApi` class and pass in `blobName` as a parameter.]*/
+        this._fileUploadApi.getBlobSharedAccessSignature(blobName, opCallback);
+      }, (err, result) => {
+        /*Codes_SRS_NODE_DEVICE_CLIENT_41_003: [The `getBlobSharedAccessSignature` method shall call the `_callback` callback with `err` and `result` from the call to `getBlobSharedAccessSignature`.]*/
+        if (!err) {
+          debug('got blob storage shared access signature.');
+          /*Codes_SRS_NODE_DEVICE_CLIENT_41_004: [The `getBlobSharedAccessSignature` method shall store the `result` value for use by the `notifyBlobUploadStatus` method.]*/
+          this._blobStorageUploadParams = result;
+        } else {
+          debug('Could not obtain blob shared access signature.');
+        }
+        safeCallback(_callback, err, result);
+      });
+    }, callback);
+  }
+
+  /**
+   * @description      The `notifyBlobUploadStatus` method sends IoT Hub the result of a blob upload.
+   *
+   * @param {Error}                          err              Error received if blob upload throws
+   * @param {BlobUploadCommonResponseStub}   uploadResponse   The reponse received after a blob upload via the storage api is complete
+   * @param {ErrorCallback}                  [callback]       Optional callback to call when the upload is complete.
+   * @returns {Promise<void> | void}                          Promise if no callback function was passed, void otherwise.
+   *
+   * @throws {ReferenceException} If uploadResponse is falsy.
+   */
+  notifyBlobUploadStatus(err: Error, uploadResponse: BlobUploadCommonResponseStub, callback: ErrorCallback): void;
+  notifyBlobUploadStatus(err: Error, uploadResponse: BlobUploadCommonResponseStub): Promise<void>;
+  notifyBlobUploadStatus(err: Error, uploadResponse: BlobUploadCommonResponseStub, callback?: ErrorCallback): Promise<void> | void {
+    return callbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_41_005: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `uploadResponse` is falsy.]*/
+      if (!uploadResponse) throw new ReferenceError('uploadResponse cannot be \'' + uploadResponse + '\'');
+      /*Codes_SRS_NODE_DEVICE_CLIENT_41_012: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `correlationId` is not set.]*/
+      if (!this._blobStorageUploadParams || !this._blobStorageUploadParams.correlationId) throw new ReferenceError('getBlobSharedAccessSignature must be called before notifyBlobUploadStatus in order to set \'correlationId\' ');
+      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      retryOp.retry((opCallback) => {
+        /*Codes_SRS_NODE_DEVICE_CLIENT_41_006: [The `notifyBlobUploadStatus` method shall call the `fromAzureStorageCallbackArgs2` method of the `BlobUploadResult` class to reformat the `uploadResponse`.]*/
+        let reformattedUploadResponse = BlobUploadResult.fromAzureStorageCallbackArgs(err, uploadResponse);
+        /*Codes_SRS_NODE_DEVICE_CLIENT_41_007: [The `notifyBlobUploadStatus` method shall call the `fromAzureStorageCallbackArgs2` method of the `BlobUploadResult` class.]*/
+        this._fileUploadApi.notifyUploadComplete(this._blobStorageUploadParams.correlationId, reformattedUploadResponse, opCallback);
+      }, (err) => {
+        /*Codes_SRS_NODE_DEVICE_CLIENT_41_008: [The `notifyBlobUploadStatus` method shall call the `_callback` callback with `err` if the notification fails.]*/
+        /*Codes_SRS_NODE_DEVICE_CLIENT_41_009: [The `notifyBlobUploadStatus` method shall call the `_callback` callback with no parameters if the notification succeeds.]*/
+        safeCallback(_callback, err);
+      });
+    }, callback);
+  }
+
 
   private _enableC2D(callback: (err?: Error) => void): void {
     debug('_c2dEnabled is: ' + this._c2dEnabled);
@@ -252,7 +323,7 @@ export class Client extends InternalClient {
     }
 
     /*Codes_SRS_NODE_DEVICE_CLIENT_05_006: [The fromConnectionString method shall return a new instance of the Client object, as by a call to new Client(new transportCtor(...)).]*/
-    return new Client(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider));
+    return new Client(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider), new DefaultFileUploadApi(authenticationProvider));
   }
 
   /**
@@ -276,7 +347,7 @@ export class Client extends InternalClient {
     const authenticationProvider = SharedAccessSignatureAuthenticationProvider.fromSharedAccessSignature(sharedAccessSignature);
 
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_030: [The fromSharedAccessSignature method shall return a new instance of the Client object] */
-    return new Client(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider));
+    return new Client(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider), new DefaultFileUploadApi(authenticationProvider));
   }
 
   /**
@@ -298,6 +369,6 @@ export class Client extends InternalClient {
 
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_090: [The `fromAuthenticationProvider` method shall pass the `authenticationProvider` object passed as argument to the transport constructor.]*/
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_091: [The `fromAuthenticationProvider` method shall return a `Client` object configured with a new instance of a transport created using the `transportCtor` argument.]*/
-    return new Client(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider));
+    return new Client(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider), new DefaultFileUploadApi(authenticationProvider));
   }
 }

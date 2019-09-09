@@ -134,10 +134,9 @@ describe('BlobUploader', function() {
     it('calls the \'done\' callback with the result of the storage api call', function (done) {
       var uploader = new BlobUploader(FakeStorageApi);
 
-      uploader.uploadToBlob(fakeBlobInfo, fakeStream, 42, function (err, body, response) {
-        assert.equal(err, 'fakeError');
-        assert.equal(body, 'fakeBody');
-        assert.equal(response, 'fakeResponse');
+      uploader.uploadToBlob(fakeBlobInfo, fakeStream, 42, function (err, response) {
+        assert.equal(err, null);
+        assert.equal(response, 'fakeUploadResponse');
         done();
       });
     });
