@@ -230,12 +230,12 @@ export class Client extends InternalClient {
   notifyBlobUploadStatus(isSuccess: boolean, statusCode: number, statusDescription: string): Promise<void>;
   notifyBlobUploadStatus(isSuccess: boolean, statusCode: number, statusDescription: string, callback?: ErrorCallback): Promise<void> | void {
     return callbackToPromise((_callback) => {
-      /*Codes_SRS_NODE_DEVICE_CLIENT_41_005: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `isSuccess` is falsy.]*/
-      /*Codes_SRS_NODE_DEVICE_CLIENT_41_006: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusCode` is falsy.]*/
+      /*Codes_SRS_NODE_DEVICE_CLIENT_41_005: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `isSuccess` is falsy but not the boolean false.]*/
+      /*Codes_SRS_NODE_DEVICE_CLIENT_41_006: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusCode` is falsy but not the number 0.]*/
       /*Codes_SRS_NODE_DEVICE_CLIENT_41_007: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusDescription` is falsy.]*/
       if (!isSuccess && typeof(isSuccess) !== 'boolean' ) throw new ReferenceError('isSuccess cannot be \' ' + isSuccess + ' \'');
       if (!statusCode && !(statusCode === 0)) throw new ReferenceError('statusCode cannot be \' ' + statusCode + ' \'');
-      if (!statusDescription) throw new ReferenceError('statusDescription cannot be \' ' + statusDescription + ' \'. If no statusDescription returned, provide string \'NaN\'.');
+      if (!statusDescription) throw new ReferenceError('statusDescription cannot be \' ' + statusDescription + ' \'. If no statusDescription returned, provide string \'None.\'.');
       /*Codes_SRS_NODE_DEVICE_CLIENT_41_012: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `correlationId` is not set.]*/
       if (!this._blobStorageUploadParams || !this._blobStorageUploadParams.correlationId) {
         let referenceErrorMessage = 'correlationId is not set. getBlobSharedAccessSignature must be called before notifyBlobUploadStatus in order to set \'correlationId\'.';

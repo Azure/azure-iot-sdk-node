@@ -214,24 +214,30 @@ describe('Device Client', function () {
     });
     });
 
-    /*Codes_SRS_NODE_DEVICE_CLIENT_41_006: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusCode` is falsy.]*/
+    /*Codes_SRS_NODE_DEVICE_CLIENT_41_006: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusCode` is falsy but not the number 0.]*/
     [undefined, null, ''].forEach(function (statusCode) {
-    it('throws a ReferenceError if \'statusCode\' is ' + statusCode + '\'', function(done) {
+    it.only('throws a ReferenceError if \'statusCode\' is ' + statusCode + '\'', function(done) {
       let isSuccess = 0;
       let statusDescription = 'NaN';
       let client = new Client(new EventEmitter(), null, {}, {});
       client._blobStorageUploadParams = { correlationId: 'fakeCorrelationId' };
       try {
-        client.notifyBlobUploadStatus(isSuccess, statusCode, statusDescription, function() {});
+        client.notifyBlobUploadStatus(isSuccess, statusCode, statusDescription, function() {
+        });
       } catch (err) {
+        console.log(statusCode);
         assert.strictEqual(err.name, "ReferenceError");
+        return done();
+      }
+      if (statusCode === 0) {
+        assert(true);
         done();
       }
-      assert.fail('Error not thrown. Error should be thrown.');
+      assert(false, 'Error not thrown. Error should be thrown.');
     });
     });
 
-    /*Codes_SRS_NODE_DEVICE_CLIENT_41_007: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusDescription` is falsy.]*/    
+    /*Tests_SRS_NODE_DEVICE_CLIENT_41_007: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusDescription` is falsy.]*/
     [undefined, null, ''].forEach(function (statusDescription) {
     it('throws a ReferenceError if \'statusDescription\' is ' + statusDescription + '\'', function(done) {
       let isSuccess = 0;
@@ -260,7 +266,7 @@ describe('Device Client', function () {
     });
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_41_013: [The `notifyBlobUploadStatus` method shall call the `done` callback with an `Error` object if the notify fails.]*/
-    it.only('calls the done callback with an Error object if the notify fails', function(done) {
+    it('calls the done callback with an Error object if the notify fails', function(done) {
       let isSuccess = false;
       let statusCode = 0;
       let statusDescription = 'NaN';
