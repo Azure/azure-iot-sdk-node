@@ -142,10 +142,6 @@ interface DeviceMethodEventHandler {
 
 **SRS_NODE_DEVICE_CLIENT_41_005: [** The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `uploadResponse` is falsy. **]**
 
-**SRS_NODE_DEVICE_CLIENT_41_006: [** The `notifyBlobUploadStatus` method shall call the `fromAzureStorageCallbackArgs2` method of the `BlobUploadResult` class to reformat the `uploadResponse`. **]**
-
-**SRS_NODE_DEVICE_CLIENT_41_007: [** The `notifyBlobUploadStatus` method shall call the `fromAzureStorageCallbackArgs2` method of the `BlobUploadResult` class. **]**
-
 **SRS_NODE_DEVICE_CLIENT_41_008: [** The `notifyBlobUploadStatus` method shall call the `_callback` callback with `err` if the notification fails. **]**
 
 **SRS_NODE_DEVICE_CLIENT_41_009: [** The `notifyBlobUploadStatus` method shall call the `_callback` callback with no parameters if the notification succeeds. **]**

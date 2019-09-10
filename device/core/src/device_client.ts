@@ -9,12 +9,12 @@ const debug = dbg('azure-iot-device:DeviceClient');
 
 import { AuthenticationProvider, RetryOperation, ConnectionString, results, Callback, ErrorCallback, callbackToPromise } from 'azure-iot-common';
 import { InternalClient, DeviceTransport } from './internal_client';
-import { BlobUploadClient, UploadParams, BlobUploadResult, DefaultFileUploadApi, FileUploadInterface } from './blob_upload';
+import { BlobUploadClient, UploadParams, DefaultFileUploadApi, FileUploadInterface } from './blob_upload';
 import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
 import { X509AuthenticationProvider } from './x509_authentication_provider';
 import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_provider';
 import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
-import { DeviceClientOptions, BlobUploadCommonResponseStub } from './interfaces';
+import { DeviceClientOptions } from './interfaces';
 
 function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Error, result?: any): void {
   if (callback) callback(error, result);
@@ -218,28 +218,34 @@ export class Client extends InternalClient {
 
   /**
    * @description      The `notifyBlobUploadStatus` method sends IoT Hub the result of a blob upload.
-   *
-   * @param {Error}                          err              Error received if blob upload throws
-   * @param {BlobUploadCommonResponseStub}   uploadResponse   The reponse received after a blob upload via the storage api is complete
-   * @param {ErrorCallback}                  [callback]       Optional callback to call when the upload is complete.
-   * @returns {Promise<void> | void}                          Promise if no callback function was passed, void otherwise.
+   * @param {boolean}                        isSuccess          The success or failure status from the storage blob operation result.
+   * @param {number}                         statusCode         The HTTP status code associated with the storage blob result.
+   * @param {string}                         statusDescription  The description of the HTTP status code.
+   * @param {ErrorCallback}                  [callback]         Optional callback to call when the upload is complete.
+   * @returns {Promise<void> | void}                            Promise if no callback function was passed, void otherwise.
    *
    * @throws {ReferenceException} If uploadResponse is falsy.
    */
-  notifyBlobUploadStatus(err: Error, uploadResponse: BlobUploadCommonResponseStub, callback: ErrorCallback): void;
-  notifyBlobUploadStatus(err: Error, uploadResponse: BlobUploadCommonResponseStub): Promise<void>;
-  notifyBlobUploadStatus(err: Error, uploadResponse: BlobUploadCommonResponseStub, callback?: ErrorCallback): Promise<void> | void {
+  notifyBlobUploadStatus(isSuccess: boolean, statusCode: number, statusDescription: string, callback: ErrorCallback): void;
+  notifyBlobUploadStatus(isSuccess: boolean, statusCode: number, statusDescription: string): Promise<void>;
+  notifyBlobUploadStatus(isSuccess: boolean, statusCode: number, statusDescription: string, callback?: ErrorCallback): Promise<void> | void {
     return callbackToPromise((_callback) => {
-      /*Codes_SRS_NODE_DEVICE_CLIENT_41_005: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `uploadResponse` is falsy.]*/
-      if (!uploadResponse) throw new ReferenceError('uploadResponse cannot be \'' + uploadResponse + '\'');
+      /*Codes_SRS_NODE_DEVICE_CLIENT_41_005: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `isSuccess` is falsy.]*/
+      /*Codes_SRS_NODE_DEVICE_CLIENT_41_006: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusCode` is falsy.]*/
+      /*Codes_SRS_NODE_DEVICE_CLIENT_41_007: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusDescription` is falsy.]*/
+      if (!isSuccess && typeof(isSuccess) !== 'boolean' ) throw new ReferenceError('isSuccess cannot be \' ' + isSuccess + ' \'');
+      if (!statusCode && !(statusCode === 0)) throw new ReferenceError('statusCode cannot be \' ' + statusCode + ' \'');
+      if (!statusDescription) throw new ReferenceError('statusDescription cannot be \' ' + statusDescription + ' \'. If no statusDescription returned, provide string \'NaN\'.');
       /*Codes_SRS_NODE_DEVICE_CLIENT_41_012: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `correlationId` is not set.]*/
-      if (!this._blobStorageUploadParams || !this._blobStorageUploadParams.correlationId) throw new ReferenceError('getBlobSharedAccessSignature must be called before notifyBlobUploadStatus in order to set \'correlationId\' ');
+      if (!this._blobStorageUploadParams || !this._blobStorageUploadParams.correlationId) {
+        let referenceErrorMessage = 'correlationId is not set. getBlobSharedAccessSignature must be called before notifyBlobUploadStatus in order to set \'correlationId\'.';
+        throw new ReferenceError(referenceErrorMessage);
+      }
       const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
-        /*Codes_SRS_NODE_DEVICE_CLIENT_41_006: [The `notifyBlobUploadStatus` method shall call the `fromAzureStorageCallbackArgs2` method of the `BlobUploadResult` class to reformat the `uploadResponse`.]*/
-        let reformattedUploadResponse = BlobUploadResult.fromAzureStorageCallbackArgs(err, uploadResponse);
-        /*Codes_SRS_NODE_DEVICE_CLIENT_41_007: [The `notifyBlobUploadStatus` method shall call the `fromAzureStorageCallbackArgs2` method of the `BlobUploadResult` class.]*/
-        this._fileUploadApi.notifyUploadComplete(this._blobStorageUploadParams.correlationId, reformattedUploadResponse, opCallback);
+        let uploadResult = { isSuccess: isSuccess, statusCode: statusCode, statusDescription: statusDescription };
+        /*Codes_SRS_NODE_DEVICE_CLIENT_41_XXX: [The `notifyBlobUploadStatus` method shall call the `notifyUploadComplete` method via the internal `_fileUploadApi` class.]*/
+        this._fileUploadApi.notifyUploadComplete(this._blobStorageUploadParams.correlationId, uploadResult, opCallback);
       }, (err) => {
         /*Codes_SRS_NODE_DEVICE_CLIENT_41_008: [The `notifyBlobUploadStatus` method shall call the `_callback` callback with `err` if the notification fails.]*/
         /*Codes_SRS_NODE_DEVICE_CLIENT_41_009: [The `notifyBlobUploadStatus` method shall call the `_callback` callback with no parameters if the notification succeeds.]*/
