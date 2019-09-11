@@ -446,17 +446,20 @@ export class DigitalTwinClient {
       */
     return callbackToPromise((_callback) => {
       debug('about to begin the interface telemetry.');
-      if (!this._interfaceInstances[interfaceInstanceName].registered) throw new Error(interfaceInstanceName + ' is not registered');
-      let newObject: any = {[telemetryName]: telemetryValue};
-      let telemetryMessage = new Message(
-        JSON.stringify(newObject)
-      );
-      telemetryMessage.properties.add(messageInterfaceInstanceProperty, interfaceInstanceName);
-      telemetryMessage.properties.add(messageSchemaProperty, telemetryName);
-      telemetryMessage.contentType =  'application/json';
-      this._client.sendEvent(telemetryMessage, (telemetryError) => {
-        return _callback(telemetryError);
-      });
+      if (!this._interfaceInstances[interfaceInstanceName].registered) {
+        return _callback(new Error(interfaceInstanceName + ' is not registered'));
+      } else {
+        let newObject: any = {[telemetryName]: telemetryValue};
+        let telemetryMessage = new Message(
+          JSON.stringify(newObject)
+        );
+        telemetryMessage.properties.add(messageInterfaceInstanceProperty, interfaceInstanceName);
+        telemetryMessage.properties.add(messageSchemaProperty, telemetryName);
+        telemetryMessage.contentType =  'application/json';
+        this._client.sendEvent(telemetryMessage, (telemetryError) => {
+          return _callback(telemetryError);
+        });
+      }
     }, sendCallback);
   }
 
@@ -498,27 +501,30 @@ export class DigitalTwinClient {
     }
 
     return callbackToPromise((_callback) => {
-      if (!this._interfaceInstances[interfaceInstanceName].registered) throw new Error(interfaceInstanceName + ' is not registered');
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [** Properties may invoke the method `report` with a value to produce a patch to the reported properties. **] */
-      let interfaceInstancePart = interfaceInstancePrefix + interfaceInstanceName;
-      let propertyContent: any = {
-        value: propertyValue
-      };
+      if (!this._interfaceInstances[interfaceInstanceName].registered) {
+        return _callback(new Error(interfaceInstanceName + ' is not registered'));
+      } else {
+        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [** Properties may invoke the method `report` with a value to produce a patch to the reported properties. **] */
+        let interfaceInstancePart = interfaceInstancePrefix + interfaceInstanceName;
+        let propertyContent: any = {
+          value: propertyValue
+        };
 
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_039: [** Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties. **] */
-      if (actualResponse) {
-        propertyContent.sc = actualResponse.code;
-        propertyContent.sd = actualResponse.description;
-        propertyContent.sv = actualResponse.version;
-      }
-
-      let patch = {
-        [interfaceInstancePart]: {
-          [propertyName]: propertyContent
+        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_039: [** Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties. **] */
+        if (actualResponse) {
+          propertyContent.sc = actualResponse.code;
+          propertyContent.sd = actualResponse.description;
+          propertyContent.sv = actualResponse.version;
         }
-      };
 
-      this._twin.properties.reported.update(patch, _callback);
+        let patch = {
+          [interfaceInstancePart]: {
+            [propertyName]: propertyContent
+          }
+        };
+
+        this._twin.properties.reported.update(patch, _callback);
+      }
     }, actualCallback);
   }
 

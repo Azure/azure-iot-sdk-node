@@ -17,5 +17,5 @@
   "strict": true,
   "globalstrict": true,
   "trailing": true,
-  "esnext": true
+  "esversion": 8
 }
