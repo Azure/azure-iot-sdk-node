@@ -61,7 +61,7 @@ describe('BlobUploadResult', function() {
       assert.equal(result.statusDescription, '');
     });
 
-    it.only('Creates a correct BlobUploadResult instance when response is a error without an errorCode', function() {
+    it('Creates a correct BlobUploadResult instance when response is a error without an errorCode', function() {
       let fakeSuccessUpdateResponse = {
         errorCode: '',
         _response: { status: 400, bodyAsText: '' }
