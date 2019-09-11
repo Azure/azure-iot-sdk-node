@@ -132,13 +132,12 @@ interface InterfaceInstanceInformation {
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
 
-/**
- * @private
- * An instantiation of the SDK information interface.
- */
-const sdkInformation = new SdkInformation('urn_azureiot_Client_SDKInformation', 'urn:azureiot:Client:SDKInformation:1');
-
 export class DigitalTwinClient {
+  //
+  // An instantiation of the SDK information interface.
+  //
+  private readonly _sdkInformation: SdkInformation  = new SdkInformation('urn_azureiot_Client_SDKInformation', 'urn:azureiot:Client:SDKInformation:1');
+
   //
   // Dictionary of each interfaceInstance and the associated interface.
   //
@@ -164,7 +163,7 @@ export class DigitalTwinClient {
     this._capabilityModel = capabilityModel;
     this._client = client;
     this._twin = {} as Twin;
-    this.addInterfaceInstance(sdkInformation);
+    this.addInterfaceInstance(this._sdkInformation);
   }
 
   /**
@@ -446,17 +445,20 @@ export class DigitalTwinClient {
       */
     return callbackToPromise((_callback) => {
       debug('about to begin the interface telemetry.');
-      if (!this._interfaceInstances[interfaceInstanceName].registered) throw new Error(interfaceInstanceName + ' is not registered');
-      let newObject: any = {[telemetryName]: telemetryValue};
-      let telemetryMessage = new Message(
-        JSON.stringify(newObject)
-      );
-      telemetryMessage.properties.add(messageInterfaceInstanceProperty, interfaceInstanceName);
-      telemetryMessage.properties.add(messageSchemaProperty, telemetryName);
-      telemetryMessage.contentType =  'application/json';
-      this._client.sendEvent(telemetryMessage, (telemetryError) => {
-        return _callback(telemetryError);
-      });
+      if (!this._interfaceInstances[interfaceInstanceName].registered) {
+        return _callback(new Error(interfaceInstanceName + ' is not registered'));
+      } else {
+        let newObject: any = {[telemetryName]: telemetryValue};
+        let telemetryMessage = new Message(
+          JSON.stringify(newObject)
+        );
+        telemetryMessage.properties.add(messageInterfaceInstanceProperty, interfaceInstanceName);
+        telemetryMessage.properties.add(messageSchemaProperty, telemetryName);
+        telemetryMessage.contentType =  'application/json';
+        this._client.sendEvent(telemetryMessage, (telemetryError) => {
+          return _callback(telemetryError);
+        });
+      }
     }, sendCallback);
   }
 
@@ -498,27 +500,30 @@ export class DigitalTwinClient {
     }
 
     return callbackToPromise((_callback) => {
-      if (!this._interfaceInstances[interfaceInstanceName].registered) throw new Error(interfaceInstanceName + ' is not registered');
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [** Properties may invoke the method `report` with a value to produce a patch to the reported properties. **] */
-      let interfaceInstancePart = interfaceInstancePrefix + interfaceInstanceName;
-      let propertyContent: any = {
-        value: propertyValue
-      };
+      if (!this._interfaceInstances[interfaceInstanceName].registered) {
+        return _callback(new Error(interfaceInstanceName + ' is not registered'));
+      } else {
+        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [** Properties may invoke the method `report` with a value to produce a patch to the reported properties. **] */
+        let interfaceInstancePart = interfaceInstancePrefix + interfaceInstanceName;
+        let propertyContent: any = {
+          value: propertyValue
+        };
 
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_039: [** Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties. **] */
-      if (actualResponse) {
-        propertyContent.sc = actualResponse.code;
-        propertyContent.sd = actualResponse.description;
-        propertyContent.sv = actualResponse.version;
-      }
-
-      let patch = {
-        [interfaceInstancePart]: {
-          [propertyName]: propertyContent
+        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_039: [** Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties. **] */
+        if (actualResponse) {
+          propertyContent.sc = actualResponse.code;
+          propertyContent.sd = actualResponse.description;
+          propertyContent.sv = actualResponse.version;
         }
-      };
 
-      this._twin.properties.reported.update(patch, _callback);
+        let patch = {
+          [interfaceInstancePart]: {
+            [propertyName]: propertyContent
+          }
+        };
+
+        this._twin.properties.reported.update(patch, _callback);
+      }
     }, actualCallback);
   }
 
@@ -636,15 +641,15 @@ export class DigitalTwinClient {
             // Intentionally letting a failure of SDK information report
             // be ignored.
             //
-            sdkInformation.language.report('Node.js', (err?: Error) => {
+            this._sdkInformation.language.report('Node.js', (err?: Error) => {
               if (err) {
                 debug('Error updating the SDK language: ' + err.toString());
               }
-              sdkInformation.version.report(packageJson.name + '/' + packageJson.version, (err?: Error) => {
+              this._sdkInformation.version.report(packageJson.name + '/' + packageJson.version, (err?: Error) => {
                 if (err) {
                   debug('Error updating the SDK version: ' + err.toString());
                 }
-                sdkInformation.vendor.report('Microsoft Corporation', (err?: Error) => {
+                this._sdkInformation.vendor.report('Microsoft Corporation', (err?: Error) => {
                   if (err) {
                     debug('Error updating the SDK vendor: ' + err.toString());
                   }
