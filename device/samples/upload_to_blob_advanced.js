@@ -46,7 +46,6 @@ async function uploadToBlob(localFilePath, client) {
     throw new errors.ArgumentError('Invalid upload parameters');
   }
 // END NODE.JS DEVICE CLIENT CODE
-
 // STORAGE BLOB CODE
   const pipeline = StorageURL.newPipeline(new AnonymousCredential(), {
     retryOptions: { maxTries: 4 },
@@ -79,20 +78,26 @@ async function uploadToBlob(localFilePath, client) {
     }
     );
     console.log('uploadStreamToBlockBlob success');
+    let isSuccess = true;
+    let statusCode = uploadStatus._response.status;
+    let statusDescription = uploadStatus._response.bodyAsText;
 // END STORAGE BLOB CODE
+// NODE.JS DEVICE CLIENT CODE
     // notify IoT Hub of upload to blob status (success)
-    await client.notifyBlobUploadStatus(null, uploadStatus);
+    await client.notifyBlobUploadStatus(isSuccess, statusCode, statusDescription);
+    console.log('notifyBlobUploadStatus success')
     return 0;
   }
   catch (err) {
     // notify IoT Hub of upload to blob status (failure)
+    console.log(err);
     await client.notifyBlobUploadStatus(err, null);
     return 1;
   }
-
+// END NODE.JS DEVICE CLIENT CODE
 }
 
 uploadToBlob(localFilePath, Client.fromConnectionString(deviceConnectionString, Protocol))
 .catch((err) => {
-  return new Error(err);
+  console.log(err);
 });
