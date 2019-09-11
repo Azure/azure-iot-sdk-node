@@ -132,13 +132,12 @@ interface InterfaceInstanceInformation {
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
 
-/**
- * @private
- * An instantiation of the SDK information interface.
- */
-const sdkInformation = new SdkInformation('urn_azureiot_Client_SDKInformation', 'urn:azureiot:Client:SDKInformation:1');
-
 export class DigitalTwinClient {
+  //
+  // An instantiation of the SDK information interface.
+  //
+  private readonly _sdkInformation: SdkInformation  = new SdkInformation('urn_azureiot_Client_SDKInformation', 'urn:azureiot:Client:SDKInformation:1');
+
   //
   // Dictionary of each interfaceInstance and the associated interface.
   //
@@ -164,7 +163,7 @@ export class DigitalTwinClient {
     this._capabilityModel = capabilityModel;
     this._client = client;
     this._twin = {} as Twin;
-    this.addInterfaceInstance(sdkInformation);
+    this.addInterfaceInstance(this._sdkInformation);
   }
 
   /**
@@ -636,15 +635,15 @@ export class DigitalTwinClient {
             // Intentionally letting a failure of SDK information report
             // be ignored.
             //
-            sdkInformation.language.report('Node.js', (err?: Error) => {
+            this._sdkInformation.language.report('Node.js', (err?: Error) => {
               if (err) {
                 debug('Error updating the SDK language: ' + err.toString());
               }
-              sdkInformation.version.report(packageJson.name + '/' + packageJson.version, (err?: Error) => {
+              this._sdkInformation.version.report(packageJson.name + '/' + packageJson.version, (err?: Error) => {
                 if (err) {
                   debug('Error updating the SDK version: ' + err.toString());
                 }
-                sdkInformation.vendor.report('Microsoft Corporation', (err?: Error) => {
+                this._sdkInformation.vendor.report('Microsoft Corporation', (err?: Error) => {
                   if (err) {
                     debug('Error updating the SDK vendor: ' + err.toString());
                   }
