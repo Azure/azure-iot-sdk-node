@@ -67,7 +67,7 @@
     "test": "npm -s run lint && npm -s run alltest"
   },
   "engines": {
-    "node": ">= 0.10"
+    "node": ">= 8.0.0"
   },
   "repository": {
     "type": "git",

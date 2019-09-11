@@ -33,7 +33,7 @@
     "check-cover": "nyc check-coverage --statements 93 --branches 88 --functions 100 --lines 93 "
   },
   "engines": {
-    "node": ">= 0.10"
+    "node": ">= 8.0.0"
   },
   "repository": {
     "type": "git",

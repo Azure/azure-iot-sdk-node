@@ -39,19 +39,6 @@ const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
 const localFilePath = process.env.PATH_TO_FILE;
 const blobName = 'testblob.txt';
 
-
-// helper function 
-function getFileStats(localFilePath) {
-  return new Promise((resolve, reject) => { 
-    fs.stat(localFilePath, (err, fileStats) => {
-      if (err) {
-        reject(err);
-      }
-      resolve(fileStats);
-    });
-  });
-} 
-
 async function uploadToBlob(localFilePath, client) {
 // NODE.JS DEVICE CLIENT CODE
   let blobInfo = await client.getBlobSharedAccessSignature(blobName);
@@ -78,9 +65,6 @@ async function uploadToBlob(localFilePath, client) {
   const containerURL = ContainerURL.fromServiceURL(serviceURL, blobInfo.containerName);
   const blobURL = BlobURL.fromContainerURL(containerURL, blobInfo.blobName);
   const blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
-
-  // get file stats
-  let fileStats = await getFileStats(localFilePath);
 
   // parallel uploading
   try {
@@ -109,7 +93,6 @@ async function uploadToBlob(localFilePath, client) {
 }
 
 uploadToBlob(localFilePath, Client.fromConnectionString(deviceConnectionString, Protocol))
-  .catch((err) => {
-    return new Error(err);
-  });
-
+.catch((err) => {
+  return new Error(err);
+});
