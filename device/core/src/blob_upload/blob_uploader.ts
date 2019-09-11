@@ -92,7 +92,7 @@ export class BlobUploader implements BlobUploaderInterface {
         throw new errors.ArgumentError('Invalid upload parameters');
       }
 
-      // this is only an option for testing purposes.
+      // This if statement is only for testing purposes. There is no customer API for selecting a storage API.
       if (!this.storageApi) {
         /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_06_002: [`BlobUploader` should delay load azure-storage into the storageAPI property if `storageApi` is falsy]*/
         this.storageApi = require('@azure/storage-blob');
@@ -108,7 +108,7 @@ export class BlobUploader implements BlobUploaderInterface {
         }
       });
       const blockBlobURL = new this.storageApi.BlockBlobURL(`https://${blobInfo.hostName}/${blobInfo.containerName}/${blobInfo.blobName}${blobInfo.sasToken}`, pipeline);
-      const uploadPromise = this.storageApi.uploadStreamToBlockBlob(this.storageApi.Aborter.timeout(30 * 60 * 1000), stream, blockBlobURL, streamLength, 20, { progress: (ev) => console.log(ev) });
+      const uploadPromise = this.storageApi.uploadStreamToBlockBlob(this.storageApi.Aborter.timeout(30 * 60 * 1000), stream, blockBlobURL, streamLength, 20);
       uploadPromise
       .then((uploadBlobResponse: any) => {
         /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_16_005: [`uploadToBlob` shall call the `_callback` calback with the result of the storage api call.]*/

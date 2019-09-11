@@ -216,7 +216,7 @@ describe('Device Client', function () {
 
     /*Codes_SRS_NODE_DEVICE_CLIENT_41_006: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusCode` is falsy but not the number 0.]*/
     [undefined, null, ''].forEach(function (statusCode) {
-    it.only('throws a ReferenceError if \'statusCode\' is ' + statusCode + '\'', function(done) {
+    it('throws a ReferenceError if \'statusCode\' is ' + statusCode + '\'', function(done) {
       let isSuccess = 0;
       let statusDescription = 'NaN';
       let client = new Client(new EventEmitter(), null, {}, {});

@@ -15,13 +15,14 @@ describe('BlobUploadResult', function() {
       });
     });
 
+    
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_16_002: [The `statusCode` parameter shall be assigned to the the `statusCode` property of the newly created `BlobUploadResult` instance.]*/
     it('Assigns the \'statusCode\' parameter to the \'statusCode\' property', function() {
       var testStatusCode = 42;
       var result = new BlobUploadResult(true, testStatusCode);
       assert.equal(result.statusCode, testStatusCode);
     });
-
+    
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_16_003: [The `statusDescription` parameter shall be assigned to the the `statusDescription` property of the newly created `BlobUploadResult` instance.]*/
     it('Assigns the \'statusDescription\' parameter to the \'statusDescription\' property', function() {
       var testStatusDescription = 'test description';
@@ -30,10 +31,16 @@ describe('BlobUploadResult', function() {
     });
   });
   
+  
   describe('#fromAzureStorageCallbackArgs', function(){
-    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_16_004: [If the `err` argument is not `null`, the `BlobUploadResult` error shall have the `isSuccess` property set to `false`.]*/
-    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_16_005: [If `err`, `body` and `response` are not `null` (HTTP error), the `BlobUploadResult` error shall have the `statusCode` property set to the HTTP error code of the blob upload response.]*/
-    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_16_006: [If `err`, `body` and `response` are not `null` (HTTP error), the `BlobUploadResult` error shall have the `statusDescription` property set to the HTTP error body of the blob upload response.]*/
+    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_41_001: [If `err` is `null` and `uploadResponse` is falsy a `ReferenceError` shall be thrown]*/
+    it('Throws a \'ReferenceError\' if err is null and uploadResponse is not provided', function() {
+      assert.throws(function() {
+        BlobUploadResult.fromAzureStorageCallbackArgs(null, null);
+      }, ReferenceError);
+    });
+
+    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_41_002: [If `err` is not `null`, the `BlobUploadResult` shall have the `isSucess` property set to `false`.]*/
     it('Creates a correct BlobUploadResult instance when the error in an HTTP error', function() {
       let testBody = 'This is a fake error';
       let result = BlobUploadResult.fromAzureStorageCallbackArgs(new Error(testBody), null);
@@ -41,12 +48,35 @@ describe('BlobUploadResult', function() {
       assert.equal(result.statusCode, -1);
       assert.equal(result.statusDescription, testBody);
     });
+
+    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_41_003: [If `err` is null but `uploadResponse` is provided, and `uploadResponse.ErrorCode` is not null, `BlobUploadResult` shall have the `isSuccess` property set to `false`]*/
+    it('Creates a correct BlobUploadResult instance when response is a error', function() {
+      let fakeSuccessUpdateResponse = {
+        errorCode: '400',
+        _response: { status: 400, bodyAsText: '' }
+        }
+      var result = BlobUploadResult.fromAzureStorageCallbackArgs(null, fakeSuccessUpdateResponse);
+      assert.isFalse(result.isSuccess);
+      assert.equal(result.statusCode, 400);
+      assert.equal(result.statusDescription, '');
+    });
+
+    it.only('Creates a correct BlobUploadResult instance when response is a error without an errorCode', function() {
+      let fakeSuccessUpdateResponse = {
+        errorCode: '',
+        _response: { status: 400, bodyAsText: '' }
+        }
+      var result = BlobUploadResult.fromAzureStorageCallbackArgs(null, fakeSuccessUpdateResponse);
+      assert.isFalse(result.isSuccess);
+      assert.equal(result.statusCode, 400);
+      assert.equal(result.statusDescription, '');
+    });
     
-    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_16_007: [If the `err` argument is not `null` but body and response are `undefined` (non HTTP error), the `BlobUploadResult` error shall have the `statusCode` property set to -1.]*/
-    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_16_008: [If the `err` argument is not `null` but body and response are `undefined` (non HTTP error), the `BlobUploadResult` error shall have the `statusDescription` property set to the error message.]*/
+    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_41_004: [If `err` is null and `uploadResponse` is provided, the `BlobUploadResult` shall have the `statusCode` and `statusDescription` property set to the HTTP status code of the blob upload response]*/
+    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_41_005: [If `uploadResponse._response.status` is a number within the HTTP Status Codes 'success' range, the `isSuccess` property will be set to `true`]*/
     it('Creates a correct BlobUploadResult instance when response is a success', function() {
       let fakeSuccessUpdateResponse = {
-        errorCode: 0,
+        errorCode: '',
         _response: { status: 201, bodyAsText: '' }
        }
       var result = BlobUploadResult.fromAzureStorageCallbackArgs(null, fakeSuccessUpdateResponse);
@@ -55,35 +85,15 @@ describe('BlobUploadResult', function() {
       assert.equal(result.statusDescription, '');
     });
 
-    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_16_007: [If the `err` argument is not `null` but body and response are `undefined` (non HTTP error), the `BlobUploadResult` error shall have the `statusCode` property set to -1.]*/
-    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_16_008: [If the `err` argument is not `null` but body and response are `undefined` (non HTTP error), the `BlobUploadResult` error shall have the `statusDescription` property set to the error message.]*/
-    it('Creates a correct BlobUploadResult instance when response is a success', function() {
+    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_41_005: [If `uploadResponse._response.status` is a number within the HTTP Status Codes 'success' range, the `isSuccess` property will be set to `true`]*/
+    it('Creates a correct BlobUploadResult instance when response is malformed (no _response)', function() {
       let fakeSuccessUpdateResponse = {
-        errorCode: 400,
-        _response: { status: 400, bodyAsText: '' }
-       }
+        errorCode: '0'
+      }
       var result = BlobUploadResult.fromAzureStorageCallbackArgs(null, fakeSuccessUpdateResponse);
       assert.isFalse(result.isSuccess);
-      assert.equal(result.statusCode, 400);
-      assert.equal(result.statusDescription, '');
-    });
-
-    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_16_007: [If the `err` argument is not `null` but body and response are `undefined` (non HTTP error), the `BlobUploadResult` error shall have the `statusCode` property set to -1.]*/
-    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_16_008: [If the `err` argument is not `null` but body and response are `undefined` (non HTTP error), the `BlobUploadResult` error shall have the `statusDescription` property set to the error message.]*/
-    it('Creates a correct BlobUploadResult instance when response is a success', function() {
-      let fakeSuccessUpdateResponse = {
-        errorCode: 0
-      }
-      assert.throws(() => {
-        var result = BlobUploadResult.fromAzureStorageCallbackArgs(null, fakeSuccessUpdateResponse);
-      });
-    });
-    
-    /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_16_012: [If `err` is null and `body` and/or `response` is/are falsy, `fromAzureStorageCallbackArgs` shall throw a `ReferenceError`.]*/
-    it('Throws a \'ReferenceError\' if err is null and uploadResponse is not provided', function() {
-      assert.throws(function() {
-        BlobUploadResult.fromAzureStorageCallbackArgs(null, null);
-      }, ReferenceError);
+      assert.equal(result.statusCode, -1);
+      assert.equal(result.statusDescription, 'no status description');    
     });
   });
 });
