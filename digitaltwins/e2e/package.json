@@ -39,7 +39,7 @@
     "@azure/event-hubs": "^1.0.8",
     "azure-iot-digitaltwins-model-repository": "1.0.0-preview.1",
     "azure-iot-digitaltwins-service": "1.0.0-preview.1",
-    "azure-iot-digitaltwins-device": "1.0.0-preview.1"
+    "azure-iot-digitaltwins-device": "1.0.0-preview.2"
   },
   "devDependencies": {
     "eslint": "^6.0.1",
