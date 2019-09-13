@@ -232,7 +232,7 @@ export class Client extends InternalClient {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_DEVICE_CLIENT_41_005: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `isSuccess` is falsy but not the boolean false.]*/
       /*Codes_SRS_NODE_DEVICE_CLIENT_41_006: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusCode` is falsy but not the number 0.]*/
-      /*Codes_SRS_NODE_DEVICE_CLIENT_41_007: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusDescription` is falsy.]*/
+      /*Codes_SRS_NODE_DEVICE_CLIENT_41_007: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusDescription` is falsy but not an empty string.]*/
       if (!isSuccess && typeof(isSuccess) !== 'boolean' ) throw new ReferenceError('isSuccess cannot be \' ' + isSuccess + ' \'');
       if (!statusCode && !(statusCode === 0)) throw new ReferenceError('statusCode cannot be \' ' + statusCode + ' \'');
       if (!statusDescription && statusDescription !== '') throw new ReferenceError('statusDescription cannot be \' ' + statusDescription + ' \'.');
@@ -244,7 +244,7 @@ export class Client extends InternalClient {
       const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         let uploadResult = { isSuccess: isSuccess, statusCode: statusCode, statusDescription: statusDescription };
-        /*Codes_SRS_NODE_DEVICE_CLIENT_41_XXX: [The `notifyBlobUploadStatus` method shall call the `notifyUploadComplete` method via the internal `_fileUploadApi` class.]*/
+        /*Codes_SRS_NODE_DEVICE_CLIENT_41_015: [The `notifyBlobUploadStatus` method shall call the `notifyUploadComplete` method via the internal `_fileUploadApi` class.]*/
         this._fileUploadApi.notifyUploadComplete(this._blobStorageUploadParams.correlationId, uploadResult, opCallback);
       }, (err) => {
         /*Codes_SRS_NODE_DEVICE_CLIENT_41_008: [The `notifyBlobUploadStatus` method shall call the `_callback` callback with `err` if the notification fails.]*/

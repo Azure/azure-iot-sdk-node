@@ -142,6 +142,10 @@ interface DeviceMethodEventHandler {
 
 **SRS_NODE_DEVICE_CLIENT_41_005: [** The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `uploadResponse` is falsy. **]**
 
+**SRS_NODE_DEVICE_CLIENT_41_006: [** The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusCode` is falsy but not the number 0. **]**
+
+**SRS_NODE_DEVICE_CLIENT_41_007: [** The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusDescription` is falsy but not an empty string. **]**
+
 **SRS_NODE_DEVICE_CLIENT_41_008: [** The `notifyBlobUploadStatus` method shall call the `_callback` callback with `err` if the notification fails. **]**
 
 **SRS_NODE_DEVICE_CLIENT_41_009: [** The `notifyBlobUploadStatus` method shall call the `_callback` callback with no parameters if the notification succeeds. **]**
@@ -155,3 +159,5 @@ interface DeviceMethodEventHandler {
 **SRS_NODE_DEVICE_CLIENT_41_013: [** The `notifyBlobUploadStatus` method shall call the `done` callback with an `Error` object if the notify fails. **]**
 
 **SRS_NODE_DEVICE_CLIENT_41_014: [** The `notifyBlobUploadStatus` method shall call the `done` callback with no parameters if the notify succeeds. **]**
+
+**SRS_NODE_DEVICE_CLIENT_41_015: [** The `notifyBlobUploadStatus` method shall call the `notifyUploadComplete` method via the internal `_fileUploadApi` class. **]**

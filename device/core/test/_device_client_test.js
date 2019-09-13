@@ -197,7 +197,7 @@ describe('Device Client', function () {
 
   describe('#notifyBlobUploadStatus', function() {
 
-    /*Codes_SRS_NODE_DEVICE_CLIENT_41_005: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `isSuccess` is falsy.]*/
+    /*Tests_SRS_NODE_DEVICE_CLIENT_41_005: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `isSuccess` is falsy.]*/
     [undefined, null, ''].forEach(function (isSuccess) {
     it('throws a ReferenceError if \'isSuccess\' is ' + isSuccess + '\'', function(done) {
       let statusCode = 1;
@@ -214,7 +214,7 @@ describe('Device Client', function () {
     });
     });
 
-    /*Codes_SRS_NODE_DEVICE_CLIENT_41_006: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusCode` is falsy but not the number 0.]*/
+    /*Tests_SRS_NODE_DEVICE_CLIENT_41_006: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusCode` is falsy but not the number 0.]*/
     [undefined, null, ''].forEach(function (statusCode) {
     it('throws a ReferenceError if \'statusCode\' is ' + statusCode + '\'', function(done) {
       let isSuccess = 0;
@@ -237,7 +237,7 @@ describe('Device Client', function () {
     });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_41_007: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusDescription` is falsy.]*/
+    /*Tests_SRS_NODE_DEVICE_CLIENT_41_007: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusDescription` is falsy but not an empty string.]*/
     [undefined, null, ''].forEach(function (statusDescription) {
     it('throws a ReferenceError if \'statusDescription\' is ' + statusDescription + '\'', function(done) {
       let isSuccess = 0;
