@@ -24,10 +24,10 @@ var createDeviceClient = require('./testUtils.js').createDeviceClient;
 var closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
-async function uploadToBlob(fileStream, client, callback) {
+async function uploadToBlob(blobName, fileStream, client, callback) {
   let blobInfo = await client.getBlobSharedAccessSignature(blobName);
   if (!blobInfo) {
-    throw new errors.ArgumentError('Invalid upload parameters');
+    callback(Error('Failed to retrieve Blob SAS'));
   }
   const pipeline = StorageURL.newPipeline(new AnonymousCredential(), {
     retryOptions: { maxTries: 4 },
@@ -46,7 +46,10 @@ async function uploadToBlob(fileStream, client, callback) {
   const containerURL = ContainerURL.fromServiceURL(serviceURL, blobInfo.containerName);
   const blobURL = BlobURL.fromContainerURL(containerURL, blobInfo.blobName);
   const blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
-  
+  let isSuccess;
+  let statusCode;
+  let statusDescription;
+  let errorCode;
     // parallel uploading
   try {
     let uploadStatus = await uploadStreamToBlockBlob(
@@ -54,26 +57,25 @@ async function uploadToBlob(fileStream, client, callback) {
       fileStream,
       blockBlobURL,
       4 * 1024 * 1024, // 4MB block size
-    20, // 20 concurrency
-    {
-      progress: ev => console.log(ev)
-    }
+    20 // 20 concurrency
     );
-    console.log('uploadStreamToBlockBlob success');
-    let isSuccess = true;
-    let statusCode = uploadStatus._response.status;
-    let statusDescription = uploadStatus._response.bodyAsText;
+    debug('uploadStreamToBlockBlob success');
+    isSuccess = true;
+    statusCode = uploadStatus._response.status;
+    statusDescription = uploadStatus._response.bodyAsText;
     // notify IoT Hub of upload to blob status (success)
-    await client.notifyBlobUploadStatus(isSuccess, statusCode, statusDescription);
-    console.log('notifyBlobUploadStatus success')
-    return callback();
+    debug('notifyBlobUploadStatus success');
   }
   catch (err) {
-    // notify IoT Hub of upload to blob status (failure)
-    console.log(err);
-    await client.notifyBlobUploadStatus(err, null);
-    return callback(err);
+    isSuccess = false;
+    statusCode = err.response.headers.get("x-ms-error-code");
+    statusDescription = '';
+    errorCode = err;
+    debug(err);
+    debug('notifyBlobUploadStatus failure');
   }
+  await client.notifyBlobUploadStatus(isSuccess, statusCode, statusDescription);
+  return callback(errorCode);
 }
 
 

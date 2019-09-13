@@ -196,16 +196,15 @@ describe('Device Client', function () {
   });
 
   describe('#notifyBlobUploadStatus', function() {
-
     /*Tests_SRS_NODE_DEVICE_CLIENT_41_005: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `isSuccess` is falsy.]*/
     [undefined, null, ''].forEach(function (isSuccess) {
     it('throws a ReferenceError if \'isSuccess\' is ' + isSuccess + '\'', function(done) {
       let statusCode = 1;
       let statusDescription = 'NaN';
+      let correlationId = 'fakeCorrelationId';
       let client = new Client(new EventEmitter(), null, {}, {});
-      client._blobStorageUploadParams = { correlationId: 'fakeCorrelationId' };
       try {
-        client.notifyBlobUploadStatus(isSuccess, statusCode, statusDescription, function() {});
+        client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function() {});
       } catch (err) {
         assert.strictEqual(err.name, "ReferenceError");
         done();
@@ -219,10 +218,10 @@ describe('Device Client', function () {
     it('throws a ReferenceError if \'statusCode\' is ' + statusCode + '\'', function(done) {
       let isSuccess = 0;
       let statusDescription = 'NaN';
+      let correlationId = 'fakeCorrelationId';
       let client = new Client(new EventEmitter(), null, {}, {});
-      client._blobStorageUploadParams = { correlationId: 'fakeCorrelationId' };
       try {
-        client.notifyBlobUploadStatus(isSuccess, statusCode, statusDescription, function() {
+        client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function() {
         });
       } catch (err) {
         console.log(statusCode);
@@ -242,10 +241,10 @@ describe('Device Client', function () {
     it('throws a ReferenceError if \'statusDescription\' is ' + statusDescription + '\'', function(done) {
       let isSuccess = 0;
       let statusDescription = 'NaN';
+      let correlationId = 'fakeCorrelationId';
       let client = new Client(new EventEmitter(), null, {}, {});
-      client._blobStorageUploadParams = { correlationId: 'fakeCorrelationId' };
       try {
-        client.notifyBlobUploadStatus(isSuccess, statusCode, statusDescription, function() {});
+        client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function() {});
       } catch (err) {
         assert.strictEqual(err.name, "ReferenceError");
         done();
@@ -254,30 +253,36 @@ describe('Device Client', function () {
     });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_41_012: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `correlationId` is not set.]*/
-    it('throws a ReferenceError if \'correlationId\' is not set because getBlobSharedAccessSignature has not been called', function() {
-      let isSuccess = 0;
-      let statusCode = 200;
-      let statusDescription = 'NaN';
-      var client = new Client(new EventEmitter(), null, {}, {});
-      assert.throws(function() {
-        client.notifyBlobUploadStatus(isSuccess, statusCode, statusDescription, function() {});
+    /*Tests_SRS_NODE_DEVICE_CLIENT_41_XXX: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `correlationId` is falsy.]*/
+    [undefined, null, ''].forEach(function (correlationId) {
+      it('throws a ReferenceError if \'isSuccess\' is ' + correlationId + '\'', function(done) {
+        let isSuccess = 0;
+        let statusCode = 1;
+        let statusDescription = 'NaN';
+        let client = new Client(new EventEmitter(), null, {}, {});
+        try {
+          client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function() {});
+        } catch (err) {
+          assert.strictEqual(err.name, "ReferenceError");
+          done();
+        }
+        assert.fail('Error not thrown. Error should be thrown.');
       });
-    });
+      });
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_41_013: [The `notifyBlobUploadStatus` method shall call the `done` callback with an `Error` object if the notify fails.]*/
     it('calls the done callback with an Error object if the notify fails', function(done) {
       let isSuccess = false;
       let statusCode = 0;
       let statusDescription = 'NaN';
+      let correlationId = 'fakeCorrelationId';
       let FakeFileUploadApi = function (uploadResult) {
         this.notifyUploadComplete = function(correlationId, uploadResult, callback) {
           callback(new Error('fake notify error'));
         };
       };
       let client = new Client(new EventEmitter(), null, null, new FakeFileUploadApi());
-      client._blobStorageUploadParams = { correlationId: 'fakeCorrelationId' };
-      client.notifyBlobUploadStatus(isSuccess, statusCode, statusDescription, function(err) { 
+      client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function(err) { 
       assert.instanceOf(err, Error);
         done();
       });
@@ -288,14 +293,14 @@ describe('Device Client', function () {
       let isSuccess = true;
       let statusCode = 200;
       let statusDescription = 'NaN';
+      let correlationId = 'fakeCorrelationId';
       let FakeFileUploadApi = function (uploadResult) {
         this.notifyUploadComplete = function(correlationId, uploadResult, callback) {
           callback();
         };
       };
       let client = new Client(new EventEmitter(), null, null, new FakeFileUploadApi());
-      client._blobStorageUploadParams = { correlationId: 'fakeCorrelationId' };
-      client.notifyBlobUploadStatus(isSuccess, statusCode, statusDescription, done);
+      client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, done);
     });
   });
 

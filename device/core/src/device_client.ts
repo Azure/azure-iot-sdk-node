@@ -31,7 +31,6 @@ export class Client extends InternalClient {
   private _c2dEnabled: boolean;
   private _deviceDisconnectHandler: (err?: Error, result?: any) => void;
   private _blobUploadClient: BlobUploadClient;
-  private _blobStorageUploadParams: UploadParams;
   private _fileUploadApi: FileUploadInterface;
 
   /**
@@ -206,8 +205,6 @@ export class Client extends InternalClient {
         /*Codes_SRS_NODE_DEVICE_CLIENT_41_003: [The `getBlobSharedAccessSignature` method shall call the `_callback` callback with `err` and `result` from the call to `getBlobSharedAccessSignature`.]*/
         if (!err) {
           debug('got blob storage shared access signature.');
-          /*Codes_SRS_NODE_DEVICE_CLIENT_41_004: [The `getBlobSharedAccessSignature` method shall store the `result` value for use by the `notifyBlobUploadStatus` method.]*/
-          this._blobStorageUploadParams = result;
         } else {
           debug('Could not obtain blob shared access signature.');
         }
@@ -218,6 +215,7 @@ export class Client extends InternalClient {
 
   /**
    * @description      The `notifyBlobUploadStatus` method sends IoT Hub the result of a blob upload.
+   * @param {string}                         correlationId      An id for correlating a upload status to a specific blob. Generated during the call to `getBlobSharedAccessSignature`.
    * @param {boolean}                        isSuccess          The success or failure status from the storage blob operation result.
    * @param {number}                         statusCode         The HTTP status code associated with the storage blob result.
    * @param {string}                         statusDescription  The description of the HTTP status code.
@@ -226,26 +224,23 @@ export class Client extends InternalClient {
    *
    * @throws {ReferenceException} If uploadResponse is falsy.
    */
-  notifyBlobUploadStatus(isSuccess: boolean, statusCode: number, statusDescription: string, callback: ErrorCallback): void;
-  notifyBlobUploadStatus(isSuccess: boolean, statusCode: number, statusDescription: string): Promise<void>;
-  notifyBlobUploadStatus(isSuccess: boolean, statusCode: number, statusDescription: string, callback?: ErrorCallback): Promise<void> | void {
+  notifyBlobUploadStatus(correlationId: string, isSuccess: boolean, statusCode: number, statusDescription: string, callback: ErrorCallback): void;
+  notifyBlobUploadStatus(correlationId: string, isSuccess: boolean, statusCode: number, statusDescription: string): Promise<void>;
+  notifyBlobUploadStatus(correlationId: string, isSuccess: boolean, statusCode: number, statusDescription: string, callback?: ErrorCallback): Promise<void> | void {
     return callbackToPromise((_callback) => {
+      /*Codes_SRS_NODE_DEVICE_CLIENT_41_XXX: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `correlationId` is falsy.]*/
       /*Codes_SRS_NODE_DEVICE_CLIENT_41_005: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `isSuccess` is falsy but not the boolean false.]*/
       /*Codes_SRS_NODE_DEVICE_CLIENT_41_006: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusCode` is falsy but not the number 0.]*/
       /*Codes_SRS_NODE_DEVICE_CLIENT_41_007: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusDescription` is falsy but not an empty string.]*/
+      if (!correlationId) throw new ReferenceError('correlationId cannot be \' ' + correlationId + ' \'');
       if (!isSuccess && typeof(isSuccess) !== 'boolean' ) throw new ReferenceError('isSuccess cannot be \' ' + isSuccess + ' \'');
       if (!statusCode && !(statusCode === 0)) throw new ReferenceError('statusCode cannot be \' ' + statusCode + ' \'');
       if (!statusDescription && statusDescription !== '') throw new ReferenceError('statusDescription cannot be \' ' + statusDescription + ' \'.');
-      /*Codes_SRS_NODE_DEVICE_CLIENT_41_012: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `correlationId` is not set.]*/
-      if (!this._blobStorageUploadParams || !this._blobStorageUploadParams.correlationId) {
-        let referenceErrorMessage = 'correlationId is not set. getBlobSharedAccessSignature must be called before notifyBlobUploadStatus in order to set \'correlationId\'.';
-        throw new ReferenceError(referenceErrorMessage);
-      }
       const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         let uploadResult = { isSuccess: isSuccess, statusCode: statusCode, statusDescription: statusDescription };
         /*Codes_SRS_NODE_DEVICE_CLIENT_41_015: [The `notifyBlobUploadStatus` method shall call the `notifyUploadComplete` method via the internal `_fileUploadApi` class.]*/
-        this._fileUploadApi.notifyUploadComplete(this._blobStorageUploadParams.correlationId, uploadResult, opCallback);
+        this._fileUploadApi.notifyUploadComplete(correlationId, uploadResult, opCallback);
       }, (err) => {
         /*Codes_SRS_NODE_DEVICE_CLIENT_41_008: [The `notifyBlobUploadStatus` method shall call the `_callback` callback with `err` if the notification fails.]*/
         /*Codes_SRS_NODE_DEVICE_CLIENT_41_009: [The `notifyBlobUploadStatus` method shall call the `_callback` callback with no parameters if the notification succeeds.]*/

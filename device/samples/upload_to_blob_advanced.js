@@ -40,13 +40,11 @@ const localFilePath = process.env.PATH_TO_FILE;
 const blobName = 'testblob.txt';
 
 async function uploadToBlob(localFilePath, client) {
-// NODE.JS DEVICE CLIENT CODE
   let blobInfo = await client.getBlobSharedAccessSignature(blobName);
   if (!blobInfo) {
     throw new errors.ArgumentError('Invalid upload parameters');
   }
-// END NODE.JS DEVICE CLIENT CODE
-// STORAGE BLOB CODE
+
   const pipeline = StorageURL.newPipeline(new AnonymousCredential(), {
     retryOptions: { maxTries: 4 },
     telemetry: { value: 'HighLevelSample V1.0.0' }, // Customized telemetry string
@@ -54,21 +52,21 @@ async function uploadToBlob(localFilePath, client) {
       enable: false
     }
   });
-
   const serviceURL = new ServiceURL(
     `https://${blobInfo.hostName}/${blobInfo.sasToken}`,
     pipeline
   );  
-
   // initialize the blockBlobURL to a new blob
   const containerURL = ContainerURL.fromServiceURL(serviceURL, blobInfo.containerName);
   const blobURL = BlobURL.fromContainerURL(containerURL, blobInfo.blobName);
   const blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
-
   // parallel uploading
+  let isSuccess;
+  let statusCode;
+  let statusDescription;
   try {
     let uploadStatus = await uploadStreamToBlockBlob(
-      Aborter.timeout(30 * 60 * 1000), // Abort uploading with timeout in 30mins
+      Aborter.timeout(30 * 60 * 1000), // 30mins
       fs.createReadStream(localFilePath),
       blockBlobURL,
       4 * 1024 * 1024, // 4MB block size
@@ -78,23 +76,20 @@ async function uploadToBlob(localFilePath, client) {
     }
     );
     console.log('uploadStreamToBlockBlob success');
-    let isSuccess = true;
-    let statusCode = uploadStatus._response.status;
-    let statusDescription = uploadStatus._response.bodyAsText;
-// END STORAGE BLOB CODE
-// NODE.JS DEVICE CLIENT CODE
+    isSuccess = true;
+    statusCode = uploadStatus._response.status;
+    statusDescription = uploadStatus._response.bodyAsText;
     // notify IoT Hub of upload to blob status (success)
-    await client.notifyBlobUploadStatus(isSuccess, statusCode, statusDescription);
-    console.log('notifyBlobUploadStatus success')
-    return 0;
+    console.log('notifyBlobUploadStatus success');
   }
   catch (err) {
-    // notify IoT Hub of upload to blob status (failure)
+    isSuccess = false;
+    statusCode = err.response.headers.get("x-ms-error-code");
+    statusDescription = '';
+    console.log('notifyBlobUploadStatus failed');
     console.log(err);
-    await client.notifyBlobUploadStatus(err, null);
-    return 1;
   }
-// END NODE.JS DEVICE CLIENT CODE
+  await client.notifyBlobUploadStatus(result.correlationId, isSuccess, statusCode, statusDescription);
 }
 
 uploadToBlob(localFilePath, Client.fromConnectionString(deviceConnectionString, Protocol))
