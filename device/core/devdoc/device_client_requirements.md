@@ -161,3 +161,5 @@ interface DeviceMethodEventHandler {
 **SRS_NODE_DEVICE_CLIENT_41_014: [** The `notifyBlobUploadStatus` method shall call the `done` callback with no parameters if the notify succeeds. **]**
 
 **SRS_NODE_DEVICE_CLIENT_41_015: [** The `notifyBlobUploadStatus` method shall call the `notifyUploadComplete` method via the internal `_fileUploadApi` class. **]**
+
+**SRS_NODE_DEVICE_CLIENT_41_016: [** The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `correlationId` is falsy. **]**

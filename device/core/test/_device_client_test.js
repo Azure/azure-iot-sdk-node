@@ -253,7 +253,7 @@ describe('Device Client', function () {
     });
     });
 
-    /*Tests_SRS_NODE_DEVICE_CLIENT_41_XXX: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `correlationId` is falsy.]*/
+    /*Tests_SRS_NODE_DEVICE_CLIENT_41_016: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `correlationId` is falsy.]*/
     [undefined, null, ''].forEach(function (correlationId) {
       it('throws a ReferenceError if \'isSuccess\' is ' + correlationId + '\'', function(done) {
         let isSuccess = 0;

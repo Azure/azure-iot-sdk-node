@@ -228,7 +228,7 @@ export class Client extends InternalClient {
   notifyBlobUploadStatus(correlationId: string, isSuccess: boolean, statusCode: number, statusDescription: string): Promise<void>;
   notifyBlobUploadStatus(correlationId: string, isSuccess: boolean, statusCode: number, statusDescription: string, callback?: ErrorCallback): Promise<void> | void {
     return callbackToPromise((_callback) => {
-      /*Codes_SRS_NODE_DEVICE_CLIENT_41_XXX: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `correlationId` is falsy.]*/
+      /*Codes_SRS_NODE_DEVICE_CLIENT_41_016: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `correlationId` is falsy.]*/
       /*Codes_SRS_NODE_DEVICE_CLIENT_41_005: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `isSuccess` is falsy but not the boolean false.]*/
       /*Codes_SRS_NODE_DEVICE_CLIENT_41_006: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusCode` is falsy but not the number 0.]*/
       /*Codes_SRS_NODE_DEVICE_CLIENT_41_007: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusDescription` is falsy but not an empty string.]*/
