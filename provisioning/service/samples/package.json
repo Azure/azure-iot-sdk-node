@@ -9,7 +9,7 @@
     "yargs": "^10.1.1"
   },
   "engines": {
-    "node": ">= 0.10"
+    "node": ">= 8.0.0"
   },
   "repository": {
     "type": "git",

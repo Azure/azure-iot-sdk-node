@@ -16,6 +16,7 @@
     "azure-iot-device-mqtt": "1.10.3",
     "azure-iothub": "1.10.3",
     "azure-storage": "^2.10.2",
+    "@azure/storage-blob": "^10.4.1",
     "bluebird": "^3.5.2",
     "debug": "^4.1.1",
     "lodash": "^4.17.15",
@@ -66,7 +67,7 @@
     "test": "npm -s run lint && npm -s run alltest"
   },
   "engines": {
-    "node": ">= 0.10"
+    "node": ">= 8.0.0"
   },
   "repository": {
     "type": "git",

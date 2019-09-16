@@ -7,7 +7,8 @@
         "lib": [
             "es6"
         ],
-        "noUnusedLocals": true
+        "noUnusedLocals": true,
+        "resolveJsonModule": true
     },
     "include": [
         "./src/**/*.ts"

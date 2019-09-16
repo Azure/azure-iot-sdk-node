@@ -138,3 +138,27 @@ export interface DeviceClientOptions extends X509 {
    */
   amqp?: AmqpTransportOptions;
 }
+
+/**
+ * Structure to mimic the BlobUploadCommonResponse from @azure/storage-blob
+ */
+export interface BlobUploadCommonResponseStub {
+  errorCode?: string;
+  _response?: {
+    status?: number;
+    bodyAsText?: string;
+  };
+}
+
+/**
+ * Structure to mimic the RestError class from @azure/core-http
+ * This is used in blob_upload_results.ts to define the type of the error input to fromAzureStorageCallbackArgs.
+ *
+ */
+export interface RestErrorStub {
+  code?: string;
+  statusCode?: number;
+  request?: any; // WebResource
+  response?: any; // HttpOperationResponse
+  body?: any;
+}

@@ -9,7 +9,7 @@
   "dependencies": {
     "azure-iot-common": "1.10.3",
     "azure-iot-http-base": "1.9.12",
-    "azure-storage": "^2.10.2",
+    "@azure/storage-blob": "10.5.0",
     "debug": "^4.1.1",
     "lodash": "^4.17.15",
     "machina": "^4.0.2",
@@ -39,7 +39,7 @@
     "check-cover": "istanbul check-coverage --statements 95 --branches 86 --lines 97 --functions 92"
   },
   "engines": {
-    "node": ">= 0.10"
+    "node": ">= 8.0.0"
   },
   "repository": {
     "type": "git",

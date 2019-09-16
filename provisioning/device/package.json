@@ -32,7 +32,7 @@
     "check-cover": "istanbul check-coverage --statements 87 --branches 71 --functions 77 --lines 88"
   },
   "engines": {
-    "node": ">= 0.10"
+    "node": ">= 8.0.0"
   },
   "repository": {
     "type": "git",
