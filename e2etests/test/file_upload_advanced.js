@@ -59,20 +59,16 @@ async function uploadToBlob(blobName, fileStream, client, callback) {
       4 * 1024 * 1024, // 4MB block size
     20 // 20 concurrency
     );
-    debug('uploadStreamToBlockBlob success');
     isSuccess = true;
     statusCode = uploadStatus._response.status;
     statusDescription = uploadStatus._response.bodyAsText;
     // notify IoT Hub of upload to blob status (success)
-    debug('notifyBlobUploadStatus success');
   }
   catch (err) {
     isSuccess = false;
     statusCode = err.response.headers.get("x-ms-error-code");
     statusDescription = '';
     errorCode = err;
-    debug(err);
-    debug('notifyBlobUploadStatus failure');
   }
   await client.notifyBlobUploadStatus(isSuccess, statusCode, statusDescription);
   return callback(errorCode);
