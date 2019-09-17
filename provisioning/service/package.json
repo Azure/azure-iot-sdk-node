@@ -1,14 +1,14 @@
 {
   "name": "azure-iot-provisioning-service",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "Azure IoT SDK - Provisioning Service Client",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "iotprovisioningservice.js",
   "typings": "iotprovisioningservice.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.10.2",
-    "azure-iot-http-base": "1.9.11",
+    "azure-iot-common": "1.10.3",
+    "azure-iot-http-base": "1.9.12",
     "debug": "^4.1.1"
   },
   "devDependencies": {
@@ -34,7 +34,7 @@
     "cover": "istanbul cover ../../node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js"
   },
   "engines": {
-    "node": ">= 0.10"
+    "node": ">= 8.0.0"
   },
   "repository": {
     "type": "git",
