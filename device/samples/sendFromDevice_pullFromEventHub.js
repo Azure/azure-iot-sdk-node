@@ -34,9 +34,9 @@ const recieveFromEventHubAndPrint = (eventHubClient, eventPosition) => partition
 )
 const run = async() => {
     try {
-        const moduleClient = ModuleClient.fromConnectionString(process.env.DEVICE_CONN_STRING, Mqtt);
+        const moduleClient = ModuleClient.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Mqtt);
         const eventHubClient = await EventHubClient.createFromIotHubConnectionString(process.env.IOTHUB_CONNECTION_STRING); //this uses the iot hub connection string to create the client rather than the actual event hub end point
-        const httpClient = HttpClientFromConnectionString(process.env.DEVICE_CONN_STRING)
+        const httpClient = HttpClientFromConnectionString(process.env.DEVICE_CONNECTION_STRING)
         console.log('Initialized clients!')
 
         const partitionIds = await eventHubClient.getPartitionIds() //read more about partitions https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-features#partitions

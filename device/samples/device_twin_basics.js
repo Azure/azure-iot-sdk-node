@@ -11,7 +11,7 @@ const { Client } = require('azure-iot-device');
 
 const run = async() => {
   try {
-    const client = Client.fromConnectionString(process.env.DEVICE_CONN_STRING, Mqtt);
+    const client = Client.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Mqtt);
 
     //get the device twin
     const twin = await client.getTwin()

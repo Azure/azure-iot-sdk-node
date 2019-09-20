@@ -23,7 +23,7 @@ const listenOnDevice = async() => {
     try {
         
         //create a client using the device connection string and the mqtt protocol
-        const client = DeviceClient.fromConnectionString(process.env.DEVICE_CONN_STRING, Mqtt)
+        const client = DeviceClient.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Mqtt)
 
         client.on('message', (message) => console.log('recieved a message!', message.data.toString() ))
 

@@ -42,7 +42,7 @@ const connectWith_x509 = async() => {
 const run = async() => {
     try {
         //create a client using the device connection string and the mqtt protocol
-        const client = Client.fromConnectionString(process.env.DEVICE_CONN_STRING, Mqtt)
+        const client = Client.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Mqtt)
 
         /* you can also create clients with the alternative methods! */
         // const client = connectWith_sharedAccessSignature();

@@ -28,7 +28,7 @@ const onLockCarDoor = async(request, response) => {
 
 const run = async() => {
     try {
-        const client = DeviceClient.fromConnectionString(process.env.DEVICE_CONN_STRING, Mqtt)
+        const client = DeviceClient.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Mqtt)
         
         client.onDeviceMethod('lockDoor', onLockCarDoor)
         console.log('Listening for the lockDoor directMethod!')
