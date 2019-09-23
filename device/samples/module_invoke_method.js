@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-require('dotenv').config()
-const { Mqtt } = require('azure-iot-device-mqtt');
+require('dotenv').config();
+const Protocol = require('azure-iot-device-mqtt').Mqtt;
 const { ModuleClient } = require('azure-iot-device');
 
 /*
@@ -14,7 +14,7 @@ const { ModuleClient } = require('azure-iot-device');
 
 const run = async() => {
     try {
-        const client = await ModuleClient.fromEnvironment(Mqtt)
+        const client = await ModuleClient.fromEnvironment(Protocol)
         console.log('connected to moduleClient')
 
         const res = await client.invokeMethod(process.env.DEVICE_ID, 'methodTarget', {

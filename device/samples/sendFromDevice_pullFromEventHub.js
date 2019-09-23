@@ -1,5 +1,5 @@
-require('dotenv').config()
-const { Mqtt } = require('azure-iot-device-mqtt');
+require('dotenv').config();
+const Protocol = require('azure-iot-device-mqtt').Mqtt;
 const { clientFromConnectionString : HttpClientFromConnectionString } = require('azure-iot-device-http');
 const { ModuleClient, Message } = require('azure-iot-device');
 const { EventHubClient, EventPosition } = require('@azure/event-hubs');
@@ -7,14 +7,15 @@ const { promisify } = require('util')
 const delay = promisify(setTimeout)
 
 
-/* 
-This is a conceptual example in that it likely does not make sense for a module client to be sending messages then retrieve them in the same script
 
-This sample uses a module client to have the device send dummy messages, 
-it then uses an event hub client, created from out IoT Hub connection string to pull the recent messages down
+// This is a conceptual example in that it likely does not make sense for a module client to be sending messages then retrieve them in the same script
+// 
+// Here's how the sample works:
+// A Module Client is set up to receive messages from the HTTP Device Client
+// Then, an Event Hub Client, created from our IoT Hub connection string to pull the recent messages down
 
-It also demonstrates 
-*/
+// It also demonstrates 
+
 
 
 //this returns a dummy messsage ready to be sent, the messageId is just to show order
@@ -34,9 +35,10 @@ const recieveFromEventHubAndPrint = (eventHubClient, eventPosition) => partition
 )
 const run = async() => {
     try {
-        const moduleClient = ModuleClient.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Mqtt);
-        const eventHubClient = await EventHubClient.createFromIotHubConnectionString(process.env.IOTHUB_CONNECTION_STRING); //this uses the iot hub connection string to create the client rather than the actual event hub end point
-        const httpClient = HttpClientFromConnectionString(process.env.DEVICE_CONNECTION_STRING)
+        const moduleClient = ModuleClient.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Protocol);
+        // We use the iot hub connection string to create the client rather than the actual event hub end point
+        const eventHubClient = await EventHubClient.createFromIotHubConnectionString(process.env.IOTHUB_CONNECTION_STRING); 
+        const httpClient = HttpClientFromConnectionString(process.env.DEVICE_CONNECTION_STRING);
         console.log('Initialized clients!')
 
         const partitionIds = await eventHubClient.getPartitionIds() //read more about partitions https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-features#partitions
@@ -53,8 +55,8 @@ const run = async() => {
         await Promise.all(importantMessages.map(sendDummyMessage))
         console.log('Sent messages iteratively')
 
-        // we can also send as a batch of events using certain protocols such as http 
-        //first lets generate some newer messages
+        // we can also send as a batch of events using certain protocols such as http (not mqtt)
+        // first lets generate some newer messages
         const extremelyImportantMessages = [...Array(messageCount).keys()].map( i => generateImportantMessage(i+10) ) 
         await httpClient.sendEventBatch(extremelyImportantMessages)
 

@@ -40,7 +40,7 @@ const onMessage = client => async(message) => {
 const run = async() => {
     try {
         //create a client using the device connection string and the mqtt protocol
-        const client = Client.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Mqtt);
+        const client = Client.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Protocol);
 
         console.log('Client created. Starting send loop');
         const sendMessageInterval = startMessageInterval(client)

@@ -1,5 +1,5 @@
-require('dotenv').config()
-const { Mqtt } = require('azure-iot-device-mqtt');
+require('dotenv').config();
+const Protocol = require('azure-iot-device-mqtt').Mqtt;
 const { Client : DeviceClient, Message } = require('azure-iot-device');
 
 const { Client : HubClient } = require('azure-iothub')
@@ -23,7 +23,7 @@ const listenOnDevice = async() => {
     try {
         
         //create a client using the device connection string and the mqtt protocol
-        const client = DeviceClient.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Mqtt)
+        const client = DeviceClient.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Protocol)
 
         client.on('message', (message) => console.log('recieved a message!', message.data.toString() ))
 
