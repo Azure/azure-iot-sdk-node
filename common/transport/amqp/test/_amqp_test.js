@@ -789,6 +789,35 @@ describe('Amqp', function () {
       });
     }));
 
+
+    it('encodes the security interface id correctly', sinon.test(function(testCallback) {
+      var amqp = new Amqp();
+      var fakeConnection = new EventEmitter();
+      fakeConnection.name = 'connection';
+      var fakeConnectionContext = {connection: fakeConnection};
+      this.stub(amqp._rheaContainer, 'connect').callsFake(() => {process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
+      var fakeSession = new EventEmitter();
+      var fakeSessionContext = {session: fakeSession};
+      fakeConnection.create_session = this.stub().returns(fakeSession);
+      fakeSession.open = () => {};
+      this.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
+
+      assert.doesNotThrow(() => {
+        amqp.connect({uri: 'uri'}, () => {
+          var fakeLink = new SenderLink('endpoint', undefined, fakeSession);
+          fakeLink.attach = this.stub().callsArg(0);
+          fakeLink.send = this.stub().callsArgWith(1, null, new results.MessageEnqueued());
+          this.stub(MockSenderLink, 'SenderLink').returns(fakeLink);
+          var msg = new Message('message');
+          msg.setAsSecurityMessage();
+          amqp.send(msg, 'endpoint', undefined, function() {
+            assert.equal(fakeLink.send.args[0][0]['message_annotations']['iothub-interface-id'], "urn:azureiot:Security:SecurityAgent:1");
+            testCallback();
+          });
+        });
+      });
+    }));
+
     /*Tests_SRS_NODE_COMMON_AMQP_16_007: [If send encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
     it('calls the done callback with an Error if creating a sender fails', sinon.test(function(testCallback) {
       var amqp = new Amqp();

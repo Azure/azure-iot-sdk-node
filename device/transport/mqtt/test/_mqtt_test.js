@@ -282,6 +282,19 @@ describe('Mqtt', function () {
         });
       });
 
+      it('correctly serializes security message', function(done) {
+        var testMessage = new Message('message');
+        testMessage.setAsSecurityMessage();
+
+        var transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        transport.connect(function () {
+          testConfig.sendFunc(transport, testMessage, function() {
+            assert.equal(fakeMqttBase.publish.firstCall.args[0], testConfig.baseTopicWithProps+'%24.ifid=urn%3Aazureiot%3ASecurity%3ASecurityAgent%3A1' + testConfig.topicEnder);
+            done();
+          });
+        });
+      });
+
       /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `sendEvent` method shall use QoS level of 1.]*/
       /*Tests_SRS_NODE_DEVICE_MQTT_18_039: [ The `sendOutputEvent` method shall use QoS level of 1. ]*/
       it('uses a QoS of 1', function(done) {

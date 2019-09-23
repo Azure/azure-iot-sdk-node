@@ -89,6 +89,16 @@ export class AmqpMessage {
       amqpMessage.content_type = message.contentType;
     }
 
+    if (message.interfaceId) {
+      if (!amqpMessage.message_annotations) {
+        amqpMessage.message_annotations = {
+          'iothub-interface-id': message.interfaceId
+        };
+      } else {
+        amqpMessage.message_annotations['iothub-interface-id'] = message.interfaceId;
+      }
+    }
+
     /*Codes_SRS_NODE_IOTHUB_AMQPMSG_05_008: [If needed, the created AmqpMessage object shall have a property of type Object named application_properties.]*/
     function ensureApplicationPropertiesCreated(): void {
       if (!amqpMessage.application_properties) {
