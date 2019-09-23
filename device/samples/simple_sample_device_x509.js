@@ -4,17 +4,17 @@
 'use strict';
 
 var fs = require('fs');
-var Protocol = require('azure-iot-device-mqtt').Mqtt;
+//var Protocol = require('azure-iot-device-mqtt').Mqtt;
 // Uncomment one of these transports and then change it in fromConnectionString to test other transports
 // var Protocol = require('azure-iot-device-amqp').AmqpWs;
-// var Protocol = require('azure-iot-device-http').Http;
+var Protocol = require('azure-iot-device-http').Http;
 // var Protocol = require('azure-iot-device-amqp').Amqp;
 var Client = require('azure-iot-device').Client;
 var Message = require('azure-iot-device').Message;
 
 // String containing Hostname and Device Id in the following format:
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;x509=true"
-var deviceConnectionString = process.env.X509_DEVICE_CONNECTION_STRING; 
+var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING; 
 var certFile = process.env.PATH_TO_CERTIFICATE_FILE;
 var keyFile = process.env.PATH_TO_KEY_FILE;
 var passphrase = process.env.KEY_PASSPHRASE_OR_EMPTY; // Key Passphrase if one exists.
