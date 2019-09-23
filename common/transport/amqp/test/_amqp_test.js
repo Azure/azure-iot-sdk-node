@@ -811,7 +811,7 @@ describe('Amqp', function () {
           var msg = new Message('message');
           msg.setAsSecurityMessage();
           amqp.send(msg, 'endpoint', undefined, function() {
-            assert.equal(fakeLink.send.args[0][0]['message_annotations']['iothub-interface-id'], "urn:azureiot:Security:SecurityAgent:1");
+            assert.equal(fakeLink.send.args[0][0]['message_annotations']['iothub-interface-id'], 'urn:azureiot:Security:SecurityAgent:1');
             testCallback();
           });
         });

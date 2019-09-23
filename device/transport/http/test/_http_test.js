@@ -161,7 +161,7 @@ describe('Http', function () {
       assert(spy.calledOnce);
       assert.isOk(spy.args[0]);
       assert.isOk(spy.args[0][2]);
-      assert.equal(spy.args[0][2]['iothub-interface-id'], "urn:azureiot:Security:SecurityAgent:1");
+      assert.equal(spy.args[0][2]['iothub-interface-id'], 'urn:azureiot:Security:SecurityAgent:1');
 
       // cleanup
       done();
