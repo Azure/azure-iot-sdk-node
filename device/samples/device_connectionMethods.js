@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 require('dotenv').config();
-const Protocol = require('azure-iot-device-mqtt').Mqtt;
+const { Mqtt: Protocol } = require('azure-iot-device-mqtt');
 const { Client, Message } = require('azure-iot-device');
-const { readFileSync } = require('fs')
+const { readFileSync } = require('fs');
 
 //Note that this is using the device clients sendEvent rather than the module clients sendOutputEvent as seen in another sample
 const startMessageInterval = (client, messageDelay=1000) => setInterval( async() => {
@@ -42,7 +42,7 @@ const connectWith_x509 = async() => {
 const run = async() => {
     try {
         //create a client using the device connection string and the mqtt protocol
-        const client = Client.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Protocol)
+        const client = Client.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Mqtt)
 
         /* you can also create clients with the alternative methods! */
         // const client = connectWith_sharedAccessSignature();

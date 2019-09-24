@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 require('dotenv').config();
-const Protocol = require('azure-iot-device-mqtt').Mqtt;
+const Mqtt = require('azure-iot-device-mqtt').Mqtt;
 const { Client : HubClient } = require('azure-iothub');
 const { promisify } = require('util');
 
@@ -18,7 +18,7 @@ const run = async() => {
     try {
         // Note: IOTHUB_CONNECTION_STRING is NOT the same as DEVICE_CONNECTION_STRING 
         console.log('Connecting IoT Hub Service Client.');
-        const client = HubClient.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING, Protocol);
+        const client = HubClient.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING, Mqtt);
 
         console.log('Invoking direct method "lockDoor" on deviceId : ${process.env.DEVICE_ID}');
         const { result } = await client.invokeDeviceMethod(process.env.DEVICE_ID, methodParams);

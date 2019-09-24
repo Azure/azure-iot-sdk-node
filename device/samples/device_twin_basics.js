@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 require('dotenv').config();
-const Protocol = require('azure-iot-device-mqtt').Mqtt;
+const Mqtt = require('azure-iot-device-mqtt').Mqtt;
 const { Client } = require('azure-iot-device');
 
 
@@ -11,7 +11,7 @@ const { Client } = require('azure-iot-device');
 
 const run = async() => {
   try {
-    const client = Client.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Protocol);
+    const client = Client.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Mqtt);
 
     //get the device twin
     const twin = await client.getTwin()

@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 require('dotenv').config();
-const Protocol = require('azure-iot-device-mqtt').Mqtt;
+const Mqtt = require('azure-iot-device-mqtt').Mqtt;
 const { Client : DeviceClient } = require('azure-iot-device');
 
 
@@ -28,7 +28,7 @@ const onLockCarDoor = async(request, response) => {
 
 const run = async() => {
     try {
-        const client = DeviceClient.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Protocol);
+        const client = DeviceClient.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Mqtt);
         
         client.onDeviceMethod('lockDoor', onLockCarDoor);
         console.log('Listening for the lockDoor directMethod!');

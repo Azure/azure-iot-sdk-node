@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 require('dotenv').config();
-const Protocol = require('azure-iot-device-mqtt').Mqtt;
+const { Mqtt: Protocol } = require('azure-iot-device-mqtt');
 const { Client } = require('azure-iot-device');
 const { promisify } = require('util')
 const { writeFile, createReadStream, stat, unlinkSync } = require('fs');
