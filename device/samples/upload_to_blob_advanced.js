@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-// UPLOAD TO BLOB ADVANCED SAMPLE 
+// upload_to_blob_advanced.js
 // This is a new api for upload to blob that allows for greater control over the blob uplaod calls.  
 // Instead of a single API call that wraps the Storage SDK, the user in this sample retrieves the linked
 // Storage Account SAS Token from IoT Hub using a new API call,  removes the Azure Storage Blob package from within the Node.js Client Library
@@ -101,6 +101,10 @@ const run = async() => {
         }
         err = await to(client.notifyBlobUploadStatus(result.correlationId, isSuccess, statusCode, statusDescription));
         err ? console.error('notifyBlobUploadStatus failed') : console.log('notifyBlobUploadStatus success');
+
+        //remove the dummy file we just created
+        unlinkSync(dummyFilePath);
+        console.log('Removed created dummy file.');
     }
     catch (err) {
         console.error('Error: ', err);
