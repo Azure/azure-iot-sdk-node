@@ -10,7 +10,7 @@ var Message = require('azure-iot-device').Message;
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
-var connectionString = '[IoT Hub device connection string]';
+var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
 var deviceId = ConnectionString.parse(connectionString).DeviceId;
 
 // Sensors data
@@ -19,7 +19,7 @@ var humidity = 50;
 var externalTemperature = 55;
 
 // Create IoT Hub client
-var client = Client.fromConnectionString(connectionString, Protocol);
+var client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
 // Helper function to print results for an operation
 function printErrorFor(op) {

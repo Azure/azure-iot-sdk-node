@@ -1,29 +1,29 @@
 {
   "name": "azure-iot-device-mqtt",
-  "version": "1.10.0",
+  "version": "1.10.3",
   "description": "MQTT transport for Azure IoT device SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.10.0",
-    "azure-iot-device": "1.10.0",
-    "azure-iot-mqtt-base": "1.9.10",
+    "azure-iot-common": "1.10.3",
+    "azure-iot-device": "1.11.2",
+    "azure-iot-mqtt-base": "1.9.13",
     "debug": "^4.1.1",
     "machina": "^4.0.2",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
     "@types/mqtt": "0.0.34",
-    "@types/node": "^9.3.0",
+    "@types/node": "^9.6.50",
     "chai": "^4.2.0",
     "es5-shim": "^4.5.12",
     "mocha": "^5.2.0",
-    "nyc": "^14.0.0",
-    "sinon": "^7.2.7",
-    "source-map-support": "^0.5.8",
-    "tslint": "^5.9.1",
+    "nyc": "^14.1.1",
+    "sinon": "^7.4.1",
+    "source-map-support": "^0.5.13",
+    "tslint": "^5.18.0",
     "typescript": "2.9.2"
   },
   "scripts": {
@@ -35,7 +35,7 @@
     "check-cover": "nyc check-coverage --statements 97 --branches 91 --functions 98 --lines 97"
   },
   "engines": {
-    "node": ">= 0.10"
+    "node": ">= 8.0.0"
   },
   "repository": {
     "type": "git",

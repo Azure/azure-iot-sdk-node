@@ -1,21 +1,21 @@
 {
   "name": "azure-iot-provisioning-device-e2e",
-  "version": "1.6.0",
+  "version": "1.6.3",
   "description": "E2E tests for the Azure Device Provisioning SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "dependencies": {
     "async": "^2.6.2",
-    "azure-iot-common": "1.10.0",
-    "azure-iot-provisioning-device": "1.6.0",
-    "azure-iot-provisioning-device-amqp": "1.6.0",
-    "azure-iot-provisioning-device-http": "1.6.0",
-    "azure-iot-provisioning-device-mqtt": "1.5.9",
-    "azure-iot-provisioning-service": "1.6.0",
-    "azure-iot-security-tpm": "1.6.0",
-    "azure-iot-security-x509": "1.5.9",
-    "azure-iot-security-symmetric-key": "1.5.9",
-    "azure-iothub": "1.10.0",
+    "azure-iot-common": "1.10.3",
+    "azure-iot-provisioning-device": "1.6.3",
+    "azure-iot-provisioning-device-amqp": "1.6.3",
+    "azure-iot-provisioning-device-http": "1.6.3",
+    "azure-iot-provisioning-device-mqtt": "1.5.12",
+    "azure-iot-provisioning-service": "1.6.3",
+    "azure-iot-security-symmetric-key": "1.5.12",
+    "azure-iot-security-tpm": "1.6.3",
+    "azure-iot-security-x509": "1.5.12",
+    "azure-iothub": "1.10.3",
     "chai": "^4.2.0",
     "debug": "^4.1.1",
     "istanbul": "^0.4.5",
@@ -37,7 +37,7 @@
     "e2e": "npm -s run lint && npm -s run alltest"
   },
   "engines": {
-    "node": ">= 0.10"
+    "node": ">= 8.0.0"
   },
   "repository": {
     "type": "git",

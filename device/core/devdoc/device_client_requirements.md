@@ -47,6 +47,10 @@ class Client extends InternalClient {
 
 **SRS_NODE_DEVICE_CLIENT_16_091: [** The `fromAuthenticationProvider` method shall return a `Client` object configured with a new instance of a transport created using the `transportCtor` argument. **]**
 
+### setOptions(options, done)
+
+**SRS_NODE_DEVICE_CLIENT_99_103: [** The `setOptions` method shall set `blobUploadClient` options. **]**
+
 ### uploadToBlob(blobName, stream, done)
 
 **SRS_NODE_DEVICE_CLIENT_16_037: [** The `uploadToBlob` method shall throw a `ReferenceError` if `blobName` is falsy. **]**
@@ -123,3 +127,39 @@ interface DeviceMethodEventHandler {
 **SRS_NODE_DEVICE_CLIENT_16_098: [** If the transport emits a `disconnect` event while the client is subscribed to direct methods the retry policy shall be used to reconnect and re-enable the feature using the transport `enableMethods` method. **]**
 
 **SRS_NODE_DEVICE_CLIENT_16_100: [** If the retry policy fails to reestablish the direct methods functionality a `disconnect` event shall be emitted with a `results.Disconnected` object. **]**
+
+### getBlobSharedAccessSignature
+
+**SRS_NODE_DEVICE_CLIENT_41_001: [** The `getBlobSharedAccessSignature` method shall throw a `ReferenceError` if `blobName` is falsy. **]**
+
+**SRS_NODE_DEVICE_CLIENT_41_002: [** The `getBlobSharedAccessSignature` method shall call the `getBlobSharedAccessSignature` method in the instantiated `_fileUploadApi` class and pass in `blobName` as a parameter. **]**
+
+**SRS_NODE_DEVICE_CLIENT_41_003: [** The `getBlobSharedAccessSignature` method shall call the `_callback` callback with `err` and `result` from the call to `getBlobSharedAccessSignature`. **]**
+
+**SRS_NODE_DEVICE_CLIENT_41_004: [** The `getBlobSharedAccessSignature` method shall store the `result` value for use by the `notifyBlobUploadStatus` method. **]**
+
+### notifyBlobUploadStatus
+
+**SRS_NODE_DEVICE_CLIENT_41_005: [** The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `uploadResponse` is falsy. **]**
+
+**SRS_NODE_DEVICE_CLIENT_41_006: [** The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusCode` is falsy but not the number 0. **]**
+
+**SRS_NODE_DEVICE_CLIENT_41_007: [** The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusDescription` is falsy but not an empty string. **]**
+
+**SRS_NODE_DEVICE_CLIENT_41_008: [** The `notifyBlobUploadStatus` method shall call the `_callback` callback with `err` if the notification fails. **]**
+
+**SRS_NODE_DEVICE_CLIENT_41_009: [** The `notifyBlobUploadStatus` method shall call the `_callback` callback with no parameters if the notification succeeds. **]**
+
+**SRS_NODE_DEVICE_CLIENT_41_010: [** The `getBlobSharedAccessSignature` method shall call the `done` callback with an `Error` object if the call fails. **]**
+
+**SRS_NODE_DEVICE_CLIENT_41_011: [** The `getBlobSharedAccessSignature` method shall call the `done` callback with no error and a result object if the call succeeds. **]**
+
+**SRS_NODE_DEVICE_CLIENT_41_012: [** The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `correlationId` is not set. **]**
+
+**SRS_NODE_DEVICE_CLIENT_41_013: [** The `notifyBlobUploadStatus` method shall call the `done` callback with an `Error` object if the notify fails. **]**
+
+**SRS_NODE_DEVICE_CLIENT_41_014: [** The `notifyBlobUploadStatus` method shall call the `done` callback with no parameters if the notify succeeds. **]**
+
+**SRS_NODE_DEVICE_CLIENT_41_015: [** The `notifyBlobUploadStatus` method shall call the `notifyUploadComplete` method via the internal `_fileUploadApi` class. **]**
+
+**SRS_NODE_DEVICE_CLIENT_41_016: [** The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `correlationId` is falsy. **]**

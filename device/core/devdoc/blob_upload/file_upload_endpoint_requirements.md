@@ -12,6 +12,10 @@ The `FileUploadApi` class provide methods to get an Azure Storage blob SAS URI f
 
 **SRS_NODE_FILE_UPLOAD_ENDPOINT_16_018: [** `FileUploadApi` shall instantiate the default `azure-iot-http-base.Http` transport if `transport` is not specified, otherwise it shall use the specified transport. **]**
 
+### setOptions(options)
+
+**SRS_NODE_FILE_UPLOAD_ENDPOINT_99_020: [** `setOptions` shall set provided transport options. **]**
+
 ### getBlobSharedAccessSignature(blobName, iotHubSas, done)
 
 **SRS_NODE_FILE_UPLOAD_ENDPOINT_16_004: [** `getBlobSharedAccessSignature` shall throw a `ReferenceError` if `blobName` is falsy. **]**

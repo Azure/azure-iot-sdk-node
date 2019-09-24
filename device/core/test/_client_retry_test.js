@@ -30,7 +30,7 @@ describe('DeviceClient Retry Logic', function () {
 });
 
 function DeviceClientCtor(fakeTransport) {
-  return new DeviceClient(fakeTransport, null, { updateSharedAccessSignature: sinon.stub() });
+  return new DeviceClient(fakeTransport, null, { updateSharedAccessSignature: sinon.stub(), setOptions: sinon.stub() });
 }
 
 function ModuleClientCtor(fakeTransport) {

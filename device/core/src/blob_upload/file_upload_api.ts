@@ -5,7 +5,7 @@
 
 import { endpoint, AuthenticationProvider, encodeUriComponentStrict, callbackToPromise, Callback, errorCallbackToPromise, ErrorCallback } from 'azure-iot-common';
 import { Http as DefaultHttpTransport } from 'azure-iot-http-base';
-import { UploadParams, FileUpload as FileUploadInterface } from './blob_upload_client';
+import { UploadParams } from './blob_uploader';
 import { BlobUploadResult } from './blob_upload_result';
 
 // tslint:disable-next-line:no-var-requires
@@ -24,6 +24,21 @@ const packageJson = require('../../package.json');
  */
 /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_002: [`FileUploadApi` shall throw a `ReferenceError` if `deviceId` is falsy.]*/
 /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_003: [`FileUploadApi` shall throw a `ReferenceError` if `hostname` is falsy.]*/
+
+/**
+ * @private
+ */
+export interface FileUploadInterface {
+    setOptions(options: any): void;
+    getBlobSharedAccessSignature(blobName: string, done: Callback<UploadParams>): void;
+    getBlobSharedAccessSignature(blobName: string): Promise<UploadParams>;
+    notifyUploadComplete(correlationId: string, uploadResult: BlobUploadResult, done: (err?: Error) => void): void;
+    notifyUploadComplete(correlationId: string, uploadResult: BlobUploadResult): Promise<void>;
+}
+
+/**
+ * @private
+ */
 export class FileUploadApi implements FileUploadInterface {
     _authenticationProvider: AuthenticationProvider;
     http: any; // TODO: need interface >_<
@@ -35,6 +50,13 @@ export class FileUploadApi implements FileUploadInterface {
         this._authenticationProvider = authenticationProvider;
         /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_018: [`FileUploadApi` shall instantiate the default `azure-iot-http-base.Http` transport if `transport` is not specified, otherwise it shall use the specified transport.]*/
         this.http = httpTransport ? httpTransport : new DefaultHttpTransport();
+    }
+
+    setOptions(options: any): void {
+        if (this.http) {
+            /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_99_020: [`setOptions` shall set provided transport options.`]*/
+            this.http.setOptions(options);
+        }
     }
 
     getBlobSharedAccessSignature(blobName: string, done: Callback<UploadParams>): void;

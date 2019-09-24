@@ -127,7 +127,7 @@ describe('Device Client', function () {
         };
       };
 
-      var client = new Client(new EventEmitter(), null, new FakeBlobUploader());
+      var client = new Client(new EventEmitter(), null,  new FakeBlobUploader());
       client.uploadToBlob('blobName', new stream.Readable(), 42, function(err) {
         assert.instanceOf(err, Error);
         done();
@@ -142,8 +142,165 @@ describe('Device Client', function () {
         };
       };
 
-      var client = new Client(new EventEmitter(), null, new FakeBlobUploader());
+      var client = new Client(new EventEmitter(), null,  new FakeBlobUploader());
       client.uploadToBlob('blobName', new stream.Readable(), 42, done);
+    });
+  });
+
+  describe('#getBlobSharedAccessSignature', function() {
+    /*Tests_SRS_NODE_DEVICE_CLIENT_41_001: [The `getBlobSharedAccessSignature` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
+    [undefined, null, ''].forEach(function (blobName) {
+      it('throws a ReferenceError if \'blobName\' is ' + blobName + '\'', function() {
+        var client = new Client(new EventEmitter(), null, {}, {});
+        assert.throws(function() {
+          client.getBlobSharedAccessSignature(blobName, function() {});
+        });
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_41_010: [The `getBlobSharedAccessSignature` method shall call the `done` callback with an `Error` object if the call fails.]*/
+    it('calls the done callback with an Error object if the upload fails', function(done) {
+      var FakeFileUploadApi = function () {
+        this.getBlobSharedAccessSignature = function(blobName, callback) {
+          callback(new Error('fake error'));
+        };
+      };
+
+      var client = new Client(new EventEmitter(), null, null, new FakeFileUploadApi());
+      client.getBlobSharedAccessSignature('blobName', function(err) {
+        assert.instanceOf(err, Error);
+        done();
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_41_011: [The `getBlobSharedAccessSignature` method shall call the `done` callback with no error and a result object if the call succeeds.]*/
+    it('calls the done callback with the upload parameters if the method call succeeded', function (done) {
+      let fakeUploadParams = {
+        fake: 'string'
+      };  
+      class FakeFileUploadApi {
+        constructor() {
+          this.getBlobSharedAccessSignature = function (blobName, callback) {
+            callback(null,fakeUploadParams);
+          };
+        }
+      }
+
+      var client = new Client(new EventEmitter(), null, null, new FakeFileUploadApi());
+      client.getBlobSharedAccessSignature('blobName', function(err, result) {
+        assert.isNull(err);
+        assert.isNotNull(result);
+        done();
+      });
+    });
+  });
+
+  describe('#notifyBlobUploadStatus', function() {
+    /*Tests_SRS_NODE_DEVICE_CLIENT_41_005: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `isSuccess` is falsy.]*/
+    [undefined, null, ''].forEach(function (isSuccess) {
+    it('throws a ReferenceError if \'isSuccess\' is ' + isSuccess + '\'', function(done) {
+      let statusCode = 1;
+      let statusDescription = 'NaN';
+      let correlationId = 'fakeCorrelationId';
+      let client = new Client(new EventEmitter(), null, {}, {});
+      try {
+        client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function() {});
+      } catch (err) {
+        assert.strictEqual(err.name, "ReferenceError");
+        done();
+      }
+      assert.fail('Error not thrown. Error should be thrown.');
+    });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_41_006: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusCode` is falsy but not the number 0.]*/
+    [undefined, null, ''].forEach(function (statusCode) {
+    it('throws a ReferenceError if \'statusCode\' is ' + statusCode + '\'', function(done) {
+      let isSuccess = 0;
+      let statusDescription = 'NaN';
+      let correlationId = 'fakeCorrelationId';
+      let client = new Client(new EventEmitter(), null, {}, {});
+      try {
+        client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function() {
+        });
+      } catch (err) {
+        console.log(statusCode);
+        assert.strictEqual(err.name, "ReferenceError");
+        return done();
+      }
+      if (statusCode === 0) {
+        assert(true);
+        done();
+      }
+      assert(false, 'Error not thrown. Error should be thrown.');
+    });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_41_007: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusDescription` is falsy but not an empty string.]*/
+    [undefined, null, ''].forEach(function (statusDescription) {
+    it('throws a ReferenceError if \'statusDescription\' is ' + statusDescription + '\'', function(done) {
+      let isSuccess = 0;
+      let statusDescription = 'NaN';
+      let correlationId = 'fakeCorrelationId';
+      let client = new Client(new EventEmitter(), null, {}, {});
+      try {
+        client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function() {});
+      } catch (err) {
+        assert.strictEqual(err.name, "ReferenceError");
+        done();
+      }
+      assert.fail('Error not thrown. Error should be thrown.');
+    });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_41_016: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `correlationId` is falsy.]*/
+    [undefined, null, ''].forEach(function (correlationId) {
+      it('throws a ReferenceError if \'isSuccess\' is ' + correlationId + '\'', function(done) {
+        let isSuccess = 0;
+        let statusCode = 1;
+        let statusDescription = 'NaN';
+        let client = new Client(new EventEmitter(), null, {}, {});
+        try {
+          client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function() {});
+        } catch (err) {
+          assert.strictEqual(err.name, "ReferenceError");
+          done();
+        }
+        assert.fail('Error not thrown. Error should be thrown.');
+      });
+      });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_41_013: [The `notifyBlobUploadStatus` method shall call the `done` callback with an `Error` object if the notify fails.]*/
+    it('calls the done callback with an Error object if the notify fails', function(done) {
+      let isSuccess = false;
+      let statusCode = 0;
+      let statusDescription = 'NaN';
+      let correlationId = 'fakeCorrelationId';
+      let FakeFileUploadApi = function (uploadResult) {
+        this.notifyUploadComplete = function(correlationId, uploadResult, callback) {
+          callback(new Error('fake notify error'));
+        };
+      };
+      let client = new Client(new EventEmitter(), null, null, new FakeFileUploadApi());
+      client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function(err) { 
+      assert.instanceOf(err, Error);
+        done();
+      });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_CLIENT_41_014: [The `notifyBlobUploadStatus` method shall call the `done` callback with no parameters if the notify succeeds.]*/
+    it('calls the done callback with no parameters if the upload succeeded', function (done) {
+      let isSuccess = true;
+      let statusCode = 200;
+      let statusDescription = 'NaN';
+      let correlationId = 'fakeCorrelationId';
+      let FakeFileUploadApi = function (uploadResult) {
+        this.notifyUploadComplete = function(correlationId, uploadResult, callback) {
+          callback();
+        };
+      };
+      let client = new Client(new EventEmitter(), null, null, new FakeFileUploadApi());
+      client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, done);
     });
   });
 
@@ -330,6 +487,17 @@ describe('Device Client', function () {
       var client = new Client(failingTransport);
       client.setOptions({}, function (err) {
         assert.instanceOf(err, Error);
+        done();
+      });
+    });
+
+    it('calls setOptions of blob uploader with supplied options', function (done) {
+      /*Tests_SRS_NODE_DEVICE_CLIENT_99_103: [The `setOptions` method shall set `blobUploadClient` options.]*/
+      var fakeOptions = '__FAKE_OPTIONS__';
+      var fakeBlobUploader = { setOptions: sinon.fake() };
+      var client = new Client(new FakeTransport(), null, fakeBlobUploader);
+      client.setOptions(fakeOptions, function () {
+        assert.isTrue(fakeBlobUploader.setOptions.calledWith(fakeOptions));
         done();
       });
     });

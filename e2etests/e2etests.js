@@ -5,6 +5,7 @@
 
 require('./test/device_service.js');
 require('./test/file_upload.js');
+require('./test/file_upload_advanced.js');
 require('./test/device_acknowledge_tests.js');
 require('./test/sas_token_tests.js');
 require('./test/d2c_disconnect.js');

@@ -271,6 +271,8 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
                 /*Codes_SRS_NODE_DEVICE_MQTT_18_050: [The `sendOutputEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to publish the message. ]*/
                 sendEventCallback(translateError(err));
               } else {
+                /*Codes_SRS_NODE_DEVICE_MQTT_41_004 [ The `sendEvent` method shall call its callback with a `MessageEnqueued` ]*/
+                /*Codes_SRS_NODE_DEVICE_MQTT_41_005 [ The `sendOutputEvent` method shall call its callback with a `MessageEnqueued` ]*/
                 sendEventCallback(null, new results.MessageEnqueued(result));
               }
             });
@@ -395,7 +397,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
         done(err);
       } else {
         debug('PUBACK: ' + JSON.stringify(puback));
-        done(null, new results.MessageEnqueued(puback));
+        done(null, puback);
       }
     });
   }
@@ -646,7 +648,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
         done(err);
       } else {
         debug('PUBACK: ' + JSON.stringify(puback));
-        done(null, new results.MessageEnqueued(puback));
+        done(null, puback);
       }
     });
   }
