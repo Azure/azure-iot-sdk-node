@@ -918,7 +918,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     if (message.contentType) systemProperties['$.ct'] = <string>message.contentType;
     /*Codes_SRS_NODE_DEVICE_MQTT_16_083: [The `sendEvent` method shall serialize the `contentEncoding` property of the message as a key-value pair on the topic with the key `$.ce`.]*/
     if (message.contentEncoding) systemProperties['$.ce'] = <string>message.contentEncoding;
-
+    if (message.interfaceId) systemProperties['$.ifid'] = message.interfaceId;
 
     if (message.expiryTimeUtc) {
       const expiryString = message.expiryTimeUtc instanceof Date ? message.expiryTimeUtc.toISOString() : message.expiryTimeUtc;

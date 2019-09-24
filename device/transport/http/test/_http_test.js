@@ -140,6 +140,33 @@ describe('Http', function () {
   });
 
   describe('#sendEvent', function() {
+
+    it('encodes the security interface id correctly', function(done) {
+      var MockHttp = {
+        buildRequest: function() {}
+      };
+      var spy = sinon.stub(MockHttp, 'buildRequest').returns({
+        write: function() {},
+        end: function() {}
+      });
+      transport._http = MockHttp;
+
+      var msg = new Message("boo");
+      msg.setAsSecurityMessage();
+
+      // act
+      transport.sendEvent(msg, function() {});
+
+      // assert
+      assert(spy.calledOnce);
+      assert.isOk(spy.args[0]);
+      assert.isOk(spy.args[0][2]);
+      assert.equal(spy.args[0][2]['iothub-interface-id'], 'urn:azureiot:Security:SecurityAgent:1');
+
+      // cleanup
+      done();
+
+    });
     /*Tests_SRS_NODE_DEVICE_HTTP_16_032: [All HTTP requests shall obtain the credentials necessary to execute the request by calling `getDeviceCredentials` on the `AuthenticationProvider` object passed to the `Http` constructor.]*/
     it('gets the credentials before sending the request', function (testCallback) {
       var http = new Http(fakeAuthenticationProvider);
