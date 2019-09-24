@@ -93,7 +93,7 @@ Below is a table showing the mapping of the LTS branches to the package versions
 
 | NPM Package | Github Branch | LTS Status | LTS Start Date | Maintenance End Date | Removed Date |
 | :-----------: | :-----------: | :--------: | :------------: | :------------------: | :----------: |
-| 1.7.x         | [lts_09_2018](https://github.com/Azure/azure-iot-sdk-node/tree/lts_09_2018)   | Active     | 2018-09-16     | 2019-09-16           | 2020-03-09   |
+| 1.7.x         | [lts_09_2018](https://github.com/Azure/azure-iot-sdk-node/tree/lts_09_2018)   | Deprecated | 2018-09-16     | 2019-09-16           | 2020-03-09   |
 | 1.11.x        | [lts_09_2019](https://github.com/Azure/azure-iot-sdk-node/tree/lts_09_2019)   | Active     | 2019-09-09     | 2020-03-09           | 2020-09-19   |
 
 * <sup>1</sup> All scheduled dates are subject to change by the Azure IoT SDK team.
