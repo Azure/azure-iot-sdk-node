@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-// simple_sample_device.js
-// This is a basic sample simulating a device that sends information to IoT Hub about an Asteroid it is monitoring. 
-// In addition to that, our device has the ability to receive messages from the cloud via C2D, although it is not very
-// smart and only acknowledges receipt.
-
+// device_sas.js
+// This is a basic sample simulating a device that sends information to IoT Hub about an Asteroid it is monitoring.
+// It is very similar to simple_sample_device.js, with the exception that the device is validated with a SAS Token.
+// More information on the different forms of access control for IoT Hub can be found here:
+// https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-security
+//
 // NOTE: This sample enables C2D (Cloud to Device) Messages on the Device Client. 
 // To receive C2D Messages, a Service Client must send the messages.
 // This can be done using the cloud_to_device_mesage.js file, which uses the Azure IoT Service Client,
@@ -67,8 +68,8 @@ const onMessage = client => async(message) => {
 const run = async() => {
     try {
         console.log('Initializing Device Client.');
-        //  DEVICE_CONNECTION_STRING in the format: "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
-        const client = Client.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Protocol);
+        //  "SharedAccessSignature sr=<iothub_host_name>/devices/<device_id>&sig=<signature>&se=<expiry>"
+        const client = Client.fromSharedAccessSignature(process.env.IOTHUB_SAS, Protocol);
 
         console.log('Connecting Device Client.');
         await client.open();

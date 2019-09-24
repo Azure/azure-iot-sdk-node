@@ -1,39 +1,32 @@
-require('dotenv').config()
+require('dotenv').config();
 const { Mqtt } = require('azure-iot-device-mqtt');
 const { Client : DeviceClient, Message } = require('azure-iot-device');
 
-const { Client : HubClient } = require('azure-iothub')
+const { Client : HubClient } = require('azure-iothub');
 
-/*
-    Note that this is a conceptual example in that it doesn't really make since to send a
-    message from the iot hub then listen to it in the same script
-
-*/
-
+// Note that this is a conceptual example in that it doesn't really make since to send a
+// message from the iot hub then listen to it in the same script
 
 const generateImportantMessage = (data=Math.random()) => new Message(
     JSON.stringify({ 
         type : 'beep boop bopity bop',
-        data
+        data : data
     })
-)
+);
 
 
 const listenOnDevice = async() => {
     try {
-        
         //create a client using the device connection string and the mqtt protocol
-        const client = DeviceClient.fromConnectionString(process.env.DEVICE_CONN_STRING, Mqtt)
+        console.log('Initializing Device Client.');
+        const client = DeviceClient.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Mqtt);
 
-        client.on('message', (message) => console.log('recieved a message!', message.data.toString() ))
-
-
-
+        console.log('Establishing on received message callback.');
+        client.on('message', (message) => console.log('recieved a message!', message.data.toString()));
     } catch (err) {
-        console.error('Error: ', err)
+        console.error('Error: ', err);
     }
 }
-
 
 const sendMessageFromIotHub = async() => {
     try {
@@ -47,14 +40,13 @@ const sendMessageFromIotHub = async() => {
     }
 }
 
-
 const run = async() => {
     try { 
-        listenOnDevice()
-        setInterval(sendMessageFromIotHub, 3000)
+        listenOnDevice();
+        setInterval(sendMessageFromIotHub, 3000);
     } catch (err) {
-        console.error('Error:', err)
+        console.error('Error:', err);
     }
 }
 
-run()
+run();
