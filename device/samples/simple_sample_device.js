@@ -1,70 +1,102 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// simple_sample_device.js
+// This is a basic sample simulating a device that sends information to IoT Hub about a Simulated Device it is monitoring. 
+// In addition to that, our device has the ability to receive messages from the cloud via C2D, although it is not very
+// smart and only acknowledges receipt.
+
+// NOTE: This sample enables C2D (Cloud to Device) Messages on the Device Client. 
+// To receive C2D Messages, a Service Client must send the messages.
+// This can be done using the cloud_to_device_mesage.js file, which uses the Azure IoT Service Client,
+// or it can be done using the Azure IoT Explorer. 
+
 'use strict';
 
-var Protocol = require('azure-iot-device-mqtt').Mqtt;
+require('dotenv').config();
+const { Mqtt: Protocol } = require('azure-iot-device-mqtt');
 // Uncomment one of these transports and then change it in fromConnectionString to test other transports
-// var Protocol = require('azure-iot-device-amqp').AmqpWs;
-// var Protocol = require('azure-iot-device-http').Http;
-// var Protocol = require('azure-iot-device-amqp').Amqp;
-// var Protocol = require('azure-iot-device-mqtt').MqttWs;
-var Client = require('azure-iot-device').Client;
-var Message = require('azure-iot-device').Message;
+// const { AmqpWs: Protocol } = require('azure-iot-device-amqp');
+// const { Http: Protocol } = require('azure-iot-device-http');
+// const { Amqp: Protocol } = require('azure-iot-device-amqp');
+// const { MqttWs: Protocol } = require('azure-iot-device-mqtt');
+const { Client, Message } = require('azure-iot-device');
 
-// String containing Hostname, Device Id & Device Key in the following formats:
-//  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
-var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+// Helper Function
+const generateMessage = () => {
+    // Generates a simulated temperature and humidity sensor
+    //  and uses a random number generator to determine
 
-// fromConnectionString must specify a transport constructor, coming from any transport package.
-var client = Client.fromConnectionString(deviceConnectionString, Protocol);
+    console.log('Creating Simulated Information Message.');
+    const msg = new Message( JSON.stringify(
+        {
+            deviceId : 'simulatedDevice',
+            windSpeed : 10 + (Math.random() * 4), // range: [10, 14]
+            temperature : 20 + (Math.random() * 10), // range: [20, 30]
+            humidity : 60 + (Math.random() * 20) // range: [60, 80]
+        }
+    ));
+    msg.properties.add('DATA_TYPE', 'JSON');
+    msg.properties.add('DEVICE_LOCATION', 'REDMOND');
 
-var connectCallback = function (err) {
-  if (err) {
-    console.error('Could not connect: ' + err.message);
-  } else {
-    console.log('Client connected');
-    client.on('message', function (msg) {
-      console.log('Id: ' + msg.messageId + ' Body: ' + msg.data);
-      // When using MQTT the following line is a no-op.
-      client.complete(msg, printResultFor('completed'));
-      // The AMQP and HTTP transports also have the notion of completing, rejecting or abandoning the message.
-      // When completing a message, the service that sent the C2D message is notified that the message has been processed.
-      // When rejecting a message, the service that sent the C2D message is notified that the message won't be processed by the device. the method to use is client.reject(msg, callback).
-      // When abandoning the message, IoT Hub will immediately try to resend it. The method to use is client.abandon(msg, callback).
-      // MQTT is simpler: it accepts the message by default, and doesn't support rejecting or abandoning a message.
-    });
-
-    // Create a message and send it to the IoT Hub every two seconds
-    var sendInterval = setInterval(function () {
-      var windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
-      var temperature = 20 + (Math.random() * 10); // range: [20, 30]
-      var humidity = 60 + (Math.random() * 20); // range: [60, 80]
-      var data = JSON.stringify({ deviceId: 'myFirstDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
-      var message = new Message(data);
-      message.properties.add('temperatureAlert', (temperature > 28) ? 'true' : 'false');
-      console.log('Sending message: ' + message.getData());
-      client.sendEvent(message, printResultFor('send'));
-    }, 2000);
-
-    client.on('error', function (err) {
-      console.error(err.message);
-    });
-
-    client.on('disconnect', function () {
-      clearInterval(sendInterval);
-      client.removeAllListeners();
-      client.open(connectCallback);
-    });
-  }
+    return msg;
 };
 
-client.open(connectCallback);
+//Note that this is using the device client's sendEvent rather than the module clients sendOutputEvent as seen in another sample
+// The setInterval() method calls our function at the specified interval provided in messageDelay.
+const startMessageInterval = (client, messageDelay) => setInterval( async() => {
+    let msg = generateMessage();
+    console.log('Sending Message to IoT Hub from Device Client.');
+    const status = await client.sendEvent(msg).catch( err => console.error('Error sending message: ', err));
+    console.log('Sent Message');
+    console.log(status);
+}, messageDelay);
 
-// Helper function to print results in the console
-function printResultFor(op) {
-  return function printResult(err, res) {
-    if (err) console.log(op + ' error: ' + err.toString());
-    if (res) console.log(op + ' status: ' + res.constructor.name);
-  };
-}
+
+const onMessage = client => async (message) => {
+    console.log('Received a C2D message: ', message.data.toString());
+
+    // The AMQP and HTTP transports also have the notion of completing, rejecting or abandoning the message.
+    // When completing a message, the service that sent the C2D message is notified that the message has been processed.
+    // When rejecting a message, the service that sent the C2D message is notified that the message won't be processed by the device. the method to use is client.reject(msg, callback).
+    // When abandoning the message, IoT Hub will immediately try to resend it. The method to use is client.abandon(msg, callback).
+    // MQTT is simpler: it accepts the message by default, and doesn't support rejecting or abandoning a message.
+
+    // Thus when using MQTT the following line is a no-op.
+    await client.complete(message);
+};
+
+const run = async() => {
+    try {
+        console.log('Initializing Device Client.');
+        //  DEVICE_CONNECTION_STRING in the format: "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
+        const client = Client.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Protocol);
+
+        console.log('Connecting Device Client.');
+        await client.open().catch((err) => { console.error('Error: ', err); });
+
+        console.log('Client created. Starting send loop.');
+        const sendMessageInterval = startMessageInterval(client, 5000);
+
+        console.log('Enabling Client cloud to device message handler.');
+        client.on('message', onMessage(client));
+
+        console.log('Enabling Client cloud to device error handler.');
+        client.on('error', console.error);
+
+        console.log('Enabling Client cloud to device disconnect handler.');
+        client.on('disconnect', () => {
+            console.log('Halting automated message sends from Device Client.');
+            clearInterval(sendMessageInterval);
+            console.log('Removing all C2D listeners.');
+            client.removeAllListeners();
+            console.log('Re-opening Client Connection. This is essentially a restart.');
+            run();
+        });
+    }
+    catch (err) {
+        console.error('Error: ', err);
+    }
+};
+
+run();

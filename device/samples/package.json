@@ -10,8 +10,10 @@
     "azure-iot-device-amqp": "1.11.0",
     "azure-iot-device-http": "1.11.0",
     "azure-iot-device-mqtt": "1.11.0",
-    "es5-shim": "^4.5.12",
-    "lodash": "^4.17.15"
+    "azure-iothub": "1.11.0",
+    "@azure/event-hubs": "^2.1.1",
+    "dotenv": "^8.1.0",
+    "tslint": "^5.20.0"
   },
   "devDependencies": {
     "jshint": "^2.10.2"

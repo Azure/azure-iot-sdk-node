@@ -1,0 +1,34 @@
+{
+  "ObjectType": "DeviceInfo",
+  "IsSimulatedDevice": 0,
+  "Version": "1.0",
+  "DeviceProperties": {
+    "HubEnabledState": 1,
+    "CreatedTime": "2015-09-21T20:28:55.5448990Z",
+    "DeviceState": "normal",
+    "UpdatedTime": null,
+    "Manufacturer": "Contoso Inc.",
+    "ModelNumber": "MD-909",
+    "SerialNumber": "SER9090",
+    "FirmwareVersion": "1.10",
+    "Platform": "node.js",
+    "Processor": "ARM",
+    "InstalledRAM": "64 MB",
+    "Latitude": 47.617025,
+    "Longitude": -122.191285
+  },
+  "Commands": [{
+    "Name": "SetTemperature",
+    "Parameters": [{
+      "Name": "Temperature",
+      "Type": "double"
+    }]
+  },
+    {
+      "Name": "SetHumidity",
+      "Parameters": [{
+        "Name": "Humidity",
+        "Type": "double"
+      }]
+    }]
+}
