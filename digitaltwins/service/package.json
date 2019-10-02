@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/azure/azure-iot-sdk-node-digitaltwins.git"
+    "url": "git+https://github.com/azure/azure-iot-sdk-node.git"
   },
   "keywords": [
     "Azure",
@@ -37,9 +37,9 @@
   "author": "Microsoft Corp.",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/azure/azure-iot-sdk-node-digitaltwins/issues"
+    "url": "https://github.com/azure/azure-iot-sdk-node/issues"
   },
-  "homepage": "https://github.com/azure/azure-iot-sdk-node-digitaltwins#readme",
+  "homepage": "https://github.com/azure/azure-iot-sdk-node#readme",
   "devDependencies": {
     "autorest": "^2.0.4283",
     "istanbul": "^0.4.5",
