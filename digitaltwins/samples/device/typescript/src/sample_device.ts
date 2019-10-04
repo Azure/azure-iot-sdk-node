@@ -99,8 +99,8 @@ const main = async () => {
     await deviceInformation.osName.report('ContosoOS');
     await deviceInformation.processorArchitecture.report('4762');
     await deviceInformation.processorManufacturer.report('Contoso Foundries');
-    await deviceInformation.totalStorage.report('64000');
-    await deviceInformation.totalMemory.report('640');
+    await deviceInformation.totalStorage.report(64000);
+    await deviceInformation.totalMemory.report(640);
   } catch (err) {
     console.log('error from operation is: ' + err.toString());
   }
