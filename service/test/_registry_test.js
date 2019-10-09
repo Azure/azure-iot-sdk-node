@@ -430,7 +430,7 @@ describe('Registry', function () {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.equal(method, 'DELETE');
           assert.equal(path, '/devices/' + fakeDevice.deviceId + endpoint.versionQueryString());
-          assert.equal(httpHeaders['If-Match'], '*');
+          assert.equal(httpHeaders['If-Match'], '"*"');
           done();
         }
       };
@@ -533,7 +533,7 @@ describe('Registry', function () {
           assert.equal(method, 'PATCH');
           assert.equal(path, '/twins/' + fakeDeviceId + endpoint.versionQueryString());
           assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
-          assert.equal(httpHeaders['If-Match'], fakeEtag);
+          assert.equal(httpHeaders['If-Match'], '"' + fakeEtag + '"');
           assert.equal(body, fakeTwinPatch);
           done(null, new Twin(fakeDeviceId, {}), fakeHttpResponse);
         }
@@ -1266,7 +1266,32 @@ describe('Registry', function () {
       var fakePatch = {
         patch: true
       };
-      var fakeEtag = "Fake";
+      var fakeEtag = 'Fake';
+
+      var fakeHttpHelper = {
+        executeApiCall: function (method, path, httpHeaders, body, done) {
+          assert.strictEqual(method, 'PATCH');
+          assert.strictEqual(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
+          assert.strictEqual(path, '/twins/deviceId/modules/moduleId' + endpoint.versionQueryString());
+          assert.strictEqual(httpHeaders['If-Match'], '"' + fakeEtag + '"');
+          assert.deepEqual(body, fakePatch);
+          done(null, JSON.stringify({
+            deviceId: 'fakeTwin'
+          }), {
+            status: 200
+          });
+        }
+      };
+
+      var registry = new Registry(fakeConfig, fakeHttpHelper);
+      registry.updateModuleTwin('deviceId', 'moduleId', fakePatch, fakeEtag, testCallback);
+    });
+
+    it('constructs a valid HTTP request with quoted eTag', function (testCallback) {
+      var fakePatch = {
+        patch: true
+      };
+      var fakeEtag = '"Fake"';
 
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
@@ -1286,6 +1311,7 @@ describe('Registry', function () {
       var registry = new Registry(fakeConfig, fakeHttpHelper);
       registry.updateModuleTwin('deviceId', 'moduleId', fakePatch, fakeEtag, testCallback);
     });
+
 
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_18_006: [The `updateModuleTwin` method shall call the `done` callback with a `Twin` object updated with the latest property values stored in the IoT Hub service. ]*/
     it('calls the \'done\' callback with a \'Twin\' object', function (testCallback) {

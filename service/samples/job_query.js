@@ -4,7 +4,7 @@
 
 var JobClient = require('azure-iothub').JobClient;
 
-var connectionString = '<IoT Hub Connection String>';
+var connectionString = process.env.IOTHUB_CONNECTION_STRING;
 var jobClient = JobClient.fromConnectionString(connectionString);
 
 var query = jobClient.createQuery();

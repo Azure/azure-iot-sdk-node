@@ -34,6 +34,8 @@ and shall set the password to the passed in sas token.
 
 **SRS_NODE_PROVISIONING_AMQP_16_002: [** The `registrationRequest` method shall connect the AMQP client with the certificate and key given in the `auth` parameter of the previously called `setAuthentication` method. **]**
 
+**SRS_NODE_PROVISIONING_AMQP_99_001: [** The `registrationRequest` method shall connect the AMQP client with the SSL agent given in the `auth` parameter of the previously called `setAuthentication` method. **]**
+
 **SRS_NODE_PROVISIONING_AMQP_16_003: [** The `registrationRequest` method shall attach a sender link on the `<idScope>/registrations/<registrationId>` endpoint with the following properties:
 ```
 com.microsoft:api-version: <API_VERSION>

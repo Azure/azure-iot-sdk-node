@@ -3,19 +3,42 @@
 
 'use strict';
 
-function FakeBlobService() {}
-
-FakeBlobService.prototype.createBlockBlobFromStream = function (containerName, blobName, stream, streamLength, done) {
-  done('fakeError', 'fakeBody', 'fakeResponse');
-};
-
-function createBlobServiceWithSas (host, sasToken) {
-  if (!host) throw new ReferenceError('host cannot be falsy');
-  if (!sasToken) throw new ReferenceError('host cannot be falsy');
-  
-  return new FakeBlobService();
+class BlockBlobURL {
+  constructor(url, pipeline) {
+    return 'fakeBlockBlobURL'
+  }
 }
 
+class Aborter {
+  constructor () {
+  }
+  static timeout() {
+    return 'fakeTimeout';
+  }
+}
+
+class StorageURL {
+  constructor() {
+   }
+  static newPipeline() {
+    return fakePipeline;
+  }
+};
+
+function AnonymousCredential() {};
+
+function uploadStreamToBlockBlob() {
+  return new Promise((resolve, reject) => {
+    resolve('fakeUploadResponse');
+  });
+}
+
+function fakePipeline() {};
+
 module.exports = {
-  createBlobServiceWithSas: createBlobServiceWithSas
+  AnonymousCredential: AnonymousCredential,
+  Aborter: Aborter,
+  StorageURL: StorageURL,
+  BlockBlobURL: BlockBlobURL,
+  uploadStreamToBlockBlob: uploadStreamToBlockBlob
 };

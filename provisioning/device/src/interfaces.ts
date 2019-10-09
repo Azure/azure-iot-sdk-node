@@ -5,6 +5,7 @@
 
 import { X509, Callback, SharedAccessSignature } from 'azure-iot-common';
 import { X509Registration } from './x509_registration';
+import { Agent } from 'https';
 
 /**
  * Configuration options for provisioning transports.  Passed into the transport's setTransportOptions function.
@@ -19,6 +20,11 @@ export interface ProvisioningTransportOptions {
    * default timeout to use when communicating with the service
    */
   timeoutInterval?: number;
+
+  /**
+   * Optional agent to use when communicating with the service
+   */
+  webSocketAgent?: Agent;
 }
 
 /**

@@ -20,6 +20,15 @@ describe('message', function () {
 
   });
 
+  describe('#setAsSecurityMessage', function () {
+    it('sets message as a security message', function () {
+      var message = new Message(stringTestMsg);
+      assert.isUndefined(message.interfaceId);
+      message.setAsSecurityMessage();
+      assert.equal(message.interfaceId, 'urn:azureiot:Security:SecurityAgent:1');
+    });
+  });
+
   describe('#getBytes', function () {
 
     /*Tests_SRS_NODE_IOTHUB_MESSAGE_07_001: [If the data message that is store is of type Buffer then the data object will get returned unaltered.]*/

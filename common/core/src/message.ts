@@ -6,6 +6,8 @@
 
 import { Properties } from './properties';
 
+const securityInterfaceId: string = 'urn:azureiot:Security:SecurityAgent:1';
+
 /**
  * The {@link azure-iot-common.Message} object is used for telemetry (device-to-cloud) and commands (cloud-to-device) asynchronous
  * messaging between the device and the IoT Hub service. It is transport-agnostic, meaning it works the same way over AMQP, MQTT and HTTP.
@@ -54,6 +56,11 @@ export class Message {
    * Content encoding of the message body. can be 'utf-8', 'utf-16' or 'utf-32'.
    */
   contentEncoding: undefined | 'utf-8' | 'utf-16' | 'utf-32';
+
+  /**
+   * Is this message a security message
+   */
+  interfaceId: string;
 
   /**
    * @private
@@ -105,6 +112,13 @@ export class Message {
       /*Codes_SRS_NODE_IOTHUB_MESSAGE_07_002: [If the data message is of any other type then the data will be converted to a Buffer object and returned.]*/
       return Buffer.from(this.data);
     }
+  }
+
+  /**
+   * Sets this message as a security message
+   */
+  setAsSecurityMessage(): void {
+    this.interfaceId = securityInterfaceId;
   }
 
   /**

@@ -68,7 +68,7 @@ When you have a certificate change containing a root certificate and several opt
 
 At the very least, your root certificate needs to be uploaded to your Device Provisioning Service blade in the Azure portal, and it needs to be verified.
 
-Once the group is created and the certificates have been uploaded and verified, you can use [register_x509.js][register-x509] to register the device.  When running this sample, you'll need to replace the '[provisioning host]' '[id scope]', '[registration id'], '[cert filename]', and '[key filename]' values in the code with your specific values.
+Once the group is created and the certificates have been uploaded and verified, you can use [register_x509.js][register-x509] to register the device.  When running this sample, you'll need to replace the '[provisioning host]' '[id scope]', '[registration id'], '[cert filename]', and '[key filename]' values in the code with your specific values.  Guidance on populating these values can be found [here][simulate-x509-device]
 
 When registering a device via group enrollment, the cert may need to include the certificate chain that links it back to a verified certificate.
 
@@ -95,6 +95,7 @@ For more information on how to use this library refer to the documents below:
 [provisioning-e2e]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/e2e
 [c-sdk-create-individual-enrollment]: https://docs.microsoft.com/en-us/azure/iot-dps/quick-create-simulated-device-x509
 [lnk-dps-concepts]: https://docs.microsoft.com/en-us/azure/iot-dps/concepts-service
+[simulate-x509-device] https://docs.microsoft.com/en-us/azure/iot-dps/quick-create-simulated-device-x509-node#simulate-the-device
 [provisioning-tools]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/tools
 [lnk-x509-ca-overview]: https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-x509ca-overview
 [lnk-x509-verification-instructions]: https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-security-x509-get-started#registercerts
