@@ -101,7 +101,6 @@ describe('translateError', function() {
       var specific_message = 'specific error message';
       let testErr = { error: { message: { message: specific_message }}};    
       var err = translateError(message, testErr.error);
-      console.log(err.message);
       assert.equal(err.message, message + '. ' + specific_message);
     });
   });
