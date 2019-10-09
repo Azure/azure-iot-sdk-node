@@ -18,13 +18,13 @@ var Message = require('azure-iot-device').Message;
 //
 // The resulting string should look like the following
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>;GatewayHostName=<edge device hostname>"
-var connectionString = '[Downstream device IoT Edge connection string]';
+var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
 
 // Path to the Edge "owner" root CA certificate
-var edge_ca_cert_path = '[Path to Edge CA certificate]';
+var edge_ca_cert_path = process.env.PATH_TO_EDGE_CA_CERT;
 
 // fromConnectionString must specify a transport constructor, coming from any transport package.
-var client = Client.fromConnectionString(connectionString, Protocol);
+var client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
 var connectCallback = function (err) {
   if (err) {

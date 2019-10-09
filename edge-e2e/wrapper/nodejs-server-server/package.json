@@ -29,6 +29,6 @@
     "swagger-tools": "^0.10.4"
   },
   "devDependencies": {
-    "jshint": "^2.9.6"
+    "jshint": "^2.10.2"
   }
 }

@@ -282,6 +282,19 @@ describe('Mqtt', function () {
         });
       });
 
+      it('correctly serializes security message', function(done) {
+        var testMessage = new Message('message');
+        testMessage.setAsSecurityMessage();
+
+        var transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        transport.connect(function () {
+          testConfig.sendFunc(transport, testMessage, function() {
+            assert.equal(fakeMqttBase.publish.firstCall.args[0], testConfig.baseTopicWithProps+'%24.ifid=urn%3Aazureiot%3ASecurity%3ASecurityAgent%3A1' + testConfig.topicEnder);
+            done();
+          });
+        });
+      });
+
       /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `sendEvent` method shall use QoS level of 1.]*/
       /*Tests_SRS_NODE_DEVICE_MQTT_18_039: [ The `sendOutputEvent` method shall use QoS level of 1. ]*/
       it('uses a QoS of 1', function(done) {
@@ -293,6 +306,29 @@ describe('Mqtt', function () {
           });
         });
         fakemqtt.emit('connect', { connack: true });
+      });
+
+      /*Tests_SRS_NODE_DEVICE_MQTT_41_004 [ The `sendEvent` method shall call its callback with a `MessageEnqueued` ]*/
+      /*Tests_SRS_NODE_DEVICE_MQTT_41_005 [ The `sendOutputEvent` method shall call its callback with a `MessageEnqueued` ]*/
+      it('calls the callback with the correctly structured response parameter', function (done) {
+        // There was a bug in the mqtt SendEvent code whereby the `response` would contain a doubly nested object.
+        // This was caused by creating a new MessagedEnqueued object, and then passing that in as a parameter
+        // to a callback that would use it as a parameter for creating a MessageEnqueued object, leading to a 
+        // odd double nesting. This does not seek to test the MessageEnqueued object itself, since that should
+        // be tested in the results unit testing, just to verify that the response is generated properly without
+        // double nesting.
+        fakeMqttBase.publish.callsArgWith(3, null, 'fakeResultObject');
+        var transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        transport.connect(function () {
+          testConfig.sendFunc(transport, new Message('message'), function(err, resp) {
+            assert.equal(resp.constructor.name, 'MessageEnqueued');
+            assert(resp.hasOwnProperty('transportObj'));
+            assert.equal(resp.transportObj,'fakeResultObject');
+            done();
+          });
+        });
+        fakemqtt.emit('connect', { connack: true });
+
       });
 
       [

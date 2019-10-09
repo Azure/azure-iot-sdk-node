@@ -6,7 +6,9 @@ import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
 // import { MqttWs as Protocol } from 'azure-iot-device-mqtt';
 // import { Http as Protocol } from 'azure-iot-device-http';
 
-const client = Client.fromConnectionString(process.argv[2], Protocol);
+
+const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+const client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
 client.open(() => {
   // Set up error handler

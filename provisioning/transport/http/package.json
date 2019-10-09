@@ -14,12 +14,12 @@
     "machina": "^4.0.2"
   },
   "devDependencies": {
-    "@types/node": "^9.3.0",
+    "@types/node": "^9.6.50",
     "chai": "^4.2.0",
     "istanbul": "^0.4.5",
     "mocha": "^5.2.0",
-    "sinon": "^7.2.7",
-    "tslint": "^5.9.1",
+    "sinon": "^7.4.1",
+    "tslint": "^5.18.0",
     "typescript": "2.9.2"
   },
   "scripts": {
@@ -34,7 +34,7 @@
     "check-cover": "istanbul check-coverage --statements 94 --branches 82 --functions 90 --lines 96"
   },
   "engines": {
-    "node": ">= 0.10"
+    "node": ">= 8.0.0"
   },
   "repository": {
     "type": "git",

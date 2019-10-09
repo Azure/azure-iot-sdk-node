@@ -10,14 +10,8 @@ var Client = require('azure-iot-device').Client;
 var client = null;
 
 function main() {
-    // receive the IoT Hub connection string as a command line parameter
-    if(process.argv.length < 3) {
-        console.error('Usage: node device_methods.js <<IoT Hub Device Connection String>>');
-        process.exit(1);
-    }
-
     // open a connection to the device
-    var deviceConnectionString = process.argv[2];
+    var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
     client = Client.fromConnectionString(deviceConnectionString, Protocol);
     client.open(onConnect);
 }

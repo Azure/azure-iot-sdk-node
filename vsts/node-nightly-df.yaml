@@ -6,7 +6,6 @@ resources:
 phases:
 - phase: Phase_2
   displayName: Ubuntu 1604 - Node 10.15.x
-
   condition: succeededOrFailed()
   queue:
     name: Hosted Ubuntu 1604
@@ -64,9 +63,10 @@ phases:
     name: Hosted
   steps:
   - task: NodeTool@0
-    displayName: 'Use Node 8.x'
+    displayName: 'Use Node 8.10.x'
     inputs:
-      versionSpec: '8.x'
+      versionSpec: 8.10.x
+
   - powershell: |
        runas.exe /savecred /user:administrator
        npm install --global node-gyp

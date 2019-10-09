@@ -12,6 +12,8 @@ var uuid = require('uuid');
 var _ = require('lodash');
 var assert = require('chai').assert;
 var async = require('async');
+var InvalidEtagError = require('azure-iot-common').errors.InvalidEtagError;
+
 var debug = require('debug')('e2etests:twin_e2e');
 
 var deviceAmqp = require('azure-iot-device-amqp');
@@ -247,7 +249,7 @@ delete nullMergeResult.tweedle;
                   assertObjectsAreEqual(serviceTwin.properties.reported, result);
                   done();
                 });
-              }, 3000);
+              }, 6000);
             }
           });
         }
@@ -400,6 +402,28 @@ delete nullMergeResult.tweedle;
     it('service can merge new tags using etag *', function(done) {
       mergeTags(newProps, moreNewProps, "*", mergeResult, done);
     });
+
+    it('service can send a desired property using actual eTag', async () => {
+      let rsp;
+      try {
+        rsp = await registry.getTwin(deviceDescription.deviceId);
+        rsp = await registry.updateTwin(deviceDescription.deviceId, { properties: { desired: { telemetryInterval: 100 } } }, rsp.responseBody.etag);
+        assert(rsp.responseBody.properties.desired.telemetryInterval, 100);
+      } catch (err) {
+        debug('unexpected throw during test.');
+        assert.fail('unexpected error: ' + err.toString());
+      }
+    });
+
+    it('service sending invalid eTag gets an error', async () => {
+      try {
+        await registry.updateTwin(deviceDescription.deviceId, { properties: { desired: { telemetryInterval: 100 } } }, 'abc');
+        assert.fail('Update twin SHOULD have failed.');
+      } catch (err) {
+        assert.strictEqual(err.name, InvalidEtagError.name);
+      }
+    });
+
 
     it('can send reported properties to the service after renewing the sas token', function(done) {
       var newSas = deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
