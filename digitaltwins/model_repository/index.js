@@ -1,6 +1,6 @@
 'use strict';
 
 module.exports = {
-  DigitalTwinRepositoryService: require('./dist/digitalTwinRepositoryService').DigitalTwinRepositoryService,
-  DigitalTwinRepositoryServiceModels: require('./dist/digitalTwinRepositoryService').DigitalTwinRepositoryServiceModels,
+  ModelRepositoryCredentials: require('./dist/auth/model_repository_credentials').ModelRepositoryCredentials,
+  ModelRepositoryServiceClient: require('./dist/cl/model_repository_service_client').ModelRepositoryServiceClient,
 };
