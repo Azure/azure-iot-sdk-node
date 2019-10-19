@@ -28,12 +28,13 @@ describe('ConnectionString', function () {
     /*Tests_SRS_NODE_CONNSTR_05_006: [The generated ConnectionString object shall be returned to the caller.]*/
     /*Tests_SRS_NODE_CONNSTR_05_007: [If requiredFields is falsy, parse shall not validate fields.]*/
     it('returns an object with all the properties of the connection string', function () {
-      var str = 'HostName=name;DeviceId=id;ModuleId=mod;SharedAccessKey=key;GatewayHostName=name';
+      var str = 'HostName=name;DeviceId=id;ModuleId=mod;RepositoryId=repoid;SharedAccessKey=key;GatewayHostName=name';
       var cn = ConnectionString.parse(str);
       assert.deepEqual(cn, {
         HostName: 'name',
         DeviceId: 'id',
         ModuleId: 'mod',
+        RepositoryId: 'repoid',
         SharedAccessKey: 'key',
         GatewayHostName: 'name'
       });
@@ -42,7 +43,7 @@ describe('ConnectionString', function () {
     /*Tests_SRS_NODE_CONNSTR_05_001: [The input argument source shall be converted to string if necessary.]*/
     it('accepts an argument that can be converted to String', function () {
       var obj = {
-        value: 'HostName=name;DeviceId=id;ModuleId=mod;SharedAccessKey=key;GatewayHostName=name',
+        value: 'HostName=name;DeviceId=id;ModuleId=mod;RepositoryId=repoid;SharedAccessKey=key;GatewayHostName=name',
         toString: function () { return this.value; }
       };
       var cn = ConnectionString.parse(obj);
@@ -50,6 +51,7 @@ describe('ConnectionString', function () {
         HostName: 'name',
         DeviceId: 'id',
         ModuleId: 'mod',
+        RepositoryId: 'repoid',
         SharedAccessKey: 'key',
         GatewayHostName: 'name'
       });

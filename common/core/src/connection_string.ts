@@ -30,6 +30,12 @@ export class ConnectionString {
   // tslint:disable-next-line:variable-name
   ModuleId?: string;
   /**
+   * Unique repository identifier as it exists in the model repository.
+   * @memberof {azure-iot-common.ConnectionString}
+   */
+  // tslint:disable-next-line:variable-name
+  RepositoryId?: string;
+  /**
    * Symmetric key used to create shared access signature tokens that are in turn used to authenticate the connection. Associated either with a specific device or a specific service policy.
    * @memberof {azure-iot-common.ConnectionString}
    */
