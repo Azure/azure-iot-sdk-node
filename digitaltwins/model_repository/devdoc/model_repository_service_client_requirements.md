@@ -94,6 +94,8 @@ class ModelRepositoryServiceClient
 
 **SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_013: [** The `createModel` method shall return a promise if there is no callback passed. **]**
 
+**SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_022: [** The `createModel` method shall throw ArgumentError if 'ifMatch' (eTag) is specified in 'options' argument. **]**
+
 ## updateModel
 
 **SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_014: [** The `updateModel` method shall call the `createOrUpdateModel` method of the protocol layer with the given arguments. **]**
@@ -103,6 +105,8 @@ class ModelRepositoryServiceClient
 **SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_016: [** The `updateModel` method shall return error if the method of the protocol layer failed. **]**
 
 **SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_017: [** The `updateModel` method shall return a promise if there is no callback passed. **]**
+
+**SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_023: [** The `updateModel` method shall use the 'eTag' argument's value even if user specified the 'ifMatch' in the 'options' argument. **]**
 
 ## deleteModel
 
