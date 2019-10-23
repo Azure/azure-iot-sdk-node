@@ -8,8 +8,7 @@ import { DigitalTwinRepositoryService as PLClient, DigitalTwinRepositoryServiceM
 import { tripleValueCallbackToPromise, TripleValueCallback } from 'azure-iot-common';
 import * as msRest from '@azure/ms-rest-js';
 import { ModelRepositoryCredentials } from '../auth/model_repository_credentials';
-
-import uuid = require('uuid');
+import { ArgumentError } from 'azure-iot-common/lib/errors';
 
 /**
  * @export
@@ -98,11 +97,6 @@ export class ModelRepositoryServiceClient {
    * The Azure Model Repository service's API version.
    */
   private _apiVersion: string = '2019-07-01-Preview';
-  /**
-   * @private
-   * The Azure Model Repository service's API version.
-   */
-  private _clientSource: string = 'ModelRepositoryServiceClient_SDK';
 
   /**
    * Constructor which also creates an instance of the Protocol Layer Client used by the ModelRepoServiceClient.
@@ -128,6 +122,24 @@ export class ModelRepositoryServiceClient {
    * @method getModel                         module: azure-iot-modelrepository-service.ModelRepoServiceClient.getModel
    * @description                             Retrieve a Digital Twin Model.
    * @param {string} modelId                  The Id of the requested model.
+   * @param {GetModelParams} options          Optional argument with the following members:
+   *                                          JSON format:
+   *                                          options = {
+   *                                            'repositoryId': '',
+   *                                            'xMsClientRequestId': '',
+   *                                            'expand'
+   *                                          };
+   *                                          Where:
+   *                                          'repositoryId'
+   *                                              {string} Private repository id. To access global repository, caller should not specify this value.
+   *                                          'xMsClientRequestId'
+   *                                              {string} Provides a client-generated opaque value that is recorded in the logs.
+   *                                              Using this header is highly recommended for correlating client-side activities
+   *                                              with requests received by the server.
+   *                                          'expand'
+   *                                              {boolean} Indicates whether to expand the capability
+   *                                              model's interface definitions inline or not. This query parameter ONLY
+   *                                              applies to Capability model. Default value: false .
    * @returns GetModelResponse                The return object containing the Model plus the HttpResponse.
    * @memberof ModelRepositoryServiceClient
    */
@@ -140,11 +152,7 @@ export class ModelRepositoryServiceClient {
     /* Codes_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_005: [ The `getModel` method shall return a promise if there is no callback passed. ]*/
     return tripleValueCallbackToPromise<GetModelResponse, msRest.HttpOperationResponse, GetModelResponse>((_callback) => {
       if (!options) {
-        options = {
-          'repositoryId': this._credentials.getRepositoryId(),
-          'x-ms-client-source': this._clientSource,
-          'xMsClientRequestId': uuid.v4()
-        };
+        options = {};
       }
       this._pl.getModel(modelId, this._apiVersion, options, (err, result, request, response) => {
       _callback(err as Error, result, response);
@@ -153,10 +161,23 @@ export class ModelRepositoryServiceClient {
   }
 
   /**
-   * @method searchModel                              module: azure-iot-modelrepository-service.ModelRepoServiceClient.searchModel
-   * @description                                     Search Digital Twin Models in the Model Repository using a search filter.
-   * @param (SearchModelOptions) SearchModelOptions   To search models with the keyword, filter and continuation.
-   * @returns SearchResponse                          The return object containing the SearchResponse plus the HttpResponse.
+   * @method searchModel                             module: azure-iot-modelrepository-service.ModelRepoServiceClient.searchModel
+   * @description                                    Search Digital Twin Models in the Model Repository using a search filter.
+   * @param (SearchModelOptions) SearchModelOptions  To search models with the keyword, filter and continuation.
+   * @param {SearchModelParams} options              Optional argument with the following members:
+   *                                                 JSON format:
+   *                                                 options = {
+   *                                                   'repositoryId': '',
+   *                                                   'xMsClientRequestId': '',
+   *                                                 };
+   *                                                 Where:
+   *                                                 'repositoryId'
+   *                                                    {string} Private repository id. To access global repository, caller should not specify this value.
+   *                                                 'xMsClientRequestId'
+   *                                                    {string} Provides a client-generated opaque value that is recorded in the logs.
+   *                                                    Using this header is highly recommended for correlating client-side activities
+   *                                                    with requests received by the server.
+   * @returns SearchResponse                         The return object containing the SearchResponse plus the HttpResponse.
    * @memberof ModelRepositoryServiceClient
    */
   searchModel(searchModelOptions: SearchModelOptions, searchModelParams: SearchModelParams): Promise<SearchResponse>;
@@ -168,11 +189,7 @@ export class ModelRepositoryServiceClient {
     /* Codes_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_009: [ The `searchModel` method shall return a promise if there is no callback passed. ]*/
     return tripleValueCallbackToPromise<SearchResponse, msRest.HttpOperationResponse, SearchModelResponse>((_callback) => {
       if (!searchModelParams) {
-        searchModelParams = {
-          'repositoryId': this._credentials.getRepositoryId(),
-          'x-ms-client-source': this._clientSource,
-          'xMsClientRequestId': uuid.v4()
-        };
+        searchModelParams = {};
       }
       this._pl.searchModel(searchModelOptions, this._apiVersion, searchModelParams, (err, result, request, response) => {
       _callback(err as Error, result, response);
@@ -184,6 +201,19 @@ export class ModelRepositoryServiceClient {
    * @method createModel                             module: azure-iot-modelrepository-service.ModelRepoServiceClient.createModel
    * @description                                    Creates a Digital Twin Model in the Model Repository.
    * @param {any} model                              Model definition in Digital Twin Definition Language format.
+   * @param {CreateOrUpdateModelParams} options      Optional argument with the following members:
+   *                                                 JSON format:
+   *                                                 options = {
+   *                                                   'repositoryId': '',
+   *                                                   'xMsClientRequestId': '',
+   *                                                 };
+   *                                                 Where:
+   *                                                 'repositoryId'
+   *                                                    {string} Private repository id. To access global repository, caller should not specify this value.
+   *                                                 'xMsClientRequestId'
+   *                                                    {string} Provides a client-generated opaque value that is recorded in the logs.
+   *                                                    Using this header is highly recommended for correlating client-side activities
+   *                                                    with requests received by the server.
    * @returns CreateOrUpdateModelResponse            The return object containing the CreateResponse plus the HttpResponse.
    * @memberof ModelRepositoryServiceClient
    */
@@ -194,13 +224,13 @@ export class ModelRepositoryServiceClient {
     /* Codes_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_011: [ The `createModel` method shall call the callback with an error parameter if a callback is passed. ]*/
     /* Codes_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_012: [ The `createModel` method shall return error if the method of the protocol layer failed. ]*/
     /* Codes_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_013: [ The `createModel` method shall return a promise if there is no callback passed. ]*/
+    /* Codes_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_022: [ The `createModel` method shall throw ArgumentError if 'ifMatch' (eTag) is specified in 'options' argument. ]*/
     return tripleValueCallbackToPromise<CreateOrUpdateModelResponse, msRest.HttpOperationResponse, CreateOrUpdateModelResponse>((_callback) => {
-      if (!options) {
-        options = {
-          'repositoryId': this._credentials.getRepositoryId(),
-          'x-ms-client-source': this._clientSource,
-          'xMsClientRequestId': uuid.v4()
-        };
+      if (options) {
+        if (options.ifMatch)
+          throw new ArgumentError('IfMatch (eTag) should not be specified in createModel API!');
+      } else {
+        options = {};
       }
       this._pl.createOrUpdateModel(model['@id'], this._apiVersion, model, options, (err, result, request, response) => {
         let createOrUpdateModelResponse: CreateOrUpdateModelResponse = {
@@ -217,6 +247,19 @@ export class ModelRepositoryServiceClient {
    * @method updateModel                             module: azure-iot-modelrepository-service.ModelRepoServiceClient.updateModel
    * @description                                    Updates a Digital Twin Model in the Model Repository.
    * @param {any} model                              Model definition in Digital Twin Definition Language format.
+   * @param {CreateOrUpdateModelParams} options      Optional argument with the following members:
+   *                                                 JSON format:
+   *                                                 options = {
+   *                                                   'repositoryId': '',
+   *                                                   'xMsClientRequestId': '',
+   *                                                 };
+   *                                                 Where:
+   *                                                 'repositoryId'
+   *                                                    {string} Private repository id. To access global repository, caller should not specify this value.
+   *                                                 'xMsClientRequestId'
+   *                                                    {string} Provides a client-generated opaque value that is recorded in the logs.
+   *                                                    Using this header is highly recommended for correlating client-side activities
+   *                                                    with requests received by the server.
    * @returns CreateOrUpdateModelResponse            The return object containing the UpdateResponse plus the HttpResponse.
    * @memberof ModelRepositoryServiceClient
    */
@@ -227,14 +270,16 @@ export class ModelRepositoryServiceClient {
     /* Codes_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_015: [ The `createModel` method shall call the callback with an error parameter if a callback is passed. ]*/
     /* Codes_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_016: [ The `createModel` method shall return error if the method of the protocol layer failed. ]*/
     /* Codes_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_017: [ The `createModel` method shall return a promise if there is no callback passed. ]*/
+    /* Codes_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_023: [ The `updateModel` method shall use the 'eTag' argument's value even if user specified the 'ifMatch' in the 'options' argument. ]*/
     return tripleValueCallbackToPromise<CreateOrUpdateModelResponse, msRest.HttpOperationResponse, CreateOrUpdateModelResponse>((_callback) => {
       if (!options) {
         options = {
-          'repositoryId': this._credentials.getRepositoryId(),
-          'x-ms-client-source': this._clientSource,
-          'xMsClientRequestId': uuid.v4(),
-          'ifMatch': eTag,
+          'ifMatch': eTag
         };
+      } else {
+        if (options.ifMatch) {
+          options.ifMatch = eTag;
+        }
       }
       this._pl.createOrUpdateModel(model['@id'], this._apiVersion, model, options, (err, result, request, response) => {
         let createOrUpdateModelResponse: CreateOrUpdateModelResponse = {
@@ -251,6 +296,16 @@ export class ModelRepositoryServiceClient {
    * @method deleteModel                             module: azure-iot-modelrepository-service.ModelRepoServiceClient.deleteModel
    * @description                                    Deletes a Digital Twin Model in the Model Repository.
    * @param {string} modelId                         The model Id of the model to delete.
+   * @param {DeleteModelParams} options              Optional argument with the following members:
+   *                                                 JSON format:
+   *                                                 options = {
+   *                                                   'xMsClientRequestId': '',
+   *                                                 };
+   *                                                 Where:
+   *                                                 'xMsClientRequestId'
+   *                                                    {string} Provides a client-generated opaque value that is recorded in the logs.
+   *                                                    Using this header is highly recommended for correlating client-side activities
+   *                                                    with requests received by the server.
    * @returns DeleteModelResponse                    The return object containing the DeleteResponse plus the HttpResponse.
    * @memberof ModelRepositoryServiceClient
    */
@@ -263,10 +318,7 @@ export class ModelRepositoryServiceClient {
     /* Codes_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_021: [ The `deleteModel` method shall return a promise if there is no callback passed. ]*/
     return tripleValueCallbackToPromise<DeleteModelResponse, msRest.HttpOperationResponse, DeleteModelResponse>((_callback) => {
       if (!options) {
-          options = {
-            'x-ms-client-source': this._clientSource,
-            'xMsClientRequestId': uuid.v4()
-        };
+          options = {};
       }
       this._pl.deleteModel(modelId, this._credentials.getRepositoryId(), this._apiVersion, options, (err, result, request, response) => {
         let deleteModelResponse: DeleteModelResponse = {

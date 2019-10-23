@@ -77,7 +77,14 @@ function replacer(key, value) {
   }
 }
 
+// Simple example of how to:
+// - create a Model Repository Service Client
+// - authenticate Service Client with Model Repository
+// - create a Digital Twin Model in the Model Repository (global or private)
+// - create a Digital Twin Model from scratch
 async function main() {
+  // Azure IoT Model repository connection string has to be set to system environment variable AZURE_IOT_MODEL_REPOSITORY_CONNECTION_STRING
+
   const modelRepositoryCredentials = new ModelRepositoryCredentials(process.env.AZURE_IOT_MODEL_REPOSITORY_CONNECTION_STRING);
   const modelRepositoryServiceClient = new ModelRepositoryServiceClient(modelRepositoryCredentials);
 
@@ -85,7 +92,17 @@ async function main() {
     const testInterfaceDocument = createUniqueDocument();
     console.log('New interface ID: ' + testInterfaceDocument['@id']);
 
-    const createModelResponse = await modelRepositoryServiceClient.createModel(testInterfaceDocument);
+    // The "options" argument is optional, see the description of the values below
+    options = {
+      // {string} Private repository id. To access global repository, caller should not specify this value.
+      'repositoryId': modelRepositoryCredentials.getRepositoryId(),
+      // {string} Provides a client-generated opaque value that is recorded in the logs.
+      // Using this header is highly recommended for correlating client-side activities
+      // with requests received by the server.
+      'xMsClientRequestId': '',
+    };
+
+    const createModelResponse = await modelRepositoryServiceClient.createModel(testInterfaceDocument, options);
     console.log(JSON.stringify(createModelResponse, replacer, 2));
   } catch (err) {
     console.error(err.toString());
