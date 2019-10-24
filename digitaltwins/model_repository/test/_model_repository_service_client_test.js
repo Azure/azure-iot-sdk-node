@@ -110,19 +110,32 @@ describe('ModelRepositoryServiceClient', function () {
         modelFilterType: 'Interface',
         searchKeyword: 'ModelDiscovery'
       };
-      var testSearchResponse = [
-        {
-          'description': 'test',
-          'displayName': 'Test Device',
-          'urnId': 'urn:domain:ModelDiscovery:TestDevice:1',
-        }
-      ];
+      var testSearchParams = {
+        'repositoryId': '',
+        'xMsClientRequestId': '',
+      };
+      var plSearchResponse = {
+        'testResponseField': 'testResponseValue',
+        'parsedHeaders': {
+          'xMsRequestId': 'testXMsRequestId',
+        },
+      };
+      var plSearchResult = {
+        'continuationToken': 'testContinuationToken',
+        'results': [ 'testValue1', 'testValue2' ]
+      };
+      var clSearchResponse = {
+        '_response': plSearchResponse,
+        'xMsRequestId': 'testXMsRequestId',
+        'continuationToken': 'testContinuationToken',
+        'results': plSearchResult.results
+      };
       var testClient = new ModelRepositoryServiceClient(testCredentials);
-      testClient._pl.searchModel = sinon.stub().callsArgWith(2, null, testSearchResponse);
-      testClient.searchModel(testSearchOptions, function (err, result, response) {
-        assert.isTrue(testClient._pl.searchModel.calledWith(testSearchOptions, sinon.match.any, sinon.match.any));
+      testClient._pl.searchModel = sinon.stub().callsArgWith(3, null, plSearchResult, null, plSearchResponse);
+      testClient.searchModel(testSearchOptions, testSearchParams, function (err, result) {
+        assert.isTrue(testClient._pl.searchModel.calledWith(testSearchOptions, sinon.match.any, testSearchParams, sinon.match.any));
         assert.isNull(err);
-        assert.deepEqual(result, testSearchResponse);
+        assert.deepEqual(result, clSearchResponse);
         testCallback();
       });
     });
@@ -154,36 +167,97 @@ describe('ModelRepositoryServiceClient', function () {
         'xMsClientRequestId': 'testRequestId',
         'repositoryId': 'testRepositoryId'
       };
-      var testSearchResponse = [
-        {
-          'description': 'test',
-          'displayName': 'Test Device',
-          'urnId': 'urn:domain:ModelDiscovery:TestDevice:1',
-        }
-      ];
+      var plSearchResponse = {
+        'testResponseField': 'testResponseValue',
+        'parsedHeaders': {
+          'xMsRequestId': 'testXMsRequestId',
+        },
+      };
+      var plSearchResult = {
+        'continuationToken': 'testContinuationToken',
+        'results': [ 'testValue1', 'testValue2' ]
+      };
+      var clSearchResponse = {
+        '_response': plSearchResponse,
+        'xMsRequestId': 'testXMsRequestId',
+        'continuationToken': 'testContinuationToken',
+        'results': plSearchResult.results
+      };
       var testClient = new ModelRepositoryServiceClient(testCredentials);
-      testClient._pl.searchModel = sinon.stub().callsArgWith(3, null, testSearchResponse, testOptions);
+      testClient._pl.searchModel = sinon.stub().callsArgWith(3, null, plSearchResult, null, plSearchResponse);
       const returnedPromise = await testClient.searchModel(testSearchOptions, testOptions);
-      assert.deepEqual(returnedPromise, testSearchResponse);
+      assert.deepEqual(returnedPromise, clSearchResponse);
     });
 
-    /* Tests_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_009: [ The `searchModel` method shall return a promise if there is no callback passed. ]*/
-    it('searchModel shall return a promise if there is no callback passed without options argument', async () => {
+    /* Tests_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_024: [ The `searchModel` method shall return a promise if there is no options argument passed. ]*/
+    it('searchModel shall return a promise if there is no options argument passed', async () => {
       var testSearchOptions = {
         modelFilterType: 'Interface',
         searchKeyword: 'ModelDiscovery'
       };
-      var testSearchResponse = [
-        {
-          'description': 'test',
-          'displayName': 'Test Device',
-          'urnId': 'urn:domain:ModelDiscovery:TestDevice:1',
-        }
-      ];
+      var plSearchResponse = {
+        'testResponseField': 'testResponseValue',
+        'parsedHeaders': {
+          'xMsRequestId': 'testXMsRequestId',
+        },
+      };
+      var plSearchResult = {
+        'continuationToken': 'testContinuationToken',
+        'results': [ 'testValue1', 'testValue2' ]
+      };
+      var clSearchResponse = {
+        '_response': plSearchResponse,
+        'xMsRequestId': 'testXMsRequestId',
+        'continuationToken': 'testContinuationToken',
+        'results': plSearchResult.results
+      };
       var testClient = new ModelRepositoryServiceClient(testCredentials);
-      testClient._pl.searchModel = sinon.stub().callsArgWith(3, null, testSearchResponse, {});
+      testClient._pl.searchModel = sinon.stub().callsArgWith(3, null, plSearchResult, null, plSearchResponse);
       const returnedPromise = await testClient.searchModel(testSearchOptions);
-      assert.deepEqual(returnedPromise, testSearchResponse);
+      assert.deepEqual(returnedPromise, clSearchResponse);
+    });
+
+    /* Tests_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_025: [ The `searchModel` method shall return a promise if there if no parsedHeaders in the response. ]*/
+    it('searchModel shall return a promise if there if no parsedHeaders in the response', async () => {
+      var testSearchOptions = {
+        modelFilterType: 'Interface',
+        searchKeyword: 'ModelDiscovery'
+      };
+      var plSearchResponse = {
+        'testResponseField': 'testResponseValue',
+      };
+      var plSearchResult = {
+        'continuationToken': 'testContinuationToken',
+        'results': [ 'testValue1', 'testValue2' ]
+      };
+      var clSearchResponse = {
+        '_response': plSearchResponse,
+        'xMsRequestId': undefined,
+        'continuationToken': 'testContinuationToken',
+        'results': plSearchResult.results
+      };
+      var testClient = new ModelRepositoryServiceClient(testCredentials);
+      testClient._pl.searchModel = sinon.stub().callsArgWith(3, null, plSearchResult, null, plSearchResponse);
+      const returnedPromise = await testClient.searchModel(testSearchOptions);
+      assert.deepEqual(returnedPromise, clSearchResponse);
+    });
+
+    /* Tests_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_026: [ The `searchModel` method shall return a promise if the result and response are null or undefined. ]*/
+    it('searchModel shall return a promise if the result and response are null or undefined', async () => {
+      var testSearchOptions = {
+        modelFilterType: 'Interface',
+        searchKeyword: 'ModelDiscovery'
+      };
+      var clSearchResponse = {
+        '_response': null,
+        'xMsRequestId': undefined,
+        'continuationToken': undefined,
+        'results': undefined
+      };
+      var testClient = new ModelRepositoryServiceClient(testCredentials);
+      testClient._pl.searchModel = sinon.stub().callsArgWith(3, null, null, null, null);
+      const returnedPromise = await testClient.searchModel(testSearchOptions);
+      assert.deepEqual(returnedPromise, clSearchResponse);
     });
   });
 
@@ -210,7 +284,6 @@ describe('ModelRepositoryServiceClient', function () {
       };
       options = {
         'repositoryId': 'testRepositoryId',
-        'x-ms-client-source': 'testClientSource',
         'xMsClientRequestId': 'testXMsClientRequestId'
       };
       var testClient = new ModelRepositoryServiceClient(testCredentials);
@@ -260,6 +333,25 @@ describe('ModelRepositoryServiceClient', function () {
       assert.deepEqual(returnedPromise._response, testCreateResponse);
       assert.deepEqual(returnedPromise.xMsRequestId, testCreateResponse.parsedHeaders.xMsRequestId);
       assert.deepEqual(returnedPromise.eTag, testCreateResponse.parsedHeaders.eTag);
+    });
+
+    /* Tests_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_027: [ The `createModel` method shall return a promise if the result and response are null or undefined. ]*/
+    it('createModel shall return a promise if the result and response are null or undefined', async () => {
+      var testModel = {
+        id: 'urn:test:unit:1',
+        type: 'interface',
+        displayName: 'testName',
+        contents: []
+      };
+      var clCreateResponse = {
+        '_response': null,
+        'xMsRequestId': undefined,
+        'eTag': undefined
+      };
+      var testClient = new ModelRepositoryServiceClient(testCredentials);
+      testClient._pl.createOrUpdateModel = sinon.stub().callsArgWith(4, null, null, null, null);
+      const returnedPromise = await testClient.createModel(testModel);
+      assert.deepEqual(returnedPromise, clCreateResponse);
     });
 
     /* Tests_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_022: [ The `createModel` method shall throw ArgumentError if 'ifMatch' (eTag) is specified in 'options' argument. ]*/
@@ -390,6 +482,26 @@ describe('ModelRepositoryServiceClient', function () {
         testCallback();
       });
     });
+
+    /* Tests_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_028: [ The `updateModel` method shall return a promise if the result and response are null or undefined. ]*/
+    it('updateModel shall return a promise if the result and response are null or undefined', async () => {
+      var testModel = {
+        id: 'urn:test:unit:1',
+        type: 'interface',
+        displayName: 'testName',
+        contents: []
+      };
+      var testETag = 'testETag';
+      var clUpdateResponse = {
+        '_response': null,
+        'xMsRequestId': undefined,
+        'eTag': undefined
+      };
+      var testClient = new ModelRepositoryServiceClient(testCredentials);
+      testClient._pl.createOrUpdateModel = sinon.stub().callsArgWith(4, null, null, null, null);
+      const returnedPromise = await testClient.updateModel(testModel, testETag);
+      assert.deepEqual(returnedPromise, clUpdateResponse);
+    });
   });
 
   describe('deleteModel', function () {
@@ -447,6 +559,37 @@ describe('ModelRepositoryServiceClient', function () {
       };
       var testClient = new ModelRepositoryServiceClient(testCredentials);
       testClient._pl.deleteModel = sinon.stub().callsArgWith(4, null, null, null, plDeleteResponse);
+      const returnedPromise = await testClient.deleteModel(testModelId);
+      assert.deepEqual(returnedPromise, clDeleteResponse);
+    });
+
+    /* Tests_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_029: [ The `deleteModel` method shall return a promise if there if no parsedHeaders in the response. ]*/
+    it('deleteModel shall return a promise if there if no parsedHeaders in the response', async () => {
+      var testModelId = 'urn:test:unit:1';
+      var plDeleteResponse = {
+        'parsedHeaders': null
+      };
+      var clDeleteResponse = {
+        '_response': {
+          'parsedHeaders': null
+        },
+        'xMsRequestId': undefined
+      };
+      var testClient = new ModelRepositoryServiceClient(testCredentials);
+      testClient._pl.deleteModel = sinon.stub().callsArgWith(4, null, null, null, plDeleteResponse);
+      const returnedPromise = await testClient.deleteModel(testModelId);
+      assert.deepEqual(returnedPromise, clDeleteResponse);
+    });
+
+    /* Tests_SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_030: [ The `deleteModel` method shall return a promise if the result and response are null or undefined. ]*/
+    it('deleteModel shall return a promise if the result and response are null or undefined', async () => {
+      var testModelId = 'urn:test:unit:1';
+      var clDeleteResponse = {
+        '_response': null,
+        'xMsRequestId': undefined
+      };
+      var testClient = new ModelRepositoryServiceClient(testCredentials);
+      testClient._pl.deleteModel = sinon.stub().callsArgWith(4, null, null, null, null);
       const returnedPromise = await testClient.deleteModel(testModelId);
       assert.deepEqual(returnedPromise, clDeleteResponse);
     });

@@ -84,6 +84,12 @@ class ModelRepositoryServiceClient
 
 **SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_009: [** The `searchModel` method shall return a promise if there is no callback passed. **]**
 
+**SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_024: [** The `searchModel` method shall return a promise if there is no options argument passed. **]**
+
+**SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_025: [** The `searchModel` method shall return a promise if there if no parsedHeaders in the response. **]**
+
+**SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_026: [** The `searchModel` method shall return a promise if the result and response are null or undefined. **]**
+
 ## createModel
 
 **SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_010: [** The `createModel` method shall call the `createOrUpdateModel` method of the protocol layer with the given arguments. **]**
@@ -95,6 +101,10 @@ class ModelRepositoryServiceClient
 **SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_013: [** The `createModel` method shall return a promise if there is no callback passed. **]**
 
 **SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_022: [** The `createModel` method shall throw ArgumentError if 'ifMatch' (eTag) is specified in 'options' argument. **]**
+
+**SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_027: [** The `createModel` method shall return a promise if the result and response are null or undefined. **]**
+
+if the result and response are null or undefined
 
 ## updateModel
 
@@ -108,6 +118,9 @@ class ModelRepositoryServiceClient
 
 **SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_023: [** The `updateModel` method shall use the 'eTag' argument's value even if user specified the 'ifMatch' in the 'options' argument. **]**
 
+**SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_028: [** The `updateModel` method shall return a promise if the result and response are null or undefined. **]**
+
+
 ## deleteModel
 
 **SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_018: [** The `deleteModel` method shall call the `deleteModel` method of the protocol layer with the given arguments. **]**
@@ -117,4 +130,8 @@ class ModelRepositoryServiceClient
 **SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_020: [** The `deleteModel` method shall return error if the method of the protocol layer failed. **]**
 
 **SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_021: [** The `deleteModel` method shall return a promise if there is no callback passed. **]**
+
+**SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_029: [** The `deleteModel` method shall return a promise if there if no parsedHeaders in the response. **]**
+
+**SRS_NODE_MODEL_REPOSITORY_SERVICE_CLIENT_12_030: [** The `deleteModel` method shall return a promise if the result and response are null or undefined. **]**
 -->
