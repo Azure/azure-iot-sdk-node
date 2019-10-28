@@ -4,14 +4,6 @@
 const ModelRepositoryCredentials = require('azure-iot-digitaltwins-model-repository').ModelRepositoryCredentials;
 const ModelRepositoryServiceClient = require('azure-iot-digitaltwins-model-repository').ModelRepositoryServiceClient;
 
-function replacer(key, value) {
-  if (key == '_response') {
-    return undefined;
-  } else {
-    return value;
-  }
-}
-
 // Simple example of how to:
 // - create a Model Repository Service Client
 // - authenticate Service Client with Model Repository
