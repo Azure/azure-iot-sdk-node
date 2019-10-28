@@ -7,3 +7,4 @@ require('./digitaltwin_commands.js');
 require('./digitaltwin_telemetry.js');
 require('./digitaltwin_properties.js');
 require('./model_repository_crud.js');
+require('./model_repository_cl_crud.js');
