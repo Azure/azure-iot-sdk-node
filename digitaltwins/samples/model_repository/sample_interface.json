@@ -1,0 +1,51 @@
+{
+  "@id": "urn:microsoft:azureiot:node_sdk:sample:1",
+  "@type": "Interface",
+  "displayName": "Azure IoT Node Service Client Library Sample",
+  "contents": [
+    {
+      "@type": "Telemetry",
+      "name": "telemetry",
+      "schema": "double"
+    },
+    {
+      "@type": "Property",
+      "name": "readOnlyProperty",
+      "writable": false,
+      "schema": "string"
+    },
+    {
+      "@type": "Property",
+      "name": "writableProperty",
+      "writable": true,
+      "schema": "string"
+    },
+    {
+      "@type": "Command",
+      "name": "syncCommand",
+      "commandType": "synchronous",
+      "request": {
+        "name": "requestProperty",
+        "schema": "string"
+      },
+      "response": {
+        "name": "responseProperty",
+        "schema": "string"
+      }
+    },
+    {
+      "@type": "Command",
+      "name": "asyncCommand",
+      "commandType": "asynchronous",
+      "request": {
+        "name": "requestProperty",
+        "schema": "string"
+      },
+      "response": {
+        "name": "responseProperty",
+        "schema": "string"
+      }
+    }
+  ],
+  "@context": "http://azureiot.com/v1/contexts/IoTModel.json"
+}
