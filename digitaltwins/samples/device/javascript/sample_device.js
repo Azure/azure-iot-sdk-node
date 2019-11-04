@@ -164,7 +164,7 @@ async function main() {
   const digitalTwinClient = new DigitalTwinClient(capabilityModel, deviceClient);
   digitalTwinClient.addInterfaceInstance(environmentalSensor);
   digitalTwinClient.addInterfaceInstance(deviceInformation);
-  digitalTwinClient.addInterfaceInstance(modelDefinition);5
+  digitalTwinClient.addInterfaceInstance(modelDefinition);
   await digitalTwinClient.register();
 
   // report all of the device information.
