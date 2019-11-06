@@ -207,7 +207,6 @@ const deviceInformation = new DeviceInformation('deviceInformation');
 const modelDefinition = new ModelDefinition('urn_azureiot_ModelDiscovery_ModelDefinition', undefined, modelDefinitionHandler);
 const exitInterface = new SampleExit('urn_azureiotsdknode_SampleInterface_SampleExit', undefined, exitHandler);
 
-
 const client = Client.fromConnectionString(process.env.DEVICE_CONNECTION_STRING as string, Protocol);
 
 const capabilityModel = 'urn:azureiot:samplemodel:1';
@@ -216,9 +215,7 @@ let dtClient = new DigitalTwinClient(capabilityModel, client);
 
 const main = async () => {
   try {
-    await environmentalSensor.humid.send(7.3);
-    await environmentalSensor.temp.send(65.5);
-    await environmentalSensor.state.report('on');
+    await environmentalSensor.state.report(true);
     await deviceInformation.manufacturer.report('Contoso Device Corporation');
     await deviceInformation.model.report('Contoso 4762B-turbo');
     await deviceInformation.swVersion.report('3.1');
@@ -227,6 +224,12 @@ const main = async () => {
     await deviceInformation.processorManufacturer.report('Contoso Foundries');
     await deviceInformation.totalStorage.report('64000');
     await deviceInformation.totalMemory.report('640');
+
+    // send telemetry every 5 seconds
+    setInterval( () => {
+      environmentalSensor.temp.send(10 + (Math.random() * 90) ); // range: [10, 90]
+      environmentalSensor.humid.send(1 + (Math.random() * 99) ); // range: [1, 99]
+    }, 5000);
   } catch (err) {
     console.log('error from operation is: ' + err.toString());
   }
