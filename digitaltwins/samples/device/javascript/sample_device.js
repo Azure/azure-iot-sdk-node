@@ -137,6 +137,7 @@ const modelDefinitionHandler = (request, response) => {
   //
   // Make sure that the id matches what the model id is.
   //
+  console.log('Payload is: ' + request.payload);
   if (request.payload !== environmentalId) {
     response.acknowledge(404, null)
       .then(console.log('Successfully sent the not found error for command ' + request.payload))
@@ -178,14 +179,16 @@ async function main() {
   await deviceInformation.totalMemory.report('640');
   console.log('Done sending device Information');
 
-  // send telemetry
-  await environmentalSensor.temp.send(65.5);
-  await environmentalSensor.humid.send(12.2);
-  console.log('Done sending telemetry.');
-
   // report a property
-  await environmentalSensor.state.report('online');
-  console.log('reported state property as online');
+  await environmentalSensor.state.report(true);
+  console.log('reported state property online as true');
+
+  console.log('Sending message: ' + message.getData());
+  // send telemetry every 5 seconds
+  setInterval(function () {
+    environmentalSensor.temp.send(10 + (Math.random() * 90) ); // range: [10, 90]
+    environmentalSensor.humid.send(1 + (Math.random() * 99) ); // range: [1, 99]
+  }, 5000);
 };
 
 main();
