@@ -226,9 +226,9 @@ const main = async () => {
     await deviceInformation.totalMemory.report('640');
 
     // send telemetry every 5 seconds
-    setInterval( () => {
-      environmentalSensor.temp.send(10 + (Math.random() * 90) ); // range: [10, 90]
-      environmentalSensor.humid.send(1 + (Math.random() * 99) ); // range: [1, 99]
+    setInterval( async () => {
+      await environmentalSensor.temp.send(10 + (Math.random() * 90) ); // range: [10, 90]
+      await environmentalSensor.humid.send(1 + (Math.random() * 99) ); // range: [1, 99]
     }, 5000);
   } catch (err) {
     console.log('error from operation is: ' + err.toString());
