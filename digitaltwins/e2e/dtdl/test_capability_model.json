@@ -8,5 +8,5 @@
       "schema": "urn:microsoft:azureiot:nodesdk:e2etest:1"
     }
   ],
-  "@context": "http://azureiot.com/v1/contexts/CapabilityModel.json"
+  "@context": "http://azureiot.com/v1/contexts/IoTModel.json"
 }

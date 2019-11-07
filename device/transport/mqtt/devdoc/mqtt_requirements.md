@@ -118,6 +118,10 @@ The `sendEvent` method sends an event to an IoT hub on behalf of the device indi
 
 **SRS_NODE_DEVICE_MQTT_16_027: [** The `sendEvent` method shall call its callback with an `Error` that has been translated using the `translateError` method if the `MqttBase` object fails to publish the message. **]**
 
+**SRS_NODE_DEVICE_MQTT_41_004 [** The `sendEvent` method shall call its callback with a `MessageEnqueued` **]**
+**SRS_NODE_DEVICE_MQTT_41_005 [** The `sendOutputEvent` method shall call its callback with a `MessageEnqueued` **]**
+
+
 ### sendEventBatch(messages, done)
 **SRS_NODE_DEVICE_MQTT_16_056: [** The `sendEventBatch` method shall throw a `NotImplementedError` **]**
 

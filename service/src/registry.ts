@@ -151,7 +151,7 @@ export class Registry {
       const path = endpoint.devicePath(encodeURIComponent(deviceInfo.deviceId)) + endpoint.versionQueryString();
       const httpHeaders = {
         'Content-Type': 'application/json; charset=utf-8',
-        'If-Match': '*'
+        'If-Match': this.ensureQuoted('*')
       };
 
       let normalizedDeviceInfo = JSON.parse(JSON.stringify(deviceInfo));
@@ -274,7 +274,7 @@ export class Registry {
       ```]*/
       const path = endpoint.devicePath(encodeURIComponent(deviceId)) + endpoint.versionQueryString();
       const httpHeaders = {
-        'If-Match': '*'
+        'If-Match': this.ensureQuoted('*')
       };
 
       this._restApiClient.executeApiCall('DELETE', path, httpHeaders, null, _callback);
@@ -624,7 +624,7 @@ export class Registry {
       const path = '/twins/' + encodeURIComponent(deviceId) + endpoint.versionQueryString();
       const headers = {
         'Content-Type': 'application/json; charset=utf-8',
-        'If-Match': etag
+        'If-Match': this.ensureQuoted(etag)
       };
 
       this._restApiClient.executeApiCall('PATCH', path, headers, patch, (err, newTwin, response) => {
@@ -675,7 +675,7 @@ export class Registry {
       const path = `/twins/${encodeURIComponent(deviceId)}/modules/${encodeURIComponent(moduleId)}${endpoint.versionQueryString()}`;
       const headers = {
         'Content-Type': 'application/json; charset=utf-8',
-        'If-Match': etag
+        'If-Match': this.ensureQuoted(etag)
       };
 
       this._restApiClient.executeApiCall('PATCH', path, headers, patch, (err, newTwin, response) => {
@@ -874,7 +874,7 @@ export class Registry {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_021: [If `forceUpdate` is truthy, the `updateConfiguration` method shall put `*` into the `If-Match` header value. ]*/
     const httpHeaders = {
       'Content-Type': 'application/json; charset=utf-8',
-      'If-Match': forceUpdate ? '"*"' : '\"' + configuration.etag + '\"'
+      'If-Match': this.ensureQuoted(forceUpdate ? '*' : configuration.etag)
     };
 
     this._restApiClient.executeApiCall('PUT', path, httpHeaders, configuration, done);
@@ -1133,7 +1133,7 @@ export class Registry {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_037: [If `forceUpdate` is truthy, the `updateModule` method shall put `*` into the `If-Match` header value. ]*/
     const httpHeaders = {
       'Content-Type': 'application/json; charset=utf-8',
-      'If-Match': forceUpdate ? '"*"' : '\"' + preparedModule.etag + '\"'
+      'If-Match': this.ensureQuoted(forceUpdate ? '*' : preparedModule.etag)
     };
 
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_038: [The `updateModule` method shall construct an HTTP request using information supplied by the caller, as follows:
@@ -1227,7 +1227,7 @@ export class Registry {
     ```
     ]*/
     const httpHeaders = {
-      'If-Match': '"' + etag + '"'
+      'If-Match': this.ensureQuoted(etag)
     };
 
     const path = `${endpoint.modulePath(encodeURIComponent(deviceId), encodeURIComponent(moduleId))}${endpoint.versionQueryString()}`;
@@ -1434,6 +1434,16 @@ export class Registry {
         deviceInfo.authentication.type = 'sas';
       }
     }
+  }
+
+  private ensureQuoted(eTag: string): string {
+    const tagLength = eTag.length;
+    if (tagLength === 0) {
+      return '""';
+    } else if ((eTag.slice(0, 1) === '"') && (eTag.slice(tagLength - 1, tagLength) === '"')) {
+      return eTag;
+    }
+    return '"' + eTag + '"';
   }
 
   /**

@@ -8,10 +8,10 @@ var Client = require('azure-iot-device').Client;
 var Protocol = require('azure-iot-device-mqtt').Mqtt;
 var _ = require('lodash');
 
-var connectionString = process.argv[2];
+var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
 
 // create the IoTHub client
-var client = Client.fromConnectionString(connectionString, Protocol);
+var client = Client.fromConnectionString(deviceConnectionString, Protocol);
 console.log('got client');
 
 // connect to the hub

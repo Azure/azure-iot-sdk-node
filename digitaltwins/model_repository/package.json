@@ -9,14 +9,14 @@
     "compile": "tsc",
     "lint": "tslint --project . -c ../../tslint.json",
     "build": "npm -s run lint && npm -s run compile",
-    "test-min": "echo \"no test\"",
-    "test": "echo \"no test\"",
+    "test-min": "istanbul cover --report none ./node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test.js",
+    "test": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test.js",
     "check-cover": "istanbul check-coverage --statements 1 --branches 1  --lines 1 --functions 1",
-    "ci": "npm -s run build && npm -s run test-min"
+    "ci": "npm -s run build && npm -s run test-min && npm -s run check-cover"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/azure/azure-iot-sdk-node-digitaltwins.git"
+    "url": "git+https://github.com/azure/azure-iot-sdk-node.git"
   },
   "keywords": [
     "Azure",
@@ -37,9 +37,9 @@
   "author": "Microsoft Corp.",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/azure/azure-iot-sdk-node-digitaltwins/issues"
+    "url": "https://github.com/azure/azure-iot-sdk-node/issues"
   },
-  "homepage": "https://github.com/azure/azure-iot-sdk-node-digitaltwins#readme",
+  "homepage": "https://github.com/azure/azure-iot-sdk-node#readme",
   "devDependencies": {
     "autorest": "^2.0.4283",
     "istanbul": "^0.4.5",
