@@ -85,6 +85,7 @@ $.ifid : 'urn:azureiot:ModelDiscovery:ModelInformation:1'
 $.ifname: 'urn_azureiot_ModelDiscovery_ModelInformation'
 $.schema: 'modelInformation'
 contentType: 'application/json'
+contentEncoding: 'utf-8'
 ```
  **]**
 
@@ -161,6 +162,7 @@ message application properties:
 'iothub-command-statuscode': statusCode argument of the update method
 '$.ifname': interfaceInstances name
 contentType: 'application/json'
+contentEncoding: 'utf-8'
 ```
  **]**
 
@@ -168,13 +170,27 @@ contentType: 'application/json'
 
 ### Telemetry
 
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_034: [** Subsequent to addInterfaceInstance a Telemetry will have a report method. **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_041: [** Subsequent to addInterfaceInstance if the interface contains any telemetry properties, the interface will have a sendTelemetry method that can send any number of telemetry properties in on message.
+ **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_042: [** The sendTelemetry method will send a device message with the following format:
+```
+payload: {<telemetry property name>: <telemetry property value> ,...}
+message application properties:
+contentType: 'application/json'
+contentEncoding: 'utf-8'
+$.ifname: <interfaceInstance name>
+```
+ **]**
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_034: [** Subsequent to addInterfaceInstance a Telemetry will have a send method. **]**
 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_032: [** A telemetry will send a device message with the following format:
 ```
 payload: {<telemetry property name>: value}
 message application properties:
 contentType: 'application/json'
+contentEncoding: 'utf-8'
 $.ifname: <interfaceInstance name>
 $.schema: <telemetry property name>
 ```

@@ -18,6 +18,16 @@ You need to install the [Node.js][nodejs_lnk] JavaScript runtime environment to 
 
 [npm][npm_lnk] is a command-line package manager that is installed with Node.js is installed, and will be used to install Azure IoT node.js client side SDK.
 
+## Latest updates
+
+The telemetry interface has been adjusted.  We are de-emphasizing the ability to send individual properties.
+We have introduced a new method on the interface instance called sendTelemetry. Its argument is an object that can
+send multiple properties with a single message.
+
+We are likely to remove the ability to do a .send in the near future.
+
+We are very likely to in a near future update to be changing the names of some Digital Twin client methods.  Stay tuned.
+
 ## Installation
 
 To get the latest version you need to install this package as well as the device client and the MQTT transport that support the digital twin client:
@@ -69,8 +79,7 @@ async function main() {
   const digitalTwinClient = new DigitalTwinClient(capabilityModel, deviceClient);
   digitalTwinClient.addInterfaceInstance(environmentalSensor);
   await digitalTwinClient.register();
-  await environmentalSensor.temp.send(65.5);
-  await environmentalSensor.humid.send(12.2);
+  await environmentalSensor.sendTelemetry({temp: 65.5, humid: 12.2});
   console.log('Done sending telemetry.');
 };
 
