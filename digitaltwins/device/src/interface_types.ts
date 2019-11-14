@@ -139,6 +139,35 @@ export class Telemetry {
 }
 
 /*
+ * Signature for public method for sending an interface telemetry that is
+ * comprised of any number of telemetry properties that utilize a promise
+ * instead of callback.
+ *
+ * This is used for an interfaceInstance .sendTelemetry method.
+ *
+ * @param   telemetry               The object for the telemetry being sent to
+ *                                  in the Digital Twin.
+ * @returns {Promise<void>}         Promise if no callback function was passed, void otherwise.
+ */
+export type InterfaceTelemetryPromise = (telemetry: any) => Promise<void>;
+
+/*
+ * Signature for public method for sending an interface telemetry that is
+ * comprised of any number of telemetry properties that utilize a callback
+ * instead of a promise
+ *
+ * This is used for an interfaceInstance .sendTelemetry method.
+ *
+ * @param   telemetry               The object for the telemetry being sent to
+ *                                  in the Digital Twin.
+ * @parm    callback                Function to be invoked when the operation to send
+ *                                  the telemetry has completed successfully or
+ *                                  with an Error.
+ */
+export type InterfaceTelemetryCallback = (telemetry: any, callback: Callback) => void;
+
+
+/*
  * Signature for public method for sending a telemetry property
  * that utilize a promise instead of callback.
  *

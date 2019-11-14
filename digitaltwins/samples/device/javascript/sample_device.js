@@ -185,8 +185,7 @@ async function main() {
 
   // send telemetry every 5 seconds
   setInterval( async () => {
-    await environmentalSensor.temp.send(10 + (Math.random() * 90) ); // range: [10, 90]
-    await environmentalSensor.humid.send(1 + (Math.random() * 99) ); // range: [1, 99]
+    await environmentalSensor.sendTelemetry( { temp: 10 + (Math.random() * 90), humid: 1 + (Math.random() * 99) } );
   }, 5000);
 };
 

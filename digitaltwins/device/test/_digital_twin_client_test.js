@@ -158,6 +158,7 @@ describe('Digital Twin Client', function () {
       $.ifname: 'urn_azureiot_ModelDiscovery_ModelInformation'
       $.schema: 'modelInformation'
       contentType: 'application/json'
+      contentEncoding: 'utf-8'
       **]
     */
     describe('sends a correctly formatted registration event', function () {
@@ -180,6 +181,7 @@ describe('Digital Twin Client', function () {
         assert.isOk(registrationPayload.modelInformation.interfaces['abc']);
         assert.strictEqual(registrationPayload.modelInformation.interfaces['abc'], 'urn:contoso:com:something:1');
         assert.strictEqual(registrationMessage.contentType, 'application/json');
+        assert.strictEqual(registrationMessage.contentEncoding, 'utf-8');
         assert.strictEqual(registrationMessage.properties.getValue('$.ifid'), 'urn:azureiot:ModelDiscovery:ModelInformation:1');
         assert.strictEqual(registrationMessage.properties.getValue('$.ifname'), 'urn_azureiot_ModelDiscovery_ModelInformation');
         assert.strictEqual(registrationMessage.properties.getValue('$.schema'), 'modelInformation');
@@ -380,6 +382,9 @@ describe('Digital Twin Client', function () {
       constructor(name, propertyCallback, commandCallback) {
         super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
         this.temp = new Telemetry();
+        this.firstTelemetryProperty = new Telemetry();
+        this.secondTelemetryProperty = new Telemetry();
+        this.thirdTelemetryProperty = new Telemetry();
       }
     };
 
@@ -402,6 +407,7 @@ describe('Digital Twin Client', function () {
       payload: {<telemetry property name>: value}
       message application properties:
       contentType: 'application/json'
+      contentEncoding: 'utf-8'
       $.ifname: <interfaceInstance name>
       $.schema: <telemetry property name>
       **]
@@ -418,6 +424,7 @@ describe('Digital Twin Client', function () {
           assert.isOk(telemetryPayload[telemetryName]);
           assert.strictEqual(telemetryPayload[telemetryName], 42);
           assert.strictEqual(telemetryMessage.contentType, 'application/json');
+          assert.strictEqual(telemetryMessage.contentEncoding, 'utf-8');
           assert.strictEqual(telemetryMessage.properties.getValue('$.ifname'), 'abc');
           assert.strictEqual(telemetryMessage.properties.getValue('$.schema'), telemetryName);
           done();
@@ -441,12 +448,78 @@ describe('Digital Twin Client', function () {
         });
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_034: [** Subsequent to addInterfaceInstance a Telemetry will have a report method. **] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_034: [** Subsequent to addInterfaceInstance a Telemetry will have a send method. **] */
     it('Subsequent to adding the interfaceInstance, a Telemetry will have a send method', (done) => {
       assert(!fakeInterfaceInstance.temp.send);
       dtClient.addInterfaceInstance(fakeInterfaceInstance);
       assert(fakeInterfaceInstance.temp.send);
       assert(typeof fakeInterfaceInstance.temp.send === 'function');
+      done();
+    });
+
+    /* Tests_**SRS_NODE_DIGITAL_TWIN_DEVICE_06_042: [** The sendTelemetry method will send a device message with the following format:
+      payload: {<telemetry property name>: <telemetry property value> ,...}
+      message application properties:
+      contentType: 'application/json'
+      contentEncoding: 'utf-8'
+      $.ifname: <interfaceInstance name>
+      ]
+    */
+    it('sending "imploded" message with correct format - invoking callback on success', function (done) {
+      dtClient.addInterfaceInstance(fakeInterfaceInstance);
+      dtClient.register((error) => {
+        assert.isNotOk(error);
+        fakeInterfaceInstance.sendTelemetry({ firstTelemetryProperty: 1, thirdTelemetryProperty: 'end' }, (telemetryError) => {
+          assert.isNotOk(telemetryError);
+          const telemetryMessage = telemetryDeviceClient.sendEvent.args[1][0];
+          const telemetryPayload = JSON.parse(telemetryMessage.data);
+          assert.strictEqual(telemetryPayload.firstTelemetryProperty, 1);
+          assert.strictEqual(telemetryPayload.thirdTelemetryProperty, 'end');
+          assert.strictEqual(Object.keys(telemetryPayload).length, 2);
+          assert.strictEqual(telemetryMessage.contentType, 'application/json');
+          assert.strictEqual(telemetryMessage.contentEncoding, 'utf-8');
+          assert.strictEqual(telemetryMessage.properties.getValue('$.ifname'), 'abc');
+          done();
+        });
+      });
+    });
+
+    it('"imploded" - resolving with a promise', function (done) {
+      dtClient.addInterfaceInstance(fakeInterfaceInstance);
+      dtClient.register()
+        .then(() => {
+          fakeInterfaceInstance.sendTelemetry({ firstTelemetryProperty: 1, thirdTelemetryProperty: 'end' })
+            .then( () => {
+              const telemetryMessage = telemetryDeviceClient.sendEvent.args[1][0];
+              const telemetryPayload = JSON.parse(telemetryMessage.data);
+              assert.strictEqual(telemetryPayload.firstTelemetryProperty, 1);
+              assert.strictEqual(telemetryPayload.thirdTelemetryProperty, 'end');
+              assert.strictEqual(Object.keys(telemetryPayload).length, 2);
+              return done();
+            });
+        });
+    });
+
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_041: [Subsequent to addInterfaceInstance if the interface contains any telemetry properties, the interface will have a sendTelemetry method that can send any number of telemetry properties in on message.] */
+    it('Subsequent to adding the interfaceInstance, a Telemetry will have a sendTelemetry method', (done) => {
+      assert(!fakeInterfaceInstance.sendTelemetry);
+      dtClient.addInterfaceInstance(fakeInterfaceInstance);
+      assert(fakeInterfaceInstance.sendTelemetry);
+      assert(typeof fakeInterfaceInstance.sendTelemetry === 'function');
+      done();
+    });
+
+    it('No Telemetry property then no sendTelemetry method', (done) => {
+      class PropertyOnlyInterface extends BaseInterface {
+        constructor(name, propertyCallback, commandCallback) {
+          super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
+          this.justAProperty = new Property();
+        }
+      };
+      const onlyPropertyInterfaceInstance = new PropertyOnlyInterface('abc');
+      assert(!onlyPropertyInterfaceInstance.sendTelemetry);
+      dtClient.addInterfaceInstance(onlyPropertyInterfaceInstance);
+      assert(!onlyPropertyInterfaceInstance.sendTelemetry);
       done();
     });
   });
@@ -836,6 +909,7 @@ describe('Digital Twin Client', function () {
       'iothub-command-statuscode': statusCode argument of the update method
       '$.ifname': interfaceInstances name
       contentType: 'application/json'
+      contentEncoding: 'utf-8'
       ]
      */
     it('Invoking the `update` method will produce the appropriately formated telemetry message', (done) => {
@@ -851,6 +925,7 @@ describe('Digital Twin Client', function () {
           commandDeviceClient.sendEvent.onCall(1).callsFake((message, fakeDone) => {
             assert.strictEqual(message.data.toString(), JSON.stringify(payload));
             assert.strictEqual(message.contentType, 'application/json');
+            assert.strictEqual(message.contentEncoding, 'utf-8');
             assert.strictEqual(message.properties.getValue('iothub-message-schema'), 'asyncResult');
             assert.strictEqual(message.properties.getValue('iothub-command-request-id'), '43');
             assert.strictEqual(message.properties.getValue('iothub-command-statuscode'), '200');

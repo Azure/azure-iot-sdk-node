@@ -113,4 +113,60 @@ describe('Digital Twin Telemetry', function () {
         return closeClients(deviceClient, ehClient, done, err);
       });
   });
+
+  it('can send "imploded" telemetry and it is received on the Event Hubs endpoint', function (done) {
+    this.timeout(60000);
+
+    const testTelemetryBody = {
+      firstTelemetryProperty: 1,
+      thirdTelemetryProperty: 'end'
+    };
+    const startAfterTime = Date.now() - 5000;
+    let ehClient;
+
+    // test device client
+    const deviceSasExpiry = Math.floor(new Date() / 1000) + 3600;
+    const deviceSas = DeviceSas.create(hubHostName, createdDevice.deviceId, createdDevice.authentication.symmetricKey.primaryKey, deviceSasExpiry);
+    const deviceClient = DeviceClient.fromSharedAccessSignature(deviceSas, Mqtt);
+    const digitalTwinClient = new DigitalTwinDeviceClient(capabilityModelDocument['@id'], deviceClient);
+    const testInterfaceInstance = new TestInterfaceInstance('testInterfaceInstance', function () {}, function () {});
+    digitalTwinClient.addInterfaceInstance(testInterfaceInstance);
+
+    const onEventHubMessage = function (eventData) {
+      if (eventData.annotations['iothub-connection-device-id'] === createdDevice.deviceId) {
+        debug('received a message from the test device: ');
+        debug(JSON.stringify(eventData.body));
+        if ((eventData.body.firstTelemetryProperty && eventData.body.firstTelemetryProperty === testTelemetryBody.firstTelemetryProperty) &&
+            (eventData.body.thirdTelemetryProperty && eventData.body.thirdTelemetryProperty === testTelemetryBody.thirdTelemetryProperty) &&
+            (Object.keys(eventData.body).length === 2)) {
+          debug('found telemetry message from test device. test successful.');
+          closeClients(deviceClient, ehClient, done);
+        }
+      } else {
+        debug('Incoming device id is: ' + eventData.annotations['iothub-connection-device-id']);
+      }
+    };
+
+    const onEventHubError = function (err) {
+      debug('Error from Event Hub Client Receiver: ' + err.toString());
+      closeClients(deviceClient, ehClient, done, err);
+    };
+
+    debug('event hubs client: starting...');
+    startEventHubsClient(onEventHubMessage, onEventHubError, startAfterTime, 3000)
+      .then((client) => {
+        debug('event hubs client: started');
+        ehClient = client;
+        debug('registering digital twin client with test interfaceInstance');
+        return digitalTwinClient.register();
+      }).then(function () {
+        debug('digital twin client registered. sending telemetry: ' + testTelemetryBody);
+        return testInterfaceInstance.sendTelemetry(testTelemetryBody);
+      }).then(() => {
+        debug('telemetry sent: ' + testTelemetryBody);
+      }).catch((err) => {
+        debug('error while testing telemetry: ' + err.toString());
+        return closeClients(deviceClient, ehClient, done, err);
+      });
+  });
 });
