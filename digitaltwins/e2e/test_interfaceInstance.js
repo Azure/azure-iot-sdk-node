@@ -13,6 +13,9 @@ module.exports.TestInterfaceInstance = class TestInterfaceInstance extends BaseI
   constructor(name, propertyCallback, commandCallback) {
     super(name, interfaceId, propertyCallback, commandCallback);
     this.telemetry = new Telemetry();
+    this.firstTelemetryProperty = new Telemetry();
+    this.secondTelemetryProperty = new Telemetry();
+    this.thirdTelemetryProperty = new Telemetry();
     this.readOnlyProperty = new Property();
     this.writableProperty = new Property(true);
     this.syncCommand = new Command();
