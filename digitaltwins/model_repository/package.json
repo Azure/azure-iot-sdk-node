@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-digitaltwins-model-repository",
-  "version": "1.0.0-preview.1",
+  "version": "1.0.0-preview.2",
   "description": "Azure IoT Digital Twins Model Repository Preview",
   "main": "index.js",
   "types": "index.d.ts",
@@ -49,7 +49,7 @@
   },
   "dependencies": {
     "@azure/ms-rest-js": "^1.8.13",
-    "azure-iot-common": "1.12.0-preview.1",
+    "azure-iot-common": "1.12.0-preview.2",
     "tslib": "^1.9.3"
   }
 }
