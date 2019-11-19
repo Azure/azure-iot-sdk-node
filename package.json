@@ -2,7 +2,7 @@
 	"devDependencies": {
 		"lerna": "^2.11.0",
 		"istanbul": "^0.4.5",
-		"mocha": "^5.2.0"
+		"mocha": "^6.1.4"
 	},
 	"engines": {
 		"node": ">=8.0.0"
