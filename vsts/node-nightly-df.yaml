@@ -25,40 +25,13 @@ phases:
         lerna bootstrap --hoist
         lerna run build
     displayName: 'Bootstrap & Build'
+
   - script: 'lerna run ci'
     displayName: 'Unit & Integration Tests'
     env:
       IOTHUB_CONNECTION_STRING: $(LINUX-IOTHUB-CONNECTION-STRING)
 
   - script: 'lerna run e2e'
-  - script: |
-      cd digitaltwins/service
-      npm -s run ci
-    displayName: 'Unit Tests: Service'
-  - script: |
-      cd digitaltwins/model_repository
-      npm -s run ci
-    displayName: 'Unit Tests: Model Repository'
-  - script: |
-      cd digitaltwins/device
-      npm -s run ci
-    displayName: 'Unit Tests: Device'
-  - script: |
-      cd digitaltwins/samples/service
-      npm -s run lint
-    displayName: 'Linter: Service Samples'
-  - script: |
-      cd digitaltwins/samples/model_repository
-      npm -s run lint
-    displayName: 'Linter: Model Repo Samples'
-  - script: |
-      cd digitaltwins/samples/device/typescript
-      npm -s run lint
-      npm -s run build
-    displayName: 'Linter: Device Samples'
-  - script: |
-      cd digitaltwins/e2e
-      npm -s run e2e
     displayName: 'E2E Tests'
     env:
       IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
@@ -106,36 +79,6 @@ phases:
        call lerna run build
     displayName: 'Bootstrap & Build'
 
-  - script: 'call lerna run ci'
-    displayName: 'Unit & Integration Tests'
-    env:
-      IOTHUB_CONNECTION_STRING: $(WINDOWS-IOTHUB-CONNECTION-STRING)
-
-  - script: 'lerna run e2e'
-  - powershell: |
-       lerna bootstrap --hoist
-       lerna run build
-    displayName: 'Bootstrap & Build'
-  - script: |
-        cd digitaltwins/service
-        call npm -s run ci
-    displayName: 'Unit Tests: Service'
-  - script: |
-      cd digitaltwins/model_repository
-      call npm -s run ci
-    displayName: 'Unit Tests: Model Repository'
-  - script: |
-      cd digitaltwins/device
-      call npm -s run ci
-    displayName: 'Unit Tests: Device'
-  - script: |
-      cd digitaltwins/samples/service
-      call npm -s run lint
-    displayName: 'Linter: Service Samples'
-  - script: |
-       call lerna bootstrap --hoist
-       call lerna run build
-    displayName: 'Bootstrap & Build'
   - script: 'call lerna run ci'
     displayName: 'Unit & Integration Tests'
     env:
