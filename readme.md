@@ -1,12 +1,29 @@
-# Microsoft Azure IoT SDK for Node.js
+# Azure IoT SDK for Node.js
+
+The Azure IoT Node.js SDK enables developers to more easily create IoT solutions written in Node.js for the Azure IoT platform.
 
 ![Build Status](https://azure-iot-sdks.visualstudio.com/azure-iot-sdks/_apis/build/status/node/node-canary)
 
-This repository contains the following SDKs:
-* **Azure IoT Hub Device SDK**: to connect devices to Azure IoT Hub. [API Reference][node-api-device-reference]
-* **Azure IoT Hub Service SDK**: enables developing back-end applications making use of Azure IoT Hub. [API Reference][node-api-service-reference]
-* **Azure IoT Hub Provisioning Device SDK**: to connect devices to the Azure IoT Hub Provisioning Service. [API Reference][node-api-prov-device-reference]
-* **Azure IoT Hub Provisioning Service SDK**: enables developing back-end applications making use of the Azure IoT Provisioning Service. [API Reference][node-api-prov-service-reference]
+## Getting Started
+
+### Why Azure IoT? 
+
+- [**Azure IoT is built on decades of Microsoft enterprise experience and is designed to be accessible for all organizations.**][iot-dev-center]
+
+### New to Azure IoT Hub?
+
+- [**Introduction to Azure IoT Hub:**][azure-iot-device-ecosystem] Follow this guide to learn how to set up an IoT Hub and IoT Hub devices. 
+
+### New to the Azure IoT Node.JS SDK? 
+
+- [**Send Telemetry Walkthrough:**][telemetry-walkthrough] Create a basic Python application that sends telemetry to your IoT Hub device. 
+
+## Components
+
+* **Device Client Library**: to connect devices to Azure IoT Hub. [API Reference][node-api-device-reference]
+* **Service Client Library**: enables developing back-end applications making use of Azure IoT Hub. [API Reference][node-api-service-reference]
+* **Provisioning Device Client Library**: to connect devices to the Azure IoT Hub Provisioning Service. [API Reference][node-api-prov-device-reference]
+* **Provisioning Service Client Library**: enables developing back-end applications making use of the Azure IoT Provisioning Service. [API Reference][node-api-prov-service-reference]
 
 ## Developing applications for Azure IoT
 
@@ -103,6 +120,8 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 Microsoft collects performance and usage information which may be used to provide and improve Microsoft products and services and enhance your experience.  To learn more, review the [privacy statement](https://go.microsoft.com/fwlink/?LinkId=521839&clcid=0x409).
 
+[telemetry-walkthrough]: 
+[azure-iot-device-ecoysystem]: https://github.com/Azure/azure-iot-device-ecosystem/blob/master/setup_iothub.md
 [iot-dev-center]: http://azure.com/iotdev
 [iot-hub-documentation]: https://docs.microsoft.com/en-us/azure/iot-hub/
 [azure-iot-sdks]: http://github.com/azure/azure-iot-sdks
