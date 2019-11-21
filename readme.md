@@ -4,36 +4,30 @@ The Azure IoT Node.js SDK enables developers to more easily create IoT solutions
 
 ![Build Status](https://azure-iot-sdks.visualstudio.com/azure-iot-sdks/_apis/build/status/node/node-canary)
 
-## Getting Started
+# Getting Started
 
 ### Why Azure IoT? 
 
-- [**Azure IoT is built on decades of Microsoft enterprise experience and is designed to be accessible for all organizations.**][iot-dev-center]
+- [Azure IoT is built on decades of Microsoft enterprise experience and is designed to be accessible for all organizations.][iot-dev-center]
 
 ### New to Azure IoT Hub?
 
-- [**Introduction to Azure IoT Hub:**][azure-iot-device-ecosystem] Follow this guide to learn how to set up an IoT Hub and IoT Hub devices. 
+- **[Introduction to Azure IoT Hub:][iot-device-ecosystem]** Follow this guide to learn how to set up an IoT Hub and IoT Hub devices. 
 
 ### New to the Azure IoT Node.JS SDK? 
 
-- [**Send Telemetry Walkthrough:**][telemetry-walkthrough] Create a basic Python application that sends telemetry to your IoT Hub device. 
+- **[Try a Device Sample:](./device/samples/)** Create a basic Python application following one of the device client library samples provided. 
 
-## Components
+# Components
 
 * **Device Client Library**: to connect devices to Azure IoT Hub. [API Reference][node-api-device-reference]
 * **Service Client Library**: enables developing back-end applications making use of Azure IoT Hub. [API Reference][node-api-service-reference]
 * **Provisioning Device Client Library**: to connect devices to the Azure IoT Hub Provisioning Service. [API Reference][node-api-prov-device-reference]
 * **Provisioning Service Client Library**: enables developing back-end applications making use of the Azure IoT Provisioning Service. [API Reference][node-api-prov-service-reference]
 
-## Developing applications for Azure IoT
+### npm package list
 
-Visit [Azure IoT Dev Center][iot-dev-center] to learn more about developing applications for Azure IoT.
-
-## How to use the Azure IoT SDKs for Node.js
-
-Devices and data sources in an IoT solution can range from a simple network-connected sensor to a powerful, standalone computing device. Devices may have limited processing capability, memory, communication bandwidth, and communication protocol support. The IoT device SDKs enable you to implement client applications for a wide variety of devices.
-
-The SDK team publishes the SDKs as [npm](https://npmjs.org) packages:
+The Node.js SDK is published as [npm](https://npmjs.org) packages.
 - **Azure IoT Hub Device SDK**
   - [Device Client](https://www.npmjs.com/package/azure-iot-device) [![npm version](https://badge.fury.io/js/azure-iot-device.svg)](https://badge.fury.io/js/azure-iot-device)
   - [MQTT Transport](https://www.npmjs.com/package/azure-iot-device-mqtt) [![npm version](https://badge.fury.io/js/azure-iot-device-mqtt.svg)](https://badge.fury.io/js/azure-iot-device-mqtt)
@@ -51,7 +45,9 @@ The SDK team publishes the SDKs as [npm](https://npmjs.org) packages:
 - **Azure IoT Hub Device Provisioning Service: Service SDK**
   - [Service SDK](https://www.npmjs.com/package/azure-iot-provisioning-service) [![npm version](https://badge.fury.io/js/azure-iot-provisioning-service.svg)](https://badge.fury.io/js/azure-iot-provisioning-service)
 
-* **Working with the SDKs code**: if you are working with the SDK's code to modify it or to contribute changes, then you can clone the repository and build the libraries following [these instructions](./doc/node-devbox-setup.md).
+### Working from Source Code
+
+If you want to modify or contribute changes to the SDK, then you can build the libraries following **[these instructions](./doc/node-devbox-setup.md).**
 
 ## Need Support?
 - **Have a feature request for SDKs?** Please post it on [User Voice](https://feedback.azure.com/forums/321918-azure-iot) to help us prioritize
@@ -120,8 +116,8 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 Microsoft collects performance and usage information which may be used to provide and improve Microsoft products and services and enhance your experience.  To learn more, review the [privacy statement](https://go.microsoft.com/fwlink/?LinkId=521839&clcid=0x409).
 
-[telemetry-walkthrough]: 
-[azure-iot-device-ecoysystem]: https://github.com/Azure/azure-iot-device-ecosystem/blob/master/setup_iothub.md
+
+[iot-device-ecosystem]: https://github.com/Azure/azure-iot-device-ecosystem/blob/master/setup_iothub.md
 [iot-dev-center]: http://azure.com/iotdev
 [iot-hub-documentation]: https://docs.microsoft.com/en-us/azure/iot-hub/
 [azure-iot-sdks]: http://github.com/azure/azure-iot-sdks
