@@ -16,7 +16,7 @@ The Azure IoT Node.js SDK enables developers to more easily create IoT solutions
 
 ### New to the Azure IoT Node.JS SDK? 
 
-- **[Try a Device Sample:](./device/samples/)** Create a basic Python application following one of the device client library samples provided. 
+- **[Try a Device Sample:](./device/samples/)** Create a basic Node.js application following one of the device client library samples provided. 
 
 # Components
 
