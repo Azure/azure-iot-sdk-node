@@ -1,8 +1,6 @@
 <div align="center">
-  <img src="">
+  <img src="./doc/Azure IoT Hub.png">
 </div>
-
-# Azure IoT SDK for Node.js
 
 The Azure IoT Node.js SDK enables developers to more easily create IoT solutions written in Node.js for the Azure IoT platform.
 
