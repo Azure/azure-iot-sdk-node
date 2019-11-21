@@ -20,68 +20,76 @@ The Azure IoT Node.js SDK enables developers to create IoT solutions written in 
 
 - **[Try a Device Sample:](./device/samples/)** Create a basic Node.js application following one of the device client library samples provided. 
 
-# Components
 
-* **Device Client Library**: to connect devices to Azure IoT Hub. [API Reference][node-api-device-reference]
-* **Service Client Library**: enables developing back-end applications making use of Azure IoT Hub. [API Reference][node-api-service-reference]
-* **Provisioning Device Client Library**: to connect devices to the Azure IoT Hub Provisioning Service. [API Reference][node-api-prov-device-reference]
-* **Provisioning Service Client Library**: enables developing back-end applications making use of the Azure IoT Provisioning Service. [API Reference][node-api-prov-service-reference]
-
-### npm package list
-
-The Node.js SDK is published as [npm](https://npmjs.org) packages.
-- **Azure IoT Hub Device SDK**
-  - [Device Client](https://www.npmjs.com/package/azure-iot-device) [![npm version](https://badge.fury.io/js/azure-iot-device.svg)](https://badge.fury.io/js/azure-iot-device)
-  - [MQTT Transport](https://www.npmjs.com/package/azure-iot-device-mqtt) [![npm version](https://badge.fury.io/js/azure-iot-device-mqtt.svg)](https://badge.fury.io/js/azure-iot-device-mqtt)
-  - [AMQP Transport](https://www.npmjs.com/package/azure-iot-device-amqp) [![npm version](https://badge.fury.io/js/azure-iot-device-amqp.svg)](https://badge.fury.io/js/azure-iot-device-amqp)
-  - [HTTP Transport](https://www.npmjs.com/package/azure-iot-device-http) [![npm version](https://badge.fury.io/js/azure-iot-device-http.svg)](https://badge.fury.io/js/azure-iot-device-http)
-- **Azure IoT Hub Service SDK**
-  - [Service SDK](https://www.npmjs.com/package/azure-iothub) [![npm version](https://badge.fury.io/js/azure-iothub.svg)](https://badge.fury.io/js/azure-iothub)
-- **Azure IoT Hub Device Provisioning Service: Device SDK**
-  - [Device Client](https://www.npmjs.com/package/azure-iot-provisioning-device) [![npm version](https://badge.fury.io/js/azure-iot-provisioning-device.svg)](https://badge.fury.io/js/azure-iot-provisioning-device)
-  - [MQTT Transport](https://www.npmjs.com/package/azure-iot-provisioning-device-mqtt) [![npm version](https://badge.fury.io/js/azure-iot-provisioning-device-mqtt.svg)](https://badge.fury.io/js/azure-iot-provisioning-device-mqtt)
-  - [AMQP Transport](https://www.npmjs.com/package/azure-iot-provisioning-device-amqp) [![npm version](https://badge.fury.io/js/azure-iot-provisioning-device-amqp.svg)](https://badge.fury.io/js/azure-iot-provisioning-device-amqp)
-  - [HTTP Transport](https://www.npmjs.com/package/azure-iot-provisioning-device-http) [![npm version](https://badge.fury.io/js/azure-iot-provisioning-device-http.svg)](https://badge.fury.io/js/azure-iot-provisioning-device-http)
-  - [TPM Security Client](https://www.npmjs.com/package/azure-iot-security-tpm) [![npm version](https://badge.fury.io/js/azure-iot-security-tpm.svg)](https://badge.fury.io/js/azure-iot-security-tpm)
-  - [x509 Security Client](https://www.npmjs.com/package/azure-iot-security-x509) [![npm version](https://badge.fury.io/js/azure-iot-security-x509.svg)](https://badge.fury.io/js/azure-iot-security-x509)
-- **Azure IoT Hub Device Provisioning Service: Service SDK**
-  - [Service SDK](https://www.npmjs.com/package/azure-iot-provisioning-service) [![npm version](https://badge.fury.io/js/azure-iot-provisioning-service.svg)](https://badge.fury.io/js/azure-iot-provisioning-service)
-
-### Working from Source Code
-
-If you want to modify or contribute changes to the SDK, then you can build the libraries following **[these instructions](./doc/node-devbox-setup.md).**
-
-## Need Support?
-- **Have a feature request for SDKs?** Please post it on [User Voice](https://feedback.azure.com/forums/321918-azure-iot) to help us prioritize
-- **Have a technical question?** Ask on [Stack Overflow with tag "azure-iot-hub"](https://stackoverflow.com/questions/tagged/azure-iot-hub)
-- **Need Support?** Every customer with an active Azure subscription has access to [support](https://docs.microsoft.com/en-us/azure/azure-supportability/how-to-create-azure-support-request) with guaranteed response time.  Consider submitting a ticket and get assistance from Microsoft support team
-- **Found a bug?** Please help us fix it by thoroughly documenting it and [filing an issue](https://github.com/Azure/azure-iot-sdk-node/issues/new).
-
-## Key features and roadmap
-
-Here's a [feature matrix](./feature_matrix.md) that will help you understand what feature is supported with which protocol.
-
-## Samples
+# Samples
 
 In the repository, you will find a set of simple samples that will help you get started:
 - [Device SDK samples](./device/samples/)
 - [Service SDK samples](./service/samples/)
 
-## Platforms compatibility
+
+# Components
+
+* **Device Client Library**: to connect devices to Azure IoT Hub. [API Reference][node-api-device-reference]
+* **Service Client Library**: enables developing back-end applications making use of Azure IoT Hub. [API Reference][node-api-service-reference]
+* **Provisioning Device Client Library**: to connect devices to the Azure IoT Provisioning Service. [API Reference][node-api-prov-device-reference]
+* **Provisioning Service Client Library**: enables developing back-end applications making use of the Azure IoT Provisioning Service. [API Reference][node-api-prov-service-reference]
+
+### npm Package List 
+
+The Node.js SDK is published as [npm](https://npmjs.org) packages.
+
+**Azure IoT Hub Device SDK**
+
+| Name            | npm package                                                                                                |
+|-----------------|------------------------------------------------------------------------------------------------------------|
+| [Device Client](https://www.npmjs.com/package/azure-iot-device)   | [![npm version](https://badge.fury.io/js/azure-iot-device.svg)](https://badge.fury.io/js/azure-iot-device) |
+|  [MQTT Transport](https://www.npmjs.com/package/azure-iot-device-mqtt) | [![npm version](https://badge.fury.io/js/azure-iot-device-mqtt.svg)](https://badge.fury.io/js/azure-iot-device-mqtt) |
+|  [AMQP Transport](https://www.npmjs.com/package/azure-iot-device-amqp) | [![npm version](https://badge.fury.io/js/azure-iot-device-amqp.svg)](https://badge.fury.io/js/azure-iot-device-amqp) |
+|  [HTTP Transport](https://www.npmjs.com/package/azure-iot-device-http) | [![npm version](https://badge.fury.io/js/azure-iot-device-http.svg)](https://badge.fury.io/js/azure-iot-device-http) |
+
+**Azure IoT Hub Service SDK**
+
+| Name            | npm package                                                                                                |
+|-----------------|------------------------------------------------------------------------------------------------------------|
+| [Service SDK](https://www.npmjs.com/package/azure-iothub)   | [![npm version](https://badge.fury.io/js/azure-iothub.svg)](https://badge.fury.io/js/azure-iothub) |
+
+
+**Azure IoT Hub Device Provisioning Service: Device SDK**
+
+| Name                 | npm package                                                                                                |
+|----------------------|------------------------------------------------------------------------------------------------------------|
+| [Device Client](https://www.npmjs.com/package/azure-iot-provisioning-device) | [![npm version](https://badge.fury.io/js/azure-iot-provisioning-device.svg)](https://badge.fury.io/js/azure-iot-provisioning-device) |
+| [MQTT Transport](https://www.npmjs.com/package/azure-iot-provisioning-device-mqtt) | [![npm version](https://badge.fury.io/js/azure-iot-provisioning-device-mqtt.svg)](https://badge.fury.io/js/azure-iot-provisioning-device-mqtt)  |
+|  [AMQP Transport](https://www.npmjs.com/package/azure-iot-provisioning-device-amqp) | [![npm version](https://badge.fury.io/js/azure-iot-provisioning-device-amqp.svg)](https://badge.fury.io/js/azure-iot-provisioning-device-amqp) |
+|  [HTTP Transport](https://www.npmjs.com/package/azure-iot-provisioning-device-http)  | [![npm version](https://badge.fury.io/js/azure-iot-provisioning-device-http.svg)](https://badge.fury.io/js/azure-iot-provisioning-device-http) |
+| [TPM Security Client](https://www.npmjs.com/package/azure-iot-security-tpm)  | [![npm version](https://badge.fury.io/js/azure-iot-security-tpm.svg)](https://badge.fury.io/js/azure-iot-security-tpm) |
+| [x509 Security Client](https://www.npmjs.com/package/azure-iot-security-x509)  |  [![npm version](https://badge.fury.io/js/azure-iot-security-x509.svg)](https://badge.fury.io/js/azure-iot-security-x509) |
+
+
+**Azure IoT Hub Device Provisioning Service: Service SDK**
+| Name            | npm package                                                                                                |
+|-----------------|------------------------------------------------------------------------------------------------------------|
+| [Service SDK](https://www.npmjs.com/package/azure-iot-provisioning-service)   | [![npm version](https://badge.fury.io/js/azure-iot-provisioning-service.svg)](https://badge.fury.io/js/azure-iot-provisioning-service) |
+
+### Working from Source Code
+
+If you want to modify or contribute changes to the SDK, then you can build the libraries following **[these instructions](./doc/node-devbox-setup.md).**
+
+### Platforms Compatibility
 
 The Azure IoT SDK for Node.js supports the LTS and Current versions of the [Node.js runtime](https://nodejs.org/en/about/releases/).
 
-## Contribution, feedback and issues
+
+# How to Contribute
 
 If you encounter any bugs, have suggestions for new features or if you would like to become an active contributor to this project please follow the instructions provided in the [contribution guidelines](.github/CONTRIBUTING.md).
+- **Have a feature request for SDKs?** Please post it on [User Voice](https://feedback.azure.com/forums/321918-azure-iot) to help us prioritize
+- **Have a technical question?** Ask on [Stack Overflow with tag "azure-iot-hub"](https://stackoverflow.com/questions/tagged/azure-iot-hub)
+- **Need Support?** Every customer with an active Azure subscription has access to [support](https://docs.microsoft.com/en-us/azure/azure-supportability/how-to-create-azure-support-request) with guaranteed response time.  Consider submitting a ticket and get assistance from Microsoft support team
+- **Found a bug?** Please help us fix it by thoroughly documenting it and [filing an issue](https://github.com/Azure/azure-iot-sdk-node/issues/new).
 
-## Looking for SDKs for other languages/platforms?
-- [C](https://github.com/azure/azure-iot-sdk-c)
-- [Python](https://github.com/azure/azure-iot-sdk-python)
-- [Java](https://github.com/azure/azure-iot-sdk-java)
-- [.NET](https://github.com/azure/azure-iot-sdk-csharp)
-
-## Read more
+# Read More
 
 * [Azure IoT Hub documentation][iot-hub-documentation]
 * [Prepare your development environment to use the Azure IoT device SDK for Node.js][devbox-setup]
@@ -102,7 +110,7 @@ No new features or improvements will be picked up in an LTS branch.
 
 LTS branches are named lts_*mm*_*yyyy*, where *mm* and *yyyy* are the month and year when the branch was created. An example of such a branch is *lts_07_2017*.
 
-## Schedule<sup>1</sup>
+### Schedule<sup>1</sup>
 
 Below is a table showing the mapping of the LTS branches to the package versions released
 
@@ -111,7 +119,7 @@ Below is a table showing the mapping of the LTS branches to the package versions
 | 1.7.x         | [lts_09_2018](https://github.com/Azure/azure-iot-sdk-node/tree/lts_09_2018)   | Deprecated | 2018-09-16     | 2019-09-16           | 2020-03-09   |
 | 1.11.x        | [lts_09_2019](https://github.com/Azure/azure-iot-sdk-node/tree/lts_09_2019)   | Active     | 2019-09-09     | 2020-03-09           | 2020-09-19   |
 
-* <sup>1</sup> All scheduled dates are subject to change by the Azure IoT SDK team.
+<sup>1</sup> All scheduled dates are subject to change by the Azure IoT SDK team.
 
 ---
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
