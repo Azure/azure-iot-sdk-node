@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="https://www.tensorflow.org/images/tf_logo_social.png">
+</div>
+
 # Azure IoT SDK for Node.js
 
 The Azure IoT Node.js SDK enables developers to more easily create IoT solutions written in Node.js for the Azure IoT platform.
@@ -8,7 +12,7 @@ The Azure IoT Node.js SDK enables developers to more easily create IoT solutions
 
 ### Why Azure IoT? 
 
-- [Azure IoT is built on decades of Microsoft enterprise experience and is designed to be accessible for all organizations.][iot-dev-center]
+[Azure IoT is built on decades of Microsoft enterprise experience and is designed to be accessible for all organizations.][iot-dev-center]
 
 ### New to Azure IoT Hub?
 
