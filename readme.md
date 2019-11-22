@@ -10,22 +10,15 @@ The Azure IoT Node.js SDK enables developers to create IoT solutions written in 
 
 ### Why Azure IoT? 
 
-[Azure IoT is built on decades of Microsoft enterprise experience and is designed to be accessible for all organizations.][iot-dev-center]
+**[Click here][iot-dev-center]** to learn how Azure IoT can empower the digital transformation of your organization. 
 
 ### New to Azure IoT Hub?
 
-- **[Introduction to Azure IoT Hub:][iot-device-ecosystem]** Follow this guide to learn how to set up an IoT Hub and IoT Hub devices. 
+**[Introduction to Azure IoT Hub:][iot-device-ecosystem]** Follow this guide to learn how to set up an IoT Hub and IoT Hub devices. 
 
 ### New to the Azure IoT Node.JS SDK? 
 
-- **[Try a Device Sample:](./device/samples/)** Create a basic Node.js application following one of the device client library samples provided. 
-
-
-# Samples
-
-In the repository, you will find a set of simple samples that will help you get started:
-- [Device SDK samples](./device/samples/)
-- [Service SDK samples](./service/samples/)
+**[Try a Device Sample:](./device/samples/)** Create a basic Node.js application following one of the device client library samples provided. 
 
 
 # Components
@@ -35,7 +28,14 @@ In the repository, you will find a set of simple samples that will help you get 
 * **Provisioning Device Client Library**: to connect devices to the Azure IoT Provisioning Service. [API Reference][node-api-prov-device-reference]
 * **Provisioning Service Client Library**: enables developing back-end applications making use of the Azure IoT Provisioning Service. [API Reference][node-api-prov-service-reference]
 
-## npm Package List 
+# Samples
+
+
+- [Device SDK samples](./device/samples/)
+- [Service SDK samples](./service/samples/)
+
+
+# npm Package List 
 
 The Node.js SDK is published as [npm](https://npmjs.org) packages.
 
@@ -72,11 +72,11 @@ The Node.js SDK is published as [npm](https://npmjs.org) packages.
 |-----------------|------------------------------------------------------------------------------------------------------------|
 | Service SDK     | [![npm version](https://badge.fury.io/js/azure-iot-provisioning-service.svg)](https://badge.fury.io/js/azure-iot-provisioning-service) |
 
-## Working from Source Code
+# Working from Source Code
 
 If you want to modify or contribute changes to the SDK, then you can build the libraries following **[these instructions](./doc/node-devbox-setup.md).**
 
-## Platforms Compatibility
+# Platforms Compatibility
 
 The Azure IoT SDK for Node.js supports the LTS and Current versions of the [Node.js runtime](https://nodejs.org/en/about/releases/).
 
