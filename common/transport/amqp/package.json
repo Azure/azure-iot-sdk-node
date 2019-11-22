@@ -21,7 +21,7 @@
     "@types/node": "^9.6.50",
     "chai": "^4.2.0",
     "istanbul": "^0.4.5",
-    "mocha": "^5.2.0",
+    "mocha": "^6.1.4",
     "sinon": "^7.4.1",
     "sinon-test": "^2.4.0",
     "tslint": "^5.18.0",

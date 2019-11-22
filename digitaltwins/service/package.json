@@ -9,8 +9,8 @@
     "compile": "tsc",
     "lint": "tslint --project . -c ../../tslint.json",
     "build": "npm -s run lint && npm -s run compile",
-    "test-min": "istanbul cover --report none ./node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test.js",
-    "test": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test.js",
+    "test-min": "istanbul cover --report none ../../node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test.js",
+    "test": "istanbul cover ../../node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test.js",
     "check-cover": "istanbul check-coverage --statements 84 --branches 51  --lines 85 --functions 48",
     "ci": "npm -s run build && npm -s run test-min && npm -s run check-cover"
   },
@@ -44,7 +44,7 @@
     "autorest": "^2.0.4283",
     "istanbul": "^0.4.5",
     "mocha": "^6.1.4",
-    "tslint": "^5.16.0",
+    "tslint": "^5.18.0",
     "typescript": "^3.4.5"
   },
   "dependencies": {
