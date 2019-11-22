@@ -65,6 +65,7 @@ The Azure IoT Node.js SDK enables developers to create IoT solutions written in 
 
 
 **Azure IoT Hub Device Provisioning Service: Service Client Libraries**
+
 | Name            | npm package                                                                                                |
 |-----------------|------------------------------------------------------------------------------------------------------------|
 | Service SDK     | [![npm version](https://badge.fury.io/js/azure-iot-provisioning-service.svg)](https://badge.fury.io/js/azure-iot-provisioning-service) |
