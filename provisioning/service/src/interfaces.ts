@@ -78,17 +78,17 @@ export interface X509Attestation {
   /**
    * x509 certificate object which provides all information for a leaf certificate.
    */
-  clientCertificates: X509Certificates;
+  clientCertificates?: X509Certificates;
   /**
    * x509 certificate object which provides all information needed for a certificate
    * suitable for signing other certificates.
    */
-  signingCertificates: X509Certificates;
+  signingCertificates?: X509Certificates;
   /**
    * Primary and secondary CA reference.  These will be names rather than
    * actual certificates.
    */
-  caReferences: X509CAReferences;
+  caReferences?: X509CAReferences;
 }
 
 /**
@@ -149,7 +149,7 @@ export interface X509CertificateWithInfo {
    * This property is populated by the service from the information
    * provided by the certificate property of this object.
    */
-  info: X509CertificateInfo;
+  info?: X509CertificateInfo;
 }
 
 /**
@@ -166,7 +166,7 @@ export interface X509Certificates {
    * and authentication for an enrollment in the case that the primary is
    * revoked.
    */
-  secondary: X509CertificateWithInfo;
+  secondary?: X509CertificateWithInfo;
 }
 
 export interface X509CAReferences {
