@@ -446,16 +446,16 @@ export interface EnrollmentGroup {
    * The IoT Hub that will be the destination of the provisioning for devices
    * associated with this object.
    */
-  iotHubHostName: string;
+  iotHubHostName?: string;
   /**
    * The initial twin document that will be created for devices upon their provisioning.
    */
-  initialTwin: InitialTwin;
+  initialTwin?: InitialTwin;
   /**
    * An opaque value suitable to uniquely identify a particular generation
    * of this object for use during a CRUD operation.
    */
-  etag: string;
+  etag?: string;
   /**
    * Indicates whether this object can be used as the basis for a device
    * provisioning.
@@ -464,12 +464,12 @@ export interface EnrollmentGroup {
   /**
    * The date and time that this object was created.
    */
-  createdDateTimeUtc: string;
+  createdDateTimeUtc?: string;
   /**
    * The date and time that this object was last updated.  This
    * could include an update or an actual registration.
    */
-  lastUpdatedDateTimeUtc: string;
+  lastUpdatedDateTimeUtc?: string;
 
   /**
    * The behavior when a device is re-provisioned to an IoT hub.
@@ -488,7 +488,7 @@ export interface EnrollmentGroup {
   /**
    * The list of names of IoT hubs the device(s) in this resource can be allocated to. It must be a subset of tenant level list of IoT hubs.
    */
-  iotHubs: string[];
+  iotHubs?: string[];
 
   /**
    * Custom allocation definition.
