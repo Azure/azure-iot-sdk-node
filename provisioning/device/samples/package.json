@@ -16,7 +16,7 @@
     "azure-iot-security-symmetric-key": "1.6.0",
     "azure-iot-security-tpm": "1.7.0",
     "azure-iot-security-x509": "1.6.0",
-    "rhea": "^1.0.2"
+    "rhea": "^1.0.15"
   },
   "engines": {
     "node": ">= 8.0.0"
