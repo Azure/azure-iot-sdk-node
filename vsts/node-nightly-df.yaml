@@ -64,9 +64,9 @@ phases:
     name: Hosted
   steps:
   - task: NodeTool@0
-    displayName: 'Use Node 8.x'
+    displayName: 'Use Node 8.10.x'
     inputs:
-      versionSpec: 8.x
+      versionSpec: 8.10.x
 
   - powershell: |
        runas.exe /savecred /user:administrator

@@ -1,15 +1,15 @@
 {
   "name": "azure-iot-device",
-  "version": "1.12.0",
+  "version": "1.12.1",
   "description": "Azure IoT device SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "device.js",
   "typings": "device.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.11.0",
-    "azure-iot-http-base": "1.10.0",
-    "@azure/storage-blob": "10.5.0",
+    "azure-iot-common": "1.11.1",
+    "azure-iot-http-base": "1.10.1",
+    "@azure/storage-blob": "^10.5.0",
     "debug": "^4.1.1",
     "lodash": "^4.17.15",
     "machina": "^4.0.2",
@@ -22,7 +22,7 @@
     "chai": "^4.2.0",
     "es5-shim": "^4.5.12",
     "istanbul": "^0.4.5",
-    "mocha": "^5.2.0",
+    "mocha": "^6.1.4",
     "sinon": "^7.4.1",
     "tslint": "^5.18.0",
     "typescript": "2.9.2"

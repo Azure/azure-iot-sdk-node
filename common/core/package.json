@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-common",
-  "version": "1.11.0",
+  "version": "1.11.1",
   "description": "Common components shared by Azure IoT device and service SDKs",
   "author": "Microsoft Corporation",
   "license": "MIT",
@@ -15,7 +15,7 @@
     "@types/node": "^9.6.50",
     "chai": "^4.2.0",
     "istanbul": "^0.4.5",
-    "mocha": "^5.2.0",
+    "mocha": "^6.1.4",
     "sinon": "^7.4.1",
     "tslint": "^5.18.0",
     "typescript": "2.9.2"
