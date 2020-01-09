@@ -6,7 +6,7 @@
 import { Stream } from 'stream';
 import { errors } from 'azure-iot-common';
 import { tripleValueCallbackToPromise, TripleValueCallback } from 'azure-iot-common';
-
+import { AbortController } from "@azure/abort-controller";
 
 /**
  * @private
@@ -64,7 +64,7 @@ export interface StorageApi {
  * @private
  */
 export class BlobUploader implements BlobUploaderInterface {
-  storageApi: StorageApi;
+  storageApi: any; // temporary, revert back to StorageApi once things are fixed...
 
   constructor(storageApi?: StorageApi) { // TODO: interface
     if (storageApi) {
@@ -98,7 +98,7 @@ export class BlobUploader implements BlobUploaderInterface {
         this.storageApi = require('@azure/storage-blob');
       }
 
-      const pipeline = this.storageApi.StorageURL.newPipeline(new this.storageApi.AnonymousCredential(), {
+      const pipeline = this.storageApi.newPipeline(new this.storageApi.AnonymousCredential(), {
         // httpClient: myHTTPClient,
         // logger: MyLogger
         retryOptions: { maxTries: 4 },
@@ -107,8 +107,12 @@ export class BlobUploader implements BlobUploaderInterface {
           enable: false
         }
       });
-      const blockBlobURL = new this.storageApi.BlockBlobURL(`https://${blobInfo.hostName}/${blobInfo.containerName}/${blobInfo.blobName}${blobInfo.sasToken}`, pipeline);
-      const uploadPromise = this.storageApi.uploadStreamToBlockBlob(this.storageApi.Aborter.timeout(30 * 60 * 1000), stream, blockBlobURL, streamLength, 20);
+      const newBlockBlobClient = new this.storageApi.BlockBlobClient(`https://${blobInfo.hostName}/${blobInfo.containerName}/${blobInfo.blobName}${blobInfo.sasToken}`, pipeline);
+      const uploadPromise = newBlockBlobClient.uploadStream(
+        stream, 
+        4 * 1024 * 1024, 20, 
+        { abortSignal: AbortController.timeout(30 * 60 * 1000) }
+      );
       uploadPromise
       .then((uploadBlobResponse: any) => {
         /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_16_005: [`uploadToBlob` shall call the `_callback` calback with the result of the storage api call.]*/
