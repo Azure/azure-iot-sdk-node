@@ -2,7 +2,7 @@
 
 ## TLS Version
 
-The Node SDK fully supports TLS 1.2 in all it's API and connetions.
+The Node SDK fully supports TLS 1.2 in all of its API and connetions.
 
 ## TLS Cipher Suites
 
