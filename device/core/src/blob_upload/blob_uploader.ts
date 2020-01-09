@@ -6,7 +6,7 @@
 import { Stream } from 'stream';
 import { errors } from 'azure-iot-common';
 import { tripleValueCallbackToPromise, TripleValueCallback } from 'azure-iot-common';
-import { AbortController } from "@azure/abort-controller";
+import { AbortController } from '@azure/abort-controller';
 
 /**
  * @private
@@ -109,8 +109,8 @@ export class BlobUploader implements BlobUploaderInterface {
       });
       const newBlockBlobClient = new this.storageApi.BlockBlobClient(`https://${blobInfo.hostName}/${blobInfo.containerName}/${blobInfo.blobName}${blobInfo.sasToken}`, pipeline);
       const uploadPromise = newBlockBlobClient.uploadStream(
-        stream, 
-        4 * 1024 * 1024, 20, 
+        stream,
+        4 * 1024 * 1024, 20,
         { abortSignal: AbortController.timeout(30 * 60 * 1000) }
       );
       uploadPromise
