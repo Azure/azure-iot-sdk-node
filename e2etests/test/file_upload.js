@@ -23,6 +23,9 @@ describe('File upload - HTTP transport', function () {
   },{
     fileName: 'bigFile',
     fileSizeInKb: '5120',
+  },{
+    fileName: 'massiveFile',
+    fileSizeInKb: '256000',
   }];
 
   before(function(beforeCallback) {
