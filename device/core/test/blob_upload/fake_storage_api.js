@@ -3,42 +3,31 @@
 
 'use strict';
 
-class BlockBlobURL {
+class fakeBlockBlobClient {
+  constructor() {}
+
+  static uploadStream() {
+    return new Promise((resolve, reject) => {
+      resolve('fakeUploadResponse');
+    });
+  }
+}
+
+class BlockBlobClient {
   constructor(url, pipeline) {
-    return 'fakeBlockBlobURL'
+    return fakeBlockBlobClient
   }
 }
 
-class Aborter {
-  constructor () {
-  }
-  static timeout() {
-    return 'fakeTimeout';
-  }
+function newPipeline() {
+  return function() {};
 }
-
-class StorageURL {
-  constructor() {
-   }
-  static newPipeline() {
-    return fakePipeline;
-  }
-};
 
 function AnonymousCredential() {};
 
-function uploadStreamToBlockBlob() {
-  return new Promise((resolve, reject) => {
-    resolve('fakeUploadResponse');
-  });
-}
-
-function fakePipeline() {};
 
 module.exports = {
+  newPipeline: newPipeline,
   AnonymousCredential: AnonymousCredential,
-  Aborter: Aborter,
-  StorageURL: StorageURL,
-  BlockBlobURL: BlockBlobURL,
-  uploadStreamToBlockBlob: uploadStreamToBlockBlob
+  BlockBlobClient: BlockBlobClient,
 };

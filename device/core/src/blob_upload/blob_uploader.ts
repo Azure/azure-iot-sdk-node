@@ -52,19 +52,24 @@ export interface BlobService {
 /**
  * @private
  */
+export interface BlockBlobClient {
+  uploadStream(stream: Stream, bufferSize?: undefined | number, maxConcurrancy?: undefined | number,  options?: any): Promise<any>;
+}
+
+/**
+ * @private
+ */
 export interface StorageApi {
-  BlockBlobURL: any;
-  Aborter: Aborter;
-  StorageURL: any;
+  newPipeline: any;
   AnonymousCredential: any;
-  uploadStreamToBlockBlob: any;
+  BlockBlobClient(url: string, pipeline: any): void;
 }
 
 /**
  * @private
  */
 export class BlobUploader implements BlobUploaderInterface {
-  storageApi: any; // temporary, revert back to StorageApi once things are fixed...
+  storageApi: StorageApi; // temporary, revert back to StorageApi once things are fixed...
 
   constructor(storageApi?: StorageApi) { // TODO: interface
     if (storageApi) {
@@ -107,10 +112,11 @@ export class BlobUploader implements BlobUploaderInterface {
           enable: false
         }
       });
-      const newBlockBlobClient = new this.storageApi.BlockBlobClient(`https://${blobInfo.hostName}/${blobInfo.containerName}/${blobInfo.blobName}${blobInfo.sasToken}`, pipeline);
+      const newBlockBlobClient: BlockBlobClient = new this.storageApi.BlockBlobClient(`https://${blobInfo.hostName}/${blobInfo.containerName}/${blobInfo.blobName}${blobInfo.sasToken}`, pipeline);
       const uploadPromise = newBlockBlobClient.uploadStream(
         stream,
-        4 * 1024 * 1024, 20,
+        4 * 1024 * 1024,
+        20,
         { abortSignal: AbortController.timeout(30 * 60 * 1000) }
       );
       uploadPromise
