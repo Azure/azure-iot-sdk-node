@@ -83,9 +83,14 @@ export interface ConfigurationMetrics {
 
 export interface ConfigurationContent {
   /**
-   * The configuration for all the modules.
+   * The configuration for edge modules.
    */
   modulesContent?: {[key: string]: Object};
+
+  /**
+   * The configuration for device modules
+   */
+  moduleContent?: {[key: string]: Object};
 
   /**
    * The configuration for all the devices.
