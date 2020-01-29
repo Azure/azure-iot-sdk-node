@@ -17,7 +17,7 @@
     "@types/node": "^9.6.50",
     "array-equal": "^1.0.0",
     "chai": "^4.2.0",
-    "istanbul": "^0.4.5",
+    "nyc": "^15.0.0",
     "jshint": "^2.10.2",
     "mocha": "^6.1.4",
     "sinon": "^7.4.1",
@@ -27,16 +27,47 @@
   "scripts": {
     "lint": "tslint --project . -c ../../tslint.json",
     "build": "tsc",
-    "unittest-min": "istanbul cover --report none ../../node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test.js",
-    "alltest-min": "istanbul cover --report none ../../node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test*.js",
-    "unittest": "istanbul cover ../../node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test.js",
-    "alltest": "istanbul cover ../../node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
-    "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
-    "test": "npm -s run lint && npm -s run build && npm -s run unittest",
-    "check-cover": "istanbul check-coverage --statements 71 --branches 55 --functions 76 --lines 71"
+    "unittest-min": "nyc --reporter=lcov --report none ../../node_modules/mocha/bin/_mocha -- dot test/_*_test.js",
+    "alltest-min": "nyc --reporter=lcov --report none ../../node_modules/mocha/bin/_mocha -- dot test/_*_test*.js",
+    "unittest": "nyc --reporter=lcov --reporter=text ../../node_modules/mocha/bin/_mocha -- spec test/_*_test.js",
+    "alltest": "nyc --reporter=lcov --reporter=text ../../node_modules/mocha/bin/_mocha -- spec test/_*_test*.js",
+    "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min",
+    "test": "npm -s run lint && npm -s run build && npm -s run unittest"
+  },
+  "nyc": {
+    "exclude": [
+    	"coverage/**",
+      "packages/*/test{,s}/**",
+      "**/*.d.ts",
+      "test{,s}/**",
+      "test{,-*}.{js,cjs,mjs,ts}",
+      "**/*{.,-}test.{js,cjs,mjs,ts}",
+      "**/__tests__/**",
+
+      "**/{ava,nyc}.config.{js,cjs,mjs}",
+      "**/jest.config.{js,cjs,mjs,ts}",
+      "**/{karma,rollup,webpack}.config.js",
+      "**/{babel.config,.eslintrc,.mocharc}.{js,cjs}",
+
+      "common.js",
+      "src/authentication_provider.ts",
+      "src/results.ts"
+    ],
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "all": true,
+    "source-map": true,
+    "produce-source-map": true,
+    "check-coverage": true,
+    "statements": 71,
+    "lines": 71,
+    "functions": 76,
+    "branches": 55
   },
   "engines": {
-    "node": ">= 8.0.0"
+    "node": ">= 10.0.0"
   },
   "repository": {
     "type": "git",
