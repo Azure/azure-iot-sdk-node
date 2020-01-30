@@ -2,10 +2,13 @@
     "compilerOptions": {
         "outDir": "./lib",
         "target":"es5",
-        "sourceMap": true,
+        "sourceMap": false,
+        "inlineSourceMap": false,
+        "inlineSources": false,
         "declaration": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
+        "removeComments": false,
         "lib": [ "es6" ]
     },
     "include": [

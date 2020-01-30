@@ -51,11 +51,7 @@
       "**/{ava,nyc}.config.{js,cjs,mjs}",
       "**/jest.config.{js,cjs,mjs,ts}",
       "**/{karma,rollup,webpack}.config.js",
-      "**/{babel.config,.eslintrc,.mocharc}.{js,cjs}",
-
-      "common.js",
-      "src/authentication_provider.ts",
-      "src/results.ts"
+      "**/{babel.config,.eslintrc,.mocharc}.{js,cjs}"
     ],
     "extension": [
       ".ts",

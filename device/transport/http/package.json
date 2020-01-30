@@ -29,20 +29,8 @@
     "build": "tsc",
     "test-min": "nyc mocha --reporter dot --require source-map-support/register test/_*_test.js",
     "test": "nyc mocha --reporter spec --require source-map-support/register test/_*_test.js",
-    "ci": "npm -s run lint && npm -s run build && npm -s run test-min ",
-    "check-cover": "nyc check-coverage --statements 93 --branches 88 --functions 100 --lines 93 "
+    "ci": "npm -s run lint && npm -s run build && npm -s run test-min "
   },
-  "engines": {
-    "node": ">= 10.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Azure/azure-iot-sdk-node.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Azure/azure-iot-sdk-node/issues"
-  },
-  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme",
   "nyc": {
     "exclude": [
     	"coverage/**",
@@ -56,11 +44,7 @@
       "**/{ava,nyc}.config.{js,cjs,mjs}",
       "**/jest.config.{js,cjs,mjs,ts}",
       "**/{karma,rollup,webpack}.config.js",
-      "**/{babel.config,.eslintrc,.mocharc}.{js,cjs}",
-
-      "common.js",
-      "src/authentication_provider.ts",
-      "src/results.ts"
+      "**/{babel.config,.eslintrc,.mocharc}.{js,cjs}"
     ],
     "extension": [
       ".ts",
@@ -74,5 +58,16 @@
     "lines": 99,
     "functions": 99,
     "branches": 80
-  }
+  },
+  "engines": {
+    "node": ">= 10.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Azure/azure-iot-sdk-node.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Azure/azure-iot-sdk-node/issues"
+  },
+  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme"
 }

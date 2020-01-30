@@ -31,7 +31,7 @@
     "build": "tsc",
     "test-min": "nyc mocha --reporter dot --require source-map-support/register test/_*_test.js",
     "test": "nyc mocha --reporter spec --require source-map-support/register test/_*_test.js",
-    "ci": "npm -s run lint && npm -s run build && npm -s run test-min",
+    "ci": "npm -s run lint && npm -s run build && npm -s run test-min"
   },
   "engines": {
     "node": ">= 10.0.0"
@@ -57,11 +57,7 @@
       "**/{ava,nyc}.config.{js,cjs,mjs}",
       "**/jest.config.{js,cjs,mjs,ts}",
       "**/{karma,rollup,webpack}.config.js",
-      "**/{babel.config,.eslintrc,.mocharc}.{js,cjs}",
-
-      "common.js",
-      "src/authentication_provider.ts",
-      "src/results.ts"
+      "**/{babel.config,.eslintrc,.mocharc}.{js,cjs}"
     ],
     "extension": [
       ".ts",

@@ -31,8 +31,35 @@
     "unittest": "nyc --reporter=lcov --reporter=text ../../../node_modules/mocha/bin/_mocha -- spec test/_*_test.js",
     "alltest": "nyc --reporter=lcov --reporter=text ../../../node_modules/mocha/bin/_mocha -- spec test/_*_test*.js",
     "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min ",
-    "test": "npm -s run lint && npm -s run build && npm -s run unittest",
-    "check-cover": "istanbul check-coverage --statements 93 --branches 79 --functions 89 --lines 94"
+    "test": "npm -s run lint && npm -s run build && npm -s run unittest"
+  },
+  "nyc": {
+    "exclude": [
+    	"coverage/**",
+      "packages/*/test{,s}/**",
+      "**/*.d.ts",
+      "test{,s}/**",
+      "test{,-*}.{js,cjs,mjs,ts}",
+      "**/*{.,-}test.{js,cjs,mjs,ts}",
+      "**/__tests__/**",
+
+      "**/{ava,nyc}.config.{js,cjs,mjs}",
+      "**/jest.config.{js,cjs,mjs,ts}",
+      "**/{karma,rollup,webpack}.config.js",
+      "**/{babel.config,.eslintrc,.mocharc}.{js,cjs}"
+    ],
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "all": true,
+    "source-map": true,
+    "produce-source-map": true,
+    "check-coverage": true,
+    "statements": 100,
+    "lines": 100,
+    "functions": 100,
+    "branches": 100
   },
   "engines": {
     "node": ">= 10.0.0"
