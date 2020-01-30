@@ -12,7 +12,7 @@
     "model_repository_crud": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json model_repository_crud.js",
     "model_repository_cl_crud": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json model_repository_cl_crud.js",
     "alltest": "npm run digitaltwins_commands && npm run digitaltwins_properties && npm run digitaltwins_telemetry",
-    "e2e": "npm -s run lint && npm -s run alltest"
+    "e2e": "npm -s run lint"
   },
   "repository": {
     "type": "git",
