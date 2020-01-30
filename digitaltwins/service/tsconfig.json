@@ -6,7 +6,7 @@
     "sourceMap": true,
     "declarationMap": true,
     "lib": [
-      "es6"
+      "es6", "dom"
     ],
     "declaration": true,
     "noUnusedLocals": true
