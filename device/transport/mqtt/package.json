@@ -29,25 +29,13 @@
   "scripts": {
     "lint": "tslint --project . -c ../../../tslint.json",
     "build": "tsc",
-    "test-min": "nyc mocha --reporter dot --require source-map-support/register test/_*_test.js",
-    "test": "nyc mocha --reporter spec --require source-map-support/register test/_*_test.js",
+    "test-min": "tsc && nyc --reporter lcov ../../../node_modules/mocha/bin/_mocha --reporter dot",
+    "test": "tsc && nyc --reporter lcov --reporter text ../../../node_modules/mocha/bin/_mocha",
     "ci": "npm -s run lint && npm -s run build && npm -s run test-min"
   },
-  "engines": {
-    "node": ">= 10.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Azure/azure-iot-sdk-node.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Azure/azure-iot-sdk-node/issues"
-  },
-  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme",
   "nyc": {
     "exclude": [
     	"coverage/**",
-      "packages/*/test{,s}/**",
       "**/*.d.ts",
       "test{,s}/**",
       "test{,-*}.{js,cjs,mjs,ts}",
@@ -64,12 +52,27 @@
       ".tsx"
     ],
     "all": true,
-    "source-map": true,
-    "produce-source-map": true,
     "check-coverage": true,
-    "statements": 97,
-    "lines": 97,
-    "functions": 98,
-    "branches": 91
-  }
+    "statements": 100,
+    "lines": 100,
+    "functions": 100,
+    "branches": 100
+  },
+  "mocha": {
+    "require": ["ts-node/register", "source-map-support/register"],
+    "full-trace": true,
+    "bail": true,
+    "spec": "test/**/_*_test.js"
+  },
+  "engines": {
+    "node": ">= 10.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Azure/azure-iot-sdk-node.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Azure/azure-iot-sdk-node/issues"
+  },
+  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme"
 }

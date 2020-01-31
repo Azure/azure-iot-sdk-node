@@ -23,17 +23,14 @@
   "scripts": {
     "lint": "tslint --project . -c ../../tslint.json",
     "build": "tsc",
-    "unittest-min": "nyc --reporter=lcov ../../node_modules/mocha/bin/_mocha -- dot test/_*_test.js",
-    "alltest-min": "nyc --reporter=lcov ../../node_modules/mocha/bin/_mocha -- dot test/_*_test*.js",
-    "unittest": "nyc --reporter=lcov --reporter=text ../../node_modules/mocha/bin/_mocha -- spec test/_*_test.js",
-    "alltest": "nyc --reporter=lcov --reporter=text ../../node_modules/mocha/bin/_mocha -- spec test/_*_test*.js",
-    "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min ",
+    "unittest-min": "tsc && nyc --reporter lcov ../../node_modules/mocha/bin/_mocha --reporter dot",
+    "unittest": "tsc && nyc --reporter lcov --reporter text ../../node_modules/mocha/bin/_mocha",
+    "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min",
     "test": "npm -s run lint && npm -s run build && npm -s run unittest"
   },
   "nyc": {
     "exclude": [
     	"coverage/**",
-      "packages/*/test{,s}/**",
       "**/*.d.ts",
       "test{,s}/**",
       "test{,-*}.{js,cjs,mjs,ts}",
@@ -50,13 +47,17 @@
       ".tsx"
     ],
     "all": true,
-    "source-map": true,
-    "produce-source-map": true,
     "check-coverage": true,
     "statements": 100,
     "lines": 100,
     "functions": 100,
     "branches": 100
+  },
+  "mocha": {
+    "require": ["ts-node/register", "source-map-support/register"],
+    "full-trace": true,
+    "bail": true,
+    "spec": "test/**/_*_test.js"
   },
   "engines": {
     "node": ">= 10.0.0"
