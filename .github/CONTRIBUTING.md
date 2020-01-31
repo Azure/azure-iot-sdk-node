@@ -42,7 +42,7 @@ This project follows the [Conventional Commits convention](https://www.conventio
 [optional footer]
 ```
 
-The commit should contains the following structural elements:
+The commit should contains one of the following structural elements as the \<type\>:
 
 - `fix:` a commit of the type fix patches a bug in your codebase (this correlates with PATCH in semantic versioning).
 - `feat:` a commit of the type feat introduces a new feature to the codebase (this correlates with MINOR in semantic versioning).
