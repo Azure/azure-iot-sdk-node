@@ -27,9 +27,11 @@
     "lint": "tslint --project . -c ../../tslint.json",
     "build": "tsc",
     "unittest-min": "tsc && nyc --reporter lcov ../../node_modules/mocha/bin/_mocha --reporter dot",
+    "alltest-min": "tsc && nyc --reporter=lcov --report none ../node_modules/mocha/bin/_mocha --reporter dot test/_*_test*.js",
     "unittest": "tsc && nyc --reporter lcov --reporter text ../../node_modules/mocha/bin/_mocha",
-    "ci": "npm -s run lint && npm -s run build && npm -s run unittest-min",
-    "test": "npm -s run lint && npm -s run build && npm -s run unittest"
+    "alltest": "tsc && nyc --reporter=lcov --reporter=text ../../node_modules/mocha/bin/_mocha test/_*_test*.js",
+    "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min",
+    "test": "npm -s run lint && npm -s run build && npm -s run alltest"
   },
   "nyc": {
     "exclude": [
@@ -48,13 +50,11 @@
     "extension": [
       ".ts",
       ".tsx"
-    ],
-    "all": true,
-    "check-coverage": true,
-    "statements": 100,
-    "lines": 100,
-    "functions": 100,
-    "branches": 100
+    ],    "check-coverage": true,
+    "lines": 99,
+    "functions": 99,
+    "branches": 80,
+    "statements": 99
   },
   "mocha": {
     "require": ["ts-node/register", "source-map-support/register"],
