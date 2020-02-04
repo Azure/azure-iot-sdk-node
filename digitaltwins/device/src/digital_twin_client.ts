@@ -7,7 +7,7 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-digitaltwins-device:Client');
 
 import { DigitalTwinInterface as SdkInformation } from './sdkinformation';
-import { callbackToPromise, errorCallbackToPromise, ErrorCallback, Message } from 'azure-iot-common';
+import { callbackToPromise, errorCallbackToPromise, ErrorCallback, Message, errors } from 'azure-iot-common';
 import { Client, Twin, DeviceMethodRequest, DeviceMethodResponse } from 'azure-iot-device';
 import { BaseInterface } from './base_interface';
 import { azureDigitalTwinTelemetry, azureDigitalTwinCommand, azureDigitalTwinProperty,
@@ -680,14 +680,33 @@ export class DigitalTwinClient {
     registrationMessage.properties.add(messageSchemaProperty, registrationSchema);
     registrationMessage.contentType = 'application/json';
     registrationMessage.contentEncoding = 'utf-8';
+    //
+    // If a serious error occurs during this initial processing sequence mqtt will simply drop the connection.
+    // MQTT might not notice this and we will be waiting forever for the operation to finish.
+    //
+    // Set the timeout for 30 seconds, which should be long enough to go through this entire sequence.
+    //
+    let currentStepDescription = 'Failure during ModelInformation registration.';
+    let alreadyTimedOut = false;
+    let registrationTimeout = setTimeout(() => {
+      alreadyTimedOut = true;
+      let errorOnRegistrationSequence = new errors.NotConnectedError(currentStepDescription);
+      return registerCallback(errorOnRegistrationSequence);
+    }, 30000);
     this._client.sendEvent(registrationMessage, (registrationError) => {
+      if (alreadyTimedOut) return;
       if (registrationError) {
         /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_011: [Will indicate an error via a callback or by promise rejection if the registration message fails.] */
+        clearTimeout(registrationTimeout);
         return registerCallback(registrationError);
       } else {
+        currentStepDescription = 'Failure during enabling of all interfaces.';
         this._setAllInterfaceInstancesRegistered();
+        currentStepDescription = 'Failure during enabling of all commands.';
         this._enableAllCommands();
+        currentStepDescription = 'Failure during the retrieval of the device twin.';
         this._client.getTwin((getTwinError, twinResult) => {
+          if (alreadyTimedOut) return;
           if (getTwinError) {
             return registerCallback(getTwinError);
           } else {
