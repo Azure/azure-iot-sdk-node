@@ -55,10 +55,10 @@
       ".tsx"
     ],
     "check-coverage": true,
-    "lines": 100,
-    "functions": 100,
-    "branches": 100,
-    "statements": 100
+    "lines": 96,
+    "functions": 92,
+    "branches": 95,
+    "statements": 96
   },
   "mocha": {
     "require": ["ts-node/register", "source-map-support/register"],
