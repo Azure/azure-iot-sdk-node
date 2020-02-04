@@ -21,7 +21,7 @@
     "@types/node": "^9.6.50",
     "chai": "^4.2.0",
     "mocha": "^6.1.4",
-    "nyc": "^14.1.1",
+    "nyc": "^15.0.0",
     "sinon": "^7.4.1",
     "source-map-support": "^0.5.13",
     "tslint": "^5.18.0",
@@ -30,13 +30,45 @@
   "scripts": {
     "lint": "tslint --project . -c ../../../tslint.json",
     "build": "tsc",
-    "test-min": "nyc mocha --reporter dot --require source-map-support/register test/_*_test.js",
-    "test": "nyc mocha --reporter spec --require source-map-support/register test/_*_test.js",
-    "ci": "npm -s run lint && npm -s run build && npm -s run test-min && npm -s run check-cover",
-    "check-cover": "nyc check-coverage --statements 95 --branches 90 --functions 96 --lines 95"
+    "unittest-min": "tsc && nyc --reporter lcov ../../../node_modules/mocha/bin/_mocha --reporter dot",
+    "alltest-min": "tsc && nyc --reporter lcov ../../../node_modules/mocha/bin/_mocha --reporter dot test/_*_test*.js",
+    "unittest": "tsc && nyc --reporter lcov ../../../node_modules/mocha/bin/_mocha",
+    "alltest": "tsc && nyc --reporter lcov --reporter text ../../../node_modules/mocha/bin/_mocha test/_*_test*.js",
+    "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min",
+    "test": "npm -s run unittest"
+  },
+  "nyc": {
+    "exclude": [
+    	"coverage/**",
+      "**/*.d.ts",
+      "test{,s}/**",
+      "test{,-*}.{js,cjs,mjs,ts}",
+      "**/*{.,-}test.{js,cjs,mjs,ts}",
+      "**/__tests__/**",
+
+      "**/{ava,nyc}.config.{js,cjs,mjs}",
+      "**/jest.config.{js,cjs,mjs,ts}",
+      "**/{karma,rollup,webpack}.config.js",
+      "**/{babel.config,.eslintrc,.mocharc}.{js,cjs}"
+    ],
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "check-coverage": true,
+    "lines": 95,
+    "functions": 96,
+    "branches": 90,
+    "statements": 96
+  },
+  "mocha": {
+    "require": ["ts-node/register", "source-map-support/register"],
+    "full-trace": true,
+    "bail": true,
+    "spec": "test/**/_*_test.js"
   },
   "engines": {
-    "node": ">= 8.0.0"
+    "node": ">= 10.0.0"
   },
   "repository": {
     "type": "git",
@@ -45,22 +77,5 @@
   "bugs": {
     "url": "https://github.com/Azure/azure-iot-sdk-node/issues"
   },
-  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme",
-  "nyc": {
-    "extension": [
-      ".ts",
-      ".tsx"
-    ],
-    "exclude": [
-      "**/*.d.ts",
-      "coverage/",
-      "index.js",
-      "test/"
-    ],
-    "reporter": [
-      "html",
-      "text-summary"
-    ],
-    "all": true
-  }
+  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme"
 }

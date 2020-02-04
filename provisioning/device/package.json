@@ -14,7 +14,7 @@
   "devDependencies": {
     "@types/node": "^9.6.50",
     "chai": "^4.2.0",
-    "istanbul": "^0.4.5",
+    "nyc": "^15.0.0",
     "mocha": "^6.1.4",
     "sinon": "^7.4.1",
     "tslint": "^5.18.0",
@@ -23,16 +23,45 @@
   "scripts": {
     "lint": "tslint --project . -c ../../tslint.json",
     "build": "tsc",
-    "unittest-min": "istanbul cover ../../node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test.js",
-    "alltest-min": "istanbul cover ../../node_modules/mocha/bin/_mocha -- --reporter dot test/_*_test*.js",
-    "unittest": "istanbul cover ../../node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test.js",
-    "alltest": "istanbul cover ../../node_modules/mocha/bin/_mocha -- --reporter spec test/_*_test*.js",
-    "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min && npm -s run check-cover",
-    "test": "npm -s run lint && npm -s run build && npm -s run unittest",
-    "check-cover": "istanbul check-coverage --statements 87 --branches 71 --functions 77 --lines 88"
+    "unittest-min": "tsc && nyc --reporter lcov ../../node_modules/mocha/bin/_mocha --reporter dot",
+    "alltest-min": "tsc && nyc --reporter lcov ../../node_modules/mocha/bin/_mocha --reporter dot test/_*_test*.js",
+    "unittest": "tsc && nyc --reporter lcov --reporter text ../../node_modules/mocha/bin/_mocha",
+    "alltest": "tsc && nyc --reporter lcov --reporter text  ../../node_modules/mocha/bin/_mocha test/_*_test*.js",
+    "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min",
+    "test": "npm -s run lint && npm -s run build && npm -s run alltest"
+  },
+  "nyc": {
+    "exclude": [
+    	"coverage/**",
+      "**/*.d.ts",
+      "test{,s}/**",
+      "test{,-*}.{js,cjs,mjs,ts}",
+      "**/*{.,-}test.{js,cjs,mjs,ts}",
+      "**/__tests__/**",
+
+      "**/{ava,nyc}.config.{js,cjs,mjs}",
+      "**/jest.config.{js,cjs,mjs,ts}",
+      "**/{karma,rollup,webpack}.config.js",
+      "**/{babel.config,.eslintrc,.mocharc}.{js,cjs}"
+    ],
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "check-coverage": true,
+    "lines": 89,
+    "functions": 82,
+    "branches": 81,
+    "statements": 89
+  },
+  "mocha": {
+    "require": ["ts-node/register", "source-map-support/register"],
+    "full-trace": true,
+    "bail": true,
+    "spec": "test/**/_*_test.js"
   },
   "engines": {
-    "node": ">= 8.0.0"
+    "node": ">= 10.0.0"
   },
   "repository": {
     "type": "git",

@@ -6,6 +6,7 @@
         "declaration": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
+        "removeComments": false,
         "lib": [ "es6" ]
     },
     "include": [
