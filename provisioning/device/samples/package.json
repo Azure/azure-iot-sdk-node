@@ -16,10 +16,10 @@
     "azure-iot-security-symmetric-key": "1.8.0-preview.2",
     "azure-iot-security-tpm": "1.8.0-preview.2",
     "azure-iot-security-x509": "1.8.0-preview.2",
-    "rhea": "^1.0.2"
+    "rhea": "^1.0.15"
   },
   "engines": {
-    "node": ">= 8.0.0"
+    "node": ">= 10.0.0"
   },
   "repository": {
     "type": "git",

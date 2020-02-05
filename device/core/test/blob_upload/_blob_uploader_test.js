@@ -5,6 +5,7 @@
 
 const sinon = require('sinon');
 const storageblob = require('@azure/storage-blob');
+const AbortController = require('@azure/abort-controller').AbortController;
 const assert = require('chai').assert;
 const stream = require('stream');
 const ArgumentError = require('azure-iot-common').errors.ArgumentError;
@@ -38,14 +39,16 @@ describe('BlobUploader', function() {
     let fakeStream = new stream.Readable();
 
     it('sets the require for storage blob', function() {
-      sinon.stub(storageblob,'BlockBlobURL');
-      sinon.stub(storageblob,'Aborter');
-      sinon.stub(storageblob,'StorageURL');
+      sinon.stub(AbortController,'timeout');
+      sinon.stub(storageblob,'newPipeline');
       sinon.stub(storageblob,'AnonymousCredential');
-      sinon.stub(storageblob,"uploadStreamToBlockBlob").callsFake(function fakeFn() {
-        return new Promise((resolve, reject) => {
-          resolve('fakeBlobResponse');
-        });
+      sinon.stub(storageblob,"BlockBlobClient").callsFake(function fakeFn() {
+        function uploadStreamFn(stream, bufferSize, maxConcurrancy, options) {
+          return new Promise((resolve, reject) => {
+            resolve('fakeBlobResponse');
+          });
+        }
+        return { uploadStream: uploadStreamFn }
       });
       let uploader = new BlobUploader();
       uploader.uploadToBlob(fakeBlobInfo, fakeStream, 42, function (err, response) {

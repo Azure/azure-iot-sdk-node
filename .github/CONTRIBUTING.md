@@ -1,8 +1,11 @@
 **The Azure IoT SDKs team wants to hear from you!**
 
 - [Need Support?](#need-support)
-- [File a bug](#file-a-bug)
+- [File a bug (code or documentation)](#file-a-bug-code-or-documentation)
 - [Contribute code and/or documentation](#contribute-code-andor-documentation)
+    - [Commit messages](#commit-messages)
+  - [Editing module requirements](#editing-module-requirements)
+  - [Adding new files](#adding-new-files)
 
 # Need Support?
 - **Have a feature request for SDKs?** Please post it on [User Voice](https://feedback.azure.com/forums/321918-azure-iot) to help us prioritize
@@ -28,6 +31,24 @@ Also, have you signed the [Contribution License Agreement](https://cla.microsoft
 
 If you feel like your contribution is going to be a major effort, you should probably give us a heads-up. We have a lot of items captured in our backlog and we release every two weeks, so before you spend the time, just check with us to make
 sure your plans and ours are in sync :) Just open an issue on github and tag it "enhancement" or "feature request"
+
+### Commit messages
+
+This project follows the [Conventional Commits convention](https://www.conventionalcommits.org), meaning that your commits message should be structured as follows:
+
+```
+<type>[optional scope]: <description>
+[optional body]
+[optional footer]
+```
+
+The commit should contains one of the following structural elements as the \<type\>:
+
+- `fix:` a commit of the type fix patches a bug in your codebase (this correlates with PATCH in semantic versioning).
+- `feat:` a commit of the type feat introduces a new feature to the codebase (this correlates with MINOR in semantic versioning).
+- Others: commit types other than `fix:` and `feat:` are allowed such as `chore:`, `docs:`, `style:`, `refactor:`, `perf:`, `test:`, and others. Refer to [@commitlint/config-conventional](https://github.com/conventional-changelog/commitlint/tree/master/%40commitlint/config-conventional) for a full list.
+
+If you are new to this convention you can use `npm run commit` instead of `git commit` and follow the guided instructions.
 
 ## Editing module requirements
 We use requirement documents to describe the expected behavior for each code modules. It works as a basis to understand what tests need to be written.

@@ -6,7 +6,6 @@
 var Client = require('azure-iot-device').Client;
 //var Protocol = require('azure-iot-device-amqp').Amqp;
 var Protocol = require('azure-iot-device-mqtt').Mqtt;
-var _ = require('lodash');
 
 var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
 
