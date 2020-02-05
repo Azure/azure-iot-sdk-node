@@ -41,13 +41,12 @@
   },
   "nyc": {
     "exclude": [
-    	"coverage/**",
+      "coverage/**",
       "**/*.d.ts",
       "test{,s}/**",
       "test{,-*}.{js,cjs,mjs,ts}",
       "**/*{.,-}test.{js,cjs,mjs,ts}",
       "**/__tests__/**",
-
       "**/{ava,nyc}.config.{js,cjs,mjs}",
       "**/jest.config.{js,cjs,mjs,ts}",
       "**/{karma,rollup,webpack}.config.js",
@@ -64,7 +63,10 @@
     "statements": 97
   },
   "mocha": {
-    "require": ["ts-node/register", "source-map-support/register"],
+    "require": [
+      "ts-node/register",
+      "source-map-support/register"
+    ],
     "full-trace": true,
     "bail": true,
     "spec": "test/**/_*_test.js"
