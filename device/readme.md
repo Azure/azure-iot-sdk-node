@@ -1,13 +1,12 @@
-# Microsoft Azure IoT device SDK for Node.js
+# Azure IoT Node.js Device Client Library
 
-The Azure IoT device SDK for Node allows to build devices that communicate with Azure IoT Hub.
+The Azure IoT Node.js Device Client Library is can be used to build applications on devices that interact with Azure IoT Hub.
 
 ## Features
 
-Use the device SDK to:
 * Send event data to Azure IoT Hub.
-* Receive messages from IoT Hub.
-* Communicate with the service via MQTT (optionally over WebSockets), AMQP (optionally over WebSockets),  or HTTP.
+* Receive messages from IoT Hub. 
+* Support for multiple communications protocols, including MQTT (optionally over WebSockets), AMQP (optionally over WebSockets), or HTTP.
 * Synchronize an Azure IoT Hub device Twin with Azure IoT Hub from a device
 * Implement Azure IoT Hub Direct Device Methods on devices
 * Implement Azure IoT Device Mangement features on devices

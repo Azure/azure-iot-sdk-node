@@ -16,7 +16,7 @@ client.open(function(err) {
       // Get the firmware image Uri from the body of the method request
       var fwPackageUri = request.payload.fwPackageUri;
       var fwPackageUriObj = url.parse(fwPackageUri);
-      
+
       // Ensure that the url is to a secure url
       if (fwPackageUriObj.protocol !== 'https:') {
         response.send(400, 'Invalid URL format.  Must use https:// protocol.', function(err) {
@@ -49,86 +49,86 @@ function initiateFirmwareUpdateFlow(fwPackageUri, callback) {
   ], function(err) {
     if (err) {
       console.error('Error : ' + err.message);
-    } 
+    }
     callback(err);
   });
 }
 
-// Function that implements the 'downloadImage' phase of the 
+// Function that implements the 'downloadImage' phase of the
 // firmware update process.
 function downloadImage(fwPackageUriVal, callback) {
   var imageResult = '[Fake firmware image data]';
-  
+
   async.waterfall([
     function (callback) {
-      reportFWUpdateThroughTwin ({ 
+      reportFWUpdateThroughTwin ({
         status: 'downloading',
         startedDownloadingTime: new Date().toISOString()
-      }, 
+      },
       callback);
     },
     function (callback) {
       console.log("Downloading image from URI: " + fwPackageUriVal);
-      
+
       // Replace this line with the code to download the image.  Delay used to simulate the download.
-      setTimeout(function() { 
-        callback(null); 
+      setTimeout(function() {
+        callback(null);
       }, 4000);
     },
     function (callback) {
-      reportFWUpdateThroughTwin ({ 
+      reportFWUpdateThroughTwin ({
         status: 'download complete',
         downloadCompleteTime : new Date().toISOString()
-      }, 
+      },
       callback);
     },
   ],
   function(err) {
     if (err) {
       reportFWUpdateThroughTwin( { status : 'Download image failed' }, function(err) {
-        callback(err);  
-      })
+        callback(err);
+      });
     } else {
       callback(null, imageResult);
     }
   });
 }
 
-// Implementation for the apply phase, which reports status after 
+// Implementation for the apply phase, which reports status after
 // completing the image apply.
 function applyImage(imageData, callback) {
   async.waterfall([
     function(callback) {
-      reportFWUpdateThroughTwin ({ 
+      reportFWUpdateThroughTwin ({
         status: 'applying',
         startedApplyingImage: new Date().toISOString()
-      }, 
+      },
       callback);
     },
     function (callback) {
-      console.log("Applying firmware image"); 
+      console.log("Applying firmware image");
 
       // Replace this line with the code to download the image.  Delay used to simulate the download.
-      setTimeout(function() { 
+      setTimeout(function() {
         callback(null);
-      }, 4000);      
+      }, 4000);
     },
     function (callback) {
-      reportFWUpdateThroughTwin ({ 
+      reportFWUpdateThroughTwin ({
         status: 'apply firmware image complete',
         lastFirmwareUpdate: new Date().toISOString()
-      }, 
+      },
       callback);
     },
-  ], 
+  ],
   function (err) {
     if (err) {
       reportFWUpdateThroughTwin({ status : 'Apply image failed' }, function(err) {
-        callback(err);  
-      })
+        callback(err);
+      });
     }
     callback(null);
-  })
+  });
 }
 
 // Helper function to update the twin reported properties.
@@ -144,9 +144,9 @@ function reportFWUpdateThroughTwin(firmwareUpdateValue, callback) {
     if (!err) {
       twin.properties.reported.update(patch, function(err) {
         callback(err);
-      });      
+      });
     } else {
       callback(err);
     }
   });
-};
+}

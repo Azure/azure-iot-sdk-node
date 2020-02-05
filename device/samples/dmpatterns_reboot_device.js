@@ -19,15 +19,15 @@ client.open(function(err) {
           console.log('Response to method \'' + request.methodName + '\' sent successfully.');
         }
       });
-      
+
       // Get device Twin
       client.getTwin(function(err, twin) {
         if (err) {
           console.error('could not get twin');
         } else {
           console.log('twin acquired');
-          
-          // Update the reported properties for this device through the 
+
+          // Update the reported properties for this device through the
           // twin.  This enables the back end app to query for all device that
           // have completed a reboot based on the lastReboot property.
           twin.properties.reported.update({
@@ -37,14 +37,17 @@ client.open(function(err) {
               }
             }
           }, function(err) {
-            if (err) console.error('Error updating twin');
-            else console.log('Device reboot twin state reported')
-          });  
+            if (err) {
+              console.error('Error updating twin');
+            } else {
+              console.log('Device reboot twin state reported');
+            }
+          });
         }
       });
-      
+
       // Add your device's reboot API for physical restart.
-      console.log('Rebooting!');      
+      console.log('Rebooting!');
     });
     console.log('Client connected to IoT Hub.  Waiting for reboot device method.');
   } else {

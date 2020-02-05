@@ -4,7 +4,7 @@ import { Mqtt as DeviceMqtt, MqttWs as DeviceMqttWs } from 'azure-iot-device-mqt
 import { Http as DeviceHttp } from 'azure-iot-device-http';
 import { EventHubClient, EventPosition } from '@azure/event-hubs';
 import { Message, results } from 'azure-iot-common';
-import {ConnectionString as ServiceConnectionString } from 'azure-iothub';
+import { ConnectionString as ServiceConnectionString } from 'azure-iothub';
 import * as uuid from 'uuid';
 import * as testUtils from './testUtils';
 import { assert } from 'chai';
