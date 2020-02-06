@@ -9,7 +9,6 @@
 		"cz-conventional-changelog": "^3.0.2",
 		"husky": "^4.2.1",
 		"lerna": "^2.11.0",
-		"istanbul": "^0.4.5",
 		"mocha": "^6.1.4"
 	},
 	"engines": {
@@ -24,7 +23,10 @@
 	"commitlint": {
 		"extends": [
 			"@commitlint/config-conventional"
-		]
+		],
+        "rules": {
+            "header-max-length": [0, "always", 150]
+		}
 	},
 	"config": {
 		"commitizen": {
