@@ -23,6 +23,7 @@
     "nyc": "^15.0.0",
     "sinon": "^7.4.1",
     "source-map-support": "^0.5.16",
+    "ts-node": "^8.6.2",
     "tslint": "^5.18.0",
     "typescript": "2.9.2"
   },
@@ -38,13 +39,12 @@
   },
   "nyc": {
     "exclude": [
-    	"coverage/**",
+      "coverage/**",
       "**/*.d.ts",
       "test{,s}/**",
       "test{,-*}.{js,cjs,mjs,ts}",
       "**/*{.,-}test.{js,cjs,mjs,ts}",
       "**/__tests__/**",
-
       "**/{ava,nyc}.config.{js,cjs,mjs}",
       "**/jest.config.{js,cjs,mjs,ts}",
       "**/{karma,rollup,webpack}.config.js",
@@ -61,7 +61,10 @@
     "statements": 97
   },
   "mocha": {
-    "require": ["ts-node/register", "source-map-support/register"],
+    "require": [
+      "ts-node/register",
+      "source-map-support/register"
+    ],
     "full-trace": true,
     "bail": true,
     "spec": "test/**/_*_test.js"
