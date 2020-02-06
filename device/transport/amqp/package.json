@@ -23,7 +23,7 @@
     "mocha": "^6.1.4",
     "nyc": "^15.0.0",
     "sinon": "^7.4.1",
-    "source-map-support": "^0.5.13",
+    "source-map-support": "^0.5.16",
     "tslint": "^5.18.0",
     "typescript": "2.9.2"
   },
