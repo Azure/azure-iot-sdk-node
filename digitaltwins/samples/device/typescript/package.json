@@ -17,6 +17,8 @@
   "scripts": {
     "lint": "tslint --project . -c ../../../../tslint.json",
     "build": "tsc",
+    "npmlockrefresh": "npm i --package-lock-only",
+    "npmaudit": "npm audit",
     "ci": "npm -s run lint && npm -s run build"
   },
   "engines": {

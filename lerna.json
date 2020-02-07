@@ -15,7 +15,6 @@
     "security/*",
     "longhaultests",
     "e2etests",
-    "edge-e2e/wrapper/nodejs-server-server",
     "ts-e2e",
     "digitaltwins/device",
     "digitaltwins/service",
