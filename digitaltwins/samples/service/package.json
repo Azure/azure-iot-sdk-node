@@ -5,6 +5,8 @@
   "main": "get_digital_twin.js",
   "scripts": {
     "lint": "eslint -c ../../../.eslintrc.json .",
+    "npmlockrefresh": "npm i --package-lock-only",
+    "npmaudit": "npm audit",
     "ci": "npm -s run lint"
   },
   "repository": {
