@@ -24,6 +24,7 @@
     "typescript": "2.9.2"
   },
   "scripts": {
+    "npmlockrefresh": "npm i --package-lock-only",
     "lint": "tslint --project . -c ../../tslint.json",
     "build": "tsc",
     "unittest-min": "tsc && nyc --reporter lcov ../../node_modules/mocha/bin/_mocha --reporter dot",
