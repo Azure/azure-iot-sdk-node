@@ -17,6 +17,7 @@
     "jshint": "^2.10.2"
   },
   "scripts": {
+    "npmlockrefresh": "npm i --package-lock-only",
     "lint": "jshint --show-non-errors ."
   }
 }

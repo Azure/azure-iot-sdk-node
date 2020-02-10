@@ -33,6 +33,7 @@
     "mocha-multi-reporters": "^1.1.7"
   },
   "scripts": {
+    "npmlockrefresh": "npm i --package-lock-only",
     "lint": "jshint --show-non-errors .",
     "empty_messages": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/empty_messages.js",
     "server_validation": "mocha --exit --reporter mocha-multi-reporters --reporter-options configFile=../mocha-reports.json test/server_validation.js",

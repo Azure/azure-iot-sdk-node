@@ -6,7 +6,6 @@
   "types": "index.d.ts",
   "scripts": {
     "npmlockrefresh": "npm i --package-lock-only",
-    "npmaudit": "npm audit",
     "generate-pl": "autorest --typescript --add-credentials --model-enum-as-union --license-header=MICROSOFT_MIT_NO_VERSION --source-code-folder-path='' --output-folder=src/pl --input-file=src/service.json",
     "compile": "tsc",
     "lint": "tslint --project . -c ../../tslint.json",
