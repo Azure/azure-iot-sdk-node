@@ -5,6 +5,9 @@
   "main": "registry_sample.js",
   "author": "Microsoft Corp.",
   "license": "MIT",
+  "scripts": {
+    "npmlockrefresh": "npm i --package-lock-only"
+  },
   "dependencies": {
     "azure-iothub": "1.11.2",
     "azure-storage": "^2.8.1"

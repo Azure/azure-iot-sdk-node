@@ -10,6 +10,7 @@
     "delete-device": "./delete-device.js"
   },
   "scripts": {
+    "npmlockrefresh": "npm i --package-lock-only",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

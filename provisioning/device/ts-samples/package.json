@@ -18,6 +18,7 @@
     "azure-iot-security-x509": "1.6.2"
   },
   "scripts": {
+    "npmlockrefresh": "npm i --package-lock-only",
     "lint": "tslint --project . -c ../../../tslint.json",
     "build": "tsc",
     "test": "mocha ./lib/*.tests.js"
