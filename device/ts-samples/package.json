@@ -4,6 +4,7 @@
   "description": "Device code samples for the Azure IoT Hub Device SDK",
   "main": "sample_device.js",
   "scripts": {
+    "npmlockrefresh": "npm i --package-lock-only",
     "lint": "tslint --project . --type-check -c ../../tslint.json",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"

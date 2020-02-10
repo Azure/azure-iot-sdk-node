@@ -31,7 +31,6 @@
     "lint": "tslint --project . -c ../../tslint.json",
     "build": "tsc",
     "npmlockrefresh": "npm i --package-lock-only",
-    "npmaudit": "npm audit",
     "unittest-min": "tsc && nyc --reporter lcov ../../node_modules/mocha/bin/_mocha --reporter dot",
     "alltest-min": "tsc && nyc --reporter lcov ../../node_modules/mocha/bin/_mocha --reporter dot test/_*_test*.js",
     "unittest": "tsc && nyc --reporter lcov --reporter text ../../node_modules/mocha/bin/_mocha",

@@ -11,6 +11,9 @@
   "engines": {
     "node": ">= 10.0.0"
   },
+  "scripts": {
+    "npmlockrefresh": "npm i --package-lock-only"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Azure/azure-iot-sdk-node.git"

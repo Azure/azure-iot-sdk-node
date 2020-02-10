@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "npmlockrefresh": "npm i --package-lock-only",
     "lint": "tslint --project . -c ../tslint.json",
     "build": "tsc",
     "test": "mocha ./lib/*.tests.js"

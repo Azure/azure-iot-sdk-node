@@ -1,5 +1,6 @@
 {
 	"scripts": {
+		"npmlockrefresh": "npm i --package-lock-only",
 		"commit": "git-cz"
 	},
 	"devDependencies": {
@@ -7,9 +8,7 @@
 		"@commitlint/config-conventional": "^8.1.0",
 		"commitizen": "^4.0.3",
 		"cz-conventional-changelog": "^3.0.2",
-		"husky": "^4.2.1",
-		"lerna": "^2.11.0",
-		"mocha": "^6.1.4"
+		"husky": "^4.2.1"
 	},
 	"engines": {
 		"node": ">=10.0.0"
@@ -24,8 +23,12 @@
 		"extends": [
 			"@commitlint/config-conventional"
 		],
-        "rules": {
-            "header-max-length": [0, "always", 150]
+		"rules": {
+			"header-max-length": [
+				0,
+				"always",
+				150
+			]
 		}
 	},
 	"config": {

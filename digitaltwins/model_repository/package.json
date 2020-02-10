@@ -7,7 +7,6 @@
   "scripts": {
     "generate-pl": "autorest --force --typescript --add-credentials --model-enum-as-union --license-header=MICROSOFT_MIT_NO_VERSION --source-code-folder-path='' --output-folder=src/pl --input-file=src/service.json",
     "npmlockrefresh": "npm i --package-lock-only",
-    "npmaudit": "npm audit",
     "compile": "tsc",
     "lint": "tslint --project . -c ../../tslint.json",
     "build": "npm -s run lint && npm -s run compile",

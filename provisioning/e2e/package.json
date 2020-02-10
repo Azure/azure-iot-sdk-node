@@ -29,6 +29,7 @@
     "uuid": "^3.3.2"
   },
   "scripts": {
+    "npmlockrefresh": "npm i --package-lock-only",
     "server_validation": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json _server_validation.js",
     "service_create_delete": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json _service_create_delete.js",
     "provisioning_e2e": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json _provisioning_e2e.js",
