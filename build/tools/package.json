@@ -5,6 +5,7 @@
   "description": "Build tools for the Azure IoT Hub Node.js SDK Build",
   "main": "create_certs.js",
   "scripts": {
+    "npmlockrefresh": "npm i --package-lock-only",
     "lint": "jshint --show-non-errors . && tslint -c ../../tslint.json \"{lib,.}/*.ts\""
   },
   "repository": {

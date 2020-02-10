@@ -24,14 +24,15 @@ export class IotHubGatewayServiceAPIs20190701PreviewContext extends msRest.Servi
    * @param [options] The parameter options
    */
   constructor(credentials: msRest.ServiceClientCredentials, options?: Models.IotHubGatewayServiceAPIs20190701PreviewOptions) {
-    if (credentials === null || credentials === undefined) {
-      throw new Error('\'credentials\' cannot be null.');
+    if (credentials == undefined) {
+      throw new Error("'credentials' cannot be null.");
     }
 
     if (!options) {
       options = {};
     }
-    if(!options.userAgent) {
+
+    if (!options.userAgent) {
       const defaultUserAgent = msRest.getDefaultUserAgentValue();
       options.userAgent = `${packageName}/${packageVersion} ${defaultUserAgent}`;
     }
@@ -42,8 +43,7 @@ export class IotHubGatewayServiceAPIs20190701PreviewContext extends msRest.Servi
     this.baseUri = options.baseUri || this.baseUri || "https://fully-qualified-iothubname.azure-devices.net";
     this.requestContentType = "application/json; charset=utf-8";
     this.credentials = credentials;
-
-    if(options.apiVersion !== null && options.apiVersion !== undefined) {
+    if (options.apiVersion !== null && options.apiVersion !== undefined) {
       this.apiVersion = options.apiVersion;
     }
   }

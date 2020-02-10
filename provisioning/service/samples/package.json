@@ -9,7 +9,10 @@
     "azure-iot-provisioning-service": "1.8.0-preview.2"
   },
   "engines": {
-    "node": ">= 8.0.0"
+    "node": ">= 10.0.0"
+  },
+  "scripts": {
+    "npmlockrefresh": "npm i --package-lock-only"
   },
   "repository": {
     "type": "git",

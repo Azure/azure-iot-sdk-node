@@ -10,7 +10,7 @@ var camelcase = require('camelcase');
 var argv = require('yargs')
           .command('root [commonName]', 'create a root certificate', (yargs) => {
             return yargs
-              .positional('commonName', { describe: 'name to use for cert', default: 'Test Root Cert' })
+              .positional('commonName', { describe: 'name to use for cert', default: 'Test Root Cert' });
           })
           .command('intermediate <commonName> <parentCommonName>', 'create an intermediate cert', (yargs) => {
             return yargs
@@ -38,7 +38,6 @@ var argv = require('yargs')
 var command = argv._[0];
 
 var commonName = null;
-var parentCommonName = null;
 
 var outputFilenameRoot = null;
 

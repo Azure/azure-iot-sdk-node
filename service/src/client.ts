@@ -23,7 +23,7 @@ const MAX_RETRY_TIMEOUT = 240000; // 4 minutes
 /**
  * The IoT Hub service client is used to communicate with devices through an Azure IoT hub.
  * It lets the SDK user:
- *   - send device-to-cloud (also known as commands) to devices: commands are queued on IoT Hub and delivered asynchronously only when the device is connected. Only 50 commands can be queued per device.
+ *   - send cloud-to-device (also known as commands) to devices: commands are queued on IoT Hub and delivered asynchronously only when the device is connected. Only 50 commands can be queued per device.
  *   - invoke direct methods on devices (which will work only if the device is currently connected: it's a synchronous way of communicating with the device)
  *   - listen for feedback messages sent by devices for previous commands.
  *   - listen for file upload notifications from devices.

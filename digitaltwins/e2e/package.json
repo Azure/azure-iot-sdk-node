@@ -6,12 +6,13 @@
   "private": true,
   "scripts": {
     "lint": "eslint -c ../../.eslintrc.json .",
+    "npmlockrefresh": "npm i --package-lock-only",
     "digitaltwins_commands": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json digitaltwin_commands.js",
     "digitaltwins_telemetry": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json digitaltwin_telemetry.js",
     "digitaltwins_properties": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json digitaltwin_properties.js",
     "model_repository_crud": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json model_repository_crud.js",
     "model_repository_cl_crud": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json model_repository_cl_crud.js",
-    "alltest": "npm run  model_repository_crud && npm run digitaltwins_commands && npm run digitaltwins_properties && npm run digitaltwins_telemetry",
+    "alltest": "npm run digitaltwins_commands && npm run digitaltwins_properties && npm run digitaltwins_telemetry",
     "e2e": "npm -s run lint && npm -s run alltest"
   },
   "repository": {
@@ -38,12 +39,15 @@
     "azure-iot-device-mqtt": "1.12.0-preview.2",
     "azure-iothub": "1.12.0-preview.2",
     "@azure/event-hubs": "^2.1.1",
-    "azure-iot-digitaltwins-model-repository": "1.0.0-preview.2",
-    "azure-iot-digitaltwins-service": "1.0.0-preview.2",
+    "azure-iot-digitaltwins-model-repository": "1.0.0-preview.3",
+    "azure-iot-digitaltwins-service": "1.0.0-preview.3",
     "azure-iot-digitaltwins-device": "1.0.0-preview.3"
   },
   "devDependencies": {
     "eslint": "^6.0.1",
     "eslint-config-google": "^0.13.0"
+  },
+  "engines": {
+    "node": ">= 10.0.0"
   }
 }

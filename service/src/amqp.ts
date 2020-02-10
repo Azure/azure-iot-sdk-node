@@ -84,7 +84,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
     });
 
     this._c2dErrorListener = (err) => {
-      debug('Error on the D2C link: ' + err.toString());
+      debug('Error on the C2D link: ' + err.toString());
       this._c2dLink = null;
     };
 
@@ -158,7 +158,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
             callback();
           },
           amqpError: (err) => {
-            debug('error received while disconnected. likely a bug?');
+            debug('Late arriving error received while in disconnected state.');
             if (err) {
               debug(err.toString());
             }
@@ -349,7 +349,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
                       if (detachErr) {
                         debug('error detaching the message feedback link: ' + detachErr.toString());
                       } else {
-                        debug('D2C link detached');
+                        debug('feedback link detached');
                       }
                       tmpFeedbackReceiver.removeListener('error', this._feedbackErrorListener);
                       if (!finalError && detachErr) {
@@ -377,7 +377,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
                       if (detachErr) {
                         debug('error detaching the file upload notification link: ' + detachErr.toString());
                       } else {
-                        debug('D2C link detached');
+                        debug('File notification link detached');
                       }
                       tmpFileNotificationReceiver.removeListener('error', this._fileNotificationErrorListener);
                       if (!finalError && detachErr) {
