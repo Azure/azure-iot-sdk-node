@@ -7,6 +7,7 @@ const EventEmitter = require('events');
 const sinon = require('sinon');
 const results = require('azure-iot-common').results;
 const DigitalTwinClient = require('../dist/digital_twin_client').DigitalTwinClient;
+const errors = require('azure-iot-common').errors;
 const BaseInterface = require('../dist/base_interface').BaseInterface;
 const Telemetry = require('../dist/interface_types').Telemetry;
 const Property = require('../dist/interface_types').Property;
@@ -370,6 +371,138 @@ describe('Digital Twin Client', function () {
             assert.strictEqual(err, twinError);
             return done();
           });
+      });
+    });
+
+    const timeoutForDisconnects = 30;
+    const almostToTimeout = 29000;
+    const pushOverTheTimeout = 2000;
+    describe('Will timeout in ' + timeoutForDisconnects + ' seconds if the initial registration message disconnects the connection', () => {
+      let dtClient;
+      let registrationDeviceClient;
+      let fakeInterfaceInstance;
+
+      class FakeInterface extends BaseInterface {
+        constructor(name, propertyCallback, commandCallback) {
+          super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
+          this.temp = new Telemetry();
+        }
+      };
+
+      beforeEach(function () {
+        registrationDeviceClient = {
+          sendEvent: sinon.stub()
+        };
+        dtClient = new DigitalTwinClient('urn:abc:1', registrationDeviceClient);
+        fakeInterfaceInstance = new FakeInterface('abc');
+        dtClient.addInterfaceInstance(fakeInterfaceInstance);
+      });
+
+      it(' - invokes callback with error object', (done) =>{
+        const clock = sinon.useFakeTimers();
+        let resultedInNotConnectedError = false;
+        dtClient.register((error) => {
+          assert.equal(error.name, 'NotConnectedError');
+          assert.equal(error.message, 'Failure during ModelInformation registration.');
+          resultedInNotConnectedError = true;
+        });
+        clock.tick(almostToTimeout);
+        assert.isNotOk(resultedInNotConnectedError);
+        clock.tick(pushOverTheTimeout);
+        assert(resultedInNotConnectedError);
+        clock.restore();
+        done();
+      });
+
+      it(' - rejects the promise', function (done) {
+        const clock = sinon.useFakeTimers();
+        let resultedInNotConnectedError = false;
+        dtClient.register()
+          .then(() => {
+            assert.fail('In Promise path, should not succeed registration');
+          })
+          .catch((error) => {
+            assert.equal(error.name, 'NotConnectedError');
+            assert.equal(error.message, 'Failure during ModelInformation registration.');
+            resultedInNotConnectedError = true;
+          });
+        clock.tick(almostToTimeout);
+        assert.isNotOk(resultedInNotConnectedError);
+        clock.tick(pushOverTheTimeout);
+        clock.restore();
+        //
+        // Oddly it seems as though the .catch requires an actual
+        // tick to occur.
+        //
+        setTimeout(() => {
+          assert(resultedInNotConnectedError);
+          done();
+        }, 100);
+      });
+    });
+
+    describe('Will timeout in ' + timeoutForDisconnects + ' seconds if the getTwin disconnects the connection', () => {
+      let registrationDeviceClient;
+      let dtClient;
+      let fakeInterfaceInstance;
+      class FakeInterface extends BaseInterface {
+        constructor(name, propertyCallback, commandCallback) {
+          super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
+          this.temp = new Property();
+        }
+      };
+
+      beforeEach(function () {
+        registrationDeviceClient = {
+          sendEvent: sinon.stub().callsArgWith(1, null, new results.MessageEnqueued()),
+          onDeviceMethod: sinon.stub(),
+          getTwin: sinon.stub()
+        };
+        dtClient = new DigitalTwinClient('urn:abc:1', registrationDeviceClient);
+        fakeInterfaceInstance = new FakeInterface('abc');
+        dtClient.addInterfaceInstance(fakeInterfaceInstance);
+      });
+
+      it(' - invokes callback with error object', function (done) {
+        const clock = sinon.useFakeTimers();
+        let resultedInNotConnectedError = false;
+        dtClient.register((error) => {
+          assert.equal(error.name, 'NotConnectedError');
+          assert.equal(error.message, 'Failure during the retrieval of the device twin.');
+          resultedInNotConnectedError = true;
+        });
+        clock.tick(almostToTimeout);
+        assert.isNotOk(resultedInNotConnectedError);
+        clock.tick(pushOverTheTimeout);
+        assert(resultedInNotConnectedError);
+        clock.restore();
+        done();
+      });
+
+      it(' - rejects the promise', function (done) {
+        const clock = sinon.useFakeTimers();
+        let resultedInNotConnectedError = false;
+        dtClient.register()
+          .then(() => {
+            assert.fail('In Promise path, should not succeed registration');
+          })
+          .catch((error) => {
+            assert.equal(error.name, 'NotConnectedError');
+            assert.equal(error.message, 'Failure during the retrieval of the device twin.');
+            resultedInNotConnectedError = true;
+          });
+        clock.tick(almostToTimeout);
+        assert.isNotOk(resultedInNotConnectedError);
+        clock.tick(pushOverTheTimeout);
+        clock.restore();
+        //
+        // Oddly it seems as though the .catch requires an actual
+        // tick to occur.
+        //
+        setTimeout(() => {
+          assert(resultedInNotConnectedError);
+          done();
+        }, 100);
       });
     });
   });

@@ -661,6 +661,7 @@ export class DigitalTwinClient {
     const modelInterfaceId = 'urn:azureiot:ModelDiscovery:ModelInformation:1';
     const modelInterfaceInstanceName = 'urn_azureiot_ModelDiscovery_ModelInformation';
     const registrationSchema = 'modelInformation';
+    const timeoutForDisconnects = 30000;
 
     let registrationObject: any = {};
     registrationObject = {
@@ -684,7 +685,7 @@ export class DigitalTwinClient {
     // If a serious error occurs during this initial processing sequence mqtt will simply drop the connection.
     // MQTT might not notice this and we will be waiting forever for the operation to finish.
     //
-    // Set the timeout for 30 seconds, which should be long enough to go through this entire sequence.
+    // Set the timeout for timeoutForDisconnects seconds, which should be long enough to go through this entire sequence.
     //
     let currentStepDescription = 'Failure during ModelInformation registration.';
     let alreadyTimedOut = false;
@@ -692,7 +693,7 @@ export class DigitalTwinClient {
       alreadyTimedOut = true;
       let errorOnRegistrationSequence = new errors.NotConnectedError(currentStepDescription);
       return registerCallback(errorOnRegistrationSequence);
-    }, 30000);
+    }, timeoutForDisconnects);
     this._client.sendEvent(registrationMessage, (registrationError) => {
       if (alreadyTimedOut) return;
       if (registrationError) {
@@ -700,14 +701,13 @@ export class DigitalTwinClient {
         clearTimeout(registrationTimeout);
         return registerCallback(registrationError);
       } else {
-        currentStepDescription = 'Failure during enabling of all interfaces.';
         this._setAllInterfaceInstancesRegistered();
-        currentStepDescription = 'Failure during enabling of all commands.';
         this._enableAllCommands();
         currentStepDescription = 'Failure during the retrieval of the device twin.';
         this._client.getTwin((getTwinError, twinResult) => {
           if (alreadyTimedOut) return;
           if (getTwinError) {
+            clearTimeout(registrationTimeout);
             return registerCallback(getTwinError);
           } else {
             this._twin = twinResult as Twin;
@@ -716,18 +716,23 @@ export class DigitalTwinClient {
             // Intentionally letting a failure of SDK information report
             // be ignored.
             //
+            currentStepDescription = 'Failure during the SDK reporting.';
             this._sdkInformation.language.report('Node.js', (err?: Error) => {
+              if (alreadyTimedOut) return;
               if (err) {
                 debug('Error updating the SDK language: ' + err.toString());
               }
               this._sdkInformation.version.report(packageJson.name + '/' + packageJson.version, (err?: Error) => {
+                if (alreadyTimedOut) return;
                 if (err) {
                   debug('Error updating the SDK version: ' + err.toString());
                 }
                 this._sdkInformation.vendor.report('Microsoft Corporation', (err?: Error) => {
+                  if (alreadyTimedOut) return;
                   if (err) {
                     debug('Error updating the SDK vendor: ' + err.toString());
                   }
+                  clearTimeout(registrationTimeout);
                   return registerCallback();
                 });
               });
