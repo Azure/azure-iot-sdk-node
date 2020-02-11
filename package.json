@@ -1,7 +1,7 @@
 {
 	"scripts": {
 		"npmlockrefresh": "npm i --package-lock-only",
-		"commit": "git-cz"
+		"cm": "git-cz"
 	},
 	"devDependencies": {
 		"@commitlint/cli": "^8.1.0",
@@ -17,7 +17,6 @@
 	},
 	"husky": {
 		"hooks": {
-			"pre-commit": "pretty-quick --staged",
 			"commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
 		}
 	},
