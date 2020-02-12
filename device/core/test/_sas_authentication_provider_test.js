@@ -114,6 +114,15 @@ describe('SharedAccessSignatureAuthenticationProvider', function () {
         testCallback();
       });
     });
+
+    it('create a correct config when the sr contains a module', function (testCallback) {
+      var sharedAccessSignature = '"SharedAccessSignature sr=hubName.azure-devices.net/devices/deviceId/modules/module42&sig=s1gn4tur3&se=1454204843"';
+      var sasAuthProvider = SharedAccessSignatureAuthenticationProvider.fromSharedAccessSignature(sharedAccessSignature);
+      sasAuthProvider.getDeviceCredentials(function (err, creds) {
+        assert.strictEqual(creds.moduleId, 'module42')
+        testCallback();
+      });
+    });
   });
 
   describe('#stop', function () {
