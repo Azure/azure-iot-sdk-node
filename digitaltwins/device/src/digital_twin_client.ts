@@ -7,7 +7,7 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-digitaltwins-device:Client');
 
 import { DigitalTwinInterface as SdkInformation } from './sdkinformation';
-import { callbackToPromise, errorCallbackToPromise, ErrorCallback, Message } from 'azure-iot-common';
+import { callbackToPromise, errorCallbackToPromise, ErrorCallback, Message, errors } from 'azure-iot-common';
 import { Client, Twin, DeviceMethodRequest, DeviceMethodResponse } from 'azure-iot-device';
 import { BaseInterface } from './base_interface';
 import { azureDigitalTwinTelemetry, azureDigitalTwinCommand, azureDigitalTwinProperty,
@@ -661,6 +661,7 @@ export class DigitalTwinClient {
     const modelInterfaceId = 'urn:azureiot:ModelDiscovery:ModelInformation:1';
     const modelInterfaceInstanceName = 'urn_azureiot_ModelDiscovery_ModelInformation';
     const registrationSchema = 'modelInformation';
+    const timeoutForDisconnects = 30000;
 
     let registrationObject: any = {};
     registrationObject = {
@@ -680,15 +681,33 @@ export class DigitalTwinClient {
     registrationMessage.properties.add(messageSchemaProperty, registrationSchema);
     registrationMessage.contentType = 'application/json';
     registrationMessage.contentEncoding = 'utf-8';
+    //
+    // If a serious error occurs during this initial processing sequence mqtt will simply drop the connection.
+    // MQTT might not notice this and we will be waiting forever for the operation to finish.
+    //
+    // Set the timeout for timeoutForDisconnects seconds, which should be long enough to go through this entire sequence.
+    //
+    let currentStepDescription = 'Failure during ModelInformation registration.';
+    let alreadyTimedOut = false;
+    let registrationTimeout = setTimeout(() => {
+      alreadyTimedOut = true;
+      let errorOnRegistrationSequence = new errors.NotConnectedError(currentStepDescription);
+      return registerCallback(errorOnRegistrationSequence);
+    }, timeoutForDisconnects);
     this._client.sendEvent(registrationMessage, (registrationError) => {
+      if (alreadyTimedOut) return;
       if (registrationError) {
         /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_011: [Will indicate an error via a callback or by promise rejection if the registration message fails.] */
+        clearTimeout(registrationTimeout);
         return registerCallback(registrationError);
       } else {
         this._setAllInterfaceInstancesRegistered();
         this._enableAllCommands();
+        currentStepDescription = 'Failure during the retrieval of the device twin.';
         this._client.getTwin((getTwinError, twinResult) => {
+          if (alreadyTimedOut) return;
           if (getTwinError) {
+            clearTimeout(registrationTimeout);
             return registerCallback(getTwinError);
           } else {
             this._twin = twinResult as Twin;
@@ -697,18 +716,23 @@ export class DigitalTwinClient {
             // Intentionally letting a failure of SDK information report
             // be ignored.
             //
+            currentStepDescription = 'Failure during the SDK reporting.';
             this._sdkInformation.language.report('Node.js', (err?: Error) => {
+              if (alreadyTimedOut) return;
               if (err) {
                 debug('Error updating the SDK language: ' + err.toString());
               }
               this._sdkInformation.version.report(packageJson.name + '/' + packageJson.version, (err?: Error) => {
+                if (alreadyTimedOut) return;
                 if (err) {
                   debug('Error updating the SDK version: ' + err.toString());
                 }
                 this._sdkInformation.vendor.report('Microsoft Corporation', (err?: Error) => {
+                  if (alreadyTimedOut) return;
                   if (err) {
                     debug('Error updating the SDK vendor: ' + err.toString());
                   }
+                  clearTimeout(registrationTimeout);
                   return registerCallback();
                 });
               });
