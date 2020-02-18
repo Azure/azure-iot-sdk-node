@@ -124,6 +124,12 @@ export interface DeviceClientOptions extends X509 {
   productInfo?: string;
 
   /**
+   * Optional object with token renewal values.  Only use with authentication
+   * that uses pre shared keys.
+   */
+  tokenRenewal?: TokenRenewalValues;
+
+  /**
    * Optional object with options specific to the MQTT transport
    */
    mqtt?: MqttTransportOptions;
@@ -149,6 +155,16 @@ export interface BlobUploadCommonResponseStub {
     bodyAsText?: string;
   };
 }
+
+/**
+ * Structure used to pass down token renewal values for authentication that
+ * utilizes pre-shared keys.
+ */
+export interface TokenRenewalValues {
+  tokenValidTimeInSeconds: number;
+  tokenRenewalMarginInSeconds: number;
+}
+
 
 /**
  * Structure to mimic the RestError class from @azure/core-http
