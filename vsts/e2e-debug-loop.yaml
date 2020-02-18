@@ -7,12 +7,15 @@ phases:
   condition: succeeded()
   queue:
     name: Hosted Ubuntu 1604
+
   steps:
   - task: NodeTool@0
-    displayName: 'Use Node 6.x'
-
+    displayName: 'Use Node 10.15.x'
+    inputs:
+      versionSpec: '10.15.x'
 
   - script: |
+      npm install --global node-gyp
       npm install -g lerna
       npm install
     displayName: 'Install Tools'
@@ -59,12 +62,12 @@ phases:
     name: Hosted
   steps:
   - task: NodeTool@0
-    displayName: 'Use Node 8.x'
+    displayName: 'Use Node 12.x'
     inputs:
-      versionSpec: 8.x
-
+      versionSpec: 12.x
 
   - script: |
+      npm install --global node-gyp
       npm install -g lerna
       npm install
     displayName: 'Install Tools'
