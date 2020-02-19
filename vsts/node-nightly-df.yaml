@@ -58,7 +58,7 @@ phases:
     condition: succeededOrFailed()
 
 - phase: Phase_1
-  displayName: Windows Build - Node 8
+  displayName: Windows Build - Node 12
   condition: succeededOrFailed()
   queue:
     name: Hosted
@@ -78,6 +78,7 @@ phases:
   - script: |
        call lerna bootstrap --hoist
        call lerna run build
+       call npm rebuild ref
     displayName: 'Bootstrap & Build'
 
   - script: 'call lerna run ci'
