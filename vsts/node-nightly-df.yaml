@@ -78,7 +78,7 @@ phases:
   - script: |
        call lerna bootstrap --hoist
        call lerna run build
-       call npm rebuild ref
+       npm install ref
     displayName: 'Bootstrap & Build'
 
   - script: 'call lerna run ci'
