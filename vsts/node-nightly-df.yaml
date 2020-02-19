@@ -58,15 +58,15 @@ phases:
     condition: succeededOrFailed()
 
 - phase: Phase_1
-  displayName: Windows Build - Node 12
+  displayName: Windows Build - Node 10.15.x
   condition: succeededOrFailed()
   queue:
     name: Hosted
   steps:
   - task: NodeTool@0
-    displayName: 'Use Node 12.x'
+    displayName: 'Use Node 10.15.x'
     inputs:
-      versionSpec: 12.x
+      versionSpec: '10.15.x'
 
   - powershell: |
        runas.exe /savecred /user:administrator
