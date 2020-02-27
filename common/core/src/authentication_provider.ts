@@ -26,4 +26,5 @@ export interface AuthenticationProvider {
   type: AuthenticationType;
   getDeviceCredentials(callback: Callback<TransportConfig>): void;
   getDeviceCredentials(): Promise<TransportConfig>;
-}
+  setTokenRenewalValues?(tokenValidTimeInSeconds: number, tokenRenewalMarginInSeconds: number): void;
+  }

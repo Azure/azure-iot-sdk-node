@@ -411,7 +411,7 @@ describe('Amqp', function () {
           testCallback();
         });
       });
-  
+
       /*Tests_SRS_NODE_DEVICE_AMQP_41_002: [ The connect method shall set the productInfo on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
       it('sets productInfo if provided', function (testCallback) {
         var options = { productInfo: 'test: THIS IS A TEST'};
@@ -452,7 +452,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_06_005: [If x509 authentication is NOT being utilized then `initializeCBS` shall be invoked.]*/
       /*Tests_SRS_NODE_DEVICE_AMQP_06_008: [If `initializeCBS` is not successful then the client will remain disconnected and the callback will be called with an error per SRS_NODE_DEVICE_AMQP_16_009.]*/
-      it('Invokes initializeCBS if NOT using x509 - initialize fails and disconnects', function () {
+      it('invokes initializeCBS if NOT using x509 - initialize fails and disconnects', function () {
         var testError = new errors.NotConnectedError('fake error');
         fakeBaseClient.initializeCBS = sinon.stub().callsArgWith(0, testError);
         transport.connect(function(err) {
@@ -462,7 +462,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_06_006: [If `initializeCBS` is successful, `putToken` shall be invoked If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter audience, created from the sr of the sas signature, the next parameter of the actual sas, and a callback.]*/
       /*Tests_SRS_NODE_DEVICE_AMQP_06_009: [If `putToken` is not successful then the client will remain disconnected and the callback will be called with an error per SRS_NODE_DEVICE_AMQP_16_009.]*/
-      it('Invokes putToken - putToken fails and disconnects', function () {
+      it('invokes putToken - putToken fails and disconnects', function () {
         var testError = new errors.NotConnectedError('fake error');
         fakeBaseClient.putToken = sinon.stub().callsArgWith(2, testError);
         transport.connect(function(err) {
@@ -471,7 +471,7 @@ describe('Amqp', function () {
       });
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_008: [The `done` callback method passed in argument shall be called if the connection is established]*/
-      it('Connect calls done when using sas', function () {
+      it('connect calls done when using sas', function () {
         transport.connect(function (err, result) {
           assert.isNotOk(err);
           assert.instanceOf(result, results.Connected);
@@ -886,11 +886,52 @@ describe('Amqp', function () {
         });
       });
 
-      /*Tests_SRS_NODE_DEVICE_AMQP_16_053: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called while using token-based authentication.]*/
-      it('throws an InvalidOperationError if called on an transport using token-based authentication', function () {
+      /*Tests_SRS_NODE_DEVICE_AMQP_16_053: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called with a cert option while using token-based authentication.]*/
+      it('throws an InvalidOperationError if cert option passed and called on an transport using token-based authentication', function () {
         assert.throws(function () {
           transport.setOptions({ cert: 'cert' });
         }, errors.InvalidOperationError);
+      });
+
+      /* Tests_SRS_NODE_DEVICE_AMQP_06_012: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called with token renewal options while using using cert or non renewal authentication.] */
+      it('throws when token renewal options passed and uses cert based authentication', () => {
+        transport = new Amqp(fakeX509AuthenticationProvider, fakeBaseClient);
+        assert.throws(() => {
+          transport.setOptions({
+            tokenRenewal: {
+              tokenValidTimeInSeconds: 10,
+              tokenRenewalMarginInSeconds: 1
+            }
+          }, () => {});
+        });
+      });
+
+      it('throws when token renewal options passed and uses non-renewal authentication ', () => {
+        assert.throws(() => {
+          transport.setOptions({
+            tokenRenewal: {
+              tokenValidTimeInSeconds: 10,
+              tokenRenewalMarginInSeconds: 1
+            }
+          }, () => {});
+        });
+      });
+
+      /* Tests_SRS_NODE_DEVICE_AMQP_06_013: [The authentication providers `setTokenRenewalValues` method shall be invoked with the values provided in the tokenRenewal option.] */
+      it('invokes the setTokenRenewalValues of the provider ', (done) => {
+        fakeTokenAuthenticationProvider.setTokenRenewalValues = sinon.stub();
+        const tokenOptions = {
+          tokenRenewal: {
+            tokenValidTimeInSeconds: 10,
+            tokenRenewalMarginInSeconds: 1
+          }
+        };
+        transport.setOptions(tokenOptions);
+        assert(fakeTokenAuthenticationProvider.setTokenRenewalValues.calledOnceWith(
+          tokenOptions.tokenRenewal.tokenValidTimeInSeconds,
+          tokenOptions.tokenRenewal.tokenRenewalMarginInSeconds
+        ));
+        done();
       });
 
       /*Tests_SRS_NODE_DEVICE_AMQP_13_001: [ The setOptions method shall save the options passed in. ]*/

@@ -170,6 +170,10 @@ Host: <config.host>
 
 **SRS_NODE_DEVICE_HTTP_41_003: [** `productInfo` must be set before `http._ensureAgentString` is invoked for the first time **]**
 
+**SRS_NODE_DEVICE_HTTP_06_001: [** The `setOptions` method shall throw an `InvalidOperationError` if the method is called with token renewal options while using using cert or non renewal authentication. **]**
+
+**SRS_NODE_DEVICE_HTTP_06_002: [** The authentication providers `setTokenRenewalValues` method shall be invoked with the values provided in the tokenRenewal option. **]**
+
 ### abandon(message, done)
 
 **SRS_NODE_DEVICE_HTTP_RECEIVER_16_009: [**`abandon` shall construct an HTTP request using information supplied by the caller, as follows:
