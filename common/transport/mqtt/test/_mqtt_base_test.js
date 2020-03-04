@@ -10,6 +10,8 @@ var sinon = require('sinon');
 var MqttBase = require('../lib/mqtt_base.js').MqttBase;
 var FakeMqtt = require('./_fake_mqtt.js');
 var errors = require('azure-iot-common').errors;
+var tls = require('tls');
+var constants = require('constants');
 
 describe('MqttBase', function () {
   var fakeConfig;
@@ -71,9 +73,14 @@ describe('MqttBase', function () {
 
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_002: [The `connect` method shall use the authentication parameters contained in the `config` argument to connect to the server.]*/
     it('uses the authentication parameters contained in the config structure (SharedAccessSignature)', function () {
+      var fakeSecureContext = '__fakeSecureContext__';
       var config = fakeConfig;
       var fakemqtt = new FakeMqtt();
       var transport = new MqttBase(fakemqtt);
+
+      // This stubs createSecureContext, which is used by mqtt_base to manually
+      // override the TLS configuration for X509 and TLS1.2 Enforcement.
+      var tlsStub = sinon.stub(tls,'createSecureContext').callsFake(()=>{ return fakeSecureContext});
 
       fakemqtt.connect = function(host, options) {
         assert.strictEqual(options.clientId, config.clientId);
@@ -87,13 +94,16 @@ describe('MqttBase', function () {
         /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_016: [The `connect` method shall configure the `keepalive` ping interval to 3 minutes by default since the Azure Load Balancer TCP Idle timeout default is 4 minutes.]*/
         assert.isFalse(options.reschedulePings);
         assert.strictEqual(options.keepalive, 180);
+        assert.strictEqual(options.secureContext, fakeSecureContext);
+        tlsStub.restore();
         return new EventEmitter();
       };
 
       transport.connect(config, function () {});
     });
 
-    it('uses the authentication parameters contained in the config structure (x509)', function () {
+    it.only('uses the authentication parameters contained in the config structure (x509)', function () {
+
       var config = {
         uri: 'uri',
         clientId: 'clientId',
@@ -104,6 +114,17 @@ describe('MqttBase', function () {
           passphrase: 'passphrase'
         }
       };
+      class fakeCreateSecureContext {
+        constructor (fakeSecureContext) {
+          this.cert = fakeSecureContext.cert;
+          this.key = fakeSecureContext.key;
+          this.passphrase = fakeSecureContext.passphrase;
+          this.secureOptions = fakeSecureContext.secureOptions;
+          this.ca = fakeSecureContext.ca;
+        }
+      }
+
+      var stub = sinon.stub(tls, 'createSecureContext').callsFake(function (arg) { return new fakeCreateSecureContext(arg) })
 
       var fakemqtt = new FakeMqtt();
       var transport = new MqttBase(fakemqtt);
@@ -111,9 +132,12 @@ describe('MqttBase', function () {
       fakemqtt.connect = function(host, options) {
         assert.strictEqual(options.clientId, config.clientId);
         assert.strictEqual(options.username, config.username);
-        assert.strictEqual(options.cert, config.x509.cert);
-        assert.strictEqual(options.key, config.x509.key);
-        assert.strictEqual(options.passphrase, config.x509.passphrase);
+
+        // SecureContext
+        assert.strictEqual(options.secureContext.cert, config.x509.cert);
+        assert.strictEqual(options.secureContext.key, config.x509.key);
+        assert.strictEqual(options.secureContext.passphrase, config.x509.passphrase);
+        assert.strictEqual(options.secureContext.secureOptions, constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_TLSv1 | constants.SSL_OP_NO_TLSv1_1);
 
         assert.strictEqual(options.protocolId, 'MQTT');
         assert.strictEqual(options.protocolVersion, 4);
@@ -122,6 +146,7 @@ describe('MqttBase', function () {
         /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_016: [The `connect` method shall configure the `keepalive` ping interval to 3 minutes by default since the Azure Load Balancer TCP Idle timeout default is 4 minutes.]*/
         assert.isFalse(options.reschedulePings);
         assert.strictEqual(options.keepalive, 180);
+        stub.restore();
         return new EventEmitter();
       };
 

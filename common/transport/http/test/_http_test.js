@@ -6,6 +6,7 @@ const node_http = require('http');
 var assert = require('chai').assert;
 var sinon = require('sinon');
 var EventEmitter = require('events');
+var tls = require('tls');
 
 describe('Http', function() {
   describe('#parseErrorBody', function(){
@@ -141,7 +142,24 @@ describe('Http', function() {
       assert.strictEqual(https.request.args[0][0].ca, fakeCA);
       callback();
     });
+
+    it ('sets the secureContext option through a call to TLS', function(callback) {
+      let fakeSecureContext = '__fakeSecureContext__'
+      sinon.stub(tls, 'createSecureContext')
+      .callsFake(()=>{
+        return fakeSecureContext;
+      });
+      
+      var http = new Http();
+      http.setOptions(fakeOptions);
+      http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, function() {});
+      assert(https.request.called);
+      var httpOptions = https.request.firstCall.args[0];
+      assert.strictEqual(httpOptions.secureContext, fakeSecureContext);
+      callback();
+    });
   });
+
 
   describe('#buildRequest', function() {
     var fakeOptions = {
