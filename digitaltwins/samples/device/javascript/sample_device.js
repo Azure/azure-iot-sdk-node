@@ -163,29 +163,34 @@ const capabilityModel = 'urn:azureiot:samplemodel:1';
 
 async function main() {
   const digitalTwinClient = new DigitalTwinClient(capabilityModel, deviceClient);
-  digitalTwinClient.addInterfaceInstance(environmentalSensor);
-  digitalTwinClient.addInterfaceInstance(deviceInformation);
-  digitalTwinClient.addInterfaceInstance(modelDefinition);
-  await digitalTwinClient.register();
+
+  // TBC: Do we create these inline
+  await digitalTwinClient.addInterfaceInstances(
+    environmentalSensor,
+    deviceInformation,
+    modelDefinition
+  );
+
+  await digitalTwinClient.enableCommands();
 
   // report all of the device information.
-  await deviceInformation.manufacturer.report('Contoso Device Corporation');
-  await deviceInformation.model.report('Contoso 4762B-turbo');
-  await deviceInformation.swVersion.report('3.1');
-  await deviceInformation.osName.report('ContosoOS');
-  await deviceInformation.processorArchitecture.report('4762');
-  await deviceInformation.processorManufacturer.report('Contoso Foundries');
-  await deviceInformation.totalStorage.report('64000');
-  await deviceInformation.totalMemory.report('640');
-  console.log('Done sending device Information');
+  // TBC: Should 1st parameter be the interface or the ID
+  await digitalTwinClient.report(deviceInformation, {
+    manufacturer: 'Contoso Device Corporation', 
+    model: 'Contoso 47-turbo',
+    swVersion: '3.1',
+    osName: 'ContosoOS',
+    processorArchitecture, 'Cotosox86',
+    processorManufacturer: 'Contoso Industries',
+    totalStorage: 65000,
+    totalMemory: 640,
+  });
 
-  // report a property
-  await environmentalSensor.state.report(true);
-  console.log('reported state property online as true');
+  await digitalTwinClient.report(environmentalSensor, { state: true });
 
   // send telemetry every 5 seconds
   setInterval( async () => {
-    await environmentalSensor.sendTelemetry( { temp: 10 + (Math.random() * 90), humid: 1 + (Math.random() * 99) } );
+    await digitalTwinClient.sendTelemetry(environmentalSensor, { temp:  + (Math.random() * 90), humid: 1 + (Math.random() * 99) })
   }, 5000);
 };
 
