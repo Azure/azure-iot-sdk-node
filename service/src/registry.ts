@@ -401,7 +401,7 @@ export class Registry {
     }, done);
   }
 
-    /**
+  /**
    * @method              module:azure-iothub.Registry#importDevicesFromBlobByIdentity
    * @description         Imports devices from a blob in bulk job.
    * @param {String}      inputBlobContainerUri   The URI to a container with a blob named 'devices.txt' containing a list of devices to import.
@@ -429,7 +429,8 @@ export class Registry {
       {
         'type': 'import',
         'inputBlobContainerUri': '<input container Uri given as parameter>',
-        'outputBlobContainerUri': '<output container Uri given as parameter>'
+        'outputBlobContainerUri': '<output container Uri given as parameter>',
+        'storageAuthenticationType': 'IdentityBased'
       }
       ```]*/
       const path = '/jobs/create' + endpoint.versionQueryString();
@@ -440,7 +441,7 @@ export class Registry {
         'type': 'import',
         'inputBlobContainerUri': inputBlobContainerUri,
         'outputBlobContainerUri': outputBlobContainerUri,
-        'storageAuthenticationType': "IdentityBased"
+        'storageAuthenticationType': 'IdentityBased'
       };
 
       this._restApiClient.executeApiCall('POST', path, httpHeaders, importRequest, _callback);
@@ -516,7 +517,8 @@ export class Registry {
       {
         'type': 'export',
         'outputBlobContainerUri': '<output container Uri given as parameter>',
-        'excludeKeysInExport': '<excludeKeys Boolean given as parameter>'
+        'excludeKeysInExport': '<excludeKeys Boolean given as parameter>',
+        'storageAuthenticationType': 'IdentityBased'
       }
       ```]*/
       const path = '/jobs/create' + endpoint.versionQueryString();
@@ -527,7 +529,7 @@ export class Registry {
         'type': 'export',
         'outputBlobContainerUri': outputBlobContainerUri,
         'excludeKeysInExport': excludeKeys,
-        'storageAuthenticationType': "IdentityBased"
+        'storageAuthenticationType': 'IdentityBased'
       };
 
       this._restApiClient.executeApiCall('POST', path, httpHeaders, exportRequest, _callback);
