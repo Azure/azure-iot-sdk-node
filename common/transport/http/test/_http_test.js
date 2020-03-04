@@ -46,11 +46,13 @@ describe('Http', function() {
     beforeEach(function() {
       sinon.stub(https, 'request').returns(new EventEmitter());
       sinon.stub(node_http, 'request').returns(new EventEmitter());
+      sinon.stub(tls, 'createSecureContext').returns(0xFFFF);
     });
 
     afterEach(function() {
       https.request.restore();
       node_http.request.restore();
+      tls.createSecureContext.restore();
     });
 
     it ('uses the right agent value', function(callback) {
@@ -115,9 +117,10 @@ describe('Http', function() {
         passphrase: 'pass1'
       };
       http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, x509Options, function() {});
-      assert.strictEqual(https.request.args[0][0].cert, 'cert1');
-      assert.strictEqual(https.request.args[0][0].key, 'key1');
-      assert.strictEqual(https.request.args[0][0].passphrase, 'pass1');
+      var spyCall = tls.createSecureContext.getCall(0);
+      assert.strictEqual(spyCall.lastArg.cert, 'cert1');
+      assert.strictEqual(spyCall.lastArg.key, 'key1');
+      assert.strictEqual(spyCall.lastArg.passphrase, 'pass1');
       callback();
     });
 
@@ -130,7 +133,8 @@ describe('Http', function() {
       
       http.setOptions(fakeOptions);
       http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, x509Options, function() {});
-      assert.strictEqual(https.request.args[0][0].clientCertEngine, clientCertEngine);
+      let spyCall = tls.createSecureContext.getCall(0);
+      assert.strictEqual(spyCall.lastArg.clientCertEngine, clientCertEngine);
       callback();
     });
 
@@ -139,12 +143,14 @@ describe('Http', function() {
       var fakeCA = 'ca';
       http.setOptions({ ca: fakeCA });
       http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, null, function() {});
-      assert.strictEqual(https.request.args[0][0].ca, fakeCA);
+      let spyCall = tls.createSecureContext.getCall(0);
+      assert.strictEqual(spyCall.lastArg.ca, fakeCA);
       callback();
     });
 
-    it ('sets the secureContext option through a call to TLS', function(callback) {
+    it('sets the secureContext option through a call to TLS', function(callback) {
       let fakeSecureContext = '__fakeSecureContext__'
+      tls.createSecureContext.restore();
       sinon.stub(tls, 'createSecureContext')
       .callsFake(()=>{
         return fakeSecureContext;
