@@ -45,12 +45,6 @@ describe.only('TLS 1.2 enforcement test over Http', function () {
     return Math.ceil(raw);
   }
 
-  function createTestMessage(body) {
-    var msg = new Message(body);
-    msg.expiryTimeUtc = Date.now() + 60000; // Expire 60s from now, to reduce the chance of us hitting the 50-message limit on the IoT Hub
-    return msg;
-  }
-
   function createNewSas() {
     var cs = ConnectionString.parse(provisionedDevice.connectionString);
     var sas = SharedAccessSignature.create(cs.HostName, provisionedDevice.deviceId, cs.SharedAccessKey, thirtySecondsFromNow());
@@ -77,7 +71,7 @@ describe.only('TLS 1.2 enforcement test over Http', function () {
         assert.isTrue(secureContextSpy.called, 'createSecureContext not called');
         assert.exists(secureContextSpy.args[0][0].secureOptions, 'secureOptions not passed to createSecureContext');
         finishUp();
-      })
+      });
     });
   });
 });

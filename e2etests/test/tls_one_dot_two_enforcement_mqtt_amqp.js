@@ -67,7 +67,7 @@ transport.forEach(function (deviceTransport) {
       deviceClient.open(function (err) {
         // the spy will check that we did infact call the secureContext in the TLS.
         assert.isTrue(secureContextSpy.called, 'createSecureContext not called');
-        assert.exists(secureContextSpy.args[0][0].secureOptions, 'secureOptions not passed to createSecureContext')
+        assert.exists(secureContextSpy.args[0][0].secureOptions, 'secureOptions not passed to createSecureContext');
 
         if (err) return testCallback(err);
         finishUp();
