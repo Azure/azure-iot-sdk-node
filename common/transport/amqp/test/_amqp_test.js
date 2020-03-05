@@ -64,7 +64,7 @@ describe('Amqp', function () {
     });
 
     it('sets the connection to use the custom defined secureContext', function (done) {
-      let fakeSecureContext = '__fakeSecureContext__';
+      let fakeSecureContext = 0xFFFF;
       var amqp = new Amqp();
       var fakeConnection = new EventEmitter();
       fakeConnection.name = 'connection';
@@ -76,9 +76,9 @@ describe('Amqp', function () {
       fakeConnection.create_session = sinon.stub().returns(fakeSession);
       fakeSession.open = () => {};
       sinon.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
-      amqp.connect({uri: 'uri'}, function() {
-        assert.isNotOk(err,'client connected');
-      assert.strictEqual(amqp._rheaContainer.connect.args[0][0]['secureContext'], fakeSecureContext);
+      amqp.connect({uri: 'uri'}, function(err) {
+        assert.strictEqual(amqp._rheaContainer.connect.args[0][0]['secureContext'], fakeSecureContext);
+        done();
       });
     })
   });
