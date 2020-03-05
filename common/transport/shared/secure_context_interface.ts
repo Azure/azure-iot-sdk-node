@@ -10,7 +10,7 @@ export interface SecureContext {
     /**
      * Key associated with the X509 certificate.
      */
-    key?:  string | Buffer;
+    key?: string | Buffer;
 
     /**
      * Passphrase used to decode the key associated with the X509 certificate.

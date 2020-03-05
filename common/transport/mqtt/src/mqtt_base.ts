@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { SecureContext } from './secure_context_interface';
+import { SecureContext } from '../../shared/secure_context_interface';
 import { EventEmitter } from 'events';
 import * as machina from 'machina';
 import { Client as MqttClient, IClientOptions, IClientPublishOptions, IClientSubscribeOptions } from 'mqtt';
