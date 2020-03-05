@@ -5,8 +5,7 @@
 
 import { request as http_request, ClientRequest, IncomingMessage } from 'http';
 import { request as https_request, RequestOptions } from 'https';
-import { Message, X509 } from 'azure-iot-common';
-import { SecureContext } from '../../shared/secure_context_interface';
+import { Message, X509, SecureContext } from 'azure-iot-common';
 import constants = require('constants');
 import { createSecureContext } from 'tls';
 import dbg = require('debug');

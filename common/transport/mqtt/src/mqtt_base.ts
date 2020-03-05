@@ -3,13 +3,12 @@
 
 'use strict';
 
-import { SecureContext } from '../../shared/secure_context_interface';
 import { EventEmitter } from 'events';
 import * as machina from 'machina';
 import { Client as MqttClient, IClientOptions, IClientPublishOptions, IClientSubscribeOptions } from 'mqtt';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-mqtt-base:MqttBase');
-import { errors, results, SharedAccessSignature, X509 } from 'azure-iot-common';
+import { errors, results, SharedAccessSignature, X509, SecureContext } from 'azure-iot-common';
 import constants = require('constants');
 import tls = require('tls');
 

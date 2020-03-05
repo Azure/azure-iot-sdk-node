@@ -17,6 +17,7 @@ export { RetryPolicy, NoRetry, ExponentialBackOffWithJitter } from './lib/retry_
 export { AuthenticationProvider, AuthenticationType } from './lib/authentication_provider';
 export { getAgentPlatformString } from './lib/utils';
 export { Callback, ErrorCallback, NoErrorCallback, DoubleValueCallback, TripleValueCallback, HttpResponseCallback, callbackToPromise, doubleValueCallbackToPromise, errorCallbackToPromise, noErrorCallbackToPromise, tripleValueCallbackToPromise, httpCallbackToPromise } from './lib/promise_utils'
+export { SecureContext } from './lib/secure_context_interface'
 
 export interface Receiver extends EventEmitter {
     on(type: 'message', func: (msg: Message) => void): this;

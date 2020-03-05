@@ -6,12 +6,11 @@
 import * as machina from 'machina';
 import urlParser = require('url');
 import { AmqpMessage } from './amqp_message';
-import { errors, results, Message } from 'azure-iot-common';
+import { errors, results, Message, SecureContext } from 'azure-iot-common';
 import { ClaimsBasedSecurityAgent } from './amqp_cbs';
 import { SenderLink } from './sender_link';
 import { ReceiverLink } from './receiver_link';
 import { AmqpLink } from './amqp_link_interface';
-import { SecureContext } from '../../shared/secure_context_interface';
 import { create_container as rheaCreateContainer, EventContext, AmqpError, Container, Connection, Session } from 'rhea';
 import merge = require('lodash.merge');
 import * as dbg from 'debug';
