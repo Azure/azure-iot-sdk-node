@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { SecureContext } from './secure_context_interface';
 import { EventEmitter } from 'events';
 import * as machina from 'machina';
 import { Client as MqttClient, IClientOptions, IClientPublishOptions, IClientSubscribeOptions } from 'mqtt';
@@ -214,7 +215,7 @@ export class MqttBase extends EventEmitter {
 
   private _connectClient(callback: (err?: Error, connack?: any) => void): void {
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_002: [The `connect` method shall use the authentication parameters contained in the `config` argument to connect to the server.]*/
-    let secureContext = {}; // YMTODO: Make this a ISecureContext, rather than a generic object. Then fix all the <any> types
+    let secureContext : SecureContext;
     let options: IClientOptions = {
       protocolId: 'MQTT',
       protocolVersion: 4,
@@ -229,12 +230,12 @@ export class MqttBase extends EventEmitter {
     };
 
 
-    (<any>secureContext).secureOptions = constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_TLSv1 | constants.SSL_OP_NO_TLSv1_1;
+    secureContext.secureOptions = constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_TLSv1 | constants.SSL_OP_NO_TLSv1_1;
 
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_18_001: [The `connect` method shall set the `ca` option based on the `ca` string passed in the `options` structure via the `setOptions` function.]*/
     if (this._options) {
       if (this._options.ca) {
-        (<any>secureContext).ca = this._options.ca;
+        secureContext.ca = this._options.ca;
       }
       /*Codes_SRS_NODE_COMMON_MQTT_BASE_18_002: [The `connect` method shall set the `wsOptions.agent` option based on the `mqtt.webSocketAgent` object passed in the `options` structure via the `setOptions` function.]*/
       if (this._options.mqtt && this._options.mqtt.webSocketAgent) {
@@ -248,9 +249,9 @@ export class MqttBase extends EventEmitter {
       debug('username: ' + options.username);
       debug('uri:      ' + this._config.uri);
     } else {
-      (<any>secureContext).cert = this._config.x509.cert;
-      (<any>secureContext).key = this._config.x509.key;
-      (<any>secureContext).passphrase = this._config.x509.passphrase;
+      secureContext.cert = this._config.x509.cert;
+      secureContext.key = this._config.x509.key;
+      secureContext.passphrase = this._config.x509.passphrase;
     }
 
     // tslint:disable-next-line: no-string-literal

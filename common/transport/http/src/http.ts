@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { SecureContext } from './secure_context_interface';
 import { request as http_request, ClientRequest, IncomingMessage } from 'http';
 import { request as https_request, RequestOptions } from 'https';
 import { Message, X509 } from 'azure-iot-common';
@@ -95,7 +96,7 @@ export class Http {
       options = undefined;
     }
 
-    let secureContext = {}; // YMTODO: Make this a ISecureContext, rather than a generic object. Then fix all the <any> types
+    let secureContext: SecureContext;
 
     let x509Options: X509 = null;
     if (options && this.isX509Options(options)) {
@@ -144,23 +145,18 @@ export class Http {
 
     /*Codes_SRS_NODE_HTTP_16_001: [If `options` has x509 properties, the certificate, key and passphrase in the structure shall be used to authenticate the connection.]*/
     if (x509Options) {
-      (<any>secureContext).cert = (x509Options as X509).cert;
-      (<any>secureContext).key = (x509Options as X509).key;
-      (<any>secureContext).passphrase = (x509Options as X509).passphrase;
-      (<any>secureContext).clientCertEngine = (x509Options as X509).clientCertEngine;
-      // YMTODO: When this has been validated as working, remove these.
-      // httpOptions.cert = (x509Options as X509).cert;
-      // httpOptions.key = (x509Options as X509).key;
-      // httpOptions.passphrase = (x509Options as X509).passphrase;
-      // httpOptions.clientCertEngine = (x509Options as X509).clientCertEngine;
+      secureContext.cert = (x509Options as X509).cert;
+      secureContext.key = (x509Options as X509).key;
+      secureContext.passphrase = (x509Options as X509).passphrase;
+      secureContext.clientCertEngine = (x509Options as X509).clientCertEngine;
     }
 
     if (this._options && this._options.ca) {
-      (<any>secureContext).ca = this._options.ca;
+      secureContext.ca = this._options.ca;
       // httpOptions.ca = this._options.ca;
     }
 
-    (<any>secureContext).secureOptions = constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_TLSv1 | constants.SSL_OP_NO_TLSv1_1;
+    secureContext.secureOptions = constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_TLSv1 | constants.SSL_OP_NO_TLSv1_1;
     (<any>httpOptions).secureContext = tls.createSecureContext(secureContext);
 
     let httpReq = request(httpOptions, (response: IncomingMessage): void => {

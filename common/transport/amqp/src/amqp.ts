@@ -11,6 +11,7 @@ import { ClaimsBasedSecurityAgent } from './amqp_cbs';
 import { SenderLink } from './sender_link';
 import { ReceiverLink } from './receiver_link';
 import { AmqpLink } from './amqp_link_interface';
+import { SecureContext } from './secure_context_interface'
 import { create_container as rheaCreateContainer, EventContext, AmqpError, Container, Connection, Session } from 'rhea';
 import merge = require('lodash.merge');
 import * as dbg from 'debug';
@@ -695,13 +696,13 @@ export class Amqp {
    */
   connect(config: AmqpBaseTransportConfig, done: GenericAmqpBaseCallback<any>): void {
 
-    let secureContext = {}; // YMTODO: Make this a ISecureContext, rather than a generic object. Then fix all the <any> types
+    let secureContext : SecureContext;
     let parsedUrl = urlParser.parse(config.uri);
     let connectionParameters: any = {};
     if (config.sslOptions) {
-      (<any>secureContext).cert = config.sslOptions.cert;
-      (<any>secureContext).key = config.sslOptions.key;
-      (<any>secureContext).ca = config.sslOptions.ca;
+      secureContext.cert = config.sslOptions.cert;
+      secureContext.key = config.sslOptions.key;
+      secureContext.ca = config.sslOptions.ca;
       // connectionParameters.cert = config.sslOptions.cert;
       // connectionParameters.key = config.sslOptions.key;
       // connectionParameters.ca = config.sslOptions.ca;
@@ -722,7 +723,7 @@ export class Amqp {
     }
     connectionParameters = merge(connectionParameters, config.policyOverride);
 
-    (<any>secureContext).secureOptions = constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_TLSv1 | constants.SSL_OP_NO_TLSv1_1;
+    secureContext.secureOptions = constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_TLSv1 | constants.SSL_OP_NO_TLSv1_1;
     (<any>connectionParameters).secureContext = tls.createSecureContext(secureContext);
 
     this._config = config;
