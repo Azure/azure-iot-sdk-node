@@ -79,9 +79,12 @@ export class SharedAccessSignatureAuthenticationProvider extends EventEmitter im
     const sas: SharedAccessSignature = SharedAccessSignature.parse(sharedAccessSignature);
     const decodedUri = decodeURIComponent(sas.sr);
     const uriSegments = decodedUri.split('/');
+    const uriDeviceId = (uriSegments.length >= 3 && uriSegments[1] === 'devices') ? (uriSegments[2]) : null;
+    const uriModuleId = (uriSegments.length >= 5 && uriSegments[3] === 'modules') ? (uriSegments[4]) : null;
     const credentials: TransportConfig = {
       host: uriSegments[0],
-      deviceId: uriSegments[uriSegments.length - 1],
+      deviceId: uriDeviceId,
+      moduleId: uriModuleId,
       sharedAccessSignature: sharedAccessSignature
     };
 

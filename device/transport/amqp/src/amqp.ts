@@ -690,8 +690,20 @@ export class Amqp extends EventEmitter implements DeviceTransport {
       if (this._authenticationProvider.type === AuthenticationType.X509) {
         (this._authenticationProvider as X509AuthenticationProvider).setX509Options(options);
       } else {
-        /*Codes_SRS_NODE_DEVICE_AMQP_16_053: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called while using token-based authentication.]*/
+        /*Codes_SRS_NODE_DEVICE_AMQP_16_053: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called with a cert option while using token-based authentication.]*/
         throw new errors.InvalidOperationError('cannot set X509 options when using token-based authentication');
+      }
+    }
+
+    /* Codes_SRS_NODE_DEVICE_AMQP_06_012: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called with token renewal options while using using cert or non renewal authentication.] */
+    if (options.tokenRenewal) {
+      if (this._authenticationProvider.type === AuthenticationType.X509) {
+        throw new errors.InvalidOperationError('cannot set token renewal options when using X509 authentication');
+      } else if (!this._authenticationProvider.setTokenRenewalValues) {
+        throw new errors.InvalidOperationError('can only set token renewal options when using pre-shared key authentication');
+      } else {
+        /* Codes_SRS_NODE_DEVICE_AMQP_06_013: [The authentication providers `setTokenRenewalValues` method shall be invoked with the values provided in the tokenRenewal option.] */
+        this._authenticationProvider.setTokenRenewalValues(options.tokenRenewal.tokenValidTimeInSeconds, options.tokenRenewal.tokenRenewalMarginInSeconds);
       }
     }
 
