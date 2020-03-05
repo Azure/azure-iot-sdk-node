@@ -23,7 +23,7 @@ var debug = require('debug')('e2etests:tls_one_dot_two_enforcement');
 
 var httpTransport = require('azure-iot-device-http').Http;
 
-describe.only('TLS 1.2 enforcement test over Http', function () {
+describe('TLS 1.2 enforcement test over Http', function () {
   this.timeout(60000);
   var provisionedDevice;
 
