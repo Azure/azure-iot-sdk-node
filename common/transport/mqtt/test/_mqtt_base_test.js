@@ -102,7 +102,7 @@ describe('MqttBase', function () {
       transport.connect(config, function () {});
     });
 
-    it.only('uses the authentication parameters contained in the config structure (x509)', function () {
+    it('uses the authentication parameters contained in the config structure (x509)', function () {
 
       var config = {
         uri: 'uri',
@@ -178,9 +178,19 @@ describe('MqttBase', function () {
       var fakemqtt = new FakeMqtt();
       var transport = new MqttBase(fakemqtt);
 
+      // var mock = sinon.mock(tls);
+      var stub = sinon.stub(tls, 'createSecureContext').callsFake((arg) => {
+        if(!!arg.ca) {
+          return 0xFFFF;
+        }
+        return 0;
+      });
+
       transport.setOptions({ca: fakeCa});
       fakemqtt.connect = function(host, options) {
-        assert.strictEqual(options.ca, fakeCa);
+        assert.isTrue(stub.called);
+        assert.strictEqual(stub.getCall(0).lastArg.ca, fakeCa);
+        assert.strictEqual(options.secureContext, 0xFFFF);
         done();
       };
       transport.connect(fakeConfig, function () {});
