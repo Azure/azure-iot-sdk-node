@@ -95,7 +95,7 @@ export class Http {
       options = undefined;
     }
 
-    let secureContext: SecureContext;
+    let secureContext: SecureContext = {} as SecureContext;
 
     let x509Options: X509 = null;
     if (options && this.isX509Options(options)) {

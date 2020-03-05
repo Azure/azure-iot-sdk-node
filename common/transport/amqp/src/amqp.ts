@@ -695,7 +695,7 @@ export class Amqp {
    */
   connect(config: AmqpBaseTransportConfig, done: GenericAmqpBaseCallback<any>): void {
 
-    let secureContext : SecureContext;
+    let secureContext: SecureContext = {} as SecureContext;
     let parsedUrl = urlParser.parse(config.uri);
     let connectionParameters: any = {};
     if (config.sslOptions) {

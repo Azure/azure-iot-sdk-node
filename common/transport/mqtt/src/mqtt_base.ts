@@ -211,7 +211,7 @@ export class MqttBase extends EventEmitter {
 
   private _connectClient(callback: (err?: Error, connack?: any) => void): void {
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_002: [The `connect` method shall use the authentication parameters contained in the `config` argument to connect to the server.]*/
-    let secureContext : SecureContext;
+    let secureContext: SecureContext = {} as SecureContext;
     let options: IClientOptions = {
       protocolId: 'MQTT',
       protocolVersion: 4,
