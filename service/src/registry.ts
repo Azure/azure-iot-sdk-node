@@ -403,7 +403,7 @@ export class Registry {
 
   /**
    * @method              module:azure-iothub.Registry#importDevicesFromBlobByIdentity
-   * @description         Imports devices from a blob in bulk job.
+   * @description         Imports devices from a blob in bulk job and uses identity.
    * @param {String}      inputBlobContainerUri   The URI to a container with a blob named 'devices.txt' containing a list of devices to import.
    * @param {String}      outputBlobContainerUri  The URI to a container where a blob will be created with logs of the import process.
    * @param {Function}    [done]                  The optional function to call when the job has been created, with two arguments: an error object if an
@@ -419,7 +419,7 @@ export class Registry {
       /* Codes_SRS_NODE_IOTHUB_REGISTRY_07_002: [A ReferenceError shall be thrown if exportBlobContainerUri is falsy] */
       if (!outputBlobContainerUri) throw new ReferenceError('outputBlobContainerUri cannot be falsy');
 
-      /*SRS_NODE_IOTHUB_REGISTRY_07_031: [The `importDeviceFromBlob` method shall construct an HTTP request using information supplied by the caller, as follows:
+      /*SRS_NODE_IOTHUB_REGISTRY_07_003: [The `importDevicesFromBlobByIdentity` method shall construct an HTTP request using information supplied by the caller, as follows:
       ```
       POST /jobs/create?api-version=<version> HTTP/1.1
       Authorization: <config.sharedAccessSignature>
@@ -504,10 +504,10 @@ export class Registry {
   exportDevicesToBlobByIdentity(outputBlobContainerUri: string, excludeKeys: boolean): Promise<Registry.JobStatus>;
   exportDevicesToBlobByIdentity(outputBlobContainerUri: string, excludeKeys: boolean, done?: Callback<Registry.JobStatus>): Promise<Registry.JobStatus> | void {
     return callbackToPromise((_callback) => {
-      /* Codes_SRS_NODE_IOTHUB_REGISTRY_16_004: [A ReferenceError shall be thrown if outputBlobContainerUri is falsy] */
+      /* Codes_SRS_NODE_IOTHUB_REGISTRY_07_004: [A ReferenceError shall be thrown if outputBlobContainerUri is falsy] */
       if (!outputBlobContainerUri) throw new ReferenceError('outputBlobContainerUri cannot be falsy');
 
-      /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_032: [** The `exportDeviceToBlob` method shall construct an HTTP request using information supplied by the caller, as follows:
+      /*Codes_SRS_NODE_IOTHUB_REGISTRY_07_005: [** The `exportDeviceToBlob` method shall construct an HTTP request using information supplied by the caller, as follows:
       ```
       POST /jobs/create?api-version=<version> HTTP/1.1
       Authorization: <config.sharedAccessSignature>

@@ -1,7 +1,9 @@
 # azure-iothub.Registry Requirements
 
 ## Overview
+
 `Registry` represents an IoT hub’s device identity service, known as the Registry.  A consumer can add, remove, update, or read device metadata from the Device Registry.
+
 ## Example usage
 
 ```javascript
@@ -35,6 +37,7 @@ registry.create({deviceId: 'dev1'}, function (err, dev) {
 ## Constructors/Factory methods
 
 ### Registry(config, restApiClient) [constructor]
+
 The `Registry` constructor initializes a new instance of a `Registry` object that is used to conduct operations on the device registry.
 
 **SRS_NODE_IOTHUB_REGISTRY_16_023: [** The `Registry` constructor shall throw a `ReferenceError` if the `config` object is falsy. **]**
@@ -69,10 +72,12 @@ The `fromSharedAccessSignature` static method returns a new instance of the `Reg
 ## CRUD operation for the device registry
 
 ### normalize authentication
+
 With 2017-06-30 api release crud device information MUST contain authentication specification
 
 **SRS_NODE_IOTHUB_REGISTRY_06_028: [** A device information with no authentication will be normalized with the following authentication:
-```
+
+```Node
 authentication : {
   type: 'sas',
   symmetricKey: {
@@ -81,6 +86,7 @@ authentication : {
   }
 }
 ```
+
 **]**
 
 **SRS_NODE_IOTHUB_REGISTRY_06_029: [** A device information with an authentication object that contains a `type` property is considered normalized. **]**
@@ -90,6 +96,7 @@ authentication : {
 **SRS_NODE_IOTHUB_REGISTRY_06_031: [** A device information with an authentication object that doesn't contain the x509Thumbprint property will be normalized with a `type` property with value "sas". **]**
 
 ### create(deviceInfo, done)
+
 The `create` method creates a device with the given device properties.
 
 **SRS_NODE_IOTHUB_REGISTRY_07_001: [** The `create` method shall throw `ReferenceError` if the `deviceInfo` argument is falsy. **]**
@@ -257,6 +264,7 @@ Request-Id: <guid>
 ## Bulk Import/Export of devices
 
 ### importDevicesFromBlob(inputBlobContainerUri, outputBlobContainerUri, done)
+
 The `importDevicesFromBlob` imports a list of devices from a blob named devices.txt found at the input URI given as a parameter, and output logs from the import job in a blob at found at the output URI given as a parameter.
 
 **SRS_NODE_IOTHUB_REGISTRY_16_001: [** A `ReferenceError` shall be thrown if `inputBlobContainerUri` is falsy **]**
@@ -264,7 +272,8 @@ The `importDevicesFromBlob` imports a list of devices from a blob named devices.
 **SRS_NODE_IOTHUB_REGISTRY_16_002: [** A `ReferenceError` shall be thrown if `outputBlobContainerUri` is falsy **]**
 
 **SRS_NODE_IOTHUB_REGISTRY_16_031: [** The `importDeviceFromBlob` method shall construct an HTTP request using information supplied by the caller, as follows:
-```
+
+```Node
 POST /jobs/create?api-version=<version> HTTP/1.1
 Authorization: <config.sharedAccessSignature>
 Content-Type: application/json; charset=utf-8
@@ -276,15 +285,44 @@ Request-Id: <guid>
   "outputBlobContainerUri": "<output container Uri given as parameter>"
 }
 ```
+
+**]**
+
+### importDevicesFromBlobByIdentity(inputBlobContainerUri, outputBlobContainerUri, done)
+
+The `importDevicesFromBlobByIdentity` imports a list of devices from a blob named devices.txt found at the input URI given as a parameter, and output logs from the import job in a blob at found at the output URI given as a parameter.
+
+**SRS_NODE_IOTHUB_REGISTRY_07_001: [** A `ReferenceError` shall be thrown if `inputBlobContainerUri` is falsy **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_07_002: [** A `ReferenceError` shall be thrown if `outputBlobContainerUri` is falsy **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_07_003: [** The `importDeviceFromBlobByIdentity` method shall construct an HTTP request using information supplied by the caller, as follows:
+
+```Node
+POST /jobs/create?api-version=<version> HTTP/1.1
+Authorization: <config.sharedAccessSignature>
+Content-Type: application/json; charset=utf-8
+Request-Id: <guid>
+
+{
+  "type": "import",
+  "inputBlobContainerUri": "<input container Uri given as parameter>",
+  "outputBlobContainerUri": "<output container Uri given as parameter>",
+  'storageAuthenticationType': 'IdentityBased'
+}
+```
+
 **]**
 
 ### exportDevicesToBlob(outputBlobContainerUri, excludeKeys, done)
+
 The `exportDevicesToBlob` exports a list of devices in a blob named devices.txt and logs from the export job at the output URI given as a parameter given as a parameter the export will contain security keys if the excludeKeys is false.
 
 **SRS_NODE_IOTHUB_REGISTRY_16_004: [** A `ReferenceError` shall be thrown if outputBlobContainerUri is falsy **]**
 
 **SRS_NODE_IOTHUB_REGISTRY_16_032: [** The `exportDeviceToBlob` method shall construct an HTTP request using information supplied by the caller, as follows:
-```
+
+```Node
 POST /jobs/create?api-version=<version> HTTP/1.1
 Authorization: <config.sharedAccessSignature>
 Content-Type: application/json; charset=utf-8
@@ -296,9 +334,35 @@ Request-Id: <guid>
   "excludeKeysInExport": "<excludeKeys Boolean given as parameter>"
 }
 ```
+
+**]**
+
+### exportDevicesToBlobByIdentity(outputBlobContainerUri, excludeKeys, done)
+
+The `exportDevicesToBlobByIdentity` exports a list of devices in a blob named devices.txt and logs from the export job at the output URI given as a parameter given as a parameter the export will contain security keys if the excludeKeys is false.
+
+**SRS_NODE_IOTHUB_REGISTRY_07_004: [** A `ReferenceError` shall be thrown if outputBlobContainerUri is falsy **]**
+
+**SRS_NODE_IOTHUB_REGISTRY_07_005: [** The `exportDeviceToBlobByIdentity` method shall construct an HTTP request using information supplied by the caller, as follows:
+
+```Node
+POST /jobs/create?api-version=<version> HTTP/1.1
+Authorization: <config.sharedAccessSignature>
+Content-Type: application/json; charset=utf-8
+Request-Id: <guid>
+
+{
+  "type": "export",
+  "outputBlobContainerUri": "<output container Uri given as parameter>",
+  "excludeKeysInExport": "<excludeKeys Boolean given as parameter>",
+  'storageAuthenticationType': 'IdentityBased'
+}
+```
+
 **]**
 
 ### listJobs(done)
+
 The `listJobs` method will obtain a list of recent bulk import/export jobs (including the active one, if any).
 
 **SRS_NODE_IOTHUB_REGISTRY_16_037: [** The `listJobs` method shall construct an HTTP request using information supplied by the caller, as follows:
@@ -310,6 +374,7 @@ Request-Id: <guid>
 **]**
 
 ### getJob(jobId, done)
+
 The `getJob` method will obtain status information of the bulk import/export job identified by the `jobId` parameter.
 
 **SRS_NODE_IOTHUB_REGISTRY_16_006: [** A `ReferenceError` shall be thrown if jobId is falsy **]**

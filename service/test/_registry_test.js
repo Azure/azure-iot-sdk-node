@@ -713,7 +713,8 @@ describe('Registry', function () {
     {
       "type": "import",
       "inputBlobContainerUri": "<input container Uri given as parameter>",
-      "outputBlobContainerUri": "<output container Uri given as parameter>"
+      "outputBlobContainerUri": "<output container Uri given as parameter>",
+      'storageAuthenticationType': 'IdentityBased'
     }
     ```]*/
     it('constructs a valid HTTP request', function (testCallback) {
@@ -763,7 +764,8 @@ describe('Registry', function () {
     {
       "type": "export",
       "outputBlobContainerUri": "<output container Uri given as parameter>",
-      "excludeKeysInExport": "<excludeKeys Boolean given as parameter>"
+      "excludeKeysInExport": "<excludeKeys Boolean given as parameter>",
+      'storageAuthenticationType': 'IdentityBased'
     }
     ```]*/
     [true, false].forEach(function (fakeExcludeKeys) {
