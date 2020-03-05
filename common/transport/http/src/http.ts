@@ -3,12 +3,12 @@
 
 'use strict';
 
-import { SecureContext } from '../../shared/secure_context_interface';
 import { request as http_request, ClientRequest, IncomingMessage } from 'http';
 import { request as https_request, RequestOptions } from 'https';
 import { Message, X509 } from 'azure-iot-common';
+import { SecureContext } from '../../shared/secure_context_interface';
 import constants = require('constants');
-import tls = require('tls');
+import { createSecureContext } from 'tls';
 import dbg = require('debug');
 const debug = dbg('azure-iot-http-base.Http');
 
@@ -157,7 +157,7 @@ export class Http {
     }
 
     secureContext.secureOptions = constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_TLSv1 | constants.SSL_OP_NO_TLSv1_1;
-    (<any>httpOptions).secureContext = tls.createSecureContext(secureContext);
+    (<any>httpOptions).secureContext = createSecureContext(secureContext);
 
     let httpReq = request(httpOptions, (response: IncomingMessage): void => {
       let responseBody = '';

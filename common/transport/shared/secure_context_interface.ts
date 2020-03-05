@@ -36,3 +36,4 @@ export interface SecureContext {
      */
     secureOptions: number;
   }
+  

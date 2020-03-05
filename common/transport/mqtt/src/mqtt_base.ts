@@ -13,9 +13,6 @@ import { errors, results, SharedAccessSignature, X509 } from 'azure-iot-common';
 import constants = require('constants');
 import tls = require('tls');
 
-
-
-
 /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_004: [The `MqttBase` constructor shall instanciate the default MQTT.JS library if no argument is passed to it.]*/
 /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_005: [The `MqttBase` constructor shall use the object passed as argument instead of the default MQTT.JS library if it's not falsy.]*/
 /**
