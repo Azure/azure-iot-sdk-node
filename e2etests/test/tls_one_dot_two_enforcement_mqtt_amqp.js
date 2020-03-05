@@ -60,6 +60,7 @@ transport.forEach(function (deviceTransport) {
 
       var finishUp = function() {
         deviceClient.close(function () {
+          secureContextSpy.restore();
           testCallback();
         });
       };
