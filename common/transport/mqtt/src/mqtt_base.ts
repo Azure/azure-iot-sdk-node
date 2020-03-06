@@ -210,8 +210,11 @@ export class MqttBase extends EventEmitter {
   }
 
   private _connectClient(callback: (err?: Error, connack?: any) => void): void {
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_41_001: [The `connect` method shall enforce the use of TLS 1.2 (not on websockets).]*/
+    let secureContext: SecureContext = { 
+      secureOptions: constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_TLSv1 | constants.SSL_OP_NO_TLSv1_1
+    };
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_002: [The `connect` method shall use the authentication parameters contained in the `config` argument to connect to the server.]*/
-    let secureContext: SecureContext = {} as SecureContext;
     let options: IClientOptions = {
       protocolId: 'MQTT',
       protocolVersion: 4,
@@ -225,13 +228,14 @@ export class MqttBase extends EventEmitter {
       reschedulePings: false
     };
 
-
-    secureContext.secureOptions = constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_TLSv1 | constants.SSL_OP_NO_TLSv1_1;
-
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_18_001: [The `connect` method shall set the `ca` option based on the `ca` string passed in the `options` structure via the `setOptions` function.]*/
     if (this._options) {
       if (this._options.ca) {
-        secureContext.ca = this._options.ca;
+        if (this._options.mqtt.webSocketAgent) { // do not add ca to secureContext if using WebSockets.
+          options.ca = this._options.ca
+        } else {
+          secureContext.ca = this._options.ca;
+        }
       }
       /*Codes_SRS_NODE_COMMON_MQTT_BASE_18_002: [The `connect` method shall set the `wsOptions.agent` option based on the `mqtt.webSocketAgent` object passed in the `options` structure via the `setOptions` function.]*/
       if (this._options.mqtt && this._options.mqtt.webSocketAgent) {
@@ -245,12 +249,17 @@ export class MqttBase extends EventEmitter {
       debug('username: ' + options.username);
       debug('uri:      ' + this._config.uri);
     } else {
-      secureContext.cert = this._config.x509.cert;
-      secureContext.key = this._config.x509.key;
-      secureContext.passphrase = this._config.x509.passphrase;
+      if (this._options.mqtt.webSocketAgent) {
+        options.cert = this._config.x509.cert;
+        options.key = this._config.x509.key;
+        (<any>options).passphrase = this._config.x509.passphrase;
+      } else {
+        secureContext.cert = this._config.x509.cert;
+        secureContext.key = this._config.x509.key;
+        secureContext.passphrase = this._config.x509.passphrase;
+      }
     }
 
-    // tslint:disable-next-line: no-string-literal
     (<any>options).secureContext = tls.createSecureContext(secureContext);
 
     const createErrorCallback = (eventName) => {

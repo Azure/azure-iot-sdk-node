@@ -27,10 +27,10 @@ phases:
         lerna run build
     displayName: 'Bootstrap & Build'
 
-  - script: 'lerna run ci'
-    displayName: 'Unit & Integration Tests'
-    env:
-      IOTHUB_CONNECTION_STRING: $(LINUX-IOTHUB-CONNECTION-STRING)
+  # - script: 'lerna run ci'
+  #   displayName: 'Unit & Integration Tests'
+  #   env:
+  #     IOTHUB_CONNECTION_STRING: $(LINUX-IOTHUB-CONNECTION-STRING)
 
   - script: 'lerna run e2e'
     displayName: 'E2E Tests'

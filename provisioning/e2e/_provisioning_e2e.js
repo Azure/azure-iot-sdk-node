@@ -504,7 +504,7 @@ var SymmetricKeyGroup = function() {
   };
 };
 
-describe('E2E Device Provisioning', function() {
+describe.only('E2E Device Provisioning', function() {
   this.timeout(120000);
   before(createAllCerts);
 
