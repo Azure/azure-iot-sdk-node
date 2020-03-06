@@ -249,15 +249,9 @@ export class MqttBase extends EventEmitter {
       debug('username: ' + options.username);
       debug('uri:      ' + this._config.uri);
     } else {
-      if (this._options.mqtt && this._options.mqtt.webSocketAgent) {
-        options.cert = this._config.x509.cert;
-        options.key = this._config.x509.key;
-        (<any>options).passphrase = this._config.x509.passphrase;
-      } else {
         secureContext.cert = this._config.x509.cert;
         secureContext.key = this._config.x509.key;
         secureContext.passphrase = this._config.x509.passphrase;
-      }
     }
 
     (<any>options).secureContext = tls.createSecureContext(secureContext);
