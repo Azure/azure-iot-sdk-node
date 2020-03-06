@@ -231,7 +231,7 @@ export class MqttBase extends EventEmitter {
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_18_001: [The `connect` method shall set the `ca` option based on the `ca` string passed in the `options` structure via the `setOptions` function.]*/
     if (this._options) {
       if (this._options.ca) {
-        if (this._options.mqtt.webSocketAgent) { // do not add ca to secureContext if using WebSockets.
+        if (this._options.mqtt && this._options.mqtt.webSocketAgent) { // do not add ca to secureContext if using WebSockets.
           options.ca = this._options.ca
         } else {
           secureContext.ca = this._options.ca;
@@ -249,7 +249,7 @@ export class MqttBase extends EventEmitter {
       debug('username: ' + options.username);
       debug('uri:      ' + this._config.uri);
     } else {
-      if (this._options.mqtt.webSocketAgent) {
+      if (this._options.mqtt && this._options.mqtt.webSocketAgent) {
         options.cert = this._config.x509.cert;
         options.key = this._config.x509.key;
         (<any>options).passphrase = this._config.x509.passphrase;
