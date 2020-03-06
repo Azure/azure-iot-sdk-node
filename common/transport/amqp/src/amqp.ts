@@ -695,18 +695,23 @@ export class Amqp {
    */
   connect(config: AmqpBaseTransportConfig, done: GenericAmqpBaseCallback<any>): void {
 
-    let secureContext: SecureContext = {
-      secureOptions: constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_TLSv1 | constants.SSL_OP_NO_TLSv1_1
+    {
     };
     let parsedUrl = urlParser.parse(config.uri);
     let connectionParameters: any = {};
     if (config.sslOptions) {
-      // secureContext.cert = config.sslOptions.cert;
-      // secureContext.key = config.sslOptions.key;
-      // secureContext.ca = config.sslOptions.ca;
-      connectionParameters.cert = config.sslOptions.cert;
-      connectionParameters.key = config.sslOptions.key;
-      connectionParameters.ca = config.sslOptions.ca;
+      if (parsedUrl.protocol === 'wss:') { // AMQPWS does not support TLS version enforcement currently
+        connectionParameters.cert = config.sslOptions.cert;
+        connectionParameters.key = config.sslOptions.key;
+        connectionParameters.ca = config.sslOptions.ca;
+      } else {
+        let secureContext = {} as SecureContext;
+        secureContext.secureOptions = constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_TLSv1 | constants.SSL_OP_NO_TLSv1_1
+        secureContext.cert = config.sslOptions.cert;
+        secureContext.key = config.sslOptions.key;
+        secureContext.ca = config.sslOptions.ca;
+        (<any>connectionParameters).secureContext = tls.createSecureContext(secureContext);
+      }
     }
     connectionParameters.port = parsedUrl.port ? ( parsedUrl.port ) : (5671);
     connectionParameters.transport = 'tls';
@@ -724,7 +729,6 @@ export class Amqp {
     }
     connectionParameters = merge(connectionParameters, config.policyOverride);
 
-    (<any>connectionParameters).secureContext = tls.createSecureContext(secureContext);
 
     this._config = config;
     this._fsm.handle('connect', connectionParameters, done);
