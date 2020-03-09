@@ -87,6 +87,8 @@ If you encounter any bugs, have suggestions for new features or if you would lik
 
 The Azure IoT SDK for Node.js supports the LTS and Current versions of the [Node.js runtime](https://nodejs.org/en/about/releases/).
 
+To enforce strong security practices the Device Client enforces secure connections using TLS 1.2 and above for AMQP, MQTT, and HTTP connections.
+
 # Long Term Support
 
 The project offers a Long Term Support (LTS) version to allow users that do not need the latest features to be shielded from unwanted changes.

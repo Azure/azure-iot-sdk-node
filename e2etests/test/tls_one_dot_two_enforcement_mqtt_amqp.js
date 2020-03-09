@@ -58,20 +58,24 @@ transport.forEach(function (deviceTransport) {
 
       var deviceClient = Client.fromSharedAccessSignature(createNewSas(), deviceTransport);
 
-      var finishUp = function() {
+      var finishUp = function(e) {
         deviceClient.close(function () {
           secureContextSpy.restore();
-          testCallback();
+          testCallback(e);
         });
       };
 
       deviceClient.open(function (err) {
         // the spy will check that we did infact call the secureContext in the TLS.
-        assert.isTrue(secureContextSpy.called, 'createSecureContext not called');
-        assert.exists(secureContextSpy.args[0][0].secureOptions, 'secureOptions not passed to createSecureContext');
-
         if (err) return testCallback(err);
-        finishUp();
+        try {
+          assert.isTrue(secureContextSpy.called, 'createSecureContext not called');
+          assert.exists(secureContextSpy.args[0][0].secureOptions, 'secureOptions not passed to createSecureContext');
+          finishUp();
+        } catch (e) {
+          finishUp(e)
+        }
+
       });
     });
   });
