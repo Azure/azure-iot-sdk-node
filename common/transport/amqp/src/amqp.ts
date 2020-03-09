@@ -694,9 +694,6 @@ export class Amqp {
    * @param {Function}                    done          Callback called when the connection is established or if an error happened.
    */
   connect(config: AmqpBaseTransportConfig, done: GenericAmqpBaseCallback<any>): void {
-
-    {
-    };
     let parsedUrl = urlParser.parse(config.uri);
     let connectionParameters: any = {};
     if (config.sslOptions) {
@@ -706,7 +703,7 @@ export class Amqp {
         connectionParameters.ca = config.sslOptions.ca;
       } else {
         let secureContext = {} as SecureContext;
-        secureContext.secureOptions = constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_TLSv1 | constants.SSL_OP_NO_TLSv1_1
+        secureContext.secureOptions = constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_TLSv1 | constants.SSL_OP_NO_TLSv1_1;
         secureContext.cert = config.sslOptions.cert;
         secureContext.key = config.sslOptions.key;
         secureContext.ca = config.sslOptions.ca;
