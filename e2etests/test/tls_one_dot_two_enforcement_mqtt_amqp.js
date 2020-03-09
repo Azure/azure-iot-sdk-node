@@ -73,7 +73,7 @@ transport.forEach(function (deviceTransport) {
           assert.exists(secureContextSpy.args[0][0].secureOptions, 'secureOptions not passed to createSecureContext');
           finishUp();
         } catch (e) {
-          finishUp(e)
+          finishUp(e);
         }
 
       });
