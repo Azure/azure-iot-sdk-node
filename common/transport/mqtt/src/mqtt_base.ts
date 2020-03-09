@@ -232,8 +232,6 @@ export class MqttBase extends EventEmitter {
     if (this._options) {
       if (this._options.ca) {
         if (this._options.mqtt && this._options.mqtt.webSocketAgent) { // do not add ca to secureContext if using WebSockets.
-          options.ca = this._options.ca
-        } else {
           secureContext.ca = this._options.ca;
         }
       }
@@ -249,9 +247,9 @@ export class MqttBase extends EventEmitter {
       debug('username: ' + options.username);
       debug('uri:      ' + this._config.uri);
     } else {
-        secureContext.cert = this._config.x509.cert;
-        secureContext.key = this._config.x509.key;
-        secureContext.passphrase = this._config.x509.passphrase;
+      secureContext.cert = this._config.x509.cert;
+      secureContext.key = this._config.x509.key;
+      secureContext.passphrase = this._config.x509.passphrase;
     }
 
     (<any>options).secureContext = tls.createSecureContext(secureContext);

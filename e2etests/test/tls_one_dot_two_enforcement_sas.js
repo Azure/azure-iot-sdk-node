@@ -21,6 +21,68 @@ var debug = require('debug')('e2etests:tls_one_dot_two_enforcement');
  * There is no enforcement for WS on MQTT or AMQP currently.
  */
 
+var transport  = [
+  // require('azure-iot-device-amqp').Amqp,
+  require('azure-iot-device-mqtt').Mqtt
+];
+
+transport.forEach(function (deviceTransport) {
+  describe('TLS 1.2 enforcement test over ' + deviceTransport.name, function () {
+    this.timeout(60000);
+    var provisionedDevice;
+
+    before(function (beforeCallback) {
+      DeviceIdentityHelper.createDeviceWithSymmetricKey(function (err, testDeviceInfo) {
+        debug('created test device: ' + testDeviceInfo.deviceId);
+        provisionedDevice = testDeviceInfo;
+        beforeCallback(err);
+      });
+    });
+
+    after(function (afterCallback) {
+      debug('deleting test device: ' + provisionedDevice.deviceId);
+      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+    });
+
+    function thirtySecondsFromNow() {
+      var raw = (Date.now() / 1000) + 30;
+      return Math.ceil(raw);
+    }
+
+    function createNewSas() {
+      var cs = ConnectionString.parse(provisionedDevice.connectionString);
+      var sas = SharedAccessSignature.create(cs.HostName, provisionedDevice.deviceId, cs.SharedAccessKey, thirtySecondsFromNow());
+      return sas.toString();
+    }
+
+    it('Provides TLS with a SecureContext with SecureOptions', function (testCallback) {
+      var secureContextSpy = sinon.spy(tls, 'createSecureContext');
+
+      var deviceClient = Client.fromSharedAccessSignature(createNewSas(), deviceTransport);
+
+      var finishUp = function(e) {
+        deviceClient.close(function () {
+          secureContextSpy.restore();
+          testCallback(e);
+        });
+      };
+
+      deviceClient.open(function (err) {
+        // the spy will check that we did infact call the secureContext in the TLS.
+        if (err) return testCallback(err);
+        try {
+          assert.isTrue(secureContextSpy.called, 'createSecureContext not called');
+          assert.exists(secureContextSpy.args[0][0].secureOptions, 'secureOptions not passed to createSecureContext');
+          finishUp();
+        } catch (e) {
+          finishUp(e);
+        }
+
+      });
+    });
+  });
+});
+
 var httpTransport = require('azure-iot-device-http').Http;
 
 describe('TLS 1.2 enforcement test over Http', function () {
