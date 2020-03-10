@@ -7,17 +7,17 @@
 
 # Getting Started
 
-### Why Azure IoT? 
+### Why Azure IoT?
 
-**[Click here][iot-dev-center]** to learn how Azure IoT can empower the digital transformation of your organization. 
+**[Click here][iot-dev-center]** to learn how Azure IoT can empower the digital transformation of your organization.
 
 ### New to Azure IoT Hub?
 
-**[Introduction to Azure IoT Hub:][iot-device-ecosystem]** Follow this guide to learn how to set up an IoT Hub and IoT Hub devices. 
+**[Introduction to Azure IoT Hub:][iot-device-ecosystem]** Follow this guide to learn how to set up an IoT Hub and IoT Hub devices.
 
-### New to the Azure IoT Node.JS SDK? 
+### New to the Azure IoT Node.JS SDK?
 
-**[Try a Device Sample:](./device/samples/)** Create a basic Node.js application following one of the device client library samples provided. 
+**[Try a Device Sample:](./device/samples/)** Create a basic Node.js application following one of the device client library samples provided.
 
 
 # Components
@@ -34,7 +34,7 @@ The Azure IoT Node.js SDK enables developers to create IoT solutions written in 
 | [Device Library Samples](./device/samples/) | [Service Library Samples](./service/samples/) |
 |-----------------------------------------|-------------------------------------------|
 
-# npm Package List 
+# npm Package List
 
 **Azure IoT Hub Device Client Libraries**
 
@@ -91,7 +91,7 @@ The Azure IoT SDK for Node.js supports the LTS and Current versions of the [Node
 
 The project offers a Long Term Support (LTS) version to allow users that do not need the latest features to be shielded from unwanted changes.
 
-A new LTS version will be created every 6 months. The lifetime of an LTS branch is currently planned for one year. LTS branches receive all bug fixes that fall in one of these categories:
+The maintenance lifetime of an LTS branch is currently planned for 12 months. LTS branches receive all bug fixes that fall in one of these categories:
 
 - security bugfixes
 - critical bugfixes (crashes, memory leaks, etc.)
@@ -107,9 +107,11 @@ Below is a table showing the mapping of the LTS branches to the package versions
 | NPM Package | Github Branch | LTS Status | LTS Start Date | Maintenance End Date | Removed Date |
 | :-----------: | :-----------: | :--------: | :------------: | :------------------: | :----------: |
 | 1.7.x         | [lts_09_2018](https://github.com/Azure/azure-iot-sdk-node/tree/lts_09_2018)   | Deprecated | 2018-09-16     | 2019-09-16           | 2020-03-09   |
-| 1.11.x        | [lts_09_2019](https://github.com/Azure/azure-iot-sdk-node/tree/lts_09_2019)   | Active     | 2019-09-09     | 2020-03-09           | 2020-09-19   |
+| 1.11.x        | [lts_09_2019](https://github.com/Azure/azure-iot-sdk-node/tree/lts_09_2019)   | Active     | 2019-09-09     | 2020-09-09           | 2021-03-09   |
 
 <sup>1</sup> All scheduled dates are subject to change by the Azure IoT SDK team.
+
+New LTS branches will generally be released around the midpoint of the current LTS.
 
 # Read More
 
