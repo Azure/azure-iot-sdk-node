@@ -22,7 +22,7 @@ var debug = require('debug')('e2etests:tls_one_dot_two_enforcement');
  */
 
 var transport  = [
-  // require('azure-iot-device-amqp').Amqp,
+  require('azure-iot-device-amqp').Amqp,
   require('azure-iot-device-mqtt').Mqtt
 ];
 
@@ -131,7 +131,7 @@ describe('TLS 1.2 enforcement test over Http', function () {
         if (err) return testCallback(err);
         // the spy will check that we did infact call the secureContext in the TLS.
         assert.isTrue(secureContextSpy.called, 'createSecureContext not called');
-        assert.exists(secureContextSpy.args[0][0].secureOptions, 'secureOptions not passed to createSecureContext');
+        assert.exists(secureContextSpy.args[0][0].secureProtocol, "TLSv1_2_method");
         finishUp();
       });
     });
