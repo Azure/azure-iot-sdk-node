@@ -4,8 +4,8 @@
 
 'use strict';
 
-export const apiVersion = '2020-03-13';
-export const previewApiVersion = '2020-03-13';
+export const apiVersion = '2019-03-30';
+export const latestApiVersion = '2020-03-13';
 
 export function devicePath(deviceId: string): string {
   return '/devices/' + deviceId;
@@ -64,5 +64,11 @@ export function moduleInputMessagePath(deviceId: string, moduleId: string): stri
 }
 
 export function versionQueryString(): string {
-  return '?api-version=' + apiVersion;
+  // This change is temporary
+  if (process.env.EnableStorageIdentity == "1") {
+    return '?api-version=' + latestApiVersion;
+  }
+  else {
+    return '?api-version=' + apiVersion;
+  }
 }

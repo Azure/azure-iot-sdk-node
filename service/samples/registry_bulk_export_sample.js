@@ -58,50 +58,14 @@ blobSvc.createContainerIfNotExists(inputContainerName, function (error) {
                      * There can only be one active job at a time, therefore, you can uncomment the export section and comment the import
                      * session or vice versa depending on what part of the code you would like to test.
                      */
-
-                    //    registry.exportDevicesToBlobByIdentity(outputSasUrl, false, function (error, result) {
-                    //        if (error) {
-                    //            console.error('Could not create export job: ' + error.message);
-                    //        } else {
-                    //            console.log('--------------\r\nDevices Export Job Identifier:--------------\r\n' + result);
-                    //            var jobId = result.jobId;
-                    //            var interval = setInterval(function () {
-                    //                registry.getJob(jobId, function (error, result) {
-                    //                   if (error) {
-                    //                       console.error('Could not get job status: ' + error.message + ' : ' + error.responseBody);
-                    //                   } else {
-                    //                       console.log('--------------\r\njob ' + jobId + ' status:\r\n--------------\r\n' + result);
-                    //                       var status = result.status;
-                    //                       if (status === "completed") {
-                    //                           clearInterval(interval);
-                    //                       }
-                    //                   }
-                    //               });
-                    //            }, 500);
-                    //        }
-                    //    });
-
-
-                       registry.importDevicesFromBlobByIdentity(inputSasUrl, outputSasUrl, function (error, result) {
-                          if (error) {
-                              console.error('Could not create import devices: ' + error.message + ' : ' + error.responseBody);
-                          } else {
-                              console.log('--------------\r\nDevices Import Job Identifier:--------------\r\n' + result);
-                              var jobId = result.jobId;
-                              var interval = setInterval(function () {
-                                  /**
-                                   * Uncomment this code to test cancelling a job.
-                                   */
-                                //   registry.cancelJob(jobId, function (error, result) {
-                                //       if (error) {
-                                //           console.error('Could not cancel job: ' + error.message + ' : ' + error.responseBody);
-                                //       } else {
-                                //           console.log('--------------\r\njob ' + jobId + ' cancelled:\r\n--------------\r\n' + result);
-                                //           clearInterval(interval);
-                                //       }
-                                //   });
-
-                                  registry.getJob(jobId, function (error, result) {
+                       registry.exportDevicesToBlobByIdentity(outputSasUrl, false, function (error, result) {
+                           if (error) {
+                               console.error('Could not create export job: ' + error.message);
+                           } else {
+                               console.log('--------------\r\nDevices Export Job Identifier:--------------\r\n' + result);
+                               var jobId = result.jobId;
+                               var interval = setInterval(function () {
+                                   registry.getJob(jobId, function (error, result) {
                                       if (error) {
                                           console.error('Could not get job status: ' + error.message + ' : ' + error.responseBody);
                                       } else {
@@ -112,8 +76,8 @@ blobSvc.createContainerIfNotExists(inputContainerName, function (error) {
                                           }
                                       }
                                   });
-                              }, 500);
-                          }
+                               }, 500);
+                           }
                        });
 
                        registry.listJobs(function(error, result) {
