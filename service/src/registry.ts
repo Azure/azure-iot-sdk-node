@@ -403,7 +403,8 @@ export class Registry {
 
   /**
    * @method              module:azure-iothub.Registry#importDevicesFromBlobByIdentity
-   * @description         Imports devices from a blob in bulk job and uses identity.
+   * @description         Imports devices from a blob in bulk job using the configured identity.  This API initially has limited availablity and is only is implemented in a few regions.
+   *                      If a user wishes to try it out, they will need to set an Environment Variable of "EnabledStorageIdentity" and set it to "1"
    * @param {String}      inputBlobContainerUri   The URI to a container with a blob named 'devices.txt' containing a list of devices to import.
    * @param {String}      outputBlobContainerUri  The URI to a container where a blob will be created with logs of the import process.
    * @param {Function}    [done]                  The optional function to call when the job has been created, with two arguments: an error object if an
@@ -433,7 +434,7 @@ export class Registry {
         'storageAuthenticationType': 'IdentityBased'
       }
       ```]*/
-      const path = '/jobs/create' + endpoint.versionQueryString();
+      const path = '/jobs/create' + endpoint.versionQueryStringLimitedAvailability();
       const httpHeaders = {
         'Content-Type': 'application/json; charset=utf-8'
       };
@@ -493,7 +494,8 @@ export class Registry {
 
   /**
    * @method              module:azure-iothub.Registry#exportDevicesToBlob
-   * @description         Export devices to a blob in a bulk job.
+   * @description         Export devices to a blob in a bulk job using the configured identity.  This API initially has limited availablity and is only is implemented in a few regions.
+   *                      If a user wishes to try it out, they will need to set an Environment Variable of "EnabledStorageIdentity" and set it to "1"
    * @param {String}      outputBlobContainerUri  The URI to a container where a blob will be created with logs of the export process.
    * @param {Boolean}     excludeKeys             Boolean indicating whether security keys should be excluded from the exported data.
    * @param {Function}    [done]                  The optional function to call when the job has been created, with two arguments: an error object if an
@@ -521,7 +523,7 @@ export class Registry {
         'storageAuthenticationType': 'IdentityBased'
       }
       ```]*/
-      const path = '/jobs/create' + endpoint.versionQueryString();
+      const path = '/jobs/create' + endpoint.versionQueryStringLimitedAvailability();
       const httpHeaders = {
         'Content-Type': 'application/json; charset=utf-8'
       };
