@@ -64,12 +64,12 @@ export function moduleInputMessagePath(deviceId: string, moduleId: string): stri
 }
 
 export function versionQueryString(): string {
-  // This change is temporary
   return '?api-version=' + apiVersion;
 }
 
 export function versionQueryStringLimitedAvailability(): string {
-  // This change is temporary
+  // This addition is for the limited Availability of certain service
+  // regions
   if (process.env.EnableStorageIdentity === '1') {
     return '?api-version=' + apiVersionLimitedAvail;
   } else {

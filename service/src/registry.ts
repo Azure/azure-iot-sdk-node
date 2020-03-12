@@ -420,7 +420,7 @@ export class Registry {
       /* Codes_SRS_NODE_IOTHUB_REGISTRY_07_002: [A ReferenceError shall be thrown if exportBlobContainerUri is falsy] */
       if (!outputBlobContainerUri) throw new ReferenceError('outputBlobContainerUri cannot be falsy');
 
-      /*SRS_NODE_IOTHUB_REGISTRY_07_003: [The `importDevicesFromBlobByIdentity` method shall construct an HTTP request using information supplied by the caller, as follows:
+      /* Codes_SRS_NODE_IOTHUB_REGISTRY_07_003: [The `importDevicesFromBlobByIdentity` method shall construct an HTTP request using information supplied by the caller, as follows:
       ```
       POST /jobs/create?api-version=<version> HTTP/1.1
       Authorization: <config.sharedAccessSignature>
@@ -465,7 +465,7 @@ export class Registry {
       /* Codes_SRS_NODE_IOTHUB_REGISTRY_16_004: [A ReferenceError shall be thrown if outputBlobContainerUri is falsy] */
       if (!outputBlobContainerUri) throw new ReferenceError('outputBlobContainerUri cannot be falsy');
 
-      /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_032: [** The `exportDeviceToBlob` method shall construct an HTTP request using information supplied by the caller, as follows:
+      /* Codes_SRS_NODE_IOTHUB_REGISTRY_16_032: [** The `exportDeviceToBlob` method shall construct an HTTP request using information supplied by the caller, as follows:
       ```
       POST /jobs/create?api-version=<version> HTTP/1.1
       Authorization: <config.sharedAccessSignature>

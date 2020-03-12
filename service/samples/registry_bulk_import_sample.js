@@ -61,9 +61,9 @@ blobSvc.createContainerIfNotExists(inputContainerName, function (error) {
                               console.log('--------------\r\nDevices Import Job Identifier:--------------\r\n' + result);
                               var jobId = result.jobId;
                               var interval = setInterval(function () {
-                                  /**
-                                   * Uncomment this code to test cancelling a job.
-                                   */
+                                /**
+                                 * Uncomment this code to test cancelling a job.
+                                 */
                                 //   registry.cancelJob(jobId, function (error, result) {
                                 //       if (error) {
                                 //           console.error('Could not cancel job: ' + error.message + ' : ' + error.responseBody);
