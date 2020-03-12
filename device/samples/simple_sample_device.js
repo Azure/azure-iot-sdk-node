@@ -18,7 +18,6 @@ var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
 
 // fromConnectionString must specify a transport constructor, coming from any transport package.
 var client = Client.fromConnectionString(deviceConnectionString, Protocol);
-client.setOptions({mqtt: {'keepalive': 50}})
 
 var connectCallback = function (err) {
   if (err) {

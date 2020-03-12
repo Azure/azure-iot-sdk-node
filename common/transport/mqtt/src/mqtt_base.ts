@@ -227,16 +227,17 @@ export class MqttBase extends EventEmitter {
       if (this._options.ca) {
         options.ca = this._options.ca;
       }
+
+      /*Codes_SRS_NODE_COMMON_MQTT_BASE_41_001: [The `connect` method shall set the `keepalive` option based on the `keepalive` numeric value passed in the `options` structure via the `setOptions` function.]*/
+      if (this._options.keepalive) {
+        options.keepalive = this._options.keepalive;
+      } 
+
       /*Codes_SRS_NODE_COMMON_MQTT_BASE_18_002: [The `connect` method shall set the `wsOptions.agent` option based on the `mqtt.webSocketAgent` object passed in the `options` structure via the `setOptions` function.]*/
-      if (this._options.mqtt) {
-        if (this._options.mqtt.keepalive) {
-          options.keepalive = this._options.mqtt.keepalive;
-        }
-        if (this._options.mqtt.webSocketAgent) {
-          options.wsOptions = {
-            agent: this._options.mqtt.webSocketAgent
-          };
-        }
+      if (this._options.mqtt && this._options.mqtt.webSocketAgent) {
+        options.wsOptions = {
+          agent: this._options.mqtt.webSocketAgent
+        };
       }
     }
     if (this._config.sharedAccessSignature) {
