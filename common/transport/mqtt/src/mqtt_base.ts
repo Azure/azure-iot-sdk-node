@@ -237,7 +237,7 @@ export class MqttBase extends EventEmitter {
             agent: this._options.mqtt.webSocketAgent
           };
         }
-      } 
+      }
     }
     if (this._config.sharedAccessSignature) {
       options.password = this._config.sharedAccessSignature.toString();
