@@ -70,10 +70,9 @@ export function versionQueryString(): string {
 
 export function versionQueryStringLimitedAvailability(): string {
   // This change is temporary
-  if (process.env.EnableStorageIdentity === "1") {
+  if (process.env.EnableStorageIdentity === '1') {
     return '?api-version=' + apiVersionLimitedAvail;
-  }
-  else {
+  } else {
     return '?api-version=' + apiVersion;
   }
 }
