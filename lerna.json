@@ -8,6 +8,7 @@
     "device/samples",
     "device/transport/*",
     "service",
+    "service/samples",
     "provisioning/*",
     "provisioning/transport/*",
     "provisioning/device/samples",
