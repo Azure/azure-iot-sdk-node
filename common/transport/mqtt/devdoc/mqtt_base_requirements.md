@@ -46,7 +46,7 @@ The `connect` method establishes a connection with the server using the config o
 
 **SRS_NODE_COMMON_MQTT_BASE_18_002: [** The `connect` method shall set the `wsOptions.agent` option based on the `mqtt.webSocketAgent` object passed in the `options` structure via the `setOptions` function. **]**
 
-**SRS_NODE_COMMON_MQTT_BASE_18_002: [** The `connect` method shall set the `wsOptions.agent` option based on the `mqtt.webSocketAgent` object passed in the `options` structure via the `setOptions` function. **]**
+**SRS_NODE_COMMON_MQTT_BASE_41_001: [** The `connect` method shall set the `keepalive` option based on the `keepalive` numeric value passed in the `options` structure via the `setOptions` function. **]**
 
 **SRS_NODE_COMMON_MQTT_BASE_12_005: [** The `connect` method shall call connect on MQTT.JS  library and call the `done` callback with a `null` error object and the result as a second argument. **]**
 
