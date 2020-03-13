@@ -12,7 +12,7 @@ resources:
     type: github
     name: Azure/iot-sdks-e2e-fx
     ref: refs/heads/master
-    endpoint: 'e2e-fx-github-access'
+    endpoint: 'Azure'
 
 jobs:
 - template: vsts/templates/jobs-gate-node.yaml@e2e_fx
