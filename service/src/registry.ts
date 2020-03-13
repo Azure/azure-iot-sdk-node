@@ -402,6 +402,54 @@ export class Registry {
   }
 
   /**
+   * @method              module:azure-iothub.Registry#importDevicesFromBlobByIdentity
+   * @description         Imports devices from a blob in bulk job using the configured identity.  This API initially has limited availablity and is only is implemented in a few regions.
+   *                      If a user wishes to try it out, they will need to set an Environment Variable of "EnabledStorageIdentity" and set it to "1"
+   * @param {String}      inputBlobContainerUri   The URI to a container with a blob named 'devices.txt' containing a list of devices to import.
+   * @param {String}      outputBlobContainerUri  The URI to a container where a blob will be created with logs of the import process.
+   * @param {Function}    [done]                  The optional function to call when the job has been created, with two arguments: an error object if an
+   *                                              an error happened, (null otherwise) and the job status that can be used to track progress of the devices import.
+   * @returns {Promise<Registry.JobStatus> | void} Promise if no callback function was passed, void otherwise.
+   */
+  importDevicesFromBlobByIdentity(inputBlobContainerUri: string, outputBlobContainerUri: string, done: Callback<Registry.JobStatus>): void;
+  importDevicesFromBlobByIdentity(inputBlobContainerUri: string, outputBlobContainerUri: string): Promise<Registry.JobStatus>;
+  importDevicesFromBlobByIdentity(inputBlobContainerUri: string, outputBlobContainerUri: string, done?: Callback<Registry.JobStatus>): Promise<Registry.JobStatus> | void {
+    return callbackToPromise((_callback) => {
+      /* Codes_SRS_NODE_IOTHUB_REGISTRY_07_001: [A ReferenceError shall be thrown if importBlobContainerUri is falsy] */
+      if (!inputBlobContainerUri) throw new ReferenceError('inputBlobContainerUri cannot be falsy');
+      /* Codes_SRS_NODE_IOTHUB_REGISTRY_07_002: [A ReferenceError shall be thrown if exportBlobContainerUri is falsy] */
+      if (!outputBlobContainerUri) throw new ReferenceError('outputBlobContainerUri cannot be falsy');
+
+      /* Codes_SRS_NODE_IOTHUB_REGISTRY_07_003: [The `importDevicesFromBlobByIdentity` method shall construct an HTTP request using information supplied by the caller, as follows:
+      ```
+      POST /jobs/create?api-version=<version> HTTP/1.1
+      Authorization: <config.sharedAccessSignature>
+      Content-Type: application/json; charset=utf-8
+      Request-Id: <guid>
+
+      {
+        'type': 'import',
+        'inputBlobContainerUri': '<input container Uri given as parameter>',
+        'outputBlobContainerUri': '<output container Uri given as parameter>',
+        'storageAuthenticationType': 'IdentityBased'
+      }
+      ```]*/
+      const path = '/jobs/create' + endpoint.versionQueryStringLimitedAvailability();
+      const httpHeaders = {
+        'Content-Type': 'application/json; charset=utf-8'
+      };
+      const importRequest = {
+        'type': 'import',
+        'inputBlobContainerUri': inputBlobContainerUri,
+        'outputBlobContainerUri': outputBlobContainerUri,
+        'storageAuthenticationType': 'IdentityBased'
+      };
+
+      this._restApiClient.executeApiCall('POST', path, httpHeaders, importRequest, _callback);
+    }, done);
+  }
+
+  /**
    * @method              module:azure-iothub.Registry#exportDevicesToBlob
    * @description         Export devices to a blob in a bulk job.
    * @param {String}      outputBlobContainerUri  The URI to a container where a blob will be created with logs of the export process.
@@ -417,7 +465,7 @@ export class Registry {
       /* Codes_SRS_NODE_IOTHUB_REGISTRY_16_004: [A ReferenceError shall be thrown if outputBlobContainerUri is falsy] */
       if (!outputBlobContainerUri) throw new ReferenceError('outputBlobContainerUri cannot be falsy');
 
-      /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_032: [** The `exportDeviceToBlob` method shall construct an HTTP request using information supplied by the caller, as follows:
+      /* Codes_SRS_NODE_IOTHUB_REGISTRY_16_032: [** The `exportDeviceToBlob` method shall construct an HTTP request using information supplied by the caller, as follows:
       ```
       POST /jobs/create?api-version=<version> HTTP/1.1
       Authorization: <config.sharedAccessSignature>
@@ -438,6 +486,52 @@ export class Registry {
         'type': 'export',
         'outputBlobContainerUri': outputBlobContainerUri,
         'excludeKeysInExport': excludeKeys
+      };
+
+      this._restApiClient.executeApiCall('POST', path, httpHeaders, exportRequest, _callback);
+    }, done);
+  }
+
+  /**
+   * @method              module:azure-iothub.Registry#exportDevicesToBlob
+   * @description         Export devices to a blob in a bulk job using the configured identity.  This API initially has limited availablity and is only is implemented in a few regions.
+   *                      If a user wishes to try it out, they will need to set an Environment Variable of "EnabledStorageIdentity" and set it to "1"
+   * @param {String}      outputBlobContainerUri  The URI to a container where a blob will be created with logs of the export process.
+   * @param {Boolean}     excludeKeys             Boolean indicating whether security keys should be excluded from the exported data.
+   * @param {Function}    [done]                  The optional function to call when the job has been created, with two arguments: an error object if an
+   *                                              an error happened, (null otherwise) and the job status that can be used to track progress of the devices export.
+   * @returns {Promise<Registry.JobStatus> | void} Promise if no callback function was passed, void otherwise.
+   */
+  exportDevicesToBlobByIdentity(outputBlobContainerUri: string, excludeKeys: boolean, done: Callback<Registry.JobStatus>): void;
+  exportDevicesToBlobByIdentity(outputBlobContainerUri: string, excludeKeys: boolean): Promise<Registry.JobStatus>;
+  exportDevicesToBlobByIdentity(outputBlobContainerUri: string, excludeKeys: boolean, done?: Callback<Registry.JobStatus>): Promise<Registry.JobStatus> | void {
+    return callbackToPromise((_callback) => {
+      /* Codes_SRS_NODE_IOTHUB_REGISTRY_07_004: [A ReferenceError shall be thrown if outputBlobContainerUri is falsy] */
+      if (!outputBlobContainerUri) throw new ReferenceError('outputBlobContainerUri cannot be falsy');
+
+      /*Codes_SRS_NODE_IOTHUB_REGISTRY_07_005: [** The `exportDeviceToBlob` method shall construct an HTTP request using information supplied by the caller, as follows:
+      ```
+      POST /jobs/create?api-version=<version> HTTP/1.1
+      Authorization: <config.sharedAccessSignature>
+      Content-Type: application/json; charset=utf-8
+      Request-Id: <guid>
+
+      {
+        'type': 'export',
+        'outputBlobContainerUri': '<output container Uri given as parameter>',
+        'excludeKeysInExport': '<excludeKeys Boolean given as parameter>',
+        'storageAuthenticationType': 'IdentityBased'
+      }
+      ```]*/
+      const path = '/jobs/create' + endpoint.versionQueryStringLimitedAvailability();
+      const httpHeaders = {
+        'Content-Type': 'application/json; charset=utf-8'
+      };
+      const exportRequest = {
+        'type': 'export',
+        'outputBlobContainerUri': outputBlobContainerUri,
+        'excludeKeysInExport': excludeKeys,
+        'storageAuthenticationType': 'IdentityBased'
       };
 
       this._restApiClient.executeApiCall('POST', path, httpHeaders, exportRequest, _callback);
