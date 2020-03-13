@@ -6,7 +6,7 @@
 import * as machina from 'machina';
 import urlParser = require('url');
 import { AmqpMessage } from './amqp_message';
-import { errors, results, Message } from 'azure-iot-common';
+import { errors, results, Message, SecureContext } from 'azure-iot-common';
 import { ClaimsBasedSecurityAgent } from './amqp_cbs';
 import { SenderLink } from './sender_link';
 import { ReceiverLink } from './receiver_link';
@@ -15,6 +15,8 @@ import { create_container as rheaCreateContainer, EventContext, AmqpError, Conta
 import merge = require('lodash.merge');
 import * as dbg from 'debug';
 import * as async from 'async';
+import constants = require('constants');
+import tls = require('tls');
 
 const debug = dbg('azure-iot-amqp-base:Amqp');
 
@@ -692,13 +694,23 @@ export class Amqp {
    * @param {Function}                    done          Callback called when the connection is established or if an error happened.
    */
   connect(config: AmqpBaseTransportConfig, done: GenericAmqpBaseCallback<any>): void {
-
     let parsedUrl = urlParser.parse(config.uri);
     let connectionParameters: any = {};
+    let secureContext = {} as SecureContext;
     if (config.sslOptions) {
-      connectionParameters.cert = config.sslOptions.cert;
-      connectionParameters.key = config.sslOptions.key;
-      connectionParameters.ca = config.sslOptions.ca;
+      if (parsedUrl.protocol === 'wss:') { // AMQPWS does not support TLS version enforcement currently
+        connectionParameters.cert = config.sslOptions.cert;
+        connectionParameters.key = config.sslOptions.key;
+        connectionParameters.ca = config.sslOptions.ca;
+      } else {
+        secureContext.cert = config.sslOptions.cert;
+        secureContext.key = config.sslOptions.key;
+        secureContext.ca = config.sslOptions.ca;
+      }
+    }
+    if (parsedUrl.protocol !== 'wss:') {
+      secureContext.secureOptions = constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_TLSv1 | constants.SSL_OP_NO_TLSv1_1;
+      (<any>connectionParameters).secureContext = tls.createSecureContext(secureContext);
     }
     connectionParameters.port = parsedUrl.port ? ( parsedUrl.port ) : (5671);
     connectionParameters.transport = 'tls';
@@ -715,6 +727,8 @@ export class Amqp {
       connectionParameters.sasl_mechanisms[config.saslMechanismName] = config.saslMechanism;
     }
     connectionParameters = merge(connectionParameters, config.policyOverride);
+
+
     this._config = config;
     this._fsm.handle('connect', connectionParameters, done);
   }

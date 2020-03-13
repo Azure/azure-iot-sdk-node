@@ -19,6 +19,7 @@ var errors = require('azure-iot-common').errors;
 var Message = require('azure-iot-common').Message;
 var EventEmitter = require('events').EventEmitter;
 var uuid = require('uuid');
+var tls = require('tls');
 
 describe('Amqp', function () {
   sinon.test = sinonTest;
@@ -61,6 +62,25 @@ describe('Amqp', function () {
         assert.isFalse(amqp._rheaContainer.options.receiver_options.reconnect, 'rhea sender does not reconnect');
       });
     });
+
+    it('sets the connection to use the custom defined secureContext', function (done) {
+      let fakeSecureContext = 0xFFFF;
+      var amqp = new Amqp();
+      var fakeConnection = new EventEmitter();
+      fakeConnection.name = 'connection';
+      var fakeConnectionContext = { connection: fakeConnection };
+      sinon.stub(tls, 'createSecureContext').callsFake(() => { return fakeSecureContext});
+      sinon.stub(amqp._rheaContainer, 'connect').callsFake(() => { process.nextTick(() => {amqp._rheaConnection.emit('connection_open', fakeConnectionContext)}); return fakeConnection});
+      var fakeSession = new EventEmitter();
+      var fakeSessionContext = {session: fakeSession};
+      fakeConnection.create_session = sinon.stub().returns(fakeSession);
+      fakeSession.open = () => {};
+      sinon.stub(fakeSession, 'open').callsFake(() => {process.nextTick(() => {fakeSession.emit('session_open', fakeSessionContext)})});
+      amqp.connect({uri: 'uri'}, function(err) {
+        assert.strictEqual(amqp._rheaContainer.connect.args[0][0]['secureContext'], fakeSecureContext);
+        done();
+      });
+    })
   });
 
   describe('#connect', function () {

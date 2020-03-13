@@ -37,5 +37,6 @@ module.exports = {
   NoErrorCallback: require('./lib/promise_utils').NoErrorCallback,
   DoubleValueCallback: require('./lib/promise_utils').DoubleValueCallback,
   TripleValueCallback: require('./lib/promise_utils').TripleValueCallback,
-  HttpResponseCallback: require('./lib/promise_utils').HttpResponseCallback
+  HttpResponseCallback: require('./lib/promise_utils').HttpResponseCallback,
+  SecureContext: require('./lib/secure_context_interface').SecureContext
 };

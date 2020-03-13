@@ -8,7 +8,9 @@ import * as machina from 'machina';
 import { Client as MqttClient, IClientOptions, IClientPublishOptions, IClientSubscribeOptions } from 'mqtt';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-mqtt-base:MqttBase');
-import { errors, results, SharedAccessSignature, X509 } from 'azure-iot-common';
+import { errors, results, SharedAccessSignature, X509, SecureContext } from 'azure-iot-common';
+import constants = require('constants');
+import tls = require('tls');
 
 /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_004: [The `MqttBase` constructor shall instanciate the default MQTT.JS library if no argument is passed to it.]*/
 /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_005: [The `MqttBase` constructor shall use the object passed as argument instead of the default MQTT.JS library if it's not falsy.]*/
@@ -208,6 +210,10 @@ export class MqttBase extends EventEmitter {
   }
 
   private _connectClient(callback: (err?: Error, connack?: any) => void): void {
+    /*Codes_SRS_NODE_COMMON_MQTT_BASE_41_001: [The `connect` method shall enforce the use of TLS 1.2 (not on websockets).]*/
+    let secureContext: SecureContext = {
+      secureOptions: constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_TLSv1 | constants.SSL_OP_NO_TLSv1_1
+    };
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_002: [The `connect` method shall use the authentication parameters contained in the `config` argument to connect to the server.]*/
     let options: IClientOptions = {
       protocolId: 'MQTT',
@@ -225,7 +231,9 @@ export class MqttBase extends EventEmitter {
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_18_001: [The `connect` method shall set the `ca` option based on the `ca` string passed in the `options` structure via the `setOptions` function.]*/
     if (this._options) {
       if (this._options.ca) {
-        options.ca = this._options.ca;
+        if (this._options.mqtt && this._options.mqtt.webSocketAgent) { // do not add ca to secureContext if using WebSockets.
+          secureContext.ca = this._options.ca;
+        }
       }
       /*Codes_SRS_NODE_COMMON_MQTT_BASE_18_002: [The `connect` method shall set the `wsOptions.agent` option based on the `mqtt.webSocketAgent` object passed in the `options` structure via the `setOptions` function.]*/
       if (this._options.mqtt && this._options.mqtt.webSocketAgent) {
@@ -239,10 +247,12 @@ export class MqttBase extends EventEmitter {
       debug('username: ' + options.username);
       debug('uri:      ' + this._config.uri);
     } else {
-      options.cert = this._config.x509.cert;
-      options.key = this._config.x509.key;
-      (<any>options).passphrase = this._config.x509.passphrase; // forced to cast to any because passphrase is used by tls options but not surfaced by the types definition.
+      secureContext.cert = this._config.x509.cert;
+      secureContext.key = this._config.x509.key;
+      secureContext.passphrase = this._config.x509.passphrase;
     }
+
+    (<any>options).secureContext = tls.createSecureContext(secureContext);
 
     const createErrorCallback = (eventName) => {
       return (error) => {
