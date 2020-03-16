@@ -118,6 +118,12 @@ export interface DeviceClientOptions extends X509 {
   ca?: string;
 
   /**
+   * Keepalive interval in numeric format (seconds). This controls the keepalive ping for MQTT specifically. If you are using AMQP
+   * or HTTP, this will do nothing.
+   */
+  keepalive?: number;
+
+  /**
    * Custom user defined information to be appended to existing User Agent information. The User Agent Identification information
    * is used predominantly by Microsoft internally for identifying metadata related to Device Client usage for Azure IoT.
    */
