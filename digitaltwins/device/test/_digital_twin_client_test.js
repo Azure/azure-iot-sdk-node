@@ -41,6 +41,71 @@ describe('Digital Twin Client', function () {
     });
   });
 
+  describe('#fromConnectionString', function () {
+    before(function () {
+      sinon.stub(Client, 'fromConnectionString');
+    })
+
+    after(function () {
+      Client.fromConnectionString.restore();
+    })
+
+    const fakeCapabilityModel = 'urn:fake:1';
+    const fakeConnStr = 'HostName=host;DeviceId=id;SharedAccessKey=key';
+
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_001: [Will throw `ReferenceError` if `capabilityModel` argument is falsy.] */
+    [undefined, null, ''].forEach(function (falsyCapabilityModel) {
+      it('throws a ReferenceError if \'capabilityModel\' is ' + falsyCapabilityModel + '\'', function () {
+        assert.throws(() => {
+          const client = DigitalTwinClient.fromConnectionString(falsyCapabilityModel, fakeConnStr);
+          (client);
+        });
+      });
+    });
+
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_002: [Will throw `ReferenceError` if the constructor `client` argument is falsy.] */
+    [undefined, null, ''].forEach(function (falsyConnStr) {
+      it('throws a ReferenceError if \'client\' is ' + client + '\'', function () {
+        assert.throws(() => {
+          const dtClient = new DigitalTwinClient(fakeCapabilityModel, falsyConnStr);
+          (dtClient);
+        });
+      });
+    });
+
+    /* Tests_SRS_NODE_DEVICE_CLIENT_05_006: [The fromConnectionString method shall return a new instance of the Client object, as by a call to new Client(new Transport(...)).] */
+    it('returns an instance of DigitalTwinClient', function () {
+      const dtClient = DigitalTwinClient.fromConnectionString(fakeCapabilityModel, fakeConnStr);
+      assert.instanceOf(dtClient, DigitalTwinClient);
+    });
+
+    it.only('uses the MQTTWS transport if specified', function (testCallback) {
+      const stubWs = sinon.stub(MqttWs);
+      const stubMqtt = sinon.stub(Mqtt);
+      DigitalTwinClient.fromConnectionString(fakeCapabilityModel, fakeConnStr, true);
+
+      assert.isTrue(stubWs.calledOnce);
+      assert.strictEqual(stubMqtt.callCount, 0);
+
+      assert.isTrue(Client.fromConnectionString.calledOnce);
+    });
+
+    /* Tests_SRS_NODE_DEVICE_CLIENT_16_093: [The `fromConnectionString` method shall create a new `X509AuthorizationProvider` object with the connection string passed as argument if it contains an X509 parameter and pass this object to the transport constructor.]*/
+    it('creates a X509AuthenticationProvider and passes it to the transport', function (testCallback) { // TODO
+      const x509ConnectionString = 'HostName=host;DeviceId=id;x509=true';
+      DigitalTwinClient.fromConnectionString(x509ConnectionString);
+    });
+
+    /* Tests_SRS_NODE_DEVICE_CLIENT_16_094: [The `fromConnectionString` method shall create a new `SharedAccessSignatureAuthenticationProvider` object with the connection string passed as argument if it contains a SharedAccessSignature parameter and pass this object to the transport constructor.]*/
+    it('creates a SharedAccessSignatureAuthenticationProvider and passes it to the transport', function (testCallback) {
+      const SharedAccessSignatureConnectionString = 'HostName=host;DeviceId=id;SharedAccessSignature=' + sharedAccessSignature;
+      DigitalTwinClient.fromConnectionString(SharedAccessSignatureConnectionString, function (authProvider) {
+        assert.instanceOf(authProvider, SharedAccessSignatureAuthenticationProvider);
+        testCallback();
+      });
+    });
+  });
+
   describe('#addInterfaceInstance', function () {
     class FakeInterface extends BaseInterface {
       constructor(name, propertyCallback, commandCallback) {

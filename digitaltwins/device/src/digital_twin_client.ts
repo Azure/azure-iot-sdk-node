@@ -9,6 +9,7 @@ const debug = dbg('azure-iot-digitaltwins-device:Client');
 import { DigitalTwinInterface as SdkInformation } from './sdkinformation';
 import { callbackToPromise, errorCallbackToPromise, ErrorCallback, Message, errors } from 'azure-iot-common';
 import { Client, Twin, DeviceMethodRequest, DeviceMethodResponse } from 'azure-iot-device';
+import { Mqtt, MqttWs } from 'azure-iot-device-mqtt';
 import { BaseInterface } from './base_interface';
 import { azureDigitalTwinTelemetry, azureDigitalTwinCommand, azureDigitalTwinProperty,
          Telemetry, InterfaceTelemetryCallback, InterfaceTelemetryPromise, TelemetryPromise, TelemetryCallback,
@@ -658,6 +659,8 @@ export class DigitalTwinClient {
       contentEncoding: 'utf-8'
       **]
     */
+
+    // need a lazy open, if the connection is not opened, open it. 
     const modelInterfaceId = 'urn:azureiot:ModelDiscovery:ModelInformation:1';
     const modelInterfaceInstanceName = 'urn_azureiot_ModelDiscovery_ModelInformation';
     const registrationSchema = 'modelInformation';
@@ -717,6 +720,7 @@ export class DigitalTwinClient {
             // be ignored.
             //
             currentStepDescription = 'Failure during the SDK reporting.';
+            // pull out all the things related to sdk information since we aren't doing this any more. 
             this._sdkInformation.language.report('Node.js', (err?: Error) => {
               if (alreadyTimedOut) return;
               if (err) {
@@ -741,5 +745,31 @@ export class DigitalTwinClient {
         });
       }
     });
+  }
+
+  /**
+   * Creates a Digital Twin Client from the given connection string.
+   *
+   * @param {String}    connStr       A connection string which encapsulates "device connect" permissions on an IoT hub.
+   * 
+   * @param {Boolean}   ws            Optional boolean to specify if MQTT over websockets should be used.
+   *
+   * @throws {ReferenceError}         If the connStr parameter is falsy.
+   *
+   * @returns {module:azure-iot-digitaltwins.DigitalTwinClient}
+   */
+  static fromConnectionString(capabilityModel: string, connStr: string, ws?: boolean): DigitalTwinClient {
+  /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_001: [Will throw `ReferenceError` if `capabilityModel` argument is falsy.] */
+  if (!capabilityModel) throw new ReferenceError('capabilityModel must not be falsy');
+  if (!connStr) throw new ReferenceError('connStr (connection string) must not be falsy');
+
+  let transport;
+  if (ws) {
+    transport = MqttWs;
+  } else {
+    transport = Mqtt;
+  }
+  const client = Client.fromConnectionString(connStr, transport);
+  return new DigitalTwinClient(capabilityModel, client);
   }
 }

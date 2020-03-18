@@ -4,8 +4,6 @@
 'use strict';
 
 const DigitalTwinClient = require('azure-iot-digitaltwins-device').DigitalTwinClient;
-const DeviceClient = require('azure-iot-device').Client;
-const Mqtt = require('azure-iot-device-mqtt').Mqtt;
 
 const EnvironmentalSensor = require('./environmentalinterface').EnvironmentalSensor;
 const DeviceInformation = require('./deviceInformation').DeviceInformation;
@@ -157,12 +155,11 @@ const environmentalSensor = new EnvironmentalSensor('environmentalSensor', prope
 const deviceInformation = new DeviceInformation('deviceInformation');
 const modelDefinition = new ModelDefinition('urn_azureiot_ModelDiscovery_ModelDefinition', null, modelDefinitionHandler);
 
-const deviceClient = DeviceClient.fromConnectionString(process.env.DEVICE_CONNECTION_STRING, Mqtt);
-
 const capabilityModel = 'urn:azureiot:samplemodel:1';
 
 async function main() {
-  const digitalTwinClient = new DigitalTwinClient(capabilityModel, deviceClient);
+  // mqtt is implied in this static method
+  const digitalTwinClient = DigitalTwinClient.fromConnectionString(capabilityModel, process.env.DEVICE_CONNECTION_STRING);
 
   // TBC: Do we create these inline
   await digitalTwinClient.addInterfaceInstances(
@@ -171,7 +168,11 @@ async function main() {
     modelDefinition
   );
 
+  // either one of these would cause the device to call open, or the report.
+  // device could do report / telemetry before these enables.
+  // enablePropertyUpdates 
   await digitalTwinClient.enableCommands();
+  await digitalTwinClient.enablePropertyUpdates();
 
   // report all of the device information.
   // TBC: Should 1st parameter be the interface or the ID
@@ -180,7 +181,7 @@ async function main() {
     model: 'Contoso 47-turbo',
     swVersion: '3.1',
     osName: 'ContosoOS',
-    processorArchitecture, 'Cotosox86',
+    processorArchitecture: 'Cotosox86',
     processorManufacturer: 'Contoso Industries',
     totalStorage: 65000,
     totalMemory: 640,
