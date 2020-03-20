@@ -5,6 +5,7 @@
 
 var assert = require('chai').assert;
 var sinon = require('sinon');
+var uuid = require('uuid');
 var endpoint = require('azure-iot-common').endpoint;
 var errors = require('azure-iot-common').errors;
 var Registry = require('../lib/registry.js').Registry;
@@ -1028,16 +1029,17 @@ describe('Registry', function () {
       /* Tests_SRS_NODE_IOTHUB_REGISTRY_06_031: [A device information with an authentication object that doesn't contain the x509Thumbprint property will be normalized with a `type` property with value "sas".] */
       /* Tests_SRS_NODE_IOTHUB_REGISTRY_06_030: [A device information with an authentication object that contains the x509Thumbprint property with at least one of `primaryThumbprint` or `secondaryThumbprint` sub-properties will be normalized with a `type` property with value "selfSigned".] */
       it('constructs a valid HTTP request', function(testCallback) {
+        var fakeKey = uuid.v4();
         var addedDevices = [
           { deviceId: 'devicezero'},
           { deviceId: 'deviceone', authentication: { x509Thumbprint: { primaryThumbprint: 'abc' }}},
-          { deviceId: 'devicetwo', authentication: { symmetricKey: { primaryKey: 'abc' }}},
+          { deviceId: 'devicetwo', authentication: { symmetricKey: { primaryKey: fakeKey }}},
           { deviceId: 'devicethree', authentication: { type: 'certificateAuthority' }},
         ];
         var sentBody = [
           { id: 'devicezero', importMode:'create', authentication: { type: 'sas', symmetricKey: { primaryKey: '', secondaryKey: '' }}},
           { id: 'deviceone', importMode:'create', authentication: { type: 'selfSigned', x509Thumbprint: { primaryThumbprint: 'abc' }}},
-          { id: 'devicetwo', importMode:'create', authentication: { type: 'sas', symmetricKey: { primaryKey: 'abc' }}},
+          { id: 'devicetwo', importMode:'create', authentication: { type: 'sas', symmetricKey: { primaryKey: fakeKey }}},
           { id: 'devicethree', importMode:'create', authentication: { type: 'certificateAuthority' }},
         ];
         var fakeHttpHelper = {
