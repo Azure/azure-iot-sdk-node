@@ -170,14 +170,14 @@ async function main() {
 
   // either one of these would cause the device to call open, or the report.
   // device could do report / telemetry before these enables.
-  // enablePropertyUpdates 
+  // enablePropertyUpdates
   await digitalTwinClient.enableCommands();
   await digitalTwinClient.enablePropertyUpdates();
 
   // report all of the device information.
   // TBC: Should 1st parameter be the interface or the ID
   await digitalTwinClient.report(deviceInformation, {
-    manufacturer: 'Contoso Device Corporation', 
+    manufacturer: 'Contoso Device Corporation',
     model: 'Contoso 47-turbo',
     swVersion: '3.1',
     osName: 'ContosoOS',
@@ -191,7 +191,7 @@ async function main() {
 
   // send telemetry every 5 seconds
   setInterval( async () => {
-    await digitalTwinClient.sendTelemetry(environmentalSensor, { temp:  + (Math.random() * 90), humid: 1 + (Math.random() * 99) })
+    await digitalTwinClient.sendTelemetry(environmentalSensor, { temp: 1 + (Math.random() * 90), humid: 1 + (Math.random() * 99) });
   }, 5000);
 };
 

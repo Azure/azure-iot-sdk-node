@@ -7,6 +7,9 @@ const EventEmitter = require('events');
 const sinon = require('sinon');
 const results = require('azure-iot-common').results;
 const DigitalTwinClient = require('../dist/digital_twin_client').DigitalTwinClient;
+const Client = require('azure-iot-device').Client;
+const Mqtt = require('azure-iot-device-mqtt').Mqtt;
+const MqttWs = require('azure-iot-device-mqtt').MqttWs;
 const errors = require('azure-iot-common').errors;
 const BaseInterface = require('../dist/base_interface').BaseInterface;
 const Telemetry = require('../dist/interface_types').Telemetry;
@@ -24,8 +27,8 @@ describe('Digital Twin Client', function () {
     [undefined, null, ''].forEach(function (capabilityModel) {
       it('throws a ReferenceError if \'capabilityModel\' is ' + capabilityModel + '\'', function () {
         assert.throws(() => {
-          const client = new DigitalTwinClient(capabilityModel, fakeDeviceClient);
-          (client);
+          const dtClient = new DigitalTwinClient(capabilityModel, fakeDeviceClient);
+          (dtClient);
         });
       });
     });
@@ -42,13 +45,6 @@ describe('Digital Twin Client', function () {
   });
 
   describe('#fromConnectionString', function () {
-    before(function () {
-      sinon.stub(Client, 'fromConnectionString');
-    })
-
-    after(function () {
-      Client.fromConnectionString.restore();
-    })
 
     const fakeCapabilityModel = 'urn:fake:1';
     const fakeConnStr = 'HostName=host;DeviceId=id;SharedAccessKey=key';
@@ -65,7 +61,7 @@ describe('Digital Twin Client', function () {
 
     /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_002: [Will throw `ReferenceError` if the constructor `client` argument is falsy.] */
     [undefined, null, ''].forEach(function (falsyConnStr) {
-      it('throws a ReferenceError if \'client\' is ' + client + '\'', function () {
+      it('throws a ReferenceError if \'client\' is ' + falsyConnStr + '\'', function () {
         assert.throws(() => {
           const dtClient = new DigitalTwinClient(fakeCapabilityModel, falsyConnStr);
           (dtClient);
@@ -79,15 +75,24 @@ describe('Digital Twin Client', function () {
       assert.instanceOf(dtClient, DigitalTwinClient);
     });
 
-    it.only('uses the MQTTWS transport if specified', function (testCallback) {
-      const stubWs = sinon.stub(MqttWs);
+    it('uses the MQTT transport by default', function (testCallback) {
       const stubMqtt = sinon.stub(Mqtt);
+      const stub = sinon.stub(Client, 'fromConnectionString').callsFake((connStr, transport) => {
+        assert.strictEqual(transport, stubMqtt);
+        stub.restore();
+        testCallback();
+      });
       DigitalTwinClient.fromConnectionString(fakeCapabilityModel, fakeConnStr, true);
+    });
 
-      assert.isTrue(stubWs.calledOnce);
-      assert.strictEqual(stubMqtt.callCount, 0);
-
-      assert.isTrue(Client.fromConnectionString.calledOnce);
+    it('uses the MQTTWS transport if specified', function (testCallback) {
+      const stubWs = sinon.stub(MqttWs);
+      const stub = sinon.stub(Client, 'fromConnectionString').callsFake((connStr, transport) => {
+        assert.strictEqual(transport, stubWs);
+        stub.restore();
+        testCallback();
+      });
+      DigitalTwinClient.fromConnectionString(fakeCapabilityModel, fakeConnStr, true);
     });
 
     /* Tests_SRS_NODE_DEVICE_CLIENT_16_093: [The `fromConnectionString` method shall create a new `X509AuthorizationProvider` object with the connection string passed as argument if it contains an X509 parameter and pass this object to the transport constructor.]*/

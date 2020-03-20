@@ -16,6 +16,7 @@ import { azureDigitalTwinTelemetry, azureDigitalTwinCommand, azureDigitalTwinPro
          Property, PropertyReportCallback, PropertyReportPromise, PropertyChangedCallback, DesiredStateResponse,
          CommandRequest, CommandResponse, CommandUpdateCallback, CommandUpdatePromise, CommandCallback
         } from './interface_types';
+import async = require('async');
 
 /**
  * @private
@@ -164,16 +165,14 @@ export class DigitalTwinClient {
     this._capabilityModel = capabilityModel;
     this._client = client;
     this._twin = {} as Twin;
-    this.addInterfaceInstance(this._sdkInformation);
+    this._addInterfaceInstance(this._sdkInformation);
   }
 
-  /**
-   * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.addInterfaceInstance
-   * @description                   Adds the interfaceInstance to the Digital Twin client.  This will not cause
-   *                                any network activity.  This is a synchronous method.
-   * @param newInterfaceInstance            The object for a particular interfaceInstance.
-   */
-  addInterfaceInstance(newInterfaceInstance: BaseInterface): void {
+    /**
+     * Adds the interfaceInstance to the Digital Twin client.  This will not cause
+     * any network activity.  This is a synchronous method.
+     */
+    private _addInterfaceInstance(newInterfaceInstance: BaseInterface): void {
     /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_003: [Will throw `ReferenceError` if the `newInterfaceInstance` argument is falsy.] */
     if (!newInterfaceInstance) throw new ReferenceError('newInterfaceInstance is \'' + newInterfaceInstance + '\'');
     /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_004: [Will throw `ReferenceError` if the `newInterfaceInstance` argument `interfaceId` property is falsy.] */
@@ -257,6 +256,18 @@ export class DigitalTwinClient {
         debug(newInterfaceInstance.interfaceInstanceName + '.' + individualProperty + ' is NOT of interest.');
       }
     });
+  }
+
+  /**
+   * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.addInterfaceInstances
+   * @description                   Adds multiple interfaceInstances to the Digital Twin client.  This will not cause
+   *                                any network activity.  This is a synchronous method.
+   * @param newInterfaceInstances   A single object or multiple objects for a particular interfaceInstance.
+   */
+  addInterfaceInstances(...args: BaseInterface[]) {
+    for (var i = 0; i < args.length; i++) {
+      this._addInterfaceInstance(args[i]);
+    }
   }
 
   /**
@@ -528,6 +539,30 @@ export class DigitalTwinClient {
     };
   }
 
+  reportSingleProperty(iName: string, propertyName: string, propertyValue: any, response: DesiredStateResponse | undefined, callback: ErrorCallback) {
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [** Properties may invoke the method `report` with a value to produce a patch to the reported properties. **] */
+    let interfaceInstancePart = interfaceInstancePrefix + iName;
+    let propertyContent: any = {
+      value: propertyValue
+    };
+
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_039: [** Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties. **] */
+    if (response) {
+      propertyContent.sc = response.code;
+      propertyContent.sd = response.description;
+      propertyContent.sv = response.version;
+    }
+
+    let patch = {
+      [interfaceInstancePart]: {
+        [propertyName]: propertyContent
+      }
+    };
+
+    this._twin.properties.reported.update(patch, callback);
+  }
+
+
   /**
    * @method                        private _reportProperty
    * @description                   Sends the value of a reported property to the Digital Twin.
@@ -538,9 +573,9 @@ export class DigitalTwinClient {
    * @param callback (optional)     If present, the callback to be invoked on completion of the telemetry,
    *                                otherwise a promise is returned.
    */
-  private _reportProperty(interfaceInstanceName: string, interfaceId: string, propertyName: string, propertyValue: any, responseOrCallback: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): void;
-  private _reportProperty(interfaceInstanceName: string, interfaceId: string, propertyName: string, propertyValue: any, response?: DesiredStateResponse): Promise<void>;
-  private _reportProperty(interfaceInstanceName: string, interfaceId: string, propertyName: string, propertyValue: any, responseOrCallback?: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): Promise<void> | void {
+  report(interfaceInstance : BaseInterface, propertiesToReport: any, responseOrCallback: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): void;
+  report(interfaceInstance : BaseInterface, propertiesToReport: any, response?: DesiredStateResponse): Promise<void>;
+  report(interfaceInstance : BaseInterface, propertiesToReport: any, responseOrCallback?: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): Promise<void> | void {
     let actualResponse: DesiredStateResponse | undefined;
     let actualCallback: ErrorCallback | undefined;
 
@@ -555,29 +590,21 @@ export class DigitalTwinClient {
     }
 
     return callbackToPromise((_callback) => {
-      if (!this._interfaceInstances[interfaceInstanceName].registered) {
-        return _callback(new Error(interfaceInstanceName + ' is not registered'));
+      let iName = interfaceInstance.interfaceInstanceName;
+      let fnArr = [];
+      if (!this._interfaceInstances[iName].registered) {
+        _callback(new Error(interfaceInstance.interfaceInstanceName + ' is not registered'));
       } else {
-        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [** Properties may invoke the method `report` with a value to produce a patch to the reported properties. **] */
-        let interfaceInstancePart = interfaceInstancePrefix + interfaceInstanceName;
-        let propertyContent: any = {
-          value: propertyValue
-        };
-
-        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_039: [** Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties. **] */
-        if (actualResponse) {
-          propertyContent.sc = actualResponse.code;
-          propertyContent.sd = actualResponse.description;
-          propertyContent.sv = actualResponse.version;
+        for (const [propertyName, propertyValue] of Object.entries(propertiesToReport)) {
+          fnArr.push((internalCallback: ErrorCallback) => { this.reportSingleProperty(iName, propertyName, propertyValue, actualResponse, internalCallback); });
         }
-
-        let patch = {
-          [interfaceInstancePart]: {
-            [propertyName]: propertyContent
+        async.parallel(fnArr, function (err) {
+          if (err) {
+            _callback(err);
+          } else {
+            _callback();
           }
-        };
-
-        this._twin.properties.reported.update(patch, _callback);
+        });
       }
     }, actualCallback);
   }
@@ -660,7 +687,7 @@ export class DigitalTwinClient {
       **]
     */
 
-    // need a lazy open, if the connection is not opened, open it. 
+    // need a lazy open, if the connection is not opened, open it.
     const modelInterfaceId = 'urn:azureiot:ModelDiscovery:ModelInformation:1';
     const modelInterfaceInstanceName = 'urn_azureiot_ModelDiscovery_ModelInformation';
     const registrationSchema = 'modelInformation';
@@ -720,7 +747,7 @@ export class DigitalTwinClient {
             // be ignored.
             //
             currentStepDescription = 'Failure during the SDK reporting.';
-            // pull out all the things related to sdk information since we aren't doing this any more. 
+            // pull out all the things related to sdk information since we aren't doing this any more.
             this._sdkInformation.language.report('Node.js', (err?: Error) => {
               if (alreadyTimedOut) return;
               if (err) {
@@ -751,7 +778,7 @@ export class DigitalTwinClient {
    * Creates a Digital Twin Client from the given connection string.
    *
    * @param {String}    connStr       A connection string which encapsulates "device connect" permissions on an IoT hub.
-   * 
+   *
    * @param {Boolean}   ws            Optional boolean to specify if MQTT over websockets should be used.
    *
    * @throws {ReferenceError}         If the connStr parameter is falsy.
