@@ -237,14 +237,6 @@ export class DigitalTwinClient {
                 throw new Error('InterfaceInstance ' + newInterfaceInstance.interfaceInstanceName + ' does not have a property update callback specified');
               }
             }
-
-            //
-            // This instantiates a 'report' method for this property that invokes the lower level clients twin reporting.  The
-            // instantiated function will format the message appropriately and add any necessary transport/digital twin properties to
-            // the message.
-            //
-            /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_033: [** Subsequent to addInterfaceInstance a writable property will have a report method.] */
-            (newInterfaceInstance[individualProperty] as Property).report  = this._returnPropertyReportMethod(newInterfaceInstance.interfaceInstanceName, newInterfaceInstance.interfaceId, individualProperty);
             break;
           }
           default: {
@@ -528,43 +520,8 @@ export class DigitalTwinClient {
     }, sendCallback);
   }
 
-  //
-  // Yet another of several methods that create and return a method.
-  // In this case the returned method is used to update a property
-  // values.
-  //
-  private _returnPropertyReportMethod(interfaceInstanceName: string, interfaceId: string, propertyName: string): PropertyReportPromise | PropertyReportCallback {
-    return (propertyValue, responseOrCallback, callback) => {
-      return this._reportProperty(interfaceInstanceName, interfaceId, propertyName, propertyValue, responseOrCallback as DesiredStateResponse, callback as ErrorCallback);
-    };
-  }
-
-  reportSingleProperty(iName: string, propertyName: string, propertyValue: any, response: DesiredStateResponse | undefined, callback: ErrorCallback) {
-    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [** Properties may invoke the method `report` with a value to produce a patch to the reported properties. **] */
-    let interfaceInstancePart = interfaceInstancePrefix + iName;
-    let propertyContent: any = {
-      value: propertyValue
-    };
-
-    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_039: [** Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties. **] */
-    if (response) {
-      propertyContent.sc = response.code;
-      propertyContent.sd = response.description;
-      propertyContent.sv = response.version;
-    }
-
-    let patch = {
-      [interfaceInstancePart]: {
-        [propertyName]: propertyContent
-      }
-    };
-
-    this._twin.properties.reported.update(patch, callback);
-  }
-
-
   /**
-   * @method                        private _reportProperty
+   * @method                        private report
    * @description                   Sends the value of a reported property to the Digital Twin.
    * @param interfaceInstanceName           Name of the instance for this interface.
    * @param interfaceId             The id (in URN format) for the interface.
@@ -591,20 +548,25 @@ export class DigitalTwinClient {
 
     return callbackToPromise((_callback) => {
       let iName = interfaceInstance.interfaceInstanceName;
-      let fnArr = [];
       if (!this._interfaceInstances[iName].registered) {
         _callback(new Error(interfaceInstance.interfaceInstanceName + ' is not registered'));
       } else {
+        let interfaceInstancePart = interfaceInstancePrefix + iName;
+        let patch : any = {
+          [interfaceInstancePart]: {}
+        };
+        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [** Properties may invoke the method `report` with a value to produce a patch to the reported properties. **] */
         for (const [propertyName, propertyValue] of Object.entries(propertiesToReport)) {
-          fnArr.push((internalCallback: ErrorCallback) => { this.reportSingleProperty(iName, propertyName, propertyValue, actualResponse, internalCallback); });
-        }
-        async.parallel(fnArr, function (err) {
-          if (err) {
-            _callback(err);
-          } else {
-            _callback();
+          let propertyContent : any = { value: propertyValue };
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_039: [** Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties. **] */
+          if (actualResponse) {
+            propertyContent.sc = actualResponse.code;
+            propertyContent.sd = actualResponse.description;
+            propertyContent.sv = actualResponse.version;
           }
-        });
+          patch[interfaceInstancePart][propertyName] = propertyContent
+        }
+        this._twin.properties.reported.update(patch, callback);
       }
     }, actualCallback);
   }
