@@ -86,6 +86,20 @@ export interface Configuration {
 }
 
 /**
+ * Base class for serializable value of indetermined type.
+ */
+export interface VariantValue {
+  /**
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly objectValue?: any;
+  /**
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly isNull?: boolean;
+}
+
+/**
  * An interface representing ConfigurationQueriesTestInput.
  */
 export interface ConfigurationQueriesTestInput {
@@ -265,22 +279,23 @@ export interface DeviceRegistryOperationError {
    * 'EtagDoesNotMatch', 'RequestTimedOut', 'UnsupportedOperationOnReplica', 'NullMessage',
    * 'ConnectionForcefullyClosedOnNewConnection', 'InvalidDeviceScope',
    * 'ConnectionForcefullyClosedOnFaultInjection', 'ConnectionRejectedOnFaultInjection',
-   * 'InvalidRouteTestInput', 'InvalidSourceOnRoute', 'RoutingNotEnabled',
-   * 'InvalidContentEncodingOrType', 'InvalidEndorsementKey', 'InvalidRegistrationId',
-   * 'InvalidStorageRootKey', 'InvalidEnrollmentGroupId', 'TooManyEnrollments',
-   * 'RegistrationIdDefinedMultipleTimes', 'CustomAllocationFailed',
-   * 'CustomAllocationIotHubNotSpecified', 'CustomAllocationUnauthorizedAccess',
-   * 'CannotRegisterModuleToModule', 'TenantHubRoutingNotEnabled',
-   * 'InvalidConfigurationTargetCondition', 'InvalidConfigurationContent',
-   * 'CannotModifyImmutableConfigurationContent', 'InvalidConfigurationCustomMetricsQuery',
-   * 'InvalidPnPInterfaceDefinition', 'InvalidPnPDesiredProperties',
-   * 'InvalidPnPReportedProperties', 'InvalidPnPWritableReportedProperties', 'GenericUnauthorized',
+   * 'InvalidEndpointAuthenticationType', 'ManagedIdentityNotEnabled', 'InvalidRouteTestInput',
+   * 'InvalidSourceOnRoute', 'RoutingNotEnabled', 'InvalidContentEncodingOrType',
+   * 'InvalidEndorsementKey', 'InvalidRegistrationId', 'InvalidStorageRootKey',
+   * 'InvalidEnrollmentGroupId', 'TooManyEnrollments', 'RegistrationIdDefinedMultipleTimes',
+   * 'CustomAllocationFailed', 'CustomAllocationIotHubNotSpecified',
+   * 'CustomAllocationUnauthorizedAccess', 'CannotRegisterModuleToModule',
+   * 'TenantHubRoutingNotEnabled', 'InvalidConfigurationTargetCondition',
+   * 'InvalidConfigurationContent', 'CannotModifyImmutableConfigurationContent',
+   * 'InvalidConfigurationCustomMetricsQuery', 'InvalidPnPInterfaceDefinition',
+   * 'InvalidPnPDesiredProperties', 'InvalidPnPReportedProperties',
+   * 'InvalidPnPWritableReportedProperties', 'InvalidDigitalTwinJsonPatch', 'GenericUnauthorized',
    * 'IotHubNotFound', 'IotHubUnauthorizedAccess', 'IotHubUnauthorized', 'ElasticPoolNotFound',
    * 'SystemModuleModifyUnauthorizedAccess', 'GenericForbidden', 'IotHubSuspended',
    * 'IotHubQuotaExceeded', 'JobQuotaExceeded', 'DeviceMaximumQueueDepthExceeded',
    * 'IotHubMaxCbsTokenExceeded', 'DeviceMaximumActiveFileUploadLimitExceeded',
    * 'DeviceMaximumQueueSizeExceeded', 'RoutingEndpointResponseForbidden',
-   * 'InvalidMessageExpiryTime', 'OperationNotAvailableInCurrentTier',
+   * 'InvalidMessageExpiryTime', 'OperationNotAvailableInCurrentTier', 'KeyEncryptionKeyRevoked',
    * 'DeviceModelMaxPropertiesExceeded', 'DeviceModelMaxIndexablePropertiesExceeded',
    * 'IotDpsSuspended', 'IotDpsSuspending', 'GenericNotFound', 'DeviceNotFound', 'JobNotFound',
    * 'QuotaMetricNotFound', 'SystemPropertyNotFound', 'AmqpAddressNotFound',
@@ -306,22 +321,25 @@ export interface DeviceRegistryOperationError {
    * 'JobRunPreconditionFailed', 'InflightMessagesInLink', 'GenericRequestEntityTooLarge',
    * 'MessageTooLarge', 'TooManyDevices', 'TooManyModulesOnDevice',
    * 'ConfigurationCountLimitExceeded', 'DigitalTwinModelCountLimitExceeded',
-   * 'GenericUnsupportedMediaType', 'IncompatibleDataType', 'GenericTooManyRequests',
-   * 'ThrottlingException', 'ThrottleBacklogLimitExceeded', 'ThrottlingBacklogTimeout',
-   * 'ThrottlingMaxActiveJobCountExceeded', 'ClientClosedRequest', 'GenericServerError',
-   * 'ServerError', 'JobCancelled', 'StatisticsRetrievalError', 'ConnectionForcefullyClosed',
-   * 'InvalidBlobState', 'BackupTimedOut', 'AzureStorageTimeout', 'GenericTimeout',
-   * 'InvalidThrottleParameter', 'EventHubLinkAlreadyClosed', 'ReliableBlobStoreError',
-   * 'RetryAttemptsExhausted', 'AzureTableStoreError', 'CheckpointStoreNotFound',
-   * 'DocumentDbInvalidReturnValue', 'ReliableDocDbStoreStoreError',
+   * 'InterfaceNameCompressionModelCountLimitExceeded', 'GenericUnsupportedMediaType',
+   * 'IncompatibleDataType', 'GenericTooManyRequests', 'ThrottlingException',
+   * 'ThrottleBacklogLimitExceeded', 'ThrottlingBacklogTimeout',
+   * 'ThrottlingMaxActiveJobCountExceeded', 'DeviceThrottlingLimitExceeded', 'ClientClosedRequest',
+   * 'GenericServerError', 'ServerError', 'JobCancelled', 'StatisticsRetrievalError',
+   * 'ConnectionForcefullyClosed', 'InvalidBlobState', 'BackupTimedOut', 'AzureStorageTimeout',
+   * 'GenericTimeout', 'InvalidThrottleParameter', 'EventHubLinkAlreadyClosed',
+   * 'ReliableBlobStoreError', 'RetryAttemptsExhausted', 'AzureTableStoreError',
+   * 'CheckpointStoreNotFound', 'DocumentDbInvalidReturnValue', 'ReliableDocDbStoreStoreError',
    * 'ReliableBlobStoreTimeoutError', 'ConfigReadFailed', 'InvalidContainerReceiveLink',
-   * 'InvalidPartitionEpoch', 'RestoreTimedOut', 'StreamReservationFailure',
+   * 'InvalidPartitionEpoch', 'RestoreTimedOut', 'StreamReservationFailure', 'SerializationError',
    * 'UnexpectedPropertyValue', 'OrchestrationOperationFailed', 'ModelRepoEndpointError',
-   * 'ResolutionError', 'GenericBadGateway', 'InvalidResponseWhileProxying',
-   * 'GenericServiceUnavailable', 'ServiceUnavailable', 'PartitionNotFound',
-   * 'IotHubActivationFailed', 'ServerBusy', 'IotHubRestoring', 'ReceiveLinkOpensThrottled',
-   * 'ConnectionUnavailable', 'DeviceUnavailable', 'ConfigurationNotAvailable',
-   * 'GroupNotAvailable', 'GenericGatewayTimeout', 'GatewayTimeout'
+   * 'ResolutionError', 'UnableToFetchCredentials', 'UnableToFetchTenantInfo',
+   * 'UnableToShareIdentity', 'UnableToExpandDiscoveryInfo', 'UnableToExpandComponentInfo',
+   * 'GenericBadGateway', 'InvalidResponseWhileProxying', 'GenericServiceUnavailable',
+   * 'ServiceUnavailable', 'PartitionNotFound', 'IotHubActivationFailed', 'ServerBusy',
+   * 'IotHubRestoring', 'ReceiveLinkOpensThrottled', 'ConnectionUnavailable', 'DeviceUnavailable',
+   * 'ConfigurationNotAvailable', 'GroupNotAvailable', 'HostingServiceNotAvailable',
+   * 'GenericGatewayTimeout', 'GatewayTimeout'
    */
   errorCode?: ErrorCode;
   /**
@@ -381,130 +399,6 @@ export interface QuerySpecification {
 }
 
 /**
- * The query result.
- */
-export interface QueryResult {
-  /**
-   * The query result type. Possible values include: 'unknown', 'twin', 'deviceJob', 'jobResponse',
-   * 'raw', 'enrollment', 'enrollmentGroup', 'deviceRegistration'
-   */
-  type?: Type1;
-  /**
-   * The query result items, as a collection.
-   */
-  items?: any[];
-  /**
-   * Request continuation token.
-   */
-  continuationToken?: string;
-}
-
-/**
- * An interface representing JobProperties.
- */
-export interface JobProperties {
-  /**
-   * System generated.  Ignored at creation.
-   */
-  jobId?: string;
-  /**
-   * System generated.  Ignored at creation.
-   */
-  startTimeUtc?: Date;
-  /**
-   * System generated.  Ignored at creation.
-   * Represents the time the job stopped processing.
-   */
-  endTimeUtc?: Date;
-  /**
-   * Required.
-   * The type of job to execute. Possible values include: 'unknown', 'export', 'import', 'backup',
-   * 'readDeviceProperties', 'writeDeviceProperties', 'updateDeviceConfiguration', 'rebootDevice',
-   * 'factoryResetDevice', 'firmwareUpdate', 'scheduleDeviceMethod', 'scheduleUpdateTwin',
-   * 'restoreFromBackup', 'failoverDataCopy'
-   */
-  type?: Type2;
-  /**
-   * System generated.  Ignored at creation. Possible values include: 'unknown', 'enqueued',
-   * 'running', 'completed', 'failed', 'cancelled', 'scheduled', 'queued'
-   */
-  status?: Status2;
-  /**
-   * System generated.  Ignored at creation.
-   * Represents the percentage of completion.
-   */
-  progress?: number;
-  /**
-   * URI containing SAS token to a blob container that contains registry data to sync.
-   */
-  inputBlobContainerUri?: string;
-  /**
-   * The blob name to be used when importing from the provided input blob container.
-   */
-  inputBlobName?: string;
-  /**
-   * URI containing SAS token to a blob container.  This is used to output the status of the job
-   * and the results.
-   */
-  outputBlobContainerUri?: string;
-  /**
-   * The name of the blob that will be created in the provided output blob container.  This blob
-   * will contain
-   * the exported device registry information for the IoT Hub.
-   */
-  outputBlobName?: string;
-  /**
-   * Optional for export jobs; ignored for other jobs.  Default: false.  If false, authorization
-   * keys are included
-   * in export output.  Keys are exported as null otherwise.
-   */
-  excludeKeysInExport?: boolean;
-  /**
-   * System genereated.  Ignored at creation.
-   * If status == failure, this represents a string containing the reason.
-   */
-  failureReason?: string;
-}
-
-/**
- * Result of a device message queue purge operation.
- */
-export interface PurgeMessageQueueResult {
-  totalMessagesPurged?: number;
-  /**
-   * The ID of the device whose messages are being purged.
-   */
-  deviceId?: string;
-  /**
-   * The ID of the device whose messages are being purged.
-   */
-  moduleId?: string;
-}
-
-/**
- * An interface representing FaultInjectionConnectionProperties.
- */
-export interface FaultInjectionConnectionProperties {
-  /**
-   * Possible values include: 'None', 'CloseAll', 'Periodic'
-   */
-  action?: Action;
-  blockDurationInMinutes?: number;
-}
-
-/**
- * An interface representing FaultInjectionProperties.
- */
-export interface FaultInjectionProperties {
-  iotHubName?: string;
-  connection?: FaultInjectionConnectionProperties;
-  /**
-   * Service generated.
-   */
-  lastUpdatedTimeUtc?: Date;
-}
-
-/**
  * Represents Twin properties
  */
 export interface TwinProperties {
@@ -560,7 +454,7 @@ export interface Twin {
   /**
    * Gets the corresponding Device's Status. Possible values include: 'enabled', 'disabled'
    */
-  status?: Status3;
+  status?: Status2;
   /**
    * Reason, if any, for the corresponding Device to be in specified Status
    */
@@ -594,6 +488,149 @@ export interface Twin {
   x509Thumbprint?: X509Thumbprint;
   capabilities?: DeviceCapabilities;
   deviceScope?: string;
+}
+
+/**
+ * An interface representing JobProperties.
+ */
+export interface JobProperties {
+  /**
+   * System generated.  Ignored at creation.
+   */
+  jobId?: string;
+  /**
+   * System generated.  Ignored at creation.
+   */
+  startTimeUtc?: Date;
+  /**
+   * System generated.  Ignored at creation.
+   * Represents the time the job stopped processing.
+   */
+  endTimeUtc?: Date;
+  /**
+   * Required.
+   * The type of job to execute. Possible values include: 'unknown', 'export', 'import', 'backup',
+   * 'readDeviceProperties', 'writeDeviceProperties', 'updateDeviceConfiguration', 'rebootDevice',
+   * 'factoryResetDevice', 'firmwareUpdate', 'scheduleDeviceMethod', 'scheduleUpdateTwin',
+   * 'restoreFromBackup', 'failoverDataCopy'
+   */
+  type?: Type1;
+  /**
+   * System generated.  Ignored at creation. Possible values include: 'unknown', 'enqueued',
+   * 'running', 'completed', 'failed', 'cancelled', 'scheduled', 'queued'
+   */
+  status?: Status3;
+  /**
+   * System generated.  Ignored at creation.
+   * Represents the percentage of completion.
+   */
+  progress?: number;
+  /**
+   * URI containing SAS token to a blob container that contains registry data to sync.
+   */
+  inputBlobContainerUri?: string;
+  /**
+   * The blob name to be used when importing from the provided input blob container.
+   */
+  inputBlobName?: string;
+  /**
+   * URI containing SAS token to a blob container.  This is used to output the status of the job
+   * and the results.
+   */
+  outputBlobContainerUri?: string;
+  /**
+   * The name of the blob that will be created in the provided output blob container.  This blob
+   * will contain
+   * the exported device registry information for the IoT Hub.
+   */
+  outputBlobName?: string;
+  /**
+   * Optional for export jobs; ignored for other jobs.  Default: false.  If false, authorization
+   * keys are included
+   * in export output.  Keys are exported as null otherwise.
+   */
+  excludeKeysInExport?: boolean;
+  /**
+   * Specifies authentication type being used for connecting to storage account. Possible values
+   * include: 'keyBased', 'identityBased'
+   */
+  storageAuthenticationType?: StorageAuthenticationType;
+  /**
+   * System genereated.  Ignored at creation.
+   * If status == failure, this represents a string containing the reason.
+   */
+  failureReason?: string;
+}
+
+/**
+ * Result of a device message queue purge operation.
+ */
+export interface PurgeMessageQueueResult {
+  totalMessagesPurged?: number;
+  /**
+   * The ID of the device whose messages are being purged.
+   */
+  deviceId?: string;
+  /**
+   * The ID of the device whose messages are being purged.
+   */
+  moduleId?: string;
+}
+
+/**
+ * An interface representing FaultInjectionConnectionProperties.
+ */
+export interface FaultInjectionConnectionProperties {
+  /**
+   * Possible values include: 'None', 'CloseAll', 'Periodic'
+   */
+  action?: Action;
+  blockDurationInMinutes?: number;
+}
+
+/**
+ * An interface representing FaultInjectionProperties.
+ */
+export interface FaultInjectionProperties {
+  iotHubName?: string;
+  connection?: FaultInjectionConnectionProperties;
+  /**
+   * Service generated.
+   */
+  lastUpdatedTimeUtc?: Date;
+}
+
+/**
+ * An interface representing PatchOperation.
+ */
+export interface PatchOperation {
+  /**
+   * Json patch "op" memeber,represents operations such as "add", "remove", "replace". Possible
+   * values include: 'add', 'replace', 'remove'
+   */
+  op?: Op;
+  /**
+   * Json patch "path" member.
+   */
+  path?: string;
+  /**
+   * Json patch "value" member.
+   */
+  value?: VariantValue;
+  /**
+   * Json patch "from" member.
+   */
+  from?: string;
+}
+
+/**
+ * An interface representing DigitalTwinPatch.
+ */
+export interface DigitalTwinPatch {
+  /**
+   * List of digital twin json-patch operations.
+   */
+  operations?: PatchOperation[];
 }
 
 /**
@@ -702,7 +739,7 @@ export interface JobRequest {
    * 'factoryResetDevice', 'firmwareUpdate', 'scheduleDeviceMethod', 'scheduleUpdateTwin',
    * 'restoreFromBackup', 'failoverDataCopy'
    */
-  type?: Type3;
+  type?: Type2;
   /**
    * Required if jobType is cloudToDeviceMethod.
    * The method type and parameters.
@@ -786,7 +823,7 @@ export interface JobResponse {
    * 'factoryResetDevice', 'firmwareUpdate', 'scheduleDeviceMethod', 'scheduleUpdateTwin',
    * 'restoreFromBackup', 'failoverDataCopy'
    */
-  type?: Type4;
+  type?: Type3;
   /**
    * Required if jobType is cloudToDeviceMethod.
    * The method type and parameters.
@@ -811,6 +848,25 @@ export interface JobResponse {
    * Job details
    */
   deviceJobStatistics?: DeviceJobStatistics;
+}
+
+/**
+ * The query result.
+ */
+export interface QueryResult {
+  /**
+   * The query result type. Possible values include: 'unknown', 'twin', 'deviceJob', 'jobResponse',
+   * 'raw', 'enrollment', 'enrollmentGroup', 'deviceRegistration'
+   */
+  type?: Type4;
+  /**
+   * The query result items, as a collection.
+   */
+  items?: any[];
+  /**
+   * Request continuation token.
+   */
+  continuationToken?: string;
 }
 
 /**
@@ -884,11 +940,11 @@ export interface DigitalTwinInterfacesPatch {
 }
 
 /**
- * An interface representing IotHubGatewayServiceAPIs20190701PreviewOptions.
+ * An interface representing IotHubGatewayServiceAPIsOptions.
  */
-export interface IotHubGatewayServiceAPIs20190701PreviewOptions extends ServiceClientOptions {
+export interface IotHubGatewayServiceAPIsOptions extends ServiceClientOptions {
   /**
-   * Version of the Api. Default value: '2019-07-01-preview'.
+   * Version of the Api. Default value: '2020-05-31-preview'.
    */
   apiVersion?: string;
   baseUri?: string;
@@ -897,28 +953,28 @@ export interface IotHubGatewayServiceAPIs20190701PreviewOptions extends ServiceC
 /**
  * Optional Parameters.
  */
-export interface ServiceCreateOrUpdateConfigurationOptionalParams extends msRest.RequestOptionsBase {
+export interface ConfigurationCreateOrUpdateOptionalParams extends msRest.RequestOptionsBase {
   ifMatch?: string;
 }
 
 /**
  * Optional Parameters.
  */
-export interface ServiceDeleteConfigurationOptionalParams extends msRest.RequestOptionsBase {
+export interface ConfigurationDeleteMethodOptionalParams extends msRest.RequestOptionsBase {
   ifMatch?: string;
 }
 
 /**
  * Optional Parameters.
  */
-export interface ServiceGetConfigurationsOptionalParams extends msRest.RequestOptionsBase {
+export interface ConfigurationGetConfigurationsOptionalParams extends msRest.RequestOptionsBase {
   top?: number;
 }
 
 /**
  * Optional Parameters.
  */
-export interface ServiceGetDevicesOptionalParams extends msRest.RequestOptionsBase {
+export interface RegistryManagerGetDevicesOptionalParams extends msRest.RequestOptionsBase {
   /**
    * This parameter when specified, defines the maximum number of device identities that are
    * returned. Any value outside the range of 1-1000 is considered to be 1000.
@@ -929,49 +985,43 @@ export interface ServiceGetDevicesOptionalParams extends msRest.RequestOptionsBa
 /**
  * Optional Parameters.
  */
-export interface ServiceCreateOrUpdateDeviceOptionalParams extends msRest.RequestOptionsBase {
+export interface RegistryManagerQueryIotHubOptionalParams extends msRest.RequestOptionsBase {
+  xMsContinuation?: string;
+  xMsMaxItemCount?: string;
+}
+
+/**
+ * Optional Parameters.
+ */
+export interface RegistryManagerCreateOrUpdateDeviceOptionalParams extends msRest.RequestOptionsBase {
   ifMatch?: string;
 }
 
 /**
  * Optional Parameters.
  */
-export interface ServiceDeleteDeviceOptionalParams extends msRest.RequestOptionsBase {
+export interface RegistryManagerDeleteDeviceOptionalParams extends msRest.RequestOptionsBase {
   ifMatch?: string;
 }
 
 /**
  * Optional Parameters.
  */
-export interface ServiceReplaceTwinOptionalParams extends msRest.RequestOptionsBase {
+export interface RegistryManagerCreateOrUpdateModuleOptionalParams extends msRest.RequestOptionsBase {
   ifMatch?: string;
 }
 
 /**
  * Optional Parameters.
  */
-export interface ServiceUpdateTwinOptionalParams extends msRest.RequestOptionsBase {
+export interface RegistryManagerDeleteModuleOptionalParams extends msRest.RequestOptionsBase {
   ifMatch?: string;
 }
 
 /**
  * Optional Parameters.
  */
-export interface ServiceReplaceModuleTwinOptionalParams extends msRest.RequestOptionsBase {
-  ifMatch?: string;
-}
-
-/**
- * Optional Parameters.
- */
-export interface ServiceUpdateModuleTwinOptionalParams extends msRest.RequestOptionsBase {
-  ifMatch?: string;
-}
-
-/**
- * Optional Parameters.
- */
-export interface ServiceQueryJobsOptionalParams extends msRest.RequestOptionsBase {
+export interface JobClientQueryJobsOptionalParams extends msRest.RequestOptionsBase {
   /**
    * Job Type.
    */
@@ -985,21 +1035,42 @@ export interface ServiceQueryJobsOptionalParams extends msRest.RequestOptionsBas
 /**
  * Optional Parameters.
  */
-export interface ServiceCreateOrUpdateModuleOptionalParams extends msRest.RequestOptionsBase {
+export interface TwinReplaceDeviceTwinOptionalParams extends msRest.RequestOptionsBase {
   ifMatch?: string;
 }
 
 /**
  * Optional Parameters.
  */
-export interface ServiceDeleteModuleOptionalParams extends msRest.RequestOptionsBase {
+export interface TwinUpdateDeviceTwinOptionalParams extends msRest.RequestOptionsBase {
   ifMatch?: string;
 }
 
 /**
  * Optional Parameters.
  */
-export interface DigitalTwinUpdateInterfacesOptionalParams extends msRest.RequestOptionsBase {
+export interface TwinReplaceModuleTwinOptionalParams extends msRest.RequestOptionsBase {
+  ifMatch?: string;
+}
+
+/**
+ * Optional Parameters.
+ */
+export interface TwinUpdateModuleTwinOptionalParams extends msRest.RequestOptionsBase {
+  ifMatch?: string;
+}
+
+/**
+ * Optional Parameters.
+ */
+export interface DigitalTwinUpdateDigitalTwinOptionalParams extends msRest.RequestOptionsBase {
+  ifMatch?: string;
+}
+
+/**
+ * Optional Parameters.
+ */
+export interface DigitalTwinUpdateComponentOptionalParams extends msRest.RequestOptionsBase {
   ifMatch?: string;
 }
 
@@ -1017,7 +1088,14 @@ export interface DigitalTwinGetDigitalTwinModelOptionalParams extends msRest.Req
 /**
  * Optional Parameters.
  */
-export interface DigitalTwinInvokeInterfaceCommandOptionalParams extends msRest.RequestOptionsBase {
+export interface DigitalTwinUpdateDigitalTwinModelOptionalParams extends msRest.RequestOptionsBase {
+  ifMatch?: string;
+}
+
+/**
+ * Optional Parameters.
+ */
+export interface DigitalTwinInvokeComponentCommandOptionalParams extends msRest.RequestOptionsBase {
   /**
    * Connect timeout in seconds.
    */
@@ -1029,9 +1107,23 @@ export interface DigitalTwinInvokeInterfaceCommandOptionalParams extends msRest.
 }
 
 /**
- * Defines headers for GetInterfaces operation.
+ * Defines headers for QueryIotHub operation.
  */
-export interface DigitalTwinGetInterfacesHeaders {
+export interface RegistryManagerQueryIotHubHeaders {
+  /**
+   * Type of the list of items.
+   */
+  xMsItemType: string;
+  /**
+   * Continuation token
+   */
+  xMsContinuation: string;
+}
+
+/**
+ * Defines headers for GetComponents operation.
+ */
+export interface DigitalTwinGetComponentsHeaders {
   /**
    * ETag of the digital twin.
    */
@@ -1039,9 +1131,9 @@ export interface DigitalTwinGetInterfacesHeaders {
 }
 
 /**
- * Defines headers for UpdateInterfaces operation.
+ * Defines headers for UpdateComponent operation.
  */
-export interface DigitalTwinUpdateInterfacesHeaders {
+export interface DigitalTwinUpdateComponentHeaders {
   /**
    * ETag of the digital twin.
    */
@@ -1049,9 +1141,9 @@ export interface DigitalTwinUpdateInterfacesHeaders {
 }
 
 /**
- * Defines headers for GetInterface operation.
+ * Defines headers for GetComponent operation.
  */
-export interface DigitalTwinGetInterfaceHeaders {
+export interface DigitalTwinGetComponentHeaders {
   /**
    * ETag of the digital twin.
    */
@@ -1067,15 +1159,47 @@ export interface DigitalTwinGetDigitalTwinModelHeaders {
    */
   eTag: string;
   /**
-   * Id of the model returned.
+   * Digital twin model id.
    */
   xMsModelId: string;
+  /**
+   * Digital twin model resolution status: enum [Pending, Success, NotFound, Failed, Resolved,
+   * Deleted]
+   */
+  xMsModelResolutionStatus: string;
+  /**
+   * Digital twin model resolution status description.
+   */
+  xMsModelResolutionDescription: string;
 }
 
 /**
- * Defines headers for InvokeInterfaceCommand operation.
+ * Defines headers for UpdateDigitalTwinModel operation.
  */
-export interface DigitalTwinInvokeInterfaceCommandHeaders {
+export interface DigitalTwinUpdateDigitalTwinModelHeaders {
+  /**
+   * ETag of the digital twin.
+   */
+  eTag: string;
+  /**
+   * Digital twin model id.
+   */
+  xMsModelId: string;
+  /**
+   * Digital twin model resolution status: enum [Pending, Success, NotFound, Failed, Resolved,
+   * Deleted]
+   */
+  xMsModelResolutionStatus: string;
+  /**
+   * Digital twin model resolution status description.
+   */
+  xMsModelResolutionDescription: string;
+}
+
+/**
+ * Defines headers for InvokeComponentCommand operation.
+ */
+export interface DigitalTwinInvokeComponentCommandHeaders {
   /**
    * Device Generated Status Code for this Operation
    */
@@ -1139,7 +1263,8 @@ export type Status1 = 'enabled' | 'disabled';
  * 'RequestCanceled', 'InvalidStorageEndpointProperty', 'EtagDoesNotMatch', 'RequestTimedOut',
  * 'UnsupportedOperationOnReplica', 'NullMessage', 'ConnectionForcefullyClosedOnNewConnection',
  * 'InvalidDeviceScope', 'ConnectionForcefullyClosedOnFaultInjection',
- * 'ConnectionRejectedOnFaultInjection', 'InvalidRouteTestInput', 'InvalidSourceOnRoute',
+ * 'ConnectionRejectedOnFaultInjection', 'InvalidEndpointAuthenticationType',
+ * 'ManagedIdentityNotEnabled', 'InvalidRouteTestInput', 'InvalidSourceOnRoute',
  * 'RoutingNotEnabled', 'InvalidContentEncodingOrType', 'InvalidEndorsementKey',
  * 'InvalidRegistrationId', 'InvalidStorageRootKey', 'InvalidEnrollmentGroupId',
  * 'TooManyEnrollments', 'RegistrationIdDefinedMultipleTimes', 'CustomAllocationFailed',
@@ -1148,13 +1273,13 @@ export type Status1 = 'enabled' | 'disabled';
  * 'InvalidConfigurationTargetCondition', 'InvalidConfigurationContent',
  * 'CannotModifyImmutableConfigurationContent', 'InvalidConfigurationCustomMetricsQuery',
  * 'InvalidPnPInterfaceDefinition', 'InvalidPnPDesiredProperties', 'InvalidPnPReportedProperties',
- * 'InvalidPnPWritableReportedProperties', 'GenericUnauthorized', 'IotHubNotFound',
- * 'IotHubUnauthorizedAccess', 'IotHubUnauthorized', 'ElasticPoolNotFound',
+ * 'InvalidPnPWritableReportedProperties', 'InvalidDigitalTwinJsonPatch', 'GenericUnauthorized',
+ * 'IotHubNotFound', 'IotHubUnauthorizedAccess', 'IotHubUnauthorized', 'ElasticPoolNotFound',
  * 'SystemModuleModifyUnauthorizedAccess', 'GenericForbidden', 'IotHubSuspended',
  * 'IotHubQuotaExceeded', 'JobQuotaExceeded', 'DeviceMaximumQueueDepthExceeded',
  * 'IotHubMaxCbsTokenExceeded', 'DeviceMaximumActiveFileUploadLimitExceeded',
  * 'DeviceMaximumQueueSizeExceeded', 'RoutingEndpointResponseForbidden',
- * 'InvalidMessageExpiryTime', 'OperationNotAvailableInCurrentTier',
+ * 'InvalidMessageExpiryTime', 'OperationNotAvailableInCurrentTier', 'KeyEncryptionKeyRevoked',
  * 'DeviceModelMaxPropertiesExceeded', 'DeviceModelMaxIndexablePropertiesExceeded',
  * 'IotDpsSuspended', 'IotDpsSuspending', 'GenericNotFound', 'DeviceNotFound', 'JobNotFound',
  * 'QuotaMetricNotFound', 'SystemPropertyNotFound', 'AmqpAddressNotFound',
@@ -1180,25 +1305,29 @@ export type Status1 = 'enabled' | 'disabled';
  * 'JobRunPreconditionFailed', 'InflightMessagesInLink', 'GenericRequestEntityTooLarge',
  * 'MessageTooLarge', 'TooManyDevices', 'TooManyModulesOnDevice',
  * 'ConfigurationCountLimitExceeded', 'DigitalTwinModelCountLimitExceeded',
- * 'GenericUnsupportedMediaType', 'IncompatibleDataType', 'GenericTooManyRequests',
- * 'ThrottlingException', 'ThrottleBacklogLimitExceeded', 'ThrottlingBacklogTimeout',
- * 'ThrottlingMaxActiveJobCountExceeded', 'ClientClosedRequest', 'GenericServerError',
- * 'ServerError', 'JobCancelled', 'StatisticsRetrievalError', 'ConnectionForcefullyClosed',
- * 'InvalidBlobState', 'BackupTimedOut', 'AzureStorageTimeout', 'GenericTimeout',
- * 'InvalidThrottleParameter', 'EventHubLinkAlreadyClosed', 'ReliableBlobStoreError',
- * 'RetryAttemptsExhausted', 'AzureTableStoreError', 'CheckpointStoreNotFound',
- * 'DocumentDbInvalidReturnValue', 'ReliableDocDbStoreStoreError', 'ReliableBlobStoreTimeoutError',
- * 'ConfigReadFailed', 'InvalidContainerReceiveLink', 'InvalidPartitionEpoch', 'RestoreTimedOut',
- * 'StreamReservationFailure', 'UnexpectedPropertyValue', 'OrchestrationOperationFailed',
- * 'ModelRepoEndpointError', 'ResolutionError', 'GenericBadGateway',
- * 'InvalidResponseWhileProxying', 'GenericServiceUnavailable', 'ServiceUnavailable',
- * 'PartitionNotFound', 'IotHubActivationFailed', 'ServerBusy', 'IotHubRestoring',
- * 'ReceiveLinkOpensThrottled', 'ConnectionUnavailable', 'DeviceUnavailable',
- * 'ConfigurationNotAvailable', 'GroupNotAvailable', 'GenericGatewayTimeout', 'GatewayTimeout'
+ * 'InterfaceNameCompressionModelCountLimitExceeded', 'GenericUnsupportedMediaType',
+ * 'IncompatibleDataType', 'GenericTooManyRequests', 'ThrottlingException',
+ * 'ThrottleBacklogLimitExceeded', 'ThrottlingBacklogTimeout',
+ * 'ThrottlingMaxActiveJobCountExceeded', 'DeviceThrottlingLimitExceeded', 'ClientClosedRequest',
+ * 'GenericServerError', 'ServerError', 'JobCancelled', 'StatisticsRetrievalError',
+ * 'ConnectionForcefullyClosed', 'InvalidBlobState', 'BackupTimedOut', 'AzureStorageTimeout',
+ * 'GenericTimeout', 'InvalidThrottleParameter', 'EventHubLinkAlreadyClosed',
+ * 'ReliableBlobStoreError', 'RetryAttemptsExhausted', 'AzureTableStoreError',
+ * 'CheckpointStoreNotFound', 'DocumentDbInvalidReturnValue', 'ReliableDocDbStoreStoreError',
+ * 'ReliableBlobStoreTimeoutError', 'ConfigReadFailed', 'InvalidContainerReceiveLink',
+ * 'InvalidPartitionEpoch', 'RestoreTimedOut', 'StreamReservationFailure', 'SerializationError',
+ * 'UnexpectedPropertyValue', 'OrchestrationOperationFailed', 'ModelRepoEndpointError',
+ * 'ResolutionError', 'UnableToFetchCredentials', 'UnableToFetchTenantInfo',
+ * 'UnableToShareIdentity', 'UnableToExpandDiscoveryInfo', 'UnableToExpandComponentInfo',
+ * 'GenericBadGateway', 'InvalidResponseWhileProxying', 'GenericServiceUnavailable',
+ * 'ServiceUnavailable', 'PartitionNotFound', 'IotHubActivationFailed', 'ServerBusy',
+ * 'IotHubRestoring', 'ReceiveLinkOpensThrottled', 'ConnectionUnavailable', 'DeviceUnavailable',
+ * 'ConfigurationNotAvailable', 'GroupNotAvailable', 'HostingServiceNotAvailable',
+ * 'GenericGatewayTimeout', 'GatewayTimeout'
  * @readonly
  * @enum {string}
  */
-export type ErrorCode = 'InvalidErrorCode' | 'GenericBadRequest' | 'InvalidProtocolVersion' | 'DeviceInvalidResultCount' | 'InvalidOperation' | 'ArgumentInvalid' | 'ArgumentNull' | 'IotHubFormatError' | 'DeviceStorageEntitySerializationError' | 'BlobContainerValidationError' | 'ImportWarningExistsError' | 'InvalidSchemaVersion' | 'DeviceDefinedMultipleTimes' | 'DeserializationError' | 'BulkRegistryOperationFailure' | 'DefaultStorageEndpointNotConfigured' | 'InvalidFileUploadCorrelationId' | 'ExpiredFileUploadCorrelationId' | 'InvalidStorageEndpoint' | 'InvalidMessagingEndpoint' | 'InvalidFileUploadCompletionStatus' | 'InvalidStorageEndpointOrBlob' | 'RequestCanceled' | 'InvalidStorageEndpointProperty' | 'EtagDoesNotMatch' | 'RequestTimedOut' | 'UnsupportedOperationOnReplica' | 'NullMessage' | 'ConnectionForcefullyClosedOnNewConnection' | 'InvalidDeviceScope' | 'ConnectionForcefullyClosedOnFaultInjection' | 'ConnectionRejectedOnFaultInjection' | 'InvalidRouteTestInput' | 'InvalidSourceOnRoute' | 'RoutingNotEnabled' | 'InvalidContentEncodingOrType' | 'InvalidEndorsementKey' | 'InvalidRegistrationId' | 'InvalidStorageRootKey' | 'InvalidEnrollmentGroupId' | 'TooManyEnrollments' | 'RegistrationIdDefinedMultipleTimes' | 'CustomAllocationFailed' | 'CustomAllocationIotHubNotSpecified' | 'CustomAllocationUnauthorizedAccess' | 'CannotRegisterModuleToModule' | 'TenantHubRoutingNotEnabled' | 'InvalidConfigurationTargetCondition' | 'InvalidConfigurationContent' | 'CannotModifyImmutableConfigurationContent' | 'InvalidConfigurationCustomMetricsQuery' | 'InvalidPnPInterfaceDefinition' | 'InvalidPnPDesiredProperties' | 'InvalidPnPReportedProperties' | 'InvalidPnPWritableReportedProperties' | 'GenericUnauthorized' | 'IotHubNotFound' | 'IotHubUnauthorizedAccess' | 'IotHubUnauthorized' | 'ElasticPoolNotFound' | 'SystemModuleModifyUnauthorizedAccess' | 'GenericForbidden' | 'IotHubSuspended' | 'IotHubQuotaExceeded' | 'JobQuotaExceeded' | 'DeviceMaximumQueueDepthExceeded' | 'IotHubMaxCbsTokenExceeded' | 'DeviceMaximumActiveFileUploadLimitExceeded' | 'DeviceMaximumQueueSizeExceeded' | 'RoutingEndpointResponseForbidden' | 'InvalidMessageExpiryTime' | 'OperationNotAvailableInCurrentTier' | 'DeviceModelMaxPropertiesExceeded' | 'DeviceModelMaxIndexablePropertiesExceeded' | 'IotDpsSuspended' | 'IotDpsSuspending' | 'GenericNotFound' | 'DeviceNotFound' | 'JobNotFound' | 'QuotaMetricNotFound' | 'SystemPropertyNotFound' | 'AmqpAddressNotFound' | 'RoutingEndpointResponseNotFound' | 'CertificateNotFound' | 'ElasticPoolTenantHubNotFound' | 'ModuleNotFound' | 'AzureTableStoreNotFound' | 'IotHubFailingOver' | 'FeatureNotSupported' | 'DigitalTwinInterfaceNotFound' | 'QueryStoreClusterNotFound' | 'DeviceNotOnline' | 'DeviceConnectionClosedRemotely' | 'EnrollmentNotFound' | 'DeviceRegistrationNotFound' | 'AsyncOperationNotFound' | 'EnrollmentGroupNotFound' | 'DeviceRecordNotFound' | 'GroupRecordNotFound' | 'DeviceGroupNotFound' | 'ProvisioningSettingsNotFound' | 'ProvisioningRecordNotFound' | 'LinkedHubNotFound' | 'CertificateAuthorityNotFound' | 'ConfigurationNotFound' | 'GroupNotFound' | 'DigitalTwinModelNotFound' | 'InterfaceNameModelNotFound' | 'GenericMethodNotAllowed' | 'OperationNotAllowedInCurrentState' | 'ImportDevicesNotSupported' | 'BulkAddDevicesNotSupported' | 'GenericConflict' | 'DeviceAlreadyExists' | 'LinkCreationConflict' | 'CallbackSubscriptionConflict' | 'ModelAlreadyExists' | 'DeviceLocked' | 'DeviceJobAlreadyExists' | 'JobAlreadyExists' | 'EnrollmentConflict' | 'EnrollmentGroupConflict' | 'RegistrationStatusConflict' | 'DeviceRecordConflict' | 'GroupRecordConflict' | 'DeviceGroupConflict' | 'ProvisioningSettingsConflict' | 'ProvisioningRecordConflict' | 'LinkedHubConflict' | 'CertificateAuthorityConflict' | 'ModuleAlreadyExistsOnDevice' | 'ConfigurationAlreadyExists' | 'ApplyConfigurationAlreadyInProgressOnDevice' | 'DigitalTwinModelAlreadyExists' | 'DigitalTwinModelExistsWithOtherModelType' | 'InterfaceNameModelAlreadyExists' | 'GenericPreconditionFailed' | 'PreconditionFailed' | 'DeviceMessageLockLost' | 'JobRunPreconditionFailed' | 'InflightMessagesInLink' | 'GenericRequestEntityTooLarge' | 'MessageTooLarge' | 'TooManyDevices' | 'TooManyModulesOnDevice' | 'ConfigurationCountLimitExceeded' | 'DigitalTwinModelCountLimitExceeded' | 'GenericUnsupportedMediaType' | 'IncompatibleDataType' | 'GenericTooManyRequests' | 'ThrottlingException' | 'ThrottleBacklogLimitExceeded' | 'ThrottlingBacklogTimeout' | 'ThrottlingMaxActiveJobCountExceeded' | 'ClientClosedRequest' | 'GenericServerError' | 'ServerError' | 'JobCancelled' | 'StatisticsRetrievalError' | 'ConnectionForcefullyClosed' | 'InvalidBlobState' | 'BackupTimedOut' | 'AzureStorageTimeout' | 'GenericTimeout' | 'InvalidThrottleParameter' | 'EventHubLinkAlreadyClosed' | 'ReliableBlobStoreError' | 'RetryAttemptsExhausted' | 'AzureTableStoreError' | 'CheckpointStoreNotFound' | 'DocumentDbInvalidReturnValue' | 'ReliableDocDbStoreStoreError' | 'ReliableBlobStoreTimeoutError' | 'ConfigReadFailed' | 'InvalidContainerReceiveLink' | 'InvalidPartitionEpoch' | 'RestoreTimedOut' | 'StreamReservationFailure' | 'UnexpectedPropertyValue' | 'OrchestrationOperationFailed' | 'ModelRepoEndpointError' | 'ResolutionError' | 'GenericBadGateway' | 'InvalidResponseWhileProxying' | 'GenericServiceUnavailable' | 'ServiceUnavailable' | 'PartitionNotFound' | 'IotHubActivationFailed' | 'ServerBusy' | 'IotHubRestoring' | 'ReceiveLinkOpensThrottled' | 'ConnectionUnavailable' | 'DeviceUnavailable' | 'ConfigurationNotAvailable' | 'GroupNotAvailable' | 'GenericGatewayTimeout' | 'GatewayTimeout';
+export type ErrorCode = 'InvalidErrorCode' | 'GenericBadRequest' | 'InvalidProtocolVersion' | 'DeviceInvalidResultCount' | 'InvalidOperation' | 'ArgumentInvalid' | 'ArgumentNull' | 'IotHubFormatError' | 'DeviceStorageEntitySerializationError' | 'BlobContainerValidationError' | 'ImportWarningExistsError' | 'InvalidSchemaVersion' | 'DeviceDefinedMultipleTimes' | 'DeserializationError' | 'BulkRegistryOperationFailure' | 'DefaultStorageEndpointNotConfigured' | 'InvalidFileUploadCorrelationId' | 'ExpiredFileUploadCorrelationId' | 'InvalidStorageEndpoint' | 'InvalidMessagingEndpoint' | 'InvalidFileUploadCompletionStatus' | 'InvalidStorageEndpointOrBlob' | 'RequestCanceled' | 'InvalidStorageEndpointProperty' | 'EtagDoesNotMatch' | 'RequestTimedOut' | 'UnsupportedOperationOnReplica' | 'NullMessage' | 'ConnectionForcefullyClosedOnNewConnection' | 'InvalidDeviceScope' | 'ConnectionForcefullyClosedOnFaultInjection' | 'ConnectionRejectedOnFaultInjection' | 'InvalidEndpointAuthenticationType' | 'ManagedIdentityNotEnabled' | 'InvalidRouteTestInput' | 'InvalidSourceOnRoute' | 'RoutingNotEnabled' | 'InvalidContentEncodingOrType' | 'InvalidEndorsementKey' | 'InvalidRegistrationId' | 'InvalidStorageRootKey' | 'InvalidEnrollmentGroupId' | 'TooManyEnrollments' | 'RegistrationIdDefinedMultipleTimes' | 'CustomAllocationFailed' | 'CustomAllocationIotHubNotSpecified' | 'CustomAllocationUnauthorizedAccess' | 'CannotRegisterModuleToModule' | 'TenantHubRoutingNotEnabled' | 'InvalidConfigurationTargetCondition' | 'InvalidConfigurationContent' | 'CannotModifyImmutableConfigurationContent' | 'InvalidConfigurationCustomMetricsQuery' | 'InvalidPnPInterfaceDefinition' | 'InvalidPnPDesiredProperties' | 'InvalidPnPReportedProperties' | 'InvalidPnPWritableReportedProperties' | 'InvalidDigitalTwinJsonPatch' | 'GenericUnauthorized' | 'IotHubNotFound' | 'IotHubUnauthorizedAccess' | 'IotHubUnauthorized' | 'ElasticPoolNotFound' | 'SystemModuleModifyUnauthorizedAccess' | 'GenericForbidden' | 'IotHubSuspended' | 'IotHubQuotaExceeded' | 'JobQuotaExceeded' | 'DeviceMaximumQueueDepthExceeded' | 'IotHubMaxCbsTokenExceeded' | 'DeviceMaximumActiveFileUploadLimitExceeded' | 'DeviceMaximumQueueSizeExceeded' | 'RoutingEndpointResponseForbidden' | 'InvalidMessageExpiryTime' | 'OperationNotAvailableInCurrentTier' | 'KeyEncryptionKeyRevoked' | 'DeviceModelMaxPropertiesExceeded' | 'DeviceModelMaxIndexablePropertiesExceeded' | 'IotDpsSuspended' | 'IotDpsSuspending' | 'GenericNotFound' | 'DeviceNotFound' | 'JobNotFound' | 'QuotaMetricNotFound' | 'SystemPropertyNotFound' | 'AmqpAddressNotFound' | 'RoutingEndpointResponseNotFound' | 'CertificateNotFound' | 'ElasticPoolTenantHubNotFound' | 'ModuleNotFound' | 'AzureTableStoreNotFound' | 'IotHubFailingOver' | 'FeatureNotSupported' | 'DigitalTwinInterfaceNotFound' | 'QueryStoreClusterNotFound' | 'DeviceNotOnline' | 'DeviceConnectionClosedRemotely' | 'EnrollmentNotFound' | 'DeviceRegistrationNotFound' | 'AsyncOperationNotFound' | 'EnrollmentGroupNotFound' | 'DeviceRecordNotFound' | 'GroupRecordNotFound' | 'DeviceGroupNotFound' | 'ProvisioningSettingsNotFound' | 'ProvisioningRecordNotFound' | 'LinkedHubNotFound' | 'CertificateAuthorityNotFound' | 'ConfigurationNotFound' | 'GroupNotFound' | 'DigitalTwinModelNotFound' | 'InterfaceNameModelNotFound' | 'GenericMethodNotAllowed' | 'OperationNotAllowedInCurrentState' | 'ImportDevicesNotSupported' | 'BulkAddDevicesNotSupported' | 'GenericConflict' | 'DeviceAlreadyExists' | 'LinkCreationConflict' | 'CallbackSubscriptionConflict' | 'ModelAlreadyExists' | 'DeviceLocked' | 'DeviceJobAlreadyExists' | 'JobAlreadyExists' | 'EnrollmentConflict' | 'EnrollmentGroupConflict' | 'RegistrationStatusConflict' | 'DeviceRecordConflict' | 'GroupRecordConflict' | 'DeviceGroupConflict' | 'ProvisioningSettingsConflict' | 'ProvisioningRecordConflict' | 'LinkedHubConflict' | 'CertificateAuthorityConflict' | 'ModuleAlreadyExistsOnDevice' | 'ConfigurationAlreadyExists' | 'ApplyConfigurationAlreadyInProgressOnDevice' | 'DigitalTwinModelAlreadyExists' | 'DigitalTwinModelExistsWithOtherModelType' | 'InterfaceNameModelAlreadyExists' | 'GenericPreconditionFailed' | 'PreconditionFailed' | 'DeviceMessageLockLost' | 'JobRunPreconditionFailed' | 'InflightMessagesInLink' | 'GenericRequestEntityTooLarge' | 'MessageTooLarge' | 'TooManyDevices' | 'TooManyModulesOnDevice' | 'ConfigurationCountLimitExceeded' | 'DigitalTwinModelCountLimitExceeded' | 'InterfaceNameCompressionModelCountLimitExceeded' | 'GenericUnsupportedMediaType' | 'IncompatibleDataType' | 'GenericTooManyRequests' | 'ThrottlingException' | 'ThrottleBacklogLimitExceeded' | 'ThrottlingBacklogTimeout' | 'ThrottlingMaxActiveJobCountExceeded' | 'DeviceThrottlingLimitExceeded' | 'ClientClosedRequest' | 'GenericServerError' | 'ServerError' | 'JobCancelled' | 'StatisticsRetrievalError' | 'ConnectionForcefullyClosed' | 'InvalidBlobState' | 'BackupTimedOut' | 'AzureStorageTimeout' | 'GenericTimeout' | 'InvalidThrottleParameter' | 'EventHubLinkAlreadyClosed' | 'ReliableBlobStoreError' | 'RetryAttemptsExhausted' | 'AzureTableStoreError' | 'CheckpointStoreNotFound' | 'DocumentDbInvalidReturnValue' | 'ReliableDocDbStoreStoreError' | 'ReliableBlobStoreTimeoutError' | 'ConfigReadFailed' | 'InvalidContainerReceiveLink' | 'InvalidPartitionEpoch' | 'RestoreTimedOut' | 'StreamReservationFailure' | 'SerializationError' | 'UnexpectedPropertyValue' | 'OrchestrationOperationFailed' | 'ModelRepoEndpointError' | 'ResolutionError' | 'UnableToFetchCredentials' | 'UnableToFetchTenantInfo' | 'UnableToShareIdentity' | 'UnableToExpandDiscoveryInfo' | 'UnableToExpandComponentInfo' | 'GenericBadGateway' | 'InvalidResponseWhileProxying' | 'GenericServiceUnavailable' | 'ServiceUnavailable' | 'PartitionNotFound' | 'IotHubActivationFailed' | 'ServerBusy' | 'IotHubRestoring' | 'ReceiveLinkOpensThrottled' | 'ConnectionUnavailable' | 'DeviceUnavailable' | 'ConfigurationNotAvailable' | 'GroupNotAvailable' | 'HostingServiceNotAvailable' | 'GenericGatewayTimeout' | 'GatewayTimeout';
 
 /**
  * Defines values for WarningCode.
@@ -1209,49 +1338,12 @@ export type ErrorCode = 'InvalidErrorCode' | 'GenericBadRequest' | 'InvalidProto
 export type WarningCode = 'DeviceRegisteredWithoutTwin';
 
 /**
- * Defines values for Type1.
- * Possible values include: 'unknown', 'twin', 'deviceJob', 'jobResponse', 'raw', 'enrollment',
- * 'enrollmentGroup', 'deviceRegistration'
- * @readonly
- * @enum {string}
- */
-export type Type1 = 'unknown' | 'twin' | 'deviceJob' | 'jobResponse' | 'raw' | 'enrollment' | 'enrollmentGroup' | 'deviceRegistration';
-
-/**
- * Defines values for Type2.
- * Possible values include: 'unknown', 'export', 'import', 'backup', 'readDeviceProperties',
- * 'writeDeviceProperties', 'updateDeviceConfiguration', 'rebootDevice', 'factoryResetDevice',
- * 'firmwareUpdate', 'scheduleDeviceMethod', 'scheduleUpdateTwin', 'restoreFromBackup',
- * 'failoverDataCopy'
- * @readonly
- * @enum {string}
- */
-export type Type2 = 'unknown' | 'export' | 'import' | 'backup' | 'readDeviceProperties' | 'writeDeviceProperties' | 'updateDeviceConfiguration' | 'rebootDevice' | 'factoryResetDevice' | 'firmwareUpdate' | 'scheduleDeviceMethod' | 'scheduleUpdateTwin' | 'restoreFromBackup' | 'failoverDataCopy';
-
-/**
  * Defines values for Status2.
- * Possible values include: 'unknown', 'enqueued', 'running', 'completed', 'failed', 'cancelled',
- * 'scheduled', 'queued'
- * @readonly
- * @enum {string}
- */
-export type Status2 = 'unknown' | 'enqueued' | 'running' | 'completed' | 'failed' | 'cancelled' | 'scheduled' | 'queued';
-
-/**
- * Defines values for Action.
- * Possible values include: 'None', 'CloseAll', 'Periodic'
- * @readonly
- * @enum {string}
- */
-export type Action = 'None' | 'CloseAll' | 'Periodic';
-
-/**
- * Defines values for Status3.
  * Possible values include: 'enabled', 'disabled'
  * @readonly
  * @enum {string}
  */
-export type Status3 = 'enabled' | 'disabled';
+export type Status2 = 'enabled' | 'disabled';
 
 /**
  * Defines values for ConnectionState1.
@@ -1270,6 +1362,61 @@ export type ConnectionState1 = 'Disconnected' | 'Connected';
 export type AuthenticationType = 'sas' | 'selfSigned' | 'certificateAuthority' | 'none';
 
 /**
+ * Defines values for Type1.
+ * Possible values include: 'unknown', 'export', 'import', 'backup', 'readDeviceProperties',
+ * 'writeDeviceProperties', 'updateDeviceConfiguration', 'rebootDevice', 'factoryResetDevice',
+ * 'firmwareUpdate', 'scheduleDeviceMethod', 'scheduleUpdateTwin', 'restoreFromBackup',
+ * 'failoverDataCopy'
+ * @readonly
+ * @enum {string}
+ */
+export type Type1 = 'unknown' | 'export' | 'import' | 'backup' | 'readDeviceProperties' | 'writeDeviceProperties' | 'updateDeviceConfiguration' | 'rebootDevice' | 'factoryResetDevice' | 'firmwareUpdate' | 'scheduleDeviceMethod' | 'scheduleUpdateTwin' | 'restoreFromBackup' | 'failoverDataCopy';
+
+/**
+ * Defines values for Status3.
+ * Possible values include: 'unknown', 'enqueued', 'running', 'completed', 'failed', 'cancelled',
+ * 'scheduled', 'queued'
+ * @readonly
+ * @enum {string}
+ */
+export type Status3 = 'unknown' | 'enqueued' | 'running' | 'completed' | 'failed' | 'cancelled' | 'scheduled' | 'queued';
+
+/**
+ * Defines values for StorageAuthenticationType.
+ * Possible values include: 'keyBased', 'identityBased'
+ * @readonly
+ * @enum {string}
+ */
+export type StorageAuthenticationType = 'keyBased' | 'identityBased';
+
+/**
+ * Defines values for Action.
+ * Possible values include: 'None', 'CloseAll', 'Periodic'
+ * @readonly
+ * @enum {string}
+ */
+export type Action = 'None' | 'CloseAll' | 'Periodic';
+
+/**
+ * Defines values for Op.
+ * Possible values include: 'add', 'replace', 'remove'
+ * @readonly
+ * @enum {string}
+ */
+export type Op = 'add' | 'replace' | 'remove';
+
+/**
+ * Defines values for Type2.
+ * Possible values include: 'unknown', 'export', 'import', 'backup', 'readDeviceProperties',
+ * 'writeDeviceProperties', 'updateDeviceConfiguration', 'rebootDevice', 'factoryResetDevice',
+ * 'firmwareUpdate', 'scheduleDeviceMethod', 'scheduleUpdateTwin', 'restoreFromBackup',
+ * 'failoverDataCopy'
+ * @readonly
+ * @enum {string}
+ */
+export type Type2 = 'unknown' | 'export' | 'import' | 'backup' | 'readDeviceProperties' | 'writeDeviceProperties' | 'updateDeviceConfiguration' | 'rebootDevice' | 'factoryResetDevice' | 'firmwareUpdate' | 'scheduleDeviceMethod' | 'scheduleUpdateTwin' | 'restoreFromBackup' | 'failoverDataCopy';
+
+/**
  * Defines values for Type3.
  * Possible values include: 'unknown', 'export', 'import', 'backup', 'readDeviceProperties',
  * 'writeDeviceProperties', 'updateDeviceConfiguration', 'rebootDevice', 'factoryResetDevice',
@@ -1281,17 +1428,6 @@ export type AuthenticationType = 'sas' | 'selfSigned' | 'certificateAuthority' |
 export type Type3 = 'unknown' | 'export' | 'import' | 'backup' | 'readDeviceProperties' | 'writeDeviceProperties' | 'updateDeviceConfiguration' | 'rebootDevice' | 'factoryResetDevice' | 'firmwareUpdate' | 'scheduleDeviceMethod' | 'scheduleUpdateTwin' | 'restoreFromBackup' | 'failoverDataCopy';
 
 /**
- * Defines values for Type4.
- * Possible values include: 'unknown', 'export', 'import', 'backup', 'readDeviceProperties',
- * 'writeDeviceProperties', 'updateDeviceConfiguration', 'rebootDevice', 'factoryResetDevice',
- * 'firmwareUpdate', 'scheduleDeviceMethod', 'scheduleUpdateTwin', 'restoreFromBackup',
- * 'failoverDataCopy'
- * @readonly
- * @enum {string}
- */
-export type Type4 = 'unknown' | 'export' | 'import' | 'backup' | 'readDeviceProperties' | 'writeDeviceProperties' | 'updateDeviceConfiguration' | 'rebootDevice' | 'factoryResetDevice' | 'firmwareUpdate' | 'scheduleDeviceMethod' | 'scheduleUpdateTwin' | 'restoreFromBackup' | 'failoverDataCopy';
-
-/**
  * Defines values for Status4.
  * Possible values include: 'unknown', 'enqueued', 'running', 'completed', 'failed', 'cancelled',
  * 'scheduled', 'queued'
@@ -1299,6 +1435,15 @@ export type Type4 = 'unknown' | 'export' | 'import' | 'backup' | 'readDeviceProp
  * @enum {string}
  */
 export type Status4 = 'unknown' | 'enqueued' | 'running' | 'completed' | 'failed' | 'cancelled' | 'scheduled' | 'queued';
+
+/**
+ * Defines values for Type4.
+ * Possible values include: 'unknown', 'twin', 'deviceJob', 'jobResponse', 'raw', 'enrollment',
+ * 'enrollmentGroup', 'deviceRegistration'
+ * @readonly
+ * @enum {string}
+ */
+export type Type4 = 'unknown' | 'twin' | 'deviceJob' | 'jobResponse' | 'raw' | 'enrollment' | 'enrollmentGroup' | 'deviceRegistration';
 
 /**
  * Defines values for ConnectionState2.
@@ -1309,9 +1454,9 @@ export type Status4 = 'unknown' | 'enqueued' | 'running' | 'completed' | 'failed
 export type ConnectionState2 = 'Disconnected' | 'Connected';
 
 /**
- * Contains response data for the getConfiguration operation.
+ * Contains response data for the get operation.
  */
-export type ServiceGetConfigurationResponse = Configuration & {
+export type ConfigurationGetResponse = Configuration & {
   /**
    * The underlying HTTP response.
    */
@@ -1329,9 +1474,9 @@ export type ServiceGetConfigurationResponse = Configuration & {
 };
 
 /**
- * Contains response data for the createOrUpdateConfiguration operation.
+ * Contains response data for the createOrUpdate operation.
  */
-export type ServiceCreateOrUpdateConfigurationResponse = Configuration & {
+export type ConfigurationCreateOrUpdateResponse = Configuration & {
   /**
    * The underlying HTTP response.
    */
@@ -1351,7 +1496,7 @@ export type ServiceCreateOrUpdateConfigurationResponse = Configuration & {
 /**
  * Contains response data for the getConfigurations operation.
  */
-export type ServiceGetConfigurationsResponse = Array<Configuration> & {
+export type ConfigurationGetConfigurationsResponse = Array<Configuration> & {
   /**
    * The underlying HTTP response.
    */
@@ -1369,9 +1514,9 @@ export type ServiceGetConfigurationsResponse = Array<Configuration> & {
 };
 
 /**
- * Contains response data for the testConfigurationQueries operation.
+ * Contains response data for the testQueries operation.
  */
-export type ServiceTestConfigurationQueriesResponse = ConfigurationQueriesTestResponse & {
+export type ConfigurationTestQueriesResponse = ConfigurationQueriesTestResponse & {
   /**
    * The underlying HTTP response.
    */
@@ -1389,9 +1534,34 @@ export type ServiceTestConfigurationQueriesResponse = ConfigurationQueriesTestRe
 };
 
 /**
- * Contains response data for the getDeviceRegistryStatistics operation.
+ * Contains response data for the applyOnEdgeDevice operation.
  */
-export type ServiceGetDeviceRegistryStatisticsResponse = RegistryStatistics & {
+export type ConfigurationApplyOnEdgeDeviceResponse = {
+  /**
+   * The parsed response body.
+   */
+  body: any;
+
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: any;
+    };
+};
+
+/**
+ * Contains response data for the getDeviceStatistics operation.
+ */
+export type RegistryManagerGetDeviceStatisticsResponse = RegistryStatistics & {
   /**
    * The underlying HTTP response.
    */
@@ -1411,7 +1581,7 @@ export type ServiceGetDeviceRegistryStatisticsResponse = RegistryStatistics & {
 /**
  * Contains response data for the getServiceStatistics operation.
  */
-export type ServiceGetServiceStatisticsResponse = ServiceStatistics & {
+export type RegistryManagerGetServiceStatisticsResponse = ServiceStatistics & {
   /**
    * The underlying HTTP response.
    */
@@ -1431,7 +1601,7 @@ export type ServiceGetServiceStatisticsResponse = ServiceStatistics & {
 /**
  * Contains response data for the getDevices operation.
  */
-export type ServiceGetDevicesResponse = Array<Device> & {
+export type RegistryManagerGetDevicesResponse = Array<Device> & {
   /**
    * The underlying HTTP response.
    */
@@ -1449,9 +1619,9 @@ export type ServiceGetDevicesResponse = Array<Device> & {
 };
 
 /**
- * Contains response data for the bulkCreateOrUpdateDevices operation.
+ * Contains response data for the bulkDeviceCRUD operation.
  */
-export type ServiceBulkCreateOrUpdateDevicesResponse = BulkRegistryOperationResult & {
+export type RegistryManagerBulkDeviceCRUDResponse = BulkRegistryOperationResult & {
   /**
    * The underlying HTTP response.
    */
@@ -1471,11 +1641,16 @@ export type ServiceBulkCreateOrUpdateDevicesResponse = BulkRegistryOperationResu
 /**
  * Contains response data for the queryIotHub operation.
  */
-export type ServiceQueryIotHubResponse = QueryResult & {
+export type RegistryManagerQueryIotHubResponse = Array<Twin> & RegistryManagerQueryIotHubHeaders & {
   /**
    * The underlying HTTP response.
    */
   _response: msRest.HttpResponse & {
+      /**
+       * The parsed HTTP response headers.
+       */
+      parsedHeaders: RegistryManagerQueryIotHubHeaders;
+
       /**
        * The response body as text (string format)
        */
@@ -1484,14 +1659,14 @@ export type ServiceQueryIotHubResponse = QueryResult & {
       /**
        * The response body as parsed JSON or XML
        */
-      parsedBody: QueryResult;
+      parsedBody: Twin[];
     };
 };
 
 /**
  * Contains response data for the getDevice operation.
  */
-export type ServiceGetDeviceResponse = Device & {
+export type RegistryManagerGetDeviceResponse = Device & {
   /**
    * The underlying HTTP response.
    */
@@ -1511,7 +1686,7 @@ export type ServiceGetDeviceResponse = Device & {
 /**
  * Contains response data for the createOrUpdateDevice operation.
  */
-export type ServiceCreateOrUpdateDeviceResponse = Device & {
+export type RegistryManagerCreateOrUpdateDeviceResponse = Device & {
   /**
    * The underlying HTTP response.
    */
@@ -1529,119 +1704,9 @@ export type ServiceCreateOrUpdateDeviceResponse = Device & {
 };
 
 /**
- * Contains response data for the applyConfigurationOnEdgeDevice operation.
- */
-export type ServiceApplyConfigurationOnEdgeDeviceResponse = {
-  /**
-   * The parsed response body.
-   */
-  body: any;
-
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: any;
-    };
-};
-
-/**
- * Contains response data for the createImportExportJob operation.
- */
-export type ServiceCreateImportExportJobResponse = JobProperties & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: JobProperties;
-    };
-};
-
-/**
- * Contains response data for the getImportExportJobs operation.
- */
-export type ServiceGetImportExportJobsResponse = Array<JobProperties> & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: JobProperties[];
-    };
-};
-
-/**
- * Contains response data for the getImportExportJob operation.
- */
-export type ServiceGetImportExportJobResponse = JobProperties & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: JobProperties;
-    };
-};
-
-/**
- * Contains response data for the cancelImportExportJob operation.
- */
-export type ServiceCancelImportExportJobResponse = {
-  /**
-   * The parsed response body.
-   */
-  body: any;
-
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: any;
-    };
-};
-
-/**
  * Contains response data for the purgeCommandQueue operation.
  */
-export type ServicePurgeCommandQueueResponse = PurgeMessageQueueResult & {
+export type RegistryManagerPurgeCommandQueueResponse = PurgeMessageQueueResult & {
   /**
    * The underlying HTTP response.
    */
@@ -1659,229 +1724,9 @@ export type ServicePurgeCommandQueueResponse = PurgeMessageQueueResult & {
 };
 
 /**
- * Contains response data for the getFaultInjection operation.
- */
-export type ServiceGetFaultInjectionResponse = FaultInjectionProperties & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: FaultInjectionProperties;
-    };
-};
-
-/**
- * Contains response data for the getTwin operation.
- */
-export type ServiceGetTwinResponse = Twin & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: Twin;
-    };
-};
-
-/**
- * Contains response data for the replaceTwin operation.
- */
-export type ServiceReplaceTwinResponse = Twin & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: Twin;
-    };
-};
-
-/**
- * Contains response data for the updateTwin operation.
- */
-export type ServiceUpdateTwinResponse = Twin & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: Twin;
-    };
-};
-
-/**
- * Contains response data for the getModuleTwin operation.
- */
-export type ServiceGetModuleTwinResponse = Twin & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: Twin;
-    };
-};
-
-/**
- * Contains response data for the replaceModuleTwin operation.
- */
-export type ServiceReplaceModuleTwinResponse = Twin & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: Twin;
-    };
-};
-
-/**
- * Contains response data for the updateModuleTwin operation.
- */
-export type ServiceUpdateModuleTwinResponse = Twin & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: Twin;
-    };
-};
-
-/**
- * Contains response data for the getJob operation.
- */
-export type ServiceGetJobResponse = JobResponse & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: JobResponse;
-    };
-};
-
-/**
- * Contains response data for the createJob operation.
- */
-export type ServiceCreateJobResponse = JobResponse & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: JobResponse;
-    };
-};
-
-/**
- * Contains response data for the cancelJob operation.
- */
-export type ServiceCancelJobResponse = JobResponse & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: JobResponse;
-    };
-};
-
-/**
- * Contains response data for the queryJobs operation.
- */
-export type ServiceQueryJobsResponse = QueryResult & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: QueryResult;
-    };
-};
-
-/**
  * Contains response data for the getModulesOnDevice operation.
  */
-export type ServiceGetModulesOnDeviceResponse = Array<Module> & {
+export type RegistryManagerGetModulesOnDeviceResponse = Array<Module> & {
   /**
    * The underlying HTTP response.
    */
@@ -1901,7 +1746,7 @@ export type ServiceGetModulesOnDeviceResponse = Array<Module> & {
 /**
  * Contains response data for the getModule operation.
  */
-export type ServiceGetModuleResponse = Module & {
+export type RegistryManagerGetModuleResponse = Module & {
   /**
    * The underlying HTTP response.
    */
@@ -1921,7 +1766,7 @@ export type ServiceGetModuleResponse = Module & {
 /**
  * Contains response data for the createOrUpdateModule operation.
  */
-export type ServiceCreateOrUpdateModuleResponse = Module & {
+export type RegistryManagerCreateOrUpdateModuleResponse = Module & {
   /**
    * The underlying HTTP response.
    */
@@ -1939,9 +1784,9 @@ export type ServiceCreateOrUpdateModuleResponse = Module & {
 };
 
 /**
- * Contains response data for the invokeDeviceMethod operation.
+ * Contains response data for the createImportExportJob operation.
  */
-export type ServiceInvokeDeviceMethodResponse = CloudToDeviceMethodResult & {
+export type JobClientCreateImportExportJobResponse = JobProperties & {
   /**
    * The underlying HTTP response.
    */
@@ -1954,14 +1799,14 @@ export type ServiceInvokeDeviceMethodResponse = CloudToDeviceMethodResult & {
       /**
        * The response body as parsed JSON or XML
        */
-      parsedBody: CloudToDeviceMethodResult;
+      parsedBody: JobProperties;
     };
 };
 
 /**
- * Contains response data for the invokeDeviceModuleMethod operation.
+ * Contains response data for the getImportExportJobs operation.
  */
-export type ServiceInvokeDeviceModuleMethodResponse = CloudToDeviceMethodResult & {
+export type JobClientGetImportExportJobsResponse = Array<JobProperties> & {
   /**
    * The underlying HTTP response.
    */
@@ -1974,14 +1819,329 @@ export type ServiceInvokeDeviceModuleMethodResponse = CloudToDeviceMethodResult 
       /**
        * The response body as parsed JSON or XML
        */
-      parsedBody: CloudToDeviceMethodResult;
+      parsedBody: JobProperties[];
     };
 };
 
 /**
- * Contains response data for the getInterfaces operation.
+ * Contains response data for the getImportExportJob operation.
  */
-export type DigitalTwinGetInterfacesResponse = DigitalTwinInterfaces & DigitalTwinGetInterfacesHeaders & {
+export type JobClientGetImportExportJobResponse = JobProperties & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: JobProperties;
+    };
+};
+
+/**
+ * Contains response data for the cancelImportExportJob operation.
+ */
+export type JobClientCancelImportExportJobResponse = {
+  /**
+   * The parsed response body.
+   */
+  body: any;
+
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: any;
+    };
+};
+
+/**
+ * Contains response data for the getJob operation.
+ */
+export type JobClientGetJobResponse = JobResponse & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: JobResponse;
+    };
+};
+
+/**
+ * Contains response data for the createJob operation.
+ */
+export type JobClientCreateJobResponse = JobResponse & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: JobResponse;
+    };
+};
+
+/**
+ * Contains response data for the cancelJob operation.
+ */
+export type JobClientCancelJobResponse = JobResponse & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: JobResponse;
+    };
+};
+
+/**
+ * Contains response data for the queryJobs operation.
+ */
+export type JobClientQueryJobsResponse = QueryResult & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: QueryResult;
+    };
+};
+
+/**
+ * Contains response data for the get operation.
+ */
+export type FaultInjectionGetResponse = FaultInjectionProperties & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: FaultInjectionProperties;
+    };
+};
+
+/**
+ * Contains response data for the getDeviceTwin operation.
+ */
+export type TwinGetDeviceTwinResponse = Twin & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: Twin;
+    };
+};
+
+/**
+ * Contains response data for the replaceDeviceTwin operation.
+ */
+export type TwinReplaceDeviceTwinResponse = Twin & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: Twin;
+    };
+};
+
+/**
+ * Contains response data for the updateDeviceTwin operation.
+ */
+export type TwinUpdateDeviceTwinResponse = Twin & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: Twin;
+    };
+};
+
+/**
+ * Contains response data for the getModuleTwin operation.
+ */
+export type TwinGetModuleTwinResponse = Twin & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: Twin;
+    };
+};
+
+/**
+ * Contains response data for the replaceModuleTwin operation.
+ */
+export type TwinReplaceModuleTwinResponse = Twin & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: Twin;
+    };
+};
+
+/**
+ * Contains response data for the updateModuleTwin operation.
+ */
+export type TwinUpdateModuleTwinResponse = Twin & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: Twin;
+    };
+};
+
+/**
+ * Contains response data for the getDigitalTwin operation.
+ */
+export type DigitalTwinGetDigitalTwinResponse = {
+  /**
+   * The parsed response body.
+   */
+  body: any;
+
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: any;
+    };
+};
+
+/**
+ * Contains response data for the updateDigitalTwin operation.
+ */
+export type DigitalTwinUpdateDigitalTwinResponse = {
+  /**
+   * The parsed response body.
+   */
+  body: any;
+
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: any;
+    };
+};
+
+/**
+ * Contains response data for the getComponents operation.
+ */
+export type DigitalTwinGetComponentsResponse = DigitalTwinInterfaces & DigitalTwinGetComponentsHeaders & {
   /**
    * The underlying HTTP response.
    */
@@ -1989,7 +2149,7 @@ export type DigitalTwinGetInterfacesResponse = DigitalTwinInterfaces & DigitalTw
       /**
        * The parsed HTTP response headers.
        */
-      parsedHeaders: DigitalTwinGetInterfacesHeaders;
+      parsedHeaders: DigitalTwinGetComponentsHeaders;
 
       /**
        * The response body as text (string format)
@@ -2004,9 +2164,9 @@ export type DigitalTwinGetInterfacesResponse = DigitalTwinInterfaces & DigitalTw
 };
 
 /**
- * Contains response data for the updateInterfaces operation.
+ * Contains response data for the updateComponent operation.
  */
-export type DigitalTwinUpdateInterfacesResponse = DigitalTwinInterfaces & DigitalTwinUpdateInterfacesHeaders & {
+export type DigitalTwinUpdateComponentResponse = DigitalTwinInterfaces & DigitalTwinUpdateComponentHeaders & {
   /**
    * The underlying HTTP response.
    */
@@ -2014,7 +2174,7 @@ export type DigitalTwinUpdateInterfacesResponse = DigitalTwinInterfaces & Digita
       /**
        * The parsed HTTP response headers.
        */
-      parsedHeaders: DigitalTwinUpdateInterfacesHeaders;
+      parsedHeaders: DigitalTwinUpdateComponentHeaders;
 
       /**
        * The response body as text (string format)
@@ -2029,9 +2189,9 @@ export type DigitalTwinUpdateInterfacesResponse = DigitalTwinInterfaces & Digita
 };
 
 /**
- * Contains response data for the getInterface operation.
+ * Contains response data for the getComponent operation.
  */
-export type DigitalTwinGetInterfaceResponse = DigitalTwinInterfaces & DigitalTwinGetInterfaceHeaders & {
+export type DigitalTwinGetComponentResponse = DigitalTwinInterfaces & DigitalTwinGetComponentHeaders & {
   /**
    * The underlying HTTP response.
    */
@@ -2039,7 +2199,7 @@ export type DigitalTwinGetInterfaceResponse = DigitalTwinInterfaces & DigitalTwi
       /**
        * The parsed HTTP response headers.
        */
-      parsedHeaders: DigitalTwinGetInterfaceHeaders;
+      parsedHeaders: DigitalTwinGetComponentHeaders;
 
       /**
        * The response body as text (string format)
@@ -2084,9 +2244,24 @@ export type DigitalTwinGetDigitalTwinModelResponse = DigitalTwinGetDigitalTwinMo
 };
 
 /**
- * Contains response data for the invokeInterfaceCommand operation.
+ * Contains response data for the updateDigitalTwinModel operation.
  */
-export type DigitalTwinInvokeInterfaceCommandResponse = DigitalTwinInvokeInterfaceCommandHeaders & {
+export type DigitalTwinUpdateDigitalTwinModelResponse = DigitalTwinUpdateDigitalTwinModelHeaders & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The parsed HTTP response headers.
+       */
+      parsedHeaders: DigitalTwinUpdateDigitalTwinModelHeaders;
+    };
+};
+
+/**
+ * Contains response data for the invokeComponentCommand operation.
+ */
+export type DigitalTwinInvokeComponentCommandResponse = DigitalTwinInvokeComponentCommandHeaders & {
   /**
    * The parsed response body.
    */
@@ -2099,7 +2274,7 @@ export type DigitalTwinInvokeInterfaceCommandResponse = DigitalTwinInvokeInterfa
       /**
        * The parsed HTTP response headers.
        */
-      parsedHeaders: DigitalTwinInvokeInterfaceCommandHeaders;
+      parsedHeaders: DigitalTwinInvokeComponentCommandHeaders;
 
       /**
        * The response body as text (string format)
@@ -2110,5 +2285,45 @@ export type DigitalTwinInvokeInterfaceCommandResponse = DigitalTwinInvokeInterfa
        * The response body as parsed JSON or XML
        */
       parsedBody: any;
+    };
+};
+
+/**
+ * Contains response data for the invokeDeviceMethod operation.
+ */
+export type DeviceMethodInvokeDeviceMethodResponse = CloudToDeviceMethodResult & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: CloudToDeviceMethodResult;
+    };
+};
+
+/**
+ * Contains response data for the invokeModuleMethod operation.
+ */
+export type DeviceMethodInvokeModuleMethodResponse = CloudToDeviceMethodResult & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: CloudToDeviceMethodResult;
     };
 };

@@ -8,5 +8,11 @@
  * regenerated.
  */
 
-export * from "./service";
+export * from "./configurationOperations";
+export * from "./registryManager";
+export * from "./jobClient";
+export * from "./faultInjection";
+export * from "./twinOperations";
 export * from "./digitalTwin";
+export * from "./httpRuntime";
+export * from "./deviceMethod";

@@ -9,17 +9,21 @@
 export {
   Desired,
   DesiredState,
+  DigitalTwinGetComponentHeaders,
+  DigitalTwinGetComponentsHeaders,
   DigitalTwinGetDigitalTwinModelHeaders,
-  DigitalTwinGetInterfaceHeaders,
-  DigitalTwinGetInterfacesHeaders,
   DigitalTwinInterfaces,
   DigitalTwinInterfacesPatch,
   DigitalTwinInterfacesPatchInterfacesValue,
   DigitalTwinInterfacesPatchInterfacesValuePropertiesValue,
   DigitalTwinInterfacesPatchInterfacesValuePropertiesValueDesired,
-  DigitalTwinInvokeInterfaceCommandHeaders,
-  DigitalTwinUpdateInterfacesHeaders,
+  DigitalTwinInvokeComponentCommandHeaders,
+  DigitalTwinPatch,
+  DigitalTwinUpdateComponentHeaders,
+  DigitalTwinUpdateDigitalTwinModelHeaders,
   InterfaceModel,
+  PatchOperation,
   Property,
-  Reported
+  Reported,
+  VariantValue
 } from "../models/mappers";

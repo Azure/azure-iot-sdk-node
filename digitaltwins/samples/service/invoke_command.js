@@ -4,10 +4,10 @@
 const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubTokenCredentials;
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 
-const deviceId = '<DEVICE_ID_GOES_HERE>';
-const interfaceInstanceName = '<INTERFACE_INSTANCE_NAME_GOES_HERE>'; // for the environmental sensor, you can try "environmentalSensor"
-const commandName = '<COMMAND_NAME_GOES_HERE>'; // for the environmental sensor, you can try "blink", "turnOff" or "turnOn"
-const commandArgument = '<COMMAND_ARGUMENT_GOES_HERE>'; // for the environmental sensor, it really doesn't matter. any string will do.
+const connectionString = process.env.IOTHUB_CONNECTION_STRING;
+const componentInstanceName = process.env.IOTHUB_COMPONENT_INSTANCE_NAME; // for the environmental sensor, try "environmentalSensor"
+const commandName = process.env.IOTHUB_COMMAND_NAME; // for the environmental sensor, you can try "blink", "turnOff" or "turnOn"
+const commandArgument = process.env.IOTHUB_COMMAND_ARGUMENT; // for the environmental sensor, it really doesn't matter. any string will do.
 
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
@@ -17,12 +17,12 @@ async function main() {
   // Twin enabled device must be exist on the IoT Hub
 
   // Create service client
-  const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
+  const credentials = new IoTHubTokenCredentials(connectionString);
   const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-  console.log('invoking command ' + commandName + ' on interface instance' + interfaceInstanceName + ' for device ' + deviceId + '...');
+  console.log('invoking command ' + commandName + ' on component instance' + componentInstanceName + ' for device ' + deviceId + '...');
   // Invoke a command
-  const digitalTwinCommandResult = await digitalTwinServiceClient.invokeCommand(deviceId, interfaceInstanceName, commandName, commandArgument);
+  const digitalTwinCommandResult = await digitalTwinServiceClient.invokeCommand(deviceId, componentInstanceName, commandName, commandArgument);
 
   // Print result of the command
   console.log(JSON.stringify(digitalTwinCommandResult, null, 2));

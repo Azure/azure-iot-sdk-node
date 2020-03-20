@@ -4,14 +4,19 @@
 const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubTokenCredentials;
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 
-const deviceId = '<DEVICE_ID_GOES_HERE>';
+const connectionString = process.env.IOTHUB_CONNECTION_STRING;
+const deviceId = process.env.IOTHUB_DEVICE_ID;
+const componentInstanceName = process.env.IOTHUB_COMPONENT_INSTANCE_NAME; // for the environmental sensor, try "environmentalSensor"
+const propertyName = process.env.IOTHUB_PROPERTY_NAME; // for the environmental sensor, try "brightness"
+const propertyValue = process.env.IOTHUB_PROPERTY_VALUE; // for the environmental sensor, try 42 (note that this is a number, not a string, so don't include quotes).
+
 const patch = {
   interfaces: {
-    '<INTERFACE_INSTANCE_NAME_GOES_HERE>': { // for the environmental sensor, try "environmentalSensor"
+    [componentInstanceName]: { // for the environmental sensor, try "environmentalSensor"
       properties: {
-        '<PROPERTY_NAME_GOES_HERE>': { // for the environmental sensor, try "brightness"
+        [propertyName]: { // for the environmental sensor, try "brightness"
           desired: {
-            value: '<PROPERTY_VALUE_GOES_HERE>' // for the environmental sensor, try 42 (note that this is a number, not a string, so don't include quotes).
+            value: [propertyValue] // for the environmental sensor, try 42 (note that this is a number, not a string, so don't include quotes).
           }
         }
       }
@@ -28,7 +33,7 @@ async function main() {
   // Twin enabled device must be exist on the IoT Hub
 
   // Create service client
-  const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
+  const credentials = new IoTHubTokenCredentials(connectionString);
   const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
   // Get digital twin
