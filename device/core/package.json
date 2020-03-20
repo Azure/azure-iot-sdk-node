@@ -27,6 +27,7 @@
     "sinon": "^7.4.1",
     "source-map-support": "^0.5.16",
     "ts-node": "^8.6.2",
+    "uuid": "^3.3.2",
     "tslint": "^5.18.0",
     "typescript": "2.9.2"
   },
