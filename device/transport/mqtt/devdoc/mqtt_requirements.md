@@ -215,6 +215,11 @@ The `reject` method is there for compatibility purposes with other transports bu
 
 **_SRS_NODE_DEVICE_MQTT_41_003: [** `productInfo` must be set before `mqtt._ensureAgentString` is invoked for the first time **]**
 
+**SRS_NODE_DEVICE_MQTT_06_001: [** The `setOptions` method shall throw an `InvalidOperationError` if the method is called with token renewal options while using using cert or non renewal authentication.
+ **]**
+
+**SRS_NODE_DEVICE_MQTT_06_002: [** The authentication providers `setTokenRenewalValues` method shall be invoked with the values provided in the tokenRenewal option.
+ **]**
 
 ### onDeviceMethod(methodName, methodCallback)
 

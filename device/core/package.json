@@ -23,11 +23,12 @@
     "chai": "^4.2.0",
     "es5-shim": "^4.5.12",
     "nyc": "^15.0.0",
-    "mocha": "^6.1.4",
+    "mocha": "^7.1.1",
     "sinon": "^7.4.1",
     "source-map-support": "^0.5.16",
     "ts-node": "^8.6.2",
-    "tslint": "^5.18.0",
+    "uuid": "^3.3.2",
+    "tslint": "^6.1.0",
     "typescript": "2.9.2"
   },
   "scripts": {
