@@ -111,7 +111,8 @@ export class DigitalTwinServiceClient {
   /**
    * @method getDigitalTwin                   module: azure-iot-digitaltwins-service.DigitalTwinServiceClient.getDigitalTwin
    * @description                             Retrieve the Digital Twin of a given device.
-   * @param {string} digitalTwinId            The digital twin Id of the given device.
+   * @param {string} digitalTwinId            The digital twin Id of the given device or module. 
+   *                                          Format of digitalTwinId is DeviceId[~ModuleId]. ModuleId is optional.
    * @returns DigitalTwinResponse             The return object containing the Digital Twin plus the HttpResponse.
    * @memberof DigitalTwinServiceClient
    */
