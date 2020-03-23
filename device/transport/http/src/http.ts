@@ -342,6 +342,18 @@ export class Http extends EventEmitter implements DeviceTransport {
       }
     }
 
+    /* Codes_SRS_NODE_DEVICE_HTTP_06_001: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called with token renewal options while using using cert or non renewal authentication.] */
+    if (options.tokenRenewal) {
+      if (this._authenticationProvider.type === AuthenticationType.X509) {
+        throw new errors.InvalidOperationError('cannot set token renewal options when using X509 authentication');
+      } else if (!this._authenticationProvider.setTokenRenewalValues) {
+        throw new errors.InvalidOperationError('can only set token renewal options when using pre-shared key authentication');
+      } else {
+        /* Codes_SRS_NODE_DEVICE_HTTP_06_002: [The authentication providers `setTokenRenewalValues` method shall be invoked with the values provided in the tokenRenewal option.] */
+        this._authenticationProvider.setTokenRenewalValues(options.tokenRenewal.tokenValidTimeInSeconds, options.tokenRenewal.tokenRenewalMarginInSeconds);
+      }
+    }
+
     /*Codes_SRS_NODE_DEVICE_HTTP_16_010: [`setOptions` should not throw if `done` has not been specified.]*/
     /*Codes_SRS_NODE_DEVICE_HTTP_16_005: [If `done` has been specified the `setOptions` method shall call the `done` callback with no arguments when successful.]*/
     /*Codes_SRS_NODE_DEVICE_HTTP_16_009: [If `done` has been specified the `setOptions` method shall call the `done` callback with a standard javascript `Error` object when unsuccessful.]*/

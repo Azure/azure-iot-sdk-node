@@ -91,7 +91,7 @@ describe('Device Client', function () {
   describe('#uploadToBlob', function() {
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_037: [The `uploadToBlob` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
     [undefined, null, ''].forEach(function (blobName) {
-      it('throws a ReferenceError if \'blobName\' is ' + blobName + '\'', function() {
+      it('throws a ReferenceError if \'blobName\' is \'' + blobName + '\'', function() {
         var client = new Client(new EventEmitter(), null, {});
         assert.throws(function() {
           client.uploadToBlob(blobName, new stream.Readable(), 42, function() {});
@@ -101,7 +101,7 @@ describe('Device Client', function () {
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_038: [The `uploadToBlob` method shall throw a `ReferenceError` if `stream` is falsy.]*/
     [undefined, null, ''].forEach(function (stream) {
-      it('throws a ReferenceError if \'stream\' is ' + stream + '\'', function() {
+      it('throws a ReferenceError if \'stream\' is \'' + stream + '\'', function() {
         var client = new Client(new EventEmitter(), null, {});
         assert.throws(function() {
           client.uploadToBlob('blobName', stream, 42, function() {});
@@ -111,7 +111,7 @@ describe('Device Client', function () {
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_039: [The `uploadToBlob` method shall throw a `ReferenceError` if `streamLength` is falsy.]*/
     [undefined, null, '', 0].forEach(function (streamLength) {
-      it('throws a ReferenceError if \'streamLength\' is ' + streamLength + '\'', function() {
+      it('throws a ReferenceError if \'streamLength\' is \'' + streamLength + '\'', function() {
         var client = new Client(new EventEmitter(), null, {});
         assert.throws(function() {
           client.uploadToBlob('blobName', new stream.Readable(), streamLength, function() {});
@@ -150,7 +150,7 @@ describe('Device Client', function () {
   describe('#getBlobSharedAccessSignature', function() {
     /*Tests_SRS_NODE_DEVICE_CLIENT_41_001: [The `getBlobSharedAccessSignature` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
     [undefined, null, ''].forEach(function (blobName) {
-      it('throws a ReferenceError if \'blobName\' is ' + blobName + '\'', function() {
+      it('throws a ReferenceError if \'blobName\' is \'' + blobName + '\'', function() {
         var client = new Client(new EventEmitter(), null, {}, {});
         assert.throws(function() {
           client.getBlobSharedAccessSignature(blobName, function() {});
@@ -177,7 +177,7 @@ describe('Device Client', function () {
     it('calls the done callback with the upload parameters if the method call succeeded', function (done) {
       let fakeUploadParams = {
         fake: 'string'
-      };  
+      };
       class FakeFileUploadApi {
         constructor() {
           this.getBlobSharedAccessSignature = function (blobName, callback) {
@@ -198,7 +198,7 @@ describe('Device Client', function () {
   describe('#notifyBlobUploadStatus', function() {
     /*Tests_SRS_NODE_DEVICE_CLIENT_41_005: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `isSuccess` is falsy.]*/
     [undefined, null, ''].forEach(function (isSuccess) {
-    it('throws a ReferenceError if \'isSuccess\' is ' + isSuccess + '\'', function(done) {
+    it('throws a ReferenceError if \'isSuccess\' is \'' + isSuccess + '\'', function(done) {
       let statusCode = 1;
       let statusDescription = 'NaN';
       let correlationId = 'fakeCorrelationId';
@@ -215,7 +215,7 @@ describe('Device Client', function () {
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_41_006: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusCode` is falsy but not the number 0.]*/
     [undefined, null, ''].forEach(function (statusCode) {
-    it('throws a ReferenceError if \'statusCode\' is ' + statusCode + '\'', function(done) {
+    it('throws a ReferenceError if \'statusCode\' is \'' + statusCode + '\'', function(done) {
       let isSuccess = 0;
       let statusDescription = 'NaN';
       let correlationId = 'fakeCorrelationId';
@@ -238,7 +238,7 @@ describe('Device Client', function () {
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_41_007: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusDescription` is falsy but not an empty string.]*/
     [undefined, null, ''].forEach(function (statusDescription) {
-    it('throws a ReferenceError if \'statusDescription\' is ' + statusDescription + '\'', function(done) {
+    it('throws a ReferenceError if \'statusDescription\' is \'' + statusDescription + '\'', function(done) {
       let isSuccess = 0;
       let statusDescription = 'NaN';
       let correlationId = 'fakeCorrelationId';
@@ -255,7 +255,7 @@ describe('Device Client', function () {
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_41_016: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `correlationId` is falsy.]*/
     [undefined, null, ''].forEach(function (correlationId) {
-      it('throws a ReferenceError if \'isSuccess\' is ' + correlationId + '\'', function(done) {
+      it('throws a ReferenceError if \'isSuccess\' is \'' + correlationId + '\'', function(done) {
         let isSuccess = 0;
         let statusCode = 1;
         let statusDescription = 'NaN';
@@ -282,7 +282,7 @@ describe('Device Client', function () {
         };
       };
       let client = new Client(new EventEmitter(), null, null, new FakeFileUploadApi());
-      client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function(err) { 
+      client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function(err) {
       assert.instanceOf(err, Error);
         done();
       });

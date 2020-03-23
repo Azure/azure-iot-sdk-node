@@ -11,7 +11,7 @@
     "azure-iot-digitaltwins-device": "1.0.0-preview.3"
   },
   "devDependencies": {
-    "tslint": "^5.18.0",
+    "tslint": "^6.1.0",
     "typescript": "2.9.2"
   },
   "scripts": {

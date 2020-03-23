@@ -161,7 +161,20 @@ describe('MqttBase', function () {
       transport.connect(fakeConfig, function () {});
     });
 
-   /*Tests_SRS_NODE_COMMON_MQTT_BASE_18_002: [The `connect` method shall set the `wsOptions.agent` option based on the `mqtt.webSocketAgent` object passed in the `options` structure via the `setOptions` function.]*/
+    /*Tests_SRS_NODE_COMMON_MQTT_BASE_41_001: [The `connect` method shall set the `keepalive` option based on the `keepalive` numeric value passed in the `options` structure via the `setOptions` function.]*/
+    it('uses the keepalive value passed into setOptions', function(done) {
+      var fakemqtt = new FakeMqtt();
+      var transport = new MqttBase(fakemqtt);
+
+      transport.setOptions({ keepalive: 0xFF });
+      fakemqtt.connect = function(host, options) {
+        assert.strictEqual(options.keepalive, 0xFF);
+        done();
+      };
+      transport.connect(fakeConfig, function () {});
+    });
+
+    /*Tests_SRS_NODE_COMMON_MQTT_BASE_18_002: [The `connect` method shall set the `wsOptions.agent` option based on the `mqtt.webSocketAgent` object passed in the `options` structure via the `setOptions` function.]*/
     it('uses the agent passed into setOptions', function(done) {
       var fakeAgent = '__FAKE_AGENT__';
       var fakemqtt = new FakeMqtt();

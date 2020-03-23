@@ -3,28 +3,27 @@
 
 'use strict';
 
-var assert = require('chai').assert;
-var sinon = require('sinon');
-var errors = require('azure-iot-common').errors;
-var SharedAccessSignature = require('azure-iot-common').SharedAccessSignature;
-var SharedAccessKeyAuthenticationProvider = require('../lib/sak_authentication_provider').SharedAccessKeyAuthenticationProvider;
+const assert = require('chai').assert;
+const sinon = require('sinon');
+const errors = require('azure-iot-common').errors;
+const SharedAccessSignature = require('azure-iot-common').SharedAccessSignature;
+const SharedAccessKeyAuthenticationProvider = require('../lib/sak_authentication_provider').SharedAccessKeyAuthenticationProvider;
 
 describe('SharedAccessKeyAuthenticationProvider', function () {
   describe('#constructor', function () {
     /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_001: [The `constructor` shall create the initial token value using the `credentials` parameter.]*/
     it('initializes the credentials', function (testCallback) {
-      var fakeCredentials = {
+      const fakeCredentials = {
         deviceId: 'fakeDeviceId',
         host: 'fake.host.name',
         sharedAccessKey: 'fakeKey'
       };
-      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
-      sakAuthProvider.automaticRenewal = false;
+      const sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
       sakAuthProvider.getDeviceCredentials(function (err, creds) {
         assert.strictEqual(creds.deviceId, fakeCredentials.deviceId);
         assert.strictEqual(creds.host, fakeCredentials.host);
         assert.strictEqual(creds.sharedAccessKey, fakeCredentials.sharedAccessKey);
-        var sasObject = SharedAccessSignature.parse(creds.sharedAccessSignature);
+        const sasObject = SharedAccessSignature.parse(creds.sharedAccessSignature);
         /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_010: [Every token shall be created using the `azure-iot-common.SharedAccessSignature.create` method and then serialized as a string, with the arguments to the create methods being:
         ```
         resourceUri: <IoT hub host>/devices/<deviceId>
@@ -43,31 +42,28 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
 
     /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_002: [The `getDeviceCredentials` method shall start a timer that will automatically renew the token every (`tokenValidTimeInSeconds` - `tokenRenewalMarginInSeconds`) seconds if specified, or 45 minutes by default.]*/
     it('starts a timer to renew the token', function (testCallback) {
-      this.clock = sinon.useFakeTimers();
-      var testClock = this.clock;
-      var fakeCredentials = {
+      const clock = sinon.useFakeTimers();
+      const fakeCredentials = {
         deviceId: 'fakeDeviceId',
         host: 'fake.host.name',
         sharedAccessKey: 'fakeKey'
       };
-      var token;
-      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
-      var eventSpy = sinon.spy();
+      const sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+      const eventSpy = sinon.spy();
       sakAuthProvider.on('newTokenAvailable', eventSpy);
       /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_003: [The `getDeviceCredentials` should call its callback with a `null` first parameter and a `TransportConfig` object as a second parameter, containing the latest valid token it generated.]*/
       sakAuthProvider.getDeviceCredentials(function (err, creds) {
         assert.isNull(err);
-        token = creds.sharedAccessSignature;
-        testClock.tick(5000); // 5 seconds - token not renewed
+        const token = creds.sharedAccessSignature;
+        clock.tick(5000); // 5 seconds - token not renewed
         sakAuthProvider.getDeviceCredentials(function (err, creds) {
           assert.strictEqual(token, creds.sharedAccessSignature);
-          testClock.tick(5000); // 5 more seconds - token should've been renewed
+          clock.tick(5000); // 5 more seconds - token should've been renewed
           sakAuthProvider.getDeviceCredentials(function (err, creds) {
             assert.notEqual(token, creds.sharedAccessSignature);
             /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_005: [Every time a new token is created, the `newTokenAvailable` event shall be fired with no arguments.]*/
-            assert.isTrue(eventSpy.calledOnce);
-            sakAuthProvider.automaticRenewal = false;
-            testClock.restore();
+            assert(eventSpy.calledOnce);
+            clock.restore();
             sakAuthProvider.stop();
             testCallback();
           });
@@ -76,36 +72,34 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
     });
 
     it('getDeviceCredentials renews token on demand', function (testCallback) {
-      this.clock = sinon.useFakeTimers();
-      var testClock = this.clock;
-      var fakeCredentials = {
+      const clock = sinon.useFakeTimers();
+      const fakeCredentials = {
         deviceId: 'fakeDeviceId',
         host: 'fake.host.name',
         sharedAccessKey: 'fakeKey'
       };
-      var token;
-      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+      const sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
 
       // the following line will cause _shouldRenewToken to resolve to true
       sakAuthProvider._currentTokenExpiryTimeInSeconds = undefined;
 
       sakAuthProvider.getDeviceCredentials(function (err, creds) {
         assert.equal(creds.sharedAccessSignature, 'SharedAccessSignature sr=fake.host.name%2Fdevices%2FfakeDeviceId&sig=bYz5R2IFTaejB6pgYOxns2mw6lcuA4VSy8kJbYQp0Sc%3D&se=10');
-        testClock.restore();
+        clock.restore();
         sakAuthProvider.stop();
         testCallback();
       });
     });
 
     it('emits an error if _sign fails while automatically renewing on token timeout', function (testCallback) {
-      var fakeCredentials = {
+      const fakeCredentials = {
         deviceId: 'fakeDeviceId',
         host: 'fake.host.name',
         sharedAccessKey: 'fakeKey'
       };
-      var fakeError = new Error('whoops');
-      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
-      var eventSpy = sinon.spy();
+      const fakeError = new Error('whoops');
+      const sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+      const eventSpy = sinon.spy();
       sakAuthProvider.on('error', function (err) {
         assert.strictEqual(err, fakeError);
           sakAuthProvider.stop();
@@ -117,12 +111,12 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
     });
 
     it('getDeviceCredentials propagates error via callback if _sign fails', function (testCallback) {
-      var fakeCredentials = {
+      const fakeCredentials = {
         deviceId: 'fakeDeviceId',
         host: 'fake.host.name',
         sharedAccessKey: 'fakeKey'
       };
-      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+      const sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
 
       sinon.stub(sakAuthProvider, '_sign').callsArgWith(2, 'whoops');
       sakAuthProvider.getDeviceCredentials(function(err) {
@@ -133,12 +127,12 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
     });
 
     it('_renewToken provides result via callback', function (testCallback) {
-      var fakeCredentials = {
+      const fakeCredentials = {
         deviceId: 'fakeDeviceId',
         host: 'fake.host.name',
         sharedAccessKey: 'fakeKey'
       };
-      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+      const sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
 
       sinon.stub(sakAuthProvider, '_sign').callsArgWith(2, null, 'signature');
       sakAuthProvider._renewToken(function(err, creds) {
@@ -201,7 +195,7 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
       }
     ].forEach(function(testConfig) {
       it('initializes the credentials from the connection string ' + testConfig.name, function (testCallback) {
-        var sakAuthProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString(testConfig.connectionString, 2, 1);
+        const sakAuthProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString(testConfig.connectionString, 2, 1);
         sakAuthProvider.getDeviceCredentials(function (err, creds) {
           assert.strictEqual(creds.deviceId, testConfig.credentials.deviceId);
           assert.strictEqual(creds.moduleId, testConfig.credentials.moduleId);
@@ -218,38 +212,131 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
 
     /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_012: [The `stop` method shall clear the token renewal timer if it is running.]*/
     it('clears the SAS token renewal timeout', function (testCallback) {
-      this.clock = sinon.useFakeTimers();
-      var testClock = this.clock;
-      var fakeCredentials = {
+      const clock = sinon.useFakeTimers();
+      const fakeCredentials = {
         deviceId: 'fakeDeviceId',
         host: 'fake.host.name',
         sharedAccessKey: 'fakeKey'
       };
-      var token;
-      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
-      var eventSpy = sinon.spy();
+      const sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+      const eventSpy = sinon.spy();
       sakAuthProvider.on('newTokenAvailable', eventSpy);
       /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_003: [The `getDeviceCredentials` should call its callback with a `null` first parameter and a `TransportConfig` object as a second parameter, containing the latest valid token it generated.]*/
       sakAuthProvider.getDeviceCredentials(function () {
-        testClock.tick(11000); // 11 seconds - event should've fired
-        assert.isTrue(eventSpy.calledOnce);
+        clock.tick(11000); // 11 seconds - event should've fired
+        assert(eventSpy.calledOnce);
         sakAuthProvider.stop();
-        testClock.tick(11000);
-        assert.isTrue(eventSpy.calledOnce); // if the timer is still running, the event would've fired twice.
-        testClock.restore();
+        clock.tick(11000);
+        assert(eventSpy.calledOnce); // if the timer is still running, the event would've fired twice.
+        clock.restore();
         testCallback();
       });
     });
 
     /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_013: [The `stop` method shall simply return if the token renewal timer is not running.]*/
     it('returns and does not crash if the timer is not running', function () {
-      var sakAuthProvider = new SharedAccessKeyAuthenticationProvider({
+      const sakAuthProvider = new SharedAccessKeyAuthenticationProvider({
         deviceId: 'fakeDeviceId',
         host: 'fake.host.name',
         sharedAccessKey: 'fakeKey'
       }, 10, 1);
       assert.doesNotThrow(function () {
         sakAuthProvider.stop();
+      });
+    });
+  });
+
+  describe('setTokenRenewalValues', function () {
+
+    const validTimeInSeconds = 3600;
+    const marginInSeconds = 1200;
+    /* Tests_SRS_NODE_SAK_AUTH_PROVIDER_06_001: [The `setTokenRenewalValues` shall throw an `ArgumentError` if the `tokenValidTimeInSeconds` is less than or equal `tokenRenewalMarginInSeconds`.] */
+    it('throws if the valid <= margin ', () => {
+      const fakeCredentials = {
+        deviceId: 'fakeDeviceId',
+        host: 'fake.host.name',
+        sharedAccessKey: 'fakeKey'
+      };
+      const sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+      assert.throw(() => sakAuthProvider.setTokenRenewalValues(marginInSeconds, marginInSeconds), errors.ArgumentError);
+    });
+
+    /* Tests_SRS_NODE_SAK_AUTH_PROVIDER_06_002: [If there is no timer running when `setTokenRenewalValues` is invoked, there will NOT be a timer running when it returns.] */
+    it('Will NOT start the timing loop', (done) => {
+      const fakeCredentials = {
+        deviceId: 'fakeDeviceId',
+        host: 'fake.host.name',
+        sharedAccessKey: 'fakeKey'
+      };
+      const sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+      assert.notOk(sakAuthProvider._renewalTimeout);
+      sakAuthProvider.setTokenRenewalValues(validTimeInSeconds, marginInSeconds);
+      assert.notOk(sakAuthProvider._renewalTimeout);
+      done();
+    });
+
+    it('Will continue the timing loop', (done) => {
+      const fakeCredentials = {
+        deviceId: 'fakeDeviceId',
+        host: 'fake.host.name',
+        sharedAccessKey: 'fakeKey'
+      };
+      const sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+      assert.notOk(sakAuthProvider._renewalTimeout);
+      sakAuthProvider.getDeviceCredentials((errorFromGet, transportConfig) => {
+        if (errorFromGet) {
+          return done(errorFromGet);
+        } else {
+          assert(sakAuthProvider._renewalTimeout);
+          sakAuthProvider.setTokenRenewalValues(validTimeInSeconds, marginInSeconds);
+          assert(sakAuthProvider._renewalTimeout);
+          sakAuthProvider.stop();
+          assert.notOk(sakAuthProvider._renewalTimeout);
+          return done();
+        }
+      });
+    });
+
+    /* Tests_SRS_NODE_SAK_AUTH_PROVIDER_06_003: [If there is a timer running when `setTokenRenewalValues` is invoked it will cause a token renewal to happen almost immediately and cause the subsequent renewals to happen with as specified with the new values.] */
+    it('will reset the time when a new token is provided', (done) => {
+      const initialValidTimeInSeconds = 10000;
+      const initialMarginInSeconds = 2000;
+      const newValidTimeInSeconds = 20000;
+      const newMarginInSeconds = 2000;
+      const clock = sinon.useFakeTimers();
+      const fakeCredentials = {
+        deviceId: 'fakeDeviceId',
+        host: 'fake.host.name',
+        sharedAccessKey: 'fakeKey'
+      };
+      const sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, initialValidTimeInSeconds, initialMarginInSeconds);
+      const eventSpy = sinon.spy();
+      sakAuthProvider.on('newTokenAvailable', eventSpy);
+      sakAuthProvider.getDeviceCredentials(() => {
+        clock.tick(initialValidTimeInSeconds*1000);
+        assert(eventSpy.calledOnce);
+        sakAuthProvider.setTokenRenewalValues(newValidTimeInSeconds, newMarginInSeconds);
+        //
+        // When resetting these values when auto-renewing is active, the will be a new token generated
+        // almost immediately.  Then it will assume the new renewal values
+        //
+        clock.tick(1000);
+        assert(eventSpy.calledTwice);
+        //
+        // Move forward by the initial valid time.  We should NOT have had a new token generated.
+        //
+        clock.tick(initialValidTimeInSeconds*1000);
+        assert(eventSpy.calledTwice);
+        //
+        // Now move forward by the new time so we should have had another token generated.
+        //
+        clock.tick((newValidTimeInSeconds - initialValidTimeInSeconds) * 1000);
+        assert(eventSpy.calledThrice);
+        clock.tick(newValidTimeInSeconds*1000);
+        assert(eventSpy.callCount, 4);
+        sakAuthProvider.stop();
+        clock.restore();
+        done();
       });
     });
   });

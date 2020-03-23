@@ -82,7 +82,7 @@ The `connect` method establishes a connection with the Azure IoT Hub instance.
 
 **SRS_NODE_DEVICE_AMQP_13_002: [** The `connect` method shall set the CA cert on the options object when calling the underlying connection object's connect method if it was supplied. **]**
 
-**SRS_NODE_DEVICE_AMQP_99_084: [** The `connect` method shall set the HTTPS agent on the options object when calling the underlying connection object's connect method if it was supplied. **]** 
+**SRS_NODE_DEVICE_AMQP_99_084: [** The `connect` method shall set the HTTPS agent on the options object when calling the underlying connection object's connect method if it was supplied. **]**
 
 **SRS_NODE_DEVICE_AMQP_41_001: [** The AMQP transport should use the productInfo string in the `options` object if present **]**
 
@@ -153,9 +153,16 @@ This method is deprecated. The `AmqpReceiver` object and pattern is going away a
 
 **SRS_NODE_DEVICE_AMQP_06_004: [** The AMQP transport should use the x509 settings passed in the `options` object to connect to the service if present.**]**
 
-**SRS_NODE_DEVICE_AMQP_16_053: [** The `setOptions` method shall throw an `InvalidOperationError` if the method is called while using token-based authentication. **]**
+**SRS_NODE_DEVICE_AMQP_16_053: [** The `setOptions` method shall throw an `InvalidOperationError` if the method is called with a cert option while using token-based authentication. **]**
 
+**SRS_NODE_DEVICE_AMQP_06_012: [** The `setOptions` method shall throw an `InvalidOperationError` if the method is called with token renewal options while using using cert or non renewal authentication. **]**
+
+**SRS_NODE_DEVICE_AMQP_06_013: [** The authentication providers `setTokenRenewalValues` method shall be invoked with the values provided in the tokenRenewal option.
+ **]**
+ 
 **SRS_NODE_DEVICE_AMQP_13_001: [** The `setOptions` method shall save the options passed in. **]**
+
+
 
 ### abandon(message, done)
 

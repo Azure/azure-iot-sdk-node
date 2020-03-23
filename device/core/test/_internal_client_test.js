@@ -5,6 +5,7 @@
 
 var assert = require('chai').assert;
 var sinon = require('sinon');
+var uuid = require('uuid');
 var fs = require('fs');
 var EventEmitter = require('events').EventEmitter;
 var SimulatedHttp = require('./http_simulated.js');
@@ -218,7 +219,7 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
           } else {
             done();
           }
-        }); 
+        });
       });
     });
 
@@ -672,7 +673,7 @@ describe('Over simulated HTTPS', function () {
         deviceId: deviceId,
         authentication: {
           symmetricKey: {
-            primaryKey: 'key=='
+            primaryKey: uuid.v4()
           }
         }
       });
