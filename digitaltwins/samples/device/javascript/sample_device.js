@@ -9,113 +9,22 @@ const EnvironmentalSensor = require('./environmentalinterface').EnvironmentalSen
 const DeviceInformation = require('./deviceInformation').DeviceInformation;
 const ModelDefinition = require('./modelDefinition').ModelDefinition;
 
-const environmentalModel = `{
-  "@id": "urn:contoso:com:EnvironmentalSensor:1",
-  "@type": "Interface",
-  "displayName": "Environmental Sensor",
-  "description": "Provides functionality to report temperature, humidity. Provides telemetry, commands and read-write properties",
-  "comment": "Requires temperature and humidity sensors.",
-  "contents": [
-    {
-      "@type": "Property",
-      "displayName": "Device State",
-      "description": "The state of the device. Two states online/offline are available.",
-      "name": "state",
-      "schema": "boolean"
-    },
-    {
-      "@type": "Property",
-      "displayName": "Customer Name",
-      "description": "The name of the customer currently operating the device.",
-      "name": "name",
-      "schema": "string",
-      "writable": true
-    },
-    {
-      "@type": "Property",
-      "displayName": "Brightness Level",
-      "description": "The brightness level for the light on the device. Can be specified as 1 (high), 2 (medium), 3 (low)",
-      "name": "brightness",
-      "writable": true,
-      "schema": "long"
-    },
-    {
-      "@type": [
-        "Telemetry",
-        "SemanticType/Temperature"
-      ],
-      "description": "Current temperature on the device",
-      "displayName": "Temperature",
-      "name": "temp",
-      "schema": "double",
-      "unit": "Units/Temperature/fahrenheit"
-    },
-    {
-      "@type": [
-        "Telemetry",
-        "SemanticType/Humidity"
-      ],
-      "description": "Current humidity on the device",
-      "displayName": "Humidity",
-      "name": "humid",
-      "schema": "double",
-      "unit": "Units/Humidity/percent"
-    },
-    {
-      "@type": "Command",
-      "description": "This command will begin blinking the LED for given time interval.",
-      "name": "blink",
-      "commandType": "synchronous",
-      "request": {
-        "name": "interval",
-        "schema": "long"
-      },
-      "response": {
-        "name": "blinkResponse",
-        "schema": {
-          "@type": "Object",
-          "fields": [
-            {
-              "name": "description",
-              "schema": "string"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "@type": "Command",
-      "name": "turnon",
-      "comment": "This Commands will turn-on the LED light on the device.",
-      "commandType": "synchronous"
-    },
-    {
-      "@type": "Command",
-      "name": "turnoff",
-      "comment": "This Commands will turn-off the LED light on the device.",
-      "commandType": "synchronous"
-    },
-    {
-      "@type": "Command",
-      "name": "rundiagnostics",
-      "comment": "This command initiates a diagnostics run.  This will take time and is implemented as an asynchronous command",
-      "commandType": "asynchronous"
-    }
-  ],
-  "@context": "http://azureiot.com/v1/contexts/IoTModel.json"
-}`;
+const environmentalId = 'urn:contoso:com:EnvironmentalSensor:1';
+let digitalTwinClient;
 
-const environmentalId = JSON.parse(environmentalModel)['@id'];
 
-const propertyUpdateHandler = (interfaceInstance, propertyName, reportedValue, desiredValue, version) => {
+const propertyUpdateHandler = async (interfaceInstance, propertyName, reportedValue, desiredValue, version) => {
   console.log('Received an update for ' + propertyName + ': ' + JSON.stringify(desiredValue));
-  interfaceInstance[propertyName].report(desiredValue, {
-    code: 200,
-    description: 'helpful descriptive text',
-    version: version
-  })
-    .then(() => console.log('updated the property'))
-    .catch(() => console.log('failed to update the property'));
+  try {
+    await digitalTwinClient.report(interfaceInstance, propertyName, desiredValue, {
+      code: 200,
+      description: 'helpful descriptive text',
+      version: version
+    });
+    console.log('updated the property');
+  } catch (e) {
+    console.log('failed to update the property'))
+  }
 };
 
 const commandHandler = (request, response) => {
@@ -159,7 +68,8 @@ const capabilityModel = 'urn:azureiot:samplemodel:1';
 
 async function main() {
   // mqtt is implied in this static method
-  const digitalTwinClient = DigitalTwinClient.fromConnectionString(capabilityModel, process.env.DEVICE_CONNECTION_STRING);
+  digitalTwinClient = DigitalTwinClient.fromConnectionString(capabilityModel, process.env.DEVICE_CONNECTION_STRING);
+
 
   // TBC: Do we create these inline
   await digitalTwinClient.addInterfaceInstances(
@@ -168,9 +78,9 @@ async function main() {
     modelDefinition
   );
 
-  // either one of these would cause the device to call open, or the report.
-  // device could do report / telemetry before these enables.
-  // enablePropertyUpdates
+  // // either one of these would cause the device to call open, or the report.
+  // // device could do report / telemetry before these enables.
+  // // enablePropertyUpdates
   await digitalTwinClient.enableCommands();
   await digitalTwinClient.enablePropertyUpdates();
 
