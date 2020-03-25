@@ -474,8 +474,8 @@
     },
     "/devices/{id}/applyConfigurationContent": {
       "post": {
-        "summary": "Applies the provided configuration content to the specified edge device.",
-        "description": "Applies the provided configuration content to the specified edge device. Configuration content must have modules content",
+        "summary": "Applies the provided configuration content to the specified iotEdge device.",
+        "description": "Applies the provided configuration content to the specified iotEdge device. Configuration content must have modules content",
         "operationId": "Configuration_ApplyOnEdgeDevice",
         "consumes": [
           "application/json"
@@ -1953,7 +1953,7 @@
       }
     },
     "ConfigurationContent": {
-      "description": "Configuration Content for Devices or Modules on Edge Devices.",
+      "description": "Configuration Content for Devices or Modules on iotEdge Devices.",
       "type": "object",
       "properties": {
         "deviceContent": {
