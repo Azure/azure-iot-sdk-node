@@ -5,6 +5,7 @@
 
 var assert = require('chai').assert;
 var sinon = require('sinon');
+var uuid = require('uuid');
 var endpoint = require('azure-iot-common').endpoint;
 var errors = require('azure-iot-common').errors;
 var Registry = require('../lib/registry.js').Registry;
@@ -680,6 +681,116 @@ describe('Registry', function () {
     });
   });
 
+  describe('#importDevicesFromBlobByIdentity', function () {
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_001: [A `ReferenceError` shall be thrown if `inputBlobContainerUri` is falsy]*/
+    [undefined, null, ''].forEach(function(badUri) {
+      it('throws a ReferenceError if inputBlobContainerUri is \'' + badUri + '\'', function() {
+        var registry = new Registry({ host: 'host', sharedAccessSignature: 'sas' });
+        assert.throws(function(){
+          registry.importDevicesFromBlobByIdentity(badUri, 'outputContainerUri', function() {});
+        }, ReferenceError);
+      });
+    });
+
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_002: [A `ReferenceError` shall be thrown if `outputBlobContainerUri` is falsy]*/
+    [undefined, null, ''].forEach(function(badUri) {
+      it('throws a ReferenceError if outputBlobContainerUri is \'' + badUri + '\'', function() {
+        var registry = new Registry({ host: 'host', sharedAccessSignature: 'sas' });
+        assert.throws(function(){
+          registry.importDevicesFromBlobByIdentity('inputContainerUri', badUri, function() {});
+        }, ReferenceError);
+      });
+    });
+
+    testErrorCallback('importDevicesFromBlobByIdentity', 'input', 'output');
+
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_031: [The `importDeviceFromBlob` method shall construct an HTTP request using information supplied by the caller, as follows:
+    ```
+    POST /jobs/create?api-version=<version> HTTP/1.1
+    Authorization: <config.sharedAccessSignature>
+    Content-Type: application/json; charset=utf-8
+    Request-Id: <guid>
+
+    {
+      "type": "import",
+      "inputBlobContainerUri": "<input container Uri given as parameter>",
+      "outputBlobContainerUri": "<output container Uri given as parameter>",
+      'storageAuthenticationType': 'IdentityBased'
+    }
+    ```]*/
+    it('constructs a valid HTTP request', function (testCallback) {
+      var fakeInputBlob = "input";
+      var fakeOutputBlob = "output";
+      var fakeHttpHelper = {
+        executeApiCall: function (method, path, httpHeaders, body, done) {
+          assert.equal(method, 'POST');
+          assert.equal(path, '/jobs/create' + endpoint.versionQueryString());
+          assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
+          assert.equal(body.type, 'import');
+          assert.equal(body.inputBlobContainerUri, fakeInputBlob);
+          assert.equal(body.outputBlobContainerUri, fakeOutputBlob);
+          assert.equal(body.storageAuthenticationType, "IdentityBased");
+          done();
+        }
+      };
+
+      var registry = new Registry(fakeConfig, fakeHttpHelper);
+      registry.importDevicesFromBlobByIdentity(fakeInputBlob, fakeOutputBlob, testCallback);
+    });
+  });
+
+  describe('#exportDevicesToBlobByIdentity', function () {
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_004: [A `ReferenceError` shall be thrown if outputBlobContainerUri is falsy]*/
+    [undefined, null, ''].forEach(function(badUri) {
+      it('throws a ReferenceError if outputBlobContainerUri is \'' + badUri + '\'', function() {
+        var registry = new Registry({ host: 'host', sharedAccessSignature: 'sas' });
+        assert.throws(function(){
+          registry.exportDevicesToBlobByIdentity(badUri, false, function() {});
+        }, ReferenceError);
+        assert.throws(function () {
+          registry.exportDevicesToBlobByIdentity(badUri, true, function () {});
+        }, ReferenceError);
+      });
+    });
+
+    testErrorCallback('exportDevicesToBlobByIdentity', 'input', true);
+
+    /*Tests_SRS_NODE_IOTHUB_REGISTRY_16_032: [The `exportDeviceToBlob` method shall construct an HTTP request using information supplied by the caller, as follows:
+    ```
+    POST /jobs/create?api-version=<version> HTTP/1.1
+    Authorization: <config.sharedAccessSignature>
+    Content-Type: application/json; charset=utf-8
+    Request-Id: <guid>
+
+    {
+      "type": "export",
+      "outputBlobContainerUri": "<output container Uri given as parameter>",
+      "excludeKeysInExport": "<excludeKeys Boolean given as parameter>",
+      'storageAuthenticationType': 'IdentityBased'
+    }
+    ```]*/
+    [true, false].forEach(function (fakeExcludeKeys) {
+      it('constructs a valid HTTP request when excludeKeys is \'' + fakeExcludeKeys + '\'', function (testCallback) {
+        var fakeOutputBlob = "output";
+        var fakeHttpHelper = {
+          executeApiCall: function (method, path, httpHeaders, body, done) {
+            assert.equal(method, 'POST');
+            assert.equal(path, '/jobs/create' + endpoint.versionQueryString());
+            assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
+            assert.equal(body.type, 'export');
+            assert.equal(body.outputBlobContainerUri, fakeOutputBlob);
+            assert.equal(body.excludeKeysInExport, fakeExcludeKeys);
+            assert.equal(body.storageAuthenticationType, "IdentityBased");
+            done();
+          }
+        };
+
+        var registry = new Registry(fakeConfig, fakeHttpHelper);
+        registry.exportDevicesToBlobByIdentity(fakeOutputBlob, fakeExcludeKeys, testCallback);
+      });
+    });
+  });
+
   describe('#listJobs', function () {
     testErrorCallback('listJobs');
 
@@ -918,16 +1029,17 @@ describe('Registry', function () {
       /* Tests_SRS_NODE_IOTHUB_REGISTRY_06_031: [A device information with an authentication object that doesn't contain the x509Thumbprint property will be normalized with a `type` property with value "sas".] */
       /* Tests_SRS_NODE_IOTHUB_REGISTRY_06_030: [A device information with an authentication object that contains the x509Thumbprint property with at least one of `primaryThumbprint` or `secondaryThumbprint` sub-properties will be normalized with a `type` property with value "selfSigned".] */
       it('constructs a valid HTTP request', function(testCallback) {
+        var fakeKey = uuid.v4();
         var addedDevices = [
           { deviceId: 'devicezero'},
           { deviceId: 'deviceone', authentication: { x509Thumbprint: { primaryThumbprint: 'abc' }}},
-          { deviceId: 'devicetwo', authentication: { symmetricKey: { primaryKey: 'abc' }}},
+          { deviceId: 'devicetwo', authentication: { symmetricKey: { primaryKey: fakeKey }}},
           { deviceId: 'devicethree', authentication: { type: 'certificateAuthority' }},
         ];
         var sentBody = [
           { id: 'devicezero', importMode:'create', authentication: { type: 'sas', symmetricKey: { primaryKey: '', secondaryKey: '' }}},
           { id: 'deviceone', importMode:'create', authentication: { type: 'selfSigned', x509Thumbprint: { primaryThumbprint: 'abc' }}},
-          { id: 'devicetwo', importMode:'create', authentication: { type: 'sas', symmetricKey: { primaryKey: 'abc' }}},
+          { id: 'devicetwo', importMode:'create', authentication: { type: 'sas', symmetricKey: { primaryKey: fakeKey }}},
           { id: 'devicethree', importMode:'create', authentication: { type: 'certificateAuthority' }},
         ];
         var fakeHttpHelper = {

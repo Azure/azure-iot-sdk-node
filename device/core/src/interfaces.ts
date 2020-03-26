@@ -118,10 +118,22 @@ export interface DeviceClientOptions extends X509 {
   ca?: string;
 
   /**
+   * Keepalive interval in numeric format (seconds). This controls the keepalive ping for MQTT specifically. If you are using AMQP
+   * or HTTP, this will do nothing.
+   */
+  keepalive?: number;
+
+  /**
    * Custom user defined information to be appended to existing User Agent information. The User Agent Identification information
    * is used predominantly by Microsoft internally for identifying metadata related to Device Client usage for Azure IoT.
    */
   productInfo?: string;
+
+  /**
+   * Optional object with token renewal values.  Only use with authentication
+   * that uses pre shared keys.
+   */
+  tokenRenewal?: TokenRenewalValues;
 
   /**
    * Optional object with options specific to the MQTT transport
@@ -149,6 +161,16 @@ export interface BlobUploadCommonResponseStub {
     bodyAsText?: string;
   };
 }
+
+/**
+ * Structure used to pass down token renewal values for authentication that
+ * utilizes pre-shared keys.
+ */
+export interface TokenRenewalValues {
+  tokenValidTimeInSeconds: number;
+  tokenRenewalMarginInSeconds: number;
+}
+
 
 /**
  * Structure to mimic the RestError class from @azure/core-http
