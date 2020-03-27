@@ -16,7 +16,7 @@ var EventEmitter = require('events').EventEmitter;
 var getUserAgentString = require('azure-iot-device').getUserAgentString;
 
 describe('Mqtt', function () {
-  var fakeConfig, fakeAuthenticationProvider, fakeMqttBase;
+  var fakeConfig, fakeAuthenticationProvider, fakeX509AuthenticationProvider, fakeMqttBase;
 
   beforeEach(function () {
     fakeConfig = {
@@ -313,7 +313,7 @@ describe('Mqtt', function () {
       it('calls the callback with the correctly structured response parameter', function (done) {
         // There was a bug in the mqtt SendEvent code whereby the `response` would contain a doubly nested object.
         // This was caused by creating a new MessagedEnqueued object, and then passing that in as a parameter
-        // to a callback that would use it as a parameter for creating a MessageEnqueued object, leading to a 
+        // to a callback that would use it as a parameter for creating a MessageEnqueued object, leading to a
         // odd double nesting. This does not seek to test the MessageEnqueued object itself, since that should
         // be tested in the results unit testing, just to verify that the response is generated properly without
         // double nesting.
@@ -609,7 +609,7 @@ describe('Mqtt', function () {
         getUserAgentString(fakeProductInfoString, function(userAgentString) {
           var expectedUsername = 'host.name/deviceId/' + endpoint.versionQueryString() + '&DeviceClientType=' + encodeURIComponent(userAgentString);
           mqtt.connect(function () {
-            assert.strictEqual(fakeMqttBase.connect.firstCall.args[0]['username'], expectedUsername);      
+            assert.strictEqual(fakeMqttBase.connect.firstCall.args[0]['username'], expectedUsername);
             testCallback();
           });
           connectCallback();
@@ -637,8 +637,53 @@ describe('Mqtt', function () {
         connectCallback();
       });
     });
-  });
 
+    /* Tests_SRS_NODE_DEVICE_MQTT_06_001: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called with token renewal options while using using cert or non renewal authentication.] */
+    it('throws when token renewal options passed and uses cert based authentication', () => {
+      const fakeX509AuthenticationProvider = {
+        type: AuthenticationType.X509,
+      };
+      const mqtt = new Mqtt(fakeX509AuthenticationProvider, fakeMqttBase);
+      assert.throws(() => {
+        mqtt.setOptions({
+          tokenRenewal: {
+            tokenValidTimeInSeconds: 10,
+            tokenRenewalMarginInSeconds: 1
+          }
+        }, () => {});
+      });
+    });
+
+    it('throws when token renewal options passed and uses non-renewal authentication ', () => {
+      assert.throws(() => {
+        const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        mqtt.setOptions({
+          tokenRenewal: {
+            tokenValidTimeInSeconds: 10,
+            tokenRenewalMarginInSeconds: 1
+          }
+        }, () => {});
+      });
+    });
+
+    /* Tests_SRS_NODE_DEVICE_MQTT_06_002: [The authentication providers `setTokenRenewalValues` method shall be invoked with the values provided in the tokenRenewal option.] */
+    it('invokes the setTokenRenewalValues of the provider ', (done) => {
+      fakeAuthenticationProvider.setTokenRenewalValues = sinon.stub();
+      const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      const tokenOptions = {
+        tokenRenewal: {
+          tokenValidTimeInSeconds: 10,
+          tokenRenewalMarginInSeconds: 1
+        }
+      };
+      mqtt.setOptions(tokenOptions);
+      assert(fakeAuthenticationProvider.setTokenRenewalValues.calledOnceWith(
+        tokenOptions.tokenRenewal.tokenValidTimeInSeconds,
+        tokenOptions.tokenRenewal.tokenRenewalMarginInSeconds
+      ));
+      done();
+    });
+  });
 
   describe('#connect', function() {
     /* Tests_SRS_NODE_DEVICE_MQTT_12_004: [The connect method shall call the connect method on MqttBase */

@@ -26,7 +26,7 @@ sakAuthProvider.on('newTokenAvailable', function (credentials) {
 
 **SRS_NODE_SAK_AUTH_PROVIDER_16_001: [** The `constructor` shall create the initial token value using the `credentials` parameter. **]**
 
-**SRS_NODE_SAK_AUTH_PROVIDER_16_011: [** The `constructor` shall throw an `ArgumentError` if the `tokenRenewalMarginInSeconds` is less than or equal `tokenValidTimeInSeconds`. **]**
+**SRS_NODE_SAK_AUTH_PROVIDER_16_011: [** The `constructor` shall throw an `ArgumentError` if the `tokenValidTimeInSeconds` is less than or equal `tokenRenewalMarginInSeconds`. **]**
 
 ## getDeviceCredentials(callback: (err: Error, credentials: TransportConfig) => void): void
 
@@ -51,6 +51,18 @@ sakAuthProvider.on('newTokenAvailable', function (credentials) {
 **SRS_NODE_SAK_AUTH_PROVIDER_16_012: [** The `stop` method shall clear the token renewal timer if it is running. **]**
 
 **SRS_NODE_SAK_AUTH_PROVIDER_16_013: [** The `stop` method shall simply return if the token renewal timer is not running. **]**
+
+## setTokenRenewalValues(tokenValidTimeInSeconds: number, tokenRenewalMarginInSeconds: number): void
+
+The `setTokenRenewalValues` method shall set the renewal values for token generation.  If the authentication provider has begun the periodic generation of tokens, this will cause a new token generation at the next tick.
+
+**SRS_NODE_SAK_AUTH_PROVIDER_06_001: [** The `setTokenRenewalValues` shall throw an `ArgumentError` if the `tokenRenewalMarginInSeconds` is less than or equal `tokenValidTimeInSeconds`. **]**
+
+**SRS_NODE_SAK_AUTH_PROVIDER_06_002: [** If there is no timer running when `setTokenRenewalValues` is invoked, there will NOT be a timer running when it returns.
+ **]**
+
+**SRS_NODE_SAK_AUTH_PROVIDER_06_003: [** If there is a timer running when `setTokenRenewalValues` is invoked it will cause a token renewal to happen almost immediately and cause the subsequent renewals to happen with as specified with the new values.
+ **]**
 
 # Generated Security Token
 
