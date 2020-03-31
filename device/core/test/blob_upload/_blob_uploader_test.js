@@ -38,23 +38,29 @@ describe('BlobUploader', function() {
 
     let fakeStream = new stream.Readable();
 
-    it('sets the require for storage blob', function() {
+    it('sets the require for storage blob', function(done) {
+      let fakeResult = 'fakeUploadResponse'
       sinon.stub(AbortController,'timeout');
       sinon.stub(storageblob,'newPipeline');
       sinon.stub(storageblob,'AnonymousCredential');
       sinon.stub(storageblob,"BlockBlobClient").callsFake(function fakeFn() {
         function uploadStreamFn(stream, bufferSize, maxConcurrancy, options) {
           return new Promise((resolve, reject) => {
-            resolve('fakeBlobResponse');
+            resolve(fakeResult);
           });
         }
         return { uploadStream: uploadStreamFn }
       });
       let uploader = new BlobUploader();
+      uploader.uploadToBlob
       uploader.uploadToBlob(fakeBlobInfo, fakeStream, 42, function (err, response) {
-        assert.equal(err, null);
-        assert.equal(response, 'fakeUploadResponse');
-        done();
+        try {
+          assert.equal(err, null);
+          assert.equal(response, fakeResult);
+          done();
+        } catch (e) {
+          done(e)
+        }
       });
       });
 

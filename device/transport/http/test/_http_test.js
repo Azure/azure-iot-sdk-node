@@ -381,6 +381,53 @@ describe('Http', function () {
       });
     });
 
+    /* Tests_SRS_NODE_DEVICE_HTTP_06_001: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called with token renewal options while using using cert or non renewal authentication.] */
+    it('throws when token renewal options passed and uses cert based authentication', () => {
+      let fakeX509AuthenticationProvider = {
+        type: AuthenticationType.X509
+      };
+
+      transport = new Http(fakeX509AuthenticationProvider);
+      assert.throws(() => {
+        transport.setOptions({
+          tokenRenewal: {
+            tokenValidTimeInSeconds: 10,
+            tokenRenewalMarginInSeconds: 1
+          }
+        }, () => {});
+      });
+    })
+
+    it('throws when token renewal options passed and uses non-renewal authentication ', () => {
+      var transport = new Http(fakeAuthenticationProvider);
+      assert.throws(() => {
+        transport.setOptions({
+          tokenRenewal: {
+            tokenValidTimeInSeconds: 10,
+            tokenRenewalMarginInSeconds: 1
+          }
+        }, () => {});
+      });
+    })
+
+    /* Tests_SRS_NODE_DEVICE_HTTP_06_002: [The authentication providers `setTokenRenewalValues` method shall be invoked with the values provided in the tokenRenewal option.] */
+    it('invokes the setTokenRenewalValues of the provider ', (done) => {
+      fakeAuthenticationProvider.setTokenRenewalValues = sinon.stub();
+      const tokenOptions = {
+        tokenRenewal: {
+          tokenValidTimeInSeconds: 10,
+          tokenRenewalMarginInSeconds: 1
+        }
+      };
+      const transport = new Http(fakeAuthenticationProvider);
+      transport.setOptions(tokenOptions);
+      assert(fakeAuthenticationProvider.setTokenRenewalValues.calledOnceWith(
+        tokenOptions.tokenRenewal.tokenValidTimeInSeconds,
+        tokenOptions.tokenRenewal.tokenRenewalMarginInSeconds
+      ));
+      done();
+    });
+
     /*Tests_SRS_NODE_DEVICE_HTTP_41_001: [ The HTTP transport should use the productInfo string in the `options` object if present ]*/
     /*Tests_SRS_NODE_DEVICE_HTTP_41_002: [ `productInfo` should be set in the HTTP User-Agent Header if set using `setOptions` ]*/
     it('productInfo is included in the \'User-Agent\' header during the HTTP buildRequest', function() {
@@ -392,7 +439,7 @@ describe('Http', function () {
         write: function() {},
         end: function() {}
       });
-      
+
       var http = new Http(fakeAuthenticationProvider, MockHttp);
       http.setOptions({ productInfo: fakeProductInfoString });
       assert.exists(http._productInfo);
@@ -404,7 +451,7 @@ describe('Http', function () {
       var actualUserAgent = http._http.buildRequest.args[0][2]['User-Agent'];
       assert(actualUserAgent.includes(fakeProductInfoString));
     });
-    
+
     /*Tests_SRS_NODE_DEVICE_HTTP_41_003: [`productInfo` must be set before `http._ensureAgentString` is invoked for the first time]*/
     it('throws if productInfo is set after HTTP has established a connection', function() {
       var MockHttp = {
@@ -415,10 +462,10 @@ describe('Http', function () {
         write: function() {},
         end: function() {}
       });
-      
+
       var http = new Http(fakeAuthenticationProvider, MockHttp);
       var msg = new Message('fakeBody');
-      
+
       http.sendEvent(msg, () => {
         assert.throws(() => {http.setOptions({ productInfo: fakeProductInfoString });
         });

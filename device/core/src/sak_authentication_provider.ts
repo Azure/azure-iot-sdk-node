@@ -38,11 +38,38 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
     if (tokenValidTimeInSeconds) this._tokenValidTimeInSeconds = tokenValidTimeInSeconds;
     if (tokenRenewalMarginInSeconds) this._tokenRenewalMarginInSeconds = tokenRenewalMarginInSeconds;
 
-    /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_011: [The `constructor` shall throw an `ArgumentError` if the `tokenRenewalMarginInSeconds` is less than or equal `tokenValidTimeInSeconds`.]*/
+    /*Codes_SRS_NODE_SAK_AUTH_PROVIDER_16_011: [The `constructor` shall throw an `ArgumentError` if the `tokenValidTimeInSeconds` is less than or equal `tokenRenewalMarginInSeconds`.]*/
     if (this._tokenValidTimeInSeconds <= this._tokenRenewalMarginInSeconds) {
       throw new errors.ArgumentError('tokenRenewalMarginInSeconds must be less than tokenValidTimeInSeconds');
     }
   }
+
+  /**
+   * This method allows the caller to set new values for the authentication renewal.
+   *
+   * This function completes synchronously, BUT, will cause actions to occur asynchronously.
+   * If the provider is already doing token renewals, for instance - if a network connection has
+   * been make, invoking this function will cause a new renewal to take place on the almost immediately.
+   * Depending on the protocol, this could cause a disconnect and reconnect to occur.  However, if renewals
+   * are NOT currently occurring, we simply save off the new values for use later.
+   *
+   * @param tokenValidTimeInSeconds        The number of seconds for which a token is supposed to be valid.
+   * @param tokenRenewalMarginInSeconds    The number of seconds before the end of the validity period during which the `SharedAccessKeyAuthenticationProvider` should renew the token.
+   */
+  setTokenRenewalValues(tokenValidTimeInSeconds: number, tokenRenewalMarginInSeconds: number): void {
+    /* Codes_SRS_NODE_SAK_AUTH_PROVIDER_06_001: [The `setTokenRenewalValues` shall throw an `ArgumentError` if the `tokenRenewalMarginInSeconds` is less than or equal `tokenValidTimeInSeconds`.] */
+    if (tokenValidTimeInSeconds <= tokenRenewalMarginInSeconds) {
+      throw new errors.ArgumentError('tokenRenewalMarginInSeconds must be less than tokenValidTimeInSeconds');
+    }
+    this._tokenValidTimeInSeconds = tokenValidTimeInSeconds;
+    this._tokenRenewalMarginInSeconds = tokenRenewalMarginInSeconds;
+    /* Codes_SRS_NODE_SAK_AUTH_PROVIDER_06_002: [If there is no timer running when `setTokenRenewalValues` is invoked, there will NOT be a timer running when it returns.] */
+    if (this._renewalTimeout) {
+      /* Codes_SRS_NODE_SAK_AUTH_PROVIDER_06_003: [If there is a timer running when `setTokenRenewalValues` is invoked it will cause a token renewal to happen almost immediately and cause the subsequent renewals to happen with as specified with the new values.] */
+      this._expiryTimerHandler();
+    }
+  }
+
 
   /**
    * This method is used by the transports to gets the most current device credentials in the form of a `TransportConfig` object.

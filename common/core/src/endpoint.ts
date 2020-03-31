@@ -4,7 +4,8 @@
 
 'use strict';
 
-export const apiVersion = '2019-07-01-preview';
+export const apiVersion = '2019-03-30';
+export const apiVersionLimitedAvail = '2020-03-13';
 
 export function devicePath(deviceId: string): string {
   return '/devices/' + deviceId;
@@ -64,4 +65,14 @@ export function moduleInputMessagePath(deviceId: string, moduleId: string): stri
 
 export function versionQueryString(): string {
   return '?api-version=' + apiVersion;
+}
+
+export function versionQueryStringLimitedAvailability(): string {
+  // This addition is for the limited Availability of certain service
+  // regions
+  if (process.env.EnableStorageIdentity === '1') {
+    return '?api-version=' + apiVersionLimitedAvail;
+  } else {
+    return '?api-version=' + apiVersion;
+  }
 }

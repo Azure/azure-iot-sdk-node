@@ -499,6 +499,18 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
       }
     }
 
+    /* Codes_SRS_NODE_DEVICE_MQTT_06_001: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called with token renewal options while using using cert or non renewal authentication.] */
+    if (options.tokenRenewal) {
+      if (this._authenticationProvider.type === AuthenticationType.X509) {
+        throw new errors.InvalidOperationError('cannot set token renewal options when using X509 authentication');
+      } else if (!this._authenticationProvider.setTokenRenewalValues) {
+        throw new errors.InvalidOperationError('can only set token renewal options when using pre-shared key authentication');
+      } else {
+        /* Codes_SRS_NODE_DEVICE_MQTT_06_002: [The authentication providers `setTokenRenewalValues` method shall be invoked with the values provided in the tokenRenewal option.] */
+        this._authenticationProvider.setTokenRenewalValues(options.tokenRenewal.tokenValidTimeInSeconds, options.tokenRenewal.tokenRenewalMarginInSeconds);
+      }
+    }
+
     this._mqtt.setOptions(options);
 
     if (!options.cert) {
