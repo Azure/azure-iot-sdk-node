@@ -297,9 +297,9 @@ export class DigitalTwinClient {
    * @param callback
    *
    */
-  enablePropertyUpdates(callback ?: Callback) : void;
+  enablePropertyUpdates(callback: Callback) : void;
   enablePropertyUpdates() : Promise<void>;
-  enablePropertyUpdates(callback ?: Callback | undefined) : Promise<void> | void {
+  enablePropertyUpdates(callback?: Callback) : Promise<void> | void {
     return callbackToPromise((_callback) => {
       this._client.getTwin((getTwinError, twinResult) => {
         if (getTwinError) {

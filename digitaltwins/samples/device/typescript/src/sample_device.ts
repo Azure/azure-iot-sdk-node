@@ -207,11 +207,7 @@ const deviceInformation = new DeviceInformation('deviceInformation');
 const modelDefinition = new ModelDefinition('urn_azureiot_ModelDiscovery_ModelDefinition', undefined, modelDefinitionHandler);
 const exitInterface = new SampleExit('urn_azureiotsdknode_SampleInterface_SampleExit', undefined, exitHandler);
 
-const client = Client.fromConnectionString(process.env.DEVICE_CONNECTION_STRING as string, Protocol);
-
-const capabilityModel = 'urn:azureiot:samplemodel:1';
-
-let dtClient = new DigitalTwinClient(capabilityModel, client);
+let dtClient = DigitalTwinClient.fromConnectionString(process.env.DEVICE_CONNECTION_STRING as string);
 
 const main = async () => {
   try {
@@ -234,14 +230,13 @@ const main = async () => {
   }
 };
 
-dtClient.addInterfaceInstance(environmentalSensor);
-dtClient.addInterfaceInstance(deviceInformation);
-dtClient.addInterfaceInstance(modelDefinition);
-dtClient.addInterfaceInstance(exitInterface);
+dtClient.addInterfaceInstances(environmentalSensor, deviceInformation, modelDefinition, exitInterface);
 
-dtClient.register()
+dtClient.enableCommands();
+
+dtClient.enablePropertyUpdates()
   .then(() => {
-    console.log('registered the interfaceInstances.');
+    console.log('enabled the property updatess.');
     main();
   })
   .catch(() => {console.log('the registration failed.');});
