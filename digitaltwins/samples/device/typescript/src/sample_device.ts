@@ -207,19 +207,22 @@ const deviceInformation = new DeviceInformation('deviceInformation');
 const modelDefinition = new ModelDefinition('urn_azureiot_ModelDiscovery_ModelDefinition', undefined, modelDefinitionHandler);
 const exitInterface = new SampleExit('urn_azureiotsdknode_SampleInterface_SampleExit', undefined, exitHandler);
 
-let dtClient = DigitalTwinClient.fromConnectionString(process.env.DEVICE_CONNECTION_STRING as string);
+const capabilityModel = 'urn:azureiot:samplemodel:1';
+let dtClient = DigitalTwinClient.fromConnectionString(capabilityModel, process.env.DEVICE_CONNECTION_STRING as string);
 
 const main = async () => {
   try {
-    await environmentalSensor.state.report(true);
-    await deviceInformation.manufacturer.report('Contoso Device Corporation');
-    await deviceInformation.model.report('Contoso 4762B-turbo');
-    await deviceInformation.swVersion.report('3.1');
-    await deviceInformation.osName.report('ContosoOS');
-    await deviceInformation.processorArchitecture.report('4762');
-    await deviceInformation.processorManufacturer.report('Contoso Foundries');
-    await deviceInformation.totalStorage.report('64000');
-    await deviceInformation.totalMemory.report('640');
+    dtClient.report(environmentalSensor, {state: true});
+    dtClient.report(deviceInformation, {
+      manufacturer: 'Contoso Device Corporation',
+      model: 'Contoso 4762B-turbo',
+      swVersion: '3.1',
+      osName: 'ContosoOS',
+      processorArchitecture: '4762',
+      processorManufacturer: 'Contoso Foundries',
+      totalStorage: '64000',
+      totalMemory: '640'
+    });
 
     // send telemetry every 5 seconds
     setInterval( async () => {

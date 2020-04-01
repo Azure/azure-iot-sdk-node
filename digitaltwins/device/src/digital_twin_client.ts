@@ -139,7 +139,9 @@ export class DigitalTwinClient {
   // The IoT Hub Twin that supports the Digital Twin concept.
   //
   private _twin: Twin;
-  constructor(client: Client) {
+  constructor(capabilityModel: string, client: Client) {
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_001: [Will throw `ReferenceError` if the constructor `capabilityModel` argument is falsy.] */
+    if (!capabilityModel) throw new ReferenceError('capabilityModel must not be falsy');
     /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_002: [Will throw `ReferenceError` if the constructor `client` argument is falsy.] */
     if (!client) throw new ReferenceError('client must not be falsy');
     this._client = client;
@@ -595,16 +597,20 @@ export class DigitalTwinClient {
    *
    * @returns {module:azure-iot-digitaltwins.DigitalTwinClient}
    */
-  static fromConnectionString(connStr: string, ws?: boolean): DigitalTwinClient {
-  if (!connStr) throw new ReferenceError('connStr (connection string) must not be falsy');
+  static fromConnectionString(capabilityModel: string, connStr: string, ws?: boolean): DigitalTwinClient {
+    if (!capabilityModel) throw new ReferenceError('capabilityModel must not be falsy');
+    if (!connStr) throw new ReferenceError('connStr (connection string) must not be falsy');
 
-  let transport;
-  if (ws) {
-    transport = MqttWs;
-  } else {
-    transport = Mqtt;
-  }
-  const client = Client.fromConnectionString(connStr, transport);
-  return new DigitalTwinClient(client);
+    let transport;
+    if (ws) {
+      transport = MqttWs;
+    } else {
+      transport = Mqtt;
+    }
+
+    const client = Client.fromConnectionString(connStr, transport);
+    client.setOptions({ deviceCapabilityModel: '&digital-twin-model-id=' + capabilityModel });
+
+    return new DigitalTwinClient(capabilityModel, client);
   }
 }

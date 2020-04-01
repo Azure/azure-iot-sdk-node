@@ -23,7 +23,7 @@ const propertyUpdateHandler = async (interfaceInstance, propertyName, reportedVa
     });
     console.log('updated the property');
   } catch (e) {
-    console.log('failed to update the property'))
+    console.log('failed to update the property');
   }
 };
 
@@ -68,7 +68,7 @@ const capabilityModel = 'urn:azureiot:samplemodel:1';
 
 async function main() {
   // mqtt is implied in this static method
-  digitalTwinClient = DigitalTwinClient.fromConnectionString(process.env.DEVICE_CONNECTION_STRING);
+  digitalTwinClient = DigitalTwinClient.fromConnectionString(capabilityModel, process.env.DEVICE_CONNECTION_STRING);
 
 
   // TBC: Do we create these inline
