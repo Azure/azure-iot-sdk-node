@@ -3,6 +3,10 @@
 
 'use strict';
 
+var iotHubTransport = require('azure-iot-device-mqtt').Mqtt;
+var Client = require('azure-iot-device').Client;
+var Message = require('azure-iot-device').Message;
+
 var fs = require('fs');
 var Transport = require('azure-iot-provisioning-device-http').Http;
 
@@ -35,6 +39,22 @@ deviceClient.register(function(err, result) {
     console.log('registration succeeded');
     console.log('assigned hub=' + result.assignedHub);
     console.log('deviceId=' + result.deviceId);
+    var connectionString = 'HostName=' + result.assignedHub + ';DeviceId=' + result.deviceId + ';x509=true';
+    var hubClient = Client.fromConnectionString(connectionString, iotHubTransport);
+    hubClient.setOptions(deviceCert);
+    hubClient.open(function(err) {
+      if (err) {
+        console.error('Failure opening iothub connection: ' + err.message);
+      } else {
+        console.log('Client connected');
+        var message = new Message('Hello world');
+        hubClient.sendEvent(message, function(err, res) {
+          if (err) console.log('send error: ' + err.toString());
+          if (res) console.log('send status: ' + res.constructor.name);
+          process.exit(1);
+        });
+      }
+    });
   }
 });
 
