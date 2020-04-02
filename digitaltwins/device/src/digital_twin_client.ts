@@ -527,7 +527,7 @@ export class DigitalTwinClient {
     }
 
     const client = Client.fromConnectionString(connStr, transport);
-    client.setOptions({ deviceCapabilityModel: '&digital-twin-model-id=' + capabilityModel });
+    client.setOptions({ deviceCapabilityModel: capabilityModel });
 
     return new DigitalTwinClient(capabilityModel, client);
   }

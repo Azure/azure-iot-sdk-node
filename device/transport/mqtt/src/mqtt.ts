@@ -490,7 +490,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     if (this._authenticationProvider.type === AuthenticationType.Token && options.cert) throw new errors.ArgumentError('Cannot set x509 options on a device that uses token authentication.');
 
     if (options.deviceCapabilityModel) {
-      this._dcm = options.deviceCapabilityModel;
+      this._dcm = '&digital-twin-model-id=' + options.deviceCapabilityModel;
     }
     /*Codes_SRS_NODE_DEVICE_MQTT_41_001: [The MQTT transport should use the productInfo string in the `options` object if present]*/
     if (options.productInfo) {
@@ -690,13 +690,12 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_016: [If the connection string does not specify a `gatewayHostName` value, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_054: [If a `gatewayHostName` is specified in the connection string, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<gatewayhostname>`. ]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_055: [The Mqtt constructor shall initialize the `username` property of the `config` object to '<host>/<clientId>/api-version=<version>&DeviceClientType=<agentString>'. ]*/
-    /*Tests_SRS_NODE_DEVICE_MQTT_41_002: [The MQTT constructor shall append the productInfo to the `username` property of the `config` object.]*/
-    // For PnP the username should look like:
-    // Username: {iothubhostname}/{device_id}/?api-version=<version>&digital-twin-model-id=<DEVICE’s DCM ID>&DeviceClientType=<userAgentString>
+    /*Codes_SRS_NODE_DEVICE_MQTT_41_002: [The MQTT constructor shall append the productInfo to the `username` property of the `config` object.]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_41_XXX: [For a Plug and Play Device the device capability model should be included as &digital-twin-model-id=<DEVICE’s DCM ID> after the api-version]*/
     let baseConfig: MqttBaseTransportConfig = {
       uri: 'mqtts://' + (credentials.gatewayHostName || credentials.host),
       username: credentials.host + '/' + clientId +
-        '/' + endpoint.versionQueryString() + this._dcm +
+        '/' + endpoint.versionQueryString()  + this._dcm +
         '&DeviceClientType=' + encodeURIComponent(this._userAgentString), // TODO: need to update useragentString
       clientId: clientId,
       sharedAccessSignature: credentials.sharedAccessSignature,
