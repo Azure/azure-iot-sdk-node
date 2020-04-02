@@ -376,7 +376,7 @@ describe('Digital Twin Client', function () {
     });
   });
 
-  describe('#telemetry', function () {
+  describe('#sendTelemetry', function () {
     let dtClient;
     let telemetryDeviceClient;
     let fakeInterfaceInstance;
@@ -405,67 +405,11 @@ describe('Digital Twin Client', function () {
       fakeInterfaceInstance = new FakeInterface('abc');
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [** A telemetry will send a device message with the following format:
-      payload: {<telemetry property name>: value}
-      message application properties:
-      contentType: 'application/json'
-      contentEncoding: 'utf-8'
-      $.ifname: <interfaceInstance name>
-      $.schema: <telemetry property name>
-      **]
-    */
-    it('sending message with correct format - invoking callback on success', function (done) {
-      dtClient.addInterfaceInstances(fakeInterfaceInstance);
-      fakeInterfaceInstance.temp.send(42, (telemetryError) => {
-        const telemetryName = 'temp';
-        assert.isNotOk(telemetryError);
-        const telemetryMessage = telemetryDeviceClient.sendEvent.lastCall.args[0];
-        const telemetryPayload = JSON.parse(telemetryMessage.data);
-        assert.isOk(telemetryPayload[telemetryName]);
-        assert.strictEqual(telemetryPayload[telemetryName], 42);
-        assert.strictEqual(telemetryMessage.contentType, 'application/json');
-        assert.strictEqual(telemetryMessage.contentEncoding, 'utf-8');
-        assert.strictEqual(telemetryMessage.properties.getValue('$.ifname'), 'abc');
-        assert.strictEqual(telemetryMessage.properties.getValue('$.schema'), telemetryName);
-        done();
-      });
-    });
-
-    it(' - resolving with a promise', function (done) {
-      dtClient.addInterfaceInstances(fakeInterfaceInstance);
-      fakeInterfaceInstance.temp.send(44)
-        .then( () => {
-          const telemetryName = 'temp';
-          const telemetryMessage = telemetryDeviceClient.sendEvent.lastCall.args[0];
-          const telemetryPayload = JSON.parse(telemetryMessage.data);
-          assert.isOk(telemetryPayload[telemetryName]);
-          assert.strictEqual(telemetryPayload[telemetryName], 44);
-          return done();
-        });
-    });
-
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_034: [** Subsequent to addInterfaceInstances a Telemetry will have a send method. **] */
-    it('Subsequent to adding the interfaceInstance, a Telemetry will have a send method', (done) => {
-      assert(!fakeInterfaceInstance.temp.send);
-      dtClient.addInterfaceInstances(fakeInterfaceInstance);
-      assert(fakeInterfaceInstance.temp.send);
-      assert(typeof fakeInterfaceInstance.temp.send === 'function');
-      done();
-    });
-
-    /* Tests_**SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [** The sendTelemetry method will send a device message with the following format:
-      payload: {<telemetry property name>: <telemetry property value> ,...}
-      message application properties:
-      contentType: 'application/json'
-      contentEncoding: 'utf-8'
-      $.ifname: <interfaceInstance name>
-      ]
-    */
     it('sending "imploded" message with correct format - invoking callback on success', function (done) {
       dtClient.addInterfaceInstances(fakeInterfaceInstance);
-      fakeInterfaceInstance.sendTelemetry({ firstTelemetryProperty: 1, thirdTelemetryProperty: 'end' }, (telemetryError) => {
+      dtClient.sendTelemetry({ firstTelemetryProperty: 1, thirdTelemetryProperty: 'end' }, (telemetryError) => {
         assert.isNotOk(telemetryError);
-        const telemetryMessage = telemetryDeviceClient.sendEvent.lastCall.args[0];
+        const telemetryMessage = telemetryDeviceClient.sendEvent.lastcall.args[0];
         const telemetryPayload = JSON.parse(telemetryMessage.data);
         assert.strictEqual(telemetryPayload.firstTelemetryProperty, 1);
         assert.strictEqual(telemetryPayload.thirdTelemetryProperty, 'end');
@@ -481,36 +425,16 @@ describe('Digital Twin Client', function () {
       dtClient.addInterfaceInstances(fakeInterfaceInstance);
       fakeInterfaceInstance.sendTelemetry({ firstTelemetryProperty: 1, thirdTelemetryProperty: 'end' })
         .then( () => {
-          const telemetryMessage = telemetryDeviceClient.sendEvent.lastCall.args[0];
+          const telemetryMessage = telemetryDeviceClient.sendEvent.lastcall.args[0];
           const telemetryPayload = JSON.parse(telemetryMessage.data);
           assert.strictEqual(telemetryPayload.firstTelemetryProperty, 1);
           assert.strictEqual(telemetryPayload.thirdTelemetryProperty, 'end');
           assert.strictEqual(Object.keys(telemetryPayload).length, 2);
+          assert.strictEqual(telemetryMessage.contentType, 'application/json');
+          assert.strictEqual(telemetryMessage.contentEncoding, 'utf-8');
+          assert.strictEqual(telemetryMessage.properties.getValue('$.ifname'), 'abc');
           return done();
         });
-    });
-
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_041: [Subsequent to addInterfaceInstances if the interface contains any telemetry properties, the interface will have a sendTelemetry method that can send any number of telemetry properties in on message.] */
-    it('Subsequent to adding the interfaceInstance, a Telemetry will have a sendTelemetry method', (done) => {
-      assert(!fakeInterfaceInstance.sendTelemetry);
-      dtClient.addInterfaceInstances(fakeInterfaceInstance);
-      assert(fakeInterfaceInstance.sendTelemetry);
-      assert(typeof fakeInterfaceInstance.sendTelemetry === 'function');
-      done();
-    });
-
-    it('No Telemetry property then no sendTelemetry method', (done) => {
-      class PropertyOnlyInterface extends BaseInterface {
-        constructor(name, propertyCallback, commandCallback) {
-          super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
-          this.justAProperty = new Property();
-        }
-      };
-      const onlyPropertyInterfaceInstance = new PropertyOnlyInterface('abc');
-      assert(!onlyPropertyInterfaceInstance.sendTelemetry);
-      dtClient.addInterfaceInstances(onlyPropertyInterfaceInstance);
-      assert(!onlyPropertyInterfaceInstance.sendTelemetry);
-      done();
     });
   });
 

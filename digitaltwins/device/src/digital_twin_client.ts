@@ -149,6 +149,31 @@ export class DigitalTwinClient {
     this._addInterfaceInstance(this._sdkInformation);
   }
 
+
+  /**
+   * @method                        sendTelemetry
+   * @description                   Sends a telemetry message for a supplied interface.
+   * @param interfaceInstance       Interface instance to be associated with telemetry message.
+   * @param telemetry               The object to be sent.
+   * @param callback (optional)     If present, the callback to be invoked on completion of the telemetry,
+   *                                otherwise a promise is returned.
+   */
+  sendTelemetry(interfaceInstance: BaseInterface, telemetry: any, callback: ErrorCallback) : void;
+  sendTelemetry(interfaceInstance: BaseInterface, telemetry: any) : Promise<void>;
+  sendTelemetry(interfaceInstance: BaseInterface, telemetry: any, callback?: ErrorCallback) : Promise<void> | void {
+    return callbackToPromise((_callback) => {
+      let telemetryMessage = new Message(
+        JSON.stringify(telemetry)
+      );
+      telemetryMessage.properties.add(messageInterfaceInstanceProperty, interfaceInstance.interfaceInstanceName);
+      telemetryMessage.contentType =  'application/json';
+      telemetryMessage.contentEncoding = 'utf-8';
+      this._client.sendEvent(telemetryMessage, (telemetryError) => {
+        return _callback(telemetryError);
+      });
+    }, callback);
+  }
+
   /**
    * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.addInterfaceInstances
    * @description                   Adds multiple interfaceInstances to the Digital Twin client.  This will not cause
@@ -183,25 +208,6 @@ export class DigitalTwinClient {
       if (newInterfaceInstance[individualProperty] && newInterfaceInstance[individualProperty].azureDigitalTwinType) {
         debug(newInterfaceInstance.interfaceInstanceName + '.' + individualProperty + ' is of type: ' + newInterfaceInstance[individualProperty].azureDigitalTwinType);
         switch (newInterfaceInstance[individualProperty].azureDigitalTwinType) {
-          case azureDigitalTwinTelemetry: {
-            //
-            // Whenever there is even a single telemetry property on an interfaceInstance, add a
-            // 'sendTelemetry' method.  This is used to send an 'imploded' message.  That is, a
-            // single telemetry message that includes any number of telemetry properties.
-            //
-            /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_041: [Subsequent to addInterfaceInstance if the interface contains any telemetry properties, the interface will have a sendTelemetry method that can send any number of telemetry properties in on message.] */
-            if (!newInterfaceInstance.sendTelemetry) {
-              newInterfaceInstance.sendTelemetry = this._returnSendTelemetryMethod(newInterfaceInstance.interfaceInstanceName);
-            }
-            //
-            // This instantiates a 'send' method for this telemetry property that invokes the lower level clients send function.  The
-            // instantiated function will format the message appropriately and add any necessary transport/digital twin properties to
-            // the message.
-            //
-            /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_034: [ Subsequent to addInterfaceInstance a Telemetry will have a send method.] */
-            (newInterfaceInstance[individualProperty] as Telemetry).send = this._returnTelemetrySendMethod(newInterfaceInstance.interfaceInstanceName, newInterfaceInstance.interfaceId, individualProperty);
-            break;
-          }
           case azureDigitalTwinCommand: {
             //
             // Must have defined an application defined callback for the commands of this interfaceInstance.
@@ -441,94 +447,6 @@ export class DigitalTwinClient {
         return _callback(updateError);
       });
     }, commandCallback);
-  }
-  //
-  // Another of several functions that create and return a new function.
-  // In this case the returned function is used to send an arbitrary set
-  // of telemetry k/v pairs for a Digital Twin interfaceInstance.
-  //
-  private _returnSendTelemetryMethod(interfaceInstanceName: string): InterfaceTelemetryPromise | InterfaceTelemetryCallback {
-    return (telemetry, callback) => this._sendImplodedTelemetry(interfaceInstanceName, telemetry, callback);
-  }
-
-  /**
-   * @method                        private _sendImplodedTelemetry
-   * @description                   Sends a telemetry message for a supplied interface.
-   * @param interfaceInstanceName   Name of the instance for this interface.
-   * @param telemetry               The object to be sent.
-   * @param sendCallback (optional) If present, the callback to be invoked on completion of the telemetry,
-   *                                otherwise a promise is returned.
-   */
-  private _sendImplodedTelemetry(interfaceInstanceName: string, telemetry: any, sendCallback: ErrorCallback): void;
-  private _sendImplodedTelemetry(interfaceInstanceName: string, telemetry: any): Promise<void>;
-  private _sendImplodedTelemetry(interfaceInstanceName: string, telemetry: any, sendCallback?: ErrorCallback): Promise<void> | void {
-    return callbackToPromise((_callback) => {
-      /*
-        Codes_**SRS_NODE_DIGITAL_TWIN_DEVICE_06_042: [** The sendTelemetry method will send a device message with the following format:
-        payload: {<telemetry property name>: <telemetry property value> ,...}
-        message application properties:
-        contentType: 'application/json'
-        contentEncoding: 'utf-8'
-        $.ifname: <interfaceInstance name>
-        ]
-      */
-      let telemetryMessage = new Message(
-        JSON.stringify(telemetry)
-      );
-      telemetryMessage.properties.add(messageInterfaceInstanceProperty, interfaceInstanceName);
-      telemetryMessage.contentType =  'application/json';
-      telemetryMessage.contentEncoding = 'utf-8';
-      this._client.sendEvent(telemetryMessage, (telemetryError) => {
-        return _callback(telemetryError);
-      });
-    }, sendCallback);
-  }
-
-  //
-  // Another of several functions that create and return a new function.
-  // In this case the returned function is used to send telemetry values
-  // for a Digital Twin telemetry property.
-  //
-  private _returnTelemetrySendMethod(interfaceInstanceName: string, interfaceId: string, telemetryName: string): TelemetryPromise | TelemetryCallback {
-    return (value, callback) => this._sendTelemetry(interfaceInstanceName, interfaceId, telemetryName, value, callback);
-  }
-
-  /**
-   * @method                        private _sendTelemetry
-   * @description                   Sends a named telemetry message for a supplied interface.
-   * @param interfaceInstanceName   Name of the instance for this interface.
-   * @param interfaceId             The id (in URN format) for the interface.
-   * @param telemetryName           Name of the particular telemetry.
-   * @param telemetryValue          The object to be sent.
-   * @param sendCallback (optional) If present, the callback to be invoked on completion of the telemetry,
-   *                                otherwise a promise is returned.
-   */
-  private _sendTelemetry(interfaceInstanceName: string, interfaceId: string, telemetryName: string, telemetryValue: any, sendCallback: ErrorCallback): void;
-  private _sendTelemetry(interfaceInstanceName: string, interfaceId: string, telemetryName: string, telemetryValue: any): Promise<void>;
-  private _sendTelemetry(interfaceInstanceName: string, interfaceId: string, telemetryName: string, telemetryValue: any, sendCallback?: ErrorCallback): Promise<void> | void {
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_032: [** A telemetry will send a device message with the following format:
-        payload: {<telemetry property name>: value}
-        message application properties:
-        contentType: 'application/json'
-        contentEncoding: 'utf-8'
-        $.ifname: <interfaceInstance name>
-        $.schema: <telemetry property name>
-        **]
-      */
-    return callbackToPromise((_callback) => {
-      debug('about to begin the interface telemetry.');
-        let newObject: any = {[telemetryName]: telemetryValue};
-        let telemetryMessage = new Message(
-          JSON.stringify(newObject)
-        );
-        telemetryMessage.properties.add(messageInterfaceInstanceProperty, interfaceInstanceName);
-        telemetryMessage.properties.add(messageSchemaProperty, telemetryName);
-        telemetryMessage.contentType =  'application/json';
-        telemetryMessage.contentEncoding = 'utf-8';
-        this._client.sendEvent(telemetryMessage, (telemetryError) => {
-          return _callback(telemetryError);
-        });
-    }, sendCallback);
   }
 
   /**
