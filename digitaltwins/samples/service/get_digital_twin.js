@@ -10,21 +10,29 @@ const deviceId = process.env.IOTHUB_DEVICE_ID;
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
 // - get the Digital Twin
-// - list all the Digital Twin Components
 async function main() {
-  // IoT Hub connection string has to be set to system environment variable IOTHUB_CONNECTION_STRING
-  // Twin enabled device must be exist on the IoT Hub
+  // Environment variables have to be set
+  // Digital Twin enabled device must be exist on the IoT Hub
 
-  // Create digital twin service client
-  const credentials = new IoTHubTokenCredentials(connectionString);
-  const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
+  try {
+    // Create digital twin service client
+    const credentials = new IoTHubTokenCredentials(connectionString);
+    const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-  console.log('getting full digital twin for device ' + deviceId + '...');
-  // Get digital twin
-  const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
+    // Get digital twin
+    console.log('getting digital twin for device ' + deviceId + '...');
+    const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
 
-  // Print digital twin components
-  console.log(JSON.stringify(digitalTwin.interfaces, null, 2));
+    // Print digital twin
+    console.log('device information:');
+    console.log(JSON.stringify(digitalTwin.deviceInformation, null, 2));
+    if (digitalTwin.environmentalSensor) {
+      console.log('environmental sensor:');
+      console.log(JSON.stringify(digitalTwin.environmentalSensor, null, 2));
+    }
+  } catch (err) {
+    console.log(err);
+  }  
 };
 
 main();

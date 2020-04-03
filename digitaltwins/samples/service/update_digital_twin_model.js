@@ -9,17 +9,17 @@ const modelId = process.env.IOTHUB_MODEL_NAME; // suggestion: urn:azureiot:Clien
 
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
-// - get a Digital Twin Model by model ID
+// - update a model
 async function main() {
-  // IoT Hub connection string has to be set to system environment variable IOTHUB_CONNECTION_STRING
-  // Twin enabled device must be exist on the IoT Hub
+  // IOTHUB_CONNECTION_STRING, IOTHUB_DEVICE_ID, IOTHUB_COMPONENT_NAME environment variables have to be set
+  // Digital Twin enabled device must be exist on the IoT Hub
 
   // Create service client
   const credentials = new IoTHubTokenCredentials(connectionString);
   const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-  // Get digital twin model
-  const digitalTwinModel = await digitalTwinServiceClient.getModel(modelId);
+  // Update component
+  const digitalTwinModel = await digitalTwinServiceClient.updateDigitalTwinModel(modelId);
   const idName = '@id';
   console.log('ModelId: ' + JSON.stringify(digitalTwinModel[idName], null, 2));
   console.log('Model: ' + JSON.stringify(digitalTwinModel.contents, null, 2));

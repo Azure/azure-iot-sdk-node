@@ -6,10 +6,11 @@ const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').Digit
 
 const connectionString = process.env.IOTHUB_CONNECTION_STRING;
 const deviceId = process.env.IOTHUB_DEVICE_ID;
+const componentName = process.env.IOTHUB_COMPONENT_NAME; // for the environmental sensor, try "environmentalSensor"
 
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
-// - update the Digital Twin with patch
+// - get a single Digital Twin Component by name
 async function main() {
   // Environment variables have to be set
   // Digital Twin enabled device must be exist on the IoT Hub
@@ -19,29 +20,16 @@ async function main() {
     const credentials = new IoTHubTokenCredentials(connectionString);
     const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-    // Get digital twin
-    const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
+    // Get component by name
+    console.log('getting ' + componentName + ' on device ' + deviceId + '...');
+    const getComponentResponse = await digitalTwinServiceClient.getComponent(deviceId, componentName);
 
-    // Print digital twin
-    console.log('device information:');
-    console.log(JSON.stringify(digitalTwin.deviceInformation, null, 2));
-    if (digitalTwin.environmentalSensor) {
-      console.log('environmental sensor:');
-      console.log(JSON.stringify(digitalTwin.environmentalSensor, null, 2));
-    }
-
-    var patch = '<JSON patch goes here>';
-    console.log('patch:');
-    console.log(JSON.stringify(patch, null, 2));
-
-    // Update digital twin
-    const digitalTwinUpdateResponse = await digitalTwinServiceClient.updateDigitalTwin(deviceId, patch);
-
-    // Print the response
-    console.log(JSON.stringify(digitalTwinUpdateResponse.interfaces, null, 2));
+    // Print the component
+    console.log(componentName + ':');
+    console.log(JSON.stringify(getComponentResponse.interfaces, null, 2));
   } catch (err) {
     console.log(err);
-  }
+  }  
 };
 
 main();

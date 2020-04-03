@@ -177,9 +177,9 @@ export class ConfigurationOperations {
   }
 
   /**
-   * Applies the provided configuration content to the specified edge device. Configuration content
-   * must have modules content
-   * @summary Applies the provided configuration content to the specified edge device.
+   * Applies the provided configuration content to the specified iotEdge device. Configuration
+   * content must have modules content
+   * @summary Applies the provided configuration content to the specified iotEdge device.
    * @param id Device ID.
    * @param content Configuration Content.
    * @param [options] The optional parameters

@@ -6,26 +6,30 @@ const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').Digit
 
 const connectionString = process.env.IOTHUB_CONNECTION_STRING;
 const deviceId = process.env.IOTHUB_DEVICE_ID;
-const componentInstanceName = process.env.IOTHUB_COMPONENT_INSTANCE_NAME; // for the environmental sensor, try "environmentalSensor"
+const componentName = process.env.IOTHUB_COMPONENT_NAME; // for the environmental sensor, try "environmentalSensor"
 
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
-// - get a single Digital Twin Component Instance by name
+// - update a component
 async function main() {
-  // IoT Hub connection string has to be set to system environment variable IOTHUB_CONNECTION_STRING
-  // Twin enabled device must be exist on the IoT Hub
-
+  // IOTHUB_CONNECTION_STRING, IOTHUB_DEVICE_ID, IOTHUB_COMPONENT_NAME environment variables have to be set
+  // Digital Twin enabled device must be exist on the IoT Hub
 
   // Create service client
   const credentials = new IoTHubTokenCredentials(connectionString);
   const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-  console.log('getting ' + componentInstanceName + ' on device ' + deviceId + '...');
-  // Get component instance by name
-  const partialDigitalTwin = await digitalTwinServiceClient.getDigitalTwinComponentInstance(deviceId, componentInstanceName);
+  var patch = '<JSON patch goes here>';
+  console.log('patch:');
+  console.log(JSON.stringify(patch, null, 2));
 
-  // Print the component instance
-  console.log(JSON.stringify(partialDigitalTwin.interfaces, null, 2));
+  console.log('updating ' + componentName + ' on device ' + deviceId + '...');
+  // Update component
+  const updateComponentResponse = await digitalTwinServiceClient.updateComponent(deviceId, patch);
+
+  // Print the response
+  console.log(componentName + ':');
+  console.log(JSON.stringify(updateComponentResponse.interfaces, null, 2));
 };
 
 main();

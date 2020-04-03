@@ -13,19 +13,23 @@ const commandArgument = process.env.IOTHUB_COMMAND_ARGUMENT; // for the environm
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
 // - invoke a command on a Digital Twin enabled device
 async function main() {
-  // IoT Hub connection string has to be set to system environment variable IOTHUB_CONNECTION_STRING
-  // Twin enabled device must be exist on the IoT Hub
+  // Environment variables have to be set
+  // Digital Twin enabled device must be exist on the IoT Hub
 
-  // Create service client
-  const credentials = new IoTHubTokenCredentials(connectionString);
-  const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
+  try {
+    // Create service client
+    const credentials = new IoTHubTokenCredentials(connectionString);
+    const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-  console.log('invoking command ' + commandName + ' on component instance' + componentInstanceName + ' for device ' + deviceId + '...');
-  // Invoke a command
-  const digitalTwinCommandResult = await digitalTwinServiceClient.invokeCommand(deviceId, componentInstanceName, commandName, commandArgument);
+    // Invoke a command
+    console.log('invoking command ' + commandName + ' on component instance' + componentInstanceName + ' for device ' + deviceId + '...');
+    const invokeComponentCommandRespone = await digitalTwinServiceClient.invokeCommand(deviceId, componentInstanceName, commandName, commandArgument);
 
-  // Print result of the command
-  console.log(JSON.stringify(digitalTwinCommandResult, null, 2));
+    // Print the response
+    console.log(JSON.stringify(invokeComponentCommandRespone, null, 2));
+  } catch (err) {
+    console.log(err);
+  }  
 };
 
 main();

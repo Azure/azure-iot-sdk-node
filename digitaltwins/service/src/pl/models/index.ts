@@ -18,7 +18,7 @@ export interface ConfigurationMetrics {
 }
 
 /**
- * Configuration Content for Devices or Modules on Edge Devices.
+ * Configuration Content for Devices or Modules on iotEdge Devices.
  */
 export interface ConfigurationContent {
   /**

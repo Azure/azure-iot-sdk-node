@@ -5,11 +5,11 @@ const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubT
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 
 const connectionString = process.env.IOTHUB_CONNECTION_STRING;
-const deviceId = process.env.IOTHUB_DEVICE_ID;
+const modelId = process.env.IOTHUB_MODEL_NAME; // suggestion: urn:azureiot:Client:SDKInformation:1
 
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
-// - update the Digital Twin with patch
+// - get a Digital Twin Model by model ID
 async function main() {
   // Environment variables have to be set
   // Digital Twin enabled device must be exist on the IoT Hub
@@ -19,29 +19,15 @@ async function main() {
     const credentials = new IoTHubTokenCredentials(connectionString);
     const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-    // Get digital twin
-    const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
-
-    // Print digital twin
-    console.log('device information:');
-    console.log(JSON.stringify(digitalTwin.deviceInformation, null, 2));
-    if (digitalTwin.environmentalSensor) {
-      console.log('environmental sensor:');
-      console.log(JSON.stringify(digitalTwin.environmentalSensor, null, 2));
-    }
-
-    var patch = '<JSON patch goes here>';
-    console.log('patch:');
-    console.log(JSON.stringify(patch, null, 2));
-
-    // Update digital twin
-    const digitalTwinUpdateResponse = await digitalTwinServiceClient.updateDigitalTwin(deviceId, patch);
-
-    // Print the response
-    console.log(JSON.stringify(digitalTwinUpdateResponse.interfaces, null, 2));
+    // Get digital twin model
+    const digitalTwinModel = await digitalTwinServiceClient.getDigitalTwinModel(modelId);
+    const idName = '@id';
+    console.log('ModelId: ' + JSON.stringify(digitalTwinModel[idName], null, 2));
+    console.log('Model: ' + JSON.stringify(digitalTwinModel.contents, null, 2));
   } catch (err) {
     console.log(err);
-  }
+  }  
+
 };
 
 main();
