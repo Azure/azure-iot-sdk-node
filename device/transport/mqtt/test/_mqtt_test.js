@@ -619,14 +619,13 @@ describe('Mqtt', function () {
     /* Tests_SRS_NODE_DEVICE_MQTT_41_003: [`productInfo` must be set before `mqtt._ensureAgentString` is invoked for the first time]*/
     it('throws if productInfo is set after mqtt connects', function (testCallback) {
       const fakeProductInfoString = 'fakeProductInfoString';
-      const fakeProductInfoOptions = {productInfo: fakeProductInfoString}
+      const fakeProductInfoOptions = { productInfo: fakeProductInfoString };
       let connectCallback;
       fakeMqttBase.connect = sinon.stub().callsFake(function (config, callback) {
         connectCallback = callback;
       });
       const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
       getUserAgentString(fakeProductInfoString, function (userAgentString) {
-        let expectedUsername = 'host.name/deviceId/' + endpoint.versionQueryString() + '&DeviceClientType=' + encodeURIComponent(userAgentString);
         mqtt.connect(function () {
           assert.throw(function () {
             mqtt.setOptions(fakeProductInfoOptions, function (err) {});
@@ -639,18 +638,20 @@ describe('Mqtt', function () {
 
     /* Tests_SRS_NODE_DEVICE_MQTT_41_XXX: [For a Plug and Play Device the device capability model should be included as &digital-twin-model-id=<DEVICE’s DCM ID> after the api-version]*/
     it('sets options for deviceCapabilityModel', function (testCallback) {
-      const fakeDCMString = 'fakeProductInfoString';
-      const fakeDCM = { deviceCapabilityModel: fakeDCMString };
+      const fakeDCMString = '&digital-twin-model-id=fakeDCMString';
+      const fakeDCM = { deviceCapabilityModel: 'fakeDCMString' };
       let connectCallback;
       fakeMqttBase.connect = sinon.stub().callsFake(function (config, callback) {
         connectCallback = callback;
       });
       const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
-      mqtt.setOptions(fakeProductInfoOptions, function (err) {
-        assert.strictEqual(mqtt._productInfo, fakeProductInfoOptions.productInfo);
-        getUserAgentString(fakeProductInfoString, function (userAgentString) {
-          const expectedUsername = 'host.name/deviceId/' + endpoint.versionQueryString() + '&DeviceClientType=' + encodeURIComponent(userAgentString);
-          mqtt.connect(function () {
+      mqtt.setOptions(fakeDCM, function (err) {
+        assert.isNotOk(err);
+        assert.strictEqual(mqtt._dcm, fakeDCMString);
+        getUserAgentString(function (userAgentString) {
+          const expectedUsername = 'host.name/deviceId/' + endpoint.versionQueryString() + fakeDCMString + '&DeviceClientType=' + encodeURIComponent(userAgentString);
+          mqtt.connect(function (err) {
+            assert.isNotOk(err);
             assert.strictEqual(fakeMqttBase.connect.firstCall.args[0]['username'], expectedUsername);
             testCallback();
           });
