@@ -27,7 +27,7 @@ async function main() {
     console.log(JSON.stringify(getComponentsResponse.interfaces, null, 2));
   } catch (err) {
     console.log(err);
-  }  
+  }
 };
 
 main();

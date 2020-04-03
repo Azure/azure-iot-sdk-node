@@ -26,7 +26,7 @@ async function main() {
     console.log('Model: ' + JSON.stringify(digitalTwinModel.contents, null, 2));
   } catch (err) {
     console.log(err);
-  }  
+  }
 
 };
 

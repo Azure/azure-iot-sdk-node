@@ -29,7 +29,7 @@ async function main() {
     console.log(JSON.stringify(invokeComponentCommandRespone, null, 2));
   } catch (err) {
     console.log(err);
-  }  
+  }
 };
 
 main();
