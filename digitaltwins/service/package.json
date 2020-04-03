@@ -34,7 +34,7 @@
     "check-coverage": true,
     "lines": 87,
     "functions": 46,
-    "branches": 76,
+    "branches": 74,
     "statements": 87
   },
   "mocha": {
