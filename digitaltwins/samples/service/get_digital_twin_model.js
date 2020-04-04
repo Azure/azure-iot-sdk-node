@@ -27,7 +27,6 @@ async function main() {
   } catch (err) {
     console.log(err);
   }
-
 };
 
 main();

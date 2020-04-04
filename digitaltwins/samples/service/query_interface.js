@@ -5,9 +5,9 @@
 
 const Registry = require('azure-iothub').Registry;
 
-const connectionString = process.env.IOTHUB_CONNECTION_STRING
+const connectionString = process.env.IOTHUB_CONNECTION_STRING;
 const componentName = process.env.IOTHUB_COMPONENT_NAME; // suggestion to find your environmental sensor: 'urn:contoso:com:EnvironmentalSensor'
-const componentVersion = 1 // replace this with the version number you want. we suggest to start with 1 :);
+const componentVersion = 1; // replace this with the version number you want. we suggest to start with 1 :);
 
 async function main() {
   const registryClient = Registry.fromConnectionString(connectionString);
