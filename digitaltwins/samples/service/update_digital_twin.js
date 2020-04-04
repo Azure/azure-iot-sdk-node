@@ -30,7 +30,7 @@ async function main() {
       console.log(JSON.stringify(digitalTwin.environmentalSensor, null, 2));
     }
 
-    var patch = '<JSON patch goes here>';
+    const patch = '<JSON patch goes here>';
     console.log('patch:');
     console.log(JSON.stringify(patch, null, 2));
 

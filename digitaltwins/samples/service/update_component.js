@@ -15,21 +15,25 @@ async function main() {
   // IOTHUB_CONNECTION_STRING, IOTHUB_DEVICE_ID, IOTHUB_COMPONENT_NAME environment variables have to be set
   // Digital Twin enabled device must be exist on the IoT Hub
 
-  // Create service client
-  const credentials = new IoTHubTokenCredentials(connectionString);
-  const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
+  try {
+    // Create service client
+    const credentials = new IoTHubTokenCredentials(connectionString);
+    const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-  var patch = '<JSON patch goes here>';
-  console.log('patch:');
-  console.log(JSON.stringify(patch, null, 2));
+    const patch = '<JSON patch goes here>';
+    console.log('patch:');
+    console.log(JSON.stringify(patch, null, 2));
 
-  console.log('updating ' + componentName + ' on device ' + deviceId + '...');
-  // Update component
-  const updateComponentResponse = await digitalTwinServiceClient.updateComponent(deviceId, patch);
+    console.log('updating ' + componentName + ' on device ' + deviceId + '...');
+    // Update component
+    const updateComponentResponse = await digitalTwinServiceClient.updateComponent(deviceId, patch);
 
-  // Print the response
-  console.log(componentName + ':');
-  console.log(JSON.stringify(updateComponentResponse.interfaces, null, 2));
+    // Print the response
+    console.log(componentName + ':');
+    console.log(JSON.stringify(updateComponentResponse.interfaces, null, 2));
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 main();
