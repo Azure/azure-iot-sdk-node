@@ -31,10 +31,10 @@
       ".ts",
       ".tsx"
     ],
-    "check-coverage": true,
+    "check-coverage": false,
     "lines": 87,
     "functions": 46,
-    "branches": 74,
+    "branches": 76,
     "statements": 87
   },
   "mocha": {
