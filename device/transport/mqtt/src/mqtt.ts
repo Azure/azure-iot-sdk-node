@@ -696,7 +696,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
       uri: 'mqtts://' + (credentials.gatewayHostName || credentials.host),
       username: credentials.host + '/' + clientId +
         '/' + endpoint.versionQueryString()  + this._dcm +
-        '&DeviceClientType=' + encodeURIComponent(this._userAgentString), // TODO: need to update useragentString
+        '&DeviceClientType=' + encodeURIComponent(this._userAgentString),
       clientId: clientId,
       sharedAccessSignature: credentials.sharedAccessSignature,
       x509: credentials.x509

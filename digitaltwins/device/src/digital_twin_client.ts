@@ -13,7 +13,7 @@ import { Mqtt, MqttWs } from 'azure-iot-device-mqtt';
 import { BaseInterface } from './base_interface';
 import { azureDigitalTwinCommand, azureDigitalTwinProperty,
          Property, PropertyChangedCallback, DesiredStateResponse,
-         CommandRequest, CommandResponse, CommandUpdateCallback, CommandUpdatePromise, CommandCallback, Callback
+         CommandRequest, CommandResponse, CommandUpdateCallback, CommandUpdatePromise, CommandCallback, Callback, azureDigitalTwinTelemetry
         } from './interface_types';
 
 /**
@@ -21,7 +21,7 @@ import { azureDigitalTwinCommand, azureDigitalTwinProperty,
  * The name of the application property that contains the interfaceInstance name (a specific
  * interface instance) as its value.
  */
-const messageInterfaceInstanceProperty: string = '$.ifname';
+const messageSubjectProperty: string = '$.sub';
 /**
  * @private
  * Prefixes the interfaceInstance name in various objects, like command names.
@@ -132,9 +132,7 @@ export class DigitalTwinClient {
   // The IoT Hub Twin that supports the Digital Twin concept.
   //
   private _twin: Twin;
-  constructor(capabilityModel: string, client: Client) {
-    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_001: [Will throw `ReferenceError` if the constructor `capabilityModel` argument is falsy.] */
-    if (!capabilityModel) throw new ReferenceError('capabilityModel must not be falsy');
+  constructor(client: Client) {
     /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_002: [Will throw `ReferenceError` if the constructor `client` argument is falsy.] */
     if (!client) throw new ReferenceError('client must not be falsy');
     this._client = client;
@@ -205,6 +203,10 @@ export class DigitalTwinClient {
             }
             break;
           }
+          case azureDigitalTwinTelemetry: {
+            // do nothing
+            break;
+          }
           default: {
             /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_009: [Will throw `TypeError` if the `newInterfaceInstance` has a property `azureDigitalTwinType` with an unrecognized type.] */
             throw new TypeError('Unrecognized Azure Digital Twin Type');
@@ -245,7 +247,7 @@ export class DigitalTwinClient {
         // Setup the callback for delta changes.
         //
         /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_035: [Subsequent to the register, a writable property will have an event listener on the `properties.desired.$iotin:<interfaceInstanceName>.<propertyName>`] */
-        this._twin.on('properties.desired.' + rwi.prefixAndInterfaceInstanceName + '.' + rwi.propertyName, (delta) => {
+        this._twin.on('properties.desired.' + rwi.prefixAndInterfaceInstanceName + '.' + rwi.propertyName, (delta: { value: any; }) => {
           /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_040: [A change to the desired property will invoke the property change callback with the change value and version.] */
           (rwi.interfaceInstance.propertyChangedCallback as PropertyChangedCallback)(rwi.interfaceInstance, rwi.propertyName, null, delta.value, this._twin.properties.desired[versionProperty]);
         });
@@ -331,7 +333,7 @@ export class DigitalTwinClient {
   /**
    * @method                            private _sendCommandUpdate
    * @description                       Sends a command update message interfaceInstance/command.
-   * @param interfaceInstanceName               Name of the instance for this interface.
+   * @param interfaceInstanceName       Name of the instance for this interface.
    * @param interfaceId                 The id (in URN format) for the interface.
    * @param commandName                 The name of the particular command updating its status.
    * @param requestId                   The id supplied by the Digital Twin Service that uniquely identifies
@@ -355,7 +357,7 @@ export class DigitalTwinClient {
       'iothub-command-name': <command name>
       'iothub-command-request-id': request.payload.commandRequest.requestId of the method request
       'iothub-command-statuscode': statusCode argument of the update method
-      '$.ifname': interfaceInstances name
+      '$.sub': interfaceInstances name
       contentType: 'application/json'
       contentEncoding: 'utf-8'
       ]
@@ -374,10 +376,10 @@ export class DigitalTwinClient {
       updateMessage.properties.add(commandUpdateCommandNameProperty, commandName);
       updateMessage.properties.add(commandUpdateRequestIdProperty, requestId);
       updateMessage.properties.add(commandUpdateStatusCodeProperty, status.toString());
-      updateMessage.properties.add(messageInterfaceInstanceProperty, interfaceInstanceName);
+      updateMessage.properties.add(messageSubjectProperty, interfaceInstanceName);
       updateMessage.contentType = 'application/json';
       updateMessage.contentEncoding = 'utf-8';
-      this._client.sendEvent(updateMessage, (updateError) => {
+      this._client.sendEvent(updateMessage, (updateError: Error | undefined) => {
         return _callback(updateError);
       });
     }, commandCallback);
@@ -416,7 +418,7 @@ export class DigitalTwinClient {
   enablePropertyUpdates() : Promise<void>;
   enablePropertyUpdates(callback?: Callback) : Promise<void> | void {
     return callbackToPromise((_callback) => {
-      this._client.getTwin((getTwinError, twinResult) => {
+      this._client.getTwin((getTwinError: Error | undefined, twinResult: Twin | undefined) => {
         if (getTwinError) {
           return _callback(getTwinError);
         } else {
@@ -438,9 +440,9 @@ export class DigitalTwinClient {
    * @param callback (optional)     If present, the callback to be invoked on completion of the telemetry,
    *                                otherwise a promise is returned.
    */
-  report(interfaceInstance : BaseInterface, propertiesToReport: any, responseOrCallback: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): void;
-  report(interfaceInstance : BaseInterface, propertiesToReport: any, response?: DesiredStateResponse): Promise<void>;
-  report(interfaceInstance : BaseInterface, propertiesToReport: any, responseOrCallback?: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): Promise<void> | void {
+  report(interfaceInstance: BaseInterface, propertiesToReport: any, responseOrCallback: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): void;
+  report(interfaceInstance: BaseInterface, propertiesToReport: any, response?: DesiredStateResponse): Promise<void>;
+  report(interfaceInstance: BaseInterface, propertiesToReport: any, responseOrCallback?: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): Promise<void> | void {
     let actualResponse: DesiredStateResponse | undefined;
     let actualCallback: ErrorCallback | undefined;
 
@@ -455,23 +457,22 @@ export class DigitalTwinClient {
     }
 
     return callbackToPromise((_callback) => {
-      let iName = interfaceInstance.interfaceInstanceName;
-        let interfaceInstancePart = interfaceInstancePrefix + iName;
-        let patch : any = {
-          [interfaceInstancePart]: {}
-        };
-        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [** Properties may invoke the method `report` with a value to produce a patch to the reported properties. **] */
-        for (const propertyName in propertiesToReport) {
-          let propertyContent : any = { value: propertiesToReport[propertyName] };
-          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_039: [** Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties. **] */
-          if (actualResponse) {
-            propertyContent.sc = actualResponse.code;
-            propertyContent.sd = actualResponse.description;
-            propertyContent.sv = actualResponse.version;
-          }
-          patch[interfaceInstancePart][propertyName] = propertyContent
+      let interfaceInstancePart = interfaceInstancePrefix + interfaceInstance.interfaceInstanceName;
+      let patch : any = {
+        [interfaceInstancePart]: {}
+      };
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [** Properties may invoke the method `report` with a value to produce a patch to the reported properties. **] */
+      for (const propertyName in propertiesToReport) {
+        let propertyContent : any = { value: propertiesToReport[propertyName] };
+        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_039: [** Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties. **] */
+        if (actualResponse) {
+          propertyContent.ac = actualResponse.code;
+          propertyContent.ad = actualResponse.description;
+          propertyContent.av = actualResponse.version;
         }
-        this._twin.properties.reported.update(patch, _callback);
+        patch[interfaceInstancePart][propertyName] = propertyContent
+      }
+      this._twin.properties.reported.update(patch, _callback);
     }, actualCallback);
   }
 
@@ -490,10 +491,15 @@ export class DigitalTwinClient {
       let telemetryMessage = new Message(
         JSON.stringify(telemetry)
       );
-      telemetryMessage.properties.add(messageInterfaceInstanceProperty, interfaceInstance.interfaceInstanceName);
+      // The device must further specify the payload type and encoding type of the message.  Currently only JSON/utf-8 is supported.
+      // an example MQTT topic:
+      // devices/{yourdevicename}/messages/events/%24.sub={url-escaped-component-name}&%24.ct=application%2fjson&%24ce=utf-8.
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [** The device must specify the payload type and encoding type of the telemetry message. **] */
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [** PnP currently only supports JSON/utf-8 for telemetry messages. **] */
+      telemetryMessage.properties.add(messageSubjectProperty, interfaceInstance.interfaceInstanceName);
       telemetryMessage.contentType =  'application/json';
       telemetryMessage.contentEncoding = 'utf-8';
-      this._client.sendEvent(telemetryMessage, (telemetryError) => {
+      this._client.sendEvent(telemetryMessage, (telemetryError: Error | undefined) => {
         return _callback(telemetryError);
       });
     }, callback);
@@ -525,6 +531,6 @@ export class DigitalTwinClient {
     const client = Client.fromConnectionString(connStr, transport);
     client.setOptions({ deviceCapabilityModel: capabilityModel });
 
-    return new DigitalTwinClient(capabilityModel, client);
+    return new DigitalTwinClient(client);
   }
 }

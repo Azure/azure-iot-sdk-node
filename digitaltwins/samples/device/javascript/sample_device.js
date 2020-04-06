@@ -43,21 +43,24 @@ async function main() {
   // mqtt is implied in this static method
   digitalTwinClient = DigitalTwinClient.fromConnectionString(capabilityModel, process.env.DEVICE_CONNECTION_STRING);
 
-
-  // TBC: Do we create these inline
-  await digitalTwinClient.addInterfaceInstances(
+  // Add the interface instances to the Digital Twin Client
+  digitalTwinClient.addInterfaceInstances(
     environmentalSensor,
     deviceInformation,
   );
 
-  // either one of these would cause the device to call open, or the report.
-  // device could do report / telemetry before these enables.
-  // enablePropertyUpdates
+  // enableCommands will enable the AzureDigitalTwinCommand properties in your interfaces to receive PnP commands from the service, and respond via
+  // the commandHandler you created for your interface.
+  // For information on how to write a commandHandler (aka a callback for handling 'direct' methods):
+  // https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#respond-to-a-direct-method
+  // Ex. for `blink` property in the EnvironmentalSensor, it will now be handled by the commandHandler method that you wrote.
   digitalTwinClient.enableCommands();
+
+  // enablePropertyUpdates will use the device twin to listen for updates to the writable properties in the interface instances that have been set.
+  // Ex. for `brightness` property, which is set as a writable property, updates will be handled by the propertyUpdateHandler you've written.
   await digitalTwinClient.enablePropertyUpdates();
 
   // report all of the device information.
-  // TBC: Should 1st parameter be the interface or the ID
   await digitalTwinClient.report(deviceInformation, {
     manufacturer: 'Contoso Device Corporation',
     model: 'Contoso 47-turbo',

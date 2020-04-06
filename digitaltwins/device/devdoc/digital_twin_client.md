@@ -53,7 +53,6 @@ main();
 ### constructor
 Creates a new instance of a Digital Twin Device Client.  An IoT Hub Device Client must be provided as well as the urn format string specifying a Capability Model.
 
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_001: [** Will throw `ReferenceError` if `capabilityModel` argument is falsy. **]**
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_002: [** Will throw `ReferenceError` if the constructor `client` argument is falsy. **]**
 
 ### addInterfaceInstance
@@ -82,7 +81,7 @@ payload:
 }
 message application properties:
 $.ifid : 'urn:azureiot:ModelDiscovery:ModelInformation:1'
-$.ifname: 'urn_azureiot_ModelDiscovery_ModelInformation'
+$.sub: 'urn_azureiot_ModelDiscovery_ModelInformation'
 $.schema: 'modelInformation'
 contentType: 'application/json'
 contentEncoding: 'utf-8'
@@ -160,7 +159,7 @@ message application properties:
 'iothub-command-name': <command name>
 'iothub-command-request-id': request.payload.commandRequest.requestId of the method request
 'iothub-command-statuscode': statusCode argument of the update method
-'$.ifname': interfaceInstances name
+'$.sub': interfaceInstances name
 contentType: 'application/json'
 contentEncoding: 'utf-8'
 ```
@@ -179,7 +178,7 @@ payload: {<telemetry property name>: <telemetry property value> ,...}
 message application properties:
 contentType: 'application/json'
 contentEncoding: 'utf-8'
-$.ifname: <interfaceInstance name>
+$.sub: <interfaceInstance name>
 ```
  **]**
 
@@ -191,7 +190,7 @@ payload: {<telemetry property name>: value}
 message application properties:
 contentType: 'application/json'
 contentEncoding: 'utf-8'
-$.ifname: <interfaceInstance name>
+$.sub: <interfaceInstance name>
 $.schema: <telemetry property name>
 ```
 **]**

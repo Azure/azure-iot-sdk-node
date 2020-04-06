@@ -22,21 +22,11 @@ const fakeDeviceClient = {
 
 describe('Digital Twin Client', function () {
   describe('#constructor', () => {
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_001: [Will throw `ReferenceError` if `capabilityModel` argument is falsy.] */
-    [undefined, null, ''].forEach(function (capabilityModel) {
-      it('throws a ReferenceError if \'capabilityModel\' is ' + capabilityModel + '\'', function () {
-        assert.throws(() => {
-          const dtClient = new DigitalTwinClient(capabilityModel, fakeDeviceClient);
-          (dtClient);
-        });
-      });
-    });
-
     /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_002: [Will throw `ReferenceError` if the constructor `client` argument is falsy.] */
     [undefined, null, ''].forEach(function (client) {
       it('throws a ReferenceError if \'client\' is ' + client + '\'', function () {
         assert.throws(() => {
-          const dtClient = new DigitalTwinClient('urn:abc:1', client);
+          const dtClient = new DigitalTwinClient(client);
           (dtClient);
         });
       });
@@ -65,19 +55,19 @@ describe('Digital Twin Client', function () {
     [undefined, null, ''].forEach(function (falsyConnStr) {
       it('throws a ReferenceError if \'client\' is ' + falsyConnStr + '\'', function () {
         assert.throws(() => {
-          const dtClient = new DigitalTwinClient(fakeCapabilityModel, falsyConnStr);
+          const dtClient = DigitalTwinClient.fromConnectionString(fakeCapabilityModel, falsyConnStr);
           (dtClient);
         });
       });
     });
 
-    /* Tests_SRS_NODE_DEVICE_CLIENT_41_XXX: [The fromConnectionString method shall return a new instance of the Client object, as by a call to new Client(new Transport(...)).] */
+    /* Tests_SRS_NODE_DEVICE_CLIENT_41_XXX: [The fromConnectionString method shall return a new instance of the Client object] */
     it('returns an instance of DigitalTwinClient', function () {
       const dtClient = DigitalTwinClient.fromConnectionString(fakeCapabilityModel, fakeConnStr);
       assert.instanceOf(dtClient, DigitalTwinClient);
     });
 
-    /* Tests_SRS_NODE_DEVICE_CLIENT_41_XXX: [The fromConnectionString method shall use the interal MQTT transport by default] */
+    /* Tests_SRS_NODE_DEVICE_CLIENT_41_XXX: [The fromConnectionString method shall use the internal MQTT transport by default] */
     it('uses the MQTT transport by default', function (testCallback) {
       const mqttStub = sandbox.stub(Mqtt, 'Mqtt');
       sandbox.stub(Client, 'fromConnectionString').callsFake((connStr, transport) => {
@@ -87,7 +77,7 @@ describe('Digital Twin Client', function () {
       DigitalTwinClient.fromConnectionString(fakeCapabilityModel, fakeConnStr);
     });
 
-    /* Tests_SRS_NODE_DEVICE_CLIENT_41_XXX: [The fromConnectionString method shall use the interal MQTT Websockets transport if specified with a boolean parameter] */
+    /* Tests_SRS_NODE_DEVICE_CLIENT_41_XXX: [The fromConnectionString method shall use the internal MQTT Websockets transport if specified with a boolean parameter] */
     it('uses the MQTTWS transport if specified', function (testCallback) {
       const mqttWsStub = sandbox.stub(Mqtt, 'MqttWs');
       sandbox.stub(Client, 'fromConnectionString').callsFake((connStr, transport) => {
@@ -108,7 +98,7 @@ describe('Digital Twin Client', function () {
 
     /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_003: [Will throw `ReferenceError` if the `newInterfaceInstance` argument is falsy.] */
     [undefined, null, ''].forEach(function (newInterfaceInstance) {
-      const dtClient = new DigitalTwinClient('urn:abc:1', fakeDeviceClient);
+      const dtClient = new DigitalTwinClient(fakeDeviceClient);
       it('throws a ReferenceError if \'newInterfaceInstance\' is ' + newInterfaceInstance + '\'', () => {
         assert.throws(() => {
           dtClient.addInterfaceInstances(newInterfaceInstance);
@@ -126,7 +116,7 @@ describe('Digital Twin Client', function () {
       };
       const badFakeInterfaceInstance = new BadFakeInterface('badFakeInterfaceInstance');
       it('throws a ReferenceError if \'newInterfaceInstance\' \'interfaceId\` property is ' + interfaceId + '\'', () => {
-        const dtClient = new DigitalTwinClient('urn:abc:1', fakeDeviceClient);
+        const dtClient = new DigitalTwinClient(fakeDeviceClient);
         assert.throws(() => {
           dtClient.addInterfaceInstances(badFakeInterfaceInstance);
         });
@@ -137,7 +127,7 @@ describe('Digital Twin Client', function () {
     [undefined, null, ''].forEach(function (interfaceInstanceName) {
       const badFakeInterfaceInstance = new FakeInterface(interfaceInstanceName);
       it('throws a ReferenceError if \'newInterfaceInstance\' \'interfaceInstanceName\` property is ' + interfaceInstanceName + '\'', () => {
-        const dtClient = new DigitalTwinClient('urn:abc:1', fakeDeviceClient);
+        const dtClient = new DigitalTwinClient(fakeDeviceClient);
         assert.throws(() => {
           dtClient.addInterfaceInstances(badFakeInterfaceInstance);
         });
@@ -148,7 +138,7 @@ describe('Digital Twin Client', function () {
     it('throws an Error if interfaceInstance name is used in a previously added interfaceInstance', function () {
       const firstFakeInterfaceInstance = new FakeInterface('abc');
       const secondFakeInterfaceInstance = new FakeInterface('abc');
-      const dtClient = new DigitalTwinClient('urn:abc:1', fakeDeviceClient);
+      const dtClient = new DigitalTwinClient(fakeDeviceClient);
       dtClient.addInterfaceInstances(firstFakeInterfaceInstance);
       assert.throws(() => {
         dtClient.addInterfaceInstances(secondFakeInterfaceInstance);
@@ -164,7 +154,7 @@ describe('Digital Twin Client', function () {
         }
       };
       const noCallbackCommand = new NoCommandCallbackInterface('abc');
-      const dtClient = new DigitalTwinClient('urn:abc:1', fakeDeviceClient);
+      const dtClient = new DigitalTwinClient(fakeDeviceClient);
       assert.throws(() => {
         dtClient.addInterfaceInstances(noCallbackCommand);
       });
@@ -179,7 +169,7 @@ describe('Digital Twin Client', function () {
         }
       };
       const noChangedCallback = new NoChangedCallbackInterface('abc');
-      const dtClient = new DigitalTwinClient('urn:abc:1', fakeDeviceClient);
+      const dtClient = new DigitalTwinClient(fakeDeviceClient);
       assert.throws(() => {
         dtClient.addInterfaceInstances(noChangedCallback);
       });
@@ -195,14 +185,14 @@ describe('Digital Twin Client', function () {
         }
       };
       const badDigitalTwinPropertyTypeInterface = new BadDigitalTwinPropertyTypeInterface('abc');
-      const dtClient = new DigitalTwinClient('urn:abc:1', fakeDeviceClient);
+      const dtClient = new DigitalTwinClient(fakeDeviceClient);
       assert.throws(() => {
         dtClient.addInterfaceInstances(badDigitalTwinPropertyTypeInterface);
       });
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [Can accept a variable number of interfaces to add to the Digital Twin Device Client] */
-    it.only('throws an Error if interface contains an unknown Digital Twin property type', function () {
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [Can accept a variable number of interfaces to add via the addInterfaceInstances method] */
+    it('can add a variable number of interfaces', function () {
       class FakeInterface extends BaseInterface {
         constructor(name, propertyCallback, commandCallback) {
           super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
@@ -213,10 +203,12 @@ describe('Digital Twin Client', function () {
       const fakeInterfaceInstanceA = new FakeInterface('abc', () => {});
       const fakeInterfaceInstanceB = new FakeInterface('def', () => {});
       const fakeInterfaceInstanceC = new FakeInterface('hij', () => {});
-      const dtClient = new DigitalTwinClient('urn:abc:1', fakeDeviceClient);
-      assert.doesNotThrow(() => {
-        dtClient.addInterfaceInstances(fakeInterfaceInstanceA, fakeInterfaceInstanceB, fakeInterfaceInstanceC);
-      });
+      const dtClient = new DigitalTwinClient(fakeDeviceClient);
+      dtClient.addInterfaceInstances(fakeInterfaceInstanceA, fakeInterfaceInstanceB, fakeInterfaceInstanceC);
+      assert(dtClient._interfaceInstances.urn_azureiot_Client_SDKInformation.interfaceInstance.interfaceInstanceName, 'urn_azureiot_Client_SDKInformation');
+      assert(dtClient._interfaceInstances.abc.interfaceInstance.interfaceInstanceName, 'abc');
+      assert(dtClient._interfaceInstances.def.interfaceInstance.interfaceInstanceName, 'def');
+      assert(dtClient._interfaceInstances.hij.interfaceInstance.interfaceInstanceName, 'hij');
     });
   });
 
@@ -239,7 +231,7 @@ describe('Digital Twin Client', function () {
           getTwin: sinon.stub().callsArgWith(0, null, fakeTwin)
         };
         fakeInterfaceInstance = new FakeInterface('abc');
-        dtClient = new DigitalTwinClient('urn:abc:1', registrationDeviceClient);
+        dtClient = new DigitalTwinClient(registrationDeviceClient);
         dtClient.addInterfaceInstances(fakeInterfaceInstance);
       });
 
@@ -283,7 +275,7 @@ describe('Digital Twin Client', function () {
         registrationDeviceClient = {
           getTwin: sinon.stub().callsArgWith(0, twinError)
         };
-        dtClient = new DigitalTwinClient('urn:abc:1', registrationDeviceClient);
+        dtClient = new DigitalTwinClient(registrationDeviceClient);
         fakeInterfaceInstance = new FakeInterface('abc');
         dtClient.addInterfaceInstances(fakeInterfaceInstance);
       });
@@ -330,7 +322,7 @@ describe('Digital Twin Client', function () {
         }
       };
       const fakeInterfaceInstanceA = new FakeInterface('A', sinon.stub(), () => {});
-      const dtClient = new DigitalTwinClient('urn:abc:1', registrationDeviceClient);
+      const dtClient = new DigitalTwinClient(registrationDeviceClient);
       dtClient.addInterfaceInstances(fakeInterfaceInstanceA);
       dtClient.enablePropertyUpdates().then(() => {
         assert(registrationDeviceClient.getTwin.calledOnce);
@@ -341,11 +333,11 @@ describe('Digital Twin Client', function () {
     });
   });
 
-  describe.only('#enableCommands', () => {
+  describe('#enableCommands', () => {
     /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_012: [For each property in an interfaceInstance with type `Command`, a device method will be enabled with a name of the form '$iotin:' followed by the interfaceInstance name followed by '*' followed by the property name.] */
-    it('Will enable methods for all commands in all interfaceInstances', function (done) {
+    it('Will enable methods for all commands in all interfaceInstances', function () {
       const registrationDeviceClient = {
-        sendEvent: sinon.stub().callsArgWith(1, null, new results.MessageEnqueued()),
+        sendEvent: sinon.stub().callsArgWith(1, null),
         onDeviceMethod: sinon.stub(),
         getTwin: sinon.stub().callsArgWith(0, null, {
           properties: {
@@ -363,16 +355,14 @@ describe('Digital Twin Client', function () {
       };
       const fakeInterfaceInstanceA = new FakeInterface('A', () => {}, () => {});
       const fakeInterfaceInstanceB = new FakeInterface('B', () => {}, () => {});
-      const dtClient = new DigitalTwinClient('urn:abc:1', registrationDeviceClient);
+      const dtClient = new DigitalTwinClient(registrationDeviceClient);
       dtClient.addInterfaceInstances(fakeInterfaceInstanceA);
       dtClient.addInterfaceInstances(fakeInterfaceInstanceB);
       assert.strictEqual(registrationDeviceClient.onDeviceMethod.callCount, 0);
-      dtClient.enableCommands().then(() => {
-        assert.strictEqual(registrationDeviceClient.onDeviceMethod.callCount, 2);
-        assert.strictEqual(registrationDeviceClient.onDeviceMethod.args[0][0], '$iotin:A*temp');
-        assert.strictEqual(registrationDeviceClient.onDeviceMethod.args[1][0], '$iotin:B*temp');
-        done();
-      });
+      dtClient.enableCommands();
+      assert.strictEqual(registrationDeviceClient.onDeviceMethod.callCount, 2);
+      assert.strictEqual(registrationDeviceClient.onDeviceMethod.args[0][0], '$iotin:A*temp');
+      assert.strictEqual(registrationDeviceClient.onDeviceMethod.args[1][0], '$iotin:B*temp');
     });
   });
 
@@ -392,7 +382,7 @@ describe('Digital Twin Client', function () {
 
     beforeEach(function () {
       telemetryDeviceClient = {
-        sendEvent: sinon.stub().callsArgWith(1, null, new results.MessageEnqueued()),
+        sendEvent: sinon.stub().callsArgWith(1, null),
         getTwin: sinon.stub().callsArgWith(0, null, {
           properties: {
             reported: {
@@ -401,39 +391,43 @@ describe('Digital Twin Client', function () {
           }
         })
       };
-      dtClient = new DigitalTwinClient('urn:abc:1', telemetryDeviceClient);
+      dtClient = new DigitalTwinClient(telemetryDeviceClient);
       fakeInterfaceInstance = new FakeInterface('abc');
     });
 
     it('sending "imploded" message with correct format - invoking callback on success', function (done) {
       dtClient.addInterfaceInstances(fakeInterfaceInstance);
-      dtClient.sendTelemetry({ firstTelemetryProperty: 1, thirdTelemetryProperty: 'end' }, (telemetryError) => {
+      dtClient.sendTelemetry(fakeInterfaceInstance, { firstTelemetryProperty: 1, thirdTelemetryProperty: 'end' }, (telemetryError) => {
         assert.isNotOk(telemetryError);
-        const telemetryMessage = telemetryDeviceClient.sendEvent.lastcall.args[0];
+        const telemetryMessage = telemetryDeviceClient.sendEvent.lastCall.args[0];
         const telemetryPayload = JSON.parse(telemetryMessage.data);
         assert.strictEqual(telemetryPayload.firstTelemetryProperty, 1);
         assert.strictEqual(telemetryPayload.thirdTelemetryProperty, 'end');
         assert.strictEqual(Object.keys(telemetryPayload).length, 2);
         assert.strictEqual(telemetryMessage.contentType, 'application/json');
         assert.strictEqual(telemetryMessage.contentEncoding, 'utf-8');
-        assert.strictEqual(telemetryMessage.properties.getValue('$.ifname'), 'abc');
+        assert.strictEqual(telemetryMessage.properties.getValue('$.sub'), 'abc');
         done();
       });
     });
 
-    it('"imploded" - resolving with a promise', function (done) {
+    it('sending "imploded" message with correct format - resolving with a promise', function (done) {
       dtClient.addInterfaceInstances(fakeInterfaceInstance);
-      fakeInterfaceInstance.sendTelemetry({ firstTelemetryProperty: 1, thirdTelemetryProperty: 'end' })
+      dtClient.sendTelemetry(fakeInterfaceInstance, { firstTelemetryProperty: 1, thirdTelemetryProperty: 'end' })
         .then( () => {
-          const telemetryMessage = telemetryDeviceClient.sendEvent.lastcall.args[0];
-          const telemetryPayload = JSON.parse(telemetryMessage.data);
-          assert.strictEqual(telemetryPayload.firstTelemetryProperty, 1);
-          assert.strictEqual(telemetryPayload.thirdTelemetryProperty, 'end');
-          assert.strictEqual(Object.keys(telemetryPayload).length, 2);
-          assert.strictEqual(telemetryMessage.contentType, 'application/json');
-          assert.strictEqual(telemetryMessage.contentEncoding, 'utf-8');
-          assert.strictEqual(telemetryMessage.properties.getValue('$.ifname'), 'abc');
-          return done();
+          try {
+            const telemetryMessage = telemetryDeviceClient.sendEvent.lastCall.args[0];
+            const telemetryPayload = JSON.parse(telemetryMessage.data);
+            assert.strictEqual(telemetryPayload.firstTelemetryProperty, 1);
+            assert.strictEqual(telemetryPayload.thirdTelemetryProperty, 'end');
+            assert.strictEqual(Object.keys(telemetryPayload).length, 2);
+            assert.strictEqual(telemetryMessage.contentType, 'application/json');
+            assert.strictEqual(telemetryMessage.contentEncoding, 'utf-8');
+            assert.strictEqual(telemetryMessage.properties.getValue('$.sub'), 'abc');
+            done();
+          } catch (e) {
+            done(e);
+          }
         });
     });
   });
@@ -476,7 +470,7 @@ describe('Digital Twin Client', function () {
           }
         })
       };
-      dtClient = new DigitalTwinClient('urn:abc:1', commandDeviceClient);
+      dtClient = new DigitalTwinClient(commandDeviceClient);
     });
 
     afterEach(() => {
@@ -846,7 +840,7 @@ describe('Digital Twin Client', function () {
       'iothub-command-name': <command name>
       'iothub-command-request-id': request.payload.commandRequest.requestId of the method request
       'iothub-command-statuscode': statusCode argument of the update method
-      '$.ifname': interfaceInstances name
+      '$.sub': interfaceInstances name
       contentType: 'application/json'
       contentEncoding: 'utf-8'
       ]
@@ -876,7 +870,7 @@ describe('Digital Twin Client', function () {
           assert.strictEqual(message.properties.getValue('iothub-message-schema'), 'asyncResult');
           assert.strictEqual(message.properties.getValue('iothub-command-request-id'), '43');
           assert.strictEqual(message.properties.getValue('iothub-command-statuscode'), '200');
-          assert.strictEqual(message.properties.getValue('$.ifname'), 'fakeInterfaceInstanceName');
+          assert.strictEqual(message.properties.getValue('$.sub'), 'fakeInterfaceInstanceName');
           fakeDone();
         });
         methodCallbackFunction(methodRequest, methodResponse);
@@ -964,7 +958,7 @@ describe('Digital Twin Client', function () {
         onDeviceMethod: () => {},
         getTwin: sinon.stub().callsArgWith(0, null, aTwin)
       };
-      dtClient = new DigitalTwinClient('urn:abc:1', propertyDeviceClient);
+      dtClient = new DigitalTwinClient(propertyDeviceClient);
       fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstance', (interfaceObject, propertyName, reportedValue, desiredValue, version) => {
         return;
       });
@@ -1050,7 +1044,7 @@ describe('Digital Twin Client', function () {
       });
       dtClient.addInterfaceInstances(fakeInterfaceInstance);
       aTwin.properties.reported.update = sinon.stub().callsArgWith(1, null).onCall(0).callsFake((patch, callback) => {
-        assert.deepEqual(patch, { [interfaceInstanceProperty]: { [testPropertyName]: { 'value': initialTestPropertyValue, 'sc': testStatusCode, 'sd': testDescription, 'sv': initialDesiredVersion } } });
+        assert.deepEqual(patch, { [interfaceInstanceProperty]: { [testPropertyName]: { 'value': initialTestPropertyValue, 'ac': testStatusCode, 'ad': testDescription, 'av': initialDesiredVersion } } });
         callback();
       });
       dtClient.enablePropertyUpdates()
@@ -1058,8 +1052,12 @@ describe('Digital Twin Client', function () {
     });
 
     /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [A change to the desired property will invoke the property change callback with the change value and version.] */
-    it('Property change callback invoked on change to property.  No reported value given.', (done) => {
-      const doneOnSecondInvocation = sinon.stub().onSecondCall().callsFake(() => done());
+    it('Property change callback invoked on change to property. No reported value given.', (done) => {
+      const callCountStub = sinon.stub();
+      const doneOnSecondInvocation = sinon.stub().onSecondCall().callsFake(() => {
+        assert.strictEqual(callCountStub.callCount, 2, 'Not all assert paths have been called. Make sure the test is working properly.');
+        done();
+      });
       fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstance', (interfaceObject, propertyName, reportedValue, desiredValue, version) => {
         //
         // We should never see a reported value.  This is because initially there isn't a reported value because
@@ -1073,7 +1071,7 @@ describe('Digital Twin Client', function () {
         obj[propertyName] = desiredValue;
         dtClient.report(interfaceObject, obj, { code: testStatusCode, description: testDescription, version: version })
           .then(doneOnSecondInvocation)
-          .catch((err) => assert.fail('in the register catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_040 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
+          .catch((err) => done(err));
       });
       dtClient.addInterfaceInstances(fakeInterfaceInstance);
       //
@@ -1082,9 +1080,7 @@ describe('Digital Twin Client', function () {
       // The .onCall(0) is referring to the original invocation for properties that happens right after we
       // get the twin originally.
       //
-      // The next 3 calls to update occur because of the default reporting of the SDK properties.
-      //
-      // After the dtClient.register, the final .onCall(4) happens as the result of simulating the delta patch.
+      // The next .onCall happens as the result of simulating the delta patch.
       //
       aTwin.properties.reported.update = sinon.stub().callsArgWith(1, null)
         .onCall(0).callsFake((patch, callback) => {
@@ -1096,12 +1092,14 @@ describe('Digital Twin Client', function () {
           aTwin.properties.reported[interfaceInstanceProperty] = patch[interfaceInstanceProperty];
           callback();
         })
-        .onCall(4).callsFake((patch, callback) => {
-          assert.deepEqual(patch, { [interfaceInstanceProperty]: { [testPropertyName]: { 'value': initialTestPropertyValue, 'sc': testStatusCode, 'sd': testDescription, 'sv': 2*initialDesiredVersion } } });
+        .onCall(1).callsFake((patch, callback) => {
+          callCountStub();
+          assert.deepEqual(patch, { [interfaceInstanceProperty]: { [testPropertyName]: { 'value': initialTestPropertyValue, 'ac': testStatusCode, 'ad': testDescription, 'av': 2*initialDesiredVersion } } });
           callback();
         });
       dtClient.enablePropertyUpdates()
         .then(() => {
+          callCountStub();
           assert(aTwin.properties.reported[interfaceInstanceProperty][testPropertyName].value, initialTestPropertyValue);
           aTwin.properties.desired[versionPropertyName] = 2*initialDesiredVersion;
           //
