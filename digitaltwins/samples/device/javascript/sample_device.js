@@ -8,7 +8,6 @@ const DigitalTwinClient = require('azure-iot-digitaltwins-device').DigitalTwinCl
 const EnvironmentalSensor = require('./environmentalinterface').EnvironmentalSensor;
 const DeviceInformation = require('./deviceInformation').DeviceInformation;
 
-const environmentalId = 'urn:contoso:com:EnvironmentalSensor:1';
 let digitalTwinClient;
 
 

@@ -85,8 +85,8 @@ let dtClient = DigitalTwinClient.fromConnectionString(capabilityModel, process.e
 
 const main = async () => {
   try {
-    dtClient.report(environmentalSensor, {state: true});
-    dtClient.report(deviceInformation, {
+    await dtClient.report(environmentalSensor, {state: true});
+    await dtClient.report(deviceInformation, {
       manufacturer: 'Contoso Device Corporation',
       model: 'Contoso 4762B-turbo',
       swVersion: '3.1',
@@ -112,7 +112,7 @@ dtClient.enableCommands();
 
 dtClient.enablePropertyUpdates()
   .then(() => {
-    console.log('enabled the property updatess.');
+    console.log('enabled the property updates.');
     main();
   })
   .catch(() => {console.log('the registration failed.');});
