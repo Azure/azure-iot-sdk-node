@@ -7,6 +7,7 @@ var assert = require('chai').assert;
 var uuid = require('uuid');
 var Registry = require('../lib/registry.js').Registry;
 var ConnectionString = require('../lib/connection_string.js');
+console.log('_registry_test_integration SERVICE TEST ENV VALUE HAS HOSTNAME AT: ' + process.env.IOTHUB_CONNECTION_STRING.indexOf('HostName'));
 
 function makeConnectionString(host, policy, key) {
   return 'HostName=' + host + ';SharedAccessKeyName=' + policy + ';SharedAccessKey=' + key;

@@ -12,6 +12,7 @@ var incompleteConnectionStrings = {
   SharedAccessKeyName: 'HostName=hostname;SharedAccessKey=key',
   SharedAccessKey: 'HostName=name;SharedAccessKeyName=keyname'
 };
+console.log('_connection_string_test SERVICE TEST ENV VALUE HAS HOSTNAME AT: ' + process.env.IOTHUB_CONNECTION_STRING.indexOf('HostName'));
 
 describe('ConnectionString', function () {
   describe('#parse', function () {
@@ -19,6 +20,7 @@ describe('ConnectionString', function () {
     /*Tests_SRS_NODE_IOTHUB_CONNSTR_05_002: [It shall throw ArgumentError if any of 'HostName', 'SharedAccessKeyName', or 'SharedAccessKey' fields are not found in the source argument.]*/
     ['HostName', 'SharedAccessKeyName', 'SharedAccessKey'].forEach(function (key) {
       it('throws if connection string is missing ' + key, function () {
+        console.log('in PARSE TEST: ' + key);
         assert.throws(function () {
           ConnectionString.parse(incompleteConnectionStrings[key]);
         }, ArgumentError);

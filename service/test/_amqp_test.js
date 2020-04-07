@@ -12,6 +12,7 @@ var results = require('azure-iot-common').results;
 var Message = require('azure-iot-common').Message;
 var AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
 
+console.log('_amqp_test SERVICE TEST ENV VALUE HAS HOSTNAME AT: ' + process.env.IOTHUB_CONNECTION_STRING.indexOf('HostName'));
 
 var fakeConfig = {
   host: 'hub.host.name',

@@ -6,6 +6,7 @@ var Amqp = require('../lib/amqp.js').Amqp;
 var AmqpWs = require('../lib/amqp_ws.js').AmqpWs;
 var assert = require('chai').assert;
 var sinon = require('sinon');
+console.log('_amqp_ws_test SERVICE TEST ENV VALUE HAS HOSTNAME AT: ' + process.env.IOTHUB_CONNECTION_STRING.indexOf('HostName'));
 
 describe('AmqpWs', function() {
   describe('#constructor', function() {

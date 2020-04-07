@@ -12,6 +12,7 @@ var Message = require('azure-iot-common').Message;
 var errors = require('azure-iot-common').errors;
 var SimulatedAmqp = require('./amqp_simulated.js');
 var transportSpecificTests = require('./_client_common_testrun.js');
+console.log('_client_test SERVICE TEST ENV VALUE HAS HOSTNAME AT: ' + process.env.IOTHUB_CONNECTION_STRING.indexOf('HostName'));
 
 describe('Client', function () {
   describe('#constructor', function () {
