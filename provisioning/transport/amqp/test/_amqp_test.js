@@ -13,6 +13,7 @@ var ProvisioningDeviceConstants = require('azure-iot-provisioning-device').Provi
 var Amqp = require('../lib/amqp.js').Amqp;
 var Builder = require('buffer-builder');
 var rheaMessage = require('rhea').message;
+console.log('_amqp_test PROVISIONING TEST ENV VALUE HAS HOSTNAME AT: ' + process.env.IOTHUB_CONNECTION_STRING.indexOf('HostName'));
 
 var retryAfterProperty = 'retry-after';
 var internalServerError = {
