@@ -6,7 +6,6 @@
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-digitaltwins-device:Client');
 
-import { DigitalTwinInterface as SdkInformation } from './sdkinformation';
 import { callbackToPromise, ErrorCallback, Message } from 'azure-iot-common';
 import { Client, Twin, DeviceMethodRequest, DeviceMethodResponse } from 'azure-iot-device';
 import { Mqtt, MqttWs } from 'azure-iot-device-mqtt';
@@ -112,11 +111,6 @@ interface InterfaceInstanceInformation {
 
 export class DigitalTwinClient {
   //
-  // An instantiation of the SDK information interface.
-  //
-  private readonly _sdkInformation: SdkInformation  = new SdkInformation('urn_azureiot_Client_SDKInformation', 'urn:azureiot:Client:SDKInformation:1');
-
-  //
   // Dictionary of each interfaceInstance and the associated interface.
   //
   private _interfaceInstances: {[key: string]: InterfaceInstanceInformation} = {};
@@ -137,7 +131,6 @@ export class DigitalTwinClient {
     if (!client) throw new ReferenceError('client must not be falsy');
     this._client = client;
     this._twin = {} as Twin;
-    this._addInterfaceInstance(this._sdkInformation);
   }
 
   /**
@@ -259,7 +252,7 @@ export class DigitalTwinClient {
 
 
   private _createCommandInformation(interfaceInstance: BaseInterface, commandName: string): CommandInformation  {
-    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_013: [** For commands, the `commandCallback` will be invoked with `request` and `response` arguments with the following properties.
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_013: [ For commands, the `commandCallback` will be invoked with `request` and `response` arguments with the following properties.
       request:
         {
           interfaceInstance: interfaceInstance,
@@ -278,7 +271,7 @@ export class DigitalTwinClient {
               device message,
               callback, or if undefined returns a promise
         }
-      **]
+      ]
     */
     return {
       interfaceInstance: interfaceInstance,
@@ -451,6 +444,7 @@ export class DigitalTwinClient {
     let actualResponse: DesiredStateResponse | undefined;
     let actualCallback: ErrorCallback | undefined;
 
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_014: [ `report` should be able to invoke the twin reported properties `update` method and receive (if supplied) a callback upon completion. ] */
     if (responseOrCallback) {
       if (typeof responseOrCallback === 'function') {
         actualCallback = responseOrCallback as ErrorCallback;
@@ -466,10 +460,10 @@ export class DigitalTwinClient {
       let patch : any = {
         [interfaceInstancePart]: {}
       };
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [** Properties may invoke the method `report` with a value to produce a patch to the reported properties. **] */
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [ Properties may invoke the method `report` with a value to produce a patch to the reported properties. ] */
       for (const propertyName in propertiesToReport) {
         let propertyContent : any = { value: propertiesToReport[propertyName] };
-        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_039: [** Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties. **] */
+        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_039: [ Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties. ] */
         if (actualResponse) {
           propertyContent.ac = actualResponse.code;
           propertyContent.ad = actualResponse.description;
