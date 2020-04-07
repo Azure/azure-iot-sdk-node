@@ -41,17 +41,7 @@ describe('Digital Twin Client', function () {
       sandbox.restore();
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [Will throw `ReferenceError` if `capabilityModel` argument is falsy.] */
-    [undefined, null, ''].forEach(function (falsyCapabilityModel) {
-      it('throws a ReferenceError if \'capabilityModel\' is ' + falsyCapabilityModel + '\'', function () {
-        assert.throws(() => {
-          const client = DigitalTwinClient.fromConnectionString(falsyCapabilityModel, fakeConnStr);
-          (client);
-        });
-      });
-    });
-
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [Will throw `ReferenceError` if the constructor `client` argument is falsy.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_001: [Will throw `ReferenceError` if the fromConnectionString method `connStr` argument is falsy.] */
     [undefined, null, ''].forEach(function (falsyConnStr) {
       it('throws a ReferenceError if \'client\' is ' + falsyConnStr + '\'', function () {
         assert.throws(() => {
@@ -61,13 +51,17 @@ describe('Digital Twin Client', function () {
       });
     });
 
-    /* Tests_SRS_NODE_DEVICE_CLIENT_41_XXX: [The fromConnectionString method shall return a new instance of the Client object] */
-    it('returns an instance of DigitalTwinClient', function () {
-      const dtClient = DigitalTwinClient.fromConnectionString(fakeCapabilityModel, fakeConnStr);
-      assert.instanceOf(dtClient, DigitalTwinClient);
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_002: [Will throw `ReferenceError` if the fromConnectionString method `capabilityModel` argument is falsy.] */
+    [undefined, null, ''].forEach(function (falsyCapabilityModel) {
+      it('throws a ReferenceError if \'capabilityModel\' is ' + falsyCapabilityModel + '\'', function () {
+        assert.throws(() => {
+          const client = DigitalTwinClient.fromConnectionString(falsyCapabilityModel, fakeConnStr);
+          (client);
+        });
+      });
     });
 
-    /* Tests_SRS_NODE_DEVICE_CLIENT_41_XXX: [The fromConnectionString method shall use the internal MQTT transport by default] */
+    /* Tests_SRS_NODE_DEVICE_CLIENT_41_003: [The `fromConnectionString` method shall use the internal MQTT transport by default] */
     it('uses the MQTT transport by default', function (testCallback) {
       const mqttStub = sandbox.stub(Mqtt, 'Mqtt');
       sandbox.stub(Client, 'fromConnectionString').callsFake((connStr, transport) => {
@@ -77,7 +71,7 @@ describe('Digital Twin Client', function () {
       DigitalTwinClient.fromConnectionString(fakeCapabilityModel, fakeConnStr);
     });
 
-    /* Tests_SRS_NODE_DEVICE_CLIENT_41_XXX: [The fromConnectionString method shall use the internal MQTT Websockets transport if specified with a boolean parameter] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_004: [The `fromConnectionString` will use the Mqtt Websockets Transport if specified] */
     it('uses the MQTTWS transport if specified', function (testCallback) {
       const mqttWsStub = sandbox.stub(Mqtt, 'MqttWs');
       sandbox.stub(Client, 'fromConnectionString').callsFake((connStr, transport) => {
@@ -85,6 +79,12 @@ describe('Digital Twin Client', function () {
         testCallback();
       });
       DigitalTwinClient.fromConnectionString(fakeCapabilityModel, fakeConnStr, true);
+    });
+
+    /* Tests_SRS_NODE_DEVICE_CLIENT_41_005: [The fromConnectionString method shall return a new instance of the Client object] */
+    it('returns an instance of DigitalTwinClient', function () {
+      const dtClient = DigitalTwinClient.fromConnectionString(fakeCapabilityModel, fakeConnStr);
+      assert.instanceOf(dtClient, DigitalTwinClient);
     });
   });
 
@@ -191,7 +191,7 @@ describe('Digital Twin Client', function () {
       });
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [Can accept a variable number of interfaces to add via the addInterfaceInstances method] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_007: [ Can accept a variable number of interfaces to add via the addInterfaceInstances method ] */
     it('can add a variable number of interfaces', function () {
       class FakeInterface extends BaseInterface {
         constructor(name, propertyCallback, commandCallback) {
@@ -235,7 +235,7 @@ describe('Digital Twin Client', function () {
         dtClient.addInterfaceInstances(fakeInterfaceInstance);
       });
 
-      /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [`enablePropertyUpdates` will invoke the callback on success if provided] */
+      /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_008: [ `enablePropertyUpdates` will invoke the callback on success if provided ] */
       it(' - invoking callback on success', function (done) {
         dtClient.enablePropertyUpdates((error) => {
           assert.isNotOk(error);
@@ -245,7 +245,7 @@ describe('Digital Twin Client', function () {
         });
       });
 
-      /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [`enablePropertyUpdates` will resolve the promise if no callback is provided] */
+      /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_009: [ `enablePropertyUpdates` will resolve the promise if no callback is provided ] */
       it(' - resolving with a promise', function (done) {
         dtClient.enablePropertyUpdates()
           .then(() => {
@@ -280,7 +280,7 @@ describe('Digital Twin Client', function () {
         dtClient.addInterfaceInstances(fakeInterfaceInstance);
       });
 
-      /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [`enablePropertyUpdates` will pass an error to the callback if provided] */
+      /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_010: [ `enablePropertyUpdates` will pass an error to the callback if provided ] */
       it(' - invokes callback with error object', function (done) {
         dtClient.enablePropertyUpdates((error) => {
           assert.strictEqual(error, twinError);
@@ -288,7 +288,7 @@ describe('Digital Twin Client', function () {
         });
       });
 
-      /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [`enablePropertyUpdates` will reject the promise if no callback is provided on error] */
+      /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_011: [ `enablePropertyUpdates` will reject the promise if no callback is provided on error ] */
       it(' - rejects the promise', function (done) {
         dtClient.enablePropertyUpdates()
           .then(() => {
@@ -301,8 +301,8 @@ describe('Digital Twin Client', function () {
       });
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [] */
-    it('will enable methods for all commands in all interfaceInstances', function (done) {
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_012: [ `enablePropertyUpdates` will enable propertyChangedCallback on added interfaceInstances ] */
+    it.only('will enable propertyChangedCallbacks on added interfaceInstances', function (done) {
       const registrationDeviceClient = {
         getTwin: sinon.stub().callsArgWith(0, null, {
           properties: {
@@ -322,12 +322,15 @@ describe('Digital Twin Client', function () {
         }
       };
       const fakeInterfaceInstanceA = new FakeInterface('A', sinon.stub(), () => {});
+      const fakeInterfaceInstanceB = new FakeInterface('B', sinon.stub(), () => {});
       const dtClient = new DigitalTwinClient(registrationDeviceClient);
-      dtClient.addInterfaceInstances(fakeInterfaceInstanceA);
+      dtClient.addInterfaceInstances(fakeInterfaceInstanceA, fakeInterfaceInstanceB);
       dtClient.enablePropertyUpdates().then(() => {
-        assert(registrationDeviceClient.getTwin.calledOnce);
+        assert(registrationDeviceClient.getTwin.calledOnce, 'registrationDeviceClient not called once.');
         assert(fakeInterfaceInstanceA.propertyChangedCallback.calledOnce);
+        assert(fakeInterfaceInstanceB.propertyChangedCallback.calledOnce);
         assert(fakeInterfaceInstanceA.propertyChangedCallback.calledWith(fakeInterfaceInstanceA, 'writableProperty', null, undefined, undefined));
+        assert(fakeInterfaceInstanceB.propertyChangedCallback.calledWith(fakeInterfaceInstanceB, 'writableProperty', null, undefined, undefined));
         done();
       }).catch((err) => done(err));
     });
@@ -477,7 +480,7 @@ describe('Digital Twin Client', function () {
       sandbox.restore();
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [** For commands, the `commandCallback` will be invoked with `request` and `response` arguments with the following properties.
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_013: [** For commands, the `commandCallback` will be invoked with `request` and `response` arguments with the following properties.
       request:
         {
           interfaceInstance: interfaceInstance,
@@ -514,7 +517,7 @@ describe('Digital Twin Client', function () {
       methodCallbackFunction(methodRequest, methodResponse);
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [The command callback should be able to invoke the `acknowledge` method and receive (if supplied) a callback upon completion.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_014: [ The command callback should be able to invoke the `acknowledge` method and receive (if supplied) a callback upon completion. ] */
     it('Can invoke the `acknowledge` method with a callback and receive a callback on success', (done) => {
       const methodResponse = {
         send: sandbox.stub().callsArgWith(2, null)
@@ -529,7 +532,7 @@ describe('Digital Twin Client', function () {
       methodCallbackFunction(methodRequest, methodResponse);
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [The command callback should be able to invoke the `acknowledge` method, with no `payload` argument, and receive (if supplied) a callback upon completion.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_023: [ The command callback should be able to invoke the `acknowledge` method, with no `payload` argument, and receive (if supplied) a callback upon completion. ] */
     it('Can invoke the `acknowledge` method with a callback, with no `payload` argument, and receive a callback on success', (done) => {
       const methodResponse = {
         send: sandbox.stub().callsArgWith(1, null)
@@ -548,7 +551,7 @@ describe('Digital Twin Client', function () {
       }
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [The command callback should be able to invoke the `acknowledge` method with no callback and utilize the returned promise that resolves.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_015: [ The command callback should be able to invoke the `acknowledge` method with no callback and utilize the returned promise that resolves. ] */
     it('Can invoke the `acknowledge` method with no callback and utilize the returned promise that resolves', (done) => {
       const methodResponse = {
         send: sandbox.stub().resolves(null)
@@ -567,7 +570,7 @@ describe('Digital Twin Client', function () {
       }
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [The command callback should be able to invoke the `acknowledge` method, with no `payload` or callback arguments, and utilize the returned promise that resolves.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_024: [ The command callback should be able to invoke the `acknowledge` method, with no `payload` or callback arguments, and utilize the returned promise that resolves. ] */
     it('Can invoke the `acknowledge` method, with no `payload` or callback arguments, and utilize the returned promise that resolves', (done) => {
       const methodResponse = {
         send: sandbox.stub().resolves(null)
@@ -586,7 +589,7 @@ describe('Digital Twin Client', function () {
       }
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [The command callback should be able to invoke the `acknowledge` method and receive (if supplied) a callback with an error if the `acknowledge` failed.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_016: [ The command callback should be able to invoke the `acknowledge` method and receive (if supplied) a callback with an error if the `acknowledge` failed. ] */
     it('Can invoke the `acknowledge` method with a callback and receive an error in the callback on failure', (done) => {
       const ackError = new Error('fake Error');
       const methodResponse = {
@@ -607,7 +610,7 @@ describe('Digital Twin Client', function () {
       }
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [The command callback should be able to invoke the `acknowledge` method, with no `payload` argument, and receive (if supplied) a callback with an error if the `acknowledge` failed.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_025: [ The command callback should be able to invoke the `acknowledge` method, with no `payload` argument, and receive (if supplied) a callback with an error if the `acknowledge` failed. ] */
     it('Can invoke the `acknowledge` method with a callback, with no payload argument, and receive an error in the callback on failure', (done) => {
       const ackError = new Error('fake Error');
       const methodResponse = {
@@ -628,7 +631,7 @@ describe('Digital Twin Client', function () {
       }
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [The command callback should be able to invoke the `acknowledge` method with no callback and utilize the returned promise that rejects.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_017: [ The command callback should be able to invoke the `acknowledge` method with no callback and utilize the returned promise that rejects. ] */
     it('Can invoke the `acknowledge` method with no callback and utilize the returned promise that rejects', (done) => {
       const ackError = new Error('fake error');
       const methodResponse = {
@@ -651,7 +654,7 @@ describe('Digital Twin Client', function () {
       }
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [The command callback should be able to invoke the `acknowledge` method, with no `payload` argument, and utilize the returned promise with a rejection.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [ The command callback should be able to invoke the `acknowledge` method, with no `payload` argument, and utilize the returned promise with a rejection. ] */
     it('Can invoke the `acknowledge` method, with no `payload` or callback arguments, utilize the returned promise that rejects', (done) => {
       const ackError = new Error('fake error');
       const methodResponse = {
@@ -674,7 +677,7 @@ describe('Digital Twin Client', function () {
       }
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [The command callback should be able to invoke the `update` method and receive (if supplied) a callback upon completion.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_018: [ The command callback should be able to invoke the `update` method and receive (if supplied) a callback upon completion. ] */
     it('Can invoke the `update` method with a callback and receive a callback on success', (done) => {
       const fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstanceName', () => {}, (commandRequest, commandResponse) => {
         commandResponse.update(200, { fake: 100 }, (err) => {
@@ -690,7 +693,7 @@ describe('Digital Twin Client', function () {
       }
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [The command callback should be able to invoke the `update` method, with no `payload` argument, and receive (if supplied) a callback upon completion.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_027: [ The command callback should be able to invoke the `update` method, with no `payload` argument, and receive (if supplied) a callback upon completion. ] */
     it.skip('Can invoke the `update` method with a callback, with no `payload` argument, and receive a callback on success', (done) => {
       // Skip for now since the update has payload as required.
       const fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstanceName', () => {}, (commandRequest, commandResponse) => {
@@ -707,7 +710,7 @@ describe('Digital Twin Client', function () {
       }
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [The command callback should be able to invoke the `update` method with no callback and utilize the returned promise that resolves.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_019: [ The command callback should be able to invoke the `update` method with no callback and utilize the returned promise that resolves. ] */
     it('Can invoke the `update` method with no callback and utilize the returned promise that resolves', (done) => {
       const fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstanceName', () => {}, (commandRequest, commandResponse) => {
         commandResponse.update(200, { fake: 100 })
@@ -724,7 +727,7 @@ describe('Digital Twin Client', function () {
       }
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_028: [The command callback should be able to invoke the `update` method, with no `payload` or callback arguments, and utilize the returned promise that resolves.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_028: [ The command callback should be able to invoke the `update` method, with no `payload` or callback arguments, and utilize the returned promise that resolves. ] */
     it.skip('Can invoke the `update` method, with no `payload` or callback arguments, and utilize the returned promise that resolves', (done) => {
       // Skip for now since the update has payload as required.
       const fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstanceName', () => {}, (commandRequest, commandResponse) => {
@@ -742,7 +745,7 @@ describe('Digital Twin Client', function () {
       }
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [The command callback should be able to invoke the `update` method and receive (if supplied) a callback with an error if the `update` failed.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_020: [ The command callback should be able to invoke the `update` method and receive (if supplied) a callback with an error if the `update` failed. ] */
     it('Can invoke the `update` method with a callback and receive an error in the callback on failure', (done) => {
       const updateError = new Error('fake Error');
       const fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstanceName', () => {}, (commandRequest, commandResponse) => {
@@ -761,7 +764,7 @@ describe('Digital Twin Client', function () {
       }
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [The command callback should be able to invoke the `update` method, with no `payload` argument, and receive (if supplied) a callback with an error if the `update` failed.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_029: [ The command callback should be able to invoke the `update` method, with no `payload` argument, and receive (if supplied) a callback with an error if the `update` failed. ] */
     it.skip('Can invoke the `update` method with a callback, with no payload argument, and receive an error in the callback on failure', (done) => {
       // Skip for now since the update has payload as required.
       const updateError = new Error('fake Error');
@@ -781,7 +784,7 @@ describe('Digital Twin Client', function () {
       }
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [The command callback should be able to invoke the `update` method with no callback and utilize the returned promise that rejects.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_021: [ The command callback should be able to invoke the `update` method with no callback and utilize the returned promise that rejects. ] */
     it('Can invoke the `update` method with no callback and utilize the returned promise that rejects', (done) => {
       const updateError = new Error('fake error');
       const fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstanceName', () => {}, (commandRequest, commandResponse) => {
@@ -808,7 +811,7 @@ describe('Digital Twin Client', function () {
       }
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [The command callback should be able to invoke the `update` method, with no `payload` or callback arguments, and utilize the returned promise that rejects.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_030: [ The command callback should be able to invoke the `update` method, with no `payload` or callback arguments, and utilize the returned promise that rejects. ] */
     it.skip('Can invoke the `update` method, with no `payload` or callback arguments, and utilize the returned promise that rejects', (done) => {
       // Skip for now since the update has payload as required.
       const updateError = new Error('fake error');
@@ -831,7 +834,7 @@ describe('Digital Twin Client', function () {
     });
 
     /*
-      Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [Within the command callback, the application can invoke the `update` method which in turn will invoke the device client `sendEvent` method with the following message:
+      Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_022: [ Within the command callback, the application can invoke the `update` method which in turn will invoke the device client `sendEvent` method with the following message:
       payload:
       This JSON stringified value of the payload parameter.
 
@@ -843,8 +846,7 @@ describe('Digital Twin Client', function () {
       '$.sub': interfaceInstances name
       contentType: 'application/json'
       contentEncoding: 'utf-8'
-      ]
-     */
+    ] */
     it('Invoking the `update` method will produce the appropriately formated telemetry message', (done) => {
       let flag = false;
       const payload = { fake: 100 };
@@ -879,7 +881,7 @@ describe('Digital Twin Client', function () {
       }
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [Within the command callback, the application can invoke the `update` method, with no `payload` argument or payload argument set to undefined or null, which in turn will invoke the device client `sendEvent` method with a message payload of 'null'. ] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_031: [ Within the command callback, the application can invoke the `update` method, with no `payload` argument or payload argument set to undefined or null, which in turn will invoke the device client `sendEvent` method with a message payload of 'null'. ] */
     it('Invoking update with payload that is undefined or null will produce a null payload.', function (done) {
       const fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstanceName', () => {}, (commandRequest, commandResponse) => {
         commandResponse.update(200, undefined, (err) => {
@@ -896,7 +898,7 @@ describe('Digital Twin Client', function () {
       methodCallbackFunction(methodRequest, methodResponse);
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_031: [Within the command callback, the application can invoke the `update` method, with no `payload` argument or payload argument set to undefined or null, which in turn will invoke the device client `sendEvent` method with a message payload of 'null'. ] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_031: [ Within the command callback, the application can invoke the `update` method, with no `payload` argument or payload argument set to undefined or null, which in turn will invoke the device client `sendEvent` method with a message payload of 'null'. ] */
     it.skip('Invoking update with no payload will produce a null payload.', function (done) {
       const fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstanceName', () => {}, (commandRequest, commandResponse) => {
         commandResponse.update(200, (err) => {
@@ -964,7 +966,7 @@ describe('Digital Twin Client', function () {
       });
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [Subsequent to the enablePropertyUpdates, a writable property will have an event listener on the `properties.desired.$iotin:<interfaceInstanceName>.<propertyName>`] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [ Subsequent to the enablePropertyUpdates, a writable property will have an event listener on the `properties.desired.$iotin:<interfaceInstanceName>.<propertyName>` ] */
     it('Subsequent to enablePropertyUpdates, there will be an event listener for the writable property on the twin', (done) => {
       dtClient.addInterfaceInstances(fakeInterfaceInstance);
       dtClient.enablePropertyUpdates()
@@ -975,7 +977,7 @@ describe('Digital Twin Client', function () {
         .catch((err) => assert.fail('in the enablePropertyUpdates catch of SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [Following the initial get of the twin, the writable properties will have their desired values retrieved, provided they exist, provided to the property changed callback along with the current desired version value.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_036: [ Following the initial get of the twin, the writable properties will have their desired values retrieved, provided they exist, provided to the property changed callback along with the current desired version value. ] */
     it('Initially, if it exists, get the desired writable property and provide it and the version, to the property change callback', (done) => {
       fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstance', (interfaceObject, propertyName, reportedValue, desiredValue, version) => {
         assert.strictEqual(version, initialDesiredVersion);
@@ -985,10 +987,10 @@ describe('Digital Twin Client', function () {
       });
       dtClient.addInterfaceInstances(fakeInterfaceInstance);
       dtClient.enablePropertyUpdates()
-        .catch((err) => assert.fail('in the enablePropertyUpdates catch of SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
+        .catch((err) => assert.fail('in the enablePropertyUpdates catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_036 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [Initially, if it exists, provide the reported property also to the property change callback.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_037: [ Initially, if it exists, provide the reported property also to the property change callback. ] */
     it('Initially, if it exists, provide the reported property also to the property change callback', (done) => {
       const reportedPropertyTestValue = 47;
       //
@@ -1012,7 +1014,7 @@ describe('Digital Twin Client', function () {
         .catch((err) => assert.fail('in the register catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_037 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [Properties may invoke the method `report` with a value to produce a patch to the reported properties.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [ Properties may invoke the method `report` with a value to produce a patch to the reported properties. ] */
     it('Properties may invoke a `report` method to patch the value of the property in the `reported` branch of the device twin', (done) => {
       fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstance', (interfaceObject, propertyName, reportedValue, desiredValue, version) => {
         const obj = {};
@@ -1033,7 +1035,7 @@ describe('Digital Twin Client', function () {
         .catch((err) => done('in the register catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_038 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_039: [ Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties. ] */
     it('Properties also may invoke the `report` method with a response object ', (done) => {
       fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstance', (interfaceObject, propertyName, reportedValue, desiredValue, version) => {
         const obj = {};
@@ -1051,7 +1053,7 @@ describe('Digital Twin Client', function () {
         .catch((err) => assert.fail('in the register catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_039 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [A change to the desired property will invoke the property change callback with the change value and version.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_040: [ A change to the desired property will invoke the property change callback with the change value and version. ] */
     it('Property change callback invoked on change to property. No reported value given.', (done) => {
       const callCountStub = sinon.stub();
       const doneOnSecondInvocation = sinon.stub().onSecondCall().callsFake(() => {

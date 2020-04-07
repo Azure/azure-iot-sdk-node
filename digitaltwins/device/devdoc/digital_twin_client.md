@@ -1,14 +1,12 @@
 # azure-iot-digitaltwins-device.DigitalTwinClient Requirements
 
 ## Overview
-`DigitalTwinClient` provides api to add interfaceInstances (named interfaces), and then register those interfaceInstances with the IoT Hub.  The Digital Twin Client instantiates methods on the various Digital Twin Types to perform telemetry and property value reports.  In addition, it provides the ability to receive command invocations from service side requests as well as notification of updates to write enabled properties in the interfaceInstances.
+`DigitalTwinClient` provides api to add interfaceInstances (named interfaces), and then send telemetry and  those interfaceInstances with the IoT Hub.  The Digital Twin Client instantiates methods on the various Digital Twin Types to perform telemetry and property value reports.  In addition, it provides the ability to receive command invocations from service side requests as well as notification of updates to write enabled properties in the interfaceInstances.
 
 ## Example usage
 
 ```javascript
 const DigitalTwinClient = require('azure-iot-digitaltwins-device').DigitalTwinClient;
-const DeviceClient = require('azure-iot-device').Client;
-const Mqtt = require('azure-iot-device-mqtt').Mqtt;
 
 const EnvironmentalSensor = require('./environmentalinterface').EnvironmentalSensor;
 
@@ -32,16 +30,16 @@ const commandHandler = (request, response) => {
 
 const environmentalSensor = new EnvironmentalSensor('environmentalSensor', propertyUpdateHandler, commandHandler);
 
-const deviceClient = DeviceClient.fromConnectionString(process.argv[2], Mqtt);
 
 const capabilityModel = 'urn:azureiot:samplemodel:1';
 
 async function main() {
-  const digitalTwinClient = new DigitalTwinClient(capabilityModel, deviceClient);
-  digitalTwinClient.addInterfaceInstance(environmentalSensor);
-  await digitalTwinClient.register();
-  await environmentalSensor.temp.send(65.5);
-  await environmentalSensor.humid.send(12.2);
+  const digitalTwinClient = DigitalTwinClient.fromConnectionString(capabilityModel, process.argv[2]);
+  digitalTwinClient.addInterfaceInstances(environmentalSensor);
+  digitalTwinClient.enableCommands();
+  await digitalTwinClient.enablePropertyUpdates();
+  await digitalTwinClient.send(environmentalSensor, { temp: 65.5 });
+  await digitalTwinClient.send(environmentalSensor, { humid: 12.2 });
   console.log('Done sending telemetry.');
 };
 
@@ -55,6 +53,16 @@ Creates a new instance of a Digital Twin Device Client.  An IoT Hub Device Clien
 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_002: [** Will throw `ReferenceError` if the constructor `client` argument is falsy. **]**
 
+### fromConnectionString
+Creates a new instance of a Digital Twin Device Client using a provided connection string and device capability model.
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_001: [** Will throw `ReferenceError` if the fromConnectionString method `connStr` argument is falsy. **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_002: [** Will throw `ReferenceError` if the fromConnectionString method `capabilityModel` argument is falsy. **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_003: [** The `fromConnectionString` method shall use the internal MQTT transport by default **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_004: [** The `fromConnectionString` will use the Mqtt Websockets Transport if specified **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_005: [** The fromConnectionString method shall return a new instance of the Client object **]**
+
+
 ### addInterfaceInstance
 Adds the interfaceInstance to the Digital Twin client.
 
@@ -65,8 +73,18 @@ Adds the interfaceInstance to the Digital Twin client.
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_007: [** Will throw `Error` if the `newInterfaceInstance` has a property of type `Command` but no defined `CommandCallback`. **]**
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_008: [** Will throw `Error` if the `newInterfaceInstance` has a writable property but no defined `PropertyChangedCallback`. **]**
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_009: [** Will throw `TypeError` if the `newInterfaceInstance` has a property `azureDigitalTwinType` with an unrecognized type. **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_007: [** Can accept a variable number of interfaces to add via the addInterfaceInstances method **]**
 
-### register
+### enablePropertyUpdates
+Must be called so the property update callbacks you create for interfaces will handle updates.
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_008: [** `enablePropertyUpdates` will invoke the callback on success if provided **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_009: [** `enablePropertyUpdates` will resolve the promise if no callback is provided **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_010: [** `enablePropertyUpdates` will pass an error to the callback if provided **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_011: [** `enablePropertyUpdates` will reject the promise if no callback is provided on error **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_012: [** `enablePropertyUpdates` will enable propertyChangedCallback on added interfaceInstances **]**
+
+### enableCommands
 Sends a registration message to the service.  Sets up handlers for all writable property changes. Sets up handlers for commands.  Sends property reports for SDK Information.  Can be invoked as to return a promise or returning void but invoking a callback upon completion.
 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_010: [** Will send a telemetry message with the following
@@ -167,12 +185,9 @@ contentEncoding: 'utf-8'
 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_031: [** Within the command callback, the application can invoke the `update` method, with no `payload` argument or payload argument set to undefined or null, which in turn will invoke the device client `sendEvent` method with a message payload of ' '. **]**
 
-### Telemetry
+### sendTelemetry
 
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_041: [** Subsequent to addInterfaceInstance if the interface contains any telemetry properties, the interface will have a sendTelemetry method that can send any number of telemetry properties in on message.
- **]**
-
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_042: [** The sendTelemetry method will send a device message with the following format:
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_006: [** The `sendTelemetry` method will send a device message with the following format:
 ```
 payload: {<telemetry property name>: <telemetry property value> ,...}
 message application properties:
@@ -180,26 +195,13 @@ contentType: 'application/json'
 contentEncoding: 'utf-8'
 $.sub: <interfaceInstance name>
 ```
- **]**
-
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_034: [** Subsequent to addInterfaceInstance a Telemetry will have a send method. **]**
-
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_032: [** A telemetry will send a device message with the following format:
-```
-payload: {<telemetry property name>: value}
-message application properties:
-contentType: 'application/json'
-contentEncoding: 'utf-8'
-$.sub: <interfaceInstance name>
-$.schema: <telemetry property name>
-```
 **]**
 
 ### Property (writable)
 
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_033: [** Subsequent to addInterfaceInstance a writable property will have a report method. **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_033: [** Subsequent to addInterfaceInstances a writable property will have a report method. **]**
 
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_035: [** Subsequent to the register, a writable property will have an event listener on the `properties.desired.$iotin:<interfaceInstanceName>.<propertyName>` **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_06_035: [** Subsequent to the enablePropertyUpdates, a writable property will have an event listener on the `properties.desired.$iotin:<interfaceInstanceName>.<propertyName>` **]**
 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_036: [** Following the initial get of the twin, the writable properties will have their desired values retrieved, provided they exist, provided to the property changed callback along with the current desired version value.
  **]**

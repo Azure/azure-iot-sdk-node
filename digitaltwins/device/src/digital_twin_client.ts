@@ -147,6 +147,7 @@ export class DigitalTwinClient {
    * @param newInterfaceInstances   A single object or multiple objects for a particular interfaceInstance.
    */
   addInterfaceInstances(...args: BaseInterface[]) {
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [ Can accept a variable number of interfaces to add via the addInterfaceInstances method ] */
     for (var i = 0; i < args.length; i++) {
       this._addInterfaceInstance(args[i]);
     }
@@ -246,7 +247,7 @@ export class DigitalTwinClient {
         //
         // Setup the callback for delta changes.
         //
-        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_035: [Subsequent to the register, a writable property will have an event listener on the `properties.desired.$iotin:<interfaceInstanceName>.<propertyName>`] */
+        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_035: [Subsequent to the enablePropertyUpdates, a writable property will have an event listener on the `properties.desired.$iotin:<interfaceInstanceName>.<propertyName>`] */
         this._twin.on('properties.desired.' + rwi.prefixAndInterfaceInstanceName + '.' + rwi.propertyName, (delta: { value: any; }) => {
           /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_040: [A change to the desired property will invoke the property change callback with the change value and version.] */
           (rwi.interfaceInstance.propertyChangedCallback as PropertyChangedCallback)(rwi.interfaceInstance, rwi.propertyName, null, delta.value, this._twin.properties.desired[versionProperty]);
@@ -395,7 +396,8 @@ export class DigitalTwinClient {
 
   /**
    * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.enableCommands
-   * @description                   Sweeps through all the interfaceInstances and enables method handlers for each command.
+   * @description                   This must be called before the interface command callbacks will be used.
+   *                                Sweeps through all the interfaceInstances and enables method handlers for each command.
    */
   enableCommands(): void {
     Object.keys(this._interfaceInstances).forEach((interfaceInstanceName) => {
@@ -407,22 +409,26 @@ export class DigitalTwinClient {
   }
 
 
-    /**
+  /**
    * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.enablePropertyUpdates
-   * @description                   Enables property updates for the Digital Twin Client using the interal
-   *                                  device twin.
-   * @param callback
-   *
+   * @description                   Enables property updates for the Digital Twin Client so the propertyUpdateCallback will be invoked on
+   *                                property changes.
+   * @param callback                Optional callback. If not provided enablePropertyUpdates will return a promise.
    */
   enablePropertyUpdates(callback: Callback) : void;
   enablePropertyUpdates() : Promise<void>;
   enablePropertyUpdates(callback?: Callback) : Promise<void> | void {
     return callbackToPromise((_callback) => {
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_008: [ `enablePropertyUpdates` will invoke the callback on success if provided ] */
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_009: [ `enablePropertyUpdates` will resolve the promise if no callback is provided ] */
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_010: [ `enablePropertyUpdates` will pass an error to the callback if provided ] */
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_011: [ `enablePropertyUpdates` will reject the promise if no callback is provided on error ] */
       this._client.getTwin((getTwinError: Error | undefined, twinResult: Twin | undefined) => {
         if (getTwinError) {
           return _callback(getTwinError);
         } else {
           this._twin = twinResult as Twin;
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_012: [ `enablePropertyUpdates` will enable propertyChangedCallback on added interfaceInstances ] */
           this._initialWritablePropertyProcessing();
           return _callback();
         }
@@ -430,13 +436,12 @@ export class DigitalTwinClient {
     }, callback);
   }
 
-    /**
+  /**
    * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.report
    * @description                   Sends the value of a reported property to the Digital Twin.
-   * @param interfaceInstanceName           Name of the instance for this interface.
-   * @param interfaceId             The id (in URN format) for the interface.
-   * @param propertyName            Name of the particular property.
-   * @param propertyValue           The object to be sent.
+   * @param interfaceInstance       Interface instance to be reported on.
+   * @param propertiesToReport      An object of properties containing propertyNames and propertyValues as key, value pairs.
+   * @param response                An optional response to patch the reported properties.
    * @param callback (optional)     If present, the callback to be invoked on completion of the telemetry,
    *                                otherwise a promise is returned.
    */
@@ -477,12 +482,12 @@ export class DigitalTwinClient {
   }
 
   /**
-   * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.sendTelemetry
-   * @description                   Sends a telemetry message for a supplied interface.
-   * @param interfaceInstance       Interface instance to be associated with telemetry message.
-   * @param telemetry               The object to be sent.
-   * @param callback (optional)     If present, the callback to be invoked on completion of the telemetry,
-   *                                otherwise a promise is returned.
+   * @method            module:azure-iot-digitaltwins-device.DigitalTwinClient.sendTelemetry
+   * @description                                    Sends a telemetry message for a supplied interface.
+   * @param {BaseInterface}  interfaceInstance       Interface instance to be associated with telemetry message.
+   * @param {any}            telemetry               The object to be sent.
+   * @param {ErrorCallback}  callback (optional)     If present, the callback to be invoked on completion of the telemetry,
+   *                                                 otherwise a promise is returned.
    */
   sendTelemetry(interfaceInstance: BaseInterface, telemetry: any, callback: ErrorCallback) : void;
   sendTelemetry(interfaceInstance: BaseInterface, telemetry: any) : Promise<void>;
@@ -491,11 +496,15 @@ export class DigitalTwinClient {
       let telemetryMessage = new Message(
         JSON.stringify(telemetry)
       );
-      // The device must further specify the payload type and encoding type of the message.  Currently only JSON/utf-8 is supported.
-      // an example MQTT topic:
-      // devices/{yourdevicename}/messages/events/%24.sub={url-escaped-component-name}&%24.ct=application%2fjson&%24ce=utf-8.
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [** The device must specify the payload type and encoding type of the telemetry message. **] */
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [** PnP currently only supports JSON/utf-8 for telemetry messages. **] */
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_006: [ The `sendTelemetry` method will send a device message with the following format:
+      ```
+      payload: {<telemetry property name>: <telemetry property value> ,...}
+      message application properties:
+      contentType: 'application/json'
+      contentEncoding: 'utf-8'
+      $.sub: <interfaceInstance name>
+      ```
+      ] */
       telemetryMessage.properties.add(messageSubjectProperty, interfaceInstance.interfaceInstanceName);
       telemetryMessage.contentType =  'application/json';
       telemetryMessage.contentEncoding = 'utf-8';
@@ -507,27 +516,29 @@ export class DigitalTwinClient {
 
 
   /**
-   * Creates a Digital Twin Client from the given connection string.
-   *
+   * @method            module:azure-iot-digitaltwins-device.DigitalTwinClient.sendTelemetry
+   * @description                     Creates a Digital Twin Client from the given connection string.
    * @param {String}    connStr       A connection string which encapsulates "device connect" permissions on an IoT hub.
-   *
-   * @param {Boolean}   ws            Optional boolean to specify if MQTT over websockets should be used.
-   *
-   * @throws {ReferenceError}         If the connStr parameter is falsy.
-   *
+   * @param {Boolean}   ws            Optional boolean to specify if MQTT over Websockets should be used.
+   * @throws {ReferenceError}         If the connStr or capabilityModel parameter is falsy
    * @returns {module:azure-iot-digitaltwins.DigitalTwinClient}
    */
   static fromConnectionString(capabilityModel: string, connStr: string, ws?: boolean): DigitalTwinClient {
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_001: [Will throw `ReferenceError` if the fromConnectionString method `connStr` argument is falsy.] */
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_002: [Will throw `ReferenceError` if the fromConnectionString method `capabilityModel` argument is falsy.] */
     if (!capabilityModel) throw new ReferenceError('capabilityModel must not be falsy');
     if (!connStr) throw new ReferenceError('connStr (connection string) must not be falsy');
 
     let transport;
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_003: [`fromConnectionString` will use the Mqtt Transport by default] */
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_004: [`fromConnectionString` will use the Mqtt Websockets Transport if specified] */
     if (ws) {
       transport = MqttWs;
     } else {
       transport = Mqtt;
     }
 
+    /* Codes_SRS_NODE_DEVICE_CLIENT_41_005: [The fromConnectionString method shall return a new instance of the Client object] */
     const client = Client.fromConnectionString(connStr, transport);
     client.setOptions({ deviceCapabilityModel: capabilityModel });
 
