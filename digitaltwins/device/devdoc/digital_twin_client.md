@@ -63,8 +63,8 @@ Creates a new instance of a Digital Twin Device Client using a provided connecti
 **SRS_NODE_DIGITAL_TWIN_DEVICE_41_005: [** The fromConnectionString method shall return a new instance of the Client object **]**
 
 
-### addInterfaceInstance
-Adds the interfaceInstance to the Digital Twin client.
+### addInterfaceInstances
+Adds the interfaceInstances to the Digital Twin client.
 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_003: [** Will throw `ReferenceError` if the `newInterfaceInstance` argument is falsy. **]**
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_004: [** Will throw `ReferenceError` if the `newInterfaceInstance` argument `interfaceId` property is falsy. **]**
@@ -78,11 +78,11 @@ Adds the interfaceInstance to the Digital Twin client.
 ### enablePropertyUpdates
 Must be called so the property update callbacks you create for interfaces will handle updates.
 
-**SRS_NODE_DIGITAL_TWIN_DEVICE_41_008: [** `enablePropertyUpdates` will invoke the callback on success if provided **]**
-**SRS_NODE_DIGITAL_TWIN_DEVICE_41_009: [** `enablePropertyUpdates` will resolve the promise if no callback is provided **]**
-**SRS_NODE_DIGITAL_TWIN_DEVICE_41_010: [** `enablePropertyUpdates` will pass an error to the callback if provided **]**
-**SRS_NODE_DIGITAL_TWIN_DEVICE_41_011: [** `enablePropertyUpdates` will reject the promise if no callback is provided on error **]**
-**SRS_NODE_DIGITAL_TWIN_DEVICE_41_012: [** `enablePropertyUpdates` will enable propertyChangedCallback on added interfaceInstances **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_008: [** Will invoke the callback on success if provided **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_009: [** Will resolve the promise if no callback is provided  **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_010: [** Will pass an error to the callback if provided **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_011: [** Will reject the promise if no callback is provided on error **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_012: [** Will enable propertyChangedCallback on added interfaceInstances **]**
 
 ### enableCommands
 Sends a registration message to the service.  Sets up handlers for all writable property changes. Sets up handlers for commands.  Sends property reports for SDK Information.  Can be invoked as to return a promise or returning void but invoking a callback upon completion.
@@ -109,6 +109,16 @@ contentEncoding: 'utf-8'
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_011: [** Will indicate an error via a callback or by promise rejection if the registration message fails. **]**
 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_012: [** For each property in an interfaceInstance with type `Command`, a device method will be enabled with a name of the form '$iotin:' followed by the interfaceInstance name followed by '*' followed by the property name. **]**
+
+### report
+
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_013: [** Will invoke the `callback` on success if provided **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_014: [** Will invoke the `callback` on failure with an error **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_015: [** Will resolve the promise on success when no callback provided **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_016: [** Will reject the promise on failure with an error when no callback provided **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_017: [** Will produce a patch to the reported properties containing all the properties and values in the propertiesToReport object **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_018: [** May invoke with a propertiesToReport object and a response object to produce a patch to the reported properties. **]**
+ **SRS_NODE_DIGITAL_TWIN_DEVICE_41_019: [** A change to the desired property will invoke the property change callback with the change value and version. **]**
 
 ### Commands
 
@@ -207,9 +217,3 @@ $.sub: <interfaceInstance name>
  **]**
 
  **SRS_NODE_DIGITAL_TWIN_DEVICE_06_037: [** Initially, if it exists, provide the reported property also to the property change callback. **]**
-
- **SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [** Properties may invoke the method `report` with a value to produce a patch to the reported properties. **]**
-
- **SRS_NODE_DIGITAL_TWIN_DEVICE_06_039: [** Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties. **]**
-
- **SRS_NODE_DIGITAL_TWIN_DEVICE_06_040: [** A change to the desired property will invoke the property change callback with the change value and version. **]**

@@ -242,7 +242,7 @@ export class DigitalTwinClient {
         //
         /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_035: [Subsequent to the enablePropertyUpdates, a writable property will have an event listener on the `properties.desired.$iotin:<interfaceInstanceName>.<propertyName>`] */
         this._twin.on('properties.desired.' + rwi.prefixAndInterfaceInstanceName + '.' + rwi.propertyName, (delta: { value: any; }) => {
-          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_040: [A change to the desired property will invoke the property change callback with the change value and version.] */
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_019: [A change to the desired property will invoke the property change callback with the change value and version.] */
           (rwi.interfaceInstance.propertyChangedCallback as PropertyChangedCallback)(rwi.interfaceInstance, rwi.propertyName, null, delta.value, this._twin.properties.desired[versionProperty]);
         });
       });
@@ -412,16 +412,16 @@ export class DigitalTwinClient {
   enablePropertyUpdates() : Promise<void>;
   enablePropertyUpdates(callback?: Callback) : Promise<void> | void {
     return callbackToPromise((_callback) => {
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_008: [ `enablePropertyUpdates` will invoke the callback on success if provided ] */
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_009: [ `enablePropertyUpdates` will resolve the promise if no callback is provided ] */
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_010: [ `enablePropertyUpdates` will pass an error to the callback if provided ] */
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_011: [ `enablePropertyUpdates` will reject the promise if no callback is provided on error ] */
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_008: [ Will invoke the callback on success if provided ] */
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_009: [ Will resolve the promise if no callback is provided  ] */
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_010: [ Will pass an error to the callback if provided ] */
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_011: [ Will reject the promise if no callback is provided on error ] */
       this._client.getTwin((getTwinError: Error | undefined, twinResult: Twin | undefined) => {
         if (getTwinError) {
           return _callback(getTwinError);
         } else {
           this._twin = twinResult as Twin;
-          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_012: [ `enablePropertyUpdates` will enable propertyChangedCallback on added interfaceInstances ] */
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_012: [ Will enable propertyChangedCallback on added interfaceInstances ] */
           this._initialWritablePropertyProcessing();
           return _callback();
         }
@@ -443,8 +443,6 @@ export class DigitalTwinClient {
   report(interfaceInstance: BaseInterface, propertiesToReport: any, responseOrCallback?: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): Promise<void> | void {
     let actualResponse: DesiredStateResponse | undefined;
     let actualCallback: ErrorCallback | undefined;
-
-    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_014: [ `report` should be able to invoke the twin reported properties `update` method and receive (if supplied) a callback upon completion. ] */
     if (responseOrCallback) {
       if (typeof responseOrCallback === 'function') {
         actualCallback = responseOrCallback as ErrorCallback;
@@ -455,15 +453,20 @@ export class DigitalTwinClient {
       }
     }
 
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_013: [ Will invoke the `callback` on success if provided ] */
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_014: [ Will invoke the `callback` on failure with an error ] */
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_015: [ Will resolve the promise on success when no callback provided ] */
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_016: [ Will reject the promise on failure with an error when no callback provided ] */
     return callbackToPromise((_callback) => {
       let interfaceInstancePart = interfaceInstancePrefix + interfaceInstance.interfaceInstanceName;
       let patch : any = {
         [interfaceInstancePart]: {}
       };
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [ Properties may invoke the method `report` with a value to produce a patch to the reported properties. ] */
+
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_017: [ Will produce a patch to the reported properties containing all the properties and values in the propertiesToReport object ] */
       for (const propertyName in propertiesToReport) {
         let propertyContent : any = { value: propertiesToReport[propertyName] };
-        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_039: [ Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties. ] */
+        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_018: [ May invoke with a propertiesToReport object and a response object to produce a patch to the reported properties. ] */
         if (actualResponse) {
           propertyContent.ac = actualResponse.code;
           propertyContent.ad = actualResponse.description;

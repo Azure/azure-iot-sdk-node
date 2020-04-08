@@ -24,7 +24,7 @@ describe('Digital Twin Client', () => {
   describe('#constructor', () => {
     /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_002: [Will throw `ReferenceError` if the constructor `client` argument is falsy.] */
     [undefined, null, ''].forEach(function (client) {
-      it('throws a ReferenceError if \'client\' is ' + client + '\'', function () {
+      it('throws a ReferenceError if \'client\' is \"' + client + '\"', function () {
         assert.throws(() => {
           const dtClient = new DigitalTwinClient(client);
           (dtClient);
@@ -43,7 +43,7 @@ describe('Digital Twin Client', () => {
 
     /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_001: [Will throw `ReferenceError` if the fromConnectionString method `connStr` argument is falsy.] */
     [undefined, null, ''].forEach(function (falsyConnStr) {
-      it('throws a ReferenceError if \'client\' is ' + falsyConnStr + '\'', function () {
+      it('throws a ReferenceError if \'connStr\' is \"' + falsyConnStr + '\"', function () {
         assert.throws(() => {
           const dtClient = DigitalTwinClient.fromConnectionString(fakeCapabilityModel, falsyConnStr);
           (dtClient);
@@ -53,7 +53,7 @@ describe('Digital Twin Client', () => {
 
     /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_002: [Will throw `ReferenceError` if the fromConnectionString method `capabilityModel` argument is falsy.] */
     [undefined, null, ''].forEach(function (falsyCapabilityModel) {
-      it('throws a ReferenceError if \'capabilityModel\' is ' + falsyCapabilityModel + '\'', function () {
+      it('throws a ReferenceError if \'capabilityModel\' is \"' + falsyCapabilityModel + '\"', function () {
         assert.throws(() => {
           const client = DigitalTwinClient.fromConnectionString(falsyCapabilityModel, fakeConnStr);
           (client);
@@ -99,7 +99,7 @@ describe('Digital Twin Client', () => {
     /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_003: [Will throw `ReferenceError` if the `newInterfaceInstance` argument is falsy.] */
     [undefined, null, ''].forEach(function (newInterfaceInstance) {
       const dtClient = new DigitalTwinClient(fakeDeviceClient);
-      it('throws a ReferenceError if \'newInterfaceInstance\' is ' + newInterfaceInstance + '\'', () => {
+      it('throws a ReferenceError if \'newInterfaceInstance\' is \"' + newInterfaceInstance + '\"', () => {
         assert.throws(() => {
           dtClient.addInterfaceInstances(newInterfaceInstance);
         });
@@ -115,7 +115,7 @@ describe('Digital Twin Client', () => {
         }
       };
       const badFakeInterfaceInstance = new BadFakeInterface('badFakeInterfaceInstance');
-      it('throws a ReferenceError if \'newInterfaceInstance\' \'interfaceId\` property is ' + interfaceId + '\'', () => {
+      it('throws a ReferenceError if \'newInterfaceInstance\' \'interfaceId\` property is \"' + interfaceId + '\"', () => {
         const dtClient = new DigitalTwinClient(fakeDeviceClient);
         assert.throws(() => {
           dtClient.addInterfaceInstances(badFakeInterfaceInstance);
@@ -126,7 +126,7 @@ describe('Digital Twin Client', () => {
     /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_005: [Will throw `ReferenceError` if the `newInterfaceInstance` argument `interfaceInstanceName` property is falsy.] */
     [undefined, null, ''].forEach(function (interfaceInstanceName) {
       const badFakeInterfaceInstance = new FakeInterface(interfaceInstanceName);
-      it('throws a ReferenceError if \'newInterfaceInstance\' \'interfaceInstanceName\` property is ' + interfaceInstanceName + '\'', () => {
+      it('throws a ReferenceError if \'newInterfaceInstance\' \'interfaceInstanceName\` property is \"' + interfaceInstanceName + '\"', () => {
         const dtClient = new DigitalTwinClient(fakeDeviceClient);
         assert.throws(() => {
           dtClient.addInterfaceInstances(badFakeInterfaceInstance);
@@ -234,7 +234,7 @@ describe('Digital Twin Client', () => {
         dtClient.addInterfaceInstances(fakeInterfaceInstance);
       });
 
-      /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_008: [ `enablePropertyUpdates` will invoke the callback on success if provided ] */
+      /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_008: [ Will invoke the callback on success if provided ] */
       it(' - invoking callback on success', function (done) {
         dtClient.enablePropertyUpdates((error) => {
           assert.isNotOk(error);
@@ -244,7 +244,7 @@ describe('Digital Twin Client', () => {
         });
       });
 
-      /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_009: [ `enablePropertyUpdates` will resolve the promise if no callback is provided ] */
+      /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_009: [ Will resolve the promise if no callback is provided  ] */
       it(' - resolving with a promise', function (done) {
         dtClient.enablePropertyUpdates()
           .then(() => {
@@ -279,7 +279,7 @@ describe('Digital Twin Client', () => {
         dtClient.addInterfaceInstances(fakeInterfaceInstance);
       });
 
-      /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_010: [ `enablePropertyUpdates` will pass an error to the callback if provided ] */
+      /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_010: [ Will pass an error to the callback if provided ] */
       it(' - invokes callback with error object', function (done) {
         dtClient.enablePropertyUpdates((error) => {
           assert.strictEqual(error, twinError);
@@ -287,7 +287,7 @@ describe('Digital Twin Client', () => {
         });
       });
 
-      /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_011: [ `enablePropertyUpdates` will reject the promise if no callback is provided on error ] */
+      /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_011: [ Will reject the promise if no callback is provided on error ] */
       it(' - rejects the promise', function (done) {
         dtClient.enablePropertyUpdates()
           .then(() => {
@@ -300,7 +300,7 @@ describe('Digital Twin Client', () => {
       });
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_012: [ `enablePropertyUpdates` will enable propertyChangedCallback on added interfaceInstances ] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_012: [ Will enable propertyChangedCallback on added interfaceInstances ] */
     it('will enable propertyChangedCallbacks on added interfaceInstances', function (done) {
       const registrationDeviceClient = {
         getTwin: sinon.stub().callsArgWith(0, null, {
@@ -365,180 +365,6 @@ describe('Digital Twin Client', () => {
       assert.strictEqual(registrationDeviceClient.onDeviceMethod.callCount, 2);
       assert.strictEqual(registrationDeviceClient.onDeviceMethod.args[0][0], '$iotin:A*temp');
       assert.strictEqual(registrationDeviceClient.onDeviceMethod.args[1][0], '$iotin:B*temp');
-    });
-  });
-
-  describe('#report', () => {
-    let dtClient;
-    let propertyDeviceClient;
-    let fakeInterfaceInstance;
-    let aTwin;
-    const initialTestPropertyValue = 43;
-    const testStatusCode = 200;
-    const testDescription = 'A fake Description';
-    const initialDesiredVersion = 44;
-    const interfaceInstanceProperty = '$iotin:fakeInterfaceInstance';
-    const testPropertyName = 'testProperty';
-    const versionPropertyName = '$version';
-    class FakeInterface extends BaseInterface {
-      constructor(name, propertyCallback, commandCallback) {
-        super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
-        this.testProperty = new Property(true);
-      }
-    };
-
-    beforeEach(() => {
-      aTwin = new EventEmitter();
-      aTwin.properties = {
-        reported: {
-          [interfaceInstanceProperty]: {
-          },
-          update: sinon.stub().callsArgWith(1, null),
-        },
-        desired: {
-          [interfaceInstanceProperty]: {
-            [testPropertyName]: {
-              value: initialTestPropertyValue
-            }
-          },
-          [versionPropertyName]: initialDesiredVersion
-        }
-      };
-      propertyDeviceClient = {
-        sendEvent: sinon.stub().callsArgWith(1, null, new results.MessageEnqueued()),
-        onDeviceMethod: () => {},
-        getTwin: sinon.stub().callsArgWith(0, null, aTwin)
-      };
-      dtClient = new DigitalTwinClient(propertyDeviceClient);
-    });
-
-    it('`report` should invoke the supplied callback upon successful completion (no response provided)', (done) => {
-      fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstance', (interfaceObject, propertyName, reportedValue, desiredValue, version) => {
-        const obj = {};
-        obj[propertyName] = desiredValue;
-        dtClient.report(interfaceObject, obj, (err) => {
-          if (err) {
-            done(err);
-          } else {
-            done();
-          }
-        });
-      });
-      dtClient.addInterfaceInstances(fakeInterfaceInstance);
-      aTwin.properties.reported.update = sinon.stub().callsArgWith(1, null);
-      dtClient.enablePropertyUpdates()
-        .catch((err) => done('in the enablePropertyUpdates catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_038 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
-    });
-
-    it('`report` should invoke the supplied callback upon successful completion (response provided)', (done) => {
-      fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstance', (interfaceObject, propertyName, reportedValue, desiredValue, version) => {
-        const obj = {};
-        obj[propertyName] = desiredValue;
-        dtClient.report(interfaceObject, obj).then(done).catch((e) => done(e));
-      });
-      dtClient.addInterfaceInstances(fakeInterfaceInstance);
-      aTwin.properties.reported.update = sinon.stub().callsArgWith(1, null);
-      dtClient.enablePropertyUpdates()
-        .catch((err) => done('in the enablePropertyUpdates catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_038 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
-    });
-
-
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_038: [ Properties may invoke the method `report` with a value to produce a patch to the reported properties. ] */
-    it('Properties may invoke a `report` method to patch the value of the property in the `reported` branch of the device twin', (done) => {
-      fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstance', (interfaceObject, propertyName, reportedValue, desiredValue, version) => {
-        const obj = {};
-        obj[propertyName] = desiredValue;
-        dtClient.report(interfaceObject, obj)
-          .then(() => done())
-          .catch((err) => {
-            const doneErr = new Error('in the report catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_038 with err: ' + ((err) ? (err.toString()) : ('null err provided')));
-            done(doneErr);
-          });
-      });
-      dtClient.addInterfaceInstances(fakeInterfaceInstance);
-      aTwin.properties.reported.update = sinon.stub().callsArgWith(1, null).onCall(0).callsFake((patch, callback) => {
-        assert.deepEqual(patch, { [interfaceInstanceProperty]: { [testPropertyName]: { 'value': initialTestPropertyValue } } });
-        callback();
-      });
-      dtClient.enablePropertyUpdates()
-        .catch((err) => done('in the register catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_038 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
-    });
-
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_039: [ Properties may invoke the method `report` with a value and a response object to produce a patch to the reported properties. ] */
-    it('Properties also may invoke the `report` method with a response object ', (done) => {
-      fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstance', (interfaceObject, propertyName, reportedValue, desiredValue, version) => {
-        const obj = {};
-        obj[propertyName] = desiredValue;
-        dtClient.report(interfaceObject, obj, { code: testStatusCode, description: testDescription, version: version })
-          .then(() => done())
-          .catch((err) => done('in the report catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_039 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
-      });
-      dtClient.addInterfaceInstances(fakeInterfaceInstance);
-      aTwin.properties.reported.update = sinon.stub().callsArgWith(1, null).onCall(0).callsFake((patch, callback) => {
-        assert.deepEqual(patch, { [interfaceInstanceProperty]: { [testPropertyName]: { 'value': initialTestPropertyValue, 'ac': testStatusCode, 'ad': testDescription, 'av': initialDesiredVersion } } });
-        callback();
-      });
-      dtClient.enablePropertyUpdates()
-        .catch((err) => done('in the register catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_039 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
-    });
-
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_040: [ A change to the desired property will invoke the property change callback with the change value and version. ] */
-    it('Property change callback invoked on change to property. No reported value given.', (done) => {
-      const callCountStub = sinon.stub();
-      const doneOnSecondInvocation = sinon.stub().onSecondCall().callsFake(() => {
-        assert.strictEqual(callCountStub.callCount, 2, 'Not all assert paths have been called. Make sure the test is working properly.');
-        done();
-      });
-      fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstance', (interfaceObject, propertyName, reportedValue, desiredValue, version) => {
-        //
-        // We should never see a reported value.  This is because initially there isn't a reported value because
-        // the twin we use is created "fresh" for each test.
-        //
-        // The only other call to this property change handler should happen from simulating a delta change.
-        // Delta changes should never provide the value of reported properties.
-        //
-        assert.isNotOk(reportedValue);
-        const obj = {};
-        obj[propertyName] = desiredValue;
-        dtClient.report(interfaceObject, obj, { code: testStatusCode, description: testDescription, version: version })
-          .then(doneOnSecondInvocation)
-          .catch((err) => done(err));
-      });
-      dtClient.addInterfaceInstances(fakeInterfaceInstance);
-      //
-      // The below stub is there to handle calls to the *device* clients twin update function.
-      //
-      // The .onCall(0) is referring to the original invocation for properties that happens right after we
-      // get the twin originally.
-      //
-      // The next .onCall happens as the result of simulating the delta patch.
-      //
-      aTwin.properties.reported.update = sinon.stub().callsArgWith(1, null)
-        .onCall(0).callsFake((patch, callback) => {
-          //
-          // We are doing the below to simulate an actual patch.  We are doing this
-          // so that there is an actual reported value for this property.  Having a value
-          // here to sniff out if reported values are sneaking into the change callback.
-          //
-          aTwin.properties.reported[interfaceInstanceProperty] = patch[interfaceInstanceProperty];
-          callback();
-        })
-        .onCall(1).callsFake((patch, callback) => {
-          callCountStub();
-          assert.deepEqual(patch, { [interfaceInstanceProperty]: { [testPropertyName]: { 'value': initialTestPropertyValue, 'ac': testStatusCode, 'ad': testDescription, 'av': 2*initialDesiredVersion } } });
-          callback();
-        });
-      dtClient.enablePropertyUpdates()
-        .then(() => {
-          callCountStub();
-          assert(aTwin.properties.reported[interfaceInstanceProperty][testPropertyName].value, initialTestPropertyValue);
-          aTwin.properties.desired[versionPropertyName] = 2*initialDesiredVersion;
-          //
-          // This is simulating a delta change.
-          //
-          aTwin.emit('properties.desired.' + interfaceInstanceProperty + '.' + testPropertyName, aTwin.properties.desired[interfaceInstanceProperty][testPropertyName]);
-        })
-        .catch((err) => done('in the register catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_040 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
     });
   });
 
@@ -1089,6 +915,180 @@ describe('Digital Twin Client', () => {
           methodCallbackFunction(methodRequest, methodResponse);
         })
         .catch((err) => assert.fail('in the register catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_031 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
+    });
+  });
+
+  describe('#report', () => {
+    let dtClient;
+    let propertyDeviceClient;
+    let fakeInterfaceInstance;
+    let aTwin;
+    const initialTestPropertyValue = 43;
+    const testStatusCode = 200;
+    const testDescription = 'A fake Description';
+    const initialDesiredVersion = 44;
+    const interfaceInstanceProperty = '$iotin:fakeInterfaceInstance';
+    const testPropertyName = 'testProperty';
+    const versionPropertyName = '$version';
+    class FakeInterface extends BaseInterface {
+      constructor(name, propertyCallback, commandCallback) {
+        super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
+        this.testProperty = new Property(true);
+      }
+    };
+
+    beforeEach(() => {
+      aTwin = new EventEmitter();
+      aTwin.properties = {
+        reported: {
+          [interfaceInstanceProperty]: {
+          },
+          update: sinon.stub().callsArgWith(1, null),
+        },
+        desired: {
+          [interfaceInstanceProperty]: {
+            [testPropertyName]: {
+              value: initialTestPropertyValue
+            }
+          },
+          [versionPropertyName]: initialDesiredVersion
+        }
+      };
+      propertyDeviceClient = {
+        sendEvent: sinon.stub().callsArgWith(1, null, new results.MessageEnqueued()),
+        onDeviceMethod: () => {},
+        getTwin: sinon.stub().callsArgWith(0, null, aTwin)
+      };
+      dtClient = new DigitalTwinClient(propertyDeviceClient);
+    });
+
+    it('`report` should invoke the supplied callback upon successful completion (no response provided)', (done) => {
+      fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstance', (interfaceObject, propertyName, reportedValue, desiredValue, version) => {
+        const obj = {};
+        obj[propertyName] = desiredValue;
+        dtClient.report(interfaceObject, obj, (err) => {
+          if (err) {
+            done(err);
+          } else {
+            done();
+          }
+        });
+      });
+      dtClient.addInterfaceInstances(fakeInterfaceInstance);
+      aTwin.properties.reported.update = sinon.stub().callsArgWith(1, null);
+      dtClient.enablePropertyUpdates()
+        .catch((err) => done('in the enablePropertyUpdates catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_038 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
+    });
+
+    it('`report` should invoke the supplied callback upon successful completion (response provided)', (done) => {
+      fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstance', (interfaceObject, propertyName, reportedValue, desiredValue, version) => {
+        const obj = {};
+        obj[propertyName] = desiredValue;
+        dtClient.report(interfaceObject, obj).then(done).catch((e) => done(e));
+      });
+      dtClient.addInterfaceInstances(fakeInterfaceInstance);
+      aTwin.properties.reported.update = sinon.stub().callsArgWith(1, null);
+      dtClient.enablePropertyUpdates()
+        .catch((err) => done('in the enablePropertyUpdates catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_038 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
+    });
+
+
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_017: [ Will produce a patch to the reported properties containing all the properties and values in the propertiesToReport object ] */
+    it('Properties may invoke a `report` method to patch the value of the property in the `reported` branch of the device twin', (done) => {
+      fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstance', (interfaceObject, propertyName, reportedValue, desiredValue, version) => {
+        const obj = {};
+        obj[propertyName] = desiredValue;
+        dtClient.report(interfaceObject, obj)
+          .then(() => done())
+          .catch((err) => {
+            const doneErr = new Error('in the report catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_038 with err: ' + ((err) ? (err.toString()) : ('null err provided')));
+            done(doneErr);
+          });
+      });
+      dtClient.addInterfaceInstances(fakeInterfaceInstance);
+      aTwin.properties.reported.update = sinon.stub().callsArgWith(1, null).onCall(0).callsFake((patch, callback) => {
+        assert.deepEqual(patch, { [interfaceInstanceProperty]: { [testPropertyName]: { 'value': initialTestPropertyValue } } });
+        callback();
+      });
+      dtClient.enablePropertyUpdates()
+        .catch((err) => done('in the register catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_038 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
+    });
+
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_018: [ May invoke with a propertiesToReport object and a response object to produce a patch to the reported properties. ] */
+    it('Properties also may invoke the `report` method with a response object ', (done) => {
+      fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstance', (interfaceObject, propertyName, reportedValue, desiredValue, version) => {
+        const obj = {};
+        obj[propertyName] = desiredValue;
+        dtClient.report(interfaceObject, obj, { code: testStatusCode, description: testDescription, version: version })
+          .then(() => done())
+          .catch((err) => done('in the report catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_039 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
+      });
+      dtClient.addInterfaceInstances(fakeInterfaceInstance);
+      aTwin.properties.reported.update = sinon.stub().callsArgWith(1, null).onCall(0).callsFake((patch, callback) => {
+        assert.deepEqual(patch, { [interfaceInstanceProperty]: { [testPropertyName]: { 'value': initialTestPropertyValue, 'ac': testStatusCode, 'ad': testDescription, 'av': initialDesiredVersion } } });
+        callback();
+      });
+      dtClient.enablePropertyUpdates()
+        .catch((err) => done('in the register catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_039 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
+    });
+
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_019: [ A change to the desired property will invoke the property change callback with the change value and version. ] */
+    it('Property change callback invoked on change to property. No reported value given.', (done) => {
+      const callCountStub = sinon.stub();
+      const doneOnSecondInvocation = sinon.stub().onSecondCall().callsFake(() => {
+        assert.strictEqual(callCountStub.callCount, 2, 'Not all assert paths have been called. Make sure the test is working properly.');
+        done();
+      });
+      fakeInterfaceInstance = new FakeInterface('fakeInterfaceInstance', (interfaceObject, propertyName, reportedValue, desiredValue, version) => {
+        //
+        // We should never see a reported value.  This is because initially there isn't a reported value because
+        // the twin we use is created "fresh" for each test.
+        //
+        // The only other call to this property change handler should happen from simulating a delta change.
+        // Delta changes should never provide the value of reported properties.
+        //
+        assert.isNotOk(reportedValue);
+        const obj = {};
+        obj[propertyName] = desiredValue;
+        dtClient.report(interfaceObject, obj, { code: testStatusCode, description: testDescription, version: version })
+          .then(doneOnSecondInvocation)
+          .catch((err) => done(err));
+      });
+      dtClient.addInterfaceInstances(fakeInterfaceInstance);
+      //
+      // The below stub is there to handle calls to the *device* clients twin update function.
+      //
+      // The .onCall(0) is referring to the original invocation for properties that happens right after we
+      // get the twin originally.
+      //
+      // The next .onCall happens as the result of simulating the delta patch.
+      //
+      aTwin.properties.reported.update = sinon.stub().callsArgWith(1, null)
+        .onCall(0).callsFake((patch, callback) => {
+          //
+          // We are doing the below to simulate an actual patch.  We are doing this
+          // so that there is an actual reported value for this property.  Having a value
+          // here to sniff out if reported values are sneaking into the change callback.
+          //
+          aTwin.properties.reported[interfaceInstanceProperty] = patch[interfaceInstanceProperty];
+          callback();
+        })
+        .onCall(1).callsFake((patch, callback) => {
+          callCountStub();
+          assert.deepEqual(patch, { [interfaceInstanceProperty]: { [testPropertyName]: { 'value': initialTestPropertyValue, 'ac': testStatusCode, 'ad': testDescription, 'av': 2*initialDesiredVersion } } });
+          callback();
+        });
+      dtClient.enablePropertyUpdates()
+        .then(() => {
+          callCountStub();
+          assert(aTwin.properties.reported[interfaceInstanceProperty][testPropertyName].value, initialTestPropertyValue);
+          aTwin.properties.desired[versionPropertyName] = 2*initialDesiredVersion;
+          //
+          // This is simulating a delta change.
+          //
+          aTwin.emit('properties.desired.' + interfaceInstanceProperty + '.' + testPropertyName, aTwin.properties.desired[interfaceInstanceProperty][testPropertyName]);
+        })
+        .catch((err) => done('in the register catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_040 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
     });
   });
 
