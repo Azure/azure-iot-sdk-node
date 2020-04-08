@@ -36,7 +36,7 @@ const commandHandler = (request, response) => {
 const environmentalSensor = new EnvironmentalSensor('environmentalSensor', propertyUpdateHandler, commandHandler);
 const deviceInformation = new DeviceInformation('deviceInformation');
 
-const capabilityModel = 'urn:azureiot:samplemodel:1';
+const capabilityModel = 'dtmi:azureiot:samplemodel;1';
 
 async function main() {
   // mqtt is implied in this static method

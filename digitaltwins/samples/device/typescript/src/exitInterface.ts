@@ -7,7 +7,7 @@ import { BaseInterface, Command, PropertyChangedCallback, CommandCallback } from
 export class SampleExit extends BaseInterface {
   exit: Command;
   constructor(interfaceInstanceName: string, propertyChangedCallback?: PropertyChangedCallback, commandCallback?: CommandCallback) {
-    super(interfaceInstanceName, 'urn:azureiotsdknode:SampleInterface:SampleExit:1', propertyChangedCallback, commandCallback);
+    super(interfaceInstanceName, 'dtmi:azureiot:azureiotsdknode:SampleInterface:SampleExit;1', propertyChangedCallback, commandCallback);
     this.exit = new Command();
   }
 }

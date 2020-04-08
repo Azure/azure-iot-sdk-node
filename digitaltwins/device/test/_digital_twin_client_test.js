@@ -34,7 +34,7 @@ describe('Digital Twin Client', () => {
   });
 
   describe('#fromConnectionString', () => {
-    const fakeCapabilityModel = 'urn:fake:1';
+    const fakeCapabilityModel = 'dtmi:fake;1';
     const fakeConnStr = 'HostName=host;DeviceId=id;SharedAccessKey=key';
 
     afterEach(() => {
@@ -91,7 +91,7 @@ describe('Digital Twin Client', () => {
   describe('#addInterfaceInstances', () => {
     class FakeInterface extends BaseInterface {
       constructor(name, propertyCallback, commandCallback) {
-        super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
+        super(name, 'dtmi:contoso:com:something;1', propertyCallback, commandCallback);
         this.temp = new Telemetry();
       }
     };
@@ -149,7 +149,7 @@ describe('Digital Twin Client', () => {
     it('throws an Error if interface contains a command but no defined command callback', function () {
       class NoCommandCallbackInterface extends BaseInterface {
         constructor(name, propertyCallback, commandCallback) {
-          super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
+          super(name, 'dtmi:contoso:com:something;1', propertyCallback, commandCallback);
           this.aCommand = new Command();
         }
       };
@@ -164,7 +164,7 @@ describe('Digital Twin Client', () => {
     it('throws an Error if interface contains a writable property but no defined property changed callback', function () {
       class NoChangedCallbackInterface extends BaseInterface {
         constructor(name, propertyCallback, commandCallback) {
-          super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
+          super(name, 'dtmi:contoso:com:something;1', propertyCallback, commandCallback);
           this.writableProperty = new Property(true);
         }
       };
@@ -179,7 +179,7 @@ describe('Digital Twin Client', () => {
     it('throws an Error if interface contains an unknown Digital Twin property type', function () {
       class BadDigitalTwinPropertyTypeInterface extends BaseInterface {
         constructor(name, propertyCallback, commandCallback) {
-          super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
+          super(name, 'dtmi:contoso:com:something;1', propertyCallback, commandCallback);
           this.writableProperty = new Property(true);
           this.writableProperty.azureDigitalTwinType = 'abc';
         }
@@ -195,7 +195,7 @@ describe('Digital Twin Client', () => {
     it('can add a variable number of interfaces', function () {
       class FakeInterface extends BaseInterface {
         constructor(name, propertyCallback, commandCallback) {
-          super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
+          super(name, 'dtmi:contoso:com:something;1', propertyCallback, commandCallback);
           this.writableProperty = new Property(true);
         }
       };
@@ -219,7 +219,7 @@ describe('Digital Twin Client', () => {
       let fakeTwin;
       class FakeInterface extends BaseInterface {
         constructor(name, propertyCallback, commandCallback) {
-          super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
+          super(name, 'dtmi:contoso:com:something;1', propertyCallback, commandCallback);
           this.temp = new Telemetry();
         }
       };
@@ -265,7 +265,7 @@ describe('Digital Twin Client', () => {
       let fakeInterfaceInstance;
       class FakeInterface extends BaseInterface {
         constructor(name, propertyCallback, commandCallback) {
-          super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
+          super(name, 'dtmi:contoso:com:something;1', propertyCallback, commandCallback);
           this.temp = new Property();
         }
       };
@@ -315,7 +315,7 @@ describe('Digital Twin Client', () => {
       };
       class FakeInterface extends BaseInterface {
         constructor(name, propertyCallback, commandCallback) {
-          super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
+          super(name, 'dtmi:contoso:com:something;1', propertyCallback, commandCallback);
           this.temp = new Command();
           this.writableProperty = new Property(true);
         }
@@ -351,7 +351,7 @@ describe('Digital Twin Client', () => {
       };
       class FakeInterface extends BaseInterface {
         constructor(name, propertyCallback, commandCallback) {
-          super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
+          super(name, 'dtmi:contoso:com:something;1', propertyCallback, commandCallback);
           this.temp = new Command();
         }
       };
@@ -374,7 +374,7 @@ describe('Digital Twin Client', () => {
     let fakeInterfaceInstance;
     class FakeInterface extends BaseInterface {
       constructor(name, propertyCallback, commandCallback) {
-        super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
+        super(name, 'dtmi:contoso:com:something;1', propertyCallback, commandCallback);
         this.temp = new Telemetry();
         this.firstTelemetryProperty = new Telemetry();
         this.secondTelemetryProperty = new Telemetry();
@@ -449,7 +449,7 @@ describe('Digital Twin Client', () => {
     };
     class FakeInterface extends BaseInterface {
       constructor(name, propertyCallback, commandCallback) {
-        super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
+        super(name, 'dtmi:contoso:com:something;1', propertyCallback, commandCallback);
         this.temp = new Command();
       }
     };
@@ -932,7 +932,7 @@ describe('Digital Twin Client', () => {
     const versionPropertyName = '$version';
     class FakeInterface extends BaseInterface {
       constructor(name, propertyCallback, commandCallback) {
-        super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
+        super(name, 'dtmi:contoso:com:something;1', propertyCallback, commandCallback);
         this.testProperty = new Property(true);
       }
     };
@@ -1104,7 +1104,7 @@ describe('Digital Twin Client', () => {
     const versionPropertyName = '$version';
     class FakeInterface extends BaseInterface {
       constructor(name, propertyCallback, commandCallback) {
-        super(name, 'urn:contoso:com:something:1', propertyCallback, commandCallback);
+        super(name, 'dtmi:contoso:com:something;1', propertyCallback, commandCallback);
         this.testProperty = new Property(true);
       }
     };

@@ -31,7 +31,7 @@ const commandHandler = (request, response) => {
 const environmentalSensor = new EnvironmentalSensor('environmentalSensor', propertyUpdateHandler, commandHandler);
 
 
-const capabilityModel = 'urn:azureiot:samplemodel:1';
+const capabilityModel = 'dtmi:azureiot:samplemodel;1';
 
 async function main() {
   const digitalTwinClient = DigitalTwinClient.fromConnectionString(capabilityModel, process.argv[2]);
@@ -49,7 +49,7 @@ main();
 ## Public API
 
 ### constructor
-Creates a new instance of a Digital Twin Device Client.  An IoT Hub Device Client must be provided as well as the urn format string specifying a Capability Model.
+Creates a new instance of a Digital Twin Device Client.  An IoT Hub Device Client must be provided as well as the Digital Twin Model Identifier (DTMI) format string specifying a Capability Model.
 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_002: [** Will throw `ReferenceError` if the constructor `client` argument is falsy. **]**
 
@@ -98,8 +98,8 @@ payload:
   }
 }
 message application properties:
-$.ifid : 'urn:azureiot:ModelDiscovery:ModelInformation:1'
-$.sub: 'urn_azureiot_ModelDiscovery_ModelInformation'
+$.ifid : 'dtmi:com:azureiot:ModelDiscovery:ModelInformation;1'
+$.sub: 'dtmi_azureiot_ModelDiscovery_ModelInformation'
 $.schema: 'modelInformation'
 contentType: 'application/json'
 contentEncoding: 'utf-8'

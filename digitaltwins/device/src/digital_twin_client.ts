@@ -116,7 +116,7 @@ export class DigitalTwinClient {
   private _interfaceInstances: {[key: string]: InterfaceInstanceInformation} = {};
   //
   // Each Digital Twin client can have only one capability model associated with it.
-  // The dcm is in URN format.
+  // The dcm is in DTMI format.
   //
   //
   // Client is a regular (not module) IoT Hub device client.
@@ -328,7 +328,7 @@ export class DigitalTwinClient {
    * @method                            private _sendCommandUpdate
    * @description                       Sends a command update message interfaceInstance/command.
    * @param interfaceInstanceName       Name of the instance for this interface.
-   * @param interfaceId                 The id (in URN format) for the interface.
+   * @param interfaceId                 The id (in DTMI format) for the interface.
    * @param commandName                 The name of the particular command updating its status.
    * @param requestId                   The id supplied by the Digital Twin Service that uniquely identifies
    *                                    this particular invocation of the command.

@@ -78,9 +78,9 @@ const exitHandler = (request: CommandRequest, response: CommandResponse) => {
 
 const environmentalSensor = new EnvironmentalSensor('environmentalSensor', environmentReadWriteCallback, environmentCommandCallback );
 const deviceInformation = new DeviceInformation('deviceInformation');
-const exitInterface = new SampleExit('urn_azureiotsdknode_SampleInterface_SampleExit', undefined, exitHandler);
+const exitInterface = new SampleExit('dtmi_azureiot_azureiotsdknode_SampleInterface_SampleExit', undefined, exitHandler);
 
-const capabilityModel = 'urn:azureiot:samplemodel:1';
+const capabilityModel = 'dtmi:azureiot:samplemodel;1';
 let dtClient = DigitalTwinClient.fromConnectionString(capabilityModel, process.env.DEVICE_CONNECTION_STRING as string);
 
 const main = async () => {
