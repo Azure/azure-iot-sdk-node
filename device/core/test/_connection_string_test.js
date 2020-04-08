@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
+console.log('_connection_string_test SERVICE TEST ENV VALUE HAS HOSTNAME AT: ' + process.env.IOTHUB_CONNECTION_STRING.indexOf('HostName'));
 
 var assert = require('chai').assert;
 var ArgumentError = require('azure-iot-common').errors.ArgumentError;
