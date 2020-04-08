@@ -24,7 +24,7 @@ describe('Digital Twin Client', function () {
   describe('#constructor', () => {
     /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_002: [Will throw `ReferenceError` if the constructor `client` argument is falsy.] */
     [undefined, null, ''].forEach(function (client) {
-      it('throws a ReferenceError if \'client\' is ' + client + '\'', function () {
+      it('throws a ReferenceError if \'client\' is \'' + client + '\'', function () {
         assert.throws(() => {
           const dtClient = new DigitalTwinClient(client);
           (dtClient);
@@ -43,7 +43,7 @@ describe('Digital Twin Client', function () {
 
     /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [Will throw `ReferenceError` if `capabilityModel` argument is falsy.] */
     [undefined, null, ''].forEach(function (falsyCapabilityModel) {
-      it('throws a ReferenceError if \'capabilityModel\' is ' + falsyCapabilityModel + '\'', function () {
+      it('throws a ReferenceError if \'capabilityModel\' is \'' + falsyCapabilityModel + '\'', function () {
         assert.throws(() => {
           const client = DigitalTwinClient.fromConnectionString(falsyCapabilityModel, fakeConnStr);
           (client);
@@ -53,7 +53,7 @@ describe('Digital Twin Client', function () {
 
     /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [Will throw `ReferenceError` if the constructor `client` argument is falsy.] */
     [undefined, null, ''].forEach(function (falsyConnStr) {
-      it('throws a ReferenceError if \'client\' is ' + falsyConnStr + '\'', function () {
+      it('throws a ReferenceError if \'client\' is \'' + falsyConnStr + '\'', function () {
         assert.throws(() => {
           const dtClient = DigitalTwinClient.fromConnectionString(fakeCapabilityModel, falsyConnStr);
           (dtClient);
@@ -99,7 +99,7 @@ describe('Digital Twin Client', function () {
     /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_003: [Will throw `ReferenceError` if the `newInterfaceInstance` argument is falsy.] */
     [undefined, null, ''].forEach(function (newInterfaceInstance) {
       const dtClient = new DigitalTwinClient(fakeDeviceClient);
-      it('throws a ReferenceError if \'newInterfaceInstance\' is ' + newInterfaceInstance + '\'', () => {
+      it('throws a ReferenceError if \'newInterfaceInstance\' is \'' + newInterfaceInstance + '\'', () => {
         assert.throws(() => {
           dtClient.addInterfaceInstances(newInterfaceInstance);
         });
@@ -115,7 +115,7 @@ describe('Digital Twin Client', function () {
         }
       };
       const badFakeInterfaceInstance = new BadFakeInterface('badFakeInterfaceInstance');
-      it('throws a ReferenceError if \'newInterfaceInstance\' \'interfaceId\` property is ' + interfaceId + '\'', () => {
+      it('throws a ReferenceError if \'newInterfaceInstance\' \'interfaceId\` property is \'' + interfaceId + '\'', () => {
         const dtClient = new DigitalTwinClient(fakeDeviceClient);
         assert.throws(() => {
           dtClient.addInterfaceInstances(badFakeInterfaceInstance);
@@ -126,7 +126,7 @@ describe('Digital Twin Client', function () {
     /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_005: [Will throw `ReferenceError` if the `newInterfaceInstance` argument `interfaceInstanceName` property is falsy.] */
     [undefined, null, ''].forEach(function (interfaceInstanceName) {
       const badFakeInterfaceInstance = new FakeInterface(interfaceInstanceName);
-      it('throws a ReferenceError if \'newInterfaceInstance\' \'interfaceInstanceName\` property is ' + interfaceInstanceName + '\'', () => {
+      it('throws a ReferenceError if \'newInterfaceInstance\' \'interfaceInstanceName\` property is \'' + interfaceInstanceName + '\'', () => {
         const dtClient = new DigitalTwinClient(fakeDeviceClient);
         assert.throws(() => {
           dtClient.addInterfaceInstances(badFakeInterfaceInstance);
