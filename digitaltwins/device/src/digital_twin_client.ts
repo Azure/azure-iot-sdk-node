@@ -429,12 +429,19 @@ export class DigitalTwinClient {
     }, callback);
   }
 
+  // TODO: is this the best API? Should it be split into a report for writable properties and a report for non-writable properties?
   /**
    * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.report
    * @description                   Sends the value of a reported property to the Digital Twin.
    * @param interfaceInstance       Interface instance to be reported on.
    * @param propertiesToReport      An object of properties containing propertyNames and propertyValues as key, value pairs.
    * @param response                An optional response to patch the reported properties.
+   *                                  When you have a desired property change,
+   *                                  response is for writable properties as a response to the service sending desired state for those properties,
+   *                                  when the device client responds on the status of the desired property setting.
+   *                                  For instance an oven might not be done heating up yet, so the oven component would send
+   *                                  a 204 (not a legitimate status code), 'oven still heating up to desired temperature'.
+   *                                  For just a plain report, like SDK Information, there is no status.
    * @param callback (optional)     If present, the callback to be invoked on completion of the telemetry,
    *                                otherwise a promise is returned.
    */
@@ -457,7 +464,7 @@ export class DigitalTwinClient {
     /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_014: [ Will invoke the `callback` on failure with an error ] */
     /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_015: [ Will resolve the promise on success when no callback provided ] */
     /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_016: [ Will reject the promise on failure with an error when no callback provided ] */
-    return callbackToPromise((_callback) => {
+    return callbackToPromise((_callback: ErrorCallback) => {
       let interfaceInstancePart = interfaceInstancePrefix + interfaceInstance.interfaceInstanceName;
       let patch : any = {
         [interfaceInstancePart]: {}
