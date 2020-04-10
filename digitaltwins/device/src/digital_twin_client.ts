@@ -154,9 +154,9 @@ export class DigitalTwinClient {
    *                                property changes.
    * @param callback                Optional callback. If not provided enablePropertyUpdates will return a promise.
    */
-  enablePropertyUpdates(callback: Callback) : void;
-  enablePropertyUpdates() : Promise<void>;
-  enablePropertyUpdates(callback?: Callback) : Promise<void> | void {
+  enablePropertyUpdates(callback: Callback): void;
+  enablePropertyUpdates(): Promise<void>;
+  enablePropertyUpdates(callback?: Callback): Promise<void> | void {
     return callbackToPromise((_callback) => {
       /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_008: [ Will invoke the callback on success if provided ] */
       /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_009: [ Will resolve the promise if no callback is provided  ] */
@@ -212,20 +212,20 @@ export class DigitalTwinClient {
     /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_016: [ Will reject the promise on failure with an error when no callback provided ] */
     return callbackToPromise((_callback: ErrorCallback) => {
       let interfaceInstancePart = interfaceInstancePrefix + interfaceInstance.interfaceInstanceName;
-      let patch : any = {
+      let patch: any = {
         [interfaceInstancePart]: {}
       };
 
       /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_017: [ Will produce a patch to the reported properties containing all the properties and values in the propertiesToReport object ] */
       for (const propertyName in propertiesToReport) {
-        let propertyContent : any = { value: propertiesToReport[propertyName] };
+        let propertyContent: any = { value: propertiesToReport[propertyName] };
         /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_018: [ May invoke with a propertiesToReport object and a response object to produce a patch to the reported properties. ] */
         if (actualResponse) {
           propertyContent.ac = actualResponse.code;
           propertyContent.ad = actualResponse.description;
           propertyContent.av = actualResponse.version;
         }
-        patch[interfaceInstancePart][propertyName] = propertyContent
+        patch[interfaceInstancePart][propertyName] = propertyContent;
       }
       this._twin.properties.reported.update(patch, _callback);
     }, actualCallback);
@@ -239,9 +239,9 @@ export class DigitalTwinClient {
    * @param {ErrorCallback}  callback (optional)     If present, the callback to be invoked on completion of the telemetry,
    *                                                 otherwise a promise is returned.
    */
-  sendTelemetry(interfaceInstance: BaseInterface, telemetry: any, callback: ErrorCallback) : void;
-  sendTelemetry(interfaceInstance: BaseInterface, telemetry: any) : Promise<void>;
-  sendTelemetry(interfaceInstance: BaseInterface, telemetry: any, callback?: ErrorCallback) : Promise<void> | void {
+  sendTelemetry(interfaceInstance: BaseInterface, telemetry: any, callback: ErrorCallback): void;
+  sendTelemetry(interfaceInstance: BaseInterface, telemetry: any): Promise<void>;
+  sendTelemetry(interfaceInstance: BaseInterface, telemetry: any, callback?: ErrorCallback): Promise<void> | void {
     return callbackToPromise((_callback) => {
       let telemetryMessage = new Message(
         JSON.stringify(telemetry)
@@ -478,7 +478,7 @@ export class DigitalTwinClient {
       This JSON stringified value of the payload parameter.
 
       message application properties:
-      'iothub-message-schema' : 'asyncResult'
+      'iothub-message-schema': 'asyncResult'
       'iothub-command-name': <command name>
       'iothub-command-request-id': request.payload.commandRequest.requestId of the method request
       'iothub-command-statuscode': statusCode argument of the update method
