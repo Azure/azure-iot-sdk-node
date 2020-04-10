@@ -134,14 +134,145 @@ export class DigitalTwinClient {
   }
 
   /**
+   * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.enableCommands
+   * @description                   This must be called before the interface command callbacks will be used.
+   *                                Sweeps through all the interfaceInstances and enables method handlers for each command.
+   */
+  enableCommands(): void {
+    Object.keys(this._interfaceInstances).forEach((interfaceInstanceName) => {
+      this._interfaceInstances[interfaceInstanceName].commandProperties.forEach((commandInformation) => {
+        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_012: [For each property in an interfaceInstance with type `Command`, a device method will be enabled with a name of the form '$iotin:' followed by the interfaceInstance name followed by '*' followed by the property name.] */
+        this._client.onDeviceMethod(commandInformation.methodName, commandInformation.methodCallback);
+      });
+    });
+  }
+
+
+  /**
+   * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.enablePropertyUpdates
+   * @description                   Enables property updates for the Digital Twin Client so the propertyUpdateCallback will be invoked on
+   *                                property changes.
+   * @param callback                Optional callback. If not provided enablePropertyUpdates will return a promise.
+   */
+  enablePropertyUpdates(callback: Callback) : void;
+  enablePropertyUpdates() : Promise<void>;
+  enablePropertyUpdates(callback?: Callback) : Promise<void> | void {
+    return callbackToPromise((_callback) => {
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_008: [ Will invoke the callback on success if provided ] */
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_009: [ Will resolve the promise if no callback is provided  ] */
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_010: [ Will pass an error to the callback if provided ] */
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_011: [ Will reject the promise if no callback is provided on error ] */
+      this._client.getTwin((getTwinError: Error | undefined, twinResult: Twin | undefined) => {
+        if (getTwinError) {
+          return _callback(getTwinError);
+        } else {
+          this._twin = twinResult as Twin;
+          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_012: [ Will enable propertyChangedCallback on added interfaceInstances ] */
+          this._initialWritablePropertyProcessing();
+          return _callback();
+        }
+      });
+    }, callback);
+  }
+
+  // TODO: is this the best API? Should it be split into a report for writable properties and a report for non-writable properties?
+  /**
+   * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.report
+   * @description                   Sends the value of a reported property to the Digital Twin.
+   * @param interfaceInstance       Interface instance to be reported on.
+   * @param propertiesToReport      An object of properties containing propertyNames and propertyValues as key, value pairs.
+   * @param response                An optional response to patch the reported properties.
+   *                                  When you have a desired property change,
+   *                                  response is for writable properties as a response to the service sending desired state for those properties,
+   *                                  when the device client responds on the status of the desired property setting.
+   *                                  For instance an oven might not be done heating up yet, so the oven component would send
+   *                                  a 204 (not a legitimate status code), 'oven still heating up to desired temperature'.
+   *                                  For just a plain report, like SDK Information, there is no status.
+   * @param callback (optional)     If present, the callback to be invoked on completion of the telemetry,
+   *                                otherwise a promise is returned.
+   */
+  report(interfaceInstance: BaseInterface, propertiesToReport: any, responseOrCallback: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): void;
+  report(interfaceInstance: BaseInterface, propertiesToReport: any, response?: DesiredStateResponse): Promise<void>;
+  report(interfaceInstance: BaseInterface, propertiesToReport: any, responseOrCallback?: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): Promise<void> | void {
+    let actualResponse: DesiredStateResponse | undefined;
+    let actualCallback: ErrorCallback | undefined;
+    if (responseOrCallback) {
+      if (typeof responseOrCallback === 'function') {
+        actualCallback = responseOrCallback as ErrorCallback;
+        actualResponse = undefined;
+      } else {
+        actualResponse = responseOrCallback as DesiredStateResponse;
+        actualCallback = callback as ErrorCallback;
+      }
+    }
+
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_013: [ Will invoke the `callback` on success if provided ] */
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_014: [ Will invoke the `callback` on failure with an error ] */
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_015: [ Will resolve the promise on success when no callback provided ] */
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_016: [ Will reject the promise on failure with an error when no callback provided ] */
+    return callbackToPromise((_callback: ErrorCallback) => {
+      let interfaceInstancePart = interfaceInstancePrefix + interfaceInstance.interfaceInstanceName;
+      let patch : any = {
+        [interfaceInstancePart]: {}
+      };
+
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_017: [ Will produce a patch to the reported properties containing all the properties and values in the propertiesToReport object ] */
+      for (const propertyName in propertiesToReport) {
+        let propertyContent : any = { value: propertiesToReport[propertyName] };
+        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_018: [ May invoke with a propertiesToReport object and a response object to produce a patch to the reported properties. ] */
+        if (actualResponse) {
+          propertyContent.ac = actualResponse.code;
+          propertyContent.ad = actualResponse.description;
+          propertyContent.av = actualResponse.version;
+        }
+        patch[interfaceInstancePart][propertyName] = propertyContent
+      }
+      this._twin.properties.reported.update(patch, _callback);
+    }, actualCallback);
+  }
+
+  /**
+   * @method            module:azure-iot-digitaltwins-device.DigitalTwinClient.sendTelemetry
+   * @description                                    Sends a telemetry message for a supplied interface.
+   * @param {BaseInterface}  interfaceInstance       Interface instance to be associated with telemetry message.
+   * @param {any}            telemetry               The object to be sent.
+   * @param {ErrorCallback}  callback (optional)     If present, the callback to be invoked on completion of the telemetry,
+   *                                                 otherwise a promise is returned.
+   */
+  sendTelemetry(interfaceInstance: BaseInterface, telemetry: any, callback: ErrorCallback) : void;
+  sendTelemetry(interfaceInstance: BaseInterface, telemetry: any) : Promise<void>;
+  sendTelemetry(interfaceInstance: BaseInterface, telemetry: any, callback?: ErrorCallback) : Promise<void> | void {
+    return callbackToPromise((_callback) => {
+      let telemetryMessage = new Message(
+        JSON.stringify(telemetry)
+      );
+      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_006: [ The `sendTelemetry` method will send a device message with the following format:
+      ```
+      payload: {<telemetry property name>: <telemetry property value> ,...}
+      message application properties:
+      contentType: 'application/json'
+      contentEncoding: 'utf-8'
+      $.sub: <interfaceInstance name>
+      ```
+      ] */
+      telemetryMessage.properties.add(messageSubjectProperty, interfaceInstance.interfaceInstanceName);
+      telemetryMessage.contentType =  'application/json';
+      telemetryMessage.contentEncoding = 'utf-8';
+      this._client.sendEvent(telemetryMessage, (telemetryError: Error | undefined) => {
+        return _callback(telemetryError);
+      });
+    }, callback);
+  }
+
+  /**
    * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.addInterfaceInstances
    * @description                   Adds multiple interfaceInstances to the Digital Twin client.  This will not cause
    *                                any network activity.  This is a synchronous method.
    * @param newInterfaceInstances   A single object or multiple objects for a particular interfaceInstance.
    */
-  addInterfaceInstances(...args: BaseInterface[]) {
+  addInterfaceInstances(...args: BaseInterface[]): void {
     /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [ Can accept a variable number of interfaces to add via the addInterfaceInstances method ] */
-    for (var i = 0; i < args.length; i++) {
+    for (let i = 0; i < args.length; i++) {
       this._addInterfaceInstance(args[i]);
     }
   }
@@ -385,137 +516,6 @@ export class DigitalTwinClient {
       propertyName: propertyName,
       prefixAndInterfaceInstanceName: interfaceInstancePrefix + interfaceInstance.interfaceInstanceName,
     };
-  }
-
-  /**
-   * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.enableCommands
-   * @description                   This must be called before the interface command callbacks will be used.
-   *                                Sweeps through all the interfaceInstances and enables method handlers for each command.
-   */
-  enableCommands(): void {
-    Object.keys(this._interfaceInstances).forEach((interfaceInstanceName) => {
-      this._interfaceInstances[interfaceInstanceName].commandProperties.forEach((commandInformation) => {
-        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_06_012: [For each property in an interfaceInstance with type `Command`, a device method will be enabled with a name of the form '$iotin:' followed by the interfaceInstance name followed by '*' followed by the property name.] */
-        this._client.onDeviceMethod(commandInformation.methodName, commandInformation.methodCallback);
-      });
-    });
-  }
-
-
-  /**
-   * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.enablePropertyUpdates
-   * @description                   Enables property updates for the Digital Twin Client so the propertyUpdateCallback will be invoked on
-   *                                property changes.
-   * @param callback                Optional callback. If not provided enablePropertyUpdates will return a promise.
-   */
-  enablePropertyUpdates(callback: Callback) : void;
-  enablePropertyUpdates() : Promise<void>;
-  enablePropertyUpdates(callback?: Callback) : Promise<void> | void {
-    return callbackToPromise((_callback) => {
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_008: [ Will invoke the callback on success if provided ] */
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_009: [ Will resolve the promise if no callback is provided  ] */
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_010: [ Will pass an error to the callback if provided ] */
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_011: [ Will reject the promise if no callback is provided on error ] */
-      this._client.getTwin((getTwinError: Error | undefined, twinResult: Twin | undefined) => {
-        if (getTwinError) {
-          return _callback(getTwinError);
-        } else {
-          this._twin = twinResult as Twin;
-          /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_012: [ Will enable propertyChangedCallback on added interfaceInstances ] */
-          this._initialWritablePropertyProcessing();
-          return _callback();
-        }
-      });
-    }, callback);
-  }
-
-  // TODO: is this the best API? Should it be split into a report for writable properties and a report for non-writable properties?
-  /**
-   * @method                        module:azure-iot-digitaltwins-device.DigitalTwinClient.report
-   * @description                   Sends the value of a reported property to the Digital Twin.
-   * @param interfaceInstance       Interface instance to be reported on.
-   * @param propertiesToReport      An object of properties containing propertyNames and propertyValues as key, value pairs.
-   * @param response                An optional response to patch the reported properties.
-   *                                  When you have a desired property change,
-   *                                  response is for writable properties as a response to the service sending desired state for those properties,
-   *                                  when the device client responds on the status of the desired property setting.
-   *                                  For instance an oven might not be done heating up yet, so the oven component would send
-   *                                  a 204 (not a legitimate status code), 'oven still heating up to desired temperature'.
-   *                                  For just a plain report, like SDK Information, there is no status.
-   * @param callback (optional)     If present, the callback to be invoked on completion of the telemetry,
-   *                                otherwise a promise is returned.
-   */
-  report(interfaceInstance: BaseInterface, propertiesToReport: any, responseOrCallback: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): void;
-  report(interfaceInstance: BaseInterface, propertiesToReport: any, response?: DesiredStateResponse): Promise<void>;
-  report(interfaceInstance: BaseInterface, propertiesToReport: any, responseOrCallback?: DesiredStateResponse | ErrorCallback, callback?: ErrorCallback): Promise<void> | void {
-    let actualResponse: DesiredStateResponse | undefined;
-    let actualCallback: ErrorCallback | undefined;
-    if (responseOrCallback) {
-      if (typeof responseOrCallback === 'function') {
-        actualCallback = responseOrCallback as ErrorCallback;
-        actualResponse = undefined;
-      } else {
-        actualResponse = responseOrCallback as DesiredStateResponse;
-        actualCallback = callback as ErrorCallback;
-      }
-    }
-
-    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_013: [ Will invoke the `callback` on success if provided ] */
-    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_014: [ Will invoke the `callback` on failure with an error ] */
-    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_015: [ Will resolve the promise on success when no callback provided ] */
-    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_016: [ Will reject the promise on failure with an error when no callback provided ] */
-    return callbackToPromise((_callback: ErrorCallback) => {
-      let interfaceInstancePart = interfaceInstancePrefix + interfaceInstance.interfaceInstanceName;
-      let patch : any = {
-        [interfaceInstancePart]: {}
-      };
-
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_017: [ Will produce a patch to the reported properties containing all the properties and values in the propertiesToReport object ] */
-      for (const propertyName in propertiesToReport) {
-        let propertyContent : any = { value: propertiesToReport[propertyName] };
-        /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_018: [ May invoke with a propertiesToReport object and a response object to produce a patch to the reported properties. ] */
-        if (actualResponse) {
-          propertyContent.ac = actualResponse.code;
-          propertyContent.ad = actualResponse.description;
-          propertyContent.av = actualResponse.version;
-        }
-        patch[interfaceInstancePart][propertyName] = propertyContent
-      }
-      this._twin.properties.reported.update(patch, _callback);
-    }, actualCallback);
-  }
-
-  /**
-   * @method            module:azure-iot-digitaltwins-device.DigitalTwinClient.sendTelemetry
-   * @description                                    Sends a telemetry message for a supplied interface.
-   * @param {BaseInterface}  interfaceInstance       Interface instance to be associated with telemetry message.
-   * @param {any}            telemetry               The object to be sent.
-   * @param {ErrorCallback}  callback (optional)     If present, the callback to be invoked on completion of the telemetry,
-   *                                                 otherwise a promise is returned.
-   */
-  sendTelemetry(interfaceInstance: BaseInterface, telemetry: any, callback: ErrorCallback) : void;
-  sendTelemetry(interfaceInstance: BaseInterface, telemetry: any) : Promise<void>;
-  sendTelemetry(interfaceInstance: BaseInterface, telemetry: any, callback?: ErrorCallback) : Promise<void> | void {
-    return callbackToPromise((_callback) => {
-      let telemetryMessage = new Message(
-        JSON.stringify(telemetry)
-      );
-      /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_006: [ The `sendTelemetry` method will send a device message with the following format:
-      ```
-      payload: {<telemetry property name>: <telemetry property value> ,...}
-      message application properties:
-      contentType: 'application/json'
-      contentEncoding: 'utf-8'
-      $.sub: <interfaceInstance name>
-      ```
-      ] */
-      telemetryMessage.properties.add(messageSubjectProperty, interfaceInstance.interfaceInstanceName);
-      telemetryMessage.contentType =  'application/json';
-      telemetryMessage.contentEncoding = 'utf-8';
-      this._client.sendEvent(telemetryMessage, (telemetryError: Error | undefined) => {
-        return _callback(telemetryError);
-      });
-    }, callback);
   }
 
 
