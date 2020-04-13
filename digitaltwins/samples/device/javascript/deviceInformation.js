@@ -7,7 +7,7 @@ const Property = require('azure-iot-digitaltwins-device').Property;
 
 module.exports.DeviceInformation = class DeviceInformation extends BaseInterface {
   constructor(name, propertyCallback, commandCallback) {
-    super(name, 'urn:azureiot:DeviceManagement:DeviceInformation:1', propertyCallback, commandCallback);
+    super(name, 'dtmi:azureiot:DeviceManagement:DeviceInformation;1', propertyCallback, commandCallback);
     this.manufacturer = new Property();
     this.model = new Property();
     this.swVersion = new Property();

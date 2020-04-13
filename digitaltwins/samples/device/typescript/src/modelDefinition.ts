@@ -7,7 +7,7 @@ import { BaseInterface, Command, PropertyChangedCallback, CommandCallback } from
 export class ModelDefinition extends BaseInterface {
   getModelDefinition: Command;
   constructor(interfaceInstanceName: string, propertyChangedCallback?: PropertyChangedCallback, commandCallback?: CommandCallback) {
-    super(interfaceInstanceName, 'urn:azureiot:ModelDiscovery:ModelDefinition:1', propertyChangedCallback, commandCallback);
+    super(interfaceInstanceName, 'dtmi:azureiot:ModelDiscovery:ModelDefinition;1', propertyChangedCallback, commandCallback);
     this.getModelDefinition = new Command();
   }
 }

@@ -1,108 +1,8 @@
-import { Client } from 'azure-iot-device';
-import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
 import { DigitalTwinClient, CommandCallback, CommandRequest, CommandResponse, PropertyChangedCallback, BaseInterface } from 'azure-iot-digitaltwins-device';
 import { EnvironmentalSensor } from './environmentalinterface';
 import { DeviceInformation } from './deviceinfointerface';
-import { ModelDefinition } from './modelDefinition';
 import { SampleExit } from './exitInterface';
 
-const environmentalModel = `{
-  "@id": "urn:contoso:com:EnvironmentalSensor:1",
-  "@type": "Interface",
-  "displayName": "Environmental Sensor",
-  "description": "Provides functionality to report temperature, humidity. Provides telemetry, commands and read-write properties",
-  "comment": "Requires temperature and humidity sensors.",
-  "contents": [
-    {
-      "@type": "Property",
-      "displayName": "Device State",
-      "description": "The state of the device. Two states online/offline are available.",
-      "name": "state",
-      "schema": "boolean"
-    },
-    {
-      "@type": "Property",
-      "displayName": "Customer Name",
-      "description": "The name of the customer currently operating the device.",
-      "name": "name",
-      "schema": "string",
-      "writable": true
-    },
-    {
-      "@type": "Property",
-      "displayName": "Brightness Level",
-      "description": "The brightness level for the light on the device. Can be specified as 1 (high), 2 (medium), 3 (low)",
-      "name": "brightness",
-      "writable": true,
-      "schema": "long"
-    },
-    {
-      "@type": [
-        "Telemetry",
-        "SemanticType/Temperature"
-      ],
-      "description": "Current temperature on the device",
-      "displayName": "Temperature",
-      "name": "temp",
-      "schema": "double",
-      "unit": "Units/Temperature/fahrenheit"
-    },
-    {
-      "@type": [
-        "Telemetry",
-        "SemanticType/Humidity"
-      ],
-      "description": "Current humidity on the device",
-      "displayName": "Humidity",
-      "name": "humid",
-      "schema": "double",
-      "unit": "Units/Humidity/percent"
-    },
-    {
-      "@type": "Command",
-      "description": "This command will begin blinking the LED for given time interval.",
-      "name": "blink",
-      "commandType": "synchronous",
-      "request": {
-        "name": "interval",
-        "schema": "long"
-      },
-      "response": {
-        "name": "blinkResponse",
-        "schema": {
-          "@type": "Object",
-          "fields": [
-            {
-              "name": "description",
-              "schema": "string"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "@type": "Command",
-      "name": "turnon",
-      "comment": "This Commands will turn-on the LED light on the device.",
-      "commandType": "synchronous"
-    },
-    {
-      "@type": "Command",
-      "name": "turnoff",
-      "comment": "This Commands will turn-off the LED light on the device.",
-      "commandType": "synchronous"
-    },
-    {
-      "@type": "Command",
-      "name": "rundiagnostics",
-      "comment": "This command initiates a diagnostics run.  This will take time and is implemented as an asynchronous command",
-      "commandType": "asynchronous"
-    }
-  ],
-  "@context": "http://azureiot.com/v1/contexts/IoTModel.json"
-}`;
-
-const environmentalId = JSON.parse(environmentalModel)['@id'];
 
 const environmentCommandCallback: CommandCallback = (request: CommandRequest, response: CommandResponse) => {
   console.log('Callback for command for environment interface');
@@ -166,32 +66,6 @@ const environmentReadWriteCallback: PropertyChangedCallback = (interfaceObject: 
   });
 };
 
-const modelDefinitionHandler = (request: CommandRequest, response: CommandResponse) => {
-  console.log('received command: ' + request.commandName + ' for interfaceInstance: ' + request.interfaceInstanceName);
-  //
-  // The model definition interface only supports one command.  The
-  // getModelDefinition.
-  //
-  // Its only argument is an 'id'.
-  //
-  // Make sure that the id matches what the model id is.
-  //
-
-  if (request.payload !== environmentalId) {
-    response.acknowledge(404, null)
-      .then(console.log('Successfully sent the not found.'))
-      .catch((err: Error) => {
-        console.log('The failure response to the getModelDefinition failed to send.  Error is: ' + err.toString());
-      });
-  } else {
-    response.acknowledge(200, JSON.parse(environmentalModel))
-      .then(console.log('Successfully sent the model.'))
-      .catch((err: Error) => {
-        console.log('The response to the getModelDefinition failed to send.  Error is: ' + err.toString());
-      });
-  }
-};
-
 const exitHandler = (request: CommandRequest, response: CommandResponse) => {
   console.log('received command: ' + request.commandName + ' for interfaceInstance: ' + request.interfaceInstanceName);
   response.acknowledge(200, null, (err?: Error) => {
@@ -204,26 +78,24 @@ const exitHandler = (request: CommandRequest, response: CommandResponse) => {
 
 const environmentalSensor = new EnvironmentalSensor('environmentalSensor', environmentReadWriteCallback, environmentCommandCallback );
 const deviceInformation = new DeviceInformation('deviceInformation');
-const modelDefinition = new ModelDefinition('urn_azureiot_ModelDiscovery_ModelDefinition', undefined, modelDefinitionHandler);
-const exitInterface = new SampleExit('urn_azureiotsdknode_SampleInterface_SampleExit', undefined, exitHandler);
+const exitInterface = new SampleExit('dtmi_azureiot_azureiotsdknode_SampleInterface_SampleExit', undefined, exitHandler);
 
-const client = Client.fromConnectionString(process.env.DEVICE_CONNECTION_STRING as string, Protocol);
-
-const capabilityModel = 'urn:azureiot:samplemodel:1';
-
-let dtClient = new DigitalTwinClient(capabilityModel, client);
+const capabilityModel = 'dtmi:azureiot:samplemodel;1';
+let dtClient = DigitalTwinClient.fromConnectionString(capabilityModel, process.env.DEVICE_CONNECTION_STRING as string);
 
 const main = async () => {
   try {
-    await environmentalSensor.state.report(true);
-    await deviceInformation.manufacturer.report('Contoso Device Corporation');
-    await deviceInformation.model.report('Contoso 4762B-turbo');
-    await deviceInformation.swVersion.report('3.1');
-    await deviceInformation.osName.report('ContosoOS');
-    await deviceInformation.processorArchitecture.report('4762');
-    await deviceInformation.processorManufacturer.report('Contoso Foundries');
-    await deviceInformation.totalStorage.report('64000');
-    await deviceInformation.totalMemory.report('640');
+    await dtClient.report(environmentalSensor, {state: true});
+    await dtClient.report(deviceInformation, {
+      manufacturer: 'Contoso Device Corporation',
+      model: 'Contoso 4762B-turbo',
+      swVersion: '3.1',
+      osName: 'ContosoOS',
+      processorArchitecture: '4762',
+      processorManufacturer: 'Contoso Foundries',
+      totalStorage: '64000',
+      totalMemory: '640'
+    });
 
     // send telemetry every 5 seconds
     setInterval( async () => {
@@ -234,14 +106,13 @@ const main = async () => {
   }
 };
 
-dtClient.addInterfaceInstance(environmentalSensor);
-dtClient.addInterfaceInstance(deviceInformation);
-dtClient.addInterfaceInstance(modelDefinition);
-dtClient.addInterfaceInstance(exitInterface);
+dtClient.addInterfaceInstances(environmentalSensor, deviceInformation, exitInterface);
 
-dtClient.register()
+dtClient.enableCommands();
+
+dtClient.enablePropertyUpdates()
   .then(() => {
-    console.log('registered the interfaceInstances.');
+    console.log('enabled the property updates.');
     main();
   })
   .catch(() => {console.log('the registration failed.');});
