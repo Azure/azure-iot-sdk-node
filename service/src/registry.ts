@@ -619,11 +619,11 @@ export class Registry {
    * @param {String}      deviceId   The device identifier.
    * @param {Function}    [done]     The optional callback that will be called with either an Error object or
    *                                 the device twin instance.
-   * @returns {Promise<ResultWithHttpResponse<any>> | void} Promise if no callback function was passed, void otherwise.
+   * @returns {Promise<ResultWithHttpResponse<Twin>> | void} Promise if no callback function was passed, void otherwise.
    */
-  getTwin(deviceId: string, done: HttpResponseCallback<any>): void;
-  getTwin(deviceId: string): Promise<ResultWithHttpResponse<any>>;
-  getTwin(deviceId: string, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
+  getTwin(deviceId: string, done: HttpResponseCallback<Twin>): void;
+  getTwin(deviceId: string): Promise<ResultWithHttpResponse<Twin>>;
+  getTwin(deviceId: string, done?: HttpResponseCallback<Twin>): Promise<ResultWithHttpResponse<Twin>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_019: [The `getTwin` method shall throw a `ReferenceError` if the `deviceId` parameter is falsy.]*/
       if (!deviceId) throw new ReferenceError('the \'deviceId\' cannot be falsy');
@@ -692,11 +692,11 @@ export class Registry {
    *                                 the device twin has been updated since the etag was obtained.
    * @param {Function}    [done]     The optional callback that will be called with either an Error object or
    *                                 the device twin instance.
-   * @returns {Promise<ResultWithHttpResponse<any>> | void} Promise if no callback function was passed, void otherwise.
+   * @returns {Promise<ResultWithHttpResponse<Twin>> | void} Promise if no callback function was passed, void otherwise.
    */
-  updateTwin(deviceId: string, patch: any, etag: string, done: HttpResponseCallback<any>): void;
-  updateTwin(deviceId: string, patch: any, etag: string): Promise<ResultWithHttpResponse<any>>;
-  updateTwin(deviceId: string, patch: any, etag: string, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
+  updateTwin(deviceId: string, patch: any, etag: string, done: HttpResponseCallback<Twin>): void;
+  updateTwin(deviceId: string, patch: any, etag: string): Promise<ResultWithHttpResponse<Twin>>;
+  updateTwin(deviceId: string, patch: any, etag: string, done?: HttpResponseCallback<Twin>): Promise<ResultWithHttpResponse<Twin>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_044: [The `updateTwin` method shall throw a `ReferenceError` if the `deviceId` argument is `undefined`, `null` or an empty string.]*/
       if (deviceId === null || deviceId === undefined || deviceId === '') throw new ReferenceError('deviceId cannot be \'' + deviceId + '\'');
@@ -743,12 +743,12 @@ export class Registry {
    *                                  the module twin has been updated since the etag was obtained.
    * @param {Function}    [done]      The optional callback that will be called with either an Error object or
    *                                  the module twin instance.
-   * @returns {Promise<ResultWithHttpResponse<any>> | void} Promise if no callback function was passed, void otherwise.
+   * @returns {Promise<ResultWithHttpResponse<Twin>> | void} Promise if no callback function was passed, void otherwise.
    * @throws {ReferenceError}         If the deviceId, moduleId, patch, etag, or done argument is falsy.
    */
-  updateModuleTwin(deviceId: string, moduleId: string, patch: any, etag: string, done: HttpResponseCallback<any>): void;
-  updateModuleTwin(deviceId: string, moduleId: string, patch: any, etag: string): Promise<ResultWithHttpResponse<any>>;
-  updateModuleTwin(deviceId: string, moduleId: string, patch: any, etag: string, done?: HttpResponseCallback<any>): Promise<ResultWithHttpResponse<any>> | void {
+  updateModuleTwin(deviceId: string, moduleId: string, patch: any, etag: string, done: HttpResponseCallback<Twin>): void;
+  updateModuleTwin(deviceId: string, moduleId: string, patch: any, etag: string): Promise<ResultWithHttpResponse<Twin>>;
+  updateModuleTwin(deviceId: string, moduleId: string, patch: any, etag: string, done?: HttpResponseCallback<Twin>): Promise<ResultWithHttpResponse<Twin>> | void {
     return httpCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_18_004: [The `updateModuleTwin` method shall throw a `ReferenceError` exception if `deviceId`, `moduleId`, `patch`, `etag`,or `done` is falsy. ]*/
       if (!deviceId) throw new ReferenceError('Argument \'deviceId\' cannot be falsy');

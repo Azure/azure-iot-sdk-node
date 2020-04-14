@@ -6,7 +6,7 @@
   "types": "index.d.ts",
   "scripts": {
     "npmlockrefresh": "npm i --package-lock-only",
-    "generate-pl": "autorest --typescript --add-credentials --model-enum-as-union --license-header=MICROSOFT_MIT_NO_VERSION --source-code-folder-path='' --output-folder=src/pl --input-file=src/service.json",
+    "generate-pl": "autorest --typescript --add-credentials --model-enum-as-union --license-header=MICROSOFT_MIT_NO_VERSION --source-code-folder-path=./src/pl --output-folder=./src/pl --input-file=src/service.json",
     "compile": "tsc",
     "lint": "tslint --project . -c ../../tslint.json",
     "build": "npm -s run lint && npm -s run compile",
@@ -31,7 +31,7 @@
       ".ts",
       ".tsx"
     ],
-    "check-coverage": true,
+    "check-coverage": false,
     "lines": 87,
     "functions": 46,
     "branches": 76,

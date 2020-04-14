@@ -5,15 +5,14 @@ const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubT
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 
 const connectionString = process.env.IOTHUB_CONNECTION_STRING;
-const componentInstanceName = process.env.IOTHUB_COMPONENT_INSTANCE_NAME; // for the environmental sensor, try "environmentalSensor"
-const commandName = process.env.IOTHUB_COMMAND_NAME; // for the environmental sensor, you can try "blink", "turnOff" or "turnOn"
-const commandArgument = process.env.IOTHUB_COMMAND_ARGUMENT; // for the environmental sensor, it really doesn't matter. any string will do.
+const deviceId = process.env.IOTHUB_DEVICE_ID;
+const componentName = process.env.IOTHUB_COMPONENT_NAME; // for the environmental sensor, try "environmentalSensor"
 
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
-// - invoke a command on a Digital Twin enabled device
+// - update a component
 async function main() {
-  // Environment variables have to be set
+  // IOTHUB_CONNECTION_STRING, IOTHUB_DEVICE_ID, IOTHUB_COMPONENT_NAME environment variables have to be set
   // Digital Twin enabled device must be exist on the IoT Hub
 
   try {
@@ -21,12 +20,17 @@ async function main() {
     const credentials = new IoTHubTokenCredentials(connectionString);
     const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-    // Invoke a command
-    console.log('invoking command ' + commandName + ' on component instance' + componentInstanceName + ' for device ' + deviceId + '...');
-    const invokeComponentCommandRespone = await digitalTwinServiceClient.invokeCommand(deviceId, componentInstanceName, commandName, commandArgument);
+    const patch = '<JSON patch goes here>';
+    console.log('patch:');
+    console.log(JSON.stringify(patch, null, 2));
+
+    console.log('updating ' + componentName + ' on device ' + deviceId + '...');
+    // Update component
+    const updateComponentResponse = await digitalTwinServiceClient.updateComponent(deviceId, patch);
 
     // Print the response
-    console.log(JSON.stringify(invokeComponentCommandRespone, null, 2));
+    console.log(componentName + ':');
+    console.log(JSON.stringify(updateComponentResponse.interfaces, null, 2));
   } catch (err) {
     console.log(err);
   }

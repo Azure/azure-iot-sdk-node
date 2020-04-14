@@ -5,13 +5,11 @@ const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubT
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 
 const connectionString = process.env.IOTHUB_CONNECTION_STRING;
-const componentInstanceName = process.env.IOTHUB_COMPONENT_INSTANCE_NAME; // for the environmental sensor, try "environmentalSensor"
-const commandName = process.env.IOTHUB_COMMAND_NAME; // for the environmental sensor, you can try "blink", "turnOff" or "turnOn"
-const commandArgument = process.env.IOTHUB_COMMAND_ARGUMENT; // for the environmental sensor, it really doesn't matter. any string will do.
+const modelId = process.env.IOTHUB_MODEL_NAME; // suggestion: urn:azureiot:Client:SDKInformation:1
 
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
-// - invoke a command on a Digital Twin enabled device
+// - get a Digital Twin Model by model ID
 async function main() {
   // Environment variables have to be set
   // Digital Twin enabled device must be exist on the IoT Hub
@@ -21,12 +19,11 @@ async function main() {
     const credentials = new IoTHubTokenCredentials(connectionString);
     const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-    // Invoke a command
-    console.log('invoking command ' + commandName + ' on component instance' + componentInstanceName + ' for device ' + deviceId + '...');
-    const invokeComponentCommandRespone = await digitalTwinServiceClient.invokeCommand(deviceId, componentInstanceName, commandName, commandArgument);
-
-    // Print the response
-    console.log(JSON.stringify(invokeComponentCommandRespone, null, 2));
+    // Get digital twin model
+    const digitalTwinModel = await digitalTwinServiceClient.getDigitalTwinModel(modelId);
+    const idName = '@id';
+    console.log('ModelId: ' + JSON.stringify(digitalTwinModel[idName], null, 2));
+    console.log('Model: ' + JSON.stringify(digitalTwinModel.contents, null, 2));
   } catch (err) {
     console.log(err);
   }
