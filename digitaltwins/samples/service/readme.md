@@ -34,7 +34,7 @@ node <sample_name.js>
 
 - `invoke_command.js` invokes a command on a device interface instance.
 - `get_digital_twin.js` gets the digital twin for a specific device.
-- `get_digital_twin_interfaceInstance.js` gets the data for a specific interface instance of a specific device.
+- `get_digital_twin_component.js` gets the data for a specific interface instance of a specific device.
 - `get_model.js` gets a model from the global repository.
 - `update_digital_twin_property.js` updates a single writable property on a digital twin.
 - `update_digital_twin.js` creates a patch to updates multiple writable properties on a digital twin, potentially on multiple interface instances.

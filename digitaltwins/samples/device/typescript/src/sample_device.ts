@@ -67,7 +67,7 @@ const environmentReadWriteCallback: PropertyChangedCallback = (interfaceObject: 
 };
 
 const exitHandler = (request: CommandRequest, response: CommandResponse) => {
-  console.log('received command: ' + request.commandName + ' for interfaceInstance: ' + request.interfaceInstanceName);
+  console.log('received command: ' + request.commandName + ' for component: ' + request.componentName);
   response.acknowledge(200, null, (err?: Error) => {
     if (err) {
       console.log('Acknowledge failed. Error is: ' + err.toString());
@@ -106,7 +106,7 @@ const main = async () => {
   }
 };
 
-dtClient.addInterfaceInstances(environmentalSensor, deviceInformation, exitInterface);
+dtClient.addComponents(environmentalSensor, deviceInformation, exitInterface);
 
 dtClient.enableCommands();
 

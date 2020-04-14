@@ -11,10 +11,10 @@ const DeviceInformation = require('./deviceInformation').DeviceInformation;
 let digitalTwinClient;
 
 
-const propertyUpdateHandler = async (interfaceInstance, propertyName, reportedValue, desiredValue, version) => {
+const propertyUpdateHandler = async (component, propertyName, reportedValue, desiredValue, version) => {
   console.log('Received an update for ' + propertyName + ': ' + JSON.stringify(desiredValue));
   try {
-    await digitalTwinClient.report(interfaceInstance, propertyName, desiredValue, {
+    await digitalTwinClient.report(component, propertyName, desiredValue, {
       code: 200,
       description: 'helpful descriptive text',
       version: version
@@ -26,7 +26,7 @@ const propertyUpdateHandler = async (interfaceInstance, propertyName, reportedVa
 };
 
 const commandHandler = (request, response) => {
-  console.log('received command: ' + request.commandName + ' for interfaceInstance: ' + request.interfaceInstanceName);
+  console.log('received command: ' + request.commandName + ' for component: ' + request.componentName);
   response.acknowledge(200, 'helpful response text')
     .then(() => console.log('acknowledgement succeeded.'))
     .catch(() => console.log('acknowledgement failed'));
@@ -43,7 +43,7 @@ async function main() {
   digitalTwinClient = DigitalTwinClient.fromConnectionString(capabilityModel, process.env.DEVICE_CONNECTION_STRING);
 
   // Add the interface instances to the Digital Twin Client
-  digitalTwinClient.addInterfaceInstances(
+  digitalTwinClient.addComponents(
     environmentalSensor,
     deviceInformation,
   );

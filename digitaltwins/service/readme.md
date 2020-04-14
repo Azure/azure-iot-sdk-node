@@ -50,9 +50,9 @@ const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
 console.log(JSON.stringify(digitalTwin, null, 2));
 
 // List interfaces by name
-for (const interfaceInstanceName in digitalTwin.interfaces) {
-  if (digitalTwin.interfaces.hasOwnProperty(interfaceInstanceName)) {
-    console.log(JSON.stringify(digitalTwin.interfaces[interfaceInstanceName]));
+for (const componentName in digitalTwin.interfaces) {
+  if (digitalTwin.interfaces.hasOwnProperty(componentName)) {
+    console.log(JSON.stringify(digitalTwin.interfaces[componentName]));
   }
 }
 ```

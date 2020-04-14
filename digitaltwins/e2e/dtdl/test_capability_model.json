@@ -4,7 +4,7 @@
   "displayName": "Test capability Model",
   "implements": [
     {
-      "name": "testInterfaceInstance",
+      "name": "testComponent",
       "schema": "urn:microsoft:azureiot:nodesdk:e2etest:1"
     }
   ],
