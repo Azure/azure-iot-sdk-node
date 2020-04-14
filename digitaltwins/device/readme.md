@@ -73,7 +73,7 @@ const environmentalSensor = new EnvironmentalSensor('environmentalSensor', prope
 
 const deviceClient = DeviceClient.fromConnectionString(process.argv[2], Mqtt);
 
-const capabilityModel = 'urn:azureiot:samplemodel:1';
+const capabilityModel = 'dtmi:azureiot:samplemodel;1';
 
 async function main() {
   const digitalTwinClient = new DigitalTwinClient(capabilityModel, deviceClient);

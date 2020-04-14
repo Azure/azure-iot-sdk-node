@@ -10,7 +10,7 @@ const Command = require('azure-iot-digitaltwins-device').Command;
 module.exports.EnvironmentalSensor = class EnvironmentalSensor extends BaseInterface {
   constructor(name, propertyCallback, commandCallback) {
     // Edit this to match your IoT Central solution
-    super(name, 'urn:{yourname}:sample_device:1', propertyCallback, commandCallback);
+    super(name, 'dtmi:{yourname}:sample_device;1', propertyCallback, commandCallback);
     this.temp = new Telemetry();
     this.humid = new Telemetry();
     this.state = new Property();

@@ -7,7 +7,7 @@ const uuid = require('uuid');
 
 function createInterfaceDocument() {
   interfaceSample = {
-    '@id': 'urn:microsoft:azureiot:node_sdk:sample:1',
+    '@id': 'dtmi:microsoft:azureiot:node_sdk:sample;1',
     '@type': 'Interface',
     'displayName': 'Azure IoT Node Service Client Library Sample',
     'contents': [

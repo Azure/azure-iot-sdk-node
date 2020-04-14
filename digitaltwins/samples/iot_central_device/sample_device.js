@@ -8,7 +8,7 @@ const SymmetricKeySecurityClient = require('azure-iot-security-symmetric-key').S
 const EnvironmentalSensor = require('./environmentalinterface').EnvironmentalSensor;
 
 // Edit this to match your IoT Central solution
-const capabilityModel = 'urn:{yourname}:sample_device:1';
+const capabilityModel = 'dtmi:{yourname}:sample_device;1';
 
 const registrationId = process.env.AZURE_IOT_PROVISIONING_REGISTRATION_ID;
 const idScope = process.env.AZURE_IOT_PROVISIONING_ID_SCOPE;
