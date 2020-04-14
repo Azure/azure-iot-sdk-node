@@ -40,7 +40,7 @@ describe('Private Model Repository CRUD operations', function () {
 
   it('can get an existing model from a private repository', function () {
     this.timeout(60000); // eslint-disable-line no-invalid-this
-    const modelInformationUrn = 'urn:azureiot:ModelDiscovery:ModelInformation:1';
+    const modelInformationUrn = 'dtmi:azureiot:ModelDiscovery:ModelInformation;1';
     debug('getting model: ' + modelInformationUrn);
     return modelRepositoryClient.getModel(modelInformationUrn, apiVersion, {
       repositoryId: creds.getRepositoryId()
@@ -171,7 +171,7 @@ describe('Global Model Repository CRUD operations', function () {
 
   it('can get a model from the global repository', function () {
     this.timeout(60000); // eslint-disable-line no-invalid-this
-    const modelInformationUrn = 'urn:azureiot:ModelDiscovery:ModelInformation:1';
+    const modelInformationUrn = 'dtmi:azureiot:ModelDiscovery:ModelInformation;1';
     debug('getting model: ' + modelInformationUrn);
     return modelRepositoryClient.getModel(modelInformationUrn, apiVersion, {
       'xMsClientRequestId': uuid.v4(),

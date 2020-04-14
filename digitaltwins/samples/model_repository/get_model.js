@@ -21,7 +21,7 @@ async function main() {
 
   const modelRepositoryCredentials = new ModelRepositoryCredentials(process.env.AZURE_IOT_MODEL_REPOSITORY_CONNECTION_STRING);
   const modelRepositoryServiceClient = new ModelRepositoryServiceClient(modelRepositoryCredentials);
-  const modelId = 'urn:azureiot:ModelDiscovery:ModelInformation:1';
+  const modelId = 'dtmi:azureiot:ModelDiscovery:ModelInformation;1';
 
   try {
     // The "options" argument is optional, see the description of the values below

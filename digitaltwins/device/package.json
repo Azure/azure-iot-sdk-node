@@ -7,8 +7,9 @@
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-device": "1.12.0-preview.2",
     "azure-iot-common": "1.12.0-preview.2",
+    "azure-iot-device": "1.12.0-preview.2",
+    "azure-iot-device-mqtt": "1.12.0-preview.2",
     "debug": "^4.1.1",
     "lodash": "^4.17.15",
     "traverse": "^0.6.6"
@@ -19,11 +20,11 @@
     "@types/traverse": "^0.6.32",
     "chai": "^4.2.0",
     "es5-shim": "^4.5.12",
+    "mocha": "^7.1.1",
+    "nyc": "^15.0.0",
     "sinon": "^7.4.1",
     "source-map-support": "^0.5.16",
     "ts-node": "^8.6.2",
-    "nyc": "^15.0.0",
-    "mocha": "^7.1.1",
     "tslint": "^6.1.0",
     "typescript": "2.9.2"
   },
