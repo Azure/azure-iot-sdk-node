@@ -37,9 +37,9 @@ $ node simple_sample.js
 
 ## What does this sample do?
 
-`environmentalinterface.js` shows how to create an interfaceInstance class based on the Environmental Sensor interface published in the global model repository.
+`environmentalinterface.js` shows how to create an component class based on the Environmental Sensor interface published in the global model repository.
 
 `sample_device.js` shows how to:
 - instantiate the `DigitalTwinClient`
-- instantiate the interfaceInstance created with `environmentalinterface.js`
+- instantiate the component created with `environmentalinterface.js`
 - Combine them together to send telmetry, handle commands, and handle property updates.

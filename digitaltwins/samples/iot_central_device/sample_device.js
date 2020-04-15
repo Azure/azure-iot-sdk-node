@@ -33,9 +33,9 @@ async function main() {
   const registrationResult = await provisioningClient.register();
   const deviceConnectionString = `HostName=${registrationResult.assignedHub};DeviceId=${registrationResult.deviceId};SharedAccessKey=${symmetricKey}`;
 
-  const propertyUpdateHandler = (interfaceInstance, propertyName, reportedValue, desiredValue, version) => {
+  const propertyUpdateHandler = (component, propertyName, reportedValue, desiredValue, version) => {
     console.log('Received an update for ' + propertyName + ': ' + JSON.stringify(desiredValue));
-    interfaceInstance[propertyName].report(desiredValue, {
+    component[propertyName].report(desiredValue, {
       code: 200,
       description: 'helpful descriptive text',
       version: version
@@ -45,7 +45,7 @@ async function main() {
   };
 
   const commandHandler = (request, response) => {
-    console.log('received command: ' + request.commandName + ' for interfaceInstance: ' + request.interfaceInstanceName);
+    console.log('received command: ' + request.commandName + ' for component: ' + request.componentName);
     response.acknowledge(200, 'helpful response text')
       .then(() => console.log('acknowledgement succeeded.'))
       .catch(() => console.log('acknowledgement failed'));
@@ -55,7 +55,7 @@ async function main() {
   const deviceClient = DeviceClient.fromConnectionString(deviceConnectionString, Mqtt);
 
   const digitalTwinClient = new DigitalTwinClient(capabilityModel, deviceClient);
-  digitalTwinClient.addInterfaceInstance(environmentalSensor);
+  digitalTwinClient.addComponents(environmentalSensor);
 
   await digitalTwinClient.register();
 

@@ -143,7 +143,7 @@ export class Telemetry {
  * comprised of any number of telemetry properties that utilize a promise
  * instead of callback.
  *
- * This is used for an interfaceInstance .sendTelemetry method.
+ * This is used for an component .sendTelemetry method.
  *
  * @param   telemetry               The object for the telemetry being sent to
  *                                  in the Digital Twin.
@@ -156,7 +156,7 @@ export type InterfaceTelemetryPromise = (telemetry: any) => Promise<void>;
  * comprised of any number of telemetry properties that utilize a callback
  * instead of a promise
  *
- * This is used for an interfaceInstance .sendTelemetry method.
+ * This is used for an component .sendTelemetry method.
  *
  * @param   telemetry               The object for the telemetry being sent to
  *                                  in the Digital Twin.
@@ -268,11 +268,11 @@ export interface CommandRequest {
    * The object that is an extension of the BaseInterface which contains
    * the command properties this callback will handle.
    */
-  interfaceInstance: BaseInterface;
+  component: BaseInterface;
   /*
    * The name of the interface instance for the commands that this callback will handle.
    */
-  interfaceInstanceName: string;
+  componentName: string;
   /*
    * The name of the command property that is to be invoked.
    */

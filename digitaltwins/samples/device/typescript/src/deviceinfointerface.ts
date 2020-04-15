@@ -18,8 +18,8 @@ export class DeviceInformation extends BaseInterface {
   totalStorage: Property;
   totalMemory: Property;
 
-  constructor(interfaceInstanceName: string) {
-    super(interfaceInstanceName, 'dtmi:azureiot:DeviceInformation;1');
+  constructor(componentName: string) {
+    super(componentName, 'dtmi:azureiot:DeviceInformation;1');
     this.manufacturer = new Property();
     this.model = new Property();
     this.swVersion = new Property();

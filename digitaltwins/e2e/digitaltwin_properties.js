@@ -13,7 +13,7 @@ const DeviceClient = require('azure-iot-device').Client;
 const Mqtt = require('azure-iot-device-mqtt').Mqtt;
 const ServiceConnectionString = require('azure-iothub').ConnectionString;
 const DeviceSas = require('azure-iot-device').SharedAccessSignature;
-const TestInterfaceInstance = require('./test_interfaceInstance').TestInterfaceInstance;
+const TestComponent = require('./test_component').TestComponent;
 const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubTokenCredentials;
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 
@@ -92,15 +92,15 @@ describe('Digital Twin Properties', function () {
         });
     };
 
-    debug('creating test interfaceInstance');
-    const interfaceInstanceName = 'testInterfaceInstance';
-    testInterfaceInstance = new TestInterfaceInstance(interfaceInstanceName, () => {}, () => {});
-    digitalTwinClient.addInterfaceInstance(testInterfaceInstance);
-    debug('registering digital twin client with test interfaceInstance');
+    debug('creating test component');
+    const componentName = 'testComponent';
+    testComponent = new TestComponent(componentName, () => {}, () => {});
+    digitalTwinClient.addComponents(testComponent);
+    debug('registering digital twin client with test component');
     digitalTwinClient.register()
       .then(() => {
         debug('reporting the property value of: ' + valueForReadOnlyProperty);
-        return testInterfaceInstance.readOnlyProperty.report(valueForReadOnlyProperty);
+        return testComponent.readOnlyProperty.report(valueForReadOnlyProperty);
       })
       .then(() => {
         debug('Getting the digital twin.');
@@ -108,10 +108,10 @@ describe('Digital Twin Properties', function () {
       })
       .then((serviceTwin) => {
         let currentValueOfProperty = null;
-        if (serviceTwin.interfaces[interfaceInstanceName].properties.readOnlyProperty &&
-            serviceTwin.interfaces[interfaceInstanceName].properties.readOnlyProperty.reported &&
-            serviceTwin.interfaces[interfaceInstanceName].properties.readOnlyProperty.reported.value) {
-          currentValueOfProperty = serviceTwin.interfaces[interfaceInstanceName].properties.readOnlyProperty.reported.value;
+        if (serviceTwin.interfaces[componentName].properties.readOnlyProperty &&
+            serviceTwin.interfaces[componentName].properties.readOnlyProperty.reported &&
+            serviceTwin.interfaces[componentName].properties.readOnlyProperty.reported.value) {
+          currentValueOfProperty = serviceTwin.interfaces[componentName].properties.readOnlyProperty.reported.value;
         }
         if (currentValueOfProperty !== valueForReadOnlyProperty) {
           debug('Did not match the expected guid.');
@@ -149,11 +149,11 @@ describe('Digital Twin Properties', function () {
         });
     };
 
-    const propertyUpdateCallback = (interfaceInstance, propertyName, reportedValue, desiredValue, version) => {
+    const propertyUpdateCallback = (component, propertyName, reportedValue, desiredValue, version) => {
       debug('got new desired value: ' + desiredValue);
       assert.strictEqual(desiredValue, desiredPropertyValue);
       debug('reporting successful update');
-      interfaceInstance.writableProperty.report(desiredValue, {
+      component.writableProperty.report(desiredValue, {
         code: 200,
         description: 'test',
         version: version
@@ -169,10 +169,10 @@ describe('Digital Twin Properties', function () {
               closeClients(deviceClient, err);
             } else {
               debug('service client: got digital twin');
-              assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.reported.value, desiredPropertyValue);
-              assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.reported.desiredState.code, 200);
-              assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.reported.desiredState.description, 'test');
-              assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.reported.desiredState.version, version);
+              assert.strictEqual(updatedDigitalTwin.interfaces.testComponent.properties.writableProperty.reported.value, desiredPropertyValue);
+              assert.strictEqual(updatedDigitalTwin.interfaces.testComponent.properties.writableProperty.reported.desiredState.code, 200);
+              assert.strictEqual(updatedDigitalTwin.interfaces.testComponent.properties.writableProperty.reported.desiredState.description, 'test');
+              assert.strictEqual(updatedDigitalTwin.interfaces.testComponent.properties.writableProperty.reported.desiredState.version, version);
               debug('all digital twin properties match - test successful');
               closeClients(deviceClient);
             }
@@ -181,11 +181,11 @@ describe('Digital Twin Properties', function () {
       });
     };
 
-    debug('creating test interfaceInstance');
-    const interfaceInstanceName = 'testInterfaceInstance';
-    testInterfaceInstance = new TestInterfaceInstance(interfaceInstanceName, propertyUpdateCallback, () => {});
-    digitalTwinClient.addInterfaceInstance(testInterfaceInstance);
-    debug('registering digital twin client with test interfaceInstance');
+    debug('creating test component');
+    const componentName = 'testComponent';
+    testComponent = new TestComponent(componentName, propertyUpdateCallback, () => {});
+    digitalTwinClient.addComponents(testComponent);
+    debug('registering digital twin client with test component');
     digitalTwinClient.register()
       .then(() => {
         debug('reporting the property value of: ' + valueForReadOnlyProperty);
@@ -194,7 +194,7 @@ describe('Digital Twin Properties', function () {
         debug('crafting patch and sending it');
         const patch = {
           interfaces: {
-            testInterfaceInstance: {
+            testComponent: {
               properties: {
                 writableProperty: {
                   desired: {
@@ -207,7 +207,7 @@ describe('Digital Twin Properties', function () {
         };
         return digitalTwinServiceClient.updateDigitalTwin(createdDevice.deviceId, patch);
       }).then((updatedDigitalTwin) => {
-        assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.desired.value, desiredPropertyValue);
+        assert.strictEqual(updatedDigitalTwin.interfaces.testComponent.properties.writableProperty.desired.value, desiredPropertyValue);
         debug('service client: twin successfully updated with desired property value: ' + desiredPropertyValue);
       })
       .catch((err) => {
@@ -239,11 +239,11 @@ describe('Digital Twin Properties', function () {
         });
     };
 
-    const propertyUpdateCallback = (interfaceInstance, propertyName, reportedValue, desiredValue, version) => {
+    const propertyUpdateCallback = (component, propertyName, reportedValue, desiredValue, version) => {
       debug('got desired property update: ' + desiredValue);
       if (desiredValue === desiredPropertyValue) {
         debug('responding to desired property update');
-        interfaceInstance.writableProperty.report(desiredValue, {
+        component.writableProperty.report(desiredValue, {
           code: 200,
           description: 'test',
           version: version
@@ -259,10 +259,10 @@ describe('Digital Twin Properties', function () {
                 closeClients(deviceClient, err);
               } else {
                 debug('got digital twin');
-                assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.reported.value, desiredPropertyValue);
-                assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.reported.desiredState.code, 200);
-                assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.reported.desiredState.description, 'test');
-                assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.reported.desiredState.version, version);
+                assert.strictEqual(updatedDigitalTwin.interfaces.testComponent.properties.writableProperty.reported.value, desiredPropertyValue);
+                assert.strictEqual(updatedDigitalTwin.interfaces.testComponent.properties.writableProperty.reported.desiredState.code, 200);
+                assert.strictEqual(updatedDigitalTwin.interfaces.testComponent.properties.writableProperty.reported.desiredState.description, 'test');
+                assert.strictEqual(updatedDigitalTwin.interfaces.testComponent.properties.writableProperty.reported.desiredState.version, version);
                 debug('all digital twin properties match: test successful');
                 closeClients(deviceClient);
               }
@@ -274,20 +274,20 @@ describe('Digital Twin Properties', function () {
       }
     };
 
-    debug('creating test interfaceInstance');
-    const interfaceInstanceName = 'testInterfaceInstance';
-    testInterfaceInstance = new TestInterfaceInstance(interfaceInstanceName, propertyUpdateCallback, () => {});
-    digitalTwinClient.addInterfaceInstance(testInterfaceInstance);
-    debug('registering digital twin client with test interfaceInstance');
+    debug('creating test component');
+    const componentName = 'testComponent';
+    testComponent = new TestComponent(componentName, propertyUpdateCallback, () => {});
+    digitalTwinClient.addComponents(testComponent);
+    debug('registering digital twin client with test component');
     digitalTwinClient.register()
       .then(() => {
         debug('reporting the property value of: ' + valueForReadOnlyProperty);
         return digitalTwinServiceClient.getDigitalTwin(createdDevice.deviceId);
       }).then(() => {
         debug('updating property directly');
-        return digitalTwinServiceClient.updateDigitalTwinProperty(createdDevice.deviceId, 'testInterfaceInstance', 'writableProperty', desiredPropertyValue);
+        return digitalTwinServiceClient.updateDigitalTwinProperty(createdDevice.deviceId, 'testComponent', 'writableProperty', desiredPropertyValue);
       }).then((updatedDigitalTwin) => {
-        assert.strictEqual(updatedDigitalTwin.interfaces.testInterfaceInstance.properties.writableProperty.desired.value, desiredPropertyValue);
+        assert.strictEqual(updatedDigitalTwin.interfaces.testComponent.properties.writableProperty.desired.value, desiredPropertyValue);
         debug('service client: twin successfully updated with desired property value: ' + desiredPropertyValue);
       })
       .catch((err) => {

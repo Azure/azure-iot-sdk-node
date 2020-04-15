@@ -23,8 +23,8 @@ export class EnvironmentalSensor extends BaseInterface {
   name: Property;
   brightness: Property;
 
-  constructor(interfaceInstanceName: string, propertyChangedCallback?: PropertyChangedCallback, commandCallback?: CommandCallback) {
-    super(interfaceInstanceName, 'dtmi:contoso:com:EnvironmentalSensor;1', propertyChangedCallback, commandCallback);
+  constructor(componentName: string, propertyChangedCallback?: PropertyChangedCallback, commandCallback?: CommandCallback) {
+    super(componentName, 'dtmi:contoso:com:EnvironmentalSensor;1', propertyChangedCallback, commandCallback);
     this.temp = new Telemetry();
     this.humid = new Telemetry();
     this.state = new Property();

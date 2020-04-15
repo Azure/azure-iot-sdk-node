@@ -28,13 +28,13 @@ const hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 const hubHostName = ServiceConnectionString.parse(hubConnectionString).HostName;
 const credentials = new IoTHubTokenCredentials(hubConnectionString);
 
-const TestInterfaceInstance = require('./test_interfaceInstance').TestInterfaceInstance;
+const TestComponent = require('./test_component').TestComponent;
 
 describe('Digital Twin Invoke Command', function () {
   const deviceDescription = {
     deviceId: 'node-e2e-digitaltwin-invoke-command-' + uuid.v4()
   };
-  const testInterfaceInstanceName = 'testInterfaceInstance';
+  const testComponentName = 'testComponent';
   const syncCommandName = 'syncCommand';
   const asyncCommandName = 'asyncCommand';
   const invokeCommandArgument = 'testInvokeCommandArgument';
@@ -77,7 +77,7 @@ describe('Digital Twin Invoke Command', function () {
     const digitalTwinClient = new DigitalTwinDeviceClient(capabilityModelDocument['@id'], deviceClient);
     const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-    const testInterfaceInstance = new TestInterfaceInstance(testInterfaceInstanceName, function () {}, (request, response) => {
+    const testComponent = new TestComponent(testComponentName, function () {}, (request, response) => {
       debug('command handler invoked');
       assert.isNotNull(request);
       assert.strictEqual(request.commandName, syncCommandName);
@@ -92,14 +92,14 @@ describe('Digital Twin Invoke Command', function () {
         }
       });
     });
-    digitalTwinClient.addInterfaceInstance(testInterfaceInstance);
+    digitalTwinClient.addComponents(testComponent);
 
     debug('device client: registering');
     digitalTwinClient.register()
       .then(function () {
         debug('device client: registred and ready to receive commands.');
         debug('service client: invoke the sync command');
-        return digitalTwinServiceClient.invokeCommand(deviceDescription.deviceId, testInterfaceInstanceName, syncCommandName, invokeCommandArgument);
+        return digitalTwinServiceClient.invokeCommand(deviceDescription.deviceId, testComponentName, syncCommandName, invokeCommandArgument);
       })
       .then(function (response) {
         debug('service client: command response received');
@@ -158,7 +158,7 @@ describe('Digital Twin Invoke Command', function () {
       closeClients(deviceClient, ehClient, done, err);
     };
 
-    const testInterfaceInstance = new TestInterfaceInstance(testInterfaceInstanceName, function () {}, (request, response) => {
+    const testComponent = new TestComponent(testComponentName, function () {}, (request, response) => {
       debug('command handler invoked');
       assert.isNotNull(request);
       if (request.commandName === asyncCommandName) {
@@ -184,7 +184,7 @@ describe('Digital Twin Invoke Command', function () {
         });
       }
     });
-    digitalTwinClient.addInterfaceInstance(testInterfaceInstance);
+    digitalTwinClient.addComponents(testComponent);
 
     debug('event hubs client: creating...');
     startEventHubsClient(onEventHubMessage, onEventHubError, startAfterTime, 3000)
@@ -196,7 +196,7 @@ describe('Digital Twin Invoke Command', function () {
       }).then(() => {
         debug('device client: registered');
         debug('service client: invoke the async command');
-        return digitalTwinServiceClient.invokeCommand(deviceDescription.deviceId, testInterfaceInstanceName, asyncCommandName, 'arg');
+        return digitalTwinServiceClient.invokeCommand(deviceDescription.deviceId, testComponentName, asyncCommandName, 'arg');
       }).then((response) => {
         debug('service client: command response received');
         assert.strictEqual(200, response.statusCode);

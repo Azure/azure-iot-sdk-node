@@ -10,7 +10,7 @@ const DeviceClient = require('azure-iot-device').Client;
 const Mqtt = require('azure-iot-device-mqtt').Mqtt;
 const ServiceConnectionString = require('azure-iothub').ConnectionString;
 const DeviceSas = require('azure-iot-device').SharedAccessSignature;
-const TestInterfaceInstance = require('./test_interfaceInstance').TestInterfaceInstance;
+const TestComponent = require('./test_component').TestComponent;
 
 const createModel = require('./model_repository_helper').createModel;
 
@@ -75,8 +75,8 @@ describe('Digital Twin Telemetry', function () {
     const deviceSas = DeviceSas.create(hubHostName, createdDevice.deviceId, createdDevice.authentication.symmetricKey.primaryKey, deviceSasExpiry);
     const deviceClient = DeviceClient.fromSharedAccessSignature(deviceSas, Mqtt);
     const digitalTwinClient = new DigitalTwinDeviceClient(capabilityModelDocument['@id'], deviceClient);
-    const testInterfaceInstance = new TestInterfaceInstance('testInterfaceInstance', function () {}, function () {});
-    digitalTwinClient.addInterfaceInstance(testInterfaceInstance);
+    const testComponent = new TestComponent('testComponent', function () {}, function () {});
+    digitalTwinClient.addComponents(testComponent);
 
     const onEventHubMessage = function (eventData) {
       if (eventData.annotations['iothub-connection-device-id'] === createdDevice.deviceId) {
@@ -101,11 +101,11 @@ describe('Digital Twin Telemetry', function () {
       .then((client) => {
         debug('event hubs client: started');
         ehClient = client;
-        debug('registering digital twin client with test interfaceInstance');
+        debug('registering digital twin client with test component');
         return digitalTwinClient.register();
       }).then(function () {
         debug('digital twin client registered. sending telemetry: ' + testTelemetryBody);
-        return testInterfaceInstance.telemetry.send(testTelemetryBody);
+        return testComponent.telemetry.send(testTelemetryBody);
       }).then(() => {
         debug('telemetry sent: ' + testTelemetryBody);
       }).catch((err) => {
@@ -129,8 +129,8 @@ describe('Digital Twin Telemetry', function () {
     const deviceSas = DeviceSas.create(hubHostName, createdDevice.deviceId, createdDevice.authentication.symmetricKey.primaryKey, deviceSasExpiry);
     const deviceClient = DeviceClient.fromSharedAccessSignature(deviceSas, Mqtt);
     const digitalTwinClient = new DigitalTwinDeviceClient(capabilityModelDocument['@id'], deviceClient);
-    const testInterfaceInstance = new TestInterfaceInstance('testInterfaceInstance', function () {}, function () {});
-    digitalTwinClient.addInterfaceInstance(testInterfaceInstance);
+    const testComponent = new TestComponent('testComponent', function () {}, function () {});
+    digitalTwinClient.addComponents(testComponent);
 
     const onEventHubMessage = function (eventData) {
       if (eventData.annotations['iothub-connection-device-id'] === createdDevice.deviceId) {
@@ -157,11 +157,11 @@ describe('Digital Twin Telemetry', function () {
       .then((client) => {
         debug('event hubs client: started');
         ehClient = client;
-        debug('registering digital twin client with test interfaceInstance');
+        debug('registering digital twin client with test component');
         return digitalTwinClient.register();
       }).then(function () {
         debug('digital twin client registered. sending telemetry: ' + testTelemetryBody);
-        return testInterfaceInstance.sendTelemetry(testTelemetryBody);
+        return testComponent.sendTelemetry(testTelemetryBody);
       }).then(() => {
         debug('telemetry sent: ' + testTelemetryBody);
       }).catch((err) => {
