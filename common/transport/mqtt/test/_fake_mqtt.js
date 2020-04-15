@@ -49,6 +49,65 @@ var FakeMqtt = function() {
   });
 };
 
-util.inherits(FakeMqtt, EventEmitter);
+var PubFakeMqtt = function() {
+  EventEmitter.call(this);
+  this.callbackArray = []
+  this.publish = sinon.stub().callsFake((topic, message, options, callback) => {
+    this.callbackArray.push(callback);
+    if (this.callbackArray.length === 4) {
+      process.nextTick(() => {
+        this.callbackArray[3]();
+        this.callbackArray[0]();
+        this.callbackArray[2]();
+        this.callbackArray[1]();
+      });
+    }
+  });
 
-module.exports = FakeMqtt;
+  this.connect = sinon.stub().callsFake(function() {
+    return this;
+  });
+
+  this.end = sinon.stub().callsFake(function (force, callback) {
+    callback();
+  });
+};
+
+var PubACKTwiceFakeMqtt = function() {
+  EventEmitter.call(this);
+  this.publish = sinon.stub().callsFake((topic, message, options, callback) => {
+    callback();
+    callback();
+  });
+
+  this.connect = sinon.stub().callsFake(function() {
+    return this;
+  });
+
+  this.end = sinon.stub().callsFake(function (force, callback) {
+    callback();
+  });
+};
+
+var ErrorFakeMqtt = function() {
+  EventEmitter.call(this);
+  this.callbackArray = [];
+  this.publish = sinon.stub().callsFake((topic, message, options, callback) => {
+    this.callbackArray.push(callback);
+  });
+
+  this.connect = sinon.stub().callsFake(function() {
+    return this;
+  });
+
+  this.end = sinon.stub().callsFake(function (force, callback) {
+    callback();
+  });
+};
+
+util.inherits(FakeMqtt, EventEmitter);
+util.inherits(PubFakeMqtt, EventEmitter);
+util.inherits(PubACKTwiceFakeMqtt, EventEmitter);
+util.inherits(ErrorFakeMqtt, EventEmitter);
+
+module.exports = { FakeMqtt, PubFakeMqtt, PubACKTwiceFakeMqtt, ErrorFakeMqtt };

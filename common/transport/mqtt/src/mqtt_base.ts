@@ -6,25 +6,41 @@
 import { EventEmitter } from 'events';
 import * as machina from 'machina';
 import { Client as MqttClient, IClientOptions, IClientPublishOptions, IClientSubscribeOptions } from 'mqtt';
+import * as uuid from 'uuid';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-mqtt-base:MqttBase');
 import { errors, results, SharedAccessSignature, X509 } from 'azure-iot-common';
 
-/*Codes_SRS_NODE_COMMON_MQTT_BASE_16_004: [The `MqttBase` constructor shall instanciate the default MQTT.JS library if no argument is passed to it.]*/
+
+class OnTheWirePublish {
+  enqueuedTimeSecondsSinceEpoch: Number;
+  publishCallback: (err?: Error, result?: any) => void;
+  identifier: string;
+  constructor(enqueuedTimeSecondsSinceEpoch: Number, publishCallback: (err?: Error, result?: any) => void, identifier: string) {
+    this.enqueuedTimeSecondsSinceEpoch = enqueuedTimeSecondsSinceEpoch;
+    this.publishCallback = publishCallback;
+    this.identifier = identifier;
+  }
+}
+
+
+/*Codes_SRS_NODE_COMMON_MQTT_BASE_16_004: [The `MqttBase` constructor shall instantiate the default MQTT.JS library if no argument is passed to it.]*/
 /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_005: [The `MqttBase` constructor shall use the object passed as argument instead of the default MQTT.JS library if it's not falsy.]*/
 /**
  * @private
  */
 export class MqttBase extends EventEmitter {
-  private mqttprovider: any;
+  private mqttProvider: any;
   private _config: MqttBaseTransportConfig;
   private _mqttClient: MqttClient;
   private _fsm: any;
   private _options: any;
+  private _publishesOnTheWire: { [uuidKey: string]: OnTheWirePublish };
 
-  constructor(mqttprovider?: any) {
+  constructor(mqttProvider?: any) {
     super();
-    this.mqttprovider = mqttprovider ? mqttprovider : require('mqtt');
+    this.mqttProvider = mqttProvider ? mqttProvider : require('mqtt');
+    this._publishesOnTheWire = {};
 
     this._fsm = new machina.Fsm({
       namespace: 'mqtt-base',
@@ -32,15 +48,33 @@ export class MqttBase extends EventEmitter {
       states: {
         disconnected: {
           _onEnter: (callback, err) => {
-            if (this._mqttClient) {
-              this._mqttClient.removeAllListeners();
-              this._mqttClient = undefined;
-            }
-
+            debug('In MQTT base FSM - entered onEnter for disconnect');
+            //
+            // The semantics of this _onEnter for the disconnected state (which is the initial state)
+            // is that we got here from another one of the states of this FSM.
+            //
+            // So there was a disconnection.
+            //
+            // If there are any outstanding publishes, fail them.  We will never see
+            // their acknowledgements (PUBACK).  It is important to acknowledge that
+            // the publishes that were "on the wire", might indeed make it to the peer.  We'll
+            // never know.  If the code further up the stack retries, we could indeed get
+            // duplication of published data.  Nothing we can really do about it.
+            //
+            this._purgePublishesOnTheWire(err);
+            //
+            // One of the other states was able to pass along a callback.  Use it to finish up whatever
+            // operation the state machine was working on.
+            //
+            // If there is no callback present, the clear implication is that something pretty major occurred,
+            // NOT in the context of any particular operation.  There is NO operation that this error can be reported
+            // as a result for.  Hence we emit the 'error' event.
+            //
             if (callback) {
               callback(err);
             } else {
               if (err) {
+                debug('In mqtt base - no callback for error - emitting \'error\': ' + this._errorDescription(err));
                 this.emit('error', err);
               }
             }
@@ -63,8 +97,9 @@ export class MqttBase extends EventEmitter {
           _onEnter: (connectCallback) => {
             this._connectClient((err, connack) => {
               if (err) {
-                this._fsm.transition('disconnected', connectCallback, err);
+                this._fsm.transition('disconnecting', connectCallback, err);
               } else {
+                this._mqttClient.on('error', this._errorCallback.bind(this));
                 this._fsm.transition('connected', connectCallback, connack);
               }
             });
@@ -75,20 +110,31 @@ export class MqttBase extends EventEmitter {
           '*': () => this._fsm.deferUntilTransition()
         },
         connected: {
-          _onEnter: (connectCallback, conack) => {
-            this._mqttClient.on('close', () => {
-              debug('close event received from mqtt.js client - no error');
-              this._fsm.handle('closeEvent');
-            });
-            connectCallback(null, new results.Connected(conack));
+          _onEnter: (connectCallback, connack) => {
+            this._mqttClient.on('close', this._closeCallback.bind(this));
+            connectCallback(null, new results.Connected(connack));
           },
           connect: (callback) => callback(null, new results.Connected()),
           disconnect: (callback) => this._fsm.transition('disconnecting', callback),
           publish: (topic, payload, options, callback) => {
+            const thisPublishIdentifier = uuid.v4();
+            this._publishesOnTheWire[thisPublishIdentifier] = new OnTheWirePublish(Math.floor( Date.now() / 1000 ), callback, thisPublishIdentifier);
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_017: [The `publish` method publishes a `payload` on a `topic` using `options`.]*/
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_021: [The  `publish` method shall call `publish` on the mqtt client object and call the `callback` argument with `null` and the `puback` object if it succeeds.]*/
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_022: [The `publish` method shall call the `callback` argument with an Error if the operation fails.]*/
-            this._mqttClient.publish(topic, payload, options, callback);
+            this._mqttClient.publish(topic, payload, options, (err, result) => {
+              //
+              // The publish may have timed out or had an error, we would have already invoked the callback in the timeout code and
+              // removed it from the dictionary.
+              //
+              // No need to try to do that again.
+              //
+              let current = this._publishesOnTheWire[thisPublishIdentifier];
+              if (current) {
+                delete this._publishesOnTheWire[thisPublishIdentifier];
+                current.publishCallback(err, result);
+              }
+            });
           },
           subscribe: (topic, options, callback) => {
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_12_008: [The `subscribe` method shall call `subscribe`  on MQTT.JS  library and pass it the `topic` and `options` arguments.]*/
@@ -142,6 +188,7 @@ export class MqttBase extends EventEmitter {
                     this._fsm.transition('disconnected', callback, err);
                   } else {
                     debug('mqtt client reconnected successfully');
+                    this._mqttClient.on('error', this._errorCallback.bind(this));
                     this._fsm.transition('connected', callback, connack);
                   }
                 });
@@ -280,6 +327,7 @@ export class MqttBase extends EventEmitter {
     const createErrorCallback = (eventName) => {
       return (error) => {
         debug('received \'' + eventName + '\' from mqtt client');
+        debug(' error supplied is: ' + this._errorDescription(error));
         const err = error || new errors.NotConnectedError('Unable to establish a connection');
         callback(err);
       };
@@ -289,14 +337,9 @@ export class MqttBase extends EventEmitter {
     const closeCallback = createErrorCallback('close');
     const offlineCallback = createErrorCallback('offline');
     const disconnectCallback = createErrorCallback('disconnect');
-    const messageCallback = (topic, payload) => {
-      process.nextTick(() => {
-        this.emit('message', topic, payload);
-      });
-    };
 
-    this._mqttClient = this.mqttprovider.connect(this._config.uri, options);
-    this._mqttClient.on('message', messageCallback);
+    this._mqttClient = this.mqttProvider.connect(this._config.uri, options);
+    this._mqttClient.on('message', this._messageCallback.bind(this));
     this._mqttClient.on('error', errorCallback);
     this._mqttClient.on('close', closeCallback);
     this._mqttClient.on('offline', offlineCallback);
@@ -306,6 +349,7 @@ export class MqttBase extends EventEmitter {
       debug('Device is connected');
       debug('CONNACK: ' + JSON.stringify(connack));
 
+      this._mqttClient.removeListener('error', errorCallback);
       this._mqttClient.removeListener('close', closeCallback);
       this._mqttClient.removeListener('offline', offlineCallback);
       this._mqttClient.removeListener('disconnect', disconnectCallback);
@@ -318,9 +362,51 @@ export class MqttBase extends EventEmitter {
     debug('removing all listeners');
     this._mqttClient.removeAllListeners();
     debug('adding null error listener');
-    this._mqttClient.on('error', () => { /* null listener */ });
+    this._mqttClient.on('error', this._nullErrorCallback);
     /* Codes_SRS_NODE_COMMON_MQTT_BASE_16_001: [The disconnect method shall call the done callback when the connection to the server has been closed.] */
     this._mqttClient.end(forceDisconnect, callback);
+  }
+
+  private _purgePublishesOnTheWire(err?: Error): void {
+    const errorForPurgedPublish = err || new errors.NotConnectedError('Connect was lost');
+    const existingPublishes = this._publishesOnTheWire;
+    this._publishesOnTheWire = {};
+    Object.keys(existingPublishes).forEach((messageIdentifier: string): void => {
+      existingPublishes[messageIdentifier].publishCallback(errorForPurgedPublish);
+    });
+  }
+
+  private _errorCallback(err: Error): void {
+    debug('In base mqtt - error event received from mqtt.js client - error is: ' + this._errorDescription(err));
+    this._fsm.transition('disconnecting', null, err);
+  }
+
+  private _closeCallback(): void {
+    debug('In base mqtt - close event received from mqtt.js client - no error');
+    this._fsm.handle('closeEvent');
+  }
+
+  private _nullErrorCallback(): void {
+    return;
+  }
+
+  private _errorDescription(err?: Error): string {
+    return (
+      (err) ?
+        (
+          ((err as any).code) ||
+          ((err as any).name) ||
+          ((err as any).message) ||
+          ('An error with no description')
+        ) :
+        ('no error supplied')
+    );
+  }
+
+  private _messageCallback(topic: string, payload: any): void {
+    process.nextTick(() => {
+      this.emit('message', topic, payload);
+    });
   }
 }
 
@@ -335,4 +421,3 @@ export interface MqttBaseTransportConfig {
   clean?: boolean;
   uri: string;
 }
-
