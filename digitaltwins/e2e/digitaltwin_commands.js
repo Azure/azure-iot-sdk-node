@@ -92,7 +92,7 @@ describe('Digital Twin Invoke Command', function () {
         }
       });
     });
-    digitalTwinClient.addComponent(testComponent);
+    digitalTwinClient.addComponents(testComponent);
 
     debug('device client: registering');
     digitalTwinClient.register()
@@ -184,7 +184,7 @@ describe('Digital Twin Invoke Command', function () {
         });
       }
     });
-    digitalTwinClient.addComponent(testComponent);
+    digitalTwinClient.addComponents(testComponent);
 
     debug('event hubs client: creating...');
     startEventHubsClient(onEventHubMessage, onEventHubError, startAfterTime, 3000)

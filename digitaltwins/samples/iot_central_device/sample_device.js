@@ -55,7 +55,7 @@ async function main() {
   const deviceClient = DeviceClient.fromConnectionString(deviceConnectionString, Mqtt);
 
   const digitalTwinClient = new DigitalTwinClient(capabilityModel, deviceClient);
-  digitalTwinClient.addComponent(environmentalSensor);
+  digitalTwinClient.addComponents(environmentalSensor);
 
   await digitalTwinClient.register();
 

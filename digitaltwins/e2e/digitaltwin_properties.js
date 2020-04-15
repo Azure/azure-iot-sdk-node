@@ -95,7 +95,7 @@ describe('Digital Twin Properties', function () {
     debug('creating test component');
     const componentName = 'testComponent';
     testComponent = new TestComponent(componentName, () => {}, () => {});
-    digitalTwinClient.addComponent(testComponent);
+    digitalTwinClient.addComponents(testComponent);
     debug('registering digital twin client with test component');
     digitalTwinClient.register()
       .then(() => {
@@ -184,7 +184,7 @@ describe('Digital Twin Properties', function () {
     debug('creating test component');
     const componentName = 'testComponent';
     testComponent = new TestComponent(componentName, propertyUpdateCallback, () => {});
-    digitalTwinClient.addComponent(testComponent);
+    digitalTwinClient.addComponents(testComponent);
     debug('registering digital twin client with test component');
     digitalTwinClient.register()
       .then(() => {
@@ -277,7 +277,7 @@ describe('Digital Twin Properties', function () {
     debug('creating test component');
     const componentName = 'testComponent';
     testComponent = new TestComponent(componentName, propertyUpdateCallback, () => {});
-    digitalTwinClient.addComponent(testComponent);
+    digitalTwinClient.addComponents(testComponent);
     debug('registering digital twin client with test component');
     digitalTwinClient.register()
       .then(() => {

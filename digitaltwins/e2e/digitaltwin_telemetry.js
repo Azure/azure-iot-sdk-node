@@ -76,7 +76,7 @@ describe('Digital Twin Telemetry', function () {
     const deviceClient = DeviceClient.fromSharedAccessSignature(deviceSas, Mqtt);
     const digitalTwinClient = new DigitalTwinDeviceClient(capabilityModelDocument['@id'], deviceClient);
     const testComponent = new TestComponent('testComponent', function () {}, function () {});
-    digitalTwinClient.addComponent(testComponent);
+    digitalTwinClient.addComponents(testComponent);
 
     const onEventHubMessage = function (eventData) {
       if (eventData.annotations['iothub-connection-device-id'] === createdDevice.deviceId) {
@@ -130,7 +130,7 @@ describe('Digital Twin Telemetry', function () {
     const deviceClient = DeviceClient.fromSharedAccessSignature(deviceSas, Mqtt);
     const digitalTwinClient = new DigitalTwinDeviceClient(capabilityModelDocument['@id'], deviceClient);
     const testComponent = new TestComponent('testComponent', function () {}, function () {});
-    digitalTwinClient.addComponent(testComponent);
+    digitalTwinClient.addComponents(testComponent);
 
     const onEventHubMessage = function (eventData) {
       if (eventData.annotations['iothub-connection-device-id'] === createdDevice.deviceId) {

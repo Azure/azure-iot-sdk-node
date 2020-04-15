@@ -77,7 +77,7 @@ const capabilityModel = 'dtmi:azureiot:samplemodel;1';
 
 async function main() {
   const digitalTwinClient = new DigitalTwinClient(capabilityModel, deviceClient);
-  digitalTwinClient.addComponent(environmentalSensor);
+  digitalTwinClient.addComponents(environmentalSensor);
   await digitalTwinClient.register();
   await environmentalSensor.sendTelemetry({temp: 65.5, humid: 12.2});
   console.log('Done sending telemetry.');
