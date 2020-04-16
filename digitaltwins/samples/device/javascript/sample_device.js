@@ -13,23 +13,18 @@ let digitalTwinClient;
 
 const propertyUpdateHandler = async (component, propertyName, reportedValue, desiredValue, version) => {
   console.log('Received an update for ' + propertyName + ': ' + JSON.stringify(desiredValue));
-  try {
-    await digitalTwinClient.report(component, propertyName, desiredValue, {
-      code: 200,
-      description: 'helpful descriptive text',
-      version: version
-    });
-    console.log('updated the property');
-  } catch (e) {
-    console.log('failed to update the property');
-  }
+  await digitalTwinClient.report(component, { [propertyName]: desiredValue }, {
+    code: 200,
+    description: 'helpful descriptive text',
+    version: version
+  });
+  console.log('updated the property');
 };
 
 const commandHandler = (request, response) => {
   console.log('received command: ' + request.commandName + ' for component: ' + request.componentName);
   response.acknowledge(200, 'helpful response text')
-    .then(() => console.log('acknowledgement succeeded.'))
-    .catch(() => console.log('acknowledgement failed'));
+    .then(() => console.log('acknowledgement succeeded.'));
 };
 
 
@@ -73,7 +68,7 @@ async function main() {
 
   await digitalTwinClient.report(environmentalSensor, { state: true });
 
-  // send telemetry every 5 seconds
+  console.log('Sending telemtry every 5 seconds.  We won\'t print them out because it\'s tedious to watch.');
   setInterval( async () => {
     await digitalTwinClient.sendTelemetry(environmentalSensor, { temp: 1 + (Math.random() * 90), humid: 1 + (Math.random() * 99) });
   }, 5000);
