@@ -40,16 +40,6 @@ const environmentCommandCallback: CommandCallback = (request: CommandRequest, re
         if (err) {
           console.log('responding to the runDiagnostics command failed ' + err.toString());
         }
-        // response.update(200, 'runDiagnostics updated response', (updateError?: Error) => {
-        //   if (updateError) {
-        //     console.log('got an error on the update Response ' + updateError.toString());
-        //   }
-        // });
-        response.update(200, 'runDiagnostics updated response')
-           .then(() => {
-            console.log('in the then for the update.');
-           })
-           .catch((err: Error) => {console.log('Got an error on the update: ' + err.toString());});
       });
       break;
     }
@@ -57,7 +47,7 @@ const environmentCommandCallback: CommandCallback = (request: CommandRequest, re
 };
 
 const environmentReadWriteCallback: PropertyChangedCallback = (interfaceObject: BaseInterface, propertyName: string, reportedValue: any, desiredValue: any, version: number) => {
-  interfaceObject[propertyName].report(desiredValue + ' the boss', {responseVersion: version, statusCode: 200, statusDescription: 'a promotion'}, (err: Error) => {
+  dtClient.report(interfaceObject, { [propertyName]: desiredValue + ' the boss' }, {version: version, code: 200, description: 'a promotion'}, (err?: Error) => {
     if (err) {
       console.log('did not do the update');
     } else {
@@ -99,7 +89,7 @@ const main = async () => {
 
     // send telemetry every 5 seconds
     setInterval( async () => {
-      await environmentalSensor.sendTelemetry( { temp: 10 + (Math.random() * 90), humid: 1 + (Math.random() * 99) } );
+      await dtClient.sendTelemetry( environmentalSensor, { temp: 10 + (Math.random() * 90), humid: 1 + (Math.random() * 99) } );
     }, 5000);
   } catch (err) {
     console.log('error from operation is: ' + err.toString());
