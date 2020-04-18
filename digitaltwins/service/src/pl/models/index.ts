@@ -18,7 +18,7 @@ export interface ConfigurationMetrics {
 }
 
 /**
- * Configuration Content for Devices or Modules on iotEdge Devices.
+ * Configuration Content for Devices or Modules on Edge Devices.
  */
 export interface ConfigurationContent {
   /**
@@ -83,20 +83,6 @@ export interface Configuration {
    * Gets or sets configuration's ETag
    */
   etag?: string;
-}
-
-/**
- * Base class for serializable value of indetermined type.
- */
-export interface VariantValue {
-  /**
-   * **NOTE: This property will not be serialized. It can only be populated by the server.**
-   */
-  readonly objectValue?: any;
-  /**
-   * **NOTE: This property will not be serialized. It can only be populated by the server.**
-   */
-  readonly isNull?: boolean;
 }
 
 /**
@@ -189,6 +175,7 @@ export interface Device {
   authentication?: AuthenticationMechanism;
   capabilities?: DeviceCapabilities;
   deviceScope?: string;
+  parentScopes?: string[];
 }
 
 /**
@@ -256,6 +243,7 @@ export interface ExportImportDevice {
    */
   capabilities?: DeviceCapabilities;
   deviceScope?: string;
+  parentScopes?: string[];
 }
 
 /**
@@ -279,18 +267,19 @@ export interface DeviceRegistryOperationError {
    * 'EtagDoesNotMatch', 'RequestTimedOut', 'UnsupportedOperationOnReplica', 'NullMessage',
    * 'ConnectionForcefullyClosedOnNewConnection', 'InvalidDeviceScope',
    * 'ConnectionForcefullyClosedOnFaultInjection', 'ConnectionRejectedOnFaultInjection',
-   * 'InvalidEndpointAuthenticationType', 'ManagedIdentityNotEnabled', 'InvalidRouteTestInput',
-   * 'InvalidSourceOnRoute', 'RoutingNotEnabled', 'InvalidContentEncodingOrType',
-   * 'InvalidEndorsementKey', 'InvalidRegistrationId', 'InvalidStorageRootKey',
-   * 'InvalidEnrollmentGroupId', 'TooManyEnrollments', 'RegistrationIdDefinedMultipleTimes',
-   * 'CustomAllocationFailed', 'CustomAllocationIotHubNotSpecified',
-   * 'CustomAllocationUnauthorizedAccess', 'CannotRegisterModuleToModule',
-   * 'TenantHubRoutingNotEnabled', 'InvalidConfigurationTargetCondition',
-   * 'InvalidConfigurationContent', 'CannotModifyImmutableConfigurationContent',
-   * 'InvalidConfigurationCustomMetricsQuery', 'InvalidPnPInterfaceDefinition',
-   * 'InvalidPnPDesiredProperties', 'InvalidPnPReportedProperties',
-   * 'InvalidPnPWritableReportedProperties', 'InvalidDigitalTwinJsonPatch', 'GenericUnauthorized',
-   * 'IotHubNotFound', 'IotHubUnauthorizedAccess', 'IotHubUnauthorized', 'ElasticPoolNotFound',
+   * 'InvalidEndpointAuthenticationType', 'ManagedIdentityNotEnabled', 'InvalidDigitalTwinPayload',
+   * 'InvalidDigitalTwinPatch', 'InvalidRouteTestInput', 'InvalidSourceOnRoute',
+   * 'RoutingNotEnabled', 'InvalidContentEncodingOrType', 'InvalidEndorsementKey',
+   * 'InvalidRegistrationId', 'InvalidStorageRootKey', 'InvalidEnrollmentGroupId',
+   * 'TooManyEnrollments', 'RegistrationIdDefinedMultipleTimes', 'CustomAllocationFailed',
+   * 'CustomAllocationIotHubNotSpecified', 'CustomAllocationUnauthorizedAccess',
+   * 'CannotRegisterModuleToModule', 'TenantHubRoutingNotEnabled',
+   * 'InvalidConfigurationTargetCondition', 'InvalidConfigurationContent',
+   * 'CannotModifyImmutableConfigurationContent', 'InvalidConfigurationCustomMetricsQuery',
+   * 'InvalidPnPInterfaceDefinition', 'InvalidPnPDesiredProperties',
+   * 'InvalidPnPReportedProperties', 'InvalidPnPWritableReportedProperties',
+   * 'InvalidDigitalTwinJsonPatch', 'GenericUnauthorized', 'IotHubNotFound',
+   * 'IotHubUnauthorizedAccess', 'IotHubUnauthorized', 'ElasticPoolNotFound',
    * 'SystemModuleModifyUnauthorizedAccess', 'GenericForbidden', 'IotHubSuspended',
    * 'IotHubQuotaExceeded', 'JobQuotaExceeded', 'DeviceMaximumQueueDepthExceeded',
    * 'IotHubMaxCbsTokenExceeded', 'DeviceMaximumActiveFileUploadLimitExceeded',
@@ -335,9 +324,10 @@ export interface DeviceRegistryOperationError {
    * 'UnexpectedPropertyValue', 'OrchestrationOperationFailed', 'ModelRepoEndpointError',
    * 'ResolutionError', 'UnableToFetchCredentials', 'UnableToFetchTenantInfo',
    * 'UnableToShareIdentity', 'UnableToExpandDiscoveryInfo', 'UnableToExpandComponentInfo',
-   * 'GenericBadGateway', 'InvalidResponseWhileProxying', 'GenericServiceUnavailable',
-   * 'ServiceUnavailable', 'PartitionNotFound', 'IotHubActivationFailed', 'ServerBusy',
-   * 'IotHubRestoring', 'ReceiveLinkOpensThrottled', 'ConnectionUnavailable', 'DeviceUnavailable',
+   * 'UnableToCompressDiscoveryInfo', 'UnableToCompressComponentInfo', 'GenericBadGateway',
+   * 'InvalidResponseWhileProxying', 'GenericServiceUnavailable', 'ServiceUnavailable',
+   * 'PartitionNotFound', 'IotHubActivationFailed', 'ServerBusy', 'IotHubRestoring',
+   * 'ReceiveLinkOpensThrottled', 'ConnectionUnavailable', 'DeviceUnavailable',
    * 'ConfigurationNotAvailable', 'GroupNotAvailable', 'HostingServiceNotAvailable',
    * 'GenericGatewayTimeout', 'GatewayTimeout'
    */
@@ -488,6 +478,7 @@ export interface Twin {
   x509Thumbprint?: X509Thumbprint;
   capabilities?: DeviceCapabilities;
   deviceScope?: string;
+  parentScopes?: string[];
 }
 
 /**
@@ -598,39 +589,6 @@ export interface FaultInjectionProperties {
    * Service generated.
    */
   lastUpdatedTimeUtc?: Date;
-}
-
-/**
- * An interface representing PatchOperation.
- */
-export interface PatchOperation {
-  /**
-   * Json patch "op" memeber,represents operations such as "add", "remove", "replace". Possible
-   * values include: 'add', 'replace', 'remove'
-   */
-  op?: Op;
-  /**
-   * Json patch "path" member.
-   */
-  path?: string;
-  /**
-   * Json patch "value" member.
-   */
-  value?: VariantValue;
-  /**
-   * Json patch "from" member.
-   */
-  from?: string;
-}
-
-/**
- * An interface representing DigitalTwinPatch.
- */
-export interface DigitalTwinPatch {
-  /**
-   * List of digital twin json-patch operations.
-   */
-  operations?: PatchOperation[];
 }
 
 /**
@@ -1088,13 +1046,6 @@ export interface DigitalTwinGetDigitalTwinModelOptionalParams extends msRest.Req
 /**
  * Optional Parameters.
  */
-export interface DigitalTwinUpdateDigitalTwinModelOptionalParams extends msRest.RequestOptionsBase {
-  ifMatch?: string;
-}
-
-/**
- * Optional Parameters.
- */
 export interface DigitalTwinInvokeComponentCommandOptionalParams extends msRest.RequestOptionsBase {
   /**
    * Connect timeout in seconds.
@@ -1102,6 +1053,20 @@ export interface DigitalTwinInvokeComponentCommandOptionalParams extends msRest.
   connectTimeoutInSeconds?: number;
   /**
    * Response timeout in seconds.
+   */
+  responseTimeoutInSeconds?: number;
+}
+
+/**
+ * Optional Parameters.
+ */
+export interface DigitalTwinInvokeComponentCommandV2OptionalParams extends msRest.RequestOptionsBase {
+  /**
+   * Maximum interval of time, in seconds, that the digital twin command will wait for the answer.
+   */
+  connectTimeoutInSeconds?: number;
+  /**
+   * Maximum interval of time, in seconds, that the digital twin command will wait for the answer.
    */
   responseTimeoutInSeconds?: number;
 }
@@ -1118,6 +1083,30 @@ export interface RegistryManagerQueryIotHubHeaders {
    * Continuation token
    */
   xMsContinuation: string;
+}
+
+/**
+ * Defines headers for GetDigitalTwin operation.
+ */
+export interface DigitalTwinGetDigitalTwinHeaders {
+  /**
+   * Weak Etag
+   */
+  eTag: string;
+}
+
+/**
+ * Defines headers for UpdateDigitalTwin operation.
+ */
+export interface DigitalTwinUpdateDigitalTwinHeaders {
+  /**
+   * Weak Etag of the modified resource
+   */
+  eTag: string;
+  /**
+   * URI of the digital twin
+   */
+  location: string;
 }
 
 /**
@@ -1174,32 +1163,23 @@ export interface DigitalTwinGetDigitalTwinModelHeaders {
 }
 
 /**
- * Defines headers for UpdateDigitalTwinModel operation.
- */
-export interface DigitalTwinUpdateDigitalTwinModelHeaders {
-  /**
-   * ETag of the digital twin.
-   */
-  eTag: string;
-  /**
-   * Digital twin model id.
-   */
-  xMsModelId: string;
-  /**
-   * Digital twin model resolution status: enum [Pending, Success, NotFound, Failed, Resolved,
-   * Deleted]
-   */
-  xMsModelResolutionStatus: string;
-  /**
-   * Digital twin model resolution status description.
-   */
-  xMsModelResolutionDescription: string;
-}
-
-/**
  * Defines headers for InvokeComponentCommand operation.
  */
 export interface DigitalTwinInvokeComponentCommandHeaders {
+  /**
+   * Device Generated Status Code for this Operation
+   */
+  xMsCommandStatuscode: number;
+  /**
+   * Server Generated Request Id (GUID), to uniquely identify this request in the service
+   */
+  xMsRequestId: string;
+}
+
+/**
+ * Defines headers for InvokeComponentCommandV2 operation.
+ */
+export interface DigitalTwinInvokeComponentCommandV2Headers {
   /**
    * Device Generated Status Code for this Operation
    */
@@ -1264,10 +1244,11 @@ export type Status1 = 'enabled' | 'disabled';
  * 'UnsupportedOperationOnReplica', 'NullMessage', 'ConnectionForcefullyClosedOnNewConnection',
  * 'InvalidDeviceScope', 'ConnectionForcefullyClosedOnFaultInjection',
  * 'ConnectionRejectedOnFaultInjection', 'InvalidEndpointAuthenticationType',
- * 'ManagedIdentityNotEnabled', 'InvalidRouteTestInput', 'InvalidSourceOnRoute',
- * 'RoutingNotEnabled', 'InvalidContentEncodingOrType', 'InvalidEndorsementKey',
- * 'InvalidRegistrationId', 'InvalidStorageRootKey', 'InvalidEnrollmentGroupId',
- * 'TooManyEnrollments', 'RegistrationIdDefinedMultipleTimes', 'CustomAllocationFailed',
+ * 'ManagedIdentityNotEnabled', 'InvalidDigitalTwinPayload', 'InvalidDigitalTwinPatch',
+ * 'InvalidRouteTestInput', 'InvalidSourceOnRoute', 'RoutingNotEnabled',
+ * 'InvalidContentEncodingOrType', 'InvalidEndorsementKey', 'InvalidRegistrationId',
+ * 'InvalidStorageRootKey', 'InvalidEnrollmentGroupId', 'TooManyEnrollments',
+ * 'RegistrationIdDefinedMultipleTimes', 'CustomAllocationFailed',
  * 'CustomAllocationIotHubNotSpecified', 'CustomAllocationUnauthorizedAccess',
  * 'CannotRegisterModuleToModule', 'TenantHubRoutingNotEnabled',
  * 'InvalidConfigurationTargetCondition', 'InvalidConfigurationContent',
@@ -1319,15 +1300,16 @@ export type Status1 = 'enabled' | 'disabled';
  * 'UnexpectedPropertyValue', 'OrchestrationOperationFailed', 'ModelRepoEndpointError',
  * 'ResolutionError', 'UnableToFetchCredentials', 'UnableToFetchTenantInfo',
  * 'UnableToShareIdentity', 'UnableToExpandDiscoveryInfo', 'UnableToExpandComponentInfo',
- * 'GenericBadGateway', 'InvalidResponseWhileProxying', 'GenericServiceUnavailable',
- * 'ServiceUnavailable', 'PartitionNotFound', 'IotHubActivationFailed', 'ServerBusy',
- * 'IotHubRestoring', 'ReceiveLinkOpensThrottled', 'ConnectionUnavailable', 'DeviceUnavailable',
+ * 'UnableToCompressDiscoveryInfo', 'UnableToCompressComponentInfo', 'GenericBadGateway',
+ * 'InvalidResponseWhileProxying', 'GenericServiceUnavailable', 'ServiceUnavailable',
+ * 'PartitionNotFound', 'IotHubActivationFailed', 'ServerBusy', 'IotHubRestoring',
+ * 'ReceiveLinkOpensThrottled', 'ConnectionUnavailable', 'DeviceUnavailable',
  * 'ConfigurationNotAvailable', 'GroupNotAvailable', 'HostingServiceNotAvailable',
  * 'GenericGatewayTimeout', 'GatewayTimeout'
  * @readonly
  * @enum {string}
  */
-export type ErrorCode = 'InvalidErrorCode' | 'GenericBadRequest' | 'InvalidProtocolVersion' | 'DeviceInvalidResultCount' | 'InvalidOperation' | 'ArgumentInvalid' | 'ArgumentNull' | 'IotHubFormatError' | 'DeviceStorageEntitySerializationError' | 'BlobContainerValidationError' | 'ImportWarningExistsError' | 'InvalidSchemaVersion' | 'DeviceDefinedMultipleTimes' | 'DeserializationError' | 'BulkRegistryOperationFailure' | 'DefaultStorageEndpointNotConfigured' | 'InvalidFileUploadCorrelationId' | 'ExpiredFileUploadCorrelationId' | 'InvalidStorageEndpoint' | 'InvalidMessagingEndpoint' | 'InvalidFileUploadCompletionStatus' | 'InvalidStorageEndpointOrBlob' | 'RequestCanceled' | 'InvalidStorageEndpointProperty' | 'EtagDoesNotMatch' | 'RequestTimedOut' | 'UnsupportedOperationOnReplica' | 'NullMessage' | 'ConnectionForcefullyClosedOnNewConnection' | 'InvalidDeviceScope' | 'ConnectionForcefullyClosedOnFaultInjection' | 'ConnectionRejectedOnFaultInjection' | 'InvalidEndpointAuthenticationType' | 'ManagedIdentityNotEnabled' | 'InvalidRouteTestInput' | 'InvalidSourceOnRoute' | 'RoutingNotEnabled' | 'InvalidContentEncodingOrType' | 'InvalidEndorsementKey' | 'InvalidRegistrationId' | 'InvalidStorageRootKey' | 'InvalidEnrollmentGroupId' | 'TooManyEnrollments' | 'RegistrationIdDefinedMultipleTimes' | 'CustomAllocationFailed' | 'CustomAllocationIotHubNotSpecified' | 'CustomAllocationUnauthorizedAccess' | 'CannotRegisterModuleToModule' | 'TenantHubRoutingNotEnabled' | 'InvalidConfigurationTargetCondition' | 'InvalidConfigurationContent' | 'CannotModifyImmutableConfigurationContent' | 'InvalidConfigurationCustomMetricsQuery' | 'InvalidPnPInterfaceDefinition' | 'InvalidPnPDesiredProperties' | 'InvalidPnPReportedProperties' | 'InvalidPnPWritableReportedProperties' | 'InvalidDigitalTwinJsonPatch' | 'GenericUnauthorized' | 'IotHubNotFound' | 'IotHubUnauthorizedAccess' | 'IotHubUnauthorized' | 'ElasticPoolNotFound' | 'SystemModuleModifyUnauthorizedAccess' | 'GenericForbidden' | 'IotHubSuspended' | 'IotHubQuotaExceeded' | 'JobQuotaExceeded' | 'DeviceMaximumQueueDepthExceeded' | 'IotHubMaxCbsTokenExceeded' | 'DeviceMaximumActiveFileUploadLimitExceeded' | 'DeviceMaximumQueueSizeExceeded' | 'RoutingEndpointResponseForbidden' | 'InvalidMessageExpiryTime' | 'OperationNotAvailableInCurrentTier' | 'KeyEncryptionKeyRevoked' | 'DeviceModelMaxPropertiesExceeded' | 'DeviceModelMaxIndexablePropertiesExceeded' | 'IotDpsSuspended' | 'IotDpsSuspending' | 'GenericNotFound' | 'DeviceNotFound' | 'JobNotFound' | 'QuotaMetricNotFound' | 'SystemPropertyNotFound' | 'AmqpAddressNotFound' | 'RoutingEndpointResponseNotFound' | 'CertificateNotFound' | 'ElasticPoolTenantHubNotFound' | 'ModuleNotFound' | 'AzureTableStoreNotFound' | 'IotHubFailingOver' | 'FeatureNotSupported' | 'DigitalTwinInterfaceNotFound' | 'QueryStoreClusterNotFound' | 'DeviceNotOnline' | 'DeviceConnectionClosedRemotely' | 'EnrollmentNotFound' | 'DeviceRegistrationNotFound' | 'AsyncOperationNotFound' | 'EnrollmentGroupNotFound' | 'DeviceRecordNotFound' | 'GroupRecordNotFound' | 'DeviceGroupNotFound' | 'ProvisioningSettingsNotFound' | 'ProvisioningRecordNotFound' | 'LinkedHubNotFound' | 'CertificateAuthorityNotFound' | 'ConfigurationNotFound' | 'GroupNotFound' | 'DigitalTwinModelNotFound' | 'InterfaceNameModelNotFound' | 'GenericMethodNotAllowed' | 'OperationNotAllowedInCurrentState' | 'ImportDevicesNotSupported' | 'BulkAddDevicesNotSupported' | 'GenericConflict' | 'DeviceAlreadyExists' | 'LinkCreationConflict' | 'CallbackSubscriptionConflict' | 'ModelAlreadyExists' | 'DeviceLocked' | 'DeviceJobAlreadyExists' | 'JobAlreadyExists' | 'EnrollmentConflict' | 'EnrollmentGroupConflict' | 'RegistrationStatusConflict' | 'DeviceRecordConflict' | 'GroupRecordConflict' | 'DeviceGroupConflict' | 'ProvisioningSettingsConflict' | 'ProvisioningRecordConflict' | 'LinkedHubConflict' | 'CertificateAuthorityConflict' | 'ModuleAlreadyExistsOnDevice' | 'ConfigurationAlreadyExists' | 'ApplyConfigurationAlreadyInProgressOnDevice' | 'DigitalTwinModelAlreadyExists' | 'DigitalTwinModelExistsWithOtherModelType' | 'InterfaceNameModelAlreadyExists' | 'GenericPreconditionFailed' | 'PreconditionFailed' | 'DeviceMessageLockLost' | 'JobRunPreconditionFailed' | 'InflightMessagesInLink' | 'GenericRequestEntityTooLarge' | 'MessageTooLarge' | 'TooManyDevices' | 'TooManyModulesOnDevice' | 'ConfigurationCountLimitExceeded' | 'DigitalTwinModelCountLimitExceeded' | 'InterfaceNameCompressionModelCountLimitExceeded' | 'GenericUnsupportedMediaType' | 'IncompatibleDataType' | 'GenericTooManyRequests' | 'ThrottlingException' | 'ThrottleBacklogLimitExceeded' | 'ThrottlingBacklogTimeout' | 'ThrottlingMaxActiveJobCountExceeded' | 'DeviceThrottlingLimitExceeded' | 'ClientClosedRequest' | 'GenericServerError' | 'ServerError' | 'JobCancelled' | 'StatisticsRetrievalError' | 'ConnectionForcefullyClosed' | 'InvalidBlobState' | 'BackupTimedOut' | 'AzureStorageTimeout' | 'GenericTimeout' | 'InvalidThrottleParameter' | 'EventHubLinkAlreadyClosed' | 'ReliableBlobStoreError' | 'RetryAttemptsExhausted' | 'AzureTableStoreError' | 'CheckpointStoreNotFound' | 'DocumentDbInvalidReturnValue' | 'ReliableDocDbStoreStoreError' | 'ReliableBlobStoreTimeoutError' | 'ConfigReadFailed' | 'InvalidContainerReceiveLink' | 'InvalidPartitionEpoch' | 'RestoreTimedOut' | 'StreamReservationFailure' | 'SerializationError' | 'UnexpectedPropertyValue' | 'OrchestrationOperationFailed' | 'ModelRepoEndpointError' | 'ResolutionError' | 'UnableToFetchCredentials' | 'UnableToFetchTenantInfo' | 'UnableToShareIdentity' | 'UnableToExpandDiscoveryInfo' | 'UnableToExpandComponentInfo' | 'GenericBadGateway' | 'InvalidResponseWhileProxying' | 'GenericServiceUnavailable' | 'ServiceUnavailable' | 'PartitionNotFound' | 'IotHubActivationFailed' | 'ServerBusy' | 'IotHubRestoring' | 'ReceiveLinkOpensThrottled' | 'ConnectionUnavailable' | 'DeviceUnavailable' | 'ConfigurationNotAvailable' | 'GroupNotAvailable' | 'HostingServiceNotAvailable' | 'GenericGatewayTimeout' | 'GatewayTimeout';
+export type ErrorCode = 'InvalidErrorCode' | 'GenericBadRequest' | 'InvalidProtocolVersion' | 'DeviceInvalidResultCount' | 'InvalidOperation' | 'ArgumentInvalid' | 'ArgumentNull' | 'IotHubFormatError' | 'DeviceStorageEntitySerializationError' | 'BlobContainerValidationError' | 'ImportWarningExistsError' | 'InvalidSchemaVersion' | 'DeviceDefinedMultipleTimes' | 'DeserializationError' | 'BulkRegistryOperationFailure' | 'DefaultStorageEndpointNotConfigured' | 'InvalidFileUploadCorrelationId' | 'ExpiredFileUploadCorrelationId' | 'InvalidStorageEndpoint' | 'InvalidMessagingEndpoint' | 'InvalidFileUploadCompletionStatus' | 'InvalidStorageEndpointOrBlob' | 'RequestCanceled' | 'InvalidStorageEndpointProperty' | 'EtagDoesNotMatch' | 'RequestTimedOut' | 'UnsupportedOperationOnReplica' | 'NullMessage' | 'ConnectionForcefullyClosedOnNewConnection' | 'InvalidDeviceScope' | 'ConnectionForcefullyClosedOnFaultInjection' | 'ConnectionRejectedOnFaultInjection' | 'InvalidEndpointAuthenticationType' | 'ManagedIdentityNotEnabled' | 'InvalidDigitalTwinPayload' | 'InvalidDigitalTwinPatch' | 'InvalidRouteTestInput' | 'InvalidSourceOnRoute' | 'RoutingNotEnabled' | 'InvalidContentEncodingOrType' | 'InvalidEndorsementKey' | 'InvalidRegistrationId' | 'InvalidStorageRootKey' | 'InvalidEnrollmentGroupId' | 'TooManyEnrollments' | 'RegistrationIdDefinedMultipleTimes' | 'CustomAllocationFailed' | 'CustomAllocationIotHubNotSpecified' | 'CustomAllocationUnauthorizedAccess' | 'CannotRegisterModuleToModule' | 'TenantHubRoutingNotEnabled' | 'InvalidConfigurationTargetCondition' | 'InvalidConfigurationContent' | 'CannotModifyImmutableConfigurationContent' | 'InvalidConfigurationCustomMetricsQuery' | 'InvalidPnPInterfaceDefinition' | 'InvalidPnPDesiredProperties' | 'InvalidPnPReportedProperties' | 'InvalidPnPWritableReportedProperties' | 'InvalidDigitalTwinJsonPatch' | 'GenericUnauthorized' | 'IotHubNotFound' | 'IotHubUnauthorizedAccess' | 'IotHubUnauthorized' | 'ElasticPoolNotFound' | 'SystemModuleModifyUnauthorizedAccess' | 'GenericForbidden' | 'IotHubSuspended' | 'IotHubQuotaExceeded' | 'JobQuotaExceeded' | 'DeviceMaximumQueueDepthExceeded' | 'IotHubMaxCbsTokenExceeded' | 'DeviceMaximumActiveFileUploadLimitExceeded' | 'DeviceMaximumQueueSizeExceeded' | 'RoutingEndpointResponseForbidden' | 'InvalidMessageExpiryTime' | 'OperationNotAvailableInCurrentTier' | 'KeyEncryptionKeyRevoked' | 'DeviceModelMaxPropertiesExceeded' | 'DeviceModelMaxIndexablePropertiesExceeded' | 'IotDpsSuspended' | 'IotDpsSuspending' | 'GenericNotFound' | 'DeviceNotFound' | 'JobNotFound' | 'QuotaMetricNotFound' | 'SystemPropertyNotFound' | 'AmqpAddressNotFound' | 'RoutingEndpointResponseNotFound' | 'CertificateNotFound' | 'ElasticPoolTenantHubNotFound' | 'ModuleNotFound' | 'AzureTableStoreNotFound' | 'IotHubFailingOver' | 'FeatureNotSupported' | 'DigitalTwinInterfaceNotFound' | 'QueryStoreClusterNotFound' | 'DeviceNotOnline' | 'DeviceConnectionClosedRemotely' | 'EnrollmentNotFound' | 'DeviceRegistrationNotFound' | 'AsyncOperationNotFound' | 'EnrollmentGroupNotFound' | 'DeviceRecordNotFound' | 'GroupRecordNotFound' | 'DeviceGroupNotFound' | 'ProvisioningSettingsNotFound' | 'ProvisioningRecordNotFound' | 'LinkedHubNotFound' | 'CertificateAuthorityNotFound' | 'ConfigurationNotFound' | 'GroupNotFound' | 'DigitalTwinModelNotFound' | 'InterfaceNameModelNotFound' | 'GenericMethodNotAllowed' | 'OperationNotAllowedInCurrentState' | 'ImportDevicesNotSupported' | 'BulkAddDevicesNotSupported' | 'GenericConflict' | 'DeviceAlreadyExists' | 'LinkCreationConflict' | 'CallbackSubscriptionConflict' | 'ModelAlreadyExists' | 'DeviceLocked' | 'DeviceJobAlreadyExists' | 'JobAlreadyExists' | 'EnrollmentConflict' | 'EnrollmentGroupConflict' | 'RegistrationStatusConflict' | 'DeviceRecordConflict' | 'GroupRecordConflict' | 'DeviceGroupConflict' | 'ProvisioningSettingsConflict' | 'ProvisioningRecordConflict' | 'LinkedHubConflict' | 'CertificateAuthorityConflict' | 'ModuleAlreadyExistsOnDevice' | 'ConfigurationAlreadyExists' | 'ApplyConfigurationAlreadyInProgressOnDevice' | 'DigitalTwinModelAlreadyExists' | 'DigitalTwinModelExistsWithOtherModelType' | 'InterfaceNameModelAlreadyExists' | 'GenericPreconditionFailed' | 'PreconditionFailed' | 'DeviceMessageLockLost' | 'JobRunPreconditionFailed' | 'InflightMessagesInLink' | 'GenericRequestEntityTooLarge' | 'MessageTooLarge' | 'TooManyDevices' | 'TooManyModulesOnDevice' | 'ConfigurationCountLimitExceeded' | 'DigitalTwinModelCountLimitExceeded' | 'InterfaceNameCompressionModelCountLimitExceeded' | 'GenericUnsupportedMediaType' | 'IncompatibleDataType' | 'GenericTooManyRequests' | 'ThrottlingException' | 'ThrottleBacklogLimitExceeded' | 'ThrottlingBacklogTimeout' | 'ThrottlingMaxActiveJobCountExceeded' | 'DeviceThrottlingLimitExceeded' | 'ClientClosedRequest' | 'GenericServerError' | 'ServerError' | 'JobCancelled' | 'StatisticsRetrievalError' | 'ConnectionForcefullyClosed' | 'InvalidBlobState' | 'BackupTimedOut' | 'AzureStorageTimeout' | 'GenericTimeout' | 'InvalidThrottleParameter' | 'EventHubLinkAlreadyClosed' | 'ReliableBlobStoreError' | 'RetryAttemptsExhausted' | 'AzureTableStoreError' | 'CheckpointStoreNotFound' | 'DocumentDbInvalidReturnValue' | 'ReliableDocDbStoreStoreError' | 'ReliableBlobStoreTimeoutError' | 'ConfigReadFailed' | 'InvalidContainerReceiveLink' | 'InvalidPartitionEpoch' | 'RestoreTimedOut' | 'StreamReservationFailure' | 'SerializationError' | 'UnexpectedPropertyValue' | 'OrchestrationOperationFailed' | 'ModelRepoEndpointError' | 'ResolutionError' | 'UnableToFetchCredentials' | 'UnableToFetchTenantInfo' | 'UnableToShareIdentity' | 'UnableToExpandDiscoveryInfo' | 'UnableToExpandComponentInfo' | 'UnableToCompressDiscoveryInfo' | 'UnableToCompressComponentInfo' | 'GenericBadGateway' | 'InvalidResponseWhileProxying' | 'GenericServiceUnavailable' | 'ServiceUnavailable' | 'PartitionNotFound' | 'IotHubActivationFailed' | 'ServerBusy' | 'IotHubRestoring' | 'ReceiveLinkOpensThrottled' | 'ConnectionUnavailable' | 'DeviceUnavailable' | 'ConfigurationNotAvailable' | 'GroupNotAvailable' | 'HostingServiceNotAvailable' | 'GenericGatewayTimeout' | 'GatewayTimeout';
 
 /**
  * Defines values for WarningCode.
@@ -1396,14 +1378,6 @@ export type StorageAuthenticationType = 'keyBased' | 'identityBased';
  * @enum {string}
  */
 export type Action = 'None' | 'CloseAll' | 'Periodic';
-
-/**
- * Defines values for Op.
- * Possible values include: 'add', 'replace', 'remove'
- * @readonly
- * @enum {string}
- */
-export type Op = 'add' | 'replace' | 'remove';
 
 /**
  * Defines values for Type2.
@@ -2091,7 +2065,7 @@ export type TwinUpdateModuleTwinResponse = Twin & {
 /**
  * Contains response data for the getDigitalTwin operation.
  */
-export type DigitalTwinGetDigitalTwinResponse = {
+export type DigitalTwinGetDigitalTwinResponse = DigitalTwinGetDigitalTwinHeaders & {
   /**
    * The parsed response body.
    */
@@ -2101,6 +2075,11 @@ export type DigitalTwinGetDigitalTwinResponse = {
    * The underlying HTTP response.
    */
   _response: msRest.HttpResponse & {
+      /**
+       * The parsed HTTP response headers.
+       */
+      parsedHeaders: DigitalTwinGetDigitalTwinHeaders;
+
       /**
        * The response body as text (string format)
        */
@@ -2116,25 +2095,15 @@ export type DigitalTwinGetDigitalTwinResponse = {
 /**
  * Contains response data for the updateDigitalTwin operation.
  */
-export type DigitalTwinUpdateDigitalTwinResponse = {
-  /**
-   * The parsed response body.
-   */
-  body: any;
-
+export type DigitalTwinUpdateDigitalTwinResponse = DigitalTwinUpdateDigitalTwinHeaders & {
   /**
    * The underlying HTTP response.
    */
   _response: msRest.HttpResponse & {
       /**
-       * The response body as text (string format)
+       * The parsed HTTP response headers.
        */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: any;
+      parsedHeaders: DigitalTwinUpdateDigitalTwinHeaders;
     };
 };
 
@@ -2244,21 +2213,6 @@ export type DigitalTwinGetDigitalTwinModelResponse = DigitalTwinGetDigitalTwinMo
 };
 
 /**
- * Contains response data for the updateDigitalTwinModel operation.
- */
-export type DigitalTwinUpdateDigitalTwinModelResponse = DigitalTwinUpdateDigitalTwinModelHeaders & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The parsed HTTP response headers.
-       */
-      parsedHeaders: DigitalTwinUpdateDigitalTwinModelHeaders;
-    };
-};
-
-/**
  * Contains response data for the invokeComponentCommand operation.
  */
 export type DigitalTwinInvokeComponentCommandResponse = DigitalTwinInvokeComponentCommandHeaders & {
@@ -2275,6 +2229,36 @@ export type DigitalTwinInvokeComponentCommandResponse = DigitalTwinInvokeCompone
        * The parsed HTTP response headers.
        */
       parsedHeaders: DigitalTwinInvokeComponentCommandHeaders;
+
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: any;
+    };
+};
+
+/**
+ * Contains response data for the invokeComponentCommandV2 operation.
+ */
+export type DigitalTwinInvokeComponentCommandV2Response = DigitalTwinInvokeComponentCommandV2Headers & {
+  /**
+   * The parsed response body.
+   */
+  body: any;
+
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The parsed HTTP response headers.
+       */
+      parsedHeaders: DigitalTwinInvokeComponentCommandV2Headers;
 
       /**
        * The response body as text (string format)

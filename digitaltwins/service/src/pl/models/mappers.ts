@@ -173,30 +173,6 @@ export const Configuration: msRest.CompositeMapper = {
   }
 };
 
-export const VariantValue: msRest.CompositeMapper = {
-  serializedName: "VariantValue",
-  type: {
-    name: "Composite",
-    className: "VariantValue",
-    modelProperties: {
-      objectValue: {
-        readOnly: true,
-        serializedName: "ObjectValue",
-        type: {
-          name: "Object"
-        }
-      },
-      isNull: {
-        readOnly: true,
-        serializedName: "IsNull",
-        type: {
-          name: "Boolean"
-        }
-      }
-    }
-  }
-};
-
 export const ConfigurationQueriesTestInput: msRest.CompositeMapper = {
   serializedName: "ConfigurationQueriesTestInput",
   type: {
@@ -470,6 +446,17 @@ export const Device: msRest.CompositeMapper = {
         type: {
           name: "String"
         }
+      },
+      parentScopes: {
+        serializedName: "parentScopes",
+        type: {
+          name: "Sequence",
+          element: {
+            type: {
+              name: "String"
+            }
+          }
+        }
       }
     }
   }
@@ -591,6 +578,17 @@ export const ExportImportDevice: msRest.CompositeMapper = {
         serializedName: "deviceScope",
         type: {
           name: "String"
+        }
+      },
+      parentScopes: {
+        serializedName: "parentScopes",
+        type: {
+          name: "Sequence",
+          element: {
+            type: {
+              name: "String"
+            }
+          }
         }
       }
     }
@@ -868,6 +866,17 @@ export const Twin: msRest.CompositeMapper = {
         type: {
           name: "String"
         }
+      },
+      parentScopes: {
+        serializedName: "parentScopes",
+        type: {
+          name: "Sequence",
+          element: {
+            type: {
+              name: "String"
+            }
+          }
+        }
       }
     }
   }
@@ -1034,63 +1043,6 @@ export const FaultInjectionProperties: msRest.CompositeMapper = {
         serializedName: "lastUpdatedTimeUtc",
         type: {
           name: "DateTime"
-        }
-      }
-    }
-  }
-};
-
-export const PatchOperation: msRest.CompositeMapper = {
-  serializedName: "PatchOperation",
-  type: {
-    name: "Composite",
-    className: "PatchOperation",
-    modelProperties: {
-      op: {
-        serializedName: "op",
-        type: {
-          name: "String"
-        }
-      },
-      path: {
-        serializedName: "path",
-        type: {
-          name: "String"
-        }
-      },
-      value: {
-        serializedName: "value",
-        type: {
-          name: "Composite",
-          className: "VariantValue"
-        }
-      },
-      from: {
-        serializedName: "from",
-        type: {
-          name: "String"
-        }
-      }
-    }
-  }
-};
-
-export const DigitalTwinPatch: msRest.CompositeMapper = {
-  serializedName: "DigitalTwinPatch",
-  type: {
-    name: "Composite",
-    className: "DigitalTwinPatch",
-    modelProperties: {
-      operations: {
-        serializedName: "Operations",
-        type: {
-          name: "Sequence",
-          element: {
-            type: {
-              name: "Composite",
-              className: "PatchOperation"
-            }
-          }
         }
       }
     }
@@ -1688,6 +1640,44 @@ export const RegistryManagerQueryIotHubHeaders: msRest.CompositeMapper = {
   }
 };
 
+export const DigitalTwinGetDigitalTwinHeaders: msRest.CompositeMapper = {
+  serializedName: "digitaltwin-getdigitaltwin-headers",
+  type: {
+    name: "Composite",
+    className: "DigitalTwinGetDigitalTwinHeaders",
+    modelProperties: {
+      eTag: {
+        serializedName: "etag",
+        type: {
+          name: "String"
+        }
+      }
+    }
+  }
+};
+
+export const DigitalTwinUpdateDigitalTwinHeaders: msRest.CompositeMapper = {
+  serializedName: "digitaltwin-updatedigitaltwin-headers",
+  type: {
+    name: "Composite",
+    className: "DigitalTwinUpdateDigitalTwinHeaders",
+    modelProperties: {
+      eTag: {
+        serializedName: "etag",
+        type: {
+          name: "String"
+        }
+      },
+      location: {
+        serializedName: "location",
+        type: {
+          name: "String"
+        }
+      }
+    }
+  }
+};
+
 export const DigitalTwinGetComponentsHeaders: msRest.CompositeMapper = {
   serializedName: "digitaltwin-getcomponents-headers",
   type: {
@@ -1770,32 +1760,20 @@ export const DigitalTwinGetDigitalTwinModelHeaders: msRest.CompositeMapper = {
   }
 };
 
-export const DigitalTwinUpdateDigitalTwinModelHeaders: msRest.CompositeMapper = {
-  serializedName: "digitaltwin-updatedigitaltwinmodel-headers",
+export const DigitalTwinInvokeComponentCommandHeaders: msRest.CompositeMapper = {
+  serializedName: "digitaltwin-invokecomponentcommand-headers",
   type: {
     name: "Composite",
-    className: "DigitalTwinUpdateDigitalTwinModelHeaders",
+    className: "DigitalTwinInvokeComponentCommandHeaders",
     modelProperties: {
-      eTag: {
-        serializedName: "etag",
+      xMsCommandStatuscode: {
+        serializedName: "x-ms-command-statuscode",
         type: {
-          name: "String"
+          name: "Number"
         }
       },
-      xMsModelId: {
-        serializedName: "x-ms-model-id",
-        type: {
-          name: "String"
-        }
-      },
-      xMsModelResolutionStatus: {
-        serializedName: "x-ms-model-resolution-status",
-        type: {
-          name: "String"
-        }
-      },
-      xMsModelResolutionDescription: {
-        serializedName: "x-ms-model-resolution-description",
+      xMsRequestId: {
+        serializedName: "x-ms-request-id",
         type: {
           name: "String"
         }
@@ -1804,11 +1782,11 @@ export const DigitalTwinUpdateDigitalTwinModelHeaders: msRest.CompositeMapper = 
   }
 };
 
-export const DigitalTwinInvokeComponentCommandHeaders: msRest.CompositeMapper = {
-  serializedName: "digitaltwin-invokecomponentcommand-headers",
+export const DigitalTwinInvokeComponentCommandV2Headers: msRest.CompositeMapper = {
+  serializedName: "digitaltwin-invokecomponentcommandv2-headers",
   type: {
     name: "Composite",
-    className: "DigitalTwinInvokeComponentCommandHeaders",
+    className: "DigitalTwinInvokeComponentCommandV2Headers",
     modelProperties: {
       xMsCommandStatuscode: {
         serializedName: "x-ms-command-statuscode",

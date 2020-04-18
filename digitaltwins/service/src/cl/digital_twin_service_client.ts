@@ -35,12 +35,6 @@ export type DigitalTwinInterfaces = Models.DigitalTwinInterfaces;
 
 /**
  * @export
- * @type DigitalTwinPatch   Type alias to simplify the auto generated type's name
- */
-export type DigitalTwinPatch = Models.DigitalTwinPatch;
-
-/**
- * @export
  * @type DigitalTwinInterfacesPatch   Type alias to simplify the auto generated type's name
  */
 export type DigitalTwinInterfacesPatch = Models.DigitalTwinInterfacesPatch;
@@ -62,12 +56,6 @@ export type DigitalTwinGetComponentResponse = Models.DigitalTwinGetComponentResp
  * @type GetModelResponse   Type alias to simplify the auto generated type's name
  */
 export type GetModelResponse = Models.DigitalTwinGetDigitalTwinModelResponse;
-
-/**
- * @export
- * @type DigitalTwinUpdateDigitalTwinModelResponse   Type alias to simplify the auto generated type's name
- */
-export type DigitalTwinUpdateDigitalTwinModelResponse = Models.DigitalTwinUpdateDigitalTwinModelResponse | void;
 
 /**
  * @export
@@ -154,14 +142,14 @@ export class DigitalTwinServiceClient {
    * @method updateDigitalTwin                  module: azure-iot-digitaltwins-service.DigitalTwinServiceClient.updateDigitalTwin
    * @description                               Update the Digital Twin Component of a given device using a patch object.
    * @param {string} digitalTwinId              The digital twin Id of the given device.
-   * @param {DigitalTwinInterfacesPatch} patch  The path objet contains the update part of a Digital Twin Component.
+   * @param {any[]} patch  The path objet contains the update part of a Digital Twin Component.
    * @param {string} eTag                       The eTag for identifying the patch.
    * @returns DigitalTwinUpdateResponse         The return object containing the updated Digital Twin plus the HttpResponse.
    * @memberof DigitalTwinServiceClient
    */
-  updateDigitalTwin(digitalTwinId: string, patch: DigitalTwinPatch, eTag?: string): Promise<DigitalTwinUpdateResponse>;
-  updateDigitalTwin(digitalTwinId: string, patch: DigitalTwinPatch, eTagOrCallback?: string | TripleValueCallback<DigitalTwinUpdateResponse, msRest.HttpOperationResponse>, callback?: TripleValueCallback<DigitalTwinUpdateResponse, msRest.HttpOperationResponse>): void;
-  updateDigitalTwin(digitalTwinId: string, patch: DigitalTwinPatch, eTagOrCallback?: string | TripleValueCallback<DigitalTwinUpdateResponse, msRest.HttpOperationResponse>, callback?: TripleValueCallback<DigitalTwinUpdateResponse, msRest.HttpOperationResponse>): void | Promise<DigitalTwinUpdateResponse> {
+  updateDigitalTwin(digitalTwinId: string, patch: any[], eTag?: string): Promise<DigitalTwinUpdateResponse>;
+  updateDigitalTwin(digitalTwinId: string, patch: any[], eTagOrCallback?: string | TripleValueCallback<void, msRest.HttpOperationResponse>, callback?: TripleValueCallback<void, msRest.HttpOperationResponse>): void;
+  updateDigitalTwin(digitalTwinId: string, patch: any[], eTagOrCallback?: string | TripleValueCallback<void, msRest.HttpOperationResponse>, callback?: TripleValueCallback<void, msRest.HttpOperationResponse>): void | Promise<DigitalTwinUpdateResponse> {
     /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_035: [The `updateDigitalTwin` method shall call the `updateDigitalTwin` method of the protocol layer with the given arguments.]*/
     /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_036: [The `updateDigitalTwin` method shall call the callback with an error parameter if a callback is passed..]*/
     /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_037: [The `updateDigitalTwin` method shall return error if the method of the protocol layer failed.]*/
@@ -172,11 +160,11 @@ export class DigitalTwinServiceClient {
     const actualEtag = typeof eTagOrCallback !== 'function' ? eTagOrCallback : undefined;
     const options = actualEtag ? {ifMatch: actualEtag} : undefined;
 
-    return tripleValueCallbackToPromise<DigitalTwinUpdateResponse, msRest.HttpOperationResponse, DigitalTwinUpdateResponse>((_callback) => {
+    return tripleValueCallbackToPromise<void, msRest.HttpOperationResponse, DigitalTwinUpdateResponse>((_callback) => {
       this._pl.digitalTwin.updateDigitalTwin(digitalTwinId, patch, options as Models.DigitalTwinUpdateDigitalTwinOptionalParams, (err, result, request, response) => {
         _callback(err as Error, result, response);
       });
-    }, (result, response) => createResultWithHttpOperationResponse<DigitalTwinUpdateResponse, DigitalTwinUpdateResponse>(result, response), actualCallback as TripleValueCallback<DigitalTwinUpdateResponse, msRest.HttpOperationResponse>);
+    }, (result, response) => createResultWithHttpOperationResponse<void, DigitalTwinUpdateResponse>(result, response), actualCallback as TripleValueCallback<void, msRest.HttpOperationResponse>);
   }
 
   /**
@@ -271,30 +259,6 @@ export class DigitalTwinServiceClient {
         _callback(err as Error, result, response);
       });
     }, (result, response) => createResultWithHttpOperationResponse<GetModelResponse, GetModelResponse>(result, response), callback as TripleValueCallback<GetModelResponse, msRest.HttpOperationResponse>);
-  }
-
-  /**
-   * @method updateDigitalTwinModel                       module: azure-iot-digitaltwins-service.DigitalTwinServiceClient.updateDigitalTwinModel
-   * @description                                         Retrieve a Digital Twin Model.
-   * @param {string} modelId                              The model Id of the requested model.
-   * @returns DigitalTwinUpdateDigitalTwinModelResponse   The return object containing the Model plus the HttpResponse.
-   * @memberof DigitalTwinServiceClient
-   */
-  updateDigitalTwinModel(modelId: string, eTag?: string): Promise<DigitalTwinUpdateDigitalTwinModelResponse>;
-  updateDigitalTwinModel(modelId: string, eTagOrCallback?: string | TripleValueCallback<DigitalTwinUpdateDigitalTwinModelResponse, msRest.HttpOperationResponse>, callback?: TripleValueCallback<DigitalTwinUpdateDigitalTwinModelResponse, msRest.HttpOperationResponse>): void;
-  updateDigitalTwinModel(modelId: string, eTagOrCallback?: string | TripleValueCallback<DigitalTwinUpdateDigitalTwinModelResponse, msRest.HttpOperationResponse>, callback?: TripleValueCallback<DigitalTwinUpdateDigitalTwinModelResponse, msRest.HttpOperationResponse>): void | Promise<DigitalTwinUpdateDigitalTwinModelResponse> {
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_035: [The `updateDigitalTwinModel` method shall call the `updateDigitalTwinModel` method of the protocol layer with the given arguments.]*/
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_036: [The `updateDigitalTwinModel` method shall call the callback with an error parameter if a callback is passed..]*/
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_037: [The `updateDigitalTwinModel` method shall return error if the method of the protocol layer failed.]*/
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_038: [The `updateDigitalTwinModel` method shall return a promise if there is no callback passed.]*/
-    const actualCallback = typeof eTagOrCallback === 'function' ? eTagOrCallback : callback;
-    const actualEtag = typeof eTagOrCallback !== 'function' ? eTagOrCallback : undefined;
-    const options = actualEtag ? {ifMatch: actualEtag} : undefined;
-    return tripleValueCallbackToPromise<DigitalTwinUpdateDigitalTwinModelResponse, msRest.HttpOperationResponse, DigitalTwinUpdateDigitalTwinModelResponse>((_callback) => {
-      this._pl.digitalTwin.updateDigitalTwinModel(modelId, options as Models.DigitalTwinUpdateDigitalTwinModelOptionalParams, (err, result, request, response) => {
-        _callback(err as Error, result, response);
-      });
-    }, (result, response) => createResultWithHttpOperationResponse<DigitalTwinUpdateDigitalTwinModelResponse, DigitalTwinUpdateDigitalTwinModelResponse>(result, response), actualCallback as TripleValueCallback<DigitalTwinUpdateDigitalTwinModelResponse, msRest.HttpOperationResponse>);
   }
 
   /**

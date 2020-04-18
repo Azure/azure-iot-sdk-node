@@ -31,6 +31,16 @@ export const commandName: msRest.OperationURLParameter = {
     }
   }
 };
+export const componentPath: msRest.OperationURLParameter = {
+  parameterPath: "componentPath",
+  mapper: {
+    required: true,
+    serializedName: "componentPath",
+    type: {
+      name: "String"
+    }
+  }
+};
 export const connectTimeoutInSeconds: msRest.OperationQueryParameter = {
   parameterPath: [
     "options",

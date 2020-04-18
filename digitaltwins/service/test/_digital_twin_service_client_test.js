@@ -386,52 +386,6 @@ describe('DigitalTwinServiceClient', function () {
     assert.deepEqual(returnedPromise._response, testResponse);
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_035: [The `updateDigitalTwinModel` method shall call the `updateDigitalTwinModel` method of the protocol layer with the given arguments.]*/
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_036: [The `updateDigitalTwinModel` method shall call the callback with an error parameter if a callback is passed..]*/
-  it('updateDigitalTwinModel calls updateDigitalTwinModel on the PL client', function (testCallback) {
-    var testModelId = 'testTwinId';
-    var testResult = {
-      testComponentName: {}
-    };
-    var testResponse = 'testResponse';
-    var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.updateDigitalTwinModel = sinon.stub().callsArgWith(2, null, testResult, null, testResponse);
-    testClient.updateDigitalTwinModel(testModelId, function (err, result, response) {
-      assert.isTrue(testClient._pl.digitalTwin.updateDigitalTwinModel.calledWith(testModelId));
-      assert.isNull(err);
-      assert.deepEqual(result, testResult);
-      assert.deepEqual(response, testResponse);
-      testCallback();
-    });
-  });
-
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_037: [The `updateDigitalTwinModel` method shall return error if the method of the protocol layer failed.]*/
-  it('updateDigitalTwinModel calls its callback with an error if the PL client fails', function (testCallback) {
-    var testModelId = 'testModelId';
-    var testError = new Error('fake error');
-    var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.updateDigitalTwinModel = sinon.stub().callsArgWith(2, testError);
-    testClient.updateDigitalTwinModel(testModelId, function (err) {
-      assert.isTrue(testClient._pl.digitalTwin.updateDigitalTwinModel.calledWith(testModelId));
-      assert.strictEqual(err, testError);
-      testCallback();
-    });
-  });
-
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_038: [The `updateDigitalTwinModel` method shall return a promise if there is no callback passed.]*/
-  it('updateDigitalTwinModel shall return a promise if there is no callback passed', async () => {
-    var testTwinId = 'testTwinId';
-    var testResult = {
-      testComponentName: {}
-    };
-    var testResponse = 'testResponse';
-    var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.updateDigitalTwinModel = sinon.stub().callsArgWith(2, null, testResult, null, testResponse);
-    const returnedPromise = await testClient.updateDigitalTwinModel(testTwinId);
-    assert.deepEqual(returnedPromise, testResult);
-    assert.deepEqual(returnedPromise._response, testResponse);
-  });
-
   /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_017: [The `invokeComponentCommand` method shall call the `invokeComponentCommand` method of the protocol layer with the given arguments.]*/
   /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_018: [The `invokeComponentCommand` method shall call the callback with an error parameter if a callback is passed..]*/
   it('invokeComponentCommand calls invokeComponentCommand on the PL client', function (testCallback) {

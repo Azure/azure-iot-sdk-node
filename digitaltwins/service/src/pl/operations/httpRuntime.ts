@@ -29,7 +29,12 @@ export class HttpRuntime {
    * This method is used to retrieve feedback of a cloud-to-device message See
    * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-messaging for more information. This
    * capability is only available in the standard tier IoT Hub. For more information, see [Choose the
-   * right IoT Hub tier](https://aka.ms/scaleyouriotsolution).
+   * right IoT Hub tier](https://aka.ms/scaleyouriotsolution). For IoT Hub VNET related
+   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
+   * version '2020-03-13'.These features are currently in general availability in the East US, West
+   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
+   * these features to all regions by end of month May. For rest of the APIs please continue using
+   * API version '2019-10-01'
    * @summary This method is used to retrieve feedback of a cloud-to-device message.
    * @param [options] The optional parameters
    * @returns Promise<msRest.RestResponse>
@@ -57,7 +62,13 @@ export class HttpRuntime {
    * This method completes a feedback message. The lockToken obtained when the message was received
    * must be provided to resolve race conditions when completing, a feedback message. A completed
    * message is deleted from the feedback queue. See
-   * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-messaging for more information.
+   * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-messaging for more information. For
+   * IoT Hub VNET related
+   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
+   * version '2020-03-13'.These features are currently in general availability in the East US, West
+   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
+   * these features to all regions by end of month May. For rest of the APIs please continue using
+   * API version '2019-10-01'
    * @summary This method completes a feedback message.
    * @param lockToken Lock token.
    * @param [options] The optional parameters
@@ -89,7 +100,13 @@ export class HttpRuntime {
    * This method abandons a feedback message. The lockToken obtained when the message was received
    * must be provided to resolve race conditions when abandoning, a feedback message. A abandoned
    * message is deleted from the feedback queue. See
-   * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-messaging for more information.
+   * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-messaging for more information. For
+   * IoT Hub VNET related
+   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
+   * version '2020-03-13'.These features are currently in general availability in the East US, West
+   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
+   * these features to all regions by end of month May. For rest of the APIs please continue using
+   * API version '2019-10-01'
    * @summary This method abandons a feedback message.
    * @param lockToken Lock Token.
    * @param [options] The optional parameters

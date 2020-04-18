@@ -23,7 +23,7 @@ async function main() {
 
     // Invoke a command
     console.log('invoking command ' + commandName + ' on component instance' + componentInstanceName + ' for device ' + deviceId + '...');
-    const invokeComponentCommandRespone = await digitalTwinServiceClient.invokeCommand(deviceId, componentInstanceName, commandName, commandArgument);
+    const invokeComponentCommandRespone = await digitalTwinServiceClient.invokeComponentCommand(deviceId, componentInstanceName, commandName, commandArgument);
 
     // Print the response
     console.log(JSON.stringify(invokeComponentCommandRespone, null, 2));

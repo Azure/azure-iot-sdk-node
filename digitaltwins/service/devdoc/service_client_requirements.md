@@ -45,10 +45,6 @@ class DigitalTwinServiceClient
   getDigitalTwinModel(modelId: string, callback: TripleValueCallback<GetModelResponse, msRest.HttpOperationResponse>): void;
   getDigitalTwinModel(modelId: string, callback?: TripleValueCallback<GetModelResponse, msRest.HttpOperationResponse>): void | Promise<GetModelResponse>;
 
-  updateDigitalTwinModel(modelId: string, eTag?: string): Promise<DigitalTwinUpdateDigitalTwinModelResponse>;
-  updateDigitalTwinModel(modelId: string, eTagOrCallback?: string | TripleValueCallback<DigitalTwinUpdateDigitalTwinModelResponse, msRest.HttpOperationResponse>, callback?: TripleValueCallback<DigitalTwinUpdateDigitalTwinModelResponse, msRest.HttpOperationResponse>): void;
-  updateDigitalTwinModel(modelId: string, eTagOrCallback?: string | TripleValueCallback<DigitalTwinUpdateDigitalTwinModelResponse, msRest.HttpOperationResponse>, callback?: TripleValueCallback<DigitalTwinUpdateDigitalTwinModelResponse, msRest.HttpOperationResponse>): void | Promise<DigitalTwinUpdateDigitalTwinModelResponse>;
-
   invokeComponentCommand(digitalTwinId: string, componentName: string, commandName: string, argument: string): Promise<DigitalTwinInvokeComponentCommandResponse>;
   invokeComponentCommand(digitalTwinId: string, componentName: string, commandName: string, argument: string, callback: TripleValueCallback<DigitalTwinInvokeComponentCommandResponse, msRest.HttpOperationResponse>): void;
   invokeComponentCommand(digitalTwinId: string, componentName: string, commandName: string, argument: string, callback?: TripleValueCallback<DigitalTwinInvokeComponentCommandResponse, msRest.HttpOperationResponse>): void | Promise<DigitalTwinInvokeComponentCommandResponse>;

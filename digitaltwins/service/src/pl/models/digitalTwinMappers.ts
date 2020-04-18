@@ -11,6 +11,7 @@ export {
   DesiredState,
   DigitalTwinGetComponentHeaders,
   DigitalTwinGetComponentsHeaders,
+  DigitalTwinGetDigitalTwinHeaders,
   DigitalTwinGetDigitalTwinModelHeaders,
   DigitalTwinInterfaces,
   DigitalTwinInterfacesPatch,
@@ -18,12 +19,10 @@ export {
   DigitalTwinInterfacesPatchInterfacesValuePropertiesValue,
   DigitalTwinInterfacesPatchInterfacesValuePropertiesValueDesired,
   DigitalTwinInvokeComponentCommandHeaders,
-  DigitalTwinPatch,
+  DigitalTwinInvokeComponentCommandV2Headers,
   DigitalTwinUpdateComponentHeaders,
-  DigitalTwinUpdateDigitalTwinModelHeaders,
+  DigitalTwinUpdateDigitalTwinHeaders,
   InterfaceModel,
-  PatchOperation,
   Property,
-  Reported,
-  VariantValue
+  Reported
 } from "../models/mappers";
