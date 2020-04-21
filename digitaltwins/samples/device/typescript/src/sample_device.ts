@@ -1,6 +1,6 @@
 import { DigitalTwinClient, CommandCallback, CommandRequest, CommandResponse, PropertyChangedCallback, BaseInterface } from 'azure-iot-digitaltwins-device';
 import { EnvironmentalSensor } from './environmentalinterface';
-import { DeviceInformation } from './deviceinfointerface';
+import { DeviceInformation } from './deviceInformationInterface';
 import { SampleExit } from './exitInterface';
 
 
@@ -70,8 +70,8 @@ const environmentalSensor = new EnvironmentalSensor('environmentalSensor', envir
 const deviceInformation = new DeviceInformation('deviceInformation');
 const exitInterface = new SampleExit('dtmi_azureiot_azureiotsdknode_SampleInterface_SampleExit', undefined, exitHandler);
 
-const capabilityModel = 'dtmi:azureiot:samplemodel;1';
-let dtClient = DigitalTwinClient.fromConnectionString(capabilityModel, process.env.DEVICE_CONNECTION_STRING as string);
+const rootInterfaceId = 'dtmi:contoso_device_corp:samplemodel;1';
+let dtClient = DigitalTwinClient.fromConnectionString(rootInterfaceId, process.env.DEVICE_CONNECTION_STRING as string);
 
 const main = async () => {
   try {

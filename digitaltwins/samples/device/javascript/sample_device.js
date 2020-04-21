@@ -15,8 +15,8 @@
 'use strict';
 
 import { DigitalTwinClient } from 'azure-iot-digitaltwins-device';
-import { EnvironmentalSensor } from './environmentalinterface';
-import { DeviceInformation } from './deviceInformation';
+import { EnvironmentalSensor } from './environmentalInterface';
+import { DeviceInformation } from './deviceInformationInterface';
 
 let digitalTwinClient;
 
