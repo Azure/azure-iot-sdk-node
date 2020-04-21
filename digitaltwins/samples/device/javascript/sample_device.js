@@ -39,11 +39,11 @@ const commandHandler = (request, response) => {
 const environmentalSensor = new EnvironmentalSensor('environmentalSensor', propertyUpdateHandler, commandHandler);
 const deviceInformation = new DeviceInformation('deviceInformation');
 
-const rootInterfaceId = 'dtmi:contoso_device_corp:samplemodel;1';
+const modelId = 'dtmi:contoso_device_corp:samplemodel;1';
 
 async function main() {
   // mqtt is implied in this static method
-  digitalTwinClient = DigitalTwinClient.fromConnectionString(rootInterfaceId, process.env.DEVICE_CONNECTION_STRING);
+  digitalTwinClient = DigitalTwinClient.fromConnectionString(modelId, process.env.DEVICE_CONNECTION_STRING);
 
   // Add the interface instances to the Digital Twin Client
   digitalTwinClient.addComponents(

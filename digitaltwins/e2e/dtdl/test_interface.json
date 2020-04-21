@@ -1,5 +1,5 @@
 {
-  "@id": "urn:microsoft:azureiot:nodesdk:e2etest:1",
+  "@id": "urn:microsoft:contoso_device_corp:nodesdk:e2etest:1",
   "@type": "Interface",
   "displayName": "Azure IoT Node Client Library End-to-End Tests",
   "contents": [
@@ -47,5 +47,5 @@
       }
     }
   ],
-  "@context": "http://azureiot.com/v1/contexts/IoTModel.json"
+  "@context": "http://contoso_device_corp.com/v1/contexts/IoTModel.json"
 }

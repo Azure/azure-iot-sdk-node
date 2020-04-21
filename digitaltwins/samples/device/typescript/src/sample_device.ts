@@ -81,8 +81,8 @@ const environmentalSensor = new EnvironmentalSensor('environmentalSensor', envir
 const deviceInformation = new DeviceInformation('deviceInformation');
 const exitInterface = new SampleExit('dtmi_azureiot_azureiotsdknode_SampleInterface_SampleExit', undefined, exitHandler);
 
-const rootInterfaceId = 'dtmi:contoso_device_corp:samplemodel;1';
-let dtClient = DigitalTwinClient.fromConnectionString(rootInterfaceId, process.env.DEVICE_CONNECTION_STRING as string);
+const modelId = 'dtmi:contoso_device_corp:samplemodel;1';
+let dtClient = DigitalTwinClient.fromConnectionString(modelId, process.env.DEVICE_CONNECTION_STRING as string);
 
 const main = async () => {
   try {
