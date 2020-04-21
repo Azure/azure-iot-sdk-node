@@ -1,8 +1,19 @@
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+//
+//  █████╗ ███████╗██╗   ██╗██████╗ ███████╗    ██╗ ██████╗ ████████╗    ██████╗ ███╗   ██╗██████╗
+// ██╔══██╗╚══███╔╝██║   ██║██╔══██╗██╔════╝    ██║██╔═══██╗╚══██╔══╝    ██╔══██╗████╗  ██║██╔══██╗
+// ███████║  ███╔╝ ██║   ██║██████╔╝█████╗      ██║██║   ██║   ██║       ██████╔╝██╔██╗ ██║██████╔╝
+// ██╔══██║ ███╔╝  ██║   ██║██╔══██╗██╔══╝      ██║██║   ██║   ██║       ██╔═══╝ ██║╚██╗██║██╔═══╝
+// ██║  ██║███████╗╚██████╔╝██║  ██║███████╗    ██║╚██████╔╝   ██║       ██║     ██║ ╚████║██║
+// ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝    ╚═╝ ╚═════╝    ╚═╝       ╚═╝     ╚═╝  ╚═══╝╚═╝
+//
+// NOTE: In this sample (and this repository in general), the terms 'PnP' and 'Digital Twins' are used interchangeably.
+
 import { DigitalTwinClient, CommandCallback, CommandRequest, CommandResponse, PropertyChangedCallback, BaseInterface } from 'azure-iot-digitaltwins-device';
 import { EnvironmentalSensor } from './environmentalinterface';
 import { DeviceInformation } from './deviceInformationInterface';
 import { SampleExit } from './exitInterface';
-
 
 const environmentCommandCallback: CommandCallback = (request: CommandRequest, response: CommandResponse) => {
   console.log('Callback for command for environment interface');
