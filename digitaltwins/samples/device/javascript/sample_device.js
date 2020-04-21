@@ -23,8 +23,8 @@ const propertyUpdateHandler = async (component, propertyName, reportedValue, des
 
 const commandHandler = (request, response) => {
   console.log('received command: ' + request.commandName + ' for component: ' + request.componentName);
-  response.acknowledge(200, 'helpful response text')
-    .then(() => console.log('acknowledgement succeeded.'));
+  await response.acknowledge(200, 'helpful response text');
+  console.log('acknowledgement succeeded.');
 };
 
 
