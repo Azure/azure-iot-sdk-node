@@ -1,70 +1,129 @@
-// Copyright (c) Microsoft. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+const MqttWs = require('azure-iot-device-mqtt').Mqtt;
+const Client = require('azure-iot-device').Client;
+const Message = require('azure-iot-device').Message;
+const ExponentialBackoffWithJitter = require('azure-iot-common').ExponentialBackOffWithJitter;
+const moment = require('moment-timezone');
 
-'use strict';
+const connectString = process.env.DEVICE_CONNECTION_STRING;
+let client = Client.fromConnectionString(connectString, MqttWs);
+client.setRetryPolicy(new ExponentialBackoffWithJitter());
 
-var Protocol = require('azure-iot-device-mqtt').Mqtt;
-// Uncomment one of these transports and then change it in fromConnectionString to test other transports
-// var Protocol = require('azure-iot-device-amqp').AmqpWs;
-// var Protocol = require('azure-iot-device-http').Http;
-// var Protocol = require('azure-iot-device-amqp').Amqp;
-// var Protocol = require('azure-iot-device-mqtt').MqttWs;
-var Client = require('azure-iot-device').Client;
-var Message = require('azure-iot-device').Message;
+var messageCount = 0;
 
-// String containing Hostname, Device Id & Device Key in the following formats:
-//  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
-var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+var tokenValidTimeInSeconds =  70;
+var tokenRenewalMarginInSeconds = 51; //originally 360 seconds
 
-// fromConnectionString must specify a transport constructor, coming from any transport package.
-var client = Client.fromConnectionString(deviceConnectionString, Protocol);
+var options = {
+	tokenRenewal: {
+		tokenValidTimeInSeconds: tokenValidTimeInSeconds,
+		tokenRenewalMarginInSeconds: tokenRenewalMarginInSeconds
+	},
+	keepalive: 25
+}
 
-var connectCallback = function (err) {
-  if (err) {
-    console.error('Could not connect: ' + err.message);
-  } else {
-    console.log('Client connected');
-    client.on('message', function (msg) {
-      console.log('Id: ' + msg.messageId + ' Body: ' + msg.data);
-      // When using MQTT the following line is a no-op.
-      client.complete(msg, printResultFor('completed'));
-      // The AMQP and HTTP transports also have the notion of completing, rejecting or abandoning the message.
-      // When completing a message, the service that sent the C2D message is notified that the message has been processed.
-      // When rejecting a message, the service that sent the C2D message is notified that the message won't be processed by the device. the method to use is client.reject(msg, callback).
-      // When abandoning the message, IoT Hub will immediately try to resend it. The method to use is client.abandon(msg, callback).
-      // MQTT is simpler: it accepts the message by default, and doesn't support rejecting or abandoning a message.
-    });
-
-    // Create a message and send it to the IoT Hub every two seconds
-    var sendInterval = setInterval(function () {
-      var windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
-      var temperature = 20 + (Math.random() * 10); // range: [20, 30]
-      var humidity = 60 + (Math.random() * 20); // range: [60, 80]
-      var data = JSON.stringify({ deviceId: 'myFirstDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
-      var message = new Message(data);
-      message.properties.add('temperatureAlert', (temperature > 28) ? 'true' : 'false');
-      console.log('Sending message: ' + message.getData());
-      client.sendEvent(message, printResultFor('send'));
-    }, 2000);
-
-    client.on('error', function (err) {
-      console.error(err.message);
-    });
-
-    client.on('disconnect', function () {
-      clearInterval(sendInterval);
-      client.removeAllListeners();
-      client.open(connectCallback);
-    });
-  }
-};
+client.setOptions(options, function () {
+	console.log('[App] setOptions: done.');
+});
 
 client.open(connectCallback);
+var startTime = moment().utc().format();
 
-// Helper function to print results in the console
-function printResultFor(op) {
-  return function printResult(err, res) {
-    if (err) console.log(op + ' error: ' + err.toString());
-    if (res) console.log(op + ' status: ' + res.constructor.name);
-  };
+async function connectCallback(err) {
+	if (err) {
+		console.log(err);
+	} else {
+		console.log('[App] Connected to IoT Hub.');
+		client.on('disconnect', disconnectCallback);
+		client.on('error', errorCallback);
+		client.onDeviceMethod('test', (request, response) => {
+			console.log('test');
+			response.send(200, 'example payload', function(err) {
+				if(!!err) {
+					console.error('An error ocurred when sending a method response:\n' +
+						err.toString());
+				} else {
+					console.log('Response to method \'' + request.methodName +
+						'\' sent successfully.' );
+				}
+			});
+		});
+		await sleep(tokenRenewalMarginInSeconds * 1000 - (17 * 1000)); // originally subtracting 120 seconds, so sleeping for 240 seconds
+		//await sleep(43 * 60 * 1000); //for default renewal period
+		console.log('====================================================');
+		console.log('[App] Disconnect Ethernet cable in 5 seconds.');
+		console.log('[App] Time : ' + moment().utc().format());
+		console.log('====================================================');
+
+		await sleep(714);
+
+		const body = {};
+		body.category = 'test';
+		body.messageName = 'message';
+		body.id = messageCount;
+		await d2c(body);
+
+		await sleep(1 * 60 * 1000);
+
+		console.log('====================================================');
+		console.log('[App] Connect Ethernet cable in 30 seconds.');
+		console.log('[App] Time : ' + moment().utc().format());
+		console.log('====================================================');
+
+		setInterval(sendMessage, 4000);
+	}
 }
+
+async function sendMessage() {
+	messageCount += 1;
+	const body = {};
+	body.category = 'test';
+	body.messageName = 'message';
+	body.id = messageCount;
+	await d2c(body);
+}
+
+async function sleep(msec) {
+	return new Promise(
+		(resolve) => {
+			setTimeout(resolve, msec);
+		});
+}
+
+async function d2c(body) {
+	const message = new Message(JSON.stringify(body));
+	message.contentEncoding = 'utf-8';
+	message.contentType = 'application/json';
+
+	console.log('[App] Send Message : ' + body.id);
+	console.log('[App] Time : '  + moment().utc().format());
+	client.sendEvent(message, responseCallback(body.id));
+}
+
+function responseCallback(id) {
+	return (err, res) => {
+		console.log('[App] Recived Response : ' + id);
+		if (err) {
+			console.log(err);
+		}
+		if (res) {
+			console.log(res);
+		}
+	}
+}
+
+async function disconnectCallback() {
+	console.log('[App] Disconnected from IoT Hub');
+	console.log('Time : ' + moment().utc().format());
+	await client.close();
+}
+
+async function errorCallback(err) {
+	console.log('[App] Connection error.');
+	console.log('Time : ' + moment().utc().format());
+	console.log(err);
+	await client.close();
+}
+
+process.on('SIGINT', async () => {
+	process.exit();
+});

@@ -122,8 +122,33 @@ export class MqttBase extends EventEmitter {
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_033: [The `updateSharedAccessSignature` method shall disconnect and reconnect the mqtt client with the new `sharedAccessSignature`.]*/
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_035: [The `updateSharedAccessSignature` method shall call the `callback` argument with no parameters if the operation succeeds.]*/
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_036: [The `updateSharedAccessSignature` method shall call the `callback` argument with an `Error` if the operation fails.]*/
+            let switched = false;
+            const disconnectTimeout = setTimeout(() => {
+              debug('disconnecting mqtt client timed out. Force disconnecting.');
+              switched = true;
+              this._fsm.handle('forceDisconnect', callback);
+            }, 30000);
+
             debug('disconnecting mqtt client');
             this._disconnectClient(false, () => {
+              clearTimeout(disconnectTimeout);
+              if(!switched) {
+                debug('mqtt client disconnected - reconnecting');
+                this._connectClient((err, connack) => {
+                  if (err) {
+                    debug('failed to reconnect the client: ' + err.toString());
+                    this._fsm.transition('disconnected', callback, err);
+                  } else {
+                    debug('mqtt client reconnected successfully');
+                    this._fsm.transition('connected', callback, connack);
+                  }
+                });
+              }
+            });
+          },
+          forceDisconnect: (callback) => {
+            debug('force disconnecting mqtt client');
+            this._disconnectClient(true, () => {
               debug('mqtt client disconnected - reconnecting');
               this._connectClient((err, connack) => {
                 if (err) {
@@ -193,11 +218,14 @@ export class MqttBase extends EventEmitter {
 
   updateSharedAccessSignature(sharedAccessSignature: string, callback: (err?: Error) => void): void {
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_032: [The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the `sharedAccessSignature` argument is falsy.]*/
-    if (!sharedAccessSignature) {
-      throw new ReferenceError('sharedAccessSignature cannot be \'' + sharedAccessSignature + '\'');
-    }
-    this._config.sharedAccessSignature = sharedAccessSignature;
-    this._fsm.handle('updateSharedAccessSignature', callback);
+    (() => {
+      if (!sharedAccessSignature) {
+        throw new ReferenceError('sharedAccessSignature cannot be \'' + sharedAccessSignature + '\'');
+      }
+      this._config.sharedAccessSignature = sharedAccessSignature;
+
+      this._fsm.handle('updateSharedAccessSignature', callback);
+    })();
   }
 
   /**
