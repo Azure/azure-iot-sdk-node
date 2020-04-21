@@ -1,12 +1,22 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+
+//
+//  █████╗ ███████╗██╗   ██╗██████╗ ███████╗    ██╗ ██████╗ ████████╗    ██████╗ ███╗   ██╗██████╗
+// ██╔══██╗╚══███╔╝██║   ██║██╔══██╗██╔════╝    ██║██╔═══██╗╚══██╔══╝    ██╔══██╗████╗  ██║██╔══██╗
+// ███████║  ███╔╝ ██║   ██║██████╔╝█████╗      ██║██║   ██║   ██║       ██████╔╝██╔██╗ ██║██████╔╝
+// ██╔══██║ ███╔╝  ██║   ██║██╔══██╗██╔══╝      ██║██║   ██║   ██║       ██╔═══╝ ██║╚██╗██║██╔═══╝
+// ██║  ██║███████╗╚██████╔╝██║  ██║███████╗    ██║╚██████╔╝   ██║       ██║     ██║ ╚████║██║
+// ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝    ╚═╝ ╚═════╝    ╚═╝       ╚═╝     ╚═╝  ╚═══╝╚═╝
+//
+// NOTE: In this sample (and this repository in general), the terms 'PnP' and 'Digital Twins' are used interchangeably.
+
 'use strict';
 
-const DigitalTwinClient = require('azure-iot-digitaltwins-device').DigitalTwinClient;
-
-const EnvironmentalSensor = require('./environmentalinterface').EnvironmentalSensor;
-const DeviceInformation = require('./deviceInformation').DeviceInformation;
+import { DigitalTwinClient } from 'azure-iot-digitaltwins-device';
+import { EnvironmentalSensor } from './environmentalinterface';
+import { DeviceInformation } from './deviceInformation';
 
 let digitalTwinClient;
 
@@ -31,11 +41,11 @@ const commandHandler = (request, response) => {
 const environmentalSensor = new EnvironmentalSensor('environmentalSensor', propertyUpdateHandler, commandHandler);
 const deviceInformation = new DeviceInformation('deviceInformation');
 
-const capabilityModel = 'dtmi:azureiot:samplemodel;1';
+const rootInterfaceId = 'dtmi:contoso_device_corp:samplemodel;1';
 
 async function main() {
   // mqtt is implied in this static method
-  digitalTwinClient = DigitalTwinClient.fromConnectionString(capabilityModel, process.env.DEVICE_CONNECTION_STRING);
+  digitalTwinClient = DigitalTwinClient.fromConnectionString(rootInterfaceId, process.env.DEVICE_CONNECTION_STRING);
 
   // Add the interface instances to the Digital Twin Client
   digitalTwinClient.addComponents(
@@ -59,8 +69,8 @@ async function main() {
     manufacturer: 'Contoso Device Corporation',
     model: 'Contoso 47-turbo',
     swVersion: '3.1',
-    osName: 'ContosoOS',
-    processorArchitecture: 'Cotosox86',
+    osName: 'Contoso_OS',
+    processorArchitecture: 'Contoso_x86',
     processorManufacturer: 'Contoso Industries',
     totalStorage: 65000,
     totalMemory: 640,
