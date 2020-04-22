@@ -30,7 +30,19 @@ async function main() {
       console.log(JSON.stringify(digitalTwin.environmentalSensor, null, 2));
     }
 
-    const patch = '<JSON patch goes here>';
+   const patch = {
+    interfaces: {
+      '<INTERFACE NAME>': { // for the environmental sensor, try "environmentalSensor"
+        properties: {
+          '<PROPERTY NAME>': { // for the environmental sensor, try "brightness"
+            desired: {
+              value: '<VALUE>' // for the environmental sensor, try 42 (note that this is a number, not a string, so don't include quotes).
+            }
+          },
+        }
+      }
+    }
+  };  
     console.log('patch:');
     console.log(JSON.stringify(patch, null, 2));
 
