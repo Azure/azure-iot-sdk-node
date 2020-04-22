@@ -1,11 +1,11 @@
 {
-  "@id": "urn:microsoft:contoso_device_corp:nodesdk:e2etest:cm:1",
+  "@id": "dtmi:microsofot:contoso_device_corp:nodesdk:e2etest:cm:1",
   "@type": "CapabilityModel",
   "displayName": "Test capability Model",
   "implements": [
     {
       "name": "testComponent",
-      "schema": "urn:microsoft:contoso_device_corp:nodesdk:e2etest:1"
+      "schema": "dtmi:microsofot:contoso_device_corp:nodesdk:e2etest:1"
     }
   ],
   "@context": "http://contoso_device_corp.com/v1/contexts/IoTModel.json"

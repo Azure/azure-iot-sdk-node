@@ -1,5 +1,5 @@
 {
-  "@id": "urn:microsoft:contoso_device_corp:nodesdk:e2etest:1",
+  "@id": "dtmi:microsofot:contoso_device_corp:nodesdk:e2etest:1",
   "@type": "Interface",
   "displayName": "Azure IoT Node Client Library End-to-End Tests",
   "contents": [
