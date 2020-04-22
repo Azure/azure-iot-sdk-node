@@ -3,23 +3,12 @@
 
 'use strict';
 
-import {
-  BaseInterface,
-  Property
-} from 'azure-iot-digitaltwins-device';
+const BaseInterface = require('azure-iot-digitaltwins-device').BaseInterface;
+const Property = require('azure-iot-digitaltwins-device').Property;
 
-export class DeviceInformation extends BaseInterface {
-  manufacturer: Property;
-  model: Property;
-  swVersion: Property;
-  osName: Property;
-  processorArchitecture: Property;
-  processorManufacturer: Property;
-  totalStorage: Property;
-  totalMemory: Property;
-
-  constructor(componentName: string) {
-    super(componentName, 'dtmi:azureiot:DeviceInformation;1');
+module.exports.DeviceInformation = class DeviceInformation extends BaseInterface {
+  constructor(name, propertyCallback, commandCallback) {
+    super(name, 'dtmi:contoso_device_corp:DeviceManagement:DeviceInformation;1', propertyCallback, commandCallback);
     this.manufacturer = new Property();
     this.model = new Property();
     this.swVersion = new Property();
@@ -29,4 +18,4 @@ export class DeviceInformation extends BaseInterface {
     this.totalStorage = new Property();
     this.totalMemory = new Property();
   }
-}
+};

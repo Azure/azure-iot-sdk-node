@@ -39,7 +39,7 @@ describe('Private Model Repository CRUD operations', function () {
 
   it('can get an existing model from the repository', function () {
     this.timeout(60000); // eslint-disable-line no-invalid-this
-    const modelInformationUrn = 'dtmi:azureiot:ModelDiscovery:ModelInformation;1';
+    const modelInformationUrn = 'dtmi:contoso_device_corp:ModelDiscovery:ModelInformation;1';
     debug('getting model: ' + modelInformationUrn);
     return modelRepositoryServiceClient.getModel(modelInformationUrn)
       .then((getResponse) => {

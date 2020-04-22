@@ -31,7 +31,7 @@ const commandHandler = (request, response) => {
 const environmentalSensor = new EnvironmentalSensor('environmentalSensor', propertyUpdateHandler, commandHandler);
 
 
-const capabilityModel = 'dtmi:azureiot:samplemodel;1';
+const capabilityModel = 'dtmi:contoso_device_corp:samplemodel;1';
 
 async function main() {
   const digitalTwinClient = DigitalTwinClient.fromConnectionString(capabilityModel, process.argv[2]);
@@ -86,25 +86,6 @@ Must be called so the property update callbacks you create for interfaces will h
 
 ### enableCommands
 Sends a registration message to the service.  Sets up handlers for all writable property changes. Sets up handlers for commands.  Sends property reports for SDK Information.  Can be invoked as to return a promise or returning void but invoking a callback upon completion.
-
-**SRS_NODE_DIGITAL_TWIN_DEVICE_06_010: [** Will send a telemetry message with the following
-properties and payload to perform the registration:
-```
-payload:
-{modelInformation:
-  capabilityModelId: <capabilityModelURN>,
-  interfaces: {
-    <componentName>: <interfaceId>
-  }
-}
-message application properties:
-$.ifid : 'dtmi:com:azureiot:ModelDiscovery:ModelInformation;1'
-$.sub: 'dtmi_azureiot_ModelDiscovery_ModelInformation'
-$.schema: 'modelInformation'
-contentType: 'application/json'
-contentEncoding: 'utf-8'
-```
- **]**
 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_011: [** Will indicate an error via a callback or by promise rejection if the registration message fails. **]**
 
