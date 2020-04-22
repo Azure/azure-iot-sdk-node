@@ -23,6 +23,7 @@ async function main() {
     const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
 
     // Print digital twin
+<<<<<<< HEAD
     console.log(digitalTwin.$metadata);
 
     const patch2 = [{
@@ -43,6 +44,29 @@ async function main() {
         }
     };
 
+=======
+    console.log('device information:');
+    console.log(JSON.stringify(digitalTwin.deviceInformation, null, 2));
+    if (digitalTwin.environmentalSensor) {
+      console.log('environmental sensor:');
+      console.log(JSON.stringify(digitalTwin.environmentalSensor, null, 2));
+    }
+
+   const patch = {
+    interfaces: {
+      '<INTERFACE NAME>': { // for the environmental sensor, try "environmentalSensor"
+        properties: {
+          '<PROPERTY NAME>': { // for the environmental sensor, try "brightness"
+            desired: {
+              value: '<VALUE>' // for the environmental sensor, try 42 (note that this is a number, not a string, so don't include quotes).
+            }
+          },
+        }
+      }
+    }
+  };  
+    console.log('patch:');
+>>>>>>> public-preview-pnp
     console.log(JSON.stringify(patch, null, 2));
 
     // Update digital twin
