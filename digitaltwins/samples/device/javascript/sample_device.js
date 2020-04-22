@@ -12,9 +12,9 @@
 
 'use strict';
 
-import { DigitalTwinClient } from 'azure-iot-digitaltwins-device';
-import { EnvironmentalSensor } from './environmentalInterface';
-import { DeviceInformation } from './deviceInformationInterface';
+const DigitalTwinClient = require('azure-iot-digitaltwins-device').DigitalTwinClient;
+const EnvironmentalSensor = require('./environmentalInterface').EnvironmentalSensor;
+const DeviceInformation = require('./deviceInformationInterface').DeviceInformation;
 
 let digitalTwinClient;
 
@@ -43,9 +43,11 @@ const modelId = 'dtmi:contoso_device_corp:samplemodel;1';
 
 async function main() {
   // mqtt is implied in this static method
+  console.log('Creating Digital Twin Client from provided device connection string.');
   digitalTwinClient = DigitalTwinClient.fromConnectionString(modelId, process.env.DEVICE_CONNECTION_STRING);
 
   // Add the interface instances to the Digital Twin Client
+  console.log('Adding the components to the DTClient.');
   digitalTwinClient.addComponents(
     environmentalSensor,
     deviceInformation,
@@ -56,13 +58,16 @@ async function main() {
   // For information on how to write a commandHandler (aka a callback for handling 'direct' methods):
   // https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#respond-to-a-direct-method
   // Ex. for `blink` property in the EnvironmentalSensor, it will now be handled by the commandHandler method that you wrote.
+  console.log('Enabling the commands on the DTClient');
   digitalTwinClient.enableCommands();
 
   // enablePropertyUpdates will use the device twin to listen for updates to the writable properties in the interface instances that have been set.
   // Ex. for `brightness` property, which is set as a writable property, updates will be handled by the propertyUpdateHandler you've written.
+  console.log('Enabling property updates on the DTClient');
   await digitalTwinClient.enablePropertyUpdates();
 
   // report all of the device information.
+  console.log('Reporting deviceInformation properties...');
   await digitalTwinClient.report(deviceInformation, {
     manufacturer: 'Contoso Device Corporation',
     model: 'Contoso 47-turbo',
@@ -74,11 +79,14 @@ async function main() {
     totalMemory: 640,
   });
 
+  console.log('Reporting environmentalSensor properties...');
   await digitalTwinClient.report(environmentalSensor, { state: true });
 
-  console.log('Sending telemtry every 5 seconds.  We won\'t print them out because it\'s tedious to watch.');
+  let index = 0;
   setInterval( async () => {
+    console.log('Sending telemetry message %d...', index);
     await digitalTwinClient.sendTelemetry(environmentalSensor, { temp: 1 + (Math.random() * 90), humid: 1 + (Math.random() * 99) });
+    index += 1;
   }, 5000);
 };
 
