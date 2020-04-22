@@ -22,22 +22,19 @@ async function main() {
     // Get digital twin
     const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
 
-    // Print digital twin
-    console.log(digitalTwin);
-
     const patch = {
-        interfaces: {
-            sensor: { // for the environmental sensor, try "environmentalSensor"
-                properties: {
-                    name: { // for the environmental sensor, try "brightness"
-                        desired: {
-                            value: 'Update from patch' // for the environmental sensor, try 42 (note that this is a number, not a string, so don't include quotes).
+            "interfaces": {
+                    "sensor": {
+                        "properties": {
+                            "name": {
+                                "desired": {
+                                    "value": "Update from patch"
+                                }
+                            }
                         }
-                    },
+                    }
                 }
-            }
-        }
-    };  
+            };
 
     console.log('patch:');
     console.log(JSON.stringify(patch, null, 2));
