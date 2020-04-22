@@ -23,13 +23,9 @@ async function main() {
     console.log('getting digital twin for device ' + deviceId + '...');
     const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
 
-    // Print digital twin
-    console.log('device information:');
-    console.log(JSON.stringify(digitalTwin.deviceInformation, null, 2));
-    if (digitalTwin.environmentalSensor) {
-      console.log('environmental sensor:');
-      console.log(JSON.stringify(digitalTwin.environmentalSensor, null, 2));
-    }
+    // Print digital twin object members
+    console.log('device metadata:');
+    console.log(JSON.stringify(digitalTwin.$metadata, null, 2));
   } catch (err) {
     console.log(err);
   }
