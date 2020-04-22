@@ -1,13 +1,25 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 'use strict';
 
-const BaseInterface = require('azure-iot-digitaltwins-device').BaseInterface;
-const Property = require('azure-iot-digitaltwins-device').Property;
+import {
+  BaseInterface,
+  Property
+} from 'azure-iot-digitaltwins-device';
 
-module.exports.DeviceInformation = class DeviceInformation extends BaseInterface {
-  constructor(name, propertyCallback, commandCallback) {
-    super(name, 'dtmi:azure:DeviceManagement:DeviceInformation;1', propertyCallback, commandCallback);
+export class DeviceInformation extends BaseInterface {
+  manufacturer: Property;
+  model: Property;
+  swVersion: Property;
+  osName: Property;
+  processorArchitecture: Property;
+  processorManufacturer: Property;
+  totalStorage: Property;
+  totalMemory: Property;
+
+  constructor(componentName: string) {
+    super(componentName, 'dtmi:contoso_device_corp:DeviceInformation;1');
     this.manufacturer = new Property();
     this.model = new Property();
     this.swVersion = new Property();
@@ -17,4 +29,4 @@ module.exports.DeviceInformation = class DeviceInformation extends BaseInterface
     this.totalStorage = new Property();
     this.totalMemory = new Property();
   }
-};
+}

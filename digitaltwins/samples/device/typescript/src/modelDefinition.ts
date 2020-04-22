@@ -7,7 +7,7 @@ import { BaseInterface, Command, PropertyChangedCallback, CommandCallback } from
 export class ModelDefinition extends BaseInterface {
   getModelDefinition: Command;
   constructor(componentName: string, propertyChangedCallback?: PropertyChangedCallback, commandCallback?: CommandCallback) {
-    super(componentName, 'dtmi:azureiot:ModelDiscovery:ModelDefinition;1', propertyChangedCallback, commandCallback);
+    super(componentName, 'dtmi:contoso_device_corp:ModelDiscovery:ModelDefinition;1', propertyChangedCallback, commandCallback);
     this.getModelDefinition = new Command();
   }
 }

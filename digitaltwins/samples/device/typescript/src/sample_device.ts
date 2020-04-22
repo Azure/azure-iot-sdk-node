@@ -1,8 +1,19 @@
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+//
+//  █████╗ ███████╗██╗   ██╗██████╗ ███████╗    ██╗ ██████╗ ████████╗    ██████╗ ███╗   ██╗██████╗
+// ██╔══██╗╚══███╔╝██║   ██║██╔══██╗██╔════╝    ██║██╔═══██╗╚══██╔══╝    ██╔══██╗████╗  ██║██╔══██╗
+// ███████║  ███╔╝ ██║   ██║██████╔╝█████╗      ██║██║   ██║   ██║       ██████╔╝██╔██╗ ██║██████╔╝
+// ██╔══██║ ███╔╝  ██║   ██║██╔══██╗██╔══╝      ██║██║   ██║   ██║       ██╔═══╝ ██║╚██╗██║██╔═══╝
+// ██║  ██║███████╗╚██████╔╝██║  ██║███████╗    ██║╚██████╔╝   ██║       ██║     ██║ ╚████║██║
+// ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝    ╚═╝ ╚═════╝    ╚═╝       ╚═╝     ╚═╝  ╚═══╝╚═╝
+//
+// NOTE: In this sample (and this repository in general), the terms 'PnP' and 'Digital Twins' are used interchangeably.
+
 import { DigitalTwinClient, CommandCallback, CommandRequest, CommandResponse, PropertyChangedCallback, BaseInterface } from 'azure-iot-digitaltwins-device';
 import { EnvironmentalSensor } from './environmentalinterface';
-import { DeviceInformation } from './deviceinfointerface';
+import { DeviceInformation } from './deviceInformationInterface';
 import { SampleExit } from './exitInterface';
-
 
 const environmentCommandCallback: CommandCallback = (request: CommandRequest, response: CommandResponse) => {
   console.log('Callback for command for environment interface');
@@ -70,8 +81,8 @@ const environmentalSensor = new EnvironmentalSensor('environmentalSensor', envir
 const deviceInformation = new DeviceInformation('deviceInformation');
 const exitInterface = new SampleExit('dtmi_azureiot_azureiotsdknode_SampleInterface_SampleExit', undefined, exitHandler);
 
-const capabilityModel = 'dtmi:azureiot:samplemodel;1';
-let dtClient = DigitalTwinClient.fromConnectionString(capabilityModel, process.env.DEVICE_CONNECTION_STRING as string);
+const modelId = 'dtmi:contoso_device_corp:samplemodel;1';
+let dtClient = DigitalTwinClient.fromConnectionString(modelId, process.env.DEVICE_CONNECTION_STRING as string);
 
 const main = async () => {
   try {
