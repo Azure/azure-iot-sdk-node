@@ -4,7 +4,7 @@
 
 'use strict';
 
-export const apiVersion = '2019-03-30';
+export const apiVersion = '2020-05-31-preview';
 export const apiVersionLimitedAvail = '2020-03-13';
 
 export function devicePath(deviceId: string): string {

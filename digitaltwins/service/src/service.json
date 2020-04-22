@@ -1,0 +1,236 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "2020-05-31-preview",
+    "title": "IotHub Gateway Service APIs"
+  },
+  "host": "fully-qualified-iothubname.azure-devices.net",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/digitaltwins/{digitalTwinId}": {
+      "get": {
+        "summary": "Gets the digital twin.",
+        "operationId": "DigitalTwin_GetDigitalTwin",
+        "consumes": [],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "digitalTwinId",
+            "in": "path",
+            "description": "Digital Twin ID. Format of digitalTwinId is DeviceId[~ModuleId]. ModuleId is optional.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "$ref": "#/parameters/api-version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the digital twin object",
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates the digital twin.",
+        "operationId": "DigitalTwin_UpdateDigitalTwin",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "digitalTwinId",
+            "in": "path",
+            "description": "ID of digital twin.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "digitalTwinPatch",
+            "in": "body",
+            "description": "json-patch contents to update.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/DigitalTwinPatch"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "$ref": "#/parameters/api-version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "202": {
+            "description": "Accepted"
+          }
+        }
+      }
+    },
+    "/digitalTwins/{digitalTwinId}/components/{componentName}/commands/{commandName}": {
+      "post": {
+        "summary": "Invoke a digital twin command.",
+        "description": "Invoke a digital twin  command.",
+        "operationId": "DigitalTwin_InvokeComponentCommand",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "digitalTwinId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "componentName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "commandName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "payload",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "description": "The Request Payload",
+              "type": "object"
+            }
+          },
+          {
+            "$ref": "#/parameters/api-version"
+          },
+          {
+            "name": "connectTimeoutInSeconds",
+            "in": "query",
+            "description": "Connect timeout in seconds.",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "responseTimeoutInSeconds",
+            "in": "query",
+            "description": "Response timeout in seconds.",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the digital twin command response payload",
+            "schema": {
+              "description": "The Response Payload",
+              "type": "object"
+            },
+            "headers": {
+              "x-ms-command-statuscode": {
+                "description": "Device Generated Status Code for this Operation",
+                "type": "integer",
+                "format": "int32"
+              },
+              "x-ms-request-id": {
+                "description": "Server Generated Request Id (GUID), to uniquely identify this request in the service",
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "DigitalTwinPatch": {
+      "type": "object",
+      "properties": {
+        "Operations": {
+          "description": "List of digital twin json-patch operations.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PatchOperation"
+          }
+        }
+      }
+    },
+    "PatchOperation": {
+      "type": "object",
+      "properties": {
+        "op": {
+          "description": "Json patch \"op\" memeber,represents operations such as \"add\", \"remove\", \"replace\".",
+          "enum": [
+            "add",
+            "replace",
+            "remove"
+          ],
+          "type": "string"
+        },
+        "path": {
+          "description": "Json patch \"path\" member.",
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/definitions/VariantValue",
+          "description": "Json patch \"value\" member."
+        },
+        "from": {
+          "description": "Json patch \"from\" member.",
+          "type": "string"
+        }
+      }
+    },
+    "VariantValue": {
+      "description": "Base class for serializable value of indetermined type.",
+      "type": "object",
+      "properties": {
+        "ObjectValue": {
+          "type": "object",
+          "readOnly": true
+        },
+        "IsNull": {
+          "type": "boolean",
+          "readOnly": true
+        }
+      }
+    }
+  },
+  "parameters": {
+    "api-version": {
+      "name": "api-version",
+      "in": "query",
+      "description": "Version of the Api.",
+      "required": true,
+      "type": "string",
+      "default": "2020-05-31-preview"
+    }
+  }
+}

@@ -16,7 +16,16 @@
     "security/*",
     "longhaultests",
     "e2etests",
-    "ts-e2e"
+    "ts-e2e",
+    "digitaltwins/device",
+    "digitaltwins/service",
+    "digitaltwins/model_repository",
+    "digitaltwins/e2e",
+    "digitaltwins/samples/device/javascript",
+    "digitaltwins/samples/device/typescript",
+    "digitaltwins/samples/service",
+    "digitaltwins/samples/model_repository",
+    "digitaltwins/samples/iot_central_device"
   ],
   "version": "0.0.0",
   "maxBuffer": 1048576
