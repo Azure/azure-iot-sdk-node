@@ -6,10 +6,10 @@
   "author": "Microsoft Corp.",
   "license": "MIT",
   "dependencies": {
-    "azure-iot-device": "1.13.0",
-    "azure-iot-device-amqp": "1.12.0",
-    "azure-iot-device-http": "1.12.0",
-    "azure-iot-device-mqtt": "1.12.0",
+    "azure-iot-device": "1.14.0",
+    "azure-iot-device-amqp": "1.12.1",
+    "azure-iot-device-http": "1.12.1",
+    "azure-iot-device-mqtt": "1.13.0",
     "es5-shim": "^4.5.12",
     "lodash": "^4.17.15"
   },
