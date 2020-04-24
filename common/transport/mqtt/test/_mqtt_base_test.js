@@ -449,7 +449,8 @@ describe('MqttBase', function () {
       transport.connect(fakeConfig, function () {
         assert.isTrue(fakeMqtt.connect.calledOnce);
         assert.strictEqual(fakeMqtt.connect.firstCall.args[1].password, fakeConfig.sharedAccessSignature);
-        transport.updateSharedAccessSignature(newSas, function () {
+        transport.updateSharedAccessSignature(newSas, function (err) {
+          assert.notExists(err);
           /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_035: [The `updateSharedAccessSignature` method shall call the `callback` argument with no parameters if the operation succeeds.]*/
           assert.isTrue(fakeMqtt.end.calledOnce);
           assert.isTrue(fakeMqtt.connect.calledTwice);
@@ -463,7 +464,7 @@ describe('MqttBase', function () {
     });
 
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_41_XXX: [The `updateSharedAccessSignature` method shall trigger a forced disconnect if after 30 seconds the mqtt client has failed to complete a non-forced disconnect.]*/
-    it('disconnects and reconnects the mqtt client', function (testCallback) {
+    it('force disconnects the client on disconnect timeout during reconnecting', function (testCallback) {
       this.clock = sinon.useFakeTimers();
       var newSas = 'newsas';
       var fakeMqtt = new FakeMqtt();
@@ -482,8 +483,9 @@ describe('MqttBase', function () {
       transport.connect(fakeConfig, function () {
         assert.isTrue(fakeMqtt.connect.calledOnce);
         assert.strictEqual(fakeMqtt.connect.firstCall.args[1].password, fakeConfig.sharedAccessSignature);
-        transport.updateSharedAccessSignature(newSas, function () {
+        transport.updateSharedAccessSignature(newSas, function (err) {
           /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_035: [The `updateSharedAccessSignature` method shall call the `callback` argument with no parameters if the operation succeeds.]*/
+          assert.notExists(err);
           assert.isTrue(fakeMqtt.end.calledTwice);
           assert.isTrue(fakeMqtt.connect.calledTwice);
           assert.strictEqual(fakeMqtt.connect.secondCall.args[1].password, newSas);
@@ -511,6 +513,34 @@ describe('MqttBase', function () {
         fakeMqtt.emit('error', fakeError);
       });
 
+      fakeMqtt.emit('connect');
+    });
+
+    /*Tests_SRS_NODE_COMMON_MQTT_BASE_41_XXX: [The `updateSharedAccessSignature` method shall trigger a forced disconnect if after 30 seconds the mqtt client has failed to complete a non-forced disconnect.]*/
+    it('calls the callback with an error if it fails to reconnect the mqtt client (force disconnect)', function (testCallback) {
+      this.clock = sinon.useFakeTimers();
+      var fakeError = new Error('fake failed to reconnect');
+      var fakeMqtt = new FakeMqtt();
+      fakeMqtt.end = sinon.stub();
+      fakeMqtt.end.onFirstCall().callsFake((force, callback) => {
+        this.clock.tick(30000);
+        callback();
+      }).bind(this);
+      fakeMqtt.end.onSecondCall().callsFake((force, callback) => {
+        callback();
+      });
+      var transport = new MqttBase(fakeMqtt);
+      transport.connect(fakeConfig, function () {
+        transport.updateSharedAccessSignature('newSas', function (err) {
+          /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_035: [The `updateSharedAccessSignature` method shall call the `callback` argument with no parameters if the operation succeeds.]*/
+          assert.isTrue(fakeMqtt.end.calledTwice);
+          assert.isTrue(fakeMqtt.connect.calledTwice);
+          assert.strictEqual(err, fakeError);
+          this.clock.restore();
+          testCallback();
+        }.bind(this));
+        fakeMqtt.emit('error', fakeError);
+      }.bind(this));
       fakeMqtt.emit('connect');
     });
   });
