@@ -222,7 +222,6 @@ export class MqttBase extends EventEmitter {
       throw new ReferenceError('sharedAccessSignature cannot be \'' + sharedAccessSignature + '\'');
     }
     this._config.sharedAccessSignature = sharedAccessSignature;
-
     this._fsm.handle('updateSharedAccessSignature', callback);
   }
 
