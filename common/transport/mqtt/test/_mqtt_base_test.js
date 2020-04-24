@@ -462,6 +462,40 @@ describe('MqttBase', function () {
       fakeMqtt.emit('connect');
     });
 
+    /*Tests_SRS_NODE_COMMON_MQTT_BASE_41_XXX: [The `updateSharedAccessSignature` method shall trigger a forced disconnect if after 30 seconds the mqtt client has failed to complete a non-forced disconnect.]*/
+    it.only('disconnects and reconnects the mqtt client', function (testCallback) {
+      this.clock = sinon.useFakeTimers();
+      var newSas = 'newsas';
+      var fakeMqtt = new FakeMqtt();
+      fakeMqtt.end = sinon.stub();
+      fakeMqtt.end.onFirstCall().callsFake((force, callback) => {
+        assert.isFalse(force);
+        this.clock.tick(30000);
+        callback();
+      }).bind(this);
+
+      fakeMqtt.end.onSecondCall().callsFake((force, callback) => {
+        assert.isTrue(force);
+        callback();
+      }).bind(this);
+      var transport = new MqttBase(fakeMqtt);
+      transport.connect(fakeConfig, function () {
+        assert.isTrue(fakeMqtt.connect.calledOnce);
+        assert.strictEqual(fakeMqtt.connect.firstCall.args[1].password, fakeConfig.sharedAccessSignature);
+        transport.updateSharedAccessSignature(newSas, function () {
+          /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_035: [The `updateSharedAccessSignature` method shall call the `callback` argument with no parameters if the operation succeeds.]*/
+          assert.isTrue(fakeMqtt.end.calledTwice);
+          assert.isTrue(fakeMqtt.connect.calledTwice);
+          assert.strictEqual(fakeMqtt.connect.secondCall.args[1].password, newSas);
+          this.clock.restore();
+          testCallback();
+        }.bind(this));
+        fakeMqtt.emit('connect');
+      }.bind(this));
+
+      fakeMqtt.emit('connect');
+    });
+
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_036: [The `updateSharedAccessSignature` method shall call the `callback` argument with an `Error` if the operation fails.]*/
     it('calls the callback with an error if it fails to reconnect the mqtt client', function (testCallback) {
       var fakeError = new Error('fake failed to reconnect');
