@@ -463,7 +463,7 @@ describe('MqttBase', function () {
     });
 
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_41_XXX: [The `updateSharedAccessSignature` method shall trigger a forced disconnect if after 30 seconds the mqtt client has failed to complete a non-forced disconnect.]*/
-    it.only('disconnects and reconnects the mqtt client', function (testCallback) {
+    it('disconnects and reconnects the mqtt client', function (testCallback) {
       this.clock = sinon.useFakeTimers();
       var newSas = 'newsas';
       var fakeMqtt = new FakeMqtt();
