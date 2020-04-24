@@ -218,14 +218,12 @@ export class MqttBase extends EventEmitter {
 
   updateSharedAccessSignature(sharedAccessSignature: string, callback: (err?: Error) => void): void {
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_032: [The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the `sharedAccessSignature` argument is falsy.]*/
-    (() => {
-      if (!sharedAccessSignature) {
-        throw new ReferenceError('sharedAccessSignature cannot be \'' + sharedAccessSignature + '\'');
-      }
-      this._config.sharedAccessSignature = sharedAccessSignature;
+    if (!sharedAccessSignature) {
+      throw new ReferenceError('sharedAccessSignature cannot be \'' + sharedAccessSignature + '\'');
+    }
+    this._config.sharedAccessSignature = sharedAccessSignature;
 
-      this._fsm.handle('updateSharedAccessSignature', callback);
-    })();
+    this._fsm.handle('updateSharedAccessSignature', callback);
   }
 
   /**
