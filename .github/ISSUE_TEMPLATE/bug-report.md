@@ -36,11 +36,11 @@ Below is a generic bug report format. We recommend you use it as a template and 
 
 # Context
 
-- **OS and version used:** <VERSION> (Windows 10, Ubuntu 18.04, etc. )
-- **Node version:** <VERSION> 
-- **npm version:** <VERSION> 
-- **list of installed packages:** <VERSION> 
-- **cloned repo:** <VERSION> ( **If** you are using a cloned sdk repository, in a command prompt: git describe )
+- **OS and version used:** <VERSION> <!-- Windows 10, Ubuntu 18.04... -->
+- **Node.js version:** <VERSION> <!-- in a command prompt: node --version -->
+- **npm version:** <VERSION> <!-- in a command prompt: npm --version -->
+- **list of installed packages:** <VERSION> <!-- in a command prompt, from the directory containing your code: npm list -->
+- **cloned repo:** <VERSION> <!-- **If** you are using a cloned sdk repository, in a command prompt: git describe -->
 
 ## Description of the issue
 
