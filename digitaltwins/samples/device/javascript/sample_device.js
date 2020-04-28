@@ -55,9 +55,6 @@ async function main() {
 
   // enableCommands will enable the AzureDigitalTwinCommand properties in your interfaces to receive PnP commands from the service, and respond via
   // the commandHandler you created for your interface.
-  // For information on how to write a commandHandler (aka a callback for handling 'direct' methods):
-  // https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#respond-to-a-direct-method
-  // Ex. for `blink` property in the EnvironmentalSensor, it will now be handled by the commandHandler method that you wrote.
   console.log('Enabling the commands on the DTClient');
   digitalTwinClient.enableCommands();
 

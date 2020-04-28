@@ -74,26 +74,24 @@ const modelId = 'dtmi:YOUR_COMPANY_NAME_HERE:sample_device;1';
 let dtClient = DigitalTwinClient.fromConnectionString(modelId, process.env.DEVICE_CONNECTION_STRING as string);
 
 const main = async () => {
-  try {
-    await dtClient.report(environmentalSensor, {state: true});
-    await dtClient.report(deviceInformation, {
-      manufacturer: 'Contoso Device Corporation',
-      model: 'Contoso 4762B-turbo',
-      swVersion: '3.1',
-      osName: 'ContosoOS',
-      processorArchitecture: '4762',
-      processorManufacturer: 'Contoso Foundries',
-      totalStorage: '64000',
-      totalMemory: '640'
-    });
+  await dtClient.report(environmentalSensor, {state: true});
+  await dtClient.report(deviceInformation, {
+    manufacturer: 'Contoso Device Corporation',
+    model: 'Contoso 4762B-turbo',
+    swVersion: '3.1',
+    osName: 'ContosoOS',
+    processorArchitecture: '4762',
+    processorManufacturer: 'Contoso Foundries',
+    totalStorage: '64000',
+    totalMemory: '640'
+  });
 
-    // send telemetry every 5 seconds
-    setInterval( async () => {
-      await dtClient.sendTelemetry( environmentalSensor, { temp: 10 + (Math.random() * 90), humid: 1 + (Math.random() * 99) } );
-    }, 5000);
-  } catch (err) {
-    console.log('error from operation is: ' + err.toString());
-  }
+  let index = 0;
+  setInterval( async () => {
+    console.log('Sending telemetry message %d...', index);
+    await dtClient.sendTelemetry(environmentalSensor, { temp: 1 + (Math.random() * 90), humid: 1 + (Math.random() * 99) });
+    index += 1;
+  }, 5000);
 };
 
 dtClient.addComponents(environmentalSensor, deviceInformation);
@@ -104,5 +102,4 @@ dtClient.enablePropertyUpdates()
   .then(() => {
     console.log('enabled the property updates.');
     main();
-  })
-  .catch(() => {console.log('the registration failed.');});
+  });
