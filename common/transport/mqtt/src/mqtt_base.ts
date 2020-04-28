@@ -316,7 +316,7 @@ export class MqttBase extends EventEmitter {
     debug('removing all listeners');
     this._mqttClient.removeAllListeners();
     debug('adding null error listener');
-    this._mqttClient.on('error', () => {});
+    this._mqttClient.on('error', () => { /* null listener */ });
     /* Codes_SRS_NODE_COMMON_MQTT_BASE_16_001: [The disconnect method shall call the done callback when the connection to the server has been closed.] */
     this._mqttClient.end(forceDisconnect, callback);
   }
