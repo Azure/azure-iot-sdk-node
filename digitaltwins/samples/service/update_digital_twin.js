@@ -23,15 +23,9 @@ async function main() {
     const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
 
     // Print digital twin
-    console.log('device information:');
-    console.log(JSON.stringify(digitalTwin.deviceInformation, null, 2));
-    if (digitalTwin.environmentalSensor) {
-      console.log('environmental sensor:');
-      console.log(JSON.stringify(digitalTwin.environmentalSensor, null, 2));
-    }
+    console.log(digitalTwin);
 
-   const patch = '<JSON patch goes here>';
-
+    const patch = '<JSON patch goes here>';
     console.log('patch:');
     console.log(JSON.stringify(patch, null, 2));
 

@@ -13,7 +13,6 @@
 import { DigitalTwinClient, CommandCallback, CommandRequest, CommandResponse, PropertyChangedCallback, BaseInterface } from 'azure-iot-digitaltwins-device';
 import { EnvironmentalSensor } from './environmentalinterface';
 import { DeviceInformation } from './deviceInformationInterface';
-import { SampleExit } from './exitInterface';
 
 const environmentCommandCallback: CommandCallback = (request: CommandRequest, response: CommandResponse) => {
   console.log('Callback for command for environment interface');
@@ -27,8 +26,8 @@ const environmentCommandCallback: CommandCallback = (request: CommandRequest, re
       });
       break;
     }
-    case 'turnOn': {
-      console.log('Got the turnOn command.');
+    case 'turnon': {
+      console.log('Got the turnon command.');
       response.acknowledge(200, 'turn on response', (err?: Error) => {
         if (err) {
           console.log('responding to the turnOn command failed.');
@@ -36,8 +35,8 @@ const environmentCommandCallback: CommandCallback = (request: CommandRequest, re
       });
       break;
     }
-    case 'turnOff': {
-      console.log('Got the turnOff command.');
+    case 'turnoff': {
+      console.log('Got the turnoff command.');
       response.acknowledge(200, 'turn off response', (err?: Error) => {
         if (err) {
           console.log('responding to the blink command failed.');
@@ -45,9 +44,9 @@ const environmentCommandCallback: CommandCallback = (request: CommandRequest, re
       });
       break;
     }
-    case 'runDiagnostics': {
-      console.log('Got the runDiagnostics command.');
-      response.acknowledge(200, 'runDiagnostics response', (err?: Error) => {
+    case 'rundiagnostics': {
+      console.log('Got the rundiagnostics command.');
+      response.acknowledge(200, 'rundiagnostics response', (err?: Error) => {
         if (err) {
           console.log('responding to the runDiagnostics command failed ' + err.toString());
         }
@@ -67,47 +66,35 @@ const environmentReadWriteCallback: PropertyChangedCallback = (interfaceObject: 
   });
 };
 
-const exitHandler = (request: CommandRequest, response: CommandResponse) => {
-  console.log('received command: ' + request.commandName + ' for component: ' + request.componentName);
-  response.acknowledge(200, null, (err?: Error) => {
-    if (err) {
-      console.log('Acknowledge failed. Error is: ' + err.toString());
-    }
-    setTimeout(() => {process.exit(0);}, 2000);
-  });
-};
-
-const environmentalSensor = new EnvironmentalSensor('environmentalSensor', environmentReadWriteCallback, environmentCommandCallback );
+const environmentalSensor = new EnvironmentalSensor('sensor', environmentReadWriteCallback, environmentCommandCallback );
 const deviceInformation = new DeviceInformation('deviceInformation');
-const exitInterface = new SampleExit('dtmi_azureiot_azureiotsdknode_SampleInterface_SampleExit', undefined, exitHandler);
 
-const modelId = 'dtmi:contoso_device_corp:samplemodel;1';
+
+const modelId = 'dtmi:YOUR_COMPANY_NAME_HERE:sample_device;1';
 let dtClient = DigitalTwinClient.fromConnectionString(modelId, process.env.DEVICE_CONNECTION_STRING as string);
 
 const main = async () => {
-  try {
-    await dtClient.report(environmentalSensor, {state: true});
-    await dtClient.report(deviceInformation, {
-      manufacturer: 'Contoso Device Corporation',
-      model: 'Contoso 4762B-turbo',
-      swVersion: '3.1',
-      osName: 'ContosoOS',
-      processorArchitecture: '4762',
-      processorManufacturer: 'Contoso Foundries',
-      totalStorage: '64000',
-      totalMemory: '640'
-    });
+  await dtClient.report(environmentalSensor, {state: true});
+  await dtClient.report(deviceInformation, {
+    manufacturer: 'Contoso Device Corporation',
+    model: 'Contoso 4762B-turbo',
+    swVersion: '3.1',
+    osName: 'ContosoOS',
+    processorArchitecture: '4762',
+    processorManufacturer: 'Contoso Foundries',
+    totalStorage: '64000',
+    totalMemory: '640'
+  });
 
-    // send telemetry every 5 seconds
-    setInterval( async () => {
-      await dtClient.sendTelemetry( environmentalSensor, { temp: 10 + (Math.random() * 90), humid: 1 + (Math.random() * 99) } );
-    }, 5000);
-  } catch (err) {
-    console.log('error from operation is: ' + err.toString());
-  }
+  let index = 0;
+  setInterval( async () => {
+    console.log('Sending telemetry message %d...', index);
+    await dtClient.sendTelemetry(environmentalSensor, { temp: 1 + (Math.random() * 90), humid: 1 + (Math.random() * 99) });
+    index += 1;
+  }, 5000);
 };
 
-dtClient.addComponents(environmentalSensor, deviceInformation, exitInterface);
+dtClient.addComponents(environmentalSensor, deviceInformation);
 
 dtClient.enableCommands();
 
@@ -115,5 +102,4 @@ dtClient.enablePropertyUpdates()
   .then(() => {
     console.log('enabled the property updates.');
     main();
-  })
-  .catch(() => {console.log('the registration failed.');});
+  });
