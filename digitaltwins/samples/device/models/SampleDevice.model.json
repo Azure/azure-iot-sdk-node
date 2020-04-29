@@ -1,0 +1,17 @@
+{
+  "@id": "dtmi:YOUR_COMPANY_NAME_HERE:sample_device;1",
+  "displayName": "Sample Device with two components.",
+  "contents": [
+    {
+    "@type" : "Component",
+    "schema": "dtmi:YOUR_COMPANY_NAME_HERE:EnvironmentalSensor;1",
+    "name": "sensor"
+    },
+    {
+    "@type" : "Component",
+    "schema": "dtmi:azure:DeviceManagement:DeviceInformation;1",
+    "name": "deviceInformation"
+    }
+  ],
+  "@context": "dtmi:dtdl:context;2"
+}
