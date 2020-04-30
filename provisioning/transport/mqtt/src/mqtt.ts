@@ -335,6 +335,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
   private _disconnect(callback: (err?: Error) => void): void {
 
     let disconnect = (unsubscribeError?) => {
+      debug('call disconnect on _mqttBase');
       /* Codes_SRS_NODE_PROVISIONING_MQTT_18_045: [ When Disconnecting, `Mqtt` shall call `_mqttBase.disconnect`.] */
       this._mqttBase.disconnect((disconnectError) => {
         if (disconnectError) {
@@ -346,8 +347,10 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
     };
 
     if (this._subscribed) {
+      debug('unsubscribing on _disconnect');
       /* Codes_SRS_NODE_PROVISIONING_MQTT_18_044: [ When Disconnecting, `Mqtt` shall call _`mqttBase.unsubscribe`.] */
       this._mqttBase.unsubscribe(responseTopic, (unsubscribeError) => {
+        debug('unsubscribed');
         this._subscribed = false;
         if (unsubscribeError) {
           debug('error unsubscribing: ' + unsubscribeError.toString());
