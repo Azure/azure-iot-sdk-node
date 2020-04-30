@@ -44,13 +44,14 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
   private _topics: { [key: string]: TopicDescription };
   private _userAgentString: string;
   private _productInfo: string;
+  private _firstConnection: boolean;
 
   /**
    * @private
    */
   constructor(authenticationProvider: AuthenticationProvider, mqttBase?: any) {
     super();
-
+    this._firstConnection = true;
     this._authenticationProvider = authenticationProvider;
     /*Codes_SRS_NODE_DEVICE_MQTT_16_071: [The constructor shall subscribe to the `newTokenAvailable` event of the `authenticationProvider` passed as an argument if it uses tokens for authentication.]*/
     if (this._authenticationProvider.type === AuthenticationType.Token) {
@@ -228,8 +229,13 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
                   this._mqtt.connect(baseConfig, (err, result) => {
                     debug('connect');
                     if (err) {
+                      if (this._firstConnection) {
+                        // on the first connection, we will treat this as an Unauthorized Error
+                        err = new errors.UnauthorizedError(err.message);
+                      }
                       this._fsm.transition('disconnected', connectCallback, err);
                     } else {
+                      this._firstConnection = false;
                       this._fsm.transition('connected', connectCallback, result);
                     }
                   });
