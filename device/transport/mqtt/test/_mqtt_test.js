@@ -1169,12 +1169,12 @@ describe('Mqtt', function () {
     });
 
     /* Tests_SRS_NODE_DEVICE_MQTT_16_058: [`enableTwinDesiredPropertiesUpdates` shall calls its callback with an `Error` object if it fails to connect.]*/
-    it('calls its callback with an error if connecting the transport fails', function (testCallback) {
-      const fakeError = new Error('fake');
+    it('calls its callback with an `UnauthorizedError` if connecting the transport fails', function (testCallback) {
+      const fakeError = new Error('fake test error');
       const transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
       fakeMqttBase.connect = sinon.stub().callsArgWith(1, fakeError);
       transport.enableTwinDesiredPropertiesUpdates(function (err) {
-        assert.strictEqual(err, fakeError);
+        assert.include(err.message, fakeError.message);
         testCallback();
       });
     });
