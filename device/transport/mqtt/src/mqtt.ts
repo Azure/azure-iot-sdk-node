@@ -231,7 +231,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
                     if (err) {
                       if (this._firstConnection) {
                         // on the first connection, we will treat this as an Unauthorized Error
-                        err.message = 'Failure on first connection (Not authorized): ' + err.message
+                        err.message = 'Failure on first connection (Not authorized): ' + err.message;
                       }
                       this._fsm.transition('disconnected', connectCallback, err);
                     } else {
