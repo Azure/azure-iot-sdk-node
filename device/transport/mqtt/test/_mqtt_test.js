@@ -785,7 +785,7 @@ describe('Mqtt', function () {
       });
     });
 
-    /* Tests_SRS_NODE_DEVICE_MQTT_41_XXX: [  ]*/
+    /* Tests_SRS_NODE_DEVICE_MQTT_41_006: [The `connect` method shall call its callback with an `UnauthorizedError` returned by the primary call to `connect` in the base MQTT client.]*/
     it('calls its callback with an `UnauthorizedError` on first invocation if the call to mqtt_base `connect` returns an error', function (testCallback) {
       const fakeError = new Error('fake');
       fakeMqttBase.connect = sinon.stub().callsArgWith(1, fakeError);
@@ -798,7 +798,7 @@ describe('Mqtt', function () {
       });
     });
 
-    /* Tests_SRS_NODE_DEVICE_MQTT_41_XXX: [The `connect` method shall call its callback with the error returned by the call to `connect` in the base MQTT client.]*/
+    /* Tests_SRS_NODE_DEVICE_MQTT_41_007: [The `connect` method shall call its callback with the error returned by the non-primary call to `connect` in the base MQTT client.]*/
     it('calls its callback with an error on subsequent invocations if the call to mqtt_base `connect` returns an error', function (testCallback) {
       const fakeError = new Error('fake');
       fakeMqttBase.connect.onCall(1).callsArgWith(1, fakeError);
