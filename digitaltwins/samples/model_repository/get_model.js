@@ -34,7 +34,7 @@ async function main() {
       'xMsClientRequestId': '',
       // {boolean} Indicates whether to expand the capability
       // model's interface definitions inline or not. This query parameter ONLY
-      // applies to Capability model. Default value: false .
+      // applies to Model ID. Default value: false .
       'expand': false,
     };
 
