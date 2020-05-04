@@ -116,7 +116,7 @@ export class DigitalTwinClient {
   private _components: {[key: string]: ComponentInformation} = {};
   //
   // Each Digital Twin client can have only one Model ID associated with it.
-  // The dcm is in DTMI format.
+  // The ModelID is in DTMI format.
   //
   //
   // Client is a regular (not module) IoT Hub device client.
