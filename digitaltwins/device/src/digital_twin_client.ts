@@ -14,6 +14,7 @@ import { azureDigitalTwinCommand, azureDigitalTwinProperty,
          Property, PropertyChangedCallback, DesiredStateResponse,
          CommandRequest, CommandResponse, CommandUpdateCallback, CommandUpdatePromise, CommandCallback, Callback, azureDigitalTwinTelemetry
         } from './interface_types';
+const packageJson = require('../package.json');
 
 /**
  * @private
@@ -229,6 +230,10 @@ export class DigitalTwinClient {
       }
       this._twin.properties.reported.update(patch, _callback);
     }, actualCallback);
+  }
+
+  getVersion(): string {
+    return packageJson.version
   }
 
   /**

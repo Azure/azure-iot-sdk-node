@@ -70,7 +70,7 @@ const environmentalSensor = new EnvironmentalSensor('sensor', environmentReadWri
 const deviceInformation = new DeviceInformation('deviceInformation');
 
 
-const modelId = 'dtmi:YOUR_COMPANY_NAME_HERE:sample_device;1';
+const modelId = 'dtmi:my_company:com:sample_device;1';
 let dtClient = DigitalTwinClient.fromConnectionString(modelId, process.env.DEVICE_CONNECTION_STRING as string);
 
 const main = async () => {

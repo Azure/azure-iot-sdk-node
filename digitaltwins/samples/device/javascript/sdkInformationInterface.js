@@ -7,17 +7,11 @@ const Telemetry = require('azure-iot-digitaltwins-device').Telemetry;
 const Property = require('azure-iot-digitaltwins-device').Property;
 const Command = require('azure-iot-digitaltwins-device').Command;
 
-module.exports.EnvironmentalSensor = class EnvironmentalSensor extends BaseInterface {
+module.exports.SDKInformation = class SDKInformation extends BaseInterface {
   constructor(name, propertyCallback, commandCallback) {
-    super(name, 'dtmi:my_company:com:EnvironmentalSensor;1', propertyCallback, commandCallback);
-    this.temp = new Telemetry();
-    this.humid = new Telemetry();
-    this.state = new Property();
-    this.blink = new Command();
-    this.turnoff = new Command();
-    this.turnon = new Command();
-    this.rundiagnostics = new Command();
-    this.name = new Property(true);
-    this.brightness = new Property(true);
+    super(name, 'dtmi:azure:SDKInformation;1', propertyCallback, commandCallback);
+    this.language = new Property();
+    this.version = new Property(true);
+    this.vendor = new Property(true);
   }
 };

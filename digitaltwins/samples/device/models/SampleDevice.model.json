@@ -1,10 +1,10 @@
 {
-  "@id": "dtmi:YOUR_COMPANY_NAME_HERE:sample_device;1",
+  "@id": "dtmi:my_company:com:sample_device;1",
   "displayName": "Sample Device with two components.",
   "contents": [
     {
     "@type" : "Component",
-    "schema": "dtmi:YOUR_COMPANY_NAME_HERE:EnvironmentalSensor;1",
+    "schema": "dtmi:my_company:com:EnvironmentalSensor;1",
     "name": "sensor"
     },
     {
