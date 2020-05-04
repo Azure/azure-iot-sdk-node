@@ -73,10 +73,10 @@ const environmentalSensor = new EnvironmentalSensor('environmentalSensor', prope
 
 const deviceClient = DeviceClient.fromConnectionString(process.argv[2], Mqtt);
 
-const capabilityModel = 'dtmi:contoso_device_corp:samplemodel;1';
+const modelId = 'dtmi:contoso_device_corp:samplemodel;1';
 
 async function main() {
-  const digitalTwinClient = new DigitalTwinClient(capabilityModel, deviceClient);
+  const digitalTwinClient = new DigitalTwinClient(modelId, deviceClient);
   digitalTwinClient.addComponents(environmentalSensor);
   await digitalTwinClient.register();
   await environmentalSensor.sendTelemetry({temp: 65.5, humid: 12.2});

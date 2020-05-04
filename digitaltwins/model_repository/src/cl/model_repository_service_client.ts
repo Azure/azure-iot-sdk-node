@@ -144,7 +144,7 @@ export class ModelRepositoryServiceClient {
    *                                          'expand'
    *                                              {boolean} Indicates whether to expand the capability
    *                                              model's interface definitions inline or not. This query parameter ONLY
-   *                                              applies to Capability model. Default value: false .
+   *                                              applies to Model ID. Default value: false .
    * @returns GetModelResponse                The return object containing the Model plus the HttpResponse.
    * @memberof ModelRepositoryServiceClient
    */

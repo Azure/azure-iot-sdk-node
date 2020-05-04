@@ -57,7 +57,7 @@
                     {
                         "name": "expand",
                         "in": "query",
-                        "description": "Indicates whether to expand the capability model's interface definitions inline or not. This query parameter ONLY applies to Capability model.",
+                        "description": "Indicates whether to expand the Model ID's interface definitions inline or not. This query parameter ONLY applies to Model ID.",
                         "required": false,
                         "type": "boolean",
                         "default": false
