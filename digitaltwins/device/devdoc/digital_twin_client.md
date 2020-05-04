@@ -31,10 +31,10 @@ const commandHandler = (request, response) => {
 const environmentalSensor = new EnvironmentalSensor('environmentalSensor', propertyUpdateHandler, commandHandler);
 
 
-const capabilityModel = 'dtmi:contoso_device_corp:samplemodel;1';
+const modelId = 'dtmi:contoso_device_corp:samplemodel;1';
 
 async function main() {
-  const digitalTwinClient = DigitalTwinClient.fromConnectionString(capabilityModel, process.argv[2]);
+  const digitalTwinClient = DigitalTwinClient.fromConnectionString(modelId, process.argv[2]);
   digitalTwinClient.addComponents(environmentalSensor);
   digitalTwinClient.enableCommands();
   await digitalTwinClient.enablePropertyUpdates();
@@ -57,7 +57,7 @@ Creates a new instance of a Digital Twin Device Client.  An IoT Hub Device Clien
 Creates a new instance of a Digital Twin Device Client using a provided connection string and device capability model.
 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_41_001: [** Will throw `ReferenceError` if the fromConnectionString method `connStr` argument is falsy. **]**
-**SRS_NODE_DIGITAL_TWIN_DEVICE_41_002: [** Will throw `ReferenceError` if the fromConnectionString method `capabilityModel` argument is falsy. **]**
+**SRS_NODE_DIGITAL_TWIN_DEVICE_41_002: [** Will throw `ReferenceError` if the fromConnectionString method `modelId` argument is falsy. **]**
 **SRS_NODE_DIGITAL_TWIN_DEVICE_41_003: [** The `fromConnectionString` method shall use the internal MQTT transport by default **]**
 **SRS_NODE_DIGITAL_TWIN_DEVICE_41_004: [** The `fromConnectionString` will use the Mqtt Websockets Transport if specified **]**
 **SRS_NODE_DIGITAL_TWIN_DEVICE_41_005: [** The fromConnectionString method shall return a new instance of the Client object **]**

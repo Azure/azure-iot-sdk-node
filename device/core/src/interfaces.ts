@@ -133,7 +133,7 @@ export interface DeviceClientOptions extends X509 {
    * !!Digital Twin Use Only!!
    * String used in MQTT username settting the Digital Twin Device Capability Model.
    */
-  deviceCapabilityModel?: string;
+  modelId?: string;
 
   /**
    * Optional object with token renewal values.  Only use with authentication

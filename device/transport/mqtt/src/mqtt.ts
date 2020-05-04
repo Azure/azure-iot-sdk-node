@@ -489,8 +489,8 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_015: [The `setOptions` method shall throw an `ArgumentError` if the `cert` property is populated but the device uses symmetric key authentication.]*/
     if (this._authenticationProvider.type === AuthenticationType.Token && options.cert) throw new errors.ArgumentError('Cannot set x509 options on a device that uses token authentication.');
 
-    if (options.deviceCapabilityModel) {
-      this._dcm = '&digital-twin-model-id=' + options.deviceCapabilityModel;
+    if (options.modelId) {
+      this._dcm = '&digital-twin-model-id=' + options.modelId;
     }
     /*Codes_SRS_NODE_DEVICE_MQTT_41_001: [The MQTT transport should use the productInfo string in the `options` object if present]*/
     if (options.productInfo) {

@@ -637,9 +637,9 @@ describe('Mqtt', function () {
     });
 
     /* Tests_SRS_NODE_DEVICE_MQTT_41_XXX: [For a Plug and Play Device the device capability model should be included as &digital-twin-model-id=<DEVICE’s DCM ID> after the api-version]*/
-    it('sets options for deviceCapabilityModel', function (testCallback) {
+    it('sets options for modelId', function (testCallback) {
       const fakeDCMString = '&digital-twin-model-id=fakeDCMString';
-      const fakeDCM = { deviceCapabilityModel: 'fakeDCMString' };
+      const fakeDCM = { modelId: 'fakeDCMString' };
       let connectCallback;
       fakeMqttBase.connect = sinon.stub().callsFake(function (config, callback) {
         connectCallback = callback;

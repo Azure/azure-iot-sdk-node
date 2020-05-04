@@ -51,9 +51,9 @@ describe('Digital Twin Client', () => {
       });
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_002: [Will throw `ReferenceError` if the fromConnectionString method `capabilityModel` argument is falsy.] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_002: [Will throw `ReferenceError` if the fromConnectionString method `modelId` argument is falsy.] */
     [undefined, null, ''].forEach(function (falsyCapabilityModel) {
-      it('throws a ReferenceError if \'capabilityModel\' is \"' + falsyCapabilityModel + '\"', function () {
+      it('throws a ReferenceError if \'modelId\' is \"' + falsyCapabilityModel + '\"', function () {
         assert.throws(() => {
           const client = DigitalTwinClient.fromConnectionString(falsyCapabilityModel, fakeConnStr);
           (client);

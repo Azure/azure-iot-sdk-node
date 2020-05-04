@@ -524,13 +524,13 @@ export class DigitalTwinClient {
    * @description                     Creates a Digital Twin Client from the given connection string.
    * @param {String}    connStr       A connection string which encapsulates "device connect" permissions on an IoT hub.
    * @param {Boolean}   ws            Optional boolean to specify if MQTT over Websockets should be used.
-   * @throws {ReferenceError}         If the connStr or capabilityModel parameter is falsy
+   * @throws {ReferenceError}         If the connStr or modelId parameter is falsy
    * @returns {module:azure-iot-digitaltwins.DigitalTwinClient}
    */
-  static fromConnectionString(capabilityModel: string, connStr: string, ws?: boolean): DigitalTwinClient {
+  static fromConnectionString(modelId: string, connStr: string, ws?: boolean): DigitalTwinClient {
     /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_001: [Will throw `ReferenceError` if the fromConnectionString method `connStr` argument is falsy.] */
-    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_002: [Will throw `ReferenceError` if the fromConnectionString method `capabilityModel` argument is falsy.] */
-    if (!capabilityModel) throw new ReferenceError('capabilityModel must not be falsy');
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_002: [Will throw `ReferenceError` if the fromConnectionString method `modelId` argument is falsy.] */
+    if (!modelId) throw new ReferenceError('modelId must not be falsy');
     if (!connStr) throw new ReferenceError('connStr (connection string) must not be falsy');
 
     let transport;
@@ -544,7 +544,7 @@ export class DigitalTwinClient {
 
     /* Codes_SRS_NODE_DEVICE_CLIENT_41_005: [The fromConnectionString method shall return a new instance of the Client object] */
     const client = Client.fromConnectionString(connStr, transport);
-    client.setOptions({ deviceCapabilityModel: capabilityModel });
+    client.setOptions({ modelId: modelId });
 
     return new DigitalTwinClient(client);
   }
