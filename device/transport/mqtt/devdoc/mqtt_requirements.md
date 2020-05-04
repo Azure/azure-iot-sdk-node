@@ -221,6 +221,9 @@ The `reject` method is there for compatibility purposes with other transports bu
 **SRS_NODE_DEVICE_MQTT_06_002: [** The authentication providers `setTokenRenewalValues` method shall be invoked with the values provided in the tokenRenewal option.
  **]**
 
+**SRS_NODE_DEVICE_MQTT_41_006: [** For a Plug and Play Device the modelID should be included as `&digital-twin-model-id=<DEVICE’s DCM ID>` after the api-version **]**
+
+
 ### onDeviceMethod(methodName, methodCallback)
 
 **SRS_NODE_DEVICE_MQTT_16_066: [** The `methodCallback` parameter shall be called whenever a `method_<methodName>` is emitted and device methods have been enabled. **]**

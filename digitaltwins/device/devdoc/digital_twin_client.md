@@ -49,12 +49,12 @@ main();
 ## Public API
 
 ### constructor
-Creates a new instance of a Digital Twin Device Client.  An IoT Hub Device Client must be provided as well as the Digital Twin Model Identifier (DTMI) format string specifying a Capability Model.
+Creates a new instance of a Digital Twin Device Client.  An IoT Hub Device Client must be provided as well as the Digital Twin Model Identifier (DTMI) format string specifying a Model ID.
 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_002: [** Will throw `ReferenceError` if the constructor `client` argument is falsy. **]**
 
 ### fromConnectionString
-Creates a new instance of a Digital Twin Device Client using a provided connection string and device capability model.
+Creates a new instance of a Digital Twin Device Client using a provided connection string and modelID.
 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_41_001: [** Will throw `ReferenceError` if the fromConnectionString method `connStr` argument is falsy. **]**
 **SRS_NODE_DIGITAL_TWIN_DEVICE_41_002: [** Will throw `ReferenceError` if the fromConnectionString method `modelId` argument is falsy. **]**
@@ -76,7 +76,7 @@ Adds the components to the Digital Twin client.
 **SRS_NODE_DIGITAL_TWIN_DEVICE_41_007: [** Can accept a variable number of interfaces to add via the addComponents method **]**
 
 ### enablePropertyUpdates
-Must be called so the property update callbacks you create for interfaces will handle updates.
+(Asynchronous) Must be called so the property update callbacks you create for interfaces will handle updates.
 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_41_008: [** Will invoke the callback on success if provided **]**
 **SRS_NODE_DIGITAL_TWIN_DEVICE_41_009: [** Will resolve the promise if no callback is provided  **]**
@@ -92,6 +92,7 @@ Sends a registration message to the service.  Sets up handlers for all writable 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_06_012: [** For each property in an component with type `Command`, a device method will be enabled with a name of the form '$iotin:' followed by the component name followed by '*' followed by the property name. **]**
 
 ### report
+(Asynchronous) Used to 'report' information on properties of a component, for example osName, manufacturedDate, etc.
 
 **SRS_NODE_DIGITAL_TWIN_DEVICE_41_013: [** Will invoke the `callback` on success if provided **]**
 **SRS_NODE_DIGITAL_TWIN_DEVICE_41_014: [** Will invoke the `callback` on failure with an error **]**

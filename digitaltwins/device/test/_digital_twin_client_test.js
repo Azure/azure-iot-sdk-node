@@ -34,7 +34,7 @@ describe('Digital Twin Client', () => {
   });
 
   describe('#fromConnectionString', () => {
-    const fakeCapabilityModel = 'dtmi:fake;1';
+    const fakeModelId = 'dtmi:fake;1';
     const fakeConnStr = 'HostName=host;DeviceId=id;SharedAccessKey=key';
 
     afterEach(() => {
@@ -45,17 +45,17 @@ describe('Digital Twin Client', () => {
     [undefined, null, ''].forEach(function (falsyConnStr) {
       it('throws a ReferenceError if \'connStr\' is \"' + falsyConnStr + '\"', function () {
         assert.throws(() => {
-          const dtClient = DigitalTwinClient.fromConnectionString(fakeCapabilityModel, falsyConnStr);
+          const dtClient = DigitalTwinClient.fromConnectionString(fakeModelId, falsyConnStr);
           (dtClient);
         });
       });
     });
 
     /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_002: [Will throw `ReferenceError` if the fromConnectionString method `modelId` argument is falsy.] */
-    [undefined, null, ''].forEach(function (falsyCapabilityModel) {
-      it('throws a ReferenceError if \'modelId\' is \"' + falsyCapabilityModel + '\"', function () {
+    [undefined, null, ''].forEach(function (falsyModelId) {
+      it('throws a ReferenceError if \'modelId\' is \"' + falsyModelId + '\"', function () {
         assert.throws(() => {
-          const client = DigitalTwinClient.fromConnectionString(falsyCapabilityModel, fakeConnStr);
+          const client = DigitalTwinClient.fromConnectionString(falsyModelId, fakeConnStr);
           (client);
         });
       });
@@ -68,7 +68,7 @@ describe('Digital Twin Client', () => {
         assert.strictEqual(transport, mqttStub);
         testCallback();
       });
-      DigitalTwinClient.fromConnectionString(fakeCapabilityModel, fakeConnStr);
+      DigitalTwinClient.fromConnectionString(fakeModelId, fakeConnStr);
     });
 
     /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_004: [The `fromConnectionString` will use the Mqtt Websockets Transport if specified] */
@@ -78,12 +78,12 @@ describe('Digital Twin Client', () => {
         assert.strictEqual(transport, mqttWsStub);
         testCallback();
       });
-      DigitalTwinClient.fromConnectionString(fakeCapabilityModel, fakeConnStr, true);
+      DigitalTwinClient.fromConnectionString(fakeModelId, fakeConnStr, true);
     });
 
     /* Tests_SRS_NODE_DEVICE_CLIENT_41_005: [The fromConnectionString method shall return a new instance of the Client object] */
     it('returns an instance of DigitalTwinClient', function () {
-      const dtClient = DigitalTwinClient.fromConnectionString(fakeCapabilityModel, fakeConnStr);
+      const dtClient = DigitalTwinClient.fromConnectionString(fakeModelId, fakeConnStr);
       assert.instanceOf(dtClient, DigitalTwinClient);
     });
   });
@@ -653,7 +653,7 @@ describe('Digital Twin Client', () => {
       }
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [ The command callback should be able to invoke the `acknowledge` method, with no `payload` argument, and utilize the returned promise with a rejection. ] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_026: [ The command callback should be able to invoke the `acknowledge` method, with no `payload` or callback arguments, and utilize the returned promise that rejects. ] */
     it('Can invoke the `acknowledge` method, with no `payload` or callback arguments, utilize the returned promise that rejects', (done) => {
       const ackError = new Error('fake error');
       const methodResponse = {
@@ -672,7 +672,7 @@ describe('Digital Twin Client', () => {
       try {
         methodCallbackFunction(methodRequest, methodResponse);
       } catch (err) {
-        assert.fail('in the enableCommands catch of SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX with err: ' + ((err) ? (err.toString()) : ('null err provided')));
+        assert.fail('in the enableCommands catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_026 with err: ' + ((err) ? (err.toString()) : ('null err provided')));
       }
     });
 
@@ -688,7 +688,7 @@ describe('Digital Twin Client', () => {
       try {
         methodCallbackFunction(methodRequest, methodResponse);
       } catch (err) {
-        assert.fail('in the enableCommands catch of SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX with err: ' + ((err) ? (err.toString()) : ('null err provided')));
+        assert.fail('in the enableCommands catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_018 with err: ' + ((err) ? (err.toString()) : ('null err provided')));
       }
     });
 
@@ -1137,7 +1137,7 @@ describe('Digital Twin Client', () => {
       });
     });
 
-    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [ Subsequent to the enablePropertyUpdates, a writable property will have an event listener on the `properties.desired.$iotin:<componentName>.<propertyName>` ] */
+    /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_035: [ Subsequent to the enablePropertyUpdates, a writable property will have an event listener on the `properties.desired.$iotin:<componentName>.<propertyName>` ] */
     it('Subsequent to enablePropertyUpdates, there will be an event listener for the writable property on the twin', (done) => {
       dtClient.addComponents(fakeComponent);
       dtClient.enablePropertyUpdates()
@@ -1145,7 +1145,7 @@ describe('Digital Twin Client', () => {
           assert.strictEqual(dtClient._twin.listeners('properties.desired.' + componentProperty + '.' + testPropertyName).length, 1);
           done();
         })
-        .catch((err) => assert.fail('in the enablePropertyUpdates catch of SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
+        .catch((err) => assert.fail('in the enablePropertyUpdates catch of SRS_NODE_DIGITAL_TWIN_DEVICE_06_035 with err: ' + ((err) ? (err.toString()) : ('null err provided'))));
     });
 
     /* Tests_SRS_NODE_DIGITAL_TWIN_DEVICE_06_036: [ Following the initial get of the twin, the writable properties will have their desired values retrieved, provided they exist, provided to the property changed callback along with the current desired version value. ] */

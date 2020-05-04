@@ -115,7 +115,7 @@ export class DigitalTwinClient {
   //
   private _components: {[key: string]: ComponentInformation} = {};
   //
-  // Each Digital Twin client can have only one capability model associated with it.
+  // Each Digital Twin client can have only one Model ID associated with it.
   // The dcm is in DTMI format.
   //
   //
@@ -271,7 +271,7 @@ export class DigitalTwinClient {
    * @param newComponents   A single object or multiple objects for a particular component.
    */
   addComponents(...args: BaseInterface[]): void {
-    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_XXX: [ Can accept a variable number of interfaces to add via the addComponents method ] */
+    /* Codes_SRS_NODE_DIGITAL_TWIN_DEVICE_41_007: [ Can accept a variable number of interfaces to add via the addComponents method ] */
     for (let i = 0; i < args.length; i++) {
       this._addComponent(args[i]);
     }
