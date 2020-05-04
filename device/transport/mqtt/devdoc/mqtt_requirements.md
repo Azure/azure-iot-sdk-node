@@ -66,6 +66,10 @@ The `connect` method initializes a connection to an IoT hub.
 
 **SRS_NODE_DEVICE_MQTT_16_068: [** The `connect` method shall call its callback with the error returned by `getDeviceCredentials` if it fails to return the device credentials. **]**
 
+**SRS_NODE_DEVICE_MQTT_41_006: [** The `connect` method shall call its callback with an `UnauthorizedError` returned by the primary call to `connect` in the base MQTT client. **]**
+
+**SRS_NODE_DEVICE_MQTT_41_007: [** The `connect` method shall call its callback with the error returned by the non-primary call to `connect` in the base MQTT client. **]**
+
 ### disconnect(done)
 
 The `disconnect` method should close the connection to the IoT Hub instance.
