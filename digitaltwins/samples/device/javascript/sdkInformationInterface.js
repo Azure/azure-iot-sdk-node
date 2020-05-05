@@ -3,15 +3,13 @@
 'use strict';
 
 const BaseInterface = require('azure-iot-digitaltwins-device').BaseInterface;
-const Telemetry = require('azure-iot-digitaltwins-device').Telemetry;
 const Property = require('azure-iot-digitaltwins-device').Property;
-const Command = require('azure-iot-digitaltwins-device').Command;
 
 module.exports.SDKInformation = class SDKInformation extends BaseInterface {
   constructor(name, propertyCallback, commandCallback) {
     super(name, 'dtmi:azure:SDKInformation;1', propertyCallback, commandCallback);
     this.language = new Property();
-    this.version = new Property(true);
-    this.vendor = new Property(true);
+    this.version = new Property();
+    this.vendor = new Property();
   }
 };

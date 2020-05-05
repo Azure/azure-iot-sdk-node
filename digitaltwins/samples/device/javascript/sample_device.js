@@ -32,14 +32,29 @@ const propertyUpdateHandler = async (component, propertyName, reportedValue, des
 
 const commandHandler = (request, response) => {
   console.log('received command: ' + request.commandName + ' for component: ' + request.componentName);
-  // blink
-  // turn on
-  // turnoff
-  // run diag
-  response.acknowledge(200, 'helpful response text');
-  console.log('acknowledgement succeeded.');
+  switch (request.commandName) {
+    case 'blink': {
+      console.log('Got the blink command.');
+      response.acknowledge(200, 'blink response');
+      break;
+    }
+    case 'turnon': {
+      console.log('Got the turnon command.');
+      response.acknowledge(200, 'turn on response');
+      break;
+    }
+    case 'turnoff': {
+      console.log('Got the turnoff command.');
+      response.acknowledge(200, 'turn off response');
+      break;
+    }
+    case 'rundiagnostics': {
+      console.log('Got the rundiagnostics command.');
+      response.acknowledge(200, 'rundiagnostics response');
+      break;
+    }
+  }
 };
-
 
 const environmentalSensor = new EnvironmentalSensor('sensor', propertyUpdateHandler, commandHandler);
 const deviceInformation = new DeviceInformation('deviceInformation');
@@ -93,10 +108,9 @@ async function main() {
 
   console.log('Reporting environmentalSensor properties...');
   await digitalTwinClient.report(environmentalSensor, {
-    name: "IoT Sample Device",
+    name: 'IoT Sample Device',
     state: true,
-    brightness: "10"
-
+    brightness: '10'
   });
 
   let index = 0;

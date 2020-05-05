@@ -4,8 +4,8 @@
 const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubTokenCredentials;
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 
-const connectionString = process.env.IOTHUB_CONNECTION_STRING;
-const deviceId = process.env.IOTHUB_DEVICE_ID;
+const connectionString = "HostName=aprilpnpbugbash.private.azure-devices-int.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7OG5WvJYH8tvhWHZeNVmzMya0KOQR1bhyc8sg5G74/U=";//process.env.IOTHUB_CONNECTION_STRING;
+const deviceId = "jebrando-dev";//process.env.IOTHUB_DEVICE_ID;
 
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor

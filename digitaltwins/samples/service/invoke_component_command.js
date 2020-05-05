@@ -4,10 +4,11 @@
 const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubTokenCredentials;
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
 
-const deviceId = process.env.IOTHUB_DEVICE_ID;
-const connectionString = process.env.IOTHUB_CONNECTION_STRING;
+const connectionString = "HostName=aprilpnpbugbash.private.azure-devices-int.net;SharedAccessKeyName=iothubowner;SharedAccessKey=7OG5WvJYH8tvhWHZeNVmzMya0KOQR1bhyc8sg5G74/U=";//process.env.IOTHUB_CONNECTION_STRING;
+const deviceId = "jebrando-dev";//process.env.IOTHUB_DEVICE_ID;
+
 const componentName = process.env.IOTHUB_COMPONENT_NAME || 'sensor'; // for the environmental sensor, try "sensor"
-const commandName = process.env.IOTHUB_COMMAND_NAME || 'turnon'; // for the environmental sensor, you can try "blink", "turnoff" or "turnon"
+const commandName = process.env.IOTHUB_COMMAND_NAME || 'turndown'; // for the environmental sensor, you can try "blink", "turnoff" or "turnon"
 const commandPayload = process.env.IOTHUB_COMMAND_PAYLOAD || ''; // for the environmental sensor, it really doesn't matter. any string will do.
 
 // Simple example of how to:
