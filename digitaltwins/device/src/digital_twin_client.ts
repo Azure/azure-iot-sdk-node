@@ -15,6 +15,9 @@ import { azureDigitalTwinCommand, azureDigitalTwinProperty,
          CommandRequest, CommandResponse, CommandUpdateCallback, CommandUpdatePromise, CommandCallback, Callback, azureDigitalTwinTelemetry
         } from './interface_types';
 
+// tslint:disable-next-line:no-var-requires
+const packageJson = require('../package.json');
+
 /**
  * @private
  * The name of the application property that contains the component name (a specific
@@ -114,10 +117,6 @@ export class DigitalTwinClient {
   // Dictionary of each component and the associated interface.
   //
   private _components: {[key: string]: ComponentInformation} = {};
-  //
-  // Each Digital Twin client can have only one Model ID associated with it.
-  // The ModelID is in DTMI format.
-  //
   //
   // Client is a regular (not module) IoT Hub device client.
   //
@@ -229,6 +228,10 @@ export class DigitalTwinClient {
       }
       this._twin.properties.reported.update(patch, _callback);
     }, actualCallback);
+  }
+
+  getVersion(): string {
+    return packageJson.version;
   }
 
   /**

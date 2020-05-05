@@ -13,6 +13,7 @@
 import { DigitalTwinClient, CommandCallback, CommandRequest, CommandResponse, PropertyChangedCallback, BaseInterface } from 'azure-iot-digitaltwins-device';
 import { EnvironmentalSensor } from './environmentalinterface';
 import { DeviceInformation } from './deviceInformationInterface';
+import { SDKInformation } from './sdkInformationInterface';
 
 const environmentCommandCallback: CommandCallback = (request: CommandRequest, response: CommandResponse) => {
   console.log('Callback for command for environment interface');
@@ -68,13 +69,17 @@ const environmentReadWriteCallback: PropertyChangedCallback = (interfaceObject: 
 
 const environmentalSensor = new EnvironmentalSensor('sensor', environmentReadWriteCallback, environmentCommandCallback );
 const deviceInformation = new DeviceInformation('deviceInformation');
+const sdkInformation = new SDKInformation('sdkInformation');
 
-
-const modelId = 'dtmi:YOUR_COMPANY_NAME_HERE:sample_device;1';
+const modelId = 'dtmi:my_company:com:sample_device;1';
 let dtClient = DigitalTwinClient.fromConnectionString(modelId, process.env.DEVICE_CONNECTION_STRING as string);
 
 const main = async () => {
-  await dtClient.report(environmentalSensor, {state: true});
+  await dtClient.report(environmentalSensor, {
+    name: 'IoT Sample Device',
+    state: true,
+    brightness: '10'
+  });
   await dtClient.report(deviceInformation, {
     manufacturer: 'Contoso Device Corporation',
     model: 'Contoso 4762B-turbo',
@@ -84,6 +89,11 @@ const main = async () => {
     processorManufacturer: 'Contoso Foundries',
     totalStorage: '64000',
     totalMemory: '640'
+  });
+  await dtClient.report(sdkInformation, {
+    language: 'node.js',
+    version: dtClient.getVersion(),
+    vendor: 'Microsoft'
   });
 
   let index = 0;
