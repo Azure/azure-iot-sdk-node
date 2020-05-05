@@ -88,6 +88,19 @@ describe('Digital Twin Client', () => {
     });
   });
 
+  describe('#getVersion', () => {
+    const fakeModelId = 'dtmi:fake;1';
+    const fakeConnStr = 'HostName=host;DeviceId=id;SharedAccessKey=key';
+
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    it('returns the correct version for the DigitalTwinClient', function () {
+      assert.strictEqual(require('../package.json').version, DigitalTwinClient.fromConnectionString(fakeModelId, fakeConnStr).getVersion());
+    });
+  });
+
   describe('#addComponents', () => {
     class FakeInterface extends BaseInterface {
       constructor(name, propertyCallback, commandCallback) {
