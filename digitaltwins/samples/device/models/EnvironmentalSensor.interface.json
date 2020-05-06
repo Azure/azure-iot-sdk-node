@@ -75,21 +75,15 @@
     },
     {
       "@type": "Command",
-      "name": "turnOn",
+      "name": "turnon",
       "comment": "This Commands will turn-on the LED light on the device.",
       "commandType": "synchronous"
     },
     {
       "@type": "Command",
-      "name": "turnOff",
+      "name": "turnoff",
       "comment": "This Commands will turn-off the LED light on the device.",
       "commandType": "synchronous"
-    },
-    {
-      "@type": "Command",
-      "name": "runDiagnostics",
-      "comment": "This command initiates a diagnostics run.  This will take time and is implemented as an asynchronous command",
-      "commandType": "asynchronous"
     }
   ]
 }

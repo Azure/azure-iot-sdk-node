@@ -45,15 +45,6 @@ const environmentCommandCallback: CommandCallback = (request: CommandRequest, re
       });
       break;
     }
-    case 'rundiagnostics': {
-      console.log('Got the rundiagnostics command.');
-      response.acknowledge(200, 'rundiagnostics response', (err?: Error) => {
-        if (err) {
-          console.log('responding to the runDiagnostics command failed ' + err.toString());
-        }
-      });
-      break;
-    }
   }
 };
 

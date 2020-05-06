@@ -19,7 +19,6 @@ export class EnvironmentalSensor extends BaseInterface {
   blink: Command;
   turnoff: Command;
   turnon: Command;
-  rundiagnostics: Command;
   name: Property;
   brightness: Property;
 
@@ -31,7 +30,6 @@ export class EnvironmentalSensor extends BaseInterface {
     this.blink = new Command();
     this.turnoff = new Command();
     this.turnon = new Command();
-    this.rundiagnostics = new Command();
     this.name = new Property(true);
     this.brightness = new Property(true);
   }

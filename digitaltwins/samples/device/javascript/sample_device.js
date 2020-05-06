@@ -48,11 +48,6 @@ const commandHandler = (request, response) => {
     response.acknowledge(200, 'turn off response');
     break;
   }
-  case 'rundiagnostics': {
-    console.log('Got the rundiagnostics command.');
-    response.acknowledge(200, 'rundiagnostics response');
-    break;
-  }
   }
 };
 
