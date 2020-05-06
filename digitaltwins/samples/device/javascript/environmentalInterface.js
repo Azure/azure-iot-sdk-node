@@ -16,7 +16,6 @@ module.exports.EnvironmentalSensor = class EnvironmentalSensor extends BaseInter
     this.blink = new Command();
     this.turnoff = new Command();
     this.turnon = new Command();
-    this.rundiagnostics = new Command();
     this.name = new Property(true);
     this.brightness = new Property(true);
   }
