@@ -19,19 +19,17 @@ export class EnvironmentalSensor extends BaseInterface {
   blink: Command;
   turnoff: Command;
   turnon: Command;
-  rundiagnostics: Command;
   name: Property;
   brightness: Property;
 
   constructor(componentName: string, propertyChangedCallback?: PropertyChangedCallback, commandCallback?: CommandCallback) {
-    super(componentName, 'dtmi:YOUR_COMPANY_NAME_HERE:EnvironmentalSensor;1', propertyChangedCallback, commandCallback);
+    super(componentName, 'dtmi:my_company:com:EnvironmentalSensor;1', propertyChangedCallback, commandCallback);
     this.temp = new Telemetry();
     this.humid = new Telemetry();
     this.state = new Property();
     this.blink = new Command();
     this.turnoff = new Command();
     this.turnon = new Command();
-    this.rundiagnostics = new Command();
     this.name = new Property(true);
     this.brightness = new Property(true);
   }
