@@ -44,13 +44,14 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
   private _topics: { [key: string]: TopicDescription };
   private _userAgentString: string;
   private _productInfo: string;
+  private _firstConnection: boolean;
 
   /**
    * @private
    */
   constructor(authenticationProvider: AuthenticationProvider, mqttBase?: any) {
     super();
-
+    this._firstConnection = true;
     this._authenticationProvider = authenticationProvider;
     /*Codes_SRS_NODE_DEVICE_MQTT_16_071: [The constructor shall subscribe to the `newTokenAvailable` event of the `authenticationProvider` passed as an argument if it uses tokens for authentication.]*/
     if (this._authenticationProvider.type === AuthenticationType.Token) {
@@ -228,8 +229,15 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
                   this._mqtt.connect(baseConfig, (err, result) => {
                     debug('connect');
                     if (err) {
-                      this._fsm.transition('disconnected', connectCallback, err);
+                      if (this._firstConnection) {
+                        /* Codes_SRS_NODE_DEVICE_MQTT_41_006: [The `connect` method shall call its callback with an `UnauthorizedError` returned by the primary call to `connect` in the base MQTT client.]*/
+                        this._fsm.transition('disconnected', connectCallback, new Error('Failure on first connection (Not authorized): ' + err.message));
+                      } else {
+                        /* Codes_SRS_NODE_DEVICE_MQTT_41_007: [The `connect` method shall call its callback with the error returned by the non-primary call to `connect` in the base MQTT client.]*/
+                        this._fsm.transition('disconnected', connectCallback, err);
+                      }
                     } else {
+                      this._firstConnection = false;
                       this._fsm.transition('connected', connectCallback, result);
                     }
                   });
@@ -686,7 +694,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_016: [If the connection string does not specify a `gatewayHostName` value, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_054: [If a `gatewayHostName` is specified in the connection string, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<gatewayhostname>`. ]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_055: [The Mqtt constructor shall initialize the `username` property of the `config` object to '<host>/<clientId>/api-version=<version>&DeviceClientType=<agentString>'. ]*/
-    /*Tests_SRS_NODE_DEVICE_MQTT_41_002: [The MQTT constructor shall append the productInfo to the `username` property of the `config` object.]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_41_002: [The MQTT constructor shall append the productInfo to the `username` property of the `config` object.]*/
     let baseConfig: MqttBaseTransportConfig = {
       uri: 'mqtts://' + (credentials.gatewayHostName || credentials.host),
       username: credentials.host + '/' + clientId +
