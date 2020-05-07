@@ -1,15 +1,15 @@
 {
   "name": "azure-iot-device-http",
-  "version": "1.12.0-preview.2",
+  "version": "1.12.0-pnp-refresh.0",
   "description": "HTTP transport for Azure IoT device SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.12.0-preview.2",
-    "azure-iot-device": "1.12.0-preview.2",
-    "azure-iot-http-base": "1.12.0-preview.2",
+    "azure-iot-common": "1.12.0-pnp-refresh.0",
+    "azure-iot-device": "1.12.0-pnp-refresh.0",
+    "azure-iot-http-base": "1.12.0-pnp-refresh.0",
     "debug": "^4.1.1",
     "node-crontab": "^0.0.8"
   },
