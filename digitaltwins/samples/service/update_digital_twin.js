@@ -38,7 +38,6 @@ async function main() {
 
     // Update digital twin
     await digitalTwinServiceClient.updateDigitalTwin(deviceId, patch);
-
   } catch (err) {
     console.log(err);
   }
