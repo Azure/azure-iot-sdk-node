@@ -61,7 +61,10 @@
             "description": "json-patch contents to update.",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/DigitalTwinPatch"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PatchOperation"
+              }
             }
           },
           {
@@ -199,7 +202,7 @@
           "type": "string"
         },
         "value": {
-          "$ref": "#/definitions/VariantValue",
+          "type": "object",
           "description": "Json patch \"value\" member."
         },
         "from": {
