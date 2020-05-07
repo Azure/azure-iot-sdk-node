@@ -15,6 +15,7 @@
 const DigitalTwinClient = require('azure-iot-digitaltwins-device').DigitalTwinClient;
 const EnvironmentalSensor = require('./environmentalInterface').EnvironmentalSensor;
 const DeviceInformation = require('./deviceInformationInterface').DeviceInformation;
+const SDKInformation = require('./sdkInformationInterface').SDKInformation;
 
 let digitalTwinClient;
 
@@ -31,15 +32,30 @@ const propertyUpdateHandler = async (component, propertyName, reportedValue, des
 
 const commandHandler = (request, response) => {
   console.log('received command: ' + request.commandName + ' for component: ' + request.componentName);
-  response.acknowledge(200, 'helpful response text');
-  console.log('acknowledgement succeeded.');
+  switch (request.commandName) {
+  case 'blink': {
+    console.log('Got the blink command.');
+    response.acknowledge(200, 'blink response');
+    break;
+  }
+  case 'turnon': {
+    console.log('Got the turnon command.');
+    response.acknowledge(200, 'turn on response');
+    break;
+  }
+  case 'turnoff': {
+    console.log('Got the turnoff command.');
+    response.acknowledge(200, 'turn off response');
+    break;
+  }
+  }
 };
-
 
 const environmentalSensor = new EnvironmentalSensor('sensor', propertyUpdateHandler, commandHandler);
 const deviceInformation = new DeviceInformation('deviceInformation');
+const sdkInformation = new SDKInformation('SDKInformation');
 
-const modelId = 'dtmi:YOUR_COMPANY_NAME_HERE:sample_device;1';
+const modelId = 'dtmi:my_company:com:sample_device;1';
 
 async function main() {
   // mqtt is implied in this static method
@@ -51,6 +67,7 @@ async function main() {
   digitalTwinClient.addComponents(
     environmentalSensor,
     deviceInformation,
+    sdkInformation
   );
 
   // enableCommands will enable the AzureDigitalTwinCommand properties in your interfaces to receive PnP commands from the service, and respond via
@@ -76,8 +93,20 @@ async function main() {
     totalMemory: 640,
   });
 
+  // report sdk information
+  console.log('Reporting SDKInformation properties...');
+  await digitalTwinClient.report(sdkInformation, {
+    language: 'node.js',
+    version: digitalTwinClient.getVersion(),
+    vendor: 'Microsoft'
+  });
+
   console.log('Reporting environmentalSensor properties...');
-  await digitalTwinClient.report(environmentalSensor, { state: true });
+  await digitalTwinClient.report(environmentalSensor, {
+    name: 'IoT Sample Device',
+    state: true,
+    brightness: '10'
+  });
 
   let index = 0;
   setInterval( async () => {

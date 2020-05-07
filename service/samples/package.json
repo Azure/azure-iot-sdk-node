@@ -9,7 +9,7 @@
     "npmlockrefresh": "npm i --package-lock-only"
   },
   "dependencies": {
-    "azure-iothub": "1.12.0-preview.2",
+    "azure-iothub": "1.12.0-pnp-refresh.0",
     "azure-storage": "^2.10.2"
   }
 }

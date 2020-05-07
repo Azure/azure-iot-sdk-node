@@ -47,7 +47,7 @@ describe('Digital Twin Properties', function () {
         return createModel(interfaceDocument);
       }).then(() => {
         debug('interface model creation succeeded');
-        debug('create or update test capability model: ' + capabilityModelDocument['@id']);
+        debug('create or update test Model ID: ' + capabilityModelDocument['@id']);
         return createModel(capabilityModelDocument);
       }).then(() => {
         debug('beforeAll hook done');

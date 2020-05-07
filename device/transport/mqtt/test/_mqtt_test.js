@@ -636,20 +636,20 @@ describe('Mqtt', function () {
       });
     });
 
-    /* Tests_SRS_NODE_DEVICE_MQTT_41_XXX: [For a Plug and Play Device the device capability model should be included as &digital-twin-model-id=<DEVICE’s DCM ID> after the api-version]*/
-    it('sets options for deviceCapabilityModel', function (testCallback) {
-      const fakeDCMString = '&digital-twin-model-id=fakeDCMString';
-      const fakeDCM = { deviceCapabilityModel: 'fakeDCMString' };
+    /* Tests_SRS_NODE_DEVICE_MQTT_41_006: [For a Plug and Play Device the modelID should be included as `&digital-twin-model-id=<DEVICE’s MODEL ID>` after the api-version]*/
+    it('sets options for modelId', function (testCallback) {
+      const fakeModelId = '&digital-twin-model-id=fakeModelId';
+      const fakeModel = { modelId: 'fakeModelId' };
       let connectCallback;
       fakeMqttBase.connect = sinon.stub().callsFake(function (config, callback) {
         connectCallback = callback;
       });
       const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
-      mqtt.setOptions(fakeDCM, function (err) {
+      mqtt.setOptions(fakeModel, function (err) {
         assert.isNotOk(err);
-        assert.strictEqual(mqtt._dcm, fakeDCMString);
+        assert.strictEqual(mqtt._mid, fakeModelId);
         getUserAgentString(function (userAgentString) {
-          const expectedUsername = 'host.name/deviceId/' + endpoint.versionQueryString() + fakeDCMString + '&DeviceClientType=' + encodeURIComponent(userAgentString);
+          const expectedUsername = 'host.name/deviceId/' + endpoint.versionQueryString() + fakeModelId + '&DeviceClientType=' + encodeURIComponent(userAgentString);
           mqtt.connect(function (err) {
             assert.isNotOk(err);
             assert.strictEqual(fakeMqttBase.connect.firstCall.args[0]['username'], expectedUsername);

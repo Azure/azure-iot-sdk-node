@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-digitaltwins-e2e",
-  "version": "1.0.0-preview.2",
+  "version": "1.0.0-pnp-refresh.0",
   "description": "Azure IoT Digital Twins End-to-End tests",
   "main": "index.js",
   "private": true,
@@ -12,8 +12,7 @@
     "digitaltwins_properties": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json digitaltwin_properties.js",
     "model_repository_crud": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json model_repository_crud.js",
     "model_repository_cl_crud": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json model_repository_cl_crud.js",
-    "alltest": "npm run digitaltwins_commands && npm run digitaltwins_properties && npm run digitaltwins_telemetry",
-    "e2e": "npm -s run lint && npm -s run alltest"
+    "alltest": "npm run digitaltwins_commands && npm run digitaltwins_properties && npm run digitaltwins_telemetry"
   },
   "repository": {
     "type": "git",
@@ -34,14 +33,14 @@
     "chai": "^4.2.0",
     "debug": "^4.1.1",
     "uuid": "^3.3.2",
-    "azure-iot-common": "1.12.0-preview.2",
-    "azure-iot-device": "1.12.0-preview.2",
-    "azure-iot-device-mqtt": "1.12.0-preview.2",
-    "azure-iothub": "1.12.0-preview.2",
+    "azure-iot-common": "1.12.0-pnp-refresh.0",
+    "azure-iot-device": "1.12.0-pnp-refresh.0",
+    "azure-iot-device-mqtt": "1.12.0-pnp-refresh.0",
+    "azure-iothub": "1.12.0-pnp-refresh.0",
     "@azure/event-hubs": "^2.1.1",
-    "azure-iot-digitaltwins-model-repository": "1.0.0-preview.3",
-    "azure-iot-digitaltwins-service": "1.0.0-preview.3",
-    "azure-iot-digitaltwins-device": "1.0.0-preview.3"
+    "azure-iot-digitaltwins-model-repository": "1.0.0-pnp-refresh.0",
+    "azure-iot-digitaltwins-service": "1.0.0-pnp-refresh.0",
+    "azure-iot-digitaltwins-device": "1.0.0-pnp-refresh.0"
   },
   "devDependencies": {
     "eslint-config-google": "^0.13.0"
