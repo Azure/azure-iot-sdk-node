@@ -10,20 +10,6 @@ import { ServiceClientOptions } from "@azure/ms-rest-js";
 import * as msRest from "@azure/ms-rest-js";
 
 /**
- * Base class for serializable value of indetermined type.
- */
-export interface VariantValue {
-  /**
-   * **NOTE: This property will not be serialized. It can only be populated by the server.**
-   */
-  readonly objectValue?: any;
-  /**
-   * **NOTE: This property will not be serialized. It can only be populated by the server.**
-   */
-  readonly isNull?: boolean;
-}
-
-/**
  * An interface representing PatchOperation.
  */
 export interface PatchOperation {
@@ -39,7 +25,7 @@ export interface PatchOperation {
   /**
    * Json patch "value" member.
    */
-  value?: VariantValue;
+  value?: any;
   /**
    * Json patch "from" member.
    */
@@ -54,6 +40,20 @@ export interface DigitalTwinPatch {
    * List of digital twin json-patch operations.
    */
   operations?: PatchOperation[];
+}
+
+/**
+ * Base class for serializable value of indetermined type.
+ */
+export interface VariantValue {
+  /**
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly objectValue?: any;
+  /**
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly isNull?: boolean;
 }
 
 /**

@@ -25,15 +25,20 @@ async function main() {
     // Print digital twin
     console.log(digitalTwin);
 
-    const patch = '<JSON patch goes here>';
+    // Update digital twin desired properties
+    // jsonpatch example:
+    // patch = [
+    //     {'op': 'add', 'path': '/newThermostat', 'value': {'tempSetpoint': 100, '$metadata': {}}},
+    //     {'op': 'remove', 'path': '/baz/1'},
+    //     {'op': 'replace', 'path': '/baz/0', 'value': 42},
+    // ]);
+    const patch = [{ op: 'add', path: '/newThermostat1', value: { 'tempSetpoint': 1000, '$metadata': {} } }];
     console.log('patch:');
     console.log(JSON.stringify(patch, null, 2));
 
     // Update digital twin
-    const digitalTwinUpdateResponse = await digitalTwinServiceClient.updateDigitalTwin(deviceId, patch);
+    await digitalTwinServiceClient.updateDigitalTwin(deviceId, patch);
 
-    // Print the response
-    console.log(JSON.stringify(digitalTwinUpdateResponse.interfaces, null, 2));
   } catch (err) {
     console.log(err);
   }

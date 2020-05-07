@@ -64,21 +64,21 @@ export class DigitalTwin {
    * @param [options] The optional parameters
    * @returns Promise<Models.DigitalTwinUpdateDigitalTwinResponse>
    */
-  updateDigitalTwin(digitalTwinId: string, digitalTwinPatch: Models.DigitalTwinPatch, options?: Models.DigitalTwinUpdateDigitalTwinOptionalParams): Promise<Models.DigitalTwinUpdateDigitalTwinResponse>;
+  updateDigitalTwin(digitalTwinId: string, digitalTwinPatch: Models.PatchOperation[], options?: Models.DigitalTwinUpdateDigitalTwinOptionalParams): Promise<Models.DigitalTwinUpdateDigitalTwinResponse>;
   /**
    * @param digitalTwinId ID of digital twin.
    * @param digitalTwinPatch json-patch contents to update.
    * @param callback The callback
    */
-  updateDigitalTwin(digitalTwinId: string, digitalTwinPatch: Models.DigitalTwinPatch, callback: msRest.ServiceCallback<any>): void;
+  updateDigitalTwin(digitalTwinId: string, digitalTwinPatch: Models.PatchOperation[], callback: msRest.ServiceCallback<any>): void;
   /**
    * @param digitalTwinId ID of digital twin.
    * @param digitalTwinPatch json-patch contents to update.
    * @param options The optional parameters
    * @param callback The callback
    */
-  updateDigitalTwin(digitalTwinId: string, digitalTwinPatch: Models.DigitalTwinPatch, options: Models.DigitalTwinUpdateDigitalTwinOptionalParams, callback: msRest.ServiceCallback<any>): void;
-  updateDigitalTwin(digitalTwinId: string, digitalTwinPatch: Models.DigitalTwinPatch, options?: Models.DigitalTwinUpdateDigitalTwinOptionalParams | msRest.ServiceCallback<any>, callback?: msRest.ServiceCallback<any>): Promise<Models.DigitalTwinUpdateDigitalTwinResponse> {
+  updateDigitalTwin(digitalTwinId: string, digitalTwinPatch: Models.PatchOperation[], options: Models.DigitalTwinUpdateDigitalTwinOptionalParams, callback: msRest.ServiceCallback<any>): void;
+  updateDigitalTwin(digitalTwinId: string, digitalTwinPatch: Models.PatchOperation[], options?: Models.DigitalTwinUpdateDigitalTwinOptionalParams | msRest.ServiceCallback<any>, callback?: msRest.ServiceCallback<any>): Promise<Models.DigitalTwinUpdateDigitalTwinResponse> {
     return this.client.sendOperationRequest(
       {
         digitalTwinId,
@@ -171,8 +171,17 @@ const updateDigitalTwinOperationSpec: msRest.OperationSpec = {
   requestBody: {
     parameterPath: "digitalTwinPatch",
     mapper: {
-      ...Mappers.DigitalTwinPatch,
-      required: true
+      required: true,
+      serializedName: "digitalTwinPatch",
+      type: {
+        name: "Sequence",
+        element: {
+          type: {
+            name: "Composite",
+            className: "PatchOperation"
+          }
+        }
+      }
     }
   },
   responses: {

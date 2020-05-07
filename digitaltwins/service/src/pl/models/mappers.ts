@@ -9,30 +9,6 @@
 import * as msRest from "@azure/ms-rest-js";
 
 
-export const VariantValue: msRest.CompositeMapper = {
-  serializedName: "VariantValue",
-  type: {
-    name: "Composite",
-    className: "VariantValue",
-    modelProperties: {
-      objectValue: {
-        readOnly: true,
-        serializedName: "ObjectValue",
-        type: {
-          name: "Object"
-        }
-      },
-      isNull: {
-        readOnly: true,
-        serializedName: "IsNull",
-        type: {
-          name: "Boolean"
-        }
-      }
-    }
-  }
-};
-
 export const PatchOperation: msRest.CompositeMapper = {
   serializedName: "PatchOperation",
   type: {
@@ -54,8 +30,7 @@ export const PatchOperation: msRest.CompositeMapper = {
       value: {
         serializedName: "value",
         type: {
-          name: "Composite",
-          className: "VariantValue"
+          name: "Object"
         }
       },
       from: {
@@ -84,6 +59,30 @@ export const DigitalTwinPatch: msRest.CompositeMapper = {
               className: "PatchOperation"
             }
           }
+        }
+      }
+    }
+  }
+};
+
+export const VariantValue: msRest.CompositeMapper = {
+  serializedName: "VariantValue",
+  type: {
+    name: "Composite",
+    className: "VariantValue",
+    modelProperties: {
+      objectValue: {
+        readOnly: true,
+        serializedName: "ObjectValue",
+        type: {
+          name: "Object"
+        }
+      },
+      isNull: {
+        readOnly: true,
+        serializedName: "IsNull",
+        type: {
+          name: "Boolean"
         }
       }
     }

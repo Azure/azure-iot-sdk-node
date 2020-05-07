@@ -8,7 +8,5 @@
 
 export {
   DigitalTwinInvokeComponentCommandHeaders,
-  DigitalTwinPatch,
-  PatchOperation,
-  VariantValue
+  PatchOperation
 } from "../models/mappers";
