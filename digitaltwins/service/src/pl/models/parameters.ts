@@ -31,11 +31,11 @@ export const commandName: msRest.OperationURLParameter = {
     }
   }
 };
-export const componentName: msRest.OperationURLParameter = {
-  parameterPath: "componentName",
+export const componentPath: msRest.OperationURLParameter = {
+  parameterPath: "componentPath",
   mapper: {
     required: true,
-    serializedName: "componentName",
+    serializedName: "componentPath",
     type: {
       name: "String"
     }
@@ -53,11 +53,43 @@ export const connectTimeoutInSeconds: msRest.OperationQueryParameter = {
     }
   }
 };
+export const deviceId: msRest.OperationURLParameter = {
+  parameterPath: "deviceId",
+  mapper: {
+    required: true,
+    serializedName: "deviceId",
+    type: {
+      name: "String"
+    }
+  }
+};
 export const digitalTwinId: msRest.OperationURLParameter = {
   parameterPath: "digitalTwinId",
   mapper: {
     required: true,
     serializedName: "digitalTwinId",
+    type: {
+      name: "String"
+    }
+  }
+};
+export const expand: msRest.OperationQueryParameter = {
+  parameterPath: [
+    "options",
+    "expand"
+  ],
+  mapper: {
+    serializedName: "expand",
+    type: {
+      name: "Boolean"
+    }
+  }
+};
+export const id: msRest.OperationURLParameter = {
+  parameterPath: "id",
+  mapper: {
+    required: true,
+    serializedName: "id",
     type: {
       name: "String"
     }
@@ -75,6 +107,80 @@ export const ifMatch: msRest.OperationParameter = {
     }
   }
 };
+export const interfaceName: msRest.OperationURLParameter = {
+  parameterPath: "interfaceName",
+  mapper: {
+    required: true,
+    serializedName: "interfaceName",
+    type: {
+      name: "String"
+    }
+  }
+};
+export const jobStatus: msRest.OperationQueryParameter = {
+  parameterPath: [
+    "options",
+    "jobStatus"
+  ],
+  mapper: {
+    serializedName: "jobStatus",
+    type: {
+      name: "String"
+    }
+  }
+};
+export const jobType: msRest.OperationQueryParameter = {
+  parameterPath: [
+    "options",
+    "jobType"
+  ],
+  mapper: {
+    serializedName: "jobType",
+    type: {
+      name: "String"
+    }
+  }
+};
+export const lockToken: msRest.OperationURLParameter = {
+  parameterPath: "lockToken",
+  mapper: {
+    required: true,
+    serializedName: "lockToken",
+    type: {
+      name: "String"
+    }
+  }
+};
+export const mid: msRest.OperationURLParameter = {
+  parameterPath: "mid",
+  mapper: {
+    required: true,
+    serializedName: "mid",
+    type: {
+      name: "String"
+    }
+  }
+};
+export const modelId: msRest.OperationURLParameter = {
+  parameterPath: "modelId",
+  mapper: {
+    required: true,
+    serializedName: "modelId",
+    type: {
+      name: "String"
+    }
+  }
+};
+export const moduleId: msRest.OperationURLParameter = {
+  parameterPath: "moduleId",
+  mapper: {
+    required: true,
+    serializedName: "moduleId",
+    type: {
+      name: "String"
+    }
+  }
+};
 export const responseTimeoutInSeconds: msRest.OperationQueryParameter = {
   parameterPath: [
     "options",
@@ -84,6 +190,42 @@ export const responseTimeoutInSeconds: msRest.OperationQueryParameter = {
     serializedName: "responseTimeoutInSeconds",
     type: {
       name: "Number"
+    }
+  }
+};
+export const top: msRest.OperationQueryParameter = {
+  parameterPath: [
+    "options",
+    "top"
+  ],
+  mapper: {
+    serializedName: "top",
+    type: {
+      name: "Number"
+    }
+  }
+};
+export const xMsContinuation: msRest.OperationParameter = {
+  parameterPath: [
+    "options",
+    "xMsContinuation"
+  ],
+  mapper: {
+    serializedName: "x-ms-continuation",
+    type: {
+      name: "String"
+    }
+  }
+};
+export const xMsMaxItemCount: msRest.OperationParameter = {
+  parameterPath: [
+    "options",
+    "xMsMaxItemCount"
+  ],
+  mapper: {
+    serializedName: "x-ms-max-item-count",
+    type: {
+      name: "String"
     }
   }
 };
