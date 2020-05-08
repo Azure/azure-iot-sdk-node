@@ -7,6 +7,22 @@
  */
 
 export {
+  Desired,
+  DesiredState,
+  DigitalTwinGetComponentHeaders,
+  DigitalTwinGetComponentsHeaders,
+  DigitalTwinGetDigitalTwinHeaders,
+  DigitalTwinGetDigitalTwinModelHeaders,
+  DigitalTwinInterfaces,
+  DigitalTwinInterfacesPatch,
+  DigitalTwinInterfacesPatchInterfacesValue,
+  DigitalTwinInterfacesPatchInterfacesValuePropertiesValue,
+  DigitalTwinInterfacesPatchInterfacesValuePropertiesValueDesired,
   DigitalTwinInvokeComponentCommandHeaders,
-  PatchOperation
+  DigitalTwinInvokeComponentCommandV2Headers,
+  DigitalTwinUpdateComponentHeaders,
+  DigitalTwinUpdateDigitalTwinHeaders,
+  InterfaceModel,
+  Property,
+  Reported
 } from "../models/mappers";
