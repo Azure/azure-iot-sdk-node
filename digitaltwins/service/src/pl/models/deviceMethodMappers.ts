@@ -7,8 +7,6 @@
  */
 
 export {
-  DigitalTwinGetDigitalTwinHeaders,
-  DigitalTwinGetDigitalTwinModelHeaders,
-  DigitalTwinInvokeComponentCommandHeaders,
-  DigitalTwinUpdateDigitalTwinHeaders
+  CloudToDeviceMethod,
+  CloudToDeviceMethodResult
 } from "../models/mappers";
