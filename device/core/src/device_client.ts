@@ -96,7 +96,7 @@ export class Client extends InternalClient {
         debug('_c2dFeature %s _c2dEnabled %s', this._c2dFeature, this._c2dEnabled);
         if (this._c2dFeature) {
           // turn on C2D
-          debug('re-enabling C2D');
+          debug('disconnectHandler re-enabling C2D');
           this._enableC2D((err) => {
             if (err) {
               /*Codes_SRS_NODE_DEVICE_CLIENT_16_102: [If the retry policy fails to reestablish the C2D functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
@@ -255,7 +255,7 @@ export class Client extends InternalClient {
 
 
   private _enableC2D(callback: (err?: Error) => void): void {
-    debug('_c2dFeature %s _c2dEnabled %s', this._c2dFeature, this._c2dEnabled);
+    debug('_enableC2D: _c2dFeature %s _c2dEnabled %s', this._c2dFeature, this._c2dEnabled);
     if (this._c2dFeature && !this._c2dEnabled) {
       debug('C2D: enabling');
       const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
@@ -277,7 +277,7 @@ export class Client extends InternalClient {
   }
 
   private _disableC2D(callback: (err?: Error) => void): void {
-    debug('_c2dFeature %s _c2dEnabled %s', this._c2dFeature, this._c2dEnabled);
+    debug('_disableC2D: _c2dFeature %s _c2dEnabled %s', this._c2dFeature, this._c2dEnabled);
     if (this._c2dFeature && this._c2dEnabled) {
       debug('C2D: disabling');
       this._transport.disableC2D((err) => {
