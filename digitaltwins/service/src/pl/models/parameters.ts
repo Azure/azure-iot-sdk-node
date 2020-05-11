@@ -63,16 +63,6 @@ export const deviceId: msRest.OperationURLParameter = {
     }
   }
 };
-export const digitalTwinId: msRest.OperationURLParameter = {
-  parameterPath: "digitalTwinId",
-  mapper: {
-    required: true,
-    serializedName: "digitalTwinId",
-    type: {
-      name: "String"
-    }
-  }
-};
 export const expand: msRest.OperationQueryParameter = {
   parameterPath: [
     "options",
@@ -102,16 +92,6 @@ export const ifMatch: msRest.OperationParameter = {
   ],
   mapper: {
     serializedName: "If-Match",
-    type: {
-      name: "String"
-    }
-  }
-};
-export const interfaceName: msRest.OperationURLParameter = {
-  parameterPath: "interfaceName",
-  mapper: {
-    required: true,
-    serializedName: "interfaceName",
     type: {
       name: "String"
     }
