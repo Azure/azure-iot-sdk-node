@@ -1,0 +1,42 @@
+{
+  "name": "azure-iot-digitaltwins-service-ts-samples",
+  "version": "1.0.0-pnp-refresh.0",
+  "description": "Azure IoT SDK - Digital Twin Client typescript samples",
+  "author": "Microsoft Corporation",
+  "license": "MIT",
+  "dependencies": {
+    "azure-iot-device": "1.12.0-pnp-refresh.0",
+    "azure-iot-common": "1.12.0-pnp-refresh.0",
+    "azure-iot-device-mqtt": "1.12.0-pnp-refresh.0",
+    "azure-iot-digitaltwins-device": "1.0.0-pnp-refresh.0"
+  },
+  "devDependencies": {
+    "tslint": "^6.1.0",
+    "typescript": "2.9.2"
+  },
+  "scripts": {
+    "lint": "tslint --project . -c ../../../../tslint.json",
+    "build": "tsc",
+    "npmlockrefresh": "npm i --package-lock-only",
+    "ci": "npm -s run lint && npm -s run build"
+  },
+  "engines": {
+    "node": ">= 0.10"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "src/**/*.ts",
+    "tsconfig.json"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Azure/azure-iot-sdk-node.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Azure/azure-iot-sdk-node/issues"
+  },
+  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme"
+}
