@@ -7,8 +7,8 @@
  */
 
 export {
-  DigitalTwinGetDigitalTwinHeaders,
-  DigitalTwinGetDigitalTwinModelHeaders,
-  DigitalTwinInvokeComponentCommandHeaders,
-  DigitalTwinUpdateDigitalTwinHeaders
+  DeviceCapabilities,
+  Twin,
+  TwinProperties,
+  X509Thumbprint
 } from "../models/mappers";

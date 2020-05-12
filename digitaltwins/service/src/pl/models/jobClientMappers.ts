@@ -7,8 +7,14 @@
  */
 
 export {
-  DigitalTwinGetDigitalTwinHeaders,
-  DigitalTwinGetDigitalTwinModelHeaders,
-  DigitalTwinInvokeComponentCommandHeaders,
-  DigitalTwinUpdateDigitalTwinHeaders
+  CloudToDeviceMethod,
+  DeviceCapabilities,
+  DeviceJobStatistics,
+  JobProperties,
+  JobRequest,
+  JobResponse,
+  QueryResult,
+  Twin,
+  TwinProperties,
+  X509Thumbprint
 } from "../models/mappers";

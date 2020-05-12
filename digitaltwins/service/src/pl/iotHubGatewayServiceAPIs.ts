@@ -16,7 +16,14 @@ import { IotHubGatewayServiceAPIsContext } from "./iotHubGatewayServiceAPIsConte
 
 class IotHubGatewayServiceAPIs extends IotHubGatewayServiceAPIsContext {
   // Operation groups
+  configuration: operations.ConfigurationOperations;
+  registryManager: operations.RegistryManager;
+  jobClient: operations.JobClient;
+  faultInjection: operations.FaultInjection;
+  twin: operations.TwinOperations;
   digitalTwin: operations.DigitalTwin;
+  httpRuntime: operations.HttpRuntime;
+  deviceMethod: operations.DeviceMethod;
 
   /**
    * Initializes a new instance of the IotHubGatewayServiceAPIs class.
@@ -25,7 +32,14 @@ class IotHubGatewayServiceAPIs extends IotHubGatewayServiceAPIsContext {
    */
   constructor(credentials: msRest.ServiceClientCredentials, options?: Models.IotHubGatewayServiceAPIsOptions) {
     super(credentials, options);
+    this.configuration = new operations.ConfigurationOperations(this);
+    this.registryManager = new operations.RegistryManager(this);
+    this.jobClient = new operations.JobClient(this);
+    this.faultInjection = new operations.FaultInjection(this);
+    this.twin = new operations.TwinOperations(this);
     this.digitalTwin = new operations.DigitalTwin(this);
+    this.httpRuntime = new operations.HttpRuntime(this);
+    this.deviceMethod = new operations.DeviceMethod(this);
   }
 }
 

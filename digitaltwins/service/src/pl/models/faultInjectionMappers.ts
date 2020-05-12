@@ -7,8 +7,6 @@
  */
 
 export {
-  DigitalTwinGetDigitalTwinHeaders,
-  DigitalTwinGetDigitalTwinModelHeaders,
-  DigitalTwinInvokeComponentCommandHeaders,
-  DigitalTwinUpdateDigitalTwinHeaders
+  FaultInjectionConnectionProperties,
+  FaultInjectionProperties
 } from "../models/mappers";
