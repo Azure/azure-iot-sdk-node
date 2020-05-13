@@ -8,7 +8,8 @@
     "azure-iot-device": "1.12.0-pnp-refresh.0",
     "azure-iot-common": "1.12.0-pnp-refresh.0",
     "azure-iot-device-mqtt": "1.12.0-pnp-refresh.0",
-    "azure-iot-digitaltwins-device": "1.0.0-pnp-refresh.0"
+    "azure-iot-digitaltwins-device": "1.0.0-pnp-refresh.0",
+    "azure-iot-digitaltwins-service": "1.0.0-pnp-refresh.0"
   },
   "devDependencies": {
     "tslint": "^6.1.0",

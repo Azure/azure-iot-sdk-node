@@ -4,8 +4,8 @@
 import { DigitalTwinServiceClient } from 'azure-iot-digitaltwins-service';
 import { IoTHubTokenCredentials } from 'azure-iot-digitaltwins-service';
 
-const deviceId = process.env.IOTHUB_DEVICE_ID || 'device_id';
-const connectionString = process.env.IOTHUB_CONNECTION_STRING || 'conn_string';
+const deviceId = process.env.IOTHUB_DEVICE_ID || '';
+const connectionString = process.env.IOTHUB_CONNECTION_STRING || '';
 const componentName = process.env.IOTHUB_COMPONENT_NAME || 'sensor'; // for the environmental sensor, try "sensor"
 const commandName = process.env.IOTHUB_COMMAND_NAME || 'turnon'; // for the environmental sensor, you can try "blink", "turnoff" or "turnon"
 const commandPayload = process.env.IOTHUB_COMMAND_PAYLOAD || ''; // for the environmental sensor, it really doesn't matter. any string will do.

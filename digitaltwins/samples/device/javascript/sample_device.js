@@ -38,12 +38,12 @@ const commandHandler = (request, response) => {
     response.acknowledge(200, 'blink response');
     break;
   }
-  case 'turnon': {
+  case 'turnOn': {
     console.log('Got the turnon command.');
     response.acknowledge(200, 'turn on response');
     break;
   }
-  case 'turnoff': {
+  case 'turnOff': {
     console.log('Got the turnoff command.');
     response.acknowledge(200, 'turn off response');
     break;
