@@ -27,7 +27,7 @@ const environmentCommandCallback: CommandCallback = (request: CommandRequest, re
       });
       break;
     }
-    case 'turnon': {
+    case 'turnOn': {
       console.log('Got the turnon command.');
       response.acknowledge(200, 'turn on response', (err?: Error) => {
         if (err) {
@@ -36,7 +36,7 @@ const environmentCommandCallback: CommandCallback = (request: CommandRequest, re
       });
       break;
     }
-    case 'turnoff': {
+    case 'turnOff': {
       console.log('Got the turnoff command.');
       response.acknowledge(200, 'turn off response', (err?: Error) => {
         if (err) {
@@ -62,7 +62,7 @@ const environmentalSensor = new EnvironmentalSensor('sensor', environmentReadWri
 const deviceInformation = new DeviceInformation('deviceInformation');
 const sdkInformation = new SDKInformation('sdkInformation');
 
-const modelId = 'dtmi:my_company:com:sample_device;1';
+const modelId = 'dtmi:com:example:SampleDevice;1';
 let dtClient = DigitalTwinClient.fromConnectionString(modelId, process.env.DEVICE_CONNECTION_STRING as string);
 
 const main = async () => {

@@ -53,9 +53,9 @@ const commandHandler = (request, response) => {
 
 const environmentalSensor = new EnvironmentalSensor('sensor', propertyUpdateHandler, commandHandler);
 const deviceInformation = new DeviceInformation('deviceInformation');
-const sdkInformation = new SDKInformation('SDKInformation');
+const sdkInformation = new SDKInformation('sdkInformation');
 
-const modelId = 'dtmi:my_company:com:sample_device;1';
+const modelId = 'dtmi:com:example:SampleDevice;1';
 
 async function main() {
   // mqtt is implied in this static method

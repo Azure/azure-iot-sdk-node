@@ -19,7 +19,7 @@ export class DeviceInformation extends BaseInterface {
   totalMemory: Property;
 
   constructor(componentName: string) {
-    super(componentName, 'dtmi:contoso_device_corp:DeviceInformation;1');
+    super(componentName, 'dtmi:azure:DeviceManagement:DeviceInformation;1');
     this.manufacturer = new Property();
     this.model = new Property();
     this.swVersion = new Property();
