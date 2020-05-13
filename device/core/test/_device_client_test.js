@@ -324,11 +324,12 @@ describe('Device Client', function () {
       sinon.spy(fakeTransport, 'enableC2D');
       var client = new Client(fakeTransport);
 
-      // Calling 'on' twice to make sure it's called only once on the receiver.
-      // It works because the test will fail if the test callback is called multiple times, and it's called for every time the 'message' event is subscribed on the receiver.
+      // Calling 'on' thrice to make sure it's called each time on the receiver.
+      // It should work because enableC2D does not check that it has not been called once before, instead leaving that job up to the transport level.
       client.on('message', function () { });
       client.on('message', function () { });
-      assert.isTrue(fakeTransport.enableC2D.calledOnce);
+      client.on('message', function () { });
+      assert.isTrue(fakeTransport.enableC2D.calledThrice, 'client called enabledC2D the incorrect number of times');
     });
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_005: [The client shall stop listening for messages from the service whenever the last listener unsubscribes from the ‘message’ event.]*/
@@ -348,7 +349,7 @@ describe('Device Client', function () {
         client.removeListener('message', listener1);
         assert.isTrue(fakeTransport.disableC2D.notCalled);
         client.removeListener('message', listener2);
-        assert(fakeTransport.disableC2D.calledOnce);
+        assert.strictEqual(fakeTransport.disableC2D.callCount, 1, 'disableC2D not called once');
         testCallback();
       });
     });

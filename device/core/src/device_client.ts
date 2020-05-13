@@ -52,12 +52,12 @@ export class Client extends InternalClient {
       if (eventName === 'message' && this.listeners('message').length === 0) {
         /*Codes_SRS_NODE_DEVICE_CLIENT_16_005: [The client shall stop listening for messages from the service whenever the last listener unsubscribes from the `message` event.]*/
         debug('in removeListener, disabling C2D.');
-        this._c2dFeature = false;
         this._disableC2D((err) => {
           if (err) {
             debug('in removeListener, error disabling C2D.');
             this.emit('error', err);
           } else {
+            this._c2dFeature = false;
             debug('removeListener successfully disabled C2D.');
           }
         });
@@ -68,12 +68,12 @@ export class Client extends InternalClient {
       if (eventName === 'message') {
         /*Codes_SRS_NODE_DEVICE_CLIENT_16_004: [The client shall start listening for messages from the service whenever there is a listener subscribed to the `message` event.]*/
         debug('in newListener, enabling C2D.');
-        this._c2dFeature = true;
         this._enableC2D((err) => {
           if (err) {
             debug('in newListener, error enabling C2D.');
             this.emit('error', err);
           } else {
+            this._c2dFeature = true;
             debug('in newListener, successfully enabled C2D');
           }
         });
@@ -252,40 +252,30 @@ export class Client extends InternalClient {
 
 
   private _enableC2D(callback: (err?: Error) => void): void {
-    if (this._c2dFeature) {
-      debug('enabling C2D');
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-      retryOp.retry((opCallback) => {
-        this._transport.enableC2D(opCallback);
-      }, (err) => {
-        if (!err) {
-          debug('enabled C2D');
-        } else {
-          debug('Error while enabling C2D.');
-        }
-        callback(err);
-      });
-    } else {
-      debug('C2D is not enabled as a feature, so not enabling on device');
-      callback();
-    }
+    debug('enabling C2D');
+    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      this._transport.enableC2D(opCallback);
+    }, (err) => {
+      if (!err) {
+        debug('enabled C2D');
+      } else {
+        debug('Error while enabling C2D.');
+      }
+      callback(err);
+    });
   }
 
   private _disableC2D(callback: (err?: Error) => void): void {
-    if (this._c2dFeature) {
-      debug('disabling C2D');
-      this._transport.disableC2D((err) => {
-        if (!err) {
-          debug('disabled C2D');
-        } else {
-          debug('Error while disabling C2D.');
-        }
-        callback(err);
-      });
-    } else {
-      debug('C2D is not enabled as a feature, so there is nothing to do here');
-      callback();
-    }
+    debug('disabling C2D');
+    this._transport.disableC2D((err) => {
+      if (!err) {
+        debug('disabled C2D');
+      } else {
+        debug('Error while disabling C2D.');
+      }
+      callback(err);
+    });
   }
 
   /**
