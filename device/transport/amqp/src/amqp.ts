@@ -414,26 +414,47 @@ export class Amqp extends EventEmitter implements DeviceTransport {
           /*Codes_SRS_NODE_DEVICE_AMQP_16_079: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback no arguments if the call to `AmqpTwinClient.disableTwinDesiredPropertiesUpdates` succeeds.]*/
           disableTwinDesiredPropertiesUpdates: (callback) => this._twinClient.disableTwinDesiredPropertiesUpdates(handleResult('could not disable twin desired properties updates', callback)),
           enableC2D: (callback) => {
-            debug('attaching C2D link');
-            this._amqp.attachReceiverLink(this._c2dEndpoint, null, (err, receiverLink) => {
-              if (err) {
-                debug('error creating a C2D link: ' + err.toString());
-                /*Codes_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
-                handleResult('AMQP Transport: Could not attach link', callback)(err);
-              } else {
-                /*Codes_SRS_NODE_DEVICE_AMQP_16_032: [The `enableC2D` method shall attach the C2D link and call its `callback` once it is successfully attached.]*/
-                debug('C2D link created and attached successfully');
-                this._c2dLink = receiverLink;
-                this._c2dLink.on('error', this._c2dErrorListener);
-                this._c2dLink.on('message', this._c2dMessageListener);
-                callback();
-              }
-            });
+
+            // let listenerCounts = [0, 0];
+            // if (this._c2dLink) {
+            //   listenerCounts[0] = this._c2dLink.listenerCount('message');
+            //   listenerCounts[1] = this._c2dLink.listenerCount('error');
+            // }
+            // if (listenerCounts[0] === 1 && listenerCounts[1] === 1) {
+            //   callback(true);
+            // } else {
+            //   callback(false);
+            // }
+            if (!this._c2dLink) {
+              debug('attaching C2D link');
+              this._amqp.attachReceiverLink(this._c2dEndpoint, null, (err, receiverLink) => {
+                if (err) {
+                  debug('error creating a C2D link: ' + err.toString());
+                  /*Codes_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
+                  handleResult('AMQP Transport: Could not attach link', callback)(err);
+                } else {
+                  /*Codes_SRS_NODE_DEVICE_AMQP_16_032: [The `enableC2D` method shall attach the C2D link and call its `callback` once it is successfully attached.]*/
+                  debug('C2D link created and attached successfully');
+                  this._c2dLink = receiverLink;
+                  this._c2dLink.on('error', this._c2dErrorListener);
+                  this._c2dLink.on('message', this._c2dMessageListener);
+                  callback();
+                }
+              });
+            } else {
+              debug('C2D link already attached, doing nothing....');
+              callback();
+            }
           },
           disableC2D: (callback) => {
-            /*Codes_SRS_NODE_DEVICE_AMQP_16_035: [The `disableC2D` method shall call `detach` on the C2D link and call its callback when it is successfully detached.]*/
-            /*Codes_SRS_NODE_DEVICE_AMQP_16_036: [The `disableC2D` method shall call its `callback` with an `Error` if it fails to detach the C2D link.]*/
-            this._stopC2DListener(undefined, callback);
+            if (this._c2dLink) {
+              /*Codes_SRS_NODE_DEVICE_AMQP_16_035: [The `disableC2D` method shall call `detach` on the C2D link and call its callback when it is successfully detached.]*/
+              /*Codes_SRS_NODE_DEVICE_AMQP_16_036: [The `disableC2D` method shall call its `callback` with an `Error` if it fails to detach the C2D link.]*/
+              this._stopC2DListener(undefined, callback);
+            } else {
+              debug('C2D link already detached, doing nothing...');
+              callback();
+            }
           },
           enableMethods: (callback) => {
             /*Codes_SRS_NODE_DEVICE_AMQP_16_039: [The `enableMethods` method shall attach the method links and call its `callback` once these are successfully attached.]*/

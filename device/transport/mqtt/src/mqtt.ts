@@ -318,7 +318,13 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
             });
           },
           enableC2D: (callback) => {
-            this._setupSubscription(this._topics.message, 1, callback);
+            if (this._topics.message.subscribed) {
+              debug('C2D already enabled, doing nothing...');
+              callback();
+            } else {
+              debug('setting up C2D subscription');
+              this._setupSubscription(this._topics.message, 1, callback);
+            }
           },
           enableMethods: (callback) => {
             this._setupSubscription(this._topics.method, 0, callback);
@@ -327,7 +333,13 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
             this._setupSubscription(this._topics.inputMessage, 1, callback);
           },
           disableC2D: (callback) => {
-            this._removeSubscription(this._topics.message, callback);
+            if (this._topics.message.subscribed) {
+              debug('removing C2D subscription');
+              this._removeSubscription(this._topics.message, callback);
+            } else {
+              debug('C2D already disabled, doing nothing...');
+              callback();
+            }
           },
           disableMethods: (callback) => {
             this._removeSubscription(this._topics.method, callback);
@@ -971,7 +983,6 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
       });
     }
   }
-
 }
 
 
