@@ -45,7 +45,7 @@ export class Client extends InternalClient {
   constructor(transport: DeviceTransport, connStr?: string, blobUploadClient?: BlobUploadClient, fileUploadApi?: FileUploadInterface) {
     super(transport, connStr);
     this._blobUploadClient = blobUploadClient;
-    this._c2dFeature = false
+    this._c2dFeature = false;
     this._fileUploadApi = fileUploadApi;
 
     this.on('removeListener', (eventName) => {
