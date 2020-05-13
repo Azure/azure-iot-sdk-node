@@ -414,17 +414,6 @@ export class Amqp extends EventEmitter implements DeviceTransport {
           /*Codes_SRS_NODE_DEVICE_AMQP_16_079: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback no arguments if the call to `AmqpTwinClient.disableTwinDesiredPropertiesUpdates` succeeds.]*/
           disableTwinDesiredPropertiesUpdates: (callback) => this._twinClient.disableTwinDesiredPropertiesUpdates(handleResult('could not disable twin desired properties updates', callback)),
           enableC2D: (callback) => {
-
-            // let listenerCounts = [0, 0];
-            // if (this._c2dLink) {
-            //   listenerCounts[0] = this._c2dLink.listenerCount('message');
-            //   listenerCounts[1] = this._c2dLink.listenerCount('error');
-            // }
-            // if (listenerCounts[0] === 1 && listenerCounts[1] === 1) {
-            //   callback(true);
-            // } else {
-            //   callback(false);
-            // }
             if (!this._c2dLink) {
               debug('attaching C2D link');
               this._amqp.attachReceiverLink(this._c2dEndpoint, null, (err, receiverLink) => {
