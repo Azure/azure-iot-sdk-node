@@ -13,7 +13,7 @@ const commandPayload = process.env.IOTHUB_COMMAND_PAYLOAD || ''; // for the envi
 let credentials = new IoTHubTokenCredentials(connectionString);
 let digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-console.log('invoking command ' + commandName + ' on component instance' + componentName + ' for device ' + deviceId + '...');
+console.log('invoking command ' + commandName + ' on component ' + componentName + ' for device ' + deviceId + '...');
 const invokeComponentCommandResponse = digitalTwinServiceClient.invokeComponentCommand(deviceId, componentName, commandName, commandPayload);
 
 // Print the response
