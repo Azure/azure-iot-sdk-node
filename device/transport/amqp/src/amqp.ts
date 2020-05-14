@@ -414,7 +414,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
           /*Codes_SRS_NODE_DEVICE_AMQP_16_079: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback no arguments if the call to `AmqpTwinClient.disableTwinDesiredPropertiesUpdates` succeeds.]*/
           disableTwinDesiredPropertiesUpdates: (callback) => this._twinClient.disableTwinDesiredPropertiesUpdates(handleResult('could not disable twin desired properties updates', callback)),
           enableC2D: (callback) => {
-            /*Codes_SRS_NODE_DEVICE_AMQP_41_XXX: [The `enableC2D` method shall attach the C2D link only if it is not already attached.] */
+            /*Codes_SRS_NODE_DEVICE_AMQP_41_003: [The `enableC2D` method shall attach the C2D link only if it is not already attached.] */
             if (!this._c2dLink) {
               debug('attaching C2D link');
               this._amqp.attachReceiverLink(this._c2dEndpoint, null, (err, receiverLink) => {
@@ -437,7 +437,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
             }
           },
           disableC2D: (callback) => {
-            /*Codes_SRS_NODE_DEVICE_AMQP_41_XXX: [The `disableC2D` method shall detach the C2D link only if it is already attached.] */
+            /*Codes_SRS_NODE_DEVICE_AMQP_41_004: [The `disableC2D` method shall detach the C2D link only if it is already attached.] */
             if (this._c2dLink) {
               /*Codes_SRS_NODE_DEVICE_AMQP_16_035: [The `disableC2D` method shall call `detach` on the C2D link and call its callback when it is successfully detached.]*/
               /*Codes_SRS_NODE_DEVICE_AMQP_16_036: [The `disableC2D` method shall call its `callback` with an `Error` if it fails to detach the C2D link.]*/

@@ -1269,7 +1269,7 @@ describe('Amqp', function () {
           });
         });
 
-          /*Tests_SRS_NODE_DEVICE_AMQP_41_XXX: [The `enableC2D` method shall attach the C2D link only if it is not already attached.] */
+          /*Tests_SRS_NODE_DEVICE_AMQP_41_003: [The `enableC2D` method shall attach the C2D link only if it is not already attached.] */
           it('does not attach the C2D link if the link is already attached', function (testCallback) {
           transport.connect(function () {
             assert(fakeBaseClient.attachReceiverLink.notCalled);
@@ -1365,7 +1365,7 @@ describe('Amqp', function () {
           });
         });
 
-          /*Tests_SRS_NODE_DEVICE_AMQP_41_XXX: [The `disableC2D` method shall detach the C2D link only if it is already attached.] */
+          /*Tests_SRS_NODE_DEVICE_AMQP_41_004: [The `disableC2D` method shall detach the C2D link only if it is already attached.] */
           it('does not detach the C2D link if the link is already detached', function (testCallback) {
           transport.connect(function () {
             assert(fakeBaseClient.attachReceiverLink.notCalled);
