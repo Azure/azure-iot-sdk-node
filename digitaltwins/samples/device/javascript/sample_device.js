@@ -53,7 +53,7 @@ const commandHandler = (request, response) => {
 
 const environmentalSensor = new EnvironmentalSensor('sensor', propertyUpdateHandler, commandHandler);
 const deviceInformation = new DeviceInformation('deviceInformation');
-const sdkInformation = new SDKInformation('SDKInformation');
+const sdkInformation = new SDKInformation('sdkInformation');
 
 const modelId = 'dtmi:com:example:SampleDevice;1';
 
