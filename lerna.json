@@ -23,7 +23,8 @@
     "digitaltwins/e2e",
     "digitaltwins/samples/device/javascript",
     "digitaltwins/samples/device/typescript",
-    "digitaltwins/samples/service",
+    "digitaltwins/samples/service/javascript",
+    "digitaltwins/samples/service/typescript",
     "digitaltwins/samples/model_repository",
     "digitaltwins/samples/iot_central_device"
   ],
