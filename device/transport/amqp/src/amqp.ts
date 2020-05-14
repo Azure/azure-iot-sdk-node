@@ -414,6 +414,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
           /*Codes_SRS_NODE_DEVICE_AMQP_16_079: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback no arguments if the call to `AmqpTwinClient.disableTwinDesiredPropertiesUpdates` succeeds.]*/
           disableTwinDesiredPropertiesUpdates: (callback) => this._twinClient.disableTwinDesiredPropertiesUpdates(handleResult('could not disable twin desired properties updates', callback)),
           enableC2D: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_41_XXX: [The `enableC2D` method shall attach the C2D link only if it is not already attached.] */
             if (!this._c2dLink) {
               debug('attaching C2D link');
               this._amqp.attachReceiverLink(this._c2dEndpoint, null, (err, receiverLink) => {
@@ -436,6 +437,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
             }
           },
           disableC2D: (callback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_41_XXX: [The `disableC2D` method shall detach the C2D link only if it is already attached.] */
             if (this._c2dLink) {
               /*Codes_SRS_NODE_DEVICE_AMQP_16_035: [The `disableC2D` method shall call `detach` on the C2D link and call its callback when it is successfully detached.]*/
               /*Codes_SRS_NODE_DEVICE_AMQP_16_036: [The `disableC2D` method shall call its `callback` with an `Error` if it fails to detach the C2D link.]*/
@@ -446,11 +448,13 @@ export class Amqp extends EventEmitter implements DeviceTransport {
             }
           },
           enableMethods: (callback) => {
+            // deviceMethodClient already checks if the link is attached or not, so we do not need to check that here like we do with C2D
             /*Codes_SRS_NODE_DEVICE_AMQP_16_039: [The `enableMethods` method shall attach the method links and call its `callback` once these are successfully attached.]*/
             /*Codes_SRS_NODE_DEVICE_AMQP_16_040: [The `enableMethods` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach method links.]*/
             this._deviceMethodClient.attach(callback);
           },
           disableMethods: (callback) => {
+            // deviceMethodClient already checks if the link is attached or not, so we do not need to check that here like we do with C2D
             /*Codes_SRS_NODE_DEVICE_AMQP_16_042: [The `disableMethods` method shall call `detach` on the device method links and call its callback when these are successfully detached.]*/
             /*Codes_SRS_NODE_DEVICE_AMQP_16_043: [The `disableMethods` method shall call its `callback` with an `Error` if it fails to detach the device method links.]*/
             this._deviceMethodClient.detach(callback);
