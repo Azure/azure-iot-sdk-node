@@ -14,7 +14,7 @@ export class SDKInformation extends BaseInterface {
   vendor: Property;
 
   constructor(componentName: string) {
-    super(componentName, 'dtmi:azure:SDKInformation;1');
+    super(componentName, 'dtmi:azure:Client:SDKInformation;1');
     this.language = new Property();
     this.version = new Property();
     this.vendor = new Property();
