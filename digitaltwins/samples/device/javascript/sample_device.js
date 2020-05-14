@@ -111,7 +111,7 @@ async function main() {
   let index = 0;
   setInterval( async () => {
     console.log('Sending telemetry message %d...', index);
-    await digitalTwinClient.sendTelemetry(environmentalSensor, { temp: 1 + (Math.random() * 90), humid: 1 + (Math.random() * 99) });
+    await digitalTwinClient.sendTelemetry(environmentalSensor, { temp: 1 + (Math.random() * 90), humidity: 1 + (Math.random() * 99) });
     index += 1;
   }, 5000);
 };

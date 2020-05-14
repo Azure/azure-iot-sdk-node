@@ -11,7 +11,7 @@ module.exports.EnvironmentalSensor = class EnvironmentalSensor extends BaseInter
   constructor(name, propertyCallback, commandCallback) {
     super(name, 'dtmi:com:example:EnvironmentalSensor;1', propertyCallback, commandCallback);
     this.temp = new Telemetry();
-    this.humid = new Telemetry();
+    this.humidity = new Telemetry();
     this.state = new Property();
     this.blink = new Command();
     this.turnOff = new Command();
