@@ -32,7 +32,7 @@ async function main() {
     //     { op: 'remove', path: '/newThermostat' },
     //     { op: 'replace', path: '/newThermostat', value: { tempSetpoint: 42 } },
     // ]);
-    const patch = [{ op: 'add', path: '/newThermostat', value: { 'tempSetpoint': 100, '$metadata': {} } }];
+    const patch = [{ op: 'add', path: '/sensor', value: { 'brightness': 100, '$metadata': {} } }];
     console.log('patch:');
     console.log(JSON.stringify(patch, null, 2));
 
