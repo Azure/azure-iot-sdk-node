@@ -294,6 +294,8 @@ The `updateTwinReportedProperties` method is used to retrieve the device twin.
 
 **SRS_NODE_DEVICE_MQTT_16_052: [** `enableC2D` shall call its callback with an `Error` if subscribing to the topic fails. **]**
 
+**SRS_NODE_DEVICE_MQTT_41_008: [** `enableC2D` shall not subscribe multiple times if already subscribed. **]**
+
 ### enableMethods
 
 **SRS_NODE_DEVICE_MQTT_16_038: [** `enableMethods` shall connect the MQTT connection if it is disconnected. **]**
@@ -305,6 +307,8 @@ The `updateTwinReportedProperties` method is used to retrieve the device twin.
 **SRS_NODE_DEVICE_MQTT_16_051: [** `enableMethods` shall call its callback with no arguments when the `SUBACK` packet is received. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_053: [** `enableMethods` shall call its callback with an `Error` if subscribing to the topic fails. **]**
+
+**SRS_NODE_DEVICE_MQTT_41_009: [** `enableMethods` shall not subscribe multiple times if already subscribed. **]**
 
 ### enableTwinDesiredPropertiesUpdates
 
@@ -330,6 +334,8 @@ The `updateTwinReportedProperties` method is used to retrieve the device twin.
 
 **SRS_NODE_DEVICE_MQTT_18_063: [** `enableInputMessages` shall call its callback with an `Error` if subscribing to the topic fails. **]**
 
+**SRS_NODE_DEVICE_MQTT_41_010: [** `enableInputMessages` shall not subscribe multiple times if already subscribed. **]**
+
 ### disableC2D
 
 **SRS_NODE_DEVICE_MQTT_16_041: [** `disableC2D` shall call its callback immediately if the MQTT connection is already disconnected. **]**
@@ -340,6 +346,8 @@ The `updateTwinReportedProperties` method is used to retrieve the device twin.
 
 **SRS_NODE_DEVICE_MQTT_16_043: [** `disableC2D` shall call its callback with an `Error` if an error is received while unsubscribing. **]**
 
+**SRS_NODE_DEVICE_MQTT_41_011: [** `disableC2D` shall unsubscribe from the topic for C2D messages only if it is currently subscribed. **]**
+
 ### disableMethods
 
 **SRS_NODE_DEVICE_MQTT_16_044: [** `disableMethods` shall call its callback immediately if the MQTT connection is already disconnected. **]**
@@ -349,6 +357,8 @@ The `updateTwinReportedProperties` method is used to retrieve the device twin.
 **SRS_NODE_DEVICE_MQTT_16_055: [** `disableMethods` shall call its callback with no arguments when the `UNSUBACK` packet is received. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_046: [** `disableMethods` shall call its callback with an `Error` if an error is received while unsubscribing. **]**
+
+**SRS_NODE_DEVICE_MQTT_41_012: [** `disableMethods` shall unsubscribe from the topic for C2D messages only if it is currently subscribed. **]**
 
 ### disableTwinDesiredPropertiesUpdates
 
@@ -369,6 +379,8 @@ The `updateTwinReportedProperties` method is used to retrieve the device twin.
 **SRS_NODE_DEVICE_MQTT_18_066: [** `disableInputMessages` shall call its callback with no arguments when the `UNSUBACK` packet is received. **]**
 
 **SRS_NODE_DEVICE_MQTT_18_067: [** `disableInputMessages` shall call its callback with an `Error` if an error is received while unsubscribing. **]**
+
+**SRS_NODE_DEVICE_MQTT_41_013: [** `disableInputMessages` shall unsubscribe from the topic for C2D messages only if it is currently subscribed. **]**
 
 ### message Event
 

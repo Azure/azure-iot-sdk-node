@@ -317,14 +317,16 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
               callback(!!err ? translateError(err) : null);
             });
           },
+          /* Codes_SRS_NODE_DEVICE_MQTT_41_008: [`enableC2D` shall not subscribe multiple times if already subscribed.]*/
           enableC2D: (callback) => {
-            if (this._topics.inputMessage && this._topics.inputMessage.subscribed) {
+            if (this._topics.message && this._topics.message.subscribed) {
               debug('already subscribed to `message`, doing nothing...');
               callback();
             } else {
               this._setupSubscription(this._topics.message, 1, callback);
             }
           },
+          /* Codes_SRS_NODE_DEVICE_MQTT_41_009: [`enableMethods` shall not subscribe multiple times if already subscribed.]*/
           enableMethods: (callback) => {
             if (this._topics.method && this._topics.method.subscribed) {
               debug('already subscribed to `method`, doing nothing...');
@@ -333,6 +335,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
               this._setupSubscription(this._topics.method, 0, callback);
             }
           },
+          /* Codes_SRS_NODE_DEVICE_MQTT_41_010: [`enableInputMessages` shall not subscribe multiple times if already subscribed.]*/
           enableInputMessages: (callback) => {
             if (this._topics.inputMessage && this._topics.inputMessage.subscribed) {
               debug('already subscribed to `inputMessages`, doing nothing...');
@@ -341,6 +344,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
               this._setupSubscription(this._topics.inputMessage, 1, callback);
             }
           },
+          /* Codes_SRS_NODE_DEVICE_MQTT_41_011: [`disableC2D` shall unsubscribe from the topic for C2D messages only if it is currently subscribed.]*/
           disableC2D: (callback) => {
             if (this._topics.message && this._topics.message.subscribed) {
               this._removeSubscription(this._topics.message, callback);
@@ -349,6 +353,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
               callback();
             }
           },
+          /* Codes_SRS_NODE_DEVICE_MQTT_41_012: [`disableMethods` shall unsubscribe from the topic for direct methods only if it is currently subscribed.]*/
           disableMethods: (callback) => {
             if (this._topics.method && this._topics.method.subscribed) {
               this._removeSubscription(this._topics.method, callback);
@@ -357,6 +362,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
               callback();
             }
           },
+          /* Codes_SRS_NODE_DEVICE_MQTT_41_013: [`disableInputMessages` shall unsubscribe from the topic for inputMessages only if it is currently subscribed.]*/
           disableInputMessages: (callback) => {
             if (this._topics.inputMessage && this._topics.inputMessage.subscribed) {
               this._removeSubscription(this._topics.inputMessage, callback);
@@ -805,7 +811,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_045: [`disableMethods` shall unsubscribe from the topic for direct methods.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_065: [`disableInputMessages` shall unsubscribe from the topic for inputMessages. ]*/
     this._mqtt.unsubscribe(topic.name, (err) => {
-      topic.subscribed = !err;
+      topic.subscribed = !!err; // this sets the topic.subscribed to false if the unsubscribe is successful.
       /*Codes_SRS_NODE_DEVICE_MQTT_16_054: [`disableC2D` shall call its callback with no arguments when the `UNSUBACK` packet is received.]*/
       /*Codes_SRS_NODE_DEVICE_MQTT_16_055: [`disableMethods` shall call its callback with no arguments when the `UNSUBACK` packet is received.]*/
       /*Codes_SRS_NODE_DEVICE_MQTT_18_066: [`disableInputMessages` shall call its callback with no arguments when the `UNSUBACK` packet is received. ]*/
