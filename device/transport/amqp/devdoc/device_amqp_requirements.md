@@ -159,7 +159,7 @@ This method is deprecated. The `AmqpReceiver` object and pattern is going away a
 
 **SRS_NODE_DEVICE_AMQP_06_013: [** The authentication providers `setTokenRenewalValues` method shall be invoked with the values provided in the tokenRenewal option.
  **]**
- 
+
 **SRS_NODE_DEVICE_AMQP_13_001: [** The `setOptions` method shall save the options passed in. **]**
 
 
@@ -202,6 +202,8 @@ This method is deprecated. The `AmqpReceiver` object and pattern is going away a
 
 **SRS_NODE_DEVICE_AMQP_16_033: [** The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link. **]**
 
+**SRS_NODE_DEVICE_AMQP_41_003: [** The `enableC2D` method shall attach the C2D link only if it is not already attached. **]**
+
 **SRS_NODE_DEVICE_AMQP_16_034: [** Any `error` event received on the C2D link shall trigger the emission of an `error` event by the transport, with an argument that is a `CloudToDeviceDetachedError` object with the `innerError` property set to that error. **]**
 
 ### disableC2D(callback)
@@ -211,6 +213,9 @@ This method is deprecated. The `AmqpReceiver` object and pattern is going away a
 **SRS_NODE_DEVICE_AMQP_16_036: [** The `disableC2D` method shall call its `callback` with an `Error` if it fails to detach the C2D link. **]**
 
 **SRS_NODE_DEVICE_AMQP_16_037: [** The `disableC2D` method shall call its `callback` immediately if the transport is already disconnected. **]**
+
+**SRS_NODE_DEVICE_AMQP_41_004: [** The `disableC2D` method shall detach the C2D link only if it is already attached. **]**
+
 
 ### enableInputMessages(callback: (err?: Error) => void): void;
 
