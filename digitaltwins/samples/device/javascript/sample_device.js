@@ -38,12 +38,12 @@ const commandHandler = (request, response) => {
     response.acknowledge(200, 'blink response');
     break;
   }
-  case 'turnon': {
+  case 'turnOn': {
     console.log('Got the turnon command.');
     response.acknowledge(200, 'turn on response');
     break;
   }
-  case 'turnoff': {
+  case 'turnOff': {
     console.log('Got the turnoff command.');
     response.acknowledge(200, 'turn off response');
     break;
@@ -55,7 +55,7 @@ const environmentalSensor = new EnvironmentalSensor('sensor', propertyUpdateHand
 const deviceInformation = new DeviceInformation('deviceInformation');
 const sdkInformation = new SDKInformation('SDKInformation');
 
-const modelId = 'dtmi:my_company:com:sample_device;1';
+const modelId = 'dtmi:com:example:SampleDevice;1';
 
 async function main() {
   // mqtt is implied in this static method
@@ -111,7 +111,7 @@ async function main() {
   let index = 0;
   setInterval( async () => {
     console.log('Sending telemetry message %d...', index);
-    await digitalTwinClient.sendTelemetry(environmentalSensor, { temp: 1 + (Math.random() * 90), humid: 1 + (Math.random() * 99) });
+    await digitalTwinClient.sendTelemetry(environmentalSensor, { temp: 1 + (Math.random() * 90), humidity: 1 + (Math.random() * 99) });
     index += 1;
   }, 5000);
 };

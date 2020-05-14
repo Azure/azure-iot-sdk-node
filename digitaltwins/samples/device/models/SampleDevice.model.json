@@ -1,16 +1,22 @@
 {
-  "@id": "dtmi:my_company:com:sample_device;1",
-  "displayName": "Sample Device with two components.",
+  "@id": "dtmi:com:example:SampleDevice;1",
+  "@type": "Interface",
+  "displayName": "My Sample Model",
   "contents": [
     {
-    "@type" : "Component",
-    "schema": "dtmi:my_company:com:EnvironmentalSensor;1",
-    "name": "sensor"
+      "@type": "Component",
+      "schema": "dtmi:com:example:EnvironmentalSensor;1",
+      "name": "sensor"
     },
     {
-    "@type" : "Component",
-    "schema": "dtmi:azure:DeviceManagement:DeviceInformation;1",
-    "name": "deviceInformation"
+      "@type": "Component",
+      "schema": "dtmi:azure:DeviceManagement:DeviceInformation;1",
+      "name": "deviceInformation"
+    },
+    {
+      "@type": "Component",
+      "schema": "dtmi:azure:Client:SDKInformation;1",
+      "name": "sdkInformation"
     }
   ],
   "@context": "dtmi:dtdl:context;2"
