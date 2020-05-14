@@ -318,31 +318,52 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
             });
           },
           enableC2D: (callback) => {
-            if (this._topics.message.subscribed) {
-              debug('C2D already enabled, doing nothing...');
+            if (this._topics.inputMessage && this._topics.inputMessage.subscribed) {
+              debug('already subscribed to `message`, doing nothing...');
               callback();
             } else {
-              debug('setting up C2D subscription');
               this._setupSubscription(this._topics.message, 1, callback);
             }
           },
           enableMethods: (callback) => {
-            this._setupSubscription(this._topics.method, 0, callback);
+            if (this._topics.method && this._topics.method.subscribed) {
+              debug('already subscribed to `method`, doing nothing...');
+              callback();
+            } else {
+              this._setupSubscription(this._topics.method, 0, callback);
+            }
           },
           enableInputMessages: (callback) => {
-            this._setupSubscription(this._topics.inputMessage, 1, callback);
+            if (this._topics.inputMessage && this._topics.inputMessage.subscribed) {
+              debug('already subscribed to `inputMessages`, doing nothing...');
+              callback();
+            } else {
+              this._setupSubscription(this._topics.inputMessage, 1, callback);
+            }
           },
           disableC2D: (callback) => {
-            if (this._topics.message.subscribed) {
-              debug('removing C2D subscription');
+            if (this._topics.message && this._topics.message.subscribed) {
               this._removeSubscription(this._topics.message, callback);
             } else {
-              debug('C2D already disabled, doing nothing...');
+              debug('not subscribed to `message`, so doing nothing...');
               callback();
             }
           },
           disableMethods: (callback) => {
-            this._removeSubscription(this._topics.method, callback);
+            if (this._topics.method && this._topics.method.subscribed) {
+              this._removeSubscription(this._topics.method, callback);
+            } else {
+              debug('not subscribed to `method`, so doing nothing...');
+              callback();
+            }
+          },
+          disableInputMessages: (callback) => {
+            if (this._topics.inputMessage && this._topics.inputMessage.subscribed) {
+              this._removeSubscription(this._topics.inputMessage, callback);
+            } else {
+              debug('not subscribed to `method`, so doing nothing...');
+              callback();
+            }
           },
           /*Codes_SRS_NODE_DEVICE_MQTT_16_077: [`getTwin` shall call the `getTwin` method on the `MqttTwinClient` object and pass it its callback.]*/
           getTwin: (callback) => this._twinClient.getTwin(callback),
@@ -352,9 +373,6 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
           enableTwinDesiredPropertiesUpdates: (callback) => this._twinClient.enableTwinDesiredPropertiesUpdates(callback),
           /*Codes_SRS_NODE_DEVICE_MQTT_16_083: [`disableTwinDesiredPropertiesUpdates` shall call the `disableTwinDesiredPropertiesUpdates` on the `MqttTwinClient` object created by the constructor and pass it its callback.]*/
           disableTwinDesiredPropertiesUpdates: (callback) => this._twinClient.disableTwinDesiredPropertiesUpdates(callback),
-          disableInputMessages: (callback) => {
-            this._removeSubscription(this._topics.inputMessage, callback);
-          },
         },
         disconnecting: {
           _onEnter: (disconnectCallback, err) => {
