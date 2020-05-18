@@ -32,7 +32,8 @@ var protocolAndTermination = [
     transport: deviceAmqp.Amqp,
     operationType: 'KillTcp',
     closeReason: ' severs the TCP connection ',
-    delayInSeconds: 2
+    delayInSeconds: 2,
+    durationInSeconds: 20
   },
   {
     testEnabled: true,
@@ -202,6 +203,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
                   terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
                   terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
                   terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
+                  terminateMessage.properties.add('AzIoTHub_FaultOperationDurationInSecs', testConfiguration.durationInSeconds);
                   deviceClient.sendEvent(terminateMessage, function (sendErr) {
                     debug('at the callback for the fault injection send, err is:' + sendErr);
                   });

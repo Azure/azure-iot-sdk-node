@@ -1021,6 +1021,23 @@ describe('Mqtt', function () {
           });
         });
       });
+
+      it('will not subscribe multiple times to the same topic', function (testCallback) {
+        const transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        transport[testConfig.methodName](function (err) {
+          assert.isTrue(fakeMqttBase.connect.calledOnce);
+          assert.isUndefined(err);
+          assert.equal(fakeMqttBase.subscribe.firstCall.args[0], testConfig.topicName);
+          assert.strictEqual(fakeMqttBase.subscribe.firstCall.args[1].qos, testConfig.qos);
+          transport[testConfig.methodName](function (err) {
+            /* Tests_SRS_NODE_DEVICE_MQTT_41_008: [`enableC2D` shall not subscribe multiple times if already subscribed.]*/
+            /* Tests_SRS_NODE_DEVICE_MQTT_41_009: [`enableMethods` shall not subscribe multiple times if already subscribed.]*/
+            /* Tests_SRS_NODE_DEVICE_MQTT_41_010: [`enableInputMessages` shall not subscribe multiple times if already subscribed.]*/
+            assert(fakeMqttBase.subscribe.calledOnce, 'subscribe called multiple times when it should have been only called once');
+            testCallback();
+          });
+        });
+      });
     });
   });
 
@@ -1039,7 +1056,7 @@ describe('Mqtt', function () {
       /* Tests_SRS_NODE_DEVICE_MQTT_16_044: [`disableMethods` shall call its callback immediately if the MQTT connection is already disconnected.]*/
       /* Tests_SRS_NODE_DEVICE_MQTT_16_062: [`disableTwinDesiredPropertiesUpdates` shall call its callback immediately if the MQTT connection is already disconnected.]*/
       /* Tests_SRS_NODE_DEVICE_MQTT_18_064: [ `disableInputMessages` shall call its callback immediately if the MQTT connection is already disconnected. ]*/
-      it('immediately calls its callback if the disconnected', function (testCallback) {
+      it('immediately calls its callback if the connection is already disconnected', function (testCallback) {
         const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
         mqtt[testConfig.disableFeatureMethod](function () {
           assert.isTrue(fakeMqttBase.connect.notCalled);
@@ -1085,6 +1102,25 @@ describe('Mqtt', function () {
               assert.isTrue(fakeMqttBase.unsubscribe.called);
               assert.isUndefined(err);
               testCallback();
+            });
+          });
+        });
+      });
+
+      it('calls its callback without unsubscribing if already unsubscribed', function (testCallback) {
+        const transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        transport.connect(function () {
+          transport[testConfig.enableFeatureMethod](function () {
+            transport[testConfig.disableFeatureMethod](function (err) {
+              assert.isTrue(fakeMqttBase.unsubscribe.called);
+              assert.isUndefined(err);
+              transport[testConfig.disableFeatureMethod](function (err) {
+                /* Tests_SRS_NODE_DEVICE_MQTT_41_011: [`disableC2D` shall unsubscribe from the topic for C2D messages only if it is currently subscribed.]*/
+                /* Tests_SRS_NODE_DEVICE_MQTT_41_012: [`disableMethods` shall unsubscribe from the topic for direct methods only if it is currently subscribed.]*/
+                /* Tests_SRS_NODE_DEVICE_MQTT_41_013: [`disableInputMessages` shall unsubscribe from the topic for inputMessages only if it is currently subscribed.]*/
+                assert.isTrue(fakeMqttBase.unsubscribe.calledOnce);
+                testCallback();
+              });
             });
           });
         });

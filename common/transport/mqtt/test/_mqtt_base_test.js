@@ -463,7 +463,6 @@ describe('MqttBase', function () {
       fakeMqtt.emit('connect');
     });
 
-    /*Tests_SRS_NODE_COMMON_MQTT_BASE_41_XXX: [The `updateSharedAccessSignature` method shall trigger a forced disconnect if after 30 seconds the mqtt client has failed to complete a non-forced disconnect.]*/
     it('force disconnects the client on disconnect timeout during reconnecting', function (testCallback) {
       this.clock = sinon.useFakeTimers();
       var newSas = 'newsas';
@@ -476,6 +475,7 @@ describe('MqttBase', function () {
       }).bind(this);
 
       fakeMqtt.end.onSecondCall().callsFake((force, callback) => {
+        /*Tests_SRS_NODE_COMMON_MQTT_BASE_41_002: [The `updateSharedAccessSignature` method shall trigger a forced disconnect if after 30 seconds the mqtt client has failed to complete a non-forced disconnect.]*/
         assert.isTrue(force);
         callback();
       }).bind(this);
@@ -484,7 +484,6 @@ describe('MqttBase', function () {
         assert.isTrue(fakeMqtt.connect.calledOnce);
         assert.strictEqual(fakeMqtt.connect.firstCall.args[1].password, fakeConfig.sharedAccessSignature);
         transport.updateSharedAccessSignature(newSas, function (err) {
-          /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_035: [The `updateSharedAccessSignature` method shall call the `callback` argument with no parameters if the operation succeeds.]*/
           assert.notExists(err);
           assert.isTrue(fakeMqtt.end.calledTwice);
           assert.isTrue(fakeMqtt.connect.calledTwice);
@@ -516,7 +515,7 @@ describe('MqttBase', function () {
       fakeMqtt.emit('connect');
     });
 
-    /*Tests_SRS_NODE_COMMON_MQTT_BASE_41_XXX: [The `updateSharedAccessSignature` method shall trigger a forced disconnect if after 30 seconds the mqtt client has failed to complete a non-forced disconnect.]*/
+    /*Tests_SRS_NODE_COMMON_MQTT_BASE_41_003: [The `updateSharedAccessSignature` method shall call the `callback` argument with an `Error` if the operation fails after timing out.]*/
     it('calls the callback with an error if it fails to reconnect the mqtt client (force disconnect)', function (testCallback) {
       this.clock = sinon.useFakeTimers();
       var fakeError = new Error('fake failed to reconnect');
@@ -532,7 +531,6 @@ describe('MqttBase', function () {
       var transport = new MqttBase(fakeMqtt);
       transport.connect(fakeConfig, function () {
         transport.updateSharedAccessSignature('newSas', function (err) {
-          /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_035: [The `updateSharedAccessSignature` method shall call the `callback` argument with no parameters if the operation succeeds.]*/
           assert.isTrue(fakeMqtt.end.calledTwice);
           assert.isTrue(fakeMqtt.connect.calledTwice);
           assert.strictEqual(err, fakeError);

@@ -317,20 +317,59 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
               callback(!!err ? translateError(err) : null);
             });
           },
+          /* Codes_SRS_NODE_DEVICE_MQTT_41_008: [`enableC2D` shall not subscribe multiple times if already subscribed.]*/
           enableC2D: (callback) => {
-            this._setupSubscription(this._topics.message, 1, callback);
+            if (this._topics.message && this._topics.message.subscribed) {
+              debug('already subscribed to `message`, doing nothing...');
+              callback();
+            } else {
+              this._setupSubscription(this._topics.message, 1, callback);
+            }
           },
+          /* Codes_SRS_NODE_DEVICE_MQTT_41_009: [`enableMethods` shall not subscribe multiple times if already subscribed.]*/
           enableMethods: (callback) => {
-            this._setupSubscription(this._topics.method, 0, callback);
+            if (this._topics.method && this._topics.method.subscribed) {
+              debug('already subscribed to `method`, doing nothing...');
+              callback();
+            } else {
+              this._setupSubscription(this._topics.method, 0, callback);
+            }
           },
+          /* Codes_SRS_NODE_DEVICE_MQTT_41_010: [`enableInputMessages` shall not subscribe multiple times if already subscribed.]*/
           enableInputMessages: (callback) => {
-            this._setupSubscription(this._topics.inputMessage, 1, callback);
+            if (this._topics.inputMessage && this._topics.inputMessage.subscribed) {
+              debug('already subscribed to `inputMessages`, doing nothing...');
+              callback();
+            } else {
+              this._setupSubscription(this._topics.inputMessage, 1, callback);
+            }
           },
+          /* Codes_SRS_NODE_DEVICE_MQTT_41_011: [`disableC2D` shall unsubscribe from the topic for C2D messages only if it is currently subscribed.]*/
           disableC2D: (callback) => {
-            this._removeSubscription(this._topics.message, callback);
+            if (this._topics.message && this._topics.message.subscribed) {
+              this._removeSubscription(this._topics.message, callback);
+            } else {
+              debug('not subscribed to `message`, so doing nothing...');
+              callback();
+            }
           },
+          /* Codes_SRS_NODE_DEVICE_MQTT_41_012: [`disableMethods` shall unsubscribe from the topic for direct methods only if it is currently subscribed.]*/
           disableMethods: (callback) => {
-            this._removeSubscription(this._topics.method, callback);
+            if (this._topics.method && this._topics.method.subscribed) {
+              this._removeSubscription(this._topics.method, callback);
+            } else {
+              debug('not subscribed to `method`, so doing nothing...');
+              callback();
+            }
+          },
+          /* Codes_SRS_NODE_DEVICE_MQTT_41_013: [`disableInputMessages` shall unsubscribe from the topic for inputMessages only if it is currently subscribed.]*/
+          disableInputMessages: (callback) => {
+            if (this._topics.inputMessage && this._topics.inputMessage.subscribed) {
+              this._removeSubscription(this._topics.inputMessage, callback);
+            } else {
+              debug('not subscribed to `method`, so doing nothing...');
+              callback();
+            }
           },
           /*Codes_SRS_NODE_DEVICE_MQTT_16_077: [`getTwin` shall call the `getTwin` method on the `MqttTwinClient` object and pass it its callback.]*/
           getTwin: (callback) => this._twinClient.getTwin(callback),
@@ -340,9 +379,6 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
           enableTwinDesiredPropertiesUpdates: (callback) => this._twinClient.enableTwinDesiredPropertiesUpdates(callback),
           /*Codes_SRS_NODE_DEVICE_MQTT_16_083: [`disableTwinDesiredPropertiesUpdates` shall call the `disableTwinDesiredPropertiesUpdates` on the `MqttTwinClient` object created by the constructor and pass it its callback.]*/
           disableTwinDesiredPropertiesUpdates: (callback) => this._twinClient.disableTwinDesiredPropertiesUpdates(callback),
-          disableInputMessages: (callback) => {
-            this._removeSubscription(this._topics.inputMessage, callback);
-          },
         },
         disconnecting: {
           _onEnter: (disconnectCallback, err) => {
@@ -775,7 +811,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_045: [`disableMethods` shall unsubscribe from the topic for direct methods.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_065: [`disableInputMessages` shall unsubscribe from the topic for inputMessages. ]*/
     this._mqtt.unsubscribe(topic.name, (err) => {
-      topic.subscribed = !err;
+      topic.subscribed = !!err; // this sets the topic.subscribed to false if the unsubscribe is successful.
       /*Codes_SRS_NODE_DEVICE_MQTT_16_054: [`disableC2D` shall call its callback with no arguments when the `UNSUBACK` packet is received.]*/
       /*Codes_SRS_NODE_DEVICE_MQTT_16_055: [`disableMethods` shall call its callback with no arguments when the `UNSUBACK` packet is received.]*/
       /*Codes_SRS_NODE_DEVICE_MQTT_18_066: [`disableInputMessages` shall call its callback with no arguments when the `UNSUBACK` packet is received. ]*/
@@ -971,7 +1007,6 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
       });
     }
   }
-
 }
 
 
