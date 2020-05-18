@@ -28,9 +28,9 @@ async function main() {
     // Update digital twin desired properties
     // jsonpatch example:
     // patch = [
-    //     { op: 'add', path: '/newThermostat', value: { 'tempSetpoint': 100, '$metadata': {} } }];
-    //     { op: 'remove', path: '/newThermostat' },
-    //     { op: 'replace', path: '/newThermostat', value: { tempSetpoint: 42 } },
+    //     { op: 'add', path: '/sensor', value: { 'brightness': 100, '$metadata': {} } }];
+    //     { op: 'remove', path: '/sensor' },
+    //     { op: 'replace', path: '/sensor', value: { brightness: 42 } },
     // ]);
     const patch = [{ op: 'add', path: '/sensor', value: { 'brightness': 100, '$metadata': {} } }];
     console.log('patch:');
