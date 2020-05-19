@@ -132,9 +132,11 @@ export class Amqp extends EventEmitter implements DeviceTransport {
       }
       if (this._messageEventName === 'inputMessage') {
         /*Codes_SRS_NODE_DEVICE_AMQP_18_014: [If `amqp` receives a message on the input message link, it shall emit an "inputMessage" event with the value of the annotation property "x-opt-input-name" as the first parameter and the agnostic message as the second parameter.]*/
+        debug('inputMesssage received on C2D link, emitting \'inputMessage\'');
         this.emit('inputMessage', inputName, AmqpMessage.toMessage(msg));
       } else {
         /*Codes_SRS_NODE_DEVICE_AMQP_18_013: [If `amqp` receives a message on the C2D link, it shall emit a "message" event with the message as the event parameter.]*/
+        debug('message received on C2D link, emitting \'message\'');
         this.emit('message', AmqpMessage.toMessage(msg));
       }
     };
