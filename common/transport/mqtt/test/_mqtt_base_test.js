@@ -8,7 +8,10 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 
 var MqttBase = require('../lib/mqtt_base.js').MqttBase;
-var FakeMqtt = require('./_fake_mqtt.js');
+var FakeMqtt = require('./_fake_mqtt.js').FakeMqtt;
+var PubFakeMqtt = require('./_fake_mqtt.js').PubFakeMqtt;
+var PubACKTwiceFakeMqtt = require('./_fake_mqtt.js').PubACKTwiceFakeMqtt;
+var ErrorFakeMqtt = require('./_fake_mqtt.js').ErrorFakeMqtt;
 var errors = require('azure-iot-common').errors;
 
 describe('MqttBase', function () {
@@ -315,8 +318,85 @@ describe('MqttBase', function () {
           done();
         });
       });
-
       fakemqtt.emit('connect', { connack: true });
+    });
+
+    // Publishes 4 messages and they PUBACK out of order but the context of the callback is preserved.
+    it('handles out of order PUBACK correctly', function(done) {
+      // the fakemqtt will invoke the callbacks in the following order 4,1,3,2
+      var fakemqtt = new PubFakeMqtt();
+      var transport = new MqttBase(fakemqtt);
+      transport.connect(fakeConfig, function() {
+        var callbackInvokes = 1;
+        transport.publish('topic1', 'payload1', {}, () => {
+          assert.equal(callbackInvokes, 2);
+          callbackInvokes++;
+        });
+        transport.publish('topic2', 'payload2', {}, () => {
+          assert.equal(callbackInvokes, 4);
+          done();
+        });
+        transport.publish('topic3', 'payload3', {}, () => {
+          assert.equal(callbackInvokes, 3);
+          callbackInvokes++;
+        });
+        transport.publish('topic4', 'payload4', {}, () => {
+          assert.equal(callbackInvokes, 1);
+          callbackInvokes++;
+        });
+      });
+      fakemqtt.emit('connect', { connack: true});
+    });
+
+    it('handles puback of no longer existing pub on wire', function(done) {
+      var fakemqtt = new PubACKTwiceFakeMqtt();
+      var transport = new MqttBase(fakemqtt);
+      transport.connect(fakeConfig, function() {
+        var callbackInvokes = 0;
+        transport.publish('topic1', 'payload1', {}, () => {
+          callbackInvokes++;
+          if (callbackInvokes === 2) {
+            assert.fail('Callback invoked to many times.');
+          }
+          process.nextTick(() => done());
+        });
+      });
+      fakemqtt.emit('connect', { connack: true});
+    });
+
+    // Publishes 4 messages. None of which complete initially.  After the forth message an error is emitted.
+    // All of the publishes are completed with the error.  Finally an error is emitted as there
+    // is no current operation.
+    it('Purge messages in the case of an error occurring', function(done) {
+      var fakemqtt = new ErrorFakeMqtt();
+      var transport = new MqttBase(fakemqtt);
+      var fakeError = new Error('Error from mqtt');
+      var errorOnCallback = 0;
+      transport.connect(fakeConfig, () => {
+        transport.publish('topic1', 'payload1', {}, (err) => {
+          assert.strictEqual(err, fakeError);
+          errorOnCallback++;
+        });
+        transport.publish('topic2', 'payload2', {}, (err) => {
+          assert.strictEqual(err, fakeError);
+          errorOnCallback++;
+        });
+        transport.publish('topic3', 'payload3', {}, (err) => {
+          assert.strictEqual(err, fakeError);
+          errorOnCallback++;
+        });
+        transport.publish('topic4', 'payload4', {}, (err) => {
+          assert.strictEqual(err, fakeError);
+          errorOnCallback++;
+        });
+        process.nextTick(() => {fakemqtt.emit('error', fakeError)});
+      });
+      transport.on('error', (err) => {
+        assert.strictEqual(err, fakeError);
+        assert.equal(errorOnCallback, 4);
+        done();
+      });
+      fakemqtt.emit('connect', { connack: true});
     });
   });
 
