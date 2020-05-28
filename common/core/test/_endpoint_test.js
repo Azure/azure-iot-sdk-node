@@ -81,6 +81,11 @@ describe('endpoint', function () {
     actual: endpoint.moduleMethodPath(deviceId, moduleId)
   },
   {
+    name: 'versionQueryStringPnP',
+    expected: '?api-version=' + endpoint.apiVersionPnP,
+    actual: endpoint.versionQueryStringPnP()
+  },
+  {
     name: 'versionQueryStringLimitedAvailability',
     expected: '?api-version=' + endpoint.apiVersion,
     actual: endpoint.versionQueryStringLimitedAvailability()

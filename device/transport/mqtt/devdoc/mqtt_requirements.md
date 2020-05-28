@@ -40,6 +40,8 @@ The `Mqtt` and `MqttWs` constructors initialize a new instance of the MQTT trans
 
 **SRS_NODE_DEVICE_MQTT_16_082: [** A `twinDesiredPropertiesUpdates` shall be emitted by the `Mqtt` object for each `twinDesiredPropertiesUpdates` event received from the `MqttTwinClient` with the same payload. **]**
 
+**SRS_NODE_DEVICE_MQTT_41_015: [** If a modelId is provided, the device should use the PnP API String **]**
+
 ### connect(done)
 
 The `connect` method initializes a connection to an IoT hub.
@@ -224,6 +226,9 @@ The `reject` method is there for compatibility purposes with other transports bu
 
 **SRS_NODE_DEVICE_MQTT_06_002: [** The authentication providers `setTokenRenewalValues` method shall be invoked with the values provided in the tokenRenewal option.
  **]**
+
+**SRS_NODE_DEVICE_MQTT_41_014: [** For a Plug and Play Device the modelId should be included as `&digital-twin-model-id=<DEVICE’s MODEL ID>` after the api-version **]**
+
 
 ### onDeviceMethod(methodName, methodCallback)
 

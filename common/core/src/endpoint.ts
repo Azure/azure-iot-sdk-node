@@ -6,6 +6,7 @@
 
 export const apiVersion = '2019-10-01';
 export const apiVersionLimitedAvail = '2020-03-13';
+export const apiVersionPnP = '2020-05-31-preview';
 
 export function devicePath(deviceId: string): string {
   return '/devices/' + deviceId;
@@ -65,6 +66,10 @@ export function moduleInputMessagePath(deviceId: string, moduleId: string): stri
 
 export function versionQueryString(): string {
   return '?api-version=' + apiVersion;
+}
+
+export function versionQueryStringPnP(): string {
+  return '?api-version=' + apiVersionPnP;
 }
 
 export function versionQueryStringLimitedAvailability(): string {

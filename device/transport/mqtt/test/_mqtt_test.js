@@ -634,6 +634,31 @@ describe('Mqtt', function () {
       });
     });
 
+    /* Tests_SRS_NODE_DEVICE_MQTT_41_014: [For a Plug and Play Device the modelId should be included as `&digital-twin-model-id=<DEVICE’s MODEL ID>` after the api-version]*/
+    /* Tests_SRS_NODE_DEVICE_MQTT_41_015: [If a modelId is provided, the device should use the PnP API String] */
+    it('sets options for modelId', function (testCallback) {
+      const fakeModelId = '&digital-twin-model-id=fakeModelId';
+      const fakeModel = { modelId: 'fakeModelId' };
+      let connectCallback;
+      fakeMqttBase.connect = sinon.stub().callsFake(function (config, callback) {
+        connectCallback = callback;
+      });
+      const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      mqtt.setOptions(fakeModel, function (err) {
+        assert.isNotOk(err);
+        assert.strictEqual(mqtt._mid, fakeModelId);
+        getUserAgentString(function (userAgentString) {
+          const expectedUsername = 'host.name/deviceId/' + endpoint.versionQueryStringPnP() + fakeModelId + '&DeviceClientType=' + encodeURIComponent(userAgentString);
+          mqtt.connect(function (err) {
+            assert.isNotOk(err);
+            assert.strictEqual(fakeMqttBase.connect.firstCall.args[0]['username'], expectedUsername);
+            testCallback();
+          });
+          connectCallback();
+        });
+      });
+    });
+
     /* Tests_SRS_NODE_DEVICE_MQTT_06_001: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called with token renewal options while using using cert or non renewal authentication.] */
     it('throws when token renewal options passed and uses cert based authentication', () => {
       const fakeX509AuthenticationProvider = {
