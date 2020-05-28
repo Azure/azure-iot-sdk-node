@@ -434,7 +434,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
    */
   /* Codes_SRS_NODE_DEVICE_MQTT_12_005: [The sendEvent method shall call the publish method on MqttTransport */
   sendEvent(message: Message, done?: (err?: Error, result?: any) => void): void {
-    debug('sendEvent ' + JSON.stringify(message));
+    debug('Invoking sendEvent handler in the device client FSM' + JSON.stringify(message));
 
     this._fsm.handle('sendEvent', message, undefined, (err, puback) => {
       if (err) {
