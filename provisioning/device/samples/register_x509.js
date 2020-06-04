@@ -8,12 +8,11 @@ var Client = require('azure-iot-device').Client;
 var Message = require('azure-iot-device').Message;
 
 var fs = require('fs');
-var Transport = require('azure-iot-provisioning-device-http').Mqtt;
-
-// Feel free to change the preceding using statement to anyone of the following if you would like to try another protocol.
+// You can change the following using statement if you would like to try another protocol.
+var Transport = require('azure-iot-provisioning-device-mqtt').Mqtt;
 // var Transport = require('azure-iot-provisioning-device-amqp').Amqp;
 // var Transport = require('azure-iot-provisioning-device-amqp').AmqpWs;
-// var Transport = require('azure-iot-provisioning-device-mqtt').Http;
+// var Transport = require('azure-iot-provisioning-device-http').Http;
 // var Transport = require('azure-iot-provisioning-device-mqtt').MqttWs;
 
 var X509Security = require('azure-iot-security-x509').X509Security;
