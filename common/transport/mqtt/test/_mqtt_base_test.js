@@ -400,6 +400,101 @@ describe('MqttBase', function () {
     });
   });
 
+  describe('#timeout', function() {
+    const defaultTimeOutInSeconds = 30;
+    it('completes message with a timeout at around default timeout number of seconds', function(done) {
+      this.clock = sinon.useFakeTimers();
+      var fakemqtt = new ErrorFakeMqtt();
+      var transport = new MqttBase(fakemqtt);
+      transport.connect(fakeConfig, () => {
+        const publishCallbackSpy = sinon.spy((err) => {
+          let callbackTimeInSeconds = Math.round(Date.now() / 1000);
+          assert.instanceOf(err, errors.TimeoutError);
+          assert.isAtLeast(callbackTimeInSeconds - beforePublishTimeInSeconds, defaultTimeOutInSeconds);
+          assert.isBelow(callbackTimeInSeconds - beforePublishTimeInSeconds, defaultTimeOutInSeconds * 1.1);
+        });
+        let beforePublishTimeInSeconds = Math.round(Date.now() / 1000);
+        transport.publish('topic1', 'payload1', {}, publishCallbackSpy);
+        this.clock.tick((defaultTimeOutInSeconds*1000)+10000);
+        assert(publishCallbackSpy.calledOnce);
+        this.clock.restore();
+        done();
+    });
+      fakemqtt.emit('connect', { connack: true});
+    });
+
+    it('completes message with a timeout at around 2*default timeout number of seconds', function(done) {
+      this.clock = sinon.useFakeTimers();
+      var fakemqtt = new ErrorFakeMqtt();
+      var transport = new MqttBase(fakemqtt);
+      let callbackInvoked = false;
+      transport.connect(fakeConfig, () => {
+        let publishCallbackSpy = sinon.spy((err) => {
+          let callbackTimeInSeconds = Math.round(Date.now() / 1000);
+          assert.instanceOf(err, errors.TimeoutError);
+          assert.isAtLeast(callbackTimeInSeconds - beforePublishTimeInSeconds, 2*defaultTimeOutInSeconds);
+          assert.isBelow(callbackTimeInSeconds - beforePublishTimeInSeconds, defaultTimeOutInSeconds * 2.1);
+        });
+        let beforePublishTimeInSeconds = Math.round(Date.now() / 1000);
+        transport.publish('topic1', 'payload1', {}, publishCallbackSpy);
+        transport.setTimeout(2*defaultTimeOutInSeconds);
+        this.clock.tick((defaultTimeOutInSeconds*2*1000)+10000);
+        assert(publishCallbackSpy.calledOnce);
+        this.clock.restore();
+        done();
+      });
+      fakemqtt.emit('connect', { connack: true});
+    });
+
+    it('completes 2 message with a timeout at around default timeout number of seconds, then third at default*1.5', function(done) {
+      this.clock = sinon.useFakeTimers();
+      var fakemqtt = new ErrorFakeMqtt();
+      var transport = new MqttBase(fakemqtt);
+      let callbackInvoked = false;
+      transport.connect(fakeConfig, () => {
+        let publishCallbackSpy1st = sinon.spy((err) => {
+          let callbackTimeInSeconds = Math.round(Date.now() / 1000);
+          assert.instanceOf(err, errors.TimeoutError);
+          assert.isAtLeast(callbackTimeInSeconds - beforePublishTimeInSeconds, defaultTimeOutInSeconds);
+          assert.isBelow(callbackTimeInSeconds - beforePublishTimeInSeconds, defaultTimeOutInSeconds * 1.1);
+        });
+        let publishCallbackSpy2nd = sinon.spy((err) => {
+          let callbackTimeInSeconds = Math.round(Date.now() / 1000);
+          assert.instanceOf(err, errors.TimeoutError);
+          assert.isAtLeast(callbackTimeInSeconds - beforePublishTimeInSeconds, defaultTimeOutInSeconds);
+          assert.isBelow(callbackTimeInSeconds - beforePublishTimeInSeconds, defaultTimeOutInSeconds * 1.1);
+        });
+        let publishCallbackSpy3rd = sinon.spy((err) => {
+          let callbackTimeInSeconds = Math.round(Date.now() / 1000);
+          assert.instanceOf(err, errors.TimeoutError);
+          assert.isAtLeast(callbackTimeInSeconds - beforePublishTimeInSeconds, 1.5*defaultTimeOutInSeconds);
+          assert.isBelow(callbackTimeInSeconds - beforePublishTimeInSeconds, defaultTimeOutInSeconds * 1.7);
+        });
+        let beforePublishTimeInSeconds = Math.round(Date.now() / 1000);
+        transport.publish('topic1', 'payload1', {}, publishCallbackSpy1st);
+        transport.publish('topic2', 'payload2', {}, publishCallbackSpy2nd);
+        this.clock.tick(defaultTimeOutInSeconds*0.5*1000);
+        transport.publish('topic3', 'payload3', {}, publishCallbackSpy3rd);
+        this.clock.tick(1000);
+        assert(publishCallbackSpy1st.notCalled);
+        assert(publishCallbackSpy2nd.notCalled);
+        assert(publishCallbackSpy3rd.notCalled);
+        this.clock.tick(defaultTimeOutInSeconds*0.6*1000);
+        assert(publishCallbackSpy1st.calledOnce);
+        assert(publishCallbackSpy2nd.calledOnce);
+        assert(publishCallbackSpy3rd.notCalled);
+        this.clock.tick(defaultTimeOutInSeconds*0.6*1000);
+        assert(publishCallbackSpy1st.calledOnce);
+        assert(publishCallbackSpy2nd.calledOnce);
+        assert(publishCallbackSpy3rd.calledOnce);
+        this.clock.restore();
+        done();
+      });
+      fakemqtt.emit('connect', { connack: true});
+    });
+
+  });
+
   describe('#subscribe', function () {
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_026: [The `subscribe` method shall call the callback with a `NotConnectedError` if the connection hasn't been established prior to calling `publish`.]*/
     it('fails with a NotConnectedError if the MQTT connection is not active', function (testCallback) {
