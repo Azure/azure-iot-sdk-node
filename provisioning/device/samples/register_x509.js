@@ -8,23 +8,22 @@ var Client = require('azure-iot-device').Client;
 var Message = require('azure-iot-device').Message;
 
 var fs = require('fs');
-var Transport = require('azure-iot-provisioning-device-http').Http;
-
-// Feel free to change the preceding using statement to anyone of the following if you would like to try another protocol.
+// You can change the following using statement if you would like to try another protocol.
+var Transport = require('azure-iot-provisioning-device-mqtt').Mqtt;
 // var Transport = require('azure-iot-provisioning-device-amqp').Amqp;
 // var Transport = require('azure-iot-provisioning-device-amqp').AmqpWs;
-// var Transport = require('azure-iot-provisioning-device-mqtt').Mqtt;
+// var Transport = require('azure-iot-provisioning-device-http').Http;
 // var Transport = require('azure-iot-provisioning-device-mqtt').MqttWs;
 
 var X509Security = require('azure-iot-security-x509').X509Security;
 var ProvisioningDeviceClient = require('azure-iot-provisioning-device').ProvisioningDeviceClient;
 
-var provisioningHost = '[provisioning host]';
-var idScope = '[id scope]';
-var registrationId = '[registration id]';
+var provisioningHost = process.env.PROVISIONING_HOST;
+var idScope = process.env.PROVISIONING_IDSCOPE;
+var registrationId = process.env.PROVISIONING_REGISTRATION_ID;
 var deviceCert = {
-  cert: fs.readFileSync('[cert filename]').toString(),
-  key: fs.readFileSync('[key filename]').toString()
+  cert: fs.readFileSync(process.env.CERTIFICATE_FILE).toString(),
+  key: fs.readFileSync(process.env.KEY_FILE).toString()
 };
 
 var transport = new Transport();
