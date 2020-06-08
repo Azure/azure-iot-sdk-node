@@ -145,6 +145,7 @@ export abstract class InternalClient extends EventEmitter {
       retryOp.retry((opCallback) => {
         this._transport.connect(opCallback);
       }, (connectErr, connectResult) => {
+        this.emit('connect', connectErr, connectResult);
         /*Codes_SRS_NODE_INTERNAL_CLIENT_16_060: [The `open` method shall call the `_callback` callback with a null error object and a `results.Connected()` result object if the transport is already connected, doesn't need to connect or has just connected successfully.]*/
         safeCallback(_callback, connectErr, connectResult);
       });
