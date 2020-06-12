@@ -34,6 +34,13 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
           }, ReferenceError, 'transport is \'' + transport + '\'');
         });
       });
+
+      it('emits connected when a connected event is received from the transport', (testCallback) => {
+        const dummyTransport = new FakeTransport();
+        var client = new ClientCtor(dummyTransport);
+        client.on('connected', testCallback);
+        dummyTransport.emit('connected');
+      })
     });
 
     describe('#fromConnectionString', function () {

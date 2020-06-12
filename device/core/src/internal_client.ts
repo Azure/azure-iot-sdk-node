@@ -78,6 +78,9 @@ export abstract class InternalClient extends EventEmitter {
       debug('Transport error: ' + err.toString());
     });
 
+    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_041: [on a connected event from the transport the client will emit connected]*/
+    this._transport.on('connected', () => this.emit('connected'));
+
     this._methodCallbackMap = {};
 
     this._disconnectHandler = (err) => {
@@ -145,7 +148,6 @@ export abstract class InternalClient extends EventEmitter {
       retryOp.retry((opCallback) => {
         this._transport.connect(opCallback);
       }, (connectErr, connectResult) => {
-        this.emit('connect', connectErr, connectResult);
         /*Codes_SRS_NODE_INTERNAL_CLIENT_16_060: [The `open` method shall call the `_callback` callback with a null error object and a `results.Connected()` result object if the transport is already connected, doesn't need to connect or has just connected successfully.]*/
         safeCallback(_callback, connectErr, connectResult);
       });
@@ -490,6 +492,7 @@ export interface Config {
 export interface DeviceTransport extends EventEmitter {
   on(type: 'error', func: (err: Error) => void): this;
   on(type: 'disconnect', func: (err?: Error) => void): this;
+  on(type: 'connected', func: () => void): this;
 
   connect(done: (err?: Error, result?: results.Connected) => void): void;
   disconnect(done: (err?: Error, result?: results.Disconnected) => void): void;
