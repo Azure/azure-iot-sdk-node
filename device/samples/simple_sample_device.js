@@ -62,7 +62,7 @@ function connectCallback () {
 // fromConnectionString must specify a transport constructor, coming from any transport package.
 var client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
-client.on('connected', connectCallback);
+client.on('connect', connectCallback);
 client.on('error', (err) => console.error(err.message));
 client.on('disconnect', disconnectHandler);
 client.on('message', messageHandler);

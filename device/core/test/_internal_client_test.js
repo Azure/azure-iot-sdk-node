@@ -35,10 +35,11 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
         });
       });
 
-      it('emits connected when a connected event is received from the transport', (testCallback) => {
+      /*Tests_SRS_NODE_DEVICE_CLIENT_41_XXX: [The InternalClient shall emit a `connect` when a `connected` event is received from the transport.]*/
+      it('emits `connect` when a connected event is received from the transport', (testCallback) => {
         const dummyTransport = new FakeTransport();
         var client = new ClientCtor(dummyTransport);
-        client.on('connected', testCallback);
+        client.on('connect', testCallback);
         dummyTransport.emit('connected');
       })
     });

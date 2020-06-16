@@ -361,6 +361,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
         },
         authenticated: {
           _onEnter: (connectResult, connectCallback) => {
+            this.emit('connected');
             connectCallback(null, connectResult);
           },
           connect: (connectCallback) => connectCallback(null, new results.Connected()),

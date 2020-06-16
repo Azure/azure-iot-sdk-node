@@ -93,6 +93,7 @@ export class Http extends EventEmitter implements DeviceTransport {
    */
   connect(callback: (err?: Error, result?: results.Connected) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_028: [The `connect` method shall call its callback immediately with a `null` first argument and a `results.Connected` second argument.]*/
+    this.emit('connected');
     callback(null, new results.Connected());
   }
 

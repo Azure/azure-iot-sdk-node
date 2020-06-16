@@ -79,7 +79,7 @@ export abstract class InternalClient extends EventEmitter {
     });
 
     /*Codes_SRS_NODE_INTERNAL_CLIENT_16_041: [on a connected event from the transport the client will emit connected]*/
-    this._transport.on('connected', () => this.emit('connected'));
+    this._transport.on('connected', () => this.emit('connect'));
 
     this._methodCallbackMap = {};
 
