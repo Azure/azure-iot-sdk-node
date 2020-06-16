@@ -6,113 +6,114 @@
 import { EventEmitter } from 'events';
 import * as machina from 'machina';
 import { Client as MqttClient, IClientOptions, IClientPublishOptions, IClientSubscribeOptions } from 'mqtt';
-import * as uuid from 'uuid';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-mqtt-base:MqttBase');
 import { errors, results, SharedAccessSignature, X509 } from 'azure-iot-common';
 
-const timerCheckInMilliseconds: number = 10000;
-const defaultTimeoutInSeconds: number = 30;
-
-class OnTheWirePublish {
+class OnTheWireMessage {
   enqueuedTimeSecondsSinceEpoch: number;
-  publishCallback: (err?: Error, result?: any) => void;
-  identifier: string;
-  constructor(enqueuedTimeSecondsSinceEpoch: number, publishCallback: (err?: Error, result?: any) => void, identifier: string) {
-    this.enqueuedTimeSecondsSinceEpoch = enqueuedTimeSecondsSinceEpoch;
-    this.publishCallback = publishCallback;
-    this.identifier = identifier;
+  callback: (err?: Error, result?: any) => void;
+  constructor(callback: (err?: Error, result?: any) => void) {
+    this.enqueuedTimeSecondsSinceEpoch = Math.floor( Date.now() / 1000 );
+    this.callback = callback;
   }
 }
 
-class OnTheWirePublishContainer {
+class OnTheWireMessageContainer {
+  private readonly timerCheckInMilliseconds: number = 10000;
+  private readonly defaultTimeoutInSeconds: number = 30;
   //
-  // Container that holds on the wire publishes.  There
-  // are methods to add and complete (via callback) publishes
+  // Container that holds on the wire messages.  There
+  // are methods to add and complete (via callback) messages
   // from the container.
   //
   // Additionally there is a method to purge (remove from the container and
-  // invoke its callback) all publishes for reasons such as disconnection.
+  // invoke its callback) all messages for reasons such as disconnection.
   //
-  // Publishes that are added to the container may be timed out and
+  // Messages that are added to the container may be timed out and
   // removed from the container and its callback invoked with a timeout error.
   //
   // The number of seconds till timeout has a default and a method to
   // change that number of seconds.
   //
-  // While there are any publishes in this container it will self
-  // check every 10 seconds for publishes that have timed out.
-  //
-  addPublish: (key: string, publish: OnTheWirePublish) => void;
-  completePublish: (key: string, err?: Error, result?: any) => void;
-  purgePublishes: (err?: Error) => void;
-  setTimeoutInSeconds: (timeOut: number) => void;
+  // While there are any messages in this container it will self
+  // check every 10 seconds for messages that have timed out.
   //
   // The Map object in typescript acts as a dictionary.  Additionally
   // the entries in that dictionary can be iterated based on order of
   // insertion.
   //
-  private _onTheWire: Map<string, OnTheWirePublish>;
+  private _onTheWire: Map<number, OnTheWireMessage>;
   private _timeoutTimer: NodeJS.Timer;
   private _timeoutInSeconds: number;
+  private _identifier: number;
+
   constructor () {
-    this._timeoutInSeconds = defaultTimeoutInSeconds;
-    this.setTimeoutInSeconds = (timeout) => {
-      this._timeoutInSeconds = timeout;
-    };
-    this.addPublish = (key, publish) => {
-      this._onTheWire.set(key, publish);
-      if (this._onTheWire.size === 1) {
-        //
-        // This is the first entry into the container.  Start the
-        // timer to check for timeouts
-        //
-        this._timeoutTimer = setTimeout(this._timeoutPublishes.bind(this), timerCheckInMilliseconds);
-      }
-    };
-    this.completePublish = (key, err, result) => {
-      const current = this._onTheWire.get(key);
-      //
-      // The publish may have timed out or had an error, we would have already invoked the callback and
-      // removed it from the dictionary.
-      //
-      // No need to try to do that again.
-      //
-      if (!!current) {
-        this._onTheWire.delete(key);
-        if (this._onTheWire.size === 0) {
-          //
-          // There are no more entries in the container.  No need to run the timer anymore.
-          //
-          clearTimeout(this._timeoutTimer);
-        }
-        current.publishCallback(err, result);
-      }
-    };
-    this.purgePublishes = (err?: Error) => {
-      const errorForPurgedPublish = err || new errors.NotConnectedError('Connect was lost');
-      const existingPublishes: Map<string, OnTheWirePublish> = this._onTheWire;
-      this._onTheWire = new Map<string, OnTheWirePublish>();
-      //
-      // We stop the timer because there is nothing left in the onTheWire map anymore.
-      //
-      clearTimeout(this._timeoutTimer);
-      existingPublishes.forEach((onTheWirePublish: OnTheWirePublish, key: string) => {
-        existingPublishes.delete(key);
-        onTheWirePublish.publishCallback(errorForPurgedPublish);
-      });
-    };
+    this._timeoutInSeconds = this.defaultTimeoutInSeconds;
     //
     // Initializing the Map in the constructor.
     //
-    this._onTheWire = new Map<string, OnTheWirePublish>();
+    this._onTheWire = new Map<number, OnTheWireMessage>();
+    this._identifier = 0;
   }
-  private _timeoutPublishes(): void {
+  add(key: number, message: OnTheWireMessage): void {
+    this._onTheWire.set(key, message);
+    if (this._onTheWire.size === 1) {
+      //
+      // This is the first entry into the container.  Start the
+      // timer to check for timeouts
+      //
+      this._timeoutTimer = setTimeout(this._timeout.bind(this), this.timerCheckInMilliseconds);
+    }
+  }
+  complete(key: number, err?: Error, result?: any): void {
+    const current = this._onTheWire.get(key);
+    //
+    // The message may have timed out or had an error, we would have already invoked the callback and
+    // removed it from the dictionary.
+    //
+    // No need to try to do that again.
+    //
+    if (!!current) {
+      this._onTheWire.delete(key);
+      if (this._onTheWire.size === 0) {
+        //
+        // There are no more entries in the container.  No need to run the timer anymore.
+        //
+        clearTimeout(this._timeoutTimer);
+      }
+      current.callback(err, result);
+    }
+  }
+  purge(err?: Error): void {
+    const errorForPurgedMessage = err || new errors.NotConnectedError('Connect was lost');
+    const existing: Map<number, OnTheWireMessage> = this._onTheWire;
+    this._onTheWire = new Map<number, OnTheWireMessage>();
+    //
+    // We stop the timer because there is nothing left in the onTheWire map anymore.
+    //
+    clearTimeout(this._timeoutTimer);
+    for (const [, onTheWire] of existing) {
+      onTheWire.callback(errorForPurgedMessage);
+    }
+    existing.clear();
+  }
+  setTimeoutInSeconds(timeout: number): void {
+    this._timeoutInSeconds = timeout;
+  }
+  provideIdentifier(): number {
+    this._identifier++;
+    if (this._identifier === Number.MAX_VALUE) {
+      this._identifier = 0;
+    }
+    return this._identifier;
+  }
+  private _timeout(): void {
     const secondsSinceTheEpoch: number = Math.round(Date.now() / 1000);
-    for (const [key, onTheWirePublish] of this._onTheWire) {
-      if ((secondsSinceTheEpoch - onTheWirePublish.enqueuedTimeSecondsSinceEpoch) >= this._timeoutInSeconds) {
+    for (const [key, onTheWireMessage] of this._onTheWire) {
+      if ((secondsSinceTheEpoch - onTheWireMessage.enqueuedTimeSecondsSinceEpoch) >= this._timeoutInSeconds) {
         this._onTheWire.delete(key);
-        onTheWirePublish.publishCallback(new errors.TimeoutError('Publish not acknowledged'));
+        onTheWireMessage.callback(new errors.TimeoutError('Message not acknowledged'));
       } else {
         //
         // The Map object retains the order that items were inserted into it.
@@ -127,7 +128,7 @@ class OnTheWirePublishContainer {
       //
       // Still some entries in the map. Re-schedule ourself.
       //
-      this._timeoutTimer = setTimeout(this._timeoutPublishes.bind(this), timerCheckInMilliseconds);
+      this._timeoutTimer = setTimeout(this._timeout.bind(this), this.timerCheckInMilliseconds);
     }
   }
 }
@@ -143,12 +144,12 @@ export class MqttBase extends EventEmitter {
   private _mqttClient: MqttClient;
   private _fsm: any;
   private _options: any;
-  private _onTheWirePublishes: OnTheWirePublishContainer;
+  private _onTheWirePublishes: OnTheWireMessageContainer;
 
   constructor(mqttProvider?: any) {
     super();
     this.mqttProvider = mqttProvider ? mqttProvider : require('mqtt');
-    this._onTheWirePublishes = new OnTheWirePublishContainer();
+    this._onTheWirePublishes = new OnTheWireMessageContainer();
 
     this._fsm = new machina.Fsm({
       namespace: 'mqtt-base',
@@ -169,7 +170,7 @@ export class MqttBase extends EventEmitter {
             // never know.  If the code further up the stack retries, we could indeed get
             // duplication of published data.  Nothing we can really do about it.
             //
-            this._onTheWirePublishes.purgePublishes(err);
+            this._onTheWirePublishes.purge(err);
             //
             // One of the other states was able to pass along a callback.  Use it to finish up whatever
             // operation the state machine was working on.
@@ -225,13 +226,13 @@ export class MqttBase extends EventEmitter {
           connect: (callback) => callback(null, new results.Connected()),
           disconnect: (callback) => this._fsm.transition('disconnecting', callback),
           publish: (topic, payload, options, callback) => {
-            const thisPublishIdentifier = uuid.v4();
-            this._onTheWirePublishes.addPublish(thisPublishIdentifier, new OnTheWirePublish(Math.floor( Date.now() / 1000 ), callback, thisPublishIdentifier));
+            const thisPublishIdentifier = this._onTheWirePublishes.provideIdentifier();
+            this._onTheWirePublishes.add(thisPublishIdentifier, new OnTheWireMessage(callback));
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_017: [The `publish` method publishes a `payload` on a `topic` using `options`.]*/
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_021: [The  `publish` method shall call `publish` on the mqtt client object and call the `callback` argument with `null` and the `puback` object if it succeeds.]*/
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_022: [The `publish` method shall call the `callback` argument with an Error if the operation fails.]*/
             this._mqttClient.publish(topic, payload, options, (err, result) => {
-              this._onTheWirePublishes.completePublish(thisPublishIdentifier, err, result);
+              this._onTheWirePublishes.complete(thisPublishIdentifier, err, result);
             });
           },
           subscribe: (topic, options, callback) => {
