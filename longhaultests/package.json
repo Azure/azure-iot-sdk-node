@@ -29,12 +29,12 @@
   },
   "dependencies": {
     "async": "^2.6.2",
-    "azure-iot-common": "1.12.2",
-    "azure-iot-device": "1.15.0",
-    "azure-iot-device-amqp": "1.12.2",
-    "azure-iot-device-http": "1.12.2",
-    "azure-iot-device-mqtt": "1.14.0",
-    "azure-iothub": "1.12.2",
+    "azure-iot-common": "1.12.3",
+    "azure-iot-device": "1.16.0",
+    "azure-iot-device-amqp": "1.12.3",
+    "azure-iot-device-http": "1.12.3",
+    "azure-iot-device-mqtt": "1.14.1",
+    "azure-iothub": "1.12.3",
     "debug": "^4.1.1",
     "uuid": "^3.3.2"
   }
