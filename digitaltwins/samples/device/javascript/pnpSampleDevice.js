@@ -6,6 +6,7 @@
 const Protocol = require('azure-iot-device-mqtt').Mqtt;
 const Client = require('azure-iot-device').Client;
 const Message = require('azure-iot-device').Message;
+// const { promisify } = require('util')
 
 const packageJson = require('./package.json');
 
@@ -42,6 +43,7 @@ const propertyUpdateHandler = (deviceTwin, componentName, propertyName, reported
 
 
 const commandHandler = async (request, response) => {
+  helperLogCommandRequest(request);
   switch (request.methodName) {
   case commandNameBlink: {
     await sendCommandResponse(request, response, 200, 'blink response');
@@ -61,9 +63,7 @@ const commandHandler = async (request, response) => {
   }
 };
 
-// TODO Not sure if this needs to be async or not coz we probably dont care if the response rached Hub.
 const sendCommandResponse = async (request, response, status, payload) => {
-  helperLogCommandRequest(request);
   try {
     await response.send(status, payload);
     console.log('Response to method \'' + request.methodName +
@@ -120,17 +120,17 @@ const helperAttachHandlerForDesiredPropertyPatches = (deviceTwin, componentName)
 };
 
 
-const sendTelemetryAtInterval = async (deviceClient, componentName, secs) => {
+const sendTelemetryAtInterval = (deviceClient, componentName, secs) => {
   let index = 0;
   const interval = parseFloat(secs)*1000;
-  setInterval( async () => {
+  setInterval(() => {
     console.log('Sending telemetry message %d...', index);
     const data = JSON.stringify({ temp: 1 + (Math.random() * 90), humidity: 1 + (Math.random() * 99) });
     const pnpMsg = new Message(data);
     pnpMsg.properties.add(messageSubjectProperty, componentName);
     pnpMsg.contentType = 'application/json';
     pnpMsg.contentEncoding = 'utf-8';
-    await deviceClient.sendEvent(pnpMsg);
+    deviceClient.sendEvent(pnpMsg);
     index += 1;
   }, interval);
 };
@@ -184,7 +184,7 @@ async function main() {
       updateComponentReportedProperties(resultTwin, patchSensorInfo, sensorComponentName);
       helperAttachHandlerForDesiredPropertyPatches(resultTwin, sensorComponentName);
     } catch (err) {
-      console.error('could not get twin\n' + err.toString());
+      console.error('could not retrieve twin or report twin properties\n' + err.toString());
     }
   } catch (err) {
     console.error('could not connect pnp client\n' + err.toString());
