@@ -245,21 +245,6 @@ var ModuleClient = require('../lib/module_client').ModuleClient;
         });
       });
 
-      it('emits connect event on the client', function (done) {
-        var client = new ClientCtor(new FakeTransport());
-        let connectCallback = (err, result) => {
-          if (err) {
-            done(err)
-          }
-          else {
-            assert.equal(result.constructor.name, 'Connected');
-            done();
-          };
-        };
-        client.on('connect', connectCallback);
-        client.open();
-      });
-
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_045: [If the transport successfully establishes a connection the `open` method shall subscribe to the `disconnect` event of the transport.]*/
       it('subscribes to the \'disconnect\' event once connected', function (done) {
         var transport = new FakeTransport();
