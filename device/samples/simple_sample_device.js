@@ -3,27 +3,26 @@
 
 'use strict';
 
-var Protocol = require('azure-iot-device-mqtt').Mqtt;
+const Protocol = require('azure-iot-device-mqtt').Mqtt;
 // Uncomment one of these transports and then change it in fromConnectionString to test other transports
-// var Protocol = require('azure-iot-device-amqp').AmqpWs;
-// var Protocol = require('azure-iot-device-http').Http;
-// var Protocol = require('azure-iot-device-amqp').Amqp;
-// var Protocol = require('azure-iot-device-mqtt').MqttWs;
-var Client = require('azure-iot-device').Client;
-var Message = require('azure-iot-device').Message;
+// const Protocol = require('azure-iot-device-amqp').AmqpWs;
+// const Protocol = require('azure-iot-device-http').Http;
+// const Protocol = require('azure-iot-device-amqp').Amqp;
+// const Protocol = require('azure-iot-device-mqtt').MqttWs;
+const Client = require('azure-iot-device').Client;
+const Message = require('azure-iot-device').Message;
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
-var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+let sendInterval;
 
-async function disconnectHandler () {
+function disconnectHandler () {
   clearInterval(sendInterval);
   client.removeAllListeners();
-  try {
-    await client.open();
-  } catch (err) {
+  client.open().catch((err) => {
     console.error(err.message);
-  }
+  });
 }
 
 // The AMQP and HTTP transports have the notion of completing, rejecting or abandoning the message.
@@ -40,30 +39,35 @@ function messageHandler (msg) {
 }
 
 function generateMessage () {
-  var windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
-  var temperature = 20 + (Math.random() * 10); // range: [20, 30]
-  var humidity = 60 + (Math.random() * 20); // range: [60, 80]
-  var data = JSON.stringify({ deviceId: 'myFirstDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
-  var message = new Message(data);
+  const windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
+  const temperature = 20 + (Math.random() * 10); // range: [20, 30]
+  const humidity = 60 + (Math.random() * 20); // range: [60, 80]
+  const data = JSON.stringify({ deviceId: 'myFirstDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
+  const message = new Message(data);
   message.properties.add('temperatureAlert', (temperature > 28) ? 'true' : 'false');
   return message;
+}
+
+function errorCallback (err) {
+  (err) => console.error(err.message);
 }
 
 function connectCallback () {
   console.log('Client connected');
   // Create a message and send it to the IoT Hub every two seconds
-  var sendInterval = setInterval(function () {
+  sendInterval = setInterval(() => {
     const message = generateMessage();
     console.log('Sending message: ' + message.getData());
     client.sendEvent(message, printResultFor('send'));
   }, 2000);
+
 };
 
 // fromConnectionString must specify a transport constructor, coming from any transport package.
-var client = Client.fromConnectionString(deviceConnectionString, Protocol);
+let client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
 client.on('connect', connectCallback);
-client.on('error', (err) => console.error(err.message));
+client.on('error', errorCallback);
 client.on('disconnect', disconnectHandler);
 client.on('message', messageHandler);
 
