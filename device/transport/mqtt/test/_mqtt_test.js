@@ -718,6 +718,15 @@ describe('Mqtt', function () {
       });
     });
 
+    /*Tests_SRS_NODE_DEVICE_MQTT_41_016: [ The `connect` method shall emit `connected` once the transport is connected ]*/
+    it('emits connected on the transport', function (testCallback) {
+      const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      mqtt.on('connected', () => {
+        testCallback();
+      });
+      mqtt.connect();
+    });
+
 
     getUserAgentString(function (userAgentString) {
       [
@@ -769,6 +778,12 @@ describe('Mqtt', function () {
         });
       });
     });
+
+    it('emits connected event when the transport connects', function (testCallback) {
+      const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      mqtt.on('connected', testCallback)
+      mqtt.connect()
+    })
 
     /* Tests_SRS_NODE_DEVICE_MQTT_18_026: When MqttBase fires an error event, the Mqtt object shall emit a disconnect event */
     it('registers to emit disconnect when an error received', function (testCallback) {

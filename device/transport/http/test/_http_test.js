@@ -74,6 +74,16 @@ describe('Http', function () {
         testCallback();
       });
     });
+
+    /*Tests_SRS_NODE_DEVICE_HTTP_41_004: [ The `connect` method shall immediately emit a `connected` event ]*/
+    it('emits a connect event immediately', function (testCallback) {
+      var http = new Http(fakeAuthenticationProvider);
+      http.on('connected', () => {
+        testCallback();
+      });
+      http.connect();
+    });
+
   });
 
   describe('#disconnect', function () {

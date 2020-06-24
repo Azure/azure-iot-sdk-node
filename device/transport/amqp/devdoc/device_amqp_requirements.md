@@ -61,6 +61,9 @@ amqp.on('errorReceived', function (err) {
 
 **SRS_NODE_DEVICE_AMQP_16_058: [** If the `putToken` operation initiated upon receiving a `newTokenAvailable` event fails, a `disconnect` event shall be emitted with the error from the failed `putToken` operation. **]**
 
+**SRS_NODE_DEVICE_AMQP_41_005: [** Once the amqp client is authenticated it will emit a `connected` event **]**
+
+
 ### connect(done)
 The `connect` method establishes a connection with the Azure IoT Hub instance.
 

@@ -138,6 +138,15 @@ describe('Amqp', function () {
         fakeTokenAuthenticationProvider.emit('newTokenAvailable', { sharedAccessSignature: newSas });
       });
     });
+
+    /*Tests_SRS_NODE_DEVICE_AMQP_41_005: [ Once the amqp client is authenticated it will emit a `connected` event ]*/
+    it('emits a connect event if the transport is authenticated', function (testCallback) {
+      transport.on('connected', () => {
+        assert.strictEqual(transport._fsm.state, 'authenticated', 'transport is not in an authenticated state');
+        testCallback();
+      });
+      transport.connect();
+    });
   });
 
   describe('Direct Methods', function () {
