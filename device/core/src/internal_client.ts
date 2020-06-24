@@ -78,7 +78,7 @@ export abstract class InternalClient extends EventEmitter {
       debug('Transport error: ' + err.toString());
     });
 
-    /*Codes_SRS_NODE_INTERNAL_CLIENT_16_041: [on a connected event from the transport the client will emit connected]*/
+    /*Codes_SRS_NODE_INTERNAL_CLIENT_41_001: [A `connect` event will be emitted when a `connected` event is received from the transport.]*/
     this._transport.on('connected', () => this.emit('connect'));
 
     this._methodCallbackMap = {};

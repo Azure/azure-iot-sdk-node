@@ -361,6 +361,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
         },
         authenticated: {
           _onEnter: (connectResult, connectCallback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_41_005: [ Once the amqp client is authenticated it will emit a `connected` event ]*/
             this.emit('connected');
             connectCallback(null, connectResult);
           },
