@@ -75,7 +75,7 @@ describe('Http', function () {
       });
     });
 
-    /*Tests_SRS_NODE_DEVICE_AMQP_41_001: [ The `connect` method shall immediate emit a `connected` event ]*/
+    /*Tests_SRS_NODE_DEVICE_HTTP_41_004: [ The `connect` method shall immediately emit a `connected` event ]*/
     it('emits a connect event immediately', function (testCallback) {
       var http = new Http(fakeAuthenticationProvider);
       http.on('connected', () => {

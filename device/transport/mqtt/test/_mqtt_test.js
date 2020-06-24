@@ -6,7 +6,6 @@
 require('es5-shim');
 const assert = require('chai').assert;
 const sinon = require('sinon');
-const { on } = require('process');
 const Mqtt = require('../lib/mqtt.js').Mqtt;
 const endpoint = require('azure-iot-common').endpoint;
 const errors = require('azure-iot-common').errors;
@@ -717,6 +716,15 @@ describe('Mqtt', function () {
         assert.instanceOf(result, results.Connected);
         testCallback();
       });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_MQTT_41_016: [ The `connect` method shall emit `connected` once the transport is connected ]*/
+    it('emits connected on the transport', function (testCallback) {
+      const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      mqtt.on('connected', () => {
+        testCallback();
+      });
+      mqtt.connect();
     });
 
 

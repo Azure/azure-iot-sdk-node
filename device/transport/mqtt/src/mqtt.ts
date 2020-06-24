@@ -258,6 +258,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
         },
         connected: {
           _onEnter: (connectedCallback, connectResult) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_41_016: [ The `connect` method shall emit `connected` once the transport is connected ]*/
             this.emit('connected');
             /*Codes_SRS_NODE_DEVICE_MQTT_16_020: [The `connect` method shall call its callback with a `null` error parameter and a `results.Connected` response if `MqttBase` successfully connects.]*/
             if (connectedCallback) connectedCallback(null, new results.Connected(connectResult));

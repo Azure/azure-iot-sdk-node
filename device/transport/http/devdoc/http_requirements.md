@@ -54,7 +54,7 @@ or:
 
 **SRS_NODE_DEVICE_HTTP_16_028: [** The `connect` method shall call its callback immediately with a `null` first argument and a `results.Connected` second argument. **]**
 
-**SRS_NODE_DEVICE_AMQP_41_001: [** The `connect` method shall immediate emit a `connected` event **]**
+**SRS_NODE_DEVICE_HTTP_41_004: [** The `connect` method shall immediately emit a `connected` event **]**
 
 ### disconnect(callback)
 
