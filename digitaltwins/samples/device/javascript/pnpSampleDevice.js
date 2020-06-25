@@ -122,15 +122,11 @@ const helperAttachHandlerForDesiredPropertyPatches = (deviceTwin, componentName)
 const helperAttachExitListener = async (deviceClient) => {
   const standardInput = process.stdin;
   standardInput.setEncoding('utf-8');
-
-  // Prompt user to input data in console.
   console.log('Please enter q or Q to exit sample.');
   standardInput.on('data', (data) => {
-  // standard_input.on('data', async function (data) {
     if (data === 'q\n' || data === 'Q\n') {
       console.log('Clearing intervals and exiting sample.');
       clearInterval(intervalToken);
-      // await deviceClient.close();
       deviceClient.close();
       process.exit();
     } else {
@@ -172,6 +168,9 @@ async function main() {
       index += 1;
     }, 5500);
 
+    // attach a standard input exit listener
+    helperAttachExitListener(client);
+
     try {
       resultTwin = await client.getTwin();
       const patchDeviceInfo = helperCreateReportedPropertiesPatch({
@@ -202,16 +201,11 @@ async function main() {
       updateComponentReportedProperties(resultTwin, patchSDKInfo, sdkInfoComponentName);
       updateComponentReportedProperties(resultTwin, patchSensorInfo, sensorComponentName);
       helperAttachHandlerForDesiredPropertyPatches(resultTwin, sensorComponentName);
-
-      helperAttachExitListener(client);
     } catch (err) {
       console.error('could not retrieve twin or report twin properties\n' + err.toString());
     }
   } catch (err) {
-    console.error('could not connect pnp client\n' + err.toString());
-  } finally {
-    console.log('entering and leaving the finally block');
-    // await client.close();
+    console.error('could not connect pnp client or could not attach interval function for telemetry\n' + err.toString());
   }
 }
 
