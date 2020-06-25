@@ -1,17 +1,16 @@
 {
     "compilerOptions": {
-        "outDir": "./lib",
+        "outDir": "./dist",
         "target":"es5",
         "downlevelIteration": true,
         "lib": [ "es5", "ES2015.Iterable", "es2015.collection" ],
         "sourceMap": true,
         "declaration": true,
-        "noUnusedLocals": true
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "removeComments": false
     },
     "include": [
         "./src/**/*.ts"
-    ],
-    "exclude": [
-        "./lib"
     ]
 }

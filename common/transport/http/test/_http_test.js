@@ -1,6 +1,6 @@
 'use strict';
 
-var Http = require('../lib/http.js').Http;
+var Http = require('../dist/http.js').Http;
 var https = require('https');
 const node_http = require('http');
 var assert = require('chai').assert;
@@ -126,7 +126,7 @@ describe('Http', function() {
       const x509Options = {
         clientCertEngine
       };
-      
+
       http.setOptions(fakeOptions);
       http.buildRequest('GET', fakePath, fakeHeaders, fakeHost, x509Options, function() {});
       assert.strictEqual(https.request.args[0][0].clientCertEngine, clientCertEngine);

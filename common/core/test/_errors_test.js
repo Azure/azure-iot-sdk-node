@@ -4,7 +4,7 @@
 'use strict';
 
 var assert = require('chai').assert;
-var errors = require('../lib/errors.js');
+var errors = require('../dist/errors.js');
 
 describe('errors', function() {
 

@@ -7,7 +7,7 @@ var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 var Message = require('azure-iot-common').Message;
 var ArgumentError = require('azure-iot-common').errors.ArgumentError;
-var SharedAccessSignature = require('../lib/shared_access_signature.js');
+var SharedAccessSignature = require('../dist/shared_access_signature.js');
 var results = require('azure-iot-common').results;
 
 function Response(statusCode) {

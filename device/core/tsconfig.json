@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "outDir": "./lib",
+        "outDir": "./dist",
         "target":"es5",
         "sourceMap": true,
         "declaration": true,
@@ -8,6 +8,8 @@
             "es6"
         ],
         "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "removeComments": false,
         "resolveJsonModule": true
     },
     "include": [

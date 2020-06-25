@@ -10,7 +10,7 @@ var rhea = require('rhea');
 var uuidV4 = require('uuid').v4;
 
 
-var AmqpDeviceMethodClient = require('../lib/amqp_device_method_client.js').AmqpDeviceMethodClient;
+var AmqpDeviceMethodClient = require('../dist/amqp_device_method_client.js').AmqpDeviceMethodClient;
 
 describe('AmqpDeviceMethodClient', function () {
   var fakeConfig = {

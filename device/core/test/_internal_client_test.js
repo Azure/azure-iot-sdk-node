@@ -15,11 +15,11 @@ var results = require('azure-iot-common').results;
 var errors = require('azure-iot-common').errors;
 var Message = require('azure-iot-common').Message;
 var NoRetry = require('azure-iot-common').NoRetry;
-var SharedAccessKeyAuthenticationProvider = require('../lib/sak_authentication_provider').SharedAccessKeyAuthenticationProvider;
-var SharedAccessSignatureAuthenticationProvider = require('../lib/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider;
-var Twin = require('../lib/twin').Twin;
-var DeviceClient = require('../lib/device_client').Client;
-var ModuleClient = require('../lib/module_client').ModuleClient;
+var SharedAccessKeyAuthenticationProvider = require('../dist/sak_authentication_provider').SharedAccessKeyAuthenticationProvider;
+var SharedAccessSignatureAuthenticationProvider = require('../dist/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider;
+var Twin = require('../dist/twin').Twin;
+var DeviceClient = require('../dist/device_client').Client;
+var ModuleClient = require('../dist/module_client').ModuleClient;
 
 [ModuleClient, DeviceClient].forEach(function (ClientCtor) {
   describe(ClientCtor.name, function () {

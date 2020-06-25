@@ -10,7 +10,7 @@ var sinon = require('sinon');
 
 var AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
 var Message = require('azure-iot-common').Message;
-var Amqp = require('../lib/amqp.js').Amqp;
+var Amqp = require('../dist/amqp.js').Amqp;
 var errors = require('azure-iot-common').errors;
 var results = require('azure-iot-common').results;
 var AuthenticationType = require('azure-iot-common').AuthenticationType;
