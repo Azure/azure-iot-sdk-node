@@ -57,7 +57,7 @@ const commandHandler = async (request, response) => {
     await sendCommandResponse(request, response, 200, 'turn Off response');
     break;
   }
-  default: // Is there no way to register for an unknown method?
+  default:
     await sendCommandResponse(request, response, 404, 'unknown method');
     break;
   }
@@ -159,7 +159,6 @@ async function main() {
     client.onDeviceMethod(commandNameBlink, commandHandler);
     client.onDeviceMethod(commandNameTurnOn, commandHandler);
     client.onDeviceMethod(commandNameTurnOff, commandHandler);
-    // Is there no way to register for an unknown method ?
 
     // Send Telemetry every 5.5 secs
     let index = 0;
