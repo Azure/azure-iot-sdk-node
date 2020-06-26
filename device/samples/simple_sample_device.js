@@ -49,7 +49,7 @@ function generateMessage () {
 }
 
 function errorCallback (err) {
-  (err) => console.error(err.message);
+  console.error(err.message);
 }
 
 function connectCallback () {
@@ -61,7 +61,7 @@ function connectCallback () {
     client.sendEvent(message, printResultFor('send'));
   }, 2000);
 
-};
+}
 
 // fromConnectionString must specify a transport constructor, coming from any transport package.
 let client = Client.fromConnectionString(deviceConnectionString, Protocol);
