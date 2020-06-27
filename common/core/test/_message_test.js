@@ -4,7 +4,7 @@
 'use strict';
 
 var assert = require('chai').assert;
-var Message = require('../lib/message.js').Message;
+var Message = require('../dist/message.js').Message;
 
 var stringTestMsg = 'message';
 

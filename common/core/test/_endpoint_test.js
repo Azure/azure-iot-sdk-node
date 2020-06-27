@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 
-var endpoint = require('../lib/endpoint.js');
+var endpoint = require('../dist/endpoint.js');
 var deviceId = 'mydevice';
 var moduleId = 'mymodule';
 

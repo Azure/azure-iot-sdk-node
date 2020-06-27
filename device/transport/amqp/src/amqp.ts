@@ -176,7 +176,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
           sendEvent: (amqpMessage, sendCallback) => {
             /*Codes_SRS_NODE_DEVICE_AMQP_16_024: [The `sendEvent` method shall connect and authenticate the transport if necessary.]*/
             /*Codes_SRS_NODE_DEVICE_AMQP_18_005: [The `sendOutputEvent` method shall connect and authenticate the transport if necessary.]*/
-            this._fsm.handle('connect', (err, result) => {
+            this._fsm.handle('connect', (err, _result) => {
               if (err) {
                 sendCallback(err);
               } else {
@@ -184,13 +184,13 @@ export class Amqp extends EventEmitter implements DeviceTransport {
               }
             });
           },
-          updateSharedAccessSignature: (token, callback) => {
-            // nothing to do here: the SAS has been updated in the config object.
-            callback(null, new results.SharedAccessSignatureUpdated(false));
+          updateSharedAccessSignature: (_token, callback) => {
+          // nothing to do here: the SAS has been updated in the config object.
+          callback(null, new results.SharedAccessSignatureUpdated(false));
           },
           getTwin: (callback)  => {
             /*Codes_SRS_NODE_DEVICE_AMQP_16_059: [The `getTwin` method shall connect and authenticate the transport if it is disconnected.]*/
-            this._fsm.handle('connect', (err, result) => {
+            this._fsm.handle('connect', (err, _result) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_060: [The `getTwin` method shall call its callback with an error if connecting fails.]*/
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_061: [The `getTwin` method shall call its callback with an error if authenticating fails.]*/
@@ -202,7 +202,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
           },
           updateTwinReportedProperties: (patch, callback)  => {
             /*Codes_SRS_NODE_DEVICE_AMQP_16_065: [The `updateTwinReportedProperties` method shall connect and authenticate the transport if it is disconnected.]*/
-            this._fsm.handle('connect', (err, result) => {
+            this._fsm.handle('connect', (err, _result) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_066: [The `updateTwinReportedProperties` method shall call its callback with an error if connecting fails.]*/
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_067: [The `updateTwinReportedProperties` method shall call its callback with an error if authenticating fails.]*/
@@ -214,7 +214,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
           },
           enableTwinDesiredPropertiesUpdates:  (callback)  => {
            /*Codes_SRS_NODE_DEVICE_AMQP_16_071: [The `enableTwinDesiredPropertiesUpdates` method shall connect and authenticate the transport if it is disconnected.]*/
-            this._fsm.handle('connect', (err, result) => {
+            this._fsm.handle('connect', (err, _result) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_072: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with an error if connecting fails.]*/
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_073: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with an error if authenticating fails.]*/
@@ -227,7 +227,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
           disableTwinDesiredPropertiesUpdates: (callback) => callback(),
           /*Codes_SRS_NODE_DEVICE_AMQP_16_031: [The `enableC2D` method shall connect and authenticate the transport if it is disconnected.]*/
           enableC2D: (callback) => {
-            this._fsm.handle('connect', (err, result) => {
+            this._fsm.handle('connect', (err, _result) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
                 callback(err);
@@ -243,7 +243,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
           },
           /*Codes_SRS_NODE_DEVICE_AMQP_16_038: [The `enableMethods` method shall connect and authenticate the transport if it is disconnected.]*/
           enableMethods: (callback) => {
-            this._fsm.handle('connect', (err, result) => {
+            this._fsm.handle('connect', (err, _result) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_040: [The `enableMethods` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach method links.]*/
                 callback(err);
@@ -317,7 +317,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
             });
           },
           disconnect: (disconnectCallback) => this._fsm.transition('disconnecting', null, disconnectCallback),
-          updateSharedAccessSignature: (token, callback) => {
+          updateSharedAccessSignature: (_token, callback) => {
             callback(null, new results.SharedAccessSignatureUpdated(false));
           },
           /*Codes_SRS_NODE_DEVICE_AMQP_16_081: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connecting or authenticating, the connection shall be stopped and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error.]*/
@@ -560,7 +560,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
               this._fsm.transition('disconnected', finalError, disconnectCallback);
             });
           },
-          '*': (connectCallback) => this._fsm.deferUntilTransition()
+          '*': (_connectCallback) => this._fsm.deferUntilTransition()
         },
       }
     });
@@ -621,7 +621,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
    * @param {Function}   done        The callback to be invoked when `sendEventBatch`
    *                                 completes execution.
    */
-  sendEventBatch(messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+  sendEventBatch(_messages: Message[], _done: (err?: Error, result?: results.MessageEnqueued) => void): void {
     /*Codes_SRS_NODE_DEVICE_AMQP_16_052: [The `sendEventBatch` method shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('AMQP Transport does not support batching yet');
   }
@@ -867,7 +867,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
-  sendOutputEventBatch(outputName: string, messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+  sendOutputEventBatch(_outputName: string, _messages: Message[], _done: (err?: Error, result?: results.MessageEnqueued) => void): void {
     /*Codes_SRS_NODE_DEVICE_AMQP_18_004: [`sendOutputEventBatch` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Output events are not implemented over AMQP.');
   }

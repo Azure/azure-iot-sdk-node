@@ -7,8 +7,8 @@ var EventEmitter = require('events').EventEmitter;
 var assert = require('chai').assert;
 var sinon = require('sinon');
 
-var DeviceClient = require('../lib/device_client.js').Client;
-var ModuleClient = require('../lib/module_client.js').ModuleClient;
+var DeviceClient = require('../dist/device_client.js').Client;
+var ModuleClient = require('../dist/module_client.js').ModuleClient;
 var Message = require('azure-iot-common').Message;
 var errors = require('azure-iot-common').errors;
 

@@ -3,7 +3,7 @@
 
 'use strict';
 var assert = require('chai').assert;
-var BlobUploadResult = require('../../lib/blob_upload/blob_upload_result.js').BlobUploadResult;
+var BlobUploadResult = require('../../dist/blob_upload/blob_upload_result.js').BlobUploadResult;
 
 describe('BlobUploadResult', function() {
   describe('#constructor', function() {
@@ -15,14 +15,14 @@ describe('BlobUploadResult', function() {
       });
     });
 
-    
+
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_16_002: [The `statusCode` parameter shall be assigned to the the `statusCode` property of the newly created `BlobUploadResult` instance.]*/
     it('Assigns the \'statusCode\' parameter to the \'statusCode\' property', function() {
       var testStatusCode = 42;
       var result = new BlobUploadResult(true, testStatusCode);
       assert.equal(result.statusCode, testStatusCode);
     });
-    
+
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_16_003: [The `statusDescription` parameter shall be assigned to the the `statusDescription` property of the newly created `BlobUploadResult` instance.]*/
     it('Assigns the \'statusDescription\' parameter to the \'statusDescription\' property', function() {
       var testStatusDescription = 'test description';
@@ -30,8 +30,8 @@ describe('BlobUploadResult', function() {
       assert.equal(result.statusDescription, testStatusDescription);
     });
   });
-  
-  
+
+
   describe('#fromAzureStorageCallbackArgs', function(){
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_41_001: [If `err` is `null` and `uploadResponse` is falsy a `ReferenceError` shall be thrown]*/
     it('Throws a \'ReferenceError\' if err is null and uploadResponse is not provided', function() {
@@ -71,7 +71,7 @@ describe('BlobUploadResult', function() {
       assert.equal(result.statusCode, 400);
       assert.equal(result.statusDescription, '');
     });
-    
+
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_41_004: [If `err` is null and `uploadResponse` is provided, the `BlobUploadResult` shall have the `statusCode` and `statusDescription` property set to the HTTP status code of the blob upload response]*/
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_41_005: [If `uploadResponse._response.status` is a number within the HTTP Status Codes 'success' range, the `isSuccess` property will be set to `true`]*/
     it('Creates a correct BlobUploadResult instance when response is a success', function() {
@@ -93,7 +93,7 @@ describe('BlobUploadResult', function() {
       var result = BlobUploadResult.fromAzureStorageCallbackArgs(null, fakeSuccessUpdateResponse);
       assert.isFalse(result.isSuccess);
       assert.equal(result.statusCode, -1);
-      assert.equal(result.statusDescription, 'no status description');    
+      assert.equal(result.statusDescription, 'no status description');
     });
   });
 });

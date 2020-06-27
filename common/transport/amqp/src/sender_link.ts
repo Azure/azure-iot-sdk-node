@@ -118,7 +118,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
       this._fsm.handle('senderRejectedEvent', context);
     };
 
-    const senderSendableHandler = (context: EventContext): void => {
+    const senderSendableHandler = (_context: EventContext): void => {
       this._fsm.handle('send');
     };
 
@@ -225,7 +225,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             this._rheaSender = this._rheaSession.open_sender(this._combinedOptions);
             manageSenderHandlers('on');
           },
-          senderOpenEvent: (context: EventContext) => {
+          senderOpenEvent: (_context: EventContext) => {
             /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_022: [The `attach` method shall call the `callback` if the link was successfully attached.] */
             let callback = this._attachingCallback;
             this._attachingCallback = null;

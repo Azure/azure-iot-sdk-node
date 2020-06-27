@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "outDir": "./lib",
+        "outDir": "./dist",
         "target":"es5",
         "sourceMap": true,
         "declaration": true,
@@ -10,6 +10,6 @@
         "lib": [ "es6" ]
     },
     "include": [
-        "./src/**/*"
+        "./src/**/*.ts"
     ]
 }

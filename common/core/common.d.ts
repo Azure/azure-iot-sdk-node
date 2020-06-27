@@ -2,21 +2,21 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { EventEmitter } from 'events';
-import { Message } from './lib/message';
+import { Message } from './dist/message';
 
-export import endpoint = require('./lib/endpoint');
-export import errors = require('./lib/errors');
-export import results = require('./lib/results');
-export { ResultWithHttpResponse } from './lib/results';
-export { anHourFromNow, encodeUriComponentStrict } from './lib/authorization';
-export { ConnectionString } from './lib/connection_string';
+export import endpoint = require('./dist/endpoint');
+export import errors = require('./dist/errors');
+export import results = require('./dist/results');
+export { ResultWithHttpResponse } from './dist/results';
+export { anHourFromNow, encodeUriComponentStrict } from './dist/authorization';
+export { ConnectionString } from './dist/connection_string';
 export { Message }
-export { SharedAccessSignature } from './lib/shared_access_signature';
-export { RetryOperation } from './lib/retry_operation';
-export { RetryPolicy, NoRetry, ExponentialBackOffWithJitter } from './lib/retry_policy';
-export { AuthenticationProvider, AuthenticationType } from './lib/authentication_provider';
-export { getAgentPlatformString } from './lib/utils';
-export { Callback, ErrorCallback, NoErrorCallback, DoubleValueCallback, TripleValueCallback, HttpResponseCallback, callbackToPromise, doubleValueCallbackToPromise, errorCallbackToPromise, noErrorCallbackToPromise, tripleValueCallbackToPromise, httpCallbackToPromise } from './lib/promise_utils'
+export { SharedAccessSignature } from './dist/shared_access_signature';
+export { RetryOperation } from './dist/retry_operation';
+export { RetryPolicy, NoRetry, ExponentialBackOffWithJitter } from './dist/retry_policy';
+export { AuthenticationProvider, AuthenticationType } from './dist/authentication_provider';
+export { getAgentPlatformString } from './dist/utils';
+export { Callback, ErrorCallback, NoErrorCallback, DoubleValueCallback, TripleValueCallback, HttpResponseCallback, callbackToPromise, doubleValueCallbackToPromise, errorCallbackToPromise, noErrorCallbackToPromise, tripleValueCallbackToPromise, httpCallbackToPromise } from './dist/promise_utils'
 
 export interface Receiver extends EventEmitter {
     on(type: 'message', func: (msg: Message) => void): this;
@@ -25,4 +25,4 @@ export interface Receiver extends EventEmitter {
     on(type: string, func: Function): this;
 }
 
-export { TransportConfig, X509 } from './lib/authorization';
+export { TransportConfig, X509 } from './dist/authorization';

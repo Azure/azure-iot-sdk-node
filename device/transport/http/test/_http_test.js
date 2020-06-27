@@ -11,7 +11,7 @@ var results = require('azure-iot-common').results;
 var ArgumentError = require('azure-iot-common').errors.ArgumentError;
 var NotImplementedError = require('azure-iot-common').errors.NotImplementedError;
 var AuthenticationType = require('azure-iot-common').AuthenticationType;
-var Http = require('../lib/http.js').Http;
+var Http = require('../dist/http.js').Http;
 
 var FakeHttp = function () { };
 

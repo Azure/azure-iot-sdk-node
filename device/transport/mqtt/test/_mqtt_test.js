@@ -6,7 +6,7 @@
 require('es5-shim');
 const assert = require('chai').assert;
 const sinon = require('sinon');
-const Mqtt = require('../lib/mqtt.js').Mqtt;
+const Mqtt = require('../dist/mqtt.js').Mqtt;
 const endpoint = require('azure-iot-common').endpoint;
 const errors = require('azure-iot-common').errors;
 const results = require('azure-iot-common').results;

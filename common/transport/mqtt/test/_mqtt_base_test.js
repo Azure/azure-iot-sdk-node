@@ -7,7 +7,7 @@ var EventEmitter = require('events').EventEmitter;
 var assert = require('chai').assert;
 var sinon = require('sinon');
 
-var MqttBase = require('../lib/mqtt_base.js').MqttBase;
+var MqttBase = require('../dist/mqtt_base.js').MqttBase;
 var FakeMqtt = require('./_fake_mqtt.js').FakeMqtt;
 var PubFakeMqtt = require('./_fake_mqtt.js').PubFakeMqtt;
 var PubACKTwiceFakeMqtt = require('./_fake_mqtt.js').PubACKTwiceFakeMqtt;

@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 var errors = require('azure-iot-common').errors;
-var translateError = require('../lib/amqp_common_errors.js').translateError;
+var translateError = require('../dist/amqp_common_errors.js').translateError;
 
 
 /*Tests_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_012: [`translateError` shall return a custom error type according to this table if the AMQP error condition is one of the following:
@@ -99,7 +99,7 @@ describe('translateError', function() {
     it('returns a generic error object appended with a message if the error type is unknown and an embedded message is present', function () {
       var message = 'generic error message';
       var specific_message = 'specific error message';
-      let testErr = { error: { message: { message: specific_message }}};    
+      let testErr = { error: { message: { message: specific_message }}};
       var err = translateError(message, testErr.error);
       assert.equal(err.message, message + '. ' + specific_message);
     });

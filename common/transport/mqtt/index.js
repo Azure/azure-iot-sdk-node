@@ -11,6 +11,6 @@
  */
 
 module.exports = {
-  MqttBase: require('./lib/mqtt_base.js').MqttBase,
-  translateError: require('./lib/mqtt_translate_error.js').translateError
+  MqttBase: require('./dist/mqtt_base.js').MqttBase,
+  translateError: require('./dist/mqtt_translate_error.js').translateError
 };
