@@ -54,7 +54,7 @@ provisioningClient.register((err, result) => {
       } else {
         console.log('Client connected');
         let message = new Message('Hello world');
-        hubClient.sendEvent(message, (err, res) => {
+        hubClient.sendEvent(message, (err, _res) => {
           if (err) console.log('send error: ' + err.toString());
           process.exit(1);
         });

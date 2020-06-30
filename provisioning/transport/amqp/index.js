@@ -12,6 +12,6 @@
  */
 
 module.exports = {
-  Amqp: require('./lib/amqp.js').Amqp,
-  AmqpWs: require('./lib/amqp_ws.js').AmqpWs,
+  Amqp: require('./dist/amqp.js').Amqp,
+  AmqpWs: require('./dist/amqp_ws.js').AmqpWs,
 };
