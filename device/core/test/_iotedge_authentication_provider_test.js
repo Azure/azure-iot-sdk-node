@@ -8,8 +8,8 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 var errors = require('azure-iot-common').errors;
 var SharedAccessSignature = require('azure-iot-common').SharedAccessSignature;
-var IotEdgeAuthenticationProvider = require('../lib/iotedge_authentication_provider').IotEdgeAuthenticationProvider;
-var WORKLOAD_API_VERSION = require('../lib/iotedge_authentication_provider').WORKLOAD_API_VERSION;
+var IotEdgeAuthenticationProvider = require('../dist/iotedge_authentication_provider').IotEdgeAuthenticationProvider;
+var WORKLOAD_API_VERSION = require('../dist/iotedge_authentication_provider').WORKLOAD_API_VERSION;
 
 describe('IotEdgeAuthenticationProvider', function() {
   describe('#constructor', function() {

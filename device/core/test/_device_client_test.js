@@ -12,9 +12,9 @@ var FakeTransport = require('./fake_transport.js');
 var Message = require('azure-iot-common').Message;
 var errors = require('azure-iot-common').errors;
 var results = require('azure-iot-common').results;
-var X509AuthenticationProvider = require('../lib/x509_authentication_provider').X509AuthenticationProvider;
-var SharedAccessSignatureAuthenticationProvider = require('../lib/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider;
-var Client = require('../lib/device_client').Client;
+var X509AuthenticationProvider = require('../dist/x509_authentication_provider').X509AuthenticationProvider;
+var SharedAccessSignatureAuthenticationProvider = require('../dist/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider;
+var Client = require('../dist/device_client').Client;
 
 describe('Device Client', function () {
   var sharedKeyConnectionString = 'HostName=host;DeviceId=id;SharedAccessKey=key';
@@ -224,7 +224,6 @@ describe('Device Client', function () {
         client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function() {
         });
       } catch (err) {
-        console.log(statusCode);
         assert.strictEqual(err.name, "ReferenceError");
         return done();
       }

@@ -8,7 +8,7 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
-var Mqtt = require('../lib/mqtt.js').Mqtt;
+var Mqtt = require('../dist/mqtt.js').Mqtt;
 var Message = require('azure-iot-common').Message;
 
 describe('Mqtt as MqttReceiver', function () {

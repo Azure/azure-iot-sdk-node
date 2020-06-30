@@ -5,9 +5,9 @@
 var assert = require('chai').assert;
 var sinon = require('sinon');
 var stream = require('stream');
-var BlobUploadClient = require('../../lib/blob_upload').BlobUploadClient;
-var BlobUploadNotificationError = require('../../lib/blob_upload').BlobUploadNotificationError;
-var BlobSasError = require('../../lib/blob_upload').BlobSasError;
+var BlobUploadClient = require('../../dist/blob_upload').BlobUploadClient;
+var BlobUploadNotificationError = require('../../dist/blob_upload').BlobUploadNotificationError;
+var BlobSasError = require('../../dist/blob_upload').BlobSasError;
 
 var FakeFileUploadApi = function() {
   this.setOptions = sinon.spy();
@@ -256,7 +256,7 @@ describe('BlobUploadClient', function() {
         done();
       });
     });
-        
+
 
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_005: [`uploadToBlob` shall call the `done` callback with a `BlobUploadNotificationError` if the data transfer fails.]*/
     it('calls the done callback with a BlobUploadNotificationError if the data transfer fails but the IoT Hub notification succeeds', function(done) {

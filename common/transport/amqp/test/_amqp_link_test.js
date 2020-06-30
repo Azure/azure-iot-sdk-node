@@ -1,9 +1,9 @@
 var EventEmitter = require('events').EventEmitter;
 var assert = require('chai').assert;
 var sinon = require('sinon');
-var ReceiverLink = require('../lib/receiver_link.js').ReceiverLink;
-var SenderLink = require('../lib/sender_link.js').SenderLink;
-var AmqpMessage = require('../lib/amqp_message.js').AmqpMessage;
+var ReceiverLink = require('../dist/receiver_link.js').ReceiverLink;
+var SenderLink = require('../dist/sender_link.js').SenderLink;
+var AmqpMessage = require('../dist/amqp_message.js').AmqpMessage;
 
 describe('AmqpLink implementation unit tests', function() {
   [

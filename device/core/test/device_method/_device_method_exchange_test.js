@@ -5,9 +5,9 @@
 
 require('es5-shim');
 var assert = require('chai').assert;
-var createDeviceMethodExchange = require('../../lib/device_method').createDeviceMethodExchange;
-var DeviceMethodResponse = require('../../lib/device_method').DeviceMethodResponse;
-var DeviceMethodRequest = require('../../lib/device_method').DeviceMethodRequest;
+var createDeviceMethodExchange = require('../../dist/device_method').createDeviceMethodExchange;
+var DeviceMethodResponse = require('../../dist/device_method').DeviceMethodResponse;
+var DeviceMethodRequest = require('../../dist/device_method').DeviceMethodRequest;
 
 describe("DeviceMethodRequest", function() {
     describe("#createDeviceMethodExchange", function() {

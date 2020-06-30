@@ -18,6 +18,7 @@
   },
   "scripts": {
     "npmlockrefresh": "npm i --package-lock-only",
-    "lint": "jshint --show-non-errors ."
+    "lint": "jshint --show-non-errors .",
+    "ci": "npm run lint"
   }
 }

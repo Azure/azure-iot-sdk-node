@@ -10,7 +10,7 @@ var sinon = require('sinon');
 var AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
 var errors = require('azure-iot-common').errors;
 var ProvisioningDeviceConstants = require('azure-iot-provisioning-device').ProvisioningDeviceConstants;
-var Amqp = require('../lib/amqp.js').Amqp;
+var Amqp = require('../dist/amqp.js').Amqp;
 var Builder = require('buffer-builder');
 var rheaMessage = require('rhea').message;
 
@@ -730,7 +730,7 @@ describe('Amqp', function () {
     var SaslTpm;
 
     before(function() {
-      SaslTpm = sinon.spy(require('../lib/sasl_tpm'), 'SaslTpm');
+      SaslTpm = sinon.spy(require('../dist/sasl_tpm'), 'SaslTpm');
       sinon.stub(SaslTpm.prototype, 'start');
       sinon.stub(SaslTpm.prototype, 'step');
     });

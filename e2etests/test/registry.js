@@ -10,7 +10,6 @@ var errors = require('azure-iot-common').errors;
 var assert = require('chai').assert;
 var uuid = require('uuid');
 var debug = require('debug')('e2etests:registry');
-var Promise = require('bluebird');
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 var storageConnectionString = process.env.STORAGE_CONNECTION_STRING;

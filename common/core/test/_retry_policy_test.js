@@ -6,10 +6,10 @@
 var assert = require('chai').assert;
 var sinon = require('sinon');
 
-var errors = require('../lib/errors.js');
-var RetryPolicy = require('../lib/retry_policy.js').RetryPolicy;
-var ExponentialBackOffWithJitter = require('../lib/retry_policy.js').ExponentialBackOffWithJitter;
-var NoRetry = require('../lib/retry_policy.js').NoRetry;
+var errors = require('../dist/errors.js');
+var RetryPolicy = require('../dist/retry_policy.js').RetryPolicy;
+var ExponentialBackOffWithJitter = require('../dist/retry_policy.js').ExponentialBackOffWithJitter;
+var NoRetry = require('../dist/retry_policy.js').NoRetry;
 
 describe('RetryPolicy', function () {
   describe('ExponentialBackOffWithJitter', function () {

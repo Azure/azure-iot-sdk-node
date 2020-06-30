@@ -6,7 +6,7 @@
 var assert = require('chai').assert;
 var sinon = require('sinon');
 
-var TpmRegistration = require('../lib/tpm_registration.js').TpmRegistration;
+var TpmRegistration = require('../dist/tpm_registration.js').TpmRegistration;
 
 describe('TpmRegistration', function () {
   describe('#register', function () {

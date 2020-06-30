@@ -131,8 +131,8 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
               }
             });
           },
-          updateSharedAccessSignature: (sharedAccessSignature, callback) => { callback(null, new results.SharedAccessSignatureUpdated(false)); },
-          sendMethodResponse: (response, callback) => {
+          updateSharedAccessSignature: (_sharedAccessSignature, callback) => { callback(null, new results.SharedAccessSignatureUpdated(false)); },
+          sendMethodResponse: (_response, callback) => {
             /*Codes_SRS_NODE_DEVICE_MQTT_16_034: [The `sendMethodResponse` method shall fail with a `NotConnectedError` if the `MqttBase` object is not connected.]*/
             callback(new errors.NotConnectedError('device disconnected: the service already considers the method has failed'));
           },
@@ -258,6 +258,8 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
         },
         connected: {
           _onEnter: (connectedCallback, connectResult) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_41_016: [ The `connect` method shall emit `connected` once the transport is connected ]*/
+            this.emit('connected');
             /*Codes_SRS_NODE_DEVICE_MQTT_16_020: [The `connect` method shall call its callback with a `null` error parameter and a `results.Connected` response if `MqttBase` successfully connects.]*/
             if (connectedCallback) connectedCallback(null, new results.Connected(connectResult));
           },
@@ -382,7 +384,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
           disableTwinDesiredPropertiesUpdates: (callback) => this._twinClient.disableTwinDesiredPropertiesUpdates(callback),
         },
         disconnecting: {
-          _onEnter: (disconnectCallback, err) => {
+          _onEnter: (disconnectCallback, _err) => {
             /*Codes_SRS_NODE_DEVICE_MQTT_16_001: [The `disconnect` method should call the `disconnect` method on `MqttBase`.]*/
             /*Codes_SRS_NODE_DEVICE_MQTT_16_022: [The `disconnect` method shall call its callback with a `null` error parameter and a `results.Disconnected` response if `MqttBase` successfully disconnects if not disconnected already.]*/
             this._mqtt.disconnect((err, result) => {
@@ -456,7 +458,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
    * @param {Function}   done        The callback to be invoked when `sendEventBatch`
    *                                 completes execution.
    */
-  sendEventBatch(messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+  sendEventBatch(_messages: Message[], _done: (err?: Error, result?: results.MessageEnqueued) => void): void {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_056: [The `sendEventBatch` method shall throw a `NotImplementedError`]*/
     throw new errors.NotImplementedError('MQTT Transport does not support batching yet');
   }
@@ -470,7 +472,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
    * @param {Message}     message     The message to settle as complete.
    * @param {Function}    done        The callback that shall be called with the error or result object.
    */
-  complete(message: Message, done?: (err?: Error, result?: any) => void): void {
+  complete(_message: Message, done?: (err?: Error, result?: any) => void): void {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_005: [The ‘complete’ method shall call the callback given as argument immediately since all messages are automatically completed.]*/
     done(null, new results.MessageCompleted());
   }
@@ -566,7 +568,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
       if (done) done(null);
     } else {
       /*Codes_SRS_NODE_DEVICE_MQTT_16_069: [The `setOptions` method shall obtain the current credentials by calling `getDeviceCredentials` on the `AuthenticationProvider` passed to the constructor as an argument.]*/
-      this._authenticationProvider.getDeviceCredentials((err, credentials) => {
+      this._authenticationProvider.getDeviceCredentials((err, _credentials) => {
         if (err) {
           /*Codes_SRS_NODE_DEVICE_MQTT_16_070: [The `setOptions` method shall call its callback with the error returned by `getDeviceCredentials` if it fails to return the credentials.]*/
           if (done) done(err);
@@ -717,7 +719,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
-  sendOutputEventBatch(outputName: string, messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+  sendOutputEventBatch(_outputName: string, _messages: Message[], _done: (err?: Error, result?: results.MessageEnqueued) => void): void {
     /*Codes_SRS_NODE_DEVICE_MQTT_18_051: [ `sendOutputEventBatch` shall throw a `NotImplementedError` exception. ]*/
     throw new errors.NotImplementedError('MQTT Transport does not support batching yet');
   }

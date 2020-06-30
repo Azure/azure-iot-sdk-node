@@ -208,23 +208,23 @@ $RECYCLE.BIN/
 **/*.map
 
 # Typescript compiler output files
-common/core/lib/
-common/transport/amqp/lib/
-common/transport/http/lib/
-common/transport/mqtt/lib/
+common/core/dist/
+common/transport/amqp/dist/
+common/transport/http/dist/
+common/transport/mqtt/dist/
 
-device/core/lib/
-device/transport/amqp/lib/
-device/transport/http/lib/
-device/transport/mqtt/lib/
+device/core/dist/
+device/transport/amqp/dist/
+device/transport/http/dist/
+device/transport/mqtt/dist/
 device/ts-samples/*.js
 
-provisioning/service/lib
-provisioning/transport/amqp/lib/
-provisioning/transport/http/lib/
-provisioning/transport/mqtt/lib/
-provisioning/device/lib/
-provisioning/device/ts-samples/lib
+provisioning/service/dist
+provisioning/transport/amqp/dist/
+provisioning/transport/http/dist/
+provisioning/transport/mqtt/dist/
+provisioning/device/dist/
+provisioning/device/ts-samples/dist
 
 security/x509/lib
 security/tpm/lib
@@ -234,7 +234,13 @@ service/lib
 
 ts-e2e/lib
 
-longhaultests/lib
+longhaultests/dist
+
+digitaltwins/device/dist
+digitaltwins/samples/device/typescript/dist
+digitaltwins/samples/service/typescript/dist
+digitaltwins/service/dist
+digitaltwins/model_repository/dist
 
 # Build artifacts
 build/build_parallel/temp

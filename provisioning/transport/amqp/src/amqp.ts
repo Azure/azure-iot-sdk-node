@@ -129,7 +129,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
           },
           getAuthenticationChallenge: (request, callback) => this._amqpStateMachine.transition('connectingTpm', request, callback),
           /*Codes_SRS_NODE_PROVISIONING_AMQP_18_017: [ `respondToAuthenticationChallenge` shall call `callback` with an `InvalidOperationError` if called before calling `getAuthenticationChallenge`. ]*/
-          respondToAuthenticationChallenge: (request, sasToken, callback) => callback(new errors.InvalidOperationError('Cannot respond to challenge while disconnected.')),
+          respondToAuthenticationChallenge: (_request, _sasToken, callback) => callback(new errors.InvalidOperationError('Cannot respond to challenge while disconnected.')),
           /*Codes_SRS_NODE_PROVISIONING_AMQP_18_003: [ `cancel` shall call its callback immediately if the AMQP connection is disconnected. ] */
           cancel: (callback) => callback(),
           /*Codes_SRS_NODE_PROVISIONING_AMQP_16_022: [`disconnect` shall call its callback immediately if the AMQP connection is disconnected.]*/
@@ -351,7 +351,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
               }
             });
           },
-          queryOperationStatus: (request, correlationId, operationId, callback) => {
+          queryOperationStatus: (_request, correlationId, operationId, callback) => {
 
             /*Codes_SRS_NODE_PROVISIONING_AMQP_16_015: [The `queryOperationStatus` method shall send a message on the pre-attached sender link with a `correlation_id` set to a newly generated UUID and the following application properties:
             ```

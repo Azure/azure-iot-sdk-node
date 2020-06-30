@@ -10,8 +10,7 @@
     "azure-iot-common": "1.12.3",
     "debug": "^4.1.1",
     "machina": "^4.0.2",
-    "mqtt": "^4.0.0",
-    "uuid": "^3.3.2"
+    "mqtt": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^9.6.50",
@@ -23,7 +22,7 @@
     "source-map-support": "^0.5.16",
     "ts-node": "^8.6.2",
     "tslint": "^6.1.0",
-    "typescript": "2.9.2"
+    "typescript": "3.7.5"
   },
   "scripts": {
     "npmlockrefresh": "npm i --package-lock-only",
@@ -54,9 +53,9 @@
       ".tsx"
     ],
     "check-coverage": true,
-    "lines": 98,
+    "lines": 97,
     "functions": 93,
-    "branches": 94,
+    "branches": 93,
     "statements": 98
   },
   "mocha": {

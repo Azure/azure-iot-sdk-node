@@ -9,7 +9,7 @@
 		"commitizen": "^4.0.3",
 		"cz-conventional-changelog": "^3.0.2",
 		"husky": "^4.2.1",
-		"lerna": "^2.11.0",
+		"lerna": "^3.19.0",
 		"mocha": "^7.1.1"
 	},
 	"engines": {

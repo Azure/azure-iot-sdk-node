@@ -9,8 +9,8 @@ var sinon = require('sinon');
 var uuid = require('uuid');
 var ProvisioningDeviceConstants = require('azure-iot-provisioning-device').ProvisioningDeviceConstants;
 var errors = require('azure-iot-common').errors;
-var Mqtt = require('../lib/mqtt').Mqtt;
-var MqttWs = require('../lib/mqtt_ws').MqttWs;
+var Mqtt = require('../dist/mqtt').Mqtt;
+var MqttWs = require('../dist/mqtt_ws').MqttWs;
 
 var simpleBody = {registrationId: 'fakeRegistrationId'};
 var payload = {a: '__DAta__'};

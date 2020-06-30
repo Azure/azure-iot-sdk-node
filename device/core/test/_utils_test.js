@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 var sinon = require('sinon');
-var getUserAgentString = require('../lib/utils').getUserAgentString;
+var getUserAgentString = require('../dist/utils').getUserAgentString;
 var core = require('azure-iot-common');
 var packageJson = require('../package.json');
 
@@ -45,7 +45,7 @@ describe('getUserAgentString', function() {
       callback();
     });
   });
-  
+
   /*Tests_SRS_NODE_DEVICE_UTILS_41_003: [`getUserAgentString` shall throw if the first arg is not `falsy`, or of type `string` or `function`.]*/
   it('throws on wrong type for productInfo', function() {
     [41, [5, 1], {test: 'test'}].forEach(function (badValue) {
@@ -56,8 +56,8 @@ describe('getUserAgentString', function() {
       });
     });
   });
-  
-  
+
+
 });
 
 
