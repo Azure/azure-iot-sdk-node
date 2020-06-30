@@ -12,7 +12,6 @@ const Message = require('azure-iot-device').Message;
 const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
 
 const modelId = 'dtmi:com:example:simplethermostat;1';
-const thermostatCompName = 'sensor';
 const messageSubjectProperty = '$.sub';
 //const commandSeparator = '*';
 const telemetrySendInterval = 10000;
@@ -71,28 +70,28 @@ const helperLogCommandRequest = (request) => {
   }
 };
 
-const helperCreateReportedPropertiesPatch = (propertiesToReport, componentName) => {
+const helperCreateReportedPropertiesPatch = (propertiesToReport) => {
   const patch = { };
 
   // Construct the Patch json
   Object.keys(propertiesToReport).forEach((propertyName) => {
     patch[propertyName] = propertiesToReport[propertyName];
   });
-  console.log('The following properties will be updated for component:' + componentName);
+  console.log('The following properties will be updated for component');
   console.log(patch);
   return patch;
 };
 
-const updateComponentReportedProperties = (deviceTwin, patch, componentName) => {
+const updateComponentReportedProperties = (deviceTwin, patch) => {
   deviceTwin.properties.reported.update(patch, function (err) {
     if (err) throw err;
-    console.log('Properties have been reported for component:' + componentName);
+    console.log('Properties have been reported for component');
   });
 };
 
-const helperAttachHandlerForDesiredPropertyPatches = (deviceTwin, componentName) => {
+const helperAttachHandlerForDesiredPropertyPatches = (deviceTwin) => {
   const versionProperty = '$version';
-  deviceTwin.on('properties.desired.' + componentName, (delta) => {
+  deviceTwin.on('properties.desired.', (delta) => {
     Object.entries(delta).forEach(([propertyName, propertyValue]) => {
       propertyUpdateHandler(deviceTwin, componentName, propertyName, null, propertyValue.value, deviceTwin.properties.desired[versionProperty]);
     });
@@ -116,12 +115,11 @@ const helperAttachExitListener = async (deviceClient) => {
   });
 };
 
-async function sendTelemetry(deviceClient, componentName, index) {
+async function sendTelemetry(deviceClient, index) {
   console.log('Sending telemetry message %d...', index);
   currTemp = 1 + (Math.random() * 90);
   const data = JSON.stringify({ temperature: currTemp });
   const pnpMsg = new Message(data);
-  pnpMsg.properties.add(messageSubjectProperty, componentName);
   pnpMsg.contentType = 'application/json';
   pnpMsg.contentEncoding = 'utf-8';
   await deviceClient.sendEvent(pnpMsg);
@@ -142,7 +140,7 @@ async function main() {
     // Send Telemetry every 5.5 secs
     let index = 0;
     intervalToken = setInterval(() => {
-      sendTelemetry(client, thermostatCompName, index).catch((err) => console.log('error', err.toString()));
+      sendTelemetry(client, index).catch((err) => console.log('error', err.toString()));
       index += 1;
     }, telemetrySendInterval);
 
@@ -154,11 +152,11 @@ async function main() {
       const patchThermostat = helperCreateReportedPropertiesPatch({
         targetTemperature: targetTemp,
         currentTemperature: currTemp,
-      }, thermostatCompName);
+      });
 
       // the below things can only happen once the twin is there
-      updateComponentReportedProperties(resultTwin, patchThermostat, thermostatCompName);
-      helperAttachHandlerForDesiredPropertyPatches(resultTwin, thermostatCompName);
+      updateComponentReportedProperties(resultTwin, patchThermostat);
+      helperAttachHandlerForDesiredPropertyPatches(resultTwin);
     } catch (err) {
       console.error('could not retrieve twin or report twin properties\n' + err.toString());
     }
