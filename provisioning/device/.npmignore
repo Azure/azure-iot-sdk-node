@@ -4,4 +4,5 @@ test/
 ts-samples/
 samples/
 src/
-lib/**/*.map
+dist/**/*.map
+.nyc_output

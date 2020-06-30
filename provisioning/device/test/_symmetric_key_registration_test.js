@@ -6,7 +6,7 @@
 var sinon = require('sinon');
 var assert = require('chai').assert;
 
-var SymmetricKeyRegistration = require('../lib/symmetric_registration').SymmetricKeyRegistration;
+var SymmetricKeyRegistration = require('../dist/symmetric_registration').SymmetricKeyRegistration;
 
 var fakeProvisioningHost = 'fakeHost';
 var fakeIdScope = 'fakeIdScope';

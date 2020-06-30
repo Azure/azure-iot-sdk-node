@@ -6,7 +6,7 @@
 var sinon = require('sinon');
 var assert = require('chai').assert;
 
-var X509Registration = require('../lib/x509_registration').X509Registration;
+var X509Registration = require('../dist/x509_registration').X509Registration;
 
 var fakeX509Cert = {
   cert: 'fake_cert',

@@ -46,7 +46,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
    * @private
    *
    */
-  respondToAuthenticationChallenge(request: RegistrationRequest, sasToken: string, callback: (err?: Error) => void): void {
+  respondToAuthenticationChallenge(_request: RegistrationRequest, sasToken: string, callback: (err?: Error) => void): void {
       this._sas = sasToken;
       callback();
   }
@@ -67,7 +67,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
    */
   getAuthenticationChallenge(request: RegistrationRequest, callback: (err: Error, tpmChallenge?: Buffer) => void): void {
     /*Codes_SRS_NODE_PROVISIONING_HTTP_06_003: [The getAuthenticationChallenge will perform a request that contains the endorsementKey, the storageRootKey, and the registrationId as the body of the request.] */
-    this.registrationRequest(request, (err: HttpTransportError, result?: any, response?: any) => {
+    this.registrationRequest(request, (err: HttpTransportError, _result?: any, _response?: any) => {
       /*Codes_SRS_NODE_PROVISIONING_HTTP_06_004: [The request will actually generate a 401 error since there is actually no authentication for the request.] */
       if (err && err.response && (err.response.statusCode === 401))  {
 

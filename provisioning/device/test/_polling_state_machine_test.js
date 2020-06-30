@@ -3,8 +3,8 @@
 
 'use strict';
 
-var PollingStateMachine = require('../lib/polling_state_machine').PollingStateMachine;
-var ProvisioningDeviceConstants = require('../lib/constants').ProvisioningDeviceConstants;
+var PollingStateMachine = require('../dist/polling_state_machine').PollingStateMachine;
+var ProvisioningDeviceConstants = require('../dist/constants').ProvisioningDeviceConstants;
 var sinon = require('sinon');
 var assert = require('chai').assert;
 var errors = require('azure-iot-common').errors;
