@@ -3,8 +3,8 @@
 
 'use strict';
 
-var Amqp = require('../lib/amqp.js').Amqp;
-var AmqpWs = require('../lib/amqp_ws.js').AmqpWs;
+var Amqp = require('../dist/amqp.js').Amqp;
+var AmqpWs = require('../dist/amqp_ws.js').AmqpWs;
 var EventEmitter = require('events').EventEmitter;
 var assert = require('chai').assert;
 

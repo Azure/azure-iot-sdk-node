@@ -9,7 +9,7 @@ const AbortController = require('@azure/abort-controller').AbortController;
 const assert = require('chai').assert;
 const stream = require('stream');
 const ArgumentError = require('azure-iot-common').errors.ArgumentError;
-const BlobUploader = require('../../lib/blob_upload/blob_uploader.js').BlobUploader;
+const BlobUploader = require('../../dist/blob_upload/blob_uploader.js').BlobUploader;
 const FakeStorageApi = require('./fake_storage_api.js');
 
 describe('BlobUploader', function() {

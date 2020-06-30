@@ -44,19 +44,19 @@
 var common = require('azure-iot-common');
 
 module.exports = {
-  Client: require('./lib/device_client.js').Client,
-  ModuleClient: require('./lib/module_client.js').ModuleClient,
-  ConnectionString: require('./lib/connection_string.js'),
+  Client: require('./dist/device_client.js').Client,
+  ModuleClient: require('./dist/module_client.js').ModuleClient,
+  ConnectionString: require('./dist/connection_string.js'),
   Message: common.Message,
-  SharedAccessSignature: require('./lib/shared_access_signature.js'),
-  DeviceMethodRequest: require('./lib/device_method').DeviceMethodRequest,
-  DeviceMethodResponse: require('./lib/device_method').DeviceMethodResponse,
-  X509AuthenticationProvider: require('./lib/x509_authentication_provider').X509AuthenticationProvider,
-  SharedAccessSignatureAuthenticationProvider: require('./lib/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider,
-  SharedAccessKeyAuthenticationProvider: require('./lib/sak_authentication_provider').SharedAccessKeyAuthenticationProvider,
-  Twin: require('./lib/twin').Twin,
-  TwinProperties: require('./lib/twin').TwinProperties,
-  getUserAgentString: require('./lib/utils').getUserAgentString,
-  EdgedAuthConfig: require('./lib/iotedge_authentication_provider').EdgedAuthConfig,
-  IotEdgeAuthenticationProvider: require('./lib/iotedge_authentication_provider').IotEdgeAuthenticationProvider
+  SharedAccessSignature: require('./dist/shared_access_signature.js'),
+  DeviceMethodRequest: require('./dist/device_method').DeviceMethodRequest,
+  DeviceMethodResponse: require('./dist/device_method').DeviceMethodResponse,
+  X509AuthenticationProvider: require('./dist/x509_authentication_provider').X509AuthenticationProvider,
+  SharedAccessSignatureAuthenticationProvider: require('./dist/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider,
+  SharedAccessKeyAuthenticationProvider: require('./dist/sak_authentication_provider').SharedAccessKeyAuthenticationProvider,
+  Twin: require('./dist/twin').Twin,
+  TwinProperties: require('./dist/twin').TwinProperties,
+  getUserAgentString: require('./dist/utils').getUserAgentString,
+  EdgedAuthConfig: require('./dist/iotedge_authentication_provider').EdgedAuthConfig,
+  IotEdgeAuthenticationProvider: require('./dist/iotedge_authentication_provider').IotEdgeAuthenticationProvider
 };

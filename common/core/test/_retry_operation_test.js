@@ -6,8 +6,8 @@
 var assert = require('chai').assert;
 var sinon = require('sinon');
 
-var errors = require('../lib/errors.js');
-var RetryOperation = require('../lib/retry_operation.js').RetryOperation;
+var errors = require('../dist/errors.js');
+var RetryOperation = require('../dist/retry_operation.js').RetryOperation;
 
 describe('RetryOperation', function () {
   describe('retry', function () {

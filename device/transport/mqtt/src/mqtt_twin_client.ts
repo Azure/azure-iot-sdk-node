@@ -62,7 +62,7 @@ export class MqttTwinClient extends EventEmitter {
       initialState: 'unsubscribed',
       states: {
         unsubscribed: {
-          _onEnter: function (topicSubscription: TopicSubscription, err: Error, callback: (err?: Error) => void): void {
+          _onEnter: function (_topicSubscription: TopicSubscription, err: Error, callback: (err?: Error) => void): void {
             if (callback) {
               callback(err);
             }
@@ -70,7 +70,7 @@ export class MqttTwinClient extends EventEmitter {
           subscribe: function (topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
             this.transition(topicSubscription, 'subscribing', callback);
           },
-          unsubscribe: function (topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
+          unsubscribe: function (_topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
             // not entirely sure about that. if subscription are restored because cleanSession is false, it means technically a user may want to unsubscribe
             // even though subscribe hasn't been called yet.
             callback();
@@ -90,10 +90,10 @@ export class MqttTwinClient extends EventEmitter {
           '*': function (topicSubscription: TopicSubscription): void { this.deferUntilTransition(topicSubscription); }
         },
         subscribed: {
-          _onEnter: function (topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
+          _onEnter: function (_topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
             callback();
           },
-          subscribe: function (topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
+          subscribe: function (_topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
             callback();
           },
           unsubscribe: function (topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
@@ -102,7 +102,7 @@ export class MqttTwinClient extends EventEmitter {
         },
         unsubscribing: {
           _onEnter: function (topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
-            topicSubscription.mqttClient.unsubscribe(topicSubscription.topic, (err, result) => {
+            topicSubscription.mqttClient.unsubscribe(topicSubscription.topic, (err, _result) => {
               if (err) {
                 debug('failed to unsubscribe: ' + err.toString());
               } else {

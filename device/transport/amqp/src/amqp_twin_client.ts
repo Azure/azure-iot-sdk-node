@@ -218,12 +218,12 @@ export class AmqpTwinClient extends EventEmitter {
             const senderLink = this._senderLink;
             const receiverLink = this._receiverLink;
             /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_005: [The `detach` method shall detach the links and call its `callback` with no arguments if the links are successfully detached.]*/
-            this._client.detachSenderLink(this._endpoint, (detachSenderError: Error, result?: any) => {
+            this._client.detachSenderLink(this._endpoint, (detachSenderError: Error, _result?: any) => {
               senderLink.removeListener('error', this._errorHandler);
               if (detachSenderError) {
                 debug('we received an error for the detach of the upstream link during the disconnect.  Moving on to the downstream link.');
               }
-              this._client.detachReceiverLink(this._endpoint,  (detachReceiverError: Error, result?: any) => {
+              this._client.detachReceiverLink(this._endpoint,  (detachReceiverError: Error, _result?: any) => {
                 receiverLink.removeListener('message', this._messageHandler);
                 receiverLink.removeListener('error', this._errorHandler);
                 if (detachReceiverError) {

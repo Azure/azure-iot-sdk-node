@@ -5,9 +5,9 @@
 
 var assert = require('chai').assert;
 var sinon = require('sinon');
-var ArgumentError = require('../lib/errors.js').ArgumentError;
-var FormatError = require('../lib/errors.js').FormatError;
-var SharedAccessSignature = require('../lib/shared_access_signature.js').SharedAccessSignature;
+var ArgumentError = require('../dist/errors.js').ArgumentError;
+var FormatError = require('../dist/errors.js').FormatError;
+var SharedAccessSignature = require('../dist/shared_access_signature.js').SharedAccessSignature;
 
 var key = Buffer.from('password').toString('base64');
 

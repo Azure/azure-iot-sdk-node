@@ -7,7 +7,7 @@ const assert = require('chai').assert;
 const sinon = require('sinon');
 const errors = require('azure-iot-common').errors;
 const SharedAccessSignature = require('azure-iot-common').SharedAccessSignature;
-const SharedAccessKeyAuthenticationProvider = require('../lib/sak_authentication_provider').SharedAccessKeyAuthenticationProvider;
+const SharedAccessKeyAuthenticationProvider = require('../dist/sak_authentication_provider').SharedAccessKeyAuthenticationProvider;
 
 describe('SharedAccessKeyAuthenticationProvider', function () {
   describe('#constructor', function () {

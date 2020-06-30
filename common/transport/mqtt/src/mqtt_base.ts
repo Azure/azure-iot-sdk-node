@@ -191,11 +191,11 @@ export class MqttBase extends EventEmitter {
           connect: (callback) => this._fsm.transition('connecting', callback),
           disconnect: (callback) => callback(),
           /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_020: [The `publish` method shall call the callback with a `NotConnectedError` if the connection hasn't been established prior to calling `publish`.]*/
-          publish: (topic, payload, options, callback) => callback(new errors.NotConnectedError()),
+          publish: (_topic, _payload, _options, callback) => callback(new errors.NotConnectedError()),
           /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_026: [The `subscribe` method shall call the callback with a `NotConnectedError` if the connection hasn't been established prior to calling `publish`.]*/
-          subscribe: (topic, options, callback) => callback(new errors.NotConnectedError()),
+          subscribe: (_topic, _options, callback) => callback(new errors.NotConnectedError()),
           /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_027: [The `unsubscribe` method shall call the callback with a `NotConnectedError` if the connection hasn't been established prior to calling `publish`.]*/
-          unsubscribe: (topic, callback) => callback(new errors.NotConnectedError()),
+          unsubscribe: (_topic, callback) => callback(new errors.NotConnectedError()),
           updateSharedAccessSignature: (callback) => {
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_034: [The `updateSharedAccessSignature` method shall not trigger any network activity if the mqtt client is not connected.]*/
             debug('updating shared access signature while disconnected');

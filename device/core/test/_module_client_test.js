@@ -10,12 +10,12 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 var FakeTransport = require('./fake_transport.js');
 var Message = require('azure-iot-common').Message;
-var ModuleClient = require('../lib/module_client').ModuleClient;
+var ModuleClient = require('../dist/module_client').ModuleClient;
 var errors = require('azure-iot-common').errors;
 var results = require('azure-iot-common').results;
-var ModuleClient = require('../lib/module_client').ModuleClient;
-var IotEdgeAuthenticationProvider = require('../lib/iotedge_authentication_provider').IotEdgeAuthenticationProvider;
-var SharedAccessKeyAuthenticationProvider = require('../lib/sak_authentication_provider').SharedAccessKeyAuthenticationProvider;
+var ModuleClient = require('../dist/module_client').ModuleClient;
+var IotEdgeAuthenticationProvider = require('../dist/iotedge_authentication_provider').IotEdgeAuthenticationProvider;
+var SharedAccessKeyAuthenticationProvider = require('../dist/sak_authentication_provider').SharedAccessKeyAuthenticationProvider;
 var SharedAccessSignature = require('azure-iot-common').SharedAccessSignature;
 
 describe('ModuleClient', function () {

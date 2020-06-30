@@ -49,7 +49,7 @@ class PutTokenStatus {
     outstandingPutTokens: PutTokenOperation[] = [];
     numberOfSecondsToTimeout: number = 120;
     putTokenTimeOutExaminationInterval: number = 10000;
-    timeoutTimer: number;
+    timeoutTimer: NodeJS.Timer;
 }
 
 /**
@@ -293,7 +293,7 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
               this._fsm.transition('detached', forwardedCallback, err);
             });
           },
-          '*': (callback) => this._fsm.deferUntilTransition('detached')
+          '*': (_callback) => this._fsm.deferUntilTransition('detached')
         }
       }
     });

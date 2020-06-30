@@ -2,8 +2,8 @@ var EventEmitter = require('events').EventEmitter;
 var assert = require('chai').assert;
 var sinon = require('sinon');
 var errors = require('azure-iot-common').errors;
-var ReceiverLink = require('../lib/receiver_link.js').ReceiverLink;
-var AmqpMessage = require('../lib/amqp_message.js').AmqpMessage;
+var ReceiverLink = require('../dist/receiver_link.js').ReceiverLink;
+var AmqpMessage = require('../dist/amqp_message.js').AmqpMessage;
 
 
 
