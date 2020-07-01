@@ -4,35 +4,45 @@
 'use strict';
 
 const Protocol = require('azure-iot-device-mqtt').Mqtt;
+var ProvProtocol = require('azure-iot-provisioning-device-mqtt').Mqtt;
+
 const Client = require('azure-iot-device').Client;
 const Message = require('azure-iot-device').Message;
+const SymmetricKeySecurityClient = require('azure-iot-security-symmetric-key').SymmetricKeySecurityClient;
+const ProvisioningDeviceClient = require('azure-iot-provisioning-device').ProvisioningDeviceClient;
+
+// To see the dtdl of for this https://github.com/Azure/opendigitaltwins-dtdl
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  'HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>'
-const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+
+// DPS connection information
+var provisioningHost = process.env.PROVISIONING_HOST;
+var idScope = process.env.PROVISIONING_IDSCOPE;
+var registrationId = process.env.PROVISIONING_REGISTRATION_ID;
+var symmetricKey = process.env.PROVISIONING_SYMMETRIC_KEY;
 
 const modelId = 'dtmi:com:example:simplethermostat;1';
-const messageSubjectProperty = '$.sub';
-//const commandSeparator = '*';
 const telemetrySendInterval = 10000;
 let intervalToken;
 let currTemp = 1 + (Math.random() * 90);
 let targetTemp = currTemp;
+let maxTemp = currTemp+10;
 
 const commandNameReboot = 'reboot';
 
-const propertyUpdateHandler = (deviceTwin, componentName, propertyName, reportedValue, desiredValue, version) => {
-  console.log('Received an update for component: ' + componentName + ' and property: ' + propertyName + ' with value: ' + JSON.stringify(desiredValue));
+const propertyUpdateHandler = (deviceTwin, propertyName, reportedValue, desiredValue, version) => {
+  console.log('Received an update for component and property: ' + propertyName + ' with value: ' + JSON.stringify(desiredValue));
   const patch = helperCreateReportedPropertiesPatch(
     { [propertyName]: desiredValue },
-    componentName,
     {
       code: 200,
       description: 'Successfully executed patch for ' + propertyName,
       version: version
     }
   );
-  updateComponentReportedProperties(deviceTwin, patch, componentName);
+  updateComponentReportedProperties(deviceTwin, patch);
   console.log('updated the property');
 };
 
@@ -70,14 +80,23 @@ const helperLogCommandRequest = (request) => {
   }
 };
 
-const helperCreateReportedPropertiesPatch = (propertiesToReport) => {
-  const patch = { };
-
-  // Construct the Patch json
-  Object.keys(propertiesToReport).forEach((propertyName) => {
-    patch[propertyName] = propertiesToReport[propertyName];
-  });
-  console.log('The following properties will be updated for component');
+const helperCreateReportedPropertiesPatch = (propertiesToReport, componentName) => {
+  let patch;
+  if (!!(componentName)) {
+    patch = { };
+    propertiesToReport.__t = "c";
+    patch[componentName] = propertiesToReport;
+  }
+  else {
+    patch = { };
+    patch = propertiesToReport;
+    }
+  if (!!(componentName)) {
+    console.log('The following properties will be updated for component:' + componentName);
+  }
+  else{
+    console.log('The following properties will be updated for root interface:');
+  }
   console.log(patch);
   return patch;
 };
@@ -92,8 +111,9 @@ const updateComponentReportedProperties = (deviceTwin, patch) => {
 const helperAttachHandlerForDesiredPropertyPatches = (deviceTwin) => {
   const versionProperty = '$version';
   deviceTwin.on('properties.desired.', (delta) => {
+
     Object.entries(delta).forEach(([propertyName, propertyValue]) => {
-      propertyUpdateHandler(deviceTwin, componentName, propertyName, null, propertyValue.value, deviceTwin.properties.desired[versionProperty]);
+      propertyUpdateHandler(deviceTwin, propertyName, null, propertyValue.value, deviceTwin.properties.desired[versionProperty]);
     });
   });
 };
@@ -125,7 +145,31 @@ async function sendTelemetry(deviceClient, index) {
   await deviceClient.sendEvent(pnpMsg);
 }
 
+async function provisionDevice(payload) {
+  var provSecurityClient = new SymmetricKeySecurityClient(registrationId, symmetricKey);
+  var provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvProtocol(), provSecurityClient);
+
+  provisioningClient.setProvisioningPayload(payload);
+
+  provisioningClient.register(function(err, result) {
+    if (err) {
+      console.log("error registering device: " + err);
+    } else {
+      console.log('registration succeeded');
+      console.log('assigned hub=' + result.assignedHub);
+      console.log('deviceId=' + result.deviceId);
+      console.log('payload=' + JSON.stringify(result.payload));
+      deviceConnectionString = 'HostName=' + result.assignedHub + ';DeviceId=' + result.deviceId + ';SharedAccessKey=' + symmetricKey;
+    }
+  });
+}
+
 async function main() {
+  // If the user include a provision host then use DPS
+  if (!!(provisioningHost)) {
+    await provisionDevice();
+  }
+
   // fromConnectionString must specify a transport, coming from any transport package.
   const client = Client.fromConnectionString(deviceConnectionString, Protocol);
   console.log('Connecting using connection string ' + deviceConnectionString);
@@ -147,14 +191,17 @@ async function main() {
     // attach a standard input exit listener
     helperAttachExitListener(client);
 
+    // Deal with twin
     try {
       resultTwin = await client.getTwin();
+      const patchRoot = helperCreateReportedPropertiesPatch({serialNumber:'alohomora'}, null);
       const patchThermostat = helperCreateReportedPropertiesPatch({
-        targetTemperature: targetTemp,
-        currentTemperature: currTemp,
-      });
+        targetTemperature: {'value': targetTemp, 'ac': 200, 'ad': '', 'av': 1},
+        maxTempSinceLastReboot: maxTemp,
+      }, null);
 
       // the below things can only happen once the twin is there
+      updateComponentReportedProperties(resultTwin, patchRoot);
       updateComponentReportedProperties(resultTwin, patchThermostat);
       helperAttachHandlerForDesiredPropertyPatches(resultTwin);
     } catch (err) {

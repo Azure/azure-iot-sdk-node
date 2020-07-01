@@ -6,7 +6,7 @@
     "common/transport/*",
     "device/core",
     "device/samples",
-    "device/samples/pnp-sample",
+    "device/samples/pnp",
     "device/transport/*",
     "service",
     "service/samples",
