@@ -125,7 +125,7 @@ const debug = dbg('ts-e2e-jobclient');
       let methodResponseWasSent = false;
       const deviceClient = DeviceClient.fromConnectionString(testDeviceConnectionString, DeviceMqtt);
       deviceClient.open(continueWith(() => {
-        deviceClient.onDeviceMethod(testDeviceMethod.methodName, (request, response) => {
+        deviceClient.onDeviceMethod(testDeviceMethod.methodName, (_request, response) => {
           response.send(200, continueWith(() => {
             methodResponseWasSent = true;
           }));

@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 var errors = require('azure-iot-common').errors;
-var translateError = require('../lib/amqp_service_errors.js').translateError;
+var translateError = require('../dist/amqp_service_errors.js').translateError;
 
 describe('translateError', function() {
   /*Tests_SRS_NODE_DEVICE_AMQP_SERVICE_ERRORS_16_001: [ `translateError` shall return an `DeviceMaximumQueueDepthExceededError` if the AMQP error condition is `amqp:resource-limit-exceeded`.] */

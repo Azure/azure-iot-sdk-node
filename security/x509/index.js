@@ -4,5 +4,5 @@
 'use strict';
 
 module.exports = {
-  X509Security: require('./lib/x509').X509Security
+  X509Security: require('./dist/x509').X509Security
 };
