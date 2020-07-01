@@ -217,7 +217,7 @@ async function main() {
 
     try {
       resultTwin = await client.getTwin();
-      const patchRoot = helperCreateReportedPropertiesPatch({serialNumber:"alohomora"}, null, false);
+      const patchRoot = helperCreateReportedPropertiesPatch({serialNumber:"alohomora"}, null);
       const patchThermostat1Info = helperCreateReportedPropertiesPatch({
         targetTemperature: {"value": 56.78, "ac": 200, "ad": "wingardium leviosa", "av": 1},
         maxTempSinceLastReboot: 67.89,
@@ -227,7 +227,7 @@ async function main() {
         targetTemperature: {"value": 35.67, "ac": 200, "ad": "expecto patronum", "av": 1},
         maxTempSinceLastReboot: 98.65,
       }, thermostat2ComponentName);
-      // console.log(resultTwin)
+      
       const patchDeviceInfo = helperCreateReportedPropertiesPatch({
         manufacturer: 'Contoso Device Corporation',
         model: 'Contoso 47-turbo',
