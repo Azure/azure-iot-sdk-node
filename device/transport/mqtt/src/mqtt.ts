@@ -535,7 +535,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_015: [The `setOptions` method shall throw an `ArgumentError` if the `cert` property is populated but the device uses symmetric key authentication.]*/
     if (this._authenticationProvider.type === AuthenticationType.Token && options.cert) throw new errors.ArgumentError('Cannot set x509 options on a device that uses token authentication.');
 
-    /*Codes_SRS_NODE_DEVICE_MQTT_41_014: [For a Plug and Play Device the modelId should be included as `&modelId=<DEVICE’s MODEL ID>` after the api-version ] */
+    /*Codes_SRS_NODE_DEVICE_MQTT_41_014: [For a Plug and Play Device the model id should be included as `&model-id=<DEVICE’s MODEL ID>` after the api-version ] */
     if (options.modelId) {
       this._mid = '&model-id=' + options.modelId;
     }
