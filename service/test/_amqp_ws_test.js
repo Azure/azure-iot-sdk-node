@@ -2,8 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-var Amqp = require('../lib/amqp.js').Amqp;
-var AmqpWs = require('../lib/amqp_ws.js').AmqpWs;
+var Amqp = require('../dist/amqp.js').Amqp;
+var AmqpWs = require('../dist/amqp_ws.js').AmqpWs;
 var assert = require('chai').assert;
 var sinon = require('sinon');
 

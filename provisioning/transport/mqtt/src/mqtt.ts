@@ -382,7 +382,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
     });
  }
 
-  private _sendOperationStatusQuery(request: RegistrationRequest, rid: string, operationId: string, callback: (err?: Error, result?: any) => void): void {
+  private _sendOperationStatusQuery(_request: RegistrationRequest, rid: string, operationId: string, callback: (err?: Error, result?: any) => void): void {
     debug('operationStatus publish ' + '$dps/registrations/GET/iotdps-get-operationstatus/?$rid=' + rid + '&operationId=' + operationId);
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_017: [ `queryOperationStatus` shall publish to $dps/registrations/GET/iotdps-get-operationstatus/?$rid=<rid>&operationId=<operationId>.] */
     this._mqttBase.publish('$dps/registrations/GET/iotdps-get-operationstatus/?$rid=' + rid + '&operationId=' + operationId, ' ', { qos: 1 }, (err) => {

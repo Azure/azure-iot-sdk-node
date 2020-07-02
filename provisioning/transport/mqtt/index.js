@@ -12,6 +12,6 @@
  */
 
 module.exports = {
-  Mqtt: require('./lib/mqtt.js').Mqtt,
-  MqttWs: require('./lib/mqtt_ws.js').MqttWs
+  Mqtt: require('./dist/mqtt.js').Mqtt,
+  MqttWs: require('./dist/mqtt_ws.js').MqttWs
 };

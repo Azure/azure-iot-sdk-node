@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 var errors = require('azure-iot-common').errors;
-var ProvisioningServiceClient = require('../lib/provisioningserviceclient.js').ProvisioningServiceClient;
+var ProvisioningServiceClient = require('../dist/provisioningserviceclient.js').ProvisioningServiceClient;
 var encodeURIComponentStrict = require('azure-iot-common').encodeUriComponentStrict;
 
 var fakeRegistrationId = 'fakeId';

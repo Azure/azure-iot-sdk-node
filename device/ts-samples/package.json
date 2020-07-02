@@ -5,7 +5,7 @@
   "main": "sample_device.js",
   "scripts": {
     "npmlockrefresh": "npm i --package-lock-only",
-    "lint": "tslint --project . --type-check -c ../../tslint.json",
+    "lint": "tslint --project . -c ../../tslint.json",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

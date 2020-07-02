@@ -3,7 +3,7 @@
 
 'use strict';
 var common = require("azure-iot-common");
-var TpmSecurityClient  = require('../lib/tpm').TpmSecurityClient ;
+var TpmSecurityClient  = require('../dist/tpm').TpmSecurityClient ;
 var tss = require("tss.js");
 var sinon = require('sinon');
 var assert = require('chai').assert;

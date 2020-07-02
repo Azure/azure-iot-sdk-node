@@ -55,7 +55,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
    */
   protected _config: Client.TransportConfigOptions;
   private _amqp: Base;
-  private _renewalTimeout: number;
+  private _renewalTimeout: NodeJS.Timer;
   private _renewalNumberOfMilliseconds: number = 2700000;
   private _fsm: machina.Fsm;
 
@@ -153,7 +153,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
               }
             });
           },
-          updateSharedAccessSignature: (updatedSAS, callback) => {
+          updateSharedAccessSignature: (_updatedSAS, callback) => {
             /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_032: [The `updateSharedAccessSignature` shall not establish a connection if the transport is disconnected, but should use the new shared access signature on the next manually initiated connection attempt.]*/
             callback();
           },
@@ -171,7 +171,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
               userAgentString: packageJson.name + '/' + packageJson.version
             };
             debug('connecting');
-            this._amqp.connect(config, (err, result) => {
+            this._amqp.connect(config, (err, _result) => {
               if (err) {
                 debug('failed to connect' + err.toString());
                 this._fsm.transition('disconnected', err, callback);
@@ -229,7 +229,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
             }
             callback(null, new results.Connected());
           },
-          _onExit: (callback) => {
+          _onExit: (_callback) => {
             if (this._renewalTimeout) {
               clearTimeout(this._renewalTimeout);
             }

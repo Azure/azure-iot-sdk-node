@@ -4,5 +4,5 @@
 'use strict';
 
 module.exports = {
-  SymmetricKeySecurityClient : require('./lib/symmetric_key').SymmetricKeySecurityClient
+  SymmetricKeySecurityClient : require('./dist/symmetric_key').SymmetricKeySecurityClient
 };

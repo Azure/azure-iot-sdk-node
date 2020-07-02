@@ -49,7 +49,7 @@ export class TpmAuthenticationProvider extends EventEmitter implements Authentic
           },
           activate: (activateCallback) => this._fsm.transition('activating', activateCallback),
           getDeviceCredentials: (callback) => {
-            this._fsm.handle('activate', (err, result) => {
+            this._fsm.handle('activate', (err, _result) => {
               if (err) {
                 callback(err);
               } else {
@@ -59,7 +59,7 @@ export class TpmAuthenticationProvider extends EventEmitter implements Authentic
           }
         },
         activating: {
-          _onEnter: (callback, err) => {
+          _onEnter: (callback, _err) => {
             const newExpiry =  Math.floor(Date.now() / 1000) + this._tokenValidTimeInSeconds;
             /*Codes_SRS_NODE_TPM_AUTH_PROVIDER_16_001: [`getDeviceCredentials` shall use the `SharedAccessSignature.createWithSigningFunction` method with the `signWithIdentity` method of the `TpmSecurityClient` given to the construtor to generate a SAS token.]*/
             SharedAccessSignature.createWithSigningFunction(this._credentials, newExpiry, this._tpmSecurityClient.signWithIdentity.bind(this._tpmSecurityClient), (err, newSas) => {
@@ -114,7 +114,7 @@ export class TpmAuthenticationProvider extends EventEmitter implements Authentic
     }, callback);
   }
 
-  updateSharedAccessSignature(sharedAccessSignature: string): void {
+  updateSharedAccessSignature(_sharedAccessSignature: string): void {
     /*Codes_SRS_NODE_TPM_AUTH_PROVIDER_16_005: [`updateSharedAccessSignature` shall throw an `InvalidOperationError` since it's the role of the TPM to generate SAS tokens.]*/
     throw new errors.InvalidOperationError('cannot update a shared access signature when using TPM');
   }
