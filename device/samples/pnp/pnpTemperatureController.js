@@ -49,11 +49,9 @@ const commandHandler = async (request, response) => {
 const sendCommandResponse = async (request, response, status, payload) => {
   try {
     await response.send(status, payload);
-    console.log('Response to method \'' + request.methodName +
-              '\' sent successfully.' );
+    console.log('Response to method \'' + request.methodName + '\' sent successfully.' );
   } catch (err) {
-    console.error('An error ocurred when sending a method response:\n' +
-              err.toString());
+    console.error('An error ocurred when sending a method response:\n' + err.toString());
   }
 };
 
@@ -61,40 +59,36 @@ const helperLogCommandRequest = (request) => {
   console.log('Received command request for comand name \'' + request.methodName + '\'');
 
   if (!!(request.payload)) {
-    console.log('The command request paylaod :');
+    console.log('The command request payload is');
     console.log(request.payload);
   }
 };
 
 
 const helperCreateReportedPropertiesPatch = (propertiesToReport, componentName) => {
-    let patch;
-    if (!!(componentName)) {
-      patch = { };
-      propertiesToReport.__t = "c";
-      patch[componentName] = propertiesToReport;
-    }
-    else {
-      patch = { };
-      patch = propertiesToReport;
-      }
-    if (!!(componentName)) {
+  let patch;
+  if (!!(componentName)) {
+    patch = { };
+    propertiesToReport.__t = 'c';
+    patch[componentName] = propertiesToReport;
+  } else {
+    patch = { };
+    patch = propertiesToReport;
+  }
+  if (!!(componentName)) {
     console.log('The following properties will be updated for component:' + componentName);
-    }
-    else{
-      console.log('The following properties will be updated for root interface:');
-    }
-    console.log(patch);
-    return patch;
-  };
+  } else {
+    console.log('The following properties will be updated for root interface:');
+  }
+  console.log(patch);
+  return patch;
+};
 
 const updateComponentReportedProperties = (deviceTwin, patch, componentName) => {
   let logLine;
-  if (!!(componentName))
-  {
+  if (!!(componentName)) {
     logLine = 'Properties have been reported for component:' + componentName;
-  }
-  else{
+  } else {
     logLine = 'Properties have been reported for root interface';
   }
   deviceTwin.properties.reported.update(patch, function (err) {
@@ -102,34 +96,32 @@ const updateComponentReportedProperties = (deviceTwin, patch, componentName) => 
     console.log(logLine);
   });
 };
-
+// TODO For no component.
 const helperAttachHandlerForDesiredPropertyPatches = (deviceTwin) => {
-
   deviceTwin.on('properties.desired', (delta) => {
     if (delta[thermostat1ComponentName] || delta[thermostat2ComponentName] || delta[deviceInfoComponentName]) {
-    const version = delta.$version;
-    const componentName = Object.keys(delta)[0];
-    let logLine;
-    if (!!(componentName))
-    {
-      logLine = 'Received an update for component: ' + componentName + ' with value: ' + JSON.stringify(delta);
+      const version = delta.$version;
+      const componentName = Object.keys(delta)[0];
+      let logLine;
+      if (!!(componentName)) {
+        logLine = 'Received an update for component: ' + componentName + ' with value: ' + JSON.stringify(delta);
+      } else {
+        logLine = 'Received an update for root interface with value: ' + JSON.stringify(delta);
+      }
+      console.log(logLine);
+      const patch = { [componentName]: {} };
+      Object.entries(delta[componentName]).forEach(([propertyName, propertyValue]) => {
+        if (propertyName !== '__t') {
+          const propertyContent = { value: propertyValue };
+          propertyContent.ac = 200;
+          propertyContent.ad = 'Successfully executed patch';
+          propertyContent.av = version;
+          patch[componentName][propertyName] = propertyContent;
+        }
+      });
+      updateComponentReportedProperties(deviceTwin, patch, componentName);
     }
-    else{
-      logLine = 'Received an update for root interface with value: ' + JSON.stringify(delta);
-    }
-    console.log(logLine);
-    const patch = { [componentName]: {} };
-    Object.entries(delta[componentName]).forEach(([propertyName, propertyValue]) => {
-      if (propertyName !== '__t'){
-        const propertyContent = { value: propertyValue };
-        propertyContent.ac = 200;
-        propertyContent.ad = 'Successfully executed patch';
-        propertyContent.av = version;
-        
-        patch[componentName][propertyName] = propertyContent;
-    }});
-    updateComponentReportedProperties(deviceTwin, patch, componentName);
- }});
+  });
 };
 
 const helperAttachExitListener = async (deviceClient) => {
@@ -152,11 +144,9 @@ const helperAttachExitListener = async (deviceClient) => {
 };
 async function sendTemperatureTelemetry(deviceClient, componentName, index) {
   console.log('Sending telemetry message %d from component %s ', index, componentName);
-  
-  const data = JSON.stringify({ temperature: 1 + (Math.random() * 90)});
+  const data = JSON.stringify({ temperature: 1 + (Math.random() * 90) });
   const pnpMsg = new Message(data);
-  if (!!(componentName))
-  {
+  if (!!(componentName)) {
     pnpMsg.properties.add(messageSubjectProperty, componentName);
   }
   pnpMsg.contentType = 'application/json';
@@ -166,10 +156,9 @@ async function sendTemperatureTelemetry(deviceClient, componentName, index) {
 
 async function sendDatasizeTelemetry(deviceClient, componentName, index) {
   console.log('Sending telemetry message %d from root interface', index);
-  const data = JSON.stringify({ workingset: 1 + (Math.random() * 90)});
+  const data = JSON.stringify({ workingset: 1 + (Math.random() * 90) });
   const pnpMsg = new Message(data);
-  if (!!(componentName))
-  {
+  if (!!(componentName)) {
     pnpMsg.properties.add(messageSubjectProperty, componentName);
   }
   pnpMsg.contentType = 'application/json';
@@ -197,18 +186,18 @@ async function main() {
     let index2 = 0;
     let index3 = 0;
     intervalToken1 = setInterval(() => {
-      sendTemperatureTelemetry(client, thermostat1ComponentName, index1).catch((err) => console.log('error', err.toString()));
+      sendTemperatureTelemetry(client, thermostat1ComponentName, index1).catch((err) => console.log('error ', err.toString()));
       index1 += 1;
     }, 5000);
 
     intervalToken2 = setInterval(() => {
-      sendTemperatureTelemetry(client, thermostat2ComponentName, index2).catch((err) => console.log('error', err.toString()));
+      sendTemperatureTelemetry(client, thermostat2ComponentName, index2).catch((err) => console.log('error ', err.toString()));
       index2 += 1;
     }, 5500);
 
 
     intervalToken3 = setInterval(() => {
-      sendDatasizeTelemetry(client, null, index3).catch((err) => console.log('error', err.toString()));
+      sendDatasizeTelemetry(client, null, index3).catch((err) => console.log('error ', err.toString()));
       index3 += 1;
     }, 6000);
 
@@ -217,17 +206,17 @@ async function main() {
 
     try {
       resultTwin = await client.getTwin();
-      const patchRoot = helperCreateReportedPropertiesPatch({serialNumber:"alohomora"}, null);
+      const patchRoot = helperCreateReportedPropertiesPatch({ serialNumber: 'alohomora' }, null);
       const patchThermostat1Info = helperCreateReportedPropertiesPatch({
-        targetTemperature: {"value": 56.78, "ac": 200, "ad": "wingardium leviosa", "av": 1},
+        targetTemperature: { 'value': 56.78, 'ac': 200, 'ad': 'wingardium leviosa', 'av': 1 },
         maxTempSinceLastReboot: 67.89,
       }, thermostat1ComponentName);
 
       const patchThermostat2Info = helperCreateReportedPropertiesPatch({
-        targetTemperature: {"value": 35.67, "ac": 200, "ad": "expecto patronum", "av": 1},
+        targetTemperature: { 'value': 35.67, 'ac': 200, 'ad': 'expecto patronum', 'av': 1 },
         maxTempSinceLastReboot: 98.65,
       }, thermostat2ComponentName);
-      
+
       const patchDeviceInfo = helperCreateReportedPropertiesPatch({
         manufacturer: 'Contoso Device Corporation',
         model: 'Contoso 47-turbo',
