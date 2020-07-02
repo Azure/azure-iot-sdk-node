@@ -537,7 +537,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
 
     /*Codes_SRS_NODE_DEVICE_MQTT_41_014: [For a Plug and Play Device the modelId should be included as `&modelId=<DEVICE’s MODEL ID>` after the api-version ] */
     if (options.modelId) {
-      this._mid = '&modelId=' + options.modelId;
+      this._mid = '&model-id=' + options.modelId;
     }
     /*Codes_SRS_NODE_DEVICE_MQTT_41_001: [The MQTT transport should use the productInfo string in the `options` object if present]*/
     if (options.productInfo) {
