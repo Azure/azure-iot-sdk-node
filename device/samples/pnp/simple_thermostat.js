@@ -23,7 +23,7 @@ var idScope = process.env.PROVISIONING_IDSCOPE;
 var registrationId = process.env.PROVISIONING_REGISTRATION_ID;
 var symmetricKey = process.env.PROVISIONING_SYMMETRIC_KEY;
 
-const modelId = 'dtmi:com:example:simplethermostat;1';
+const modelId = 'dtmi:com:example:Thermostat;1';
 const telemetrySendInterval = 10000;
 let intervalToken;
 let currTemp = 1 + (Math.random() * 90);
@@ -157,13 +157,25 @@ async function provisionDevice(payload) {
     if (err) {
       console.log("error registering device: " + err);
     } else {
+      deviceConnectionString = 'HostName=' + result.assignedHub + ';DeviceId=' + result.deviceId + ';SharedAccessKey=' + symmetricKey;
       console.log('registration succeeded');
       console.log('assigned hub=' + result.assignedHub);
       console.log('deviceId=' + result.deviceId);
       console.log('payload=' + JSON.stringify(result.payload));
-      deviceConnectionString = 'HostName=' + result.assignedHub + ';DeviceId=' + result.deviceId + ';SharedAccessKey=' + symmetricKey;
     }
   });
+  console.log('conn string: '+deviceConnectionString);
+
+  // try {
+  //   let result = provisioningClient.register();
+  //   deviceConnectionString = 'HostName=' + result.assignedHub + ';DeviceId=' + result.deviceId + ';SharedAccessKey=' + symmetricKey;
+  //   console.log('registration succeeded');
+  //   console.log('assigned hub=' + result.assignedHub);
+  //   console.log('deviceId=' + result.deviceId);
+  //   console.log('payload=' + JSON.stringify(result.payload));
+  // } catch (err) {
+  //   console.error("error registering device: " + err.toString());
+  // }
 }
 
 async function main() {
