@@ -149,7 +149,9 @@ async function provisionDevice(payload) {
   var provSecurityClient = new SymmetricKeySecurityClient(registrationId, symmetricKey);
   var provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvProtocol(), provSecurityClient);
 
-  provisioningClient.setProvisioningPayload(payload);
+  if (!!(payload)) {
+    provisioningClient.setProvisioningPayload(payload);
+  }
 
   provisioningClient.register(function(err, result) {
     if (err) {
