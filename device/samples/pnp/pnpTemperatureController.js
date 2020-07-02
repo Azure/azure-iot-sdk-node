@@ -9,8 +9,8 @@ const Message = require('azure-iot-device').Message;
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  'HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>'
-// const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
-const deviceConnectionString = 'HostName=summerrelease-test-04.private.azure-devices-int.net;DeviceId=olkarnode;SharedAccessKey=wa3r2Puun1sPkFklZ0KRRgLSIcgYmW7bRr9aHjYdeas=';
+const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+
 const modelId = 'dtmi:com:example:TemperatureController;1';
 const messageSubjectProperty = '$.sub';
 const thermostat1ComponentName = 'thermostat1';
@@ -59,8 +59,8 @@ const helperLogCommandRequest = (request) => {
   console.log('Received command request for comand name: ' + request.methodName);
 
   if (!!(request.payload)) {
-    console.log('The command request payload is:\n' + request.payload);
-    // console.log(request.payload);
+    console.log('The command request payload is:');
+    console.log(request.payload);
   }
 };
 
