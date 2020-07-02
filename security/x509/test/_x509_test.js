@@ -3,7 +3,7 @@
 
 'use strict';
 
-var X509Security = require('../lib/x509').X509Security;
+var X509Security = require('../dist/x509').X509Security;
 var assert = require('chai').assert;
 
 var fakeRegistrationId = 'fake registration id';

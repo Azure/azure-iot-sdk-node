@@ -7,7 +7,7 @@ var EventEmitter = require('events').EventEmitter;
 var assert = require('chai').assert;
 var sinon = require('sinon');
 var Message = require('azure-iot-common').Message;
-var ServiceReceiver = require('../lib/service_receiver.js').ServiceReceiver;
+var ServiceReceiver = require('../dist/service_receiver.js').ServiceReceiver;
 
 describe('ServiceReceiver', function () {
   describe('constructor', function () {

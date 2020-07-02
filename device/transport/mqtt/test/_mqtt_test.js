@@ -634,10 +634,10 @@ describe('Mqtt', function () {
       });
     });
 
-    /* Tests_SRS_NODE_DEVICE_MQTT_41_014: [For a Plug and Play Device the modelId should be included as `&digital-twin-model-id=<DEVICE’s MODEL ID>` after the api-version]*/
-    /* Tests_SRS_NODE_DEVICE_MQTT_41_015: [If a modelId is provided, the device should use the PnP API String] */
+    /* Tests_SRS_NODE_DEVICE_MQTT_41_014: [For a Plug and Play Device the modelId should be included as `&model-id=<DEVICE’s MODEL ID>` after the api-version]*/
+    /* Tests_SRS_NODE_DEVICE_MQTT_41_015: [If a model id is provided, the device should use the PnP API String] */
     it('sets options for modelId', function (testCallback) {
-      const fakeModelId = '&digital-twin-model-id=fakeModelId';
+      const fakeModelId = '&model-id=fakeModelId';
       const fakeModel = { modelId: 'fakeModelId' };
       let connectCallback;
       fakeMqttBase.connect = sinon.stub().callsFake(function (config, callback) {

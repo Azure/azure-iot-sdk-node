@@ -3,7 +3,7 @@
 
 'use strict';
 var errors = require('azure-iot-common').errors;
-var TpmAuthenticationProvider  = require('../lib/tpm_authentication_provider.js').TpmAuthenticationProvider;
+var TpmAuthenticationProvider  = require('../dist/tpm_authentication_provider.js').TpmAuthenticationProvider;
 var tss = require("tss.js");
 var sinon = require('sinon');
 var assert = require('chai').assert;

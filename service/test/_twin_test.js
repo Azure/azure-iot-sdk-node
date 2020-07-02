@@ -6,8 +6,8 @@
 var assert = require('chai').assert;
 var sinon = require('sinon');
 var errors = require('azure-iot-common').errors;
-var Registry = require('../lib/registry.js').Registry;
-var Twin = require('../lib/twin.js').Twin;
+var Registry = require('../dist/registry.js').Registry;
+var Twin = require('../dist/twin.js').Twin;
 
 var fakeConfig = { host: 'host', sharedAccessSignature: 'sas' };
 var testRegistry = new Registry(fakeConfig, {});
