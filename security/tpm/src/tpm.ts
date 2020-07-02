@@ -70,7 +70,7 @@ export class TpmSecurityClient  {
           },
           connect: (connectCallback) => this._fsm.transition('connecting', connectCallback),
           getEndorsementKey: (callback) => {
-            this._fsm.handle('connect', (err, result) => {
+            this._fsm.handle('connect', (err, _result) => {
               if (err) {
                 callback(err);
               } else {
@@ -79,7 +79,7 @@ export class TpmSecurityClient  {
             });
           },
           getStorageRootKey: (callback) => {
-            this._fsm.handle('connect', (err, result) => {
+            this._fsm.handle('connect', (err, _result) => {
               if (err) {
                 callback(err);
               } else {
@@ -88,7 +88,7 @@ export class TpmSecurityClient  {
             });
           },
           signWithIdentity: (dataToSign, callback) => {
-            this._fsm.handle('connect', (err, result) => {
+            this._fsm.handle('connect', (err, _result) => {
               if (err) {
                 callback(err);
               } else {
@@ -97,7 +97,7 @@ export class TpmSecurityClient  {
             });
           },
           activateIdentityKey: (identityKey, callback) => {
-            this._fsm.handle('connect', (err, result) => {
+            this._fsm.handle('connect', (err, _result) => {
               if (err) {
                 callback(err);
               } else {
@@ -124,7 +124,7 @@ export class TpmSecurityClient  {
                       } else {
                         /*Codes_SRS_NODE_TPM_SECURITY_CLIENT_06_008: [The `getStorageRootKey` function shall query the TPM hardware and return the `storageRootKey` in the callback.] */
                         this._srk = srkPublicKey;
-                        this._readPersistentPrimary('IDENTITY', TpmSecurityClient._idKeyPersistentHandle, (readIdErr: Error, idkPublicKey: TPMT_PUBLIC) => {
+                        this._readPersistentPrimary('IDENTITY', TpmSecurityClient._idKeyPersistentHandle, (_readIdErr: Error, idkPublicKey: TPMT_PUBLIC) => {
                           //
                           // Not any kind of fatal error if we can't retrieve the identity public portion.  This device might not have ever been provisioned.
                           // If there is a signing operation attempted before an activate is attempted, an error will occur.
@@ -460,7 +460,7 @@ export class TpmSecurityClient  {
             // Apply the policy necessary to authorize an EK on Windows
             //
 
-            this._tpm.withSession(tss.NullPwSession).PolicySecret(tss.Endorsement, policySession.SessIn.sessionHandle, null, null, null, 0, (err: tss.TpmError, resp: tss.PolicySecretResponse) => {
+            this._tpm.withSession(tss.NullPwSession).PolicySecret(tss.Endorsement, policySession.SessIn.sessionHandle, null, null, null, 0, (err: tss.TpmError, _resp: tss.PolicySecretResponse) => {
               const rc = err ? err.responseCode : TPM_RC.SUCCESS;
               debug('PolicySecret() returned ' + TPM_RC[rc]);
               if (rc !== TPM_RC.SUCCESS) {

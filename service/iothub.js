@@ -22,13 +22,13 @@
  * @module azure-iothub
  */
 module.exports = {
-  Client: require('./lib/client.js').Client,
-  ConnectionString: require('./lib/connection_string.js'),
-  Registry: require('./lib/registry.js').Registry,
-  SharedAccessSignature: require('./lib/shared_access_signature.js'),
-  Amqp: require('./lib/amqp.js').Amqp,
-  AmqpWs: require('./lib/amqp_ws.js').AmqpWs,
-  JobClient: require('./lib/job_client.js').JobClient,
-  Device: require('./lib/device.js').Device,
-  Twin: require('./lib/twin.js').Twin
+  Client: require('./dist/client.js').Client,
+  ConnectionString: require('./dist/connection_string.js'),
+  Registry: require('./dist/registry.js').Registry,
+  SharedAccessSignature: require('./dist/shared_access_signature.js'),
+  Amqp: require('./dist/amqp.js').Amqp,
+  AmqpWs: require('./dist/amqp_ws.js').AmqpWs,
+  JobClient: require('./dist/job_client.js').JobClient,
+  Device: require('./dist/device.js').Device,
+  Twin: require('./dist/twin.js').Twin
 };

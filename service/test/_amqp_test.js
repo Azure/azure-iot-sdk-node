@@ -4,7 +4,7 @@
 'use strict';
 var sinon = require('sinon');
 var EventEmitter = require('events').EventEmitter;
-var Amqp = require('../lib/amqp.js').Amqp;
+var Amqp = require('../dist/amqp.js').Amqp;
 var assert = require('chai').assert;
 var SharedAccessSignature = require('azure-iot-common').SharedAccessSignature;
 var errors = require('azure-iot-common').errors;

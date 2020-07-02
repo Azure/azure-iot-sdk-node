@@ -11,16 +11,16 @@
  */
 
 module.exports = {
-  ProvisioningTransportOptions: require('./lib/interfaces').ProvisioningTransportOptions,
-  RegistrationRequest: require('./lib/interfaces').RegistrationRequest,
-  RegistrationResult: require('./lib/interfaces').RegistrationResult,
-  DeviceRegistrationResult: require('./lib/interfaces').DeviceRegistrationResult,
-  X509ProvisioningTransport: require('./lib/interfaces').X509ProvisioningTransport,
-  SymmetricKeyProvisioningTransport: require('./lib/interfaces').SymmetricKeyProvisioningTransport,
-  PollingStateMachine: require('./lib/polling_state_machine').PollingStateMachine,
-  ProvisioningDeviceClient: require('./lib/client').ProvisioningDeviceClient,
-  ProvisioningDeviceConstants: require('./lib/constants').ProvisioningDeviceConstants,
-  translateError: require('./lib/provisioning_errors').translateError,
-  DeviceRegistration: require('./lib/interfaces').DeviceRegistration,
-  TpmAttestation: require('./lib/interfaces').TpmAttestation
+  ProvisioningTransportOptions: require('./dist/interfaces').ProvisioningTransportOptions,
+  RegistrationRequest: require('./dist/interfaces').RegistrationRequest,
+  RegistrationResult: require('./dist/interfaces').RegistrationResult,
+  DeviceRegistrationResult: require('./dist/interfaces').DeviceRegistrationResult,
+  X509ProvisioningTransport: require('./dist/interfaces').X509ProvisioningTransport,
+  SymmetricKeyProvisioningTransport: require('./dist/interfaces').SymmetricKeyProvisioningTransport,
+  PollingStateMachine: require('./dist/polling_state_machine').PollingStateMachine,
+  ProvisioningDeviceClient: require('./dist/client').ProvisioningDeviceClient,
+  ProvisioningDeviceConstants: require('./dist/constants').ProvisioningDeviceConstants,
+  translateError: require('./dist/provisioning_errors').translateError,
+  DeviceRegistration: require('./dist/interfaces').DeviceRegistration,
+  TpmAttestation: require('./dist/interfaces').TpmAttestation
 };

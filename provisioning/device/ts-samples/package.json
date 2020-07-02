@@ -17,11 +17,15 @@
     "azure-iot-security-tpm": "1.8.3",
     "azure-iot-security-x509": "1.7.3"
   },
+  "devDependencies": {
+    "tslint": "^6.1.0",
+    "typescript": "3.7.5"
+  },
   "scripts": {
     "npmlockrefresh": "npm i --package-lock-only",
     "lint": "tslint --project . -c ../../../tslint.json",
     "build": "tsc",
-    "test": "mocha ./lib/*.tests.js"
+    "test": "mocha ./dist/*.tests.js"
   },
   "engines": {
     "node": ">= 10.0.0"

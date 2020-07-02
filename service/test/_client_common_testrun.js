@@ -4,7 +4,7 @@
 'use strict';
 
 var assert = require('chai').assert;
-var Client = require('../lib/client.js').Client;
+var Client = require('../dist/client.js').Client;
 var errors = require('azure-iot-common').errors;
 var Message = require('azure-iot-common').Message;
 var debug = require('debug')('azure-iothub:_client_common_testrun');

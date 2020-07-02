@@ -219,22 +219,22 @@ device/transport/http/dist/
 device/transport/mqtt/dist/
 device/ts-samples/*.js
 
-provisioning/service/lib
-provisioning/transport/amqp/lib/
-provisioning/transport/http/lib/
-provisioning/transport/mqtt/lib/
-provisioning/device/lib/
-provisioning/device/ts-samples/lib
+provisioning/service/dist
+provisioning/transport/amqp/dist/
+provisioning/transport/http/dist/
+provisioning/transport/mqtt/dist/
+provisioning/device/dist/
+provisioning/device/ts-samples/dist
 
-security/x509/lib
-security/tpm/lib
-security/symmetric/lib
+security/x509/dist
+security/tpm/dist
+security/symmetric/dist
 
-service/lib
+service/dist
 
-ts-e2e/lib
+ts-e2e/dist
 
-longhaultests/lib
+longhaultests/dist
 
 digitaltwins/device/dist
 digitaltwins/samples/device/typescript/dist
