@@ -226,13 +226,13 @@ provisioning/transport/mqtt/dist/
 provisioning/device/dist/
 provisioning/device/ts-samples/dist
 
-security/x509/lib
-security/tpm/lib
-security/symmetric/lib
+security/x509/dist
+security/tpm/dist
+security/symmetric/dist
 
-service/lib
+service/dist
 
-ts-e2e/lib
+ts-e2e/dist
 
 longhaultests/dist
 

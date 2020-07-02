@@ -15,12 +15,12 @@ describe('Registry', () => {
         if (err) throw err;
         assert.strictEqual(getDevDesc.deviceId, testDeviceId);
         assert.strictEqual(getDevDesc.status, 'enabled');
-        registry.update({ deviceId: testDeviceId, status: 'disabled' }, (err, updateDevDesc) => {
+        registry.update({ deviceId: testDeviceId, status: 'disabled' }, (_err, updateDevDesc) => {
           assert.strictEqual(updateDevDesc.deviceId, testDeviceId);
           assert.strictEqual(updateDevDesc.status, 'disabled');
           registry.delete(testDeviceId, (err) => {
             if (err) throw err;
-            registry.get(testDeviceId, (err, getDevDesc2) => {
+            registry.get(testDeviceId, (err, _getDevDesc2) => {
               assert.instanceOf(err, Error);
               testCallback();
             });
