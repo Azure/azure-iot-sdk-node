@@ -9,8 +9,8 @@ const Message = require('azure-iot-device').Message;
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  'HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>'
-const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
-
+// const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+const deviceConnectionString = 'HostName=summerrelease-test-04.private.azure-devices-int.net;DeviceId=olkarnode;SharedAccessKey=wa3r2Puun1sPkFklZ0KRRgLSIcgYmW7bRr9aHjYdeas=';
 const modelId = 'dtmi:com:example:TemperatureController;1';
 const messageSubjectProperty = '$.sub';
 const thermostat1ComponentName = 'thermostat1';
@@ -49,18 +49,18 @@ const commandHandler = async (request, response) => {
 const sendCommandResponse = async (request, response, status, payload) => {
   try {
     await response.send(status, payload);
-    console.log('Response to method \'' + request.methodName + '\' sent successfully.' );
+    console.log('Response to method: ' + request.methodName + ' sent successfully.' );
   } catch (err) {
     console.error('An error ocurred when sending a method response:\n' + err.toString());
   }
 };
 
 const helperLogCommandRequest = (request) => {
-  console.log('Received command request for comand name \'' + request.methodName + '\'');
+  console.log('Received command request for comand name: ' + request.methodName);
 
   if (!!(request.payload)) {
-    console.log('The command request payload is');
-    console.log(request.payload);
+    console.log('The command request payload is:\n' + request.payload);
+    // console.log(request.payload);
   }
 };
 
@@ -76,9 +76,9 @@ const helperCreateReportedPropertiesPatch = (propertiesToReport, componentName) 
     patch = propertiesToReport;
   }
   if (!!(componentName)) {
-    console.log('The following properties will be updated for component:' + componentName);
+    console.log('The following properties will be updated for component: ' + componentName);
   } else {
-    console.log('The following properties will be updated for root interface:');
+    console.log('The following properties will be updated for root interface.');
   }
   console.log(patch);
   return patch;
@@ -87,9 +87,9 @@ const helperCreateReportedPropertiesPatch = (propertiesToReport, componentName) 
 const updateComponentReportedProperties = (deviceTwin, patch, componentName) => {
   let logLine;
   if (!!(componentName)) {
-    logLine = 'Properties have been reported for component:' + componentName;
+    logLine = 'Properties have been reported for component: ' + componentName;
   } else {
-    logLine = 'Properties have been reported for root interface';
+    logLine = 'Properties have been reported for root interface.';
   }
   deviceTwin.properties.reported.update(patch, function (err) {
     if (err) throw err;
@@ -137,26 +137,17 @@ const helperAttachExitListener = async (deviceClient) => {
       deviceClient.close();
       process.exit();
     } else {
-      console.log('User Input was : ' + data);
+      console.log('User Input was: ' + data);
       console.log('Please only enter q or Q to exit sample.');
     }
   });
 };
-async function sendTemperatureTelemetry(deviceClient, componentName, index) {
-  console.log('Sending telemetry message %d from component %s ', index, componentName);
-  const data = JSON.stringify({ temperature: 1 + (Math.random() * 90) });
-  const pnpMsg = new Message(data);
+async function sendTelemetry(deviceClient, data, index, componentName) {
   if (!!(componentName)) {
-    pnpMsg.properties.add(messageSubjectProperty, componentName);
+    console.log('Sending telemetry message %d from component: %s ', index, componentName);
+  } else {
+    console.log('Sending telemetry message %d from root interface', index);
   }
-  pnpMsg.contentType = 'application/json';
-  pnpMsg.contentEncoding = 'utf-8';
-  await deviceClient.sendEvent(pnpMsg);
-}
-
-async function sendDatasizeTelemetry(deviceClient, componentName, index) {
-  console.log('Sending telemetry message %d from root interface', index);
-  const data = JSON.stringify({ workingset: 1 + (Math.random() * 90) });
   const pnpMsg = new Message(data);
   if (!!(componentName)) {
     pnpMsg.properties.add(messageSubjectProperty, componentName);
@@ -169,7 +160,7 @@ async function sendDatasizeTelemetry(deviceClient, componentName, index) {
 async function main() {
   // fromConnectionString must specify a transport, coming from any transport package.
   const client = Client.fromConnectionString(deviceConnectionString, Protocol);
-  console.log('Connecting using connection string ' + deviceConnectionString);
+  console.log('Connecting using connection string: ' + deviceConnectionString);
   let resultTwin;
 
   try {
@@ -186,18 +177,21 @@ async function main() {
     let index2 = 0;
     let index3 = 0;
     intervalToken1 = setInterval(() => {
-      sendTemperatureTelemetry(client, thermostat1ComponentName, index1).catch((err) => console.log('error ', err.toString()));
+      const data = JSON.stringify({ temperature: 1 + (Math.random() * 90) });
+      sendTelemetry(client, data, index1, thermostat1ComponentName).catch((err) => console.log('error ', err.toString()));
       index1 += 1;
     }, 5000);
 
     intervalToken2 = setInterval(() => {
-      sendTemperatureTelemetry(client, thermostat2ComponentName, index2).catch((err) => console.log('error ', err.toString()));
+      const data = JSON.stringify({ temperature: 1 + (Math.random() * 90) });
+      sendTelemetry(client, data, index2, thermostat2ComponentName).catch((err) => console.log('error ', err.toString()));
       index2 += 1;
     }, 5500);
 
 
     intervalToken3 = setInterval(() => {
-      sendDatasizeTelemetry(client, null, index3).catch((err) => console.log('error ', err.toString()));
+      const data = JSON.stringify({ workingset: 1 + (Math.random() * 90) });
+      sendTelemetry(client, data, index3, null).catch((err) => console.log('error ', err.toString()));
       index3 += 1;
     }, 6000);
 
@@ -206,14 +200,14 @@ async function main() {
 
     try {
       resultTwin = await client.getTwin();
-      const patchRoot = helperCreateReportedPropertiesPatch({ serialNumber: 'alohomora' }, null);
+      const patchRoot = helperCreateReportedPropertiesPatch({ serialNumber: 'alwinexlepaho8329' }, null);
       const patchThermostat1Info = helperCreateReportedPropertiesPatch({
-        targetTemperature: { 'value': 56.78, 'ac': 200, 'ad': 'wingardium leviosa', 'av': 1 },
+        targetTemperature: { 'value': 56.78, 'ac': 200, 'ad': 'first report', 'av': 1 },
         maxTempSinceLastReboot: 67.89,
       }, thermostat1ComponentName);
 
       const patchThermostat2Info = helperCreateReportedPropertiesPatch({
-        targetTemperature: { 'value': 35.67, 'ac': 200, 'ad': 'expecto patronum', 'av': 1 },
+        targetTemperature: { 'value': 35.67, 'ac': 200, 'ad': 'first report', 'av': 1 },
         maxTempSinceLastReboot: 98.65,
       }, thermostat2ComponentName);
 
