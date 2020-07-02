@@ -86,15 +86,13 @@ const helperCreateReportedPropertiesPatch = (propertiesToReport, componentName) 
     patch = { };
     propertiesToReport.__t = "c";
     patch[componentName] = propertiesToReport;
-  }
-  else {
+  } else {
     patch = { };
     patch = propertiesToReport;
-    }
+  }
   if (!!(componentName)) {
     console.log('The following properties will be updated for component:' + componentName);
-  }
-  else{
+  } else {
     console.log('The following properties will be updated for root interface:');
   }
   console.log(patch);
@@ -153,29 +151,16 @@ async function provisionDevice(payload) {
     provisioningClient.setProvisioningPayload(payload);
   }
 
-  provisioningClient.register(function(err, result) {
-    if (err) {
-      console.log("error registering device: " + err);
-    } else {
-      deviceConnectionString = 'HostName=' + result.assignedHub + ';DeviceId=' + result.deviceId + ';SharedAccessKey=' + symmetricKey;
-      console.log('registration succeeded');
-      console.log('assigned hub=' + result.assignedHub);
-      console.log('deviceId=' + result.deviceId);
-      console.log('payload=' + JSON.stringify(result.payload));
-    }
-  });
-  console.log('conn string: '+deviceConnectionString);
-
-  // try {
-  //   let result = provisioningClient.register();
-  //   deviceConnectionString = 'HostName=' + result.assignedHub + ';DeviceId=' + result.deviceId + ';SharedAccessKey=' + symmetricKey;
-  //   console.log('registration succeeded');
-  //   console.log('assigned hub=' + result.assignedHub);
-  //   console.log('deviceId=' + result.deviceId);
-  //   console.log('payload=' + JSON.stringify(result.payload));
-  // } catch (err) {
-  //   console.error("error registering device: " + err.toString());
-  // }
+  try {
+    let result = await provisioningClient.register();
+    deviceConnectionString = 'HostName=' + result.assignedHub + ';DeviceId=' + result.deviceId + ';SharedAccessKey=' + symmetricKey;
+    console.log('registration succeeded');
+    console.log('assigned hub=' + result.assignedHub);
+    console.log('deviceId=' + result.deviceId);
+    console.log('payload=' + JSON.stringify(result.payload));
+  } catch (err) {
+    console.error("error registering device: " + err.toString());
+  }
 }
 
 async function main() {
