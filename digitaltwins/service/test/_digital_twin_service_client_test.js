@@ -24,9 +24,9 @@ describe('DigitalTwinServiceClient', function () {
     testCallback();
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_002: [The `getDigitalTwin` method shall call the `getInterfaces` method of the protocol layer with the given argument.]*/
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_002: [The `getDigitalTwin` method shall call the `getDigitalTwin` method of the protocol layer with the given argument.]*/
   /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_003: [The `getDigitalTwin` method shall call the callback with an error parameter if a callback is passed..]*/
-  it('getDigitalTwin calls the getInterfaces method on the PL client', function (testCallback) {
+  it('getDigitalTwin calls the getDigitalTwin method on the PL client', function (testCallback) {
     var testTwinId = 'digitalTwinId';
     var testDigitalTwin = {
       interfaces: {
@@ -35,9 +35,9 @@ describe('DigitalTwinServiceClient', function () {
       response: undefined
     };
     var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.getInterfaces = sinon.stub().callsArgWith(1, null, testDigitalTwin);
+    testClient._pl.digitalTwin.getDigitalTwin = sinon.stub().callsArgWith(1, null, testDigitalTwin);
     testClient.getDigitalTwin(testTwinId, function (err, result, response) {
-      assert.isTrue(testClient._pl.digitalTwin.getInterfaces.calledWith(testTwinId));
+      assert.isTrue(testClient._pl.digitalTwin.getDigitalTwin.calledWith(testTwinId));
       assert.isNull(err);
       assert.deepEqual(result.interfaces, testDigitalTwin.interfaces);
       assert.deepEqual(result.response, testDigitalTwin.response);
@@ -50,9 +50,9 @@ describe('DigitalTwinServiceClient', function () {
     var testTwinId = 'digitalTwinId';
     var testError = new Error('fake error');
     var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.getInterfaces = sinon.stub().callsArgWith(1, testError);
+    testClient._pl.digitalTwin.getDigitalTwin = sinon.stub().callsArgWith(1, testError);
     testClient.getDigitalTwin(testTwinId, function (err) {
-      assert.isTrue(testClient._pl.digitalTwin.getInterfaces.calledWith(testTwinId));
+      assert.isTrue(testClient._pl.digitalTwin.getDigitalTwin.calledWith(testTwinId));
       assert.strictEqual(err, testError);
       testCallback();
     });
@@ -67,15 +67,178 @@ describe('DigitalTwinServiceClient', function () {
       }
     };
     var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.getInterfaces = sinon.stub().callsArgWith(1, null, testDigitalTwin);
+    testClient._pl.digitalTwin.getDigitalTwin = sinon.stub().callsArgWith(1, null, testDigitalTwin);
     const returnedPromise = await testClient.getDigitalTwin(testTwinId);
     assert.deepEqual(returnedPromise.interfaces, testDigitalTwin.interfaces);
     assert.deepEqual(returnedPromise.response, testDigitalTwin.response);
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_005: [The `getDigitalTwinInterfaceInstance` method shall call the `getInterface` method of the protocol layer with the given arguments.]*/
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_006: [The `getDigitalTwinInterfaceInstance` method shall call the callback with an error parameter if a callback is passed..]*/
-  it('getDigitalTwinInterfaceInstance calls getInterface on the PL client', function (testCallback) {
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_011: [The `updateDigitalTwin` method shall call the `updateDigitalTwin` method of the protocol layer with the given arguments.]*/
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_012: [The `updateDigitalTwin` method shall call the callback with an error parameter if a callback is passed..]*/
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_028: [** The `patch` argument of the `updateDigitalTwin` method should be a JSON string using the following format:
+   const patch = {
+    interfaces: {
+      [interfaceInstanceName]: {
+        properties: {
+          [propertyName]: {
+            desired: {
+              value: propertyValue
+            }
+          }
+        }
+      }
+    }
+  };
+  The interfaceInstanceName should be an existing interfaceInstance's name.
+  The propertyName could be existing or new.
+  The patch should contain difference to a previously reported twin only (e.g. patch).]*/
+  it('updateDigitalTwin calls updateDigitalTwin on the PL client', function (testCallback) {
+    var testTwinId = 'digitalTwinId';
+    var testPropertyValue ='testPropertyValue';
+
+    var testServicePatch = {
+      interfaces: {
+        interfaceInstanceName: {
+          properties: {
+            testPropertyName: {
+              value: testPropertyValue
+            }
+          }
+        }
+      },
+      version: 1234
+    };
+    var testUserPatch = {
+      interfaces: {
+        interfaceInstanceName: {
+          properties: {
+            testPropertyName: {
+              value: testPropertyValue
+            }
+          }
+        }
+      },
+      version: 1234
+    };
+
+    var testClient = new DigitalTwinServiceClient(testCredentials);
+    testClient._pl.digitalTwin.updateDigitalTwin = sinon.stub().callsArgWith(3, null, testServicePatch, null, undefined);
+    testClient.updateDigitalTwin(testTwinId, testUserPatch, function (err, result) {
+      assert.isTrue(testClient._pl.digitalTwin.updateDigitalTwin.calledWith(testTwinId, testUserPatch));
+      assert.isNull(err);
+      assert.deepEqual(result, testUserPatch);
+      testCallback();
+    });
+  });
+
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_013: [The `updateDigitalTwin` method shall return error if the method of the protocol layer failed.]*/
+  it('updateDigitalTwin calls its callback with an error if the PL client fails', function (testCallback) {
+    var testTwinId = 'digitalTwinId';
+    var testPatch = {
+      interfaces: {
+        testInterfaceInstanceName: {}
+      }
+    };
+    var testError = new Error('fake error');
+    var testClient = new DigitalTwinServiceClient(testCredentials);
+    testClient._pl.digitalTwin.updateDigitalTwin = sinon.stub().callsArgWith(3, testError);
+    testClient.updateDigitalTwin(testTwinId, testPatch, function (err, result) {
+      assert.isTrue(testClient._pl.digitalTwin.updateDigitalTwin.calledWith(testTwinId));
+      assert.strictEqual(err, testError);
+      testCallback();
+    });
+  });
+
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_023: [The `updateDigitalTwin` method shall return a promise if there is no callback passed.]*/
+  it('updateDigitalTwin shall return a promise if there is no callback passed', async () => {
+    var testTwinId = 'digitalTwinId';
+    var testDigitalTwin = {
+      interfaces: {
+        testInterfaceInstanceName: {}
+      }
+    };
+    var testPatch = {
+      eTag: '001'
+    };
+    var testClient = new DigitalTwinServiceClient(testCredentials);
+    testClient._pl.digitalTwin.updateDigitalTwin = sinon.stub().callsArgWith(3, null, testDigitalTwin, null, undefined);
+    const returnedPromise = await testClient.updateDigitalTwin(testTwinId, testPatch);
+    assert.deepEqual(returnedPromise, testDigitalTwin);
+  });
+
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_026: [The `updateDigitalTwin` method shall call the `updateDigitalTwin` method of the protocol layer with the given arguments including eTag.]*/
+  it('updateDigitalTwin calls updateDigitalTwin on the PL client using eTag', function (testCallback) {
+    var testTwinId = 'digitalTwinId';
+    var eTag = 'testETag';
+    var testPropertyValue ='testPropertyValue';
+
+    var testServicePatch = {
+      interfaces: {
+        testInterfaceInstanceName: {
+          properties: {
+            testPropertyName: {
+              value: testPropertyValue
+            }
+          }
+        }
+      },
+      version: undefined
+    };
+    var testResponse = {
+      parsedHeaders: {
+        eTag: '001'
+      }
+    };
+    var testUserPatch = {
+      interfaces: {
+        testInterfaceInstanceName: {
+          properties: {
+            testPropertyName: {
+              value: testPropertyValue
+            }
+          }
+        }
+      },
+      version: undefined
+    };
+    var testClient = new DigitalTwinServiceClient(testCredentials);
+    testClient._pl.digitalTwin.updateDigitalTwin = sinon.stub().callsArgWith(3, null, testServicePatch, null, testResponse);
+    testClient.updateDigitalTwin(testTwinId, testUserPatch, eTag, function (err, result) {
+      assert.isTrue(testClient._pl.digitalTwin.updateDigitalTwin.calledWith(testTwinId, testUserPatch));
+      assert.isNull(err);
+      assert.deepEqual(result, testUserPatch);
+      testCallback();
+    });
+  });
+
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_030: [The `updateDigitalTwin` method shall return a promise if eTag is passed and there is no callback passed.] */
+  it('updateDigitalTwin shall return a promise if eTag is passed and there is no callback passed', async () => {
+    var testTwinId = 'digitalTwinId';
+    var eTag = 'eTag';
+    var testServicePatch = {
+      interfaces: {
+        testInterfaceInstanceName: {}
+      }
+    };
+    var testResponse = {
+      interfaces: {
+        testInterfaceInstanceName: {}
+      }
+    };
+    var testUserPatch = {
+      interfaces: {
+        testInterfaceInstanceName: {}
+      }
+    };
+    var testClient = new DigitalTwinServiceClient(testCredentials);
+    testClient._pl.digitalTwin.updateDigitalTwin = sinon.stub().callsArgWith(3, null, testServicePatch, null, testResponse);
+    const returnedPromise = await testClient.updateDigitalTwin(testTwinId, testUserPatch, eTag);
+    assert.deepEqual(returnedPromise._response, testUserPatch);
+  });
+
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_005: [The `getComponent` method shall call the `getComponent` method of the protocol layer with the given arguments.]*/
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_006: [The `getComponent` method shall call the callback with an error parameter if a callback is passed..]*/
+  it('getComponent calls getComponent on the PL client', function (testCallback) {
     var testTwinId = 'digitalTwinId';
     var testInterfaceInstanceName = 'testInterfaceInstanceName';   
     var testDigitalTwin = {
@@ -84,44 +247,38 @@ describe('DigitalTwinServiceClient', function () {
       },
       version: 1234
     };
-    var testResponse = {
-      parsedHeaders: {
-        eTag: '001'
-      }
-    };
     var expectedTestDigitalTwin = {
       interfaces: {
         interfaceInstanceName: {}
       },
-      eTag: '001',
       version: 1234
     };
     var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.getInterface = sinon.stub().callsArgWith(2, null, testDigitalTwin, null, testResponse);
-    testClient.getDigitalTwinInterfaceInstance(testTwinId, testInterfaceInstanceName, function (err, result) {
-      assert.isTrue(testClient._pl.digitalTwin.getInterface.calledWith(testTwinId, testInterfaceInstanceName));
+    testClient._pl.digitalTwin.getComponent = sinon.stub().callsArgWith(2, null, testDigitalTwin, null, undefined);
+    testClient.getComponent(testTwinId, testInterfaceInstanceName, function (err, result) {
+      assert.isTrue(testClient._pl.digitalTwin.getComponent.calledWith(testTwinId, testInterfaceInstanceName));
       assert.isNull(err);
       assert.deepEqual(result, expectedTestDigitalTwin);
       testCallback();
     });
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_007: [The `getDigitalTwinInterfaceInstance` method shall return error if the method of the protocol layer failed.]*/
-  it('getDigitalTwinInterfaceInstance calls its callback with an error if the PL client fails', function (testCallback) {
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_007: [The `getComponent` method shall return error if the method of the protocol layer failed.]*/
+  it('getComponent calls its callback with an error if the PL client fails', function (testCallback) {
     var testTwinId = 'digitalTwinId';
     var testError = new Error('fake error');
     var testInterfaceInstanceName = 'testInterfaceInstanceName';
     var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.getInterface = sinon.stub().callsArgWith(2, testError);
-    testClient.getDigitalTwinInterfaceInstance(testTwinId, testInterfaceInstanceName, function (err, result) {
-      assert.isTrue(testClient._pl.digitalTwin.getInterface.calledWith(testTwinId, testInterfaceInstanceName));
+    testClient._pl.digitalTwin.getComponent = sinon.stub().callsArgWith(2, testError);
+    testClient.getComponent(testTwinId, testInterfaceInstanceName, function (err, result) {
+      assert.isTrue(testClient._pl.digitalTwin.getComponent.calledWith(testTwinId, testInterfaceInstanceName));
       assert.strictEqual(err, testError);
       testCallback();
     });
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_021: [The `getDigitalTwinInterfaceInstance` method shall return a promise if there is no callback passed.]*/
-  it('getDigitalTwinInterfaceInstance shall return a promise if there is no callback passed', async () => {
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_021: [The `getComponent` method shall return a promise if there is no callback passed.]*/
+  it('getComponent shall return a promise if there is no callback passed', async () => {
     var testTwinId = 'digitalTwinId';
     var testDigitalTwin = {
       interfaces: {
@@ -130,8 +287,8 @@ describe('DigitalTwinServiceClient', function () {
     };
     var testInterfaceInstanceName = 'testInterfaceInstanceName';
     var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.getInterface = sinon.stub().callsArgWith(2, null, testDigitalTwin.interfaces);
-    const returnedPromise = await testClient.getDigitalTwinInterfaceInstance(testTwinId, testInterfaceInstanceName);
+    testClient._pl.digitalTwin.getComponent = sinon.stub().callsArgWith(2, null, testDigitalTwin.interfaces);
+    const returnedPromise = await testClient.getComponent(testTwinId, testInterfaceInstanceName);
     assert.isNotNull(returnedPromise);
   });
 
@@ -179,9 +336,9 @@ describe('DigitalTwinServiceClient', function () {
     assert.isNotNull(returnedPromise);
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_011: [The `updateDigitalTwin` method shall call the `updateInterfaces` method of the protocol layer with the given arguments.]*/
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_012: [The `updateDigitalTwin` method shall call the callback with an error parameter if a callback is passed..]*/
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_028: [** The `patch` argument of the `updateDigitalTwin` method should be a JSON string using the following format:
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_011: [The `updateComponent` method shall call the `updateComponent` method of the protocol layer with the given arguments.]*/
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_012: [The `updateComponent` method shall call the callback with an error parameter if a callback is passed..]*/
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_028: [** The `patch` argument of the `updateComponent` method should be a JSON string using the following format:
    const patch = {
     interfaces: {
       [interfaceInstanceName]: {
@@ -198,7 +355,7 @@ describe('DigitalTwinServiceClient', function () {
   The interfaceInstanceName should be an existing interfaceInstance's name.
   The propertyName could be existing or new.
   The patch should contain difference to a previously reported twin only (e.g. patch).]*/
-  it('updateDigitalTwin calls updateInterfaces on the PL client', function (testCallback) {
+  it('updateComponent calls updateComponent on the PL client', function (testCallback) {
     var testTwinId = 'digitalTwinId';
     var testPropertyValue ='testPropertyValue';
 
@@ -214,11 +371,6 @@ describe('DigitalTwinServiceClient', function () {
       },
       version: 1234
     };
-    var testResponse = {
-      parsedHeaders: {
-        eTag: '001'
-      }
-    };
     var testUserPatch = {
       interfaces: {
         interfaceInstanceName: {
@@ -229,22 +381,21 @@ describe('DigitalTwinServiceClient', function () {
           }
         }
       },
-      eTag: '001',
       version: 1234
     };
 
     var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.updateInterfaces = sinon.stub().callsArgWith(3, null, testServicePatch, null, testResponse);
-    testClient.updateDigitalTwin(testTwinId, testUserPatch, function (err, result) {
-      assert.isTrue(testClient._pl.digitalTwin.updateInterfaces.calledWith(testTwinId, testUserPatch));
+    testClient._pl.digitalTwin.updateComponent = sinon.stub().callsArgWith(3, null, testServicePatch, null, undefined);
+    testClient.updateComponent(testTwinId, testUserPatch, function (err, result) {
+      assert.isTrue(testClient._pl.digitalTwin.updateComponent.calledWith(testTwinId, testUserPatch));
       assert.isNull(err);
       assert.deepEqual(result, testUserPatch);
       testCallback();
     });
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_013: [The `updateDigitalTwin` method shall return error if the method of the protocol layer failed.]*/
-  it('updateDigitalTwin calls its callback with an error if the PL client fails', function (testCallback) {
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_013: [The `updateComponent` method shall return error if the method of the protocol layer failed.]*/
+  it('updateComponent calls its callback with an error if the PL client fails', function (testCallback) {
     var testTwinId = 'digitalTwinId';
     var testPatch = {
       interfaces: {
@@ -253,25 +404,20 @@ describe('DigitalTwinServiceClient', function () {
     };
     var testError = new Error('fake error');
     var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.updateInterfaces = sinon.stub().callsArgWith(3, testError);
-    testClient.updateDigitalTwin(testTwinId, testPatch, function (err, result) {
-      assert.isTrue(testClient._pl.digitalTwin.updateInterfaces.calledWith(testTwinId));
+    testClient._pl.digitalTwin.updateComponent = sinon.stub().callsArgWith(3, testError);
+    testClient.updateComponent(testTwinId, testPatch, function (err, result) {
+      assert.isTrue(testClient._pl.digitalTwin.updateComponent.calledWith(testTwinId));
       assert.strictEqual(err, testError);
       testCallback();
     });
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_023: [The `updateDigitalTwin` method shall return a promise if there is no callback passed.]*/
-  it('updateDigitalTwin shall return a promise if there is no callback passed', async () => {
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_023: [The `updateComponent` method shall return a promise if there is no callback passed.]*/
+  it('updateComponent shall return a promise if there is no callback passed', async () => {
     var testTwinId = 'digitalTwinId';
     var testDigitalTwin = {
       interfaces: {
         testInterfaceInstanceName: {}
-      }
-    };
-    var testResponse = {
-      parsedHeaders: {
-        eTag: '001'
       }
     };
     var testPatch = {
@@ -280,20 +426,20 @@ describe('DigitalTwinServiceClient', function () {
       }
     };
     var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.updateInterfaces = sinon.stub().callsArgWith(3, null, testDigitalTwin, null, testResponse);
-    const returnedPromise = await testClient.updateDigitalTwin(testTwinId, testPatch);
-    assert.deepEqual(returnedPromise.interfaces, testPatch.interfaces);
+    testClient._pl.digitalTwin.updateComponent = sinon.stub().callsArgWith(3, null, testDigitalTwin, null, undefined);
+    const returnedPromise = await testClient.updateComponent(testTwinId, testPatch);
+    assert.deepEqual(returnedPromise.eTag, testPatch.eTag);
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_026: [The `updateDigitalTwin` method shall call the `updateInterfaces` method of the protocol layer with the given arguments including eTag.]*/
-  it('updateDigitalTwin calls updateInterfaces on the PL client using eTag', function (testCallback) {
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_026: [The `updateComponent` method shall call the `updateComponent` method of the protocol layer with the given arguments including eTag.]*/
+  it('updateComponent calls updateComponent on the PL client using eTag', function (testCallback) {
     var testTwinId = 'digitalTwinId';
     var eTag = 'testETag';
     var testPropertyValue ='testPropertyValue';
 
     var testServicePatch = {
       interfaces: {
-        testInterfaceInstanceName: {
+        interfaceInstanceName: {
           properties: {
             testPropertyName: {
               value: testPropertyValue
@@ -301,16 +447,11 @@ describe('DigitalTwinServiceClient', function () {
           }
         }
       },
-      version: undefined
-    };
-    var testResponse = {
-      parsedHeaders: {
-        eTag: '001'
-      }
+      version: 1234
     };
     var testUserPatch = {
       interfaces: {
-        testInterfaceInstanceName: {
+        interfaceInstanceName: {
           properties: {
             testPropertyName: {
               value: testPropertyValue
@@ -318,21 +459,20 @@ describe('DigitalTwinServiceClient', function () {
           }
         }
       },
-      eTag: '001',
-      version: undefined
+      version: 1234
     };
     var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.updateInterfaces = sinon.stub().callsArgWith(3, null, testServicePatch, null, testResponse);
-    testClient.updateDigitalTwin(testTwinId, testUserPatch, eTag, function (err, result) {
-      assert.isTrue(testClient._pl.digitalTwin.updateInterfaces.calledWith(testTwinId, testUserPatch));
+    testClient._pl.digitalTwin.updateComponent = sinon.stub().callsArgWith(3, null, testServicePatch, null, undefined);
+    testClient.updateComponent(testTwinId, testUserPatch, eTag, function (err, result) {
+      assert.isTrue(testClient._pl.digitalTwin.updateComponent.calledWith(testTwinId, testUserPatch));
       assert.isNull(err);
       assert.deepEqual(result, testUserPatch);
       testCallback();
     });
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_030: [The `updateDigitalTwin` method shall return a promise if eTag is passed and there is no callback passed.] */
-  it('updateDigitalTwin shall return a promise if eTag is passed and there is no callback passed', async () => {
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_030: [The `updateComponent` method shall return a promise if eTag is passed and there is no callback passed.] */
+  it('updateComponent shall return a promise if eTag is passed and there is no callback passed', async () => {
     var testTwinId = 'digitalTwinId';
     var eTag = 'eTag';
     var testServicePatch = {
@@ -340,236 +480,67 @@ describe('DigitalTwinServiceClient', function () {
         testInterfaceInstanceName: {}
       }
     };
-    var testResponse = {
-      parsedHeaders: {
-        eTag: '001'
-      }
-    };
     var testUserPatch = {
       interfaces: {
         testInterfaceInstanceName: {}
       }
     };
     var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.updateInterfaces = sinon.stub().callsArgWith(3, null, testServicePatch, null, testResponse);
-    const returnedPromise = await testClient.updateDigitalTwin(testTwinId, testUserPatch, eTag);
-    assert.deepEqual(returnedPromise.interfaces, testUserPatch.interfaces);
+    testClient._pl.digitalTwin.updateComponent = sinon.stub().callsArgWith(3, null, testServicePatch, null, undefined);
+    const returnedPromise = await testClient.updateComponent(testTwinId, testUserPatch, eTag);
+    assert.deepEqual(returnedPromise.eTag, testUserPatch.eTag);
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_014: [The `updateDigitalTwinProperty` method shall call the `updateInterfaces` method of the protocol layer.]*/
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_015: [The `updateDigitalTwinProperty` method shall call the callback with an error parameter if a callback is passed..]*/
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_029: [** The `updateDigitalTwinProperty` method receives the following arguments:
-  const interfaceInstanceName - an existing interfaceInstance's name.
-  const propertyName - the property what need to be updated or created.
-  const property value - the reported value of the property.]*/
-  it('updateDigitalTwinProperty calls updateInterfaces on the PL client', function (testCallback) {
-    var testTwinId = 'digitalTwinId';
-    var testInterfaceInstanceName ='testInterfaceInstanceName';
-    var testPropertyName ='testPropertyName';
-    var testPropertyValue ='testPropertyValue';
-
-    var testServicePatch = {
-      interfaces: {
-        testInterfaceInstanceName: {
-          properties: {
-            testPropertyName: {
-              value: testPropertyValue
-            }
-          }
-        }
-      },
-      version: undefined
-    };
-    var testResponse = {
-      parsedHeaders: {
-        eTag: '001'
-      }
-    };
-    var testUserPatch = {
-      interfaces: {
-        testInterfaceInstanceName: {
-          properties: {
-            testPropertyName: {
-              value: testPropertyValue
-            }
-          }
-        }
-      },
-      eTag: '001',
-      version: undefined
-    };
-
-    var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.updateInterfaces = sinon.stub().callsArgWith(3, null, testServicePatch, null, testResponse);
-    testClient.updateDigitalTwinProperty(testTwinId, testInterfaceInstanceName, testPropertyName, testPropertyValue, function (err, result) {
-      assert.isTrue(testClient._pl.digitalTwin.updateInterfaces.calledWith(testTwinId));
-      assert.isNull(err);
-      assert.deepEqual(result, testUserPatch);
-      testCallback();
-    });
-  });
-
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_016: [The `updateDigitalTwinProperty` method shall return error if the method of the protocol layer failed.]*/
-  it('updateDigitalTwinProperty calls its callback with an error if the PL client fails', function (testCallback) {
-    var testTwinId = 'digitalTwinId';
-    var testError = new Error('fake error');
-    var testInterfaceInstanceName = 'testInterfaceInstanceName';
-    var testPropertyName = 'testPropertyName';
-    var testPropertyValue = 'testPropertyValue';
-    var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.updateInterfaces = sinon.stub().callsArgWith(3, testError);
-    testClient.updateDigitalTwinProperty(testTwinId, testInterfaceInstanceName, testPropertyName, testPropertyValue, function (err, result) {
-      assert.isTrue(testClient._pl.digitalTwin.updateInterfaces.calledWith(testTwinId));
-      assert.strictEqual(err, testError);
-      testCallback();
-    });
-  });
-
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_024: [The `updateDigitalTwinProperty` method shall return a promise if there is no callback passed.]*/
-  it('updateDigitalTwinProperty shall return a promise if there is no callback passed', async () => {
-    var testTwinId = 'digitalTwinId';
-    var testInterfaceInstanceName = 'testInterfaceInstanceName';
-    var testPropertyName = 'testPropertyName';
-    var testPropertyValue = 'testPropertyValue';
-
-    var testServicePatch = {
-      interfaces: {
-        testInterfaceInstanceName: {
-          properties: {
-            testPropertyName: {
-              value: testPropertyValue
-            }
-          }
-        }
-      }
-    };
-    var testUserPatch = {
-      interfaces: {
-        testInterfaceInstanceName: {
-          properties: {
-            testPropertyName: {
-              value: testPropertyValue
-            }
-          }
-        }
-      }
-    };
-
-    var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.updateInterfaces = sinon.stub().callsArgWith(3, null, testServicePatch);
-    const returnedPromise = await testClient.updateDigitalTwinProperty(testTwinId, testInterfaceInstanceName, testPropertyName, testPropertyValue);
-    assert.deepEqual(returnedPromise.interfaces, testUserPatch.interfaces);
-  });
-
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_027: [The `updateDigitalTwinProperty` method shall call the `updateInterfaces` method of the protocol layer including eTag.]*/
-  it('updateDigitalTwinProperty calls updateInterfaces on the PL client using eTag', function (testCallback) {
-    var testTwinId = 'digitalTwinId';
-    var testInterfaceInstanceName = 'testInterfaceInstanceName';
-    var testPropertyName = 'testPropertyName';
-    var testPropertyValue = 'testPropertyValue';
-    var eTag = 'testETag';
-    var options = {
-      ifMatch: eTag
-    };
-
-    var testServicePatch = {
-      interfaces: {
-        testInterfaceInstanceName: {
-          properties: {
-            testPropertyName: {
-              desired: {
-                value: testPropertyValue
-              }
-            }
-          }
-        }
-      }
-    };
-
-    var testUserPatch = {
-      interfaces: {
-        [testInterfaceInstanceName]: {
-          properties: {
-            [testPropertyName]: {
-              desired: {
-                value: testPropertyValue
-              }
-            }
-          }
-        }
-      },
-      eTag: undefined,
-      version: undefined
-    };
-    var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.updateInterfaces = sinon.stub().callsArgWith(3, null, testServicePatch);
-    testClient.updateDigitalTwinProperty(testTwinId, testInterfaceInstanceName, testPropertyName, testPropertyValue, eTag, function (err, result) {
-      assert.isTrue(testClient._pl.digitalTwin.updateInterfaces.calledWith(testTwinId));
-      assert.deepEqual(testClient._pl.digitalTwin.updateInterfaces.firstCall.args[1], testServicePatch);
-      assert.deepEqual(testClient._pl.digitalTwin.updateInterfaces.firstCall.args[2], options);
-      assert.isNull(err);
-      assert.deepEqual(result, testUserPatch);
-      testCallback();
-    });
-  });
-
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_017: [The `invokeCommand` method shall call the `invokeInterfaceCommand` method of the protocol layer with the given arguments.]*/
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_018: [The `invokeCommand` method shall call the callback with an error parameter if a callback is passed..]*/
-  it('invokeCommand calls invokeInterfaceCommand on the PL client', function (testCallback) {
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_017: [The `invokeComponentCommand` method shall call the `invokeComponentCommand` method of the protocol layer with the given arguments.]*/
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_018: [The `invokeComponentCommand` method shall call the callback with an error parameter if a callback is passed..]*/
+  it('invokeComponentCommand calls invokeComponentCommand on the PL client', function (testCallback) {
     var testTwinId = 'digitalTwinId';
 
-    var testResult = 'testResult';
     var testRequest = 'testRequest';
     var statusCode = 200;
     var requestId = '1234';
-    var testResponse = {
-      headers: {
-        get: function (key) {
-          if (key === 'x-ms-command-statuscode') {
-            return statusCode;
-          } else {
-            return requestId;
-          }
-        }
-      }
+    var testResult =  {
+      statusCode: number = statusCode,
+      requestId: string = requestId,
+      result: any = "testResult"
     };
     var expectedTestCommandResponse = {
       statusCode: number = statusCode,
       requestId: string = requestId,
-      result: any = testResult
+      result: any = "testResult"
     };
 
     var testInterfaceInstanceName = 'testInterfaceInstanceName';
     var testCommandName = 'testCommandName';
     var testArgument = 123456;
     var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.invokeInterfaceCommand = sinon.stub().callsArgWith(4, null, testResult, testRequest, testResponse);
-    testClient.invokeCommand(testTwinId, testInterfaceInstanceName, testCommandName, testArgument, function (err, result) {
-      assert.isTrue(testClient._pl.digitalTwin.invokeInterfaceCommand.calledWith(testTwinId, testInterfaceInstanceName, testCommandName, testArgument));
+    testClient._pl.digitalTwin.invokeComponentCommand1 = sinon.stub().callsArgWith(4, null, testResult, testRequest, undefined);
+    testClient.invokeComponentCommand(testTwinId, testInterfaceInstanceName, testCommandName, testArgument, function (err, result) {
+      assert.isTrue(testClient._pl.digitalTwin.invokeComponentCommand1.calledWith(testTwinId, testInterfaceInstanceName, testCommandName, testArgument));
       assert.isNull(err);
       assert.deepEqual(result, expectedTestCommandResponse);
       testCallback();
     });
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_019: [The `invokeCommand` method shall return error if the method of the protocol layer failed.]*/
-  it('invokeCommand calls its callback with an error if the PL client fails', function (testCallback) {
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_019: [The `invokeComponentCommand` method shall return error if the method of the protocol layer failed.]*/
+  it('invokeComponentCommand calls its callback with an error if the PL client fails', function (testCallback) {
     var testTwinId = 'digitalTwinId';
     var testError = new Error('fake error');
     var testInterfaceInstanceName = 'testInterfaceInstanceName';
     var testCommandName = 'testCommandName';
     var testArgument = 'abcdefg';
     var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.invokeInterfaceCommand = sinon.stub().callsArgWith(4, testError);
-    testClient.invokeCommand(testTwinId, testInterfaceInstanceName, testCommandName, testArgument, function (err, result) {
-      assert.isTrue(testClient._pl.digitalTwin.invokeInterfaceCommand.calledWith(testTwinId, testInterfaceInstanceName, testCommandName, testArgument));
+    testClient._pl.digitalTwin.invokeComponentCommand1 = sinon.stub().callsArgWith(4, testError);
+    testClient.invokeComponentCommand(testTwinId, testInterfaceInstanceName, testCommandName, testArgument, function (err, result) {
+      assert.isTrue(testClient._pl.digitalTwin.invokeComponentCommand1.calledWith(testTwinId, testInterfaceInstanceName, testCommandName, testArgument));
       assert.strictEqual(err, testError);
       testCallback();
     });
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_025: [The `invokeCommand` method shall return a promise if there is no callback passed.]*/
-  it('invokeCommand shall return a promise if there is no callback passed', async () => {
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_025: [The `invokeComponentCommand` method shall return a promise if there is no callback passed.]*/
+  it('invokeComponentCommand shall return a promise if there is no callback passed', async () => {
     var testTwinId = 'digitalTwinId';
     var testCommandResponse = {
       result: {
@@ -580,8 +551,8 @@ describe('DigitalTwinServiceClient', function () {
     var testCommandName = 'testCommandName';
     var testArgument = 123456;
     var testClient = new DigitalTwinServiceClient(testCredentials);
-    testClient._pl.digitalTwin.invokeInterfaceCommand = sinon.stub().callsArgWith(4, null, testCommandResponse);
-    const returnedPromise = await testClient.invokeCommand(testTwinId, testInterfaceInstanceName, testCommandName, testArgument);
+    testClient._pl.digitalTwin.invokeComponentCommand1 = sinon.stub().callsArgWith(4, null, testCommandResponse);
+    const returnedPromise = await testClient.invokeComponentCommand(testTwinId, testInterfaceInstanceName, testCommandName, testArgument);
     assert.isNotNull(returnedPromise);
   });
 });

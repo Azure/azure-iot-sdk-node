@@ -15,7 +15,7 @@ export const apiVersion: msRest.OperationQueryParameter = {
   mapper: {
     required: true,
     serializedName: "api-version",
-    defaultValue: '2019-07-01-preview',
+    defaultValue: '2020-05-31-preview',
     type: {
       name: "String"
     }
@@ -26,6 +26,16 @@ export const commandName: msRest.OperationURLParameter = {
   mapper: {
     required: true,
     serializedName: "commandName",
+    type: {
+      name: "String"
+    }
+  }
+};
+export const componentPath: msRest.OperationURLParameter = {
+  parameterPath: "componentPath",
+  mapper: {
+    required: true,
+    serializedName: "componentPath",
     type: {
       name: "String"
     }
@@ -131,6 +141,16 @@ export const jobType: msRest.OperationQueryParameter = {
     }
   }
 };
+export const lockToken: msRest.OperationURLParameter = {
+  parameterPath: "lockToken",
+  mapper: {
+    required: true,
+    serializedName: "lockToken",
+    type: {
+      name: "String"
+    }
+  }
+};
 export const mid: msRest.OperationURLParameter = {
   parameterPath: "mid",
   mapper: {
@@ -182,6 +202,30 @@ export const top: msRest.OperationQueryParameter = {
     serializedName: "top",
     type: {
       name: "Number"
+    }
+  }
+};
+export const xMsContinuation: msRest.OperationParameter = {
+  parameterPath: [
+    "options",
+    "xMsContinuation"
+  ],
+  mapper: {
+    serializedName: "x-ms-continuation",
+    type: {
+      name: "String"
+    }
+  }
+};
+export const xMsMaxItemCount: msRest.OperationParameter = {
+  parameterPath: [
+    "options",
+    "xMsMaxItemCount"
+  ],
+  mapper: {
+    serializedName: "x-ms-max-item-count",
+    type: {
+      name: "String"
     }
   }
 };

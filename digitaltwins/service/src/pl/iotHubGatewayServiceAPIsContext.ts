@@ -14,16 +14,16 @@ import * as Models from "./models";
 const packageName = "";
 const packageVersion = "";
 
-export class IotHubGatewayServiceAPIs20190701PreviewContext extends msRest.ServiceClient {
+export class IotHubGatewayServiceAPIsContext extends msRest.ServiceClient {
   apiVersion?: string;
   credentials: msRest.ServiceClientCredentials;
 
   /**
-   * Initializes a new instance of the IotHubGatewayServiceAPIs20190701PreviewContext class.
+   * Initializes a new instance of the IotHubGatewayServiceAPIsContext class.
    * @param credentials Subscription credentials which uniquely identify client subscription.
    * @param [options] The parameter options
    */
-  constructor(credentials: msRest.ServiceClientCredentials, options?: Models.IotHubGatewayServiceAPIs20190701PreviewOptions) {
+  constructor(credentials: msRest.ServiceClientCredentials, options?: Models.IotHubGatewayServiceAPIsOptions) {
     if (credentials == undefined) {
       throw new Error("'credentials' cannot be null.");
     }
@@ -39,7 +39,7 @@ export class IotHubGatewayServiceAPIs20190701PreviewContext extends msRest.Servi
 
     super(credentials, options);
 
-    this.apiVersion = '2019-07-01-preview';
+    this.apiVersion = '2020-05-31-preview';
     this.baseUri = options.baseUri || this.baseUri || "https://fully-qualified-iothubname.azure-devices.net";
     this.requestContentType = "application/json; charset=utf-8";
     this.credentials = credentials;

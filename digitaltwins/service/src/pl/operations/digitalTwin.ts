@@ -12,68 +12,152 @@ import * as msRest from "@azure/ms-rest-js";
 import * as Models from "../models";
 import * as Mappers from "../models/digitalTwinMappers";
 import * as Parameters from "../models/parameters";
-import { IotHubGatewayServiceAPIs20190701PreviewContext } from "../iotHubGatewayServiceAPIs20190701PreviewContext";
+import { IotHubGatewayServiceAPIsContext } from "../iotHubGatewayServiceAPIsContext";
 
 /** Class representing a DigitalTwin. */
 export class DigitalTwin {
-  private readonly client: IotHubGatewayServiceAPIs20190701PreviewContext;
+  private readonly client: IotHubGatewayServiceAPIsContext;
 
   /**
    * Create a DigitalTwin.
-   * @param {IotHubGatewayServiceAPIs20190701PreviewContext} client Reference to the service client.
+   * @param {IotHubGatewayServiceAPIsContext} client Reference to the service client.
    */
-  constructor(client: IotHubGatewayServiceAPIs20190701PreviewContext) {
+  constructor(client: IotHubGatewayServiceAPIsContext) {
     this.client = client;
   }
 
   /**
+   * For IoT Hub VNET related
+   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
+   * version '2020-03-13'.These features are currently in general availability in the East US, West
+   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
+   * these features to all regions by end of month May. For rest of the APIs please continue using
+   * API version '2019-10-01'
+   * @summary Gets a digital twin.
+   * @param id Digital Twin ID.
+   * @param [options] The optional parameters
+   * @returns Promise<Models.DigitalTwinGetDigitalTwinResponse>
+   */
+  getDigitalTwin(id: string, options?: msRest.RequestOptionsBase): Promise<Models.DigitalTwinGetDigitalTwinResponse>;
+  /**
+   * @param id Digital Twin ID.
+   * @param callback The callback
+   */
+  getDigitalTwin(id: string, callback: msRest.ServiceCallback<any>): void;
+  /**
+   * @param id Digital Twin ID.
+   * @param options The optional parameters
+   * @param callback The callback
+   */
+  getDigitalTwin(id: string, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<any>): void;
+  getDigitalTwin(id: string, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<any>, callback?: msRest.ServiceCallback<any>): Promise<Models.DigitalTwinGetDigitalTwinResponse> {
+    return this.client.sendOperationRequest(
+      {
+        id,
+        options
+      },
+      getDigitalTwinOperationSpec,
+      callback) as Promise<Models.DigitalTwinGetDigitalTwinResponse>;
+  }
+
+  /**
+   * For IoT Hub VNET related
+   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
+   * version '2020-03-13'.These features are currently in general availability in the East US, West
+   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
+   * these features to all regions by end of month May. For rest of the APIs please continue using
+   * API version '2019-10-01'
+   * @summary Updates a digital twin.
+   * @param id Digital Twin ID.
+   * @param digitalTwinPatch json-patch contents to update.
+   * @param [options] The optional parameters
+   * @returns Promise<Models.DigitalTwinUpdateDigitalTwinResponse>
+   */
+  updateDigitalTwin(id: string, digitalTwinPatch: any[], options?: Models.DigitalTwinUpdateDigitalTwinOptionalParams): Promise<Models.DigitalTwinUpdateDigitalTwinResponse>;
+  /**
+   * @param id Digital Twin ID.
+   * @param digitalTwinPatch json-patch contents to update.
+   * @param callback The callback
+   */
+  updateDigitalTwin(id: string, digitalTwinPatch: any[], callback: msRest.ServiceCallback<void>): void;
+  /**
+   * @param id Digital Twin ID.
+   * @param digitalTwinPatch json-patch contents to update.
+   * @param options The optional parameters
+   * @param callback The callback
+   */
+  updateDigitalTwin(id: string, digitalTwinPatch: any[], options: Models.DigitalTwinUpdateDigitalTwinOptionalParams, callback: msRest.ServiceCallback<void>): void;
+  updateDigitalTwin(id: string, digitalTwinPatch: any[], options?: Models.DigitalTwinUpdateDigitalTwinOptionalParams | msRest.ServiceCallback<void>, callback?: msRest.ServiceCallback<void>): Promise<Models.DigitalTwinUpdateDigitalTwinResponse> {
+    return this.client.sendOperationRequest(
+      {
+        id,
+        digitalTwinPatch,
+        options
+      },
+      updateDigitalTwinOperationSpec,
+      callback) as Promise<Models.DigitalTwinUpdateDigitalTwinResponse>;
+  }
+
+  /**
+   * For IoT Hub VNET related
+   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
+   * version '2020-03-13'.These features are currently in general availability in the East US, West
+   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
+   * these features to all regions by end of month May. For rest of the APIs please continue using
+   * API version '2019-10-01'
    * @summary Gets the list of interfaces.
    * @param digitalTwinId Digital Twin ID. Format of digitalTwinId is DeviceId[~ModuleId]. ModuleId
    * is optional.
    * @param [options] The optional parameters
-   * @returns Promise<Models.DigitalTwinGetInterfacesResponse>
+   * @returns Promise<Models.DigitalTwinGetComponentsResponse>
    */
-  getInterfaces(digitalTwinId: string, options?: msRest.RequestOptionsBase): Promise<Models.DigitalTwinGetInterfacesResponse>;
+  getComponents(digitalTwinId: string, options?: msRest.RequestOptionsBase): Promise<Models.DigitalTwinGetComponentsResponse>;
   /**
    * @param digitalTwinId Digital Twin ID. Format of digitalTwinId is DeviceId[~ModuleId]. ModuleId
    * is optional.
    * @param callback The callback
    */
-  getInterfaces(digitalTwinId: string, callback: msRest.ServiceCallback<Models.DigitalTwinInterfaces>): void;
+  getComponents(digitalTwinId: string, callback: msRest.ServiceCallback<Models.DigitalTwinInterfaces>): void;
   /**
    * @param digitalTwinId Digital Twin ID. Format of digitalTwinId is DeviceId[~ModuleId]. ModuleId
    * is optional.
    * @param options The optional parameters
    * @param callback The callback
    */
-  getInterfaces(digitalTwinId: string, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<Models.DigitalTwinInterfaces>): void;
-  getInterfaces(digitalTwinId: string, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<Models.DigitalTwinInterfaces>, callback?: msRest.ServiceCallback<Models.DigitalTwinInterfaces>): Promise<Models.DigitalTwinGetInterfacesResponse> {
+  getComponents(digitalTwinId: string, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<Models.DigitalTwinInterfaces>): void;
+  getComponents(digitalTwinId: string, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<Models.DigitalTwinInterfaces>, callback?: msRest.ServiceCallback<Models.DigitalTwinInterfaces>): Promise<Models.DigitalTwinGetComponentsResponse> {
     return this.client.sendOperationRequest(
       {
         digitalTwinId,
         options
       },
-      getInterfacesOperationSpec,
-      callback) as Promise<Models.DigitalTwinGetInterfacesResponse>;
+      getComponentsOperationSpec,
+      callback) as Promise<Models.DigitalTwinGetComponentsResponse>;
   }
 
   /**
+   * For IoT Hub VNET related
+   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
+   * version '2020-03-13'.These features are currently in general availability in the East US, West
+   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
+   * these features to all regions by end of month May. For rest of the APIs please continue using
+   * API version '2019-10-01'
    * @summary Updates desired properties of multiple interfaces.
    * Example URI: "digitalTwins/{digitalTwinId}/interfaces"
    * @param digitalTwinId Digital Twin ID. Format of digitalTwinId is DeviceId[~ModuleId]. ModuleId
    * is optional.
    * @param interfacesPatchInfo Multiple interfaces desired properties to update.
    * @param [options] The optional parameters
-   * @returns Promise<Models.DigitalTwinUpdateInterfacesResponse>
+   * @returns Promise<Models.DigitalTwinUpdateComponentResponse>
    */
-  updateInterfaces(digitalTwinId: string, interfacesPatchInfo: Models.DigitalTwinInterfacesPatch, options?: Models.DigitalTwinUpdateInterfacesOptionalParams): Promise<Models.DigitalTwinUpdateInterfacesResponse>;
+  updateComponent(digitalTwinId: string, interfacesPatchInfo: Models.DigitalTwinInterfacesPatch, options?: Models.DigitalTwinUpdateComponentOptionalParams): Promise<Models.DigitalTwinUpdateComponentResponse>;
   /**
    * @param digitalTwinId Digital Twin ID. Format of digitalTwinId is DeviceId[~ModuleId]. ModuleId
    * is optional.
    * @param interfacesPatchInfo Multiple interfaces desired properties to update.
    * @param callback The callback
    */
-  updateInterfaces(digitalTwinId: string, interfacesPatchInfo: Models.DigitalTwinInterfacesPatch, callback: msRest.ServiceCallback<Models.DigitalTwinInterfaces>): void;
+  updateComponent(digitalTwinId: string, interfacesPatchInfo: Models.DigitalTwinInterfacesPatch, callback: msRest.ServiceCallback<Models.DigitalTwinInterfaces>): void;
   /**
    * @param digitalTwinId Digital Twin ID. Format of digitalTwinId is DeviceId[~ModuleId]. ModuleId
    * is optional.
@@ -81,35 +165,41 @@ export class DigitalTwin {
    * @param options The optional parameters
    * @param callback The callback
    */
-  updateInterfaces(digitalTwinId: string, interfacesPatchInfo: Models.DigitalTwinInterfacesPatch, options: Models.DigitalTwinUpdateInterfacesOptionalParams, callback: msRest.ServiceCallback<Models.DigitalTwinInterfaces>): void;
-  updateInterfaces(digitalTwinId: string, interfacesPatchInfo: Models.DigitalTwinInterfacesPatch, options?: Models.DigitalTwinUpdateInterfacesOptionalParams | msRest.ServiceCallback<Models.DigitalTwinInterfaces>, callback?: msRest.ServiceCallback<Models.DigitalTwinInterfaces>): Promise<Models.DigitalTwinUpdateInterfacesResponse> {
+  updateComponent(digitalTwinId: string, interfacesPatchInfo: Models.DigitalTwinInterfacesPatch, options: Models.DigitalTwinUpdateComponentOptionalParams, callback: msRest.ServiceCallback<Models.DigitalTwinInterfaces>): void;
+  updateComponent(digitalTwinId: string, interfacesPatchInfo: Models.DigitalTwinInterfacesPatch, options?: Models.DigitalTwinUpdateComponentOptionalParams | msRest.ServiceCallback<Models.DigitalTwinInterfaces>, callback?: msRest.ServiceCallback<Models.DigitalTwinInterfaces>): Promise<Models.DigitalTwinUpdateComponentResponse> {
     return this.client.sendOperationRequest(
       {
         digitalTwinId,
         interfacesPatchInfo,
         options
       },
-      updateInterfacesOperationSpec,
-      callback) as Promise<Models.DigitalTwinUpdateInterfacesResponse>;
+      updateComponentOperationSpec,
+      callback) as Promise<Models.DigitalTwinUpdateComponentResponse>;
   }
 
   /**
+   * For IoT Hub VNET related
+   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
+   * version '2020-03-13'.These features are currently in general availability in the East US, West
+   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
+   * these features to all regions by end of month May. For rest of the APIs please continue using
+   * API version '2019-10-01'
    * @summary Gets the interface of given interfaceId.
    * Example URI: "digitalTwins/{digitalTwinId}/interfaces/{interfaceName}"
    * @param digitalTwinId Digital Twin ID. Format of digitalTwinId is DeviceId[~ModuleId]. ModuleId
    * is optional.
    * @param interfaceName The interface name.
    * @param [options] The optional parameters
-   * @returns Promise<Models.DigitalTwinGetInterfaceResponse>
+   * @returns Promise<Models.DigitalTwinGetComponentResponse>
    */
-  getInterface(digitalTwinId: string, interfaceName: string, options?: msRest.RequestOptionsBase): Promise<Models.DigitalTwinGetInterfaceResponse>;
+  getComponent(digitalTwinId: string, interfaceName: string, options?: msRest.RequestOptionsBase): Promise<Models.DigitalTwinGetComponentResponse>;
   /**
    * @param digitalTwinId Digital Twin ID. Format of digitalTwinId is DeviceId[~ModuleId]. ModuleId
    * is optional.
    * @param interfaceName The interface name.
    * @param callback The callback
    */
-  getInterface(digitalTwinId: string, interfaceName: string, callback: msRest.ServiceCallback<Models.DigitalTwinInterfaces>): void;
+  getComponent(digitalTwinId: string, interfaceName: string, callback: msRest.ServiceCallback<Models.DigitalTwinInterfaces>): void;
   /**
    * @param digitalTwinId Digital Twin ID. Format of digitalTwinId is DeviceId[~ModuleId]. ModuleId
    * is optional.
@@ -117,19 +207,25 @@ export class DigitalTwin {
    * @param options The optional parameters
    * @param callback The callback
    */
-  getInterface(digitalTwinId: string, interfaceName: string, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<Models.DigitalTwinInterfaces>): void;
-  getInterface(digitalTwinId: string, interfaceName: string, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<Models.DigitalTwinInterfaces>, callback?: msRest.ServiceCallback<Models.DigitalTwinInterfaces>): Promise<Models.DigitalTwinGetInterfaceResponse> {
+  getComponent(digitalTwinId: string, interfaceName: string, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<Models.DigitalTwinInterfaces>): void;
+  getComponent(digitalTwinId: string, interfaceName: string, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<Models.DigitalTwinInterfaces>, callback?: msRest.ServiceCallback<Models.DigitalTwinInterfaces>): Promise<Models.DigitalTwinGetComponentResponse> {
     return this.client.sendOperationRequest(
       {
         digitalTwinId,
         interfaceName,
         options
       },
-      getInterfaceOperationSpec,
-      callback) as Promise<Models.DigitalTwinGetInterfaceResponse>;
+      getComponentOperationSpec,
+      callback) as Promise<Models.DigitalTwinGetComponentResponse>;
   }
 
   /**
+   * For IoT Hub VNET related
+   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
+   * version '2020-03-13'.These features are currently in general availability in the East US, West
+   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
+   * these features to all regions by end of month May. For rest of the APIs please continue using
+   * API version '2019-10-01'
    * @summary Returns a DigitalTwin model definition for the given id.
    * If "expand" is present in the query parameters and id is for a device capability model then it
    * returns
@@ -168,9 +264,9 @@ export class DigitalTwin {
    * @param commandName
    * @param payload
    * @param [options] The optional parameters
-   * @returns Promise<Models.DigitalTwinInvokeInterfaceCommandResponse>
+   * @returns Promise<Models.DigitalTwinInvokeComponentCommandResponse>
    */
-  invokeInterfaceCommand(digitalTwinId: string, interfaceName: string, commandName: string, payload: any, options?: Models.DigitalTwinInvokeInterfaceCommandOptionalParams): Promise<Models.DigitalTwinInvokeInterfaceCommandResponse>;
+  invokeComponentCommand(digitalTwinId: string, interfaceName: string, commandName: string, payload: any, options?: Models.DigitalTwinInvokeComponentCommandOptionalParams): Promise<Models.DigitalTwinInvokeComponentCommandResponse>;
   /**
    * @param digitalTwinId
    * @param interfaceName
@@ -178,7 +274,7 @@ export class DigitalTwin {
    * @param payload
    * @param callback The callback
    */
-  invokeInterfaceCommand(digitalTwinId: string, interfaceName: string, commandName: string, payload: any, callback: msRest.ServiceCallback<any>): void;
+  invokeComponentCommand(digitalTwinId: string, interfaceName: string, commandName: string, payload: any, callback: msRest.ServiceCallback<any>): void;
   /**
    * @param digitalTwinId
    * @param interfaceName
@@ -187,8 +283,8 @@ export class DigitalTwin {
    * @param options The optional parameters
    * @param callback The callback
    */
-  invokeInterfaceCommand(digitalTwinId: string, interfaceName: string, commandName: string, payload: any, options: Models.DigitalTwinInvokeInterfaceCommandOptionalParams, callback: msRest.ServiceCallback<any>): void;
-  invokeInterfaceCommand(digitalTwinId: string, interfaceName: string, commandName: string, payload: any, options?: Models.DigitalTwinInvokeInterfaceCommandOptionalParams | msRest.ServiceCallback<any>, callback?: msRest.ServiceCallback<any>): Promise<Models.DigitalTwinInvokeInterfaceCommandResponse> {
+  invokeComponentCommand(digitalTwinId: string, interfaceName: string, commandName: string, payload: any, options: Models.DigitalTwinInvokeComponentCommandOptionalParams, callback: msRest.ServiceCallback<any>): void;
+  invokeComponentCommand(digitalTwinId: string, interfaceName: string, commandName: string, payload: any, options?: Models.DigitalTwinInvokeComponentCommandOptionalParams | msRest.ServiceCallback<any>, callback?: msRest.ServiceCallback<any>): Promise<Models.DigitalTwinInvokeComponentCommandResponse> {
     return this.client.sendOperationRequest(
       {
         digitalTwinId,
@@ -197,14 +293,152 @@ export class DigitalTwin {
         payload,
         options
       },
-      invokeInterfaceCommandOperationSpec,
-      callback) as Promise<Models.DigitalTwinInvokeInterfaceCommandResponse>;
+      invokeComponentCommandOperationSpec,
+      callback) as Promise<Models.DigitalTwinInvokeComponentCommandResponse>;
+  }
+
+  /**
+   * Invoke a digital twin command.
+   * @summary Invoke a digital twin command.
+   * @param id
+   * @param componentPath
+   * @param commandName
+   * @param payload
+   * @param [options] The optional parameters
+   * @returns Promise<Models.DigitalTwinInvokeComponentCommandHeaders12>
+   */
+  invokeComponentCommand1(id: string, componentPath: string, commandName: string, payload: any, options?: Models.DigitalTwinInvokeComponentCommand1OptionalParams): Promise<Models.DigitalTwinInvokeComponentCommandHeaders12>;
+  /**
+   * @param id
+   * @param componentPath
+   * @param commandName
+   * @param payload
+   * @param callback The callback
+   */
+  invokeComponentCommand1(id: string, componentPath: string, commandName: string, payload: any, callback: msRest.ServiceCallback<any>): void;
+  /**
+   * @param id
+   * @param componentPath
+   * @param commandName
+   * @param payload
+   * @param options The optional parameters
+   * @param callback The callback
+   */
+  invokeComponentCommand1(id: string, componentPath: string, commandName: string, payload: any, options: Models.DigitalTwinInvokeComponentCommand1OptionalParams, callback: msRest.ServiceCallback<any>): void;
+  invokeComponentCommand1(id: string, componentPath: string, commandName: string, payload: any, options?: Models.DigitalTwinInvokeComponentCommand1OptionalParams | msRest.ServiceCallback<any>, callback?: msRest.ServiceCallback<any>): Promise<Models.DigitalTwinInvokeComponentCommandHeaders12> {
+    return this.client.sendOperationRequest(
+      {
+        id,
+        componentPath,
+        commandName,
+        payload,
+        options
+      },
+      invokeComponentCommand1OperationSpec,
+      callback) as Promise<Models.DigitalTwinInvokeComponentCommandHeaders12>;
+  }
+
+  /**
+   * Invoke a digital twin root level command.
+   * @summary Invoke a digital twin root level command.
+   * @param id
+   * @param commandName
+   * @param payload
+   * @param [options] The optional parameters
+   * @returns Promise<Models.DigitalTwinInvokeRootLevelCommandResponse>
+   */
+  invokeRootLevelCommand(id: string, commandName: string, payload: any, options?: Models.DigitalTwinInvokeRootLevelCommandOptionalParams): Promise<Models.DigitalTwinInvokeRootLevelCommandResponse>;
+  /**
+   * @param id
+   * @param commandName
+   * @param payload
+   * @param callback The callback
+   */
+  invokeRootLevelCommand(id: string, commandName: string, payload: any, callback: msRest.ServiceCallback<any>): void;
+  /**
+   * @param id
+   * @param commandName
+   * @param payload
+   * @param options The optional parameters
+   * @param callback The callback
+   */
+  invokeRootLevelCommand(id: string, commandName: string, payload: any, options: Models.DigitalTwinInvokeRootLevelCommandOptionalParams, callback: msRest.ServiceCallback<any>): void;
+  invokeRootLevelCommand(id: string, commandName: string, payload: any, options?: Models.DigitalTwinInvokeRootLevelCommandOptionalParams | msRest.ServiceCallback<any>, callback?: msRest.ServiceCallback<any>): Promise<Models.DigitalTwinInvokeRootLevelCommandResponse> {
+    return this.client.sendOperationRequest(
+      {
+        id,
+        commandName,
+        payload,
+        options
+      },
+      invokeRootLevelCommandOperationSpec,
+      callback) as Promise<Models.DigitalTwinInvokeRootLevelCommandResponse>;
   }
 }
 
 // Operation Specifications
 const serializer = new msRest.Serializer(Mappers);
-const getInterfacesOperationSpec: msRest.OperationSpec = {
+const getDigitalTwinOperationSpec: msRest.OperationSpec = {
+  httpMethod: "GET",
+  path: "digitaltwins/{id}",
+  urlParameters: [
+    Parameters.id
+  ],
+  queryParameters: [
+    Parameters.apiVersion
+  ],
+  responses: {
+    200: {
+      bodyMapper: {
+        serializedName: "parsedResponse",
+        type: {
+          name: "Object"
+        }
+      },
+      headersMapper: Mappers.DigitalTwinGetDigitalTwinHeaders
+    },
+    default: {}
+  },
+  serializer
+};
+
+const updateDigitalTwinOperationSpec: msRest.OperationSpec = {
+  httpMethod: "PATCH",
+  path: "digitaltwins/{id}",
+  urlParameters: [
+    Parameters.id
+  ],
+  queryParameters: [
+    Parameters.apiVersion
+  ],
+  headerParameters: [
+    Parameters.ifMatch
+  ],
+  requestBody: {
+    parameterPath: "digitalTwinPatch",
+    mapper: {
+      required: true,
+      serializedName: "digitalTwinPatch",
+      type: {
+        name: "Sequence",
+        element: {
+          type: {
+            name: "Object"
+          }
+        }
+      }
+    }
+  },
+  responses: {
+    202: {
+      headersMapper: Mappers.DigitalTwinUpdateDigitalTwinHeaders
+    },
+    default: {}
+  },
+  serializer
+};
+
+const getComponentsOperationSpec: msRest.OperationSpec = {
   httpMethod: "GET",
   path: "digitalTwins/{digitalTwinId}/interfaces",
   urlParameters: [
@@ -216,14 +450,14 @@ const getInterfacesOperationSpec: msRest.OperationSpec = {
   responses: {
     200: {
       bodyMapper: Mappers.DigitalTwinInterfaces,
-      headersMapper: Mappers.DigitalTwinGetInterfacesHeaders
+      headersMapper: Mappers.DigitalTwinGetComponentsHeaders
     },
     default: {}
   },
   serializer
 };
 
-const updateInterfacesOperationSpec: msRest.OperationSpec = {
+const updateComponentOperationSpec: msRest.OperationSpec = {
   httpMethod: "PATCH",
   path: "digitalTwins/{digitalTwinId}/interfaces",
   urlParameters: [
@@ -245,14 +479,14 @@ const updateInterfacesOperationSpec: msRest.OperationSpec = {
   responses: {
     200: {
       bodyMapper: Mappers.DigitalTwinInterfaces,
-      headersMapper: Mappers.DigitalTwinUpdateInterfacesHeaders
+      headersMapper: Mappers.DigitalTwinUpdateComponentHeaders
     },
     default: {}
   },
   serializer
 };
 
-const getInterfaceOperationSpec: msRest.OperationSpec = {
+const getComponentOperationSpec: msRest.OperationSpec = {
   httpMethod: "GET",
   path: "digitalTwins/{digitalTwinId}/interfaces/{interfaceName}",
   urlParameters: [
@@ -265,7 +499,7 @@ const getInterfaceOperationSpec: msRest.OperationSpec = {
   responses: {
     200: {
       bodyMapper: Mappers.DigitalTwinInterfaces,
-      headersMapper: Mappers.DigitalTwinGetInterfaceHeaders
+      headersMapper: Mappers.DigitalTwinGetComponentHeaders
     },
     default: {}
   },
@@ -292,12 +526,15 @@ const getDigitalTwinModelOperationSpec: msRest.OperationSpec = {
       },
       headersMapper: Mappers.DigitalTwinGetDigitalTwinModelHeaders
     },
+    204: {
+      headersMapper: Mappers.DigitalTwinGetDigitalTwinModelHeaders
+    },
     default: {}
   },
   serializer
 };
 
-const invokeInterfaceCommandOperationSpec: msRest.OperationSpec = {
+const invokeComponentCommandOperationSpec: msRest.OperationSpec = {
   httpMethod: "POST",
   path: "digitalTwins/{digitalTwinId}/interfaces/{interfaceName}/commands/{commandName}",
   urlParameters: [
@@ -328,7 +565,82 @@ const invokeInterfaceCommandOperationSpec: msRest.OperationSpec = {
           name: "Object"
         }
       },
-      headersMapper: Mappers.DigitalTwinInvokeInterfaceCommandHeaders
+      headersMapper: Mappers.DigitalTwinInvokeComponentCommandHeaders
+    },
+    default: {}
+  },
+  serializer
+};
+
+const invokeComponentCommand1OperationSpec: msRest.OperationSpec = {
+  httpMethod: "POST",
+  path: "digitaltwins/{id}/components/{componentPath}/commands/{commandName}",
+  urlParameters: [
+    Parameters.id,
+    Parameters.componentPath,
+    Parameters.commandName
+  ],
+  queryParameters: [
+    Parameters.apiVersion,
+    Parameters.connectTimeoutInSeconds,
+    Parameters.responseTimeoutInSeconds
+  ],
+  requestBody: {
+    parameterPath: "payload",
+    mapper: {
+      required: true,
+      serializedName: "payload",
+      type: {
+        name: "Object"
+      }
+    }
+  },
+  responses: {
+    200: {
+      bodyMapper: {
+        serializedName: "parsedResponse",
+        type: {
+          name: "Object"
+        }
+      },
+      headersMapper: Mappers.DigitalTwinInvokeComponentCommandHeaders1
+    },
+    default: {}
+  },
+  serializer
+};
+
+const invokeRootLevelCommandOperationSpec: msRest.OperationSpec = {
+  httpMethod: "POST",
+  path: "digitaltwins/{id}/commands/{commandName}",
+  urlParameters: [
+    Parameters.id,
+    Parameters.commandName
+  ],
+  queryParameters: [
+    Parameters.apiVersion,
+    Parameters.connectTimeoutInSeconds,
+    Parameters.responseTimeoutInSeconds
+  ],
+  requestBody: {
+    parameterPath: "payload",
+    mapper: {
+      required: true,
+      serializedName: "payload",
+      type: {
+        name: "Object"
+      }
+    }
+  },
+  responses: {
+    200: {
+      bodyMapper: {
+        serializedName: "parsedResponse",
+        type: {
+          name: "Object"
+        }
+      },
+      headersMapper: Mappers.DigitalTwinInvokeRootLevelCommandHeaders
     },
     default: {}
   },
