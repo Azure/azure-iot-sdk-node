@@ -16,6 +16,7 @@
 // More information on Uploading Files with IoT Hub can be found here:
 // https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-file-upload
 
+'use strict';
 
 const Client = require('azure-iot-device').Client;
 const Protocol = require('azure-iot-device-mqtt').Mqtt;
@@ -38,7 +39,7 @@ async function uploadToBlob(localFilePath, client) {
     throw new errors.ArgumentError('Invalid upload parameters');
   }
 
-  const pipeline = StorageURL.newPipeline(new AnonymousCredential(), {
+  const pipeline = newPipeline(new AnonymousCredential(), {
     retryOptions: { maxTries: 4 },
     telemetry: { value: 'HighLevelSample V1.0.0' }, // Customized telemetry string
     keepAliveOptions: { enable: false }
