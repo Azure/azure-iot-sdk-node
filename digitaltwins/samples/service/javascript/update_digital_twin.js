@@ -3,44 +3,52 @@
 
 const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubTokenCredentials;
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
+const { inspect } = require('util');
 
-const connectionString = process.env.IOTHUB_CONNECTION_STRING;
-const deviceId = process.env.IOTHUB_DEVICE_ID;
+const patch = [{
+  interfaces: {
+    'environmentalSensor': { // for the environmental sensor, try "environmentalSensor"
+      properties: {
+        'brightness': { // for the environmental sensor, try "brightness"
+          desired: {
+            value: 42 // for the environmental sensor, try 42 (note that this is a number, not a string, so don't include quotes).
+          }
+        }
+      }
+    }
+  }
+}];
 
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
+// - create a patch for modifying the Digital Twin
 // - update the Digital Twin with patch
+//
+// Preconditions:
+// - Environment variables have to be set
+// - Twin enabled device must exist on the ADT hub
 async function main() {
-  // Environment variables have to be set
-  // Digital Twin enabled device must be exist on the IoT Hub
+  const deviceId = process.env.IOTHUB_DEVICE_ID;
 
-  try {
-    // Create service client
-    const credentials = new IoTHubTokenCredentials(connectionString);
-    const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
+  // Create service client
+  const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
+  const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-    // Get digital twin
-    const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
+  // Get digital twin
+  const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
 
-    // Print digital twin
-    console.log(digitalTwin);
+  // Print original Twin
+  console.log(inspect(digitalTwin));
 
-    // Update digital twin desired properties
-    // jsonpatch example:
-    // patch = [
-    //     { op: 'add', path: '/sensor', value: { 'brightness': 100, '$metadata': {} } }];
-    //     { op: 'remove', path: '/sensor' },
-    //     { op: 'replace', path: '/sensor', value: { brightness: 42 } },
-    // ]);
-    const patch = [{ op: 'add', path: '/sensor', value: { 'brightness': 100, '$metadata': {} } }];
-    console.log('patch:');
-    console.log(JSON.stringify(patch, null, 2));
+  // Update digital twin and verify the update
+  const response = await digitalTwinServiceClient.updateDigitalTwin(deviceId, patch);
 
-    // Update digital twin
-    await digitalTwinServiceClient.updateDigitalTwin(deviceId, patch);
-  } catch (err) {
-    console.log(err);
-  }
+  // Print response
+  console.log(response);
 };
 
-main();
+main().catch((err) => {
+  console.log("error code: ", err.code);
+  console.log("error message: ", err.message);
+  console.log("error stack: ", err.stack);
+});
