@@ -24,17 +24,19 @@ var registrationId = process.env.PROVISIONING_REGISTRATION_ID;
 var symmetricKey = process.env.PROVISIONING_SYMMETRIC_KEY;
 
 const modelId = 'dtmi:com:example:Thermostat;1';
-const telemetrySendInterval = 10000;
+const telemetrySendInterval = 30000;
+const deviceSerialNum = '123abc';
+
 let intervalToken;
 let currTemp = 1 + (Math.random() * 90);
-let targetTemp = currTemp;
+//let targetTemp = currTemp;
 let maxTemp = currTemp+10;
 
-const commandNameReboot = 'reboot';
+const commandMinMaxReport = 'getMaxMinReport';
 
 const propertyUpdateHandler = (deviceTwin, propertyName, reportedValue, desiredValue, version) => {
-  console.log('Received an update for component and property: ' + propertyName + ' with value: ' + JSON.stringify(desiredValue));
-  const patch = helperCreateReportedPropertiesPatch(
+  console.log('Received an update for property: ' + propertyName + ' with value: ' + JSON.stringify(desiredValue));
+  const patch = createReportPropPatch(
     { [propertyName]: desiredValue },
     {
       code: 200,
@@ -47,11 +49,10 @@ const propertyUpdateHandler = (deviceTwin, propertyName, reportedValue, desiredV
 };
 
 const commandHandler = async (request, response) => {
-  helperLogCommandRequest(request);
   switch (request.methodName) {
-  case commandNameReboot: {
-    console.log('Rebooting after ' + request.payload);
-    await sendCommandResponse(request, response, 200, 'reboot response');
+  case commandMinMaxReport: {
+    console.log('MaxMinReport ' + request.payload);
+    await sendCommandResponse(request, response, 200, 'min/max response');
     break;
   }
   default:
@@ -71,30 +72,11 @@ const sendCommandResponse = async (request, response, status, payload) => {
   }
 };
 
-const helperLogCommandRequest = (request) => {
-  console.log('Received command request for comand name \'' + request.methodName + '\'');
-
-  if (!!(request.payload)) {
-    console.log('The command request paylaod :');
-    console.log(request.payload);
-  }
-};
-
-const helperCreateReportedPropertiesPatch = (propertiesToReport, componentName) => {
+const createReportPropPatch = (propertiesToReport) => {
   let patch;
-  if (!!(componentName)) {
-    patch = { };
-    propertiesToReport.__t = "c";
-    patch[componentName] = propertiesToReport;
-  } else {
-    patch = { };
-    patch = propertiesToReport;
-  }
-  if (!!(componentName)) {
-    console.log('The following properties will be updated for component:' + componentName);
-  } else {
-    console.log('The following properties will be updated for root interface:');
-  }
+  patch = { };
+  patch = propertiesToReport;
+  console.log('The following properties will be updated for root interface:');
   console.log(patch);
   return patch;
 };
@@ -106,9 +88,9 @@ const updateComponentReportedProperties = (deviceTwin, patch) => {
   });
 };
 
-const helperAttachHandlerForDesiredPropertyPatches = (deviceTwin) => {
-  const versionProperty = '$version';
-  deviceTwin.on('properties.desired.', (delta) => {
+const desiredPropertyPatchHandler = (deviceTwin) => {
+  deviceTwin.on('properties.desired', (delta) => {
+    const versionProperty = delta.$version;
 
     Object.entries(delta).forEach(([propertyName, propertyValue]) => {
       propertyUpdateHandler(deviceTwin, propertyName, null, propertyValue.value, deviceTwin.properties.desired[versionProperty]);
@@ -116,7 +98,7 @@ const helperAttachHandlerForDesiredPropertyPatches = (deviceTwin) => {
   });
 };
 
-const helperAttachExitListener = async (deviceClient) => {
+const attachExitHandler = async (deviceClient) => {
   const standardInput = process.stdin;
   standardInput.setEncoding('utf-8');
   console.log('Please enter q or Q to exit sample.');
@@ -178,7 +160,7 @@ async function main() {
     await client.setOptions({ modelId: modelId });
     await client.open();
     console.log('Enabling the commands on the client');
-    client.onDeviceMethod(commandNameReboot, commandHandler);
+    client.onDeviceMethod(commandMinMaxReport, commandHandler);
 
     // Send Telemetry every 5.5 secs
     let index = 0;
@@ -188,21 +170,20 @@ async function main() {
     }, telemetrySendInterval);
 
     // attach a standard input exit listener
-    helperAttachExitListener(client);
+    attachExitHandler(client);
 
     // Deal with twin
     try {
       resultTwin = await client.getTwin();
-      const patchRoot = helperCreateReportedPropertiesPatch({serialNumber:'alohomora'}, null);
-      const patchThermostat = helperCreateReportedPropertiesPatch({
-        targetTemperature: {'value': targetTemp, 'ac': 200, 'ad': '', 'av': 1},
-        maxTempSinceLastReboot: maxTemp,
-      }, null);
+      const patchRoot = createReportPropPatch({ serialNumber: deviceSerialNum });
+      const patchThermostat = createReportPropPatch({
+        maxTempSinceLastReboot: maxTemp
+      });
 
       // the below things can only happen once the twin is there
       updateComponentReportedProperties(resultTwin, patchRoot);
       updateComponentReportedProperties(resultTwin, patchThermostat);
-      helperAttachHandlerForDesiredPropertyPatches(resultTwin);
+      desiredPropertyPatchHandler(resultTwin);
     } catch (err) {
       console.error('could not retrieve twin or report twin properties\n' + err.toString());
     }
