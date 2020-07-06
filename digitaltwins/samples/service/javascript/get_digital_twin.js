@@ -3,32 +3,31 @@
 
 const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubTokenCredentials;
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
-
-const connectionString = process.env.IOTHUB_CONNECTION_STRING;
-const deviceId = process.env.IOTHUB_DEVICE_ID;
+const { inspect } = require('util');
 
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
 // - get the Digital Twin
+//
+// Preconditions:
+// - Environment variables have to be set
+// - Twin enabled device must exist on the ADT hub
 async function main() {
-  // Environment variables have to be set
-  // Digital Twin enabled device must be exist on the IoT Hub
+  const deviceId = process.env.IOTHUB_DEVICE_ID;
 
-  try {
-    // Create digital twin service client
-    const credentials = new IoTHubTokenCredentials(connectionString);
-    const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
+  // Create digital twin service client
+  const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
+  const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-    // Get digital twin
-    console.log('getting digital twin for device ' + deviceId + '...');
-    const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
+  // Get digital twin
+  const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
 
-    // Print digital twin object members
-    console.log('device metadata:');
-    console.log(JSON.stringify(digitalTwin.$metadata, null, 2));
-  } catch (err) {
-    console.log(err);
-  }
+  // Print digital twin
+  console.log(inspect(digitalTwin));
 };
 
-main();
+main().catch((err) => {
+  console.log('error code: ', err.code);
+  console.log('error message: ', err.message);
+  console.log('error stack: ', err.stack);
+});
