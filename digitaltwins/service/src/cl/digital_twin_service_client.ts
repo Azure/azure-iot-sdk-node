@@ -191,8 +191,8 @@ export class DigitalTwinServiceClient {
   }
 
   /**
-   * @method getComponents                       module: azure-iot-digitaltwins-service.DigitalTwinServiceClient.getDigitalTwinComponent
-   * @description                               Retrieve one component of the Digital Twin of a given device.
+   * @method getComponents                      module: azure-iot-digitaltwins-service.DigitalTwinServiceClient.getDigitalTwinComponent
+   * @description                               Retrieve all components of the Digital Twin of a given device.
    * @param {string} digitalTwinId              The digital twin Id of the given device.
    * @param {string} componentName              The name of the requested component.
    * @returns DigitalTwinGetComponentsResponse  The return object containing the component plus the HttpResponse.
@@ -237,7 +237,7 @@ export class DigitalTwinServiceClient {
 
   /**
    * @method getComponent                      module: azure-iot-digitaltwins-service.DigitalTwinServiceClient.getDigitalTwinComponent
-   * @description                              Retrieve one component of the Digital Twin of a given device.
+   * @description                              Retrieve a component of the Digital Twin of a given device.
    * @param {string} digitalTwinId             The digital twin Id of the given device.
    * @param {string} componentName             The name of the requested component.
    * @returns DigitalTwinGetComponentResponse  The return object containing the component plus the HttpResponse.
