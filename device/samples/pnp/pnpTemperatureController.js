@@ -96,7 +96,7 @@ const updateComponentReportedProperties = (deviceTwin, patch, componentName) => 
     console.log(logLine);
   });
 };
-// TODO For no component.
+
 const helperAttachHandlerForDesiredPropertyPatches = (deviceTwin) => {
   deviceTwin.on('properties.desired', (delta) => {
     if (delta[thermostat1ComponentName] || delta[thermostat2ComponentName] || delta[deviceInfoComponentName]) {
@@ -142,6 +142,7 @@ const helperAttachExitListener = async (deviceClient) => {
     }
   });
 };
+
 async function sendTelemetry(deviceClient, data, index, componentName) {
   if (!!(componentName)) {
     console.log('Sending telemetry message %d from component: %s ', index, componentName);
