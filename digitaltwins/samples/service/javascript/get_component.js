@@ -14,7 +14,7 @@ const { inspect } = require('util');
 // - Twin enabled device must exist on the ADT hub
 async function main() {
   const deviceId = process.env.IOTHUB_DEVICE_ID;
-  const componentName = process.env.IOTHUB_DEVICE_TWIN_COMPONENT_NAME; // suggestion: urn:azureiot:Client:SDKInformation:1 or for the environmental sensor, try "environmentalSensor"
+  const componentName = process.env.IOTHUB_DEVICE_TWIN_COMPONENT_NAME; // suggestion: urn:azureiot:Client:SDKInformation:1 or for the environmental sensor, try 'environmentalSensor'
 
   // Create service client
   const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
@@ -28,7 +28,7 @@ async function main() {
 };
 
 main().catch((err) => {
-  console.log("error code: ", err.code);
-  console.log("error message: ", err.message);
-  console.log("error stack: ", err.stack);
+  console.log('error code: ', err.code);
+  console.log('error message: ', err.message);
+  console.log('error stack: ', err.stack);
 });

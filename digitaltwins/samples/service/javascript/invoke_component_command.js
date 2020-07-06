@@ -14,8 +14,8 @@ const { inspect } = require('util');
 // - Twin enabled device must exist on the ADT hub
 async function main() {
   const deviceId = process.env.IOTHUB_DEVICE_ID;
-  const componentName = process.env.IOTHUB_COMPONENT_NAME; // for the environmental sensor, you can try "environmentalSensor"
-  const commandName = process.env.IOTHUB_COMMAND_NAME; // for the environmental sensor, you can try "blink", "turnOff" or "turnOn"
+  const componentName = process.env.IOTHUB_COMPONENT_NAME; // for the environmental sensor, you can try 'environmentalSensor'
+  const commandName = process.env.IOTHUB_COMMAND_NAME; // for the environmental sensor, you can try 'blink', 'turnOff' or 'turnOn'
   const commandArgument = process.env.IOTHUB_COMMAND_PAYLOAD; // for the environmental sensor, it really doesn't matter. any string will do.
 
   // Create service client
@@ -30,8 +30,8 @@ async function main() {
 };
 
 main().catch((err) => {
-  console.log("error code: ", err.code);
-  console.log("error message: ", err.message);
-  console.log("error stack: ", err.stack);
+  console.log('error code: ', err.code);
+  console.log('error message: ', err.message);
+  console.log('error stack: ', err.stack);
 });
 

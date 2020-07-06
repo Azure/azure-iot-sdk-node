@@ -27,7 +27,7 @@ async function main() {
 };
 
 main().catch((err) => {
-  console.log("error code: ", err.code);
-  console.log("error message: ", err.message);
-  console.log("error stack: ", err.stack);
+  console.log('error code: ', err.code);
+  console.log('error message: ', err.message);
+  console.log('error stack: ', err.stack);
 });

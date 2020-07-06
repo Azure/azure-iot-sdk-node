@@ -7,9 +7,9 @@ const { inspect } = require('util');
 
 const patch = [{
   interfaces: {
-    'environmentalSensor': { // for the environmental sensor, try "environmentalSensor"
+    'environmentalSensor': { // for the environmental sensor, try 'environmentalSensor'
       properties: {
-        'brightness': { // for the environmental sensor, try "brightness"
+        'brightness': { // for the environmental sensor, try 'brightness'
           desired: {
             value: 42 // for the environmental sensor, try 42 (note that this is a number, not a string, so don't include quotes).
           }
@@ -48,7 +48,7 @@ async function main() {
 };
 
 main().catch((err) => {
-  console.log("error code: ", err.code);
-  console.log("error message: ", err.message);
-  console.log("error stack: ", err.stack);
+  console.log('error code: ', err.code);
+  console.log('error message: ', err.message);
+  console.log('error stack: ', err.stack);
 });

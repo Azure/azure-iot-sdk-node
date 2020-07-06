@@ -7,9 +7,9 @@ const { inspect } = require('util');
 
 const patch = [{
   interfaces: {
-    'environmentalSensor': { // for the environmental sensor, try "environmentalSensor"
+    'environmentalSensor': { // for the environmental sensor, try 'environmentalSensor'
       properties: {
-        'brightness': { // for the environmental sensor, try "brightness"
+        'brightness': { // for the environmental sensor, try 'brightness'
           desired: {
             value: 42 // for the environmental sensor, try 42 (note that this is a number, not a string, so don't include quotes).
           }
@@ -29,7 +29,7 @@ const patch = [{
 // - Twin enabled device must exist on the ADT hub
 async function main() {
   const deviceId = process.env.IOTHUB_DEVICE_ID;
-  const componentName = process.env.IOTHUB_DEVICE_TWIN_COMPONENT_NAME; // suggestion: urn:azureiot:Client:SDKInformation:1 or for the environmental sensor, try "environmentalSensor"
+  const componentName = process.env.IOTHUB_DEVICE_TWIN_COMPONENT_NAME; // suggestion: urn:azureiot:Client:SDKInformation:1 or for the environmental sensor, try 'environmentalSensor'
 
   // Create service client
   const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
@@ -49,7 +49,7 @@ async function main() {
 };
 
 main().catch((err) => {
-  console.log("error code: ", err.code);
-  console.log("error message: ", err.message);
-  console.log("error stack: ", err.stack);
+  console.log('error code: ', err.code);
+  console.log('error message: ', err.message);
+  console.log('error stack: ', err.stack);
 });
