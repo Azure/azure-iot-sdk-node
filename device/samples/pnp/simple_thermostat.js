@@ -24,13 +24,12 @@ var registrationId = process.env.PROVISIONING_REGISTRATION_ID;
 var symmetricKey = process.env.PROVISIONING_SYMMETRIC_KEY;
 
 const modelId = 'dtmi:com:example:Thermostat;1';
-const telemetrySendInterval = 30000;
+const telemetrySendInterval = 10000;
 const deviceSerialNum = '123abc';
 
 let intervalToken;
 let currTemp = 1 + (Math.random() * 90);
-//let targetTemp = currTemp;
-let maxTemp = currTemp+10;
+let maxTemp = currTemp;
 
 const commandMinMaxReport = 'getMaxMinReport';
 
@@ -162,7 +161,7 @@ async function main() {
     console.log('Enabling the commands on the client');
     client.onDeviceMethod(commandMinMaxReport, commandHandler);
 
-    // Send Telemetry every 5.5 secs
+    // Send Telemetry every 10 secs
     let index = 0;
     intervalToken = setInterval(() => {
       sendTelemetry(client, index).catch((err) => console.log('error', err.toString()));
