@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-digitaltwins-e2e",
-  "version": "1.0.0-pnp-refresh.0",
+  "version": "1.0.0-pnp-refresh.1",
   "description": "Azure IoT Digital Twins End-to-End tests",
   "main": "index.js",
   "private": true,
@@ -33,14 +33,14 @@
     "chai": "^4.2.0",
     "debug": "^4.1.1",
     "uuid": "^3.3.2",
-    "azure-iot-common": "1.12.0-pnp-refresh.0",
-    "azure-iot-device": "1.12.0-pnp-refresh.0",
-    "azure-iot-device-mqtt": "1.12.0-pnp-refresh.0",
-    "azure-iothub": "1.12.0-pnp-refresh.0",
+    "azure-iot-common": "1.12.4",
+    "azure-iot-device": "1.17.0",
+    "azure-iot-device-mqtt": "1.15.0",
+    "azure-iothub": "1.12.4",
     "@azure/event-hubs": "^2.1.1",
-    "azure-iot-digitaltwins-model-repository": "1.0.0-pnp-refresh.0",
-    "azure-iot-digitaltwins-service": "1.0.0-pnp-refresh.0",
-    "azure-iot-digitaltwins-device": "1.0.0-pnp-refresh.0"
+    "azure-iot-digitaltwins-model-repository": "1.0.0-pnp-refresh.1",
+    "azure-iot-digitaltwins-service": "1.0.0-pnp-refresh.1",
+    "azure-iot-digitaltwins-device": "1.0.0-pnp-refresh.1"
   },
   "devDependencies": {
     "eslint-config-google": "^0.13.0"

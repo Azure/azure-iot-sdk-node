@@ -86,7 +86,7 @@
   },
   "dependencies": {
     "@azure/ms-rest-js": "^2.0.5",
-    "azure-iot-common": "1.12.0-pnp-refresh.0",
+    "azure-iot-common": "1.12.4",
     "tslib": "^1.9.3"
   }
 }

@@ -1,18 +1,18 @@
 {
   "name": "azure-iot-digitaltwins-ts-samples",
-  "version": "1.0.0-pnp-refresh.0",
+  "version": "1.0.0-pnp-refresh.1",
   "description": "Azure IoT SDK - Digital Twin Client typescript samples",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "dependencies": {
-    "azure-iot-device": "1.12.0-pnp-refresh.0",
-    "azure-iot-common": "1.12.0-pnp-refresh.0",
-    "azure-iot-device-mqtt": "1.12.0-pnp-refresh.0",
-    "azure-iot-digitaltwins-device": "1.0.0-pnp-refresh.0"
+    "azure-iot-device": "1.17.0",
+    "azure-iot-common": "1.12.4",
+    "azure-iot-device-mqtt": "1.15.0",
+    "azure-iot-digitaltwins-device": "1.0.0-pnp-refresh.1"
   },
   "devDependencies": {
     "tslint": "^6.1.0",
-    "typescript": "2.9.2"
+    "typescript": "3.7.5"
   },
   "scripts": {
     "lint": "tslint --project . -c ../../../../tslint.json",

@@ -1,15 +1,15 @@
 {
   "name": "azure-iot-digitaltwins-device",
-  "version": "1.0.0-pnp-refresh.0",
+  "version": "1.0.0-pnp-refresh.1",
   "description": "Azure IoT Digital Twin Device Client",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.12.0-pnp-refresh.0",
-    "azure-iot-device": "1.12.0-pnp-refresh.0",
-    "azure-iot-device-mqtt": "1.12.0-pnp-refresh.0",
+    "azure-iot-common": "1.12.4",
+    "azure-iot-device": "1.17.0",
+    "azure-iot-device-mqtt": "1.15.0",
     "debug": "^4.1.1",
     "lodash": "^4.17.15",
     "traverse": "^0.6.6"
@@ -26,7 +26,7 @@
     "source-map-support": "^0.5.16",
     "ts-node": "^8.6.2",
     "tslint": "^6.1.0",
-    "typescript": "2.9.2"
+    "typescript": "3.7.5"
   },
   "scripts": {
     "lint": "tslint --project . -c ../../tslint.json",
