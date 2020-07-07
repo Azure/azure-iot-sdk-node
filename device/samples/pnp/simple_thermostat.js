@@ -29,7 +29,6 @@ const deviceSerialNum = '123abc';
 
 let intervalToken;
 let currTemp = 1 + (Math.random() * 90);
-let targetTemp = currTemp;
 const maxTemp = currTemp+10;
 
 const commandMinMaxReport = 'getMaxMinReport';
@@ -180,7 +179,6 @@ async function main() {
       resultTwin = await client.getTwin();
       const patchRoot = createReportPropPatch({ serialNumber: deviceSerialNum });
       const patchThermostat = createReportPropPatch({
-        targetTemperature: { 'value': targetTemp, 'ac': 200, 'ad': 'inital report', 'av': 1 },
         maxTempSinceLastReboot: maxTemp
       });
 
