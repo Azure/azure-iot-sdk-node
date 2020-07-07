@@ -1,0 +1,92 @@
+{
+  "name": "azure-iot-digitaltwins-service",
+  "version": "1.0.0-pnp-refresh.1",
+  "description": "Azure IoT Digital Twins Preview",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "npmlockrefresh": "npm i --package-lock-only",
+    "generate-pl": "autorest --typescript --add-credentials --model-enum-as-union --license-header=MICROSOFT_MIT_NO_VERSION --source-code-folder-path=./src/pl --output-folder=./src/pl --input-file=src/service.json",
+    "compile": "tsc",
+    "lint": "tslint --project . -c ../../tslint.json",
+    "build": "npm -s run lint && npm -s run compile",
+    "test-min": "tsc && nyc --reporter lcov ../../node_modules/mocha/bin/_mocha --reporter dot test/_*_test*.js",
+    "test": "tsc && nyc --reporter lcov --reporter text ../../node_modules/mocha/bin/_mocha",
+    "ci": "npm -s run lint && npm -s run build && npm -s run test-min"
+  },
+  "nyc": {
+    "exclude": [
+      "coverage/**",
+      "**/*.d.ts",
+      "test{,s}/**",
+      "test{,-*}.{js,cjs,mjs,ts}",
+      "**/*{.,-}test.{js,cjs,mjs,ts}",
+      "**/__tests__/**",
+      "**/{ava,nyc}.config.{js,cjs,mjs}",
+      "**/jest.config.{js,cjs,mjs,ts}",
+      "**/{karma,rollup,webpack}.config.js",
+      "**/{babel.config,.eslintrc,.mocharc}.{js,cjs}"
+    ],
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "check-coverage": false,
+    "lines": 87,
+    "functions": 46,
+    "branches": 76,
+    "statements": 87
+  },
+  "mocha": {
+    "require": [
+      "ts-node/register",
+      "source-map-support/register"
+    ],
+    "full-trace": true,
+    "bail": true,
+    "spec": "test/**/_*_test.js"
+  },
+  "engines": {
+    "node": ">= 10.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/azure/azure-iot-sdk-node.git"
+  },
+  "keywords": [
+    "Azure",
+    "IoT",
+    "Digital",
+    "Twins"
+  ],
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "src/**/*.ts",
+    "tsconfig.json",
+    "index.js",
+    "index.d.ts"
+  ],
+  "author": "Microsoft Corp.",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/azure/azure-iot-sdk-node/issues"
+  },
+  "homepage": "https://github.com/azure/azure-iot-sdk-node#readme",
+  "devDependencies": {
+    "autorest": "^2.0.4413",
+    "source-map-support": "^0.5.16",
+    "ts-node": "^8.6.2",
+    "nyc": "^15.0.0",
+    "mocha": "^7.1.1",
+    "tslint": "^6.1.0",
+    "typescript": "^3.7.5"
+  },
+  "dependencies": {
+    "@azure/ms-rest-js": "^2.0.5",
+    "azure-iot-common": "1.12.4",
+    "tslib": "^1.9.3"
+  }
+}

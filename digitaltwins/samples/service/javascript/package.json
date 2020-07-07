@@ -1,0 +1,28 @@
+{
+  "name": "azure-iot-digitaltwins-service-samples",
+  "version": "1.0.0-pnp-refresh.1",
+  "description": "Samples for the azure-iot-digitaltwins-service client library",
+  "main": "get_digital_twin.js",
+  "scripts": {
+    "lint": "eslint -c ../../../../.eslintrc.json .",
+    "npmlockrefresh": "npm i --package-lock-only",
+    "ci": "npm -s run lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/azure/azure-iot-sdk-node-digitaltwins.git"
+  },
+  "author": "Microsoft Corp.",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/azure/azure-iot-sdk-node-digitaltwins/issues"
+  },
+  "homepage": "https://github.com/azure/azure-iot-sdk-node-digitaltwins#readme",
+  "dependencies": {
+    "azure-iot-digitaltwins-service": "1.0.0-pnp-refresh.1"
+  },
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-google": "^0.13.0"
+  }
+}
