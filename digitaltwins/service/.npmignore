@@ -3,4 +3,4 @@ devdoc/
 test/
 samples/
 src/
-lib/**/*.map
+dist/**/*.map
