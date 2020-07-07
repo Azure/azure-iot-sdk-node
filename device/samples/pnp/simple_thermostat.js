@@ -29,20 +29,22 @@ const deviceSerialNum = '123abc';
 
 let intervalToken;
 let currTemp = 1 + (Math.random() * 90);
-let maxTemp = currTemp;
+let targetTemp = currTemp;
+const maxTemp = currTemp+10;
 
 const commandMinMaxReport = 'getMaxMinReport';
 
 const propertyUpdateHandler = (deviceTwin, propertyName, reportedValue, desiredValue, version) => {
   console.log('Received an update for property: ' + propertyName + ' with value: ' + JSON.stringify(desiredValue));
   const patch = createReportPropPatch(
-    { [propertyName]: desiredValue },
-    {
-      code: 200,
-      description: 'Successfully executed patch for ' + propertyName,
-      version: version
-    }
-  );
+    { [propertyName]:
+      {
+        'value': desiredValue,
+        'ac': 200,
+        'ad': 'Successfully executed patch for ' + propertyName,
+        'av': version
+      }
+    });
   updateComponentReportedProperties(deviceTwin, patch);
   console.log('updated the property');
 };
@@ -92,7 +94,9 @@ const desiredPropertyPatchHandler = (deviceTwin) => {
     const versionProperty = delta.$version;
 
     Object.entries(delta).forEach(([propertyName, propertyValue]) => {
-      propertyUpdateHandler(deviceTwin, propertyName, null, propertyValue.value, deviceTwin.properties.desired[versionProperty]);
+      if (propertyName !== '$version') {
+        propertyUpdateHandler(deviceTwin, propertyName, null, propertyValue, versionProperty);
+      }
     });
   });
 };
@@ -176,13 +180,17 @@ async function main() {
       resultTwin = await client.getTwin();
       const patchRoot = createReportPropPatch({ serialNumber: deviceSerialNum });
       const patchThermostat = createReportPropPatch({
+        targetTemperature: { 'value': targetTemp, 'ac': 200, 'ad': 'inital report', 'av': 1 },
         maxTempSinceLastReboot: maxTemp
       });
 
       // the below things can only happen once the twin is there
       updateComponentReportedProperties(resultTwin, patchRoot);
       updateComponentReportedProperties(resultTwin, patchThermostat);
+
+      // Setup the handler for desired properties
       desiredPropertyPatchHandler(resultTwin);
+
     } catch (err) {
       console.error('could not retrieve twin or report twin properties\n' + err.toString());
     }
