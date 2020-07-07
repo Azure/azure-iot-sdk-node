@@ -4,8 +4,8 @@
 'use strict';
 
 var assert = require('chai').assert;
-var ArgumentError = require('../lib/errors.js').ArgumentError;
-var ConnectionString = require('../lib/connection_string.js').ConnectionString;
+var ArgumentError = require('../dist/errors.js').ArgumentError;
+var ConnectionString = require('../dist/connection_string.js').ConnectionString;
 
 describe('ConnectionString', function () {
   describe('#constructor', function() {

@@ -44,6 +44,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
   private _topics: { [key: string]: TopicDescription };
   private _userAgentString: string;
   private _productInfo: string;
+  private _firstConnection: boolean;
   private _mid: string = '';
 
   /**
@@ -51,7 +52,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
    */
   constructor(authenticationProvider: AuthenticationProvider, mqttBase?: any) {
     super();
-
+    this._firstConnection = true;
     this._authenticationProvider = authenticationProvider;
     /*Codes_SRS_NODE_DEVICE_MQTT_16_071: [The constructor shall subscribe to the `newTokenAvailable` event of the `authenticationProvider` passed as an argument if it uses tokens for authentication.]*/
     if (this._authenticationProvider.type === AuthenticationType.Token) {
@@ -130,8 +131,8 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
               }
             });
           },
-          updateSharedAccessSignature: (sharedAccessSignature, callback) => { callback(null, new results.SharedAccessSignatureUpdated(false)); },
-          sendMethodResponse: (response, callback) => {
+          updateSharedAccessSignature: (_sharedAccessSignature, callback) => { callback(null, new results.SharedAccessSignatureUpdated(false)); },
+          sendMethodResponse: (_response, callback) => {
             /*Codes_SRS_NODE_DEVICE_MQTT_16_034: [The `sendMethodResponse` method shall fail with a `NotConnectedError` if the `MqttBase` object is not connected.]*/
             callback(new errors.NotConnectedError('device disconnected: the service already considers the method has failed'));
           },
@@ -229,8 +230,15 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
                   this._mqtt.connect(baseConfig, (err, result) => {
                     debug('connect');
                     if (err) {
-                      this._fsm.transition('disconnected', connectCallback, err);
+                      if (this._firstConnection) {
+                        /* Codes_SRS_NODE_DEVICE_MQTT_41_006: [The `connect` method shall call its callback with an `UnauthorizedError` returned by the primary call to `connect` in the base MQTT client.]*/
+                        this._fsm.transition('disconnected', connectCallback, new Error('Failure on first connection (Not authorized): ' + err.message));
+                      } else {
+                        /* Codes_SRS_NODE_DEVICE_MQTT_41_007: [The `connect` method shall call its callback with the error returned by the non-primary call to `connect` in the base MQTT client.]*/
+                        this._fsm.transition('disconnected', connectCallback, err);
+                      }
                     } else {
+                      this._firstConnection = false;
                       this._fsm.transition('connected', connectCallback, result);
                     }
                   });
@@ -250,6 +258,8 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
         },
         connected: {
           _onEnter: (connectedCallback, connectResult) => {
+            /*Codes_SRS_NODE_DEVICE_MQTT_41_016: [ The `connect` method shall emit `connected` once the transport is connected ]*/
+            this.emit('connected');
             /*Codes_SRS_NODE_DEVICE_MQTT_16_020: [The `connect` method shall call its callback with a `null` error parameter and a `results.Connected` response if `MqttBase` successfully connects.]*/
             if (connectedCallback) connectedCallback(null, new results.Connected(connectResult));
           },
@@ -310,20 +320,59 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
               callback(!!err ? translateError(err) : null);
             });
           },
+          /* Codes_SRS_NODE_DEVICE_MQTT_41_008: [`enableC2D` shall not subscribe multiple times if already subscribed.]*/
           enableC2D: (callback) => {
-            this._setupSubscription(this._topics.message, 1, callback);
+            if (this._topics.message && this._topics.message.subscribed) {
+              debug('already subscribed to `message`, doing nothing...');
+              callback();
+            } else {
+              this._setupSubscription(this._topics.message, 1, callback);
+            }
           },
+          /* Codes_SRS_NODE_DEVICE_MQTT_41_009: [`enableMethods` shall not subscribe multiple times if already subscribed.]*/
           enableMethods: (callback) => {
-            this._setupSubscription(this._topics.method, 0, callback);
+            if (this._topics.method && this._topics.method.subscribed) {
+              debug('already subscribed to `method`, doing nothing...');
+              callback();
+            } else {
+              this._setupSubscription(this._topics.method, 0, callback);
+            }
           },
+          /* Codes_SRS_NODE_DEVICE_MQTT_41_010: [`enableInputMessages` shall not subscribe multiple times if already subscribed.]*/
           enableInputMessages: (callback) => {
-            this._setupSubscription(this._topics.inputMessage, 1, callback);
+            if (this._topics.inputMessage && this._topics.inputMessage.subscribed) {
+              debug('already subscribed to `inputMessages`, doing nothing...');
+              callback();
+            } else {
+              this._setupSubscription(this._topics.inputMessage, 1, callback);
+            }
           },
+          /* Codes_SRS_NODE_DEVICE_MQTT_41_011: [`disableC2D` shall unsubscribe from the topic for C2D messages only if it is currently subscribed.]*/
           disableC2D: (callback) => {
-            this._removeSubscription(this._topics.message, callback);
+            if (this._topics.message && this._topics.message.subscribed) {
+              this._removeSubscription(this._topics.message, callback);
+            } else {
+              debug('not subscribed to `message`, so doing nothing...');
+              callback();
+            }
           },
+          /* Codes_SRS_NODE_DEVICE_MQTT_41_012: [`disableMethods` shall unsubscribe from the topic for direct methods only if it is currently subscribed.]*/
           disableMethods: (callback) => {
-            this._removeSubscription(this._topics.method, callback);
+            if (this._topics.method && this._topics.method.subscribed) {
+              this._removeSubscription(this._topics.method, callback);
+            } else {
+              debug('not subscribed to `method`, so doing nothing...');
+              callback();
+            }
+          },
+          /* Codes_SRS_NODE_DEVICE_MQTT_41_013: [`disableInputMessages` shall unsubscribe from the topic for inputMessages only if it is currently subscribed.]*/
+          disableInputMessages: (callback) => {
+            if (this._topics.inputMessage && this._topics.inputMessage.subscribed) {
+              this._removeSubscription(this._topics.inputMessage, callback);
+            } else {
+              debug('not subscribed to `method`, so doing nothing...');
+              callback();
+            }
           },
           /*Codes_SRS_NODE_DEVICE_MQTT_16_077: [`getTwin` shall call the `getTwin` method on the `MqttTwinClient` object and pass it its callback.]*/
           getTwin: (callback) => this._twinClient.getTwin(callback),
@@ -333,12 +382,9 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
           enableTwinDesiredPropertiesUpdates: (callback) => this._twinClient.enableTwinDesiredPropertiesUpdates(callback),
           /*Codes_SRS_NODE_DEVICE_MQTT_16_083: [`disableTwinDesiredPropertiesUpdates` shall call the `disableTwinDesiredPropertiesUpdates` on the `MqttTwinClient` object created by the constructor and pass it its callback.]*/
           disableTwinDesiredPropertiesUpdates: (callback) => this._twinClient.disableTwinDesiredPropertiesUpdates(callback),
-          disableInputMessages: (callback) => {
-            this._removeSubscription(this._topics.inputMessage, callback);
-          },
         },
         disconnecting: {
-          _onEnter: (disconnectCallback, err) => {
+          _onEnter: (disconnectCallback, _err) => {
             /*Codes_SRS_NODE_DEVICE_MQTT_16_001: [The `disconnect` method should call the `disconnect` method on `MqttBase`.]*/
             /*Codes_SRS_NODE_DEVICE_MQTT_16_022: [The `disconnect` method shall call its callback with a `null` error parameter and a `results.Disconnected` response if `MqttBase` successfully disconnects if not disconnected already.]*/
             this._mqtt.disconnect((err, result) => {
@@ -390,7 +436,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
    */
   /* Codes_SRS_NODE_DEVICE_MQTT_12_005: [The sendEvent method shall call the publish method on MqttTransport */
   sendEvent(message: Message, done?: (err?: Error, result?: any) => void): void {
-    debug('sendEvent ' + JSON.stringify(message));
+    debug('Invoking sendEvent handler in the device client FSM' + JSON.stringify(message));
 
     this._fsm.handle('sendEvent', message, undefined, (err, puback) => {
       if (err) {
@@ -412,7 +458,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
    * @param {Function}   done        The callback to be invoked when `sendEventBatch`
    *                                 completes execution.
    */
-  sendEventBatch(messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+  sendEventBatch(_messages: Message[], _done: (err?: Error, result?: results.MessageEnqueued) => void): void {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_056: [The `sendEventBatch` method shall throw a `NotImplementedError`]*/
     throw new errors.NotImplementedError('MQTT Transport does not support batching yet');
   }
@@ -426,7 +472,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
    * @param {Message}     message     The message to settle as complete.
    * @param {Function}    done        The callback that shall be called with the error or result object.
    */
-  complete(message: Message, done?: (err?: Error, result?: any) => void): void {
+  complete(_message: Message, done?: (err?: Error, result?: any) => void): void {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_005: [The ‘complete’ method shall call the callback given as argument immediately since all messages are automatically completed.]*/
     done(null, new results.MessageCompleted());
   }
@@ -489,8 +535,9 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_015: [The `setOptions` method shall throw an `ArgumentError` if the `cert` property is populated but the device uses symmetric key authentication.]*/
     if (this._authenticationProvider.type === AuthenticationType.Token && options.cert) throw new errors.ArgumentError('Cannot set x509 options on a device that uses token authentication.');
 
+    /*Codes_SRS_NODE_DEVICE_MQTT_41_014: [For a Plug and Play Device the model id should be included as `&model-id=<DEVICE’s MODEL ID>` after the api-version ] */
     if (options.modelId) {
-      this._mid = '&digital-twin-model-id=' + options.modelId;
+      this._mid = '&model-id=' + options.modelId;
     }
     /*Codes_SRS_NODE_DEVICE_MQTT_41_001: [The MQTT transport should use the productInfo string in the `options` object if present]*/
     if (options.productInfo) {
@@ -521,7 +568,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
       if (done) done(null);
     } else {
       /*Codes_SRS_NODE_DEVICE_MQTT_16_069: [The `setOptions` method shall obtain the current credentials by calling `getDeviceCredentials` on the `AuthenticationProvider` passed to the constructor as an argument.]*/
-      this._authenticationProvider.getDeviceCredentials((err, credentials) => {
+      this._authenticationProvider.getDeviceCredentials((err, _credentials) => {
         if (err) {
           /*Codes_SRS_NODE_DEVICE_MQTT_16_070: [The `setOptions` method shall call its callback with the error returned by `getDeviceCredentials` if it fails to return the credentials.]*/
           if (done) done(err);
@@ -672,7 +719,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
-  sendOutputEventBatch(outputName: string, messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+  sendOutputEventBatch(_outputName: string, _messages: Message[], _done: (err?: Error, result?: results.MessageEnqueued) => void): void {
     /*Codes_SRS_NODE_DEVICE_MQTT_18_051: [ `sendOutputEventBatch` shall throw a `NotImplementedError` exception. ]*/
     throw new errors.NotImplementedError('MQTT Transport does not support batching yet');
   }
@@ -687,15 +734,18 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
       clientId = credentials.deviceId;
     }
 
+    /*Codes_SRS_NODE_DEVICE_MQTT_41_015: [If a modelId is provided, the device should use the PnP API String] */
+    let apiVersionString = this._mid ? endpoint.versionQueryStringPnP() : endpoint.versionQueryString();
+
     /*Codes_SRS_NODE_DEVICE_MQTT_16_016: [If the connection string does not specify a `gatewayHostName` value, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_054: [If a `gatewayHostName` is specified in the connection string, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<gatewayhostname>`. ]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_055: [The Mqtt constructor shall initialize the `username` property of the `config` object to '<host>/<clientId>/api-version=<version>&DeviceClientType=<agentString>'. ]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_41_002: [The MQTT constructor shall append the productInfo to the `username` property of the `config` object.]*/
-    /*Codes_SRS_NODE_DEVICE_MQTT_41_006: [For a Plug and Play Device the modelID should be included as `&digital-twin-model-id=<DEVICE’s MODEL ID>` after the api-version]*/
+    /*Codes_SRS_NODE_DEVICE_MQTT_41_014: [For a Plug and Play Device the modelId should be included as `&modelId=<DEVICE’s MODEL ID>` after the api-version]*/
     let baseConfig: MqttBaseTransportConfig = {
       uri: 'mqtts://' + (credentials.gatewayHostName || credentials.host),
       username: credentials.host + '/' + clientId +
-        '/' + endpoint.versionQueryString()  + this._mid +
+        '/' + apiVersionString  + this._mid +
         '&DeviceClientType=' + encodeURIComponent(this._userAgentString),
       clientId: clientId,
       sharedAccessSignature: credentials.sharedAccessSignature,
@@ -772,7 +822,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     /*Codes_SRS_NODE_DEVICE_MQTT_16_045: [`disableMethods` shall unsubscribe from the topic for direct methods.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_065: [`disableInputMessages` shall unsubscribe from the topic for inputMessages. ]*/
     this._mqtt.unsubscribe(topic.name, (err) => {
-      topic.subscribed = !err;
+      topic.subscribed = !!err; // this sets the topic.subscribed to false if the unsubscribe is successful.
       /*Codes_SRS_NODE_DEVICE_MQTT_16_054: [`disableC2D` shall call its callback with no arguments when the `UNSUBACK` packet is received.]*/
       /*Codes_SRS_NODE_DEVICE_MQTT_16_055: [`disableMethods` shall call its callback with no arguments when the `UNSUBACK` packet is received.]*/
       /*Codes_SRS_NODE_DEVICE_MQTT_18_066: [`disableInputMessages` shall call its callback with no arguments when the `UNSUBACK` packet is received. ]*/
@@ -968,7 +1018,6 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
       });
     }
   }
-
 }
 
 

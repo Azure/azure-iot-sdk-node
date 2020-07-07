@@ -1,15 +1,15 @@
 {
   "name": "azure-iot-device-mqtt",
-  "version": "1.12.0-pnp-refresh.0",
+  "version": "1.15.0",
   "description": "MQTT transport for Azure IoT device SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.12.0-pnp-refresh.0",
-    "azure-iot-device": "1.12.0-pnp-refresh.0",
-    "azure-iot-mqtt-base": "1.12.0-pnp-refresh.0",
+    "azure-iot-common": "1.12.4",
+    "azure-iot-device": "1.17.0",
+    "azure-iot-mqtt-base": "1.12.4",
     "debug": "^4.1.1",
     "machina": "^4.0.2",
     "uuid": "^3.3.2"
@@ -25,7 +25,7 @@
     "source-map-support": "^0.5.16",
     "ts-node": "^8.6.2",
     "tslint": "^6.1.0",
-    "typescript": "2.9.2"
+    "typescript": "3.7.5"
   },
   "scripts": {
     "npmlockrefresh": "npm i --package-lock-only",

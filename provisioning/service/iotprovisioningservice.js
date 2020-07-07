@@ -10,5 +10,5 @@
  * @module azure-iot-provisioning-service
  */
 module.exports = {
-  ProvisioningServiceClient: require('./lib/provisioningserviceclient.js').ProvisioningServiceClient
+  ProvisioningServiceClient: require('./dist/provisioningserviceclient.js').ProvisioningServiceClient
 };

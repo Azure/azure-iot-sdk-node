@@ -4,12 +4,12 @@
 'use strict';
 
 var assert = require('chai').assert;
-var callbackToPromise = require('../lib/promise_utils').callbackToPromise;
-var errorCallbackToPromise = require('../lib/promise_utils').errorCallbackToPromise;
-var noErrorCallbackToPromise = require('../lib/promise_utils').noErrorCallbackToPromise;
-var doubleValueCallbackToPromise = require('../lib/promise_utils').doubleValueCallbackToPromise;
-var tripleValueCallbackToPromise = require('../lib/promise_utils').tripleValueCallbackToPromise;
-var httpCallbackToPromise = require('../lib/promise_utils').httpCallbackToPromise;
+var callbackToPromise = require('../dist/promise_utils').callbackToPromise;
+var errorCallbackToPromise = require('../dist/promise_utils').errorCallbackToPromise;
+var noErrorCallbackToPromise = require('../dist/promise_utils').noErrorCallbackToPromise;
+var doubleValueCallbackToPromise = require('../dist/promise_utils').doubleValueCallbackToPromise;
+var tripleValueCallbackToPromise = require('../dist/promise_utils').tripleValueCallbackToPromise;
+var httpCallbackToPromise = require('../dist/promise_utils').httpCallbackToPromise;
 
 describe('PromiseUtils', () => {
     describe('#callbackToPromise', () => {

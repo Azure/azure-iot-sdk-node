@@ -6,7 +6,7 @@
 var assert = require('chai').assert;
 var expect = require('chai').expect;
 var sinon = require('sinon');
-var Http = require('../lib/http.js').Http;
+var Http = require('../dist/http.js').Http;
 var errors = require('azure-iot-common').errors;
 var ProvisioningDeviceConstants = require('azure-iot-provisioning-device').ProvisioningDeviceConstants;
 

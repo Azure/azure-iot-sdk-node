@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 var endpoint = require('azure-iot-common').endpoint;
-var DeviceMethod = require('../lib/device_method.js').DeviceMethod;
+var DeviceMethod = require('../dist/device_method.js').DeviceMethod;
 
 describe('DeviceMethod', function() {
   describe('#constructor', function() {

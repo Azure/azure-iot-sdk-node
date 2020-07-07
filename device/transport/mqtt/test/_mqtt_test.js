@@ -6,7 +6,7 @@
 require('es5-shim');
 const assert = require('chai').assert;
 const sinon = require('sinon');
-const Mqtt = require('../lib/mqtt.js').Mqtt;
+const Mqtt = require('../dist/mqtt.js').Mqtt;
 const endpoint = require('azure-iot-common').endpoint;
 const errors = require('azure-iot-common').errors;
 const results = require('azure-iot-common').results;
@@ -296,7 +296,7 @@ describe('Mqtt', function () {
         });
       });
 
-      /* Tests_SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `sendEvent` method shall use QoS level of 1.]*/
+      /* Tests_SRS_NODE_COMMON_MQTT_BASE_16_010: [  The `sendEvent` method shall use QoS level of 1.]*/
       /* Tests_SRS_NODE_DEVICE_MQTT_18_039: [ The `sendOutputEvent` method shall use QoS level of 1. ]*/
       it('uses a QoS of 1', function (done) {
         const transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
@@ -306,7 +306,6 @@ describe('Mqtt', function () {
             done();
           });
         });
-        fakemqtt.emit('connect', { connack: true });
       });
 
       /* Tests_SRS_NODE_DEVICE_MQTT_41_004 [ The `sendEvent` method shall call its callback with a `MessageEnqueued` ]*/
@@ -328,7 +327,6 @@ describe('Mqtt', function () {
             done();
           });
         });
-        fakemqtt.emit('connect', { connack: true });
       });
 
       [
@@ -636,9 +634,10 @@ describe('Mqtt', function () {
       });
     });
 
-    /* Tests_SRS_NODE_DEVICE_MQTT_41_006: [For a Plug and Play Device the modelID should be included as `&digital-twin-model-id=<DEVICE’s MODEL ID>` after the api-version]*/
+    /* Tests_SRS_NODE_DEVICE_MQTT_41_014: [For a Plug and Play Device the modelId should be included as `&model-id=<DEVICE’s MODEL ID>` after the api-version]*/
+    /* Tests_SRS_NODE_DEVICE_MQTT_41_015: [If a model id is provided, the device should use the PnP API String] */
     it('sets options for modelId', function (testCallback) {
-      const fakeModelId = '&digital-twin-model-id=fakeModelId';
+      const fakeModelId = '&model-id=fakeModelId';
       const fakeModel = { modelId: 'fakeModelId' };
       let connectCallback;
       fakeMqttBase.connect = sinon.stub().callsFake(function (config, callback) {
@@ -649,7 +648,7 @@ describe('Mqtt', function () {
         assert.isNotOk(err);
         assert.strictEqual(mqtt._mid, fakeModelId);
         getUserAgentString(function (userAgentString) {
-          const expectedUsername = 'host.name/deviceId/' + endpoint.versionQueryString() + fakeModelId + '&DeviceClientType=' + encodeURIComponent(userAgentString);
+          const expectedUsername = 'host.name/deviceId/' + endpoint.versionQueryStringPnP() + fakeModelId + '&DeviceClientType=' + encodeURIComponent(userAgentString);
           mqtt.connect(function (err) {
             assert.isNotOk(err);
             assert.strictEqual(fakeMqttBase.connect.firstCall.args[0]['username'], expectedUsername);
@@ -719,6 +718,15 @@ describe('Mqtt', function () {
       });
     });
 
+    /*Tests_SRS_NODE_DEVICE_MQTT_41_016: [ The `connect` method shall emit `connected` once the transport is connected ]*/
+    it('emits connected on the transport', function (testCallback) {
+      const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      mqtt.on('connected', () => {
+        testCallback();
+      });
+      mqtt.connect();
+    });
+
 
     getUserAgentString(function (userAgentString) {
       [
@@ -771,6 +779,12 @@ describe('Mqtt', function () {
       });
     });
 
+    it('emits connected event when the transport connects', function (testCallback) {
+      const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      mqtt.on('connected', testCallback)
+      mqtt.connect()
+    })
+
     /* Tests_SRS_NODE_DEVICE_MQTT_18_026: When MqttBase fires an error event, the Mqtt object shall emit a disconnect event */
     it('registers to emit disconnect when an error received', function (testCallback) {
       const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
@@ -808,6 +822,36 @@ describe('Mqtt', function () {
       mqtt.connect(function () {
         assert.isTrue(fakeAuthenticationProvider.getDeviceCredentials.calledOnce);
         testCallback();
+      });
+    });
+
+    /* Tests_SRS_NODE_DEVICE_MQTT_41_006: [The `connect` method shall call its callback with an `UnauthorizedError` returned by the primary call to `connect` in the base MQTT client.]*/
+    it('calls its callback with an `UnauthorizedError` on first invocation if the call to mqtt_base `connect` returns an error', function (testCallback) {
+      const fakeError = new Error('fake');
+      fakeMqttBase.connect = sinon.stub().callsArgWith(1, fakeError);
+      const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      fakeAuthenticationProvider.getDeviceCredentials = sinon.stub().callsArgWith(0, undefined, sinon.stub());
+      mqtt.connect(function (err) {
+        assert.instanceOf(err, errors.UnauthorizedError);
+        assert.include(err.message, fakeError.message)
+        testCallback();
+      });
+    });
+
+    /* Tests_SRS_NODE_DEVICE_MQTT_41_007: [The `connect` method shall call its callback with the error returned by the non-primary call to `connect` in the base MQTT client.]*/
+    it('calls its callback with an error on subsequent invocations if the call to mqtt_base `connect` returns an error', function (testCallback) {
+      const fakeError = new Error('fake');
+      fakeMqttBase.connect.onCall(1).callsArgWith(1, fakeError);
+      const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      fakeAuthenticationProvider.getDeviceCredentials = sinon.stub().callsArgWith(0, undefined, sinon.stub());
+      mqtt.connect(function (err) {
+        assert.notExists(err);
+        mqtt.disconnect(() => {
+          mqtt.connect((err) => {
+            assert.strictEqual(err.transportError, fakeError);
+            testCallback();
+          });
+        })
       });
     });
 
@@ -1017,6 +1061,23 @@ describe('Mqtt', function () {
           });
         });
       });
+
+      it('will not subscribe multiple times to the same topic', function (testCallback) {
+        const transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        transport[testConfig.methodName](function (err) {
+          assert.isTrue(fakeMqttBase.connect.calledOnce);
+          assert.isUndefined(err);
+          assert.equal(fakeMqttBase.subscribe.firstCall.args[0], testConfig.topicName);
+          assert.strictEqual(fakeMqttBase.subscribe.firstCall.args[1].qos, testConfig.qos);
+          transport[testConfig.methodName](function (err) {
+            /* Tests_SRS_NODE_DEVICE_MQTT_41_008: [`enableC2D` shall not subscribe multiple times if already subscribed.]*/
+            /* Tests_SRS_NODE_DEVICE_MQTT_41_009: [`enableMethods` shall not subscribe multiple times if already subscribed.]*/
+            /* Tests_SRS_NODE_DEVICE_MQTT_41_010: [`enableInputMessages` shall not subscribe multiple times if already subscribed.]*/
+            assert(fakeMqttBase.subscribe.calledOnce, 'subscribe called multiple times when it should have been only called once');
+            testCallback();
+          });
+        });
+      });
     });
   });
 
@@ -1035,7 +1096,7 @@ describe('Mqtt', function () {
       /* Tests_SRS_NODE_DEVICE_MQTT_16_044: [`disableMethods` shall call its callback immediately if the MQTT connection is already disconnected.]*/
       /* Tests_SRS_NODE_DEVICE_MQTT_16_062: [`disableTwinDesiredPropertiesUpdates` shall call its callback immediately if the MQTT connection is already disconnected.]*/
       /* Tests_SRS_NODE_DEVICE_MQTT_18_064: [ `disableInputMessages` shall call its callback immediately if the MQTT connection is already disconnected. ]*/
-      it('immediately calls its callback if the disconnected', function (testCallback) {
+      it('immediately calls its callback if the connection is already disconnected', function (testCallback) {
         const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
         mqtt[testConfig.disableFeatureMethod](function () {
           assert.isTrue(fakeMqttBase.connect.notCalled);
@@ -1081,6 +1142,25 @@ describe('Mqtt', function () {
               assert.isTrue(fakeMqttBase.unsubscribe.called);
               assert.isUndefined(err);
               testCallback();
+            });
+          });
+        });
+      });
+
+      it('calls its callback without unsubscribing if already unsubscribed', function (testCallback) {
+        const transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        transport.connect(function () {
+          transport[testConfig.enableFeatureMethod](function () {
+            transport[testConfig.disableFeatureMethod](function (err) {
+              assert.isTrue(fakeMqttBase.unsubscribe.called);
+              assert.isUndefined(err);
+              transport[testConfig.disableFeatureMethod](function (err) {
+                /* Tests_SRS_NODE_DEVICE_MQTT_41_011: [`disableC2D` shall unsubscribe from the topic for C2D messages only if it is currently subscribed.]*/
+                /* Tests_SRS_NODE_DEVICE_MQTT_41_012: [`disableMethods` shall unsubscribe from the topic for direct methods only if it is currently subscribed.]*/
+                /* Tests_SRS_NODE_DEVICE_MQTT_41_013: [`disableInputMessages` shall unsubscribe from the topic for inputMessages only if it is currently subscribed.]*/
+                assert.isTrue(fakeMqttBase.unsubscribe.calledOnce);
+                testCallback();
+              });
             });
           });
         });
@@ -1165,12 +1245,12 @@ describe('Mqtt', function () {
     });
 
     /* Tests_SRS_NODE_DEVICE_MQTT_16_058: [`enableTwinDesiredPropertiesUpdates` shall calls its callback with an `Error` object if it fails to connect.]*/
-    it('calls its callback with an error if connecting the transport fails', function (testCallback) {
-      const fakeError = new Error('fake');
+    it('calls its callback with an `UnauthorizedError` if connecting the transport fails', function (testCallback) {
+      const fakeError = new Error('fake test error');
       const transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
       fakeMqttBase.connect = sinon.stub().callsArgWith(1, fakeError);
       transport.enableTwinDesiredPropertiesUpdates(function (err) {
-        assert.strictEqual(err, fakeError);
+        assert.include(err.message, fakeError.message);
         testCallback();
       });
     });

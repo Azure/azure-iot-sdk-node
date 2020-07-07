@@ -1,14 +1,14 @@
 {
   "name": "azure-iot-device",
-  "version": "1.12.0-pnp-refresh.0",
+  "version": "1.17.0",
   "description": "Azure IoT device SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "device.js",
   "typings": "device.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.12.0-pnp-refresh.0",
-    "azure-iot-http-base": "1.12.0-pnp-refresh.0",
+    "azure-iot-common": "1.12.4",
+    "azure-iot-http-base": "1.11.4",
     "@azure/storage-blob": "^12.0.0",
     "@azure/abort-controller": "1.0.1",
     "debug": "^4.1.1",
@@ -29,7 +29,7 @@
     "ts-node": "^8.6.2",
     "uuid": "^3.3.2",
     "tslint": "^6.1.0",
-    "typescript": "2.9.2"
+    "typescript": "3.7.5"
   },
   "scripts": {
     "npmlockrefresh": "npm i --package-lock-only",

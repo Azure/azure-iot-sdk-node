@@ -12,6 +12,9 @@ azure-iot-device.InternalClient is an internal class which provides a means for 
 
 **SRS_NODE_INTERNAL_CLIENT_16_026: [** The `Client` constructor shall accept a connection string as an optional second argument **]**
 
+**SRS_NODE_INTERNAL_CLIENT_41_001: [** A `connect` event will be emitted when a `connected` event is received from the transport. **]**
+
+
 ### Public Methods
 
 #### open(openCallback)

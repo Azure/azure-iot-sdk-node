@@ -5,8 +5,8 @@
 
 var assert = require('chai').assert;
 var sinon = require('sinon');
-var Query = require('../lib/query.js').Query;
-var Twin = require('../lib/twin.js').Twin;
+var Query = require('../dist/query.js').Query;
+var Twin = require('../dist/twin.js').Twin;
 
 describe('Query', function() {
   describe('#constructor', function() {

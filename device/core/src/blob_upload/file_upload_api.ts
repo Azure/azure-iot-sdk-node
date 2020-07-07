@@ -65,8 +65,7 @@ export class FileUploadApi implements FileUploadInterface {
         return callbackToPromise((_callback) => {
             /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_004: [`getBlobSharedAccessSignature` shall throw a `ReferenceError` if `blobName` is falsy.]*/
             if (!blobName) throw new ReferenceError('blobName cannot be \'' + blobName + '\'');
-
-            this._authenticationProvider.getDeviceCredentials((err, deviceCredentials) => {
+            this._authenticationProvider.getDeviceCredentials((_err, deviceCredentials) => {
                 /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_006: [`getBlobSharedAccessSignature` shall create a `POST` HTTP request to a path formatted as the following:`/devices/URI_ENCODED(<deviceId>)/files?api-version=<api-version>]*/
                 const path = endpoint.devicePath(encodeUriComponentStrict(deviceCredentials.deviceId)) + '/files' + endpoint.versionQueryString();
                 const body = JSON.stringify({ blobName: blobName });
@@ -125,8 +124,7 @@ export class FileUploadApi implements FileUploadInterface {
             /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_012: [`notifyUploadComplete` shall throw a `ReferenceError` if `uploadResult` is falsy.]*/
             if (!correlationId) throw new ReferenceError('correlationId cannot be \'' + correlationId + '\'');
             if (!uploadResult) throw new ReferenceError('uploadResult cannot be \'' + uploadResult + '\'');
-
-            this._authenticationProvider.getDeviceCredentials((err, deviceCredentials) => {
+            this._authenticationProvider.getDeviceCredentials((_err, deviceCredentials) => {
                 /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_013: [`notifyUploadComplete` shall create a `POST` HTTP request to a path formatted as the following:`/devices/URI_ENCODED(<deviceId>)/files/<correlationId>?api-version=<api-version>`]*/
                 const path = endpoint.devicePath(encodeUriComponentStrict(deviceCredentials.deviceId)) + '/files/notifications/' + encodeURIComponent(correlationId) + endpoint.versionQueryString();
                 const body = JSON.stringify(uploadResult);

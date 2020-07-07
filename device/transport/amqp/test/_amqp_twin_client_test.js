@@ -9,7 +9,7 @@ var sinon = require('sinon');
 var rhea = require('rhea');
 
 
-var AmqpTwinClient = require('../lib/amqp_twin_client.js').AmqpTwinClient;
+var AmqpTwinClient = require('../dist/amqp_twin_client.js').AmqpTwinClient;
 var errors = require('azure-iot-common').errors;
 var endpoint = require('azure-iot-common').endpoint;
 

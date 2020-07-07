@@ -30,7 +30,7 @@ export function createTestDevice(): TestDevice {
 export function addTestDeviceToRegistry(testDevice: TestDevice, addCallback: (err?: Error) => void): void {
   const reg = Registry.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
   debug('creating device ' + testDevice.deviceId);
-  reg.create(testDevice, (err, createdDev) => {
+  reg.create(testDevice, (err, _createdDev) => {
     if (err) debug('failed to create device ' + testDevice.deviceId + ': ' + err.toString());
     addCallback(err);
   });

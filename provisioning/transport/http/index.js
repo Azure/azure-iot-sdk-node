@@ -12,5 +12,5 @@
  */
 
 module.exports = {
-  Http: require('./lib/http').Http
+  Http: require('./dist/http').Http
 };

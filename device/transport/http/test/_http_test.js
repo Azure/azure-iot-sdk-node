@@ -11,7 +11,7 @@ var results = require('azure-iot-common').results;
 var ArgumentError = require('azure-iot-common').errors.ArgumentError;
 var NotImplementedError = require('azure-iot-common').errors.NotImplementedError;
 var AuthenticationType = require('azure-iot-common').AuthenticationType;
-var Http = require('../lib/http.js').Http;
+var Http = require('../dist/http.js').Http;
 
 var FakeHttp = function () { };
 
@@ -74,6 +74,16 @@ describe('Http', function () {
         testCallback();
       });
     });
+
+    /*Tests_SRS_NODE_DEVICE_HTTP_41_004: [ The `connect` method shall immediately emit a `connected` event ]*/
+    it('emits a connect event immediately', function (testCallback) {
+      var http = new Http(fakeAuthenticationProvider);
+      http.on('connected', () => {
+        testCallback();
+      });
+      http.connect();
+    });
+
   });
 
   describe('#disconnect', function () {

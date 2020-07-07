@@ -141,9 +141,9 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_028: [The `forceDetach` method shall return immediately if the link is already detached.]*/
             return;
           },
-          accept: (message, callback) => callback(new errors.DeviceMessageLockLostError()),
-          reject: (message, callback) => callback(new errors.DeviceMessageLockLostError()),
-          abandon: (message, callback) => callback(new errors.DeviceMessageLockLostError())
+          accept: (_message, callback) => callback(new errors.DeviceMessageLockLostError()),
+          reject: (_message, callback) => callback(new errors.DeviceMessageLockLostError()),
+          abandon: (_message, callback) => callback(new errors.DeviceMessageLockLostError())
         },
         attaching: {
           _onEnter: (callback) => {
@@ -222,9 +222,9 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             attachingCallback(error);
             this._fsm.transition('detached', undefined, error);
           },
-          accept: (message, callback) => callback(new errors.DeviceMessageLockLostError()),
-          reject: (message, callback) => callback(new errors.DeviceMessageLockLostError()),
-          abandon: (message, callback) => callback(new errors.DeviceMessageLockLostError())
+          accept: (_message, callback) => callback(new errors.DeviceMessageLockLostError()),
+          reject: (_message, callback) => callback(new errors.DeviceMessageLockLostError()),
+          abandon: (_message, callback) => callback(new errors.DeviceMessageLockLostError())
         },
         attached: {
           _onEnter: (callback, err) => {
