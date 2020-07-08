@@ -11,7 +11,7 @@ const Message = require('azure-iot-device').Message;
 //  'HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>'
 const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
 
-const modelId = 'dtmi:com:example:TemperatureController;1';
+const modelId = 'dtmi:com:example:WeatherController;1';
 const messageSubjectProperty = '$.sub';
 const thermostat1ComponentName = 'thermostat1';
 const thermostat2ComponentName = 'thermostat2';
@@ -118,18 +118,14 @@ const helperAttachHandlerForDesiredPropertyPatches = (deviceTwin, componentNames
         });
         updateComponentReportedProperties(deviceTwin, patchForComponents, componentName);
       }
-      else if  (key !== '$version') {
+      else if  (key !== '$version') { // individual property for root
         const patchForRoot = { };
-        Object.entries(delta).forEach(([propertyName, propertyValue]) => {
-          if (propertyName !== '$version') {
-            console.log('Will update property: ' + propertyName + ' to value: ' + propertyValue + ' for root');
-            const propertyContent = { value: propertyValue };
-            propertyContent.ac = 200;
-            propertyContent.ad = 'Successfully executed patch';
-            propertyContent.av = version;
-            patchForRoot[propertyName] = propertyContent;
-          }
-        });
+        console.log('Will update property: ' + key + ' to value: ' + values + ' for root');
+        const propertyContent = { value: values };
+        propertyContent.ac = 200;
+        propertyContent.ad = 'Successfully executed patch';
+        propertyContent.av = version;
+        patchForRoot[key] = propertyContent;
         updateComponentReportedProperties(deviceTwin, patchForRoot, null);
       }
   });
@@ -214,7 +210,7 @@ async function main() {
     try {
       resultTwin = await client.getTwin();
       // Only report readable propertiess
-      const patchRoot = helperCreateReportedPropertiesPatch({ serialNumber: serialNumber }, null);
+      const patchRoot = helperCreateReportedPropertiesPatch({ serialNumber: {"value" : serialNumber, "ac" : 200, "av" : 1} }, null);
       const patchThermostat1Info = helperCreateReportedPropertiesPatch({
         maxTempSinceLastReboot: 67.89,
       }, thermostat1ComponentName);
