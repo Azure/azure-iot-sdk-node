@@ -23,7 +23,7 @@ async function main() {
   const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
 
   console.log(inspect(digitalTwin));
-  console.log("Model Id: " + inspect(digitalTwin.$metadata.$model))
+  console.log('Model Id: ' + inspect(digitalTwin.$metadata.$model));
 };
 
 main().catch((err) => {

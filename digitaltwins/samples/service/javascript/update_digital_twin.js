@@ -34,7 +34,7 @@ async function main() {
   }];
   await digitalTwinServiceClient.updateDigitalTwin(deviceId, patch);
 
-  console.log("Patch has been succesfully applied");
+  console.log('Patch has been succesfully applied');
 };
 
 main().catch((err) => {
