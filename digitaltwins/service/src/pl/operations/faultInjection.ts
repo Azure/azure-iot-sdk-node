@@ -27,12 +27,6 @@ export class FaultInjection {
   }
 
   /**
-   * For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
    * @summary Get FaultInjection entity
    * @param [options] The optional parameters
    * @returns Promise<Models.FaultInjectionGetResponse>
@@ -57,12 +51,6 @@ export class FaultInjection {
   }
 
   /**
-   * For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
    * @summary Create or update FaultInjection entity
    * @param value
    * @param [options] The optional parameters

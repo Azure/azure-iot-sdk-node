@@ -247,9 +247,9 @@ describe('DigitalTwinServiceClient', function () {
     var testCommandName = 'testCommandName';
     var testArgument = 123456;
     var testClient = new DigitalTwinServiceClient(testCredentials);
-    sinon.stub(testClient._pl.digitalTwin, "invokeComponentCommand1").returns(testCommandResponse);
+    sinon.stub(testClient._pl.digitalTwin, "invokeComponentCommand").returns(testCommandResponse);
     const response = await testClient.invokeComponentCommand(testTwinId, testInterfaceInstanceName, testCommandName, testArgument);
-    assert.isTrue(testClient._pl.digitalTwin.invokeComponentCommand1.calledWith(testTwinId, testInterfaceInstanceName, testCommandName, testArgument));
+    assert.isTrue(testClient._pl.digitalTwin.invokeComponentCommand.calledWith(testTwinId, testInterfaceInstanceName, testCommandName, testArgument));
     assert.isNotNull(response);
     assert.strictEqual(testCommandResponse, response);
   });

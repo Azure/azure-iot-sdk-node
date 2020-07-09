@@ -27,12 +27,6 @@ export class RegistryManager {
   }
 
   /**
-   * For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
    * @summary Retrieves statistics about device identities in the IoT hub’s identity registry.
    * @param [options] The optional parameters
    * @returns Promise<Models.RegistryManagerGetDeviceStatisticsResponse>
@@ -57,12 +51,6 @@ export class RegistryManager {
   }
 
   /**
-   * For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
    * @summary Retrieves service statistics for this IoT hub’s identity registry.
    * @param [options] The optional parameters
    * @returns Promise<Models.RegistryManagerGetServiceStatisticsResponse>
@@ -87,16 +75,10 @@ export class RegistryManager {
   }
 
   /**
-   * For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
    * @summary Get the identities of multiple devices from the IoT hub identity registry. Not
    * recommended. Use the IoT Hub query language to retrieve device twin and device identity
-   * information. See https://docs.microsoft.com/en-us/rest/api/iothub/service/queryiothub and
-   * https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-query-language for more
+   * information. See  https://docs.microsoft.com/rest/api/iothub/service/registrymanager/queryiothub
+   * and https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-query-language for more
    * information.
    * @param [options] The optional parameters
    * @returns Promise<Models.RegistryManagerGetDevicesResponse>
@@ -126,12 +108,6 @@ export class RegistryManager {
    * delete) on different devices are allowed. A maximum of 100 devices can be specified per
    * invocation. For large scale operations, consider using the import feature using blob
    * storage(https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-identity-registry#import-and-export-device-identities).
-   * For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
    * @summary Create, update, or delete the identities of multiple devices from the IoT hub identity
    * registry.
    * @param devices
@@ -163,13 +139,7 @@ export class RegistryManager {
   /**
    * Query an IoT hub to retrieve information regarding device twins using a SQL-like language. See
    * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-query-language for more information.
-   * Pagination of results is supported. This returns information about device twins only. For IoT
-   * Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * Pagination of results is supported. This returns information about device twins only.
    * @summary Query an IoT hub to retrieve information regarding device twins using a SQL-like
    * language.
    * @param querySpecification
@@ -199,12 +169,7 @@ export class RegistryManager {
   }
 
   /**
-   * Retrieve a device from the identity registry of an IoT hub. For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * Retrieve a device from the identity registry of an IoT hub.
    * @summary Retrieve a device from the identity registry of an IoT hub.
    * @param id Device ID.
    * @param [options] The optional parameters
@@ -235,12 +200,7 @@ export class RegistryManager {
   /**
    * Create or update the identity of a device in the identity registry of an IoT hub. An ETag must
    * not be specified for the create operation. An ETag must be specified for the update operation.
-   * Note that generationId and deviceId cannot be updated by the user. For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * Note that generationId and deviceId cannot be updated by the user.
    * @summary Create or update the identity of a device in the identity registry of an IoT hub.
    * @param id Device ID.
    * @param device
@@ -279,12 +239,7 @@ export class RegistryManager {
    * concurrency. The delete operation is performed only if the ETag sent by the client matches the
    * value maintained by the server, indicating that the device identity has not been modified since
    * it was retrieved by the client. To force an unconditional delete, set If-Match to the wildcard
-   * character (*). For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * character (*).
    * @summary Delete the identity of a device from the identity registry of an IoT hub.
    * @param id Device ID.
    * @param [options] The optional parameters
@@ -313,12 +268,7 @@ export class RegistryManager {
   }
 
   /**
-   * Deletes all the pending commands for this device from the IoT hub For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * Deletes all the pending commands for this device from the IoT hub
    * @summary Deletes all the pending commands for this device from the IoT hub.
    * @param id Device ID.
    * @param [options] The optional parameters
@@ -347,12 +297,6 @@ export class RegistryManager {
   }
 
   /**
-   * For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
    * @summary Retrieve all the module identities on the device.
    * @param id Device ID.
    * @param [options] The optional parameters
@@ -381,12 +325,6 @@ export class RegistryManager {
   }
 
   /**
-   * For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
    * @summary Retrieve the specified module identity on the device.
    * @param id Device ID.
    * @param mid Module ID.
@@ -419,12 +357,6 @@ export class RegistryManager {
   }
 
   /**
-   * For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
    * @summary Create or update the module identity for device in IoT hub. An ETag must not be
    * specified for the create operation. An ETag must be specified for the update operation. Note
    * that moduleId and generation cannot be updated by the user.
@@ -463,12 +395,6 @@ export class RegistryManager {
   }
 
   /**
-   * For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
    * @summary Delete the module identity for device of an IoT hub. This request requires the If-Match
    * header. The client may specify the ETag for the device identity on the request in order to
    * compare to the ETag maintained by the service for the purpose of optimistic concurrency. The

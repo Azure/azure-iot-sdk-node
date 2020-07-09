@@ -28,12 +28,7 @@ export class TwinOperations {
 
   /**
    * Gets a device twin. See https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-device-twins
-   * for more information. For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * for more information.
    * @summary Gets a device twin.
    * @param id Device ID.
    * @param [options] The optional parameters
@@ -63,13 +58,7 @@ export class TwinOperations {
 
   /**
    * Replaces a device twin. See
-   * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-device-twins for more information. For
-   * IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-device-twins for more information.
    * @summary Replaces tags and desired properties of a device twin.
    * @param id Device ID.
    * @param deviceTwinInfo Device twin info
@@ -103,13 +92,7 @@ export class TwinOperations {
 
   /**
    * Updates a device twin. See
-   * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-device-twins for more information. For
-   * IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-device-twins for more information.
    * @summary Updates tags and desired properties of a device twin.
    * @param id Device ID.
    * @param deviceTwinInfo Device twin info
@@ -143,12 +126,7 @@ export class TwinOperations {
 
   /**
    * Gets a module twin. See https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-device-twins
-   * for more information. For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * for more information.
    * @summary Gets a module twin.
    * @param id Device ID.
    * @param mid Module ID.
@@ -182,13 +160,7 @@ export class TwinOperations {
 
   /**
    * Replaces a module twin. See
-   * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-device-twins for more information. For
-   * IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-device-twins for more information.
    * @summary Replaces tags and desired properties of a module twin.
    * @param id Device ID.
    * @param mid Module ID.
@@ -226,13 +198,7 @@ export class TwinOperations {
 
   /**
    * Updates a module twin. See
-   * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-device-twins for more information. For
-   * IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-device-twins for more information.
    * @summary Updates tags and desired properties of a module twin.
    * @param id Device ID.
    * @param mid Module ID.

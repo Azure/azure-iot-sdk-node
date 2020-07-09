@@ -13,7 +13,7 @@ import * as msRest from '@azure/ms-rest-js';
  * @export
  * @type DigitalTwin   Type alias to simplify the auto generated type's name
  */
-export type DigitalTwin = Models.DigitalTwinGetComponentsHeaders | undefined;
+export type DigitalTwin = Models.DigitalTwinGetDigitalTwinHeaders | undefined;
 
 /**
  * @export
@@ -31,7 +31,7 @@ export type DigitalTwinUpdateResponse = Models.DigitalTwinUpdateDigitalTwinRespo
  * @export
  * @type DigitalTwinInvokeComponentCommandResponse   Type alias to simplify the auto generated type's name
  */
-export type DigitalTwinInvokeComponentCommandResponse = Models.DigitalTwinInvokeComponentCommandHeaders12 | undefined;
+export type DigitalTwinInvokeComponentCommandResponse = Models.DigitalTwinInvokeComponentCommandResponse | undefined;
 
 /**
  * @export
@@ -148,7 +148,7 @@ export class DigitalTwinServiceClient {
    * @memberof DigitalTwinServiceClient
    */
   invokeComponentCommand(digitalTwinId: string, componentName: string, commandName: string, argument: string): Promise<DigitalTwinInvokeComponentCommandResponse>{
-    return this._pl.digitalTwin.invokeComponentCommand1(digitalTwinId, componentName, commandName, argument);
+    return this._pl.digitalTwin.invokeComponentCommand(digitalTwinId, componentName, commandName, argument);
   }
 
   /**
