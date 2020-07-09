@@ -24,6 +24,7 @@ let intervalToken3;
 const commandNameGetMaxMinReport1 = thermostat1ComponentName + commandComponentCommandNameSeparator + 'getMaxMinReport';
 const commandNameGetMaxMinReport2 = thermostat2ComponentName + commandComponentCommandNameSeparator + 'getMaxMinReport';
 const commandNameReboot = 'reboot';
+const serialNumber = 'alwinexlepaho8329';
 
 const commandHandler = async (request, response) => {
   helperLogCommandRequest(request);
@@ -97,34 +98,41 @@ const updateComponentReportedProperties = (deviceTwin, patch, componentName) => 
   });
 };
 
-const helperAttachHandlerForDesiredPropertyPatches = (deviceTwin) => {
+const desiredPropertyPatchListener = (deviceTwin, componentNames) => {
   deviceTwin.on('properties.desired', (delta) => {
-    if (delta[thermostat1ComponentName] || delta[thermostat2ComponentName] || delta[deviceInfoComponentName]) {
+    console.log('Received an update for device with value: ' + JSON.stringify(delta));
+    Object.entries(delta).forEach(([key, values]) => {
       const version = delta.$version;
-      const componentName = Object.keys(delta)[0];
-      let logLine;
-      if (!!(componentName)) {
-        logLine = 'Received an update for component: ' + componentName + ' with value: ' + JSON.stringify(delta);
-      } else {
-        logLine = 'Received an update for root interface with value: ' + JSON.stringify(delta);
+      if (!!(componentNames) && componentNames.includes(key)) { // then it is a component we are expecting
+        const componentName = key;
+        const patchForComponents = { [componentName]: {} };
+        Object.entries(values).forEach(([propertyName, propertyValue]) => {
+          if (propertyName !== '__t' && propertyName !== '$version') {
+            console.log('Will update property: ' + propertyName + ' to value: ' + propertyValue + ' of component: ' + componentName);
+            const propertyContent = { value: propertyValue };
+            propertyContent.ac = 200;
+            propertyContent.ad = 'Successfully executed patch';
+            propertyContent.av = version;
+            patchForComponents[componentName][propertyName] = propertyContent;
+          }
+        });
+        updateComponentReportedProperties(deviceTwin, patchForComponents, componentName);
       }
-      console.log(logLine);
-      const patch = { [componentName]: {} };
-      Object.entries(delta[componentName]).forEach(([propertyName, propertyValue]) => {
-        if (propertyName !== '__t') {
-          const propertyContent = { value: propertyValue };
-          propertyContent.ac = 200;
-          propertyContent.ad = 'Successfully executed patch';
-          propertyContent.av = version;
-          patch[componentName][propertyName] = propertyContent;
-        }
-      });
-      updateComponentReportedProperties(deviceTwin, patch, componentName);
-    }
+      else if  (key !== '$version') { // individual property for root
+        const patchForRoot = { };
+        console.log('Will update property: ' + key + ' to value: ' + values + ' for root');
+        const propertyContent = { value: values };
+        propertyContent.ac = 200;
+        propertyContent.ad = 'Successfully executed patch';
+        propertyContent.av = version;
+        patchForRoot[key] = propertyContent;
+        updateComponentReportedProperties(deviceTwin, patchForRoot, null);
+      }
+  });
   });
 };
 
-const helperAttachExitListener = async (deviceClient) => {
+const exitListener = async (deviceClient) => {
   const standardInput = process.stdin;
   standardInput.setEncoding('utf-8');
   console.log('Please enter q or Q to exit sample.');
@@ -197,18 +205,17 @@ async function main() {
     }, 6000);
 
     // attach a standard input exit listener
-    helperAttachExitListener(client);
+    exitListener(client);
 
     try {
       resultTwin = await client.getTwin();
-      const patchRoot = helperCreateReportedPropertiesPatch({ serialNumber: 'alwinexlepaho8329' }, null);
+      // Only report readable propertiess
+      const patchRoot = helperCreateReportedPropertiesPatch({ serialNumber: {"value" : serialNumber, "ac" : 200, "av" : 1} }, null);
       const patchThermostat1Info = helperCreateReportedPropertiesPatch({
-        targetTemperature: { 'value': 56.78, 'ac': 200, 'ad': 'first report', 'av': 1 },
         maxTempSinceLastReboot: 67.89,
       }, thermostat1ComponentName);
 
       const patchThermostat2Info = helperCreateReportedPropertiesPatch({
-        targetTemperature: { 'value': 35.67, 'ac': 200, 'ad': 'first report', 'av': 1 },
         maxTempSinceLastReboot: 98.65,
       }, thermostat2ComponentName);
 
@@ -228,7 +235,7 @@ async function main() {
       updateComponentReportedProperties(resultTwin, patchThermostat1Info, thermostat1ComponentName);
       updateComponentReportedProperties(resultTwin, patchThermostat2Info, thermostat2ComponentName);
       updateComponentReportedProperties(resultTwin, patchDeviceInfo, deviceInfoComponentName);
-      helperAttachHandlerForDesiredPropertyPatches(resultTwin);
+      desiredPropertyPatchListener(resultTwin, [thermostat1ComponentName, thermostat2ComponentName, deviceInfoComponentName]);
     } catch (err) {
       console.error('could not retrieve twin or report twin properties\n' + err.toString());
     }
