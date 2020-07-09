@@ -9,8 +9,7 @@ const Message = require('azure-iot-device').Message;
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  'HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>'
-// const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
-const deviceConnectionString = 'HostName=hubforsdkfolks.azure-devices.net;DeviceId=olkarnode;SharedAccessKey=3FC/uiphxm2+w00mHdR10ZBdSOKfyyQFF5qHNYx63HY=';
+const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
 
 const modelId = 'dtmi:com:example:TemperatureController;1';
 const messageSubjectProperty = '$.sub';
