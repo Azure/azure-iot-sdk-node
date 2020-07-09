@@ -9,9 +9,10 @@ const Message = require('azure-iot-device').Message;
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  'HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>'
-const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+// const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+const deviceConnectionString = 'HostName=hubforsdkfolks.azure-devices.net;DeviceId=olkarnode;SharedAccessKey=3FC/uiphxm2+w00mHdR10ZBdSOKfyyQFF5qHNYx63HY=';
 
-const modelId = 'dtmi:com:example:WeatherController;1';
+const modelId = 'dtmi:com:example:TemperatureController;1';
 const messageSubjectProperty = '$.sub';
 const thermostat1ComponentName = 'thermostat1';
 const thermostat2ComponentName = 'thermostat2';
@@ -98,7 +99,7 @@ const updateComponentReportedProperties = (deviceTwin, patch, componentName) => 
   });
 };
 
-const helperAttachHandlerForDesiredPropertyPatches = (deviceTwin, componentNames) => {
+const desiredPropertyPatchListener = (deviceTwin, componentNames) => {
   deviceTwin.on('properties.desired', (delta) => {
     console.log('Received an update for device with value: ' + JSON.stringify(delta));
     Object.entries(delta).forEach(([key, values]) => {
@@ -132,7 +133,7 @@ const helperAttachHandlerForDesiredPropertyPatches = (deviceTwin, componentNames
   });
 };
 
-const helperAttachExitListener = async (deviceClient) => {
+const exitListener = async (deviceClient) => {
   const standardInput = process.stdin;
   standardInput.setEncoding('utf-8');
   console.log('Please enter q or Q to exit sample.');
@@ -205,7 +206,7 @@ async function main() {
     }, 6000);
 
     // attach a standard input exit listener
-    helperAttachExitListener(client);
+    exitListener(client);
 
     try {
       resultTwin = await client.getTwin();
@@ -235,7 +236,7 @@ async function main() {
       updateComponentReportedProperties(resultTwin, patchThermostat1Info, thermostat1ComponentName);
       updateComponentReportedProperties(resultTwin, patchThermostat2Info, thermostat2ComponentName);
       updateComponentReportedProperties(resultTwin, patchDeviceInfo, deviceInfoComponentName);
-      helperAttachHandlerForDesiredPropertyPatches(resultTwin, [thermostat1ComponentName, thermostat2ComponentName, deviceInfoComponentName]);
+      desiredPropertyPatchListener(resultTwin, [thermostat1ComponentName, thermostat2ComponentName, deviceInfoComponentName]);
     } catch (err) {
       console.error('could not retrieve twin or report twin properties\n' + err.toString());
     }
