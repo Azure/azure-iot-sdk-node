@@ -21,9 +21,15 @@ async function main() {
   const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
   // Update digital twin and verify the update
+  // If you already have a component thermostat1:
+  // const patch = [{
+  //   op: 'replace',
+  //   path: '/thermostat1/targetTemperature',
+  //   value: 42
+  // }];
   const patch = [{
-    op: 'replace',
-    path: '/thermostat1/targetTemperature',
+    op: 'add',
+    path: '/targetTemperature',
     value: 42
   }];
   await digitalTwinServiceClient.updateDigitalTwin(deviceId, patch);

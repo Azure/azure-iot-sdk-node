@@ -14,7 +14,7 @@ const { inspect } = require('util');
 // - Twin enabled device must exist on the ADT hub
 async function main() {
   const deviceId = process.env.IOTHUB_DEVICE_ID;
-  const commandName = process.env.IOTHUB_COMMAND_NAME; // for the thermostat you can try GetMaxMinReport
+  const commandName = process.env.IOTHUB_COMMAND_NAME; // for the thermostat you can try getMaxMinReport
   const commandArgument = process.env.IOTHUB_COMMAND_PAYLOAD; // it really doesn't matter, any string will do.
 
   // Create service client
