@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-digitaltwins-service-samples",
-  "version": "1.0.0-pnp-refresh.0",
+  "version": "1.0.0-pnp-refresh.2",
   "description": "Samples for the azure-iot-digitaltwins-service client library",
   "main": "get_digital_twin.js",
   "scripts": {
@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/azure/azure-iot-sdk-node-digitaltwins#readme",
   "dependencies": {
-    "azure-iot-digitaltwins-service": "1.0.0-pnp-refresh.0"
+    "azure-iot-digitaltwins-service": "1.0.0-pnp-refresh.2"
   },
   "devDependencies": {
     "eslint": "^6.8.0",
