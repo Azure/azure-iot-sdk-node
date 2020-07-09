@@ -14,9 +14,9 @@ const { inspect } = require('util');
 // - Twin enabled device must exist on the ADT hub
 async function main() {
   const deviceId = process.env.IOTHUB_DEVICE_ID;
-  const componentName = process.env.IOTHUB_COMPONENT_NAME; // for the environmental sensor, you can try 'environmentalSensor'
-  const commandName = process.env.IOTHUB_COMMAND_NAME; // for the environmental sensor, you can try 'blink', 'turnOff' or 'turnOn'
-  const commandArgument = process.env.IOTHUB_COMMAND_PAYLOAD; // for the environmental sensor, it really doesn't matter. any string will do.
+  const componentName = process.env.IOTHUB_COMPONENT_NAME; // for the TemperatureController, try thermostat1
+  const commandName = process.env.IOTHUB_COMMAND_NAME; // for the thermostat you can try GetMaxMinReport
+  const commandArgument = process.env.IOTHUB_COMMAND_PAYLOAD; // it really doesn't matter, any string will do.
 
   // Create service client
   const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
