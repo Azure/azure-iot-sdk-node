@@ -1,4 +1,4 @@
-# Azure IoT Digital Twins Client Library
+# Azure IoT Digital Twins Service Client Library
 
 **PREVIEW - WILL LIKELY HAVE BREAKING CHANGES**
 This client library lets you connect to your Azure IoT Hub and manage your Digital Twins.
@@ -16,7 +16,7 @@ You need to install the [Node.js][nodejs_lnk] JavaScript runtime environment to 
 
 ## Installation
 
-`npm install azure-iot-digitaltwins-service` to get the latest version.
+`npm install azure-iot-digitaltwins-service@pnp-refresh` to get the latest version.
 
  Features
 
