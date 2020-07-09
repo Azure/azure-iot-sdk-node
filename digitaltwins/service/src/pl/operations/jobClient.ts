@@ -29,12 +29,7 @@ export class JobClient {
   /**
    * Create a new import/export job on an IoT hub. See
    * https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-identity-registry#import-and-export-device-identities
-   * for more information. For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * for more information.
    * @summary Create a new import/export job on an IoT hub.
    * @param jobProperties Specifies the job specification.
    * @param [options] The optional parameters
@@ -65,12 +60,7 @@ export class JobClient {
   /**
    * Gets the status of all import/export jobs in an iot hub. See
    * https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-identity-registry#import-and-export-device-identities
-   * for more information. For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * for more information.
    * @summary Gets the status of all import/export jobs in an iot hub
    * @param [options] The optional parameters
    * @returns Promise<Models.JobClientGetImportExportJobsResponse>
@@ -97,12 +87,7 @@ export class JobClient {
   /**
    * Gets the status of an import or export job in an iot hub. See
    * https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-identity-registry#import-and-export-device-identities
-   * for more information. For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * for more information.
    * @summary Gets the status of an import or export job in an iot hub
    * @param id Job ID.
    * @param [options] The optional parameters
@@ -133,12 +118,7 @@ export class JobClient {
   /**
    * Cancels an import or export job in an IoT hub. See
    * https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-identity-registry#import-and-export-device-identities
-   * for more information. For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * for more information.
    * @summary Cancels an import or export job in an IoT hub.
    * @param id Job ID.
    * @param [options] The optional parameters
@@ -168,13 +148,7 @@ export class JobClient {
 
   /**
    * Retrieves details of a scheduled job from an IoT hub. See
-   * https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-jobs for more information. For
-   * IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-jobs for more information.
    * @summary Retrieves details of a scheduled job from an IoT hub.
    * @param id Job ID.
    * @param [options] The optional parameters
@@ -205,12 +179,7 @@ export class JobClient {
   /**
    * Creates a new job to schedule update twins or device direct methods on an IoT hub at a scheduled
    * time. See https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-jobs for more
-   * information. For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * information.
    * @summary Creates a new job to schedule update twins or device direct methods on an IoT hub at a
    * scheduled time.
    * @param id Job ID.
@@ -245,13 +214,7 @@ export class JobClient {
 
   /**
    * Cancels a scheduled job on an IoT hub. See
-   * https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-jobs for more information. For
-   * IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-jobs for more information.
    * @summary Cancels a scheduled job on an IoT hub.
    * @param id Job ID.
    * @param [options] The optional parameters
@@ -282,12 +245,7 @@ export class JobClient {
   /**
    * Query an IoT hub to retrieve information regarding jobs using the IoT Hub query language. See
    * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-query-language for more information.
-   * Pagination of results is supported. This returns information about jobs only. For IoT Hub VNET
-   * related features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please
-   * use API version '2020-03-13'.These features are currently in general availability in the East
-   * US, West US 2, and Southcentral US regions only. We are actively working to expand the
-   * availability of these features to all regions by end of month May. For rest of the APIs please
-   * continue using API version '2019-10-01'
+   * Pagination of results is supported. This returns information about jobs only.
    * @summary Query an IoT hub to retrieve information regarding jobs using the IoT Hub query
    * language
    * @param [options] The optional parameters

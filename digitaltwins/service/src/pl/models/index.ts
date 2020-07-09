@@ -552,6 +552,8 @@ export interface JobProperties {
    * If status == failure, this represents a string containing the reason.
    */
   failureReason?: string;
+  includeConfigurations?: boolean;
+  configurationsBlobName?: string;
 }
 
 /**
@@ -590,81 +592,6 @@ export interface FaultInjectionProperties {
    * Service generated.
    */
   lastUpdatedTimeUtc?: Date;
-}
-
-/**
- * An interface representing DesiredState.
- */
-export interface DesiredState {
-  /**
-   * Status code for the operation.
-   */
-  code?: number;
-  /**
-   * Version of the desired value received.
-   */
-  version?: number;
-  /**
-   * Description of the status.
-   */
-  description?: string;
-}
-
-/**
- * An interface representing Reported.
- */
-export interface Reported {
-  /**
-   * The current interface property value in a digitalTwin.
-   */
-  value?: any;
-  desiredState?: DesiredState;
-}
-
-/**
- * An interface representing Desired.
- */
-export interface Desired {
-  /**
-   * The desired value of the interface property to set in a digitalTwin.
-   */
-  value?: any;
-}
-
-/**
- * An interface representing Property.
- */
-export interface Property {
-  reported?: Reported;
-  desired?: Desired;
-}
-
-/**
- * An interface representing InterfaceModel.
- */
-export interface InterfaceModel {
-  /**
-   * Full name of digital twin interface.
-   */
-  name?: string;
-  /**
-   * List of all properties in an interface.
-   */
-  properties?: { [propertyName: string]: Property };
-}
-
-/**
- * An interface representing DigitalTwinInterfaces.
- */
-export interface DigitalTwinInterfaces {
-  /**
-   * Interface(s) data on the digital twin.
-   */
-  interfaces?: { [propertyName: string]: InterfaceModel };
-  /**
-   * Version of digital twin.
-   */
-  version?: number;
 }
 
 /**
@@ -862,43 +789,6 @@ export interface CloudToDeviceMethodResult {
 }
 
 /**
- * An interface representing DigitalTwinInterfacesPatchInterfacesValuePropertiesValueDesired.
- */
-export interface DigitalTwinInterfacesPatchInterfacesValuePropertiesValueDesired {
-  /**
-   * The desired value of the interface property to set in a digitalTwin.
-   */
-  value?: any;
-}
-
-/**
- * An interface representing DigitalTwinInterfacesPatchInterfacesValuePropertiesValue.
- */
-export interface DigitalTwinInterfacesPatchInterfacesValuePropertiesValue {
-  desired?: DigitalTwinInterfacesPatchInterfacesValuePropertiesValueDesired;
-}
-
-/**
- * An interface representing DigitalTwinInterfacesPatchInterfacesValue.
- */
-export interface DigitalTwinInterfacesPatchInterfacesValue {
-  /**
-   * List of properties to update in an interface.
-   */
-  properties?: { [propertyName: string]: DigitalTwinInterfacesPatchInterfacesValuePropertiesValue };
-}
-
-/**
- * An interface representing DigitalTwinInterfacesPatch.
- */
-export interface DigitalTwinInterfacesPatch {
-  /**
-   * Interface(s) data to patch in the digital twin.
-   */
-  interfaces?: { [propertyName: string]: DigitalTwinInterfacesPatchInterfacesValue };
-}
-
-/**
  * An interface representing IotHubGatewayServiceAPIsOptions.
  */
 export interface IotHubGatewayServiceAPIsOptions extends ServiceClientOptions {
@@ -1029,53 +919,21 @@ export interface DigitalTwinUpdateDigitalTwinOptionalParams extends msRest.Reque
 /**
  * Optional Parameters.
  */
-export interface DigitalTwinUpdateComponentOptionalParams extends msRest.RequestOptionsBase {
-  ifMatch?: string;
-}
-
-/**
- * Optional Parameters.
- */
-export interface DigitalTwinGetDigitalTwinModelOptionalParams extends msRest.RequestOptionsBase {
+export interface DigitalTwinInvokeRootLevelCommandOptionalParams extends msRest.RequestOptionsBase {
   /**
-   * Indicates whether to expand the device capability model's interface definitions inline or not.
-   * This query parameter ONLY applies to Capability model.
+   * Maximum interval of time, in seconds, that the digital twin command will wait for the answer.
    */
-  expand?: boolean;
+  connectTimeoutInSeconds?: number;
+  /**
+   * Maximum interval of time, in seconds, that the digital twin command will wait for the answer.
+   */
+  responseTimeoutInSeconds?: number;
 }
 
 /**
  * Optional Parameters.
  */
 export interface DigitalTwinInvokeComponentCommandOptionalParams extends msRest.RequestOptionsBase {
-  /**
-   * Connect timeout in seconds.
-   */
-  connectTimeoutInSeconds?: number;
-  /**
-   * Response timeout in seconds.
-   */
-  responseTimeoutInSeconds?: number;
-}
-
-/**
- * Optional Parameters.
- */
-export interface DigitalTwinInvokeComponentCommand1OptionalParams extends msRest.RequestOptionsBase {
-  /**
-   * Maximum interval of time, in seconds, that the digital twin command will wait for the answer.
-   */
-  connectTimeoutInSeconds?: number;
-  /**
-   * Maximum interval of time, in seconds, that the digital twin command will wait for the answer.
-   */
-  responseTimeoutInSeconds?: number;
-}
-
-/**
- * Optional Parameters.
- */
-export interface DigitalTwinInvokeRootLevelCommandOptionalParams extends msRest.RequestOptionsBase {
   /**
    * Maximum interval of time, in seconds, that the digital twin command will wait for the answer.
    */
@@ -1125,90 +983,23 @@ export interface DigitalTwinUpdateDigitalTwinHeaders {
 }
 
 /**
- * Defines headers for GetComponents operation.
+ * Defines headers for InvokeRootLevelCommand operation.
  */
-export interface DigitalTwinGetComponentsHeaders {
+export interface DigitalTwinInvokeRootLevelCommandHeaders {
   /**
-   * ETag of the digital twin.
+   * Device Generated Status Code for this Operation
    */
-  eTag: string;
-}
-
-/**
- * Defines headers for UpdateComponent operation.
- */
-export interface DigitalTwinUpdateComponentHeaders {
+  xMsCommandStatuscode: number;
   /**
-   * ETag of the digital twin.
+   * Server Generated Request Id (GUID), to uniquely identify this request in the service
    */
-  eTag: string;
-}
-
-/**
- * Defines headers for GetComponent operation.
- */
-export interface DigitalTwinGetComponentHeaders {
-  /**
-   * ETag of the digital twin.
-   */
-  eTag: string;
-}
-
-/**
- * Defines headers for GetDigitalTwinModel operation.
- */
-export interface DigitalTwinGetDigitalTwinModelHeaders {
-  /**
-   * ETag of the digital twin.
-   */
-  eTag: string;
-  /**
-   * Digital twin model id.
-   */
-  xMsModelId: string;
-  /**
-   * Digital twin model resolution status: enum [Pending, Success, NotFound, Failed, Resolved,
-   * Deleted]
-   */
-  xMsModelResolutionStatus: string;
-  /**
-   * Digital twin model resolution status description.
-   */
-  xMsModelResolutionDescription: string;
+  xMsRequestId: string;
 }
 
 /**
  * Defines headers for InvokeComponentCommand operation.
  */
 export interface DigitalTwinInvokeComponentCommandHeaders {
-  /**
-   * Device Generated Status Code for this Operation
-   */
-  xMsCommandStatuscode: number;
-  /**
-   * Server Generated Request Id (GUID), to uniquely identify this request in the service
-   */
-  xMsRequestId: string;
-}
-
-/**
- * Defines headers for InvokeComponentCommand operation.
- */
-export interface DigitalTwinInvokeComponentCommandHeaders1 {
-  /**
-   * Device Generated Status Code for this Operation
-   */
-  xMsCommandStatuscode: number;
-  /**
-   * Server Generated Request Id (GUID), to uniquely identify this request in the service
-   */
-  xMsRequestId: string;
-}
-
-/**
- * Defines headers for InvokeRootLevelCommand operation.
- */
-export interface DigitalTwinInvokeRootLevelCommandHeaders {
   /**
    * Device Generated Status Code for this Operation
    */
@@ -2137,84 +1928,9 @@ export type DigitalTwinUpdateDigitalTwinResponse = DigitalTwinUpdateDigitalTwinH
 };
 
 /**
- * Contains response data for the getComponents operation.
+ * Contains response data for the invokeRootLevelCommand operation.
  */
-export type DigitalTwinGetComponentsResponse = DigitalTwinInterfaces & DigitalTwinGetComponentsHeaders & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The parsed HTTP response headers.
-       */
-      parsedHeaders: DigitalTwinGetComponentsHeaders;
-
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: DigitalTwinInterfaces;
-    };
-};
-
-/**
- * Contains response data for the updateComponent operation.
- */
-export type DigitalTwinUpdateComponentResponse = DigitalTwinInterfaces & DigitalTwinUpdateComponentHeaders & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The parsed HTTP response headers.
-       */
-      parsedHeaders: DigitalTwinUpdateComponentHeaders;
-
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: DigitalTwinInterfaces;
-    };
-};
-
-/**
- * Contains response data for the getComponent operation.
- */
-export type DigitalTwinGetComponentResponse = DigitalTwinInterfaces & DigitalTwinGetComponentHeaders & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The parsed HTTP response headers.
-       */
-      parsedHeaders: DigitalTwinGetComponentHeaders;
-
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: DigitalTwinInterfaces;
-    };
-};
-
-/**
- * Contains response data for the getDigitalTwinModel operation.
- */
-export type DigitalTwinGetDigitalTwinModelResponse = DigitalTwinGetDigitalTwinModelHeaders & {
+export type DigitalTwinInvokeRootLevelCommandResponse = DigitalTwinInvokeRootLevelCommandHeaders & {
   /**
    * The parsed response body.
    */
@@ -2227,7 +1943,7 @@ export type DigitalTwinGetDigitalTwinModelResponse = DigitalTwinGetDigitalTwinMo
       /**
        * The parsed HTTP response headers.
        */
-      parsedHeaders: DigitalTwinGetDigitalTwinModelHeaders;
+      parsedHeaders: DigitalTwinInvokeRootLevelCommandHeaders;
 
       /**
        * The response body as text (string format)
@@ -2258,66 +1974,6 @@ export type DigitalTwinInvokeComponentCommandResponse = DigitalTwinInvokeCompone
        * The parsed HTTP response headers.
        */
       parsedHeaders: DigitalTwinInvokeComponentCommandHeaders;
-
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: any;
-    };
-};
-
-/**
- * Contains response data for the invokeComponentCommand1 operation.
- */
-export type DigitalTwinInvokeComponentCommandHeaders12 = DigitalTwinInvokeComponentCommandHeaders1 & {
-  /**
-   * The parsed response body.
-   */
-  body: any;
-
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The parsed HTTP response headers.
-       */
-      parsedHeaders: DigitalTwinInvokeComponentCommandHeaders1;
-
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: any;
-    };
-};
-
-/**
- * Contains response data for the invokeRootLevelCommand operation.
- */
-export type DigitalTwinInvokeRootLevelCommandResponse = DigitalTwinInvokeRootLevelCommandHeaders & {
-  /**
-   * The parsed response body.
-   */
-  body: any;
-
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The parsed HTTP response headers.
-       */
-      parsedHeaders: DigitalTwinInvokeRootLevelCommandHeaders;
 
       /**
        * The response body as text (string format)

@@ -13,32 +13,13 @@ import * as msRest from '@azure/ms-rest-js';
  * @export
  * @type DigitalTwin   Type alias to simplify the auto generated type's name
  */
-export type DigitalTwin = Models.DigitalTwinGetComponentsHeaders | undefined;
+export type DigitalTwin = Models.DigitalTwinGetDigitalTwinHeaders | undefined;
 
 /**
  * @export
  * @type DigitalTwinResponse   Type alias to simplify the auto generated type's name
  */
 export type DigitalTwinResponse = Models.DigitalTwinGetDigitalTwinResponse | undefined;
-
-
-/**
- * @export
- * @type DigitalTwinComponents   Type alias to simplify the auto generated type's name
- */
-export type DigitalTwinComponents = Models.DigitalTwinInterfaces | undefined;
-
-/**
- * @export
- * @type DigitalTwinGetComponentResponse   Type alias to simplify the auto generated type's name
- */
-export type DigitalTwinGetComponentResponse = Models.DigitalTwinGetComponentResponse;
-
-/**
- * @export
- * @type DigitalTwinGetComponentsResponse   Type alias to simplify the auto generated type's name
- */
-export type DigitalTwinGetComponentsResponse = Models.DigitalTwinGetComponentsResponse;
 
 /**
  * @export
@@ -48,49 +29,15 @@ export type DigitalTwinUpdateResponse = Models.DigitalTwinUpdateDigitalTwinRespo
 
 /**
  * @export
- * @type Model   Type alias to simplify the auto generated type's name
+ * @type DigitalTwinInvokeComponentCommandResponse   Type alias to simplify the auto generated type's name
  */
-export type Model = Models.DigitalTwinGetDigitalTwinModelResponse;
+export type DigitalTwinInvokeComponentCommandResponse = Models.DigitalTwinInvokeComponentCommandResponse | undefined;
 
 /**
  * @export
- * @type DigitalTwinGetDigitalTwinModelResponse   Type alias to simplify the auto generated type's name
+ * @type DigitalTwinInvokeRootLevelCommandResponse   Type alias to simplify the auto generated type's name
  */
-export type DigitalTwinGetDigitalTwinModelResponse = Models.DigitalTwinGetDigitalTwinModelResponse;
-
-/**
- * @export
- * @type DigitalTwinComponentsPatch   Type alias to simplify the auto generated type's name
- */
-export type DigitalTwinComponentsPatch = Models.DigitalTwinInterfacesPatch;
-
-/**
- * @export
- * @type DigitalTwinUpdateComponentResponse   Type alias to simplify the auto generated type's name
- */
-export type DigitalTwinUpdateComponentResponse = Models.DigitalTwinUpdateComponentResponse | undefined;
-
-/**
- * @export
- * @interface CommandResult   Base interface containing the following fields:
- * @field result              The return value of an invoked command
- * @field statusCode          The status code of the executed command
- * @field requestId           Identifier of the invoked command
- */
-export interface CommandResult {
-  result?: any;
-  statusCode?: number;
-  requestId?: string;
-}
-
-/**
- * @export
- * @interface CommandResultResponse   Extended command result interface adding the following field:
- * @field _response                   The full and parsed Http response for debugging purposes
- */
-export interface CommandResultResponse extends CommandResult {
-  _response?: msRest.HttpOperationResponse;
-}
+export type DigitalTwinInvokeRootLevelCommandResponse = Models.DigitalTwinInvokeRootLevelCommandResponse | undefined;
 
 /**
  * @private
@@ -191,114 +138,28 @@ export class DigitalTwinServiceClient {
   }
 
   /**
-   * @method getComponents                      module: azure-iot-digitaltwins-service.DigitalTwinServiceClient.getDigitalTwinComponent
-   * @description                               Retrieve all components of the Digital Twin of a given device.
-   * @param {string} digitalTwinId              The digital twin Id of the given device.
-   * @param {string} componentName              The name of the requested component.
-   * @returns DigitalTwinGetComponentsResponse  The return object containing the component plus the HttpResponse.
+   * @method invokeComponentCommand                     module: azure-iot-digitaltwins-service.DigitalTwinServiceClient.invokeComponentCommand
+   * @description                                       Invoke a command on an component of a particular device and get the result of it.
+   * @param {string} digitalTwinId                      The digital twin Id of the given device.
+   * @param {string} componentName                      The component's name.
+   * @param {string} commandName                        The command's name.
+   * @param {string} argument                           The argument of a command.
+   * @returns DigitalTwinInvokeComponentCommandResponse The result of the invoked command containing the result, status code, request ID and the parsed HttpResponse.
    * @memberof DigitalTwinServiceClient
    */
-  getComponents(digitalTwinId: string): Promise<DigitalTwinGetComponentsResponse>;
-  getComponents(digitalTwinId: string, callback: TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>): void;
-  getComponents(digitalTwinId: string, callback?: TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>): void | Promise<DigitalTwinGetComponentsResponse> {
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_005: [The `getDigitalTwinComponent` method shall call the `getComponent` method of the protocol layer with the given arguments.]*/
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_006: [The `getDigitalTwinComponent` method shall call the callback with an error parameter if a callback is passed..]*/
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_007: [The `getDigitalTwinComponent` method shall return error if the method of the protocol layer failed.]*/
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_021: [The `getDigitalTwinComponent` method shall return a promise if there is no callback passed.]*/
-    return tripleValueCallbackToPromise<DigitalTwinComponents, msRest.HttpOperationResponse, DigitalTwinGetComponentsResponse>((_callback) => {
-      this._pl.digitalTwin.getComponents(digitalTwinId, (err, result, request, response) => {
-        _callback(err as Error, result, response);
-      });
-    }, (result, response) => createResultWithHttpOperationResponse<DigitalTwinComponents, DigitalTwinGetComponentsResponse>(result, response), callback as TripleValueCallback<DigitalTwinComponents, msRest.HttpOperationResponse>);
+  invokeComponentCommand(digitalTwinId: string, componentName: string, commandName: string, argument: string): Promise<DigitalTwinInvokeComponentCommandResponse>{
+    return this._pl.digitalTwin.invokeComponentCommand(digitalTwinId, componentName, commandName, argument);
   }
 
   /**
-   * @method updateComponent                            module: azure-iot-digitaltwins-service.DigitalTwinServiceClient.updateComponent
-   * @description                                       Updates desired properties of multiple copmonents.
-   * @param {string} digitalTwinId                      Digital Twin ID. Format of digitalTwinId is DeviceId[~ModuleId]. ModuleId is optional.
-   * @param {DigitalTwinComponentsPatch} patch          Desired properties to update.
-   * @param {string} eTag                               The eTag for identifying the patch.
-   * @returns DigitalTwinUpdateComponentResponse        The return object containing the updated Component plus the HttpResponse.
+   * @method invokeCommand                              module: azure-iot-digitaltwins-service.DigitalTwinServiceClient.invokeCommand
+   * @description                                       Invoke a command on an component of a particular device and get the result of it.
+   * @param {string} digitalTwinId                      The digital twin Id of the given device.
+   * @param {string} argument                           The argument of a command.
+   * @returns DigitalTwinInvokeRootLevelCommandResponse The result of the invoked command containing the result, status code, request ID and the parsed HttpResponse.
    * @memberof DigitalTwinServiceClient
    */
-  updateComponent(digitalTwinId: string, patch: DigitalTwinComponentsPatch, eTag?: string): Promise<DigitalTwinUpdateComponentResponse>;
-  updateComponent(digitalTwinId: string, patch: DigitalTwinComponentsPatch, eTagOrCallback?: string | TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>, callback?: TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>): void;
-  updateComponent(digitalTwinId: string, patch: DigitalTwinComponentsPatch, eTagOrCallback?: string | TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>, callback?: TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>): void | Promise<DigitalTwinUpdateComponentResponse> {
-    const actualCallback = typeof eTagOrCallback === 'function' ? eTagOrCallback : callback;
-    const actualEtag = typeof eTagOrCallback !== 'function' ? eTagOrCallback : undefined;
-    const options = actualEtag ? {ifMatch: actualEtag} : undefined;
-
-    return tripleValueCallbackToPromise<DigitalTwinComponents, msRest.HttpOperationResponse, DigitalTwinUpdateComponentResponse>((_callback) => {
-      this._pl.digitalTwin.updateComponent(digitalTwinId, patch, options as Models.DigitalTwinUpdateComponentOptionalParams, (err, result, request, response) => {
-        _callback(err as Error, result, response);
-      });
-    }, (result, response) => createResultWithHttpOperationResponse<DigitalTwinComponents, DigitalTwinUpdateComponentResponse>(result, response), actualCallback as TripleValueCallback<DigitalTwinComponents, msRest.HttpOperationResponse>);
-  }
-
-  /**
-   * @method getComponent                      module: azure-iot-digitaltwins-service.DigitalTwinServiceClient.getDigitalTwinComponent
-   * @description                              Retrieve a component of the Digital Twin of a given device.
-   * @param {string} digitalTwinId             The digital twin Id of the given device.
-   * @param {string} componentName             The name of the requested component.
-   * @returns DigitalTwinGetComponentResponse  The return object containing the component plus the HttpResponse.
-   * @memberof DigitalTwinServiceClient
-   */
-  getComponent(digitalTwinId: string, componentName: string): Promise<DigitalTwinGetComponentResponse>;
-  getComponent(digitalTwinId: string, componentName: string, callback: TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>): void;
-  getComponent(digitalTwinId: string, componentName: string, callback?: TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>): void | Promise<DigitalTwinGetComponentResponse> {
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_005: [The `getDigitalTwinComponent` method shall call the `getComponent` method of the protocol layer with the given arguments.]*/
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_006: [The `getDigitalTwinComponent` method shall call the callback with an error parameter if a callback is passed..]*/
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_007: [The `getDigitalTwinComponent` method shall return error if the method of the protocol layer failed.]*/
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_021: [The `getDigitalTwinComponent` method shall return a promise if there is no callback passed.]*/
-    return tripleValueCallbackToPromise<DigitalTwinComponents, msRest.HttpOperationResponse, DigitalTwinGetComponentResponse>((_callback) => {
-      this._pl.digitalTwin.getComponent(digitalTwinId, componentName, (err, result, request, response) => {
-        _callback(err as Error, result, response);
-      });
-    }, (result, response) => createResultWithHttpOperationResponse<DigitalTwinComponents, DigitalTwinGetComponentResponse>(result, response), callback as TripleValueCallback<DigitalTwinComponents, msRest.HttpOperationResponse>);
-  }
-
-  /**
-   * @method getModel                                 module: azure-iot-digitaltwins-service.DigitalTwinServiceClient.getModel
-   * @description                                     Retrieve a Digital Twin Model.
-   * @param {string} modelId                          The model Id of the requested model.
-   * @returns DigitalTwinGetDigitalTwinModelResponse  The return object containing the Model plus the HttpResponse.
-   * @memberof DigitalTwinServiceClient
-   */
-  getModel(modelId: string): Promise<DigitalTwinGetDigitalTwinModelResponse>;
-  getModel(modelId: string, callback: TripleValueCallback<Model, msRest.HttpOperationResponse>): void;
-  getModel(modelId: string, callback?: TripleValueCallback<Model, msRest.HttpOperationResponse>): void | Promise<DigitalTwinGetDigitalTwinModelResponse> {
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_008: [The `getModel` method shall call the `getDigitalTwinModel` method of the protocol layer with the given argument.]*/
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_009: [The `getModel` method shall call the callback with an error parameter if a callback is passed..]*/
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_010: [The `getModel` method shall return error if the method of the protocol layer failed.]*/
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_022: [The `getModel` method shall return a promise if there is no callback passed.]*/
-    return tripleValueCallbackToPromise<Model, msRest.HttpOperationResponse, DigitalTwinGetDigitalTwinModelResponse>((_callback) => {
-      this._pl.digitalTwin.getDigitalTwinModel(modelId, (err, result, request, response) => {
-        _callback(err as Error, result, response);
-      });
-    }, (result, response) => createResultWithHttpOperationResponse<Model, DigitalTwinGetDigitalTwinModelResponse>(result, response), callback as TripleValueCallback<Model, msRest.HttpOperationResponse>);
-  }
-
-  /**
-   * @method invokeComponentCommand         module: azure-iot-digitaltwins-service.DigitalTwinServiceClient.invokeComponentCommand
-   * @description                           Invoke a command on an component of a particular device and get the result of it.
-   * @param {string} digitalTwinId          The digital twin Id of the given device.
-   * @param {string} componentName          The component's name.
-   * @param {string} commandName            The command's name.
-   * @param {string} argument               The argument of a command.
-   * @returns CommandResultResponse         The result of the invoked command containing the result, status code, request ID and the parsed HttpResponse.
-   * @memberof DigitalTwinServiceClient
-   */
-  invokeComponentCommand(digitalTwinId: string, componentName: string, commandName: string, argument: string): Promise<CommandResultResponse>;
-  invokeComponentCommand(digitalTwinId: string, componentName: string, commandName: string, argument: string, callback: TripleValueCallback<CommandResult, msRest.HttpOperationResponse>): void;
-  invokeComponentCommand(digitalTwinId: string, componentName: string, commandName: string, argument: string, callback?: TripleValueCallback<CommandResult, msRest.HttpOperationResponse>): void | Promise<CommandResultResponse> {
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_017: [The `invokeComponentCommand` method shall call the `invokeComponentCommand1` method of the protocol layer with the given arguments.]*/
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_018: [The `invokeComponentCommand` method shall call the callback with an error parameter if a callback is passed..]*/
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_019: [The `invokeComponentCommand` method shall return error if the method of the protocol layer failed.]*/
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_025: [The `invokeComponentCommand` method shall return a promise if there is no callback passed.]*/
-    return tripleValueCallbackToPromise<CommandResult, msRest.HttpOperationResponse, CommandResultResponse>((_callback) => {
-      this._pl.digitalTwin.invokeComponentCommand1(digitalTwinId, componentName, commandName, argument, (err, result, request, response) => {
-        _callback(err as Error, result, response);
-      });
-    }, (result, response) => createResultWithHttpOperationResponse<CommandResult, CommandResultResponse>(result, response), callback as TripleValueCallback<CommandResult, msRest.HttpOperationResponse>);
+  invokeCommand(digitalTwinId: string, commandName: string, argument: string): Promise<DigitalTwinInvokeRootLevelCommandResponse>{
+    return this._pl.digitalTwin.invokeRootLevelCommand(digitalTwinId, commandName, argument);
   }
 }

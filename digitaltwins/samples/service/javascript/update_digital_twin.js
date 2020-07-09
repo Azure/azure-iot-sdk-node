@@ -3,21 +3,6 @@
 
 const IoTHubTokenCredentials = require('azure-iot-digitaltwins-service').IoTHubTokenCredentials;
 const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').DigitalTwinServiceClient;
-const { inspect } = require('util');
-
-const patch = [{
-  interfaces: {
-    'environmentalSensor': { // for the environmental sensor, try 'environmentalSensor'
-      properties: {
-        'brightness': { // for the environmental sensor, try 'brightness'
-          desired: {
-            value: 42 // for the environmental sensor, try 42 (note that this is a number, not a string, so don't include quotes).
-          }
-        }
-      }
-    }
-  }
-}];
 
 // Simple example of how to:
 // - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
@@ -34,17 +19,21 @@ async function main() {
   const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
   const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-  // Get digital twin
-  const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
-
-  // Print original Twin
-  console.log(inspect(digitalTwin));
-
   // Update digital twin and verify the update
-  const response = await digitalTwinServiceClient.updateDigitalTwin(deviceId, patch);
+  // If you already have a component thermostat1:
+  // const patch = [{
+  //   op: 'replace',
+  //   path: '/thermostat1/targetTemperature',
+  //   value: 42
+  // }];
+  const patch = [{
+    op: 'add',
+    path: '/targetTemperature',
+    value: 42
+  }];
+  await digitalTwinServiceClient.updateDigitalTwin(deviceId, patch);
 
-  // Print response
-  console.log(response);
+  console.log('Patch has been succesfully applied');
 };
 
 main().catch((err) => {

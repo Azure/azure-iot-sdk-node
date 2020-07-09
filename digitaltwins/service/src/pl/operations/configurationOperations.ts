@@ -27,12 +27,6 @@ export class ConfigurationOperations {
   }
 
   /**
-   * For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
    * @summary Retrieve a configuration for Iot Hub devices and modules by it identifier.
    * @param id
    * @param [options] The optional parameters
@@ -61,12 +55,6 @@ export class ConfigurationOperations {
   }
 
   /**
-   * For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
    * @summary Create or update the configuration for devices or modules of an IoT hub. An ETag must
    * not be specified for the create operation. An ETag must be specified for the update operation.
    * Note that configuration Id and Content cannot be updated by the user.
@@ -101,12 +89,6 @@ export class ConfigurationOperations {
   }
 
   /**
-   * For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
    * @summary Delete the configuration for devices or modules of an IoT hub. This request requires
    * the If-Match header. The client may specify the ETag for the device identity on the request in
    * order to compare to the ETag maintained by the service for the purpose of optimistic
@@ -141,12 +123,6 @@ export class ConfigurationOperations {
   }
 
   /**
-   * For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
    * @summary Get multiple configurations for devices or modules of an IoT Hub. Returns the specified
    * number of configurations for Iot Hub. Pagination is not supported.
    * @param [options] The optional parameters
@@ -172,12 +148,7 @@ export class ConfigurationOperations {
   }
 
   /**
-   * Validates the target condition query and custom metric queries for a configuration. For IoT Hub
-   * VNET related features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support)
-   * please use API version '2020-03-13'.These features are currently in general availability in the
-   * East US, West US 2, and Southcentral US regions only. We are actively working to expand the
-   * availability of these features to all regions by end of month May. For rest of the APIs please
-   * continue using API version '2019-10-01'
+   * Validates the target condition query and custom metric queries for a configuration.
    * @summary Validates the target condition query and custom metric queries for a configuration.
    * @param input
    * @param [options] The optional parameters
@@ -207,12 +178,7 @@ export class ConfigurationOperations {
 
   /**
    * Applies the provided configuration content to the specified edge device. Configuration content
-   * must have modules content For IoT Hub VNET related
-   * features(https://docs.microsoft.com/en-us/azure/iot-hub/virtual-network-support) please use API
-   * version '2020-03-13'.These features are currently in general availability in the East US, West
-   * US 2, and Southcentral US regions only. We are actively working to expand the availability of
-   * these features to all regions by end of month May. For rest of the APIs please continue using
-   * API version '2019-10-01'
+   * must have modules content
    * @summary Applies the provided configuration content to the specified edge device.
    * @param id Device ID.
    * @param content Configuration Content.

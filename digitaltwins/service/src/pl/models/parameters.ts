@@ -63,28 +63,6 @@ export const deviceId: msRest.OperationURLParameter = {
     }
   }
 };
-export const digitalTwinId: msRest.OperationURLParameter = {
-  parameterPath: "digitalTwinId",
-  mapper: {
-    required: true,
-    serializedName: "digitalTwinId",
-    type: {
-      name: "String"
-    }
-  }
-};
-export const expand: msRest.OperationQueryParameter = {
-  parameterPath: [
-    "options",
-    "expand"
-  ],
-  mapper: {
-    serializedName: "expand",
-    type: {
-      name: "Boolean"
-    }
-  }
-};
 export const id: msRest.OperationURLParameter = {
   parameterPath: "id",
   mapper: {
@@ -102,16 +80,6 @@ export const ifMatch: msRest.OperationParameter = {
   ],
   mapper: {
     serializedName: "If-Match",
-    type: {
-      name: "String"
-    }
-  }
-};
-export const interfaceName: msRest.OperationURLParameter = {
-  parameterPath: "interfaceName",
-  mapper: {
-    required: true,
-    serializedName: "interfaceName",
     type: {
       name: "String"
     }
@@ -156,16 +124,6 @@ export const mid: msRest.OperationURLParameter = {
   mapper: {
     required: true,
     serializedName: "mid",
-    type: {
-      name: "String"
-    }
-  }
-};
-export const modelId: msRest.OperationURLParameter = {
-  parameterPath: "modelId",
-  mapper: {
-    required: true,
-    serializedName: "modelId",
     type: {
       name: "String"
     }
