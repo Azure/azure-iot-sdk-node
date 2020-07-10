@@ -84,5 +84,5 @@ async function uploadToBlob(localFilePath, client) {
 // Create a client device from the connection string and upload the local file to blob storage.
 uploadToBlob(localFilePath, Client.fromConnectionString(deviceConnectionString, Protocol))
   .catch((err) => {
-    console.log(err)
+    console.log(err);
   });
