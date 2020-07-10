@@ -22,10 +22,10 @@ const Client = require('azure-iot-device').Client;
 const Protocol = require('azure-iot-device-mqtt').Mqtt;
 const errors = require('azure-iot-common').errors;
 
-const { 
-  AnonymousCredential, 
+const {
+  AnonymousCredential,
   BlockBlobClient,
-  newPipeline 
+  newPipeline
 } = require('@azure/storage-blob');
 
 // make sure you set these environment variables prior to running the sample.
@@ -44,19 +44,19 @@ async function uploadToBlob(localFilePath, client) {
     telemetry: { value: 'HighLevelSample V1.0.0' }, // Customized telemetry string
     keepAliveOptions: { enable: false }
   });
-  
+
   // Construct the blob URL to construct the blob client for file uploads
   const { hostName, containerName, blobName, sasToken } = blobInfo;
   const blobUrl = `https://${hostName}/${containerName}/${blobName}${sasToken}`;
-  
+
   // Create the BlockBlobClient for file upload to the Blob Storage Blob
   const blobClient = new BlockBlobClient(blobUrl, pipeline);
-  
+
   // Setup blank status notification arguments to be filled in on success/failure
   let isSuccess;
   let statusCode;
   let statusDescription;
-  
+
   try {
     const uploadStatus = await blobClient.uploadFile(localFilePath);
     console.log('uploadStreamToBlockBlob success');
@@ -71,18 +71,22 @@ async function uploadToBlob(localFilePath, client) {
   }
   catch (err) {
     isSuccess = false;
-    statusCode = err.response.headers.get("x-ms-error-code");
-    statusDescription = '';
+    statusCode = err.code;
+    statusDescription = err.message;
 
     console.log('notifyBlobUploadStatus failed');
     console.log(err);
   }
-  
+
   await client.notifyBlobUploadStatus(blobInfo.correlationId, isSuccess, statusCode, statusDescription);
 }
 
 // Create a client device from the connection string and upload the local file to blob storage.
-uploadToBlob(localFilePath, Client.fromConnectionString(deviceConnectionString, Protocol))
+const deviceClient = Client.fromConnectionString(deviceConnectionString, Protocol)
+uploadToBlob(localFilePath, deviceClient)
   .catch((err) => {
     console.log(err);
+  })
+  .finally(() => {
+    process.exit();
   });
