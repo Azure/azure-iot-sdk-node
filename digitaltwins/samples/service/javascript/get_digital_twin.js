@@ -14,13 +14,14 @@ const { inspect } = require('util');
 // - Twin enabled device must exist on the ADT hub
 async function main() {
   const deviceId = process.env.IOTHUB_DEVICE_ID;
+  const connString = process.env.IOTHUB_CONNECTION_STRING;
 
   // Create digital twin service client
-  const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
-  const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
+  const credentials = new IoTHubTokenCredentials(connString);
+  const dtServiceclient = new DigitalTwinServiceClient(credentials);
 
   // Get digital twin and retrieve the modelId from it
-  const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
+  const digitalTwin = await dtServiceclient.getDigitalTwin(deviceId);
 
   console.log(inspect(digitalTwin));
   console.log('Model Id: ' + inspect(digitalTwin.$metadata.$model));

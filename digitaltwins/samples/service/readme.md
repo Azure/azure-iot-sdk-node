@@ -20,6 +20,7 @@ npm install
 ```shell
 set IOTHUB_CONNECTION_STRING=<your IoT Hub connection string>
 ```
+
 *use `export` instead of `set` if you're running MacOS or Linux.*
 
 4. Edit the sample to change the values at the top of the  file to match your scenario
