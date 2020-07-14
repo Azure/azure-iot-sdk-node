@@ -1,10 +1,12 @@
 {
     "compilerOptions": {
       "outDir": "./dist",
-      "strict": true,
+      "strict": false,
       "target": "es5",
       "sourceMap": true,
       "declarationMap": true,
+      "noImplicitAny": true,
+      "suppressImplicitAnyIndexErrors": true,
       "lib": [
         "es6", "dom"
       ],
