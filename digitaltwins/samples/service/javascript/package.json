@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/azure/azure-iot-sdk-node-digitaltwins.git"
+    "url": "git+https://github.com/azure/azure-iot-sdk-node.git"
   },
   "author": "Microsoft Corp.",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/azure/azure-iot-sdk-node-digitaltwins/issues"
+    "url": "https://github.com/azure/azure-iot-sdk-node/issues"
   },
-  "homepage": "https://github.com/azure/azure-iot-sdk-node-digitaltwins#readme",
+  "homepage": "https://github.com/azure/azure-iot-sdk-node#readme",
   "dependencies": {
     "azure-iot-digitaltwins-service": "1.0.0-pnp-refresh.2"
   },

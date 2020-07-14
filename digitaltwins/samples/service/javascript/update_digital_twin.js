@@ -14,9 +14,10 @@ const DigitalTwinServiceClient = require('azure-iot-digitaltwins-service').Digit
 // - Twin enabled device must exist on the ADT hub
 async function main() {
   const deviceId = process.env.IOTHUB_DEVICE_ID;
+  const connString = process.env.IOTHUB_CONNECTION_STRING;
 
   // Create service client
-  const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
+  const credentials = new IoTHubTokenCredentials(connString);
   const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
   // Update digital twin and verify the update
