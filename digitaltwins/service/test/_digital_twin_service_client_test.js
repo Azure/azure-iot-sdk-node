@@ -254,7 +254,26 @@ describe('DigitalTwinServiceClient', function () {
     assert.strictEqual(testCommandResponse, response);
   });
 
-  it('invokeCommand shall return a promise if there is no callback passed', async () => {
+  it('invokeComponentCommand called with the right plus optional parameters and shall return a promise', async () => {
+    var testTwinId = 'digitalTwinId';
+    var testCommandResponse = {
+      result: {
+        testResult: {}
+      }
+    };
+    var testInterfaceInstanceName = 'testInterfaceInstanceName';
+    var testCommandName = 'testCommandName';
+    var testArgument = 123456;
+    var options = {};
+    var testClient = new DigitalTwinServiceClient(testCredentials);
+    sinon.stub(testClient._pl.digitalTwin, "invokeComponentCommand").returns(testCommandResponse);
+    const response = await testClient.invokeComponentCommand(testTwinId, testInterfaceInstanceName, testCommandName, testArgument, options);
+    assert.isTrue(testClient._pl.digitalTwin.invokeComponentCommand.calledWith(testTwinId, testInterfaceInstanceName, testCommandName, testArgument));
+    assert.isNotNull(response);
+    assert.strictEqual(testCommandResponse, response);
+  });
+
+  it('invokeCommand called with the right plus optional parameters and shall return a promise', async () => {
     var testTwinId = 'digitalTwinId';
     var testCommandResponse = {
       result: {
@@ -266,6 +285,24 @@ describe('DigitalTwinServiceClient', function () {
     var testClient = new DigitalTwinServiceClient(testCredentials);
     sinon.stub(testClient._pl.digitalTwin, "invokeRootLevelCommand").returns(testCommandResponse);
     const response = await testClient.invokeCommand(testTwinId, testCommandName, testArgument);
+    assert.isTrue(testClient._pl.digitalTwin.invokeRootLevelCommand.calledWith(testTwinId, testCommandName, testArgument));
+    assert.isNotNull(response);
+    assert.strictEqual(testCommandResponse, response);
+  });
+
+  it('invokeCommand called with the right plus optional parameters and shall return a promise', async () => {
+    var testTwinId = 'digitalTwinId';
+    var testCommandResponse = {
+      result: {
+        testResult: {}
+      }
+    };
+    var testCommandName = 'testCommandName';
+    var testArgument = 123456;
+    var options = {};
+    var testClient = new DigitalTwinServiceClient(testCredentials);
+    sinon.stub(testClient._pl.digitalTwin, "invokeRootLevelCommand").returns(testCommandResponse);
+    const response = await testClient.invokeCommand(testTwinId, testCommandName, testArgument, options);
     assert.isTrue(testClient._pl.digitalTwin.invokeRootLevelCommand.calledWith(testTwinId, testCommandName, testArgument));
     assert.isNotNull(response);
     assert.strictEqual(testCommandResponse, response);
