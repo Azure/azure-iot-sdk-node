@@ -23,7 +23,11 @@ async function main() {
   const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
   // Invoke a command
-  const commandResponse = await digitalTwinServiceClient.invokeComponentCommand(deviceId, componentName, commandName, commandArgument);
+  const options = {
+    connectTimeoutInSeconds: 10,
+    responseTimeoutInSeconds: 7 // The responseTimeoutInSeconds must be within [5; 300]
+  };
+  const commandResponse = await digitalTwinServiceClient.invokeComponentCommand(deviceId, componentName, commandName, commandArgument, options);
 
   // Print result of the command
   console.log(inspect(commandResponse));
