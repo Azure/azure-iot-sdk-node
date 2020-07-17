@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-digitaltwins-service",
-  "version": "1.0.0-pnp-refresh.2",
+  "version": "1.0.0-pnp-refresh.3",
   "description": "Azure IoT Digital Twins Preview",
   "main": "index.js",
   "types": "index.d.ts",
