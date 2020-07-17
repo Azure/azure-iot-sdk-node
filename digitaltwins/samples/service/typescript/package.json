@@ -1,11 +1,11 @@
 {
   "name": "azure-iot-digitaltwins-service-ts-samples",
-  "version": "1.0.0-pnp-refresh.2",
+  "version": "1.0.0-pnp-refresh.3",
   "description": "Azure IoT SDK - Digital Twin Client typescript samples",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "dependencies": {
-    "azure-iot-digitaltwins-service": "1.0.0-pnp-refresh.2"
+    "azure-iot-digitaltwins-service": "1.0.0-pnp-refresh.3"
   },
   "devDependencies": {
     "tslint": "^6.1.0",
