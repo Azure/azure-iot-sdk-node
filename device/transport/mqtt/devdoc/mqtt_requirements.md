@@ -40,6 +40,8 @@ The `Mqtt` and `MqttWs` constructors initialize a new instance of the MQTT trans
 
 **SRS_NODE_DEVICE_MQTT_16_082: [** A `twinDesiredPropertiesUpdates` shall be emitted by the `Mqtt` object for each `twinDesiredPropertiesUpdates` event received from the `MqttTwinClient` with the same payload. **]**
 
+**SRS_NODE_DEVICE_MQTT_41_015: [** If a modelId is provided, the device should use the PnP API String **]**
+
 ### connect(done)
 
 The `connect` method initializes a connection to an IoT hub.
@@ -65,6 +67,12 @@ The `connect` method initializes a connection to an IoT hub.
 **SRS_NODE_DEVICE_MQTT_16_067: [** The `connect` method shall call the `getDeviceCredentials` method of the `AuthenticationProvider` object passed to the constructor to obtain the credentials of the device. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_068: [** The `connect` method shall call its callback with the error returned by `getDeviceCredentials` if it fails to return the device credentials. **]**
+
+**SRS_NODE_DEVICE_MQTT_41_006: [** The `connect` method shall call its callback with an `UnauthorizedError` returned by the primary call to `connect` in the base MQTT client. **]**
+
+**SRS_NODE_DEVICE_MQTT_41_007: [** The `connect` method shall call its callback with the error returned by the non-primary call to `connect` in the base MQTT client. **]**
+
+**SRS_NODE_DEVICE_MQTT_41_016: [** The `connect` method shall emit `connected` once the transport is connected **]**
 
 ### disconnect(done)
 
@@ -221,7 +229,7 @@ The `reject` method is there for compatibility purposes with other transports bu
 **SRS_NODE_DEVICE_MQTT_06_002: [** The authentication providers `setTokenRenewalValues` method shall be invoked with the values provided in the tokenRenewal option.
  **]**
 
-**SRS_NODE_DEVICE_MQTT_41_006: [** For a Plug and Play Device the modelID should be included as `&digital-twin-model-id=<DEVICE’s MODEL ID>` after the api-version **]**
+**SRS_NODE_DEVICE_MQTT_41_014: [** For a Plug and Play Device the modelId should be included as `&model-id=<DEVICE’s MODEL ID>` after the api-version **]**
 
 
 ### onDeviceMethod(methodName, methodCallback)
@@ -293,6 +301,8 @@ The `updateTwinReportedProperties` method is used to retrieve the device twin.
 
 **SRS_NODE_DEVICE_MQTT_16_052: [** `enableC2D` shall call its callback with an `Error` if subscribing to the topic fails. **]**
 
+**SRS_NODE_DEVICE_MQTT_41_008: [** `enableC2D` shall not subscribe multiple times if already subscribed. **]**
+
 ### enableMethods
 
 **SRS_NODE_DEVICE_MQTT_16_038: [** `enableMethods` shall connect the MQTT connection if it is disconnected. **]**
@@ -304,6 +314,8 @@ The `updateTwinReportedProperties` method is used to retrieve the device twin.
 **SRS_NODE_DEVICE_MQTT_16_051: [** `enableMethods` shall call its callback with no arguments when the `SUBACK` packet is received. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_053: [** `enableMethods` shall call its callback with an `Error` if subscribing to the topic fails. **]**
+
+**SRS_NODE_DEVICE_MQTT_41_009: [** `enableMethods` shall not subscribe multiple times if already subscribed. **]**
 
 ### enableTwinDesiredPropertiesUpdates
 
@@ -329,6 +341,8 @@ The `updateTwinReportedProperties` method is used to retrieve the device twin.
 
 **SRS_NODE_DEVICE_MQTT_18_063: [** `enableInputMessages` shall call its callback with an `Error` if subscribing to the topic fails. **]**
 
+**SRS_NODE_DEVICE_MQTT_41_010: [** `enableInputMessages` shall not subscribe multiple times if already subscribed. **]**
+
 ### disableC2D
 
 **SRS_NODE_DEVICE_MQTT_16_041: [** `disableC2D` shall call its callback immediately if the MQTT connection is already disconnected. **]**
@@ -339,6 +353,8 @@ The `updateTwinReportedProperties` method is used to retrieve the device twin.
 
 **SRS_NODE_DEVICE_MQTT_16_043: [** `disableC2D` shall call its callback with an `Error` if an error is received while unsubscribing. **]**
 
+**SRS_NODE_DEVICE_MQTT_41_011: [** `disableC2D` shall unsubscribe from the topic for C2D messages only if it is currently subscribed. **]**
+
 ### disableMethods
 
 **SRS_NODE_DEVICE_MQTT_16_044: [** `disableMethods` shall call its callback immediately if the MQTT connection is already disconnected. **]**
@@ -348,6 +364,8 @@ The `updateTwinReportedProperties` method is used to retrieve the device twin.
 **SRS_NODE_DEVICE_MQTT_16_055: [** `disableMethods` shall call its callback with no arguments when the `UNSUBACK` packet is received. **]**
 
 **SRS_NODE_DEVICE_MQTT_16_046: [** `disableMethods` shall call its callback with an `Error` if an error is received while unsubscribing. **]**
+
+**SRS_NODE_DEVICE_MQTT_41_012: [** `disableMethods` shall unsubscribe from the topic for direct methods only if it is currently subscribed. **]**
 
 ### disableTwinDesiredPropertiesUpdates
 
@@ -368,6 +386,8 @@ The `updateTwinReportedProperties` method is used to retrieve the device twin.
 **SRS_NODE_DEVICE_MQTT_18_066: [** `disableInputMessages` shall call its callback with no arguments when the `UNSUBACK` packet is received. **]**
 
 **SRS_NODE_DEVICE_MQTT_18_067: [** `disableInputMessages` shall call its callback with an `Error` if an error is received while unsubscribing. **]**
+
+**SRS_NODE_DEVICE_MQTT_41_013: [** `disableInputMessages` shall unsubscribe from the topic for inputMessages only if it is currently subscribed. **]**
 
 ### message Event
 

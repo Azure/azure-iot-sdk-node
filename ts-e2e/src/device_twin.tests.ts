@@ -42,7 +42,7 @@ describe('Device Twin', () => {
             twin.properties.reported.update(twinPatch, (err) => {
               if (err) throw err;
               const registry = Registry.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
-              registry.getTwin(testDevice.deviceId, (err, twin) => {
+              registry.getTwin(testDevice.deviceId, (_err, twin) => {
                 debug('Registry: Got Device Twin');
                 assert.strictEqual(twin.properties.reported.twinKey, twinPatch.twinKey);
                 testCallback();
@@ -84,7 +84,7 @@ describe('Device Twin', () => {
         });
 
         const registry = Registry.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
-        registry.getTwin(testDevice.deviceId, (err, twin) => {
+        registry.getTwin(testDevice.deviceId, (_err, twin) => {
           debug('Registry: Got Device Twin');
           twin.update(twinPatch, (err) => {
             if (err) throw err;

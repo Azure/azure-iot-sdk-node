@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 var ArgumentError = require('azure-iot-common').errors.ArgumentError;
-var ConnectionString = require('../lib/connection_string.js');
+var ConnectionString = require('../dist/connection_string.js');
 
 var incompleteConnectionStrings = {
   HostName: 'DeviceId=id;SharedAccessKey=key;GatewayHostName=gateway',

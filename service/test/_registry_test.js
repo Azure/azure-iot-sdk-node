@@ -8,10 +8,10 @@ var sinon = require('sinon');
 var uuid = require('uuid');
 var endpoint = require('azure-iot-common').endpoint;
 var errors = require('azure-iot-common').errors;
-var Registry = require('../lib/registry.js').Registry;
-var Twin = require('../lib/twin.js').Twin;
-var Query = require('../lib/query.js').Query;
-var Device = require('../lib/device.js').Device;
+var Registry = require('../dist/registry.js').Registry;
+var Twin = require('../dist/twin.js').Twin;
+var Query = require('../dist/query.js').Query;
+var Device = require('../dist/device.js').Device;
 
 var fakeDevice = { deviceId: 'deviceId' };
 var fakeAuthentication = {

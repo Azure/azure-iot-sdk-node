@@ -6,7 +6,7 @@
 var EventEmitter = require('events').EventEmitter;
 var assert = require('chai').assert;
 var sinon = require('sinon');
-var MqttWs = require('../lib/mqtt_ws.js').MqttWs;
+var MqttWs = require('../dist/mqtt_ws.js').MqttWs;
 
 describe('MqttWs', function () {
   var fakeConfig = {

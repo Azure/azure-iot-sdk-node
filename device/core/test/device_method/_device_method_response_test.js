@@ -8,7 +8,7 @@ var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 var sinon = require('sinon');
 var assert = require('chai').assert;
-var DeviceMethodResponse = require('../../lib/device_method').DeviceMethodResponse;
+var DeviceMethodResponse = require('../../dist/device_method').DeviceMethodResponse;
 
 describe('DeviceMethodResponse', function() {
   var MockReceiver = function() {

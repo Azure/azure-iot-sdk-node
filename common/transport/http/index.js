@@ -10,7 +10,7 @@
  */
 
 module.exports = {
-  Http: require('./lib/http.js').Http,
-  HttpTransportError: require('./lib/rest_api_client.js').HttpTransportError,
-  RestApiClient: require('./lib/rest_api_client.js').RestApiClient
+  Http: require('./dist/http.js').Http,
+  HttpTransportError: require('./dist/rest_api_client.js').HttpTransportError,
+  RestApiClient: require('./dist/rest_api_client.js').RestApiClient
 };

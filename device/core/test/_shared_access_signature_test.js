@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 var ArgumentError = require('azure-iot-common').errors.ArgumentError;
-var SharedAccessSignature = require('../lib/shared_access_signature.js');
+var SharedAccessSignature = require('../dist/shared_access_signature.js');
 
 var incompleteSignatures = {
   sr: 'SharedAccessSignature sig=signature&se=expiry',

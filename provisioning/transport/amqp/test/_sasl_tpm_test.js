@@ -3,7 +3,7 @@
 
 'use strict';
 
-var SaslTpm = require('../lib/sasl_tpm').SaslTpm;
+var SaslTpm = require('../dist/sasl_tpm').SaslTpm;
 var assert = require('chai').assert;
 var Builder = require('buffer-builder');
 

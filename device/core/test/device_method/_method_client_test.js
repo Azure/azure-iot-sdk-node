@@ -6,7 +6,7 @@
 var assert = require('chai').assert;
 var sinon = require('sinon');
 var encodeUriComponentStrict = require('azure-iot-common').encodeUriComponentStrict;
-var MethodClient = require('../../lib/device_method').MethodClient;
+var MethodClient = require('../../dist/device_method').MethodClient;
 
 
 describe('MethodClient', function () {

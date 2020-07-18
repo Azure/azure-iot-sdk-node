@@ -3,5 +3,5 @@ devdoc/
 test/
 samples/
 src/
-lib/**/*.map
+dist/**/*.map
 .nyc_output

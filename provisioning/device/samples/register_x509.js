@@ -3,24 +3,27 @@
 
 'use strict';
 
-var fs = require('fs');
-var Transport = require('azure-iot-provisioning-device-http').Http;
+var iotHubTransport = require('azure-iot-device-mqtt').Mqtt;
+var Client = require('azure-iot-device').Client;
+var Message = require('azure-iot-device').Message;
 
-// Feel free to change the preceding using statement to anyone of the following if you would like to try another protocol.
+var fs = require('fs');
+// You can change the following using statement if you would like to try another protocol.
+var Transport = require('azure-iot-provisioning-device-mqtt').Mqtt;
 // var Transport = require('azure-iot-provisioning-device-amqp').Amqp;
 // var Transport = require('azure-iot-provisioning-device-amqp').AmqpWs;
-// var Transport = require('azure-iot-provisioning-device-mqtt').Mqtt;
+// var Transport = require('azure-iot-provisioning-device-http').Http;
 // var Transport = require('azure-iot-provisioning-device-mqtt').MqttWs;
 
 var X509Security = require('azure-iot-security-x509').X509Security;
 var ProvisioningDeviceClient = require('azure-iot-provisioning-device').ProvisioningDeviceClient;
 
-var provisioningHost = '[provisioning host]';
-var idScope = '[id scope]';
-var registrationId = '[registration id]';
+var provisioningHost = process.env.PROVISIONING_HOST;
+var idScope = process.env.PROVISIONING_IDSCOPE;
+var registrationId = process.env.PROVISIONING_REGISTRATION_ID;
 var deviceCert = {
-  cert: fs.readFileSync('[cert filename]').toString(),
-  key: fs.readFileSync('[key filename]').toString()
+  cert: fs.readFileSync(process.env.CERTIFICATE_FILE).toString(),
+  key: fs.readFileSync(process.env.KEY_FILE).toString()
 };
 
 var transport = new Transport();
@@ -35,6 +38,22 @@ deviceClient.register(function(err, result) {
     console.log('registration succeeded');
     console.log('assigned hub=' + result.assignedHub);
     console.log('deviceId=' + result.deviceId);
+    var connectionString = 'HostName=' + result.assignedHub + ';DeviceId=' + result.deviceId + ';x509=true';
+    var hubClient = Client.fromConnectionString(connectionString, iotHubTransport);
+    hubClient.setOptions(deviceCert);
+    hubClient.open(function(err) {
+      if (err) {
+        console.error('Failure opening iothub connection: ' + err.message);
+      } else {
+        console.log('Client connected');
+        var message = new Message('Hello world');
+        hubClient.sendEvent(message, function(err, res) {
+          if (err) console.log('send error: ' + err.toString());
+          if (res) console.log('send status: ' + res.constructor.name);
+          process.exit(1);
+        });
+      }
+    });
   }
 });
 

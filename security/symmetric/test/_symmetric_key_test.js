@@ -3,7 +3,7 @@
 
 'use strict';
 var ArgumentError = require('azure-iot-common').errors.ArgumentError;
-var SymmetricKeySecurityClient  = require('../lib/symmetric_key').SymmetricKeySecurityClient ;
+var SymmetricKeySecurityClient  = require('../dist/symmetric_key').SymmetricKeySecurityClient ;
 var sinon = require('sinon');
 var assert = require('chai').assert;
 
