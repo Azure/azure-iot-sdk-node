@@ -68,8 +68,8 @@ export class Http extends EventEmitter implements DeviceTransport {
   private _http: Base;
   private _opts: HttpReceiverOptions;
   private _cronObj: any;
-  private _intervalObj: number;
-  private _timeoutObj: number;
+  private _intervalObj: NodeJS.Timer;
+  private _timeoutObj: NodeJS.Timer;
   private _receiverStarted: boolean;
   private _userAgentString: string;
   private _productInfo: string;
@@ -92,6 +92,8 @@ export class Http extends EventEmitter implements DeviceTransport {
    * @private
    */
   connect(callback: (err?: Error, result?: results.Connected) => void): void {
+    /*Codes_SRS_NODE_DEVICE_HTTP_41_004: [ The `connect` method shall immediately emit a `connected` event ]*/
+    this.emit('connected');
     /*Codes_SRS_NODE_DEVICE_HTTP_16_028: [The `connect` method shall call its callback immediately with a `null` first argument and a `results.Connected` second argument.]*/
     callback(null, new results.Connected());
   }
@@ -552,7 +554,7 @@ export class Http extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
-  getTwin(done: (err?: Error, twin?: TwinProperties) => void): void {
+  getTwin(_done: (err?: Error, twin?: TwinProperties) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_020: [`getTwin` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Twin is not implemented over HTTP.');
   }
@@ -560,7 +562,7 @@ export class Http extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
-  updateTwinReportedProperties(done: (err?: Error) => void): void {
+  updateTwinReportedProperties(_done: (err?: Error) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_034: [`updateTwinReportedProperties` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Twin is not implemented over HTTP.');
   }
@@ -568,7 +570,7 @@ export class Http extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
-  enableTwinDesiredPropertiesUpdates(done: (err?: Error) => void): void {
+  enableTwinDesiredPropertiesUpdates(_done: (err?: Error) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_035: [`enableTwinDesiredPropertiesUpdates` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Twin is not implemented over HTTP.');
   }
@@ -576,7 +578,7 @@ export class Http extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
-  disableTwinDesiredPropertiesUpdates(done: (err?: Error) => void): void {
+  disableTwinDesiredPropertiesUpdates(_done: (err?: Error) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_036: [`disableTwinDesiredPropertiesUpdates` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Twin is not implemented over HTTP.');
   }
@@ -584,7 +586,7 @@ export class Http extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
-  sendMethodResponse(response: DeviceMethodResponse, done?: (err?: Error, result?: any) => void): void {
+  sendMethodResponse(_response: DeviceMethodResponse, _done?: (err?: Error, result?: any) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_024: [`sendMethodResponse` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Direct methods are not implemented over HTTP.');
   }
@@ -592,7 +594,7 @@ export class Http extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
-  onDeviceMethod(methodName: string, methodCallback: (request: MethodMessage, response: DeviceMethodResponse) => void): void {
+  onDeviceMethod(_methodName: string, _methodCallback: (request: MethodMessage, response: DeviceMethodResponse) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_025: [`onDeviceMethod` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Direct methods are not implemented over HTTP.');
   }
@@ -600,7 +602,7 @@ export class Http extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
-  enableMethods(callback: (err?: Error) => void): void {
+  enableMethods(_callback: (err?: Error) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_026: [`enableMethods` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Direct methods are not implemented over HTTP.');
   }
@@ -608,7 +610,7 @@ export class Http extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
-  disableMethods(callback: (err?: Error) => void): void {
+  disableMethods(_callback: (err?: Error) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_027: [`disableMethods` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Direct methods are not implemented over HTTP.');
   }
@@ -616,7 +618,7 @@ export class Http extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
-  enableInputMessages(callback: (err?: Error) => void): void {
+  enableInputMessages(_callback: (err?: Error) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_18_001: [`enableInputMessages` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Input messages are not implemented over HTTP.');
   }
@@ -624,7 +626,7 @@ export class Http extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
-  disableInputMessages(callback: (err?: Error) => void): void {
+  disableInputMessages(_callback: (err?: Error) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_18_002: [`disableInputMessages` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Input messages are not implemented over HTTP.');
   }
@@ -632,7 +634,7 @@ export class Http extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
-  sendOutputEvent(outputName: string, message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+  sendOutputEvent(_outputName: string, _message: Message, _done: (err?: Error, result?: results.MessageEnqueued) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_18_003: [`sendOutputEvent` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Output events are not implemented over HTTP.');
   }
@@ -640,12 +642,10 @@ export class Http extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
-  sendOutputEventBatch(outputName: string, messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+  sendOutputEventBatch(_outputName: string, _messages: Message[], _done: (err?: Error, result?: results.MessageEnqueued) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_18_004: [`sendOutputEventBatch` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Output events are not implemented over HTTP.');
   }
-
-
 
   private _insertAuthHeaderIfNecessary(headers: { [key: string]: string }, credentials: TransportConfig): void {
     if (this._authenticationProvider.type === AuthenticationType.Token) {

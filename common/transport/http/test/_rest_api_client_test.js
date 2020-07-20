@@ -6,8 +6,8 @@
 var assert = require('chai').assert;
 var sinon = require('sinon');
 var errors = require('azure-iot-common').errors;
-var HttpBase = require('../lib/http.js').Http;
-var RestApiClient = require('../lib/rest_api_client.js').RestApiClient;
+var HttpBase = require('../dist/http.js').Http;
+var RestApiClient = require('../dist/rest_api_client.js').RestApiClient;
 
 var fakeConfig = { host: 'host', sharedAccessSignature: 'sas' };
 var socketConfig = { host: { socketPath: '/var/run/foo.sock' }, sharedAccessSignature: 'sas' };

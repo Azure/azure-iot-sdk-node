@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 
-var endpoint = require('../lib/endpoint.js');
+var endpoint = require('../dist/endpoint.js');
 var deviceId = 'mydevice';
 var moduleId = 'mymodule';
 
@@ -79,6 +79,11 @@ describe('endpoint', function () {
     name: 'moduleMethodPath',
     expected: '/devices/mydevice/modules/mymodule/methods/devicebound',
     actual: endpoint.moduleMethodPath(deviceId, moduleId)
+  },
+  {
+    name: 'versionQueryStringPnP',
+    expected: '?api-version=' + endpoint.apiVersionPnP,
+    actual: endpoint.versionQueryStringPnP()
   },
   {
     name: 'versionQueryStringLimitedAvailability',

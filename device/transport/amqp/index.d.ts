@@ -3,6 +3,6 @@
 
 import { Client } from 'azure-iot-device';
 
-export { Amqp } from  './lib/amqp';
-export { AmqpWs } from  './lib/amqp_ws';
+export { Amqp } from  './dist/amqp';
+export { AmqpWs } from  './dist/amqp_ws';
 export declare function clientFromConnectionString(connectionString: string): Client;

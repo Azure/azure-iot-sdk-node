@@ -6,7 +6,7 @@
 var assert = require('chai').assert;
 var sinon = require('sinon');
 var errors = require('azure-iot-common').errors;
-var X509AuthenticationProvider = require('../lib/x509_authentication_provider').X509AuthenticationProvider;
+var X509AuthenticationProvider = require('../dist/x509_authentication_provider').X509AuthenticationProvider;
 
 describe('X509AuthenticationProvider', function () {
   describe('#constructor + #getDeviceCredentials', function () {

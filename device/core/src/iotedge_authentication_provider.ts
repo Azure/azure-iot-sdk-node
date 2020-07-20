@@ -180,7 +180,7 @@ export class IotEdgeAuthenticationProvider extends SharedAccessKeyAuthentication
         { 'Content-Type': 'application/json' },
         signRequest,
         this._getRequestOptions(),
-        (err, body: SignResponse, response) => {
+        (err, body: SignResponse, _response) => {
           if (err) {
             signCallback(err, null);
           } else {

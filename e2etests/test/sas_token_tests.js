@@ -4,7 +4,6 @@
 'use strict';
 
 var uuid = require('uuid');
-var Promise = require('bluebird');
 
 var serviceSdk = require('azure-iothub');
 var EventHubClient = require('@azure/event-hubs').EventHubClient;

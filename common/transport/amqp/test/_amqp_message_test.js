@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 var Message = require('azure-iot-common').Message;
-var AmqpMessage = require('../lib/amqp_message.js').AmqpMessage;
+var AmqpMessage = require('../dist/amqp_message.js').AmqpMessage;
 var uuidv4 = require('uuid').v4;
 var rhea = require('rhea');
 

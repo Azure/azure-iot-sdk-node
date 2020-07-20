@@ -132,9 +132,11 @@ export class Amqp extends EventEmitter implements DeviceTransport {
       }
       if (this._messageEventName === 'inputMessage') {
         /*Codes_SRS_NODE_DEVICE_AMQP_18_014: [If `amqp` receives a message on the input message link, it shall emit an "inputMessage" event with the value of the annotation property "x-opt-input-name" as the first parameter and the agnostic message as the second parameter.]*/
+        debug('inputMesssage received on C2D link, emitting \'inputMessage\'');
         this.emit('inputMessage', inputName, AmqpMessage.toMessage(msg));
       } else {
         /*Codes_SRS_NODE_DEVICE_AMQP_18_013: [If `amqp` receives a message on the C2D link, it shall emit a "message" event with the message as the event parameter.]*/
+        debug('message received on C2D link, emitting \'message\'');
         this.emit('message', AmqpMessage.toMessage(msg));
       }
     };
@@ -174,7 +176,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
           sendEvent: (amqpMessage, sendCallback) => {
             /*Codes_SRS_NODE_DEVICE_AMQP_16_024: [The `sendEvent` method shall connect and authenticate the transport if necessary.]*/
             /*Codes_SRS_NODE_DEVICE_AMQP_18_005: [The `sendOutputEvent` method shall connect and authenticate the transport if necessary.]*/
-            this._fsm.handle('connect', (err, result) => {
+            this._fsm.handle('connect', (err, _result) => {
               if (err) {
                 sendCallback(err);
               } else {
@@ -182,13 +184,13 @@ export class Amqp extends EventEmitter implements DeviceTransport {
               }
             });
           },
-          updateSharedAccessSignature: (token, callback) => {
-            // nothing to do here: the SAS has been updated in the config object.
-            callback(null, new results.SharedAccessSignatureUpdated(false));
+          updateSharedAccessSignature: (_token, callback) => {
+          // nothing to do here: the SAS has been updated in the config object.
+          callback(null, new results.SharedAccessSignatureUpdated(false));
           },
           getTwin: (callback)  => {
             /*Codes_SRS_NODE_DEVICE_AMQP_16_059: [The `getTwin` method shall connect and authenticate the transport if it is disconnected.]*/
-            this._fsm.handle('connect', (err, result) => {
+            this._fsm.handle('connect', (err, _result) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_060: [The `getTwin` method shall call its callback with an error if connecting fails.]*/
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_061: [The `getTwin` method shall call its callback with an error if authenticating fails.]*/
@@ -200,7 +202,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
           },
           updateTwinReportedProperties: (patch, callback)  => {
             /*Codes_SRS_NODE_DEVICE_AMQP_16_065: [The `updateTwinReportedProperties` method shall connect and authenticate the transport if it is disconnected.]*/
-            this._fsm.handle('connect', (err, result) => {
+            this._fsm.handle('connect', (err, _result) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_066: [The `updateTwinReportedProperties` method shall call its callback with an error if connecting fails.]*/
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_067: [The `updateTwinReportedProperties` method shall call its callback with an error if authenticating fails.]*/
@@ -212,7 +214,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
           },
           enableTwinDesiredPropertiesUpdates:  (callback)  => {
            /*Codes_SRS_NODE_DEVICE_AMQP_16_071: [The `enableTwinDesiredPropertiesUpdates` method shall connect and authenticate the transport if it is disconnected.]*/
-            this._fsm.handle('connect', (err, result) => {
+            this._fsm.handle('connect', (err, _result) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_072: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with an error if connecting fails.]*/
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_073: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with an error if authenticating fails.]*/
@@ -225,7 +227,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
           disableTwinDesiredPropertiesUpdates: (callback) => callback(),
           /*Codes_SRS_NODE_DEVICE_AMQP_16_031: [The `enableC2D` method shall connect and authenticate the transport if it is disconnected.]*/
           enableC2D: (callback) => {
-            this._fsm.handle('connect', (err, result) => {
+            this._fsm.handle('connect', (err, _result) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
                 callback(err);
@@ -241,7 +243,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
           },
           /*Codes_SRS_NODE_DEVICE_AMQP_16_038: [The `enableMethods` method shall connect and authenticate the transport if it is disconnected.]*/
           enableMethods: (callback) => {
-            this._fsm.handle('connect', (err, result) => {
+            this._fsm.handle('connect', (err, _result) => {
               if (err) {
                 /*Codes_SRS_NODE_DEVICE_AMQP_16_040: [The `enableMethods` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach method links.]*/
                 callback(err);
@@ -315,7 +317,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
             });
           },
           disconnect: (disconnectCallback) => this._fsm.transition('disconnecting', null, disconnectCallback),
-          updateSharedAccessSignature: (token, callback) => {
+          updateSharedAccessSignature: (_token, callback) => {
             callback(null, new results.SharedAccessSignatureUpdated(false));
           },
           /*Codes_SRS_NODE_DEVICE_AMQP_16_081: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connecting or authenticating, the connection shall be stopped and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error.]*/
@@ -359,6 +361,8 @@ export class Amqp extends EventEmitter implements DeviceTransport {
         },
         authenticated: {
           _onEnter: (connectResult, connectCallback) => {
+            /*Codes_SRS_NODE_DEVICE_AMQP_41_005: [ Once the amqp client is authenticated it will emit a `connected` event ]*/
+            this.emit('connected');
             connectCallback(null, connectResult);
           },
           connect: (connectCallback) => connectCallback(null, new results.Connected()),
@@ -414,33 +418,47 @@ export class Amqp extends EventEmitter implements DeviceTransport {
           /*Codes_SRS_NODE_DEVICE_AMQP_16_079: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback no arguments if the call to `AmqpTwinClient.disableTwinDesiredPropertiesUpdates` succeeds.]*/
           disableTwinDesiredPropertiesUpdates: (callback) => this._twinClient.disableTwinDesiredPropertiesUpdates(handleResult('could not disable twin desired properties updates', callback)),
           enableC2D: (callback) => {
-            debug('attaching C2D link');
-            this._amqp.attachReceiverLink(this._c2dEndpoint, null, (err, receiverLink) => {
-              if (err) {
-                debug('error creating a C2D link: ' + err.toString());
-                /*Codes_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
-                handleResult('AMQP Transport: Could not attach link', callback)(err);
-              } else {
-                /*Codes_SRS_NODE_DEVICE_AMQP_16_032: [The `enableC2D` method shall attach the C2D link and call its `callback` once it is successfully attached.]*/
-                debug('C2D link created and attached successfully');
-                this._c2dLink = receiverLink;
-                this._c2dLink.on('error', this._c2dErrorListener);
-                this._c2dLink.on('message', this._c2dMessageListener);
-                callback();
-              }
-            });
+            /*Codes_SRS_NODE_DEVICE_AMQP_41_003: [The `enableC2D` method shall attach the C2D link only if it is not already attached.] */
+            if (!this._c2dLink) {
+              debug('attaching C2D link');
+              this._amqp.attachReceiverLink(this._c2dEndpoint, null, (err, receiverLink) => {
+                if (err) {
+                  debug('error creating a C2D link: ' + err.toString());
+                  /*Codes_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
+                  handleResult('AMQP Transport: Could not attach link', callback)(err);
+                } else {
+                  /*Codes_SRS_NODE_DEVICE_AMQP_16_032: [The `enableC2D` method shall attach the C2D link and call its `callback` once it is successfully attached.]*/
+                  debug('C2D link created and attached successfully');
+                  this._c2dLink = receiverLink;
+                  this._c2dLink.on('error', this._c2dErrorListener);
+                  this._c2dLink.on('message', this._c2dMessageListener);
+                  callback();
+                }
+              });
+            } else {
+              debug('C2D link already attached, doing nothing....');
+              callback();
+            }
           },
           disableC2D: (callback) => {
-            /*Codes_SRS_NODE_DEVICE_AMQP_16_035: [The `disableC2D` method shall call `detach` on the C2D link and call its callback when it is successfully detached.]*/
-            /*Codes_SRS_NODE_DEVICE_AMQP_16_036: [The `disableC2D` method shall call its `callback` with an `Error` if it fails to detach the C2D link.]*/
-            this._stopC2DListener(undefined, callback);
+            /*Codes_SRS_NODE_DEVICE_AMQP_41_004: [The `disableC2D` method shall detach the C2D link only if it is already attached.] */
+            if (this._c2dLink) {
+              /*Codes_SRS_NODE_DEVICE_AMQP_16_035: [The `disableC2D` method shall call `detach` on the C2D link and call its callback when it is successfully detached.]*/
+              /*Codes_SRS_NODE_DEVICE_AMQP_16_036: [The `disableC2D` method shall call its `callback` with an `Error` if it fails to detach the C2D link.]*/
+              this._stopC2DListener(undefined, callback);
+            } else {
+              debug('C2D link already detached, doing nothing...');
+              callback();
+            }
           },
           enableMethods: (callback) => {
+            // deviceMethodClient already checks if the link is attached or not, so we do not need to check that here like we do with C2D
             /*Codes_SRS_NODE_DEVICE_AMQP_16_039: [The `enableMethods` method shall attach the method links and call its `callback` once these are successfully attached.]*/
             /*Codes_SRS_NODE_DEVICE_AMQP_16_040: [The `enableMethods` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach method links.]*/
             this._deviceMethodClient.attach(callback);
           },
           disableMethods: (callback) => {
+            // deviceMethodClient already checks if the link is attached or not, so we do not need to check that here like we do with C2D
             /*Codes_SRS_NODE_DEVICE_AMQP_16_042: [The `disableMethods` method shall call `detach` on the device method links and call its callback when these are successfully detached.]*/
             /*Codes_SRS_NODE_DEVICE_AMQP_16_043: [The `disableMethods` method shall call its `callback` with an `Error` if it fails to detach the device method links.]*/
             this._deviceMethodClient.detach(callback);
@@ -542,7 +560,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
               this._fsm.transition('disconnected', finalError, disconnectCallback);
             });
           },
-          '*': (connectCallback) => this._fsm.deferUntilTransition()
+          '*': (_connectCallback) => this._fsm.deferUntilTransition()
         },
       }
     });
@@ -603,7 +621,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
    * @param {Function}   done        The callback to be invoked when `sendEventBatch`
    *                                 completes execution.
    */
-  sendEventBatch(messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+  sendEventBatch(_messages: Message[], _done: (err?: Error, result?: results.MessageEnqueued) => void): void {
     /*Codes_SRS_NODE_DEVICE_AMQP_16_052: [The `sendEventBatch` method shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('AMQP Transport does not support batching yet');
   }
@@ -849,7 +867,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
   /**
    * @private
    */
-  sendOutputEventBatch(outputName: string, messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void {
+  sendOutputEventBatch(_outputName: string, _messages: Message[], _done: (err?: Error, result?: results.MessageEnqueued) => void): void {
     /*Codes_SRS_NODE_DEVICE_AMQP_18_004: [`sendOutputEventBatch` shall throw a `NotImplementedError`.]*/
     throw new errors.NotImplementedError('Output events are not implemented over AMQP.');
   }

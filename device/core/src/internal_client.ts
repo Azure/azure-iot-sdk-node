@@ -78,6 +78,9 @@ export abstract class InternalClient extends EventEmitter {
       debug('Transport error: ' + err.toString());
     });
 
+    /*Codes_SRS_NODE_INTERNAL_CLIENT_41_001: [A `connect` event will be emitted when a `connected` event is received from the transport.]*/
+    this._transport.on('connected', () => this.emit('connect'));
+
     this._methodCallbackMap = {};
 
     this._disconnectHandler = (err) => {
@@ -489,6 +492,7 @@ export interface Config {
 export interface DeviceTransport extends EventEmitter {
   on(type: 'error', func: (err: Error) => void): this;
   on(type: 'disconnect', func: (err?: Error) => void): this;
+  on(type: 'connected', func: () => void): this;
 
   connect(done: (err?: Error, result?: results.Connected) => void): void;
   disconnect(done: (err?: Error, result?: results.Disconnected) => void): void;

@@ -7,9 +7,9 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 
 var endpoint = require('azure-iot-common').endpoint;
-var JobClient = require('../lib/job_client.js').JobClient;
-var DeviceMethod = require('../lib/device_method.js').DeviceMethod;
-var Query = require('../lib/query.js').Query;
+var JobClient = require('../dist/job_client.js').JobClient;
+var DeviceMethod = require('../dist/device_method.js').DeviceMethod;
+var Query = require('../dist/query.js').Query;
 
 describe('JobClient', function() {
   function testFalsyArg (fn, badArgName, badArgValue, args) {

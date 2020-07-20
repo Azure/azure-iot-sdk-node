@@ -7,8 +7,11 @@ var EventEmitter = require('events').EventEmitter;
 var assert = require('chai').assert;
 var sinon = require('sinon');
 
-var MqttBase = require('../lib/mqtt_base.js').MqttBase;
-var FakeMqtt = require('./_fake_mqtt.js');
+var MqttBase = require('../dist/mqtt_base.js').MqttBase;
+var FakeMqtt = require('./_fake_mqtt.js').FakeMqtt;
+var PubFakeMqtt = require('./_fake_mqtt.js').PubFakeMqtt;
+var PubACKTwiceFakeMqtt = require('./_fake_mqtt.js').PubACKTwiceFakeMqtt;
+var ErrorFakeMqtt = require('./_fake_mqtt.js').ErrorFakeMqtt;
 var errors = require('azure-iot-common').errors;
 
 describe('MqttBase', function () {
@@ -284,7 +287,7 @@ describe('MqttBase', function () {
 
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_020: [The `publish` method shall call the callback with a `NotConnectedError` if the connection hasn't been established prior to calling `publish`.]*/
     it('fails with a NotConnectedError if the MQTT connection is not active', function (testCallback) {
-      var transport = new MqttBase(new FakeMqtt());
+      const transport = new MqttBase(new FakeMqtt());
       transport.publish('topic', 'payload', {}, function (err) {
         assert.instanceOf(err, errors.NotConnectedError);
         testCallback();
@@ -293,8 +296,8 @@ describe('MqttBase', function () {
 
     /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_017: [The `publish` method publishes a `payload` on a `topic` using `options`.]*/
     it('calls publish on the MQTT library', function(testCallback) {
-      var fakemqtt = new FakeMqtt();
-      var transport = new MqttBase(fakemqtt);
+      const fakemqtt = new FakeMqtt();
+      const transport = new MqttBase(fakemqtt);
       transport.connect(fakeConfig, function () {
         fakemqtt.publishShouldSucceed(true);
         /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_021: [The  `publish` method shall call `publish` on the mqtt client object and call the `callback` argument with `null` and the `puback` object if it succeeds.]*/
@@ -305,8 +308,8 @@ describe('MqttBase', function () {
 
     // Publish errors are handled with a callback, so 'error' should be subscribed only once when connecting, to get link errors.
     it('does not subscribe to the error event', function (done) {
-      var fakemqtt = new FakeMqtt();
-      var transport = new MqttBase(fakemqtt);
+      const fakemqtt = new FakeMqtt();
+      const transport = new MqttBase(fakemqtt);
       transport.connect(fakeConfig, function () {
         assert.equal(fakemqtt.listeners('error').length, 1);
         fakemqtt.publishShouldSucceed(false);
@@ -315,9 +318,191 @@ describe('MqttBase', function () {
           done();
         });
       });
-
       fakemqtt.emit('connect', { connack: true });
     });
+
+    // Publishes 4 messages and they PUBACK out of order but the context of the callback is preserved.
+    it('handles out of order PUBACK correctly', function(done) {
+      // the fakemqtt will invoke the callbacks in the following order 4,1,3,2
+      const fakemqtt = new PubFakeMqtt();
+      const transport = new MqttBase(fakemqtt);
+      transport.connect(fakeConfig, function() {
+        let callbackInvokes = 1;
+        transport.publish('topic1', 'payload1', {}, () => {
+          assert.equal(callbackInvokes, 2);
+          callbackInvokes++;
+        });
+        transport.publish('topic2', 'payload2', {}, () => {
+          assert.equal(callbackInvokes, 4);
+          done();
+        });
+        transport.publish('topic3', 'payload3', {}, () => {
+          assert.equal(callbackInvokes, 3);
+          callbackInvokes++;
+        });
+        transport.publish('topic4', 'payload4', {}, () => {
+          assert.equal(callbackInvokes, 1);
+          callbackInvokes++;
+        });
+      });
+      fakemqtt.emit('connect', { connack: true});
+    });
+
+    it('handles puback of no longer existing pub on wire', function(done) {
+      const fakemqtt = new PubACKTwiceFakeMqtt();
+      const transport = new MqttBase(fakemqtt);
+      transport.connect(fakeConfig, function() {
+        let callbackInvokes = 0;
+        transport.publish('topic1', 'payload1', {}, () => {
+          callbackInvokes++;
+          if (callbackInvokes === 2) {
+            assert.fail('Callback invoked to many times.');
+          }
+          process.nextTick(() => done());
+        });
+      });
+      fakemqtt.emit('connect', { connack: true});
+    });
+
+    // Publishes 4 messages. None of which complete initially.  After the forth message an error is emitted.
+    // All of the publishes are completed with the error.  Finally an error is emitted as there
+    // is no current operation.
+    it('Purge messages in the case of an error occurring', function(done) {
+      const fakemqtt = new ErrorFakeMqtt();
+      const transport = new MqttBase(fakemqtt);
+      const fakeError = new Error('Error from mqtt');
+      let processedErrorEvent = false;
+      let errorOnCallback = 0;
+      transport.connect(fakeConfig, () => {
+        transport.publish('topic1', 'payload1', {}, (err) => {
+          assert.strictEqual(err, fakeError);
+          errorOnCallback++;
+        });
+        transport.publish('topic2', 'payload2', {}, (err) => {
+          assert.strictEqual(err, fakeError);
+          errorOnCallback++;
+        });
+        transport.publish('topic3', 'payload3', {}, (err) => {
+          assert.strictEqual(err, fakeError);
+          errorOnCallback++;
+        });
+        transport.publish('topic4', 'payload4', {}, (err) => {
+          assert.strictEqual(err, fakeError);
+          errorOnCallback++;
+        });
+        process.nextTick(() => {fakemqtt.emit('error', fakeError)});
+      });
+      transport.on('error', (err) => {
+        assert.strictEqual(err, fakeError);
+        processedErrorEvent = true;
+      });
+      //
+      // Let the event loop go round twice.  Makes sure everything gets processed.
+      //
+      setImmediate(() => {
+        setImmediate(() => {
+          assert(processedErrorEvent);
+          assert.equal(errorOnCallback, 4);
+          done();
+        });
+      });
+      fakemqtt.emit('connect', { connack: true});
+    });
+  });
+
+  describe('#timeout', function() {
+    const defaultTimeOutInSeconds = 30;
+    it('completes message with a timeout at around default timeout number of seconds', function(done) {
+      this.clock = sinon.useFakeTimers();
+      var fakemqtt = new ErrorFakeMqtt();
+      var transport = new MqttBase(fakemqtt);
+      transport.connect(fakeConfig, () => {
+        const publishCallbackSpy = sinon.spy((err) => {
+          let callbackTimeInSeconds = Math.round(Date.now() / 1000);
+          assert.instanceOf(err, errors.TimeoutError);
+          assert.isAtLeast(callbackTimeInSeconds - beforePublishTimeInSeconds, defaultTimeOutInSeconds);
+          assert.isBelow(callbackTimeInSeconds - beforePublishTimeInSeconds, defaultTimeOutInSeconds * 1.1);
+        });
+        let beforePublishTimeInSeconds = Math.round(Date.now() / 1000);
+        transport.publish('topic1', 'payload1', {}, publishCallbackSpy);
+        this.clock.tick((defaultTimeOutInSeconds*1000)+10000);
+        assert(publishCallbackSpy.calledOnce);
+        this.clock.restore();
+        done();
+    });
+      fakemqtt.emit('connect', { connack: true});
+    });
+
+    it('completes message with a timeout at around 2*default timeout number of seconds', function(done) {
+      this.clock = sinon.useFakeTimers();
+      var fakemqtt = new ErrorFakeMqtt();
+      var transport = new MqttBase(fakemqtt);
+      let callbackInvoked = false;
+      transport.connect(fakeConfig, () => {
+        let publishCallbackSpy = sinon.spy((err) => {
+          let callbackTimeInSeconds = Math.round(Date.now() / 1000);
+          assert.instanceOf(err, errors.TimeoutError);
+          assert.isAtLeast(callbackTimeInSeconds - beforePublishTimeInSeconds, 2*defaultTimeOutInSeconds);
+          assert.isBelow(callbackTimeInSeconds - beforePublishTimeInSeconds, defaultTimeOutInSeconds * 2.1);
+        });
+        let beforePublishTimeInSeconds = Math.round(Date.now() / 1000);
+        transport.publish('topic1', 'payload1', {}, publishCallbackSpy);
+        transport.setTimeout(2*defaultTimeOutInSeconds);
+        this.clock.tick((defaultTimeOutInSeconds*2*1000)+10000);
+        assert(publishCallbackSpy.calledOnce);
+        this.clock.restore();
+        done();
+      });
+      fakemqtt.emit('connect', { connack: true});
+    });
+
+    it('completes 2 message with a timeout at around default timeout number of seconds, then third at default*1.5', function(done) {
+      this.clock = sinon.useFakeTimers();
+      var fakemqtt = new ErrorFakeMqtt();
+      var transport = new MqttBase(fakemqtt);
+      let callbackInvoked = false;
+      transport.connect(fakeConfig, () => {
+        let publishCallbackSpy1st = sinon.spy((err) => {
+          let callbackTimeInSeconds = Math.round(Date.now() / 1000);
+          assert.instanceOf(err, errors.TimeoutError);
+          assert.isAtLeast(callbackTimeInSeconds - beforePublishTimeInSeconds, defaultTimeOutInSeconds);
+          assert.isBelow(callbackTimeInSeconds - beforePublishTimeInSeconds, defaultTimeOutInSeconds * 1.1);
+        });
+        let publishCallbackSpy2nd = sinon.spy((err) => {
+          let callbackTimeInSeconds = Math.round(Date.now() / 1000);
+          assert.instanceOf(err, errors.TimeoutError);
+          assert.isAtLeast(callbackTimeInSeconds - beforePublishTimeInSeconds, defaultTimeOutInSeconds);
+          assert.isBelow(callbackTimeInSeconds - beforePublishTimeInSeconds, defaultTimeOutInSeconds * 1.1);
+        });
+        let publishCallbackSpy3rd = sinon.spy((err) => {
+          let callbackTimeInSeconds = Math.round(Date.now() / 1000);
+          assert.instanceOf(err, errors.TimeoutError);
+          assert.isAtLeast(callbackTimeInSeconds - beforePublishTimeInSeconds, 1.5*defaultTimeOutInSeconds);
+          assert.isBelow(callbackTimeInSeconds - beforePublishTimeInSeconds, defaultTimeOutInSeconds * 1.7);
+        });
+        let beforePublishTimeInSeconds = Math.round(Date.now() / 1000);
+        transport.publish('topic1', 'payload1', {}, publishCallbackSpy1st);
+        transport.publish('topic2', 'payload2', {}, publishCallbackSpy2nd);
+        this.clock.tick(defaultTimeOutInSeconds*0.5*1000);
+        transport.publish('topic3', 'payload3', {}, publishCallbackSpy3rd);
+        this.clock.tick(1000);
+        assert(publishCallbackSpy1st.notCalled);
+        assert(publishCallbackSpy2nd.notCalled);
+        assert(publishCallbackSpy3rd.notCalled);
+        this.clock.tick(defaultTimeOutInSeconds*0.6*1000);
+        assert(publishCallbackSpy1st.calledOnce);
+        assert(publishCallbackSpy2nd.calledOnce);
+        assert(publishCallbackSpy3rd.notCalled);
+        this.clock.tick(defaultTimeOutInSeconds*0.6*1000);
+        assert(publishCallbackSpy1st.calledOnce);
+        assert(publishCallbackSpy2nd.calledOnce);
+        assert(publishCallbackSpy3rd.calledOnce);
+        this.clock.restore();
+        done();
+      });
+      fakemqtt.emit('connect', { connack: true});
+    });
+
   });
 
   describe('#subscribe', function () {
@@ -449,7 +634,8 @@ describe('MqttBase', function () {
       transport.connect(fakeConfig, function () {
         assert.isTrue(fakeMqtt.connect.calledOnce);
         assert.strictEqual(fakeMqtt.connect.firstCall.args[1].password, fakeConfig.sharedAccessSignature);
-        transport.updateSharedAccessSignature(newSas, function () {
+        transport.updateSharedAccessSignature(newSas, function (err) {
+          assert.notExists(err);
           /*Tests_SRS_NODE_COMMON_MQTT_BASE_16_035: [The `updateSharedAccessSignature` method shall call the `callback` argument with no parameters if the operation succeeds.]*/
           assert.isTrue(fakeMqtt.end.calledOnce);
           assert.isTrue(fakeMqtt.connect.calledTwice);
@@ -458,6 +644,40 @@ describe('MqttBase', function () {
         });
         fakeMqtt.emit('connect');
       });
+
+      fakeMqtt.emit('connect');
+    });
+
+    it('force disconnects the client on disconnect timeout during reconnecting', function (testCallback) {
+      this.clock = sinon.useFakeTimers();
+      var newSas = 'newsas';
+      var fakeMqtt = new FakeMqtt();
+      fakeMqtt.end = sinon.stub();
+      fakeMqtt.end.onFirstCall().callsFake((force, callback) => {
+        assert.isFalse(force);
+        this.clock.tick(30000);
+        callback();
+      }).bind(this);
+
+      fakeMqtt.end.onSecondCall().callsFake((force, callback) => {
+        /*Tests_SRS_NODE_COMMON_MQTT_BASE_41_002: [The `updateSharedAccessSignature` method shall trigger a forced disconnect if after 30 seconds the mqtt client has failed to complete a non-forced disconnect.]*/
+        assert.isTrue(force);
+        callback();
+      }).bind(this);
+      var transport = new MqttBase(fakeMqtt);
+      transport.connect(fakeConfig, function () {
+        assert.isTrue(fakeMqtt.connect.calledOnce);
+        assert.strictEqual(fakeMqtt.connect.firstCall.args[1].password, fakeConfig.sharedAccessSignature);
+        transport.updateSharedAccessSignature(newSas, function (err) {
+          assert.notExists(err);
+          assert.isTrue(fakeMqtt.end.calledTwice);
+          assert.isTrue(fakeMqtt.connect.calledTwice);
+          assert.strictEqual(fakeMqtt.connect.secondCall.args[1].password, newSas);
+          this.clock.restore();
+          testCallback();
+        }.bind(this));
+        fakeMqtt.emit('connect');
+      }.bind(this));
 
       fakeMqtt.emit('connect');
     });
@@ -477,6 +697,33 @@ describe('MqttBase', function () {
         fakeMqtt.emit('error', fakeError);
       });
 
+      fakeMqtt.emit('connect');
+    });
+
+    /*Tests_SRS_NODE_COMMON_MQTT_BASE_41_003: [The `updateSharedAccessSignature` method shall call the `callback` argument with an `Error` if the operation fails after timing out.]*/
+    it('calls the callback with an error if it fails to reconnect the mqtt client (force disconnect)', function (testCallback) {
+      this.clock = sinon.useFakeTimers();
+      var fakeError = new Error('fake failed to reconnect');
+      var fakeMqtt = new FakeMqtt();
+      fakeMqtt.end = sinon.stub();
+      fakeMqtt.end.onFirstCall().callsFake((force, callback) => {
+        this.clock.tick(30000);
+        callback();
+      }).bind(this);
+      fakeMqtt.end.onSecondCall().callsFake((force, callback) => {
+        callback();
+      });
+      var transport = new MqttBase(fakeMqtt);
+      transport.connect(fakeConfig, function () {
+        transport.updateSharedAccessSignature('newSas', function (err) {
+          assert.isTrue(fakeMqtt.end.calledTwice);
+          assert.isTrue(fakeMqtt.connect.calledTwice);
+          assert.strictEqual(err, fakeError);
+          this.clock.restore();
+          testCallback();
+        }.bind(this));
+        fakeMqtt.emit('error', fakeError);
+      }.bind(this));
       fakeMqtt.emit('connect');
     });
   });

@@ -5,9 +5,9 @@ var sinon = require('sinon');
 
 var errors = require('azure-iot-common').errors;
 var Message = require('azure-iot-common').Message;
-var AmqpMessage = require('../lib/amqp_message.js').AmqpMessage;
+var AmqpMessage = require('../dist/amqp_message.js').AmqpMessage;
 
-var CBS = require('../lib/amqp_cbs.js').ClaimsBasedSecurityAgent;
+var CBS = require('../dist/amqp_cbs.js').ClaimsBasedSecurityAgent;
 
 describe('ClaimsBasedSecurityAgent', function() {
   describe('#attach', function() {

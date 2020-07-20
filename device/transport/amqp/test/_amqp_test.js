@@ -10,7 +10,7 @@ var sinon = require('sinon');
 
 var AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
 var Message = require('azure-iot-common').Message;
-var Amqp = require('../lib/amqp.js').Amqp;
+var Amqp = require('../dist/amqp.js').Amqp;
 var errors = require('azure-iot-common').errors;
 var results = require('azure-iot-common').results;
 var AuthenticationType = require('azure-iot-common').AuthenticationType;
@@ -100,7 +100,7 @@ describe('Amqp', function () {
   });
 
   describe('#constructor', function () {
-    /*Codes_SRS_NODE_DEVICE_AMQP_16_056: [If the `authenticationProvider` object passed to the `Amqp` constructor has a `type` property which value is set to `AuthenticationType.Token` the `Amqp` constructor shall subscribe to the `newTokenAvailable` event of the `authenticationProvider` object.]*/
+    /*Tests_SRS_NODE_DEVICE_AMQP_16_056: [If the `authenticationProvider` object passed to the `Amqp` constructor has a `type` property which value is set to `AuthenticationType.Token` the `Amqp` constructor shall subscribe to the `newTokenAvailable` event of the `authenticationProvider` object.]*/
     it('subscribes to the newTokenAvailable event if the AuthenticationProvider has its type property set to AuthenticationType.Token', function () {
       assert.isTrue(fakeTokenAuthenticationProvider.on.calledOnce);
     });
@@ -137,6 +137,15 @@ describe('Amqp', function () {
         fakeBaseClient.putToken = sinon.stub().callsArgWith(2, fakeError);
         fakeTokenAuthenticationProvider.emit('newTokenAvailable', { sharedAccessSignature: newSas });
       });
+    });
+
+    /*Tests_SRS_NODE_DEVICE_AMQP_41_005: [ Once the amqp client is authenticated it will emit a `connected` event ]*/
+    it('emits a connect event if the transport is authenticated', function (testCallback) {
+      transport.on('connected', () => {
+        assert.strictEqual(transport._fsm.state, 'authenticated', 'transport is not in an authenticated state');
+        testCallback();
+      });
+      transport.connect();
     });
   });
 
@@ -1269,6 +1278,20 @@ describe('Amqp', function () {
           });
         });
 
+          /*Tests_SRS_NODE_DEVICE_AMQP_41_003: [The `enableC2D` method shall attach the C2D link only if it is not already attached.] */
+          it('does not attach the C2D link if the link is already attached', function (testCallback) {
+          transport.connect(function () {
+            assert(fakeBaseClient.attachReceiverLink.notCalled);
+            transport[testConfig.enableFunc](function () {
+              assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
+              transport[testConfig.enableFunc](function () {
+                assert(fakeBaseClient.attachReceiverLink.calledOnce, 'attachReceiverLink called multiple times, when it should have only been called once.');
+                testCallback();
+              });
+            });
+          });
+        });
+
         /*Tests_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
         it('calls its callback with an Error if connecting the transport fails', function (testCallback) {
         fakeBaseClient.connect = sinon.stub().callsArgWith(1, new Error('fake failed to connect'));
@@ -1346,6 +1369,23 @@ describe('Amqp', function () {
               transport[testConfig.disableFunc](function () {
                 assert(receiver.detach.calledOnce);
                 testCallback();
+              });
+            });
+          });
+        });
+
+          /*Tests_SRS_NODE_DEVICE_AMQP_41_004: [The `disableC2D` method shall detach the C2D link only if it is already attached.] */
+          it('does not detach the C2D link if the link is already detached', function (testCallback) {
+          transport.connect(function () {
+            assert(fakeBaseClient.attachReceiverLink.notCalled);
+            transport[testConfig.enableFunc](function () {
+              assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
+              transport[testConfig.disableFunc](function () {
+                assert(receiver.detach.calledOnce);
+                transport[testConfig.disableFunc](function () {
+                  assert(receiver.detach.calledOnce);
+                  testCallback();
+                });
               });
             });
           });

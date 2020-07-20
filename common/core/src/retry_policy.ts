@@ -162,8 +162,7 @@ export class NoRetry implements RetryPolicy {
    * @param {number} retryCount This parameter is ignored.
    */
   /*Codes_SRS_NODE_COMMON_RETRY_POLICY_16_004: [The `getNextTimeout` method shall always return `-1`.]*/
-  // @ts-ignore: parameter is not used
-  nextRetryTimeout(retryCount: number): number {
+  nextRetryTimeout(_retryCount: number): number {
     return -1;
   }
 
@@ -174,8 +173,7 @@ export class NoRetry implements RetryPolicy {
    * @returns {boolean} Will always be false: retry should not be attempted no matter what the error is.
    */
   /*Codes_SRS_NODE_COMMON_RETRY_POLICY_16_03: [The `shouldRetry` method shall always return `false`.]*/
-  // @ts-ignore: parameter is not used
-  shouldRetry(err: Error): boolean {
+  shouldRetry(_err: Error): boolean {
     return false;
   }
 }

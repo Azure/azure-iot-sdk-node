@@ -54,6 +54,8 @@ or:
 
 **SRS_NODE_DEVICE_HTTP_16_028: [** The `connect` method shall call its callback immediately with a `null` first argument and a `results.Connected` second argument. **]**
 
+**SRS_NODE_DEVICE_HTTP_41_004: [** The `connect` method shall immediately emit a `connected` event **]**
+
 ### disconnect(callback)
 
 **SRS_NODE_DEVICE_HTTP_16_029: [** The `disconnect` method shall disable the C2D message receiver if it is running. **]**

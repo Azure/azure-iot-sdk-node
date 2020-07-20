@@ -24,7 +24,8 @@
 
 The Azure IoT Node.js SDK enables developers to create IoT solutions written in Node.js for the Azure IoT platform. It is composed of the following client libraries:
 
-* **Device Client Library**: to connect devices to Azure IoT Hub. [API Reference][node-api-device-reference]
+* **Device Client Library**: to connect devices and IoT Edge modules to Azure IoT Hub. [API Reference][node-api-device-reference]
+  * **Note:** IoT Edge for Node.js is scoped to Linux containers & devices only. [Learn more](https://techcommunity.microsoft.com/t5/internet-of-things/linux-modules-with-azure-iot-edge-on-windows-10-iot-enterprise/ba-p/1407066) about using Linux containers for IoT edge on Windows devices. 
 * **Service Client Library**: enables developing back-end applications making use of Azure IoT Hub. [API Reference][node-api-service-reference]
 * **Provisioning Device Client Library**: to connect devices to the Azure IoT Provisioning Service. [API Reference][node-api-prov-device-reference]
 * **Provisioning Service Client Library**: enables developing back-end applications making use of the Azure IoT Provisioning Service. [API Reference][node-api-prov-service-reference]

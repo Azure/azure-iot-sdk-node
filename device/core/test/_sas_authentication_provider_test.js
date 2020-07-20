@@ -5,7 +5,7 @@
 
 var assert = require('chai').assert;
 var SharedAccessSignature = require('azure-iot-common').SharedAccessSignature;
-var SharedAccessSignatureAuthenticationProvider = require('../lib/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider;
+var SharedAccessSignatureAuthenticationProvider = require('../dist/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider;
 
 
 describe('SharedAccessSignatureAuthenticationProvider', function () {

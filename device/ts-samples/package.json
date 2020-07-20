@@ -5,7 +5,7 @@
   "main": "sample_device.js",
   "scripts": {
     "npmlockrefresh": "npm i --package-lock-only",
-    "lint": "tslint --project . --type-check -c ../../tslint.json",
+    "lint": "tslint --project . -c ../../tslint.json",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -21,11 +21,11 @@
   "homepage": "https://github.com/azure/azure-iot-sdk-node#readme",
   "dependencies": {
     "@types/node": "^9.6.50",
-    "azure-iot-common": "1.12.0-pnp-refresh.0",
-    "azure-iot-device": "1.12.0-pnp-refresh.0",
-    "azure-iot-device-amqp": "1.12.0-pnp-refresh.0",
-    "azure-iot-device-http": "1.12.0-pnp-refresh.0",
-    "azure-iot-device-mqtt": "1.12.0-pnp-refresh.0",
+    "azure-iot-common": "1.12.4",
+    "azure-iot-device": "1.17.0",
+    "azure-iot-device-amqp": "1.13.0",
+    "azure-iot-device-http": "1.13.0",
+    "azure-iot-device-mqtt": "1.15.0",
     "tslint": "^6.1.0",
     "typescript": "2.9.2"
   }

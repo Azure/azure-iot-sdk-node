@@ -28,7 +28,7 @@ function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Er
  * to create an IoT Hub device client.
  */
 export class Client extends InternalClient {
-  private _c2dEnabled: boolean;
+  private _c2dFeature: boolean;
   private _deviceDisconnectHandler: (err?: Error, result?: any) => void;
   private _blobUploadClient: BlobUploadClient;
   private _fileUploadApi: FileUploadInterface;
@@ -45,7 +45,7 @@ export class Client extends InternalClient {
   constructor(transport: DeviceTransport, connStr?: string, blobUploadClient?: BlobUploadClient, fileUploadApi?: FileUploadInterface) {
     super(transport, connStr);
     this._blobUploadClient = blobUploadClient;
-    this._c2dEnabled = false;
+    this._c2dFeature = false;
     this._fileUploadApi = fileUploadApi;
 
     this.on('removeListener', (eventName) => {
@@ -57,6 +57,7 @@ export class Client extends InternalClient {
             debug('in removeListener, error disabling C2D.');
             this.emit('error', err);
           } else {
+            this._c2dFeature = false;
             debug('removeListener successfully disabled C2D.');
           }
         });
@@ -72,6 +73,7 @@ export class Client extends InternalClient {
             debug('in newListener, error enabling C2D.');
             this.emit('error', err);
           } else {
+            this._c2dFeature = true;
             debug('in newListener, successfully enabled C2D');
           }
         });
@@ -89,10 +91,9 @@ export class Client extends InternalClient {
       if (err && this._retryPolicy.shouldRetry(err)) {
         debug('reconnect policy specifies a reconnect on error');
         /*Codes_SRS_NODE_DEVICE_CLIENT_16_097: [If the transport emits a `disconnect` event while the client is subscribed to c2d messages the retry policy shall be used to reconnect and re-enable the feature using the transport `enableC2D` method.]*/
-        debug('_c2dEnabled is: ' + this._c2dEnabled);
-        if (this._c2dEnabled) {
-          this._c2dEnabled = false;
-          debug('re-enabling C2D link.');
+        if (this._c2dFeature) {
+          // turn on C2D
+          debug('disconnectHandler re-enabling C2D');
           this._enableC2D((err) => {
             if (err) {
               /*Codes_SRS_NODE_DEVICE_CLIENT_16_102: [If the retry policy fails to reestablish the C2D functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
@@ -103,7 +104,7 @@ export class Client extends InternalClient {
             }
           });
         } else {
-          debug('During _deviceDisconnectHandler, _c2dEnabled is false');
+          debug('C2D has not been enabled on the device');
         }
       }
     };
@@ -251,44 +252,30 @@ export class Client extends InternalClient {
 
 
   private _enableC2D(callback: (err?: Error) => void): void {
-    debug('_c2dEnabled is: ' + this._c2dEnabled);
-    if (!this._c2dEnabled) {
-      debug('enabling C2D');
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
-      retryOp.retry((opCallback) => {
-        this._transport.enableC2D(opCallback);
-      }, (err) => {
-        if (!err) {
-          debug('enabled C2D. Setting this._c2dEnabled to true.');
-          this._c2dEnabled = true;
-        } else {
-          debug('Error while enabling C2D.');
-        }
-        callback(err);
-      });
-    } else {
-      debug('this._c2dEnable is true. Not enabling C2D.');
-      callback();
-    }
+    debug('enabling C2D');
+    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      this._transport.enableC2D(opCallback);
+    }, (err) => {
+      if (!err) {
+        debug('enabled C2D');
+      } else {
+        debug('Error while enabling C2D.');
+      }
+      callback(err);
+    });
   }
 
   private _disableC2D(callback: (err?: Error) => void): void {
-    debug('_c2dEnabled is: ' + this._c2dEnabled);
-    if (this._c2dEnabled) {
-      debug('disabling C2D');
-      this._transport.disableC2D((err) => {
-        if (!err) {
-          debug('disabled C2D. Setting this._c2dEnabled to false.');
-          this._c2dEnabled = false;
-        } else {
-          debug('Error while disabling C2D.');
-        }
-        callback(err);
-      });
-    } else {
-      debug('this._c2dEnable is false. Not disabling C2D.');
-      callback();
-    }
+    debug('disabling C2D');
+    this._transport.disableC2D((err) => {
+      if (!err) {
+        debug('disabled C2D');
+      } else {
+        debug('Error while disabling C2D.');
+      }
+      callback(err);
+    });
   }
 
   /**

@@ -20,12 +20,12 @@ var ProvisioningDeviceClient = require('azure-iot-provisioning-device').Provisio
 //
 // For the public clouds the address of the provisioning host would be: global.azure-devices-provisioning.net
 //
-var provisioningHost = '<replace with provisioning host entry point>';
+var provisioningHost = process.env.PROVISIONING_HOST;
 
 //
 // You can find your idScope in the portal overview section for your dps instance.
 //
-var idScope = '<the id scope for your dps instance>';
+var idScope = process.env.PROVISIONING_IDSCOPE;
 
 var securityClient = new tpmSecurity.TpmSecurityClient();
 

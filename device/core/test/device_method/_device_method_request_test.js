@@ -5,7 +5,7 @@
 
 require('es5-shim');
 var assert = require('chai').assert;
-var DeviceMethodRequest = require('../../lib/device_method').DeviceMethodRequest;
+var DeviceMethodRequest = require('../../dist/device_method').DeviceMethodRequest;
 
 describe('DeviceMethodRequest', function() {
   describe('#constructor', function() {
