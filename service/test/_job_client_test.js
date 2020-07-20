@@ -11,6 +11,8 @@ var JobClient = require('../dist/job_client.js').JobClient;
 var DeviceMethod = require('../dist/device_method.js').DeviceMethod;
 var Query = require('../dist/query.js').Query;
 
+const defaultMaxExecutionTimeInSeconds = 3600;
+
 describe('JobClient', function() {
   function testFalsyArg (fn, badArgName, badArgValue, args) {
     it('throws a ReferenceError when ' + badArgName + ' is \'' + badArgValue + '\'', function() {
@@ -360,6 +362,43 @@ describe('JobClient', function() {
       assert.strictEqual(fakeRestApiClient.executeApiCall.args[0][3].maxExecutionTimeInSeconds, fakeMaxExecutionTime);
     });
 
+    it('sends default start time and execution time if parameters not specified', function() {
+      this.clock = sinon.useFakeTimers();
+      var fakeTimeNowString = (new Date()).toISOString();
+      var fakeJobId = 'id';
+      var fakeQuery = 'SELECT * FROM devices';
+      var fakeMethodParams = {
+        methodName: 'name',
+        payload: { foo: 'bar' },
+        responseTimeoutInSeconds: 15
+      };
+
+      var fakeRestApiClient = { executeApiCall: sinon.stub() };
+
+      var client = new JobClient(fakeRestApiClient);
+      client.scheduleDeviceMethod(fakeJobId, fakeQuery, fakeMethodParams, function() {});
+      this.clock.restore();
+      assert.strictEqual(fakeRestApiClient.executeApiCall.args[0][3].startTime, fakeTimeNowString);
+      assert.strictEqual(fakeRestApiClient.executeApiCall.args[0][3].maxExecutionTimeInSeconds, defaultMaxExecutionTimeInSeconds);
+    });
+
+    it('sends default max execution time if parameter not specified', function() {
+      var fakeJobId = 'id';
+      var fakeQuery = 'SELECT * FROM devices';
+      var fakeMethodParams = {
+        methodName: 'name',
+        payload: { foo: 'bar' },
+        responseTimeoutInSeconds: 15
+      };
+
+      var fakeStartTime = new Date(Date.now() + 3600);
+      var fakeRestApiClient = { executeApiCall: sinon.stub() };
+
+      var client = new JobClient(fakeRestApiClient);
+      client.scheduleDeviceMethod(fakeJobId, fakeQuery, fakeMethodParams, fakeStartTime, function() {});
+      assert.strictEqual(fakeRestApiClient.executeApiCall.args[0][3].maxExecutionTimeInSeconds, defaultMaxExecutionTimeInSeconds);
+    });
+
     /*Tests_SRS_NODE_JOB_CLIENT_16_018: [If `jobStartTime` is a function, `jobStartTime` shall be considered the callback and a `TypeError` shall be thrown if `maxExecutionTimeInSeconds` and/or `done` are not `undefined`.]*/
     testCallback('scheduleDeviceMethod', ['jobId', 'query', {methodName: 'name'}]);
     /*Tests_SRS_NODE_JOB_CLIENT_16_019: [If `maxExecutionTimeInSeconds` is a function, `maxExecutionTimeInSeconds` shall be considered the callback and a `TypeError` shall be thrown if `done` is not `undefined`.]*/
@@ -446,6 +485,43 @@ describe('JobClient', function() {
       assert.strictEqual(fakeRestApiClient.executeApiCall.args[0][3].queryCondition, fakeQuery);
       assert.strictEqual(fakeRestApiClient.executeApiCall.args[0][3].startTime, new Date(fakeStartTime).toISOString());
       assert.strictEqual(fakeRestApiClient.executeApiCall.args[0][3].maxExecutionTimeInSeconds, fakeMaxExecutionTime);
+    });
+
+    it('sends default start time and execution time if parameters not specified', function() {
+      this.clock = sinon.useFakeTimers();
+      var fakeTimeNowString = (new Date()).toISOString();
+      var fakeJobId = 'id';
+      var fakeQuery = 'SELECT * FROM devices';
+      var fakePatch = {
+        tags: {
+          key: 'value'
+        }
+      };
+
+      var fakeRestApiClient = { executeApiCall: sinon.stub() };
+
+      var client = new JobClient(fakeRestApiClient);
+      client.scheduleTwinUpdate(fakeJobId, fakeQuery, fakePatch, function() {});
+      this.clock.restore();
+      assert.strictEqual(fakeRestApiClient.executeApiCall.args[0][3].startTime, fakeTimeNowString);
+      assert.strictEqual(fakeRestApiClient.executeApiCall.args[0][3].maxExecutionTimeInSeconds, defaultMaxExecutionTimeInSeconds);
+    });
+
+    it('sends default max execution time if parameter not specified', function() {
+      var fakeJobId = 'id';
+      var fakeQuery = 'SELECT * FROM devices';
+      var fakePatch = {
+        tags: {
+          key: 'value'
+        }
+      };
+
+      var fakeStartTime = new Date(Date.now() + 3600);
+      var fakeRestApiClient = { executeApiCall: sinon.stub() };
+
+      var client = new JobClient(fakeRestApiClient);
+      client.scheduleTwinUpdate(fakeJobId, fakeQuery, fakePatch, fakeStartTime, function() {});
+      assert.strictEqual(fakeRestApiClient.executeApiCall.args[0][3].maxExecutionTimeInSeconds, defaultMaxExecutionTimeInSeconds);
     });
 
     /*Tests_SRS_NODE_JOB_CLIENT_16_024: [If `jobStartTime` is a function, `jobStartTime` shall be considered the callback and a `TypeError` shall be thrown if `maxExecutionTimeInSeconds` and/or `done` are not `undefined`.]*/

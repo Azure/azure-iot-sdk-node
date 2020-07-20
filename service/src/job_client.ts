@@ -16,6 +16,8 @@ import { TripleValueCallback, tripleValueCallbackToPromise } from 'azure-iot-com
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
 
+const defaultMaxExecutionTimeInSeconds = 3600;
+
 export type JobType = 'scheduleUpdateTwin' | 'scheduleDeviceMethod';
 export type JobStatus = 'queued' | 'scheduled' | 'running' | 'cancelled' | 'finished';
 
@@ -183,8 +185,8 @@ export class JobClient {
           throw new TypeError('The callback must be the last parameter');
         } else {
           _callback = jobStartTime;
-          jobStartTime = null;
-          maxExecutionTimeInSeconds = null;
+          jobStartTime = new Date();
+          maxExecutionTimeInSeconds = defaultMaxExecutionTimeInSeconds;
         }
         /*Codes_SRS_NODE_JOB_CLIENT_16_019: [If `maxExecutionTimeInSeconds` is a function, `maxExecutionTimeInSeconds` shall be considered the callback and a `TypeError` shall be thrown if `_callback` is not `undefined`.]*/
       } else if (typeof maxExecutionTimeInSeconds === 'function') {
@@ -192,7 +194,7 @@ export class JobClient {
           throw new TypeError('The callback must be the last parameter');
         } else {
           _callback = maxExecutionTimeInSeconds;
-          maxExecutionTimeInSeconds = null;
+          maxExecutionTimeInSeconds = defaultMaxExecutionTimeInSeconds;
         }
       }
 
@@ -286,8 +288,8 @@ export class JobClient {
           throw new TypeError('The callback must be the last parameter');
         } else {
           _callback = jobStartTime;
-          jobStartTime = null;
-          maxExecutionTimeInSeconds = null;
+          jobStartTime = new Date();
+          maxExecutionTimeInSeconds = defaultMaxExecutionTimeInSeconds;
         }
         /*Codes_SRS_NODE_JOB_CLIENT_16_025: [If `maxExecutionTimeInSeconds` is a function, `maxExecutionTimeInSeconds` shall be considered the callback and a `TypeError` shall be thrown if `_callback` is not `undefined`.]*/
       } else if (typeof maxExecutionTimeInSeconds === 'function') {
@@ -295,7 +297,7 @@ export class JobClient {
           throw new TypeError('The callback must be the last parameter');
         } else {
           _callback = maxExecutionTimeInSeconds;
-          maxExecutionTimeInSeconds = null;
+          maxExecutionTimeInSeconds = defaultMaxExecutionTimeInSeconds;
         }
       }
 
