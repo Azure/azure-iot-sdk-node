@@ -832,10 +832,32 @@ describe('ModuleClient', function () {
           done();
         });
       });
-      2
-
       // test
       transport.emitMethodCall('reboot');
+    });
+
+    it('calls response send with 400 status when method call contains invalid body', function (done) {
+      // setup
+      var transport = new FakeMethodTransport();
+      var client = new ModuleClient(transport);
+      client.open(function () {
+        client.onMethod('reboot', function () {
+          assert.fail('Should not reach here.');
+        });
+      });
+      var responseSpy = sinon.spy(transport, 'sendMethodResponse');
+      // test
+      transport.emit('method_' + 'reboot', {
+        methods: {
+          methodName: 'reboot'
+        },
+        body: '{',
+        requestId: '42'
+      });
+
+      transport.emitMethodCall('reboot');
+      assert.strictEqual(responseSpy.args[0][0].status, 400);
+      done();
     });
 
     // Tests_SRS_NODE_MODULE_CLIENT_13_003: [ The client shall start listening for method calls from the service whenever there is a listener subscribed for a method callback. ]
