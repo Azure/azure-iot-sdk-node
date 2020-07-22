@@ -396,18 +396,25 @@ export abstract class InternalClient extends EventEmitter {
   private _addMethodCallback(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
     const self = this;
     this._transport.onDeviceMethod(methodName, (message) => {
-      // build the request object
-      const request = new DeviceMethodRequest(
-        message.requestId,
-        message.methods.methodName,
-        message.body
-      );
-
       // build the response object
       const response = new DeviceMethodResponse(message.requestId, self._transport);
 
-      // Codes_SRS_NODE_INTERNAL_CLIENT_13_001: [ The onDeviceMethod method shall cause the callback function to be invoked when a cloud-to-device method invocation signal is received from the IoT Hub service. ]
-      callback(request, response);
+      // build the request object
+      try {
+        const request = new DeviceMethodRequest(
+          message.requestId,
+          message.methods.methodName,
+          message.body
+        );
+        // Codes_SRS_NODE_INTERNAL_CLIENT_13_001: [ The onDeviceMethod method shall cause the callback function to be invoked when a cloud-to-device method invocation signal is received from the IoT Hub service. ]
+        callback(request, response);
+      } catch (err) {
+        response.send(400, 'Invalid request format: ' + err.message, (err) => {
+          if (err) {
+            debug('Error sending invalid request response back to application');
+          }
+        });
+      }
     });
   }
 
