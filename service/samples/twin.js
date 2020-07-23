@@ -6,7 +6,7 @@
 var Registry = require('azure-iothub').Registry;
 
 var connectionString = process.env.IOTHUB_CONNECTION_STRING;
-var deviceId = '[Device ID]';
+var deviceId = process.env.IOTHUB_DEVICE_ID;
 
 var registry = Registry.fromConnectionString(connectionString);
 registry.getTwin(deviceId, function(err, twin) {

@@ -634,7 +634,7 @@ export class Registry {
       Authorization: <config.sharedAccessSignature>
       Request-Id: <guid>
       ```]*/
-      const path = '/twins/' + encodeURIComponent(deviceId) + endpoint.versionQueryString();
+      const path = '/twins/' + encodeURIComponent(deviceId) + endpoint.versionQueryStringPnP();
       this._restApiClient.executeApiCall('GET', path, null, null, (err, newTwin, response) => {
         if (err) {
           _callback(err);
@@ -671,7 +671,7 @@ export class Registry {
         Request-Id: <guid>
       ```
       ]*/
-      const path = `/twins/${encodeURIComponent(deviceId)}/modules/${encodeURIComponent(moduleId)}${endpoint.versionQueryString()}`;
+      const path = `/twins/${encodeURIComponent(deviceId)}/modules/${encodeURIComponent(moduleId)}${endpoint.versionQueryStringPnP()}`;
       this._restApiClient.executeApiCall('GET', path, null, null, (err, newTwin, response) => {
         if (err) {
           _callback(err);
@@ -715,7 +715,7 @@ export class Registry {
 
       <patch>
       ```]*/
-      const path = '/twins/' + encodeURIComponent(deviceId) + endpoint.versionQueryString();
+      const path = '/twins/' + encodeURIComponent(deviceId) + endpoint.versionQueryStringPnP();
       const headers = {
         'Content-Type': 'application/json; charset=utf-8',
         'If-Match': this.ensureQuoted(etag)
@@ -766,7 +766,7 @@ export class Registry {
       <patch>
       ```
       ]*/
-      const path = `/twins/${encodeURIComponent(deviceId)}/modules/${encodeURIComponent(moduleId)}${endpoint.versionQueryString()}`;
+      const path = `/twins/${encodeURIComponent(deviceId)}/modules/${encodeURIComponent(moduleId)}${endpoint.versionQueryStringPnP()}`;
       const headers = {
         'Content-Type': 'application/json; charset=utf-8',
         'If-Match': this.ensureQuoted(etag)
@@ -816,7 +816,7 @@ export class Registry {
   getRegistryStatistics(): Promise<ResultWithHttpResponse<Registry.RegistryStatistics>>;
   getRegistryStatistics(done?: HttpResponseCallback<Registry.RegistryStatistics>): Promise<ResultWithHttpResponse<Registry.RegistryStatistics>> | void {
     return httpCallbackToPromise((_callback) => {
-      const path = '/statistics/devices' + endpoint.versionQueryString();
+      const path = '/statistics/devices' + endpoint.versionQueryStringPnP();
       this._restApiClient.executeApiCall('GET', path, {}, null, _callback);
     }, done);
   }
