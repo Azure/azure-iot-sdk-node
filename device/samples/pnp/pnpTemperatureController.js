@@ -210,7 +210,7 @@ async function main() {
     try {
       resultTwin = await client.getTwin();
       // Only report readable propertiess
-      const patchRoot = helperCreateReportedPropertiesPatch({ serialNumber: {"value" : serialNumber, "ac" : 200, "av" : 1} }, null);
+      const patchRoot = helperCreateReportedPropertiesPatch({ serialNumber: serialNumber }, null);
       const patchThermostat1Info = helperCreateReportedPropertiesPatch({
         maxTempSinceLastReboot: 67.89,
       }, thermostat1ComponentName);
