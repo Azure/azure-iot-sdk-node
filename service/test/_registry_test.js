@@ -532,7 +532,7 @@ describe('Registry', function () {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.equal(method, 'PATCH');
-          assert.equal(path, '/twins/' + fakeDeviceId + endpoint.versionQueryString());
+          assert.equal(path, '/twins/' + fakeDeviceId + endpoint.versionQueryStringPnP());
           assert.equal(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
           assert.equal(httpHeaders['If-Match'], '"' + fakeEtag + '"');
           assert.equal(body, fakeTwinPatch);
@@ -975,7 +975,7 @@ describe('Registry', function () {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.equal(method, 'GET');
-          assert.equal(path, '/statistics/devices' + endpoint.versionQueryString());
+          assert.equal(path, '/statistics/devices' + endpoint.versionQueryStringPnP());
           done();
         }
       };
@@ -1273,7 +1273,7 @@ describe('Registry', function () {
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.strictEqual(method, 'GET');
-          assert.strictEqual(path, '/twins/deviceId/modules/moduleId' + endpoint.versionQueryString());
+          assert.strictEqual(path, '/twins/deviceId/modules/moduleId' + endpoint.versionQueryStringPnP());
           done(null, JSON.stringify({
             deviceId: 'fakeTwin'
           }), {
@@ -1384,7 +1384,7 @@ describe('Registry', function () {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.strictEqual(method, 'PATCH');
           assert.strictEqual(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
-          assert.strictEqual(path, '/twins/deviceId/modules/moduleId' + endpoint.versionQueryString());
+          assert.strictEqual(path, '/twins/deviceId/modules/moduleId' + endpoint.versionQueryStringPnP());
           assert.strictEqual(httpHeaders['If-Match'], '"' + fakeEtag + '"');
           assert.deepEqual(body, fakePatch);
           done(null, JSON.stringify({
@@ -1409,7 +1409,7 @@ describe('Registry', function () {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.strictEqual(method, 'PATCH');
           assert.strictEqual(httpHeaders['Content-Type'], 'application/json; charset=utf-8');
-          assert.strictEqual(path, '/twins/deviceId/modules/moduleId' + endpoint.versionQueryString());
+          assert.strictEqual(path, '/twins/deviceId/modules/moduleId' + endpoint.versionQueryStringPnP());
           assert.strictEqual(httpHeaders['If-Match'], fakeEtag);
           assert.deepEqual(body, fakePatch);
           done(null, JSON.stringify({
