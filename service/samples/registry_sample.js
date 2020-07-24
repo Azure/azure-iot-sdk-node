@@ -9,14 +9,9 @@ var connectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 var registry = iothub.Registry.fromConnectionString(connectionString);
 
-// Create a new device
-var device = {
-  deviceId: 'sample-device-' + Date.now()
-};
-registry.delete(device.deviceId, printAndContinue('delete'));
 
 // List devices
-/*console.log('**listing devices...');
+console.log('**listing devices...');
 registry.list(function (err, deviceList) {
   deviceList.forEach(function (device) {
     var key = device.authentication ? device.authentication.symmetricKey.primaryKey : '<no primary key>';
@@ -39,7 +34,7 @@ registry.list(function (err, deviceList) {
       registry.delete(device.deviceId, printAndContinue('delete'));
     }));
   }));
-});*/
+});
 
 function printAndContinue(op, next) {
   return function printResult(err, deviceInfo, res) {
