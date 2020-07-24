@@ -13,6 +13,8 @@ registry.getTwin(deviceId, function(err, twin) {
   if (err) {
     console.error(err.message);
   } else {
+    console.log(twin.moduleId);
+
     console.log(JSON.stringify(twin, null, 2));
     var twinPatch = {
       tags: {

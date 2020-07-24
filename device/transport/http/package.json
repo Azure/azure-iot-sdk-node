@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@types/node": "^9.6.50",
-    "azure-iothub": "1.12.4",
+    "azure-iothub": "1.12.4-pnp-refresh.3",
     "chai": "^4.2.0",
     "mocha": "^7.1.1",
     "nyc": "^15.0.0",

@@ -57,6 +57,10 @@ export class Twin implements TwinData {
    */
   etag: string;
   /**
+   * Model identifier for the pnp model associated with the twin.
+   */
+  modelId?: string;
+  /**
    * Collection of key/value pairs that is available only on the service side and can be used in queries to find specific devices.
    */
   tags: {
