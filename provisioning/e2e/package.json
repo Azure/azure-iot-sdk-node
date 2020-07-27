@@ -15,7 +15,7 @@
     "azure-iot-security-symmetric-key": "1.7.4",
     "azure-iot-security-tpm": "1.8.4",
     "azure-iot-security-x509": "1.7.4",
-    "azure-iothub": "1.12.4",
+    "azure-iothub": "1.12.4-pnp-refresh.4",
     "chai": "^4.2.0",
     "debug": "^4.1.1",
     "nyc": "^15.0.0",

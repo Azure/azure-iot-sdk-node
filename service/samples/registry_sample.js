@@ -9,6 +9,7 @@ var connectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 var registry = iothub.Registry.fromConnectionString(connectionString);
 
+
 // List devices
 console.log('**listing devices...');
 registry.list(function (err, deviceList) {
