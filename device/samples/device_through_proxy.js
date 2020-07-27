@@ -5,9 +5,6 @@
 
 // !IMPORTANT! This sample only pertains to HTTPS Proxy, via the HTTP Transport, MQTTWS Transport, and AMQPWS Transport.
 
-//
-
-
 // Uncomment one of these transports and then change it in fromConnectionString to test other transports
 // const Protocol = require('azure-iot-device-amqp').AmqpWs;
 // const Protocol = require('azure-iot-device-http').Http;
@@ -80,11 +77,11 @@ var agent = new HttpsProxyAgent(options);
 // fromConnectionString must specify a transport constructor, coming from any transport package.
 let client = Client.fromConnectionString(deviceConnectionString, Protocol);
 // MQTTWS (MQTT over Websocket)
-client.setOptions({mqtt: {webSocketAgent: agent}})
+client.setOptions({mqtt: {webSocketAgent: agent}});
 // AMQPWS (AMQP over Websocket)
-// client.setOptions({amqp: {agent: agent}})
+// client.setOptions({amqp: {agent: agent}});
 // HTTP
-// client.setOptions({http: {webSocketAgent: agent}})
+// client.setOptions({http: {webSocketAgent: agent}});
 client.on('connect', connectCallback);
 client.on('error', errorCallback);
 client.on('disconnect', disconnectHandler);
