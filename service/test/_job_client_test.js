@@ -5,10 +5,14 @@
 
 var assert = require('chai').assert;
 var sinon = require('sinon');
+var uuid = require('uuid');
 
 var endpoint = require('azure-iot-common').endpoint;
 var JobClient = require('../dist/job_client.js').JobClient;
+var ConnectionString = require('../iothub').ConnectionString;
+var SharedAccessSignature = require('../iothub').SharedAccessSignature;
 var DeviceMethod = require('../dist/device_method.js').DeviceMethod;
+var RestApiClient = require('azure-iot-http-base').RestApiClient;
 var Query = require('../dist/query.js').Query;
 
 const defaultMaxExecutionTimeInSeconds = 3600;
@@ -73,6 +77,80 @@ describe('JobClient', function() {
           return new JobClient(badClient);
         }, ReferenceError);
       });
+    });
+
+    it('Will update the authentication expiration for each new request', function(done) {
+      this.clock = sinon.useFakeTimers();
+      this.clock.tick(1); // Expiration in the SAS we are about to create shouldn't be zero.
+
+      //
+      // Building up arguments for the invoke method job client call upcoming.
+      // Using this api because that is where the problem was reported for the Job Client
+      //
+      var fakeJobId = 'id';
+      var fakeQuery = 'SELECT * FROM devices';
+      var fakeMethodParams = {
+        methodName: 'name',
+        payload: { foo: 'bar' },
+        responseTimeoutInSeconds: 15
+      };
+
+      var fakeStartTime = new Date(Date.now() + 3600);
+      var fakeMaxExecutionTime = 7200;
+
+      //
+      // Build up the arguments for the RestApi constructor.
+      // Using the uuid as the key since putting a hard constant that looks
+      // like a key would get flagged by checks looking for keys committed to
+      // the repo.
+      //
+      const connectionString = 'HostName=fake.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=' + uuid.v4();
+      const cn = ConnectionString.parse(connectionString);
+      const config = {
+        host: cn.HostName,
+        sharedAccessSignature: SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, Date.now())
+      };
+      assert(Number(config.sharedAccessSignature.se) > 0, 'Initial sas expiration needs to be greater than 0');
+
+      //
+      // We create our own http base client since we want to capture
+      // the authorization header after it's been instantiated.
+      // The other functions are used during the course of serialization
+      // of the http request.
+      //
+      var fakeHttpBase = {
+        buildRequest: sinon.stub().returns({
+          write: sinon.stub(),
+          end: sinon.stub()
+        }),
+        setOptions: sinon.stub()
+      };
+      let client = new JobClient(new RestApiClient(config, 'a/1.0.0', fakeHttpBase));
+
+      client.scheduleDeviceMethod(fakeJobId, fakeQuery, fakeMethodParams, fakeStartTime, fakeMaxExecutionTime, function fakeCallback() {});
+
+      //
+      // The expiration should be at least 5 minutes from the epoch above.  (It's very likely 1 hour).
+      //
+      // The first index of the args is the particular invocation of the buildRequest.  In this case 0 is the first call.
+      // The second index of the args is the particular argument of the call.  In this case 2 is the
+      // third argument to buildRequest, which are the headers of the http request.
+      //
+
+      const firstExpiration = Number(SharedAccessSignature.parse(fakeHttpBase.buildRequest.args[0][2].Authorization).se);
+      assert(firstExpiration >= ((60*5) + 1), 'Expiration of sas for first method invocation call needed to be at least 5 minutes');
+
+      //
+      // Move time forward by 10 seconds.
+      // The expiration of the second call should be at least 10 seconds later than the first call.
+      //
+
+      this.clock.tick(10*1000);
+      client.scheduleDeviceMethod(fakeJobId, fakeQuery, fakeMethodParams, fakeStartTime, fakeMaxExecutionTime, function fakeCallback() {});
+      const secondExpiration = Number(SharedAccessSignature.parse(fakeHttpBase.buildRequest.args[1][2].Authorization).se);
+      this.clock.restore();
+      assert(secondExpiration >= (firstExpiration + 10), 'Expiration of sas for second method invocation needed to be at least 10 seconds after first');
+      done();
     });
   });
 

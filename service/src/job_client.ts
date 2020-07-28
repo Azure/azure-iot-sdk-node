@@ -4,7 +4,7 @@
 'use strict';
 
 import { Agent } from 'https';
-import { anHourFromNow, endpoint } from 'azure-iot-common';
+import { endpoint } from 'azure-iot-common';
 import * as ConnectionString from './connection_string';
 import * as SharedAccessSignature from './shared_access_signature';
 import { RestApiClient } from 'azure-iot-http-base';
@@ -393,10 +393,9 @@ export class JobClient {
     /*Codes_SRS_NODE_JOB_CLIENT_16_002: [The `fromConnectionString` method shall throw a `ReferenceError` if `connectionString` is falsy.]*/
     if (!connectionString) throw new ReferenceError('connectionString cannot be \'' + connectionString + '\'');
     const cn = ConnectionString.parse(connectionString);
-    const sas = SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, anHourFromNow());
     const config = {
       host: cn.HostName,
-      sharedAccessSignature: sas.toString()
+      sharedAccessSignature: SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, Date.now())
     };
 
     /*Codes_SRS_NODE_JOB_CLIENT_16_003: [The `fromConnectionString` method shall return a new `JobClient` instance.]*/
