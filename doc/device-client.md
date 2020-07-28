@@ -25,7 +25,7 @@ Used directly after creating the Device Client to set options on the client. The
         - `drain`: Boolean indicating whether only one message should be received all messages should be drained.
 - `amqp`: Options object specific to the AMQP transport
     - `webSocketAgent`: [Agent](https://nodejs.org/api/https.html#https_class_https_agent) object to use with AMQP-WS connections. Can be used for tunneling proxies.
-- `cert`: X.509 Certificate.
+- `cert`: X.509 certificate used for authenticating the device to the IoTHub.
 - `key`: Key associated with the X.509 certificate.
 - `passphrase`: Passphrase used to decode the key associated with the X.509 certificate.
 - `clientCertEngine`: Name of an OpenSSL engine which can provide the client certificate.
