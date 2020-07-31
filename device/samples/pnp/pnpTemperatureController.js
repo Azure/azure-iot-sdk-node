@@ -11,6 +11,12 @@ const Message = require('azure-iot-device').Message;
 //  'HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>'
 const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 
+// DPS connection information
+var provisioningHost = process.env.PROVISIONING_HOST;
+var idScope = process.env.PROVISIONING_IDSCOPE;
+var registrationId = process.env.PROVISIONING_REGISTRATION_ID;
+var symmetricKey = process.env.PROVISIONING_SYMMETRIC_KEY;
+
 const modelId = 'dtmi:com:example:TemperatureController;1';
 const messageSubjectProperty = '$.sub';
 const thermostat1ComponentName = 'thermostat1';
@@ -166,7 +172,32 @@ async function sendTelemetry(deviceClient, data, index, componentName) {
   await deviceClient.sendEvent(pnpMsg);
 }
 
+async function provisionDevice(payload) {
+  var provSecurityClient = new SymmetricKeySecurityClient(registrationId, symmetricKey);
+  var provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvProtocol(), provSecurityClient);
+
+  if (!!(payload)) {
+    provisioningClient.setProvisioningPayload(payload);
+  }
+
+  try {
+    let result = await provisioningClient.register();
+    deviceConnectionString = 'HostName=' + result.assignedHub + ';DeviceId=' + result.deviceId + ';SharedAccessKey=' + symmetricKey;
+    console.log('registration succeeded');
+    console.log('assigned hub=' + result.assignedHub);
+    console.log('deviceId=' + result.deviceId);
+    console.log('payload=' + JSON.stringify(result.payload));
+  } catch (err) {
+    console.error("error registering device: " + err.toString());
+  }
+}
+
 async function main() {
+  // If the user include a provision host then use DPS
+  if (!!(provisioningHost)) {
+    await provisionDevice();
+  }
+
   // fromConnectionString must specify a transport, coming from any transport package.
   const client = Client.fromConnectionString(deviceConnectionString, Protocol);
   console.log('Connecting using connection string: ' + deviceConnectionString);

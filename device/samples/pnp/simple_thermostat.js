@@ -18,10 +18,10 @@ const ProvisioningDeviceClient = require('azure-iot-provisioning-device').Provis
 var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 
 // DPS connection information
-var provisioningHost = process.env.PROVISIONING_HOST;
-var idScope = process.env.PROVISIONING_IDSCOPE;
-var registrationId = process.env.PROVISIONING_REGISTRATION_ID;
-var symmetricKey = process.env.PROVISIONING_SYMMETRIC_KEY;
+var provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT;
+var idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE;
+var registrationId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID;
+var symmetricKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY;
 
 const modelId = 'dtmi:com:example:Thermostat;1';
 const telemetrySendInterval = 10000;
