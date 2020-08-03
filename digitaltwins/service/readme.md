@@ -65,7 +65,7 @@ Check out the [samples][samples] for details on the various features of the Serv
 
 * [Azure IoT Hub dev center][iot-dev-center]
 * [Azure IoT Hub documentation][iot-hub-documentation]
-* [Node.js API reference documentation][node-api-reference]
+* [Node.js API reference documentation][https://docs.microsoft.com/en-us/javascript/api/azure-iot-digitaltwins-service/?view=azure-node-latest]
 
 ## Directory structure
 
