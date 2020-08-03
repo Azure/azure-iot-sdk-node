@@ -6,6 +6,8 @@ It complements the `azure-iothub` package that covers the initial set of Azure I
 
 The Azure IoT Digital Twins Service SDK for Node.js helps you build applications that interact with your twin enabled devices and manage their twin document.
 
+[API Reference](https://docs.microsoft.com/en-us/javascript/api/azure-iot-digitaltwins-service/?view=azure-node-latest)
+
 [![npm version](https://badge.fury.io/js/azure-iot-digitaltwins-service.svg)](https://badge.fury.io/js/azure-iot-digitaltwins-service)
 
 ## Prerequisites
