@@ -22,6 +22,7 @@ var provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT;
 var idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE;
 var registrationId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID;
 var symmetricKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY;
+var useDps = process.env.IOTHUB_DEVICE_SECURITY_TYPE;
 
 const modelId = 'dtmi:com:example:Thermostat;1';
 const telemetrySendInterval = 10000;
@@ -149,7 +150,7 @@ async function provisionDevice(payload) {
 
 async function main() {
   // If the user include a provision host then use DPS
-  if (!!(provisioningHost)) {
+  if (useDps === "DPS") {
     await provisionDevice();
   }
 
