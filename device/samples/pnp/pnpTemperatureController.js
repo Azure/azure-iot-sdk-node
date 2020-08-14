@@ -4,12 +4,23 @@
 'use strict';
 
 const Protocol = require('azure-iot-device-mqtt').Mqtt;
+var ProvProtocol = require('azure-iot-provisioning-device-mqtt').Mqtt;
+
 const Client = require('azure-iot-device').Client;
 const Message = require('azure-iot-device').Message;
+const SymmetricKeySecurityClient = require('azure-iot-security-symmetric-key').SymmetricKeySecurityClient;
+const ProvisioningDeviceClient = require('azure-iot-provisioning-device').ProvisioningDeviceClient;
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  'HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>'
-const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
+var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
+
+// DPS connection information
+var provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT;
+var idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE;
+var registrationId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID;
+var symmetricKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY;
+var useDps = process.env.IOTHUB_DEVICE_SECURITY_TYPE;
 
 const modelId = 'dtmi:com:example:TemperatureController;1';
 const messageSubjectProperty = '$.sub';
@@ -166,7 +177,32 @@ async function sendTelemetry(deviceClient, data, index, componentName) {
   await deviceClient.sendEvent(pnpMsg);
 }
 
+async function provisionDevice(payload) {
+  var provSecurityClient = new SymmetricKeySecurityClient(registrationId, symmetricKey);
+  var provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvProtocol(), provSecurityClient);
+
+  if (!!(payload)) {
+    provisioningClient.setProvisioningPayload(payload);
+  }
+
+  try {
+    let result = await provisioningClient.register();
+    deviceConnectionString = 'HostName=' + result.assignedHub + ';DeviceId=' + result.deviceId + ';SharedAccessKey=' + symmetricKey;
+    console.log('registration succeeded');
+    console.log('assigned hub=' + result.assignedHub);
+    console.log('deviceId=' + result.deviceId);
+    console.log('payload=' + JSON.stringify(result.payload));
+  } catch (err) {
+    console.error("error registering device: " + err.toString());
+  }
+}
+
 async function main() {
+  // If the user include a provision host then use DPS
+  if (useDps === "DPS") {
+    await provisionDevice();
+  }
+
   // fromConnectionString must specify a transport, coming from any transport package.
   const client = Client.fromConnectionString(deviceConnectionString, Protocol);
   console.log('Connecting using connection string: ' + deviceConnectionString);

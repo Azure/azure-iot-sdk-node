@@ -8,8 +8,7 @@
  */
 export interface AttestationMechanism {
   /**
-   * The type of attestation.  Will be set to a string
-   * either `tpm` or `x509`.
+   * The type of attestation.
    */
   type: AttestationTypes;
   /**
@@ -438,8 +437,6 @@ export interface EnrollmentGroup {
   enrollmentGroupId: string;
   /**
    * The security mechanism associated with this object.
-   *
-   * Currently this MUST be x509.
    */
   attestation: AttestationMechanism;
   /**
