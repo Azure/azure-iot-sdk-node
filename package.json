@@ -4,9 +4,9 @@
 		"cm": "git-cz"
 	},
 	"devDependencies": {
-		"@commitlint/cli": "^8.1.0",
-		"@commitlint/config-conventional": "^8.1.0",
-		"commitizen": "^4.0.3",
+		"@commitlint/cli": "^10.0.0",
+		"@commitlint/config-conventional": "^10.0.0",
+		"commitizen": "^4.1.2",
 		"cz-conventional-changelog": "^3.0.2",
 		"husky": "^4.2.1",
 		"lerna": "^3.19.0",
