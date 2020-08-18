@@ -19,7 +19,6 @@ let sendInterval;
 
 function disconnectHandler () {
   clearInterval(sendInterval);
-  client.removeAllListeners();
   client.open().catch((err) => {
     console.error(err.message);
   });
