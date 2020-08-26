@@ -11,10 +11,14 @@ const commandName = process.env.IOTHUB_COMMAND_NAME || 'turnOn'; // for the envi
 const commandPayload = process.env.IOTHUB_COMMAND_PAYLOAD || ''; // for the environmental sensor, it really doesn't matter. any string will do.
 
 let credentials = new IoTHubTokenCredentials(connectionString);
-let digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
-console.log('invoking command ' + commandName + ' on component ' + componentName + ' for device ' + deviceId + '...');
-const invokeComponentCommandResponse = digitalTwinServiceClient.invokeComponentCommand(deviceId, componentName, commandName, commandPayload);
+async function asyncMain() { 
+    console.log('invoking command ' + commandName + ' on component ' + componentName + ' for device ' + deviceId + '...');
+    const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
+    const invokeComponentCommandResponse = await digitalTwinServiceClient.invokeComponentCommand(deviceId, componentName, commandName, commandPayload);
 
-// Print the response
-console.log(JSON.stringify(invokeComponentCommandResponse, null, 2));
+    // Print the response
+    console.log(JSON.stringify(invokeComponentCommandResponse, null, 2));
+}
+
+asyncMain();

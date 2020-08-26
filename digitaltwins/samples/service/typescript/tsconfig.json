@@ -1,18 +1,12 @@
 {
     "compilerOptions": {
-      "outDir": "./dist",
-      "strict": false,
-      "target": "es5",
-      "sourceMap": true,
-      "declarationMap": true,
-      "noImplicitAny": true,
-      "suppressImplicitAnyIndexErrors": true,
+      "module": "commonjs",
+      "moduleResolution": "node",
+      "allowSyntheticDefaultImports": true,
       "lib": [
         "es6", "dom"
       ],
       "declaration": true,
       "noUnusedLocals": true
-    },
-    "include": ["./*.ts"],
-    "exclude": ["node_modules"]
+    }
   }

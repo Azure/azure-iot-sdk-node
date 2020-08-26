@@ -1,7 +1,7 @@
 {
   "name": "azure-iot-digitaltwins-service-ts-samples",
   "version": "1.0.0-pnp-refresh.3",
-  "description": "Azure IoT SDK - Digital Twin Client typescript samples",
+  "description": "Azure IoT SDK - Digital Twin Client Typescript samples",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "dependencies": {
@@ -16,24 +16,5 @@
     "build": "tsc",
     "npmlockrefresh": "npm i --package-lock-only",
     "ci": "npm -s run lint && npm -s run build"
-  },
-  "engines": {
-    "node": ">= 0.10"
-  },
-  "files": [
-    "dist/**/*.js",
-    "dist/**/*.js.map",
-    "dist/**/*.d.ts",
-    "dist/**/*.d.ts.map",
-    "src/**/*.ts",
-    "tsconfig.json"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Azure/azure-iot-sdk-node.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Azure/azure-iot-sdk-node/issues"
-  },
-  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme"
+  }
 }
