@@ -12,16 +12,16 @@ import { IoTHubTokenCredentials } from 'azure-iot-digitaltwins-service';
 // - Environment variables have to be set
 // - Twin enabled device must exist on the ADT hub
 const deviceId = process.env.IOTHUB_DEVICE_ID || '';
-const connString = process.env.IOTHUB_CONNECTION_STRING || '';
+const connectionString = process.env.IOTHUB_CONNECTION_STRING || '';
 const metadata = '$metadata';
 const model = '$model';
 
 async function asyncMain() { 
   try {
-    const digitalTwinServiceClient = new DigitalTwinServiceClient(new IoTHubTokenCredentials(connString));
-    const twin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
-    if (!!(twin)) {
-      console.log(twin[metadata][model]);
+    const digitalTwinServiceClient = new DigitalTwinServiceClient(new IoTHubTokenCredentials(connectionString));
+    const deviceTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
+    if (!!(deviceTwin)) {
+      console.log(deviceTwin[metadata][model]);
     }
   }
   catch (err) {
