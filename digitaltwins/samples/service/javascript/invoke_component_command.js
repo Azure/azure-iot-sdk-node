@@ -14,12 +14,13 @@ const { inspect } = require('util');
 // - Twin enabled device must exist on the ADT hub
 async function main() {
   const deviceId = process.env.IOTHUB_DEVICE_ID;
+  const connectionString = process.env.IOTHUB_CONNECTION_STRING;
   const componentName = process.env.IOTHUB_COMPONENT_NAME; // for the TemperatureController, try thermostat1
   const commandName = process.env.IOTHUB_COMMAND_NAME; // for the thermostat you can try getMaxMinReport
   const commandArgument = process.env.IOTHUB_COMMAND_PAYLOAD; // it really doesn't matter, any string will do.
 
   // Create service client
-  const credentials = new IoTHubTokenCredentials(process.env.IOTHUB_CONNECTION_STRING);
+  const credentials = new IoTHubTokenCredentials(connectionString);
   const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
 
   // Invoke a command

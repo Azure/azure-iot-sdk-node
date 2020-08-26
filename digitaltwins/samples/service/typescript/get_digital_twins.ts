@@ -17,16 +17,17 @@ const metadata = '$metadata';
 const model = '$model';
 
 async function asyncMain() { 
-  try {
-    const digitalTwinServiceClient = new DigitalTwinServiceClient(new IoTHubTokenCredentials(connectionString));
-    const deviceTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
-    if (!!(deviceTwin)) {
-      console.log(deviceTwin[metadata][model]);
-    }
-  }
-  catch (err) {
-      console.log(err);
+  const digitalTwinServiceClient = new DigitalTwinServiceClient(new IoTHubTokenCredentials(connectionString));
+  const deviceTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
+
+  // Print the response
+  if (!!(deviceTwin)) {
+    console.log(deviceTwin[metadata][model]);
   }
 }
 
-asyncMain();
+asyncMain().catch((err) => {
+  console.log('error code: ', err.code);
+  console.log('error message: ', err.message);
+  console.log('error stack: ', err.stack);
+});
