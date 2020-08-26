@@ -18,8 +18,8 @@ const model = '$model';
 
 async function asyncMain() { 
   try {
-    const dtServiceClient = new DigitalTwinServiceClient(new IoTHubTokenCredentials(connString));
-    const twin = await dtServiceClient.getDigitalTwin(deviceId);
+    const digitalTwinServiceClient = new DigitalTwinServiceClient(new IoTHubTokenCredentials(connString));
+    const twin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
     if (!!(twin)) {
       console.log(twin[metadata][model]);
     }
