@@ -13,6 +13,7 @@
   },
   "scripts": {
     "lint": "tslint --project . -c ../../../../tslint.json",
+    "prebuild": "npm run lint",
     "build": "tsc",
     "npmlockrefresh": "npm i --package-lock-only",
     "ci": "npm -s run lint && npm -s run build"

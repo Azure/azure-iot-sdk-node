@@ -16,7 +16,7 @@ const connectionString = process.env.IOTHUB_CONNECTION_STRING || '';
 const metadata = '$metadata';
 const model = '$model';
 
-async function asyncMain() { 
+async function asyncMain(): Promise<void> {
   const digitalTwinServiceClient = new DigitalTwinServiceClient(new IoTHubTokenCredentials(connectionString));
   const deviceTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
 

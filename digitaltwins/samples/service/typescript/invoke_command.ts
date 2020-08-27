@@ -16,7 +16,7 @@ const commandPayload = process.env.IOTHUB_COMMAND_PAYLOAD || ''; // for the envi
 // Preconditions:
 // - Environment variables have to be set
 // - Twin enabled device must exist on the ADT hub
-async function asyncMain() { 
+async function asyncMain(): Promise<void> {
   console.log('invoking command ' + commandName + ' for device ' + deviceId + '...');
 
   const credentials = new IoTHubTokenCredentials(connectionString);
