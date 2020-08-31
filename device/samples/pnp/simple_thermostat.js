@@ -8,6 +8,7 @@ const ProvProtocol = require('azure-iot-provisioning-device-mqtt').Mqtt;
 
 const Client = require('azure-iot-device').Client;
 const Message = require('azure-iot-device').Message;
+const ConnectionString = require('azure-iot-common').ConnectionString;
 const SymmetricKeySecurityClient = require('azure-iot-security-symmetric-key').SymmetricKeySecurityClient;
 const ProvisioningDeviceClient = require('azure-iot-provisioning-device').ProvisioningDeviceClient;
 
@@ -189,8 +190,21 @@ async function provisionDevice(payload) {
 
 async function main() {
   // If the user include a provision host then use DPS
-  if (useDps === "DPS") {
+  if (useDps === 'DPS') {
     await provisionDevice(modelIdObject);
+  } else if (useDps === 'connectionString') {
+    try {
+      if (!(deviceConnectionString && ConnectionString.parse(deviceConnectionString,['HostName','DeviceId']))) {
+        console.error('Connection string was not specified.');
+        process.exit(1);
+      }
+    } catch (err) {
+      console.error('Invalid connection string specified.');
+      process.exit(1);
+    }
+  } else {
+    console.log('No proper SECURITY TYPE provided.');
+    process.exit(1);
   }
 
   // fromConnectionString must specify a transport, coming from any transport package.
