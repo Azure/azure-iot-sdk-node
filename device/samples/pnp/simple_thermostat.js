@@ -4,7 +4,7 @@
 'use strict';
 
 const Protocol = require('azure-iot-device-mqtt').Mqtt;
-var ProvProtocol = require('azure-iot-provisioning-device-mqtt').Mqtt;
+const ProvProtocol = require('azure-iot-provisioning-device-mqtt').Mqtt;
 
 const Client = require('azure-iot-device').Client;
 const Message = require('azure-iot-device').Message;
@@ -15,24 +15,61 @@ const ProvisioningDeviceClient = require('azure-iot-provisioning-device').Provis
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  'HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>'
-var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
+let deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 
 // DPS connection information
-var provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT;
-var idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE;
-var registrationId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID;
-var symmetricKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY;
-var useDps = process.env.IOTHUB_DEVICE_SECURITY_TYPE;
+const provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT || 'global.azure-devices-provisioning.net';
+const idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE;
+const registrationId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID;
+const symmetricKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY;
+const useDps = process.env.IOTHUB_DEVICE_SECURITY_TYPE;
 
-const modelId = 'dtmi:com:example:Thermostat;1';
+const modelIdObject = { modelId: 'dtmi:com:example:Thermostat;1' };
 const telemetrySendInterval = 10000;
 const deviceSerialNum = '123abc';
 
-let intervalToken;
-let currTemp = 1 + (Math.random() * 90);
-const maxTemp = currTemp+10;
+class TemperatureSensor {
+  constructor() {
+    this.currTemp = 1 + (Math.random() * 90);
+    this.maxTemp = this.currTemp;
+    this.minTemp = this.currTemp;
+    this.cumulativeTemperature = this.currTemp;
+    this.startTime = (new Date(Date.now())).toISOString();
+    this.numberOfTemperatureReadings = 1;
+  }
+  getCurrentTemperatureObject() {
+    return { temperature: this.currTemp };
+  }
+  updateSensor() {
+    this.currTemp = 1 + (Math.random() * 90);
+    this.cumulativeTemperature += this.currTemp;
+    this.numberOfTemperatureReadings++;
+    if (this.currTemp > this.maxTemp) {
+      this.maxTemp = this.currTemp;
+    }
+    if (this.currTemp < this.minTemp) {
+      this.minTemp = this.currTemp;
+    }
+    return this;
+  }
+  getMaxMinReportObject() {
+    return {
+      maxTemp: this.maxTemp,
+      minTemp: this.minTemp,
+      avgTemp: this.cumulativeTemperature / this.numberOfTemperatureReadings,
+      endTime: (new Date(Date.now())).toISOString(),
+      startTime: this.startTime
+    };
+  }
+  getMaxTemperatureValue() {
+    return this.maxTemp;
+  }
+}
 
-const commandMinMaxReport = 'getMaxMinReport';
+let intervalToken;
+
+const deviceTemperatureSensor = new TemperatureSensor();
+const commandMaxMinReport = 'getMaxMinReport';
 
 const propertyUpdateHandler = (deviceTwin, propertyName, reportedValue, desiredValue, version) => {
   console.log('Received an update for property: ' + propertyName + ' with value: ' + JSON.stringify(desiredValue));
@@ -51,9 +88,9 @@ const propertyUpdateHandler = (deviceTwin, propertyName, reportedValue, desiredV
 
 const commandHandler = async (request, response) => {
   switch (request.methodName) {
-  case commandMinMaxReport: {
+  case commandMaxMinReport: {
     console.log('MaxMinReport ' + request.payload);
-    await sendCommandResponse(request, response, 200, 'min/max response');
+    await sendCommandResponse(request, response, 200, deviceTemperatureSensor.getMaxMinReportObject());
     break;
   }
   default:
@@ -120,9 +157,11 @@ const attachExitHandler = async (deviceClient) => {
 
 async function sendTelemetry(deviceClient, index) {
   console.log('Sending telemetry message %d...', index);
-  currTemp = 1 + (Math.random() * 90);
-  const data = JSON.stringify({ temperature: currTemp });
-  const pnpMsg = new Message(data);
+  const pnpMsg = new Message(
+    JSON.stringify(
+      deviceTemperatureSensor.updateSensor().getCurrentTemperatureObject()
+    )
+  );
   pnpMsg.contentType = 'application/json';
   pnpMsg.contentEncoding = 'utf-8';
   await deviceClient.sendEvent(pnpMsg);
@@ -151,7 +190,7 @@ async function provisionDevice(payload) {
 async function main() {
   // If the user include a provision host then use DPS
   if (useDps === "DPS") {
-    await provisionDevice();
+    await provisionDevice(modelIdObject);
   }
 
   // fromConnectionString must specify a transport, coming from any transport package.
@@ -160,10 +199,10 @@ async function main() {
   let resultTwin;
   try {
     // Add the modelId here
-    await client.setOptions({ modelId: modelId });
+    await client.setOptions(modelIdObject);
     await client.open();
     console.log('Enabling the commands on the client');
-    client.onDeviceMethod(commandMinMaxReport, commandHandler);
+    client.onDeviceMethod(commandMaxMinReport, commandHandler);
 
     // Send Telemetry every 10 secs
     let index = 0;
@@ -180,7 +219,7 @@ async function main() {
       resultTwin = await client.getTwin();
       const patchRoot = createReportPropPatch({ serialNumber: deviceSerialNum });
       const patchThermostat = createReportPropPatch({
-        maxTempSinceLastReboot: maxTemp
+        maxTempSinceLastReboot: deviceTemperatureSensor.getMaxTemperatureValue()
       });
 
       // the below things can only happen once the twin is there
