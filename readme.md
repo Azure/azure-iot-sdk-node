@@ -27,7 +27,7 @@ We are running a survey through August 2020 to learn more about your IoT project
 
 The Azure IoT Node.js SDK enables developers to create IoT solutions written in Node.js for the Azure IoT platform. It is composed of the following client libraries:
 
-* **Device Client Library**: to connect devices and IoT Edge modules to Azure IoT Hub. [API Reference][node-api-device-reference] | [README](./doc/device_client.md)
+* **Device Client Library**: to connect devices and IoT Edge modules to Azure IoT Hub. [API Reference][node-api-device-reference] | [README](https://github.com/Azure/azure-iot-sdk-node/tree/master/device) | [Configuration Options](https://github.com/Azure/azure-iot-sdk-node/blob/master/doc/device-client.md)
   * **Note:** IoT Edge for Node.js is scoped to Linux containers & devices only. [Learn more](https://techcommunity.microsoft.com/t5/internet-of-things/linux-modules-with-azure-iot-edge-on-windows-10-iot-enterprise/ba-p/1407066) about using Linux containers for IoT edge on Windows devices.
 * **Service Client Library**: enables developing back-end applications making use of Azure IoT Hub. [API Reference][node-api-service-reference]
 * **Provisioning Device Client Library**: to connect devices to the Azure IoT Provisioning Service. [API Reference][node-api-prov-device-reference]
@@ -40,7 +40,7 @@ The Azure IoT Node.js SDK enables developers to create IoT solutions written in 
 
 # npm Package List
 
-**Azure IoT Hub [Device Client Libraries](./doc/device_client.md)**
+**Azure IoT Hub [Device Client Libraries](https://github.com/Azure/azure-iot-sdk-node/tree/master/device)**
 
 | Name            | npm package                                                                                                |
 |-----------------|------------------------------------------------------------------------------------------------------------|
@@ -49,7 +49,7 @@ The Azure IoT Node.js SDK enables developers to create IoT solutions written in 
 |  AMQP Transport | [![npm version](https://badge.fury.io/js/azure-iot-device-amqp.svg)](https://badge.fury.io/js/azure-iot-device-amqp) |
 |  HTTP Transport | [![npm version](https://badge.fury.io/js/azure-iot-device-http.svg)](https://badge.fury.io/js/azure-iot-device-http) |
 
-**Azure IoT Hub Service Client Libraries**
+**Azure IoT Hub [Service Client Libraries](https://github.com/Azure/azure-iot-sdk-node/tree/master/service)**
 
 | Name            | npm package                                                                                                |
 |-----------------|------------------------------------------------------------------------------------------------------------|
