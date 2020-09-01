@@ -4,25 +4,26 @@
 'use strict';
 
 const Protocol = require('azure-iot-device-mqtt').Mqtt;
-var ProvProtocol = require('azure-iot-provisioning-device-mqtt').Mqtt;
+const ProvProtocol = require('azure-iot-provisioning-device-mqtt').Mqtt;
 
 const Client = require('azure-iot-device').Client;
 const Message = require('azure-iot-device').Message;
+const ConnectionString = require('azure-iot-common').ConnectionString;
 const SymmetricKeySecurityClient = require('azure-iot-security-symmetric-key').SymmetricKeySecurityClient;
 const ProvisioningDeviceClient = require('azure-iot-provisioning-device').ProvisioningDeviceClient;
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  'HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>'
-var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
+let deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 
 // DPS connection information
-var provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT;
-var idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE;
-var registrationId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID;
-var symmetricKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY;
-var useDps = process.env.IOTHUB_DEVICE_SECURITY_TYPE;
+const provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT ||'global.azure-devices-provisioning.net';
+const idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE;
+const registrationId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID;
+const symmetricKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY;
+const useDps = process.env.IOTHUB_DEVICE_SECURITY_TYPE;
 
-const modelId = 'dtmi:com:example:TemperatureController;1';
+const modelIdObject = { modelId: 'dtmi:com:example:TemperatureController;1' };
 const messageSubjectProperty = '$.sub';
 const thermostat1ComponentName = 'thermostat1';
 const thermostat2ComponentName = 'thermostat2';
@@ -31,6 +32,47 @@ const commandComponentCommandNameSeparator = '*';
 let intervalToken1;
 let intervalToken2;
 let intervalToken3;
+
+class TemperatureSensor {
+  constructor() {
+    this.currTemp = 1 + (Math.random() * 90);
+    this.maxTemp = this.currTemp;
+    this.minTemp = this.currTemp;
+    this.cumulativeTemperature = this.currTemp;
+    this.startTime = (new Date(Date.now())).toISOString();
+    this.numberOfTemperatureReadings = 1;
+  }
+  getCurrentTemperatureObject() {
+    return { temperature: this.currTemp };
+  }
+  updateSensor() {
+    this.currTemp = 1 + (Math.random() * 90);
+    this.cumulativeTemperature += this.currTemp;
+    this.numberOfTemperatureReadings++;
+    if (this.currTemp > this.maxTemp) {
+      this.maxTemp = this.currTemp;
+    }
+    if (this.currTemp < this.minTemp) {
+      this.minTemp = this.currTemp;
+    }
+    return this;
+  }
+  getMaxMinReportObject() {
+    return {
+      maxTemp: this.maxTemp,
+      minTemp: this.minTemp,
+      avgTemp: this.cumulativeTemperature / this.numberOfTemperatureReadings,
+      endTime: (new Date(Date.now())).toISOString(),
+      startTime: this.startTime
+    };
+  }
+  getMaxTemperatureValue() {
+    return this.maxTemp;
+  }
+}
+
+const thermostat1 = new TemperatureSensor();
+const thermostat2 = new TemperatureSensor();
 
 const commandNameGetMaxMinReport1 = thermostat1ComponentName + commandComponentCommandNameSeparator + 'getMaxMinReport';
 const commandNameGetMaxMinReport2 = thermostat2ComponentName + commandComponentCommandNameSeparator + 'getMaxMinReport';
@@ -41,11 +83,11 @@ const commandHandler = async (request, response) => {
   helperLogCommandRequest(request);
   switch (request.methodName) {
   case commandNameGetMaxMinReport1: {
-    await sendCommandResponse(request, response, 200, 'max min report from thermostat 1');
+    await sendCommandResponse(request, response, 200, thermostat1.getMaxMinReportObject());
     break;
   }
   case commandNameGetMaxMinReport2: {
-    await sendCommandResponse(request, response, 200, 'max min report from thermostat 2');
+    await sendCommandResponse(request, response, 200, thermostat2.getMaxMinReportObject());
     break;
   }
   case commandNameReboot: {
@@ -68,7 +110,7 @@ const sendCommandResponse = async (request, response, status, payload) => {
 };
 
 const helperLogCommandRequest = (request) => {
-  console.log('Received command request for comand name: ' + request.methodName);
+  console.log('Received command request for command name: ' + request.methodName);
 
   if (!!(request.payload)) {
     console.log('The command request payload is:');
@@ -139,7 +181,7 @@ const desiredPropertyPatchListener = (deviceTwin, componentNames) => {
         patchForRoot[key] = propertyContent;
         updateComponentReportedProperties(deviceTwin, patchForRoot, null);
       }
-  });
+    });
   });
 };
 
@@ -168,13 +210,13 @@ async function sendTelemetry(deviceClient, data, index, componentName) {
   } else {
     console.log('Sending telemetry message %d from root interface', index);
   }
-  const pnpMsg = new Message(data);
+  const msg = new Message(data);
   if (!!(componentName)) {
-    pnpMsg.properties.add(messageSubjectProperty, componentName);
+    msg.properties.add(messageSubjectProperty, componentName);
   }
-  pnpMsg.contentType = 'application/json';
-  pnpMsg.contentEncoding = 'utf-8';
-  await deviceClient.sendEvent(pnpMsg);
+  msg.contentType = 'application/json';
+  msg.contentEncoding = 'utf-8';
+  await deviceClient.sendEvent(msg);
 }
 
 async function provisionDevice(payload) {
@@ -199,8 +241,21 @@ async function provisionDevice(payload) {
 
 async function main() {
   // If the user include a provision host then use DPS
-  if (useDps === "DPS") {
-    await provisionDevice();
+  if (useDps === 'DPS') {
+    await provisionDevice(modelIdObject);
+  } else if (useDps === 'connectionString') {
+    try {
+      if (!(deviceConnectionString && ConnectionString.parse(deviceConnectionString,['HostName','DeviceId']))) {
+        console.error('Connection string was not specified.');
+        process.exit(1);
+      }
+    } catch (err) {
+      console.error('Invalid connection string specified.');
+      process.exit(1);
+    }
+  } else {
+    console.log('No proper SECURITY TYPE provided.');
+    process.exit(1);
   }
 
   // fromConnectionString must specify a transport, coming from any transport package.
@@ -210,7 +265,7 @@ async function main() {
 
   try {
     // Add the modelId here
-    await client.setOptions({ modelId: modelId });
+    await client.setOptions(modelIdObject);
     await client.open();
     console.log('Enabling the commands on the client');
     client.onDeviceMethod(commandNameGetMaxMinReport1, commandHandler);
@@ -222,13 +277,13 @@ async function main() {
     let index2 = 0;
     let index3 = 0;
     intervalToken1 = setInterval(() => {
-      const data = JSON.stringify({ temperature: 1 + (Math.random() * 90) });
+      const data = JSON.stringify(thermostat1.updateSensor().getCurrentTemperatureObject());
       sendTelemetry(client, data, index1, thermostat1ComponentName).catch((err) => console.log('error ', err.toString()));
       index1 += 1;
     }, 5000);
 
     intervalToken2 = setInterval(() => {
-      const data = JSON.stringify({ temperature: 1 + (Math.random() * 90) });
+      const data = JSON.stringify(thermostat2.updateSensor().getCurrentTemperatureObject());
       sendTelemetry(client, data, index2, thermostat2ComponentName).catch((err) => console.log('error ', err.toString()));
       index2 += 1;
     }, 5500);
@@ -245,14 +300,14 @@ async function main() {
 
     try {
       resultTwin = await client.getTwin();
-      // Only report readable propertiess
+      // Only report readable properties
       const patchRoot = helperCreateReportedPropertiesPatch({ serialNumber: serialNumber }, null);
       const patchThermostat1Info = helperCreateReportedPropertiesPatch({
-        maxTempSinceLastReboot: 67.89,
+        maxTempSinceLastReboot: thermostat1.getMaxTemperatureValue(),
       }, thermostat1ComponentName);
 
       const patchThermostat2Info = helperCreateReportedPropertiesPatch({
-        maxTempSinceLastReboot: 98.65,
+        maxTempSinceLastReboot: thermostat2.getMaxTemperatureValue(),
       }, thermostat2ComponentName);
 
       const patchDeviceInfo = helperCreateReportedPropertiesPatch({
@@ -276,7 +331,7 @@ async function main() {
       console.error('could not retrieve twin or report twin properties\n' + err.toString());
     }
   } catch (err) {
-    console.error('could not connect pnp client or could not attach interval function for telemetry\n' + err.toString());
+    console.error('could not connect Plug and Play client or could not attach interval function for telemetry\n' + err.toString());
   }
 }
 
