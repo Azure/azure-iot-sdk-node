@@ -210,13 +210,13 @@ async function sendTelemetry(deviceClient, data, index, componentName) {
   } else {
     console.log('Sending telemetry message %d from root interface', index);
   }
-  const pnpMsg = new Message(data);
+  const msg = new Message(data);
   if (!!(componentName)) {
-    pnpMsg.properties.add(messageSubjectProperty, componentName);
+    msg.properties.add(messageSubjectProperty, componentName);
   }
-  pnpMsg.contentType = 'application/json';
-  pnpMsg.contentEncoding = 'utf-8';
-  await deviceClient.sendEvent(pnpMsg);
+  msg.contentType = 'application/json';
+  msg.contentEncoding = 'utf-8';
+  await deviceClient.sendEvent(msg);
 }
 
 async function provisionDevice(payload) {
@@ -331,7 +331,7 @@ async function main() {
       console.error('could not retrieve twin or report twin properties\n' + err.toString());
     }
   } catch (err) {
-    console.error('could not connect pnp client or could not attach interval function for telemetry\n' + err.toString());
+    console.error('could not connect Plug and Play client or could not attach interval function for telemetry\n' + err.toString());
   }
 }
 
