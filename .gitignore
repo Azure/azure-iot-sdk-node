@@ -231,6 +231,7 @@ security/tpm/dist
 security/symmetric/dist
 
 service/dist
+service/samples/typescript/dist
 
 ts-e2e/dist
 

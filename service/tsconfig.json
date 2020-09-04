@@ -6,13 +6,17 @@
         "declaration": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
-        "removeComments": false
+        "removeComments": false,
+        "lib": [
+            "es6", "dom"
+        ]
     },
     "include": [
         "./src/**/*.ts"
     ],
     "exclude": [
         "./dist",
+        "node_modules",
         "./samples"
     ]
 }

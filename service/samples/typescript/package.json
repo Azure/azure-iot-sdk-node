@@ -1,0 +1,24 @@
+{
+  "name": "service-samples-typescript",
+  "version": "0.0.1",
+  "private": true,
+  "main": "get_digital_twins.ts",
+  "author": "Microsoft Corp.",
+  "license": "MIT",
+  "dependencies": {
+    "azure-iothub": "1.12.5"
+  },
+  "devDependencies": {
+    "source-map-support": "^0.5.16",
+    "ts-node": "^8.6.2",
+    "tslint": "^6.1.0",
+    "typescript": "3.7.5"
+  },
+  "scripts": {
+    "prebuild": "npm run lint",
+    "build": "tsc -p .",
+    "lint": "tslint -c ../../../tslint.json --project tsconfig.json",
+    "npmlockrefresh": "npm i --package-lock-only",
+    "ci": "npm -s run lint && npm -s run build"
+  }
+}
