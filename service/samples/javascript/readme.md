@@ -57,6 +57,7 @@ set IOTHUB_CONNECTION_STRING=<your IoT Hub connection string>
 set IOTHUB_DEVICE_ID=<device id>
 set IOTHUB_PRIMARY_THUMBPRINT=<primary thumbprint>
 set IOTHUB_SECONDARY_THUMBPRINT=<secondary thumbprint>
+set IOTHUB_MODULE_ID=<module id>
 set IOTHUB_METHOD_NAME=<method name>
 set IOTHUB_METHOD_PAYLOAD=<method payload>
 set STORAGE_CONNECTION_STRING=<storage connection string>

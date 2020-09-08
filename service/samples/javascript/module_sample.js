@@ -6,8 +6,8 @@
 var iothub = require('azure-iothub');
 
 var connectionString = process.env.IOTHUB_CONNECTION_STRING;
-var deviceId = '[Device ID]';
-var moduleId = '[Module ID]';
+var deviceId = process.env.IOTHUB_DEVICE_ID;
+var moduleId = process.env.IOTHUB_MODULE_ID;
 
 var registry = iothub.Registry.fromConnectionString(connectionString);
 
