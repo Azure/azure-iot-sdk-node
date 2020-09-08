@@ -27,19 +27,19 @@ export class ConfigurationOperations {
   }
 
   /**
-   * @summary Retrieve a configuration for Iot Hub devices and modules by it identifier.
-   * @param id
+   * Gets a configuration on the IoT Hub for automatic device/module management.
+   * @param id The unique identifier of the configuration.
    * @param [options] The optional parameters
    * @returns Promise<Models.ConfigurationGetResponse>
    */
   get(id: string, options?: msRest.RequestOptionsBase): Promise<Models.ConfigurationGetResponse>;
   /**
-   * @param id
+   * @param id The unique identifier of the configuration.
    * @param callback The callback
    */
   get(id: string, callback: msRest.ServiceCallback<Models.Configuration>): void;
   /**
-   * @param id
+   * @param id The unique identifier of the configuration.
    * @param options The optional parameters
    * @param callback The callback
    */
@@ -55,24 +55,23 @@ export class ConfigurationOperations {
   }
 
   /**
-   * @summary Create or update the configuration for devices or modules of an IoT hub. An ETag must
-   * not be specified for the create operation. An ETag must be specified for the update operation.
-   * Note that configuration Id and Content cannot be updated by the user.
-   * @param id
-   * @param configuration
+   * Creates or updates a configuration on the IoT Hub for automatic device/module management.
+   * Configuration identifier and Content cannot be updated.
+   * @param id The unique identifier of the configuration.
+   * @param configuration The configuration to be created or updated.
    * @param [options] The optional parameters
    * @returns Promise<Models.ConfigurationCreateOrUpdateResponse>
    */
   createOrUpdate(id: string, configuration: Models.Configuration, options?: Models.ConfigurationCreateOrUpdateOptionalParams): Promise<Models.ConfigurationCreateOrUpdateResponse>;
   /**
-   * @param id
-   * @param configuration
+   * @param id The unique identifier of the configuration.
+   * @param configuration The configuration to be created or updated.
    * @param callback The callback
    */
   createOrUpdate(id: string, configuration: Models.Configuration, callback: msRest.ServiceCallback<Models.Configuration>): void;
   /**
-   * @param id
-   * @param configuration
+   * @param id The unique identifier of the configuration.
+   * @param configuration The configuration to be created or updated.
    * @param options The optional parameters
    * @param callback The callback
    */
@@ -89,25 +88,19 @@ export class ConfigurationOperations {
   }
 
   /**
-   * @summary Delete the configuration for devices or modules of an IoT hub. This request requires
-   * the If-Match header. The client may specify the ETag for the device identity on the request in
-   * order to compare to the ETag maintained by the service for the purpose of optimistic
-   * concurrency. The delete operation is performed only if the ETag sent by the client matches the
-   * value maintained by the server, indicating that the device identity has not been modified since
-   * it was retrieved by the client. To force an unconditional delete, set If-Match to the wildcard
-   * character (*).
-   * @param id
+   * Deletes a configuration on the IoT Hub for automatic device/module management.
+   * @param id The unique identifier of the configuration.
    * @param [options] The optional parameters
    * @returns Promise<msRest.RestResponse>
    */
   deleteMethod(id: string, options?: Models.ConfigurationDeleteMethodOptionalParams): Promise<msRest.RestResponse>;
   /**
-   * @param id
+   * @param id The unique identifier of the configuration.
    * @param callback The callback
    */
   deleteMethod(id: string, callback: msRest.ServiceCallback<void>): void;
   /**
-   * @param id
+   * @param id The unique identifier of the configuration.
    * @param options The optional parameters
    * @param callback The callback
    */
@@ -123,8 +116,8 @@ export class ConfigurationOperations {
   }
 
   /**
-   * @summary Get multiple configurations for devices or modules of an IoT Hub. Returns the specified
-   * number of configurations for Iot Hub. Pagination is not supported.
+   * Gets configurations on the IoT Hub for automatic device/module management. Pagination is not
+   * supported.
    * @param [options] The optional parameters
    * @returns Promise<Models.ConfigurationGetConfigurationsResponse>
    */
@@ -148,20 +141,19 @@ export class ConfigurationOperations {
   }
 
   /**
-   * Validates the target condition query and custom metric queries for a configuration.
-   * @summary Validates the target condition query and custom metric queries for a configuration.
-   * @param input
+   * Validates target condition and custom metric queries for a configuration on the IoT Hub.
+   * @param input The configuration for target condition and custom metric queries.
    * @param [options] The optional parameters
    * @returns Promise<Models.ConfigurationTestQueriesResponse>
    */
   testQueries(input: Models.ConfigurationQueriesTestInput, options?: msRest.RequestOptionsBase): Promise<Models.ConfigurationTestQueriesResponse>;
   /**
-   * @param input
+   * @param input The configuration for target condition and custom metric queries.
    * @param callback The callback
    */
   testQueries(input: Models.ConfigurationQueriesTestInput, callback: msRest.ServiceCallback<Models.ConfigurationQueriesTestResponse>): void;
   /**
-   * @param input
+   * @param input The configuration for target condition and custom metric queries.
    * @param options The optional parameters
    * @param callback The callback
    */
@@ -177,29 +169,27 @@ export class ConfigurationOperations {
   }
 
   /**
-   * Applies the provided configuration content to the specified edge device. Configuration content
-   * must have modules content
-   * @summary Applies the provided configuration content to the specified edge device.
-   * @param id Device ID.
-   * @param content Configuration Content.
+   * Applies the configuration content to an edge device.
+   * @param id The unique identifier of the edge device.
+   * @param content The configuration content.
    * @param [options] The optional parameters
-   * @returns Promise<Models.ConfigurationApplyOnEdgeDeviceResponse>
+   * @returns Promise<msRest.RestResponse>
    */
-  applyOnEdgeDevice(id: string, content: Models.ConfigurationContent, options?: msRest.RequestOptionsBase): Promise<Models.ConfigurationApplyOnEdgeDeviceResponse>;
+  applyOnEdgeDevice(id: string, content: Models.ConfigurationContent, options?: msRest.RequestOptionsBase): Promise<msRest.RestResponse>;
   /**
-   * @param id Device ID.
-   * @param content Configuration Content.
+   * @param id The unique identifier of the edge device.
+   * @param content The configuration content.
    * @param callback The callback
    */
-  applyOnEdgeDevice(id: string, content: Models.ConfigurationContent, callback: msRest.ServiceCallback<any>): void;
+  applyOnEdgeDevice(id: string, content: Models.ConfigurationContent, callback: msRest.ServiceCallback<void>): void;
   /**
-   * @param id Device ID.
-   * @param content Configuration Content.
+   * @param id The unique identifier of the edge device.
+   * @param content The configuration content.
    * @param options The optional parameters
    * @param callback The callback
    */
-  applyOnEdgeDevice(id: string, content: Models.ConfigurationContent, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<any>): void;
-  applyOnEdgeDevice(id: string, content: Models.ConfigurationContent, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<any>, callback?: msRest.ServiceCallback<any>): Promise<Models.ConfigurationApplyOnEdgeDeviceResponse> {
+  applyOnEdgeDevice(id: string, content: Models.ConfigurationContent, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<void>): void;
+  applyOnEdgeDevice(id: string, content: Models.ConfigurationContent, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<void>, callback?: msRest.ServiceCallback<void>): Promise<msRest.RestResponse> {
     return this.client.sendOperationRequest(
       {
         id,
@@ -207,7 +197,7 @@ export class ConfigurationOperations {
         options
       },
       applyOnEdgeDeviceOperationSpec,
-      callback) as Promise<Models.ConfigurationApplyOnEdgeDeviceResponse>;
+      callback);
   }
 }
 
@@ -347,14 +337,6 @@ const applyOnEdgeDeviceOperationSpec: msRest.OperationSpec = {
     }
   },
   responses: {
-    200: {
-      bodyMapper: {
-        serializedName: "parsedResponse",
-        type: {
-          name: "Object"
-        }
-      }
-    },
     204: {},
     default: {}
   },

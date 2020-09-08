@@ -7,8 +7,13 @@
  */
 
 export {
+  AuthenticationMechanism,
+  BulkRegistryOperationResult,
   DeviceCapabilities,
-  Twin,
-  TwinProperties,
+  DeviceRegistryOperationError,
+  DeviceRegistryOperationWarning,
+  ExportImportDevice,
+  PropertyContainer,
+  SymmetricKey,
   X509Thumbprint
 } from "../models/mappers";

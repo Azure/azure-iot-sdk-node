@@ -10,77 +10,84 @@ import { ServiceClientOptions } from "@azure/ms-rest-js";
 import * as msRest from "@azure/ms-rest-js";
 
 /**
- * Configuration Metrics
+ * The configuration metrics for Iot Hub devices and modules.
  */
 export interface ConfigurationMetrics {
+  /**
+   * The results of the metrics collection queries.
+   */
   results?: { [propertyName: string]: number };
+  /**
+   * The key-value pairs with queries and their identifier.
+   */
   queries?: { [propertyName: string]: string };
 }
 
 /**
- * Configuration Content for Devices or Modules on Edge Devices.
+ * The configuration content for devices or modules on edge devices.
  */
 export interface ConfigurationContent {
   /**
-   * Gets or sets device Configurations
+   * The device configuration content.
    */
   deviceContent?: { [propertyName: string]: any };
   /**
-   * Gets or sets Modules Configurations
+   * The modules configuration content.
    */
   modulesContent?: { [propertyName: string]: { [propertyName: string]: any } };
   /**
-   * Gets or sets Module Configurations
+   * The module configuration content.
    */
   moduleContent?: { [propertyName: string]: any };
 }
 
 /**
- * Configuration for IotHub devices and modules.
+ * The configuration for Iot Hub device and module twins.
  */
 export interface Configuration {
   /**
-   * Gets Identifier for the configuration
+   * The unique identifier of the configuration.
    */
   id?: string;
   /**
-   * Gets Schema version for the configuration
+   * The schema version of the configuration.
    */
   schemaVersion?: string;
   /**
-   * Gets or sets labels for the configuration
+   * The key-value pairs used to describe the configuration.
    */
   labels?: { [propertyName: string]: string };
   /**
-   * Gets or sets Content for the configuration
+   * The content of the configuration.
    */
   content?: ConfigurationContent;
   /**
-   * Gets or sets Target Condition for the configuration
+   * The query used to define the targeted devices or modules. The query is based on twin tags
+   * and/or reported properties.
    */
   targetCondition?: string;
   /**
-   * Gets creation time for the configuration
+   * The creation date and time of the configuration.
    */
   createdTimeUtc?: Date;
   /**
-   * Gets last update time for the configuration
+   * The update date and time of the configuration.
    */
   lastUpdatedTimeUtc?: Date;
   /**
-   * Gets or sets Priority for the configuration
+   * The priority number assigned to the configuration.
    */
   priority?: number;
   /**
-   * System Configuration Metrics
+   * The system metrics computed by the IoT Hub that cannot be customized.
    */
   systemMetrics?: ConfigurationMetrics;
   /**
-   * Custom Configuration Metrics
+   * The custom metrics specified by the developer as queries against twin reported properties.
    */
   metrics?: ConfigurationMetrics;
   /**
-   * Gets or sets configuration's ETag
+   * The ETag of the configuration.
    */
   etag?: string;
 }
@@ -89,7 +96,14 @@ export interface Configuration {
  * An interface representing ConfigurationQueriesTestInput.
  */
 export interface ConfigurationQueriesTestInput {
+  /**
+   * The query used to define targeted devices or modules. The query is based on twin tags and/or
+   * reported properties.
+   */
   targetCondition?: string;
+  /**
+   * The key-value pairs with queries and their identifier.
+   */
   customMetricQueries?: { [propertyName: string]: string };
 }
 
@@ -97,7 +111,13 @@ export interface ConfigurationQueriesTestInput {
  * An interface representing ConfigurationQueriesTestResponse.
  */
 export interface ConfigurationQueriesTestResponse {
+  /**
+   * The errors from running the target condition query.
+   */
   targetConditionError?: string;
+  /**
+   * The errors from running the custom metric query.
+   */
   customMetricQueryErrors?: { [propertyName: string]: string };
 }
 
@@ -105,8 +125,17 @@ export interface ConfigurationQueriesTestResponse {
  * An interface representing RegistryStatistics.
  */
 export interface RegistryStatistics {
+  /**
+   * The total number of devices registered for the IoT Hub.
+   */
   totalDeviceCount?: number;
+  /**
+   * The number of currently enabled devices.
+   */
   enabledDeviceCount?: number;
+  /**
+   * The number of currently disabled devices.
+   */
   disabledDeviceCount?: number;
 }
 
@@ -114,6 +143,9 @@ export interface RegistryStatistics {
  * An interface representing ServiceStatistics.
  */
 export interface ServiceStatistics {
+  /**
+   * The number of currently connected devices.
+   */
   connectedDeviceCount?: number;
 }
 
@@ -121,7 +153,13 @@ export interface ServiceStatistics {
  * An interface representing SymmetricKey.
  */
 export interface SymmetricKey {
+  /**
+   * The base64 encoded primary key of the device.
+   */
   primaryKey?: string;
+  /**
+   * The base64 encoded secondary key of the device.
+   */
   secondaryKey?: string;
 }
 
@@ -129,7 +167,13 @@ export interface SymmetricKey {
  * An interface representing X509Thumbprint.
  */
 export interface X509Thumbprint {
+  /**
+   * The X509 client certificate primary thumbprint.
+   */
   primaryThumbprint?: string;
+  /**
+   * The X509 client certificate secondary thumbprint.
+   */
   secondaryThumbprint?: string;
 }
 
@@ -137,18 +181,28 @@ export interface X509Thumbprint {
  * An interface representing AuthenticationMechanism.
  */
 export interface AuthenticationMechanism {
+  /**
+   * The primary and secondary keys used for SAS based authentication.
+   */
   symmetricKey?: SymmetricKey;
+  /**
+   * The primary and secondary x509 thumbprints used for x509 based authentication.
+   */
   x509Thumbprint?: X509Thumbprint;
   /**
-   * Possible values include: 'sas', 'selfSigned', 'certificateAuthority', 'none'
+   * The type of authentication used to connect to the service. Possible values include: 'sas',
+   * 'selfSigned', 'certificateAuthority', 'none'
    */
   type?: Type;
 }
 
 /**
- * Status of Capabilities enabled on the device
+ * The status of capabilities enabled on the device.
  */
 export interface DeviceCapabilities {
+  /**
+   * The property that determines if the device is an edge device or not.
+   */
   iotEdge?: boolean;
 }
 
@@ -156,42 +210,84 @@ export interface DeviceCapabilities {
  * An interface representing Device.
  */
 export interface Device {
+  /**
+   * The unique identifier of the device.
+   */
   deviceId?: string;
+  /**
+   * The IoT Hub-generated, case-sensitive string up to 128 characters long. This value is used to
+   * distinguish devices with the same deviceId, when they have been deleted and re-created.
+   */
   generationId?: string;
+  /**
+   * The string representing a weak ETag for the device identity, as per RFC7232.
+   */
   etag?: string;
   /**
-   * Possible values include: 'Disconnected', 'Connected'
+   * The state of the device. Possible values include: 'Disconnected', 'Connected'
    */
   connectionState?: ConnectionState;
   /**
+   * The status of the device. If the status disabled, a device cannot connect to the service.
    * Possible values include: 'enabled', 'disabled'
    */
   status?: Status;
+  /**
+   * The 128 character-long string that stores the reason for the device identity status. All UTF-8
+   * characters are allowed.
+   */
   statusReason?: string;
+  /**
+   * The date and time the connection state was last updated.
+   */
   connectionStateUpdatedTime?: Date;
+  /**
+   * The date and time when the status field was last updated.
+   */
   statusUpdatedTime?: Date;
+  /**
+   * The date and last time the device last connected, received, or sent a message.
+   */
   lastActivityTime?: Date;
+  /**
+   * The number of cloud-to-device messages currently queued to be sent to the device.
+   */
   cloudToDeviceMessageCount?: number;
+  /**
+   * The authentication mechanism used by the device.
+   */
   authentication?: AuthenticationMechanism;
+  /**
+   * The set of capabilities of the device. For example, if this device is an edge device or not.
+   */
   capabilities?: DeviceCapabilities;
+  /**
+   * The scope of the device. Auto generated and immutable for edge devices and modifiable in leaf
+   * devices to create child/parent relationship.
+   */
   deviceScope?: string;
+  /**
+   * The scopes of the upper level edge devices if applicable. Only available for edge devices.
+   */
   parentScopes?: string[];
 }
 
 /**
- * Represents Twin properties
+ * The desired and reported properties of the twin. The maximum depth of the object is 10.
  */
 export interface PropertyContainer {
   /**
-   * Used in conjunction with reported properties to synchronize device configuration or condition.
-   * Desired properties can only be set by the solution back end and can be read by the device app.
-   * The device app can also be notified in real time of changes on the desired properties.
+   * The collection of desired property key-value pairs. The keys are UTF-8 encoded, case-sensitive
+   * and up-to 1KB in length. Allowed characters exclude UNICODE control characters (segments C0
+   * and C1), '.', '$' and space. The desired porperty values are JSON objects, up-to 4KB in
+   * length.
    */
   desired?: { [propertyName: string]: any };
   /**
-   * Used in conjunction with desired properties to synchronize device configuration or condition.
-   * Reported properties can only be set by the device app and can be read and queried by the
-   * solution back end.
+   * The collection of reported property key-value pairs. The keys are UTF-8 encoded,
+   * case-sensitive and up-to 1KB in length. Allowed characters exclude UNICODE control characters
+   * (segments C0 and C1), '.', '$' and space. The reported property values are JSON objects, up-to
+   * 4KB in length.
    */
   reported?: { [propertyName: string]: any };
 }
@@ -201,91 +297,108 @@ export interface PropertyContainer {
  */
 export interface ExportImportDevice {
   /**
-   * Device Id is always required
+   * The unique identifier of the device.
    */
   id?: string;
   /**
-   * ModuleId is applicable to modules only
+   * The unique identifier of the module, if applicable.
    */
   moduleId?: string;
   /**
-   * ETag parameter is only used for pre-conditioning the update when importMode is
-   * updateIfMatchETag
+   * The string representing a weak ETag for the device RFC7232. The value is only used if import
+   * mode is updateIfMatchETag, in that case the import operation is performed only if this ETag
+   * matches the value maintained by the server.
    */
   eTag?: string;
   /**
-   * Possible values include: 'create', 'update', 'updateIfMatchETag', 'delete',
-   * 'deleteIfMatchETag', 'updateTwin', 'updateTwinIfMatchETag'
+   * The type of registry operation and ETag preferences. Possible values include: 'create',
+   * 'update', 'updateIfMatchETag', 'delete', 'deleteIfMatchETag', 'updateTwin',
+   * 'updateTwinIfMatchETag'
    */
   importMode?: ImportMode;
   /**
-   * Status is optional and defaults to enabled. Possible values include: 'enabled', 'disabled'
+   * The status of the module. If disabled, the module cannot connect to the service. Possible
+   * values include: 'enabled', 'disabled'
    */
   status?: Status1;
+  /**
+   * The 128 character-long string that stores the reason for the device identity status. All UTF-8
+   * characters are allowed.
+   */
   statusReason?: string;
   /**
-   * Authentication parameter is optional and defaults to SAS if not provided. In that case, we
-   * auto-generate primary/secondary access keys
+   * The authentication mechanism used by the module. This parameter is optional and defaults to
+   * SAS if not provided. In that case, primary/secondary access keys are auto-generated.
    */
   authentication?: AuthenticationMechanism;
   /**
-   * twinETag parameter is only used for pre-conditioning the update when importMode is
-   * updateTwinIfMatchETag
+   * The string representing a weak ETag for the device twin RFC7232. The value is only used if
+   * import mode is updateIfMatchETag, in that case the import operation is performed only if this
+   * ETag matches the value maintained by the server.
    */
   twinETag?: string;
+  /**
+   * The JSON document read and written by the solution back end. The tags are not visible to
+   * device apps.
+   */
   tags?: { [propertyName: string]: any };
   /**
-   * Properties are optional and defaults to empty object
+   * The desired and reported properties for the device.
    */
   properties?: PropertyContainer;
   /**
-   * Capabilities param is optional and defaults to no capability
+   * The status of capabilities enabled on the device.
    */
   capabilities?: DeviceCapabilities;
+  /**
+   * The scope of the device.
+   */
   deviceScope?: string;
+  /**
+   * The scopes of the upper level edge devices if applicable. Only available for edge devices.
+   */
   parentScopes?: string[];
 }
 
 /**
- * Encapsulates device registry operation error details.
+ * The device registry operation error details.
  */
 export interface DeviceRegistryOperationError {
   /**
-   * The ID of the device that indicated the error.
+   * The unique identifier of the device.
    */
   deviceId?: string;
   /**
-   * ErrorCode associated with the error. Possible values include: 'InvalidErrorCode',
-   * 'GenericBadRequest', 'InvalidProtocolVersion', 'DeviceInvalidResultCount', 'InvalidOperation',
-   * 'ArgumentInvalid', 'ArgumentNull', 'IotHubFormatError',
-   * 'DeviceStorageEntitySerializationError', 'BlobContainerValidationError',
-   * 'ImportWarningExistsError', 'InvalidSchemaVersion', 'DeviceDefinedMultipleTimes',
-   * 'DeserializationError', 'BulkRegistryOperationFailure', 'DefaultStorageEndpointNotConfigured',
-   * 'InvalidFileUploadCorrelationId', 'ExpiredFileUploadCorrelationId', 'InvalidStorageEndpoint',
-   * 'InvalidMessagingEndpoint', 'InvalidFileUploadCompletionStatus',
-   * 'InvalidStorageEndpointOrBlob', 'RequestCanceled', 'InvalidStorageEndpointProperty',
-   * 'EtagDoesNotMatch', 'RequestTimedOut', 'UnsupportedOperationOnReplica', 'NullMessage',
-   * 'ConnectionForcefullyClosedOnNewConnection', 'InvalidDeviceScope',
-   * 'ConnectionForcefullyClosedOnFaultInjection', 'ConnectionRejectedOnFaultInjection',
-   * 'InvalidEndpointAuthenticationType', 'ManagedIdentityNotEnabled', 'InvalidRouteTestInput',
-   * 'InvalidSourceOnRoute', 'RoutingNotEnabled', 'InvalidContentEncodingOrType',
-   * 'InvalidEndorsementKey', 'InvalidRegistrationId', 'InvalidStorageRootKey',
-   * 'InvalidEnrollmentGroupId', 'TooManyEnrollments', 'RegistrationIdDefinedMultipleTimes',
-   * 'CustomAllocationFailed', 'CustomAllocationIotHubNotSpecified',
-   * 'CustomAllocationUnauthorizedAccess', 'CannotRegisterModuleToModule',
-   * 'TenantHubRoutingNotEnabled', 'InvalidConfigurationTargetCondition',
-   * 'InvalidConfigurationContent', 'CannotModifyImmutableConfigurationContent',
-   * 'InvalidConfigurationCustomMetricsQuery', 'InvalidPnPInterfaceDefinition',
-   * 'InvalidPnPDesiredProperties', 'InvalidPnPReportedProperties',
-   * 'InvalidPnPWritableReportedProperties', 'InvalidDigitalTwinJsonPatch',
-   * 'InvalidDigitalTwinPayload', 'InvalidDigitalTwinPatch', 'InvalidDigitalTwinPatchPath',
-   * 'GenericUnauthorized', 'IotHubNotFound', 'IotHubUnauthorizedAccess', 'IotHubUnauthorized',
-   * 'ElasticPoolNotFound', 'SystemModuleModifyUnauthorizedAccess', 'GenericForbidden',
-   * 'IotHubSuspended', 'IotHubQuotaExceeded', 'JobQuotaExceeded',
-   * 'DeviceMaximumQueueDepthExceeded', 'IotHubMaxCbsTokenExceeded',
-   * 'DeviceMaximumActiveFileUploadLimitExceeded', 'DeviceMaximumQueueSizeExceeded',
-   * 'RoutingEndpointResponseForbidden', 'InvalidMessageExpiryTime',
-   * 'OperationNotAvailableInCurrentTier', 'KeyEncryptionKeyRevoked',
+   * The error code. Possible values include: 'InvalidErrorCode', 'GenericBadRequest',
+   * 'InvalidProtocolVersion', 'DeviceInvalidResultCount', 'InvalidOperation', 'ArgumentInvalid',
+   * 'ArgumentNull', 'IotHubFormatError', 'DeviceStorageEntitySerializationError',
+   * 'BlobContainerValidationError', 'ImportWarningExistsError', 'InvalidSchemaVersion',
+   * 'DeviceDefinedMultipleTimes', 'DeserializationError', 'BulkRegistryOperationFailure',
+   * 'DefaultStorageEndpointNotConfigured', 'InvalidFileUploadCorrelationId',
+   * 'ExpiredFileUploadCorrelationId', 'InvalidStorageEndpoint', 'InvalidMessagingEndpoint',
+   * 'InvalidFileUploadCompletionStatus', 'InvalidStorageEndpointOrBlob', 'RequestCanceled',
+   * 'InvalidStorageEndpointProperty', 'EtagDoesNotMatch', 'RequestTimedOut',
+   * 'UnsupportedOperationOnReplica', 'NullMessage', 'ConnectionForcefullyClosedOnNewConnection',
+   * 'InvalidDeviceScope', 'ConnectionForcefullyClosedOnFaultInjection',
+   * 'ConnectionRejectedOnFaultInjection', 'InvalidEndpointAuthenticationType',
+   * 'ManagedIdentityNotEnabled', 'InvalidRouteTestInput', 'InvalidSourceOnRoute',
+   * 'RoutingNotEnabled', 'InvalidContentEncodingOrType', 'InvalidEndorsementKey',
+   * 'InvalidRegistrationId', 'InvalidStorageRootKey', 'InvalidEnrollmentGroupId',
+   * 'TooManyEnrollments', 'RegistrationIdDefinedMultipleTimes', 'CustomAllocationFailed',
+   * 'CustomAllocationIotHubNotSpecified', 'CustomAllocationUnauthorizedAccess',
+   * 'CannotRegisterModuleToModule', 'TenantHubRoutingNotEnabled',
+   * 'InvalidConfigurationTargetCondition', 'InvalidConfigurationContent',
+   * 'CannotModifyImmutableConfigurationContent', 'InvalidConfigurationCustomMetricsQuery',
+   * 'InvalidPnPInterfaceDefinition', 'InvalidPnPDesiredProperties',
+   * 'InvalidPnPReportedProperties', 'InvalidPnPWritableReportedProperties',
+   * 'InvalidDigitalTwinJsonPatch', 'InvalidDigitalTwinPayload', 'InvalidDigitalTwinPatch',
+   * 'InvalidDigitalTwinPatchPath', 'GenericUnauthorized', 'IotHubNotFound',
+   * 'IotHubUnauthorizedAccess', 'IotHubUnauthorized', 'ElasticPoolNotFound',
+   * 'SystemModuleModifyUnauthorizedAccess', 'GenericForbidden', 'IotHubSuspended',
+   * 'IotHubQuotaExceeded', 'JobQuotaExceeded', 'DeviceMaximumQueueDepthExceeded',
+   * 'IotHubMaxCbsTokenExceeded', 'DeviceMaximumActiveFileUploadLimitExceeded',
+   * 'DeviceMaximumQueueSizeExceeded', 'RoutingEndpointResponseForbidden',
+   * 'InvalidMessageExpiryTime', 'OperationNotAvailableInCurrentTier', 'KeyEncryptionKeyRevoked',
    * 'DeviceModelMaxPropertiesExceeded', 'DeviceModelMaxIndexablePropertiesExceeded',
    * 'IotDpsSuspended', 'IotDpsSuspending', 'GenericNotFound', 'DeviceNotFound', 'JobNotFound',
    * 'QuotaMetricNotFound', 'SystemPropertyNotFound', 'AmqpAddressNotFound',
@@ -334,151 +447,172 @@ export interface DeviceRegistryOperationError {
    */
   errorCode?: ErrorCode;
   /**
-   * Additional details associated with the error.
+   * The details of the error.
    */
   errorStatus?: string;
+  /**
+   * The unique identifier of the module, if applicable.
+   */
   moduleId?: string;
+  /**
+   * The type of the operation that failed.
+   */
   operation?: string;
 }
 
 /**
- * Encapsulates device registry operation error details.
+ * The device registry operation warning details.
  */
 export interface DeviceRegistryOperationWarning {
   /**
-   * The ID of the device that indicated the warning.
+   * The unique identifier of the device.
    */
   deviceId?: string;
   /**
-   * Possible values include: 'DeviceRegisteredWithoutTwin'
+   * The warning code. Possible values include: 'DeviceRegisteredWithoutTwin'
    */
   warningCode?: WarningCode;
   /**
-   * Additional details associated with the warning.
+   * The details of the warning.
    */
   warningStatus?: string;
 }
 
 /**
- * Encapsulates the result of a bulk registry operation.
+ * The result of the bulk registry operation.
  */
 export interface BulkRegistryOperationResult {
   /**
-   * Whether or not the operation was successful.
+   * The operation result.
    */
   isSuccessful?: boolean;
   /**
-   * If the operation was not successful, this contains an array of DeviceRegistryOperationError
-   * objects.
+   * The device registry operation errors.
    */
   errors?: DeviceRegistryOperationError[];
   /**
-   * If the operation was partially successful, this contains an array of
-   * DeviceRegistryOperationWarning objects.
+   * The device registry operation warnings.
    */
   warnings?: DeviceRegistryOperationWarning[];
 }
 
 /**
- * A Json query request
+ * The Json query request.
  */
 export interface QuerySpecification {
   /**
-   * The query.
+   * The query string.
    */
   query?: string;
 }
 
 /**
- * Represents Twin properties
+ * The desired and reported properties of the twin. The maximum depth of the object is 10.
  */
 export interface TwinProperties {
   /**
-   * Used in conjunction with reported properties to synchronize device configuration or condition.
-   * Desired properties can only be set by the solution back end and can be read by the device app.
-   * The device app can also be notified in real time of changes on the desired properties.
+   * The collection of desired property key-value pairs. The keys are UTF-8 encoded, case-sensitive
+   * and up-to 1KB in length. Allowed characters exclude UNICODE control characters (segments C0
+   * and C1), '.', '$' and space. The desired porperty values are JSON objects, up-to 4KB in
+   * length.
    */
   desired?: { [propertyName: string]: any };
   /**
-   * Used in conjunction with desired properties to synchronize device configuration or condition.
-   * Reported properties can only be set by the device app and can be read and queried by the
-   * solution back end.
+   * The collection of reported property key-value pairs. The keys are UTF-8 encoded,
+   * case-sensitive and up-to 1KB in length. Allowed characters exclude UNICODE control characters
+   * (segments C0 and C1), '.', '$' and space. The reported property values are JSON objects, up-to
+   * 4KB in length.
    */
   reported?: { [propertyName: string]: any };
 }
 
 /**
- * Twin Representation
+ * The state information for a device or module. This is implicitly created and deleted when the
+ * corresponding device/ module identity is created or deleted in the IoT Hub.
  */
 export interface Twin {
   /**
-   * The deviceId uniquely identifies the device in the IoT hub's identity registry. A
-   * case-sensitive string (up to 128 char long) of ASCII 7-bit alphanumeric chars + {'-', ':',
-   * '.', '+', '%', '_', '#', '*', '?', '!', '(', ')', ',', '=', '@', ';', '$', '''}.
+   * The unique identifier of the device in the identity registry of the IoT Hub. It is a
+   * case-sensitive string (up to 128 char long) of ASCII 7-bit alphanumeric chars, and the
+   * following special characters {'-', ':', '.', '+', '%', '_', '#', '*', '?', '!', '(', ')', ',',
+   * '=', '@', ';', '$', '''}.
    */
   deviceId?: string;
   /**
-   * Gets and sets the Module Id.
+   * The unique identifier of the module in the identity registry of the IoT Hub. It is a
+   * case-sensitive string (up to 128 char long) of ASCII 7-bit alphanumeric chars, and the
+   * following special characters {'-', ':', '.', '+', '%', '_', '#', '*', '?', '!', '(', ')', ',',
+   * '=', '@', ';', '$', '''}.
    */
   moduleId?: string;
   /**
-   * A JSON document read and written by the solution back end. Tags are not visible to device
-   * apps.
+   * The collection of key-value pairs read and written by the solution back end. They are not
+   * visible to device apps. They keys are UTF-8 encoded, case-sensitive and up-to 1KB in length.
+   * Allowed characters exclude UNICODE control characters (segments C0 and C1), '.', '$' and
+   * space. The values are JSON objects, up-to 4KB in length.
    */
   tags?: { [propertyName: string]: any };
   /**
-   * Gets and sets the Twin properties.
+   * The desired and reported properties of the twin.
    */
   properties?: TwinProperties;
   /**
-   * Twin's ETag
+   * The string representing a ETag for the device twin, as per RFC7232.
    */
   etag?: string;
   /**
-   * Version for device twin, including tags and desired properties
+   * The version for the device twin including tags and desired properties
    */
   version?: number;
   /**
-   * Device's ETag
+   * The string representing a ETag for the device, as per RFC7232.
    */
   deviceEtag?: string;
   /**
-   * Gets the corresponding Device's Status. Possible values include: 'enabled', 'disabled'
+   * The enabled status of the device. If disabled, the device cannot connect to the service.
+   * Possible values include: 'enabled', 'disabled'
    */
   status?: Status2;
   /**
-   * Reason, if any, for the corresponding Device to be in specified Status
+   * The reason for the current status of the device, if any.
    */
   statusReason?: string;
   /**
-   * Time when the corresponding Device's Status was last updated
+   * The date and time when the status of the device was last updated.
    */
   statusUpdateTime?: Date;
   /**
-   * Corresponding Device's ConnectionState. Possible values include: 'Disconnected', 'Connected'
+   * The connection state of the device. Possible values include: 'Disconnected', 'Connected'
    */
   connectionState?: ConnectionState1;
   /**
-   * The last time the device connected, received or sent a message. In ISO8601 datetime format in
-   * UTC, for example, 2015-01-28T16:24:48.789Z. This does not update if the device uses the HTTP/1
-   * protocol to perform messaging operations.
+   * The date and time when the device last connected or received or sent a message. The date and
+   * time is sepecified in ISO8601 datetime format in UTC, for example, 2015-01-28T16:24:48.789Z.
+   * This value is not updated if the device uses the HTTP/1 protocol to perform messaging
+   * operations.
    */
   lastActivityTime?: Date;
   /**
-   * Number of messages sent to the corresponding Device from the Cloud
+   * The number of cloud-to-device messages sent.
    */
   cloudToDeviceMessageCount?: number;
   /**
-   * Corresponding Device's authentication type. Possible values include: 'sas', 'selfSigned',
+   * The authentication type used by the device. Possible values include: 'sas', 'selfSigned',
    * 'certificateAuthority', 'none'
    */
   authenticationType?: AuthenticationType;
   /**
-   * Corresponding Device's X509 thumbprint
+   * The X509 thumbprint of the device.
    */
   x509Thumbprint?: X509Thumbprint;
   capabilities?: DeviceCapabilities;
+  /**
+   * The scope of the device.
+   */
   deviceScope?: string;
+  /**
+   * The scopes of the upper level edge devices if applicable. Only available for edge devices.
+   */
   parentScopes?: string[];
 }
 
@@ -487,123 +621,102 @@ export interface Twin {
  */
 export interface JobProperties {
   /**
-   * System generated.  Ignored at creation.
+   * The unique identifier of the job.
    */
   jobId?: string;
   /**
-   * System generated.  Ignored at creation.
+   * System generated. Ignored at creation. The start date and time of the job in UTC.
    */
   startTimeUtc?: Date;
   /**
-   * System generated.  Ignored at creation.
-   * Represents the time the job stopped processing.
+   * System generated. Ignored at creation. The end date and time of the job in UTC.
    */
   endTimeUtc?: Date;
   /**
-   * Required.
-   * The type of job to execute. Possible values include: 'unknown', 'export', 'import', 'backup',
+   * The job type. Possible values include: 'unknown', 'export', 'import', 'backup',
    * 'readDeviceProperties', 'writeDeviceProperties', 'updateDeviceConfiguration', 'rebootDevice',
    * 'factoryResetDevice', 'firmwareUpdate', 'scheduleDeviceMethod', 'scheduleUpdateTwin',
    * 'restoreFromBackup', 'failoverDataCopy'
    */
   type?: Type1;
   /**
-   * System generated.  Ignored at creation. Possible values include: 'unknown', 'enqueued',
-   * 'running', 'completed', 'failed', 'cancelled', 'scheduled', 'queued'
+   * System generated. Ignored at creation. The status of the job. Possible values include:
+   * 'unknown', 'enqueued', 'running', 'completed', 'failed', 'cancelled', 'scheduled', 'queued'
    */
   status?: Status3;
   /**
-   * System generated.  Ignored at creation.
-   * Represents the percentage of completion.
+   * System generated. Ignored at creation. The percentage of job completion.
    */
   progress?: number;
   /**
-   * URI containing SAS token to a blob container that contains registry data to sync.
+   * The URI containing SAS token to a blob container that contains registry data to sync.
    */
   inputBlobContainerUri?: string;
   /**
-   * The blob name to be used when importing from the provided input blob container.
+   * The blob name to use when importing from the input blob container.
    */
   inputBlobName?: string;
   /**
-   * URI containing SAS token to a blob container.  This is used to output the status of the job
-   * and the results.
+   * The SAS token to access the blob container. This is used to output the status and results of
+   * the job.
    */
   outputBlobContainerUri?: string;
   /**
-   * The name of the blob that will be created in the provided output blob container.  This blob
-   * will contain
-   * the exported device registry information for the IoT Hub.
+   * The blob name that will be created in the output blob container. This blob will contain the
+   * exported device registry information for the IoT Hub.
    */
   outputBlobName?: string;
   /**
-   * Optional for export jobs; ignored for other jobs.  Default: false.  If false, authorization
-   * keys are included
-   * in export output.  Keys are exported as null otherwise.
+   * Optional for export jobs; ignored for other jobs. If not specified, the service defaults to
+   * false. If false, authorization keys are included in export output. Keys are exported as null
+   * otherwise.
    */
   excludeKeysInExport?: boolean;
   /**
-   * Specifies authentication type being used for connecting to storage account. Possible values
-   * include: 'keyBased', 'identityBased'
+   * The authentication type used for connecting to the storage account. Possible values include:
+   * 'keyBased', 'identityBased'
    */
   storageAuthenticationType?: StorageAuthenticationType;
   /**
-   * System genereated.  Ignored at creation.
-   * If status == failure, this represents a string containing the reason.
+   * System genereated.  Ignored at creation. The reason for failure, if a failure occurred.
    */
   failureReason?: string;
+  /**
+   * Defaults to false. If true, then configurations are included in the data export/import.
+   */
   includeConfigurations?: boolean;
+  /**
+   * Defaults to configurations.txt. Specifies the name of the blob to use when exporting/importing
+   * configurations.
+   */
   configurationsBlobName?: string;
 }
 
 /**
- * Result of a device message queue purge operation.
+ * The result of a device message queue purge operation.
  */
 export interface PurgeMessageQueueResult {
   totalMessagesPurged?: number;
   /**
-   * The ID of the device whose messages are being purged.
+   * The unique identifier of the device.
    */
   deviceId?: string;
   /**
-   * The ID of the device whose messages are being purged.
+   * The unique identifier of the module.
    */
   moduleId?: string;
 }
 
 /**
- * An interface representing FaultInjectionConnectionProperties.
- */
-export interface FaultInjectionConnectionProperties {
-  /**
-   * Possible values include: 'None', 'CloseAll', 'Periodic'
-   */
-  action?: Action;
-  blockDurationInMinutes?: number;
-}
-
-/**
- * An interface representing FaultInjectionProperties.
- */
-export interface FaultInjectionProperties {
-  iotHubName?: string;
-  connection?: FaultInjectionConnectionProperties;
-  /**
-   * Service generated.
-   */
-  lastUpdatedTimeUtc?: Date;
-}
-
-/**
- * Parameters to execute a direct method on the device
+ * The parameters to execute a direct method on the device.
  */
 export interface CloudToDeviceMethod {
   /**
-   * Method to run
+   * The name of the method to execute.
    */
   methodName?: string;
   /**
-   * Payload
+   * The JSON-formatted direct method payload, up to 128kb in size.
    */
   payload?: any;
   responseTimeoutInSeconds?: number;
@@ -615,60 +728,58 @@ export interface CloudToDeviceMethod {
  */
 export interface JobRequest {
   /**
-   * Job identifier
+   * The unique identifier of the job.
    */
   jobId?: string;
   /**
-   * Required.
-   * The type of job to execute. Possible values include: 'unknown', 'export', 'import', 'backup',
+   * The job type. Possible values include: 'unknown', 'export', 'import', 'backup',
    * 'readDeviceProperties', 'writeDeviceProperties', 'updateDeviceConfiguration', 'rebootDevice',
    * 'factoryResetDevice', 'firmwareUpdate', 'scheduleDeviceMethod', 'scheduleUpdateTwin',
    * 'restoreFromBackup', 'failoverDataCopy'
    */
   type?: Type2;
   /**
-   * Required if jobType is cloudToDeviceMethod.
-   * The method type and parameters.
+   * The method type and parameters. This is required if the job type is cloudToDeviceMethod.
    */
   cloudToDeviceMethod?: CloudToDeviceMethod;
   updateTwin?: Twin;
   /**
-   * Required if jobType is updateTwin or cloudToDeviceMethod.
-   * Condition for device query to get devices to execute the job on
+   * The condition for devices to execute the job. This is required if the job type is updateTwin
+   * or cloudToDeviceMethod.
    */
   queryCondition?: string;
   /**
-   * ISO 8601 date time to start the job
+   * The start date and time of the job in ISO 8601 standard.
    */
   startTime?: Date;
   /**
-   * Max execution time in secounds (ttl duration)
+   * The maximum execution time in secounds.
    */
   maxExecutionTimeInSeconds?: number;
 }
 
 /**
- * The job counts, e.g., number of failed/succeeded devices
+ * The job statistics regarding execution status.
  */
 export interface DeviceJobStatistics {
   /**
-   * Number of devices in the job
+   * The number of devices targeted by the job.
    */
   deviceCount?: number;
   /**
-   * The number of failed jobs
+   * The number of failed jobs.
    */
   failedCount?: number;
   /**
-   * The number of Successed jobs
+   * The number of succeeded jobs.
    */
   succeededCount?: number;
   /**
-   * The number of running jobs
+   * The number of running jobs.
    */
   runningCount?: number;
   /**
-   * The number of pending (scheduled) jobs
+   * The number of pending (scheduled) jobs.
    */
   pendingCount?: number;
 }
@@ -678,60 +789,56 @@ export interface DeviceJobStatistics {
  */
 export interface JobResponse {
   /**
-   * System generated.  Ignored at creation.
+   * System generated.  Ignored at creation. The unique identifier of the job.
    */
   jobId?: string;
   /**
-   * Device query condition.
+   * The device query condition.
    */
   queryCondition?: string;
   /**
-   * System generated.  Ignored at creation.
+   * System generated.  Ignored at creation. The creation date and time of the job.
    */
   createdTime?: Date;
   /**
-   * Scheduled job start time in UTC.
+   * The start date and time of the scheduled job in UTC.
    */
   startTime?: Date;
   /**
-   * System generated.  Ignored at creation.
-   * Represents the time the job stopped processing.
+   * System generated.  Ignored at creation. The end date and time of the job in UTC.
    */
   endTime?: Date;
   /**
-   * Max execution time in secounds (ttl duration)
+   * The maximum execution time in secounds.
    */
   maxExecutionTimeInSeconds?: number;
   /**
-   * Required.
-   * The type of job to execute. Possible values include: 'unknown', 'export', 'import', 'backup',
+   * The job type. Possible values include: 'unknown', 'export', 'import', 'backup',
    * 'readDeviceProperties', 'writeDeviceProperties', 'updateDeviceConfiguration', 'rebootDevice',
    * 'factoryResetDevice', 'firmwareUpdate', 'scheduleDeviceMethod', 'scheduleUpdateTwin',
    * 'restoreFromBackup', 'failoverDataCopy'
    */
   type?: Type3;
   /**
-   * Required if jobType is cloudToDeviceMethod.
-   * The method type and parameters.
+   * The method type and parameters. This is required if job type is cloudToDeviceMethod.
    */
   cloudToDeviceMethod?: CloudToDeviceMethod;
   updateTwin?: Twin;
   /**
-   * System generated.  Ignored at creation. Possible values include: 'unknown', 'enqueued',
-   * 'running', 'completed', 'failed', 'cancelled', 'scheduled', 'queued'
+   * System generated.  Ignored at creation. The status of the job. Possible values include:
+   * 'unknown', 'enqueued', 'running', 'completed', 'failed', 'cancelled', 'scheduled', 'queued'
    */
   status?: Status4;
   /**
-   * System generated.  Ignored at creation.
-   * If status == failure, this represents a string containing the reason.
+   * The reason for the failure, if a failure occurred.
    */
   failureReason?: string;
   /**
-   * Status message for the job
+   * The status message of the job.
    */
   statusMessage?: string;
   /**
-   * Job details
+   * The details regarding job execution status.
    */
   deviceJobStatistics?: DeviceJobStatistics;
 }
@@ -750,27 +857,56 @@ export interface QueryResult {
    */
   items?: any[];
   /**
-   * Request continuation token.
+   * The continuation token.
    */
   continuationToken?: string;
 }
 
 /**
- * Module identity on a device
+ * The module identity on a device.
  */
 export interface Module {
+  /**
+   * The unique identifier of the module.
+   */
   moduleId?: string;
+  /**
+   * Identifies who manages this module. For instance, this value is \"IotEdge\" if the edge
+   * runtime owns this module.
+   */
   managedBy?: string;
+  /**
+   * The unique identifier of the device.
+   */
   deviceId?: string;
+  /**
+   * The IoT Hub generated, case-sensitive string up to 128 characters long. This value is used to
+   * distinguish modules with the same moduleId, when they have been deleted and re-created.
+   */
   generationId?: string;
+  /**
+   * The string representing a weak ETag for the module identity, as per RFC7232.
+   */
   etag?: string;
   /**
-   * Possible values include: 'Disconnected', 'Connected'
+   * The connection state of the device. Possible values include: 'Disconnected', 'Connected'
    */
   connectionState?: ConnectionState2;
+  /**
+   * The date and time the connection state was last updated.
+   */
   connectionStateUpdatedTime?: Date;
+  /**
+   * The date and time the device last connected, received, or sent a message.
+   */
   lastActivityTime?: Date;
+  /**
+   * The number of cloud-to-module messages currently queued to be sent to the module.
+   */
   cloudToDeviceMessageCount?: number;
+  /**
+   * The authentication mechanism used by the module when connecting to the service and edge hub.
+   */
   authentication?: AuthenticationMechanism;
 }
 
@@ -803,6 +939,10 @@ export interface IotHubGatewayServiceAPIsOptions extends ServiceClientOptions {
  * Optional Parameters.
  */
 export interface ConfigurationCreateOrUpdateOptionalParams extends msRest.RequestOptionsBase {
+  /**
+   * The string representing a weak ETag for the configuration, as per RFC7232. This should not be
+   * set when creating a configuration, but may be set when updating a configuration.
+   */
   ifMatch?: string;
 }
 
@@ -810,6 +950,12 @@ export interface ConfigurationCreateOrUpdateOptionalParams extends msRest.Reques
  * Optional Parameters.
  */
 export interface ConfigurationDeleteMethodOptionalParams extends msRest.RequestOptionsBase {
+  /**
+   * The string representing a weak ETag for the configuration, as per RFC7232. The delete
+   * operation is performed only if this ETag matches the value maintained by the server,
+   * indicating that the configuration has not been modified since it was last retrieved. To force
+   * an unconditional delete, set If-Match to the wildcard character (*).
+   */
   ifMatch?: string;
 }
 
@@ -817,16 +963,9 @@ export interface ConfigurationDeleteMethodOptionalParams extends msRest.RequestO
  * Optional Parameters.
  */
 export interface ConfigurationGetConfigurationsOptionalParams extends msRest.RequestOptionsBase {
-  top?: number;
-}
-
-/**
- * Optional Parameters.
- */
-export interface RegistryManagerGetDevicesOptionalParams extends msRest.RequestOptionsBase {
   /**
-   * This parameter when specified, defines the maximum number of device identities that are
-   * returned. Any value outside the range of 1-1000 is considered to be 1000.
+   * The number of configurations to retrieve. Value will be overridden if greater than the maximum
+   * deployment count for the IoT Hub.
    */
   top?: number;
 }
@@ -834,49 +973,89 @@ export interface RegistryManagerGetDevicesOptionalParams extends msRest.RequestO
 /**
  * Optional Parameters.
  */
-export interface RegistryManagerQueryIotHubOptionalParams extends msRest.RequestOptionsBase {
+export interface DevicesGetDevicesOptionalParams extends msRest.RequestOptionsBase {
+  /**
+   * The maximum number of device identities returned by the query. Any value outside the range of
+   * 1-1000 is considered to be 1000.
+   */
+  top?: number;
+}
+
+/**
+ * Optional Parameters.
+ */
+export interface DevicesCreateOrUpdateIdentityOptionalParams extends msRest.RequestOptionsBase {
+  /**
+   * The string representing a weak ETag for the device identity, as per RFC7232. This should not
+   * be set when creating a device, but may be set when updating a device.
+   */
+  ifMatch?: string;
+}
+
+/**
+ * Optional Parameters.
+ */
+export interface DevicesDeleteIdentityOptionalParams extends msRest.RequestOptionsBase {
+  /**
+   * The string representing a weak ETag for the device identity, as per RFC7232. The delete
+   * operation is performed only if this ETag matches the value maintained by the server,
+   * indicating that the device identity has not been modified since it was last retrieved. To
+   * force an unconditional delete, set If-Match to the wildcard character (*).
+   */
+  ifMatch?: string;
+}
+
+/**
+ * Optional Parameters.
+ */
+export interface DevicesReplaceTwinOptionalParams extends msRest.RequestOptionsBase {
+  /**
+   * The string representing a weak ETag for the device twin, as per RFC7232. It determines if the
+   * replace operation should be carried out.
+   */
+  ifMatch?: string;
+}
+
+/**
+ * Optional Parameters.
+ */
+export interface DevicesUpdateTwinOptionalParams extends msRest.RequestOptionsBase {
+  /**
+   * The string representing a weak ETag for the device twin, as per RFC7232. It determines if the
+   * update operation should be carried out.
+   */
+  ifMatch?: string;
+}
+
+/**
+ * Optional Parameters.
+ */
+export interface QueryGetTwinsOptionalParams extends msRest.RequestOptionsBase {
+  /**
+   * The continuation token used to get the next page of results.
+   */
   xMsContinuation?: string;
+  /**
+   * The maximum number of items returned per page. The service may use a different value if the
+   * value specified is not acceptable.
+   */
   xMsMaxItemCount?: string;
 }
 
 /**
  * Optional Parameters.
  */
-export interface RegistryManagerCreateOrUpdateDeviceOptionalParams extends msRest.RequestOptionsBase {
-  ifMatch?: string;
-}
-
-/**
- * Optional Parameters.
- */
-export interface RegistryManagerDeleteDeviceOptionalParams extends msRest.RequestOptionsBase {
-  ifMatch?: string;
-}
-
-/**
- * Optional Parameters.
- */
-export interface RegistryManagerCreateOrUpdateModuleOptionalParams extends msRest.RequestOptionsBase {
-  ifMatch?: string;
-}
-
-/**
- * Optional Parameters.
- */
-export interface RegistryManagerDeleteModuleOptionalParams extends msRest.RequestOptionsBase {
-  ifMatch?: string;
-}
-
-/**
- * Optional Parameters.
- */
-export interface JobClientQueryJobsOptionalParams extends msRest.RequestOptionsBase {
+export interface JobsQueryScheduledJobsOptionalParams extends msRest.RequestOptionsBase {
   /**
-   * Job Type.
+   * The job type. See
+   * https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-jobs#querying-for-progress-on-jobs
+   * for a list of possible job types.
    */
   jobType?: string;
   /**
-   * Job Status.
+   * The job status. See
+   * https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-jobs#querying-for-progress-on-jobs
+   * for a list of possible statuses.
    */
   jobStatus?: string;
 }
@@ -884,28 +1063,46 @@ export interface JobClientQueryJobsOptionalParams extends msRest.RequestOptionsB
 /**
  * Optional Parameters.
  */
-export interface TwinReplaceDeviceTwinOptionalParams extends msRest.RequestOptionsBase {
+export interface ModulesReplaceTwinOptionalParams extends msRest.RequestOptionsBase {
+  /**
+   * The string representing a weak ETag for the device twin, as per RFC7232. It determines if the
+   * replace operation should be carried out.
+   */
   ifMatch?: string;
 }
 
 /**
  * Optional Parameters.
  */
-export interface TwinUpdateDeviceTwinOptionalParams extends msRest.RequestOptionsBase {
+export interface ModulesUpdateTwinOptionalParams extends msRest.RequestOptionsBase {
+  /**
+   * The string representing a weak ETag for the device twin, as per RFC7232. It determines if the
+   * update operation should be carried out.
+   */
   ifMatch?: string;
 }
 
 /**
  * Optional Parameters.
  */
-export interface TwinReplaceModuleTwinOptionalParams extends msRest.RequestOptionsBase {
+export interface ModulesCreateOrUpdateIdentityOptionalParams extends msRest.RequestOptionsBase {
+  /**
+   * The string representing a weak ETag for the module, as per RFC7232. This should not be set
+   * when creating a module, but may be set when updating a module.
+   */
   ifMatch?: string;
 }
 
 /**
  * Optional Parameters.
  */
-export interface TwinUpdateModuleTwinOptionalParams extends msRest.RequestOptionsBase {
+export interface ModulesDeleteIdentityOptionalParams extends msRest.RequestOptionsBase {
+  /**
+   * The string representing a weak ETag for the module, as per RFC7232. The delete operation is
+   * performed only if this ETag matches the value maintained by the server, indicating that the
+   * module has not been modified since it was last retrieved. To force an unconditional delete,
+   * set If-Match to the wildcard character (*).
+   */
   ifMatch?: string;
 }
 
@@ -945,15 +1142,15 @@ export interface DigitalTwinInvokeComponentCommandOptionalParams extends msRest.
 }
 
 /**
- * Defines headers for QueryIotHub operation.
+ * Defines headers for GetTwins operation.
  */
-export interface RegistryManagerQueryIotHubHeaders {
+export interface QueryGetTwinsHeaders {
   /**
-   * Type of the list of items.
+   * The type of list of items.
    */
   xMsItemType: string;
   /**
-   * Continuation token
+   * The continuation token used to get the next page of results.
    */
   xMsContinuation: string;
 }
@@ -1192,14 +1389,6 @@ export type Status3 = 'unknown' | 'enqueued' | 'running' | 'completed' | 'failed
 export type StorageAuthenticationType = 'keyBased' | 'identityBased';
 
 /**
- * Defines values for Action.
- * Possible values include: 'None', 'CloseAll', 'Periodic'
- * @readonly
- * @enum {string}
- */
-export type Action = 'None' | 'CloseAll' | 'Periodic';
-
-/**
  * Defines values for Type2.
  * Possible values include: 'unknown', 'export', 'import', 'backup', 'readDeviceProperties',
  * 'writeDeviceProperties', 'updateDeviceConfiguration', 'rebootDevice', 'factoryResetDevice',
@@ -1328,34 +1517,9 @@ export type ConfigurationTestQueriesResponse = ConfigurationQueriesTestResponse 
 };
 
 /**
- * Contains response data for the applyOnEdgeDevice operation.
- */
-export type ConfigurationApplyOnEdgeDeviceResponse = {
-  /**
-   * The parsed response body.
-   */
-  body: any;
-
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: any;
-    };
-};
-
-/**
  * Contains response data for the getDeviceStatistics operation.
  */
-export type RegistryManagerGetDeviceStatisticsResponse = RegistryStatistics & {
+export type StatisticsGetDeviceStatisticsResponse = RegistryStatistics & {
   /**
    * The underlying HTTP response.
    */
@@ -1375,7 +1539,7 @@ export type RegistryManagerGetDeviceStatisticsResponse = RegistryStatistics & {
 /**
  * Contains response data for the getServiceStatistics operation.
  */
-export type RegistryManagerGetServiceStatisticsResponse = ServiceStatistics & {
+export type StatisticsGetServiceStatisticsResponse = ServiceStatistics & {
   /**
    * The underlying HTTP response.
    */
@@ -1395,7 +1559,7 @@ export type RegistryManagerGetServiceStatisticsResponse = ServiceStatistics & {
 /**
  * Contains response data for the getDevices operation.
  */
-export type RegistryManagerGetDevicesResponse = Array<Device> & {
+export type DevicesGetDevicesResponse = Array<Device> & {
   /**
    * The underlying HTTP response.
    */
@@ -1413,9 +1577,129 @@ export type RegistryManagerGetDevicesResponse = Array<Device> & {
 };
 
 /**
- * Contains response data for the bulkDeviceCRUD operation.
+ * Contains response data for the getIdentity operation.
  */
-export type RegistryManagerBulkDeviceCRUDResponse = BulkRegistryOperationResult & {
+export type DevicesGetIdentityResponse = Device & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: Device;
+    };
+};
+
+/**
+ * Contains response data for the createOrUpdateIdentity operation.
+ */
+export type DevicesCreateOrUpdateIdentityResponse = Device & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: Device;
+    };
+};
+
+/**
+ * Contains response data for the getTwin operation.
+ */
+export type DevicesGetTwinResponse = Twin & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: Twin;
+    };
+};
+
+/**
+ * Contains response data for the replaceTwin operation.
+ */
+export type DevicesReplaceTwinResponse = Twin & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: Twin;
+    };
+};
+
+/**
+ * Contains response data for the updateTwin operation.
+ */
+export type DevicesUpdateTwinResponse = Twin & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: Twin;
+    };
+};
+
+/**
+ * Contains response data for the invokeMethod operation.
+ */
+export type DevicesInvokeMethodResponse = CloudToDeviceMethodResult & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: CloudToDeviceMethodResult;
+    };
+};
+
+/**
+ * Contains response data for the updateRegistry operation.
+ */
+export type BulkRegistryUpdateRegistryResponse = BulkRegistryOperationResult & {
   /**
    * The underlying HTTP response.
    */
@@ -1433,9 +1717,9 @@ export type RegistryManagerBulkDeviceCRUDResponse = BulkRegistryOperationResult 
 };
 
 /**
- * Contains response data for the queryIotHub operation.
+ * Contains response data for the getTwins operation.
  */
-export type RegistryManagerQueryIotHubResponse = Array<Twin> & RegistryManagerQueryIotHubHeaders & {
+export type QueryGetTwinsResponse = Array<Twin> & QueryGetTwinsHeaders & {
   /**
    * The underlying HTTP response.
    */
@@ -1443,7 +1727,7 @@ export type RegistryManagerQueryIotHubResponse = Array<Twin> & RegistryManagerQu
       /**
        * The parsed HTTP response headers.
        */
-      parsedHeaders: RegistryManagerQueryIotHubHeaders;
+      parsedHeaders: QueryGetTwinsHeaders;
 
       /**
        * The response body as text (string format)
@@ -1458,129 +1742,9 @@ export type RegistryManagerQueryIotHubResponse = Array<Twin> & RegistryManagerQu
 };
 
 /**
- * Contains response data for the getDevice operation.
- */
-export type RegistryManagerGetDeviceResponse = Device & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: Device;
-    };
-};
-
-/**
- * Contains response data for the createOrUpdateDevice operation.
- */
-export type RegistryManagerCreateOrUpdateDeviceResponse = Device & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: Device;
-    };
-};
-
-/**
- * Contains response data for the purgeCommandQueue operation.
- */
-export type RegistryManagerPurgeCommandQueueResponse = PurgeMessageQueueResult & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: PurgeMessageQueueResult;
-    };
-};
-
-/**
- * Contains response data for the getModulesOnDevice operation.
- */
-export type RegistryManagerGetModulesOnDeviceResponse = Array<Module> & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: Module[];
-    };
-};
-
-/**
- * Contains response data for the getModule operation.
- */
-export type RegistryManagerGetModuleResponse = Module & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: Module;
-    };
-};
-
-/**
- * Contains response data for the createOrUpdateModule operation.
- */
-export type RegistryManagerCreateOrUpdateModuleResponse = Module & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: Module;
-    };
-};
-
-/**
  * Contains response data for the createImportExportJob operation.
  */
-export type JobClientCreateImportExportJobResponse = JobProperties & {
+export type JobsCreateImportExportJobResponse = JobProperties & {
   /**
    * The underlying HTTP response.
    */
@@ -1600,7 +1764,7 @@ export type JobClientCreateImportExportJobResponse = JobProperties & {
 /**
  * Contains response data for the getImportExportJobs operation.
  */
-export type JobClientGetImportExportJobsResponse = Array<JobProperties> & {
+export type JobsGetImportExportJobsResponse = Array<JobProperties> & {
   /**
    * The underlying HTTP response.
    */
@@ -1620,7 +1784,7 @@ export type JobClientGetImportExportJobsResponse = Array<JobProperties> & {
 /**
  * Contains response data for the getImportExportJob operation.
  */
-export type JobClientGetImportExportJobResponse = JobProperties & {
+export type JobsGetImportExportJobResponse = JobProperties & {
   /**
    * The underlying HTTP response.
    */
@@ -1640,7 +1804,7 @@ export type JobClientGetImportExportJobResponse = JobProperties & {
 /**
  * Contains response data for the cancelImportExportJob operation.
  */
-export type JobClientCancelImportExportJobResponse = {
+export type JobsCancelImportExportJobResponse = {
   /**
    * The parsed response body.
    */
@@ -1663,9 +1827,9 @@ export type JobClientCancelImportExportJobResponse = {
 };
 
 /**
- * Contains response data for the getJob operation.
+ * Contains response data for the getScheduledJob operation.
  */
-export type JobClientGetJobResponse = JobResponse & {
+export type JobsGetScheduledJobResponse = JobResponse & {
   /**
    * The underlying HTTP response.
    */
@@ -1683,9 +1847,9 @@ export type JobClientGetJobResponse = JobResponse & {
 };
 
 /**
- * Contains response data for the createJob operation.
+ * Contains response data for the createScheduledJob operation.
  */
-export type JobClientCreateJobResponse = JobResponse & {
+export type JobsCreateScheduledJobResponse = JobResponse & {
   /**
    * The underlying HTTP response.
    */
@@ -1703,9 +1867,9 @@ export type JobClientCreateJobResponse = JobResponse & {
 };
 
 /**
- * Contains response data for the cancelJob operation.
+ * Contains response data for the cancelScheduledJob operation.
  */
-export type JobClientCancelJobResponse = JobResponse & {
+export type JobsCancelScheduledJobResponse = JobResponse & {
   /**
    * The underlying HTTP response.
    */
@@ -1723,9 +1887,9 @@ export type JobClientCancelJobResponse = JobResponse & {
 };
 
 /**
- * Contains response data for the queryJobs operation.
+ * Contains response data for the queryScheduledJobs operation.
  */
-export type JobClientQueryJobsResponse = QueryResult & {
+export type JobsQueryScheduledJobsResponse = QueryResult & {
   /**
    * The underlying HTTP response.
    */
@@ -1743,9 +1907,9 @@ export type JobClientQueryJobsResponse = QueryResult & {
 };
 
 /**
- * Contains response data for the get operation.
+ * Contains response data for the purgeCloudToDeviceMessageQueue operation.
  */
-export type FaultInjectionGetResponse = FaultInjectionProperties & {
+export type CloudToDeviceMessagesPurgeCloudToDeviceMessageQueueResponse = PurgeMessageQueueResult & {
   /**
    * The underlying HTTP response.
    */
@@ -1758,14 +1922,14 @@ export type FaultInjectionGetResponse = FaultInjectionProperties & {
       /**
        * The response body as parsed JSON or XML
        */
-      parsedBody: FaultInjectionProperties;
+      parsedBody: PurgeMessageQueueResult;
     };
 };
 
 /**
- * Contains response data for the getDeviceTwin operation.
+ * Contains response data for the getTwin operation.
  */
-export type TwinGetDeviceTwinResponse = Twin & {
+export type ModulesGetTwinResponse = Twin & {
   /**
    * The underlying HTTP response.
    */
@@ -1783,9 +1947,9 @@ export type TwinGetDeviceTwinResponse = Twin & {
 };
 
 /**
- * Contains response data for the replaceDeviceTwin operation.
+ * Contains response data for the replaceTwin operation.
  */
-export type TwinReplaceDeviceTwinResponse = Twin & {
+export type ModulesReplaceTwinResponse = Twin & {
   /**
    * The underlying HTTP response.
    */
@@ -1803,9 +1967,9 @@ export type TwinReplaceDeviceTwinResponse = Twin & {
 };
 
 /**
- * Contains response data for the updateDeviceTwin operation.
+ * Contains response data for the updateTwin operation.
  */
-export type TwinUpdateDeviceTwinResponse = Twin & {
+export type ModulesUpdateTwinResponse = Twin & {
   /**
    * The underlying HTTP response.
    */
@@ -1823,9 +1987,9 @@ export type TwinUpdateDeviceTwinResponse = Twin & {
 };
 
 /**
- * Contains response data for the getModuleTwin operation.
+ * Contains response data for the getModulesOnDevice operation.
  */
-export type TwinGetModuleTwinResponse = Twin & {
+export type ModulesGetModulesOnDeviceResponse = Array<Module> & {
   /**
    * The underlying HTTP response.
    */
@@ -1838,14 +2002,14 @@ export type TwinGetModuleTwinResponse = Twin & {
       /**
        * The response body as parsed JSON or XML
        */
-      parsedBody: Twin;
+      parsedBody: Module[];
     };
 };
 
 /**
- * Contains response data for the replaceModuleTwin operation.
+ * Contains response data for the getIdentity operation.
  */
-export type TwinReplaceModuleTwinResponse = Twin & {
+export type ModulesGetIdentityResponse = Module & {
   /**
    * The underlying HTTP response.
    */
@@ -1858,14 +2022,14 @@ export type TwinReplaceModuleTwinResponse = Twin & {
       /**
        * The response body as parsed JSON or XML
        */
-      parsedBody: Twin;
+      parsedBody: Module;
     };
 };
 
 /**
- * Contains response data for the updateModuleTwin operation.
+ * Contains response data for the createOrUpdateIdentity operation.
  */
-export type TwinUpdateModuleTwinResponse = Twin & {
+export type ModulesCreateOrUpdateIdentityResponse = Module & {
   /**
    * The underlying HTTP response.
    */
@@ -1878,7 +2042,27 @@ export type TwinUpdateModuleTwinResponse = Twin & {
       /**
        * The response body as parsed JSON or XML
        */
-      parsedBody: Twin;
+      parsedBody: Module;
+    };
+};
+
+/**
+ * Contains response data for the invokeMethod operation.
+ */
+export type ModulesInvokeMethodResponse = CloudToDeviceMethodResult & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: CloudToDeviceMethodResult;
     };
 };
 
@@ -1984,45 +2168,5 @@ export type DigitalTwinInvokeComponentCommandResponse = DigitalTwinInvokeCompone
        * The response body as parsed JSON or XML
        */
       parsedBody: any;
-    };
-};
-
-/**
- * Contains response data for the invokeDeviceMethod operation.
- */
-export type DeviceMethodInvokeDeviceMethodResponse = CloudToDeviceMethodResult & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: CloudToDeviceMethodResult;
-    };
-};
-
-/**
- * Contains response data for the invokeModuleMethod operation.
- */
-export type DeviceMethodInvokeModuleMethodResponse = CloudToDeviceMethodResult & {
-  /**
-   * The underlying HTTP response.
-   */
-  _response: msRest.HttpResponse & {
-      /**
-       * The response body as text (string format)
-       */
-      bodyAsText: string;
-
-      /**
-       * The response body as parsed JSON or XML
-       */
-      parsedBody: CloudToDeviceMethodResult;
     };
 };

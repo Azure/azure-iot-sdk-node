@@ -10,16 +10,16 @@
 
 import * as msRest from "@azure/ms-rest-js";
 import * as Models from "../models";
-import * as Mappers from "../models/jobClientMappers";
+import * as Mappers from "../models/jobsMappers";
 import * as Parameters from "../models/parameters";
 import { IotHubGatewayServiceAPIsContext } from "../iotHubGatewayServiceAPIsContext";
 
-/** Class representing a JobClient. */
-export class JobClient {
+/** Class representing a Jobs. */
+export class Jobs {
   private readonly client: IotHubGatewayServiceAPIsContext;
 
   /**
-   * Create a JobClient.
+   * Create a Jobs.
    * @param {IotHubGatewayServiceAPIsContext} client Reference to the service client.
    */
   constructor(client: IotHubGatewayServiceAPIsContext) {
@@ -27,45 +27,43 @@ export class JobClient {
   }
 
   /**
-   * Create a new import/export job on an IoT hub. See
+   * Creates a new import or export job on the IoT Hub. See
    * https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-identity-registry#import-and-export-device-identities
    * for more information.
-   * @summary Create a new import/export job on an IoT hub.
-   * @param jobProperties Specifies the job specification.
+   * @param jobProperties The job specifications.
    * @param [options] The optional parameters
-   * @returns Promise<Models.JobClientCreateImportExportJobResponse>
+   * @returns Promise<Models.JobsCreateImportExportJobResponse>
    */
-  createImportExportJob(jobProperties: Models.JobProperties, options?: msRest.RequestOptionsBase): Promise<Models.JobClientCreateImportExportJobResponse>;
+  createImportExportJob(jobProperties: Models.JobProperties, options?: msRest.RequestOptionsBase): Promise<Models.JobsCreateImportExportJobResponse>;
   /**
-   * @param jobProperties Specifies the job specification.
+   * @param jobProperties The job specifications.
    * @param callback The callback
    */
   createImportExportJob(jobProperties: Models.JobProperties, callback: msRest.ServiceCallback<Models.JobProperties>): void;
   /**
-   * @param jobProperties Specifies the job specification.
+   * @param jobProperties The job specifications.
    * @param options The optional parameters
    * @param callback The callback
    */
   createImportExportJob(jobProperties: Models.JobProperties, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<Models.JobProperties>): void;
-  createImportExportJob(jobProperties: Models.JobProperties, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<Models.JobProperties>, callback?: msRest.ServiceCallback<Models.JobProperties>): Promise<Models.JobClientCreateImportExportJobResponse> {
+  createImportExportJob(jobProperties: Models.JobProperties, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<Models.JobProperties>, callback?: msRest.ServiceCallback<Models.JobProperties>): Promise<Models.JobsCreateImportExportJobResponse> {
     return this.client.sendOperationRequest(
       {
         jobProperties,
         options
       },
       createImportExportJobOperationSpec,
-      callback) as Promise<Models.JobClientCreateImportExportJobResponse>;
+      callback) as Promise<Models.JobsCreateImportExportJobResponse>;
   }
 
   /**
-   * Gets the status of all import/export jobs in an iot hub. See
+   * Gets the status of all import and export jobs in the IoT Hub. See
    * https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-identity-registry#import-and-export-device-identities
    * for more information.
-   * @summary Gets the status of all import/export jobs in an iot hub
    * @param [options] The optional parameters
-   * @returns Promise<Models.JobClientGetImportExportJobsResponse>
+   * @returns Promise<Models.JobsGetImportExportJobsResponse>
    */
-  getImportExportJobs(options?: msRest.RequestOptionsBase): Promise<Models.JobClientGetImportExportJobsResponse>;
+  getImportExportJobs(options?: msRest.RequestOptionsBase): Promise<Models.JobsGetImportExportJobsResponse>;
   /**
    * @param callback The callback
    */
@@ -75,199 +73,187 @@ export class JobClient {
    * @param callback The callback
    */
   getImportExportJobs(options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<Models.JobProperties[]>): void;
-  getImportExportJobs(options?: msRest.RequestOptionsBase | msRest.ServiceCallback<Models.JobProperties[]>, callback?: msRest.ServiceCallback<Models.JobProperties[]>): Promise<Models.JobClientGetImportExportJobsResponse> {
+  getImportExportJobs(options?: msRest.RequestOptionsBase | msRest.ServiceCallback<Models.JobProperties[]>, callback?: msRest.ServiceCallback<Models.JobProperties[]>): Promise<Models.JobsGetImportExportJobsResponse> {
     return this.client.sendOperationRequest(
       {
         options
       },
       getImportExportJobsOperationSpec,
-      callback) as Promise<Models.JobClientGetImportExportJobsResponse>;
+      callback) as Promise<Models.JobsGetImportExportJobsResponse>;
   }
 
   /**
-   * Gets the status of an import or export job in an iot hub. See
+   * Gets the status of an import or export job in the IoT Hub. See
    * https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-identity-registry#import-and-export-device-identities
    * for more information.
-   * @summary Gets the status of an import or export job in an iot hub
-   * @param id Job ID.
+   * @param id The unique identifier of the job.
    * @param [options] The optional parameters
-   * @returns Promise<Models.JobClientGetImportExportJobResponse>
+   * @returns Promise<Models.JobsGetImportExportJobResponse>
    */
-  getImportExportJob(id: string, options?: msRest.RequestOptionsBase): Promise<Models.JobClientGetImportExportJobResponse>;
+  getImportExportJob(id: string, options?: msRest.RequestOptionsBase): Promise<Models.JobsGetImportExportJobResponse>;
   /**
-   * @param id Job ID.
+   * @param id The unique identifier of the job.
    * @param callback The callback
    */
   getImportExportJob(id: string, callback: msRest.ServiceCallback<Models.JobProperties>): void;
   /**
-   * @param id Job ID.
+   * @param id The unique identifier of the job.
    * @param options The optional parameters
    * @param callback The callback
    */
   getImportExportJob(id: string, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<Models.JobProperties>): void;
-  getImportExportJob(id: string, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<Models.JobProperties>, callback?: msRest.ServiceCallback<Models.JobProperties>): Promise<Models.JobClientGetImportExportJobResponse> {
+  getImportExportJob(id: string, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<Models.JobProperties>, callback?: msRest.ServiceCallback<Models.JobProperties>): Promise<Models.JobsGetImportExportJobResponse> {
     return this.client.sendOperationRequest(
       {
         id,
         options
       },
       getImportExportJobOperationSpec,
-      callback) as Promise<Models.JobClientGetImportExportJobResponse>;
+      callback) as Promise<Models.JobsGetImportExportJobResponse>;
   }
 
   /**
-   * Cancels an import or export job in an IoT hub. See
-   * https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-identity-registry#import-and-export-device-identities
-   * for more information.
-   * @summary Cancels an import or export job in an IoT hub.
-   * @param id Job ID.
+   * Cancels an import or export job in the IoT Hub.
+   * @param id The unique identifier of the job.
    * @param [options] The optional parameters
-   * @returns Promise<Models.JobClientCancelImportExportJobResponse>
+   * @returns Promise<Models.JobsCancelImportExportJobResponse>
    */
-  cancelImportExportJob(id: string, options?: msRest.RequestOptionsBase): Promise<Models.JobClientCancelImportExportJobResponse>;
+  cancelImportExportJob(id: string, options?: msRest.RequestOptionsBase): Promise<Models.JobsCancelImportExportJobResponse>;
   /**
-   * @param id Job ID.
+   * @param id The unique identifier of the job.
    * @param callback The callback
    */
   cancelImportExportJob(id: string, callback: msRest.ServiceCallback<any>): void;
   /**
-   * @param id Job ID.
+   * @param id The unique identifier of the job.
    * @param options The optional parameters
    * @param callback The callback
    */
   cancelImportExportJob(id: string, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<any>): void;
-  cancelImportExportJob(id: string, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<any>, callback?: msRest.ServiceCallback<any>): Promise<Models.JobClientCancelImportExportJobResponse> {
+  cancelImportExportJob(id: string, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<any>, callback?: msRest.ServiceCallback<any>): Promise<Models.JobsCancelImportExportJobResponse> {
     return this.client.sendOperationRequest(
       {
         id,
         options
       },
       cancelImportExportJobOperationSpec,
-      callback) as Promise<Models.JobClientCancelImportExportJobResponse>;
+      callback) as Promise<Models.JobsCancelImportExportJobResponse>;
   }
 
   /**
-   * Retrieves details of a scheduled job from an IoT hub. See
+   * Gets details of a scheduled job from the IoT Hub. See
    * https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-jobs for more information.
-   * @summary Retrieves details of a scheduled job from an IoT hub.
-   * @param id Job ID.
+   * @param id The unique identifier of the job.
    * @param [options] The optional parameters
-   * @returns Promise<Models.JobClientGetJobResponse>
+   * @returns Promise<Models.JobsGetScheduledJobResponse>
    */
-  getJob(id: string, options?: msRest.RequestOptionsBase): Promise<Models.JobClientGetJobResponse>;
+  getScheduledJob(id: string, options?: msRest.RequestOptionsBase): Promise<Models.JobsGetScheduledJobResponse>;
   /**
-   * @param id Job ID.
+   * @param id The unique identifier of the job.
    * @param callback The callback
    */
-  getJob(id: string, callback: msRest.ServiceCallback<Models.JobResponse>): void;
+  getScheduledJob(id: string, callback: msRest.ServiceCallback<Models.JobResponse>): void;
   /**
-   * @param id Job ID.
+   * @param id The unique identifier of the job.
    * @param options The optional parameters
    * @param callback The callback
    */
-  getJob(id: string, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<Models.JobResponse>): void;
-  getJob(id: string, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<Models.JobResponse>, callback?: msRest.ServiceCallback<Models.JobResponse>): Promise<Models.JobClientGetJobResponse> {
+  getScheduledJob(id: string, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<Models.JobResponse>): void;
+  getScheduledJob(id: string, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<Models.JobResponse>, callback?: msRest.ServiceCallback<Models.JobResponse>): Promise<Models.JobsGetScheduledJobResponse> {
     return this.client.sendOperationRequest(
       {
         id,
         options
       },
-      getJobOperationSpec,
-      callback) as Promise<Models.JobClientGetJobResponse>;
+      getScheduledJobOperationSpec,
+      callback) as Promise<Models.JobsGetScheduledJobResponse>;
   }
 
   /**
-   * Creates a new job to schedule update twins or device direct methods on an IoT hub at a scheduled
-   * time. See https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-jobs for more
-   * information.
-   * @summary Creates a new job to schedule update twins or device direct methods on an IoT hub at a
-   * scheduled time.
-   * @param id Job ID.
-   * @param jobRequest
+   * Creates a new job to schedule twin updates or direct methods on the IoT Hub at a scheduled time.
+   * See https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-jobs for more information.
+   * @param id The unique identifier of the job.
+   * @param jobRequest The job request info.
    * @param [options] The optional parameters
-   * @returns Promise<Models.JobClientCreateJobResponse>
+   * @returns Promise<Models.JobsCreateScheduledJobResponse>
    */
-  createJob(id: string, jobRequest: Models.JobRequest, options?: msRest.RequestOptionsBase): Promise<Models.JobClientCreateJobResponse>;
+  createScheduledJob(id: string, jobRequest: Models.JobRequest, options?: msRest.RequestOptionsBase): Promise<Models.JobsCreateScheduledJobResponse>;
   /**
-   * @param id Job ID.
-   * @param jobRequest
+   * @param id The unique identifier of the job.
+   * @param jobRequest The job request info.
    * @param callback The callback
    */
-  createJob(id: string, jobRequest: Models.JobRequest, callback: msRest.ServiceCallback<Models.JobResponse>): void;
+  createScheduledJob(id: string, jobRequest: Models.JobRequest, callback: msRest.ServiceCallback<Models.JobResponse>): void;
   /**
-   * @param id Job ID.
-   * @param jobRequest
+   * @param id The unique identifier of the job.
+   * @param jobRequest The job request info.
    * @param options The optional parameters
    * @param callback The callback
    */
-  createJob(id: string, jobRequest: Models.JobRequest, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<Models.JobResponse>): void;
-  createJob(id: string, jobRequest: Models.JobRequest, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<Models.JobResponse>, callback?: msRest.ServiceCallback<Models.JobResponse>): Promise<Models.JobClientCreateJobResponse> {
+  createScheduledJob(id: string, jobRequest: Models.JobRequest, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<Models.JobResponse>): void;
+  createScheduledJob(id: string, jobRequest: Models.JobRequest, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<Models.JobResponse>, callback?: msRest.ServiceCallback<Models.JobResponse>): Promise<Models.JobsCreateScheduledJobResponse> {
     return this.client.sendOperationRequest(
       {
         id,
         jobRequest,
         options
       },
-      createJobOperationSpec,
-      callback) as Promise<Models.JobClientCreateJobResponse>;
+      createScheduledJobOperationSpec,
+      callback) as Promise<Models.JobsCreateScheduledJobResponse>;
   }
 
   /**
-   * Cancels a scheduled job on an IoT hub. See
+   * Cancels a scheduled job on the IoT Hub. See
    * https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-jobs for more information.
-   * @summary Cancels a scheduled job on an IoT hub.
-   * @param id Job ID.
+   * @param id The unique identifier of the job.
    * @param [options] The optional parameters
-   * @returns Promise<Models.JobClientCancelJobResponse>
+   * @returns Promise<Models.JobsCancelScheduledJobResponse>
    */
-  cancelJob(id: string, options?: msRest.RequestOptionsBase): Promise<Models.JobClientCancelJobResponse>;
+  cancelScheduledJob(id: string, options?: msRest.RequestOptionsBase): Promise<Models.JobsCancelScheduledJobResponse>;
   /**
-   * @param id Job ID.
+   * @param id The unique identifier of the job.
    * @param callback The callback
    */
-  cancelJob(id: string, callback: msRest.ServiceCallback<Models.JobResponse>): void;
+  cancelScheduledJob(id: string, callback: msRest.ServiceCallback<Models.JobResponse>): void;
   /**
-   * @param id Job ID.
+   * @param id The unique identifier of the job.
    * @param options The optional parameters
    * @param callback The callback
    */
-  cancelJob(id: string, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<Models.JobResponse>): void;
-  cancelJob(id: string, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<Models.JobResponse>, callback?: msRest.ServiceCallback<Models.JobResponse>): Promise<Models.JobClientCancelJobResponse> {
+  cancelScheduledJob(id: string, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<Models.JobResponse>): void;
+  cancelScheduledJob(id: string, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<Models.JobResponse>, callback?: msRest.ServiceCallback<Models.JobResponse>): Promise<Models.JobsCancelScheduledJobResponse> {
     return this.client.sendOperationRequest(
       {
         id,
         options
       },
-      cancelJobOperationSpec,
-      callback) as Promise<Models.JobClientCancelJobResponse>;
+      cancelScheduledJobOperationSpec,
+      callback) as Promise<Models.JobsCancelScheduledJobResponse>;
   }
 
   /**
-   * Query an IoT hub to retrieve information regarding jobs using the IoT Hub query language. See
+   * Gets the information about jobs using an IoT Hub query. See
    * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-query-language for more information.
-   * Pagination of results is supported. This returns information about jobs only.
-   * @summary Query an IoT hub to retrieve information regarding jobs using the IoT Hub query
-   * language
    * @param [options] The optional parameters
-   * @returns Promise<Models.JobClientQueryJobsResponse>
+   * @returns Promise<Models.JobsQueryScheduledJobsResponse>
    */
-  queryJobs(options?: Models.JobClientQueryJobsOptionalParams): Promise<Models.JobClientQueryJobsResponse>;
+  queryScheduledJobs(options?: Models.JobsQueryScheduledJobsOptionalParams): Promise<Models.JobsQueryScheduledJobsResponse>;
   /**
    * @param callback The callback
    */
-  queryJobs(callback: msRest.ServiceCallback<Models.QueryResult>): void;
+  queryScheduledJobs(callback: msRest.ServiceCallback<Models.QueryResult>): void;
   /**
    * @param options The optional parameters
    * @param callback The callback
    */
-  queryJobs(options: Models.JobClientQueryJobsOptionalParams, callback: msRest.ServiceCallback<Models.QueryResult>): void;
-  queryJobs(options?: Models.JobClientQueryJobsOptionalParams | msRest.ServiceCallback<Models.QueryResult>, callback?: msRest.ServiceCallback<Models.QueryResult>): Promise<Models.JobClientQueryJobsResponse> {
+  queryScheduledJobs(options: Models.JobsQueryScheduledJobsOptionalParams, callback: msRest.ServiceCallback<Models.QueryResult>): void;
+  queryScheduledJobs(options?: Models.JobsQueryScheduledJobsOptionalParams | msRest.ServiceCallback<Models.QueryResult>, callback?: msRest.ServiceCallback<Models.QueryResult>): Promise<Models.JobsQueryScheduledJobsResponse> {
     return this.client.sendOperationRequest(
       {
         options
       },
-      queryJobsOperationSpec,
-      callback) as Promise<Models.JobClientQueryJobsResponse>;
+      queryScheduledJobsOperationSpec,
+      callback) as Promise<Models.JobsQueryScheduledJobsResponse>;
   }
 }
 
@@ -363,7 +349,7 @@ const cancelImportExportJobOperationSpec: msRest.OperationSpec = {
   serializer
 };
 
-const getJobOperationSpec: msRest.OperationSpec = {
+const getScheduledJobOperationSpec: msRest.OperationSpec = {
   httpMethod: "GET",
   path: "jobs/v2/{id}",
   urlParameters: [
@@ -381,7 +367,7 @@ const getJobOperationSpec: msRest.OperationSpec = {
   serializer
 };
 
-const createJobOperationSpec: msRest.OperationSpec = {
+const createScheduledJobOperationSpec: msRest.OperationSpec = {
   httpMethod: "PUT",
   path: "jobs/v2/{id}",
   urlParameters: [
@@ -406,7 +392,7 @@ const createJobOperationSpec: msRest.OperationSpec = {
   serializer
 };
 
-const cancelJobOperationSpec: msRest.OperationSpec = {
+const cancelScheduledJobOperationSpec: msRest.OperationSpec = {
   httpMethod: "POST",
   path: "jobs/v2/{id}/cancel",
   urlParameters: [
@@ -424,7 +410,7 @@ const cancelJobOperationSpec: msRest.OperationSpec = {
   serializer
 };
 
-const queryJobsOperationSpec: msRest.OperationSpec = {
+const queryScheduledJobsOperationSpec: msRest.OperationSpec = {
   httpMethod: "GET",
   path: "jobs/v2/query",
   queryParameters: [
