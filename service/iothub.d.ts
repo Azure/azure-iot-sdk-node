@@ -13,3 +13,5 @@ export * from './dist/configuration';
 export { Device } from './dist/device';
 export { Module } from './dist/module';
 export { Twin } from './dist/twin';
+export { IoTHubTokenCredentials } from './dist/auth/iothub_token_credentials';
+export { DigitalTwinServiceClient } from './dist/cl/digital_twin_service_client';

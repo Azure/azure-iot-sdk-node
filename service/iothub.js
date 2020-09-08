@@ -30,5 +30,7 @@ module.exports = {
   AmqpWs: require('./dist/amqp_ws.js').AmqpWs,
   JobClient: require('./dist/job_client.js').JobClient,
   Device: require('./dist/device.js').Device,
-  Twin: require('./dist/twin.js').Twin
+  Twin: require('./dist/twin.js').Twin,
+  IoTHubTokenCredentials: require('./dist/auth/iothub_token_credentials').IoTHubTokenCredentials,
+  DigitalTwinServiceClient: require('./dist/cl/digital_twin_service_client').DigitalTwinServiceClient
 };

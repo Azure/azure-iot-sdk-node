@@ -1,0 +1,20 @@
+{
+  "name": "registry_sample",
+  "version": "0.0.1",
+  "private": true,
+  "main": "registry_sample.js",
+  "author": "Microsoft Corp.",
+  "license": "MIT",
+  "scripts": {
+    "npmlockrefresh": "npm i --package-lock-only",
+    "lint": "jshint --show-non-errors .",
+    "ci": "npm run lint"
+  },
+  "dependencies": {
+    "azure-iothub": "1.12.5",
+    "azure-storage": "^2.10.2"
+  },
+  "devDependencies": {
+    "jshint": "^2.10.2"
+  }
+}
