@@ -17,13 +17,14 @@ import { IotHubGatewayServiceAPIsContext } from "./iotHubGatewayServiceAPIsConte
 class IotHubGatewayServiceAPIs extends IotHubGatewayServiceAPIsContext {
   // Operation groups
   configuration: operations.ConfigurationOperations;
-  registryManager: operations.RegistryManager;
-  jobClient: operations.JobClient;
-  faultInjection: operations.FaultInjection;
-  twin: operations.TwinOperations;
+  statistics: operations.Statistics;
+  devices: operations.Devices;
+  bulkRegistry: operations.BulkRegistry;
+  query: operations.Query;
+  jobs: operations.Jobs;
+  cloudToDeviceMessages: operations.CloudToDeviceMessages;
+  modules: operations.Modules;
   digitalTwin: operations.DigitalTwin;
-  httpRuntime: operations.HttpRuntime;
-  deviceMethod: operations.DeviceMethod;
 
   /**
    * Initializes a new instance of the IotHubGatewayServiceAPIs class.
@@ -33,13 +34,14 @@ class IotHubGatewayServiceAPIs extends IotHubGatewayServiceAPIsContext {
   constructor(credentials: msRest.ServiceClientCredentials, options?: Models.IotHubGatewayServiceAPIsOptions) {
     super(credentials, options);
     this.configuration = new operations.ConfigurationOperations(this);
-    this.registryManager = new operations.RegistryManager(this);
-    this.jobClient = new operations.JobClient(this);
-    this.faultInjection = new operations.FaultInjection(this);
-    this.twin = new operations.TwinOperations(this);
+    this.statistics = new operations.Statistics(this);
+    this.devices = new operations.Devices(this);
+    this.bulkRegistry = new operations.BulkRegistry(this);
+    this.query = new operations.Query(this);
+    this.jobs = new operations.Jobs(this);
+    this.cloudToDeviceMessages = new operations.CloudToDeviceMessages(this);
+    this.modules = new operations.Modules(this);
     this.digitalTwin = new operations.DigitalTwin(this);
-    this.httpRuntime = new operations.HttpRuntime(this);
-    this.deviceMethod = new operations.DeviceMethod(this);
   }
 }
 

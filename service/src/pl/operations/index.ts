@@ -9,10 +9,11 @@
  */
 
 export * from "./configurationOperations";
-export * from "./registryManager";
-export * from "./jobClient";
-export * from "./faultInjection";
-export * from "./twinOperations";
+export * from "./statistics";
+export * from "./devices";
+export * from "./bulkRegistry";
+export * from "./query";
+export * from "./jobs";
+export * from "./cloudToDeviceMessages";
+export * from "./modules";
 export * from "./digitalTwin";
-export * from "./httpRuntime";
-export * from "./deviceMethod";

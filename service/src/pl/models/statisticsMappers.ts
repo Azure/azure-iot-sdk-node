@@ -7,5 +7,6 @@
  */
 
 export {
-
+  RegistryStatistics,
+  ServiceStatistics
 } from "../models/mappers";

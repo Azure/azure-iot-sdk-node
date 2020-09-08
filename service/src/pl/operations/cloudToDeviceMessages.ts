@@ -9,16 +9,17 @@
  */
 
 import * as msRest from "@azure/ms-rest-js";
-import * as Mappers from "../models/httpRuntimeMappers";
+import * as Models from "../models";
+import * as Mappers from "../models/cloudToDeviceMessagesMappers";
 import * as Parameters from "../models/parameters";
 import { IotHubGatewayServiceAPIsContext } from "../iotHubGatewayServiceAPIsContext";
 
-/** Class representing a HttpRuntime. */
-export class HttpRuntime {
+/** Class representing a CloudToDeviceMessages. */
+export class CloudToDeviceMessages {
   private readonly client: IotHubGatewayServiceAPIsContext;
 
   /**
-   * Create a HttpRuntime.
+   * Create a CloudToDeviceMessages.
    * @param {IotHubGatewayServiceAPIsContext} client Reference to the service client.
    */
   constructor(client: IotHubGatewayServiceAPIsContext) {
@@ -26,11 +27,38 @@ export class HttpRuntime {
   }
 
   /**
-   * This method is used to retrieve feedback of a cloud-to-device message See
+   * Deletes all the pending commands for a device in the IoT Hub.
+   * @param id The unique identifier of the device.
+   * @param [options] The optional parameters
+   * @returns Promise<Models.CloudToDeviceMessagesPurgeCloudToDeviceMessageQueueResponse>
+   */
+  purgeCloudToDeviceMessageQueue(id: string, options?: msRest.RequestOptionsBase): Promise<Models.CloudToDeviceMessagesPurgeCloudToDeviceMessageQueueResponse>;
+  /**
+   * @param id The unique identifier of the device.
+   * @param callback The callback
+   */
+  purgeCloudToDeviceMessageQueue(id: string, callback: msRest.ServiceCallback<Models.PurgeMessageQueueResult>): void;
+  /**
+   * @param id The unique identifier of the device.
+   * @param options The optional parameters
+   * @param callback The callback
+   */
+  purgeCloudToDeviceMessageQueue(id: string, options: msRest.RequestOptionsBase, callback: msRest.ServiceCallback<Models.PurgeMessageQueueResult>): void;
+  purgeCloudToDeviceMessageQueue(id: string, options?: msRest.RequestOptionsBase | msRest.ServiceCallback<Models.PurgeMessageQueueResult>, callback?: msRest.ServiceCallback<Models.PurgeMessageQueueResult>): Promise<Models.CloudToDeviceMessagesPurgeCloudToDeviceMessageQueueResponse> {
+    return this.client.sendOperationRequest(
+      {
+        id,
+        options
+      },
+      purgeCloudToDeviceMessageQueueOperationSpec,
+      callback) as Promise<Models.CloudToDeviceMessagesPurgeCloudToDeviceMessageQueueResponse>;
+  }
+
+  /**
+   * Gets the feedback for cloud-to-device messages. See
    * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-messaging for more information. This
    * capability is only available in the standard tier IoT Hub. For more information, see [Choose the
    * right IoT Hub tier](https://aka.ms/scaleyouriotsolution).
-   * @summary This method is used to retrieve feedback of a cloud-to-device message.
    * @param [options] The optional parameters
    * @returns Promise<msRest.RestResponse>
    */
@@ -54,23 +82,24 @@ export class HttpRuntime {
   }
 
   /**
-   * This method completes a feedback message. The lockToken obtained when the message was received
-   * must be provided to resolve race conditions when completing, a feedback message. A completed
-   * message is deleted from the feedback queue. See
-   * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-messaging for more information.
-   * @summary This method completes a feedback message.
-   * @param lockToken Lock token.
+   * Completes the cloud-to-device feedback message. A completed message is deleted from the feedback
+   * queue of the service. See https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-messaging
+   * for more information.
+   * @param lockToken The lock token obtained when the cloud-to-device message is received. This is
+   * used to resolve race conditions when completing a feedback message.
    * @param [options] The optional parameters
    * @returns Promise<msRest.RestResponse>
    */
   completeFeedbackNotification(lockToken: string, options?: msRest.RequestOptionsBase): Promise<msRest.RestResponse>;
   /**
-   * @param lockToken Lock token.
+   * @param lockToken The lock token obtained when the cloud-to-device message is received. This is
+   * used to resolve race conditions when completing a feedback message.
    * @param callback The callback
    */
   completeFeedbackNotification(lockToken: string, callback: msRest.ServiceCallback<void>): void;
   /**
-   * @param lockToken Lock token.
+   * @param lockToken The lock token obtained when the cloud-to-device message is received. This is
+   * used to resolve race conditions when completing a feedback message.
    * @param options The optional parameters
    * @param callback The callback
    */
@@ -86,23 +115,20 @@ export class HttpRuntime {
   }
 
   /**
-   * This method abandons a feedback message. The lockToken obtained when the message was received
-   * must be provided to resolve race conditions when abandoning, a feedback message. A abandoned
-   * message is deleted from the feedback queue. See
+   * Abandons the lock on a cloud-to-device feedback message. See
    * https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-messaging for more information.
-   * @summary This method abandons a feedback message.
-   * @param lockToken Lock Token.
+   * @param lockToken The lock token obtained when the cloud-to-device message is received.
    * @param [options] The optional parameters
    * @returns Promise<msRest.RestResponse>
    */
   abandonFeedbackNotification(lockToken: string, options?: msRest.RequestOptionsBase): Promise<msRest.RestResponse>;
   /**
-   * @param lockToken Lock Token.
+   * @param lockToken The lock token obtained when the cloud-to-device message is received.
    * @param callback The callback
    */
   abandonFeedbackNotification(lockToken: string, callback: msRest.ServiceCallback<void>): void;
   /**
-   * @param lockToken Lock Token.
+   * @param lockToken The lock token obtained when the cloud-to-device message is received.
    * @param options The optional parameters
    * @param callback The callback
    */
@@ -120,6 +146,24 @@ export class HttpRuntime {
 
 // Operation Specifications
 const serializer = new msRest.Serializer(Mappers);
+const purgeCloudToDeviceMessageQueueOperationSpec: msRest.OperationSpec = {
+  httpMethod: "DELETE",
+  path: "devices/{id}/commands",
+  urlParameters: [
+    Parameters.id
+  ],
+  queryParameters: [
+    Parameters.apiVersion
+  ],
+  responses: {
+    200: {
+      bodyMapper: Mappers.PurgeMessageQueueResult
+    },
+    default: {}
+  },
+  serializer
+};
+
 const receiveFeedbackNotificationOperationSpec: msRest.OperationSpec = {
   httpMethod: "GET",
   path: "messages/serviceBound/feedback",

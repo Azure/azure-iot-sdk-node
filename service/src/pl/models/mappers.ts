@@ -1010,57 +1010,6 @@ export const PurgeMessageQueueResult: msRest.CompositeMapper = {
   }
 };
 
-export const FaultInjectionConnectionProperties: msRest.CompositeMapper = {
-  serializedName: "FaultInjectionConnectionProperties",
-  type: {
-    name: "Composite",
-    className: "FaultInjectionConnectionProperties",
-    modelProperties: {
-      action: {
-        serializedName: "action",
-        type: {
-          name: "String"
-        }
-      },
-      blockDurationInMinutes: {
-        serializedName: "blockDurationInMinutes",
-        type: {
-          name: "Number"
-        }
-      }
-    }
-  }
-};
-
-export const FaultInjectionProperties: msRest.CompositeMapper = {
-  serializedName: "FaultInjectionProperties",
-  type: {
-    name: "Composite",
-    className: "FaultInjectionProperties",
-    modelProperties: {
-      iotHubName: {
-        serializedName: "IotHubName",
-        type: {
-          name: "String"
-        }
-      },
-      connection: {
-        serializedName: "connection",
-        type: {
-          name: "Composite",
-          className: "FaultInjectionConnectionProperties"
-        }
-      },
-      lastUpdatedTimeUtc: {
-        serializedName: "lastUpdatedTimeUtc",
-        type: {
-          name: "DateTime"
-        }
-      }
-    }
-  }
-};
-
 export const CloudToDeviceMethod: msRest.CompositeMapper = {
   serializedName: "CloudToDeviceMethod",
   type: {
@@ -1406,11 +1355,11 @@ export const CloudToDeviceMethodResult: msRest.CompositeMapper = {
   }
 };
 
-export const RegistryManagerQueryIotHubHeaders: msRest.CompositeMapper = {
-  serializedName: "registrymanager-queryiothub-headers",
+export const QueryGetTwinsHeaders: msRest.CompositeMapper = {
+  serializedName: "query-gettwins-headers",
   type: {
     name: "Composite",
-    className: "RegistryManagerQueryIotHubHeaders",
+    className: "QueryGetTwinsHeaders",
     modelProperties: {
       xMsItemType: {
         serializedName: "x-ms-item-type",

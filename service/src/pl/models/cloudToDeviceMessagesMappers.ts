@@ -7,6 +7,5 @@
  */
 
 export {
-  FaultInjectionConnectionProperties,
-  FaultInjectionProperties
+  PurgeMessageQueueResult
 } from "../models/mappers";

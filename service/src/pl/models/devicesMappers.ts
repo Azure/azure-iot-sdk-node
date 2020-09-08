@@ -7,6 +7,13 @@
  */
 
 export {
+  AuthenticationMechanism,
   CloudToDeviceMethod,
-  CloudToDeviceMethodResult
+  CloudToDeviceMethodResult,
+  Device,
+  DeviceCapabilities,
+  SymmetricKey,
+  Twin,
+  TwinProperties,
+  X509Thumbprint
 } from "../models/mappers";

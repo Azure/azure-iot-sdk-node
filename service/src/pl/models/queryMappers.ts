@@ -7,21 +7,9 @@
  */
 
 export {
-  AuthenticationMechanism,
-  BulkRegistryOperationResult,
-  Device,
   DeviceCapabilities,
-  DeviceRegistryOperationError,
-  DeviceRegistryOperationWarning,
-  ExportImportDevice,
-  Module,
-  PropertyContainer,
-  PurgeMessageQueueResult,
+  QueryGetTwinsHeaders,
   QuerySpecification,
-  RegistryManagerQueryIotHubHeaders,
-  RegistryStatistics,
-  ServiceStatistics,
-  SymmetricKey,
   Twin,
   TwinProperties,
   X509Thumbprint

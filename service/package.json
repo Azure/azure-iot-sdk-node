@@ -52,7 +52,8 @@
     "unittest": "tsc && nyc --reporter lcov --reporter text ../node_modules/mocha/bin/_mocha",
     "alltest": "tsc && nyc --reporter lcov --reporter text ../node_modules/mocha/bin/_mocha test/_*_test*.js",
     "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min",
-    "test": "npm -s run lint && npm -s run build && npm -s run alltest"
+    "test": "npm -s run lint && npm -s run build && npm -s run alltest",
+    "generate-pl": "autorest --typescript --add-credentials --model-enum-as-union --license-header=MICROSOFT_MIT_NO_VERSION --source-code-folder-path=./src/pl --output-folder=./src/pl --input-file=src/service.json"
   },
   "nyc": {
     "exclude": [
