@@ -793,7 +793,7 @@ export interface CloudToDeviceMethodResult {
  */
 export interface IotHubGatewayServiceAPIsOptions extends ServiceClientOptions {
   /**
-   * Version of the Api. Default value: '2020-05-31-preview'.
+   * Version of the Api. Default value: '2020-09-30'.
    */
   apiVersion?: string;
   baseUri?: string;

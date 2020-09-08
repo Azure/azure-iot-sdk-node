@@ -3,25 +3,27 @@
 
 "use strict";
 
-var uuid = require('uuid');
-var JobClient = require('azure-iothub').JobClient;
+const uuid = require('uuid');
+const JobClient = require('azure-iothub').JobClient;
 
-var connectionString = process.env.IOTHUB_CONNECTION_STRING;
-var queryCondition = "deviceId IN ['<device Id 1>', '<device Id 2>']"; // example queryCondition = "deviceId IN ['MyDevice1', 'MyDevice2']"
-// For a single device you can also set queryCondition as "deviceId = '<device id>'" . Example, "deviceId = 'MyDevice1'" 
-var startTime = new Date();
-var maxExecutionTimeInSeconds =  3600;
+const connectionString = process.env.IOTHUB_CONNECTION_STRING;
+const queryCondition = 'deviceId IN [' +
+                      process.env.IOTHUB_DEVICE_ID + ', ' +
+                      process.env.IOTHUB_DEVICE_ID2 + ']'; // example queryCondition = "deviceId IN ['MyDevice1', 'MyDevice2']"
+// For a single device you can also set queryCondition as "deviceId = '<device id>'" . Example, "deviceId = 'MyDevice1'"
+const startTime = new Date();
+const maxExecutionTimeInSeconds =  3600;
 
-var jobClient = JobClient.fromConnectionString(connectionString);
+const jobClient = JobClient.fromConnectionString(connectionString);
 
 // Schedule a device method call.
-var methodParams = {
+const methodParams = {
   methodName: 'methodName',
   payload: null,
-  responseTimeoutInSeconds: 15 // set response timeout as 15 seconds 
+  responseTimeoutInSeconds: 15 // set response timeout as 15 seconds
 };
 
-var methodJobId = uuid.v4();
+const methodJobId = uuid.v4();
 console.log('scheduling Device Method job with id: ' + methodJobId);
 jobClient.scheduleDeviceMethod(methodJobId,
                                queryCondition,

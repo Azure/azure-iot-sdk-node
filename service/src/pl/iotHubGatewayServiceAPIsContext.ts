@@ -39,7 +39,7 @@ export class IotHubGatewayServiceAPIsContext extends msRest.ServiceClient {
 
     super(credentials, options);
 
-    this.apiVersion = '2020-05-31-preview';
+    this.apiVersion = '2020-09-30';
     this.baseUri = options.baseUri || this.baseUri || "https://fully-qualified-iothubname.azure-devices.net";
     this.requestContentType = "application/json; charset=utf-8";
     this.credentials = credentials;

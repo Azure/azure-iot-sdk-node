@@ -8,12 +8,12 @@ var iothub = require('azure-iothub');
 var connectionString = process.env.IOTHUB_CONNECTION_STRING;
 var registry = iothub.Registry.fromConnectionString(connectionString);
 var device = {
-  deviceId: '<DEVICE ID>',
+  deviceId: process.env.IOTHUB_DEVICE_ID,
   status: 'enabled',
   authentication: {
     x509Thumbprint: {
-      primaryThumbprint: "<PRIMARY THUMBPRINT>",
-      secondaryThumbprint: "<SECONDARY THUMBPRINT>"
+      primaryThumbprint: process.env.IOTHUB_PRIMARY_THUMBPRINT,
+      secondaryThumbprint: process.env.IOTHUB_SECONDARY_THUMBPRINT
     }
   }
 };

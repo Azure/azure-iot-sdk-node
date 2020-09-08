@@ -6,11 +6,11 @@
 var Client = require('azure-iothub').Client;
 
 var connectionString = process.env.IOTHUB_CONNECTION_STRING;
-var targetDevice = '<Device Id>';
+var targetDevice = process.env.IOTHUB_DEVICE_ID;
 var methodParams = {
-  methodName: '<Method Name>', 
-  payload: '[Method Payload]',
-  responseTimeoutInSeconds: 15 // set response timeout as 15 seconds 
+  methodName: process.env.IOTHUB_METHOD_NAME,
+  payload: process.env.IOTHUB_METHOD_PAYLOAD,
+  responseTimeoutInSeconds: 15 // set response timeout as 15 seconds
 };
 
 var client = Client.fromConnectionString(connectionString);

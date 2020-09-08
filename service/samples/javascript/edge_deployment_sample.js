@@ -64,7 +64,7 @@ var sampleDeployment = {
   'labels': {
     'Version': '3.0.1'
   },
-}
+};
 
 var printJson = function(obj) {
   console.log(JSON.stringify(obj, null, '  '));
@@ -110,7 +110,7 @@ var updateEdgeDeployment = function(done) {
       console.log('getConfiguration failed: ' + err);
       done();
     } else {
-      configFromService.metrics.queries['notAppliedCount'] = 'select deviceId from devices.modules where moduleId = \'$edgeAgent\' and configurations.[[fake-deployment]].status != \'Applied\'';
+      configFromService.metrics.queries.notAppliedCount = 'select deviceId from devices.modules where moduleId = \'$edgeAgent\' and configurations.[[fake-deployment]].status != \'Applied\'';
       registry.updateConfiguration(configFromService, function(err) {
         if (err) {
           console.log('updateConfiguration failed: ' + err);

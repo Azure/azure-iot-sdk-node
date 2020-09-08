@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+'use strict';
+
 const IoTHubTokenCredentials = require('azure-iothub').IoTHubTokenCredentials;
 const DigitalTwinServiceClient = require('azure-iothub').DigitalTwinServiceClient;
 
@@ -35,7 +37,7 @@ async function main() {
   await digitalTwinServiceClient.updateDigitalTwin(deviceId, patch);
 
   console.log('Patch has been succesfully applied');
-};
+}
 
 main().catch((err) => {
   console.log('error code: ', err.code);

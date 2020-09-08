@@ -51,10 +51,16 @@ set IOTHUB_CONNECTION_STRING=<your IoT Hub connection string>
 
 *use `export` instead of `set` if you're running MacOS or Linux.*
 
-* for some samples you can also set the following environment variable:
+* Depending on the samples you can also set the following environment variables:
 
 ```shell
 set IOTHUB_DEVICE_ID=<device id>
+set IOTHUB_PRIMARY_THUMBPRINT=<primary thumbprint>
+set IOTHUB_SECONDARY_THUMBPRINT=<secondary thumbprint>
+set IOTHUB_METHOD_NAME=<method name>
+set IOTHUB_METHOD_PAYLOAD=<method payload>
+set STORAGE_CONNECTION_STRING=<storage connection string>
+set IOTHUB_DEVICE_ID2=<second device id>
 ```
 
 * additionally some Plug and Play samples take the following environment variables:

@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "version": "2020-05-31-preview",
+    "version": "2020-09-30",
     "title": "IotHub Gateway Service APIs"
   },
   "host": "fully-qualified-iothubname.azure-devices.net",
@@ -2921,7 +2921,7 @@
       "description": "Version of the Api.",
       "required": true,
       "type": "string",
-      "default": "2020-05-31-preview"
+      "default": "2020-09-30"
     }
   }
 }

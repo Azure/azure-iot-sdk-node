@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+'use strict';
+
 const IoTHubTokenCredentials = require('azure-iothub').IoTHubTokenCredentials;
 const DigitalTwinServiceClient = require('azure-iothub').DigitalTwinServiceClient;
 const { inspect } = require('util');
@@ -25,7 +27,7 @@ async function main() {
 
   console.log(inspect(digitalTwin));
   console.log('Model Id: ' + inspect(digitalTwin.$metadata.$model));
-};
+}
 
 main().catch((err) => {
   console.log('error code: ', err.code);

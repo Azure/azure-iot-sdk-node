@@ -93,7 +93,7 @@ var updateConfiguration = function(done) {
       console.log('getConfiguration failed: ' + err);
       done();
     } else {
-      configFromService.metrics.queries['overheat'] = 'SELECT deviceId FROM devices WHERE properties.reported.chillerWaterSettings.temperature > 75';
+      configFromService.metrics.queries.overheat = 'SELECT deviceId FROM devices WHERE properties.reported.chillerWaterSettings.temperature > 75';
       registry.updateConfiguration(configFromService, function(err) {
         if (err) {
           console.log('updateConfiguration failed: ' + err);

@@ -17,14 +17,6 @@ var expiryDate = new Date(startDate);
 expiryDate.setMinutes(startDate.getMinutes() + 100);
 startDate.setMinutes(startDate.getMinutes() - 100);
 
-var inputSharedAccessPolicy = {
-  AccessPolicy: {
-    Permissions: 'rl',
-    Start: startDate,
-    Expiry: expiryDate
-  },
-};
-
 var outputSharedAccessPolicy = {
   AccessPolicy: {
     Permissions: 'rwd',
@@ -41,8 +33,6 @@ blobSvc.createContainerIfNotExists(inputContainerName, function (error) {
     if(error) {
         console.error('Could not create input container: ' + error.message);
     } else {
-        var inputSasToken = blobSvc.generateSharedAccessSignature(inputContainerName, null, inputSharedAccessPolicy);
-        var inputSasUrl = blobSvc.getUrl(inputContainerName, null, inputSasToken);
         blobSvc.createBlockBlobFromLocalFile(inputContainerName, deviceFile, deviceFile, function (error) {
             if (error) {
                 console.error('Could not create devices.txt: ' + error.message);

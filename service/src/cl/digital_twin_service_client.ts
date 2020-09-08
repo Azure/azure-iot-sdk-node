@@ -81,7 +81,7 @@ export class DigitalTwinServiceClient {
    * @private
    * The Azure IoT service's API version.
    */
-  private _apiVersion: string = '2020-05-31-preview';
+  private _apiVersion: string = '2020-09-30';
 
   /**
    * Constructor which also creates an instance of the Protocol Layer Client used by the DigitalTwinServiceClient.
