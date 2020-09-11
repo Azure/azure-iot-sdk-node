@@ -1,5 +1,5 @@
-/*! Copyright (c) Microsoft. All rights reserved.
- *! Licensed under the MIT license. See LICENSE file in the project root for full license information.
+/* Copyright (c) Microsoft. All rights reserved.
+ * Licensed under the MIT license. See LICENSE file in the project root for full license information.
  */
 
 'use strict';
@@ -39,32 +39,35 @@ export class Properties {
 
   /**
    * Returns the key-value pair corresponding to the given index.
+   *
    * @returns {Object}  Key-value pair corresponding to the given index. The
    *                    returned object has the properties `key` and `value`
    *                    corresponding to the key and value of the property.
    */
   /* Codes_SRS_NODE_IOTHUB_PROPERTIES_07_001: [if the supplied index is greater or equal to zero and the is less than property map length then it shall return the property object.] */
-  getItem(index: number): { key: string, value: string } {
-    if (index >= 0 && index < this.propertyList.length)
+  getItem(index: number): { key: string; value: string } {
+    if (index >= 0 && index < this.propertyList.length) {
       return this.propertyList[index];
+    }
 
-    /*Codes_SRS_NODE_IOTHUB_PROPERTIES_13_001: [ If the supplied index is less than zero or greater than or equal to the property map length then it shall return undefined. ]*/
+    /* Codes_SRS_NODE_IOTHUB_PROPERTIES_13_001: [ If the supplied index is less than zero or greater than or equal to the property map length then it shall return undefined. ] */
     return undefined;
   }
 
   /**
    * Returns the value property of the element that has the given key.
+   *
    * @returns {Object}  corresponding value or undefined if the key doesn't exist.
    */
   getValue(key: string): any {
     for (let i = 0; i < this.propertyList.length; i++) {
-      /*Codes_SRS_NODE_IOTHUB_PROPERTIES_16_002: [`Properties.getValue` should return the corresponding value of the `value` property of the element with the `key` property passed as argument.]*/
+      /* Codes_SRS_NODE_IOTHUB_PROPERTIES_16_002: [`Properties.getValue` should return the corresponding value of the `value` property of the element with the `key` property passed as argument.] */
       if (this.propertyList[i].key === key) {
         return this.propertyList[i].value;
       }
     }
 
-    /*Codes_SRS_NODE_IOTHUB_PROPERTIES_16_001: [`Properties.getValue` should return `undefined` if no element within the `propertyList` array contains `key`.]*/
+    /* Codes_SRS_NODE_IOTHUB_PROPERTIES_16_001: [`Properties.getValue` should return `undefined` if no element within the `propertyList` array contains `key`.] */
     return undefined;
   }
 

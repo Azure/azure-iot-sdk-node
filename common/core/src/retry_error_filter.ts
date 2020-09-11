@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-
+/* eslint-disable @typescript-eslint/naming-convention */
 /**
  * @private
  * Associates error types with a boolean value indicating whether it can be retried (true) or if it is fatal (false)
@@ -33,11 +33,10 @@ export interface ErrorFilter {
   TimeoutError: boolean;
   BadDeviceResponseError: boolean;
   GatewayTimeoutError: boolean; // ??
-  DeviceTimeoutError: boolean;// ??
+  DeviceTimeoutError: boolean; // ??
   TwinRequestError?: boolean;
 }
 
-/* tslint:disable:variable-name */
 /**
  * @private
  */
@@ -67,7 +66,6 @@ export class DefaultErrorFilter implements ErrorFilter {
   TimeoutError: boolean = true;
   BadDeviceResponseError: boolean = false;
   GatewayTimeoutError: boolean = false; // ??
-  DeviceTimeoutError: boolean = false;// ??
+  DeviceTimeoutError: boolean = false; // ??
   TwinRequestError?: boolean = false;
 }
-/* tslint:enable:variable-name */

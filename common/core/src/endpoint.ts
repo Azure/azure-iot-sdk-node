@@ -1,5 +1,5 @@
-/*! Copyright (c) Microsoft. All rights reserved.
- *! Licensed under the MIT license. See LICENSE file in the project root for full license information.
+/* Copyright (c) Microsoft. All rights reserved.
+ * Licensed under the MIT license. See LICENSE file in the project root for full license information.
  */
 
 'use strict';
@@ -28,7 +28,10 @@ export function deviceTwinPath(deviceId: string): string {
   return devicePath(deviceId) + '/twin';
 }
 
-export function deviceFeedbackPath(deviceId: string, lockToken: string): string {
+export function deviceFeedbackPath(
+  deviceId: string,
+  lockToken: string
+): string {
   return deviceMessagePath(deviceId) + '/' + lockToken;
 }
 
@@ -36,8 +39,15 @@ export function deviceBlobUploadPath(deviceId: string): string {
   return devicePath(deviceId) + '/files';
 }
 
-export function deviceBlobUploadNotificationPath(deviceId: string, correlationId: string): string {
-  return devicePath(deviceId) + '/files/notifications/' + encodeURIComponent(correlationId);
+export function deviceBlobUploadNotificationPath(
+  deviceId: string,
+  correlationId: string
+): string {
+  return (
+    devicePath(deviceId) +
+    '/files/notifications/' +
+    encodeURIComponent(correlationId)
+  );
 }
 
 export function modulePath(deviceId: string, moduleId: string): string {
@@ -60,7 +70,10 @@ export function moduleTwinPath(deviceId: string, moduleId: string): string {
   return modulePath(deviceId, moduleId) + '/twin';
 }
 
-export function moduleInputMessagePath(deviceId: string, moduleId: string): string {
+export function moduleInputMessagePath(
+  deviceId: string,
+  moduleId: string
+): string {
   return modulePath(deviceId, moduleId) + '/inputs';
 }
 

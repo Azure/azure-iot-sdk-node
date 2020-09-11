@@ -1,5 +1,5 @@
-/*! Copyright (c) Microsoft. All rights reserved.
- *! Licensed under the MIT license. See LICENSE file in the project root for full license information.
+/* Copyright (c) Microsoft. All rights reserved.
+ * Licensed under the MIT license. See LICENSE file in the project root for full license information.
  */
 
 'use strict';
@@ -69,12 +69,13 @@ export class Message {
 
   /**
    * Creates a new {@link azure-iot-common.Message} object
+   *
    * @constructor
    * @param data a Node [Buffer]{@link https://nodejs.org/api/globals.html#globals_class_buffer}
    *             object or anything that can be passed to the [Buffer]{@link https://nodejs.org/api/globals.html#globals_class_buffer} constructor
    *             to construct a [Buffer]{@link https://nodejs.org/api/globals.html#globals_class_buffer} from.
    */
-  /*Codes_SRS_NODE_IOTHUB_MESSAGE_07_004: [The Message constructor shall accept a variable message that will be transmitted.]*/
+  /* Codes_SRS_NODE_IOTHUB_MESSAGE_07_004: [The Message constructor shall accept a variable message that will be transmitted.] */
   constructor(data: Message.BufferConvertible) {
     this.data = data;
 
@@ -95,7 +96,7 @@ export class Message {
    * @returns {*} The content of the {@link azure-iot-common.Message}.
    */
   getData(): Message.BufferConvertible {
-    /*Codes_SRS_NODE_IOTHUB_MESSAGE_07_003: [The getData function shall return a representation of the body of the message as the type that was presented during construction.]*/
+    /* Codes_SRS_NODE_IOTHUB_MESSAGE_07_003: [The getData function shall return a representation of the body of the message as the type that was presented during construction.] */
     return this.data;
   }
 
@@ -105,11 +106,11 @@ export class Message {
    * @returns {Buffer}
    */
   getBytes(): Buffer {
-    if (Buffer.isBuffer(this.data) ) {
-      /*Codes_SRS_NODE_IOTHUB_MESSAGE_07_001: [If the data message that is store is of type Buffer then the data object will get returned unaltered.]*/
+    if (Buffer.isBuffer(this.data)) {
+      /* Codes_SRS_NODE_IOTHUB_MESSAGE_07_001: [If the data message that is store is of type Buffer then the data object will get returned unaltered.] */
       return this.data;
     } else {
-      /*Codes_SRS_NODE_IOTHUB_MESSAGE_07_002: [If the data message is of any other type then the data will be converted to a Buffer object and returned.]*/
+      /* Codes_SRS_NODE_IOTHUB_MESSAGE_07_002: [If the data message is of any other type then the data will be converted to a Buffer object and returned.] */
       return Buffer.from(this.data);
     }
   }
@@ -129,7 +130,7 @@ export class Message {
    * @returns True if the object is of type {@link Message.BufferConvertible}
    */
   static isBufferConvertible(obj: any): boolean {
-    /*Codes_SRS_NODE_IOTHUB_MESSAGE_18_001: [`isBufferConvertible` shall return `true` if `obj` is a `Buffer`, a `string`, an `Array`, or an `ArrayBuffer`.]*/
+    /* Codes_SRS_NODE_IOTHUB_MESSAGE_18_001: [`isBufferConvertible` shall return `true` if `obj` is a `Buffer`, a `string`, an `Array`, or an `ArrayBuffer`.] */
     if (Buffer.isBuffer(obj)) {
       return true;
     } else if (typeof obj === 'string') {
@@ -139,13 +140,14 @@ export class Message {
     } else if (obj instanceof ArrayBuffer) {
       return true;
     } else {
-      /*Codes_SRS_NODE_IOTHUB_MESSAGE_18_002: [`isBufferConvertible` shall return `false` if `obj` is any other type.]*/
+      /* Codes_SRS_NODE_IOTHUB_MESSAGE_18_002: [`isBufferConvertible` shall return `false` if `obj` is any other type.] */
       return false;
     }
   }
 }
 
+/* eslint-disable no-redeclare */
 export namespace Message {
-  export type BufferConvertible = Buffer | String | any[] | ArrayBuffer;
-
+  export type BufferConvertible = Buffer | string | any[] | ArrayBuffer;
 }
+/* eslint-enable no-redeclare */

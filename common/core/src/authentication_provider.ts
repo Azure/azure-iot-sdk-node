@@ -4,6 +4,7 @@
 import { TransportConfig } from './authorization';
 import { Callback } from './promise_utils';
 
+/* eslint-disable @typescript-eslint/naming-convention */
 /**
  * Designate the type of authentication used by an `AuthenticationProvider`.
  */
@@ -17,6 +18,7 @@ export enum AuthenticationType {
    */
   Token
 }
+/* eslint-enable @typescript-eslint/naming-convention */
 
 /**
  * Interface that must be implemented by objects that are used to provide credentials to the transports used by the device client
@@ -26,5 +28,8 @@ export interface AuthenticationProvider {
   type: AuthenticationType;
   getDeviceCredentials(callback: Callback<TransportConfig>): void;
   getDeviceCredentials(): Promise<TransportConfig>;
-  setTokenRenewalValues?(tokenValidTimeInSeconds: number, tokenRenewalMarginInSeconds: number): void;
-  }
+  setTokenRenewalValues?(
+    tokenValidTimeInSeconds: number,
+    tokenRenewalMarginInSeconds: number
+  ): void;
+}

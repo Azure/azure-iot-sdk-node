@@ -10,7 +10,10 @@ import { ResultWithHttpResponse } from './results';
  * @template TResult1 - Type of the first result value, possibly Error.
  * @template TResult2 - Type of the second result value, possibly Error.
  */
-export type DoubleValueCallback<TResult1, TResult2> = (result1?: TResult1, result2?: TResult2) => void;
+export type DoubleValueCallback<TResult1, TResult2> = (
+  result1?: TResult1,
+  result2?: TResult2
+) => void;
 
 /**
  * Defines type describing callback with one non-error result value.
@@ -37,7 +40,11 @@ export type Callback<TResult> = DoubleValueCallback<Error, TResult>;
  * @template TResult1 - Type of the first result value.
  * @template TResult2 - Type of the second result value.
  */
-export type TripleValueCallback<TResult1, TResult2> = (error?: Error, result1?: TResult1, result2?: TResult2) => void;
+export type TripleValueCallback<TResult1, TResult2> = (
+  error?: Error,
+  result1?: TResult1,
+  result2?: TResult2
+) => void;
 
 /**
  * Defines type describing callback with three results - response, raw HTTP response and an Error.
@@ -69,7 +76,10 @@ export type HttpResponseCallback<TResult> = TripleValueCallback<TResult, any>;
  * const param = 42;
  * callbackToPromise((_callback) => foo(param, _callback)).then(result => { console.log(result); }, error => { console.error(error); });
  */
-export function callbackToPromise<TResult>(callBackOperation: (callback: Callback<TResult>) => void, userCallback?: Callback<TResult>): Promise<TResult> | void {
+export function callbackToPromise<TResult>(
+  callBackOperation: (callback: Callback<TResult>) => void,
+  userCallback?: Callback<TResult>
+): Promise<TResult> | void {
   if (userCallback) {
     if (!(typeof userCallback === 'function')) {
       throw new TypeError('Callback has to be a Function');
@@ -115,9 +125,17 @@ export function callbackToPromise<TResult>(callBackOperation: (callback: Callbac
  * const param = 42;
  * errorCallbackToPromise((_callback) => foo(param, _callback)).then(_ => { }, err => { console.log(err); });
  */
-export function errorCallbackToPromise(callBackOperation: (callback: ErrorCallback) => void, userCallback: ErrorCallback): void;
-export function errorCallbackToPromise(callBackOperation: (callback: ErrorCallback) => void): Promise<void>;
-export function errorCallbackToPromise(callBackOperation: (callback: ErrorCallback) => void, userCallback?: ErrorCallback): Promise<void> | void {
+export function errorCallbackToPromise(
+  callBackOperation: (callback: ErrorCallback) => void,
+  userCallback: ErrorCallback
+): void;
+export function errorCallbackToPromise(
+  callBackOperation: (callback: ErrorCallback) => void
+): Promise<void>;
+export function errorCallbackToPromise(
+  callBackOperation: (callback: ErrorCallback) => void,
+  userCallback?: ErrorCallback
+): Promise<void> | void {
   return callbackToPromise(callBackOperation, userCallback);
 }
 
@@ -144,9 +162,17 @@ export function errorCallbackToPromise(callBackOperation: (callback: ErrorCallba
  * const param = 42;
  * noErrorCallbackToPromise((_callback) => foo(param, _callback)).then(result => { console.log(result); }, err => { console.log("it never rejects"); });
  */
-export function noErrorCallbackToPromise<TResult>(callBackOperation: (callback: NoErrorCallback<TResult>) => void, userCallback: NoErrorCallback<TResult>): void;
-export function noErrorCallbackToPromise<TResult>(callBackOperation: (callback: NoErrorCallback<TResult>) => void): Promise<TResult>;
-export function noErrorCallbackToPromise<TResult>(callBackOperation: (callback: NoErrorCallback<TResult>) => void, userCallback?: NoErrorCallback<TResult>): Promise<TResult> | void {
+export function noErrorCallbackToPromise<TResult>(
+  callBackOperation: (callback: NoErrorCallback<TResult>) => void,
+  userCallback: NoErrorCallback<TResult>
+): void;
+export function noErrorCallbackToPromise<TResult>(
+  callBackOperation: (callback: NoErrorCallback<TResult>) => void
+): Promise<TResult>;
+export function noErrorCallbackToPromise<TResult>(
+  callBackOperation: (callback: NoErrorCallback<TResult>) => void,
+  userCallback?: NoErrorCallback<TResult>
+): Promise<TResult> | void {
   if (userCallback) {
     if (!(typeof userCallback === 'function')) {
       throw new TypeError('Callback has to be a Function');
@@ -155,11 +181,9 @@ export function noErrorCallbackToPromise<TResult>(callBackOperation: (callback: 
     return callBackOperation(userCallback);
   }
 
-  return new Promise<TResult>((resolve, _reject) => {
-    callBackOperation((result) => {
-      return resolve(result);
-    });
-  });
+  return new Promise<TResult>((resolve, _reject) =>
+    callBackOperation(result => resolve(result))
+  );
 }
 
 /**
@@ -192,17 +216,38 @@ export function noErrorCallbackToPromise<TResult>(callBackOperation: (callback: 
  * const param = 42;
  * doubleValueCallbackToPromise((_callback) => foo(param, _callback), pack).then(result => { console.log(result); }, err => { console.error(error); });
  */
-export function doubleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>(
-  callBackOperation: (callback: DoubleValueCallback<TResult1, TResult2>) => void,
+export function doubleValueCallbackToPromise<
+  TResult1,
+  TResult2,
+  TPromiseResult
+>(
+  callBackOperation: (
+    callback: DoubleValueCallback<TResult1, TResult2>
+  ) => void,
   packResults: (result1: TResult1, result2: TResult2) => TPromiseResult,
-  userCallback: DoubleValueCallback<TResult1, TResult2>): void;
-export function doubleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>(
-  callBackOperation: (callback: DoubleValueCallback<TResult1, TResult2>) => void,
-  packResults: (result1: TResult1, result2: TResult2) => TPromiseResult): Promise<TPromiseResult>;
-export function doubleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>(
-  callBackOperation: (callback: DoubleValueCallback<TResult1, TResult2>) => void,
+  userCallback: DoubleValueCallback<TResult1, TResult2>
+): void;
+export function doubleValueCallbackToPromise<
+  TResult1,
+  TResult2,
+  TPromiseResult
+>(
+  callBackOperation: (
+    callback: DoubleValueCallback<TResult1, TResult2>
+  ) => void,
+  packResults: (result1: TResult1, result2: TResult2) => TPromiseResult
+): Promise<TPromiseResult>;
+export function doubleValueCallbackToPromise<
+  TResult1,
+  TResult2,
+  TPromiseResult
+>(
+  callBackOperation: (
+    callback: DoubleValueCallback<TResult1, TResult2>
+  ) => void,
   packResults: (result1: TResult1, result2: TResult2) => TPromiseResult,
-  userCallback?: DoubleValueCallback<TResult1, TResult2>): Promise<TPromiseResult> | void {
+  userCallback?: DoubleValueCallback<TResult1, TResult2>
+): Promise<TPromiseResult> | void {
   if (userCallback) {
     if (!(typeof userCallback === 'function')) {
       throw new TypeError('Callback has to be a Function');
@@ -260,17 +305,38 @@ export function doubleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>
  * const param = 42;
  * tripleValueCallbackToPromise((_callback) => foo(param, _callback), pack).then(result => { console.log(result); }, err => { console.error(error); });
  */
-export function tripleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>(
-  callbackOperation: (callback: TripleValueCallback<TResult1, TResult2>) => void,
+export function tripleValueCallbackToPromise<
+  TResult1,
+  TResult2,
+  TPromiseResult
+>(
+  callbackOperation: (
+    callback: TripleValueCallback<TResult1, TResult2>
+  ) => void,
   packResults: (result1: TResult1, result2: TResult2) => TPromiseResult,
-  userCallback: TripleValueCallback<TResult1, TResult2>): void;
-export function tripleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>(
-  callbackOperation: (callback: TripleValueCallback<TResult1, TResult2>) => void,
-  packResults: (result1: TResult1, result2: TResult2) => TPromiseResult, ): Promise<TPromiseResult>;
-export function tripleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>(
-  callbackOperation: (callback: TripleValueCallback<TResult1, TResult2>) => void,
+  userCallback: TripleValueCallback<TResult1, TResult2>
+): void;
+export function tripleValueCallbackToPromise<
+  TResult1,
+  TResult2,
+  TPromiseResult
+>(
+  callbackOperation: (
+    callback: TripleValueCallback<TResult1, TResult2>
+  ) => void,
+  packResults: (result1: TResult1, result2: TResult2) => TPromiseResult
+): Promise<TPromiseResult>;
+export function tripleValueCallbackToPromise<
+  TResult1,
+  TResult2,
+  TPromiseResult
+>(
+  callbackOperation: (
+    callback: TripleValueCallback<TResult1, TResult2>
+  ) => void,
   packResults: (result1: TResult1, result2: TResult2) => TPromiseResult,
-  userCallback?: TripleValueCallback<TResult1, TResult2>): Promise<TPromiseResult> | void {
+  userCallback?: TripleValueCallback<TResult1, TResult2>
+): Promise<TPromiseResult> | void {
   if (userCallback) {
     if (!(typeof userCallback === 'function')) {
       throw new TypeError('Callback has to be a Function');
@@ -296,6 +362,16 @@ export function tripleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>
 
 /**
  * @private
+ */
+export function createResultWithHttpResponse<TResult>(
+  responseBody: TResult,
+  httpResponse: any
+): ResultWithHttpResponse<TResult> {
+  return { responseBody: responseBody, httpResponse: httpResponse };
+}
+
+/**
+ * @private
  *
  * Converts method taking callback with two result values (response body and HTTP response itself)
  * and an error as a parameter to method returning a Promise if userCallback is not specified.
@@ -307,18 +383,19 @@ export function tripleValueCallbackToPromise<TResult1, TResult2, TPromiseResult>
  * @template TResult - Type of the response body result.
  */
 export function httpCallbackToPromise<TResult>(
-  callbackOperation: (callback: HttpResponseCallback<TResult>) => void, callback: HttpResponseCallback<TResult>): void;
+  callbackOperation: (callback: HttpResponseCallback<TResult>) => void,
+  callback: HttpResponseCallback<TResult>
+): void;
 export function httpCallbackToPromise<TResult>(
-  callbackOperation: (callback: HttpResponseCallback<TResult>) => void): Promise<ResultWithHttpResponse<TResult>>;
+  callbackOperation: (callback: HttpResponseCallback<TResult>) => void
+): Promise<ResultWithHttpResponse<TResult>>;
 export function httpCallbackToPromise<TResult>(
   callbackOperation: (callback: HttpResponseCallback<TResult>) => void,
-  callback?: HttpResponseCallback<TResult>): Promise<ResultWithHttpResponse<TResult>> | void {
-  return tripleValueCallbackToPromise(callbackOperation, (b, r) => createResultWithHttpResponse(b, r), callback);
-}
-
-/**
- * @private
- */
-export function createResultWithHttpResponse<TResult>(responseBody: TResult, httpResponse: any): ResultWithHttpResponse<TResult> {
-  return { responseBody: responseBody, httpResponse: httpResponse };
+  callback?: HttpResponseCallback<TResult>
+): Promise<ResultWithHttpResponse<TResult>> | void {
+  return tripleValueCallbackToPromise(
+    callbackOperation,
+    (b, r) => createResultWithHttpResponse(b, r),
+    callback
+  );
 }
