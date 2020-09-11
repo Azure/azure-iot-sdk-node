@@ -20,10 +20,8 @@ describe('RetryPolicy', function() {
           TimeoutError: false,
           UnauthorizedError: true
         };
-        const testPolicy = new ExponentialBackOffWithJitter(
-          testPolicy,
-          testFilter
-        );
+        let testPolicy;
+        testPolicy = new ExponentialBackOffWithJitter(testPolicy, testFilter);
         assert.isFalse(
           testPolicy.shouldRetry(
             new errors.TimeoutError(
