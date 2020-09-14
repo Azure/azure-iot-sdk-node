@@ -4,6 +4,7 @@
 		"cm": "git-cz"
 	},
 	"devDependencies": {
+		"node": "12.18.3",
 		"@commitlint/cli": "^10.0.0",
 		"@commitlint/config-conventional": "^10.0.0",
 		"commitizen": "^4.1.2",
@@ -37,8 +38,5 @@
 		"commitizen": {
 			"path": "cz-conventional-changelog"
 		}
-	},
-	"dependencies": {
-		"eslint-plugin-jsdoc": "^30.2.4"
 	}
 }
