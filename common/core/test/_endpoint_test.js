@@ -82,7 +82,7 @@ describe('endpoint', function () {
   },
   {
     name: 'versionQueryStringPnP',
-    expected: '?api-version=' + endpoint.apiVersionPnP,
+    expected: '?api-version=' + endpoint.apiVersion,
     actual: endpoint.versionQueryStringPnP()
   },
   {
