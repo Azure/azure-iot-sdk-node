@@ -57,6 +57,10 @@ export class Twin implements TwinData {
    */
   etag: string;
   /**
+   * Model Id of the device identity associated with the twin, as it exists in the device identity registry.
+   */
+  modelId?: string;
+  /**
    * Collection of key/value pairs that is available only on the service side and can be used in queries to find specific devices.
    */
   tags: {

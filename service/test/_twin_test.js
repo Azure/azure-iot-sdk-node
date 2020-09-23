@@ -91,9 +91,11 @@ describe('Twin', function() {
     it('calls the getModuleTwin method on the Registry', function() {
       var fakeDeviceId = 'deviceId';
       var fakeModuleId = 'moduleId';
+      var fakeModelId = 'modelId';
       var registry = new Registry(fakeConfig, {});
       var twin = new Twin(fakeDeviceId, registry);
       twin.moduleId = fakeModuleId;
+      twin.modelId = fakeModelId;
 
       sinon.stub(registry, 'getModuleTwin');
 
