@@ -91,11 +91,9 @@ describe('Twin', function() {
     it('calls the getModuleTwin method on the Registry', function() {
       var fakeDeviceId = 'deviceId';
       var fakeModuleId = 'moduleId';
-      var fakeModelId = 'modelId';
       var registry = new Registry(fakeConfig, {});
       var twin = new Twin(fakeDeviceId, registry);
       twin.moduleId = fakeModuleId;
-      twin.modelId = fakeModelId;
 
       sinon.stub(registry, 'getModuleTwin');
 
@@ -145,7 +143,7 @@ describe('Twin', function() {
     /*Tests_SRS_NODE_IOTHUB_TWIN_16_023: [The method shall call the `done` callback with a `null` error object, its parent instance as a second argument and the transport `response` object as a third argument if the request succeeds**/
     it('calls the done callback with a null error object, a twin and a response', function(testCallback) {
       var fakeDeviceId = 'deviceId';
-      var fakeTwin = { deviceId: fakeDeviceId };
+      var fakeTwin = { deviceId: 'fakeDeviceId' };
       var fakeResponse = { statusCode: 200 };
       var registry = new Registry(fakeConfig, {});
       var twin = new Twin(fakeDeviceId, registry);

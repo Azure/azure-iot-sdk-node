@@ -735,7 +735,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     }
 
     /*Codes_SRS_NODE_DEVICE_MQTT_41_015: [If a modelId is provided, the device should use the PnP API String] */
-    let apiVersionString = this._mid ? endpoint.versionQueryStringPnP() : endpoint.versionQueryString();
+    let apiVersionString = endpoint.versionQueryString();
 
     /*Codes_SRS_NODE_DEVICE_MQTT_16_016: [If the connection string does not specify a `gatewayHostName` value, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_054: [If a `gatewayHostName` is specified in the connection string, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<gatewayhostname>`. ]*/

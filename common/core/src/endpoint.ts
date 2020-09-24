@@ -67,10 +67,6 @@ export function versionQueryString(): string {
   return '?api-version=' + apiVersion;
 }
 
-export function versionQueryStringPnP(): string {
-  return '?api-version=' + apiVersion;
-}
-
 export function versionQueryStringLimitedAvailability(): string {
   // This addition is for the limited Availability of certain service
   // regions

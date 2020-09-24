@@ -648,7 +648,7 @@ describe('Mqtt', function () {
         assert.isNotOk(err);
         assert.strictEqual(mqtt._mid, fakeModelId);
         getUserAgentString(function (userAgentString) {
-          const expectedUsername = 'host.name/deviceId/' + endpoint.versionQueryStringPnP() + fakeModelId + '&DeviceClientType=' + encodeURIComponent(userAgentString);
+          const expectedUsername = 'host.name/deviceId/' + endpoint.versionQueryString() + fakeModelId + '&DeviceClientType=' + encodeURIComponent(userAgentString);
           mqtt.connect(function (err) {
             assert.isNotOk(err);
             assert.strictEqual(fakeMqttBase.connect.firstCall.args[0]['username'], expectedUsername);
