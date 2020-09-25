@@ -7,7 +7,7 @@ const IoTHubTokenCredentials = require('azure-iothub').IoTHubTokenCredentials;
 const DigitalTwinClient = require('azure-iothub').DigitalTwinClient;
 
 // Simple example of how to:
-// - create a Digital Twin Service Client using the DigitalTwinClient constructor
+// - create a Digital Twin Client using the DigitalTwinClient constructor
 // - create a patch for modifying the Digital Twin
 // - update the Digital Twin with patch
 //

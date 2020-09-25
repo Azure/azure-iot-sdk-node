@@ -1,4 +1,4 @@
-# Digital Twin Service Client requirements
+# Digital Twin Client requirements
 
 The `DigitalTwinClient` class provides methods to interact with a device's digital twin object stored in Azure IoT Hub.
 

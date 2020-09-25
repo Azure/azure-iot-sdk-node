@@ -8,7 +8,7 @@ const DigitalTwinClient = require('azure-iothub').DigitalTwinClient;
 const { inspect } = require('util');
 
 // Simple example of how to:
-// - create a Digital Twin Service Client using the DigitalTwinClient constructor
+// - create a Digital Twin Client using the DigitalTwinClient constructor
 // - invoke a root level command on a Digital Twin enabled device
 //
 // Preconditions:

@@ -5,7 +5,7 @@ import { DigitalTwinClient } from 'azure-iothub';
 import { IoTHubTokenCredentials } from 'azure-iothub';
 
 // Simple example of how to:
-// - create a Digital Twin Service Client using the DigitalTwinClient constructor
+// - create a Digital Twin Client using the DigitalTwinClient constructor
 // - get the Digital Twin
 //
 // Preconditions:

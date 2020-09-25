@@ -10,7 +10,7 @@ const commandName = process.env.IOTHUB_COMMAND_NAME || 'turnOn'; // for the envi
 const commandPayload = process.env.IOTHUB_COMMAND_PAYLOAD || ''; // for the environmental sensor, it really doesn't matter. any string will do.
 
 // Simple example of how to:
-// - create a Digital Twin Service Client using the DigitalTwinClient constructor
+// - create a Digital Twin Client using the DigitalTwinClient constructor
 // - invoke a root level command on a Digital Twin enabled device
 //
 // Preconditions:
