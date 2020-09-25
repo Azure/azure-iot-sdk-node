@@ -4,10 +4,10 @@
 'use strict';
 
 const IoTHubTokenCredentials = require('azure-iothub').IoTHubTokenCredentials;
-const DigitalTwinServiceClient = require('azure-iothub').DigitalTwinServiceClient;
+const DigitalTwinClient = require('azure-iothub').DigitalTwinClient;
 
 // Simple example of how to:
-// - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
+// - create a Digital Twin Service Client using the DigitalTwinClient constructor
 // - create a patch for modifying the Digital Twin
 // - update the Digital Twin with patch
 //
@@ -20,7 +20,7 @@ async function main() {
 
   // Create service client
   const credentials = new IoTHubTokenCredentials(connString);
-  const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
+  const digitalTwinClient = new DigitalTwinClient(credentials);
 
   // Update digital twin and verify the update
   // If you already have a component thermostat1:
@@ -34,7 +34,7 @@ async function main() {
     path: '/targetTemperature',
     value: 42
   }];
-  await digitalTwinServiceClient.updateDigitalTwin(deviceId, patch);
+  await digitalTwinClient.updateDigitalTwin(deviceId, patch);
 
   console.log('Patch has been succesfully applied');
 }

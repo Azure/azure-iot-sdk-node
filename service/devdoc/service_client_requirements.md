@@ -1,6 +1,6 @@
 # Digital Twin Service Client requirements
 
-The `DigitalTwinServiceClient` class provides methods to interact with a device's digital twin object stored in Azure IoT Hub.
+The `DigitalTwinClient` class provides methods to interact with a device's digital twin object stored in Azure IoT Hub.
 
 ## Overview
 
@@ -19,7 +19,7 @@ type GetModelResponse = Models.DigitalTwinGetDigitalTwinModelResponse;
 type DigitalTwinUpdateDigitalTwinModelResponse = Models.DigitalTwinUpdateDigitalTwinModelResponse | void;
 type DigitalTwinInvokeComponentCommandResponse = Models.DigitalTwinInvokeComponentCommandResponse;
 
-class DigitalTwinServiceClient
+class DigitalTwinClient
 
   getDigitalTwin(digitalTwinId: string): Promise<DigitalTwinResponse>;
   getDigitalTwin(digitalTwinId: string, callback: TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>): void;
@@ -58,7 +58,7 @@ class DigitalTwinServiceClient
 
 ## Constructor
 
-**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_001: [** The `DigitalTwinServiceClient` creates an instance of the DigitalTwinServiceClient passing IoTHubTokenCredentials class as an argument. **]**
+**SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_001: [** The `DigitalTwinClient` creates an instance of the DigitalTwinClient passing IoTHubTokenCredentials class as an argument. **]**
 
 ## getDigitalTwin
 

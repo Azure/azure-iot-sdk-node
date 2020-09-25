@@ -7,7 +7,7 @@
 
 var assert = require('chai').assert;
 var sinon = require('sinon');
-var DigitalTwinServiceClient = require('../dist/cl/digital_twin_service_client').DigitalTwinServiceClient;
+var DigitalTwinClient = require('../dist/cl/digital_twin_service_client').DigitalTwinClient;
 
 var testCredentials = {
   signRequest: sinon.stub().callsFake(function (webResource) {
@@ -16,11 +16,11 @@ var testCredentials = {
   getHubName: sinon.stub().returns('fake.host.name')
 };
 
-describe('DigitalTwinServiceClient', function () {
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_001: [The `DigitalTwinServiceClient` creates an instance of the DigitalTwinServiceClient passing IoTHubTokenCredentials class as an argument.]*/
-  it(`Constructor creates an instance of the DigitalTwinServiceClient`, function (testCallback) {
-    var digitalTwinServiceClient = new DigitalTwinServiceClient(testCredentials);
-    assert.instanceOf(digitalTwinServiceClient, DigitalTwinServiceClient);
+describe('DigitalTwinClient', function () {
+  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_001: [The `DigitalTwinClient` creates an instance of the DigitalTwinClient passing IoTHubTokenCredentials class as an argument.]*/
+  it(`Constructor creates an instance of the DigitalTwinClient`, function (testCallback) {
+    var digitalTwinClient = new DigitalTwinClient(testCredentials);
+    assert.instanceOf(digitalTwinClient, DigitalTwinClient);
     testCallback();
   });
 
@@ -34,7 +34,7 @@ describe('DigitalTwinServiceClient', function () {
       },
       response: undefined
     };
-    var testClient = new DigitalTwinServiceClient(testCredentials);
+    var testClient = new DigitalTwinClient(testCredentials);
     testClient._pl.digitalTwin.getDigitalTwin = sinon.stub().callsArgWith(1, null, testDigitalTwin);
     testClient.getDigitalTwin(testTwinId, function (err, result, response) {
       assert.isTrue(testClient._pl.digitalTwin.getDigitalTwin.calledWith(testTwinId));
@@ -49,7 +49,7 @@ describe('DigitalTwinServiceClient', function () {
   it('getDigitalTwin calls its callback with an error if the PL client fails', function (testCallback) {
     var testTwinId = 'digitalTwinId';
     var testError = new Error('fake error');
-    var testClient = new DigitalTwinServiceClient(testCredentials);
+    var testClient = new DigitalTwinClient(testCredentials);
     testClient._pl.digitalTwin.getDigitalTwin = sinon.stub().callsArgWith(1, testError);
     testClient.getDigitalTwin(testTwinId, function (err) {
       assert.isTrue(testClient._pl.digitalTwin.getDigitalTwin.calledWith(testTwinId));
@@ -66,7 +66,7 @@ describe('DigitalTwinServiceClient', function () {
         testInterfaceInstanceName: {}
       }
     };
-    var testClient = new DigitalTwinServiceClient(testCredentials);
+    var testClient = new DigitalTwinClient(testCredentials);
     testClient._pl.digitalTwin.getDigitalTwin = sinon.stub().callsArgWith(1, null, testDigitalTwin);
     const returnedPromise = await testClient.getDigitalTwin(testTwinId);
     assert.deepEqual(returnedPromise.interfaces, testDigitalTwin.interfaces);
@@ -121,7 +121,7 @@ describe('DigitalTwinServiceClient', function () {
       version: 1234
     };
 
-    var testClient = new DigitalTwinServiceClient(testCredentials);
+    var testClient = new DigitalTwinClient(testCredentials);
     testClient._pl.digitalTwin.updateDigitalTwin = sinon.stub().callsArgWith(3, null, testServicePatch, null, undefined);
     testClient.updateDigitalTwin(testTwinId, testUserPatch, function (err, result) {
       assert.isTrue(testClient._pl.digitalTwin.updateDigitalTwin.calledWith(testTwinId, testUserPatch));
@@ -140,7 +140,7 @@ describe('DigitalTwinServiceClient', function () {
       }
     };
     var testError = new Error('fake error');
-    var testClient = new DigitalTwinServiceClient(testCredentials);
+    var testClient = new DigitalTwinClient(testCredentials);
     testClient._pl.digitalTwin.updateDigitalTwin = sinon.stub().callsArgWith(3, testError);
     testClient.updateDigitalTwin(testTwinId, testPatch, function (err, result) {
       assert.isTrue(testClient._pl.digitalTwin.updateDigitalTwin.calledWith(testTwinId));
@@ -160,7 +160,7 @@ describe('DigitalTwinServiceClient', function () {
     var testPatch = {
       eTag: '001'
     };
-    var testClient = new DigitalTwinServiceClient(testCredentials);
+    var testClient = new DigitalTwinClient(testCredentials);
     testClient._pl.digitalTwin.updateDigitalTwin = sinon.stub().callsArgWith(3, null, testDigitalTwin, null, undefined);
     const returnedPromise = await testClient.updateDigitalTwin(testTwinId, testPatch);
     assert.deepEqual(returnedPromise, testDigitalTwin);
@@ -201,7 +201,7 @@ describe('DigitalTwinServiceClient', function () {
       },
       version: undefined
     };
-    var testClient = new DigitalTwinServiceClient(testCredentials);
+    var testClient = new DigitalTwinClient(testCredentials);
     testClient._pl.digitalTwin.updateDigitalTwin = sinon.stub().callsArgWith(3, null, testServicePatch, null, testResponse);
     testClient.updateDigitalTwin(testTwinId, testUserPatch, eTag, function (err, result) {
       assert.isTrue(testClient._pl.digitalTwin.updateDigitalTwin.calledWith(testTwinId, testUserPatch));
@@ -230,7 +230,7 @@ describe('DigitalTwinServiceClient', function () {
         testInterfaceInstanceName: {}
       }
     };
-    var testClient = new DigitalTwinServiceClient(testCredentials);
+    var testClient = new DigitalTwinClient(testCredentials);
     testClient._pl.digitalTwin.updateDigitalTwin = sinon.stub().callsArgWith(3, null, testServicePatch, null, testResponse);
     const returnedPromise = await testClient.updateDigitalTwin(testTwinId, testUserPatch, eTag);
     assert.deepEqual(returnedPromise._response, testUserPatch);
@@ -246,7 +246,7 @@ describe('DigitalTwinServiceClient', function () {
     var testInterfaceInstanceName = 'testInterfaceInstanceName';
     var testCommandName = 'testCommandName';
     var testArgument = 123456;
-    var testClient = new DigitalTwinServiceClient(testCredentials);
+    var testClient = new DigitalTwinClient(testCredentials);
     sinon.stub(testClient._pl.digitalTwin, "invokeComponentCommand").returns(testCommandResponse);
     const response = await testClient.invokeComponentCommand(testTwinId, testInterfaceInstanceName, testCommandName, testArgument);
     assert.isTrue(testClient._pl.digitalTwin.invokeComponentCommand.calledWith(testTwinId, testInterfaceInstanceName, testCommandName, testArgument));
@@ -265,7 +265,7 @@ describe('DigitalTwinServiceClient', function () {
     var testCommandName = 'testCommandName';
     var testArgument = 123456;
     var options = {};
-    var testClient = new DigitalTwinServiceClient(testCredentials);
+    var testClient = new DigitalTwinClient(testCredentials);
     sinon.stub(testClient._pl.digitalTwin, "invokeComponentCommand").returns(testCommandResponse);
     const response = await testClient.invokeComponentCommand(testTwinId, testInterfaceInstanceName, testCommandName, testArgument, options);
     assert.isTrue(testClient._pl.digitalTwin.invokeComponentCommand.calledWith(testTwinId, testInterfaceInstanceName, testCommandName, testArgument));
@@ -282,7 +282,7 @@ describe('DigitalTwinServiceClient', function () {
     };
     var testCommandName = 'testCommandName';
     var testArgument = 123456;
-    var testClient = new DigitalTwinServiceClient(testCredentials);
+    var testClient = new DigitalTwinClient(testCredentials);
     sinon.stub(testClient._pl.digitalTwin, "invokeRootLevelCommand").returns(testCommandResponse);
     const response = await testClient.invokeCommand(testTwinId, testCommandName, testArgument);
     assert.isTrue(testClient._pl.digitalTwin.invokeRootLevelCommand.calledWith(testTwinId, testCommandName, testArgument));
@@ -300,7 +300,7 @@ describe('DigitalTwinServiceClient', function () {
     var testCommandName = 'testCommandName';
     var testArgument = 123456;
     var options = {};
-    var testClient = new DigitalTwinServiceClient(testCredentials);
+    var testClient = new DigitalTwinClient(testCredentials);
     sinon.stub(testClient._pl.digitalTwin, "invokeRootLevelCommand").returns(testCommandResponse);
     const response = await testClient.invokeCommand(testTwinId, testCommandName, testArgument, options);
     assert.isTrue(testClient._pl.digitalTwin.invokeRootLevelCommand.calledWith(testTwinId, testCommandName, testArgument));

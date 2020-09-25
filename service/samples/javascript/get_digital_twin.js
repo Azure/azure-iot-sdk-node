@@ -4,11 +4,11 @@
 'use strict';
 
 const IoTHubTokenCredentials = require('azure-iothub').IoTHubTokenCredentials;
-const DigitalTwinServiceClient = require('azure-iothub').DigitalTwinServiceClient;
+const DigitalTwinClient = require('azure-iothub').DigitalTwinClient;
 const { inspect } = require('util');
 
 // Simple example of how to:
-// - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
+// - create a Digital Twin Service Client using the DigitalTwinClient constructor
 // - get the Digital Twin
 //
 // Preconditions:
@@ -20,10 +20,10 @@ async function main() {
 
   // Create digital twin service client
   const credentials = new IoTHubTokenCredentials(connectionString);
-  const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
+  const digitalTwinClient = new DigitalTwinClient(credentials);
 
   // Get digital twin and retrieve the modelId from it
-  const digitalTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
+  const digitalTwin = await digitalTwinClient.getDigitalTwin(deviceId);
 
   console.log(inspect(digitalTwin));
   console.log('Model Id: ' + inspect(digitalTwin.$metadata.$model));

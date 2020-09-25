@@ -4,11 +4,11 @@
 'use strict';
 
 const IoTHubTokenCredentials = require('azure-iothub').IoTHubTokenCredentials;
-const DigitalTwinServiceClient = require('azure-iothub').DigitalTwinServiceClient;
+const DigitalTwinClient = require('azure-iothub').DigitalTwinClient;
 const { inspect } = require('util');
 
 // Simple example of how to:
-// - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
+// - create a Digital Twin Service Client using the DigitalTwinClient constructor
 // - invoke a root level command on a Digital Twin enabled device
 //
 // Preconditions:
@@ -22,14 +22,14 @@ async function main() {
 
   // Create service client
   const credentials = new IoTHubTokenCredentials(connectionString);
-  const digitalTwinServiceClient = new DigitalTwinServiceClient(credentials);
+  const digitalTwinClient = new DigitalTwinClient(credentials);
 
   // Invoke a command
   const options = {
     connectTimeoutInSeconds: 30,
     responseTimeoutInSeconds: 40 // The responseTimeoutInSeconds must be within [5; 300]
   };
-  const commandResponse = await digitalTwinServiceClient.invokeCommand(deviceId, commandName, commandPayload, options);
+  const commandResponse = await digitalTwinClient.invokeCommand(deviceId, commandName, commandPayload, options);
 
   // Print result of the command
   console.log(inspect(commandResponse));

@@ -32,5 +32,5 @@ module.exports = {
   Device: require('./dist/device.js').Device,
   Twin: require('./dist/twin.js').Twin,
   IoTHubTokenCredentials: require('./dist/auth/iothub_token_credentials').IoTHubTokenCredentials,
-  DigitalTwinServiceClient: require('./dist/cl/digital_twin_service_client').DigitalTwinServiceClient
+  DigitalTwinClient: require('./dist/cl/digital_twin_client').DigitalTwinClient
 };
