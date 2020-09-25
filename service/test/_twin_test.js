@@ -143,7 +143,8 @@ describe('Twin', function() {
     /*Tests_SRS_NODE_IOTHUB_TWIN_16_023: [The method shall call the `done` callback with a `null` error object, its parent instance as a second argument and the transport `response` object as a third argument if the request succeeds**/
     it('calls the done callback with a null error object, a twin and a response', function(testCallback) {
       var fakeDeviceId = 'deviceId';
-      var fakeTwin = { deviceId: 'fakeDeviceId' };
+      var myFakeEtag = 'myFakeEtag';
+      var fakeTwin = { deviceId: fakeDeviceId, etag: myFakeEtag};
       var fakeResponse = { statusCode: 200 };
       var registry = new Registry(fakeConfig, {});
       var twin = new Twin(fakeDeviceId, registry);
@@ -152,13 +153,37 @@ describe('Twin', function() {
         callback(null, fakeTwin, fakeResponse);
       });
 
-      twin.get(function(err, twin, resp) {
+      assert.notEqual(twin.etag, fakeTwin.etag);
+      twin.get(function(err, gottenTwin, resp) {
         assert.isNull(err);
-        assert.equal(twin.deviceId, fakeDeviceId);
+        assert.strictEqual(gottenTwin.deviceId, fakeDeviceId);
+        assert.strictEqual(twin.etag, myFakeEtag);
         assert.equal(resp, fakeResponse);
         testCallback();
       });
     });
+
+    it('if model id exists make sure it shows up in the twin', function(testCallback) {
+      var fakeDeviceId = 'deviceId';
+      var myFakeEtag = 'myFakeEtag';
+      var myFakeModelId = 'myFakeModel'
+      var fakeTwin = { deviceId: fakeDeviceId, etag: myFakeEtag, modelId: myFakeModelId};
+      var fakeResponse = { statusCode: 200 };
+      var registry = new Registry(fakeConfig, {});
+      var twin = new Twin(fakeDeviceId, registry);
+
+      sinon.stub(registry, 'getTwin').callsFake(function(deviceId, callback) {
+        callback(null, fakeTwin, fakeResponse);
+      });
+
+      assert.notOk(twin.modelId);
+      twin.get(function(err, gottenTwin, resp) {
+        assert.isNull(err);
+        assert.strictEqual(twin.modelId, myFakeModelId)
+        testCallback();
+      });
+    });
+
   });
 
   describe('update', function() {
