@@ -7,7 +7,7 @@
 
 var assert = require('chai').assert;
 var sinon = require('sinon');
-var DigitalTwinClient = require('../dist/cl/digital_twin_service_client').DigitalTwinClient;
+var DigitalTwinClient = require('../dist/cl/digital_twin_client').DigitalTwinClient;
 
 var testCredentials = {
   signRequest: sinon.stub().callsFake(function (webResource) {
@@ -17,15 +17,15 @@ var testCredentials = {
 };
 
 describe('DigitalTwinClient', function () {
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_001: [The `DigitalTwinClient` creates an instance of the DigitalTwinClient passing IoTHubTokenCredentials class as an argument.]*/
+  /* Tests_SRS_NODE_DIGITAL_TWIN_CLIENT_12_001: [The `DigitalTwinClient` creates an instance of the DigitalTwinClient passing IoTHubTokenCredentials class as an argument.]*/
   it(`Constructor creates an instance of the DigitalTwinClient`, function (testCallback) {
     var digitalTwinClient = new DigitalTwinClient(testCredentials);
     assert.instanceOf(digitalTwinClient, DigitalTwinClient);
     testCallback();
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_002: [The `getDigitalTwin` method shall call the `getDigitalTwin` method of the protocol layer with the given argument.]*/
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_003: [The `getDigitalTwin` method shall call the callback with an error parameter if a callback is passed..]*/
+  /* Tests_SRS_NODE_DIGITAL_TWIN_CLIENT_12_002: [The `getDigitalTwin` method shall call the `getDigitalTwin` method of the protocol layer with the given argument.]*/
+  /* Tests_SRS_NODE_DIGITAL_TWIN_CLIENT_12_003: [The `getDigitalTwin` method shall call the callback with an error parameter if a callback is passed..]*/
   it('getDigitalTwin calls the getDigitalTwin method on the PL client', function (testCallback) {
     var testTwinId = 'digitalTwinId';
     var testDigitalTwin = {
@@ -45,7 +45,7 @@ describe('DigitalTwinClient', function () {
     });
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_004: [The `getDigitalTwin` method shall return error if the method of the protocol layer failed.]*/
+  /* Tests_SRS_NODE_DIGITAL_TWIN_CLIENT_12_004: [The `getDigitalTwin` method shall return error if the method of the protocol layer failed.]*/
   it('getDigitalTwin calls its callback with an error if the PL client fails', function (testCallback) {
     var testTwinId = 'digitalTwinId';
     var testError = new Error('fake error');
@@ -58,7 +58,7 @@ describe('DigitalTwinClient', function () {
     });
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_020: [The `getDigitalTwin` method shall return a promise if there is no callback passed.]*/
+  /* Tests_SRS_NODE_DIGITAL_TWIN_CLIENT_12_020: [The `getDigitalTwin` method shall return a promise if there is no callback passed.]*/
   it('getDigitalTwin shall return a promise if there is no callback passed', async () => {
     var testTwinId = 'digitalTwinId';
     var testDigitalTwin = {
@@ -73,9 +73,9 @@ describe('DigitalTwinClient', function () {
     assert.deepEqual(returnedPromise.response, testDigitalTwin.response);
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_011: [The `updateDigitalTwin` method shall call the `updateDigitalTwin` method of the protocol layer with the given arguments.]*/
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_012: [The `updateDigitalTwin` method shall call the callback with an error parameter if a callback is passed..]*/
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_028: [** The `patch` argument of the `updateDigitalTwin` method should be a JSON string using the following format:
+  /* Tests_SRS_NODE_DIGITAL_TWIN_CLIENT_12_011: [The `updateDigitalTwin` method shall call the `updateDigitalTwin` method of the protocol layer with the given arguments.]*/
+  /* Tests_SRS_NODE_DIGITAL_TWIN_CLIENT_12_012: [The `updateDigitalTwin` method shall call the callback with an error parameter if a callback is passed..]*/
+  /* Tests_SRS_NODE_DIGITAL_TWIN_CLIENT_12_028: [** The `patch` argument of the `updateDigitalTwin` method should be a JSON string using the following format:
    const patch = {
     interfaces: {
       [interfaceInstanceName]: {
@@ -131,7 +131,7 @@ describe('DigitalTwinClient', function () {
     });
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_013: [The `updateDigitalTwin` method shall return error if the method of the protocol layer failed.]*/
+  /* Tests_SRS_NODE_DIGITAL_TWIN_CLIENT_12_013: [The `updateDigitalTwin` method shall return error if the method of the protocol layer failed.]*/
   it('updateDigitalTwin calls its callback with an error if the PL client fails', function (testCallback) {
     var testTwinId = 'digitalTwinId';
     var testPatch = {
@@ -149,7 +149,7 @@ describe('DigitalTwinClient', function () {
     });
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_023: [The `updateDigitalTwin` method shall return a promise if there is no callback passed.]*/
+  /* Tests_SRS_NODE_DIGITAL_TWIN_CLIENT_12_023: [The `updateDigitalTwin` method shall return a promise if there is no callback passed.]*/
   it('updateDigitalTwin shall return a promise if there is no callback passed', async () => {
     var testTwinId = 'digitalTwinId';
     var testDigitalTwin = {
@@ -166,7 +166,7 @@ describe('DigitalTwinClient', function () {
     assert.deepEqual(returnedPromise, testDigitalTwin);
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_026: [The `updateDigitalTwin` method shall call the `updateDigitalTwin` method of the protocol layer with the given arguments including eTag.]*/
+  /* Tests_SRS_NODE_DIGITAL_TWIN_CLIENT_12_026: [The `updateDigitalTwin` method shall call the `updateDigitalTwin` method of the protocol layer with the given arguments including eTag.]*/
   it('updateDigitalTwin calls updateDigitalTwin on the PL client using eTag', function (testCallback) {
     var testTwinId = 'digitalTwinId';
     var eTag = 'testETag';
@@ -211,7 +211,7 @@ describe('DigitalTwinClient', function () {
     });
   });
 
-  /* Tests_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_030: [The `updateDigitalTwin` method shall return a promise if eTag is passed and there is no callback passed.] */
+  /* Tests_SRS_NODE_DIGITAL_TWIN_CLIENT_12_030: [The `updateDigitalTwin` method shall return a promise if eTag is passed and there is no callback passed.] */
   it('updateDigitalTwin shall return a promise if eTag is passed and there is no callback passed', async () => {
     var testTwinId = 'digitalTwinId';
     var eTag = 'eTag';
