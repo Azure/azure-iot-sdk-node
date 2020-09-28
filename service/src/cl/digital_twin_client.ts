@@ -64,9 +64,9 @@ function createResultWithHttpOperationResponse<TArg, TResult>(result: TArg, resp
 
 /**
  * @export
- * @class DigitalTwinServiceClient    Main class to implement Azure IoT Digital Twin Service Client API
+ * @class DigitalTwinClient    Main class to implement Azure IoT Digital Twin Client API
  */
-export class DigitalTwinServiceClient {
+export class DigitalTwinClient {
   /**
    * @private
    * The IoTHub token credentials used for creating the Protocol Layer client.
@@ -74,7 +74,7 @@ export class DigitalTwinServiceClient {
   private _creds: IoTHubTokenCredentials;
   /**
    * @private
-   * The Protocol Layer Client instance used by the DigitalTwinServiceClient.
+   * The Protocol Layer Client instance used by the DigitalTwinClient.
    */
   private _pl: PLClient;
   /**
@@ -84,12 +84,12 @@ export class DigitalTwinServiceClient {
   private _apiVersion: string = '2020-09-30';
 
   /**
-   * Constructor which also creates an instance of the Protocol Layer Client used by the DigitalTwinServiceClient.
+   * Constructor which also creates an instance of the Protocol Layer Client used by the DigitalTwinClient.
    * @param {IoTHubTokenCredentials} creds    The IoTHub token credentials used for creating the Protocol Layer client.
-   * @memberof DigitalTwinServiceClient
+   * @memberof DigitalTwinClient
    */
   constructor(creds: IoTHubTokenCredentials) {
-    /*Code_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_001: [** The `DigitalTwinServiceClient` creates an instance of the DigitalTwinServiceClient passing IoTHubTokenCredentials class as an argument.]*/
+    /*Code_SRS_NODE_DIGITAL_TWIN_CLIENT_12_001: [** The `DigitalTwinClient` creates an instance of the DigitalTwinClient passing IoTHubTokenCredentials class as an argument.]*/
     this._creds = creds;
     this._pl = new PLClient(this._creds, {
       baseUri: 'https://' + this._creds.getHubName(),
@@ -105,20 +105,20 @@ export class DigitalTwinServiceClient {
   }
 
   /**
-   * @method getDigitalTwin                      module: azure-iot-digitaltwins-service.DigitalTwinServiceClient.getDigitalTwin
+   * @method getDigitalTwin                      module: azure-iot-digitaltwins-service.DigitalTwinClient.getDigitalTwin
    * @description                                Retrieve the Digital Twin of a given device.
    * @param {string} digitalTwinId               The digital twin Id of the given device or module.
    *                                             Format of digitalTwinId is DeviceId[~ModuleId]. ModuleId is optional.
    * @returns DigitalTwinResponse                The return object containing the Digital Twin plus the HttpResponse.
-   * @memberof DigitalTwinServiceClient
+   * @memberof DigitalTwinClient
    */
   getDigitalTwin(digitalTwinId: string): Promise<DigitalTwinResponse>;
   getDigitalTwin(digitalTwinId: string, callback: TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>): void;
   getDigitalTwin(digitalTwinId: string, callback?: TripleValueCallback<DigitalTwin, msRest.HttpOperationResponse>): void | Promise<DigitalTwinResponse> {
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_002: [The `getDigitalTwin` method shall call the `getDigitalTwin` method of the protocol layer with the given argument.]*/
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_003: [The `getDigitalTwin` method shall call the callback with an error parameter if a callback is passed..]*/
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_004: [The `getDigitalTwin` method shall return error if the method of the protocol layer failed.]*/
-    /*Codes_SRS_NODE_DIGITAL_TWIN_SERVICE_CLIENT_12_020: [The `getDigitalTwin` method shall return a promise if there is no callback passed.]*/
+    /*Codes_SRS_NODE_DIGITAL_TWIN_CLIENT_12_002: [The `getDigitalTwin` method shall call the `getDigitalTwin` method of the protocol layer with the given argument.]*/
+    /*Codes_SRS_NODE_DIGITAL_TWIN_CLIENT_12_003: [The `getDigitalTwin` method shall call the callback with an error parameter if a callback is passed..]*/
+    /*Codes_SRS_NODE_DIGITAL_TWIN_CLIENT_12_004: [The `getDigitalTwin` method shall return error if the method of the protocol layer failed.]*/
+    /*Codes_SRS_NODE_DIGITAL_TWIN_CLIENT_12_020: [The `getDigitalTwin` method shall return a promise if there is no callback passed.]*/
     return tripleValueCallbackToPromise<DigitalTwin, msRest.HttpOperationResponse, DigitalTwinResponse>((_callback) => {
       this._pl.digitalTwin.getDigitalTwin(digitalTwinId, (err, result, _request, response) => {
         _callback(err as Error, result, response);
@@ -127,13 +127,13 @@ export class DigitalTwinServiceClient {
   }
 
   /**
-   * @method updateDigitalTwin                          module: azure-iot-digitaltwins-service.DigitalTwinServiceClient.updateDigitalTwin
+   * @method updateDigitalTwin                          module: azure-iot-digitaltwins-service.DigitalTwinClient.updateDigitalTwin
    * @description                                       Update the Digital Twin of a given device using a patch object.
    * @param {string} digitalTwinId                      The digital twin Id of the given device.
    * @param {any[]} patch                               The patch objet contains the update part of a Digital Twin.
    * @param {string} eTag                               The eTag for identifying the patch.
    * @returns DigitalTwinUpdateResponse                 The HTTPesponse.
-   * @memberof DigitalTwinServiceClient
+   * @memberof DigitalTwinClient
    */
   updateDigitalTwin(digitalTwinId: string, patch: any[], eTag?: string): Promise<DigitalTwinUpdateResponse>;
   updateDigitalTwin(digitalTwinId: string, patch: any[], eTagOrCallback?: string | TripleValueCallback<void, msRest.HttpOperationResponse>, callback?: TripleValueCallback<void, msRest.HttpOperationResponse>): void;
@@ -150,7 +150,7 @@ export class DigitalTwinServiceClient {
   }
 
   /**
-   * @method invokeComponentCommand                                     module: azure-iot-digitaltwins-service.DigitalTwinServiceClient.invokeComponentCommand
+   * @method invokeComponentCommand                                     module: azure-iot-digitaltwins-service.DigitalTwinClient.invokeComponentCommand
    * @description                                                       Invoke a command on an component of a particular device and get the result of it.
    * @param {string} digitalTwinId                                      The digital twin Id of the given device.
    * @param {string} componentName                                      The component's name.
@@ -159,21 +159,21 @@ export class DigitalTwinServiceClient {
    * @param {DigitalTwinInvokeComponentCommandOptionalParams} options   The optional parameter to set options including connectionTimeoutInSeconds and responseTimeoutInSeconds.
    *                                                                    The responseTimeoutInSeconds must be within [5; 300]
    * @returns DigitalTwinInvokeComponentCommandResponse                 The result of the invoked command containing the result, status code, request ID and the parsed HttpResponse.
-   * @memberof DigitalTwinServiceClient
+   * @memberof DigitalTwinClient
    */
   invokeComponentCommand(digitalTwinId: string, componentName: string, commandName: string, argument: string, options?: DigitalTwinInvokeComponentCommandOptionalParams): Promise<DigitalTwinInvokeComponentCommandResponse>{
     return this._pl.digitalTwin.invokeComponentCommand(digitalTwinId, componentName, commandName, argument, options);
   }
 
   /**
-   * @method invokeCommand                                              module: azure-iot-digitaltwins-service.DigitalTwinServiceClient.invokeCommand
+   * @method invokeCommand                                              module: azure-iot-digitaltwins-service.DigitalTwinClient.invokeCommand
    * @description                                                       Invoke a command on an component of a particular device and get the result of it.
    * @param {string} digitalTwinId                                      The digital twin Id of the given device.
    * @param {string} argument                                           The argument of a command.
    * @param {DigitalTwinInvokeRootLevelCommandOptionalParams} options   The optional parameter to set options including connectionTimeoutInSeconds and responseTimeoutInSeconds.
    *                                                                    The responseTimeoutInSeconds must be within [5; 300]
    * @returns DigitalTwinInvokeRootLevelCommandResponse                 The result of the invoked command containing the result, status code, request ID and the parsed HttpResponse.
-   * @memberof DigitalTwinServiceClient
+   * @memberof DigitalTwinClient
    */
   invokeCommand(digitalTwinId: string, commandName: string, argument: string, options?: DigitalTwinInvokeRootLevelCommandOptionalParams): Promise<DigitalTwinInvokeRootLevelCommandResponse>{
     return this._pl.digitalTwin.invokeRootLevelCommand(digitalTwinId, commandName, argument, options);

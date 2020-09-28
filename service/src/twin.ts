@@ -57,6 +57,10 @@ export class Twin implements TwinData {
    */
   etag: string;
   /**
+   * Model Id of the device identity associated with the twin, as it exists in the device identity registry.
+   */
+  modelId?: string;
+  /**
    * Collection of key/value pairs that is available only on the service side and can be used in queries to find specific devices.
    */
   tags: {
@@ -153,6 +157,9 @@ export class Twin implements TwinData {
           this.properties = result.properties;
           this.tags = result.tags;
           this.etag = result.etag;
+          if (result.modelId) {
+            this.modelId = result.modelId;
+          }
           /*Codes_SRS_NODE_IOTHUB_TWIN_16_023: [The method shall call the `_callback` callback with a `null` error object, its parent instance as a second argument and the transport `response` object as a third argument if the request succeeded.]*/
           _callback(null, this, response);
         }

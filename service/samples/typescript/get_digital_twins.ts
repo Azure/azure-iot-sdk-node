@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { DigitalTwinServiceClient } from 'azure-iothub';
+import { DigitalTwinClient } from 'azure-iothub';
 import { IoTHubTokenCredentials } from 'azure-iothub';
 
 // Simple example of how to:
-// - create a Digital Twin Service Client using the DigitalTwinServiceClient constructor
+// - create a Digital Twin Client using the DigitalTwinClient constructor
 // - get the Digital Twin
 //
 // Preconditions:
@@ -17,8 +17,8 @@ const metadata = '$metadata';
 const model = '$model';
 
 async function asyncMain(): Promise<void> {
-  const digitalTwinServiceClient = new DigitalTwinServiceClient(new IoTHubTokenCredentials(connectionString));
-  const deviceTwin = await digitalTwinServiceClient.getDigitalTwin(deviceId);
+  const digitalTwinClient = new DigitalTwinClient(new IoTHubTokenCredentials(connectionString));
+  const deviceTwin = await digitalTwinClient.getDigitalTwin(deviceId);
 
   // Print the response
   if (!!(deviceTwin)) {
