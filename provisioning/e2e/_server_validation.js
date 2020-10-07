@@ -36,7 +36,7 @@ describe('Invalid Certificate Validation', function() {
       }
     }
   };
-  it.skip('Should fail to create enrollment', function(done) {
+  it('Should fail to create enrollment', function(done) {
     var dpsServiceClient = provisioningServiceClient.fromConnectionString(process.env.DPS_CONN_STRING_INVALID_CERT);
     dpsServiceClient.createOrUpdateIndividualEnrollment(enrollment1, function(err) {
       correctDisconnectMessage(err, done);
