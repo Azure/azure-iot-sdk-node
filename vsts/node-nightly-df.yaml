@@ -3,9 +3,6 @@ resources:
   - repo: self
   clean: true
 
-pr:
-  - master
-  - releases/*
 
 phases:
 - phase: Phase_2
@@ -52,7 +49,7 @@ phases:
       DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT: $(DPS-GLOBAL-DEVICE-ENDPOINT-INVALID-CERT)
       IOTHUB_CONN_STRING_INVALID_CERT: $(IOTHUB-CONN-STRING-INVALID-CERT)
       IOTHUB_DEVICE_CONN_STRING_INVALID_CERT: $(IOTHUB-DEVICE-CONN-STRING-INVALID-CERT)
-      
+
   - task: PublishTestResults@2
     displayName: 'Publish Test Results | Mocha'
     inputs:
