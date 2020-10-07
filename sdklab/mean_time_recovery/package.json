@@ -8,7 +8,7 @@
     "lint": "eslint \"*.js\" --ignore-pattern node_modules/"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "aedes": "^0.42.6",
     "azure-iot-common": "1.12.6",

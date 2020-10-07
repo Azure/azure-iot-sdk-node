@@ -18,6 +18,9 @@ async function main() {
   let childServer, childDevice;
 
   function deviceReceiveMessage() {
+    // This returns a promise to wait on the response by the device, by setting up a
+    // listener on the childDevice process. The childDevice should send a message to
+    // the orchestrator when its message has been acked, so once the message is received the promise will be resolved.
     return new Promise((res, rej) => {
       const callback = (m) => {
         debug("in the deviceReceiveMessage callback");
@@ -33,34 +36,11 @@ async function main() {
     });
   }
 
-  childServer = fork("aedes_server.js");
-
-  childServer.on("error", (code) => {
-    debug(`childServer error ${code}`);
-  });
-
-  childServer.on("close", (code) => {
-    debug(`childServer closed with code ${code}`);
-  });
-
-  wait(1000);
-
-  childDevice = fork("device.js");
-  childDevice.on("close", (code) => {
-    debug(`childDevice closed with code ${code}`);
-  });
-
-  childDevice.on("message", (m) => {
-    debug(`PARENT got message from childDevice: ${JSON.stringify(m)}`);
-  });
-
-  childDevice.send({ setKeepAlive: 20 }); // set the keepAlive on the Device
-  await wait(500);
-
-  for (let i = 0; i < 3; i++) {
-    debug("have device send message to server to ensure connection");
-    await new Promise((res, rej) => {
-      debug("in the promise");
+  function haveDeviceSendTestMessageToBroker(childDevice) {
+    // this tells the device that it should send a message to the broker, just to make
+    // sure they're both working. If there is no response from the broker,
+    // then this should timeout and reject the promise.
+    return new Promise((res, rej) => {
       const callback = (m) => {
         debug(`PARENT got message from childDevice: ${JSON.stringify(m)}`);
         if (m.messageAckedOnDevice) {
@@ -74,11 +54,52 @@ async function main() {
         childDevice.removeListener("message", callback);
         rej();
       }, 5000);
-    }); // wait for 1 seconds
+    });
+  }
+
+  function setupChildServer() {
+    const childServer = fork("aedes_server.js");
+    childServer.on("error", (code) => {
+      debug(`childServer error ${code}`);
+    });
+    childServer.on("close", (code) => {
+      debug(`childServer closed with code ${code}`);
+    });
+    return childServer;
+  }
+
+  function setupChildDevice() {
+    const childDevice = fork("device.js");
+    childDevice.on("close", (code) => {
+      debug(`childDevice closed with code ${code}`);
+    });
+
+    childDevice.on("message", (m) => {
+      debug(`PARENT got message from childDevice: ${JSON.stringify(m)}`);
+    });
+
+    const childDeviceKeepAlive = 20;
+    debug("setting keepAlive on childDevice to", childDeviceKeepAlive);
+    childDevice.send({ setKeepAlive: childDeviceKeepAlive }); // set the keepAlive on the Device
+    return childDevice;
+  }
+
+  childServer = setupChildServer();
+
+  await wait(500);
+
+  childDevice = setupChildDevice();
+
+  await wait(500);
+
+  for (let i = 0; i < 5; i++) {
+    debug("have device send message to server to ensure connection");
+    await haveDeviceSendTestMessageToBroker(childDevice);
     debug("killing childServer");
     childServer.kill();
     debug("initiate sendEvent on childDevice");
     childDevice.send({ sendMessages: 1 });
+    debug("waiting for 10 seconds");
     await wait(10 * 1000); // wait for 10 seconds
     debug("restarting server");
     const responseTimePromise = deviceReceiveMessage();
@@ -99,7 +120,7 @@ async function main() {
       if (err) throw err;
       debug("file written!");
     });
-    await wait(5 * 1000); // wait for 5 seconds
+    await wait(5 * 1000); // some time for things to reset between iterations.
   }
 }
 

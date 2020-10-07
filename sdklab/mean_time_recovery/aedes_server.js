@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// This is all fairly simple MQTT broker code. Even the extra event handlers are not necessary beyond giving some debugs. All it's doing is acting as a dumb broker that receives and acknowledges packets.
+
 "use strict";
 
 const fs = require("fs");
@@ -48,18 +50,3 @@ aedes.on("subscribe", function (subscriptions, client) {
 aedes.on("client", function (client) {
   debug(`new client ${client.id}`);
 });
-
-// process.on('message', (m) => {
-//   debug(`RECEIVED \'${m}\' FROM SERVER`);
-//   if (m.toString() === 'pause') {
-//     debug('CLOSING SERVER')
-//     server.close();
-//     debug('SERVER CLOSED...')
-//     setTimeout(() => {
-//       debug('RECONNECTING SERVER...')
-//       server.listen(port, function () {
-//         debug(`server reconnected and listening on port ${port}`);
-//       });
-//     }, 10000);
-//   }
-// })
