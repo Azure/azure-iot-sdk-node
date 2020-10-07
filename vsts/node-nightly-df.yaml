@@ -1,7 +1,11 @@
 name: $(BuildID)_$(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 resources:
-- repo: self
+  - repo: self
   clean: true
+
+pr:
+  - master
+  - releases/*
 
 phases:
 - phase: Phase_2
