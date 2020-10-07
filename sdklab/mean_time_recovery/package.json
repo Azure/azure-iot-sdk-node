@@ -1,0 +1,21 @@
+{
+  "name": "mean_time_recovery",
+  "version": "1.0.0",
+  "description": "metric analysis of mean time to recovery for device code",
+  "main": "ochestrator.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint \"*.js\" --ignore-pattern node_modules/"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "aedes": "^0.42.6",
+    "azure-iot-common": "1.12.6",
+    "azure-iot-device": "1.17.2",
+    "azure-iot-device-mqtt": "1.15.2",
+    "colors": "^1.4.0",
+    "eslint": "^7.10.0",
+    "tslint": "^6.1.3"
+  }
+}

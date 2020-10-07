@@ -235,7 +235,7 @@ service/samples/typescript/dist
 
 ts-e2e/dist
 
-longhaultests/dist
+sdklab/longhaultests/dist
 
 digitaltwins/device/dist
 digitaltwins/samples/device/typescript/dist

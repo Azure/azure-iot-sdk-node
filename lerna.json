@@ -16,7 +16,8 @@
     "provisioning/device/samples",
     "provisioning/device/ts-samples",
     "security/*",
-    "longhaultests",
+    "sdklab/longhaultests",
+    "sdklab/mean_time_recovery",
     "e2etests",
     "ts-e2e"
   ],
