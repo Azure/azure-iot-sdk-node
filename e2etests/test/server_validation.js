@@ -43,7 +43,7 @@ describe('Service Client', function () {
     require('azure-iothub').Amqp,
     require('azure-iothub').AmqpWs
   ].forEach(function (Transport) {
-    it.skip('Service client will fail with SAS token over ' + Transport.name + ' using a shared access signature', function(done) {
+    it('Service client will fail with SAS token over ' + Transport.name + ' using a shared access signature', function(done) {
       var connStr = serviceSdk.ConnectionString.parse(hubConnectionString);
       var sas = serviceSas.create(connStr.HostName, connStr.SharedAccessKeyName, connStr.SharedAccessKey, anHourFromNow()).toString();
       var serviceClient = serviceSdk.Client.fromSharedAccessSignature(sas, Transport);
@@ -58,7 +58,7 @@ describe('Service Client', function () {
       });
     });
 
-    it.skip('Service client will fail with connection string over ' + Transport.name + ' using a connection string', function(done) {
+    it('Service client will fail with connection string over ' + Transport.name + ' using a connection string', function(done) {
       var serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString, Transport);
       serviceClient.open(function(err) {
         if (err) {
@@ -78,7 +78,7 @@ describe('Registry', function () {
   var deviceIdOnly = {
     deviceId: uuid.v4()
   };
-  it.skip('Fails to create a device', function (done){
+  it('Fails to create a device', function (done){
     var registry = Registry.fromConnectionString(hubConnectionString);
     registry.create(deviceIdOnly, function(err) {
       correctDisconnectMessage(err, done);
@@ -98,7 +98,7 @@ describe('Device Client', function() {
     mqttModule.MqttWs
   ].forEach(function (deviceTransport) {
     describe('Over ' + deviceTransport.name, function () {
-      it.skip('Fails to open a device', function(done) {
+      it('Fails to open a device', function(done) {
         var deviceClient = deviceSdk.Client.fromConnectionString(deviceConnectionString, deviceTransport);
         deviceClient.setRetryPolicy(new NoRetry());
         deviceClient.sendEvent(originalMessage, function(err) {
