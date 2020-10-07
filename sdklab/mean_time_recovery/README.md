@@ -8,13 +8,15 @@ The output you should result in is a `key.pem` file and a `certificate.pem` file
 
 ## To Run (Using Powershell)
 
-1) Set the environment variables
+1. Set the environment variables
+
 ```powershell
 & $ENV:NODE_EXTRA_CA_CERTS="./certificate.pem"
 & $ENV:DEBUG="orchestrator, device, aedes_server"
 ```
 
-2) Run the orchestrator
+2. Run the orchestrator
+
 ```powershell
 & node orchestrator.js
   aedes_server server started and listening on port 8883 +0ms
