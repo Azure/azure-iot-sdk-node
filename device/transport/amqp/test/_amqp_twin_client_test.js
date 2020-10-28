@@ -134,6 +134,7 @@ describe('AmqpTwinClient', function () {
       assert.equal(senderLinkOptions.rcv_settle_mode, 0, ' sender rcv settle mode not set appropriately' );
       assert.equal(receiverLinkOptions.snd_settle_mode, 1, ' receiver send settle mode not set appropriately' );
       assert.equal(receiverLinkOptions.rcv_settle_mode, 0, ' receiver rcv settle mode not set appropriately' );
+      assert.equal(receiverLinkOptions.autoaccept, true, 'receiver autoaccept false');
       assert.equal(senderLinkOptions.properties['com.microsoft:api-version'], endpoint.apiVersion, ' sender api version not set appropriately');
       assert.equal(receiverLinkOptions.properties['com.microsoft:api-version'], endpoint.apiVersion, ' receiver api version not set appropriately');
       /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_036: [The same correlationId shall be used for both the sender and receiver links.]*/

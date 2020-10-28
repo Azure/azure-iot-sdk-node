@@ -161,7 +161,10 @@ export class AmqpTwinClient extends EventEmitter {
                   } else {
                     this._senderLink = senderTransportObject;
                     this._senderLink.on('error', this._errorHandler);
-                    this._client.attachReceiverLink( this._endpoint, this._generateTwinLinkProperties(linkCorrelationId), (receiverLinkError?: Error, receiverTransportObject?: any): void => {
+                    const linkOptions = this._generateTwinLinkProperties(linkCorrelationId);
+                    const autoAcceptPropertyName = 'autoaccept';
+                    linkOptions[autoAcceptPropertyName] = true;
+                    this._client.attachReceiverLink( this._endpoint, linkOptions, (receiverLinkError?: Error, receiverTransportObject?: any): void => {
                       if (receiverLinkError) {
                         this._fsm.transition('detached', receiverLinkError, attachCallback);
                       } else {

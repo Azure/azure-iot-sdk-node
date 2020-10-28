@@ -104,6 +104,8 @@ export class AmqpDeviceMethodClient extends EventEmitter {
                     this._fsm.transition('detaching', attachCallback, err);
                   } else {
                     this._senderLink = senderLink;
+                    const acceptProperty = 'autoaccept';
+                    linkOptions[acceptProperty] = true;
                     this._amqpClient.attachReceiverLink(this._methodEndpoint, linkOptions, (err, receiverLink) => {
                       if (err) {
                         this._fsm.transition('detaching', attachCallback, err);

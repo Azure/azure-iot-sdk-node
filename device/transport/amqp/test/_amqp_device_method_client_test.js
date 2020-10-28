@@ -368,6 +368,7 @@ describe('AmqpDeviceMethodClient', function () {
         assert.isUndefined(err);
         assert.isTrue(fakeAmqpClient.attachReceiverLink.calledOnce);
         assert.isTrue(fakeAmqpClient.attachSenderLink.calledOnce);
+        assert.equal(fakeAmqpClient.attachReceiverLink.firstCall.args[1].autoaccept, true, 'receiver autoaccept false');
         testCallback();
       });
     });
