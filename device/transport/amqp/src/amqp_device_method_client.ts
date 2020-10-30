@@ -64,7 +64,7 @@ export class AmqpDeviceMethodClient extends EventEmitter {
           /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_025: [The `forceDetach` method shall immediately return if all links are already detached.]*/
           forceDetach: () => { return; },
           /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_026: [The `sendMethodResponse` shall fail with a `NotConnectedError` if it is called while the links are detached.]*/
-          sendMethodResponse: (response, callback) => callback(new errors.NotConnectedError('Method Links were detached - the service already considers this method failed')),
+          sendMethodResponse: (_response, callback) => callback(new errors.NotConnectedError('Method Links were detached - the service already considers this method failed')),
           /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_006: [The `onDeviceMethod` method shall save the `callback` argument so that it is called when the corresponding method call is received.]*/
           onDeviceMethod: (methodName, methodCallback) => {
             debug('attaching callback for method: ' + methodName + 'while detached.');
@@ -104,6 +104,8 @@ export class AmqpDeviceMethodClient extends EventEmitter {
                     this._fsm.transition('detaching', attachCallback, err);
                   } else {
                     this._senderLink = senderLink;
+                    const acceptProperty = 'autoaccept';
+                    linkOptions[acceptProperty] = true;
                     this._amqpClient.attachReceiverLink(this._methodEndpoint, linkOptions, (err, receiverLink) => {
                       if (err) {
                         this._fsm.transition('detaching', attachCallback, err);
@@ -155,7 +157,7 @@ export class AmqpDeviceMethodClient extends EventEmitter {
           },
           detach: () => this._fsm.deferUntilTransition(),
           /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_026: [The `sendMethodResponse` shall fail with a `NotConnectedError` if it is called while the links are detached.]*/
-          sendMethodResponse: (response, callback) => callback(new errors.NotConnectedError('Method Links were detached - the service already considers this method failed')),
+          sendMethodResponse: (_response, callback) => callback(new errors.NotConnectedError('Method Links were detached - the service already considers this method failed')),
           /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_006: [The `onDeviceMethod` method shall save the `callback` argument so that it is called when the corresponding method call is received.]*/
           onDeviceMethod: (methodName, methodCallback) => {
             debug('attaching callback for method: ' + methodName + 'while attaching.');
@@ -201,7 +203,7 @@ export class AmqpDeviceMethodClient extends EventEmitter {
               this._fsm.transition('detached', forwardedCallback, err);
             });
           },
-          '*': (callback) => this._fsm.deferUntilTransition('detached')
+          '*': (_callback) => this._fsm.deferUntilTransition('detached')
         }
       }
     });
