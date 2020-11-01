@@ -20,6 +20,14 @@ const methodMessagePropertyKeys = {
   status: 'IoThub-status'
 };
 
+interface LinkOption {
+  properties: {
+    [key: string]: string;
+  };
+  rcv_settle_mode: number;
+  autoaccept?: boolean;
+}
+
 /**
  * @private
  */
@@ -90,7 +98,7 @@ export class AmqpDeviceMethodClient extends EventEmitter {
                 /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_014: [** The `AmqpDeviceMethodClient` object shall set 2 properties of any AMQP link that it create:
                 - `com.microsoft:api-version` shall be set to the current API version in use.
                 - `com.microsoft:channel-correlation-id` shall be set to the string "methods:" followed by a guid.]*/
-                const linkOptions = {
+                const linkOptions: LinkOption = {
                   properties: {
                     'com.microsoft:api-version': endpoint.apiVersion,
                     'com.microsoft:channel-correlation-id': 'methods:' + uuid.v4()
@@ -104,8 +112,7 @@ export class AmqpDeviceMethodClient extends EventEmitter {
                     this._fsm.transition('detaching', attachCallback, err);
                   } else {
                     this._senderLink = senderLink;
-                    const acceptProperty = 'autoaccept';
-                    linkOptions[acceptProperty] = true;
+                    linkOptions.autoaccept = true;
                     this._amqpClient.attachReceiverLink(this._methodEndpoint, linkOptions, (err, receiverLink) => {
                       if (err) {
                         this._fsm.transition('detaching', attachCallback, err);
