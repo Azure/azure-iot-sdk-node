@@ -3,7 +3,6 @@
 'use strict';
 
 var provisioningServiceClient = require('azure-iot-provisioning-service').ProvisioningServiceClient;
-const path = require('path');
 
 var argv = require('yargs')
   .usage('Usage: $0 --endorsementkey <ENDORSMENT KEY> --connectionstring <DEVICE PROVISIONING CONNECTION STRING> ')

@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 'use strict';
-var fs = require('fs');
 var provisioningServiceClient = require('azure-iot-provisioning-service').ProvisioningServiceClient;
-const path = require('path');
 
 var argv = require('yargs')
   .usage('Usage: $0 --deviceid <DEVICE ID> --connectionstring <DEVICE PROVISIONING CONNECTION STRING> --webhookurl <URL OF THE AZURE FUNCTION>')
