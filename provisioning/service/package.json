@@ -1,14 +1,14 @@
 {
   "name": "azure-iot-provisioning-service",
-  "version": "1.8.4",
+  "version": "1.8.4-lts0720up1",
   "description": "Azure IoT SDK - Provisioning Service Client",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "iotprovisioningservice.js",
   "typings": "iotprovisioningservice.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.12.4",
-    "azure-iot-http-base": "1.11.4",
+    "azure-iot-common": "1.12.4-lts0720up1",
+    "azure-iot-http-base": "1.11.4-lts0720up1",
     "debug": "^4.1.1"
   },
   "devDependencies": {

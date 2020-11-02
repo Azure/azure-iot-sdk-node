@@ -1,13 +1,13 @@
 {
   "name": "azure-iot-security-x509",
-  "version": "1.7.4",
+  "version": "1.7.4-lts0720up1",
   "description": "Azure IoT x509 security client",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.12.4",
+    "azure-iot-common": "1.12.4-lts0720up1",
     "debug": "^4.1.1"
   },
   "devDependencies": {
