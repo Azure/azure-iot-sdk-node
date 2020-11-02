@@ -56,30 +56,28 @@ export class Query {
   next(): Promise<ResultWithHttpResponse<QueryResult>>;
   next(continuationToken: string): Promise<ResultWithHttpResponse<QueryResult>>;
   next(continuationTokenOrCallback?: string | QueryCallback, done?: QueryCallback): Promise<ResultWithHttpResponse<QueryResult>> | void {
-    const callback = done || ((typeof continuationTokenOrCallback === 'function') ? continuationTokenOrCallback : undefined);
+    let actualContinuationToken = this.continuationToken;
+    let actualCallback: QueryCallback;
+
+    if (typeof continuationTokenOrCallback === 'function' && !done) {
+      actualCallback = continuationTokenOrCallback as QueryCallback;
+    } else {
+      actualContinuationToken = continuationTokenOrCallback as string;
+      actualCallback = done as QueryCallback;
+    }
 
     return httpCallbackToPromise((_callback) => {
-      let actualContinuationToken = this.continuationToken;
-      let actualCallback: QueryCallback;
-
-      if (typeof continuationTokenOrCallback === 'function' && !done) {
-        actualCallback = continuationTokenOrCallback as QueryCallback;
-      } else {
-        actualContinuationToken = continuationTokenOrCallback as string;
-        actualCallback = done as QueryCallback;
-      }
-
       this._executeQueryFn(actualContinuationToken, (err, result, response) => {
         if (err) {
-          actualCallback(err);
+          _callback(err);
         } else {
           this.continuationToken = response.headers['x-ms-continuation'] as string;
           this.hasMoreResults = this.continuationToken !== undefined;
 
           /*Codes_SRS_NODE_SERVICE_QUERY_16_007: [The `next` method shall call the `done` callback with a `null` error object, the results of the query and the response of the underlying transport if the request was successful.]*/
-          actualCallback(null, result, response);
+          _callback(null, result, response);
         }
       });
-    }, callback as QueryCallback);
+    }, actualCallback);
   }
 }

@@ -33,7 +33,7 @@ if (!fs.existsSync(certFile)) {
   process.exit();
 } else {
   var certificate = fs.readFileSync(certFile, 'utf-8').toString();
-};
+}
 
 var enrollment = {
   registrationId: deviceID,

@@ -62,12 +62,12 @@ var onEnrollmentGroupResults = function (err, results) {
           results.forEach(function (deviceRegistrationState) {
             if (!alreadyPrintedSomeDeviceRegistrations) {
               alreadyPrintedSomeDeviceRegistrations = true;
-              console.log('For ' + enrollmentGroup.enrollmentGroupId + ', all of its the Device Registrations Status objects: ')
+              console.log('For ' + enrollmentGroup.enrollmentGroupId + ', all of its the Device Registrations Status objects: ');
             }
             console.log(JSON.stringify(deviceRegistrationState, null, 2));
           });
           if (queryForDeviceRegistrationState.hasMoreResults) {
-            queryForDeviceRegistrationState.next(onDeviceRegistrationState);
+            queryForDeviceRegistrationState.next(onDeviceRegistrationStateResults);
           }
         }
       };

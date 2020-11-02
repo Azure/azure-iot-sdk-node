@@ -70,6 +70,6 @@ serviceClient.createOrUpdateIndividualEnrollment(enrollment1, function (err, fir
           }
         });
       }
-    })
+    });
   }
 });
