@@ -16,6 +16,15 @@ import rhea = require('rhea');
 
 const debug = dbg('azure-iot-device-amqp:AmqpTwinClient');
 
+interface LinkOption {
+  properties: {
+    [key: string]: string;
+  };
+  rcv_settle_mode: number;
+  snd_settle_mode: number;
+  autoaccept?: boolean;
+}
+
 enum TwinMethod {
   GET = 'GET',
   PATCH = 'PATCH',
@@ -161,7 +170,7 @@ export class AmqpTwinClient extends EventEmitter {
                   } else {
                     this._senderLink = senderTransportObject;
                     this._senderLink.on('error', this._errorHandler);
-                    this._client.attachReceiverLink( this._endpoint, this._generateTwinLinkProperties(linkCorrelationId), (receiverLinkError?: Error, receiverTransportObject?: any): void => {
+                    this._client.attachReceiverLink( this._endpoint, this._generateTwinLinkProperties(linkCorrelationId, true), (receiverLinkError?: Error, receiverTransportObject?: any): void => {
                       if (receiverLinkError) {
                         this._fsm.transition('detached', receiverLinkError, attachCallback);
                       } else {
@@ -265,7 +274,7 @@ export class AmqpTwinClient extends EventEmitter {
     this._fsm.handle('detach', callback);
   }
 
-  private _generateTwinLinkProperties( correlationId: string): any {
+  private _generateTwinLinkProperties( correlationId: string, autoaccept?: boolean): LinkOption {
     /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_010: [** The link options argument for attachSenderLink shall be:
          attach: {
                 properties: {
@@ -291,7 +300,8 @@ export class AmqpTwinClient extends EventEmitter {
           'com.microsoft:api-version' : endpoint.apiVersion
         },
         snd_settle_mode: 1,
-        rcv_settle_mode: 0
+        rcv_settle_mode: 0,
+        autoaccept: autoaccept
     };
   }
 
