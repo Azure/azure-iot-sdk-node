@@ -14,7 +14,7 @@
     "node-crontab": "^0.0.8"
   },
   "devDependencies": {
-    "@types/node": "^9.6.50",
+    "@types/node": "^7.10.14",
     "azure-iothub": "1.10.3",
     "chai": "^4.2.0",
     "mocha": "^5.2.0",

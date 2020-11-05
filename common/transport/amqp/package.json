@@ -18,7 +18,7 @@
   },
   "devDependencies": {
     "@types/async": "^2.4.2",
-    "@types/node": "^9.6.50",
+    "@types/node": "^7.10.14",
     "chai": "^4.2.0",
     "istanbul": "^0.4.5",
     "mocha": "^5.2.0",

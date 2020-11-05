@@ -11,7 +11,7 @@
     "debug": "^4.1.1"
   },
   "devDependencies": {
-    "@types/node": "^9.6.50",
+    "@types/node": "^7.10.14",
     "chai": "^4.2.0",
     "istanbul": "^0.4.5",
     "jshint": "^2.10.2",

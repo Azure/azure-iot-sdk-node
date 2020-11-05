@@ -15,7 +15,7 @@
     "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "@types/node": "^9.6.50",
+    "@types/node": "^7.10.14",
     "chai": "^4.2.0",
     "istanbul": "^0.4.5",
     "mocha": "^5.2.0",

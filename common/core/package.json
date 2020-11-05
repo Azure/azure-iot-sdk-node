@@ -12,13 +12,13 @@
   },
   "devDependencies": {
     "@types/getos": "^3.0.0",
-    "@types/node": "^9.6.50",
+    "@types/node": "^7.10.14",
     "chai": "^4.2.0",
     "istanbul": "^0.4.5",
     "mocha": "^5.2.0",
     "sinon": "^7.4.1",
     "tslint": "^5.18.0",
-    "typescript": "2.9.2"
+    "typescript": "^3.5.1"
   },
   "scripts": {
     "lint": "tslint --project . -c ../../tslint.json",

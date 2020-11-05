@@ -13,7 +13,7 @@
     "mqtt": "^2.18.8"
   },
   "devDependencies": {
-    "@types/node": "^9.6.50",
+    "@types/node": "^7.10.14",
     "chai": "^4.2.0",
     "es5-shim": "^4.5.12",
     "istanbul": "^0.4.5",
