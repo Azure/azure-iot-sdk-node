@@ -1,13 +1,13 @@
 {
   "name": "azure-iot-provisioning-device",
-  "version": "1.6.3",
+  "version": "1.6.3-lts0919up1",
   "description": "Azure Device Provisioning SDK device client",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.10.3",
+    "azure-iot-common": "1.10.2-lts0919up1",
     "debug": "^4.1.1",
     "machina": "^4.0.2"
   },
