@@ -24,7 +24,7 @@
     "@types/node": "^7.10.14",
     "@types/uuid": "^3.4.5",
     "tslint": "^5.18.0",
-    "typescript": "2.9.2"
+    "typescript": "^3.5.1"
   },
   "dependencies": {
     "async": "^2.6.2",

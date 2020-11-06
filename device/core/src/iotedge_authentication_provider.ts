@@ -48,6 +48,7 @@ interface SignResponse {
  */
 export class IotEdgeAuthenticationProvider extends SharedAccessKeyAuthenticationProvider implements AuthenticationProvider {
   private _restApiClient: RestApiClient;
+  // @ts-ignore
   private _workloadUri: url.UrlWithStringQuery;
 
   /**

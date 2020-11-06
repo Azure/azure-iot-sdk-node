@@ -13,7 +13,7 @@ import { Client, SharedAccessKeyAuthenticationProvider } from 'azure-iot-device'
 import { EventEmitter } from 'events';
 
 export class D2CSender extends EventEmitter {
-  private _timer: number;
+  private _timer: NodeJS.Timer;
   private _client: Client;
   private _sendInterval: number;
   private _sendTimeout: number;

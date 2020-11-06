@@ -17,7 +17,7 @@
     "mocha": "^5.2.0",
     "sinon": "^7.4.1",
     "tslint": "^5.18.0",
-    "typescript": "2.9.2"
+    "typescript": "3.5.3"
   },
   "scripts": {
     "lint": "tslint --project . -c ../../tslint.json",

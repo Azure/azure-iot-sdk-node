@@ -142,7 +142,7 @@ export class Http {
       httpOptions.cert = (x509Options as X509).cert;
       httpOptions.key = (x509Options as X509).key;
       httpOptions.passphrase = (x509Options as X509).passphrase;
-      httpOptions.clientCertEngine = (x509Options as X509).clientCertEngine;
+      (httpOptions as any).clientCertEngine = (x509Options as X509).clientCertEngine;
     }
 
     if (this._options && this._options.ca) {

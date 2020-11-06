@@ -43,13 +43,13 @@ interface PutTokenOperation {
  * @property   {Number}     putTokenTimeOutExaminationInterval  While there are ANY put token operations outstanding a timer will be invoked every
  *                                                              10 seconds to examine the outstandingPutTokens array for any put tokens that may have
  *                                                              expired.
- * @property   {Number}     timeoutTimer                        Timer used to trigger examination of the outstandingPutTokens array.
+ * @property   {NodeJS.Timer}     timeoutTimer                        Timer used to trigger examination of the outstandingPutTokens array.
  */
 class PutTokenStatus {
     outstandingPutTokens: PutTokenOperation[] = [];
     numberOfSecondsToTimeout: number = 120;
     putTokenTimeOutExaminationInterval: number = 10000;
-    timeoutTimer: number;
+    timeoutTimer: NodeJS.Timer;
 }
 
 /**

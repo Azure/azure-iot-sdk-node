@@ -55,7 +55,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
    */
   protected _config: Client.TransportConfigOptions;
   private _amqp: Base;
-  private _renewalTimeout: number;
+  private _renewalTimeout: NodeJS.Timer;
   private _renewalNumberOfMilliseconds: number = 2700000;
   private _fsm: machina.Fsm;
 
