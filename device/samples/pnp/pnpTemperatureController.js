@@ -23,7 +23,7 @@ const registrationId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID;
 const symmetricKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY;
 const useDps = process.env.IOTHUB_DEVICE_SECURITY_TYPE;
 
-const modelIdObject = { modelId: 'dtmi:com:example:TemperatureController;1' };
+const modelIdObject = { modelId: 'dtmi:com:example:TemperatureController;2' };
 const messageSubjectProperty = '$.sub';
 const thermostat1ComponentName = 'thermostat1';
 const thermostat2ComponentName = 'thermostat2';
