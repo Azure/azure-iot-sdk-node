@@ -115,6 +115,13 @@ export class Registry {
    * @method            module:azure-iothub.Registry#update
    * @description       Updates an existing device identity on an IoT hub with
    *                    the given device information.
+   *                    The `deviceInfo` parameter must include all properties
+   *                    that are updatable.  For example, if updating the `status`
+   *                    property from `disabled` to `enabled`, the `deviceInfo`
+   *                    object should also have the statusReason, authentication
+   *                    (and its sub-properties), capabilities, and deviceScope
+   *                    set to the devices current values or those properties will
+   *                    be reset.
    * @param {Object}    deviceInfo  An object which must include a `deviceId`
    *                                property whose value is a valid device
    *                                identifier.
@@ -307,7 +314,13 @@ export class Registry {
   /**
    * @method            module:azure-iothub.Registry#updateDevices
    * @description       Updates an array of devices.
-   *
+   *                    The individual elements of the `devices` parameter must
+   *                    include all properties that are updatable.  For example,
+   *                    if updating the `status` property from `disabled` to
+   *                    `enabled`, the object should also have the statusReason,
+   *                    authentication (and its sub-properties), capabilities,
+   *                    and deviceScope set to the devices current values or those
+   *                    properties will be reset.
    * @param {Object}    devices     An array of objects which must include a `deviceId`
    *                                property whose value is a valid device
    *                                identifier.
