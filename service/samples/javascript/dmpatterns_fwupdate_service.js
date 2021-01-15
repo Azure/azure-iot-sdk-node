@@ -26,7 +26,7 @@ function(err) {
   if (err) {
     console.error(err);
   } else {
-    console.log('Fimware update complete');
+    console.log('Firmware update complete');
   } 
 });
 
