@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // UPLOAD TO BLOB ADVANCED SAMPLE
-// This is a new api for upload to blob that allows for greater control over the blob uplaod calls.
+// This is a new api for upload to blob that allows for greater control over the blob upload calls.
 // Instead of a single API call that wraps the Storage SDK, the user in this sample retrieves the linked
 // Storage Account SAS Token from IoT Hub using a new API call, uses the Azure Storage Blob package to upload the local file to blob storage.
 // Additionally - it exposes two new APIs:
