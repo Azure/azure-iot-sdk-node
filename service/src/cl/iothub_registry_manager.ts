@@ -6,7 +6,7 @@
 
 import { IotHubGatewayServiceAPIs as PLClient, IotHubGatewayServiceAPIsModels as Models } from '../pl/iotHubGatewayServiceAPIs';
 import { IoTHubTokenCredentials } from '../auth/iothub_token_credentials';
-import { 
+import {
   AuthenticationMechanism,
   SymmetricKey,
   X509Thumbprint,
@@ -31,7 +31,7 @@ export type Module = Models.Module;
  * @export
  * @type DevicesGetIdentityResponse   Type alias to simplify the auto generated type's name
  */
-export type DevicesGetIdentityResponse = Models.DevicesGetIdentityResponse
+export type DevicesGetIdentityResponse = Models.DevicesGetIdentityResponse;
 
 /**
  * @export
@@ -173,7 +173,7 @@ export type DevicesInvokeMethodResponse = Models.DevicesInvokeMethodResponse;
 
 /**
  * @export
- * @class IoTHubRegistryManager    Main class to implement IoTHub Registry Manager Operations 
+ * @class IoTHubRegistryManager    Main class to implement IoTHub Registry Manager Operations
  *                                 based on the top of the auto generated IotHub REST APIs
  */
 export class IoTHubRegistryManager {
@@ -225,21 +225,20 @@ export class IoTHubRegistryManager {
    * @memberof IoTHubRegistryManager
    */
   createDeviceWithSas(
-    deviceId: string, 
-    primaryKey: string, 
-    secondaryKey: string, 
+    deviceId: string,
+    primaryKey: string,
+    secondaryKey: string,
     isEnabled: boolean
-  ): Promise<DevicesCreateOrUpdateIdentityResponse>
-  {
+  ): Promise<DevicesCreateOrUpdateIdentityResponse> {
     const symmetricKey: SymmetricKey = {
-      primaryKey = primaryKey,
-      secondaryKey = secondaryKey      
-    }
+      primaryKey: primaryKey,
+      secondaryKey: secondaryKey
+    };
 
     const authenticationMechanism: AuthenticationMechanism = {
-      type = 'sas',
-      symmetricKey = symmetricKey
-    }
+      type: 'sas',
+      symmetricKey: symmetricKey
+    };
 
     const device: Device = {};
     device.deviceId = deviceId;
@@ -269,22 +268,21 @@ export class IoTHubRegistryManager {
     primaryThumbprint: string,
     secondaryThumbprint: string,
     isEnabled: Boolean,
-    iotEdge:boolean = false
-  ): Promise<DevicesCreateOrUpdateIdentityResponse>
-  {
+    iotEdge: boolean = false
+  ): Promise<DevicesCreateOrUpdateIdentityResponse> {
     const x509Thumbprint: X509Thumbprint = {
-      primaryThumbprint = primaryThumbprint,
-      secondaryThumbprint = secondaryThumbprint      
-    }
+      primaryThumbprint: primaryThumbprint,
+      secondaryThumbprint: secondaryThumbprint
+    };
 
     const authenticationMechanism: AuthenticationMechanism = {
-      type = 'selfSigned',
-      x509Thumbprint = x509Thumbprint
-    }
+      type: 'selfSigned',
+      x509Thumbprint: x509Thumbprint
+    };
 
     const deviceCapabilities: DeviceCapabilities = {
-      iotEdge = iotEdge
-    }
+      iotEdge: iotEdge
+    };
 
     const device: Device = {};
     device.deviceId = deviceId;
@@ -312,17 +310,17 @@ export class IoTHubRegistryManager {
     deviceId: string,
     isEnabled: boolean,
     iotEdge: boolean = false
-  ): Promise<DevicesCreateOrUpdateIdentityResponse>
-  {
+  ): Promise<DevicesCreateOrUpdateIdentityResponse> {
     const authenticationMechanism: AuthenticationMechanism = {
-      type = 'certificateAuthority'
-    }
+      type: 'certificateAuthority'
+    };
 
     const deviceCapabilities: DeviceCapabilities = {
-      iotEdge = iotEdge;
-    }
+      iotEdge: iotEdge
+    };
 
     const device: Device = {};
+    device.deviceId = deviceId;
     if (isEnabled) {
       device.status = 'enabled';
     } else {
@@ -346,22 +344,21 @@ export class IoTHubRegistryManager {
    * @memberof IoTHubRegistryManager
    */
   updateDeviceWithSas(
-    deviceId: string, 
-    eTag: string, 
-    primaryKey: string, 
-    secondaryKey: string, 
+    deviceId: string,
+    eTag: string,
+    primaryKey: string,
+    secondaryKey: string,
     isEnabled: boolean
-  ): Promise<DevicesCreateOrUpdateIdentityResponse>
-  {
+  ): Promise<DevicesCreateOrUpdateIdentityResponse> {
     const symmetricKey: SymmetricKey = {
-      primaryKey = primaryKey,
-      secondaryKey = secondaryKey      
-    }
+      primaryKey: primaryKey,
+      secondaryKey: secondaryKey
+    };
 
     const authenticationMechanism: AuthenticationMechanism = {
-      type = 'sas',
-      symmetricKey = symmetricKey
-    }
+      type: 'sas',
+      symmetricKey: symmetricKey
+    };
 
     const device: Device = {};
     device.deviceId = deviceId;
@@ -374,8 +371,8 @@ export class IoTHubRegistryManager {
     device.authentication = authenticationMechanism;
 
     const options: DevicesCreateOrUpdateIdentityOptionalParams = {
-      ifMatch = '*'
-    }
+      ifMatch: '*'
+    };
 
     return this._pl.devices.createOrUpdateIdentity(deviceId, device, options);
   }
@@ -393,21 +390,20 @@ export class IoTHubRegistryManager {
    */
   updateDeviceWithX509(
     deviceId: string,
-    eTag: string, 
+    eTag: string,
     primaryThumbprint: string,
     secondaryThumbprint: string,
     isEnabled: boolean
-  ): Promise<DevicesCreateOrUpdateIdentityResponse>
-  {
+  ): Promise<DevicesCreateOrUpdateIdentityResponse> {
     const x509Thumbprint: X509Thumbprint = {
-      primaryThumbprint = primaryThumbprint,
-      secondaryThumbprint = secondaryThumbprint      
-    }
+      primaryThumbprint: primaryThumbprint,
+      secondaryThumbprint: secondaryThumbprint
+    };
 
     const authenticationMechanism: AuthenticationMechanism = {
-      type = 'selfSigned',
-      x509Thumbprint = x509Thumbprint
-    }
+      type: 'selfSigned',
+      x509Thumbprint: x509Thumbprint
+    };
 
     const device: Device = {};
     device.deviceId = deviceId;
@@ -432,13 +428,12 @@ export class IoTHubRegistryManager {
    */
   updateDeviceWithCertificateAuthority(
     deviceId: string,
-    eTag: string, 
+    eTag: string,
     isEnabled: Boolean
-  ): Promise<DevicesCreateOrUpdateIdentityResponse>
-  {
+  ): Promise<DevicesCreateOrUpdateIdentityResponse> {
     const authenticationMechanism: AuthenticationMechanism = {
-      type = 'certificateAuthority'
-    }
+      type: 'certificateAuthority'
+    };
 
     const device: Device = {};
     device.deviceId = deviceId;
@@ -462,8 +457,7 @@ export class IoTHubRegistryManager {
    */
   getDevice(
     deviceId: string
-  ): Promise<DevicesGetIdentityResponse>
-  {
+  ): Promise<DevicesGetIdentityResponse> {
     return this._pl.devices.getIdentity(deviceId);
   }
 
@@ -477,11 +471,10 @@ export class IoTHubRegistryManager {
   deleteDevice(
     deviceId: string,
     eTag: string = '*'
-  )
-  {
+  ): void {
     const devicesDeleteIdentityOptionalParams: DevicesDeleteIdentityOptionalParams = {
-      ifMatch = eTag
-    }
+      ifMatch: eTag
+    };
 
     this._pl.devices.deleteIdentity(deviceId, devicesDeleteIdentityOptionalParams);
   }
@@ -498,22 +491,21 @@ export class IoTHubRegistryManager {
    * @memberof IoTHubRegistryManager
    */
   createModuleWithSas(
-    deviceId: string, 
-    moduleId: string, 
-    managedBy: string, 
-    primaryKey: string, 
-    secondaryKey: string, 
-  ): Promise<ModulesCreateOrUpdateIdentityResponse>
-  {
+    deviceId: string,
+    moduleId: string,
+    managedBy: string,
+    primaryKey: string,
+    secondaryKey: string,
+  ): Promise<ModulesCreateOrUpdateIdentityResponse> {
     const symmetricKey: SymmetricKey = {
-      primaryKey = primaryKey,
-      secondaryKey = secondaryKey      
-    }
+      primaryKey: primaryKey,
+      secondaryKey: secondaryKey
+    };
 
     const authenticationMechanism: AuthenticationMechanism = {
-      type = 'sas',
-      symmetricKey = symmetricKey
-    }
+      type: 'sas',
+      symmetricKey: symmetricKey
+    };
 
     const module: Module = {};
     module.deviceId = deviceId;
@@ -536,22 +528,21 @@ export class IoTHubRegistryManager {
    * @memberof IoTHubRegistryManager
    */
   createModuleWithX509(
-    deviceId: string, 
-    moduleId: string, 
-    managedBy: string, 
-    primaryThumbprint: string, 
-    secondaryThumbprint: string, 
-  ): Promise<ModulesCreateOrUpdateIdentityResponse>
-  {
+    deviceId: string,
+    moduleId: string,
+    managedBy: string,
+    primaryThumbprint: string,
+    secondaryThumbprint: string,
+  ): Promise<ModulesCreateOrUpdateIdentityResponse> {
     const x509Thumbprint: X509Thumbprint = {
-      primaryThumbprint = primaryThumbprint,
-      secondaryThumbprint = secondaryThumbprint      
-    }
-  
+      primaryThumbprint: primaryThumbprint,
+      secondaryThumbprint: secondaryThumbprint
+    };
+
     const authenticationMechanism: AuthenticationMechanism = {
-      type = 'selfSigned',
-      x509Thumbprint = x509Thumbprint
-    }
+      type: 'selfSigned',
+      x509Thumbprint: x509Thumbprint
+    };
 
     const module: Module = {};
     module.deviceId = deviceId;
@@ -572,14 +563,13 @@ export class IoTHubRegistryManager {
    * @memberof IoTHubRegistryManager
    */
   createModuleWithCertificateAuthority(
-    deviceId: string, 
-    moduleId: string, 
-    managedBy: string, 
-  ): Promise<ModulesCreateOrUpdateIdentityResponse>
-  {
+    deviceId: string,
+    moduleId: string,
+    managedBy: string,
+  ): Promise<ModulesCreateOrUpdateIdentityResponse> {
     const authenticationMechanism: AuthenticationMechanism = {
-      type = 'certificateAuthority'
-    }
+      type: 'certificateAuthority'
+    };
 
     const module: Module = {};
     module.deviceId = deviceId;
@@ -609,17 +599,16 @@ export class IoTHubRegistryManager {
     eTag: string,
     primaryKey: string,
     secondaryKey: string
-  ): Promise<ModulesCreateOrUpdateIdentityResponse>
-  {
+  ): Promise<ModulesCreateOrUpdateIdentityResponse> {
     const symmetricKey: SymmetricKey = {
-      primaryKey = primaryKey,
-      secondaryKey = secondaryKey      
-    }
+      primaryKey: primaryKey,
+      secondaryKey: secondaryKey
+    };
 
     const authenticationMechanism: AuthenticationMechanism = {
-      type = 'sas',
-      symmetricKey = symmetricKey
-    }
+      type: 'sas',
+      symmetricKey: symmetricKey
+    };
 
     const module: Module = {};
     module.deviceId = deviceId;
@@ -629,8 +618,8 @@ export class IoTHubRegistryManager {
     module.authentication = authenticationMechanism;
 
     const options: DevicesCreateOrUpdateIdentityOptionalParams = {
-      ifMatch = '*'
-    }
+      ifMatch: '*'
+    };
 
     return this._pl.modules.createOrUpdateIdentity(deviceId, moduleId, module, options);
   }
@@ -654,17 +643,16 @@ export class IoTHubRegistryManager {
     eTag: string,
     primaryThumbprint: string,
     secondaryThumbprint: string
-  ): Promise<ModulesCreateOrUpdateIdentityResponse>
-  {
+  ): Promise<ModulesCreateOrUpdateIdentityResponse> {
     const x509Thumbprint: X509Thumbprint = {
-      primaryThumbprint = primaryThumbprint,
-      secondaryThumbprint = secondaryThumbprint      
-    }
+      primaryThumbprint: primaryThumbprint,
+      secondaryThumbprint: secondaryThumbprint
+    };
 
     const authenticationMechanism: AuthenticationMechanism = {
-      type = 'selfSigned',
-      x509Thumbprint = x509Thumbprint
-    }
+      type: 'selfSigned',
+      x509Thumbprint: x509Thumbprint
+    };
 
     const module: Module = {};
     module.deviceId = deviceId;
@@ -691,11 +679,10 @@ export class IoTHubRegistryManager {
     moduleId: string,
     managedBy: string,
     eTag: string
-  ): Promise<ModulesCreateOrUpdateIdentityResponse>
-  {
+  ): Promise<ModulesCreateOrUpdateIdentityResponse> {
     const authenticationMechanism: AuthenticationMechanism = {
-      type = 'certificateAuthority'
-    }
+      type: 'certificateAuthority'
+    };
 
     const module: Module = {};
     module.deviceId = deviceId;
@@ -718,8 +705,7 @@ export class IoTHubRegistryManager {
   getModule(
     deviceId: string,
     moduleId: string
-  ): Promise<ModulesGetIdentityResponse>
-  {
+  ): Promise<ModulesGetIdentityResponse> {
     return this._pl.modules.getIdentity(deviceId, moduleId);
   }
 
@@ -732,8 +718,7 @@ export class IoTHubRegistryManager {
    */
   getModules(
     deviceId: string
-  ): Promise<ModulesGetModulesOnDeviceResponse>
-  {
+  ): Promise<ModulesGetModulesOnDeviceResponse> {
     return this._pl.modules.getModulesOnDevice(deviceId);
   }
 
@@ -749,11 +734,10 @@ export class IoTHubRegistryManager {
     deviceId: string,
     moduleId: string,
     eTag: string = '*'
-  ): void
-  {
+  ): void {
     const modulesDeleteIdentityOptionalParams: ModulesDeleteIdentityOptionalParams = {
-      ifMatch = eTag
-    }
+      ifMatch: eTag
+    };
 
     this._pl.modules.deleteIdentity(deviceId, moduleId, modulesDeleteIdentityOptionalParams);
   }
@@ -765,8 +749,7 @@ export class IoTHubRegistryManager {
    * @memberof IoTHubRegistryManager
    */
   getServiceStatistics(
-  ): Promise<StatisticsGetServiceStatisticsResponse>
-  {
+  ): Promise<StatisticsGetServiceStatisticsResponse> {
     return this._pl.statistics.getServiceStatistics();
   }
 
@@ -777,8 +760,7 @@ export class IoTHubRegistryManager {
    * @memberof IoTHubRegistryManager
    */
   getDeviceRegistryStatistics(
-  ): Promise<StatisticsGetDeviceStatisticsResponse>
-  {
+  ): Promise<StatisticsGetDeviceStatisticsResponse> {
     return this._pl.statistics.getDeviceStatistics();
   }
 
@@ -799,11 +781,10 @@ export class IoTHubRegistryManager {
    */
   getDevices(
     maxNumberOfDevices: number
-  ): Promise<DevicesGetDevicesResponse>
-  {
+  ): Promise<DevicesGetDevicesResponse> {
     const devicesGetDevicesOptionalParams: DevicesGetDevicesOptionalParams = {
-      top = maxNumberOfDevices
-    }
+      top: maxNumberOfDevices
+    };
     return this._pl.devices.getDevices(devicesGetDevicesOptionalParams);
   }
 
@@ -824,8 +805,7 @@ export class IoTHubRegistryManager {
    */
   bulkCreateOrUpdateDevices(
     devices: ExportImportDevice[]
-  ): Promise<BulkRegistryUpdateRegistryResponse>
-  {
+  ): Promise<BulkRegistryUpdateRegistryResponse> {
     return this._pl.bulkRegistry.updateRegistry(devices);
   }
 
@@ -842,8 +822,7 @@ export class IoTHubRegistryManager {
    */
   queryIoTHub(
     querySpecification: QuerySpecification
-  ): Promise<QueryGetTwinsResponse>
-  {
+  ): Promise<QueryGetTwinsResponse> {
     return this._pl.query.getTwins(querySpecification);
   }
 
@@ -856,8 +835,7 @@ export class IoTHubRegistryManager {
    */
   getTwin(
     deviceId: string
-  ): Promise<DevicesGetTwinResponse>
-  {
+  ): Promise<DevicesGetTwinResponse> {
     return this._pl.devices.getTwin(deviceId);
   }
 
@@ -872,8 +850,7 @@ export class IoTHubRegistryManager {
   replaceTwin(
     deviceId: string,
     deviceTwin: Twin
-  ): Promise<DevicesReplaceTwinResponse>
-  {
+  ): Promise<DevicesReplaceTwinResponse> {
     return this._pl.devices.replaceTwin(deviceId, deviceTwin);
   }
 
@@ -890,11 +867,10 @@ export class IoTHubRegistryManager {
     deviceId: string,
     deviceTwin: Twin,
     eTag: string
-  ): Promise<DevicesUpdateTwinResponse>
-  {
+  ): Promise<DevicesUpdateTwinResponse> {
     const devicesUpdateTwinOptionalParams: DevicesUpdateTwinOptionalParams = {
-      ifMatch = eTag
-    }
+      ifMatch: eTag
+    };
     return this._pl.devices.updateTwin(deviceId, deviceTwin, devicesUpdateTwinOptionalParams);
   }
 
@@ -909,8 +885,7 @@ export class IoTHubRegistryManager {
   getModuleTwin(
     deviceId: string,
     moduleId: string
-  ): Promise<ModulesGetTwinResponse>
-  {
+  ): Promise<ModulesGetTwinResponse> {
     return this._pl.modules.getTwin(deviceId, moduleId);
   }
 
@@ -927,8 +902,7 @@ export class IoTHubRegistryManager {
     deviceId: string,
     moduleId: string,
     moduleTwin: Twin
-  ): Promise<ModulesReplaceTwinResponse>
-  {
+  ): Promise<ModulesReplaceTwinResponse> {
     return this._pl.modules.replaceTwin(deviceId, moduleId, moduleTwin);
   }
 
@@ -947,11 +921,10 @@ export class IoTHubRegistryManager {
     moduleId: string,
     moduleTwin: Twin,
     eTag: string
-  ): Promise<ModulesReplaceTwinResponse>
-  {
+  ): Promise<ModulesReplaceTwinResponse> {
     const modulesUpdateTwinOptionalParams: ModulesUpdateTwinOptionalParams = {
-      ifMatch = eTag
-    }
+      ifMatch: eTag
+    };
     return this._pl.modules.updateTwin(deviceId, moduleId, moduleTwin, modulesUpdateTwinOptionalParams);
   }
 
@@ -966,8 +939,7 @@ export class IoTHubRegistryManager {
   invokeDeviceMethod(
     deviceId: string,
     directMethodRequest: CloudToDeviceMethod
-  ): Promise<DevicesInvokeMethodResponse>
-  {
+  ): Promise<DevicesInvokeMethodResponse> {
     if (typeof directMethodRequest.payload !== 'undefined') {
       directMethodRequest.payload = '';
     }
@@ -987,8 +959,7 @@ export class IoTHubRegistryManager {
     deviceId: string,
     moduleId: string,
     directMethodRequest: CloudToDeviceMethod
-  ): Promise<DevicesInvokeMethodResponse>
-  {
+  ): Promise<DevicesInvokeMethodResponse> {
     if (typeof directMethodRequest.payload !== 'undefined') {
       directMethodRequest.payload = '';
     }
