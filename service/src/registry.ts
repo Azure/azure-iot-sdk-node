@@ -115,6 +115,14 @@ export class Registry {
    * @method            module:azure-iothub.Registry#update
    * @description       Updates an existing device identity on an IoT hub with
    *                    the given device information.
+   *                    The `deviceInfo` parameter must include all properties
+   *                    that are updatable.  For example, if updating the `status`
+   *                    property from `disabled` to `enabled`, the `deviceInfo`
+   *                    object should also have the statusReason, authentication
+   *                    (and its sub-properties), capabilities, and deviceScope
+   *                    set to the devices current values or those properties will
+   *                    be reset.  It is recommended that the get api is called
+   *                    first before doing an update.
    * @param {Object}    deviceInfo  An object which must include a `deviceId`
    *                                property whose value is a valid device
    *                                identifier.
@@ -307,7 +315,14 @@ export class Registry {
   /**
    * @method            module:azure-iothub.Registry#updateDevices
    * @description       Updates an array of devices.
-   *
+   *                    The individual elements of the `devices` parameter must
+   *                    include all properties that are updatable.  For example,
+   *                    if updating the `status` property from `disabled` to
+   *                    `enabled`, the object should also have the statusReason,
+   *                    authentication (and its sub-properties), capabilities,
+   *                    and deviceScope set to the devices current values or those
+   *                    properties will be reset. It is recommended that the get
+   *                    api is called first before doing an update.
    * @param {Object}    devices     An array of objects which must include a `deviceId`
    *                                property whose value is a valid device
    *                                identifier.
@@ -403,7 +418,7 @@ export class Registry {
 
   /**
    * @method              module:azure-iothub.Registry#importDevicesFromBlobByIdentity
-   * @description         Imports devices from a blob in bulk job using the configured identity.  This API initially has limited availablity and is only is implemented in a few regions.
+   * @description         Imports devices from a blob in bulk job using the configured identity.  This API initially has limited availability and is only is implemented in a few regions.
    *                      If a user wishes to try it out, they will need to set an Environment Variable of "EnabledStorageIdentity" and set it to "1"
    * @param {String}      inputBlobContainerUri   The URI to a container with a blob named 'devices.txt' containing a list of devices to import.
    * @param {String}      outputBlobContainerUri  The URI to a container where a blob will be created with logs of the import process.
@@ -494,7 +509,7 @@ export class Registry {
 
   /**
    * @method              module:azure-iothub.Registry#exportDevicesToBlob
-   * @description         Export devices to a blob in a bulk job using the configured identity.  This API initially has limited availablity and is only is implemented in a few regions.
+   * @description         Export devices to a blob in a bulk job using the configured identity.  This API initially has limited availability and is only is implemented in a few regions.
    *                      If a user wishes to try it out, they will need to set an Environment Variable of "EnabledStorageIdentity" and set it to "1"
    * @param {String}      outputBlobContainerUri  The URI to a container where a blob will be created with logs of the export process.
    * @param {Boolean}     excludeKeys             Boolean indicating whether security keys should be excluded from the exported data.
