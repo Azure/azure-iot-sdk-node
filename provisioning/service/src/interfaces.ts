@@ -469,6 +469,11 @@ export interface EnrollmentGroup {
   lastUpdatedDateTimeUtc?: string;
 
   /**
+   * The capabilities of the device that will be provisioned using this enrollment record.
+   */
+  capabilities?: DeviceCapabilities;
+
+  /**
    * The behavior when a device is re-provisioned to an IoT hub.
    */
   reprovisionPolicy?: ReprovisionPolicy;
