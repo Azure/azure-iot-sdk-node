@@ -89,6 +89,26 @@ var symmetricKeyEnrollmentGroup = {
   allocationPolicy: 'static'
 };
 
+var iotEdgeEnrollmentGroup = {
+  enrollmentGroupId: 'e2e-node-deleteme-psc-' + uuid.v4(),
+  attestation: {
+    type: 'symmetricKey',
+    symmetricKey: {
+      primaryKey: Buffer.from(uuid.v4()).toString('base64'),
+      secondaryKey: Buffer.from(uuid.v4()).toString('base64')
+    }
+  },
+  provisioningStatus: "enabled",
+  capabilities: {
+    iotEdge: true
+  },
+  reprovisionPolicy: {
+    updateHubAssignment: false,
+    migrateDeviceData: true
+  },
+  allocationPolicy: 'static'
+};
+
 describe('Provisioning Service Client: CRUD operations', function () {
   this.timeout(60000);
   before(function(done) {
@@ -142,6 +162,16 @@ describe('Provisioning Service Client: CRUD operations', function () {
       createFunction: serviceClient.createOrUpdateEnrollmentGroup.bind(serviceClient),
       updateFunction: serviceClient.createOrUpdateEnrollmentGroup.bind(serviceClient),
       enrollmentObject: symmetricKeyEnrollmentGroup
+    },
+    {
+      getFunction: serviceClient.getEnrollmentGroup.bind(serviceClient),
+      deleteFunction: serviceClient.deleteEnrollmentGroup.bind(serviceClient),
+      getAttestationMechanismFunction: serviceClient.getEnrollmentGroupAttestationMechanism.bind(serviceClient),
+      testDescription: 'EnrollmentGroup object with symmetric keys and capabilities.iotEdge property with value true',
+      idPropertyName: 'enrollmentGroupId',
+      createFunction: serviceClient.createOrUpdateEnrollmentGroup.bind(serviceClient),
+      updateFunction: serviceClient.createOrUpdateEnrollmentGroup.bind(serviceClient),
+      enrollmentObject: iotEdgeEnrollmentGroup
     }
   ];
   testSpecification.forEach(function(testConfiguration) {
@@ -171,6 +201,9 @@ describe('Provisioning Service Client: CRUD operations', function () {
             debug(err);
           }
           assert.isNull(err,'Should be no error from the create');
+          if (testConfiguration.enrollmentObject.capabilities && testConfiguration.enrollmentObject.capabilities.iotEdge) {
+            assert.isTrue(returnedEnrollment.capabilities.iotEdge, 'capabilities.iotEdge property in returned enrollment should be true');
+          }
           enrollmentToDelete = returnedEnrollment;
           callback();
         });
