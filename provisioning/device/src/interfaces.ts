@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { X509, Callback, SharedAccessSignature } from 'azure-iot-common';
+import { X509, Callback, ErrorCallback, SharedAccessSignature } from 'azure-iot-common';
 import { X509Registration } from './x509_registration';
 import { Agent } from 'https';
 
@@ -196,15 +196,15 @@ export interface RegistrationClient {
   /**
    * Register the device with the provisioning service
    */
-  register(callback: (err?: Error, result?: RegistrationResult) => void): void;
+  register(callback?: Callback<RegistrationResult>): Promise<RegistrationResult> | void;
   /**
    * Cancel the registration process if it is in progress.
    */
-  cancel(callback: (err?: Error) => void): void;
+  cancel(callback?: ErrorCallback): Promise<void> | void;
   /**
    * Sets the custom payload for registration that will be sent to the custom allocation policy implemented in an Azure Function.
    */
-  setProvisioningPayload( payload: ProvisioningPayload): void;
+  setProvisioningPayload(payload: ProvisioningPayload): void;
 }
 
 /**
