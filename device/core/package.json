@@ -7,10 +7,10 @@
   "main": "device.js",
   "typings": "device.d.ts",
   "dependencies": {
-    "@azure/abort-controller": "1.0.1",
-    "@azure/storage-blob": "^12.0.0",
     "azure-iot-common": "1.12.7",
     "azure-iot-http-base": "1.11.7",
+    "@azure/storage-blob": "^12.0.0",
+    "@azure/abort-controller": "1.0.1",
     "debug": "^4.1.1",
     "lodash": "^4.17.20",
     "machina": "^4.0.2",
@@ -22,14 +22,14 @@
     "@types/traverse": "^0.6.32",
     "chai": "^4.2.0",
     "es5-shim": "^4.5.12",
-    "mocha": "^7.1.1",
     "nyc": "^15.0.0",
+    "mocha": "^7.1.1",
     "sinon": "^7.4.1",
     "source-map-support": "^0.5.16",
-    "ts-node": "^8.10.2",
+    "ts-node": "^8.6.2",
+    "uuid": "^3.3.2",
     "tslint": "^6.1.0",
-    "typescript": "3.7.5",
-    "uuid": "^3.3.2"
+    "typescript": "3.7.5"
   },
   "scripts": {
     "npmlockrefresh": "npm i --package-lock-only",
