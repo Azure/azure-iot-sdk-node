@@ -251,3 +251,6 @@ lerna-debug.log
 
 # mocha
 **/test-results.*.xml
+
+# ignore package-lock.json
+**/package-lock.json
