@@ -102,84 +102,25 @@ describe('IoTHubRegistryManager', function () {
     assert.deepEqual(returnedPromise.interfaces, returnValue.interfaces);
   });
 
-  it('updateDeviceWithSas calls the createOrUpdateIdentity method on the PL client', async () => {
+  it('updateDevice calls the createOrUpdateIdentity method on the PL client', async () => {
     var returnValue = {
         interfaces: {
           testInterfaceInstanceName: {}
         }
       };
     var testDeviceId = 'testDeviceId';
-    var testETag = 'testETag';
-    var testPrimaryKey = 'testPrimaryKey';
-    var testSecondaryKey = 'testSecondaryKey';
-    var testIsEnabled = true;
+    var testDevice = 'testDevice';
+    var testIfMatch = {
+      ifMatch: '*'
+    }
 
     var testClient = new IoTHubRegistryManager(testCredentials);
     testClient._pl.devices.createOrUpdateIdentity = sinon.stub().resolves(returnValue);
-    const returnedPromise = await testClient.updateDeviceWithSas(testDeviceId, testETag, testPrimaryKey, testSecondaryKey, testIsEnabled);
+    const returnedPromise = await testClient.updateDevice(testDeviceId, testDevice);
     assert.isTrue(testClient._pl.devices.createOrUpdateIdentity.calledWith(
         testDeviceId,
-        sinon.match.has('deviceId', testDeviceId)
-        .and(sinon.match.has('etag', testETag))
-        .and(sinon.match.has('status', 'enabled'))
-        .and(sinon.match.has('authentication'))
-        .and(sinon.match.hasNested('authentication.type', 'sas'))
-        .and(sinon.match.hasNested('authentication.symmetricKey'))
-        .and(sinon.match.hasNested('authentication.symmetricKey.primaryKey', testPrimaryKey))
-        .and(sinon.match.hasNested('authentication.symmetricKey.secondaryKey', testSecondaryKey))
-    ));
-    assert.deepEqual(returnedPromise.interfaces, returnValue.interfaces);
-  });
-
-  it('updateDeviceWithX509 calls the createOrUpdateIdentity method on the PL client', async () => {
-    var returnValue = {
-        interfaces: {
-          testInterfaceInstanceName: {}
-        }
-      };
-    var testDeviceId = 'testDeviceId';
-    var testETag = 'testETag';
-    var testPrimaryThumbprint = 'primaryThumbprint';
-    var testSecondaryThumbprint = 'secondaryThumbprint';
-    var testIsEnabled = true;
-
-    var testClient = new IoTHubRegistryManager(testCredentials);
-    testClient._pl.devices.createOrUpdateIdentity = sinon.stub().resolves(returnValue);
-    const returnedPromise = await testClient.updateDeviceWithX509(testDeviceId, testETag, testPrimaryThumbprint, testSecondaryThumbprint, testIsEnabled);
-    assert.isTrue(testClient._pl.devices.createOrUpdateIdentity.calledWith(
-        testDeviceId,
-        sinon.match.has('deviceId', testDeviceId)
-        .and(sinon.match.has('etag', testETag))
-        .and(sinon.match.has('status', 'enabled'))
-        .and(sinon.match.has('authentication'))
-        .and(sinon.match.hasNested('authentication.type', 'selfSigned'))
-        .and(sinon.match.hasNested('authentication.x509Thumbprint'))
-        .and(sinon.match.hasNested('authentication.x509Thumbprint.primaryThumbprint', testPrimaryThumbprint))
-        .and(sinon.match.hasNested('authentication.x509Thumbprint.secondaryThumbprint', testSecondaryThumbprint))
-    ));
-    assert.deepEqual(returnedPromise.interfaces, returnValue.interfaces);
-  });
-
-  it('updateDeviceWithCertificateAuthority calls the createOrUpdateIdentity method on the PL client', async () => {
-    var returnValue = {
-        interfaces: {
-          testInterfaceInstanceName: {}
-        }
-      };
-    var testDeviceId = 'testDeviceId';
-    var testETag = 'testETag';
-    var testIsEnabled = true;
-
-    var testClient = new IoTHubRegistryManager(testCredentials);
-    testClient._pl.devices.createOrUpdateIdentity = sinon.stub().resolves(returnValue);
-    const returnedPromise = await testClient.updateDeviceWithCertificateAuthority(testDeviceId, testETag, testIsEnabled);
-    assert.isTrue(testClient._pl.devices.createOrUpdateIdentity.calledWith(
-        testDeviceId,
-        sinon.match.has('deviceId', testDeviceId)
-        .and(sinon.match.has('etag', testETag))
-        .and(sinon.match.has('status', 'enabled'))
-        .and(sinon.match.has('authentication'))
-        .and(sinon.match.hasNested('authentication.type', 'certificateAuthority'))
+        testDevice,
+        testIfMatch
     ));
     assert.deepEqual(returnedPromise.interfaces, returnValue.interfaces);
   });

@@ -333,119 +333,22 @@ export class IoTHubRegistryManager {
   }
 
   /**
-   * @method updateDeviceWithSas                              module: azure-iot-digitaltwins-service.IoTHubRegistryManager.updateDeviceWithSas
-   * @description                                             Updates a device identity on IoTHub using SAS authentication.
+   * @method updateDevice                                     module: azure-iot-digitaltwins-service.IoTHubRegistryManager.updateDevice
+   * @description                                             Updates a device identity on IoTHub
    * @param {string}  deviceId                                The name (Id) of the device.
-   * @param {string}  eTag                                    The etag (if_match) value to use for the update operation.
-   * @param {string}  primaryKey                              Primary authentication key.
-   * @param {string}  secondaryKey                            Secondary authentication key.
-   * @param {boolean} isEnabled                               The status of the device. If the status disabled, a device cannot connect to the service.
+   * @param {Device}  device                                  The contents of the device identity.
    * @returns Promise<DevicesCreateOrUpdateIdentityResponse>  The return object containing the updated device and the parsed HttpResponse.
    * @memberof IoTHubRegistryManager
    */
-  updateDeviceWithSas(
+  updateDevice(
     deviceId: string,
-    eTag: string,
-    primaryKey: string,
-    secondaryKey: string,
-    isEnabled: boolean
+    device: Device
   ): Promise<DevicesCreateOrUpdateIdentityResponse> {
-    const symmetricKey: SymmetricKey = {
-      primaryKey: primaryKey,
-      secondaryKey: secondaryKey
-    };
-
-    const authenticationMechanism: AuthenticationMechanism = {
-      type: 'sas',
-      symmetricKey: symmetricKey
-    };
-
-    const device: Device = {};
-    device.deviceId = deviceId;
-    device.etag = eTag;
-    if (isEnabled) {
-      device.status = 'enabled';
-    } else {
-      device.status = 'disabled';
-    }
-    device.authentication = authenticationMechanism;
 
     const options: DevicesCreateOrUpdateIdentityOptionalParams = {
       ifMatch: '*'
     };
-
     return this._pl.devices.createOrUpdateIdentity(deviceId, device, options);
-  }
-
-  /**
-   * @method updateDeviceWithX509                             module: azure-iot-digitaltwins-service.IoTHubRegistryManager.updateDeviceWithX509
-   * @description                                             Creates a device identity on IoTHub using X509 authentication.
-   * @param {string}  deviceId                                The name (Id) of the device.
-   * @param {string}  eTag                                    The etag (if_match) value to use for the update operation.
-   * @param {string}  primaryThumbprint                       Primary X509 thumbprint.
-   * @param {string}  secondaryThumbprint                     Secondary X509 thumbprint.
-   * @param {boolean} isEnabled                               The status of the device. If the status disabled, a device cannot connect to the service.
-   * @returns Promise<DevicesCreateOrUpdateIdentityResponse>  The return object containing the updated device and the parsed HttpResponse.
-   * @memberof IoTHubRegistryManager
-   */
-  updateDeviceWithX509(
-    deviceId: string,
-    eTag: string,
-    primaryThumbprint: string,
-    secondaryThumbprint: string,
-    isEnabled: boolean
-  ): Promise<DevicesCreateOrUpdateIdentityResponse> {
-    const x509Thumbprint: X509Thumbprint = {
-      primaryThumbprint: primaryThumbprint,
-      secondaryThumbprint: secondaryThumbprint
-    };
-
-    const authenticationMechanism: AuthenticationMechanism = {
-      type: 'selfSigned',
-      x509Thumbprint: x509Thumbprint
-    };
-
-    const device: Device = {};
-    device.deviceId = deviceId;
-    device.etag = eTag;
-    if (isEnabled) {
-      device.status = 'enabled';
-    } else {
-      device.status = 'disabled';
-    }
-    device.authentication = authenticationMechanism;
-
-    return this._pl.devices.createOrUpdateIdentity(deviceId, device);
-  }
-
-  /**
-   * @method updateDeviceWithCertificateAuthority             module: azure-iot-digitaltwins-service.IoTHubRegistryManager.updateDeviceWithCertificateAuthority
-   * @description                                             Creates a device identity on IoTHub using certificate authority.
-   * @param {string}  deviceId                                The name (Id) of the device.
-   * @param {boolean} iotEdge                                 The device is part of a IoTEdge or not.
-   * @returns Promise<DevicesCreateOrUpdateIdentityResponse>  The return object containing the updated device and the parsed HttpResponse.
-   * @memberof IoTHubRegistryManager
-   */
-  updateDeviceWithCertificateAuthority(
-    deviceId: string,
-    eTag: string,
-    isEnabled: Boolean
-  ): Promise<DevicesCreateOrUpdateIdentityResponse> {
-    const authenticationMechanism: AuthenticationMechanism = {
-      type: 'certificateAuthority'
-    };
-
-    const device: Device = {};
-    device.deviceId = deviceId;
-    device.etag = eTag;
-    if (isEnabled) {
-      device.status = 'enabled';
-    } else {
-      device.status = 'disabled';
-    }
-    device.authentication = authenticationMechanism;
-
-    return this._pl.devices.createOrUpdateIdentity(deviceId, device);
   }
 
   /**
