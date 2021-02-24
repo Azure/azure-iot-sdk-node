@@ -12,7 +12,8 @@ import {
   X509Thumbprint,
   DeviceCapabilities,
   DevicesCreateOrUpdateIdentityOptionalParams,
-  DevicesDeleteIdentityOptionalParams
+  DevicesDeleteIdentityOptionalParams,
+  ModulesCreateOrUpdateIdentityOptionalParams,
 } from '../pl/models';
 
 /**
@@ -484,117 +485,24 @@ export class IoTHubRegistryManager {
   }
 
   /**
-   * @method updateModuleWithSas                              module: azure-iot-digitaltwins-service.IoTHubRegistryManager.updateModuleWithSas
-   * @description                                             Updates a module identity for a device on IoTHub using SAS authentication.
-   * @param {string}  deviceId                                The name (Id) of the device.
-   * @param {string}  moduleId                                The name (Id) of the module.
-   * @param {string}  managed_by                              The name of the manager device (edge).
-   * @param {string}  eTag                                    The etag (if_match) value to use for the update operation.
-   * @param {string}  primaryKey                              Primary authentication key.
-   * @param {string}  secondaryKey                            Secondary authentication key.
-   * @returns Promise<ModulesCreateOrUpdateIdentityResponse>  The return object containing the updated module and the parsed HttpResponse.
+   * @method updateModule                                           module: azure-iot-digitaltwins-service.IoTHubRegistryManager.updateModule
+   * @description                                                   Updates a module identity for a device on IoTHub using SAS authentication.
+   * @param {string}  deviceId                                      The name (Id) of the device.
+   * @param {string}  moduleId                                      The name (Id) of the module.
+   * @param {Module}  device                                        The contents of the module identity.
+   * @returns Promise<ModulesCreateOrUpdateIdentityOptionalParams>  The return object containing the updated module and the parsed HttpResponse.
    * @memberof IoTHubRegistryManager
    */
-  updateModuleWithSas(
+  updateModule(
     deviceId: string,
     moduleId: string,
-    managedBy: string,
-    eTag: string,
-    primaryKey: string,
-    secondaryKey: string
+    module: Module
   ): Promise<ModulesCreateOrUpdateIdentityResponse> {
-    const symmetricKey: SymmetricKey = {
-      primaryKey: primaryKey,
-      secondaryKey: secondaryKey
-    };
-
-    const authenticationMechanism: AuthenticationMechanism = {
-      type: 'sas',
-      symmetricKey: symmetricKey
-    };
-
-    const module: Module = {};
-    module.deviceId = deviceId;
-    module.moduleId = moduleId;
-    module.managedBy = managedBy;
-    module.etag = eTag;
-    module.authentication = authenticationMechanism;
-
-    const options: DevicesCreateOrUpdateIdentityOptionalParams = {
+    const options: ModulesCreateOrUpdateIdentityOptionalParams = {
       ifMatch: '*'
     };
 
     return this._pl.modules.createOrUpdateIdentity(deviceId, moduleId, module, options);
-  }
-
-  /**
-   * @method updateModuleWithX509                             module: azure-iot-digitaltwins-service.IoTHubRegistryManager.updateModuleWithX509
-   * @description                                             Updates a module identity for a device on IoTHub using X509 authentication.
-   * @param {string}  deviceId                                The name (Id) of the device.
-   * @param {string}  moduleId                                The name (Id) of the module.
-   * @param {string}  managed_by                              The name of the manager device (edge).
-   * @param {string}  eTag                                    The etag (if_match) value to use for the update operation.
-   * @param {string}  primaryThumbprint                       Primary X509 thumbprint.
-   * @param {string}  secondaryThumbprint                     Secondary X509 thumbprint.
-   * @returns Promise<ModulesCreateOrUpdateIdentityResponse>  The return object containing the updated module and the parsed HttpResponse.
-   * @memberof IoTHubRegistryManager
-   */
-  updateModuleWithX509(
-    deviceId: string,
-    moduleId: string,
-    managedBy: string,
-    eTag: string,
-    primaryThumbprint: string,
-    secondaryThumbprint: string
-  ): Promise<ModulesCreateOrUpdateIdentityResponse> {
-    const x509Thumbprint: X509Thumbprint = {
-      primaryThumbprint: primaryThumbprint,
-      secondaryThumbprint: secondaryThumbprint
-    };
-
-    const authenticationMechanism: AuthenticationMechanism = {
-      type: 'selfSigned',
-      x509Thumbprint: x509Thumbprint
-    };
-
-    const module: Module = {};
-    module.deviceId = deviceId;
-    module.moduleId = moduleId;
-    module.managedBy = managedBy;
-    module.etag = eTag;
-    module.authentication = authenticationMechanism;
-
-    return this._pl.modules.createOrUpdateIdentity(deviceId, moduleId, module);
-  }
-
-  /**
-   * @method updateModuleWithCertificateAuthority             module: azure-iot-digitaltwins-service.IoTHubRegistryManager.updateModuleWithCertificateAuthority
-   * @description                                             Updates a module identity for a device on IoTHub using certificate authority.
-   * @param {string}  deviceId                                The name (Id) of the device.
-   * @param {string}  moduleId                                The name (Id) of the module.
-   * @param {string}  managed_by                              The name of the manager device (edge).
-   * @param {string}  eTag                                    The etag (if_match) value to use for the update operation.
-   * @returns Promise<ModulesCreateOrUpdateIdentityResponse>  The return object containing the updated module and the parsed HttpResponse.
-   * @memberof IoTHubRegistryManager
-   */
-  updateModuleWithCertificateAuthority(
-    deviceId: string,
-    moduleId: string,
-    managedBy: string,
-    eTag: string
-  ): Promise<ModulesCreateOrUpdateIdentityResponse> {
-    const authenticationMechanism: AuthenticationMechanism = {
-      type: 'certificateAuthority'
-    };
-
-    const module: Module = {};
-    module.deviceId = deviceId;
-    module.moduleId = moduleId;
-    module.managedBy = managedBy;
-    module.etag = eTag;
-    module.authentication = authenticationMechanism;
-
-    return this._pl.modules.createOrUpdateIdentity(deviceId, moduleId, module);
   }
 
   /**

@@ -247,7 +247,7 @@ describe('IoTHubRegistryManager', function () {
     assert.deepEqual(returnedPromise.interfaces, returnValue.interfaces);
   });
 
-  it('updateModuleWithSas calls the createOrUpdateIdentity method on the PL client', async () => {
+  it('updateModule calls the createOrUpdateIdentity method on the PL client', async () => {
     var returnValue = {
         interfaces: {
           testInterfaceInstanceName: {}
@@ -255,85 +255,19 @@ describe('IoTHubRegistryManager', function () {
       };
     var testDeviceId = 'testDeviceId';
     var testModuleId = 'testModuleId';
-    var testManagedBy = 'testManagedBy';
-    var testETag = 'testETag';
-    var testPrimaryKey = 'testPrimaryKey';
-    var testSecondaryKey = 'testSecondaryKey';
+    var testModule = 'testModule';
+    var testIfMatch = {
+      ifMatch: '*'
+    }
 
     var testClient = new IoTHubRegistryManager(testCredentials);
     testClient._pl.modules.createOrUpdateIdentity = sinon.stub().resolves(returnValue);
-    const returnedPromise = await testClient.updateModuleWithSas(testDeviceId, testModuleId, testManagedBy, testETag, testPrimaryKey, testSecondaryKey);
+    const returnedPromise = await testClient.updateModule(testDeviceId, testModuleId, testModule);
     assert.isTrue(testClient._pl.modules.createOrUpdateIdentity.calledWith(
         testDeviceId,
         testModuleId,
-        sinon.match.has('deviceId', testDeviceId)
-        .and(sinon.match.has('moduleId', testModuleId))
-        .and(sinon.match.has('managedBy', testManagedBy))
-        .and(sinon.match.has('etag', testETag))
-        .and(sinon.match.has('authentication'))
-        .and(sinon.match.hasNested('authentication.type', 'sas'))
-        .and(sinon.match.hasNested('authentication.symmetricKey'))
-        .and(sinon.match.hasNested('authentication.symmetricKey.primaryKey', testPrimaryKey))
-        .and(sinon.match.hasNested('authentication.symmetricKey.secondaryKey', testSecondaryKey))
-    ));
-    assert.deepEqual(returnedPromise.interfaces, returnValue.interfaces);
-  });
-
-  it('updateModuleWithX509 calls the createOrUpdateIdentity method on the PL client', async () => {
-    var returnValue = {
-        interfaces: {
-          testInterfaceInstanceName: {}
-        }
-      };
-    var testDeviceId = 'testDeviceId';
-    var testModuleId = 'testModuleId';
-    var testManagedBy = 'testManagedBy';
-    var testETag = 'testETag';
-    var testPrimaryThumbprint = 'testPrimaryThumbprint';
-    var testSecondaryThumbprint = 'testSecondaryThumbprint';
-
-    var testClient = new IoTHubRegistryManager(testCredentials);
-    testClient._pl.modules.createOrUpdateIdentity = sinon.stub().resolves(returnValue);
-    const returnedPromise = await testClient.updateModuleWithX509(testDeviceId, testModuleId, testManagedBy, testETag, testPrimaryThumbprint, testSecondaryThumbprint);
-    assert.isTrue(testClient._pl.modules.createOrUpdateIdentity.calledWith(
-        testDeviceId,
-        testModuleId,
-        sinon.match.has('deviceId', testDeviceId)
-        .and(sinon.match.has('moduleId', testModuleId))
-        .and(sinon.match.has('managedBy', testManagedBy))
-        .and(sinon.match.has('etag', testETag))
-        .and(sinon.match.has('authentication'))
-        .and(sinon.match.hasNested('authentication.type', 'selfSigned'))
-        .and(sinon.match.hasNested('authentication.x509Thumbprint'))
-        .and(sinon.match.hasNested('authentication.x509Thumbprint.primaryThumbprint', testPrimaryThumbprint))
-        .and(sinon.match.hasNested('authentication.x509Thumbprint.secondaryThumbprint', testSecondaryThumbprint))
-    ));
-    assert.deepEqual(returnedPromise.interfaces, returnValue.interfaces);
-  });
-
-  it('updateModuleWithCertificateAuthority calls the createOrUpdateIdentity method on the PL client', async () => {
-    var returnValue = {
-        interfaces: {
-          testInterfaceInstanceName: {}
-        }
-      };
-    var testDeviceId = 'testDeviceId';
-    var testModuleId = 'testModuleId';
-    var testManagedBy = 'testManagedBy';
-    var testETag = 'testETag';
-
-    var testClient = new IoTHubRegistryManager(testCredentials);
-    testClient._pl.modules.createOrUpdateIdentity = sinon.stub().resolves(returnValue);
-    const returnedPromise = await testClient.updateModuleWithCertificateAuthority(testDeviceId, testModuleId, testManagedBy, testETag);
-    assert.isTrue(testClient._pl.modules.createOrUpdateIdentity.calledWith(
-        testDeviceId,
-        testModuleId,
-        sinon.match.has('deviceId', testDeviceId)
-        .and(sinon.match.has('moduleId', testModuleId))
-        .and(sinon.match.has('managedBy', testManagedBy))
-        .and(sinon.match.has('etag', testETag))
-        .and(sinon.match.has('authentication'))
-        .and(sinon.match.hasNested('authentication.type', 'certificateAuthority'))
+        testModule,
+        testIfMatch
     ));
     assert.deepEqual(returnedPromise.interfaces, returnValue.interfaces);
   });
