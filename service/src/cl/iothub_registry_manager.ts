@@ -489,7 +489,7 @@ export class IoTHubRegistryManager {
    * @description                                                   Updates a module identity for a device on IoTHub using SAS authentication.
    * @param {string}  deviceId                                      The name (Id) of the device.
    * @param {string}  moduleId                                      The name (Id) of the module.
-   * @param {Module}  device                                        The contents of the module identity.
+   * @param {Module}  module                                        The contents of the module identity.
    * @returns Promise<ModulesCreateOrUpdateIdentityOptionalParams>  The return object containing the updated module and the parsed HttpResponse.
    * @memberof IoTHubRegistryManager
    */
