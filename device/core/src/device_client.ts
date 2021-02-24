@@ -120,6 +120,10 @@ export class Client extends InternalClient {
       /*Codes_SRS_NODE_DEVICE_CLIENT_99_103: [The `setOptions` method shall set `blobUploadClient` options.]*/
       this._blobUploadClient.setOptions(options);
     }
+    if (this._fileUploadApi) {
+      /* [The `setOptions` method shall set `fileUploadApi` options.]*/
+      this._fileUploadApi.setOptions(options);
+    }
     return super.setOptions(options, done);
   }
 

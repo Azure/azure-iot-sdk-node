@@ -501,6 +501,18 @@ describe('Device Client', function () {
         done();
       });
     });
+
+    it('calls setOptions of file uploader with supplied options', function (done) {
+      /*Tests_SRS_NODE_DEVICE_CLIENT_99_104: [The `setOptions` method shall set `fileUploadClient` options.]*/
+      var fakeOptions = '__FAKE_OPTIONS__';
+      var fakeFileUploader = { setOptions: sinon.fake() };
+      var client = new Client(new FakeTransport(), null, null, fakeFileUploader);
+      client.setOptions(fakeOptions, function () {
+        assert.isTrue(fakeFileUploader.setOptions.calledWith(fakeOptions));
+        done();
+      });
+    });
+
   });
 
   describe('#onDeviceMethod', function () {
