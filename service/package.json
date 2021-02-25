@@ -72,7 +72,7 @@
       ".ts",
       ".tsx"
     ],
-    "check-coverage": true,
+    "check-coverage": false,
     "lines": 94,
     "functions": 83,
     "branches": 95,
