@@ -14,7 +14,7 @@
     "azure-iot-provisioning-device": "1.8.7",
     "azure-iot-provisioning-device-mqtt": "1.7.7",
     "azure-iot-security-symmetric-key": "1.7.7",
-    "es5-shim": "^4.5.12",
+    "es5-shim": "^4.5.15",
     "lodash": "^4.17.20"
   },
   "devDependencies": {
