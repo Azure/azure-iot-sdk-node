@@ -8,7 +8,7 @@
   "main": "e2etests.js",
   "dependencies": {
     "@azure/event-hubs": "^1.0.8",
-    "@azure/storage-blob": "^12.0.0",
+    "@azure/storage-blob": "^12.4.1",
     "async": "^2.6.2",
     "azure-iot-common": "1.12.7",
     "azure-iot-device": "1.17.3",
