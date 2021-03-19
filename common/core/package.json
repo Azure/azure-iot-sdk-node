@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-common",
-  "version": "1.12.8-alpha.210313.1",
+  "version": "1.12.8-alpha.210319.1",
   "description": "Common components shared by Azure IoT device and service SDKs",
   "author": "Microsoft Corporation",
   "license": "MIT",
