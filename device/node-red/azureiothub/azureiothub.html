@@ -4,7 +4,9 @@
         color: '#00abec',
         defaults: {
             name: {value:"Azure IoT Hub"},
-            protocol: {value:"amqp"}
+            protocol: {value:"amqp"},
+            contentEncoding: {value: ""},
+            contentTypeApplicationJsonEnabled: {value: false},
         },
         inputs:1,
         outputs:1,
@@ -35,6 +37,20 @@
     <div class="form-row">
         <label for="node-input-connectionstring"><i class="fa fa-bookmark"></i> Connection String</label>
         <input type="text" id="node-input-connectionstring">
+    </div>
+    <div class="form-row">
+        <label for="node-input-contentEncoding">Content Encoding</label>
+        <select id="node-input-contentEncoding">
+            <option value=""></option>
+            <option value="utf-8">utf-8</option>
+            <option value="utf-16">utf-16</option>
+            <option value="utf-32">utf-32</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-contentTypeApplicationJsonEnabled">Content Type</label>
+        <input type="checkbox" id="node-input-contentTypeApplicationJsonEnabled" style="display:inline-block; width:auto; vertical-align:top;" autocomplete="off">
+        <label for="node-input-recursive" style="width:70%;"> application/json</label>
     </div>
 </script>
 
