@@ -15,7 +15,7 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "jshint": "^2.10.2"
+    "jshint": "^2.12.0"
   },
   "scripts": {
     "npmlockrefresh": "npm i --package-lock-only",
