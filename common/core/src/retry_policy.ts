@@ -3,6 +3,9 @@
 
 'use strict';
 
+import * as dbg from 'debug';
+const debug = dbg('azure-iot-common:RetryPolicy');
+
 import { ErrorFilter, DefaultErrorFilter } from './retry_error_filter';
 
 /**
@@ -156,6 +159,10 @@ export class ExponentialBackOffWithJitter implements RetryPolicy {
  * @implements {RetryPolicy}
  */
 export class NoRetry implements RetryPolicy {
+  constructor() {
+    debug('An instance of NoRetry policy has been created. The client using this policy will not perform any retries on disconnection.');
+  }
+  
   /**
    * This will always return -1 as no retry is desired.
    *
