@@ -8,6 +8,7 @@ var sinon = require('sinon');
 
 var errors = require('../dist/errors.js');
 var RetryOperation = require('../dist/retry_operation.js').RetryOperation;
+var NoRetry = require('../dist/retry_policy.js').NoRetry;
 
 describe('RetryOperation', function () {
   describe('retry', function () {
@@ -86,6 +87,19 @@ describe('RetryOperation', function () {
       }, function (finalErr, finalResult) {
         assert.isNotOk(finalErr);
         assert.strictEqual(finalResult, testResult);
+        testCallback();
+      });
+    });
+
+    it('does not retry if NoRetry policy is used', function (testCallback) {
+      var testError = new Error('fake timeout that shall not be retried');
+      var actualOperation = sinon.stub().callsArgWith(0, testError);
+
+      var testOperation = new RetryOperation(new NoRetry(), 1);
+      testOperation.retry(function (callback) {
+        actualOperation(callback);
+      }, function (finalErr) {
+        assert.strictEqual(actualOperation.callCount, 1);
         testCallback();
       });
     });
