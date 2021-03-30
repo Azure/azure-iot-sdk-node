@@ -22,6 +22,7 @@ export interface DeviceIdentity {
   authentication?: Device.Authentication;
   capabilities?: Device.Capabilities;
   deviceScope?: string;
+  parentScopes?: [string];
 }
 
 
