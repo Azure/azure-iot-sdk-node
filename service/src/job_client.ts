@@ -395,7 +395,8 @@ export class JobClient {
     const cn = ConnectionString.parse(connectionString);
     const config = {
       host: cn.HostName,
-      sharedAccessSignature: SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, Date.now())
+      sharedAccessSignature: SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, Date.now()),
+      tokenCredential: undefined
     };
 
     /*Codes_SRS_NODE_JOB_CLIENT_16_003: [The `fromConnectionString` method shall return a new `JobClient` instance.]*/
@@ -422,7 +423,8 @@ export class JobClient {
     const sas = SharedAccessSignature.parse(sharedAccessSignature);
     const config = {
       host: sas.sr,
-      sharedAccessSignature: sharedAccessSignature
+      sharedAccessSignature: sharedAccessSignature,
+      tokenCredential: undefined
     };
 
     /*Codes_SRS_NODE_JOB_CLIENT_16_005: [The `fromSharedAccessSignature` method shall return a new `JobClient` instance.]*/

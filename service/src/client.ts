@@ -14,6 +14,7 @@ import { RestApiClient } from 'azure-iot-http-base';
 import { DeviceMethodParams, IncomingMessageCallback, createResultWithIncomingMessage, ResultWithIncomingMessage } from './interfaces';
 import { Callback, tripleValueCallbackToPromise } from 'azure-iot-common';
 import { IncomingMessage } from 'http';
+import { TokenCredential } from '@azure/core-http';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -416,7 +417,8 @@ export class Client extends EventEmitter {
     const config: Client.TransportConfigOptions = {
       host: cn.HostName,
       keyName: cn.SharedAccessKeyName,
-      sharedAccessSignature: SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, anHourFromNow())
+      sharedAccessSignature: SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, anHourFromNow()),
+      tokenCredential: undefined
     };
 
     /*Codes_SRS_NODE_IOTHUB_CLIENT_05_004: [The fromConnectionString method shall return a new instance of the Client object, as by a call to new Client(transport).]*/
@@ -453,7 +455,8 @@ export class Client extends EventEmitter {
     const config: Client.TransportConfigOptions = {
       host: decodedUri,
       keyName: sas.skn,
-      sharedAccessSignature: sas.toString()
+      sharedAccessSignature: sas.toString(),
+      tokenCredential: undefined
     };
 
     /*Codes_SRS_NODE_IOTHUB_CLIENT_05_007: [The fromSharedAccessSignature method shall return a new instance of the Client object, as by a call to new Client(transport).]*/
@@ -480,6 +483,11 @@ export namespace Client {
      * The shared access signature token used to authenticate the connection with the Azure IoT hub.
      */
     sharedAccessSignature: string | SharedAccessSignature;
+
+    /**
+     * The token credential used to authenticate the connection with the Azure IoT hub.
+     */
+    tokenCredential: TokenCredential;
   }
 
   export interface ServiceReceiver extends Receiver {

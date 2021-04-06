@@ -5,12 +5,11 @@
 
 import { anHourFromNow, errors, SharedAccessSignature, X509 } from 'azure-iot-common';
 import { Http as HttpBase, HttpRequestOptions } from './http';
+import { AccessToken, TokenCredential } from '@azure/core-http';
 import  * as uuid from 'uuid';
 import { ClientRequest } from 'http';
 import dbg = require('debug');
 const debug = dbg('azure-iot-http-base.RestApiClient');
-
-
 
 /**
  * @private
@@ -37,7 +36,12 @@ export interface HttpTransportError extends Error {
  * @throws {ArgumentError}   If the config argument is missing a host or sharedAccessSignature error
  */
 export class RestApiClient {
+  private static IOTHUB_PUBLIC_SCOPE: string[] = ['https://iothubs.azure.net/.default'];
+  private static BEARER_TOKEN_PREFIX: string = 'Bearer ';
+  private static MINUTES_BEFORE_PROACTIVE_RENEWAL: number = 9;
+  private static MILLISECS_BEFORE_PROACTIVE_RENEWAL: number = RestApiClient.MINUTES_BEFORE_PROACTIVE_RENEWAL * 60000;
   private _config: RestApiClient.TransportConfig;
+  private _accessToken: AccessToken;
   private _http: HttpBase;
   private _userAgent: string;
 
@@ -109,7 +113,60 @@ export class RestApiClient {
     let httpHeaders: any = headers || {};
     if (this._config.sharedAccessSignature) {
       httpHeaders.Authorization = (typeof(this._config.sharedAccessSignature) === 'string') ? this._config.sharedAccessSignature as string : (this._config.sharedAccessSignature as SharedAccessSignature).extend(anHourFromNow());
+      this.executeBody(requestBody, httpHeaders, headers, method, path, timeout, requestOptions, done);
+    } else if (this._config.tokenCredential) {
+      let accessToken = this.getToken();
+      Promise.resolve(accessToken).then((value) => {
+        httpHeaders.Authorization = value;
+        this.executeBody(requestBody, httpHeaders, headers, method, path, timeout, requestOptions, done);
+      });
     }
+  }
+
+  /**
+   * @method             module:azure-iothub.RestApiClient.updateSharedAccessSignature
+   * @description        Updates the shared access signature used to authentify API calls.
+   *
+   * @param  {string}          sharedAccessSignature  The new shared access signature that should be used.
+   *
+   * @throws {ReferenceError}  If the new sharedAccessSignature is falsy.
+   */
+  updateSharedAccessSignature(sharedAccessSignature: string | SharedAccessSignature): void {
+    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_034: [The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the `sharedAccessSignature` argument is falsy.]*/
+    if (!sharedAccessSignature) throw new ReferenceError('sharedAccessSignature cannot be \'' + sharedAccessSignature + '\'');
+
+    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_028: [The `updateSharedAccessSignature` method shall update the `sharedAccessSignature` configuration parameter that is used in the `Authorization` header of all HTTP requests.]*/
+    this._config.sharedAccessSignature = sharedAccessSignature;
+  }
+
+  /**
+   * @private
+   */
+  setOptions(options: any): void {
+    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_18_003: [ `setOptions` shall call `this._http.setOptions` passing the same parameters ]*/
+    this._http.setOptions(options);
+  }
+  isAccessTokenCloseToExpiry(accessToken: AccessToken): Boolean {
+    let remainingTimeToLive = Date.now() - accessToken.expiresOnTimestamp;
+    return remainingTimeToLive <= RestApiClient.MILLISECS_BEFORE_PROACTIVE_RENEWAL;
+  }
+
+  async getToken(): Promise<string> {
+    if ((!this._accessToken) || this.isAccessTokenCloseToExpiry(this._accessToken)) {
+      this._accessToken = await this._config.tokenCredential.getToken(RestApiClient.IOTHUB_PUBLIC_SCOPE) as any;
+    }
+    return RestApiClient.BEARER_TOKEN_PREFIX + this._accessToken.token;
+  }
+
+  private executeBody(
+    requestBody: any,
+    httpHeaders: any,
+    headers: { [key: string]: any },
+    method: HttpMethodVerb,
+    path: string,
+    timeout?: number | HttpRequestOptions | RestApiClient.ResponseCallback,
+    requestOptions?: HttpRequestOptions | number | RestApiClient.ResponseCallback,
+    done?: RestApiClient.ResponseCallback): void  {
     httpHeaders['Request-Id'] = uuid.v4();
     httpHeaders['User-Agent'] = this._userAgent;
 
@@ -200,30 +257,6 @@ export class RestApiClient {
     }
 
     request.end();
-  }
-
-  /**
-   * @method             module:azure-iothub.RestApiClient.updateSharedAccessSignature
-   * @description        Updates the shared access signature used to authentify API calls.
-   *
-   * @param  {string}          sharedAccessSignature  The new shared access signature that should be used.
-   *
-   * @throws {ReferenceError}  If the new sharedAccessSignature is falsy.
-   */
-  updateSharedAccessSignature(sharedAccessSignature: string | SharedAccessSignature): void {
-    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_034: [The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the `sharedAccessSignature` argument is falsy.]*/
-    if (!sharedAccessSignature) throw new ReferenceError('sharedAccessSignature cannot be \'' + sharedAccessSignature + '\'');
-
-    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_028: [The `updateSharedAccessSignature` method shall update the `sharedAccessSignature` configuration parameter that is used in the `Authorization` header of all HTTP requests.]*/
-    this._config.sharedAccessSignature = sharedAccessSignature;
-  }
-
-  /**
-   * @private
-   */
-  setOptions(options: any): void {
-    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_18_003: [ `setOptions` shall call `this._http.setOptions` passing the same parameters ]*/
-    this._http.setOptions(options);
   }
 
   /**
@@ -318,6 +351,7 @@ export namespace RestApiClient {
         host: string | { socketPath: string };
         sharedAccessSignature?: string | SharedAccessSignature;
         x509?: X509;
+        tokenCredential?: TokenCredential;
     }
 
     export type ResponseCallback = (err: Error, responseBody?: any, response?: any) => void;

@@ -26,7 +26,7 @@ var normalizedFakeSASDevice = {
   authentication: fakeAuthentication
 };
 
-var fakeConfig = { host: 'host', sharedAccessSignature: 'sas' };
+var fakeConfig = { host: 'host', sharedAccessSignature: 'sas', x509: 'x509', tokenCredential: 'tokenCredential' };
 
 var zeroDevices = [];
 var oneHundredOneDevices = new Array(101).map(function (x, i) { return { deviceId: i.toString() }; });
