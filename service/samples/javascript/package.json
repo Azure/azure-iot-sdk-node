@@ -11,10 +11,10 @@
     "ci": "npm run lint"
   },
   "dependencies": {
-    "azure-iothub": "1.13.2-alpha.210313.1",
+    "azure-iothub": "1.13.2-alpha.210322.1",
     "azure-storage": "^2.10.2"
   },
   "devDependencies": {
-    "jshint": "^2.10.2"
+    "jshint": "^2.12.0"
   }
 }

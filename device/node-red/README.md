@@ -33,6 +33,7 @@ To learn how to use the Azure IoT Hub node, here is a simple example:
 1. Double click on the **Azure IoT Hub** node.
 1. Select the protocol of your choice.
 1. Enter the connection string for the device (see prerequisites for details).
+1. If necessary, configure the content encoding and the content type.
 1. Click OK to validate
 1. Click on the **Deploy** red button in the top left to deploy the flow. Note that if you change the settings (protocol or connection string) you will need to redeploy the flow for the settings to be taken into account.
 1. You can now click on the **Inject Data** node to send messages to Azure IoT Hub

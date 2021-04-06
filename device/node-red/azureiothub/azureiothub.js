@@ -45,6 +45,14 @@ module.exports = function (RED) {
             node.log('Sending Message to Azure IoT Hub :\n   Payload: ' + data.toString());
             // Create a message and send it to the IoT Hub every second
             var message = new Message(data);
+
+            if (nodeConfig.contentEncoding != "") {
+                message.contentEncoding = nodeConfig.contentEncoding;
+            }
+            if (nodeConfig.contentTypeApplicationJsonEnabled) {
+                message.contentType = 'application/json';
+            }
+
             client.sendEvent(message, function (err, res) {
                 if (err) {
                     node.error('Error while trying to send message:' + err.toString());
@@ -149,7 +157,9 @@ module.exports = function (RED) {
         },
         defaults: {
             name: { value: "Azure IoT Hub" },
-            protocol: { value: "amqp" }
+            protocol: { value: "amqp" },
+            contentEncoding: {value: ""},
+            contentTypeApplicationJsonEnabled: { value: false },
         }
     });
 }

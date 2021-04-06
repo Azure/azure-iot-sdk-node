@@ -15,7 +15,7 @@ var config = {
   gatewayHostName: [Gateway host address goes here]
 };
 
-var base = new MqttBase(config));
+var base = new MqttBase(config);
 base.connect();
 base.publish(message);
 base.subscribe();
@@ -23,8 +23,7 @@ base.subscribe();
 base.receive(function (topic, msg) {
   console.log('Topic: ' + topic.toString());
   console.log('Received data: ' + msg.toString());
-  }
-};
+});
 ```
 
 ## Public Interface
