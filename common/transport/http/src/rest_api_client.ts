@@ -150,13 +150,13 @@ export class RestApiClient {
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_18_003: [ `setOptions` shall call `this._http.setOptions` passing the same parameters ]*/
     this._http.setOptions(options);
   }
-  
+
   /**
    * @private
    * Calculates if the AccessToken's remaining time to live
    * is shorter than the proactive renewal time.
    * @param accessToken The AccessToken.
-   * @returns {Boolean} True if the token's remaining time is shorter than the 
+   * @returns {Boolean} True if the token's remaining time is shorter than the
    *                    proactive renewal time, false otherwise.
    */
    isAccessTokenCloseToExpiry(accessToken: AccessToken): Boolean {
