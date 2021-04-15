@@ -1612,7 +1612,7 @@ export class Registry {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_05_013: [The fromSharedAccessSignature method shall return a new instance of the `Registry` object.]*/
     return new Registry(config);
   }
-  
+
   /**
    * @method            module:azure-iothub.Registry.fromTokenCredential
    * @description       Constructs a Registry object from the given Azure TokenCredential.
