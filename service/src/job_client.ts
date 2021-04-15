@@ -448,7 +448,7 @@ export class JobClient {
    static fromTokenCredential(hostName: string, tokenCredential: TokenCredential): JobClient {
     const config = {
       host: hostName,
-      keyName: "",
+      keyName: '',
       sharedAccessSignature: undefined,
       tokenCredential: tokenCredential
     };

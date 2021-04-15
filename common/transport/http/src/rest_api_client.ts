@@ -36,10 +36,10 @@ export interface HttpTransportError extends Error {
  * @throws {ArgumentError}   If the config argument is missing a host or sharedAccessSignature error
  */
 export class RestApiClient {
-  private static IOTHUB_PUBLIC_SCOPE: string[] = ['https://iothubs.azure.net/.default'];
-  private static BEARER_TOKEN_PREFIX: string = 'Bearer ';
-  private static MINUTES_BEFORE_PROACTIVE_RENEWAL: number = 9;
-  private static MILLISECS_BEFORE_PROACTIVE_RENEWAL: number = RestApiClient.MINUTES_BEFORE_PROACTIVE_RENEWAL * 60000;
+  private _iotHubPublicScope: string[] = ['https://iothubs.azure.net/.default'];
+  private _BearerTokenPrefix: string = 'Bearer ';
+  private _MinutesBeforeProactiveRenewal: number = 9;
+  private _MillisecsBeforeProactiveRenewal: number = this._MinutesBeforeProactiveRenewal * 60000;
   private _config: RestApiClient.TransportConfig;
   private _accessToken: AccessToken;
   private _http: HttpBase;
@@ -161,7 +161,7 @@ export class RestApiClient {
    */
    isAccessTokenCloseToExpiry(accessToken: AccessToken): Boolean {
     let remainingTimeToLive = Date.now() - accessToken.expiresOnTimestamp;
-    return remainingTimeToLive <= RestApiClient.MILLISECS_BEFORE_PROACTIVE_RENEWAL;
+    return remainingTimeToLive <= this._MillisecsBeforeProactiveRenewal;
   }
 
   /**
@@ -172,10 +172,10 @@ export class RestApiClient {
    */
    async getToken(): Promise<string> {
     if ((!this._accessToken) || this.isAccessTokenCloseToExpiry(this._accessToken)) {
-      this._accessToken = await this._config.tokenCredential.getToken(RestApiClient.IOTHUB_PUBLIC_SCOPE) as any;
+      this._accessToken = await this._config.tokenCredential.getToken(this._iotHubPublicScope) as any;
     }
     if (this._accessToken) {
-      return RestApiClient.BEARER_TOKEN_PREFIX + this._accessToken.token;
+      return this._BearerTokenPrefix + this._accessToken.token;
     } else {
       return null;
     }

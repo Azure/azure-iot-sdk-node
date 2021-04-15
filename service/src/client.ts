@@ -486,7 +486,7 @@ export class Client extends EventEmitter {
 
     const config: Client.TransportConfigOptions = {
       host: hostName,
-      keyName: "",
+      keyName: '',
       sharedAccessSignature: undefined,
       tokenCredential: tokenCredential
     };

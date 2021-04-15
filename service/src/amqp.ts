@@ -71,10 +71,10 @@ export class Amqp extends EventEmitter implements Client.Transport {
   private _fileNotificationEndpoint: string = '/messages/serviceBound/filenotifications';
   private _fileNotificationReceiver: ServiceReceiver;
   private _fileNotificationErrorListener: (err: Error) => void;
-  private static IOTHUB_PUBLIC_SCOPE: string = 'https://iothubs.azure.net/.default';
-  private static BEARER_TOKEN_PREFIX: string = 'Bearer ';
-  private static MINUTES_BEFORE_PROACTIVE_RENEWAL: number = 9;
-  private static MILLISECS_BEFORE_PROACTIVE_RENEWAL: number = Amqp.MINUTES_BEFORE_PROACTIVE_RENEWAL * 60000;
+  private _iotHubPublicScope: string = 'https://iothubs.azure.net/.default';
+  private _bearerTokenPrefix: string = 'Bearer ';
+  private _minutesBeforeProactiveRenewal: number = 9;
+  private _millisecsBeforeProactiveRenewal: number = this._minutesBeforeProactiveRenewal * 60000;
   private _accessToken: AccessToken;
 
   /**
@@ -221,7 +221,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
                     }
                   });
                 } else if (this._config.tokenCredential) {
-                  const audience = Amqp.IOTHUB_PUBLIC_SCOPE;  
+                  const audience = this._iotHubPublicScope;
                   const accessToken = this.getToken();
                   Promise.resolve(accessToken).then((value) => {
                     if (value) {
@@ -234,7 +234,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
                         }
                       });
                     } else {
-                      this._fsm.transition('disconnecting', "AccessToken creation failed", callback);
+                      this._fsm.transition('disconnecting', 'AccessToken creation failed', callback);
                     }
                   });
                 }
@@ -568,32 +568,32 @@ export class Amqp extends EventEmitter implements Client.Transport {
       });
     }, callback);
   }
-  
+
   /**
    * @private
    * Calculates if the AccessToken's remaining time to live
    * is shorter than the proactive renewal time.
    * @param accessToken The AccessToken.
-   * @returns {Boolean} True if the token's remaining time is shorter than the 
+   * @returns {Boolean} True if the token's remaining time is shorter than the
    *                    proactive renewal time, false otherwise.
    */
    isAccessTokenCloseToExpiry(accessToken: AccessToken): Boolean {
     let remainingTimeToLive = Date.now() - accessToken.expiresOnTimestamp;
-    return remainingTimeToLive <= Amqp.MILLISECS_BEFORE_PROACTIVE_RENEWAL;
+    return remainingTimeToLive <= this._millisecsBeforeProactiveRenewal;
   }
 
   /**
    * @private
    * Returns the current AccessToken if it is still valid
    * or a new AccessToken if the current token is close to expire.
-   * @returns {Promise<string>} The access token string. 
+   * @returns {Promise<string>} The access token string.
    */
    async getToken(): Promise<string | null> {
     if ((!this._accessToken) || this.isAccessTokenCloseToExpiry(this._accessToken)) {
-      this._accessToken = await this._config.tokenCredential.getToken(Amqp.IOTHUB_PUBLIC_SCOPE) as any;
+      this._accessToken = await this._config.tokenCredential.getToken(this._iotHubPublicScope) as any;
     }
     if (this._accessToken) {
-      return Amqp.BEARER_TOKEN_PREFIX + this._accessToken.token;
+      return this._bearerTokenPrefix + this._accessToken.token;
     } else {
       return null;
     }
