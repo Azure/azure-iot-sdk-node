@@ -12,6 +12,7 @@ import { DeviceMethod } from './device_method';
 import { Query } from './query';
 import { DeviceMethodParams } from './interfaces';
 import { TripleValueCallback, tripleValueCallbackToPromise } from 'azure-iot-common';
+import { TokenCredential } from '@azure/core-http';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -428,6 +429,29 @@ export class JobClient {
     };
 
     /*Codes_SRS_NODE_JOB_CLIENT_16_005: [The `fromSharedAccessSignature` method shall return a new `JobClient` instance.]*/
+    return new JobClient(new RestApiClient(config, packageJson.name + '/' + packageJson.version));
+  }
+
+  /**
+   * @method            module:azure-iothub.JobClient.fromTokenCredential
+   * @description       Constructs a JobClient object from the given shared Azure TokenCredential.
+   * @static
+   *
+   * @param {String}    hostName                  Host name of the Azure service.
+   * @param {String}    tokenCredential           An Azure TokenCredential used to authenticate
+   *                                              with the Azure  service
+   *
+   * @throws  {ReferenceError}  If the tokenCredential argument is falsy.
+   *
+   * @returns {module:azure-iothub.JobClient}
+   */
+   static fromTokenCredential(hostName: string, tokenCredential: TokenCredential): JobClient {
+    const config = {
+      host: hostName,
+      keyName: "",
+      sharedAccessSignature: undefined,
+      tokenCredential: tokenCredential
+    };
     return new JobClient(new RestApiClient(config, packageJson.name + '/' + packageJson.version));
   }
 }

@@ -117,8 +117,12 @@ export class RestApiClient {
     } else if (this._config.tokenCredential) {
       let accessToken = this.getToken();
       Promise.resolve(accessToken).then((value) => {
-        httpHeaders.Authorization = value;
-        this.executeBody(requestBody, httpHeaders, headers, method, path, timeout, requestOptions, done);
+        if (value) {
+          httpHeaders.Authorization = value;
+          this.executeBody(requestBody, httpHeaders, headers, method, path, timeout, requestOptions, done);
+        } else {
+            throw new Error('AccessToken creation failed');
+        }
       });
     }
   }
@@ -146,16 +150,35 @@ export class RestApiClient {
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_18_003: [ `setOptions` shall call `this._http.setOptions` passing the same parameters ]*/
     this._http.setOptions(options);
   }
-  isAccessTokenCloseToExpiry(accessToken: AccessToken): Boolean {
+  
+  /**
+   * @private
+   * Calculates if the AccessToken's remaining time to live
+   * is shorter than the proactive renewal time.
+   * @param accessToken The AccessToken.
+   * @returns {Boolean} True if the token's remaining time is shorter than the 
+   *                    proactive renewal time, false otherwise.
+   */
+   isAccessTokenCloseToExpiry(accessToken: AccessToken): Boolean {
     let remainingTimeToLive = Date.now() - accessToken.expiresOnTimestamp;
     return remainingTimeToLive <= RestApiClient.MILLISECS_BEFORE_PROACTIVE_RENEWAL;
   }
 
-  async getToken(): Promise<string> {
+  /**
+   * @private
+   * Returns the current AccessToken if it is still valid
+   * or a new AccessToken if the current token is close to expire.
+   * @returns {Promise<string>} The access token string.
+   */
+   async getToken(): Promise<string> {
     if ((!this._accessToken) || this.isAccessTokenCloseToExpiry(this._accessToken)) {
       this._accessToken = await this._config.tokenCredential.getToken(RestApiClient.IOTHUB_PUBLIC_SCOPE) as any;
     }
-    return RestApiClient.BEARER_TOKEN_PREFIX + this._accessToken.token;
+    if (this._accessToken) {
+      return RestApiClient.BEARER_TOKEN_PREFIX + this._accessToken.token;
+    } else {
+      return null;
+    }
   }
 
   private executeBody(

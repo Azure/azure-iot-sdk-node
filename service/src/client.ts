@@ -462,6 +462,36 @@ export class Client extends EventEmitter {
     /*Codes_SRS_NODE_IOTHUB_CLIENT_05_007: [The fromSharedAccessSignature method shall return a new instance of the Client object, as by a call to new Client(transport).]*/
     return new Client(new transportCtor(config), new RestApiClient(config, packageJson.name + '/' + packageJson.version));
   }
+  
+  /**
+   * @method            module:azure-iothub.Client.fromTokenCredential
+   * @description       Creates an IoT Hub service client from the given
+   *                    Azure tokenCredential using the default transport
+   *                    (Amqp) or the one specified in the second argument.
+   * @static
+   *
+   * @param {String}    hostName                  Host name of the Azure service.
+   * @param {String}    tokenCredential           An Azure TokenCredential used to authenticate
+   *                                              with the Azure  service
+   * @param {Function}  Transport                 A transport constructor.
+   *
+   * @throws  {ReferenceError}  If the tokenCredential argument is falsy.
+   *
+   * @returns {module:azure-iothub.Client}
+   */
+  static fromTokenCredential(hostName: string, tokenCredential: TokenCredential, transportCtor?: Client.TransportCtor): Client {
+    if (!transportCtor) {
+      transportCtor = Amqp;
+    }
+
+    const config: Client.TransportConfigOptions = {
+      host: hostName,
+      keyName: "",
+      sharedAccessSignature: undefined,
+      tokenCredential: tokenCredential
+    };
+    return new Client(new transportCtor(config), new RestApiClient(config, packageJson.name + '/' + packageJson.version));
+  }
 }
 
 export namespace Client {

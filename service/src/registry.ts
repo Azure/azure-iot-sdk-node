@@ -1612,8 +1612,21 @@ export class Registry {
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_05_013: [The fromSharedAccessSignature method shall return a new instance of the `Registry` object.]*/
     return new Registry(config);
   }
-
-  static fromTokenCredential(hostName: string, tokenCredential: TokenCredential): Registry {
+  
+  /**
+   * @method            module:azure-iothub.Registry.fromTokenCredential
+   * @description       Constructs a Registry object from the given Azure TokenCredential.
+   * @static
+   *
+   * @param {String}    hostName                  Host name of the Azure service.
+   * @param {String}    tokenCredential           An Azure TokenCredential used to authenticate
+   *                                              with the Azure  service
+   *
+   * @throws  {ReferenceError}  If the tokenCredential argument is falsy.
+   *
+   * @returns {module:azure-iothub.Registry}
+   */
+   static fromTokenCredential(hostName: string, tokenCredential: TokenCredential): Registry {
 
     const config: Registry.TransportConfig = {
       host: hostName,
