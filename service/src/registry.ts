@@ -418,17 +418,22 @@ export class Registry {
 
   /**
    * @method              module:azure-iothub.Registry#importDevicesFromBlobByIdentity
-   * @description         Imports devices from a blob in bulk job using the configured identity.  This API initially has limited availability and is only is implemented in a few regions.
-   *                      If a user wishes to try it out, they will need to set an Environment Variable of "EnabledStorageIdentity" and set it to "1"
+   * @description         Imports devices from a blob in bulk job using a configured identity.
    * @param {String}      inputBlobContainerUri   The URI to a container with a blob named 'devices.txt' containing a list of devices to import.
    * @param {String}      outputBlobContainerUri  The URI to a container where a blob will be created with logs of the import process.
+   * @param {String}      [userAssignedIdentity]  An optional Resource ID used to specify a user assigned managed identity.
    * @param {Function}    [done]                  The optional function to call when the job has been created, with two arguments: an error object if an
    *                                              an error happened, (null otherwise) and the job status that can be used to track progress of the devices import.
    * @returns {Promise<Registry.JobStatus> | void} Promise if no callback function was passed, void otherwise.
    */
   importDevicesFromBlobByIdentity(inputBlobContainerUri: string, outputBlobContainerUri: string, done: Callback<Registry.JobStatus>): void;
+  importDevicesFromBlobByIdentity(inputBlobContainerUri: string, outputBlobContainerUri: string, userAssignedIdentity: string, done: Callback<Registry.JobStatus>): void;
   importDevicesFromBlobByIdentity(inputBlobContainerUri: string, outputBlobContainerUri: string): Promise<Registry.JobStatus>;
-  importDevicesFromBlobByIdentity(inputBlobContainerUri: string, outputBlobContainerUri: string, done?: Callback<Registry.JobStatus>): Promise<Registry.JobStatus> | void {
+  importDevicesFromBlobByIdentity(inputBlobContainerUri: string, outputBlobContainerUri: string, userAssignedIdentity: string): Promise<Registry.JobStatus>;
+  importDevicesFromBlobByIdentity(inputBlobContainerUri: string, outputBlobContainerUri: string, doneOrIdentity?: Callback<Registry.JobStatus> | string, done?: Callback<Registry.JobStatus>): Promise<Registry.JobStatus> | void {
+    if (typeof doneOrIdentity === 'function') {
+      done = doneOrIdentity;
+    }
     return callbackToPromise((_callback) => {
       /* Codes_SRS_NODE_IOTHUB_REGISTRY_07_001: [A ReferenceError shall be thrown if importBlobContainerUri is falsy] */
       if (!inputBlobContainerUri) throw new ReferenceError('inputBlobContainerUri cannot be falsy');
@@ -448,8 +453,15 @@ export class Registry {
         'outputBlobContainerUri': '<output container Uri given as parameter>',
         'storageAuthenticationType': 'IdentityBased'
       }
+      ```
+
+      If a `userAssignedIdentity` is provided, the following additional property shall be in the request body:
+      ```Node
+      "identity": {
+        "userAssignedIdentity": <resource ID for user assigned managed identity given as a parameter>
+      }
       ```]*/
-      const path = '/jobs/create' + endpoint.versionQueryStringLimitedAvailability();
+      const path = '/jobs/create' + endpoint.versionQueryString();
       const httpHeaders = {
         'Content-Type': 'application/json; charset=utf-8'
       };
@@ -457,7 +469,12 @@ export class Registry {
         'type': 'import',
         'inputBlobContainerUri': inputBlobContainerUri,
         'outputBlobContainerUri': outputBlobContainerUri,
-        'storageAuthenticationType': 'IdentityBased'
+        'storageAuthenticationType': 'IdentityBased',
+        ...(typeof doneOrIdentity === 'string' && {
+          'identity': {
+            'userAssignedIdentity': doneOrIdentity
+          }
+        })
       };
 
       this._restApiClient.executeApiCall('POST', path, httpHeaders, importRequest, _callback);
@@ -508,18 +525,23 @@ export class Registry {
   }
 
   /**
-   * @method              module:azure-iothub.Registry#exportDevicesToBlob
-   * @description         Export devices to a blob in a bulk job using the configured identity.  This API initially has limited availability and is only is implemented in a few regions.
-   *                      If a user wishes to try it out, they will need to set an Environment Variable of "EnabledStorageIdentity" and set it to "1"
+   * @method              module:azure-iothub.Registry#exportDevicesToBlobByIdentity
+   * @description         Export devices to a blob in a bulk job using a configured identity.
    * @param {String}      outputBlobContainerUri  The URI to a container where a blob will be created with logs of the export process.
    * @param {Boolean}     excludeKeys             Boolean indicating whether security keys should be excluded from the exported data.
+   * @param {String}      [userAssignedIdentity]  An optional Resource ID used to specify a user assigned managed identity.
    * @param {Function}    [done]                  The optional function to call when the job has been created, with two arguments: an error object if an
    *                                              an error happened, (null otherwise) and the job status that can be used to track progress of the devices export.
    * @returns {Promise<Registry.JobStatus> | void} Promise if no callback function was passed, void otherwise.
    */
   exportDevicesToBlobByIdentity(outputBlobContainerUri: string, excludeKeys: boolean, done: Callback<Registry.JobStatus>): void;
+  exportDevicesToBlobByIdentity(outputBlobContainerUri: string, excludeKeys: boolean, userAssignedIdentity: string, done: Callback<Registry.JobStatus>): void;
   exportDevicesToBlobByIdentity(outputBlobContainerUri: string, excludeKeys: boolean): Promise<Registry.JobStatus>;
-  exportDevicesToBlobByIdentity(outputBlobContainerUri: string, excludeKeys: boolean, done?: Callback<Registry.JobStatus>): Promise<Registry.JobStatus> | void {
+  exportDevicesToBlobByIdentity(outputBlobContainerUri: string, excludeKeys: boolean, userAssignedIdentity: string): Promise<Registry.JobStatus>;
+  exportDevicesToBlobByIdentity(outputBlobContainerUri: string, excludeKeys: boolean, doneOrIdentity?: Callback<Registry.JobStatus> | string, done?: Callback<Registry.JobStatus>): Promise<Registry.JobStatus> | void {
+    if (typeof doneOrIdentity === 'function') {
+      done = doneOrIdentity;
+    }
     return callbackToPromise((_callback) => {
       /* Codes_SRS_NODE_IOTHUB_REGISTRY_07_004: [A ReferenceError shall be thrown if outputBlobContainerUri is falsy] */
       if (!outputBlobContainerUri) throw new ReferenceError('outputBlobContainerUri cannot be falsy');
@@ -537,8 +559,15 @@ export class Registry {
         'excludeKeysInExport': '<excludeKeys Boolean given as parameter>',
         'storageAuthenticationType': 'IdentityBased'
       }
+      ```
+
+      If a `userAssignedIdentity` is provided, the following additional property shall be in the request body:
+      ```Node
+      "identity": {
+        "userAssignedIdentity": <resource ID for user assigned managed identity given as a parameter>
+      }
       ```]*/
-      const path = '/jobs/create' + endpoint.versionQueryStringLimitedAvailability();
+      const path = '/jobs/create' + endpoint.versionQueryString();
       const httpHeaders = {
         'Content-Type': 'application/json; charset=utf-8'
       };
@@ -546,7 +575,12 @@ export class Registry {
         'type': 'export',
         'outputBlobContainerUri': outputBlobContainerUri,
         'excludeKeysInExport': excludeKeys,
-        'storageAuthenticationType': 'IdentityBased'
+        'storageAuthenticationType': 'IdentityBased',
+        ...(typeof doneOrIdentity === 'string' && {
+          'identity': {
+            'userAssignedIdentity': doneOrIdentity
+          }
+        })
       };
 
       this._restApiClient.executeApiCall('POST', path, httpHeaders, exportRequest, _callback);

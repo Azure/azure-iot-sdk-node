@@ -312,6 +312,13 @@ Request-Id: <guid>
 }
 ```
 
+If a `userAssignedIdentity` is provided, the following additional property shall be in the request body:
+```Node
+"identity": {
+  "userAssignedIdentity": <resource ID for user assigned managed identity given as a parameter>
+}
+```
+
 **]**
 
 ### exportDevicesToBlob(outputBlobContainerUri, excludeKeys, done)
@@ -356,6 +363,13 @@ Request-Id: <guid>
   "outputBlobContainerUri": "<output container Uri given as parameter>",
   "excludeKeysInExport": "<excludeKeys Boolean given as parameter>",
   'storageAuthenticationType': 'IdentityBased'
+}
+```
+
+If a `userAssignedIdentity` is provided, the following additional property shall be in the request body:
+```Node
+"identity": {
+  "userAssignedIdentity": <resource ID for user assigned managed identity given as a parameter>
 }
 ```
 
