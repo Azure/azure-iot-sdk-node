@@ -717,10 +717,18 @@ describe('Registry', function () {
       "outputBlobContainerUri": "<output container Uri given as parameter>",
       'storageAuthenticationType': 'IdentityBased'
     }
+    ```
+
+    If a `userAssignedIdentity` is provided, the following additional property shall be in the request body:
+    ```Node
+    "identity": {
+      "userAssignedIdentity": <resource ID for user assigned managed identity given as a parameter>
+    }
     ```]*/
     it('constructs a valid HTTP request', function (testCallback) {
       var fakeInputBlob = "input";
       var fakeOutputBlob = "output";
+      var fakeUserAssignedIdentity = "identity";
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.equal(method, 'POST');
@@ -730,12 +738,13 @@ describe('Registry', function () {
           assert.equal(body.inputBlobContainerUri, fakeInputBlob);
           assert.equal(body.outputBlobContainerUri, fakeOutputBlob);
           assert.equal(body.storageAuthenticationType, "IdentityBased");
+          assert.equal(body.identity.userAssignedIdentity, fakeUserAssignedIdentity);
           done();
         }
       };
 
       var registry = new Registry(fakeConfig, fakeHttpHelper);
-      registry.importDevicesFromBlobByIdentity(fakeInputBlob, fakeOutputBlob, testCallback);
+      registry.importDevicesFromBlobByIdentity(fakeInputBlob, fakeOutputBlob, fakeUserAssignedIdentity, testCallback);
     });
   });
 
@@ -768,10 +777,18 @@ describe('Registry', function () {
       "excludeKeysInExport": "<excludeKeys Boolean given as parameter>",
       'storageAuthenticationType': 'IdentityBased'
     }
+    ```
+
+    If a `userAssignedIdentity` is provided, the following additional property shall be in the request body:
+    ```Node
+    "identity": {
+      "userAssignedIdentity": <resource ID for user assigned managed identity given as a parameter>
+    }
     ```]*/
     [true, false].forEach(function (fakeExcludeKeys) {
       it('constructs a valid HTTP request when excludeKeys is \'' + fakeExcludeKeys + '\'', function (testCallback) {
         var fakeOutputBlob = "output";
+        var fakeUserAssignedIdentity = "identity";
         var fakeHttpHelper = {
           executeApiCall: function (method, path, httpHeaders, body, done) {
             assert.equal(method, 'POST');
@@ -781,12 +798,13 @@ describe('Registry', function () {
             assert.equal(body.outputBlobContainerUri, fakeOutputBlob);
             assert.equal(body.excludeKeysInExport, fakeExcludeKeys);
             assert.equal(body.storageAuthenticationType, "IdentityBased");
+            assert.equal(body.identity.userAssignedIdentity, fakeUserAssignedIdentity);
             done();
           }
         };
 
         var registry = new Registry(fakeConfig, fakeHttpHelper);
-        registry.exportDevicesToBlobByIdentity(fakeOutputBlob, fakeExcludeKeys, testCallback);
+        registry.exportDevicesToBlobByIdentity(fakeOutputBlob, fakeExcludeKeys, fakeUserAssignedIdentity, testCallback);
       });
     });
   });
