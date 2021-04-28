@@ -11,7 +11,7 @@
     "ci": "npm run lint"
   },
   "dependencies": {
-    "azure-iothub": "1.13.2-alpha.210322.1",
+    "azure-iothub": "1.14.0",
     "azure-storage": "^2.10.2"
   },
   "devDependencies": {
