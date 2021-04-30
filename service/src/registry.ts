@@ -484,7 +484,7 @@ export class Registry {
   /**
    * @method              module:azure-iothub.Registry#exportDevicesToBlob
    * @description         Export devices to a blob in a bulk job.
-   * @param {String}      outputBlobContainerUri  The URI to a container where a blob will be created with logs of the export process.
+   * @param {String}      outputBlobContainerUri  The URI to a container where a blob named 'devices.txt' will be created containing the list of devices.
    * @param {Boolean}     excludeKeys             Boolean indicating whether security keys should be excluded from the exported data.
    * @param {Function}    [done]                  The optional function to call when the job has been created, with two arguments: an error object if an
    *                                              an error happened, (null otherwise) and the job status that can be used to track progress of the devices export.
@@ -527,7 +527,7 @@ export class Registry {
   /**
    * @method              module:azure-iothub.Registry#exportDevicesToBlobByIdentity
    * @description         Export devices to a blob in a bulk job using a configured identity.
-   * @param {String}      outputBlobContainerUri  The URI to a container where a blob will be created with logs of the export process.
+   * @param {String}      outputBlobContainerUri  The URI to a container where a blob named 'devices.txt' will be created containing the list of devices.
    * @param {Boolean}     excludeKeys             Boolean indicating whether security keys should be excluded from the exported data.
    * @param {String}      [userAssignedIdentity]  An optional Resource ID used to specify a user assigned managed identity.
    * @param {Function}    [done]                  The optional function to call when the job has been created, with two arguments: an error object if an
