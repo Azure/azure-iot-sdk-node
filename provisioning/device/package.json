@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-provisioning-device",
-  "version": "1.8.8-alpha.210428.1",
+  "version": "1.8.8-alpha.210322.1",
   "description": "Azure Device Provisioning SDK device client",
   "author": "Microsoft Corporation",
   "license": "MIT",

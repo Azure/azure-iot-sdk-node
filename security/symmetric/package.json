@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-security-symmetric-key",
-  "version": "1.7.8-alpha.210428.1",
+  "version": "1.7.8-alpha.210322.1",
   "description": "Azure IoT Symmetric Key Security Client",
   "author": "Microsoft Corporation",
   "license": "MIT",
