@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-provisioning-service",
-  "version": "1.8.8-alpha.210428.1",
+  "version": "1.8.8",
   "description": "Azure IoT SDK - Provisioning Service Client",
   "author": "Microsoft Corporation",
   "license": "MIT",
