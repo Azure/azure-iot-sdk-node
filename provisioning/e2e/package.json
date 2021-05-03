@@ -11,7 +11,7 @@
     "azure-iot-provisioning-device-amqp": "1.8.8-alpha.210428.1",
     "azure-iot-provisioning-device-http": "1.8.8-alpha.210428.1",
     "azure-iot-provisioning-device-mqtt": "1.7.8-alpha.210428.1",
-    "azure-iot-provisioning-service": "1.8.8-alpha.210428.1",
+    "azure-iot-provisioning-service": "1.8.8",
     "azure-iot-security-symmetric-key": "1.7.8-alpha.210428.1",
     "azure-iot-security-tpm": "1.8.8-alpha.210428.1",
     "azure-iot-security-x509": "1.7.8-alpha.210428.1",
