@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-provisioning-device-http",
-  "version": "1.8.8-alpha.210428.1",
+  "version": "1.8.8-alpha.210322.1",
   "description": "HTTP transport for Azure Device Provisioning SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
@@ -9,7 +9,7 @@
   "dependencies": {
     "azure-iot-common": "1.12.8",
     "azure-iot-http-base": "1.11.8",
-    "azure-iot-provisioning-device": "1.8.8-alpha.210428.1",
+    "azure-iot-provisioning-device": "1.8.8-alpha.210322.1",
     "debug": "^4.3.1",
     "machina": "^4.0.2"
   },
