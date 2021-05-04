@@ -8,8 +8,8 @@
   "typings": "index.d.ts",
   "dependencies": {
     "async": "^2.6.3",
-    "azure-iot-amqp-base": "2.4.8-alpha.210322.1",
-    "azure-iot-common": "1.12.8-alpha.210322.1",
+    "azure-iot-amqp-base": "2.4.8",
+    "azure-iot-common": "1.12.8",
     "azure-iot-provisioning-device": "1.8.8-alpha.210322.1",
     "buffer-builder": "^0.2.0",
     "debug": "^4.3.1",
