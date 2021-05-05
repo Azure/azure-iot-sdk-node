@@ -91,7 +91,8 @@ export class MethodClient {
           getUserAgentString((userAgentString) => {
             const transportConfig: RestApiClient.TransportConfig = {
               host: creds.gatewayHostName,
-              sharedAccessSignature: creds.sharedAccessSignature
+              sharedAccessSignature: creds.sharedAccessSignature,
+              tokenCredential: undefined,
             };
 
             this._restApiClient = new RestApiClient(transportConfig, userAgentString);

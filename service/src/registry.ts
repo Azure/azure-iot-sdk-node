@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { errors, endpoint, SharedAccessSignature, ResultWithHttpResponse } from 'azure-iot-common';
+import { errors, endpoint, SharedAccessSignature, ResultWithHttpResponse, X509 } from 'azure-iot-common';
 import { Agent } from 'https';
 import { RestApiClient } from 'azure-iot-http-base';
 import * as ConnectionString from './connection_string';
@@ -14,6 +14,7 @@ import { Device } from './device';
 import { IncomingMessageCallback } from './interfaces';
 import { Module } from './module';
 import { TripleValueCallback, Callback, HttpResponseCallback, callbackToPromise, httpCallbackToPromise } from 'azure-iot-common';
+import { TokenCredential } from '@azure/core-http';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -42,11 +43,15 @@ export class Registry {
     if (!config) {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_023: [The `Registry` constructor shall throw a `ReferenceError` if the config object is falsy.]*/
       throw new ReferenceError('The \'config\' parameter cannot be \'' + config + '\'');
-    } else if (!config.host || !config.sharedAccessSignature) {
+    } else if (!config.host) {
       /*SRS_NODE_IOTHUB_REGISTRY_05_001: [** The `Registry` constructor shall throw an `ArgumentException` if the config object is missing one or more of the following properties:
       - `host`: the IoT Hub hostname
       - `sharedAccessSignature`: shared access signature with the permissions for the desired operations.]*/
-      throw new ArgumentError('The \'config\' argument is missing either the host or the sharedAccessSignature property');
+      throw new ArgumentError('The \'config\' argument is missing either the host property');
+    } else if ((!config.sharedAccessSignature) && (!config.tokenCredential)) {
+      throw new ArgumentError('The \'config\' argument is missing either the sharedAccessSignature or the tokenCredential property');
+    } else if ((config.sharedAccessSignature) && (config.tokenCredential)) {
+      throw new ArgumentError('The \'config\' argument has both the sharedAccessSignature and the tokenCredential property defined');
     }
 
     /*SRS_NODE_IOTHUB_REGISTRY_16_024: [The `Registry` constructor shall use the `restApiClient` provided as a second argument if it is provided.]*/
@@ -1607,7 +1612,8 @@ export class Registry {
 
     const config: Registry.TransportConfig = {
       host: cn.HostName,
-      sharedAccessSignature: SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, Date.now())
+      sharedAccessSignature: SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, Date.now()),
+      tokenCredential: undefined
     };
 
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_05_010: [The `fromConnectionString` method shall return a new instance of the `Registry` object.]*/
@@ -1633,19 +1639,44 @@ export class Registry {
 
     const config: Registry.TransportConfig = {
       host: sas.sr,
-      sharedAccessSignature: sas.toString()
+      sharedAccessSignature: sas.toString(),
+      tokenCredential: undefined
     };
 
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_05_013: [The fromSharedAccessSignature method shall return a new instance of the `Registry` object.]*/
     return new Registry(config);
   }
 
+  /**
+   * @method            module:azure-iothub.Registry.fromTokenCredential
+   * @description       Constructs a Registry object from the given Azure TokenCredential.
+   * @static
+   *
+   * @param {String}    hostName                  Host name of the Azure service.
+   * @param {String}    tokenCredential           An Azure TokenCredential used to authenticate
+   *                                              with the Azure  service
+   *
+   * @throws  {ReferenceError}  If the tokenCredential argument is falsy.
+   *
+   * @returns {module:azure-iothub.Registry}
+   */
+   static fromTokenCredential(hostName: string, tokenCredential: TokenCredential): Registry {
+
+    const config: Registry.TransportConfig = {
+      host: hostName,
+      sharedAccessSignature: undefined,
+      tokenCredential: tokenCredential
+    };
+    return new Registry(config);
+  }
 }
 
 export namespace Registry {
   export interface TransportConfig {
     host: string;
-    sharedAccessSignature: string | SharedAccessSignature;
+    sharedAccessSignature?: string | SharedAccessSignature;
+    x509?: X509;
+    tokenCredential?: TokenCredential;
   }
 
   export interface JobStatus {

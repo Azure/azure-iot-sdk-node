@@ -98,7 +98,8 @@ export class IotEdgeAuthenticationProvider extends SharedAccessKeyAuthentication
     // Codes_SRS_NODE_IOTEDGED_AUTHENTICATION_PROVIDER_13_007: [ The constructor shall build a string host if the workload URI protocol is not unix. ]
     this._workloadUri = url.parse(this._authConfig.workloadUri);
     const config: RestApiClient.TransportConfig = {
-      host: this._workloadUri.protocol === 'unix:' ? { socketPath: this._workloadUri.pathname } : this._workloadUri.hostname
+      host: this._workloadUri.protocol === 'unix:' ? { socketPath: this._workloadUri.pathname } : this._workloadUri.hostname,
+      tokenCredential: undefined
     };
 
     // TODO: The user agent string below needs to be constructed using the utils.getUserAgentString function.
