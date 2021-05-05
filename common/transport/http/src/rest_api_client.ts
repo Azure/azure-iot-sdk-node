@@ -111,10 +111,7 @@ export class RestApiClient {
     - Request-Id: <guid>
     - User-Agent: <version string>]*/
     let httpHeaders: any = headers || {};
-    if (this._config.sharedAccessSignature) {
-      httpHeaders.Authorization = (typeof(this._config.sharedAccessSignature) === 'string') ? this._config.sharedAccessSignature as string : (this._config.sharedAccessSignature as SharedAccessSignature).extend(anHourFromNow());
-      this.executeBody(requestBody, httpHeaders, headers, method, path, timeout, requestOptions, done);
-    } else if (this._config.tokenCredential) {
+    if (this._config.tokenCredential) {
       let accessToken = this.getToken();
       Promise.resolve(accessToken).then((value) => {
         if (value) {
@@ -124,6 +121,11 @@ export class RestApiClient {
             throw new Error('AccessToken creation failed');
         }
       });
+    } else {
+      if (this._config.sharedAccessSignature) {
+        httpHeaders.Authorization = (typeof(this._config.sharedAccessSignature) === 'string') ? this._config.sharedAccessSignature as string : (this._config.sharedAccessSignature as SharedAccessSignature).extend(anHourFromNow());
+      }
+      this.executeBody(requestBody, httpHeaders, headers, method, path, timeout, requestOptions, done);
     }
   }
 
