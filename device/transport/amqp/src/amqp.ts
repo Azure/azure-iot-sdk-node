@@ -59,6 +59,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
   private _c2dLink: ReceiverLink;
   private _d2cLink: SenderLink;
   private _options: DeviceClientOptions;
+  private _amqpLinkEmitter: EventEmitter;
 
   private _c2dErrorListener: (err: Error) => void;
   private _c2dMessageListener: (msg: AmqpMessage) => void;
@@ -146,6 +147,9 @@ export class Amqp extends EventEmitter implements DeviceTransport {
       this._d2cLink = null;
       // we don't really care because we can reattach the link every time we send and surface the error at that time.
     };
+
+    this._amqpLinkEmitter = new EventEmitter();
+    this._amqpLinkEmitter.setMaxListeners(Infinity);
 
     this._fsm = new machina.Fsm({
       initialState: 'disconnected',
@@ -372,20 +376,27 @@ export class Amqp extends EventEmitter implements DeviceTransport {
 
             /*Codes_SRS_NODE_DEVICE_AMQP_16_025: [The `sendEvent` method shall create and attach the d2c link if necessary.]*/
             /*Codes_SRS_NODE_DEVICE_AMQP_18_006: [The `sendOutputEvent` method shall create and attach the d2c link if necessary.]*/
-            if (!this._d2cLink) {
-              this._amqp.attachSenderLink(this._d2cEndpoint, null, (err, link) => {
-                if (err) {
-                  handleResult('AMQP Transport: Could not send', sendCallback)(err);
-                } else {
-                  debug('got a new D2C link');
-                  this._d2cLink = link;
-                  this._d2cLink.on('error', this._d2cErrorListener);
-                  this._d2cLink.send(amqpMessage, handleResult('AMQP Transport: Could not send', sendCallback));
-                }
-              });
-            } else {
+            if (this._d2cLink) {
               debug('using existing d2c link');
               this._d2cLink.send(amqpMessage, handleResult('AMQP Transport: Could not send', sendCallback));
+            } else {
+              debug('waiting for a D2C link');
+              this._amqpLinkEmitter.once('senderLinkAttached', () => {
+                this._d2cLink.send(amqpMessage, handleResult('AMQP Transport: Could not send', sendCallback));
+              });
+              if (this._amqpLinkEmitter.listenerCount('senderLinkAttached') === 1) {
+                debug('attaching D2C link');
+                this._amqp.attachSenderLink(this._d2cEndpoint, null, (err, link) => {
+                  if (err) {
+                    handleResult('AMQP Transport: Could not send', sendCallback)(err);
+                  } else {
+                    debug('got a new D2C link');
+                    this._d2cLink = link;
+                    this._d2cLink.on('error', this._d2cErrorListener);
+                    this._amqpLinkEmitter.emit('senderLinkAttached');
+                  }
+                });
+              }
             }
           },
           updateSharedAccessSignature: (sharedAccessSignature, updateSasCallback) => {
@@ -503,6 +514,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
                 });
               },
               (callback) => {
+                this._amqpLinkEmitter.removeAllListeners('senderLinkAttached');
                 if (this._d2cLink) {
                   let tmpD2CLink = this._d2cLink;
                   this._d2cLink = undefined;
