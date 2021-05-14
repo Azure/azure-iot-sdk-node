@@ -57,7 +57,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
   private _d2cEndpoint: string;
   private _messageEventName: string;
   private _c2dLink: ReceiverLink;
-  private _c2dLinkAttaching = false;
+  private _c2dLinkAttaching: boolean = false;
   private _d2cLink: SenderLink;
   private _options: DeviceClientOptions;
   private _amqpLinkEmitter: EventEmitter;

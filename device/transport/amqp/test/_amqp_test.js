@@ -1293,8 +1293,8 @@ describe('Amqp', function () {
           });
         });
 
-          /*Tests_SRS_NODE_DEVICE_AMQP_41_003: [The `enableC2D` method shall attach the C2D link only if it is not already attached.] */
-          it('does not attach the C2D link if the link is already attached', function (testCallback) {
+        /*Tests_SRS_NODE_DEVICE_AMQP_41_003: [The `enableC2D` method shall attach the C2D link only if it is not already attached.] */
+        it('does not attach the C2D link if the link is already attached', function (testCallback) {
           transport.connect(function () {
             assert(fakeBaseClient.attachReceiverLink.notCalled);
             transport[testConfig.enableFunc](function () {
@@ -1306,6 +1306,24 @@ describe('Amqp', function () {
             });
           });
         });
+
+        it('does not attempt to create multiple receiver links', function (testCallback) {
+          fakeBaseClient.attachReceiverLink = sinon.stub().callsArgWithAsync(2, null, receiver);
+          var firstCallbackFired = false;
+          function enableCallback() {
+            assert(fakeBaseClient.attachReceiverLink.calledOnce);
+            if (firstCallbackFired) {
+              testCallback();
+            } else {
+              firstCallbackFired = true;
+            }
+          }
+          
+          transport.connect(function () {
+            transport[testConfig.enableFunc](enableCallback);
+            transport[testConfig.enableFunc](enableCallback);
+          })
+        })
 
         /*Tests_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
         it('calls its callback with an Error if connecting the transport fails', function (testCallback) {
