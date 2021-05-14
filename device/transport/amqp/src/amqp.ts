@@ -57,6 +57,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
   private _d2cEndpoint: string;
   private _messageEventName: string;
   private _c2dLink: ReceiverLink;
+  private _c2dLinkAttaching = false;
   private _d2cLink: SenderLink;
   private _options: DeviceClientOptions;
   private _amqpLinkEmitter: EventEmitter;
@@ -384,6 +385,9 @@ export class Amqp extends EventEmitter implements DeviceTransport {
               this._amqpLinkEmitter.once('senderLinkAttached', () => {
                 this._d2cLink.send(amqpMessage, handleResult('AMQP Transport: Could not send', sendCallback));
               });
+              // If we were the first listener for the senderLinkAttached event, we should create a sender link
+              // If we are not the first listener, we know that attachSenderLink was already called and we shouldn't call it again.
+              // Doing so would create unnecessary sender links.
               if (this._amqpLinkEmitter.listenerCount('senderLinkAttached') === 1) {
                 debug('attaching D2C link');
                 this._amqp.attachSenderLink(this._d2cEndpoint, null, (err, link) => {
@@ -430,9 +434,19 @@ export class Amqp extends EventEmitter implements DeviceTransport {
           disableTwinDesiredPropertiesUpdates: (callback) => this._twinClient.disableTwinDesiredPropertiesUpdates(handleResult('could not disable twin desired properties updates', callback)),
           enableC2D: (callback) => {
             /*Codes_SRS_NODE_DEVICE_AMQP_41_003: [The `enableC2D` method shall attach the C2D link only if it is not already attached.] */
-            if (!this._c2dLink) {
+            if (this._c2dLink) {
+              debug('C2D link already attached, doing nothing....');
+              process.nextTick(callback);
+            } else if (this._c2dLinkAttaching) {
+              // We use the _c2dLinkAttaching flag to avoid attempting to attach multiple receiver links.
+              // Doing so would cause the service to close the connection and result in a crash.
+              debug('C2D link is being attached, doing nothing....');
+              process.nextTick(callback);
+            } else {
               debug('attaching C2D link');
+              this._c2dLinkAttaching = true;
               this._amqp.attachReceiverLink(this._c2dEndpoint, null, (err, receiverLink) => {
+                this._c2dLinkAttaching = false;
                 if (err) {
                   debug('error creating a C2D link: ' + err.toString());
                   /*Codes_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
@@ -446,9 +460,6 @@ export class Amqp extends EventEmitter implements DeviceTransport {
                   callback();
                 }
               });
-            } else {
-              debug('C2D link already attached, doing nothing....');
-              callback();
             }
           },
           disableC2D: (callback) => {
