@@ -1099,6 +1099,21 @@ describe('Amqp', function () {
         });
       });
 
+      it('does not create multiple sender links', function (testCallback) {
+        fakeBaseClient.attachSenderLink = sinon.stub().callsArgWithAsync(2, null, sender);
+        var count = 0;
+        function sendCallback() {
+          assert(fakeBaseClient.attachSenderLink.calledOnce);
+          if (++count === 3) {
+            testCallback();
+          }
+        };
+
+        testConfig.invokeFunction(new Message('test1'), sendCallback);
+        testConfig.invokeFunction(new Message('test1'), sendCallback);
+        testConfig.invokeFunction(new Message('test1'), sendCallback);
+      })
+
       // This is being skipped because the error is not forwarded.
       // Since we can reattach the link every time we send and surface the error at that time, I'm not sure it's useful to surface this to the client. it's just a transport-level thing at that point.
       // If something is really bad and unrecoverable the failure will happen on the next sendEvent.
