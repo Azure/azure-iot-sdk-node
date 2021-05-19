@@ -381,8 +381,12 @@ export class Amqp extends EventEmitter implements DeviceTransport {
               this._d2cLink.send(amqpMessage, handleResult('AMQP Transport: Could not send', sendCallback));
             } else {
               debug('waiting for a D2C link');
-              this._amqpLinkEmitter.once('senderLinkAttached', () => {
-                this._d2cLink.send(amqpMessage, handleResult('AMQP Transport: Could not send', sendCallback));
+              this._amqpLinkEmitter.once('senderLinkAttached', (err) => {
+                if (err) {
+                  handleResult('AMQP Transport: Could not send', sendCallback)(err);
+                } else {
+                  this._d2cLink.send(amqpMessage, handleResult('AMQP Transport: Could not send', sendCallback));
+                }
               });
               // If we were the first listener for the senderLinkAttached event, we should create a sender link
               // If we are not the first listener, we know that attachSenderLink was already called and we shouldn't call it again.
@@ -391,13 +395,13 @@ export class Amqp extends EventEmitter implements DeviceTransport {
                 debug('attaching D2C link');
                 this._amqp.attachSenderLink(this._d2cEndpoint, null, (err, link) => {
                   if (err) {
-                    handleResult('AMQP Transport: Could not send', sendCallback)(err);
+                    debug('error creating a D2C link: ' + err.toString());
                   } else {
                     debug('got a new D2C link');
                     this._d2cLink = link;
                     this._d2cLink.on('error', this._d2cErrorListener);
-                    this._amqpLinkEmitter.emit('senderLinkAttached');
                   }
+                  this._amqpLinkEmitter.emit('senderLinkAttached', err);
                 });
               }
             }
@@ -438,7 +442,14 @@ export class Amqp extends EventEmitter implements DeviceTransport {
               process.nextTick(callback);
             } else {
               debug('waiting for a C2D link');
-              this._amqpLinkEmitter.once('receiverLinkAttached', callback);
+              this._amqpLinkEmitter.once('receiverLinkAttached', (err) => {
+                if (err) {
+                  /*Codes_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
+                  handleResult('AMQP Transport: Could not attach link', callback)(err);
+                } else {
+                  callback();
+                }
+              });
               // If we were the first listener for the receiverLinkAttached event, we should create a receiver link
               // If we are not the first listener, we know that attachReceiverLink was already called and we shouldn't call it again.
               // Doing so would create unnecessary receiver links.
@@ -447,16 +458,14 @@ export class Amqp extends EventEmitter implements DeviceTransport {
                 this._amqp.attachReceiverLink(this._c2dEndpoint, null, (err, receiverLink) => {
                   if (err) {
                     debug('error creating a C2D link: ' + err.toString());
-                    /*Codes_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
-                    handleResult('AMQP Transport: Could not attach link', callback)(err);
                   } else {
                     /*Codes_SRS_NODE_DEVICE_AMQP_16_032: [The `enableC2D` method shall attach the C2D link and call its `callback` once it is successfully attached.]*/
                     debug('C2D link created and attached successfully');
                     this._c2dLink = receiverLink;
                     this._c2dLink.on('error', this._c2dErrorListener);
                     this._c2dLink.on('message', this._c2dMessageListener);
-                    this._amqpLinkEmitter.emit('receiverLinkAttached');
                   }
+                  this._amqpLinkEmitter.emit('receiverLinkAttached', err);
                 });
               }
             }
