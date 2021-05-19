@@ -57,7 +57,6 @@ export class Amqp extends EventEmitter implements DeviceTransport {
   private _d2cEndpoint: string;
   private _messageEventName: string;
   private _c2dLink: ReceiverLink;
-  private _c2dLinkAttaching: boolean = false;
   private _d2cLink: SenderLink;
   private _options: DeviceClientOptions;
   private _amqpLinkEmitter: EventEmitter;
@@ -437,29 +436,29 @@ export class Amqp extends EventEmitter implements DeviceTransport {
             if (this._c2dLink) {
               debug('C2D link already attached, doing nothing....');
               process.nextTick(callback);
-            } else if (this._c2dLinkAttaching) {
-              // We use the _c2dLinkAttaching flag to avoid attempting to attach multiple receiver links.
-              // Doing so would cause the service to close the connection and result in a crash.
-              debug('C2D link is being attached, doing nothing....');
-              process.nextTick(callback);
             } else {
-              debug('attaching C2D link');
-              this._c2dLinkAttaching = true;
-              this._amqp.attachReceiverLink(this._c2dEndpoint, null, (err, receiverLink) => {
-                this._c2dLinkAttaching = false;
-                if (err) {
-                  debug('error creating a C2D link: ' + err.toString());
-                  /*Codes_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
-                  handleResult('AMQP Transport: Could not attach link', callback)(err);
-                } else {
-                  /*Codes_SRS_NODE_DEVICE_AMQP_16_032: [The `enableC2D` method shall attach the C2D link and call its `callback` once it is successfully attached.]*/
-                  debug('C2D link created and attached successfully');
-                  this._c2dLink = receiverLink;
-                  this._c2dLink.on('error', this._c2dErrorListener);
-                  this._c2dLink.on('message', this._c2dMessageListener);
-                  callback();
-                }
-              });
+              debug('waiting for a C2D link');
+              this._amqpLinkEmitter.once('receiverLinkAttached', callback);
+              // If we were the first listener for the receiverLinkAttached event, we should create a receiver link
+              // If we are not the first listener, we know that attachReceiverLink was already called and we shouldn't call it again.
+              // Doing so would create unnecessary receiver links.
+              if (this._amqpLinkEmitter.listenerCount('receiverLinkAttached') === 1) {
+                debug('attaching C2D link');
+                this._amqp.attachReceiverLink(this._c2dEndpoint, null, (err, receiverLink) => {
+                  if (err) {
+                    debug('error creating a C2D link: ' + err.toString());
+                    /*Codes_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
+                    handleResult('AMQP Transport: Could not attach link', callback)(err);
+                  } else {
+                    /*Codes_SRS_NODE_DEVICE_AMQP_16_032: [The `enableC2D` method shall attach the C2D link and call its `callback` once it is successfully attached.]*/
+                    debug('C2D link created and attached successfully');
+                    this._c2dLink = receiverLink;
+                    this._c2dLink.on('error', this._c2dErrorListener);
+                    this._c2dLink.on('message', this._c2dMessageListener);
+                    this._amqpLinkEmitter.emit('receiverLinkAttached');
+                  }
+                });
+              }
             }
           },
           disableC2D: (callback) => {
@@ -552,6 +551,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
                 }
               },
               (callback) => {
+                this._amqpLinkEmitter.removeAllListeners('receiverLinkAttached');
                 if (this._c2dLink) {
                   /*Codes_SRS_NODE_DEVICE_AMQP_16_022: [The `disconnect` method shall detach all attached links.]*/
                   this._stopC2DListener(err, (detachErr) => {
