@@ -37,6 +37,7 @@ export interface HttpTransportError extends Error {
  */
 export class RestApiClient {
   private _iotHubPublicScope: string[] = ['https://iothubs.azure.net/.default'];
+  private _iotHubFairfaxScope: string[] = ['https://iothubs.azure.us'];
   private _BearerTokenPrefix: string = 'Bearer ';
   private _MinutesBeforeProactiveRenewal: number = 9;
   private _MillisecsBeforeProactiveRenewal: number = this._MinutesBeforeProactiveRenewal * 60000;
@@ -174,7 +175,7 @@ export class RestApiClient {
    */
    async getToken(): Promise<string> {
     if ((!this._accessToken) || this.isAccessTokenCloseToExpiry(this._accessToken)) {
-      this._accessToken = await this._config.tokenCredential.getToken(this._iotHubPublicScope) as any;
+      this._accessToken = await this._config.tokenCredential.getToken((typeof(this._config.host) === 'string' && this._config.host.toLowerCase().endsWith('azure-devices.us')) ? this._iotHubFairfaxScope : this._iotHubPublicScope) as any;
     }
     if (this._accessToken) {
       return this._BearerTokenPrefix + this._accessToken.token;
