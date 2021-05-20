@@ -383,7 +383,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
               debug('waiting for a D2C link');
               this._amqpLinkEmitter.once('senderLinkAttached', (err) => {
                 if (err) {
-                  handleResult('AMQP Transport: Could not send', sendCallback)(err);
+                  handleResult('AMQP Transport: Could not attach sender link', sendCallback)(err);
                 } else {
                   this._d2cLink.send(amqpMessage, handleResult('AMQP Transport: Could not send', sendCallback));
                 }
@@ -445,7 +445,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
               this._amqpLinkEmitter.once('receiverLinkAttached', (err) => {
                 if (err) {
                   /*Codes_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
-                  handleResult('AMQP Transport: Could not attach link', callback)(err);
+                  handleResult('AMQP Transport: Could not attach receiver link', callback)(err);
                 } else {
                   callback();
                 }

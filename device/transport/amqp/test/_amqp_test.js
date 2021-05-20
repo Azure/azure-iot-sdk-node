@@ -1049,6 +1049,23 @@ describe('Amqp', function () {
         });
       });
 
+      it('forwards the error if attaching the D2C link fails while trying to send a message', function (testCallback) {
+        var fakeError = new Error('attaching D2C link failed');
+        fakeBaseClient.attachSenderLink = sinon.stub().callsArgWithAsync(2, fakeError);
+
+        var firstCallbackFired = false;
+        function sendCallback(err) {
+          assert.strictEqual(err.amqpError, fakeError);
+          if (firstCallbackFired) {
+            testCallback();
+          }
+          firstCallbackFired = true;
+        }
+
+        testConfig.invokeFunction(new Message('test1'), sendCallback);
+        testConfig.invokeFunction(new Message('test2'), sendCallback);
+      });
+
       it('sends the message even if called while the transport is connecting', function (testCallback) {
         var connectCallback;
         fakeBaseClient.connect = sinon.stub().callsFake(function (config, done) {
@@ -1112,7 +1129,7 @@ describe('Amqp', function () {
         testConfig.invokeFunction(new Message('test1'), sendCallback);
         testConfig.invokeFunction(new Message('test1'), sendCallback);
         testConfig.invokeFunction(new Message('test1'), sendCallback);
-      })
+      });
 
       // This is being skipped because the error is not forwarded.
       // Since we can reattach the link every time we send and surface the error at that time, I'm not sure it's useful to surface this to the client. it's just a transport-level thing at that point.
@@ -1314,9 +1331,8 @@ describe('Amqp', function () {
             assert(fakeBaseClient.attachReceiverLink.calledOnce);
             if (firstCallbackFired) {
               testCallback();
-            } else {
-              firstCallbackFired = true;
             }
+            firstCallbackFired = true;
           }
           
           transport.connect(function () {
@@ -1336,14 +1352,21 @@ describe('Amqp', function () {
         });
 
         it('calls its callback with an Error if attaching the C2D link fails', function (testCallback) {
-          fakeBaseClient.attachReceiverLink = sinon.stub().callsArgWith(2, new Error('fake failed to attach'));
+          fakeBaseClient.attachReceiverLink = sinon.stub().callsArgWithAsync(2, new Error('fake failed to attach'));
           transport.connect(function () {
             assert(fakeBaseClient.attachReceiverLink.notCalled);
-            transport[testConfig.enableFunc](function (err) {
+            var firstCallbackFired = false
+            function enableCallback (err) {
               assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
               assert.instanceOf(err, Error);
-              testCallback();
-            });
+              if (firstCallbackFired) {
+                testCallback();
+              }
+              firstCallbackFired = true;
+            }
+
+            transport[testConfig.enableFunc](enableCallback);
+            transport[testConfig.enableFunc](enableCallback);
           });
         });
 
