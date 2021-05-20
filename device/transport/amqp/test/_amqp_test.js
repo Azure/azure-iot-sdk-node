@@ -1357,7 +1357,7 @@ describe('Amqp', function () {
             assert(fakeBaseClient.attachReceiverLink.notCalled);
             var firstCallbackFired = false
             function enableCallback (err) {
-              assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
+              assert(fakeBaseClient.attachReceiverLink.calledOnceWith(transport._c2dEndpoint));
               assert.instanceOf(err, Error);
               if (firstCallbackFired) {
                 testCallback();
