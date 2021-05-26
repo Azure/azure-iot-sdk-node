@@ -146,7 +146,7 @@ describe('Registry', function () {
     });
   });
 
-  it('Deletes a device and then fails to get it', function (done) {
+  it.skip('Deletes a device and then fails to get it', function (done) {
     var registry = Registry.fromConnectionString(hubConnectionString);
     registry.delete(deviceIdOnly.deviceId, function(delErr){
       if(delErr) {
@@ -160,7 +160,7 @@ describe('Registry', function () {
     });
   });
 
-  it('Lists devices and one one device remains', function(done) {
+  it.skip('Lists devices and one one device remains', function(done) {
     var registry = Registry.fromConnectionString(hubConnectionString);
     registry.list(function(err, deviceList) {
       if (err) {
@@ -209,7 +209,7 @@ describe('Registry', function () {
     });
   });
 
-  it('Fails to delete a device if it doesn\'t exist', function(done) {
+  it.skip('Fails to delete a device if it doesn\'t exist', function(done) {
     var registry = Registry.fromConnectionString(hubConnectionString);
     registry.delete('doesntexist' + uuid.v4(), function(delErr){
       assert.instanceOf(delErr, errors.DeviceNotFoundError);
@@ -218,7 +218,7 @@ describe('Registry', function () {
   });
 
   [deviceIdWithKeys.deviceId, deviceIdWithThumbprints.deviceId].forEach(function(deviceId) {
-    it('Deletes device created for the test with id ' + deviceId, function (done) {
+    it.skip('Deletes device created for the test with id ' + deviceId, function (done) {
       var registry = Registry.fromConnectionString(hubConnectionString);
       registry.delete(deviceId, function(delErr){
         if(delErr) {
@@ -619,7 +619,7 @@ describe('Registry', function () {
     .catch(function(err) { done(err); });
   });
 
-  it('bulk Identity add/update/remove', function (done) {
+  it.skip('bulk Identity add/update/remove', function (done) {
     var registry = Registry.fromConnectionString(hubConnectionString);
 
     // Specify the new devices.
