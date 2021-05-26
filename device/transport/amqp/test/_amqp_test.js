@@ -1049,6 +1049,23 @@ describe('Amqp', function () {
         });
       });
 
+      it('forwards the error if attaching the D2C link fails while trying to send a message', function (testCallback) {
+        var fakeError = new Error('attaching D2C link failed');
+        fakeBaseClient.attachSenderLink = sinon.stub().callsArgWithAsync(2, fakeError);
+
+        var firstCallbackFired = false;
+        function sendCallback(err) {
+          assert.strictEqual(err.amqpError, fakeError);
+          if (firstCallbackFired) {
+            testCallback();
+          }
+          firstCallbackFired = true;
+        }
+
+        testConfig.invokeFunction(new Message('test1'), sendCallback);
+        testConfig.invokeFunction(new Message('test2'), sendCallback);
+      });
+
       it('sends the message even if called while the transport is connecting', function (testCallback) {
         var connectCallback;
         fakeBaseClient.connect = sinon.stub().callsFake(function (config, done) {
@@ -1097,6 +1114,21 @@ describe('Amqp', function () {
             testCallback();
           });
         });
+      });
+
+      it('does not create multiple sender links', function (testCallback) {
+        fakeBaseClient.attachSenderLink = sinon.stub().callsArgWithAsync(2, null, sender);
+        var count = 0;
+        function sendCallback() {
+          assert(fakeBaseClient.attachSenderLink.calledOnce);
+          if (++count === 3) {
+            testCallback();
+          }
+        };
+
+        testConfig.invokeFunction(new Message('test1'), sendCallback);
+        testConfig.invokeFunction(new Message('test1'), sendCallback);
+        testConfig.invokeFunction(new Message('test1'), sendCallback);
       });
 
       // This is being skipped because the error is not forwarded.
@@ -1278,8 +1310,8 @@ describe('Amqp', function () {
           });
         });
 
-          /*Tests_SRS_NODE_DEVICE_AMQP_41_003: [The `enableC2D` method shall attach the C2D link only if it is not already attached.] */
-          it('does not attach the C2D link if the link is already attached', function (testCallback) {
+        /*Tests_SRS_NODE_DEVICE_AMQP_41_003: [The `enableC2D` method shall attach the C2D link only if it is not already attached.] */
+        it('does not attach the C2D link if the link is already attached', function (testCallback) {
           transport.connect(function () {
             assert(fakeBaseClient.attachReceiverLink.notCalled);
             transport[testConfig.enableFunc](function () {
@@ -1292,6 +1324,23 @@ describe('Amqp', function () {
           });
         });
 
+        it('does not attempt to create multiple receiver links', function (testCallback) {
+          fakeBaseClient.attachReceiverLink = sinon.stub().callsArgWithAsync(2, null, receiver);
+          var firstCallbackFired = false;
+          function enableCallback() {
+            assert(fakeBaseClient.attachReceiverLink.calledOnce);
+            if (firstCallbackFired) {
+              testCallback();
+            }
+            firstCallbackFired = true;
+          }
+          
+          transport.connect(function () {
+            transport[testConfig.enableFunc](enableCallback);
+            transport[testConfig.enableFunc](enableCallback);
+          })
+        })
+
         /*Tests_SRS_NODE_DEVICE_AMQP_16_033: [The `enableC2D` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach link.]*/
         it('calls its callback with an Error if connecting the transport fails', function (testCallback) {
         fakeBaseClient.connect = sinon.stub().callsArgWith(1, new Error('fake failed to connect'));
@@ -1303,14 +1352,21 @@ describe('Amqp', function () {
         });
 
         it('calls its callback with an Error if attaching the C2D link fails', function (testCallback) {
-          fakeBaseClient.attachReceiverLink = sinon.stub().callsArgWith(2, new Error('fake failed to attach'));
+          fakeBaseClient.attachReceiverLink = sinon.stub().callsArgWithAsync(2, new Error('fake failed to attach'));
           transport.connect(function () {
             assert(fakeBaseClient.attachReceiverLink.notCalled);
-            transport[testConfig.enableFunc](function (err) {
-              assert(fakeBaseClient.attachReceiverLink.calledWith(transport._c2dEndpoint));
+            var firstCallbackFired = false
+            function enableCallback (err) {
+              assert(fakeBaseClient.attachReceiverLink.calledOnceWith(transport._c2dEndpoint));
               assert.instanceOf(err, Error);
-              testCallback();
-            });
+              if (firstCallbackFired) {
+                testCallback();
+              }
+              firstCallbackFired = true;
+            }
+
+            transport[testConfig.enableFunc](enableCallback);
+            transport[testConfig.enableFunc](enableCallback);
           });
         });
 
