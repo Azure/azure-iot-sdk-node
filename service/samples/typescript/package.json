@@ -6,7 +6,7 @@
   "author": "Microsoft Corp.",
   "license": "MIT",
   "dependencies": {
-    "azure-iothub": "1.14.0"
+    "azure-iothub": "1.14.1-alpha.210607.1"
   },
   "devDependencies": {
     "source-map-support": "^0.5.16",
