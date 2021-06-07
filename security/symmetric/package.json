@@ -1,13 +1,13 @@
 {
   "name": "azure-iot-security-symmetric-key",
-  "version": "1.7.8-alpha.210607.1",
+  "version": "1.7.8",
   "description": "Azure IoT Symmetric Key Security Client",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.12.9-alpha.210607.1",
+    "azure-iot-common": "1.12.9",
     "debug": "^4.3.1"
   },
   "devDependencies": {
