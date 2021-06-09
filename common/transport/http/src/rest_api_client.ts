@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { anHourFromNow, errors, SharedAccessSignature, X509 } from 'azure-iot-common';
+import { anHourFromNow, errors, SharedAccessSignature, X509, IoTHubTokenScopes } from 'azure-iot-common';
 import { Http as HttpBase, HttpRequestOptions } from './http';
 import { AccessToken, TokenCredential } from '@azure/core-http';
 import  * as uuid from 'uuid';
@@ -36,7 +36,6 @@ export interface HttpTransportError extends Error {
  * @throws {ArgumentError}   If the config argument is missing a host or sharedAccessSignature error
  */
 export class RestApiClient {
-  private _iotHubPublicScope: string[] = ['https://iothubs.azure.net/.default'];
   private _BearerTokenPrefix: string = 'Bearer ';
   private _MinutesBeforeProactiveRenewal: number = 9;
   private _MillisecsBeforeProactiveRenewal: number = this._MinutesBeforeProactiveRenewal * 60000;
@@ -174,7 +173,7 @@ export class RestApiClient {
    */
    async getToken(): Promise<string> {
     if ((!this._accessToken) || this.isAccessTokenCloseToExpiry(this._accessToken)) {
-      this._accessToken = await this._config.tokenCredential.getToken(this._iotHubPublicScope) as any;
+      this._accessToken = await this._config.tokenCredential.getToken(this._config.tokenScope || IoTHubTokenScopes.IOT_HUB_PUBLIC_SCOPE) as any;
     }
     if (this._accessToken) {
       return this._BearerTokenPrefix + this._accessToken.token;
@@ -377,6 +376,7 @@ export namespace RestApiClient {
         sharedAccessSignature?: string | SharedAccessSignature;
         x509?: X509;
         tokenCredential?: TokenCredential;
+        tokenScope?: string;
     }
 
     export type ResponseCallback = (err: Error, responseBody?: any, response?: any) => void;

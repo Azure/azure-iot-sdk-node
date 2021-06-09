@@ -8,7 +8,7 @@ import * as dbg from 'debug';
 import * as machina from 'machina';
 import * as async from 'async';
 
-import { anHourFromNow, endpoint, errors, results, SharedAccessSignature, Message, callbackToPromise, tripleValueCallbackToPromise, Callback } from 'azure-iot-common';
+import { anHourFromNow, endpoint, errors, results, SharedAccessSignature, Message, callbackToPromise, tripleValueCallbackToPromise, Callback, IoTHubTokenScopes } from 'azure-iot-common';
 import { Amqp as Base, AmqpMessage, SenderLink, AmqpBaseTransportConfig } from 'azure-iot-amqp-base';
 import { translateError } from './amqp_service_errors.js';
 import { Client } from './client';
@@ -71,7 +71,6 @@ export class Amqp extends EventEmitter implements Client.Transport {
   private _fileNotificationEndpoint: string = '/messages/serviceBound/filenotifications';
   private _fileNotificationReceiver: ServiceReceiver;
   private _fileNotificationErrorListener: (err: Error) => void;
-  private _iotHubPublicScope: string = 'https://iothubs.azure.net/.default';
   private _bearerTokenPrefix: string = 'Bearer ';
   private _minutesBeforeProactiveRenewal: number = 9;
   private _millisecsBeforeProactiveRenewal: number = this._minutesBeforeProactiveRenewal * 60000;
@@ -221,7 +220,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
                     }
                   });
                 } else if (this._config.tokenCredential) {
-                  const audience = this._iotHubPublicScope;
+                  const audience = this._config.tokenScope || IoTHubTokenScopes.IOT_HUB_PUBLIC_SCOPE;
                   const accessToken = this.getToken();
                   Promise.resolve(accessToken).then((value) => {
                     if (value) {
@@ -590,7 +589,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
    */
    async getToken(): Promise<string | null> {
     if ((!this._accessToken) || this.isAccessTokenCloseToExpiry(this._accessToken)) {
-      this._accessToken = await this._config.tokenCredential.getToken(this._iotHubPublicScope) as any;
+      this._accessToken = await this._config.tokenCredential.getToken(this._config.tokenScope || IoTHubTokenScopes.IOT_HUB_PUBLIC_SCOPE) as any;
     }
     if (this._accessToken) {
       return this._bearerTokenPrefix + this._accessToken.token;

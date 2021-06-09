@@ -438,19 +438,28 @@ export class JobClient {
    * @static
    *
    * @param {String}    hostName                  Host name of the Azure service.
-   * @param {String}    tokenCredential           An Azure TokenCredential used to authenticate
+   * @param {Object}    tokenCredential           An Azure TokenCredential used to authenticate
    *                                              with the Azure  service
+   * @param {String}    tokenScope                The scope for the token used to authenticate
+   *                                              with the Azure service.
+   *                                              For any public cloud and private cloud other
+   *                                              than Azure US Government cloud, this can be
+   *                                              omitted. IoTHubTokenScopes.IOT_HUB_PUBLIC_SCOPE
+   *                                              would be used internally in this case.
+   *                                              For Azure US Government cloud, this should be
+   *                                              IoTHubTokenScopes.IOT_HUB_US_GOVERNMENT_SCOPE.
    *
    * @throws  {ReferenceError}  If the tokenCredential argument is falsy.
    *
    * @returns {module:azure-iothub.JobClient}
    */
-   static fromTokenCredential(hostName: string, tokenCredential: TokenCredential): JobClient {
+   static fromTokenCredential(hostName: string, tokenCredential: TokenCredential, tokenScope?: string): JobClient {
     const config = {
       host: hostName,
       keyName: '',
       sharedAccessSignature: undefined,
-      tokenCredential: tokenCredential
+      tokenCredential: tokenCredential,
+      ...(tokenScope && { tokenScope: tokenScope })
     };
     return new JobClient(new RestApiClient(config, packageJson.name + '/' + packageJson.version));
   }

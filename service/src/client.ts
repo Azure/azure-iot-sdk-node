@@ -471,16 +471,35 @@ export class Client extends EventEmitter {
    * @static
    *
    * @param {String}    hostName                  Host name of the Azure service.
-   * @param {String}    tokenCredential           An Azure TokenCredential used to authenticate
-   *                                              with the Azure  service
+   * @param {Object}    tokenCredential           An Azure TokenCredential used to authenticate
+   *                                              with the Azure service
+   * @param {String}    tokenScope                The scope for the token used to authenticate
+   *                                              with the Azure service.
+   *                                              For any public cloud and private cloud other
+   *                                              than Azure US Government cloud, this can be
+   *                                              omitted. IoTHubTokenScopes.IOT_HUB_PUBLIC_SCOPE
+   *                                              would be used internally in this case.
+   *                                              For Azure US Government cloud, this should be
+   *                                              IoTHubTokenScopes.IOT_HUB_US_GOVERNMENT_SCOPE.
    * @param {Function}  Transport                 A transport constructor.
    *
    * @throws  {ReferenceError}  If the tokenCredential argument is falsy.
    *
    * @returns {module:azure-iothub.Client}
    */
-  static fromTokenCredential(hostName: string, tokenCredential: TokenCredential, transportCtor?: Client.TransportCtor): Client {
-    if (!transportCtor) {
+  static fromTokenCredential(hostName: string, tokenCredential: TokenCredential): Client;
+  static fromTokenCredential(hostName: string, tokenCredential: TokenCredential, tokenScope: string): Client;
+  static fromTokenCredential(hostName: string, tokenCredential: TokenCredential, transportCtor: Client.TransportCtor): Client;
+  static fromTokenCredential(hostName: string, tokenCredential: TokenCredential, transportCtor: Client.TransportCtor, tokenScope: string): Client;
+  static fromTokenCredential(hostName: string, tokenCredential: TokenCredential, transportCtorOrTokenScope?: Client.TransportCtor | string, tokenScope?: string): Client {
+    if (typeof transportCtorOrTokenScope === 'string') {
+      tokenScope = transportCtorOrTokenScope;
+    }
+
+    let transportCtor: Client.TransportCtor;
+    if (transportCtorOrTokenScope && typeof transportCtorOrTokenScope !== 'string') {
+      transportCtor = transportCtorOrTokenScope;
+    } else {
       transportCtor = Amqp;
     }
 
@@ -488,7 +507,8 @@ export class Client extends EventEmitter {
       host: hostName,
       keyName: '',
       sharedAccessSignature: undefined,
-      tokenCredential: tokenCredential
+      tokenCredential: tokenCredential,
+      ...(tokenScope && { tokenScope: tokenScope })
     };
     return new Client(new transportCtor(config), new RestApiClient(config, packageJson.name + '/' + packageJson.version));
   }
@@ -518,6 +538,11 @@ export namespace Client {
      * The token credential used to authenticate the connection with the Azure IoT hub.
      */
     tokenCredential: TokenCredential;
+
+    /**
+     * The scope for the the token credential used to authenticate the connection with the Azure IoT hub.
+     */
+    tokenScope?: string;
   }
 
   export interface ServiceReceiver extends Receiver {

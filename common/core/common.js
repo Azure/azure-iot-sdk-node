@@ -37,5 +37,6 @@ module.exports = {
   NoErrorCallback: require('./dist/promise_utils').NoErrorCallback,
   DoubleValueCallback: require('./dist/promise_utils').DoubleValueCallback,
   TripleValueCallback: require('./dist/promise_utils').TripleValueCallback,
-  HttpResponseCallback: require('./dist/promise_utils').HttpResponseCallback
+  HttpResponseCallback: require('./dist/promise_utils').HttpResponseCallback,
+  IoTHubTokenScopes: require('./dist/token_scopes').IoTHubTokenScopes
 };

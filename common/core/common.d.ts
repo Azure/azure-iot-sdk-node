@@ -26,3 +26,4 @@ export interface Receiver extends EventEmitter {
 }
 
 export { TransportConfig, X509 } from './dist/authorization';
+export { IoTHubTokenScopes } from './dist/token_scopes';
