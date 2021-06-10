@@ -24,7 +24,7 @@
     "azure-iot-device-amqp": "1.13.4",
     "azure-iot-device-http": "1.13.4",
     "azure-iot-device-mqtt": "1.15.4",
-    "azure-iothub": "1.14.1",
+    "azure-iothub": "1.14.2",
     "chai": "^4.3.3",
     "debug": "^4.3.1",
     "mocha": "^7.1.1",
