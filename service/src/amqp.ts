@@ -221,20 +221,17 @@ export class Amqp extends EventEmitter implements Client.Transport {
                   });
                 } else if (this._config.tokenCredential) {
                   const audience = this._config.tokenScope || IoTHubTokenScopes.IOT_HUB_PUBLIC_SCOPE;
-                  const accessToken = this.getToken();
-                  Promise.resolve(accessToken).then((value) => {
-                    if (value) {
-                      this._amqp.putToken(audience, value, (err) => {
-                        if (err) {
-                          /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_004: [** If `putToken` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
-                          this._fsm.transition('disconnecting', err, callback);
-                        } else {
-                          this._fsm.transition('authenticated', value, callback);
-                        }
-                      });
-                    } else {
-                      this._fsm.transition('disconnecting', 'AccessToken creation failed', callback);
-                    }
+                  this.getToken().then((accessToken) => {
+                    this._amqp.putToken(audience, accessToken, (err) => {
+                      if (err) {
+                        /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_004: [** If `putToken` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
+                        this._fsm.transition('disconnecting', err, callback);
+                      } else {
+                        this._fsm.transition('authenticated', accessToken, callback)
+                      }
+                    });
+                  }).catch((err) => {
+                    this._fsm.transition('disconnecting', err, callback);
                   });
                 }
               }
@@ -591,11 +588,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
     if ((!this._accessToken) || this.isAccessTokenCloseToExpiry(this._accessToken)) {
       this._accessToken = await this._config.tokenCredential.getToken(this._config.tokenScope || IoTHubTokenScopes.IOT_HUB_PUBLIC_SCOPE) as any;
     }
-    if (this._accessToken) {
-      return this._bearerTokenPrefix + this._accessToken.token;
-    } else {
-      return null;
-    }
+    return this._bearerTokenPrefix + this._accessToken.token;
   }
 
   protected _getConnectionUri(): string {
