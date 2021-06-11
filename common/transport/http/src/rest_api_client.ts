@@ -111,14 +111,11 @@ export class RestApiClient {
     - User-Agent: <version string>]*/
     let httpHeaders: any = headers || {};
     if (this._config.tokenCredential) {
-      let accessToken = this.getToken();
-      Promise.resolve(accessToken).then((value) => {
-        if (value) {
-          httpHeaders.Authorization = value;
-          this.executeBody(requestBody, httpHeaders, headers, method, path, timeout, requestOptions, done);
-        } else {
-            throw new Error('AccessToken creation failed');
-        }
+      this.getToken().then((accessToken) => {
+        httpHeaders.Authorization = accessToken;
+        this.executeBody(requestBody, httpHeaders, headers, method, path, timeout, requestOptions, done);
+      }).catch((err) => {
+        done(err);
       });
     } else {
       if (this._config.sharedAccessSignature) {
@@ -130,7 +127,7 @@ export class RestApiClient {
 
   /**
    * @method             module:azure-iothub.RestApiClient.updateSharedAccessSignature
-   * @description        Updates the shared access signature used to authentify API calls.
+   * @description        Updates the shared access signature used to authenticate API calls.
    *
    * @param  {string}          sharedAccessSignature  The new shared access signature that should be used.
    *
@@ -175,11 +172,7 @@ export class RestApiClient {
     if ((!this._accessToken) || this.isAccessTokenCloseToExpiry(this._accessToken)) {
       this._accessToken = await this._config.tokenCredential.getToken(this._config.tokenScope || IoTHubTokenScopes.IOT_HUB_PUBLIC_SCOPE) as any;
     }
-    if (this._accessToken) {
-      return this._BearerTokenPrefix + this._accessToken.token;
-    } else {
-      return null;
-    }
+    return this._BearerTokenPrefix + this._accessToken.token;
   }
 
   private executeBody(
@@ -297,7 +290,7 @@ export class RestApiClient {
   static translateError(body: any, response: any): HttpTransportError {
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_012: [Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 3 properties:
     - `response` shall contain the `IncomingMessage` object returned by the HTTP layer.
-    - `reponseBody` shall contain the content of the HTTP response.
+    - `responseBody` shall contain the content of the HTTP response.
     - `message` shall contain a human-readable error message.]*/
     let error: HttpTransportError;
     const errorContent = HttpBase.parseErrorBody(body);
