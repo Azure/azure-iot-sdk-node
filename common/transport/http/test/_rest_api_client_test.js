@@ -6,6 +6,7 @@
 var assert = require('chai').assert;
 var sinon = require('sinon');
 var errors = require('azure-iot-common').errors;
+var IoTHubTokenScopes = require('azure-iot-common').IoTHubTokenScopes
 var HttpBase = require('../dist/http.js').Http;
 var RestApiClient = require('../dist/rest_api_client.js').RestApiClient;
 
@@ -540,6 +541,59 @@ describe('RestApiClient', function() {
         var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
         client.executeApiCall('GET', '/test/path', testHeaders, testRequestBody, testCallback);
       });
+    });
+
+    it('gets the token from the TokenCredential object using the specified token scope if tokenCredential and tokenScope are in the config', function(testCallback) {
+      var fakeTokenCredential = {
+        getToken: sinon.stub().resolves({
+          token: 'fake_token',
+          expiresOnTimestamp: Date.now() + 3600000
+        })
+      }
+      var fakeConfig = {
+        host: "fake_host.com",
+        tokenCredential: fakeTokenCredential,
+        tokenScope: "https://fake.scope.zw/.default"
+      }
+      var fakeHttpHelper = {
+        buildRequest: function(method, path, headers, host, requestCallback) {
+          assert(fakeTokenCredential.getToken.calledOnceWithExactly(fakeConfig.tokenScope))
+          return {
+            write: function() { },
+            end: function() {
+              requestCallback(null, '', { statusCode: 200 });
+            }
+          };
+        }
+      }
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
+      client.executeApiCall('GET', '/test/path', null, null, testCallback);
+    });
+
+    it('gets the token from the TokenCredential object using the IoTHubTokenScopes.IOT_HUB_PUBLIC_SCOPE scope if tokenCredential is in the config but no tokenScope is specified', function(testCallback) {
+      var fakeTokenCredential = {
+        getToken: sinon.stub().resolves({
+          token: 'fake_token',
+          expiresOnTimestamp: Date.now() + 3600000
+        })
+      }
+      var fakeConfig = {
+        host: "fake_host.com",
+        tokenCredential: fakeTokenCredential
+      }
+      var fakeHttpHelper = {
+        buildRequest: function(method, path, headers, host, requestCallback) {
+          assert(fakeTokenCredential.getToken.calledOnceWithExactly(IoTHubTokenScopes.IOT_HUB_PUBLIC_SCOPE))
+          return {
+            write: function() { },
+            end: function() {
+              requestCallback(null, '', { statusCode: 200 });
+            }
+          };
+        }
+      }
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
+      client.executeApiCall('GET', '/test/path', null, null, testCallback);
     });
   });
 

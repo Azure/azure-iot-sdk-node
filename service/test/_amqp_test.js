@@ -10,6 +10,7 @@ var SharedAccessSignature = require('azure-iot-common').SharedAccessSignature;
 var errors = require('azure-iot-common').errors;
 var results = require('azure-iot-common').results;
 var Message = require('azure-iot-common').Message;
+var IoTHubTokenScopes = require('azure-iot-common').IoTHubTokenScopes;
 var AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
 
 
@@ -180,6 +181,45 @@ describe('Amqp', function() {
           });
         });
       });
+    });
+
+    it('gets the token from the TokenCredential object using the specified token scope and passes it to putToken if tokenCredential and tokenScope are in the config', function (testCallback) {
+      var fakeToken = 'fake_token';
+      var tokenCredentialConfig = {
+        host: 'hub.host.name',
+        tokenCredential: {
+          getToken: sinon.stub().resolves({
+            token: fakeToken,
+            expiresOnTimeStamp: Date.now() + 3600000
+          })
+        },
+        tokenScope: 'https://fake.scope.zw/.default'
+      }
+      var transport = new Amqp(tokenCredentialConfig, fakeAmqpBase);
+      transport.connect(function () {
+        assert(tokenCredentialConfig.tokenCredential.getToken.calledOnceWithExactly(tokenCredentialConfig.tokenScope));
+        assert(fakeAmqpBase.putToken.calledOnceWith(tokenCredentialConfig.tokenScope, "Bearer " + fakeToken));
+        testCallback();
+      })
+    });
+
+    it('gets the token from the TokenCredential object using the IoTHubTokenScopes.IOT_HUB_PUBLIC_SCOPE scope and passes it to putToken if tokenCredential is in the config but no tokenScope is specified', function (/* */) {
+      var fakeToken = 'fake_token';
+      var tokenCredentialConfig = {
+        host: 'hub.host.name',
+        tokenCredential: {
+          getToken: sinon.stub().resolves({
+            token: fakeToken,
+            expiresOnTimeStamp: Date.now() + 3600000
+          })
+        }
+      }
+      var transport = new Amqp(tokenCredentialConfig, fakeAmqpBase);
+      transport.connect(function () {
+        assert(tokenCredentialConfig.tokenCredential.getToken.calledOnceWithExactly(IoTHubTokenScopes.IOT_HUB_PUBLIC_SCOPE));
+        assert(fakeAmqpBase.putToken.calledOnceWith(IoTHubTokenScopes.IOT_HUB_PUBLIC_SCOPE, "Bearer " + fakeToken));
+        testCallback();
+      })
     });
   });
 
