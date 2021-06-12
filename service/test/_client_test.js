@@ -99,6 +99,45 @@ describe('Client', function () {
     });
   });
 
+  describe('#fromTokenCredential', function () {
+    var fakeTokenCredential = {
+      getToken: sinon.stub().resolves({
+        token: "fake_token",
+        expiresOnTimeStamp: Date.now() + 3600000
+      })
+    };
+    
+    it('creates an instance of the default transport', function() {
+      var client = Client.fromTokenCredential("hub.host.tv", fakeTokenCredential);
+      assert.instanceOf(client._transport, Amqp);
+    });
+
+    it('uses the transport given as argument', function () {
+      var FakeTransport = function (config) {
+        assert.isOk(config);
+      };
+
+      var client = Client.fromTokenCredential("hub.host.tv", fakeTokenCredential, FakeTransport);
+      assert.instanceOf(client._transport, FakeTransport);
+    });
+
+    it('returns an instance of Client', function () {
+      var client = Client.fromTokenCredential("hub.host.tv", fakeTokenCredential);
+      assert.instanceOf(client, Client);
+      assert.isOk(client._restApiClient);
+    });
+
+    it('correctly populates the config structure', function() {
+      var client = Client.fromTokenCredential("hub.host.tv", fakeTokenCredential, "https://fake.scope.zw/.default");
+      assert.equal(client._transport._config.host, 'hub.host.tv');
+      assert.equal(client._transport._config.tokenCredential, fakeTokenCredential);
+      assert.equal(client._transport._config.tokenScope, "https://fake.scope.zw/.default");
+      assert.equal(client._restApiClient._config.host, 'hub.host.tv');
+      assert.equal(client._restApiClient._config.tokenCredential, fakeTokenCredential);
+      assert.equal(client._restApiClient._config.tokenScope, "https://fake.scope.zw/.default");
+    });
+  });
+
   var goodSendParameters = [
     { obj: Buffer.from('foo'), name: 'Buffer' },
     { obj: 'foo', name: 'string' },

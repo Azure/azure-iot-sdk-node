@@ -249,6 +249,27 @@ describe('Registry', function () {
     });
   });
 
+  describe('#fromTokenCredential', function() {
+    var fakeTokenCredential = {
+      getToken: sinon.stub().resolves({
+        token: "fake_token",
+        expiresOnTimeStamp: Date.now() + 3600000
+      })
+    };
+
+    it('returns a new instance of the Registry object', function() {
+      var registry = Registry.fromTokenCredential("hub.host.tv", fakeTokenCredential);
+      assert.instanceOf(registry, Registry);
+    });
+
+    it('correctly populates the config structure', function() {
+      var registry = Registry.fromTokenCredential("hub.host.tv", fakeTokenCredential, "https://fake.scope.zw/.default");
+      assert.equal(registry._restApiClient._config.host, 'hub.host.tv');
+      assert.equal(registry._restApiClient._config.tokenCredential, fakeTokenCredential);
+      assert.equal(registry._restApiClient._config.tokenScope, "https://fake.scope.zw/.default");
+    });
+  });
+
   describe('#create', function () {
     /*Tests_SRS_NODE_IOTHUB_REGISTRY_07_001: [The `create` method shall throw `ReferenceError` if the `deviceInfo` argument is falsy.]*/
     [undefined, null].forEach(function (badDeviceInfo) {

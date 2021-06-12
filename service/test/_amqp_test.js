@@ -203,7 +203,7 @@ describe('Amqp', function() {
       })
     });
 
-    it('gets the token from the TokenCredential object using the IoTHubTokenScopes.IOT_HUB_PUBLIC_SCOPE scope and passes it to putToken if tokenCredential is in the config but no tokenScope is specified', function (/* */) {
+    it('gets the token from the TokenCredential object using the IoTHubTokenScopes.IOT_HUB_PUBLIC_SCOPE scope and passes it to putToken if tokenCredential is in the config but no tokenScope is specified', function (testCallback) {
       var fakeToken = 'fake_token';
       var tokenCredentialConfig = {
         host: 'hub.host.name',
