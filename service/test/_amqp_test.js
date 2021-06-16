@@ -181,6 +181,25 @@ describe('Amqp', function() {
         });
       });
     });
+
+    it('gets the token from the TokenCredential object using the correct token scope and passes it to putToken if a TokenCredential is in the config', function (testCallback) {
+      var fakeToken = 'fake_token';
+      var tokenCredentialConfig = {
+        host: 'hub.host.name',
+        tokenCredential: {
+          getToken: sinon.stub().resolves({
+            token: fakeToken,
+            expiresOnTimeStamp: Date.now() + 3600000
+          })
+        }
+      }
+      var transport = new Amqp(tokenCredentialConfig, fakeAmqpBase);
+      transport.connect(function () {
+        assert(tokenCredentialConfig.tokenCredential.getToken.calledOnceWithExactly('https://iothubs.azure.net/.default'));
+        assert(fakeAmqpBase.putToken.calledOnceWith('https://iothubs.azure.net/.default', "Bearer " + fakeToken));
+        testCallback();
+      })
+    });
   });
 
   describe('#disconnect', function() {
