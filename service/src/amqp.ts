@@ -589,6 +589,9 @@ export class Amqp extends EventEmitter implements Client.Transport {
     if ((!this._accessToken) || this.isAccessTokenCloseToExpiry(this._accessToken)) {
       this._accessToken = await this._config.tokenCredential.getToken(this._iotHubPublicScope) as any;
     }
+    if (!this._accessToken) {
+      throw new Error('AccessToken creation failed');
+    }
     return this._bearerTokenPrefix + this._accessToken.token;
   }
 

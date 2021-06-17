@@ -173,6 +173,9 @@ export class RestApiClient {
     if ((!this._accessToken) || this.isAccessTokenCloseToExpiry(this._accessToken)) {
       this._accessToken = await this._config.tokenCredential.getToken(this._iotHubPublicScope) as any;
     }
+    if (!this._accessToken) {
+      throw new Error('AccessToken creation failed');
+    }
     return this._BearerTokenPrefix + this._accessToken.token;
   }
 
