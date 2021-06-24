@@ -14,6 +14,7 @@ import { RestApiClient } from 'azure-iot-http-base';
 import { DeviceMethodParams, IncomingMessageCallback, createResultWithIncomingMessage, ResultWithIncomingMessage } from './interfaces';
 import { Callback, tripleValueCallbackToPromise } from 'azure-iot-common';
 import { IncomingMessage } from 'http';
+import { TokenCredential } from '@azure/core-http';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -416,7 +417,8 @@ export class Client extends EventEmitter {
     const config: Client.TransportConfigOptions = {
       host: cn.HostName,
       keyName: cn.SharedAccessKeyName,
-      sharedAccessSignature: SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, anHourFromNow())
+      sharedAccessSignature: SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, anHourFromNow()),
+      tokenCredential: undefined
     };
 
     /*Codes_SRS_NODE_IOTHUB_CLIENT_05_004: [The fromConnectionString method shall return a new instance of the Client object, as by a call to new Client(transport).]*/
@@ -453,10 +455,41 @@ export class Client extends EventEmitter {
     const config: Client.TransportConfigOptions = {
       host: decodedUri,
       keyName: sas.skn,
-      sharedAccessSignature: sas.toString()
+      sharedAccessSignature: sas.toString(),
+      tokenCredential: undefined
     };
 
     /*Codes_SRS_NODE_IOTHUB_CLIENT_05_007: [The fromSharedAccessSignature method shall return a new instance of the Client object, as by a call to new Client(transport).]*/
+    return new Client(new transportCtor(config), new RestApiClient(config, packageJson.name + '/' + packageJson.version));
+  }
+
+  /**
+   * @method            module:azure-iothub.Client.fromTokenCredential
+   * @description       Creates an IoT Hub service client from the given
+   *                    Azure tokenCredential using the default transport
+   *                    (Amqp) or the one specified in the second argument.
+   * @static
+   *
+   * @param {String}    hostName                  Host name of the Azure service.
+   * @param {String}    tokenCredential           An Azure TokenCredential used to authenticate
+   *                                              with the Azure  service
+   * @param {Function}  Transport                 A transport constructor.
+   *
+   * @throws  {ReferenceError}  If the tokenCredential argument is falsy.
+   *
+   * @returns {module:azure-iothub.Client}
+   */
+  static fromTokenCredential(hostName: string, tokenCredential: TokenCredential, transportCtor?: Client.TransportCtor): Client {
+    if (!transportCtor) {
+      transportCtor = Amqp;
+    }
+
+    const config: Client.TransportConfigOptions = {
+      host: hostName,
+      keyName: '',
+      sharedAccessSignature: undefined,
+      tokenCredential: tokenCredential
+    };
     return new Client(new transportCtor(config), new RestApiClient(config, packageJson.name + '/' + packageJson.version));
   }
 }
@@ -480,6 +513,11 @@ export namespace Client {
      * The shared access signature token used to authenticate the connection with the Azure IoT hub.
      */
     sharedAccessSignature: string | SharedAccessSignature;
+
+    /**
+     * The token credential used to authenticate the connection with the Azure IoT hub.
+     */
+    tokenCredential: TokenCredential;
   }
 
   export interface ServiceReceiver extends Receiver {

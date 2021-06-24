@@ -292,6 +292,93 @@ describe('Registry', function () {
     });
   });
 
+  it('Can create nested Edge devices', function (done) {
+    var registry = Registry.fromConnectionString(hubConnectionString);
+
+    var rootEdgeDevice = {
+      deviceId: 'delete-me-' + uuid.v4(),
+      authentication: {
+        symmetricKey: {
+          primaryKey: Buffer.from("1234567890qwerty").toString('base64'),
+          secondaryKey: Buffer.from("ytrewq0987654321").toString('base64')
+        }
+      },
+      status: "enabled",
+      capabilities: {
+        iotEdge: true
+      }
+    };
+
+    var childEdgeDevice = {
+      deviceId: 'delete-me-' + uuid.v4(),
+      authentication: {
+        symmetricKey: {
+          primaryKey: Buffer.from("1234567890qwerty").toString('base64'),
+          secondaryKey: Buffer.from("ytrewq0987654321").toString('base64')
+        }
+      },
+      status: "enabled",
+      capabilities: {
+        iotEdge: true
+      }
+    };
+
+    var leafDevice = {
+      deviceId: 'delete-me-' + uuid.v4(),
+      authentication: {
+        symmetricKey: {
+          primaryKey: Buffer.from("1234567890qwerty").toString('base64'),
+          secondaryKey: Buffer.from("ytrewq0987654321").toString('base64')
+        }
+      },
+      status: "enabled"
+    };
+
+    registry.create(rootEdgeDevice, function(rootEdgeDeviceCreateError, rootEdgeDeviceCreateResult) {
+      if (rootEdgeDeviceCreateError) {
+        done(rootEdgeDeviceCreateError);
+      } else {
+        debug('Created root edge device: ', rootEdgeDeviceCreateResult.deviceId);
+        assert(rootEdgeDeviceCreateResult.capabilities.iotEdge, 'Created root edge device does not contain correct capabilities.');
+        assert(rootEdgeDeviceCreateResult.deviceScope, 'Created root edge device does not contain a scope value.');
+        childEdgeDevice.parentScopes = [rootEdgeDeviceCreateResult.deviceScope];
+        registry.create(childEdgeDevice, function(childEdgeDeviceCreateError, childEdgeDeviceCreateResult) {
+          if (childEdgeDeviceCreateError) {
+            registry.delete(rootEdgeDeviceCreateResult.deviceId, function() {
+              done(childEdgeDeviceCreateError);
+            });
+          } else {
+            debug('Created child edge device: ', childEdgeDeviceCreateResult.deviceId);
+            assert(childEdgeDeviceCreateResult.capabilities.iotEdge, 'Created child edge device does not contain correct capabilities.');
+            assert(childEdgeDeviceCreateResult.deviceScope, 'Created child edge device does not contain a scope value.');
+            assert.equal(childEdgeDeviceCreateResult.parentScopes[0], childEdgeDevice.parentScopes[0], 'Created child edge device does not contain correct parentScopes.');
+            leafDevice.deviceScope = childEdgeDeviceCreateResult.deviceScope;
+            leafDevice.parentScopes = [childEdgeDeviceCreateResult.deviceScope];
+            registry.create(leafDevice, function(leafDeviceCreateError, leafDeviceCreateResult) {
+              if (leafDeviceCreateError) {
+                registry.delete(childEdgeDeviceCreateResult.deviceId, function() {
+                  registry.delete(rootEdgeDeviceCreateResult.deviceId, function() {
+                    done(childEdgeDeviceCreateError);
+                  });
+                });
+              } else {
+                debug('Created leaf device: ', leafDeviceCreateResult.deviceId);
+                assert.equal(leafDeviceCreateResult.parentScopes[0], leafDevice.parentScopes[0], 'Created leaf device does not contain correct parentScopes.');
+                assert.equal(leafDeviceCreateResult.deviceScope, leafDevice.deviceScope, 'Created leaf device does not contain correct scope.');
+                registry.delete(leafDeviceCreateResult.deviceId, function(leafDeviceDeleteError) {
+                  registry.delete(childEdgeDeviceCreateResult.deviceId, function(childEdgeDeviceDeleteError) {
+                    registry.delete(rootEdgeDeviceCreateResult.deviceId, function(rootEdgeDeleteError) {
+                      done(leafDeviceDeleteError || childEdgeDeviceDeleteError || rootEdgeDeleteError);
+                    });
+                  });
+                });
+              }
+            });
+          }
+        });
+      }
+    });
+  });
 
   it.skip('Imports then exports devices', function(done) {
     this.timeout(120000);

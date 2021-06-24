@@ -272,6 +272,18 @@ describe('MqttBase', function () {
       });
       fakeMqtt.emit('connect');
     });
+
+    it('does not fail if _mqttClient is undefined', function (testCallback) {
+      var fakeMqtt = new FakeMqtt();
+      var mqttBase = new MqttBase(fakeMqtt);
+      mqttBase.connect(fakeConfig, function () {
+        mqttBase._mqttClient = undefined;
+        mqttBase.disconnect(function () {
+          testCallback();
+        });
+      });
+      fakeMqtt.emit('connect');
+    });
   });
 
   describe('#publish', function () {

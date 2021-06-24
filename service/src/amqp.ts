@@ -14,6 +14,7 @@ import { translateError } from './amqp_service_errors.js';
 import { Client } from './client';
 import { ServiceReceiver } from './service_receiver.js';
 import { ResultWithIncomingMessage, IncomingMessageCallback, createResultWithIncomingMessage } from './interfaces.js';
+import { AccessToken } from '@azure/core-http';
 
 const UnauthorizedError = errors.UnauthorizedError;
 const DeviceNotFoundError = errors.DeviceNotFoundError;
@@ -70,6 +71,11 @@ export class Amqp extends EventEmitter implements Client.Transport {
   private _fileNotificationEndpoint: string = '/messages/serviceBound/filenotifications';
   private _fileNotificationReceiver: ServiceReceiver;
   private _fileNotificationErrorListener: (err: Error) => void;
+  private _iotHubPublicScope: string = 'https://iothubs.azure.net/.default';
+  private _bearerTokenPrefix: string = 'Bearer ';
+  private _minutesBeforeProactiveRenewal: number = 9;
+  private _millisecsBeforeProactiveRenewal: number = this._minutesBeforeProactiveRenewal * 60000;
+  private _accessToken: AccessToken;
 
   /**
    * @private
@@ -200,17 +206,35 @@ export class Amqp extends EventEmitter implements Client.Transport {
               } else {
                 debug('CBS initialized');
                 /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_003: [If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter audience, created from the sr of the sas signature, the next parameter of the actual sas, and a callback.]*/
-                const audience = SharedAccessSignature.parse(this._config.sharedAccessSignature.toString(), ['sr', 'sig', 'se']).sr;
-                const applicationSuppliedSas = typeof (this._config.sharedAccessSignature) === 'string';
-                const sasToken = applicationSuppliedSas ? this._config.sharedAccessSignature as string : (this._config.sharedAccessSignature as SharedAccessSignature).extend(anHourFromNow());
-                this._amqp.putToken(audience, sasToken, (err) => {
-                  if (err) {
-                    /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_004: [** If `putToken` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
+
+                if (this._config.sharedAccessSignature) {
+                  const audience = SharedAccessSignature.parse(this._config.sharedAccessSignature.toString(), ['sr', 'sig', 'se']).sr;
+                  const applicationSuppliedSas = typeof (this._config.sharedAccessSignature) === 'string';
+
+                  const sasToken = applicationSuppliedSas ? this._config.sharedAccessSignature as string : (this._config.sharedAccessSignature as SharedAccessSignature).extend(anHourFromNow());
+                  this._amqp.putToken(audience, sasToken, (err) => {
+                    if (err) {
+                      /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_004: [** If `putToken` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
+                      this._fsm.transition('disconnecting', err, callback);
+                    } else {
+                      this._fsm.transition('authenticated', applicationSuppliedSas, callback);
+                    }
+                  });
+                } else if (this._config.tokenCredential) {
+                  const audience = this._iotHubPublicScope;
+                  this.getToken().then((accessToken) => {
+                    this._amqp.putToken(audience, accessToken, (err) => {
+                      if (err) {
+                        /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_004: [** If `putToken` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
+                        this._fsm.transition('disconnecting', err, callback);
+                      } else {
+                        this._fsm.transition('authenticated', accessToken, callback);
+                      }
+                    });
+                  }).catch((err) => {
                     this._fsm.transition('disconnecting', err, callback);
-                  } else {
-                    this._fsm.transition('authenticated', applicationSuppliedSas, callback);
-                  }
-                });
+                  });
+                }
               }
             });
           },
@@ -540,6 +564,35 @@ export class Amqp extends EventEmitter implements Client.Transport {
         }
       });
     }, callback);
+  }
+
+  /**
+   * @private
+   * Calculates if the AccessToken's remaining time to live
+   * is shorter than the proactive renewal time.
+   * @param accessToken The AccessToken.
+   * @returns {Boolean} True if the token's remaining time is shorter than the
+   *                    proactive renewal time, false otherwise.
+   */
+   isAccessTokenCloseToExpiry(accessToken: AccessToken): Boolean {
+    let remainingTimeToLive = Date.now() - accessToken.expiresOnTimestamp;
+    return remainingTimeToLive <= this._millisecsBeforeProactiveRenewal;
+  }
+
+  /**
+   * @private
+   * Returns the current AccessToken if it is still valid
+   * or a new AccessToken if the current token is close to expire.
+   * @returns {Promise<string>} The access token string.
+   */
+   async getToken(): Promise<string | null> {
+    if ((!this._accessToken) || this.isAccessTokenCloseToExpiry(this._accessToken)) {
+      this._accessToken = await this._config.tokenCredential.getToken(this._iotHubPublicScope) as any;
+    }
+    if (!this._accessToken) {
+      throw new Error('AccessToken creation failed');
+    }
+    return this._bearerTokenPrefix + this._accessToken.token;
   }
 
   protected _getConnectionUri(): string {

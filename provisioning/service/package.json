@@ -1,26 +1,26 @@
 {
   "name": "azure-iot-provisioning-service",
-  "version": "1.8.7",
+  "version": "1.8.9",
   "description": "Azure IoT SDK - Provisioning Service Client",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "iotprovisioningservice.js",
   "typings": "iotprovisioningservice.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.12.7",
-    "azure-iot-http-base": "1.11.7",
-    "debug": "^4.1.1"
+    "azure-iot-common": "1.12.9",
+    "azure-iot-http-base": "1.11.9",
+    "debug": "^4.3.1"
   },
   "devDependencies": {
     "@types/debug": "^4.1.5",
-    "@types/node": "^9.6.50",
-    "chai": "^4.2.0",
-    "nyc": "^15.0.0",
+    "@types/node": "^9.6.61",
+    "chai": "^4.3.3",
     "mocha": "^7.1.1",
+    "nyc": "^15.0.0",
     "sinon": "^7.4.1",
     "source-map-support": "^0.5.16",
     "ts-node": "^8.6.2",
-    "tslint": "^6.1.0",
+    "tslint": "^6.1.3",
     "typescript": "3.7.5"
   },
   "scripts": {

@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { errors, endpoint, SharedAccessSignature, ResultWithHttpResponse } from 'azure-iot-common';
+import { errors, endpoint, SharedAccessSignature, ResultWithHttpResponse, X509 } from 'azure-iot-common';
 import { Agent } from 'https';
 import { RestApiClient } from 'azure-iot-http-base';
 import * as ConnectionString from './connection_string';
@@ -14,6 +14,7 @@ import { Device } from './device';
 import { IncomingMessageCallback } from './interfaces';
 import { Module } from './module';
 import { TripleValueCallback, Callback, HttpResponseCallback, callbackToPromise, httpCallbackToPromise } from 'azure-iot-common';
+import { TokenCredential } from '@azure/core-http';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -42,11 +43,15 @@ export class Registry {
     if (!config) {
       /*Codes_SRS_NODE_IOTHUB_REGISTRY_16_023: [The `Registry` constructor shall throw a `ReferenceError` if the config object is falsy.]*/
       throw new ReferenceError('The \'config\' parameter cannot be \'' + config + '\'');
-    } else if (!config.host || !config.sharedAccessSignature) {
+    } else if (!config.host) {
       /*SRS_NODE_IOTHUB_REGISTRY_05_001: [** The `Registry` constructor shall throw an `ArgumentException` if the config object is missing one or more of the following properties:
       - `host`: the IoT Hub hostname
       - `sharedAccessSignature`: shared access signature with the permissions for the desired operations.]*/
-      throw new ArgumentError('The \'config\' argument is missing either the host or the sharedAccessSignature property');
+      throw new ArgumentError('The \'config\' argument is missing either the host property');
+    } else if ((!config.sharedAccessSignature) && (!config.tokenCredential)) {
+      throw new ArgumentError('The \'config\' argument is missing either the sharedAccessSignature or the tokenCredential property');
+    } else if ((config.sharedAccessSignature) && (config.tokenCredential)) {
+      throw new ArgumentError('The \'config\' argument has both the sharedAccessSignature and the tokenCredential property defined');
     }
 
     /*SRS_NODE_IOTHUB_REGISTRY_16_024: [The `Registry` constructor shall use the `restApiClient` provided as a second argument if it is provided.]*/
@@ -418,17 +423,22 @@ export class Registry {
 
   /**
    * @method              module:azure-iothub.Registry#importDevicesFromBlobByIdentity
-   * @description         Imports devices from a blob in bulk job using the configured identity.  This API initially has limited availability and is only is implemented in a few regions.
-   *                      If a user wishes to try it out, they will need to set an Environment Variable of "EnabledStorageIdentity" and set it to "1"
+   * @description         Imports devices from a blob in bulk job using a configured identity.
    * @param {String}      inputBlobContainerUri   The URI to a container with a blob named 'devices.txt' containing a list of devices to import.
    * @param {String}      outputBlobContainerUri  The URI to a container where a blob will be created with logs of the import process.
+   * @param {String}      [userAssignedIdentity]  An optional Resource ID used to specify a user assigned managed identity.
    * @param {Function}    [done]                  The optional function to call when the job has been created, with two arguments: an error object if an
    *                                              an error happened, (null otherwise) and the job status that can be used to track progress of the devices import.
    * @returns {Promise<Registry.JobStatus> | void} Promise if no callback function was passed, void otherwise.
    */
   importDevicesFromBlobByIdentity(inputBlobContainerUri: string, outputBlobContainerUri: string, done: Callback<Registry.JobStatus>): void;
+  importDevicesFromBlobByIdentity(inputBlobContainerUri: string, outputBlobContainerUri: string, userAssignedIdentity: string, done: Callback<Registry.JobStatus>): void;
   importDevicesFromBlobByIdentity(inputBlobContainerUri: string, outputBlobContainerUri: string): Promise<Registry.JobStatus>;
-  importDevicesFromBlobByIdentity(inputBlobContainerUri: string, outputBlobContainerUri: string, done?: Callback<Registry.JobStatus>): Promise<Registry.JobStatus> | void {
+  importDevicesFromBlobByIdentity(inputBlobContainerUri: string, outputBlobContainerUri: string, userAssignedIdentity: string): Promise<Registry.JobStatus>;
+  importDevicesFromBlobByIdentity(inputBlobContainerUri: string, outputBlobContainerUri: string, doneOrIdentity?: Callback<Registry.JobStatus> | string, done?: Callback<Registry.JobStatus>): Promise<Registry.JobStatus> | void {
+    if (typeof doneOrIdentity === 'function') {
+      done = doneOrIdentity;
+    }
     return callbackToPromise((_callback) => {
       /* Codes_SRS_NODE_IOTHUB_REGISTRY_07_001: [A ReferenceError shall be thrown if importBlobContainerUri is falsy] */
       if (!inputBlobContainerUri) throw new ReferenceError('inputBlobContainerUri cannot be falsy');
@@ -448,8 +458,15 @@ export class Registry {
         'outputBlobContainerUri': '<output container Uri given as parameter>',
         'storageAuthenticationType': 'IdentityBased'
       }
+      ```
+
+      If a `userAssignedIdentity` is provided, the following additional property shall be in the request body:
+      ```Node
+      "identity": {
+        "userAssignedIdentity": <resource ID for user assigned managed identity given as a parameter>
+      }
       ```]*/
-      const path = '/jobs/create' + endpoint.versionQueryStringLimitedAvailability();
+      const path = '/jobs/create' + endpoint.versionQueryString();
       const httpHeaders = {
         'Content-Type': 'application/json; charset=utf-8'
       };
@@ -457,7 +474,12 @@ export class Registry {
         'type': 'import',
         'inputBlobContainerUri': inputBlobContainerUri,
         'outputBlobContainerUri': outputBlobContainerUri,
-        'storageAuthenticationType': 'IdentityBased'
+        'storageAuthenticationType': 'IdentityBased',
+        ...(typeof doneOrIdentity === 'string' && {
+          'identity': {
+            'userAssignedIdentity': doneOrIdentity
+          }
+        })
       };
 
       this._restApiClient.executeApiCall('POST', path, httpHeaders, importRequest, _callback);
@@ -467,7 +489,7 @@ export class Registry {
   /**
    * @method              module:azure-iothub.Registry#exportDevicesToBlob
    * @description         Export devices to a blob in a bulk job.
-   * @param {String}      outputBlobContainerUri  The URI to a container where a blob will be created with logs of the export process.
+   * @param {String}      outputBlobContainerUri  The URI to a container where a blob named 'devices.txt' will be created containing the list of devices.
    * @param {Boolean}     excludeKeys             Boolean indicating whether security keys should be excluded from the exported data.
    * @param {Function}    [done]                  The optional function to call when the job has been created, with two arguments: an error object if an
    *                                              an error happened, (null otherwise) and the job status that can be used to track progress of the devices export.
@@ -508,18 +530,23 @@ export class Registry {
   }
 
   /**
-   * @method              module:azure-iothub.Registry#exportDevicesToBlob
-   * @description         Export devices to a blob in a bulk job using the configured identity.  This API initially has limited availability and is only is implemented in a few regions.
-   *                      If a user wishes to try it out, they will need to set an Environment Variable of "EnabledStorageIdentity" and set it to "1"
-   * @param {String}      outputBlobContainerUri  The URI to a container where a blob will be created with logs of the export process.
+   * @method              module:azure-iothub.Registry#exportDevicesToBlobByIdentity
+   * @description         Export devices to a blob in a bulk job using a configured identity.
+   * @param {String}      outputBlobContainerUri  The URI to a container where a blob named 'devices.txt' will be created containing the list of devices.
    * @param {Boolean}     excludeKeys             Boolean indicating whether security keys should be excluded from the exported data.
+   * @param {String}      [userAssignedIdentity]  An optional Resource ID used to specify a user assigned managed identity.
    * @param {Function}    [done]                  The optional function to call when the job has been created, with two arguments: an error object if an
    *                                              an error happened, (null otherwise) and the job status that can be used to track progress of the devices export.
    * @returns {Promise<Registry.JobStatus> | void} Promise if no callback function was passed, void otherwise.
    */
   exportDevicesToBlobByIdentity(outputBlobContainerUri: string, excludeKeys: boolean, done: Callback<Registry.JobStatus>): void;
+  exportDevicesToBlobByIdentity(outputBlobContainerUri: string, excludeKeys: boolean, userAssignedIdentity: string, done: Callback<Registry.JobStatus>): void;
   exportDevicesToBlobByIdentity(outputBlobContainerUri: string, excludeKeys: boolean): Promise<Registry.JobStatus>;
-  exportDevicesToBlobByIdentity(outputBlobContainerUri: string, excludeKeys: boolean, done?: Callback<Registry.JobStatus>): Promise<Registry.JobStatus> | void {
+  exportDevicesToBlobByIdentity(outputBlobContainerUri: string, excludeKeys: boolean, userAssignedIdentity: string): Promise<Registry.JobStatus>;
+  exportDevicesToBlobByIdentity(outputBlobContainerUri: string, excludeKeys: boolean, doneOrIdentity?: Callback<Registry.JobStatus> | string, done?: Callback<Registry.JobStatus>): Promise<Registry.JobStatus> | void {
+    if (typeof doneOrIdentity === 'function') {
+      done = doneOrIdentity;
+    }
     return callbackToPromise((_callback) => {
       /* Codes_SRS_NODE_IOTHUB_REGISTRY_07_004: [A ReferenceError shall be thrown if outputBlobContainerUri is falsy] */
       if (!outputBlobContainerUri) throw new ReferenceError('outputBlobContainerUri cannot be falsy');
@@ -537,8 +564,15 @@ export class Registry {
         'excludeKeysInExport': '<excludeKeys Boolean given as parameter>',
         'storageAuthenticationType': 'IdentityBased'
       }
+      ```
+
+      If a `userAssignedIdentity` is provided, the following additional property shall be in the request body:
+      ```Node
+      "identity": {
+        "userAssignedIdentity": <resource ID for user assigned managed identity given as a parameter>
+      }
       ```]*/
-      const path = '/jobs/create' + endpoint.versionQueryStringLimitedAvailability();
+      const path = '/jobs/create' + endpoint.versionQueryString();
       const httpHeaders = {
         'Content-Type': 'application/json; charset=utf-8'
       };
@@ -546,7 +580,12 @@ export class Registry {
         'type': 'export',
         'outputBlobContainerUri': outputBlobContainerUri,
         'excludeKeysInExport': excludeKeys,
-        'storageAuthenticationType': 'IdentityBased'
+        'storageAuthenticationType': 'IdentityBased',
+        ...(typeof doneOrIdentity === 'string' && {
+          'identity': {
+            'userAssignedIdentity': doneOrIdentity
+          }
+        })
       };
 
       this._restApiClient.executeApiCall('POST', path, httpHeaders, exportRequest, _callback);
@@ -1573,7 +1612,8 @@ export class Registry {
 
     const config: Registry.TransportConfig = {
       host: cn.HostName,
-      sharedAccessSignature: SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, Date.now())
+      sharedAccessSignature: SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, Date.now()),
+      tokenCredential: undefined
     };
 
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_05_010: [The `fromConnectionString` method shall return a new instance of the `Registry` object.]*/
@@ -1599,19 +1639,44 @@ export class Registry {
 
     const config: Registry.TransportConfig = {
       host: sas.sr,
-      sharedAccessSignature: sas.toString()
+      sharedAccessSignature: sas.toString(),
+      tokenCredential: undefined
     };
 
     /*Codes_SRS_NODE_IOTHUB_REGISTRY_05_013: [The fromSharedAccessSignature method shall return a new instance of the `Registry` object.]*/
     return new Registry(config);
   }
 
+  /**
+   * @method            module:azure-iothub.Registry.fromTokenCredential
+   * @description       Constructs a Registry object from the given Azure TokenCredential.
+   * @static
+   *
+   * @param {String}    hostName                  Host name of the Azure service.
+   * @param {String}    tokenCredential           An Azure TokenCredential used to authenticate
+   *                                              with the Azure  service
+   *
+   * @throws  {ReferenceError}  If the tokenCredential argument is falsy.
+   *
+   * @returns {module:azure-iothub.Registry}
+   */
+   static fromTokenCredential(hostName: string, tokenCredential: TokenCredential): Registry {
+
+    const config: Registry.TransportConfig = {
+      host: hostName,
+      sharedAccessSignature: undefined,
+      tokenCredential: tokenCredential
+    };
+    return new Registry(config);
+  }
 }
 
 export namespace Registry {
   export interface TransportConfig {
     host: string;
-    sharedAccessSignature: string | SharedAccessSignature;
+    sharedAccessSignature?: string | SharedAccessSignature;
+    x509?: X509;
+    tokenCredential?: TokenCredential;
   }
 
   export interface JobStatus {

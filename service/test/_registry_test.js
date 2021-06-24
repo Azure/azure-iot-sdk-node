@@ -26,7 +26,7 @@ var normalizedFakeSASDevice = {
   authentication: fakeAuthentication
 };
 
-var fakeConfig = { host: 'host', sharedAccessSignature: 'sas' };
+var fakeConfig = { host: 'host', sharedAccessSignature: 'sas', x509: 'x509', tokenCredential: undefined };
 
 var zeroDevices = [];
 var oneHundredOneDevices = new Array(101).map(function (x, i) { return { deviceId: i.toString() }; });
@@ -246,6 +246,26 @@ describe('Registry', function () {
     it('returns a new instance of the Registry object', function () {
       var registry = Registry.fromSharedAccessSignature('SharedAccessSignature sr=audience&sig=signature&se=expiry&skn=keyname');
       assert.instanceOf(registry, Registry);
+    });
+  });
+
+  describe('#fromTokenCredential', function() {
+    var fakeTokenCredential = {
+      getToken: sinon.stub().resolves({
+        token: "fake_token",
+        expiresOnTimeStamp: Date.now() + 3600000
+      })
+    };
+
+    it('returns a new instance of the Registry object', function() {
+      var registry = Registry.fromTokenCredential("hub.host.tv", fakeTokenCredential);
+      assert.instanceOf(registry, Registry);
+    });
+
+    it('correctly populates the config structure', function() {
+      var registry = Registry.fromTokenCredential("hub.host.tv", fakeTokenCredential);
+      assert.equal(registry._restApiClient._config.host, 'hub.host.tv');
+      assert.equal(registry._restApiClient._config.tokenCredential, fakeTokenCredential);
     });
   });
 
@@ -717,10 +737,18 @@ describe('Registry', function () {
       "outputBlobContainerUri": "<output container Uri given as parameter>",
       'storageAuthenticationType': 'IdentityBased'
     }
+    ```
+
+    If a `userAssignedIdentity` is provided, the following additional property shall be in the request body:
+    ```Node
+    "identity": {
+      "userAssignedIdentity": <resource ID for user assigned managed identity given as a parameter>
+    }
     ```]*/
     it('constructs a valid HTTP request', function (testCallback) {
       var fakeInputBlob = "input";
       var fakeOutputBlob = "output";
+      var fakeUserAssignedIdentity = "identity";
       var fakeHttpHelper = {
         executeApiCall: function (method, path, httpHeaders, body, done) {
           assert.equal(method, 'POST');
@@ -730,12 +758,13 @@ describe('Registry', function () {
           assert.equal(body.inputBlobContainerUri, fakeInputBlob);
           assert.equal(body.outputBlobContainerUri, fakeOutputBlob);
           assert.equal(body.storageAuthenticationType, "IdentityBased");
+          assert.equal(body.identity.userAssignedIdentity, fakeUserAssignedIdentity);
           done();
         }
       };
 
       var registry = new Registry(fakeConfig, fakeHttpHelper);
-      registry.importDevicesFromBlobByIdentity(fakeInputBlob, fakeOutputBlob, testCallback);
+      registry.importDevicesFromBlobByIdentity(fakeInputBlob, fakeOutputBlob, fakeUserAssignedIdentity, testCallback);
     });
   });
 
@@ -768,10 +797,18 @@ describe('Registry', function () {
       "excludeKeysInExport": "<excludeKeys Boolean given as parameter>",
       'storageAuthenticationType': 'IdentityBased'
     }
+    ```
+
+    If a `userAssignedIdentity` is provided, the following additional property shall be in the request body:
+    ```Node
+    "identity": {
+      "userAssignedIdentity": <resource ID for user assigned managed identity given as a parameter>
+    }
     ```]*/
     [true, false].forEach(function (fakeExcludeKeys) {
       it('constructs a valid HTTP request when excludeKeys is \'' + fakeExcludeKeys + '\'', function (testCallback) {
         var fakeOutputBlob = "output";
+        var fakeUserAssignedIdentity = "identity";
         var fakeHttpHelper = {
           executeApiCall: function (method, path, httpHeaders, body, done) {
             assert.equal(method, 'POST');
@@ -781,12 +818,13 @@ describe('Registry', function () {
             assert.equal(body.outputBlobContainerUri, fakeOutputBlob);
             assert.equal(body.excludeKeysInExport, fakeExcludeKeys);
             assert.equal(body.storageAuthenticationType, "IdentityBased");
+            assert.equal(body.identity.userAssignedIdentity, fakeUserAssignedIdentity);
             done();
           }
         };
 
         var registry = new Registry(fakeConfig, fakeHttpHelper);
-        registry.exportDevicesToBlobByIdentity(fakeOutputBlob, fakeExcludeKeys, testCallback);
+        registry.exportDevicesToBlobByIdentity(fakeOutputBlob, fakeExcludeKeys, fakeUserAssignedIdentity, testCallback);
       });
     });
   });
