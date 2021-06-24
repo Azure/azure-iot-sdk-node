@@ -11,7 +11,7 @@
     "debug": "^4.1.1",
     "machina": "^4.0.2",
     "uuid": "^3.3.2",
-    "mqtt": "^4.0.0"
+    "mqtt": "^4.2.7"
   },
   "devDependencies": {
     "@types/node": "^9.6.50",
