@@ -394,6 +394,7 @@ export class MqttBase extends EventEmitter {
       rejectUnauthorized: true,
       username: this._config.username,
       reconnectPeriod: 0,  // Client will handle reconnection at the higher level.
+      connectTimeout: 60 * 1000,
       /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_016: [The `connect` method shall configure the `keepalive` ping interval to 3 minutes by default since the Azure Load Balancer TCP Idle timeout default is 4 minutes.]*/
       keepalive: 180,
       reschedulePings: false
