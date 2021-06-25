@@ -28,23 +28,18 @@ var maximumMessageSize = ((256*1024)-512);
 [
   DeviceIdentityHelper.createDeviceWithSas,
   DeviceIdentityHelper.createDeviceWithSymmetricKey,
-  DeviceIdentityHelper.createDeviceWithX509SelfSignedCert
+  DeviceIdentityHelper.createDeviceWithX509SelfSignedCert,
+  DeviceIdentityHelper.createDeviceWithX509CASignedCert
 ].forEach(function (createDeviceMethod) {
   [
     deviceHttp.Http,
     deviceAmqp.Amqp,
     deviceAmqp.AmqpWs,
-    deviceMqtt.Mqtt
+    deviceMqtt.Mqtt,
+    deviceMqtt.MqttWs
   ].forEach(function (deviceTransport) {
     device_service_tests(deviceTransport, createDeviceMethod);
   });
-});
-
-[
-  deviceAmqp.Amqp,
-  deviceMqtt.Mqtt
-].forEach(function (deviceTransport) {
-  device_service_tests(deviceTransport, DeviceIdentityHelper.createDeviceWithX509CASignedCert);
 });
 
 function device_service_tests(deviceTransport, createDeviceMethod) {
