@@ -180,6 +180,25 @@ describe('JobClient', function() {
     });
   });
 
+  describe('#fromTokenCredential', function() {
+    var fakeTokenCredential = {
+      getToken: sinon.stub().resolves({
+        token: "fake_token",
+        expiresOnTimeStamp: Date.now() + 3600000
+      })
+    };
+
+    it('returns a JobClient instance', function() {
+      assert.instanceOf(JobClient.fromTokenCredential("hub.host.tv", fakeTokenCredential), JobClient);
+    });
+
+    it('correctly populates the config structure', function() {
+      var client = JobClient.fromTokenCredential("hub.host.tv", fakeTokenCredential);
+      assert.equal(client._restApiClient._config.host, 'hub.host.tv');
+      assert.equal(client._restApiClient._config.tokenCredential, fakeTokenCredential);
+    });
+  });
+
   describe('#getJob', function() {
     /*Tests_SRS_NODE_JOB_CLIENT_16_006: [The `getJob` method shall throw a `ReferenceError` if `jobId` is `null`, `undefined` or an empty string.]*/
     [undefined, null, ''].forEach(function(badValue) {

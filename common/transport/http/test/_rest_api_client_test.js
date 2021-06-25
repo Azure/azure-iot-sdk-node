@@ -541,6 +541,32 @@ describe('RestApiClient', function() {
         client.executeApiCall('GET', '/test/path', testHeaders, testRequestBody, testCallback);
       });
     });
+
+    it('gets the token from the TokenCredential object using the correct token scope if a TokenCredential is in the config', function(testCallback) {
+      var fakeTokenCredential = {
+        getToken: sinon.stub().resolves({
+          token: 'fake_token',
+          expiresOnTimestamp: Date.now() + 3600000
+        })
+      }
+      var fakeConfig = {
+        host: "fake_host.com",
+        tokenCredential: fakeTokenCredential
+      }
+      var fakeHttpHelper = {
+        buildRequest: function(method, path, headers, host, requestCallback) {
+          assert(fakeTokenCredential.getToken.calledOnceWithExactly('https://iothubs.azure.net/.default'))
+          return {
+            write: function() { },
+            end: function() {
+              requestCallback(null, '', { statusCode: 200 });
+            }
+          };
+        }
+      }
+      var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
+      client.executeApiCall('GET', '/test/path', null, null, testCallback);
+    });
   });
 
   describe('#updateSharedAccessSignature', function() {
@@ -607,7 +633,7 @@ describe('RestApiClient', function() {
       { statusCode: 1337, statusMessage: 'unknown', expectedErrorType: Error}
     ].forEach(function(testParams) {
       it('returns a \'' + testParams.expectedErrorType.name + '\' if the response status code is \'' + testParams.statusCode + '\'', function(){
-        var fakeReponse = {
+        var fakeResponse = {
           statusCode: testParams.statusCode,
           statusMessage: testParams.statusMessage,
         };
@@ -624,17 +650,17 @@ describe('RestApiClient', function() {
         * - the body of  the HTTP response, containing the explanation of why the request failed
         * - the HTTP response object itself]
         */
-        var err = RestApiClient.translateError(fakeResponseBody, fakeReponse);
+        var err = RestApiClient.translateError(fakeResponseBody, fakeResponse);
         assert.instanceOf(err, testParams.expectedErrorType);
 
         /* Tests_SRS_NODE_IOTHUB_REGISTRY_HTTP_ERRORS_16_001: [** Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 3 properties:
         *- `response` shall contain the `IncomingMessage` object returned by the HTTP layer.
-        *- `reponseBody` shall contain the content of the HTTP response.
+        *- `responseBody` shall contain the content of the HTTP response.
         *- `message` shall contain a human-readable error message]
         */
         assert.isOk(err.message);
         assert.equal(err.responseBody, fakeResponseBody);
-        assert.equal(err.response, fakeReponse);
+        assert.equal(err.response, fakeResponse);
       });
     });
   });
