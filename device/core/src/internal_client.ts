@@ -59,18 +59,20 @@ export abstract class InternalClient extends EventEmitter {
   private _disconnectHandler: (err?: Error, result?: any) => void;
   private _methodsEnabled: boolean;
 
-  constructor(transport: DeviceTransport, connStr?: string) {
+  constructor(transport: DeviceTransport, modelId?: string) {
     /*Codes_SRS_NODE_INTERNAL_CLIENT_05_001: [The Client constructor shall throw ReferenceError if the transport argument is falsy.]*/
     if (!transport) throw new ReferenceError('transport is \'' + transport + '\'');
 
     super();
     this._methodsEnabled = false;
-
-    if (connStr) {
-      throw new errors.InvalidOperationError('the connectionString parameter of the constructor is not used - users of the SDK should be using the `fromConnectionString` factory method.');
-    }
-
     this._transport = transport;
+
+    if (modelId) {
+      if (this._transport.constructor.name !== 'Mqtt' && this._transport.constructor.name !== 'MqttWs') {
+        throw new errors.InvalidOperationError('Azure IoT Plug and Play features are only compatible with Mqtt and MqttWs transports.');
+      }
+      this._transport.setModelId(modelId);
+    }
 
     this._transport.on('error', (err) => {
       // errors right now bubble up through the disconnect handler.
@@ -540,6 +542,8 @@ export interface DeviceTransport extends EventEmitter {
   sendOutputEvent(outputName: string, message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void;
   sendOutputEventBatch(outputName: string, messages: Message[], done: (err?: Error, result?: results.MessageEnqueued) => void): void;
 
+  // Azure IoT Plug and Play
+  setModelId(modelId: string): void;
 }
 
 export interface BlobUpload {

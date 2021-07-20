@@ -522,6 +522,17 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
 
   /**
    * @private
+   * @method         module:azure-iot-device-mqtt:Mqtt#setModelId
+   * @description    This method sets the model ID so that it is included in the username on connect as per the Azure IoT Plug and Play requirements.
+   * 
+   * @param {String}    modelId The model Id to set.
+   */
+  setModelId(modelId: string) {
+    this._mid = '&model-id=' + modelId;
+  }
+
+  /**
+   * @private
    * @method          module:azure-iot-device-mqtt.Mqtt#setOptions
    * @description     This methods sets the MQTT specific options of the transport.
    *

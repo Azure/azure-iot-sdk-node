@@ -726,6 +726,13 @@ export class Amqp extends EventEmitter implements DeviceTransport {
 
   /**
    * @private
+   */
+     setModelId(_modelId: string) {
+      throw new errors.NotImplementedError('Setting modelId is is only supported on Mqtt and MqttWs.');
+    }
+
+  /**
+   * @private
    * @method          module:azure-iot-device-amqp.Amqp#setOptions
    * @description     This methods sets the AMQP specific options of the transport.
    *
