@@ -514,6 +514,29 @@ describe('Mqtt', function () {
     });
   });
 
+  describe('#setModelId', function () {
+    it('sets the modelId correctly', function (testCallback) {
+      const fakeModelId = '&model-id=fakeModelId';
+      const fakeModel = "fakeModelId";
+      let connectCallback;
+      fakeMqttBase.connect = sinon.stub().callsFake(function (config, callback) {
+        connectCallback = callback;
+      });
+      const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      mqtt.setModelId(fakeModel);
+      assert.strictEqual(mqtt._mid, fakeModelId);
+      getUserAgentString(function (userAgentString) {
+        const expectedUsername = 'host.name/deviceId/' + endpoint.versionQueryString() + fakeModelId + '&DeviceClientType=' + encodeURIComponent(userAgentString);
+        mqtt.connect(function (err) {
+          assert.isNotOk(err);
+          assert.strictEqual(fakeMqttBase.connect.firstCall.args[0]['username'], expectedUsername);
+          testCallback();
+        });
+        connectCallback();
+      });
+    });
+  })
+
   describe('#setOptions', function () {
     const fakeX509Options = { cert: 'cert', key: 'key' };
     const fakeConfig = {

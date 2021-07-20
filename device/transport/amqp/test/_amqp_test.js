@@ -1720,7 +1720,8 @@ describe('Amqp', function () {
   /*Tests_SRS_NODE_DEVICE_AMQP_18_004: [`sendOutputEventBatch` shall throw a `NotImplementedError`.]*/
   [
     'sendEventBatch',
-    'sendOutputEventBatch'
+    'sendOutputEventBatch',
+    'setModelId'
   ].forEach(function (methodName) {
     describe('#' + methodName, function () {
       it('throws a NotImplementedError', function () {
