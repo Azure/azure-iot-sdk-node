@@ -41,6 +41,7 @@ export class Client extends InternalClient {
    * @param {string}  connStr           A connection string (optional: when not provided, updateSharedAccessSignature must be called to set the SharedAccessSignature token directly).
    * @param {Object}  blobUploadClient  An object that is capable of uploading a stream to a blob.
    * @param {Object}  fileUploadApi     An object that is used for communicating with IoT Hub for Blob Storage related actions.
+   * @param {string}  modelId           The modelId to include in the username on connect as per the Azure IoT Plug and Play requirements.
    */
   constructor(transport: DeviceTransport, connStr?: string, blobUploadClient?: BlobUploadClient, fileUploadApi?: FileUploadInterface, modelId?: string) {
     if (connStr) {
@@ -291,6 +292,7 @@ export class Client extends InternalClient {
    *
    * @param {String}    connStr        A connection string which encapsulates "device connect" permissions on an IoT hub.
    * @param {Function}  transportCtor  A transport constructor.
+   * @param {string}    modelId        The modelId to include in the username on connect as per the Azure IoT Plug and Play requirements.
    *
    * @throws {ReferenceError}         If the connStr parameter is falsy.
    *
@@ -327,9 +329,9 @@ export class Client extends InternalClient {
    * @description       Creates an IoT Hub device client from the given
    *                    shared access signature using the given transport type.
    *
-   * @param {String}    sharedAccessSignature      A shared access signature which encapsulates "device
-   *                                  connect" permissions on an IoT hub.
-   * @param {Function}  Transport     A transport constructor.
+   * @param {String}    sharedAccessSignature      A shared access signature which encapsulates "device connect" permissions on an IoT hub.
+   * @param {Function}  transportCtor              A transport constructor.
+   * @param {String}    modelId                    The modelId to include in the username on connect as per the Azure IoT Plug and Play requirements.
    *
    * @throws {ReferenceError}         If the connStr parameter is falsy.
    *
@@ -347,10 +349,11 @@ export class Client extends InternalClient {
   }
 
   /**
-   * @method                        module:azure-iot-device.Client.fromAuthenticationMethod
+   * @method                        module:azure-iot-device.Client.fromAuthenticationProvider
    * @description                   Creates an IoT Hub device client from the given authentication method and using the given transport type.
    * @param authenticationProvider  Object used to obtain the authentication parameters for the IoT hub.
    * @param transportCtor           Transport protocol used to connect to IoT hub.
+   * @param modelId                 The modelId to include in the username on connect as per the Azure IoT Plug and Play requirements.
    */
   static fromAuthenticationProvider(authenticationProvider: AuthenticationProvider, transportCtor: any, modelId?: string): Client {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_089: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `authenticationProvider` argument is falsy.]*/

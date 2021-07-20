@@ -40,6 +40,7 @@ export class ModuleClient extends InternalClient {
    *                                    expected of a transport object, e.g.,
    *                                    {@link azure-iot-device-mqtt.Mqtt|Mqtt}.
    * @param {Object}  restApiClient     the RestApiClient object to use for HTTP calls
+   * @param {string}  modelId           The modelId to include in the username on connect as per the Azure IoT Plug and Play requirements.
    */
   constructor(transport: DeviceTransport, methodClient: MethodClient, modelId?: string) {
     super(transport, modelId);
@@ -279,6 +280,7 @@ export class ModuleClient extends InternalClient {
    *
    * @param {String}    connStr        A connection string which encapsulates "device connect" permissions on an IoT hub.
    * @param {Function}  transportCtor  A transport constructor.
+   * @param {String}    modelId        The modelId to include in the username on connect as per the Azure IoT Plug and Play requirements.
    *
    * @throws {ReferenceError}          If the connStr parameter is falsy.
    *
@@ -307,9 +309,9 @@ export class ModuleClient extends InternalClient {
   /**
    * Creates an IoT Hub module client from the given shared access signature using the given transport type.
    *
-   * @param {String}    sharedAccessSignature      A shared access signature which encapsulates "device
-   *                                  connect" permissions on an IoT hub.
-   * @param {Function}  Transport     A transport constructor.
+   * @param {String}    sharedAccessSignature      A shared access signature which encapsulates "device connect" permissions on an IoT hub.
+   * @param {Function}  transportCtor              A transport constructor.
+   * @param {String}    modelId                    The modelId to include in the username on connect as per the Azure IoT Plug and Play requirements.
    *
    * @throws {ReferenceError}         If the connStr parameter is falsy.
    *
@@ -330,6 +332,7 @@ export class ModuleClient extends InternalClient {
    * Creates an IoT Hub module client from the given authentication method and using the given transport type.
    * @param authenticationProvider  Object used to obtain the authentication parameters for the IoT hub.
    * @param transportCtor           Transport protocol used to connect to IoT hub.
+   * @param modelId                 The modelId to include in the username on connect as per the Azure IoT Plug and Play requirements.
    */
   static fromAuthenticationProvider(authenticationProvider: AuthenticationProvider, transportCtor: any, modelId?: string): ModuleClient {
     /*Codes_SRS_NODE_MODULE_CLIENT_16_089: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `authenticationProvider` argument is falsy.]*/
@@ -361,6 +364,7 @@ export class ModuleClient extends InternalClient {
    *     - IOTEDGE_AUTHSCHEME           Authentication scheme to use; must be "sasToken"
    *
    * @param transportCtor Transport protocol used to connect to IoT hub.
+   * @param modelId       The modelId to include in the username on connect as per the Azure IoT Plug and Play requirements.
    * @param [callback]    Optional callback to invoke when the ModuleClient has been constructed or if an
    *                      error occurs while creating the client.
    * @returns {Promise<ModuleClient> | void} Promise if no callback function was passed, void otherwise.
