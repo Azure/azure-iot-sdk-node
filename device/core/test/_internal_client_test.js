@@ -7,6 +7,7 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 var uuid = require('uuid');
 var fs = require('fs');
+var util = require('util')
 var EventEmitter = require('events').EventEmitter;
 var SimulatedHttp = require('./http_simulated.js');
 var FakeTransport = require('./fake_transport.js');
@@ -35,13 +36,13 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
         });
       });
 
-    /*Tests_SRS_NODE_INTERNAL_CLIENT_41_001: [A `connect` event will be emitted when a `connected` event is received from the transport.]*/
-    it('emits `connect` when a connected event is received from the transport', (testCallback) => {
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_41_001: [A `connect` event will be emitted when a `connected` event is received from the transport.]*/
+      it('emits `connect` when a connected event is received from the transport', function (testCallback) {
         const dummyTransport = new FakeTransport();
         var client = new ClientCtor(dummyTransport);
         client.on('connect', testCallback);
         dummyTransport.emit('connected');
-      })
+      });
     });
 
     describe('#fromConnectionString', function () {
@@ -63,6 +64,42 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
           testCallback();
         });
       });
+
+      it('throws if modelId is provided but the transport is neither Mqtt nor MqttWs', function () {
+        assert.throws(function () {
+          ClientCtor.fromConnectionString(sharedKeyConnectionString, FakeTransport, "dtmi:com:example:TemperatureController;1");
+        }, errors.InvalidOperationError, "Azure IoT Plug and Play features are only compatible with Mqtt and MqttWs transports.");
+      });
+
+      it('does not throw if modelId is provided and the transport is Mqtt', function () {
+        assert.doesNotThrow(function () {
+          function Mqtt() {
+            FakeTransport.call(this);
+          }
+          util.inherits(Mqtt, FakeTransport);          
+          ClientCtor.fromConnectionString(sharedKeyConnectionString, Mqtt, "dtmi:com:example:TemperatureController;1");
+        });
+      });
+
+      it('does not throw if modelId is provided and the transport is MqttWs', function () {
+        assert.doesNotThrow(function () {
+          function MqttWs() {
+            FakeTransport.call(this);
+          }
+          util.inherits(MqttWs, FakeTransport); 
+          ClientCtor.fromConnectionString(sharedKeyConnectionString, MqttWs, "dtmi:com:example:TemperatureController;1");
+        });
+      });
+
+      it('calls setModelId on the transport if modelId is provided', function () {
+        function Mqtt() {
+          FakeTransport.call(this);
+          this.setModelId = sinon.stub();
+        }
+        util.inherits(Mqtt, FakeTransport);
+        var client = ClientCtor.fromConnectionString(sharedKeyConnectionString, Mqtt, "dtmi:com:example:TemperatureController;1");
+        assert.isTrue(client._transport.setModelId.calledOnceWith("dtmi:com:example:TemperatureController;1"))
+      });
     });
 
     describe('#fromSharedAccessSignature', function () {
@@ -82,6 +119,42 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
           assert.instanceOf(authProvider, SharedAccessSignatureAuthenticationProvider);
           testCallback();
         });
+      });
+
+      it('throws if modelId is provided but the transport is neither Mqtt nor MqttWs', function () {
+        assert.throws(function () {
+          ClientCtor.fromSharedAccessSignature(sharedAccessSignature, FakeTransport, "dtmi:com:example:TemperatureController;1");
+        }, errors.InvalidOperationError, "Azure IoT Plug and Play features are only compatible with Mqtt and MqttWs transports.");
+      });
+
+      it('does not throw if modelId is provided and the transport is Mqtt', function () {
+        assert.doesNotThrow(function () {
+          function Mqtt() {
+            FakeTransport.call(this);
+          }
+          util.inherits(Mqtt, FakeTransport);          
+          ClientCtor.fromSharedAccessSignature(sharedAccessSignature, Mqtt, "dtmi:com:example:TemperatureController;1");
+        });
+      });
+
+      it('does not throw if modelId is provided and the transport is MqttWs', function () {
+        assert.doesNotThrow(function () {
+          function MqttWs() {
+            FakeTransport.call(this);
+          }
+          util.inherits(MqttWs, FakeTransport); 
+          ClientCtor.fromSharedAccessSignature(sharedAccessSignature, MqttWs, "dtmi:com:example:TemperatureController;1");
+        });
+      });
+
+      it('calls setModelId on the transport if modelId is provided', function () {
+        function Mqtt() {
+          FakeTransport.call(this);
+          this.setModelId = sinon.stub();
+        }
+        util.inherits(Mqtt, FakeTransport);
+        var client = ClientCtor.fromSharedAccessSignature(sharedAccessSignature, Mqtt, "dtmi:com:example:TemperatureController;1");
+        assert.isTrue(client._transport.setModelId.calledOnceWith("dtmi:com:example:TemperatureController;1"))
       });
     });
 
@@ -111,8 +184,44 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
       it('passes the authenticationProvider to the transport', function () {
         var fakeAuthProvider = {};
         var fakeTransportCtor = sinon.stub().returns(new EventEmitter());
-        return ClientCtor.fromAuthenticationProvider(fakeAuthProvider, fakeTransportCtor);
+        ClientCtor.fromAuthenticationProvider(fakeAuthProvider, fakeTransportCtor);
         assert.isTrue(fakeTransportCtor.calledWith(fakeAuthProvider));
+      });
+
+      it('throws if modelId is provided but the transport is neither Mqtt nor MqttWs', function () {
+        assert.throws(function () {
+          ClientCtor.fromAuthenticationProvider({}, FakeTransport, "dtmi:com:example:TemperatureController;1");
+        }, errors.InvalidOperationError, "Azure IoT Plug and Play features are only compatible with Mqtt and MqttWs transports.");
+      });
+
+      it('does not throw if modelId is provided and the transport is Mqtt', function () {
+        assert.doesNotThrow(function () {
+          function Mqtt() {
+            FakeTransport.call(this);
+          }
+          util.inherits(Mqtt, FakeTransport);          
+          ClientCtor.fromAuthenticationProvider({}, Mqtt, "dtmi:com:example:TemperatureController;1");
+        });
+      });
+
+      it('does not throw if modelId is provided and the transport is MqttWs', function () {
+        assert.doesNotThrow(function () {
+          function MqttWs() {
+            FakeTransport.call(this);
+          }
+          util.inherits(MqttWs, FakeTransport); 
+          ClientCtor.fromAuthenticationProvider({}, MqttWs, "dtmi:com:example:TemperatureController;1");
+        });
+      });
+
+      it('calls setModelId on the transport if modelId is provided', function () {
+        function Mqtt() {
+          FakeTransport.call(this);
+          this.setModelId = sinon.stub();
+        }
+        util.inherits(Mqtt, FakeTransport);
+        var client = ClientCtor.fromAuthenticationProvider({}, Mqtt, "dtmi:com:example:TemperatureController;1");
+        assert.isTrue(client._transport.setModelId.calledOnceWith("dtmi:com:example:TemperatureController;1"))
       });
     });
 
@@ -481,7 +590,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
         var dummyTransport = new FakeTransport();
         sinon.spy(dummyTransport, 'updateSharedAccessSignature');
 
-        var client = new ClientCtor(dummyTransport, null, new DummyBlobUploadClient());
+        var client = new ClientCtor(dummyTransport, null, null);
         var sas = 'sas';
         client.updateSharedAccessSignature(sas, function () { });
         assert(dummyTransport.updateSharedAccessSignature.calledOnce);
@@ -495,7 +604,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
           callback(new Error('foo'));
         });
 
-        var client = new ClientCtor(dummyTransport, null, new DummyBlobUploadClient());
+        var client = new ClientCtor(dummyTransport, null, null);
         client.updateSharedAccessSignature('sas', function (err) {
           assert.isOk(err);
           done();
@@ -504,7 +613,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_036: [The updateSharedAccessSignature method shall call the `done` callback with a null error object and a result of type SharedAccessSignatureUpdated if the token was updated successfully.]*/
       it('Calls the `done` callback with a null error object and a SharedAccessSignatureUpdated result', function (done) {
-        var client = new ClientCtor(new FakeTransport(), null, new DummyBlobUploadClient());
+        var client = new ClientCtor(new FakeTransport(), null, null);
         client.updateSharedAccessSignature('sas', function (err, res) {
           if (err) {
             done(err);

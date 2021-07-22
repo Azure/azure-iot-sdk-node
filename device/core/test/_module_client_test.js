@@ -50,7 +50,7 @@ describe('ModuleClient', function () {
 
   describe('#fromEnvironment', function () {
     // Tests_SRS_NODE_MODULE_CLIENT_13_033: [ The fromEnvironment method shall throw a ReferenceError if the callback argument is not a function. ]
-    ['not a function', 20].forEach(function (badCallback) {
+    [{}, 20].forEach(function (badCallback) {
       it('throws if callback is falsy or not a function', function () {
         assert.throws(function () {
           return ModuleClient.fromEnvironment(null, badCallback);

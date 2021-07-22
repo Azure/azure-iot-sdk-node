@@ -7,7 +7,7 @@ import { Stream } from 'stream';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:DeviceClient');
 
-import { AuthenticationProvider, RetryOperation, ConnectionString, results, Callback, ErrorCallback, callbackToPromise } from 'azure-iot-common';
+import { AuthenticationProvider, RetryOperation, ConnectionString, results, Callback, ErrorCallback, callbackToPromise, errors } from 'azure-iot-common';
 import { InternalClient, DeviceTransport } from './internal_client';
 import { BlobUploadClient, UploadParams, DefaultFileUploadApi, FileUploadInterface } from './blob_upload';
 import { SharedAccessSignatureAuthenticationProvider } from './sas_authentication_provider';
@@ -41,9 +41,14 @@ export class Client extends InternalClient {
    * @param {string}  connStr           A connection string (optional: when not provided, updateSharedAccessSignature must be called to set the SharedAccessSignature token directly).
    * @param {Object}  blobUploadClient  An object that is capable of uploading a stream to a blob.
    * @param {Object}  fileUploadApi     An object that is used for communicating with IoT Hub for Blob Storage related actions.
+   * @param {string}  modelId           The modelId to include in the username on connect as per the Azure IoT Plug and Play requirements.
    */
-  constructor(transport: DeviceTransport, connStr?: string, blobUploadClient?: BlobUploadClient, fileUploadApi?: FileUploadInterface) {
-    super(transport, connStr);
+  constructor(transport: DeviceTransport, connStr?: string, blobUploadClient?: BlobUploadClient, fileUploadApi?: FileUploadInterface, modelId?: string) {
+    if (connStr) {
+      throw new errors.InvalidOperationError('the connectionString parameter of the constructor is not used - users of the SDK should be using the `fromConnectionString` factory method.');
+    }
+
+    super(transport, modelId);
     this._blobUploadClient = blobUploadClient;
     this._c2dFeature = false;
     this._fileUploadApi = fileUploadApi;
@@ -287,12 +292,13 @@ export class Client extends InternalClient {
    *
    * @param {String}    connStr        A connection string which encapsulates "device connect" permissions on an IoT hub.
    * @param {Function}  transportCtor  A transport constructor.
+   * @param {string}    modelId        The modelId to include in the username on connect as per the Azure IoT Plug and Play requirements.
    *
    * @throws {ReferenceError}         If the connStr parameter is falsy.
    *
    * @returns {module:azure-iot-device.Client}
    */
-  static fromConnectionString(connStr: string, transportCtor: any): Client {
+  static fromConnectionString(connStr: string, transportCtor: any, modelId?: string): Client {
     /*Codes_SRS_NODE_DEVICE_CLIENT_05_003: [The fromConnectionString method shall throw ReferenceError if the connStr argument is falsy.]*/
     if (!connStr) throw new ReferenceError('connStr is \'' + connStr + '\'');
 
@@ -315,7 +321,7 @@ export class Client extends InternalClient {
     }
 
     /*Codes_SRS_NODE_DEVICE_CLIENT_05_006: [The fromConnectionString method shall return a new instance of the Client object, as by a call to new Client(new transportCtor(...)).]*/
-    return new Client(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider), new DefaultFileUploadApi(authenticationProvider));
+    return new Client(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider), new DefaultFileUploadApi(authenticationProvider), modelId);
   }
 
   /**
@@ -323,15 +329,15 @@ export class Client extends InternalClient {
    * @description       Creates an IoT Hub device client from the given
    *                    shared access signature using the given transport type.
    *
-   * @param {String}    sharedAccessSignature      A shared access signature which encapsulates "device
-   *                                  connect" permissions on an IoT hub.
-   * @param {Function}  Transport     A transport constructor.
+   * @param {String}    sharedAccessSignature      A shared access signature which encapsulates "device connect" permissions on an IoT hub.
+   * @param {Function}  transportCtor              A transport constructor.
+   * @param {String}    modelId                    The modelId to include in the username on connect as per the Azure IoT Plug and Play requirements.
    *
    * @throws {ReferenceError}         If the connStr parameter is falsy.
    *
    * @returns {module:azure-iothub.Client}
    */
-  static fromSharedAccessSignature(sharedAccessSignature: string, transportCtor: any): Client {
+  static fromSharedAccessSignature(sharedAccessSignature: string, transportCtor: any, modelId?: string): Client {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_029: [The fromSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature argument is falsy.] */
     if (!sharedAccessSignature) throw new ReferenceError('sharedAccessSignature is \'' + sharedAccessSignature + '\'');
 
@@ -339,16 +345,17 @@ export class Client extends InternalClient {
     const authenticationProvider = SharedAccessSignatureAuthenticationProvider.fromSharedAccessSignature(sharedAccessSignature);
 
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_030: [The fromSharedAccessSignature method shall return a new instance of the Client object] */
-    return new Client(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider), new DefaultFileUploadApi(authenticationProvider));
+    return new Client(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider), new DefaultFileUploadApi(authenticationProvider), modelId);
   }
 
   /**
-   * @method                        module:azure-iot-device.Client.fromAuthenticationMethod
+   * @method                        module:azure-iot-device.Client.fromAuthenticationProvider
    * @description                   Creates an IoT Hub device client from the given authentication method and using the given transport type.
    * @param authenticationProvider  Object used to obtain the authentication parameters for the IoT hub.
    * @param transportCtor           Transport protocol used to connect to IoT hub.
+   * @param modelId                 The modelId to include in the username on connect as per the Azure IoT Plug and Play requirements.
    */
-  static fromAuthenticationProvider(authenticationProvider: AuthenticationProvider, transportCtor: any): Client {
+  static fromAuthenticationProvider(authenticationProvider: AuthenticationProvider, transportCtor: any, modelId?: string): Client {
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_089: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `authenticationProvider` argument is falsy.]*/
     if (!authenticationProvider) {
       throw new ReferenceError('authenticationMethod cannot be \'' + authenticationProvider + '\'');
@@ -361,6 +368,6 @@ export class Client extends InternalClient {
 
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_090: [The `fromAuthenticationProvider` method shall pass the `authenticationProvider` object passed as argument to the transport constructor.]*/
     /*Codes_SRS_NODE_DEVICE_CLIENT_16_091: [The `fromAuthenticationProvider` method shall return a `Client` object configured with a new instance of a transport created using the `transportCtor` argument.]*/
-    return new Client(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider), new DefaultFileUploadApi(authenticationProvider));
+    return new Client(new transportCtor(authenticationProvider), null, new BlobUploadClient(authenticationProvider), new DefaultFileUploadApi(authenticationProvider), modelId);
   }
 }

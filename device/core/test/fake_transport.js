@@ -79,6 +79,9 @@ function FakeTransport() {
 
   this.onDeviceMethod = function(methodName, callback) {
   }
+
+  this.setModelId = function(modelId){
+  }
 }
 
 util.inherits(FakeTransport, EventEmitter);

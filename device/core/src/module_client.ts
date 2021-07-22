@@ -40,9 +40,10 @@ export class ModuleClient extends InternalClient {
    *                                    expected of a transport object, e.g.,
    *                                    {@link azure-iot-device-mqtt.Mqtt|Mqtt}.
    * @param {Object}  restApiClient     the RestApiClient object to use for HTTP calls
+   * @param {string}  modelId           The modelId to include in the username on connect as per the Azure IoT Plug and Play requirements.
    */
-  constructor(transport: DeviceTransport, methodClient: MethodClient) {
-    super(transport, undefined);
+  constructor(transport: DeviceTransport, methodClient: MethodClient, modelId?: string) {
+    super(transport, modelId);
     this._inputMessagesEnabled = false;
     this._methodClient = methodClient;
 
@@ -279,12 +280,13 @@ export class ModuleClient extends InternalClient {
    *
    * @param {String}    connStr        A connection string which encapsulates "device connect" permissions on an IoT hub.
    * @param {Function}  transportCtor  A transport constructor.
+   * @param {String}    modelId        The modelId to include in the username on connect as per the Azure IoT Plug and Play requirements.
    *
    * @throws {ReferenceError}          If the connStr parameter is falsy.
    *
    * @returns {module:azure-iot-device.ModuleClient}
    */
-  static fromConnectionString(connStr: string, transportCtor: any): ModuleClient {
+  static fromConnectionString(connStr: string, transportCtor: any, modelId?: string): ModuleClient {
     /*Codes_SRS_NODE_MODULE_CLIENT_05_003: [The fromConnectionString method shall throw ReferenceError if the connStr argument is falsy.]*/
     if (!connStr) throw new ReferenceError('connStr is \'' + connStr + '\'');
 
@@ -301,21 +303,21 @@ export class ModuleClient extends InternalClient {
     }
 
     /*Codes_SRS_NODE_MODULE_CLIENT_05_006: [The fromConnectionString method shall return a new instance of the Client object, as by a call to new Client(new transportCtor(...)).]*/
-    return new ModuleClient(new transportCtor(authenticationProvider), new MethodClient(authenticationProvider));
+    return new ModuleClient(new transportCtor(authenticationProvider), new MethodClient(authenticationProvider), modelId);
   }
 
   /**
    * Creates an IoT Hub module client from the given shared access signature using the given transport type.
    *
-   * @param {String}    sharedAccessSignature      A shared access signature which encapsulates "device
-   *                                  connect" permissions on an IoT hub.
-   * @param {Function}  Transport     A transport constructor.
+   * @param {String}    sharedAccessSignature      A shared access signature which encapsulates "device connect" permissions on an IoT hub.
+   * @param {Function}  transportCtor              A transport constructor.
+   * @param {String}    modelId                    The modelId to include in the username on connect as per the Azure IoT Plug and Play requirements.
    *
    * @throws {ReferenceError}         If the connStr parameter is falsy.
    *
    * @returns {module:azure-iothub.Client}
    */
-  static fromSharedAccessSignature(sharedAccessSignature: string, transportCtor: any): ModuleClient {
+  static fromSharedAccessSignature(sharedAccessSignature: string, transportCtor: any, modelId?: string): ModuleClient {
     /*Codes_SRS_NODE_MODULE_CLIENT_16_029: [The fromSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature argument is falsy.] */
     if (!sharedAccessSignature) throw new ReferenceError('sharedAccessSignature is \'' + sharedAccessSignature + '\'');
 
@@ -323,15 +325,16 @@ export class ModuleClient extends InternalClient {
     const authenticationProvider = SharedAccessSignatureAuthenticationProvider.fromSharedAccessSignature(sharedAccessSignature);
 
     /*Codes_SRS_NODE_MODULE_CLIENT_16_030: [The fromSharedAccessSignature method shall return a new instance of the Client object] */
-    return new ModuleClient(new transportCtor(authenticationProvider), new MethodClient(authenticationProvider));
+    return new ModuleClient(new transportCtor(authenticationProvider), new MethodClient(authenticationProvider), modelId);
   }
 
   /**
    * Creates an IoT Hub module client from the given authentication method and using the given transport type.
    * @param authenticationProvider  Object used to obtain the authentication parameters for the IoT hub.
    * @param transportCtor           Transport protocol used to connect to IoT hub.
+   * @param modelId                 The modelId to include in the username on connect as per the Azure IoT Plug and Play requirements.
    */
-  static fromAuthenticationProvider(authenticationProvider: AuthenticationProvider, transportCtor: any): ModuleClient {
+  static fromAuthenticationProvider(authenticationProvider: AuthenticationProvider, transportCtor: any, modelId?: string): ModuleClient {
     /*Codes_SRS_NODE_MODULE_CLIENT_16_089: [The `fromAuthenticationProvider` method shall throw a `ReferenceError` if the `authenticationProvider` argument is falsy.]*/
     if (!authenticationProvider) {
       throw new ReferenceError('authenticationMethod cannot be \'' + authenticationProvider + '\'');
@@ -344,7 +347,7 @@ export class ModuleClient extends InternalClient {
 
     /*Codes_SRS_NODE_MODULE_CLIENT_16_090: [The `fromAuthenticationProvider` method shall pass the `authenticationProvider` object passed as argument to the transport constructor.]*/
     /*Codes_SRS_NODE_MODULE_CLIENT_16_091: [The `fromAuthenticationProvider` method shall return a `Client` object configured with a new instance of a transport created using the `transportCtor` argument.]*/
-    return new ModuleClient(new transportCtor(authenticationProvider), new MethodClient(authenticationProvider));
+    return new ModuleClient(new transportCtor(authenticationProvider), new MethodClient(authenticationProvider), modelId);
   }
 
   /**
@@ -361,13 +364,25 @@ export class ModuleClient extends InternalClient {
    *     - IOTEDGE_AUTHSCHEME           Authentication scheme to use; must be "sasToken"
    *
    * @param transportCtor Transport protocol used to connect to IoT hub.
-   * @param [callback]    Optional callback to invoke when the ModuleClient has been constructured or if an
+   * @param modelId       The modelId to include in the username on connect as per the Azure IoT Plug and Play requirements.
+   * @param [callback]    Optional callback to invoke when the ModuleClient has been constructed or if an
    *                      error occurs while creating the client.
    * @returns {Promise<ModuleClient> | void} Promise if no callback function was passed, void otherwise.
    */
-  static fromEnvironment(transportCtor: any, callback: Callback<ModuleClient>): void;
   static fromEnvironment(transportCtor: any): Promise<ModuleClient>;
-  static fromEnvironment(transportCtor: any, callback?: Callback<ModuleClient>): Promise<ModuleClient> | void {
+  static fromEnvironment(transportCtor: any, modelId: string): Promise<ModuleClient>;
+  static fromEnvironment(transportCtor: any, callback: Callback<ModuleClient>): void;
+  static fromEnvironment(transportCtor: any, modelId: string, callback: Callback<ModuleClient>): void;
+  static fromEnvironment(transportCtor: any, callbackOrModelId?: Callback<ModuleClient> | string, callback?: Callback<ModuleClient>): Promise<ModuleClient> | void {
+    if (callbackOrModelId && typeof(callbackOrModelId) !== 'function' && typeof(callbackOrModelId) !== 'string') {
+      throw new TypeError('The second argument to fromEnvironment must be a callback or a modelId string.');
+    }
+    if (callback && typeof(callback) !== 'function') {
+      throw new TypeError('The third argument to fromEnvironment must be a callback');
+    }
+    callback = typeof(callbackOrModelId) === 'function' ? callbackOrModelId : callback;
+    let modelId = typeof(callbackOrModelId) === 'string' ? callbackOrModelId : undefined;
+
     return callbackToPromise((_callback) => {
       // Codes_SRS_NODE_MODULE_CLIENT_13_033: [ The fromEnvironment method shall throw a ReferenceError if the callback argument is falsy or is not a function. ]
       if (!_callback || typeof (_callback) !== 'function') {
@@ -385,14 +400,14 @@ export class ModuleClient extends InternalClient {
       // if the environment has a value for EdgeHubConnectionString then we use that
       const connectionString = process.env.EdgeHubConnectionString || process.env.IotHubConnectionString;
       if (connectionString) {
-        ModuleClient._fromEnvironmentNormal(connectionString, transportCtor, _callback);
+        ModuleClient._fromEnvironmentNormal(connectionString, transportCtor, modelId, _callback);
       } else {
-        ModuleClient._fromEnvironmentEdge(transportCtor, _callback);
+        ModuleClient._fromEnvironmentEdge(transportCtor, modelId, _callback);
       }
     }, callback);
   }
 
-  private static _fromEnvironmentEdge(transportCtor: any, callback: (err?: Error, client?: ModuleClient) => void): void {
+  private static _fromEnvironmentEdge(transportCtor: any, modelId: string, callback: (err?: Error, client?: ModuleClient) => void): void {
     // make sure all the environment variables we need have been provided
     const validationError = ModuleClient.validateEnvironment();
     if (validationError) {
@@ -426,12 +441,12 @@ export class ModuleClient extends InternalClient {
         methodClient.setOptions({ ca });
 
         // Codes_SRS_NODE_MODULE_CLIENT_13_031: [ The fromEnvironment method shall invoke the callback with a new instance of the ModuleClient object. ]
-        callback(null, new ModuleClient(transport, methodClient));
+        callback(null, new ModuleClient(transport, methodClient, modelId));
       }
     });
   }
 
-  private static _fromEnvironmentNormal(connectionString: string, transportCtor: any, callback: (err?: Error, client?: ModuleClient) => void): void {
+  private static _fromEnvironmentNormal(connectionString: string, transportCtor: any, modelId: string, callback: (err?: Error, client?: ModuleClient) => void): void {
     let ca = '';
     if (process.env.EdgeModuleCACertificateFile) {
       fs.readFile(process.env.EdgeModuleCACertificateFile, 'utf8', (err, data) => {
@@ -451,7 +466,7 @@ export class ModuleClient extends InternalClient {
         }
       });
     } else {
-      callback(null, ModuleClient.fromConnectionString(connectionString, transportCtor));
+      callback(null, ModuleClient.fromConnectionString(connectionString, transportCtor, modelId));
     }
   }
 

@@ -961,7 +961,8 @@ describe('HttpReceiver', function () {
     'enableInputMessages',
     'disableInputMessages',
     'sendOutputEvent',
-    'sendOutputEventBatch'
+    'sendOutputEventBatch',
+    'setModelId'
   ].forEach(function (methodName) {
     describe('#' + methodName, function () {
       it('throws a NotImplementedError', function () {

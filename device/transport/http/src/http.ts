@@ -318,6 +318,13 @@ export class Http extends EventEmitter implements DeviceTransport {
 
   /**
    * @private
+   */
+  setModelId(_modelId: string): never {
+    throw new errors.NotImplementedError('Setting modelId is is only supported on Mqtt and MqttWs.');
+  }
+
+  /**
+   * @private
    * @method          module:azure-iot-device-http.Http#setOptions
    * @description     This methods sets the HTTP specific options of the transport.
    *
