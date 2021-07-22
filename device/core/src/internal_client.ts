@@ -160,7 +160,7 @@ export abstract class InternalClient extends EventEmitter {
    * Sends telemetry following the Azure IoT Plug and Play requirements to the default events endpoint
    * on the Azure IoT Hub or Azure IoT Edge hub instance.
    * This method is only intended for use with Azure IoT Plug and Play.
-   * 
+   *
    * @param {JSONValue} payload       A JSON-serializable object containing the telemetry to send.
    * @param {string}    componentName The component that corresponds with the telemetry. If not specified,
    *                                  the telemetry will be sent to the default component.
@@ -169,7 +169,7 @@ export abstract class InternalClient extends EventEmitter {
   sendTelemetry(payload: JSONValue, componentName: string): Promise<results.MessageEnqueued>;
   sendTelemetry(payload: JSONValue, sendTelemetryCallback: Callback<results.MessageEnqueued>): void;
   sendTelemetry(payload: JSONValue, componentName: string, sendTelemetryCallback: Callback<results.MessageEnqueued>): void;
-  sendTelemetry(payload: JSONValue, callbackOrComponent?: Callback<results.MessageEnqueued> | string, sendTelemetryCallback?: Callback<results.MessageEnqueued>) : Promise<results.MessageEnqueued> | void {
+  sendTelemetry(payload: JSONValue, callbackOrComponent?: Callback<results.MessageEnqueued> | string, sendTelemetryCallback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
     let componentName: string;
     if (typeof callbackOrComponent === 'string') {
       componentName = callbackOrComponent;
@@ -181,7 +181,7 @@ export abstract class InternalClient extends EventEmitter {
 
     let message = new Message(JSON.stringify(payload));
     message.contentEncoding = 'utf-8';
-    message.contentType = 'application/json'
+    message.contentType = 'application/json';
     if (componentName) {
       message.properties.add('$.sub', componentName);
     }
@@ -597,10 +597,10 @@ export interface MethodMessage {
 
 export type TransportCtor = new (config: Config) => DeviceTransport;
 
-export type JSONValue = 
+export type JSONValue =
  | string
  | number
  | boolean
  | null
  | JSONValue[]
- | {[key: string]: JSONValue}
+ | {[key: string]: JSONValue};
