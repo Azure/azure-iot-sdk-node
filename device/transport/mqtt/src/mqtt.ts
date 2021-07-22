@@ -524,6 +524,11 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
    * @private
    * @method         module:azure-iot-device-mqtt:Mqtt#setModelId
    * @description    This method sets the model ID so that it is included in the username on connect as per the Azure IoT Plug and Play requirements.
+   *                 While this can be achieved with setOptions (and will remain to maintain functionality older PnP samples), this method exists for a few reasons:
+   *                 1. setOptions will overwrite the options on the base MQTT transport, which may result in undesirable behavior.
+   *                 2. setOptions takes a callback despite setting the model ID being synchronous, and the callback is useless in this case.
+   *                    It is bad practice to have a function that is sometimes synchronous and sometimes asynchronous.
+   *                 3. Using this method makes it much more clear what is being done.
    *
    * @param {String}    modelId The model Id to set.
    */
