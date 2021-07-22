@@ -156,6 +156,39 @@ export abstract class InternalClient extends EventEmitter {
     }, openCallback);
   }
 
+  /**
+   * Sends telemetry following the Azure IoT Plug and Play requirements to the default events endpoint
+   * on the Azure IoT Hub or Azure IoT Edge hub instance.
+   * This method is only intended for use with Azure IoT Plug and Play.
+   * 
+   * @param {JSONValue} payload       A JSON-serializable object containing the telemetry to send.
+   * @param {string}    componentName The component that corresponds with the telemetry. If not specified,
+   *                                  the telemetry will be sent to the default component.
+   */
+  sendTelemetry(payload: JSONValue): Promise<results.MessageEnqueued>;
+  sendTelemetry(payload: JSONValue, componentName: string): Promise<results.MessageEnqueued>;
+  sendTelemetry(payload: JSONValue, sendTelemetryCallback: Callback<results.MessageEnqueued>): void;
+  sendTelemetry(payload: JSONValue, componentName: string, sendTelemetryCallback: Callback<results.MessageEnqueued>): void;
+  sendTelemetry(payload: JSONValue, callbackOrComponent?: Callback<results.MessageEnqueued> | string, sendTelemetryCallback?: Callback<results.MessageEnqueued>) : Promise<results.MessageEnqueued> | void {
+    let componentName: string;
+    if (typeof callbackOrComponent === 'string') {
+      componentName = callbackOrComponent;
+    } else if (typeof callbackOrComponent === 'function') {
+      sendTelemetryCallback = callbackOrComponent;
+    } else if (callbackOrComponent) {
+      throw new TypeError('The second parameter to sendTelemetry must be a function (sendTelemetryCallback) or string (componentName)');
+    }
+
+    let message = new Message(JSON.stringify(payload));
+    message.contentEncoding = 'utf-8';
+    message.contentType = 'application/json'
+    if (componentName) {
+      message.properties.add('$.sub', componentName);
+    }
+
+    return this.sendEvent(message, sendTelemetryCallback);
+  }
+
   sendEvent(message: Message, sendEventCallback: Callback<results.MessageEnqueued>): void;
   sendEvent(message: Message): Promise<results.MessageEnqueued>;
   sendEvent(message: Message, sendEventCallback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
@@ -563,3 +596,11 @@ export interface MethodMessage {
 }
 
 export type TransportCtor = new (config: Config) => DeviceTransport;
+
+export type JSONValue = 
+ | string
+ | number
+ | boolean
+ | null
+ | JSONValue[]
+ | {[key: string]: JSONValue}
