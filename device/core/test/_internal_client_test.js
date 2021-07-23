@@ -780,6 +780,120 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
         });
       });
     });
+
+    describe('sendTelemetry', function () {
+      [42, {}, true].forEach(function (val) {
+        it(`throws if the second parameter is neither a function nor a string (${typeof val})`, function () {
+          var client = new ClientCtor(new EventEmitter());
+          assert.throws(function () {
+            client.sendTelemetry({temperature: '42'}, val);
+          }, TypeError, 'The second parameter to sendTelemetry must be a function (sendTelemetryCallback) or string (componentName)');
+        });
+      });
+
+      [42, {}, true, 'string'].forEach(function (val) {
+        it(`throws if the third parameter is not a function (${typeof val})`, function () {
+          var client = new ClientCtor(new EventEmitter());
+          assert.throws(function () {
+            client.sendTelemetry({temperature: '42'}, "thermostat1", val);
+          }, TypeError, 'Callback has to be a Function');
+        });
+      });
+
+      it('correctly populates a Message, calls sendEvent, and returns a Promise if no component or callback is specified', function (testCallback) {
+        var payload = {temperature: 42};
+        var client = new ClientCtor(new EventEmitter());
+        client.sendEvent = (message, callback) => {
+          try {
+            assert.strictEqual(message.contentEncoding, 'utf-8');
+            assert.strictEqual(message.contentType, 'application/json');
+            assert.strictEqual(message.data, JSON.stringify(payload));
+            assert.isUndefined(message.properties.getValue('$.sub'));
+            assert.isUndefined(callback);
+          } catch (err) {
+            return Promise.reject(err);
+          }
+          return Promise.resolve(new results.MessageEnqueued());
+        }
+        client.sendTelemetry(payload).then(
+          function () {
+            testCallback();
+          },
+          function (err) {
+            testCallback(err);
+          }
+        );
+      });
+
+      it('correctly populates a Message, calls sendEvent if a component, and returns a Promise is specified but no callback is specified', function (testCallback) {
+        var payload = {temperature: 42};
+        var component = 'thermostat1'
+        var client = new ClientCtor(new EventEmitter());
+        client.sendEvent = (message, callback) => {
+          try {
+            assert.strictEqual(message.contentEncoding, 'utf-8');
+            assert.strictEqual(message.contentType, 'application/json');
+            assert.strictEqual(message.data, JSON.stringify(payload));
+            assert.strictEqual(message.properties.getValue('$.sub'), component);
+            assert.isUndefined(callback);
+          } catch (err) {
+            return Promise.reject(err);
+          }
+          return Promise.resolve(new results.MessageEnqueued());
+        }
+        client.sendTelemetry(payload, 'thermostat1').then(
+          function () {
+            testCallback();
+          },
+          function (err) {
+            testCallback(err);
+          }
+        );
+      });
+
+      it('correctly populates a Message, calls sendEvent, and calls the callback if no component is specified but a callback is specified', function (testCallback) {
+        var payload = {temperature: 42};
+        var telemetryCallback = (err) => {
+          testCallback(err);
+        };
+        var client = new ClientCtor(new EventEmitter());
+        client.sendEvent = (message, callback) => {
+          try {
+            assert.strictEqual(message.contentEncoding, 'utf-8');
+            assert.strictEqual(message.contentType, 'application/json');
+            assert.strictEqual(message.data, JSON.stringify(payload));
+            assert.isUndefined(message.properties.getValue('$.sub'));
+            assert.strictEqual(callback, telemetryCallback);
+          } catch (err) {
+            return process.nextTick(() => {callback(err)});
+          }
+          process.nextTick(() => {callback(undefined, new results.MessageEnqueued())});
+        }
+        client.sendTelemetry(payload, telemetryCallback);
+      });
+
+      it('correctly populates a Message, calls sendEvent, and calls the callback if a component and callback is specified', function (testCallback) {
+        var payload = {temperature: 42};
+        var component = 'thermostat1'
+        var telemetryCallback = (err) => {
+          testCallback(err);
+        };
+        var client = new ClientCtor(new EventEmitter());
+        client.sendEvent = (message, callback) => {
+          try {
+            assert.strictEqual(message.contentEncoding, 'utf-8');
+            assert.strictEqual(message.contentType, 'application/json');
+            assert.strictEqual(message.data, JSON.stringify(payload));
+            assert.strictEqual(message.properties.getValue('$.sub'), component);
+            assert.strictEqual(callback, telemetryCallback);
+          } catch (err) {
+            return process.nextTick(() => {callback(err)});
+          }
+          process.nextTick(() => {callback(undefined, new results.MessageEnqueued())});
+        }
+        client.sendTelemetry(payload, component, telemetryCallback);
+      });
+    });
   });
 });
 
