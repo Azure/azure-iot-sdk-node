@@ -14,6 +14,7 @@ import { results, errors, Message, X509, callbackToPromise, Callback } from 'azu
 import { SharedAccessSignature as CommonSharedAccessSignature } from 'azure-iot-common';
 import { ExponentialBackOffWithJitter, RetryPolicy, RetryOperation } from 'azure-iot-common';
 import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
+import { JSONValue, CommandRequest, CommandResponse } from './pnp';
 import { Twin, TwinProperties } from './twin';
 import { DeviceClientOptions } from './interfaces';
 
@@ -375,6 +376,38 @@ export abstract class InternalClient extends EventEmitter {
     }
   }
 
+  /**
+   * Registers a callback that gets invoked each time that the a command request for the specified command and component is received.
+   * If no component is specified, then the default component is assumed.
+   * This method is only intended for use with Azure IoT Plug and Play.
+   *
+   * @param {string} commandName   The name of the command.
+   * @param {string} componentName The name of the component that corresponds with the command.
+   * @param {function} callback    The callback that is called each time a command request for this command is received.
+   */
+  onCommand(commandName: string, callback: (request: CommandRequest, response: CommandResponse) => void): void;
+  onCommand(commandName: string, componentName: string, callback: (request: CommandRequest, response: CommandResponse) => void): void;
+  onCommand(commandName: string, callbackOrComponent: ((request: CommandRequest, response: CommandResponse) => void) | string, callback?: (request: CommandRequest, response: CommandResponse) => void): void {
+    let componentName: string;
+    if (typeof callbackOrComponent === 'function') {
+      callback = callbackOrComponent;
+    } else if (typeof callbackOrComponent === 'string') {
+      componentName = callbackOrComponent;
+    } else {
+      throw new TypeError('Second argument must be a string (componentName) or function (callback)');
+    }
+    if (typeof commandName !== 'string') {
+      throw new TypeError('commandName must be a string');
+    }
+    if (typeof callback !== 'function') {
+      throw new TypeError('callback must be a function');
+    }
+
+    this._onDeviceMethod((componentName ? `${componentName}*` : '') + commandName, (request: DeviceMethodRequest, response: DeviceMethodResponse) => {
+      callback(new CommandRequest(request), new CommandResponse(response));
+    });
+  }
+
   protected _onDeviceMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
     // validate input args
     this._validateDeviceMethodInputs(methodName, callback);
@@ -596,11 +629,3 @@ export interface MethodMessage {
 }
 
 export type TransportCtor = new (config: Config) => DeviceTransport;
-
-export type JSONValue =
- | string
- | number
- | boolean
- | null
- | JSONValue[]
- | {[key: string]: JSONValue};

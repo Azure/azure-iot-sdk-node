@@ -818,11 +818,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
         client.sendTelemetry(payload).then(
           function () {
             testCallback();
-          },
-          function (err) {
-            testCallback(err);
-          }
-        );
+          }).catch(testCallback);
       });
 
       it('correctly populates a Message, calls sendEvent if a component, and returns a Promise is specified but no callback is specified', function (testCallback) {
@@ -844,11 +840,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
         client.sendTelemetry(payload, 'thermostat1').then(
           function () {
             testCallback();
-          },
-          function (err) {
-            testCallback(err);
-          }
-        );
+          }).catch(testCallback);
       });
 
       it('correctly populates a Message, calls sendEvent, and calls the callback if no component is specified but a callback is specified', function (testCallback) {
@@ -892,6 +884,185 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
           process.nextTick(() => {callback(undefined, new results.MessageEnqueued())});
         }
         client.sendTelemetry(payload, component, telemetryCallback);
+      });
+    });
+
+    describe('onCommand', function () {
+      [42, {}, true, () => {}].forEach(function (val) {
+        it(`throws if the first argument is not a string (${typeof val})`, function () {
+          var client = new ClientCtor(new EventEmitter());
+          assert.throws(function () {
+            client.onCommand(val, () => {});
+          }, TypeError, 'commandName must be a string');
+          assert.throws(function () {
+            client.onCommand(val, "fakeComponent", () => {});
+          }, TypeError, 'commandName must be a string');
+        });
+      });
+
+      [42, {}, true].forEach(function (val) {
+        it(`throws if second argument is neither a function nor a string (${typeof val})`, function () {
+          var client = new ClientCtor(new EventEmitter());
+          assert.throws(function () {
+            client.onCommand("fakeCommand", val);
+          }, TypeError, 'Second argument must be a string (componentName) or function (callback)');
+          assert.throws(function () {
+            client.onCommand("fakeCommand", val, () => {});
+          }, TypeError, 'Second argument must be a string (componentName) or function (callback)');
+        });
+      });
+
+      [42, {}, true, "string"].forEach(function (val) {
+        it(`throws if the third argument is not a function (${typeof val})`, function () {
+          var client = new ClientCtor(new EventEmitter());
+          assert.throws(function () {
+            client.onCommand("fakeCommand", "fakeComponent", val);
+          }, TypeError, 'callback must be a function');
+        });
+      });
+
+      it('calls _onDeviceMethod with the correct method name if there is no component', function () {
+        var client = new ClientCtor(new EventEmitter());
+        client._onDeviceMethod = (methodName) => {
+          assert.strictEqual(methodName, "fakeCommand");
+        };
+        client.onCommand("fakeCommand", () => {});
+      });
+
+      it('calls _onDeviceMethod with the correct method name if there is a component', function () {
+        var client = new ClientCtor(new EventEmitter());
+        client._onDeviceMethod = (methodName) => {
+          assert.strictEqual(methodName, "fakeComponent*fakeCommand");
+        };
+        client.onCommand("fakeCommand", "fakeComponent", () => {});
+      });
+
+      it('registers a callback that gets called with the correct request info when the specified command is invoked (no component)', function (testCallback) {
+        var transport = new FakeTransport();
+        transport.onDeviceMethod = (function (methodName, callback) {
+          this.on(methodName, () => {
+            callback({
+              methods: {
+                methodName: methodName
+              },
+              requestId: "fakeId",
+              properties: {},
+              body: Buffer.from('{"fake": "body"}')
+            });
+          });
+        }).bind(transport);
+        var client = new ClientCtor(transport);
+        client.onCommand("fakeCommand", (request, _response) => {
+          try {
+            assert.strictEqual(request.requestId, "fakeId");
+            assert.strictEqual(request.commandName, "fakeCommand"),
+            assert.isUndefined(request.componentName);
+            assert.deepEqual(request.payload, JSON.parse('{"fake": "body"}'));
+          } catch (err) {
+            testCallback(err);
+            return;
+          }
+          testCallback();
+        });
+        transport.emit("fakeCommand");
+      });
+
+      it('registers a callback that gets called with the correct request info when the specified command is invoked (with component)', function (testCallback) {
+        var transport = new FakeTransport();
+        transport.onDeviceMethod = (function (methodName, callback) {
+          this.on(methodName, () => {
+            callback({
+              methods: {
+                methodName: methodName
+              },
+              requestId: "fakeId",
+              properties: {},
+              body: Buffer.from('{"fake": "body"}')
+            });
+          });
+        }).bind(transport);
+        var client = new ClientCtor(transport);
+        client.onCommand("fakeCommand", "fakeComponent", (request, _response) => {
+          try {
+            assert.strictEqual(request.requestId, "fakeId");
+            assert.strictEqual(request.commandName, "fakeCommand"),
+            assert.strictEqual(request.componentName, "fakeComponent");
+            assert.deepEqual(request.payload, JSON.parse('{"fake": "body"}'));
+          } catch (err) {
+            testCallback(err);
+            return;
+          }
+          testCallback();
+        });
+        transport.emit("fakeComponent*fakeCommand");
+      });
+
+      it('registers a callback that can correctly send a response when the specified command is invoked (promisified, with component, with payload)', function (testCallback) {
+        var transport = new FakeTransport();
+        transport.onDeviceMethod = (function (methodName, callback) {
+          this.on(methodName, () => {
+            callback({
+              methods: {
+                methodName: methodName
+              },
+              requestId: "fakeId",
+              properties: {},
+              body: Buffer.from('{"fake": "body"}')
+            });
+          });
+        }).bind(transport);
+        transport.sendMethodResponse = function (response, callback) {
+          try {
+            assert.strictEqual(response.requestId, "fakeId");
+            assert.isTrue(response.isResponseComplete);
+            assert.strictEqual(response.status, 200);
+            assert.deepEqual(response.payload, {fake: "payload"})
+          } catch (err) {
+            callback(err);
+            return;
+          }
+          callback();
+        }
+        var client = new ClientCtor(transport);
+        client.onCommand("fakeCommand", "fakeComponent", (_request, response) => {
+          response.send(200, {fake: "payload"}).then(testCallback).catch(testCallback);
+        });
+        transport.emit("fakeComponent*fakeCommand");
+      });
+
+      it('registers a callback that can correctly send a response when the specified command is invoked (callback, no component, no payload)', function (testCallback) {
+        var transport = new FakeTransport();
+        transport.onDeviceMethod = (function (methodName, callback) {
+          this.on(methodName, () => {
+            callback({
+              methods: {
+                methodName: methodName
+              },
+              requestId: "fakeId",
+              properties: {},
+              body: Buffer.from('{"fake": "body"}')
+            });
+          });
+        }).bind(transport);
+        transport.sendMethodResponse = function (response, callback) {
+          try {
+            assert.strictEqual(response.requestId, "fakeId");
+            assert.isTrue(response.isResponseComplete);
+            assert.strictEqual(response.status, 200);
+            assert.isNotOk(response.payload)
+          } catch (err) {
+            callback(err);
+            return;
+          }
+          callback();
+        }
+        var client = new ClientCtor(transport);
+        client.onCommand("fakeCommand", (_request, response) => {
+          response.send(200, (err) => {
+            testCallback(err);
+          });
+        });
+        transport.emit("fakeCommand");
       });
     });
   });
