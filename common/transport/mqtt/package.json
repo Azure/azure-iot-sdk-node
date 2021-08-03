@@ -4,7 +4,6 @@
   "description": "MQTT operations used by Azure IoT device and service SDKs",
   "author": "Microsoft Corporation",
   "license": "MIT",
-  "main": "main.js",
   "typings": "index.d.ts",
   "dependencies": {
     "azure-iot-common": "1.12.10",

@@ -4,7 +4,6 @@
   "description": "AMQP operations used by Azure IoT device and service SDKs",
   "author": "Microsoft Corporation",
   "license": "MIT",
-  "main": "main.js",
   "typings": "index.d.ts",
   "dependencies": {
     "async": "^2.6.3",
