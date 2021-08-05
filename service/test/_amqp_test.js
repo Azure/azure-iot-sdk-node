@@ -53,13 +53,50 @@ describe('Amqp', function() {
       sharedAccessSignature: SharedAccessSignature.create('uri', 'name', 'key', 1)
     };
     var amqp = new Amqp(renewingSasConfig, fakeAmqpBase);
-    amqp.connect(function() {});
-    this.clock.tick(1800000); // 30 minutes. shouldn't have updated yet.
-    assert.equal(renewingSasConfig.sharedAccessSignature.se,3600);
-    this.clock.tick(1200000); // +20 => 50 minutes. Updater should have been invoked.
-    clock.restore();
-    assert.equal(renewingSasConfig.sharedAccessSignature.se,6300); // Should be 1 hour and 50 minutes from zero.
-    done();
+    amqp.connect(function() {
+      clock.tick(1800000); // 30 minutes. shouldn't have updated yet.
+      assert.equal(renewingSasConfig.sharedAccessSignature.se,3600);
+      clock.tick(1200000); // +20 => 50 minutes. Updater should have been invoked.
+      clock.restore();
+      assert.equal(renewingSasConfig.sharedAccessSignature.se,6300); // Should be 1 hour and 50 minutes from zero.
+      done();
+    });
+  });
+
+  it('automatically renews the AccessToken from the TokenCredential before it expires', async function () {
+    var clock = sinon.useFakeTimers();
+    var fakeToken = "fake_token"
+    var tokenCredentialConfig = {
+      host: 'hub.host.name',
+      tokenCredential: {
+        getToken: sinon.stub().callsFake(() => {
+          return Promise.resolve({
+            token: fakeToken,
+            expiresOnTimestamp: Date.now() + 3600000
+          });
+        })
+      }
+    };
+    try {
+      var amqp = new Amqp(tokenCredentialConfig, fakeAmqpBase);
+      await amqp.connect();
+      await clock.tickAsync(2400000 - 1); //+40m - 1ms (20m + 1ms before expiresOnTimestamp). Should not refresh.
+      assert(tokenCredentialConfig.tokenCredential.getToken.calledOnce, "getToken() was not called exactly once when it should have been"); //called once on initial connect
+      assert(fakeAmqpBase.putToken.calledOnce, "putToken() was not called exactly once when it should have been"); //called once on initial connect
+      await clock.tickAsync(1); //+1ms (20 minutes before expiresOnTimestamp). Should refresh since we are now at 2/3 of the expiration window.
+      assert(tokenCredentialConfig.tokenCredential.getToken.calledTwice, "getToken() was not called exactly twice when it should have been");
+      assert(fakeAmqpBase.putToken.calledTwice, "putToken() was not called exactly twice when it should have been");
+      await clock.tickAsync(2400000 - 1); ////+40m - 1ms (20m + 1ms before expiresOnTimestamp). Second refresh shouldn't happen yet.
+      assert(tokenCredentialConfig.tokenCredential.getToken.calledTwice, "getToken() was not called exactly twice when it should have been");
+      assert(fakeAmqpBase.putToken.calledTwice, "putToken() was not called exactly twice when it should have been");
+      await clock.tickAsync(1); ////+1ms (20 minutes before expiresOnTimestamp). Second refresh should happen.
+      assert(tokenCredentialConfig.tokenCredential.getToken.calledThrice, "getToken() was not called exactly thrice when it should have been");
+      assert(fakeAmqpBase.putToken.calledThrice, "putToken() was not called exactly thrice when it should have been");
+      assert(fakeAmqpBase.putToken.alwaysCalledWith('https://iothubs.azure.net/.default', "Bearer " + fakeToken), "putToken() was not called with the correct arguments");
+      assert(tokenCredentialConfig.tokenCredential.getToken.alwaysCalledWithExactly('https://iothubs.azure.net/.default'), "getToken() was not called with the correct arguments");
+    } finally {
+      clock.restore();
+    }
   });
 
   describe('#constructor', function() {
@@ -192,13 +229,24 @@ describe('Amqp', function() {
             expiresOnTimeStamp: Date.now() + 3600000
           })
         }
-      }
+      };
       var transport = new Amqp(tokenCredentialConfig, fakeAmqpBase);
       transport.connect(function () {
-        assert(tokenCredentialConfig.tokenCredential.getToken.calledOnceWithExactly('https://iothubs.azure.net/.default'));
-        assert(fakeAmqpBase.putToken.calledOnceWith('https://iothubs.azure.net/.default', "Bearer " + fakeToken));
+        try {
+          assert(
+            tokenCredentialConfig.tokenCredential.getToken.calledOnceWithExactly('https://iothubs.azure.net/.default'),
+            "The TokenCredential's getToken() method was not called called with the correct args"
+          );
+          assert(
+            fakeAmqpBase.putToken.calledOnceWith('https://iothubs.azure.net/.default', "Bearer " + fakeToken),
+            "The base AMQP's putToken() method was not called with the correct args"
+          );
+        } catch (err) {
+          testCallback(err);
+          return;
+        }
         testCallback();
-      })
+      });
     });
   });
 
