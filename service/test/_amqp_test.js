@@ -25,18 +25,6 @@ var sasConfig = {
   sharedAccessSignature: SharedAccessSignature.create('uri', 'name', 'key', 123)
 };
 
-var tokenCredentialConfig = {
-  host: 'hub.host.name',
-  tokenCredential: {
-    getToken: sinon.stub().callsFake(() => {
-      return Promise.resolve({
-        token: "fakeToken",
-        expiresOnTimestamp: Date.now() + 3600000 //One hour from now
-      });
-    })
-  }
-};
-
 describe('Amqp', function() {
   var fakeAmqpBase;
 
@@ -54,6 +42,7 @@ describe('Amqp', function() {
 
   afterEach(function () {
     fakeAmqpBase = null;
+    sinon.restore();
   });
 
   it('automatically renews the SAS token before it expires', function (done) {
@@ -76,29 +65,62 @@ describe('Amqp', function() {
   });
 
   it('automatically renews the AccessToken from the TokenCredential before it expires', async function () {
+    var tokenCredentialConfig = {
+      host: 'hub.host.name',
+      tokenCredential: {
+        getToken: sinon.stub().callsFake(() => Promise.resolve({
+          token: "fakeToken",
+          expiresOnTimestamp: Date.now() + 3600000 //One hour from now
+        }))
+      }
+    };
     var clock = sinon.useFakeTimers();
     try {
       var amqp = new Amqp(tokenCredentialConfig, fakeAmqpBase);
       await amqp.connect();
 
       await clock.tickAsync(2400000 - 1); //+40m - 1ms (20m + 1ms before expiresOnTimestamp). Should not refresh.
-      assert(tokenCredentialConfig.tokenCredential.getToken.calledOnce, "getToken() was not called exactly once when it should have been"); //called once on initial connect
-      assert(fakeAmqpBase.putToken.calledOnce, "putToken() was not called exactly once when it should have been"); //called once on initial connect
+      assert(
+        tokenCredentialConfig.tokenCredential.getToken.calledOnce,
+        `Expected getToken() call count of 1, got call count of ${tokenCredentialConfig.tokenCredential.getToken.callCount}`
+      ); //called once on initial connect
+      assert(
+        fakeAmqpBase.putToken.calledOnce,
+        `Expected putToken() call count of 1, got call count of ${fakeAmqpBase.putToken.callCount}`
+      ); //called once on initial connect
 
       await clock.tickAsync(1); //+1ms (20 minutes before expiresOnTimestamp). Should refresh since we are now at 2/3 of the expiration window.
-      assert(tokenCredentialConfig.tokenCredential.getToken.calledTwice, "getToken() was not called exactly twice when it should have been");
-      assert(fakeAmqpBase.putToken.calledTwice, "putToken() was not called exactly twice when it should have been");
+      assert(
+        tokenCredentialConfig.tokenCredential.getToken.calledTwice,
+        `Expected getToken() call count of 2, got call count of ${tokenCredentialConfig.tokenCredential.getToken.callCount}`
+      );
+      assert(
+        fakeAmqpBase.putToken.calledTwice,
+        `Expected putToken() call count of 2, got call count of ${fakeAmqpBase.putToken.callCount}`
+      );
 
       await clock.tickAsync(2400000 - 1); ////+40m - 1ms (20m + 1ms before expiresOnTimestamp). Second refresh shouldn't happen yet.
-      assert(tokenCredentialConfig.tokenCredential.getToken.calledTwice, "getToken() was not called exactly twice when it should have been");
-      assert(fakeAmqpBase.putToken.calledTwice, "putToken() was not called exactly twice when it should have been");
+      assert(
+        tokenCredentialConfig.tokenCredential.getToken.calledTwice,
+        `Expected getToken() call count of 2, got call count of ${tokenCredentialConfig.tokenCredential.getToken.callCount}`
+      );
+      assert(
+        fakeAmqpBase.putToken.calledTwice,
+        `Expected putToken() call count of 2, got call count of ${fakeAmqpBase.putToken.callCount}`
+      );
 
       await clock.tickAsync(1); ////+1ms (20 minutes before expiresOnTimestamp). Second refresh should happen.
-      assert(tokenCredentialConfig.tokenCredential.getToken.calledThrice, "getToken() was not called exactly thrice when it should have been");
-      assert(fakeAmqpBase.putToken.calledThrice, "putToken() was not called exactly thrice when it should have been");
+      assert(
+        tokenCredentialConfig.tokenCredential.getToken.calledThrice,
+        `Expected getToken() call count of 3, got call count of ${tokenCredentialConfig.tokenCredential.getToken.callCount}`
+      );
+      assert(
+        fakeAmqpBase.putToken.calledThrice,
+        `Expected putToken() call count of 3, got call count of ${fakeAmqpBase.putToken.callCount}`
+      );
 
-      assert(fakeAmqpBase.putToken.alwaysCalledWith('https://iothubs.azure.net/.default', "Bearer " + "fakeToken"), "putToken() was not called with the correct arguments");
-      assert(tokenCredentialConfig.tokenCredential.getToken.alwaysCalledWithExactly('https://iothubs.azure.net/.default'), "getToken() was not called with the correct arguments");
+      assert(fakeAmqpBase.putToken.alwaysCalledWith('https://iothubs.azure.net/.default', "Bearer " + "fakeToken"), "putToken() was called with the incorrect arguments");
+      assert(tokenCredentialConfig.tokenCredential.getToken.alwaysCalledWithExactly('https://iothubs.azure.net/.default'), "getToken() was called with incorrect arguments");
     } finally {
       clock.restore();
     }
@@ -224,11 +246,11 @@ describe('Amqp', function() {
         );
         assert(
           fakeAmqpBase.disconnect.calledOnce,
-          "disconnect was not called exactly once"
+          `Expected disconnect() call count of 1, got call count of ${fakeAmqpBase.disconnect.callCount}`
         );
         return;
       }
-      assert.fail("Connect succeeded when it shouldn't have");
+      assert.fail("Expected connect() to fail, but it succeeded");
     });
 
     it('calls its callback immediately if it is already connected', function (testCallback) {
@@ -248,34 +270,27 @@ describe('Amqp', function() {
       });
     });
 
-    it('gets the token from the TokenCredential object using the correct token scope and passes it to putToken if a TokenCredential is in the config', function (testCallback) {
-      var fakeToken = 'fake_token';
+    it('gets the token from the TokenCredential object using the correct token scope and passes it to putToken if a TokenCredential is in the config', async function () {
       var tokenCredentialConfig = {
         host: 'hub.host.name',
         tokenCredential: {
-          getToken: sinon.stub().resolves({
-            token: fakeToken,
-            expiresOnTimeStamp: Date.now() + 3600000
-          })
+          getToken: sinon.stub().callsFake(() => Promise.resolve({
+            token: "fakeToken",
+            expiresOnTimestamp: Date.now() + 3600000 //One hour from now
+          }))
         }
       };
+
       var transport = new Amqp(tokenCredentialConfig, fakeAmqpBase);
-      transport.connect(function () {
-        try {
-          assert(
-            tokenCredentialConfig.tokenCredential.getToken.calledOnceWithExactly('https://iothubs.azure.net/.default'),
-            "The TokenCredential's getToken() method was not called called with the correct args"
-          );
-          assert(
-            fakeAmqpBase.putToken.calledOnceWith('https://iothubs.azure.net/.default', "Bearer " + fakeToken),
-            "The base AMQP's putToken() method was not called with the correct args"
-          );
-        } catch (err) {
-          testCallback(err);
-          return;
-        }
-        testCallback();
-      });
+      await transport.connect();
+      assert(
+        tokenCredentialConfig.tokenCredential.getToken.calledOnceWithExactly('https://iothubs.azure.net/.default'),
+        "The TokenCredential's getToken() method was not called exactly once with the correct args"
+      );
+      assert(
+        fakeAmqpBase.putToken.calledOnceWith('https://iothubs.azure.net/.default', "Bearer " + "fakeToken"),
+        "The base AMQP's putToken() method was not called exactly once with the correct args"
+      );
     });
   });
 
