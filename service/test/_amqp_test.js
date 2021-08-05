@@ -25,6 +25,18 @@ var sasConfig = {
   sharedAccessSignature: SharedAccessSignature.create('uri', 'name', 'key', 123)
 };
 
+var tokenCredentialConfig = {
+  host: 'hub.host.name',
+  tokenCredential: {
+    getToken: sinon.stub().callsFake(() => {
+      return Promise.resolve({
+        token: "fakeToken",
+        expiresOnTimestamp: Date.now() + 3600000 //One hour from now
+      });
+    })
+  }
+};
+
 describe('Amqp', function() {
   var fakeAmqpBase;
 
@@ -65,34 +77,27 @@ describe('Amqp', function() {
 
   it('automatically renews the AccessToken from the TokenCredential before it expires', async function () {
     var clock = sinon.useFakeTimers();
-    var fakeToken = "fake_token"
-    var tokenCredentialConfig = {
-      host: 'hub.host.name',
-      tokenCredential: {
-        getToken: sinon.stub().callsFake(() => {
-          return Promise.resolve({
-            token: fakeToken,
-            expiresOnTimestamp: Date.now() + 3600000
-          });
-        })
-      }
-    };
     try {
       var amqp = new Amqp(tokenCredentialConfig, fakeAmqpBase);
       await amqp.connect();
+
       await clock.tickAsync(2400000 - 1); //+40m - 1ms (20m + 1ms before expiresOnTimestamp). Should not refresh.
       assert(tokenCredentialConfig.tokenCredential.getToken.calledOnce, "getToken() was not called exactly once when it should have been"); //called once on initial connect
       assert(fakeAmqpBase.putToken.calledOnce, "putToken() was not called exactly once when it should have been"); //called once on initial connect
+
       await clock.tickAsync(1); //+1ms (20 minutes before expiresOnTimestamp). Should refresh since we are now at 2/3 of the expiration window.
       assert(tokenCredentialConfig.tokenCredential.getToken.calledTwice, "getToken() was not called exactly twice when it should have been");
       assert(fakeAmqpBase.putToken.calledTwice, "putToken() was not called exactly twice when it should have been");
+
       await clock.tickAsync(2400000 - 1); ////+40m - 1ms (20m + 1ms before expiresOnTimestamp). Second refresh shouldn't happen yet.
       assert(tokenCredentialConfig.tokenCredential.getToken.calledTwice, "getToken() was not called exactly twice when it should have been");
       assert(fakeAmqpBase.putToken.calledTwice, "putToken() was not called exactly twice when it should have been");
+
       await clock.tickAsync(1); ////+1ms (20 minutes before expiresOnTimestamp). Second refresh should happen.
       assert(tokenCredentialConfig.tokenCredential.getToken.calledThrice, "getToken() was not called exactly thrice when it should have been");
       assert(fakeAmqpBase.putToken.calledThrice, "putToken() was not called exactly thrice when it should have been");
-      assert(fakeAmqpBase.putToken.alwaysCalledWith('https://iothubs.azure.net/.default', "Bearer " + fakeToken), "putToken() was not called with the correct arguments");
+
+      assert(fakeAmqpBase.putToken.alwaysCalledWith('https://iothubs.azure.net/.default', "Bearer " + "fakeToken"), "putToken() was not called with the correct arguments");
       assert(tokenCredentialConfig.tokenCredential.getToken.alwaysCalledWithExactly('https://iothubs.azure.net/.default'), "getToken() was not called with the correct arguments");
     } finally {
       clock.restore();
@@ -200,6 +205,30 @@ describe('Amqp', function() {
         assert.instanceOf(err, Error);
         testCallback();
       });
+    });
+
+    it('Invokes getToken - getToken fails and disconnects', async function () {
+      var tokenCredentialConfig = {
+        host: 'hub.host.name',
+        tokenCredential: {
+          getToken: sinon.stub().rejects()
+        }
+      };
+      var amqp = new Amqp(tokenCredentialConfig, fakeAmqpBase);
+      try {
+        await amqp.connect();
+      } catch (err) {
+        assert(
+          tokenCredentialConfig.tokenCredential.getToken.calledOnceWithExactly('https://iothubs.azure.net/.default'),
+          "getToken() was not called exactly once with the correct args"
+        );
+        assert(
+          fakeAmqpBase.disconnect.calledOnce,
+          "disconnect was not called exactly once"
+        );
+        return;
+      }
+      assert.fail("Connect succeeded when it shouldn't have");
     });
 
     it('calls its callback immediately if it is already connected', function (testCallback) {
