@@ -73,9 +73,6 @@ export class Amqp extends EventEmitter implements Client.Transport {
   private _fileNotificationErrorListener: (err: Error) => void;
   private _iotHubPublicScope: string = 'https://iothubs.azure.net/.default';
   private _bearerTokenPrefix: string = 'Bearer ';
-  private _minutesBeforeProactiveRenewal: number = 9;
-  private _millisecsBeforeProactiveRenewal: number = this._minutesBeforeProactiveRenewal * 60000;
-  private _accessToken: AccessToken;
 
   /**
    * @private
@@ -163,6 +160,9 @@ export class Amqp extends EventEmitter implements Client.Transport {
             /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_032: [The `updateSharedAccessSignature` shall not establish a connection if the transport is disconnected, but should use the new shared access signature on the next manually initiated connection attempt.]*/
             callback();
           },
+          updateAccessToken: (_tokenValue, callback) => {
+            callback();
+          },
           amqpError: (err) => {
             debug('Late arriving error received while in disconnected state.');
             if (err) {
@@ -209,26 +209,27 @@ export class Amqp extends EventEmitter implements Client.Transport {
 
                 if (this._config.sharedAccessSignature) {
                   const audience = SharedAccessSignature.parse(this._config.sharedAccessSignature.toString(), ['sr', 'sig', 'se']).sr;
-                  const applicationSuppliedSas = typeof (this._config.sharedAccessSignature) === 'string';
+                  const isApplicationSuppliedSas = typeof (this._config.sharedAccessSignature) === 'string';
 
-                  const sasToken = applicationSuppliedSas ? this._config.sharedAccessSignature as string : (this._config.sharedAccessSignature as SharedAccessSignature).extend(anHourFromNow());
+                  const sasToken = isApplicationSuppliedSas ? this._config.sharedAccessSignature as string : (this._config.sharedAccessSignature as SharedAccessSignature).extend(anHourFromNow());
                   this._amqp.putToken(audience, sasToken, (err) => {
                     if (err) {
                       /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_004: [** If `putToken` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
                       this._fsm.transition('disconnecting', err, callback);
                     } else {
-                      this._fsm.transition('authenticated', applicationSuppliedSas, callback);
+                      this._fsm.transition('authenticated', isApplicationSuppliedSas, callback);
                     }
                   });
                 } else if (this._config.tokenCredential) {
-                  const audience = this._iotHubPublicScope;
                   this.getToken().then((accessToken) => {
-                    this._amqp.putToken(audience, accessToken, (err) => {
+                    const tokenValue = this._bearerTokenPrefix + accessToken.token;
+                    this._amqp.putToken(this._iotHubPublicScope, tokenValue, (err) => {
                       if (err) {
                         /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_004: [** If `putToken` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
                         this._fsm.transition('disconnecting', err, callback);
                       } else {
-                        this._fsm.transition('authenticated', accessToken, callback);
+                        this._renewalNumberOfMilliseconds = Math.max(1000, (2 / 3) * (accessToken.expiresOnTimestamp - Date.now()));
+                        this._fsm.transition('authenticated', false, callback);
                       }
                     });
                   }).catch((err) => {
@@ -247,9 +248,12 @@ export class Amqp extends EventEmitter implements Client.Transport {
           '*': () => this._fsm.deferUntilTransition()
         },
         authenticated: {
-          _onEnter: (applicationSuppliedSas, callback) => {
-            if (!applicationSuppliedSas) {
-              this._renewalTimeout = setTimeout(this._handleSASRenewal.bind(this), this._renewalNumberOfMilliseconds);
+          _onEnter: (isApplicationSuppliedSas, callback) => {
+            if (!isApplicationSuppliedSas) {
+              const renewalCallback = this._config.sharedAccessSignature ?
+                this._handleSASRenewal :
+                this._handleTokenCredentialRenewal;
+              this._renewalTimeout = setTimeout(renewalCallback.bind(this), this._renewalNumberOfMilliseconds);
             }
             callback(null, new results.Connected());
           },
@@ -323,6 +327,9 @@ export class Amqp extends EventEmitter implements Client.Transport {
             /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_16_031: [The `updateSharedAccessSignature` shall trigger a `putToken` call on the base transport if it is connected.]*/
             const audience = SharedAccessSignature.parse(this._config.sharedAccessSignature.toString(), ['sr', 'sig', 'se']).sr;
             this._amqp.putToken(audience, updatedSAS, callback);
+          },
+          updateAccessToken: (tokenValue, callback) => {
+            this._amqp.putToken(this._iotHubPublicScope, tokenValue, callback);
           },
           amqpError: (err) => {
             this._fsm.transition('disconnecting', err);
@@ -568,31 +575,16 @@ export class Amqp extends EventEmitter implements Client.Transport {
 
   /**
    * @private
-   * Calculates if the AccessToken's remaining time to live
-   * is shorter than the proactive renewal time.
-   * @param accessToken The AccessToken.
-   * @returns {Boolean} True if the token's remaining time is shorter than the
-   *                    proactive renewal time, false otherwise.
+   * Gets the AccessToken from the TokenCredential object.
+   * Throws if the TokenCredential object gives a null value.
+   * @returns {Promise<AccessToken>} The access token string.
    */
-   isAccessTokenCloseToExpiry(accessToken: AccessToken): Boolean {
-    let remainingTimeToLive = Date.now() - accessToken.expiresOnTimestamp;
-    return remainingTimeToLive <= this._millisecsBeforeProactiveRenewal;
-  }
-
-  /**
-   * @private
-   * Returns the current AccessToken if it is still valid
-   * or a new AccessToken if the current token is close to expire.
-   * @returns {Promise<string>} The access token string.
-   */
-   async getToken(): Promise<string | null> {
-    if ((!this._accessToken) || this.isAccessTokenCloseToExpiry(this._accessToken)) {
-      this._accessToken = await this._config.tokenCredential.getToken(this._iotHubPublicScope) as any;
-    }
-    if (!this._accessToken) {
+   async getToken(): Promise<AccessToken> {
+    const accessToken = await this._config.tokenCredential.getToken(this._iotHubPublicScope);
+    if (!accessToken) {
       throw new Error('AccessToken creation failed');
     }
-    return this._bearerTokenPrefix + this._accessToken.token;
+    return accessToken;
   }
 
   protected _getConnectionUri(): string {
@@ -607,6 +599,22 @@ export class Amqp extends EventEmitter implements Client.Transport {
       } else {
         this._renewalTimeout = setTimeout(this._handleSASRenewal.bind(this), this._renewalNumberOfMilliseconds);
       }
+    });
+  }
+
+  private _handleTokenCredentialRenewal(): void {
+    this.getToken().then((accessToken) => {
+      const tokenValue = this._bearerTokenPrefix + accessToken.token;
+      this._fsm.handle('updateAccessToken', tokenValue, (err) => {
+        if (err) {
+          debug('error automatically renewing the AccessToken');
+        } else {
+          this._renewalNumberOfMilliseconds = Math.max(1000, (2 / 3) * (accessToken.expiresOnTimestamp - Date.now()));
+          this._renewalTimeout = setTimeout(this._handleTokenCredentialRenewal.bind(this), this._renewalNumberOfMilliseconds);
+        }
+      });
+    }).catch((err) => {
+      debug('error getting a new AccessToken: ' + err.toString());
     });
   }
 }
