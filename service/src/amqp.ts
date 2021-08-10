@@ -228,7 +228,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
                         /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_004: [** If `putToken` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
                         this._fsm.transition('disconnecting', err, callback);
                       } else {
-                        this._renewalNumberOfMilliseconds = (2 / 3) * (accessToken.expiresOnTimestamp - Date.now());
+                        this._renewalNumberOfMilliseconds = Math.max(1000, (2 / 3) * (accessToken.expiresOnTimestamp - Date.now()));
                         this._fsm.transition('authenticated', false, callback);
                       }
                     });
@@ -609,7 +609,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
         if (err) {
           debug('error automatically renewing the AccessToken');
         } else {
-          this._renewalNumberOfMilliseconds = (2 / 3) * (accessToken.expiresOnTimestamp - Date.now());
+          this._renewalNumberOfMilliseconds = Math.max(1000, (2 / 3) * (accessToken.expiresOnTimestamp - Date.now()));
           this._renewalTimeout = setTimeout(this._handleTokenCredentialRenewal.bind(this), this._renewalNumberOfMilliseconds);
         }
       });
