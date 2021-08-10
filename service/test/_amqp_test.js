@@ -121,6 +121,7 @@ describe('Amqp', function() {
 
       assert(fakeAmqpBase.putToken.alwaysCalledWith('https://iothubs.azure.net/.default', "Bearer " + "fakeToken"), "putToken() was called with the incorrect arguments");
       assert(tokenCredentialConfig.tokenCredential.getToken.alwaysCalledWithExactly('https://iothubs.azure.net/.default'), "getToken() was called with incorrect arguments");
+      await amqp.disconnect();
     } finally {
       clock.restore();
     }
@@ -280,7 +281,6 @@ describe('Amqp', function() {
           }))
         }
       };
-
       var transport = new Amqp(tokenCredentialConfig, fakeAmqpBase);
       await transport.connect();
       assert(
@@ -291,6 +291,7 @@ describe('Amqp', function() {
         fakeAmqpBase.putToken.calledOnceWith('https://iothubs.azure.net/.default', "Bearer " + "fakeToken"),
         "The base AMQP's putToken() method was not called exactly once with the correct args"
       );
+      await transport.disconnect();
     });
   });
 
