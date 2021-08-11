@@ -4,7 +4,7 @@
   "description": "MQTT operations used by Azure IoT device and service SDKs",
   "author": "Microsoft Corporation",
   "license": "MIT",
-  "main": "main.js",
+  "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
     "azure-iot-common": "1.12.9",
@@ -19,7 +19,7 @@
     "es5-shim": "^4.5.12",
     "mocha": "^7.1.1",
     "nyc": "^15.0.0",
-    "sinon": "^7.4.1",
+    "sinon": "^11.1.2",
     "source-map-support": "^0.5.16",
     "ts-node": "^8.6.2",
     "tslint": "^6.1.3",
