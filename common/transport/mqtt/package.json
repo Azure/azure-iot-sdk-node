@@ -1,13 +1,13 @@
 {
   "name": "azure-iot-mqtt-base",
-  "version": "1.12.9",
+  "version": "1.12.10",
   "description": "MQTT operations used by Azure IoT device and service SDKs",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.12.9",
+    "azure-iot-common": "1.12.10",
     "debug": "^4.3.1",
     "machina": "^4.0.2",
     "mqtt": "^4.2.8",
