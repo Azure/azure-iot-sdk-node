@@ -1,3 +1,3 @@
-export { JSONValue } from './json_value';
-export { CommandRequest } from './command_request';
-export { CommandResponse } from './command_response';
+export { JSONValue, JSONObject } from './json';
+export { CommandRequest, CommandResponse } from './commands';
+export { ClientPropertyCollection, ClientProperties, generateWritablePropertyResponse } from './properties';

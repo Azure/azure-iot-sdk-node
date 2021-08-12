@@ -14,7 +14,7 @@ import { results, errors, Message, X509, callbackToPromise, Callback } from 'azu
 import { SharedAccessSignature as CommonSharedAccessSignature } from 'azure-iot-common';
 import { ExponentialBackOffWithJitter, RetryPolicy, RetryOperation } from 'azure-iot-common';
 import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
-import { JSONValue, CommandRequest, CommandResponse } from './pnp';
+import { JSONValue, CommandRequest, CommandResponse, ClientProperties, ClientPropertyCollection } from './pnp';
 import { Twin, TwinProperties } from './twin';
 import { DeviceClientOptions } from './interfaces';
 
@@ -335,6 +335,42 @@ export abstract class InternalClient extends EventEmitter {
         safeCallback(_callback, err, result);
       });
     }, abandonCallback);
+  }
+
+  updateClientProperties(propertyCollection: ClientPropertyCollection): Promise<void>;
+  updateClientProperties(propertyCollection: ClientPropertyCollection, done: (err: Error) => void): void;
+  updateClientProperties(propertyCollection: ClientPropertyCollection, done?: (err: Error) => void): Promise<void> | void {
+    return callbackToPromise((_callback) => {
+      this.getTwin((err, twin) => {
+        if (err) {
+          _callback(err);
+          return;
+        }
+        twin.properties.reported.update(propertyCollection.backingObject, _callback);
+      });
+    }, done);
+  }
+
+  onWritablePropertyUpdateRequest(callback: (properties: ClientPropertyCollection) => void): void {
+    this.getTwin((err, twin) => {
+      if (err) {
+        this.emit('error', err);
+        return;
+      }
+      twin.on('properties.desired', (patch) => {
+        callback(new ClientPropertyCollection(patch));
+      });
+    });
+  }
+
+  getClientProperties(): Promise<ClientProperties>;
+  getClientProperties(done: Callback<ClientProperties>): void;
+  getClientProperties(done?: Callback<ClientProperties>): Promise<ClientProperties> | void {
+    return callbackToPromise((_callback) => {
+      this.getTwin((err, twin) => {
+        _callback(err, new ClientProperties(twin));
+      });
+    }, done);
   }
 
   getTwin(done: Callback<Twin>): void;

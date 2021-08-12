@@ -1,6 +1,40 @@
 import { JSONValue } from '.';
-import { DeviceMethodResponse } from '../device_method';
+import { DeviceMethodRequest, DeviceMethodResponse } from '../device_method';
 import { ErrorCallback } from 'azure-iot-common';
+
+export class CommandRequest {
+    /**
+     * The request identifier supplied by the service for this command call.
+     */
+    requestId: string;
+
+    /**
+     * The name of the command being called.
+     */
+    commandName: string;
+
+    /**
+     * The name of the component corresponding to the command being called.
+     */
+    componentName?: string;
+
+    /**
+     * The payload of this command call.
+     */
+    payload: JSONValue;
+
+    constructor(methodRequest: DeviceMethodRequest) {
+        this.requestId = methodRequest.requestId;
+        this.payload = methodRequest.payload;
+        const splitMethod = methodRequest.methodName.split('*');
+        if (splitMethod.length > 1) {
+            this.componentName = splitMethod[0];
+            this.commandName = splitMethod.slice(1).join('*');
+        } else {
+            this.commandName = splitMethod[0];
+        }
+    }
+}
 
 export class CommandResponse {
     private methodSend: (status: number, payload?: any | ErrorCallback, done?: ErrorCallback) => Promise<void> | void;
