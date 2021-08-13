@@ -1,9 +1,9 @@
-export type JSONValue =
+export type JSONSerializableValue =
  | string
  | number
  | boolean
  | null
- | JSONValue[]
- | {[key: string]: JSONValue};
+ | JSONSerializableValue[]
+ | {[key: string]: JSONSerializableValue};
 
-export type JSONObject = {[key: string]: JSONValue};
+export type JSONSerializableObject = {[key: string]: JSONSerializableValue};

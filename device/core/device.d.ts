@@ -15,4 +15,4 @@ export { Twin, TwinProperties } from './dist/twin';
 export { DeviceClientOptions, HttpReceiverOptions, AmqpTransportOptions, HttpTransportOptions, MqttTransportOptions } from './dist/interfaces';
 export { getUserAgentString } from './dist/utils';
 export { MethodMessage, DeviceTransport } from './dist/internal_client'
-export { JSONValue, JSONObject, CommandRequest, CommandResponse, ClientProperties, ClientPropertyCollection, generateWritablePropertyResponse } from './dist/pnp'
+export { JSONSerializableValue, JSONSerializableObject, CommandRequest, CommandResponse, ClientProperties, ClientPropertyCollection, generateWritablePropertyResponse } from './dist/pnp'

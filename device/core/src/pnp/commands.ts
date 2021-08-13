@@ -1,4 +1,4 @@
-import { JSONValue } from '.';
+import { JSONSerializableValue } from '.';
 import { DeviceMethodRequest, DeviceMethodResponse } from '../device_method';
 import { ErrorCallback } from 'azure-iot-common';
 
@@ -21,7 +21,7 @@ export class CommandRequest {
     /**
      * The payload of this command call.
      */
-    payload: JSONValue;
+    payload: JSONSerializableValue;
 
     constructor(methodRequest: DeviceMethodRequest) {
         this.requestId = methodRequest.requestId;
@@ -46,17 +46,17 @@ export class CommandResponse {
     /**
      * Sends a response to the service for a command request.
      *
-     * @param {number}    status   A numeric status code to be sent back to the service
-     * @param {JSONValue} payload  A json-serializable object representing the payload of command response.
-     * @param {function}  callback A callback function which will be called once the response has been sent to the service.
-     *                             If an error occurs, an error object is passed as the first argument to the callback.
-     *                             If the callback is not specified, send() will return a Promise.
+     * @param {number}                status   A numeric status code to be sent back to the service
+     * @param {JSONSerializableValue} payload  A json-serializable object representing the payload of command response.
+     * @param {function}              callback A callback function which will be called once the response has been sent to the service.
+     *                                  If an error occurs, an error object is passed as the first argument to the callback.
+     *                                  If the callback is not specified, send() will return a Promise.
      */
     send(status: number): Promise<void>;
-    send(status: number, payload: JSONValue): Promise<void>;
+    send(status: number, payload: JSONSerializableValue): Promise<void>;
     send(status: number, callback: ErrorCallback): void;
-    send(status: number, payload: JSONValue, callback: ErrorCallback): void;
-    send(status: number, payloadOrCallback?: JSONValue | ErrorCallback, callback?: ErrorCallback): Promise<void> | void {
+    send(status: number, payload: JSONSerializableValue, callback: ErrorCallback): void;
+    send(status: number, payloadOrCallback?: JSONSerializableValue | ErrorCallback, callback?: ErrorCallback): Promise<void> | void {
         return this.methodSend(status, payloadOrCallback, callback);
     }
 }

@@ -14,7 +14,7 @@ import { results, errors, Message, X509, callbackToPromise, Callback } from 'azu
 import { SharedAccessSignature as CommonSharedAccessSignature } from 'azure-iot-common';
 import { ExponentialBackOffWithJitter, RetryPolicy, RetryOperation } from 'azure-iot-common';
 import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
-import { JSONValue, CommandRequest, CommandResponse, ClientProperties, ClientPropertyCollection } from './pnp';
+import { JSONSerializableValue, CommandRequest, CommandResponse, ClientProperties, ClientPropertyCollection } from './pnp';
 import { Twin, TwinProperties } from './twin';
 import { DeviceClientOptions } from './interfaces';
 
@@ -162,15 +162,15 @@ export abstract class InternalClient extends EventEmitter {
    * on the Azure IoT Hub or Azure IoT Edge hub instance.
    * This method is only intended for use with Azure IoT Plug and Play.
    *
-   * @param {JSONValue} payload       A JSON-serializable object containing the telemetry to send.
-   * @param {string}    componentName The component that corresponds with the telemetry. If not specified,
+   * @param {JSONSerializableValue} payload       A JSON-serializable object containing the telemetry to send.
+   * @param {string}                componentName The component that corresponds with the telemetry. If not specified,
    *                                  the telemetry will be sent to the default component.
    */
-  sendTelemetry(payload: JSONValue): Promise<results.MessageEnqueued>;
-  sendTelemetry(payload: JSONValue, componentName: string): Promise<results.MessageEnqueued>;
-  sendTelemetry(payload: JSONValue, sendTelemetryCallback: Callback<results.MessageEnqueued>): void;
-  sendTelemetry(payload: JSONValue, componentName: string, sendTelemetryCallback: Callback<results.MessageEnqueued>): void;
-  sendTelemetry(payload: JSONValue, callbackOrComponent?: Callback<results.MessageEnqueued> | string, sendTelemetryCallback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
+  sendTelemetry(payload: JSONSerializableValue): Promise<results.MessageEnqueued>;
+  sendTelemetry(payload: JSONSerializableValue, componentName: string): Promise<results.MessageEnqueued>;
+  sendTelemetry(payload: JSONSerializableValue, sendTelemetryCallback: Callback<results.MessageEnqueued>): void;
+  sendTelemetry(payload: JSONSerializableValue, componentName: string, sendTelemetryCallback: Callback<results.MessageEnqueued>): void;
+  sendTelemetry(payload: JSONSerializableValue, callbackOrComponent?: Callback<results.MessageEnqueued> | string, sendTelemetryCallback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
     let componentName: string;
     if (typeof callbackOrComponent === 'string') {
       componentName = callbackOrComponent;
