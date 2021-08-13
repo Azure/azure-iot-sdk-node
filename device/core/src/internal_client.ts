@@ -443,18 +443,20 @@ export abstract class InternalClient extends EventEmitter {
    * @param {function} callback      The callback that is called each time a command request for this command is received.
    */
   onCommand(commandName: string, callback: (request: CommandRequest, response: CommandResponse) => void): void;
-  onCommand(commandName: string, componentName: string, callback: (request: CommandRequest, response: CommandResponse) => void): void;
-  onCommand(commandName: string, callbackOrComponent: ((request: CommandRequest, response: CommandResponse) => void) | string, callback?: (request: CommandRequest, response: CommandResponse) => void): void {
-    let componentName: string;
-    if (typeof callbackOrComponent === 'function') {
-      callback = callbackOrComponent;
-    } else if (typeof callbackOrComponent === 'string') {
-      componentName = callbackOrComponent;
+  onCommand(componentName: string, commandName: string, callback: (request: CommandRequest, response: CommandResponse) => void): void;
+  onCommand(commandOrComponent: string, callbackOrCommand: ((request: CommandRequest, response: CommandResponse) => void) | string, callback?: (request: CommandRequest, response: CommandResponse) => void): void {
+    let commandName: string, componentName: string;
+    if (typeof callbackOrCommand === 'function') {
+      callback = callbackOrCommand;
+      commandName = commandOrComponent;
+    } else if (typeof callbackOrCommand === 'string') {
+      commandName = callbackOrCommand;
+      componentName = commandOrComponent;
     } else {
-      throw new TypeError('Second argument must be a string (componentName) or function (callback)');
+      throw new TypeError('Second argument must be a string (commandName) or function (callback)');
     }
-    if (typeof commandName !== 'string') {
-      throw new TypeError('commandName must be a string');
+    if (typeof commandOrComponent !== 'string') {
+      throw new TypeError('First argument must be a string');
     }
     if (typeof callback !== 'function') {
       throw new TypeError('callback must be a function');

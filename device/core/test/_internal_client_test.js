@@ -893,10 +893,10 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
           var client = new ClientCtor(new EventEmitter());
           assert.throws(function () {
             client.onCommand(val, () => {});
-          }, TypeError, 'commandName must be a string');
+          }, TypeError, 'First argument must be a string');
           assert.throws(function () {
-            client.onCommand(val, "fakeComponent", () => {});
-          }, TypeError, 'commandName must be a string');
+            client.onCommand(val, "fakeCommand", () => {});
+          }, TypeError, 'First argument must be a string');
         });
       });
 
@@ -905,10 +905,10 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
           var client = new ClientCtor(new EventEmitter());
           assert.throws(function () {
             client.onCommand("fakeCommand", val);
-          }, TypeError, 'Second argument must be a string (componentName) or function (callback)');
+          }, TypeError, 'Second argument must be a string (commandName) or function (callback)');
           assert.throws(function () {
-            client.onCommand("fakeCommand", val, () => {});
-          }, TypeError, 'Second argument must be a string (componentName) or function (callback)');
+            client.onCommand("fakeComponent", val, () => {});
+          }, TypeError, 'Second argument must be a string (commandName) or function (callback)');
         });
       });
 
@@ -916,7 +916,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
         it(`throws if the third argument is not a function (${typeof val})`, function () {
           var client = new ClientCtor(new EventEmitter());
           assert.throws(function () {
-            client.onCommand("fakeCommand", "fakeComponent", val);
+            client.onCommand("fakeComponent", "fakeCommand", val);
           }, TypeError, 'callback must be a function');
         });
       });
@@ -934,7 +934,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
         client._onDeviceMethod = (methodName) => {
           assert.strictEqual(methodName, "fakeComponent*fakeCommand");
         };
-        client.onCommand("fakeCommand", "fakeComponent", () => {});
+        client.onCommand("fakeComponent", "fakeCommand", () => {});
       });
 
       it('registers a callback that gets called with the correct request info when the specified command is invoked (no component)', function (testCallback) {
@@ -982,7 +982,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
           });
         }).bind(transport);
         var client = new ClientCtor(transport);
-        client.onCommand("fakeCommand", "fakeComponent", (request, _response) => {
+        client.onCommand("fakeComponent", "fakeCommand", (request, _response) => {
           try {
             assert.strictEqual(request.requestId, "fakeId");
             assert.strictEqual(request.commandName, "fakeCommand"),
@@ -1024,7 +1024,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
           callback();
         }
         var client = new ClientCtor(transport);
-        client.onCommand("fakeCommand", "fakeComponent", (_request, response) => {
+        client.onCommand("fakeComponent", "fakeCommand", (_request, response) => {
           response.send(200, {fake: "payload"}).then(testCallback).catch(testCallback);
         });
         transport.emit("fakeComponent*fakeCommand");
