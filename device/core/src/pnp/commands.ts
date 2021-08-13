@@ -49,8 +49,8 @@ export class CommandResponse {
    * @param {number}                status   A numeric status code to be sent back to the service
    * @param {JSONSerializableValue} payload  A json-serializable object representing the payload of command response.
    * @param {function}              callback A callback function which will be called once the response has been sent to the service.
-   *                                  If an error occurs, an error object is passed as the first argument to the callback.
-   *                                  If the callback is not specified, send() will return a Promise.
+   *                                         If an error occurs, an error object is passed as the first argument to the callback.
+   *                                         If the callback is not specified, send() will return a Promise.
    */
   send(status: number): Promise<void>;
   send(status: number, payload: JSONSerializableValue): Promise<void>;

@@ -162,9 +162,11 @@ export abstract class InternalClient extends EventEmitter {
    * on the Azure IoT Hub or Azure IoT Edge hub instance.
    * This method is only intended for use with Azure IoT Plug and Play.
    *
-   * @param {JSONSerializableValue} payload       A JSON-serializable object containing the telemetry to send.
-   * @param {string}                componentName The component that corresponds with the telemetry. If not specified,
-   *                                  the telemetry will be sent to the default component.
+   * @param {JSONSerializableValue}             payload               A JSON-serializable object containing the telemetry to send.
+   * @param {string}                            componentName         The component that corresponds with the telemetry. If not specified,
+   *                                                                  the telemetry will be sent to the default component.
+   * @param {Callback<results.MessageEnqueued>} sendTelemetryCallback A callback used to get notified of the success or failure of the operation.
+   *                                                                  If no callback is specified, a promise is returned instead.
    */
   sendTelemetry(payload: JSONSerializableValue): Promise<results.MessageEnqueued>;
   sendTelemetry(payload: JSONSerializableValue, componentName: string): Promise<results.MessageEnqueued>;
@@ -337,6 +339,13 @@ export abstract class InternalClient extends EventEmitter {
     }, abandonCallback);
   }
 
+  /**
+   * Sends a property update patch to the Azure IoT Hub or Azure IoT Edge Hub service.
+   *
+   * @param {ClientPropertyCollection} propertyCollection A ClientPropertyCollection object representing the property patch.
+   * @param {(err: Error) => void}     done               A callback used to get notified of the success or failure of the operation.
+   *                                                      If no callback is specified, a promise is returned instead.
+   */
   updateClientProperties(propertyCollection: ClientPropertyCollection): Promise<void>;
   updateClientProperties(propertyCollection: ClientPropertyCollection, done: (err: Error) => void): void;
   updateClientProperties(propertyCollection: ClientPropertyCollection, done?: (err: Error) => void): Promise<void> | void {
@@ -351,6 +360,11 @@ export abstract class InternalClient extends EventEmitter {
     }, done);
   }
 
+  /**
+   * Registers a listener to get invoked with a writable property patch whenever the device receives a writable property request.
+   *
+   * @param {(properties: ClientPropertyCollection) => void} callback The callback to get invoked on a writable property request.
+   */
   onWritablePropertyUpdateRequest(callback: (properties: ClientPropertyCollection) => void): void {
     this.getTwin((err, twin) => {
       if (err) {
@@ -363,6 +377,13 @@ export abstract class InternalClient extends EventEmitter {
     });
   }
 
+  /**
+   * Gets the client properties the Azure IoT Hub or Azure IoT Edge Hub service.
+   * This method is only intended for use with Azure IoT Plug and Play.
+   *
+   * @param {Callback<ClientProperties>} done The callback which gets invoked with the ClientProperties object.
+   *                                          If no callback is specified, a promise is returned instead.
+   */
   getClientProperties(): Promise<ClientProperties>;
   getClientProperties(done: Callback<ClientProperties>): void;
   getClientProperties(done?: Callback<ClientProperties>): Promise<ClientProperties> | void {
@@ -417,9 +438,9 @@ export abstract class InternalClient extends EventEmitter {
    * If no component is specified, then the default component is assumed.
    * This method is only intended for use with Azure IoT Plug and Play.
    *
-   * @param {string} commandName   The name of the command.
-   * @param {string} componentName The name of the component that corresponds with the command.
-   * @param {function} callback    The callback that is called each time a command request for this command is received.
+   * @param {string}   commandName   The name of the command.
+   * @param {string}   componentName The name of the component that corresponds with the command.
+   * @param {function} callback      The callback that is called each time a command request for this command is received.
    */
   onCommand(commandName: string, callback: (request: CommandRequest, response: CommandResponse) => void): void;
   onCommand(commandName: string, componentName: string, callback: (request: CommandRequest, response: CommandResponse) => void): void;

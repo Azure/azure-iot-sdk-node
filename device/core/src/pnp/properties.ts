@@ -1,6 +1,14 @@
 import { JSONSerializableValue, JSONSerializableObject } from '.';
 import { Twin } from '../twin';
 
+/**
+ * Helper function to generate an object used in the device's response to a writable property request.
+ *
+ * @param {JSONSerializableValue} value          The the value field of the response object. Usually equal to the received value in the writable property request.
+ * @param {number}                ackCode        The ac field of the response object.
+ * @param {string}                ackDescription The ad field of the response object.
+ * @param {number}                ackVersion     The av field of the response object. Usually equal to the received version number in the writable property request.
+ */
 export function generateWritablePropertyResponse(value: JSONSerializableValue, ackCode: number, ackDescription: string, ackVersion: number): {
   value: JSONSerializableValue,
   ac: number,
