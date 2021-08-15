@@ -9,11 +9,11 @@
 		"commitizen": "^4.2.2",
 		"cz-conventional-changelog": "^3.2.0",
 		"husky": "^4.2.5",
-		"lerna": "^3.22.1",
+		"lerna": "^4.0.0",
 		"mocha": "^7.1.1"
 	},
 	"engines": {
-		"node": ">=10.0.0"
+		"node": ">=12.0.0"
 	},
 	"husky": {
 		"hooks": {
@@ -36,5 +36,8 @@
 		"commitizen": {
 			"path": "cz-conventional-changelog"
 		}
+	},
+	"dependencies": {
+		"@types/node": "^16.6.1"
 	}
 }
