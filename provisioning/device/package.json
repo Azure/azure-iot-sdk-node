@@ -1,13 +1,13 @@
 {
   "name": "azure-iot-provisioning-device",
-  "version": "1.8.8",
+  "version": "1.8.9",
   "description": "Azure Device Provisioning SDK device client",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.12.9",
+    "azure-iot-common": "1.12.10",
     "debug": "^4.3.1",
     "machina": "^4.0.2"
   },
@@ -16,7 +16,7 @@
     "chai": "^4.3.3",
     "mocha": "^7.1.1",
     "nyc": "^15.0.0",
-    "sinon": "^7.4.1",
+    "sinon": "^11.1.2",
     "source-map-support": "^0.5.16",
     "ts-node": "^8.6.2",
     "tslint": "^6.1.3",

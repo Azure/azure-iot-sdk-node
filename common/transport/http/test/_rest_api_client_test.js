@@ -5,6 +5,7 @@
 
 var assert = require('chai').assert;
 var sinon = require('sinon');
+var util = require('util');
 var errors = require('azure-iot-common').errors;
 var HttpBase = require('../dist/http.js').Http;
 var RestApiClient = require('../dist/rest_api_client.js').RestApiClient;
@@ -566,6 +567,66 @@ describe('RestApiClient', function() {
       }
       var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
       client.executeApiCall('GET', '/test/path', null, null, testCallback);
+    });
+
+    it('gets a new token from the TokenCredential object if the token is about to expire', async function () {
+      var clock = sinon.useFakeTimers();
+      var fakeConfig = {
+        host: 'hub.host.name',
+        tokenCredential: {
+          getToken: sinon.stub().callsFake(() => Promise.resolve({
+            token: "fakeToken",
+            expiresOnTimestamp: Date.now() + 3600000 //One hour from now
+          }))
+        }
+      };
+      var fakeHttpHelper = {
+        buildRequest: function(method, path, headers, host, requestCallback) {
+          return {
+            write: function() { },
+            end: function() {
+              requestCallback(null, '', { statusCode: 200 });
+            }
+          };
+        }
+      }
+
+      try {
+        var client = new RestApiClient(fakeConfig, fakeAgent, fakeHttpHelper);
+        await (util.promisify(client.executeApiCall).bind(client))('GET', '/test/path', null, null);
+        assert(
+          fakeConfig.tokenCredential.getToken.calledOnce,
+          `Expected getToken() call count of 1, got call count of ${fakeConfig.tokenCredential.getToken.callCount}`
+        );
+        
+        await clock.tickAsync(client._accessToken.expiresOnTimestamp - client._MillisecsBeforeProactiveRenewal - 1); //1ms before proactive renewal time, should not refresh
+        await (util.promisify(client.executeApiCall).bind(client))('GET', '/test/path', null, null);
+        assert(
+          fakeConfig.tokenCredential.getToken.calledOnce,
+          `Expected getToken() call count of 1, got call count of ${fakeConfig.tokenCredential.getToken.callCount}`
+        );
+
+        await clock.tickAsync(1); //exactly at proactive renewal time, should refresh
+        await (util.promisify(client.executeApiCall).bind(client))('GET', '/test/path', null, null);
+        assert(
+          fakeConfig.tokenCredential.getToken.calledTwice,
+          `Expected getToken() call count of 2, got call count of ${fakeConfig.tokenCredential.getToken.callCount}`
+        );
+
+        await clock.tickAsync(client._accessToken.expiresOnTimestamp + 3600000); //past token expiration time, should refresh
+        await (util.promisify(client.executeApiCall).bind(client))('GET', '/test/path', null, null);
+        assert(
+          fakeConfig.tokenCredential.getToken.calledThrice,
+          `Expected getToken() call count of 3, got call count of ${fakeConfig.tokenCredential.getToken.callCount}`
+        );
+
+        assert(
+          fakeConfig.tokenCredential.getToken.alwaysCalledWithExactly('https://iothubs.azure.net/.default'),
+          "getToken() was called with the incorrect arguments"
+        );
+      } finally {
+        clock.restore();
+      }
     });
   });
 
