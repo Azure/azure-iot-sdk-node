@@ -355,7 +355,7 @@ export abstract class InternalClient extends EventEmitter {
           _callback(err);
           return;
         }
-        twin.properties.reported.update(propertyCollection.backingObject, _callback);
+        (twin as any)._updateReportedProperties(propertyCollection.backingObject, _callback);
       });
     }, done);
   }
@@ -389,7 +389,14 @@ export abstract class InternalClient extends EventEmitter {
   getClientProperties(done?: Callback<ClientProperties>): Promise<ClientProperties> | void {
     return callbackToPromise((_callback) => {
       this.getTwin((err, twin) => {
-        _callback(err, new ClientProperties(twin));
+        if (err) {
+          _callback(err);
+          return;
+        }
+        if (typeof twin.properties.reported.update === 'function') {
+          delete twin.properties.reported.update;
+        }
+        _callback(undefined, new ClientProperties(twin));
       });
     }, done);
   }
@@ -445,7 +452,8 @@ export abstract class InternalClient extends EventEmitter {
   onCommand(commandName: string, callback: (request: CommandRequest, response: CommandResponse) => void): void;
   onCommand(componentName: string, commandName: string, callback: (request: CommandRequest, response: CommandResponse) => void): void;
   onCommand(commandOrComponent: string, callbackOrCommand: ((request: CommandRequest, response: CommandResponse) => void) | string, callback?: (request: CommandRequest, response: CommandResponse) => void): void {
-    let commandName: string, componentName: string;
+    let commandName: string;
+    let componentName: string;
     if (typeof callbackOrCommand === 'function') {
       callback = callbackOrCommand;
       commandName = commandOrComponent;

@@ -35,7 +35,8 @@ export class ClientPropertyCollection {
 
   /**
    * The $version field of the properties.
-   * Returns NaN if the $version field is undefined or cannot be converted to a number.
+   * Returns NaN if the $version field cannot be converted to a number.
+   * Equivalent to Number(backingObject.$version)
    */
   get version(): number {
     return Number(this.backingObject.$version);
@@ -56,9 +57,9 @@ export class ClientPropertyCollection {
       this.backingObject[propertyNameOrComponentName] = valueOrPropertyName;
     } else {
       if (typeof this.backingObject[propertyNameOrComponentName] !== 'object') {
-        this.backingObject[propertyNameOrComponentName] = {}
+        this.backingObject[propertyNameOrComponentName] = {};
       }
-      this.backingObject[propertyNameOrComponentName]['__t'] = 'c'
+      this.backingObject[propertyNameOrComponentName][`__t`] = 'c';
       this.backingObject[propertyNameOrComponentName][valueOrPropertyName as string] = value;
     }
   }
