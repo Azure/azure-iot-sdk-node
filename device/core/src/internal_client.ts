@@ -162,11 +162,11 @@ export abstract class InternalClient extends EventEmitter {
    * on the Azure IoT Hub or Azure IoT Edge hub instance.
    * This method is only intended for use with Azure IoT Plug and Play.
    *
-   * @param {JSONSerializableValue}             payload               A JSON-serializable object containing the telemetry to send.
-   * @param {string}                            componentName         The component that corresponds with the telemetry. If not specified,
-   *                                                                  the telemetry will be sent to the default component.
-   * @param {Callback<results.MessageEnqueued>} sendTelemetryCallback A callback used to get notified of the success or failure of the operation.
-   *                                                                  If no callback is specified, a promise is returned instead.
+   * @param {JSONSerializableValue}             payload               - A JSON-serializable object containing the telemetry to send.
+   * @param {string}                            componentName         - The component that corresponds with the telemetry. If not specified,
+   *                                                                    the telemetry will be sent to the default component.
+   * @param {Callback<results.MessageEnqueued>} sendTelemetryCallback - A callback used to get notified of the success or failure of the operation.
+   *                                                                    If no callback is specified, a promise is returned instead.
    */
   sendTelemetry(payload: JSONSerializableValue): Promise<results.MessageEnqueued>;
   sendTelemetry(payload: JSONSerializableValue, componentName: string): Promise<results.MessageEnqueued>;
@@ -174,9 +174,9 @@ export abstract class InternalClient extends EventEmitter {
   sendTelemetry(payload: JSONSerializableValue, componentName: string, sendTelemetryCallback: Callback<results.MessageEnqueued>): void;
   sendTelemetry(payload: JSONSerializableValue, callbackOrComponent?: Callback<results.MessageEnqueued> | string, sendTelemetryCallback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
     let componentName: string;
-    if (typeof callbackOrComponent === 'string') {
+    if (typeof callbackOrComponent === 'string') { // If the second argument (callbackOrComponent) is a string, it is the component name
       componentName = callbackOrComponent;
-    } else if (typeof callbackOrComponent === 'function') {
+    } else if (typeof callbackOrComponent === 'function') { // If the second argument (callbackOrComponent) is a function, it is the callback
       sendTelemetryCallback = callbackOrComponent;
     } else if (callbackOrComponent) {
       throw new TypeError('The second parameter to sendTelemetry must be a function (sendTelemetryCallback) or string (componentName)');
@@ -342,9 +342,9 @@ export abstract class InternalClient extends EventEmitter {
   /**
    * Sends a property update patch to the Azure IoT Hub or Azure IoT Edge Hub service.
    *
-   * @param {ClientPropertyCollection} propertyCollection A ClientPropertyCollection object representing the property patch.
-   * @param {(err: Error) => void}     done               A callback used to get notified of the success or failure of the operation.
-   *                                                      If no callback is specified, a promise is returned instead.
+   * @param {ClientPropertyCollection} propertyCollection - A ClientPropertyCollection object representing the property patch.
+   * @param {(err: Error) => void}     done               - A callback used to get notified of the success or failure of the operation.
+   *                                                        If no callback is specified, a promise is returned instead.
    */
   updateClientProperties(propertyCollection: ClientPropertyCollection): Promise<void>;
   updateClientProperties(propertyCollection: ClientPropertyCollection, done: (err: Error) => void): void;
@@ -355,6 +355,9 @@ export abstract class InternalClient extends EventEmitter {
           _callback(err);
           return;
         }
+        // We don't want to rely on twin.properties.reported.update in case the user has a reported property called update (see https://github.com/Azure/azure-iot-sdk-node/issues/578)
+        // The as any is necessary here to make tsc happy because _updateReportedProperties is a private member of Twin
+        // We want to keep _updateReportedProperties private so users don't call it directly.
         (twin as any)._updateReportedProperties(propertyCollection.backingObject, _callback);
       });
     }, done);
@@ -363,7 +366,7 @@ export abstract class InternalClient extends EventEmitter {
   /**
    * Registers a listener to get invoked with a writable property patch whenever the device receives a writable property request.
    *
-   * @param {(properties: ClientPropertyCollection) => void} callback The callback to get invoked on a writable property request.
+   * @param {(properties: ClientPropertyCollection) => void} callback - The callback to get invoked on a writable property request.
    */
   onWritablePropertyUpdateRequest(callback: (properties: ClientPropertyCollection) => void): void {
     this.getTwin((err, twin) => {
@@ -378,11 +381,12 @@ export abstract class InternalClient extends EventEmitter {
   }
 
   /**
-   * Gets the client properties the Azure IoT Hub or Azure IoT Edge Hub service.
+   * Gets the client properties from the Azure IoT Hub or Azure IoT Edge Hub service.
    * This method is only intended for use with Azure IoT Plug and Play.
+   * @todo Add warning about properties.reported.update
    *
-   * @param {Callback<ClientProperties>} done The callback which gets invoked with the ClientProperties object.
-   *                                          If no callback is specified, a promise is returned instead.
+   * @param {Callback<ClientProperties>} done - The callback which gets invoked with the ClientProperties object.
+   *                                            If no callback is specified, a promise is returned instead.
    */
   getClientProperties(): Promise<ClientProperties>;
   getClientProperties(done: Callback<ClientProperties>): void;
@@ -394,6 +398,13 @@ export abstract class InternalClient extends EventEmitter {
           return;
         }
         if (typeof twin.properties.reported.update === 'function') {
+          /**
+           * In the "legacy" way of updating reported properties, we had an update function in the reported properties object. However, that pollutes the reported properties.
+           * We delete it to avoid the user having their reported properties polluted.
+           * This is safe because the user couldn't have possibly had a reported property of function type, so it must have been added internally.
+           * However, this breaks the "legacy" way of updating reported properties until the next time getTwin() is called on the Twin instance.
+           * It was decided that this tradeoff is worth avoiding having to make deep copies of the reported properties object.
+           */
           delete twin.properties.reported.update;
         }
         _callback(undefined, new ClientProperties(twin));
@@ -445,9 +456,9 @@ export abstract class InternalClient extends EventEmitter {
    * If no component is specified, then the default component is assumed.
    * This method is only intended for use with Azure IoT Plug and Play.
    *
-   * @param {string}   commandName   The name of the command.
-   * @param {string}   componentName The name of the component that corresponds with the command.
-   * @param {function} callback      The callback that is called each time a command request for this command is received.
+   * @param {string}   commandName   - The name of the command.
+   * @param {string}   componentName - The name of the component that corresponds with the command.
+   * @param {function} callback      - The callback that is called each time a command request for this command is received.
    */
   onCommand(commandName: string, callback: (request: CommandRequest, response: CommandResponse) => void): void;
   onCommand(componentName: string, commandName: string, callback: (request: CommandRequest, response: CommandResponse) => void): void;
@@ -455,11 +466,14 @@ export abstract class InternalClient extends EventEmitter {
     let commandName: string;
     let componentName: string;
     if (typeof callbackOrCommand === 'function') {
-      callback = callbackOrCommand;
-      commandName = commandOrComponent;
+      // If second argument (callbackOrCommand) is a function, the user invoked the two-argument function (i.e., without a componentName)
+      commandName = commandOrComponent; // Command name is the first argument
+      callback = callbackOrCommand; // Callback is the second argument
     } else if (typeof callbackOrCommand === 'string') {
-      commandName = callbackOrCommand;
-      componentName = commandOrComponent;
+      // If the second argument (callbackOrCommand) is a string, the user invoked the three-argument function (i.e., with a componentName)
+      componentName = commandOrComponent; // Component name is the first argument
+      commandName = callbackOrCommand; // Command name is the second argument
+      // callback is already bound to the third argument
     } else {
       throw new TypeError('Second argument must be a string (commandName) or function (callback)');
     }

@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 import { JSONSerializableValue } from '.';
 import { DeviceMethodRequest, DeviceMethodResponse } from '../device_method';
 import { ErrorCallback } from 'azure-iot-common';
@@ -27,10 +30,13 @@ export class CommandRequest {
     this.requestId = methodRequest.requestId;
     this.payload = methodRequest.payload;
     const splitMethod = methodRequest.methodName.split('*');
-    if (splitMethod.length > 1) {
+    if (splitMethod.length > 1) { // <component name>*<command name>
+      // Everything to the left of the first *
       this.componentName = splitMethod[0];
+      // Everything to the right of the first *.
+      // Despite multiple *'s not being allowed, it's safer to do this.
       this.commandName = splitMethod.slice(1).join('*');
-    } else {
+    } else { // <command name>
       this.commandName = splitMethod[0];
     }
   }
@@ -46,11 +52,11 @@ export class CommandResponse {
   /**
    * Sends a response to the service for a command request.
    *
-   * @param {number}                status   A numeric status code to be sent back to the service
-   * @param {JSONSerializableValue} payload  A json-serializable object representing the payload of command response.
-   * @param {function}              callback A callback function which will be called once the response has been sent to the service.
-   *                                         If an error occurs, an error object is passed as the first argument to the callback.
-   *                                         If the callback is not specified, send() will return a Promise.
+   * @param {number}                status   - A numeric status code to be sent back to the service
+   * @param {JSONSerializableValue} payload  - A json-serializable object representing the payload of command response.
+   * @param {function}              callback - A callback function which will be called once the response has been sent to the service.
+   *                                           If an error occurs, an error object is passed as the first argument to the callback.
+   *                                           If the callback is not specified, send() will return a Promise.
    */
   send(status: number): Promise<void>;
   send(status: number, payload: JSONSerializableValue): Promise<void>;
