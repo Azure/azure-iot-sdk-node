@@ -159,7 +159,7 @@ export class RestApiClient {
    *                    proactive renewal time, false otherwise.
    */
    isAccessTokenCloseToExpiry(accessToken: AccessToken): Boolean {
-    let remainingTimeToLive = Date.now() - accessToken.expiresOnTimestamp;
+    const remainingTimeToLive = accessToken.expiresOnTimestamp - Date.now();
     return remainingTimeToLive <= this._MillisecsBeforeProactiveRenewal;
   }
 
