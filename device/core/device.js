@@ -60,5 +60,8 @@ module.exports = {
   EdgedAuthConfig: require('./dist/iotedge_authentication_provider').EdgedAuthConfig,
   IotEdgeAuthenticationProvider: require('./dist/iotedge_authentication_provider').IotEdgeAuthenticationProvider,
   CommandRequest: require('./dist/pnp').CommandRequest,
-  CommandResponse: require('./dist/pnp').CommandResponse
+  CommandResponse: require('./dist/pnp').CommandResponse,
+  ClientProperties: require('./dist/pnp').ClientProperties,
+  ClientPropertyCollection: require('./dist/pnp').ClientPropertyCollection,
+  generateWritablePropertyResponse: require('./dist/pnp').generateWritablePropertyResponse
 };

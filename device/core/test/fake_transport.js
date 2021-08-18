@@ -70,7 +70,9 @@ function FakeTransport() {
   };
 
   this.getTwin = function (callback) {
-    callback(null, { desired: {}, reported: {} });
+    process.nextTick(() => {
+      callback(null, { desired: {fake: "fakeDesired"}, reported: {fake: "fakeReported"} });
+    });
   };
 
   this.enableMethods = function(callback) {
@@ -81,6 +83,14 @@ function FakeTransport() {
   }
 
   this.setModelId = function(modelId){
+  }
+
+  this.enableTwinDesiredPropertiesUpdates = function(callback) {
+    process.nextTick(callback);
+  }
+
+  this.updateTwinReportedProperties = function(state, callback) {
+    process.nextTick(callback);
   }
 }
 

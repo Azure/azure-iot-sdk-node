@@ -21,6 +21,7 @@ var SharedAccessSignatureAuthenticationProvider = require('../dist/sas_authentic
 var Twin = require('../dist/twin').Twin;
 var DeviceClient = require('../dist/device_client').Client;
 var ModuleClient = require('../dist/module_client').ModuleClient;
+var ClientPropertyCollection = require('../dist/pnp/properties').ClientPropertyCollection;
 
 [ModuleClient, DeviceClient].forEach(function (ClientCtor) {
   describe(ClientCtor.name, function () {
@@ -661,6 +662,179 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
       });
     });
 
+    describe('getClientProperties', function () {
+      it('Calls the client\'s getTwin method and calls the callback with the correct result', async function() {
+        const client = new ClientCtor(new FakeTransport());
+        sinon.spy(client, 'getTwin');
+        const properties = await new Promise((resolve, reject) => {
+          client.getClientProperties((err, properties) => {
+            err ? reject(err) : resolve(properties);
+          });
+        });
+        assert(
+          client.getTwin.calledOnce,
+          `Expected getTwin() call count of 1, got call count of ${client.getTwin.callCount}`
+        );
+        assert.deepEqual(properties.reportedFromDevice.backingObject, {fake: 'fakeReported'});
+        assert.deepEqual(properties.writablePropertiesRequests.backingObject, {fake: 'fakeDesired'});
+      });
+
+      it('Calls the client\'s getTwin method and returns a promise with the correct result', async function() {
+        const client = new ClientCtor(new FakeTransport());
+        sinon.spy(client, 'getTwin');
+        const properties = await client.getClientProperties();
+        assert(
+          client.getTwin.calledOnce,
+          `Expected getTwin() call count of 1, got call count of ${client.getTwin.callCount}`
+        );
+        assert.deepEqual(properties.reportedFromDevice.backingObject, {fake: 'fakeReported'});
+        assert.deepEqual(properties.writablePropertiesRequests.backingObject, {fake: 'fakeDesired'});
+      });
+
+      it('Calls the callback with an error if getTwin() fails', async function() {
+        const client = new ClientCtor(new FakeTransport());
+        client.getTwin = (callback) => {callback(new Error('This is a fake error'))};
+        await new Promise((resolve, reject) => {
+          client.getClientProperties((err, properties) => {
+            err ? resolve(err) : reject(new Error('Expected getClientProperties to fail, but it succeeded'));
+          });
+        });
+      });
+
+      it('Rejects if getTwin() fails', async function() {
+        const client = new ClientCtor(new FakeTransport());
+        client.getTwin = (callback) => {callback(new Error('This is a fake error'))};        
+        try {
+          await client.getClientProperties();
+        } catch(e){
+          return;
+        }
+        assert.fail('Expected getClientProperties to fail, but it succeeded.');
+      });
+    });
+
+    describe('onWritablePropertyUpdateRequest', function () {
+      it('registers a callback that gets called if there was already a desired property update before the callback was registered', function(testCallback) {
+        const client = new ClientCtor(new FakeTransport());
+        client.onWritablePropertyUpdateRequest((properties) => {
+          try {
+            assert.deepEqual(properties.backingObject, {fake: 'fakeDesired'});
+            testCallback();
+          } catch (err) {
+            testCallback(err);
+          }
+        });
+      });
+
+      it('registers a callback that gets called when a new desired property is received', function (testCallback) {
+        let transport = new FakeTransport();
+        const client = new ClientCtor(transport);
+        let called = false;
+        client.onWritablePropertyUpdateRequest((properties) => {
+          try {
+            if (called) {
+              assert.deepEqual(properties.backingObject, {key: 'value'});
+              testCallback();
+              return;
+            }
+            assert.deepEqual(properties.backingObject, {fake: 'fakeDesired'});
+            called = true;
+          } catch (err) {
+            testCallback(err);
+          }
+        });
+        setImmediate(() => {
+          transport.emit('twinDesiredPropertiesUpdate', {key: 'value'});
+        });
+      });
+
+      it('emits an error event if getTwin() fails', function (testCallback) {
+        const client = new ClientCtor(new FakeTransport());
+        client.getTwin = (callback) => {callback(new Error('This is a fake error'))};   
+        client.on('error', () => {testCallback()});
+        client.onWritablePropertyUpdateRequest(() => {});
+      });
+    });
+
+    describe('updateClientProperties', function () {
+      it('calls _updateReportedProperties with the correct payload and invokes the callback on success', async function() {
+        const client = new ClientCtor(new FakeTransport());
+        const twin = await client.getTwin();
+        sinon.spy(twin, '_updateReportedProperties');
+        await new Promise((resolve, reject) => {
+          client.updateClientProperties(new ClientPropertyCollection({key: "value"}), (err) => {
+            try {
+              assert.isNotOk(err);
+              assert(
+                twin._updateReportedProperties.calledOnce,
+                `Expected _updateReportedProperties() call count of 1, got call count of ${twin._updateReportedProperties.callCount}`
+              );
+              assert.deepEqual(twin._updateReportedProperties.args[0][0], {key: "value"});
+              resolve();
+            } catch (err) {
+              reject(err);
+            }
+          });
+        });
+      });
+
+      it('calls _updateReportedProperties with the correct payload and resolves the promise on success', async function() {
+        const client = new ClientCtor(new FakeTransport());
+        const twin = await client.getTwin();
+        sinon.spy(twin, '_updateReportedProperties');
+        await client.updateClientProperties(new ClientPropertyCollection({key: "value"}));
+        assert(
+          twin._updateReportedProperties.calledOnce,
+          `Expected _updateReportedProperties() call count of 1, got call count of ${twin._updateReportedProperties.callCount}`
+        );
+        assert.deepEqual(twin._updateReportedProperties.args[0][0], {key: "value"});
+      });
+
+      it('Calls the callback with an error if _updateReportedProperties() fails', async function() {
+        const client = new ClientCtor(new FakeTransport());
+        const twin = await client.getTwin();
+        twin._updateReportedProperties = (state, callback) => {callback(new Error('this is a fake error'))};
+        await new Promise((resolve, reject) => {
+          client.updateClientProperties(new ClientPropertyCollection({key: "value"}), (err) => {
+            err ? resolve(err) : reject(new Error('Expected updateClientProperties to fail, but it succeeded'));
+          });
+        });
+      });
+
+      it('Rejects if _updateReportedProperties() fails', async function() {
+        const client = new ClientCtor(new FakeTransport());
+        const twin  = await client.getTwin();
+        twin._updateReportedProperties = (state, callback) => {callback(new Error('this is a fake error'))};
+        try {
+          await client.updateClientProperties(new ClientPropertyCollection({key: "value"}));
+        } catch(e){
+          return;
+        }
+        assert.fail('Expected updateClientProperties to fail, but it succeeded.');
+      });
+
+      it('Calls the callback with an error if getTwin() fails', async function() {
+        const client = new ClientCtor(new FakeTransport());
+        client.getTwin = (callback) => {callback(new Error('This is a fake error'))};
+        await new Promise((resolve, reject) => {
+          client.updateClientProperties(new ClientPropertyCollection({key: "value"}), (err) => {
+            err ? resolve(err) : reject(new Error('Expected updateClientProperties to fail, but it succeeded'));
+          });
+        });
+      });
+
+      it('Rejects if getTwin() fails', async function() {
+        const client = new ClientCtor(new FakeTransport());
+        client.getTwin = (callback) => {callback(new Error('This is a fake error'))};        
+        try {
+          await client.updateClientProperties(new ClientPropertyCollection({key: "value"}));
+        } catch(e){
+          return;
+        }
+        assert.fail('Expected updateClientProperties to fail, but it succeeded.');
+      });
+    });
+
     describe('setRetryPolicy', function () {
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_083: [The `setRetryPolicy` method shall throw a `ReferenceError` if the policy object is falsy.]*/
       [null, undefined, ''].forEach(function (badPolicy) {
@@ -893,10 +1067,10 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
           var client = new ClientCtor(new EventEmitter());
           assert.throws(function () {
             client.onCommand(val, () => {});
-          }, TypeError, 'commandName must be a string');
+          }, TypeError, 'First argument must be a string');
           assert.throws(function () {
-            client.onCommand(val, "fakeComponent", () => {});
-          }, TypeError, 'commandName must be a string');
+            client.onCommand(val, "fakeCommand", () => {});
+          }, TypeError, 'First argument must be a string');
         });
       });
 
@@ -905,10 +1079,10 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
           var client = new ClientCtor(new EventEmitter());
           assert.throws(function () {
             client.onCommand("fakeCommand", val);
-          }, TypeError, 'Second argument must be a string (componentName) or function (callback)');
+          }, TypeError, 'Second argument must be a string (commandName) or function (callback)');
           assert.throws(function () {
-            client.onCommand("fakeCommand", val, () => {});
-          }, TypeError, 'Second argument must be a string (componentName) or function (callback)');
+            client.onCommand("fakeComponent", val, () => {});
+          }, TypeError, 'Second argument must be a string (commandName) or function (callback)');
         });
       });
 
@@ -916,7 +1090,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
         it(`throws if the third argument is not a function (${typeof val})`, function () {
           var client = new ClientCtor(new EventEmitter());
           assert.throws(function () {
-            client.onCommand("fakeCommand", "fakeComponent", val);
+            client.onCommand("fakeComponent", "fakeCommand", val);
           }, TypeError, 'callback must be a function');
         });
       });
@@ -934,7 +1108,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
         client._onDeviceMethod = (methodName) => {
           assert.strictEqual(methodName, "fakeComponent*fakeCommand");
         };
-        client.onCommand("fakeCommand", "fakeComponent", () => {});
+        client.onCommand("fakeComponent", "fakeCommand", () => {});
       });
 
       it('registers a callback that gets called with the correct request info when the specified command is invoked (no component)', function (testCallback) {
@@ -982,7 +1156,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
           });
         }).bind(transport);
         var client = new ClientCtor(transport);
-        client.onCommand("fakeCommand", "fakeComponent", (request, _response) => {
+        client.onCommand("fakeComponent", "fakeCommand", (request, _response) => {
           try {
             assert.strictEqual(request.requestId, "fakeId");
             assert.strictEqual(request.commandName, "fakeCommand"),
@@ -1024,7 +1198,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
           callback();
         }
         var client = new ClientCtor(transport);
-        client.onCommand("fakeCommand", "fakeComponent", (_request, response) => {
+        client.onCommand("fakeComponent", "fakeCommand", (_request, response) => {
           response.send(200, {fake: "payload"}).then(testCallback).catch(testCallback);
         });
         transport.emit("fakeComponent*fakeCommand");
