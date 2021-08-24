@@ -80,8 +80,18 @@ export class Twin extends EventEmitter {
    * @returns {Promise<Twin> | void} Promise if no callback function was passed, void otherwise.
    */
   get(callback: Callback<Twin>): void;
+  get(disableFireChangeEvents: boolean, callback: Callback<Twin>): void;
   get(): Promise<Twin>;
-  get(callback?: Callback<Twin>): Promise<Twin> | void {
+  get(disableFireChangeEvents?: boolean): Promise<Twin>;
+  get(callbackOrDisableFireChangeEvents?: Callback<Twin> | boolean, callback?: Callback<Twin>): Promise<Twin> | void {
+    callback = (typeof callbackOrDisableFireChangeEvents === 'function' ?
+      callbackOrDisableFireChangeEvents :
+      callback
+    );
+    const disableFireChangeEvents = (typeof callbackOrDisableFireChangeEvents === 'boolean' ?
+      callbackOrDisableFireChangeEvents :
+      false
+    );
     return callbackToPromise((_callback) => {
       const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
@@ -96,7 +106,9 @@ export class Twin extends EventEmitter {
             this._mergePatch(this.properties.desired, twinProperties.desired);
             this._mergePatch(this.properties.reported, twinProperties.reported);
             /*Codes_SRS_NODE_DEVICE_TWIN_16_006: [For each desired property that is part of the `TwinProperties` object received, an event named after the path to this property shall be fired and passed the property value as argument.]*/
-            this._fireChangeEvents(this.properties.desired);
+            if (!disableFireChangeEvents) {
+              this._fireChangeEvents(this.properties.desired);
+            }
             /*Codes_SRS_NODE_DEVICE_TWIN_16_005: [Once the properties have been merged the `callback` method passed to the call to `get` shall be called with a first argument that is `null` and a second argument that is the current `Twin` instance (`this`).]*/
             opCallback(null, this);
           }

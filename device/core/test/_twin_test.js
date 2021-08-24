@@ -97,6 +97,31 @@ describe('Twin', function () {
 
       twin.get(function () {});
     });
+
+    it('doesn\'t fire events if disableFireChangeEvents is set to true', function (testCallback) {
+      var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
+      let eventFired = false;
+      twin.on('properties.desired', function (delta) {
+        eventFired = true;
+      });
+      twin.on('properties.desired.key', function (delta) {
+        eventFired = true;
+      });
+      twin.get(true, (err) => {
+        if (err) {
+          testCallback(err);
+        }
+        try {
+          assert.isFalse(
+            eventFired,
+            'Expected events not to fire, but they did'
+          );
+          testCallback();
+        } catch (err) {
+          testCallback(err);
+        }
+      });
+    });
   });
 
   describe('properties.reported.update', function () {
