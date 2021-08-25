@@ -722,6 +722,13 @@ var ClientPropertyCollection = require('../dist/pnp/properties').ClientPropertyC
           })
         });
       });
+
+      [null, {}, "string", 42].forEach((value) => {
+        it(`Throws if the first argument is neither a function nor a boolean (${value})`, function() {
+          const client = new ClientCtor(new FakeTransport()); 
+          assert.throws(client.getTwin.bind(client, value), TypeError, `First argument must be a function (done) or a boolean (disableFireChangeEvents). Received ${typeof value}.`);
+        });
+      });
     });
 
     describe('getClientProperties', function () {

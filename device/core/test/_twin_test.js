@@ -122,6 +122,13 @@ describe('Twin', function () {
         }
       });
     });
+
+    [null, {}, "string", 42].forEach((value) => {
+      it(`Throws if the first argument is neither a function nor a boolean (${value})`, function() {
+        var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
+        assert.throws(twin.get.bind(twin, value), TypeError, `First argument must be a function (callback) or a boolean (disableFireChangeEvents). Received ${typeof value}.`);
+      });
+    });
   });
 
   describe('properties.reported.update', function () {

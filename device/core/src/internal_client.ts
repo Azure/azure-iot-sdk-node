@@ -413,14 +413,14 @@ export abstract class InternalClient extends EventEmitter {
   getTwin(): Promise<Twin>;
   getTwin(disableFireChangeEvents: boolean): Promise<Twin>;
   getTwin(doneOrDisableFireChangeEvents?: Callback<Twin> | boolean, done?: Callback<Twin>): Promise<Twin> | void {
-    done = (typeof doneOrDisableFireChangeEvents === 'function' ?
-      doneOrDisableFireChangeEvents :
-      done
-    );
-    const disableFireChangeEvents = (typeof doneOrDisableFireChangeEvents === 'boolean' ?
-      doneOrDisableFireChangeEvents :
-      false
-    );
+    let disableFireChangeEvents = false;
+    if (typeof doneOrDisableFireChangeEvents === 'function') {
+      done = doneOrDisableFireChangeEvents;
+    } else if (typeof doneOrDisableFireChangeEvents === 'boolean') {
+      disableFireChangeEvents = doneOrDisableFireChangeEvents;
+    } else if (typeof doneOrDisableFireChangeEvents !== 'undefined') {
+      throw new TypeError(`First argument must be a function (done) or a boolean (disableFireChangeEvents). Received ${typeof doneOrDisableFireChangeEvents}.`);
+    }
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_INTERNAL_CLIENT_16_094: [If this is the first call to `getTwin` the method shall instantiate a new `Twin` object  and pass it the transport currently in use.]*/
       if (!this._twin) {
