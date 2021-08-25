@@ -350,16 +350,12 @@ export abstract class InternalClient extends EventEmitter {
   updateClientProperties(propertyCollection: ClientPropertyCollection, done: (err: Error) => void): void;
   updateClientProperties(propertyCollection: ClientPropertyCollection, done?: (err: Error) => void): Promise<void> | void {
     return callbackToPromise((_callback) => {
-      this.getTwin((err, twin) => {
-        if (err) {
-          _callback(err);
-          return;
-        }
+      Promise.resolve(this._twin ?? this.getTwin(true)).then((twin) => {
         // We don't want to rely on twin.properties.reported.update in case the user has a reported property called update (see https://github.com/Azure/azure-iot-sdk-node/issues/578)
         // The as any is necessary here to make tsc happy because _updateReportedProperties is a private member of Twin
         // We want to keep _updateReportedProperties private so users don't call it directly.
         (twin as any)._updateReportedProperties(propertyCollection.backingObject, _callback);
-      });
+      }).catch(_callback);
     }, done);
   }
 
@@ -369,15 +365,15 @@ export abstract class InternalClient extends EventEmitter {
    * @param {(properties: ClientPropertyCollection) => void} callback - The callback to get invoked on a writable property request.
    */
   onWritablePropertyUpdateRequest(callback: (properties: ClientPropertyCollection) => void): void {
-    this.getTwin((err, twin) => {
-      if (err) {
+    Promise.resolve(this._twin ?? this.getTwin(true))
+      .then((twin) => {
+        twin.on('properties.desired', (patch) => {
+          callback(new ClientPropertyCollection(patch));
+        });
+      })
+      .catch((err) => {
         this.emit('error', err);
-        return;
-      }
-      twin.on('properties.desired', (patch) => {
-        callback(new ClientPropertyCollection(patch));
       });
-    });
   }
 
   /**
@@ -392,7 +388,7 @@ export abstract class InternalClient extends EventEmitter {
   getClientProperties(done: Callback<ClientProperties>): void;
   getClientProperties(done?: Callback<ClientProperties>): Promise<ClientProperties> | void {
     return callbackToPromise((_callback) => {
-      this.getTwin((err, twin) => {
+      this.getTwin(true, (err, twin) => {
         if (err) {
           _callback(err);
           return;
@@ -413,8 +409,18 @@ export abstract class InternalClient extends EventEmitter {
   }
 
   getTwin(done: Callback<Twin>): void;
+  getTwin(disableFireChangeEvents: boolean, done: Callback<Twin>): void;
   getTwin(): Promise<Twin>;
-  getTwin(done?: Callback<Twin>): Promise<Twin> | void {
+  getTwin(disableFireChangeEvents: boolean): Promise<Twin>;
+  getTwin(doneOrDisableFireChangeEvents?: Callback<Twin> | boolean, done?: Callback<Twin>): Promise<Twin> | void {
+    let disableFireChangeEvents = false;
+    if (typeof doneOrDisableFireChangeEvents === 'function') {
+      done = doneOrDisableFireChangeEvents;
+    } else if (typeof doneOrDisableFireChangeEvents === 'boolean') {
+      disableFireChangeEvents = doneOrDisableFireChangeEvents;
+    } else if (typeof doneOrDisableFireChangeEvents !== 'undefined') {
+      throw new TypeError(`First argument must be a function (done) or a boolean (disableFireChangeEvents). Received ${typeof doneOrDisableFireChangeEvents}.`);
+    }
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_INTERNAL_CLIENT_16_094: [If this is the first call to `getTwin` the method shall instantiate a new `Twin` object  and pass it the transport currently in use.]*/
       if (!this._twin) {
@@ -422,7 +428,7 @@ export abstract class InternalClient extends EventEmitter {
       }
 
       /*Codes_SRS_NODE_INTERNAL_CLIENT_16_095: [The `getTwin` method shall call the `get()` method on the `Twin` object currently in use and pass it its `done` argument for a callback.]*/
-      this._twin.get(_callback);
+      this._twin.get(disableFireChangeEvents, _callback);
     }, done);
   }
 
