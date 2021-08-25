@@ -208,6 +208,7 @@ export class Twin extends EventEmitter {
     this._mergePatch(this.properties.desired, patch);
     /*Codes_SRS_NODE_DEVICE_TWIN_16_013: [Recursively for each desired property that is part of the patch received, an event named using the convention `properties.desired[.path]` shall be fired with an argument containing the value of the protperty.]*/
     this._fireChangeEvents(patch);
+    this.emit('_desiredPropertyUpdate', patch);
   }
 
   /* Codes_SRS_NODE_DEVICE_TWIN_18_045: [** If a property is already set when a handler is added for that property, the `Twin` object shall fire a property changed event for the property. **]*  */
@@ -221,7 +222,8 @@ export class Twin extends EventEmitter {
           self.emit(eventName, propertyValue);
         });
       }
-
+    }
+    if (eventName.indexOf(Twin.desiredPath) === 0 || eventName === '_desiredPropertyUpdate') {
       /*Codes_SRS_NODE_DEVICE_TWIN_16_010: [When a listener is added for the first time on an event which name starts with `properties.desired`, the twin shall call the `enableTwinDesiredPropertiesUpdates` method of the `Transport` object.]*/
       this.enableTwinDesiredPropertiesUpdates((err) => {
         if (err) {

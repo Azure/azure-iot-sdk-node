@@ -367,7 +367,7 @@ export abstract class InternalClient extends EventEmitter {
   onWritablePropertyUpdateRequest(callback: (properties: ClientPropertyCollection) => void): void {
     Promise.resolve(this._twin ?? this.getTwin(true))
       .then((twin) => {
-        twin.on('properties.desired', (patch) => {
+        twin.on('_desiredPropertyUpdate', (patch) => {
           callback(new ClientPropertyCollection(patch));
         });
       })
