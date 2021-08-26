@@ -783,31 +783,14 @@ var ClientPropertyCollection = require('../dist/pnp/properties').ClientPropertyC
     });
 
     describe('onWritablePropertyUpdateRequest', function () {
-      it('registers a callback that gets called if there was already a desired property update before the callback was registered', function(testCallback) {
-        const client = new ClientCtor(new FakeTransport());
-        client.onWritablePropertyUpdateRequest((properties) => {
-          try {
-            assert.deepEqual(properties.backingObject, {fake: 'fakeDesired'});
-            testCallback();
-          } catch (err) {
-            testCallback(err);
-          }
-        });
-      });
-
       it('registers a callback that gets called when a new desired property is received', function (testCallback) {
         let transport = new FakeTransport();
         const client = new ClientCtor(transport);
-        let called = false;
         client.onWritablePropertyUpdateRequest((properties) => {
           try {
-            if (called) {
-              assert.deepEqual(properties.backingObject, {key: 'value'});
-              testCallback();
-              return;
-            }
-            assert.deepEqual(properties.backingObject, {fake: 'fakeDesired'});
-            called = true;
+            assert.deepEqual(properties.backingObject, {key: 'value'});
+            testCallback();
+            return;
           } catch (err) {
             testCallback(err);
           }

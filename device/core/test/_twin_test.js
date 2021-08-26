@@ -47,7 +47,7 @@ describe('Twin', function () {
 
   describe('#get', function () {
     /*Tests_SRS_NODE_DEVICE_TWIN_16_002: [The `get` method shall call the `getTwin` method of the `Transport` object with a callback.]*/
-    it('calls getTwin on the transpport', function () {
+    it('calls getTwin on the transport', function () {
       var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
       twin.get(function () {});
       assert.isTrue(fakeTransport.getTwin.calledOnce);
@@ -197,7 +197,7 @@ describe('Twin', function () {
     });
   });
 
-  describe('on(\'properties.desired[.path]\'', function () {
+  describe('on(\'properties.desired[.path]\')', function () {
     /*Tests_SRS_NODE_DEVICE_TWIN_16_010: [When a listener is added for the first time on an event which name starts with `properties.desired`, the twin shall call the `enableTwinDesiredPropertiesUpdates` method of the `Transport` object.]*/
     it('calls enableTwinDesiredPropertiesUpdates on the transport', function () {
       var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
@@ -268,6 +268,41 @@ describe('Twin', function () {
         });
 
         fakeTransport.emit('twinDesiredPropertiesUpdate', fakePatch);
+      });
+    });
+  });
+
+  describe('on(\'_desiredPropertyUpdate\')', function () {
+    it('calls enableTwinDesiredPropertiesUpdates on the transport', function () {
+      var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
+      twin.on('_desiredPropertyUpdate', function () {});
+      assert.isTrue(fakeTransport.enableTwinDesiredPropertiesUpdates.calledOnce);
+    });
+
+    it('emits an error if the call to enableTwinDesiredPropertiesUpdates fails', function (testCallback) {
+      var fakeError = new Error('fake');
+      fakeTransport.enableTwinDesiredPropertiesUpdates = sinon.stub().callsArgWith(0, fakeError);
+      var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
+      twin.on('error', function (err) {
+        assert.strictEqual(err, fakeError);
+        testCallback();
+      });
+      twin.on('_desiredPropertyUpdate', function () {});
+    });
+
+    it('does not emit events for existing properties', function (testCallback) {
+      var twin = new Twin(fakeTransport, fakeRetryPolicy, 0);
+      var emitted = false;
+      twin.get(() => {
+        twin.on('_desiredPropertyUpdate', () => {emitted = true});
+        setImmediate(() => {
+          try {
+            assert.isFalse(emitted, 'expect an event not to be emitted, but it was');
+            testCallback();
+          } catch (err) {
+            testCallback(err);
+          }
+        });
       });
     });
   });

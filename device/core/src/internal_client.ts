@@ -367,7 +367,7 @@ export abstract class InternalClient extends EventEmitter {
   onWritablePropertyUpdateRequest(callback: (properties: ClientPropertyCollection) => void): void {
     Promise.resolve(this._twin ?? this.getTwin(true))
       .then((twin) => {
-        twin.on('properties.desired', (patch) => {
+        twin.on('_desiredPropertyUpdate', (patch) => {
           callback(new ClientPropertyCollection(patch));
         });
       })
@@ -379,7 +379,10 @@ export abstract class InternalClient extends EventEmitter {
   /**
    * Gets the client properties from the Azure IoT Hub or Azure IoT Edge Hub service.
    * This method is only intended for use with Azure IoT Plug and Play.
-   * @todo Add warning about properties.reported.update
+   *
+   * WARNING: This will cause the legacy Twin.properties.reported.update functionality to
+   * stop working until the next call to getTwin(). Please use updateClientProperties()
+   * instead of the legacy update function when using getClientProperties().
    *
    * @param {Callback<ClientProperties>} done - The callback which gets invoked with the ClientProperties object.
    *                                            If no callback is specified, a promise is returned instead.
