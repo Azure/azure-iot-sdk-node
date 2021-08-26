@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { JSONSerializableValue, JSONSerializableObject } from '.';
-import { Twin } from '../twin';
+import { TwinProperties } from '../twin';
 
 /**
  * Helper function to generate an object used in the device's response to a writable property request.
@@ -91,8 +91,8 @@ export class ClientProperties {
   writablePropertiesRequests: ClientPropertyCollection;
   reportedFromDevice: ClientPropertyCollection;
 
-  constructor(originalTwin?: Twin) {
-    this.writablePropertiesRequests = new ClientPropertyCollection(originalTwin?.properties.desired);
-    this.reportedFromDevice = new ClientPropertyCollection(originalTwin?.properties.reported);
+  constructor(originalTwin?: TwinProperties) {
+    this.writablePropertiesRequests = new ClientPropertyCollection(originalTwin?.desired);
+    this.reportedFromDevice = new ClientPropertyCollection(originalTwin?.reported);
   }
 }
