@@ -86,6 +86,7 @@ export class SaslTpm {
       debug('length = ' + challenge.length + ' control byte = ' + challenge[0]);
       if ((challenge[0] & 0xC0) === 192) {
         /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_004: [ If `step` is called with a first byte that has 1 in the most significant bit, it shall append the challenge to the full challenge buffer and call its callback with `\u0000` ] */
+        debug('last segment - Length: ' + (challenge.length - 1) + ' data: ' + challenge.slice(1).toString('hex'));
         this._challengeKey.appendBuffer(challenge.slice(1));
         let keyBuffer: Buffer = this._challengeKey.get();
         /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_005: [ If `step` is called with a first byte that has 11 in the most significant bits, it shall call the challenge callback with the full challenge buffer. ] */
@@ -105,6 +106,7 @@ export class SaslTpm {
         });
       } else if ((challenge[0] & 0x80) === 128) {
         /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_004: [ If `step` is called with a first byte that has 1 in the most significant bit, it shall append the challenge to the full challenge buffer and call its callback with `\u0000` ] */
+        debug('not last  segment - Length: ' + (challenge.length - 1) + ' data: ' + challenge.slice(1).toString('hex'));
         this._challengeKey.appendBuffer(challenge.slice(1));
         let responseBuffer: Builder = new Builder();
         responseBuffer.appendUInt8(0); // <null>

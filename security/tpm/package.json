@@ -11,7 +11,7 @@
     "base32-encode": "^1.0.0",
     "debug": "^4.3.1",
     "machina": "^4.0.2",
-    "tss.js": "^1.1.0"
+    "tss.js": "^2.0.0"
   },
   "devDependencies": {
     "@types/node": "^16.6.1",
