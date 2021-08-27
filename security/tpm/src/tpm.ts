@@ -26,13 +26,15 @@ export class TpmSecurityClient  {
   private static readonly _tpmNonceSize: number = 20; // See TPM Structures v1.2
 
   private static readonly _ekTemplate: TPMT_PUBLIC = new TPMT_PUBLIC(TPM_ALG_ID.SHA256,
-    TPMA_OBJECT.restricted | TPMA_OBJECT.decrypt | TPMA_OBJECT.fixedTPM | TPMA_OBJECT.fixedParent | TPMA_OBJECT.adminWithPolicy | TPMA_OBJECT.sensitiveDataOrigin,
+    TPMA_OBJECT.restricted | TPMA_OBJECT.decrypt | TPMA_OBJECT.fixedTPM | TPMA_OBJECT.fixedParent |
+    TPMA_OBJECT.adminWithPolicy | TPMA_OBJECT.sensitiveDataOrigin,
     Buffer.from('837197674484b3f81a90cc8d46a5d724fd52d76e06520b64f2a1da1b331469aa', 'hex'),
     new tss.TPMS_RSA_PARMS(TpmSecurityClient._aes128SymDef, new tss.TPMS_NULL_ASYM_SCHEME(), 2048, 0),
     new tss.TPM2B_PUBLIC_KEY_RSA());
 
   private static readonly _srkTemplate: TPMT_PUBLIC = new TPMT_PUBLIC(TPM_ALG_ID.SHA256,
-    TPMA_OBJECT.restricted | TPMA_OBJECT.decrypt | TPMA_OBJECT.fixedTPM | TPMA_OBJECT.fixedParent | TPMA_OBJECT.noDA | TPMA_OBJECT.userWithAuth | TPMA_OBJECT.sensitiveDataOrigin,
+    TPMA_OBJECT.restricted | TPMA_OBJECT.decrypt | TPMA_OBJECT.fixedTPM | TPMA_OBJECT.fixedParent |
+    TPMA_OBJECT.noDA | TPMA_OBJECT.userWithAuth | TPMA_OBJECT.sensitiveDataOrigin,
     null,
     new tss.TPMS_RSA_PARMS(TpmSecurityClient._aes128SymDef, new tss.TPMS_NULL_ASYM_SCHEME(), 2048, 0),
     new tss.TPM2B_PUBLIC_KEY_RSA());
@@ -42,7 +44,9 @@ export class TpmSecurityClient  {
   private _registrationId: string = '';
   private _tpm: Tpm;
   private _fsm: machina.Fsm;
-  private _idKeyPub: TPMT_PUBLIC = null;
+  private _idKeyPub: TPMT_PUBLIC;
+  private _encUriData: tss.TPM2B_DATA;
+
 
 
   constructor(registrationId?: string, customTpm?: any) {
@@ -415,27 +419,27 @@ export class TpmSecurityClient  {
   private _activateIdentityKey(activationBlob: Buffer, activateCallback: (err: Error) => void): void {
 
     let credentialBlob: tss.TPMS_ID_OBJECT;
-    let encodedSecret = new tss.TPM2B_ENCRYPTED_SECRET();
-    let idKeyDupBlob = new TPM2B_PRIVATE();
-    let encWrapKey = new tss.TPM2B_ENCRYPTED_SECRET();
+    let encodedSecret: tss.TPM2B_ENCRYPTED_SECRET;
+    let idKeyDupBlob: tss.TPM2B_PRIVATE;
+    let encWrapKey: tss.TPM2B_ENCRYPTED_SECRET;
 
     //
     // Un-marshal components of the activation blob received from the provisioning service.
     //
     let buf: tss.TpmBuffer = activationBlob instanceof Buffer ? new tss.TpmBuffer(activationBlob) : activationBlob;
 
-    credentialBlob = buf.sizedFromTpm(tss.TPMS_ID_OBJECT, 2);
-    encodedSecret = buf.createFromTpm(tss.TPM2B_ENCRYPTED_SECRET);
-    idKeyDupBlob = buf.createFromTpm(tss.TPM2B_PRIVATE);
-    encWrapKey = buf.createFromTpm(tss.TPM2B_ENCRYPTED_SECRET);
-    this._idKeyPub = buf.sizedFromTpm(TPMT_PUBLIC, 2);
-    // This exists in the sample code but does not seem to have an equivalent here. (sample: https://github.com/Microsoft/TSS.MSR/blob/master/TSS.JS/test/Test_Azure_IoT_Provisioning.ts)
-    // this.encUriData = buf.createFromTpm(tss.TPM2B_DATA);
+    credentialBlob = buf.createSizedObj(tss.TPMS_ID_OBJECT);
+    encodedSecret = buf.createObj(tss.TPM2B_ENCRYPTED_SECRET);
+    idKeyDupBlob = buf.createObj(tss.TPM2B_PRIVATE);
+    encWrapKey = buf.createObj(tss.TPM2B_ENCRYPTED_SECRET);
+    this._idKeyPub = buf.createSizedObj(TPMT_PUBLIC);
+    this._encUriData = buf.createObj(tss.TPM2B_DATA);
+    debug('The value of the encUriData: ' + this._encUriData.toString());
 
     if (!buf.isOk())
       return activateCallback(new errors.SecurityDeviceError('Could not unmarshal activation data'));
 
-    if (buf.curPos !== buf.length)
+    if (buf.curPos !== buf.size)
       debug('WARNING: Activation Blob sent by DPS has contains extra unidentified data');
 
     //
@@ -460,7 +464,8 @@ export class TpmSecurityClient  {
             // Apply the policy necessary to authorize an EK on Windows
             //
 
-            this._tpm.withSession(tss.NullPwSession).PolicySecret(tss.Endorsement, policySession.SessIn.sessionHandle, null, null, null, 0, (err: tss.TpmError, _resp: tss.PolicySecretResponse) => {
+            // this._tpm.withSession(tss.NullPwSession).PolicySecret(tss.Endorsement, policySession.SessIn.sessionHandle, null, null, null, 0, (err: tss.TpmError, _resp: tss.PolicySecretResponse) => {
+            this._tpm.PolicySecret(tss.Endorsement, policySession.SessIn.sessionHandle, null, null, null, 0, (err: tss.TpmError, _resp: tss.PolicySecretResponse) => {
               const rc = err ? err.responseCode : TPM_RC.SUCCESS;
               debug('PolicySecret() returned ' + TPM_RC[rc]);
               if (rc !== TPM_RC.SUCCESS) {
