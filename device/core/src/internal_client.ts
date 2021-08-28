@@ -346,18 +346,15 @@ export abstract class InternalClient extends EventEmitter {
    * @param {(err: Error) => void}     done               - A callback used to get notified of the success or failure of the operation.
    *                                                        If no callback is specified, a promise is returned instead.
    */
-  updateClientProperties(propertyCollection: ClientPropertyCollection): Promise<void>;
-  updateClientProperties(propertyCollection: ClientPropertyCollection, done: (err: Error) => void): void;
-  updateClientProperties(propertyCollection: ClientPropertyCollection, done?: (err: Error) => void): Promise<void> | void {
-    return callbackToPromise((_callback) => {
-      Promise.resolve(this._twin ?? this.getTwin(true)).then((twin) => {
-        // We don't want to rely on twin.properties.reported.update in case the user has a reported property called update (see https://github.com/Azure/azure-iot-sdk-node/issues/578)
-        // The as any is necessary here to make tsc happy because _updateReportedProperties is a private member of Twin
-        // We want to keep _updateReportedProperties private so users don't call it directly.
-        (twin as any)._updateReportedProperties(propertyCollection.backingObject, _callback);
-      }).catch(_callback);
-    }, done);
-  }
+   updateClientProperties(propertyCollection: ClientPropertyCollection): Promise<void>;
+   updateClientProperties(propertyCollection: ClientPropertyCollection, done: (err: Error) => void): void;
+   updateClientProperties(propertyCollection: ClientPropertyCollection, done?: (err: Error) => void): Promise<void> | void {
+     return callbackToPromise((_callback) => {
+       new RetryOperation(this._retryPolicy, this._maxOperationTimeout).retry((opCallback) => {
+         this._transport.updateTwinReportedProperties(propertyCollection.backingObject, opCallback);
+       }, _callback);
+     }, done);
+   }
 
   /**
    * Registers a listener to get invoked with a writable property patch whenever the device receives a writable property request.
@@ -365,24 +362,24 @@ export abstract class InternalClient extends EventEmitter {
    * @param {(properties: ClientPropertyCollection) => void} callback - The callback to get invoked on a writable property request.
    */
   onWritablePropertyUpdateRequest(callback: (properties: ClientPropertyCollection) => void): void {
-    Promise.resolve(this._twin ?? this.getTwin(true))
-      .then((twin) => {
-        twin.on('_desiredPropertyUpdate', (patch) => {
-          callback(new ClientPropertyCollection(patch));
-        });
-      })
-      .catch((err) => {
-        this.emit('error', err);
-      });
+    this._transport.on('twinDesiredPropertiesUpdate', (patch) => {
+      callback(new ClientPropertyCollection(patch));
+    });
+    new RetryOperation(this._retryPolicy, this._maxOperationTimeout).retry(
+      (opCallback) => {
+        this._transport.enableTwinDesiredPropertiesUpdates(opCallback);
+      },
+      (err) => {
+        if (err) {
+          this.emit('error', err);
+        }
+      }
+    );
   }
 
   /**
    * Gets the client properties from the Azure IoT Hub or Azure IoT Edge Hub service.
    * This method is only intended for use with Azure IoT Plug and Play.
-   *
-   * WARNING: This will cause the legacy Twin.properties.reported.update functionality to
-   * stop working until the next call to getTwin(). Please use updateClientProperties()
-   * instead of the legacy update function when using getClientProperties().
    *
    * @param {Callback<ClientProperties>} done - The callback which gets invoked with the ClientProperties object.
    *                                            If no callback is specified, a promise is returned instead.
@@ -391,39 +388,21 @@ export abstract class InternalClient extends EventEmitter {
   getClientProperties(done: Callback<ClientProperties>): void;
   getClientProperties(done?: Callback<ClientProperties>): Promise<ClientProperties> | void {
     return callbackToPromise((_callback) => {
-      this.getTwin(true, (err, twin) => {
-        if (err) {
-          _callback(err);
-          return;
-        }
-        if (typeof twin.properties.reported.update === 'function') {
-          /**
-           * In the "legacy" way of updating reported properties, we had an update function in the reported properties object. However, that pollutes the reported properties.
-           * We delete it to avoid the user having their reported properties polluted.
-           * This is safe because the user couldn't have possibly had a reported property of function type, so it must have been added internally.
-           * However, this breaks the "legacy" way of updating reported properties until the next time getTwin() is called on the Twin instance.
-           * It was decided that this tradeoff is worth avoiding having to make deep copies of the reported properties object.
-           */
-          delete twin.properties.reported.update;
-        }
-        _callback(undefined, new ClientProperties(twin));
-      });
+      new RetryOperation(this._retryPolicy, this._maxOperationTimeout).retry((opCallback) => {
+        this._transport.getTwin((err, twinProperties) => {
+          if (err) {
+            opCallback(err);
+            return;
+          }
+          opCallback(null, new ClientProperties(twinProperties));
+        });
+      }, _callback);
     }, done);
   }
 
   getTwin(done: Callback<Twin>): void;
-  getTwin(disableFireChangeEvents: boolean, done: Callback<Twin>): void;
   getTwin(): Promise<Twin>;
-  getTwin(disableFireChangeEvents: boolean): Promise<Twin>;
-  getTwin(doneOrDisableFireChangeEvents?: Callback<Twin> | boolean, done?: Callback<Twin>): Promise<Twin> | void {
-    let disableFireChangeEvents = false;
-    if (typeof doneOrDisableFireChangeEvents === 'function') {
-      done = doneOrDisableFireChangeEvents;
-    } else if (typeof doneOrDisableFireChangeEvents === 'boolean') {
-      disableFireChangeEvents = doneOrDisableFireChangeEvents;
-    } else if (typeof doneOrDisableFireChangeEvents !== 'undefined') {
-      throw new TypeError(`First argument must be a function (done) or a boolean (disableFireChangeEvents). Received ${typeof doneOrDisableFireChangeEvents}.`);
-    }
+  getTwin(done?: Callback<Twin>): Promise<Twin> | void {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_INTERNAL_CLIENT_16_094: [If this is the first call to `getTwin` the method shall instantiate a new `Twin` object  and pass it the transport currently in use.]*/
       if (!this._twin) {
@@ -431,7 +410,7 @@ export abstract class InternalClient extends EventEmitter {
       }
 
       /*Codes_SRS_NODE_INTERNAL_CLIENT_16_095: [The `getTwin` method shall call the `get()` method on the `Twin` object currently in use and pass it its `done` argument for a callback.]*/
-      this._twin.get(disableFireChangeEvents, _callback);
+      this._twin.get(_callback);
     }, done);
   }
 

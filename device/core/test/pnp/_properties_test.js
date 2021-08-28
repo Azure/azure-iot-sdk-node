@@ -141,7 +141,7 @@ describe('ClientProperties', function () {
           reportedKey: 'reportedValue'
         }
       };
-      const clientProperties = new ClientProperties({properties});
+      const clientProperties = new ClientProperties(properties);
       assert.deepEqual(clientProperties.writablePropertiesRequests.backingObject, {desiredKey: 'desiredValue'});
       assert.deepEqual(clientProperties.reportedFromDevice.backingObject, {reportedKey: 'reportedValue'});
     });

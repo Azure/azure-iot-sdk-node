@@ -649,120 +649,54 @@ var ClientPropertyCollection = require('../dist/pnp/properties').ClientPropertyC
         });
       });
 
-      it('Calls get() on the Twin with the correct args and returns a promise if neither disableFireChangeEvents nor a callback is provided', async function () {
-        const client = new ClientCtor(new FakeTransport());
-        const twin = await client.getTwin();
-        sinon.spy(twin, 'get');
-        await client.getTwin();
-        assert(
-          twin.get.calledOnceWith(false),
-          `Expected get() to be called once with first argument false, got call count of ${twin.get.callCount} and first arg of ${twin.get.args[0][0]}`
-        );
-      });
-
-      it('Calls get() on the Twin with the correct args and returns a promise if disableFireChangeEvents is provided but a callback is not provided', async function () {
-        const client = new ClientCtor(new FakeTransport());
-        const twin = await client.getTwin();
-        sinon.spy(twin, 'get');
-        await client.getTwin(true);
-        assert(
-          twin.get.calledOnceWith(true),
-          `Expected get() to be called once with first argument true, got call count of ${twin.get.callCount} and first arg of ${twin.get.args[0][0]}`
-        );
-      });
-
-      it('Calls get() on the Twin with the correct args and calls the callback if disableFireChangeEvents is not provided but a callback is provided', function (testCallback) {
-        const client = new ClientCtor(new FakeTransport());
-        client.getTwin((err, twin) => {
-          if (err) {
-            testCallback(err)
-            return;
-          }
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_095: [The `getTwin` method shall call the `get()` method on the `Twin` object currently in use and pass it its `done` argument for a callback.]*/
+      it('Calls the get() method on the Twin', function (testCallback) {
+        var client = new ClientCtor(new FakeTransport());
+        client.getTwin(function (err, twin) {
           sinon.spy(twin, 'get');
-          client.getTwin((err) => {
-            if (err) {
-              testCallback(err);
-              return;
-            }
-            try {
-              assert(
-                twin.get.calledOnceWith(false),
-                `Expected get() to be called once with first argument false, got call count of ${twin.get.callCount} and first arg of ${twin.get.args[0][0]}`
-              );
-              testCallback();
-            } catch (err) {
-              testCallback(err);
-            }
-          })
-        });
-      });
-
-      it('Calls get() on the Twin with the correct args and calls the callback if both disableFireChangeEvents and a callback is provided', function (testCallback) {
-        const client = new ClientCtor(new FakeTransport());
-        client.getTwin((err, twin) => {
-          if (err) {
-            testCallback(err)
-            return;
-          }
-          sinon.spy(twin, 'get');
-          client.getTwin(true, (err) => {
-            if (err) {
-              testCallback(err);
-              return;
-            }
-            try {
-              assert(
-                twin.get.calledOnceWith(true),
-                `Expected get() to be called once with first argument true, got call count of ${twin.get.callCount} and first arg of ${twin.get.args[0][0]}`
-              );
-              testCallback();
-            } catch (err) {
-              testCallback(err);
-            }
-          })
-        });
-      });
-
-      [null, {}, "string", 42].forEach((value) => {
-        it(`Throws if the first argument is neither a function nor a boolean (${value})`, function() {
-          const client = new ClientCtor(new FakeTransport()); 
-          assert.throws(client.getTwin.bind(client, value), TypeError, `First argument must be a function (done) or a boolean (disableFireChangeEvents). Received ${typeof value}.`);
+          client.getTwin(function () {
+            assert.isTrue(twin.get.calledOnce);
+            testCallback();
+          });
         });
       });
     });
 
     describe('getClientProperties', function () {
-      it('Calls the client\'s getTwin method and calls the callback with the correct result', async function() {
-        const client = new ClientCtor(new FakeTransport());
-        sinon.spy(client, 'getTwin');
+      it('Calls the transport\'s getTwin() method and calls the callback with the correct result', async function() {
+        const transport = new FakeTransport();
+        sinon.spy(transport, 'getTwin');
+        const client = new ClientCtor(transport);
         const properties = await new Promise((resolve, reject) => {
           client.getClientProperties((err, properties) => {
             err ? reject(err) : resolve(properties);
           });
         });
         assert(
-          client.getTwin.calledOnceWith(true),
-          `Expected getTwin() call count of 1 with first arg value of true, got call count of ${client.getTwin.callCount} and argument ${client.getTwin.args[0][0]}`
+          transport.getTwin.calledOnce,
+          `Expected getTwin() call count of 1, got call count of ${transport.getTwin.callCount}`
         );
         assert.deepEqual(properties.reportedFromDevice.backingObject, {fake: 'fakeReported'});
         assert.deepEqual(properties.writablePropertiesRequests.backingObject, {fake: 'fakeDesired'});
       });
 
-      it('Calls the client\'s getTwin method and returns a promise with the correct result', async function() {
-        const client = new ClientCtor(new FakeTransport());
-        sinon.spy(client, 'getTwin');
+      it('Calls the transport\'s getTwin() method and returns a promise with the correct result', async function() {
+        const transport = new FakeTransport();
+        sinon.spy(transport, 'getTwin');
+        const client = new ClientCtor(transport);
         const properties = await client.getClientProperties();
         assert(
-          client.getTwin.calledOnceWith(true),
-          `Expected getTwin() call count of 1 with first arg value of true, got call count of ${client.getTwin.callCount} and argument ${client.getTwin.args[0][0]}`
+          transport.getTwin.calledOnce,
+          `Expected getTwin() call count of 1, got call count of ${transport.getTwin.callCount}`
         );
         assert.deepEqual(properties.reportedFromDevice.backingObject, {fake: 'fakeReported'});
         assert.deepEqual(properties.writablePropertiesRequests.backingObject, {fake: 'fakeDesired'});
       });
 
-      it('Calls the callback with an error if getTwin() fails', async function() {
-        const client = new ClientCtor(new FakeTransport());
-        client.getTwin = (_disableFireChangeEvents, callback) => {callback(new Error('This is a fake error'))};
+      it('Calls the callback with an error if the transport\'s getTwin() method fails', async function() {
+        const transport = new FakeTransport();
+        transport.getTwin = (callback) => {callback(new Error('This is a fake error'))};
+        const client = new ClientCtor(transport);
         await new Promise((resolve, reject) => {
           client.getClientProperties((err, properties) => {
             err ? resolve(err) : reject(new Error('Expected getClientProperties to fail, but it succeeded'));
@@ -770,9 +704,10 @@ var ClientPropertyCollection = require('../dist/pnp/properties').ClientPropertyC
         });
       });
 
-      it('Rejects if getTwin() fails', async function() {
-        const client = new ClientCtor(new FakeTransport());
-        client.getTwin = (_disableFireChangeEvents, callback) => {callback(new Error('This is a fake error'))};        
+      it('Rejects if the transport\'s getTwin() method fails', async function() {
+        const transport = new FakeTransport();
+        transport.getTwin = (callback) => {callback(new Error('This is a fake error'))};
+        const client = new ClientCtor(transport);       
         try {
           await client.getClientProperties();
         } catch(e){
@@ -784,13 +719,12 @@ var ClientPropertyCollection = require('../dist/pnp/properties').ClientPropertyC
 
     describe('onWritablePropertyUpdateRequest', function () {
       it('registers a callback that gets called when a new desired property is received', function (testCallback) {
-        let transport = new FakeTransport();
+        const transport = new FakeTransport();
         const client = new ClientCtor(transport);
         client.onWritablePropertyUpdateRequest((properties) => {
           try {
             assert.deepEqual(properties.backingObject, {key: 'value'});
             testCallback();
-            return;
           } catch (err) {
             testCallback(err);
           }
@@ -800,49 +734,50 @@ var ClientPropertyCollection = require('../dist/pnp/properties').ClientPropertyC
         });
       });
 
-      it('calls getTwin() if there is no existing twin', async function () {
-        const client = new ClientCtor(new FakeTransport());
-        sinon.spy(client, 'getTwin');
+      it('calls enableTwinDesiredPropertiesUpdates() on the transport', function () {
+        const transport = new FakeTransport();
+        sinon.spy(transport, 'enableTwinDesiredPropertiesUpdates');
+        const client = new ClientCtor(transport);
         client.onWritablePropertyUpdateRequest(() => {});
         assert(
-          client.getTwin.calledOnceWith(true),
-          `Expected getTwin() call count of 1 with first arg value of true, got call count of ${client.getTwin.callCount} and argument ${client.getTwin.args[0][0]}`
+          transport.enableTwinDesiredPropertiesUpdates.calledOnce,
+          `Expected enableTwinDesiredPropertiesUpdates() call count of 1, got call count of ${transport.enableTwinDesiredPropertiesUpdates.callCount}`
         )
       });
 
-      it('Does not call getTwin() if there is an existing twin', async function () {
-        const client = new ClientCtor(new FakeTransport());
-        await client.getTwin();
-        sinon.spy(client, 'getTwin');
-        client.onWritablePropertyUpdateRequest(() => {});
-        assert(
-          client.getTwin.notCalled,
-          `Expected getTwin() to not be called, got call count of ${client.getTwin.callCount}`
-        )
-      });
-
-      it('emits an error event if there is no existing twin and getTwin() fails', function (testCallback) {
-        const client = new ClientCtor(new FakeTransport());
-        client.getTwin = () => {return Promise.reject(new Error('This is a fake error'))};   
-        client.on('error', () => {testCallback()});
+      it('emits an error if enableTwinDesiredPropertiesUpdates() on the transport fails', function (testCallback) {
+        const transport = new FakeTransport();
+        transport.enableTwinDesiredPropertiesUpdates = (callback) => {
+          callback(new Error('this is a fake error'));
+        };
+        const client = new ClientCtor(transport);
+        client.on('error', (err) => {
+          try {
+            assert.strictEqual(err.message, 'this is a fake error');
+            assert.instanceOf(err, Error);
+            testCallback();
+          } catch (err) {
+            testCallback(err)
+          }
+        });
         client.onWritablePropertyUpdateRequest(() => {});
       });
     });
 
     describe('updateClientProperties', function () {
-      it('calls _updateReportedProperties with the correct payload and invokes the callback on success', async function() {
-        const client = new ClientCtor(new FakeTransport());
-        const twin = await client.getTwin();
-        sinon.spy(twin, '_updateReportedProperties');
+      it('calls updateTwinReportedProperties() on the transport with the correct payload and invokes the callback on success', async function() {
+        const transport = new FakeTransport();
+        sinon.spy(transport, 'updateTwinReportedProperties');
+        const client = new ClientCtor(transport);
         await new Promise((resolve, reject) => {
           client.updateClientProperties(new ClientPropertyCollection({key: "value"}), (err) => {
             try {
               assert.isNotOk(err);
               assert(
-                twin._updateReportedProperties.calledOnce,
-                `Expected _updateReportedProperties() call count of 1, got call count of ${twin._updateReportedProperties.callCount}`
+                transport.updateTwinReportedProperties.calledOnce,
+                `Expected updateTwinReportedProperties() call count of 1, got call count of ${transport.updateTwinReportedProperties.callCount}`
               );
-              assert.deepEqual(twin._updateReportedProperties.args[0][0], {key: "value"});
+              assert.deepEqual(transport.updateTwinReportedProperties.args[0][0], {key: "value"});
               resolve();
             } catch (err) {
               reject(err);
@@ -851,43 +786,22 @@ var ClientPropertyCollection = require('../dist/pnp/properties').ClientPropertyC
         });
       });
 
-      it('calls _updateReportedProperties with the correct payload and resolves the promise on success', async function() {
-        const client = new ClientCtor(new FakeTransport());
-        const twin = await client.getTwin();
-        sinon.spy(twin, '_updateReportedProperties');
+      it('calls updateTwinReportedProperties() on the transport with the correct payload and resolves the promise on success', async function() {
+        const transport = new FakeTransport();
+        sinon.spy(transport, 'updateTwinReportedProperties');
+        const client = new ClientCtor(transport);
         await client.updateClientProperties(new ClientPropertyCollection({key: "value"}));
         assert(
-          twin._updateReportedProperties.calledOnce,
-          `Expected _updateReportedProperties() call count of 1, got call count of ${twin._updateReportedProperties.callCount}`
+          transport.updateTwinReportedProperties.calledOnce,
+          `Expected updateTwinReportedProperties() call count of 1, got call count of ${transport.updateTwinReportedProperties.callCount}`
         );
-        assert.deepEqual(twin._updateReportedProperties.args[0][0], {key: "value"});
+        assert.deepEqual(transport.updateTwinReportedProperties.args[0][0], {key: "value"});
       });
 
-      it('calls getTwin() if there is no existing twin', async function() {
-        const client = new ClientCtor(new FakeTransport());
-        sinon.spy(client, 'getTwin');
-        await client.updateClientProperties(new ClientPropertyCollection({key: "value"}));
-        assert(
-          client.getTwin.calledOnceWith(true),
-          `Expected getTwin() call count of 1 with first arg value of true, got call count of ${client.getTwin.callCount} and argument ${client.getTwin.args[0][0]}`
-        );
-      });
-
-      it('does not call getTwin() if there is an existing twin', async function() {
-        const client = new ClientCtor(new FakeTransport());
-        await client.getTwin();
-        sinon.spy(client, 'getTwin');
-        await client.updateClientProperties(new ClientPropertyCollection({key: "value"}));
-        assert(
-          client.getTwin.notCalled,
-          `Expected getTwin() to not be called, but got call count of ${client.getTwin.callCount}`
-        );
-      });
-
-      it('Calls the callback with an error if _updateReportedProperties() fails', async function() {
-        const client = new ClientCtor(new FakeTransport());
-        const twin = await client.getTwin();
-        twin._updateReportedProperties = (state, callback) => {callback(new Error('this is a fake error'))};
+      it('Calls the callback with an error if updateTwinReportedProperties() on the transport fails', async function() {
+        const transport = new FakeTransport();
+        transport.updateTwinReportedProperties = (state, callback) => {callback(new Error('this is a fake error'))};
+        const client = new ClientCtor(transport);
         await new Promise((resolve, reject) => {
           client.updateClientProperties(new ClientPropertyCollection({key: "value"}), (err) => {
             err ? resolve(err) : reject(new Error('Expected updateClientProperties to fail, but it succeeded'));
@@ -895,31 +809,10 @@ var ClientPropertyCollection = require('../dist/pnp/properties').ClientPropertyC
         });
       });
 
-      it('Rejects if _updateReportedProperties() fails', async function() {
-        const client = new ClientCtor(new FakeTransport());
-        const twin  = await client.getTwin();
-        twin._updateReportedProperties = (state, callback) => {callback(new Error('this is a fake error'))};
-        try {
-          await client.updateClientProperties(new ClientPropertyCollection({key: "value"}));
-        } catch(e){
-          return;
-        }
-        assert.fail('Expected updateClientProperties to fail, but it succeeded.');
-      });
-
-      it('Calls the callback with an error if there is no existing twin and getTwin() fails', async function() {
-        const client = new ClientCtor(new FakeTransport());
-        client.getTwin = (_disableFireChangeEvents) => {return Promise.reject(new Error("this is a fake error"))};
-        await new Promise((resolve, reject) => {
-          client.updateClientProperties(new ClientPropertyCollection({key: "value"}), (err) => {
-            err ? resolve(err) : reject(new Error('Expected updateClientProperties to fail, but it succeeded'));
-          });
-        });
-      });
-
-      it('Rejects if if there is no existing twin and getTwin() fails', async function() {
-        const client = new ClientCtor(new FakeTransport());
-        client.getTwin = (_disableFireChangeEvents) => {return Promise.reject(new Error("this is a fake error"))};
+      it('Rejects if updateTwinReportedProperties() on the transport fails', async function() {
+        const transport = new FakeTransport();
+        transport.updateTwinReportedProperties = (state, callback) => {callback(new Error('this is a fake error'))};
+        const client = new ClientCtor(transport);
         try {
           await client.updateClientProperties(new ClientPropertyCollection({key: "value"}));
         } catch(e){
