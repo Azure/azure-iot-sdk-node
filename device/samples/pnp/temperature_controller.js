@@ -23,8 +23,18 @@ const idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE;
 const registrationId = process.env.IOTHUB_DEVICE_DPS_REGISTRATION_ID;
 const symmetricKey = process.env.IOTHUB_DEVICE_DPS_REGISTRATION_KEY;
 
-// Model definition: https://github.com/Azure/iot-plugandplay-models/blob/main/dtmi/com/example/thermostat-1.json
-const modelId = 'dtmi:com:example:Thermostat;1';
+// Model definition:
+// https://github.com/Azure/iot-plugandplay-models/blob/main/dtmi/com/example/temperaturecontroller-2.json
+const modelId = 'dtmi:com:example:TemperatureController;2';
+// thermostat1 model definition:
+// https://github.com/Azure/iot-plugandplay-models/blob/main/dtmi/com/example/thermostat-1.json
+const thermostat1ComponentName = 'thermostat1';
+// thermostat2 model definition:
+// https://github.com/Azure/iot-plugandplay-models/blob/main/dtmi/com/example/thermostat-2.json
+const thermostat2ComponentName = 'thermostat2';
+// deviceInformation model definition:
+// https://github.com/Azure/iot-plugandplay-models/blob/main/dtmi/azure/devicemanagement/deviceinformation-1.json
+const deviceInformationComponentName = 'deviceInformation';
 
 const sendTelemetryIntervalTime = 10 * 1000; //10 seconds
 
@@ -86,7 +96,7 @@ class TemperatureSensor {
   }
 };
 
-class ThermostatSample {
+class TemperatureControllerSample {
   constructor() {
     this.sensor = new TemperatureSensor();
     this.sendTelemetryIndex = 0;
@@ -109,19 +119,32 @@ class ThermostatSample {
   }
 
   handleWritablePropertyRequest = (properties) => {
-    console.log(`Received writable property patch ${JSON.stringify(properties.backingObject)}.`);
+    console.log(`Received writable property patch ${JSON.stringify(properties.backingObject)}`);
     const writablePropertyResponse = new ClientPropertyCollection();
-    for(const [key, value] of Object.entries(properties.backingObject)) {
+    for (const [key, value] of Object.entries(properties.backingObject)) {
       if (key === '$version') {
         continue;
+      } else if ((key === thermostat1ComponentName || key === thermostat2ComponentName) && typeof value === 'object') {
+        for (const [componentKey, componentValue] of Object.entries(value)) {
+          if (componentKey === '$version') {
+            continue;
+          }
+          const [ackCode, ackDescription] =
+            (componentKey === 'targetTemperature' && typeof componentValue === 'number') ?
+              [200, 'success']:
+              [400, 'invalid component property'];
+          writablePropertyResponse.setProperty(
+            key,
+            componentKey,
+            generateWritablePropertyResponse(componentValue, ackCode, ackDescription, properties.version)
+          );
+        }
+      } else {
+        writablePropertyResponse.setProperty(
+          key,
+          generateWritablePropertyResponse(value, 400, 'invalid property', properties.version)
+        );
       }
-      const [ackCode, ackDescription] = (key === 'targetTemperature' && typeof value === 'number') ?
-        [200, 'success']:
-        [400, 'invalid property'];
-      writablePropertyResponse.setProperty(
-        key,
-        generateWritablePropertyResponse(value, ackCode, ackDescription, properties.version)
-      );
     }
     console.log(
       `Updating properties to acknowledge writable property request: ${JSON.stringify(writablePropertyResponse.backingObject)}`
@@ -137,32 +160,65 @@ class ThermostatSample {
           `Error updating properties to acknowledge writable property request version ${properties.version}: ${err}`
         );
       });
-  };
+  }
+
+  handleReboot = (request, response) => {
+    console.log(
+      `Received command request "reboot" with payload "${request.payload}" and request ID ${request.requestID}`
+    );
+    response.send(200)
+      .then(() => {
+        console.log(`Successfully responded to command "reboot" with request ID ${request.requestID}`);
+      })
+      .catch((err) => {
+        console.error(
+          `An error ocurred while responding to command "reboot" with request ID ${request.requestID}: ${err}`
+        );
+      });
+  }
 
   handleGetMaxMinReport = (request, response) => {
     console.log(
-      `Received command request "getMaxMinReport" with payload "${request.payload}" and request ID ${request.requestID}`
+      `Received command request "getMaxMinReport" for component "${request.componentName}" with payload "${request.payload}" and request ID ${request.requestID}`
     );
     response.send(200, this.sensor.getMaxMinReportObject())
       .then(() => {
-        console.log(`Successfully responded to command request ID ${request.requestID}`);
+        console.log(
+          `Successfully responded to command "getMaxMinReport" for component "${request.componentName}" with request ID ${request.requestID}`
+        );
       })
-      .catch((err) => {
-        console.error(`An error ocurred while responding to command request ID ${request.requestID}: ${err}`);
+      .catch((err) =>  {
+        console.log(
+          `An error occurred while responding to command "getMaxMinReport" for component "${request.componentName}" with request ID ${request.requestID}: ${err}`
+        );
       });
-  };
+  }
 
   handleSendTelemetry = () => {
     this.sensor.updateSensor();
     const currIndex = this.sendTelemetryIndex++;
-    console.log(`Sending telemetry message ${currIndex} to default component`);
-    this.client.sendTelemetry({ temperature: this.sensor.getCurrentTemp() })
+    console.log(`Sending telemetry message ${currIndex} to root component, "thermostat1", and "thermostat2"`);
+    this.client.sendTelemetry({ workingSet: 1 + (Math.random() * 90) })
       .then(() => {
-        console.log(`Successfully sent telemetry message ${currIndex}`);
+        console.log(`Successfully sent telemetry message ${currIndex} for root component`);
       })
       .catch((err) => {
-        console.error(`An error occurred while sending telemetry message ${currIndex}: ${err}`);
+        console.error(`An error occurred while sending telemetry message ${currIndex} for root component: ${err}`);
       });
+    this.client.sendTelemetry({ temperature: this.sensor.getCurrentTemp() }, thermostat1ComponentName)
+      .then(() => {
+        console.log(`Successfully sent telemetry message ${currIndex} for "thermostat1"`);
+      })
+      .catch((err) => {
+        console.error(`An error ocurred while sending telemetry message ${currIndex} for "thermostat1": ${err}`);
+      });
+    this.client.sendTelemetry({ temperature: this.sensor.getCurrentTemp() }, thermostat2ComponentName)
+    .then(() => {
+      console.log(`Successfully sent telemetry message ${currIndex} for "thermostat2"`);
+    })
+    .catch((err) => {
+      console.error(`An error ocurred while sending telemetry message ${currIndex} for "thermostat2": ${err}`);
+    });
   }
 
   async main() {
@@ -202,28 +258,40 @@ class ThermostatSample {
     await this.client.open();
 
     const properties = new ClientPropertyCollection();
-    properties.setProperty('maxTempSinceLastReboot', this.sensor.getMaxTemp());
-    console.log(`Updating client property "maxTempSinceLastReboot" with value ${this.sensor.getMaxTemp()}`)
+    properties.setProperty('serialNumber', 'BQFQ5VqD');
+    properties.setProperty(thermostat1ComponentName, 'maxTempSinceLastReboot', this.sensor.getMaxTemp());
+    properties.setProperty(thermostat2ComponentName, 'maxTempSinceLastReboot', this.sensor.getMaxTemp());
+    properties.setProperty(deviceInformationComponentName, 'manufacturer', 'Contoso Device Corporation');
+    properties.setProperty(deviceInformationComponentName, 'model', 'Contoso 47-turbo');
+    properties.setProperty(deviceInformationComponentName, 'swVersion', '10.89');
+    properties.setProperty(deviceInformationComponentName, 'osName', 'Contoso_OS');
+    properties.setProperty(deviceInformationComponentName, 'processorArchitecture', 'Contoso_x86');
+    properties.setProperty(deviceInformationComponentName, 'processorManufacturer', 'Contoso Industries');
+    properties.setProperty(deviceInformationComponentName, 'totalStorage', 65000);
+    properties.setProperty(deviceInformationComponentName, 'totalMemory', 640);
+    console.log(`Updating client properties with initial read-only property values`);
     this.client.updateClientProperties(properties)
-      .then(() => {
-        console.log('Successfully updated "maxTempSinceLastReboot" property');
-      })
-      .catch((err) => {
-        console.error(`Error updating "maxTempSinceLastReboot" property: ${err}`);
-      s});
+    .then(() => {
+      console.log('Successfully updated read-only properties');
+    })
+    .catch((err) => {
+      console.error(`Error updating read-only properties`);
+    });
 
     console.log('Registering listener for writable property requests');
     this.client.onWritablePropertyUpdateRequest(this.handleWritablePropertyRequest);
 
-    console.log('Enabling commands on the client and registering listener for command "getMaxMinReport"');
-    this.client.onCommand('getMaxMinReport', this.handleGetMaxMinReport);
+    console.log('Registering listeners for commands');
+    this.client.onCommand('reboot', this.handleReboot);
+    this.client.onCommand(thermostat1ComponentName, 'getMaxMinReport', this.handleGetMaxMinReport);
+    this.client.onCommand(thermostat2ComponentName, 'getMaxMinReport', this.handleGetMaxMinReport);
 
-    console.log(`Starting to send telemetry every ${sendTelemetryIntervalTime} ms`);
+    console.log('Starting to send telemetry');
     this.sendTelemetryIntervalId = setInterval(this.handleSendTelemetry, sendTelemetryIntervalTime);
   }
 }
 
-new ThermostatSample().main().catch((err) => {
+new TemperatureControllerSample().main().catch((err) => {
   console.error(`An error occurred while starting the sample: ${err}`);
   process.exit(1);
 });
