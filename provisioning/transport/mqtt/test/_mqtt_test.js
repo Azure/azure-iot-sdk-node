@@ -280,7 +280,7 @@ describe('Mqtt', function () {
         uuidStub.returns(fakeUuids[0]);
 
         mqtt.queryOperationStatus(fakeRequest, fakeOperationId, function(err, result) {
-          uuidStub.restore();
+          uuid.v4.restore();
           assert.oneOf(err, [null, undefined]);
           assert.deepEqual(result, fakeResponse);
           callback();
@@ -356,7 +356,7 @@ describe('Mqtt', function () {
           uuidStub.returns(fakeUuids[0]);
           mqtt.setTransportOptions({pollingInterval: configPollingInterval});
           op.invoke(function(err, result, response, pollingInterval) {
-            uuidStub.restore();
+            uuid.v4.restore();
             assert.oneOf(err, [null, undefined]);
             assert.equal((theQueryString.indexOf('retry-after') === -1) ? (configPollingInterval) : (dpsPollingInterval*1000), pollingInterval);
             callback();

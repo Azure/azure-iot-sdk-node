@@ -628,7 +628,7 @@ describe('ClaimsBasedSecurityAgent', function() {
       cbs.attach(function(err) {
         assert.isNotOk(err, 'initialization passed');
         cbs.putToken('myAudience', 'my token');
-        uuidStub.restore();
+        uuid.v4.restore();
         assert.equal(fakeRheaSenderLink.send.args[0][0].application_properties.operation, 'put-token', 'operation application property not equal');
         assert.equal(fakeRheaSenderLink.send.args[0][0].application_properties.type, 'servicebus.windows.net:sastoken', 'type application property not equal');
         assert.equal(fakeRheaSenderLink.send.args[0][0].application_properties.name, 'myAudience', 'name application property not equal');
@@ -705,7 +705,7 @@ describe('ClaimsBasedSecurityAgent', function() {
           clearTimeout(cbs._putToken.timeoutTimer);
           testCallback();
         });
-        uuidStub.restore();
+        uuid.v4.restore();
       });
     });
 
@@ -782,7 +782,7 @@ describe('ClaimsBasedSecurityAgent', function() {
         process.nextTick(function () {
           this.clock.tick(40000); // 40 seconds more should have resulted in timeouts for the third.
         }.bind(this));
-        uuidStub.restore();
+        uuid.v4.restore();
       }.bind(this));
     });
 
@@ -888,7 +888,7 @@ describe('ClaimsBasedSecurityAgent', function() {
             }.bind(this));
           }.bind(this));
         }.bind(this));
-        uuidStub.restore();
+        uuid.v4.restore();
       }.bind(this));
     });
 
