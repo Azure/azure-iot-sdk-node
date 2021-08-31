@@ -150,32 +150,32 @@ export class DigitalTwinClient {
   }
 
   /**
-   * @method invokeComponentCommand                                     module: azure-iot-digitaltwins-service.DigitalTwinClient.invokeComponentCommand
-   * @description                                                       Invoke a command on an component of a particular device and get the result of it.
-   * @param {string} digitalTwinId                                      The digital twin Id of the given device.
-   * @param {string} componentName                                      The component's name.
-   * @param {string} commandName                                        The command's name.
-   * @param {string} argument                                           The argument of a command.
-   * @param {DigitalTwinInvokeComponentCommandOptionalParams} options   The optional parameter to set options including connectionTimeoutInSeconds and responseTimeoutInSeconds.
-   *                                                                    The responseTimeoutInSeconds must be within [5; 300]
-   * @returns DigitalTwinInvokeComponentCommandResponse                 The result of the invoked command containing the result, status code, request ID and the parsed HttpResponse.
+   * @method invokeComponentCommand                                         module: azure-iot-digitaltwins-service.DigitalTwinClient.invokeComponentCommand
+   * @description                                                           Invoke a command on an component of a particular device and get the result of it.
+   * @param {string} digitalTwinId                                          The digital twin Id of the given device.
+   * @param {string} componentName                                          The component's name.
+   * @param {string} commandName                                            The command's name.
+   * @param {string|any} argument                                           The argument of a command.
+   * @param {DigitalTwinInvokeComponentCommandOptionalParams} options       The optional parameter to set options including connectionTimeoutInSeconds and responseTimeoutInSeconds.
+   *                                                                        The responseTimeoutInSeconds must be within [5; 300]
+   * @returns DigitalTwinInvokeComponentCommandResponse                     The result of the invoked command containing the result, status code, request ID and the parsed HttpResponse.
    * @memberof DigitalTwinClient
    */
-  invokeComponentCommand(digitalTwinId: string, componentName: string, commandName: string, argument: string, options?: DigitalTwinInvokeComponentCommandOptionalParams): Promise<DigitalTwinInvokeComponentCommandResponse>{
+  invokeComponentCommand(digitalTwinId: string, componentName: string, commandName: string, argument: string|any, options?: DigitalTwinInvokeComponentCommandOptionalParams): Promise<DigitalTwinInvokeComponentCommandResponse>{
     return this._pl.digitalTwin.invokeComponentCommand(digitalTwinId, componentName, commandName, argument, options);
   }
 
   /**
-   * @method invokeCommand                                              module: azure-iot-digitaltwins-service.DigitalTwinClient.invokeCommand
-   * @description                                                       Invoke a command on an component of a particular device and get the result of it.
-   * @param {string} digitalTwinId                                      The digital twin Id of the given device.
-   * @param {string} argument                                           The argument of a command.
-   * @param {DigitalTwinInvokeRootLevelCommandOptionalParams} options   The optional parameter to set options including connectionTimeoutInSeconds and responseTimeoutInSeconds.
-   *                                                                    The responseTimeoutInSeconds must be within [5; 300]
-   * @returns DigitalTwinInvokeRootLevelCommandResponse                 The result of the invoked command containing the result, status code, request ID and the parsed HttpResponse.
+   * @method invokeCommand                                                  module: azure-iot-digitaltwins-service.DigitalTwinClient.invokeCommand
+   * @description                                                           Invoke a command on an component of a particular device and get the result of it.
+   * @param {string} digitalTwinId                                          The digital twin Id of the given device.
+   * @param {string|any} argument                                           The argument of a command.
+   * @param {DigitalTwinInvokeRootLevelCommandOptionalParams} options       The optional parameter to set options including connectionTimeoutInSeconds and responseTimeoutInSeconds.
+   *                                                                        The responseTimeoutInSeconds must be within [5; 300]
+   * @returns DigitalTwinInvokeRootLevelCommandResponse                     The result of the invoked command containing the result, status code, request ID and the parsed HttpResponse.
    * @memberof DigitalTwinClient
    */
-  invokeCommand(digitalTwinId: string, commandName: string, argument: string, options?: DigitalTwinInvokeRootLevelCommandOptionalParams): Promise<DigitalTwinInvokeRootLevelCommandResponse>{
+  invokeCommand(digitalTwinId: string, commandName: string, argument: string|any, options?: DigitalTwinInvokeRootLevelCommandOptionalParams): Promise<DigitalTwinInvokeRootLevelCommandResponse>{
     return this._pl.digitalTwin.invokeRootLevelCommand(digitalTwinId, commandName, argument, options);
   }
 }
