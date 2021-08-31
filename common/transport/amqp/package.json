@@ -13,7 +13,7 @@
     "lodash.merge": "^4.6.1",
     "machina": "^4.0.2",
     "rhea": "^1.0.15",
-    "uuid": "^3.3.2",
+    "uuid": "^8.3.2",
     "ws": "^6.0.0"
   },
   "devDependencies": {

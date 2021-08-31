@@ -12,7 +12,7 @@
     "azure-iot-provisioning-device": "1.8.9",
     "debug": "^4.3.1",
     "machina": "^4.0.2",
-    "uuid": "^3.3.2"
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/node": "^16.6.1",

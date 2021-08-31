@@ -484,6 +484,8 @@ export class TpmSecurityClient  {
                   if (rc !== TPM_RC.SUCCESS) {
                     /*Codes_SRS_NODE_TPM_SECURITY_CLIENT_06_016: [If an error is encountered activating the identity key, the callback with be invoked with an `Error` of `SecurityDeviceError`.] */
                     activateCallback(new errors.SecurityDeviceError('Unable to decrypt the symmetric key used to protect duplication blob.  RC value: ' + TPM_RC[rc].toString()));
+                  } else if (innerWrapKey.length === 0) {
+                    activateCallback(new errors.SecurityDeviceError('Unable to unwrap inner key - must have administrator privilege'));
                   } else {
                     //
                     // Initialize parameters of the symmetric key used by DRS
