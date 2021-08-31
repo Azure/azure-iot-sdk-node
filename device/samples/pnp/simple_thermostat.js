@@ -20,8 +20,8 @@ let deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 // Must be set if IOTHUB_DEVICE_SECURITY_TYPE environment variable is "DPS"
 const provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT || 'global.azure-devices-provisioning.net';
 const idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE;
-const registrationId = process.env.IOTHUB_DEVICE_DPS_REGISTRATION_ID;
-const symmetricKey = process.env.IOTHUB_DEVICE_DPS_REGISTRATION_KEY;
+const registrationId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID;
+const symmetricKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY;
 
 // Model definition: https://github.com/Azure/iot-plugandplay-models/blob/main/dtmi/com/example/thermostat-1.json
 const modelId = 'dtmi:com:example:Thermostat;1';
@@ -84,85 +84,85 @@ class TemperatureSensor {
   getMaxTemp() {
     return this.maxTemp;
   }
-};
+}
 
 class ThermostatSample {
   constructor() {
     this.sensor = new TemperatureSensor();
     this.sendTelemetryIndex = 0;
-  }
 
-  exitHandler = async () => {
-    console.log('Exiting sample');
-    if (this.sendTelemetryIntervalId) {
-      console.log('Clearing send telemetry interval');
-      clearInterval(this.sendTelemetryIntervalId);
-    }
-    if (this.client) {
-      console.log('Closing client');
-      await this.client.close().catch((err) => {
-        console.log(`An error ocurred while closing the client ${err}`);
-        process.exit(1);
-      });
-    }
-    process.exit();
-  }
-
-  handleWritablePropertyRequest = (properties) => {
-    console.log(`Received writable property patch ${JSON.stringify(properties.backingObject)}.`);
-    const writablePropertyResponse = new ClientPropertyCollection();
-    for(const [key, value] of Object.entries(properties.backingObject)) {
-      if (key === '$version') {
-        continue;
+    this.exitHandler = async () => {
+      console.log('Exiting sample');
+      if (this.sendTelemetryIntervalId) {
+        console.log('Clearing send telemetry interval');
+        clearInterval(this.sendTelemetryIntervalId);
       }
-      const [ackCode, ackDescription] = (key === 'targetTemperature' && typeof value === 'number') ?
-        [200, 'success']:
-        [400, 'invalid property'];
-      writablePropertyResponse.setProperty(
-        key,
-        generateWritablePropertyResponse(value, ackCode, ackDescription, properties.version)
+      if (this.client) {
+        console.log('Closing client');
+        await this.client.close().catch((err) => {
+          console.log(`An error ocurred while closing the client ${err}`);
+          process.exit(1);
+        });
+      }
+      process.exit();
+    };
+
+    this.handleWritablePropertyRequest = (properties) => {
+      console.log(`Received writable property patch ${JSON.stringify(properties.backingObject)}.`);
+      const writablePropertyResponse = new ClientPropertyCollection();
+      for(const [key, value] of Object.entries(properties.backingObject)) {
+        if (key === '$version') {
+          continue;
+        }
+        const [ackCode, ackDescription] = (key === 'targetTemperature' && typeof value === 'number') ?
+          [200, 'success']:
+          [400, 'invalid property'];
+        writablePropertyResponse.setProperty(
+          key,
+          generateWritablePropertyResponse(value, ackCode, ackDescription, properties.version)
+        );
+      }
+      console.log(
+        `Updating properties to acknowledge writable property request: ${JSON.stringify(writablePropertyResponse.backingObject)}`
       );
-    }
-    console.log(
-      `Updating properties to acknowledge writable property request: ${JSON.stringify(writablePropertyResponse.backingObject)}`
-    );
-    this.client.updateClientProperties(writablePropertyResponse)
-      .then(() => {
-        console.log(
-          `Successfully updated properties to acknowledge writable property request version ${properties.version}`
-        );
-      })
-      .catch((err) => {
-        console.error(
-          `Error updating properties to acknowledge writable property request version ${properties.version}: ${err}`
-        );
-      });
-  };
+      this.client.updateClientProperties(writablePropertyResponse)
+        .then(() => {
+          console.log(
+            `Successfully updated properties to acknowledge writable property request version ${properties.version}`
+          );
+        })
+        .catch((err) => {
+          console.error(
+            `Error updating properties to acknowledge writable property request version ${properties.version}: ${err}`
+          );
+        });
+    };
 
-  handleGetMaxMinReport = (request, response) => {
-    console.log(
-      `Received command request "getMaxMinReport" with payload "${request.payload}" and request ID ${request.requestID}`
-    );
-    response.send(200, this.sensor.getMaxMinReportObject())
-      .then(() => {
-        console.log(`Successfully responded to command request ID ${request.requestID}`);
-      })
-      .catch((err) => {
-        console.error(`An error ocurred while responding to command request ID ${request.requestID}: ${err}`);
-      });
-  };
+    this.handleGetMaxMinReport = (request, response) => {
+      console.log(
+        `Received command request "getMaxMinReport" with payload "${request.payload}" and request ID ${request.requestID}`
+      );
+      response.send(200, this.sensor.getMaxMinReportObject())
+        .then(() => {
+          console.log(`Successfully responded to command request ID ${request.requestID}`);
+        })
+        .catch((err) => {
+          console.error(`An error ocurred while responding to command request ID ${request.requestID}: ${err}`);
+        });
+    };
 
-  handleSendTelemetry = () => {
-    this.sensor.updateSensor();
-    const currIndex = this.sendTelemetryIndex++;
-    console.log(`Sending telemetry message ${currIndex} to default component`);
-    this.client.sendTelemetry({ temperature: this.sensor.getCurrentTemp() })
-      .then(() => {
-        console.log(`Successfully sent telemetry message ${currIndex}`);
-      })
-      .catch((err) => {
-        console.error(`An error occurred while sending telemetry message ${currIndex}: ${err}`);
-      });
+    this.handleSendTelemetry = () => {
+      this.sensor.updateSensor();
+      const currIndex = this.sendTelemetryIndex++;
+      console.log(`Sending telemetry message ${currIndex} to default component`);
+      this.client.sendTelemetry({ temperature: this.sensor.getCurrentTemp() })
+        .then(() => {
+          console.log(`Successfully sent telemetry message ${currIndex}`);
+        })
+        .catch((err) => {
+          console.error(`An error occurred while sending telemetry message ${currIndex}: ${err}`);
+        });
+    };
   }
 
   async main() {
@@ -180,7 +180,7 @@ class ThermostatSample {
     if (deviceSecurityType === 'DPS') {
       if (!idScope || !registrationId || !symmetricKey) {
         throw new Error(
-          'IOTHUB_DEVICE_DPS_ID_SCOPE, IOTHUB_DEVICE_DPS_REGISTRATION_ID, and IOTHUB_DEVICE_DPS_REGISTRATION_KEY must be provided if IOTHUB_DEVICE_SECURITY_TYPE is "DPS"'
+          'IOTHUB_DEVICE_DPS_ID_SCOPE, IOTHUB_DEVICE_DPS_DEVICE_ID, and IOTHUB_DEVICE_DPS_DEVICE_KEY must be provided if IOTHUB_DEVICE_SECURITY_TYPE is "DPS"'
         );
       }
       deviceConnectionString = await provisionDevice({ modelId });
@@ -203,14 +203,14 @@ class ThermostatSample {
 
     const properties = new ClientPropertyCollection();
     properties.setProperty('maxTempSinceLastReboot', this.sensor.getMaxTemp());
-    console.log(`Updating client property "maxTempSinceLastReboot" with value ${this.sensor.getMaxTemp()}`)
+    console.log(`Updating client property "maxTempSinceLastReboot" with value ${this.sensor.getMaxTemp()}`);
     this.client.updateClientProperties(properties)
       .then(() => {
         console.log('Successfully updated "maxTempSinceLastReboot" property');
       })
       .catch((err) => {
         console.error(`Error updating "maxTempSinceLastReboot" property: ${err}`);
-      s});
+      });
 
     console.log('Registering listener for writable property requests');
     this.client.onWritablePropertyUpdateRequest(this.handleWritablePropertyRequest);

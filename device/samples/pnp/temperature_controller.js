@@ -20,8 +20,8 @@ let deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 // Must be set if IOTHUB_DEVICE_SECURITY_TYPE environment variable is "DPS"
 const provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT || 'global.azure-devices-provisioning.net';
 const idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE;
-const registrationId = process.env.IOTHUB_DEVICE_DPS_REGISTRATION_ID;
-const symmetricKey = process.env.IOTHUB_DEVICE_DPS_REGISTRATION_KEY;
+const registrationId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID;
+const symmetricKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY;
 
 // Model definition:
 // https://github.com/Azure/iot-plugandplay-models/blob/main/dtmi/com/example/temperaturecontroller-2.json
@@ -94,131 +94,131 @@ class TemperatureSensor {
   getMaxTemp() {
     return this.maxTemp;
   }
-};
+}
 
 class TemperatureControllerSample {
   constructor() {
     this.sensor = new TemperatureSensor();
     this.sendTelemetryIndex = 0;
-  }
 
-  exitHandler = async () => {
-    console.log('Exiting sample');
-    if (this.sendTelemetryIntervalId) {
-      console.log('Clearing send telemetry interval');
-      clearInterval(this.sendTelemetryIntervalId);
-    }
-    if (this.client) {
-      console.log('Closing client');
-      await this.client.close().catch((err) => {
-        console.log(`An error ocurred while closing the client ${err}`);
-        process.exit(1);
-      });
-    }
-    process.exit();
-  }
+    this.exitHandler = async () => {
+      console.log('Exiting sample');
+      if (this.sendTelemetryIntervalId) {
+        console.log('Clearing send telemetry interval');
+        clearInterval(this.sendTelemetryIntervalId);
+      }
+      if (this.client) {
+        console.log('Closing client');
+        await this.client.close().catch((err) => {
+          console.log(`An error ocurred while closing the client ${err}`);
+          process.exit(1);
+        });
+      }
+      process.exit();
+    };
 
-  handleWritablePropertyRequest = (properties) => {
-    console.log(`Received writable property patch ${JSON.stringify(properties.backingObject)}`);
-    const writablePropertyResponse = new ClientPropertyCollection();
-    for (const [key, value] of Object.entries(properties.backingObject)) {
-      if (key === '$version') {
-        continue;
-      } else if ((key === thermostat1ComponentName || key === thermostat2ComponentName) && typeof value === 'object') {
-        for (const [componentKey, componentValue] of Object.entries(value)) {
-          if (componentKey === '$version') {
-            continue;
+    this.handleWritablePropertyRequest = (properties) => {
+      console.log(`Received writable property patch ${JSON.stringify(properties.backingObject)}`);
+      const writablePropertyResponse = new ClientPropertyCollection();
+      for (const [key, value] of Object.entries(properties.backingObject)) {
+        if (key === '$version') {
+          continue;
+        } else if ((key === thermostat1ComponentName || key === thermostat2ComponentName) && typeof value === 'object') {
+          for (const [componentKey, componentValue] of Object.entries(value)) {
+            if (componentKey === '$version') {
+              continue;
+            }
+            const [ackCode, ackDescription] =
+              (componentKey === 'targetTemperature' && typeof componentValue === 'number') ?
+                [200, 'success']:
+                [400, 'invalid component property'];
+            writablePropertyResponse.setProperty(
+              key,
+              componentKey,
+              generateWritablePropertyResponse(componentValue, ackCode, ackDescription, properties.version)
+            );
           }
-          const [ackCode, ackDescription] =
-            (componentKey === 'targetTemperature' && typeof componentValue === 'number') ?
-              [200, 'success']:
-              [400, 'invalid component property'];
+        } else {
           writablePropertyResponse.setProperty(
             key,
-            componentKey,
-            generateWritablePropertyResponse(componentValue, ackCode, ackDescription, properties.version)
+            generateWritablePropertyResponse(value, 400, 'invalid property', properties.version)
           );
         }
-      } else {
-        writablePropertyResponse.setProperty(
-          key,
-          generateWritablePropertyResponse(value, 400, 'invalid property', properties.version)
-        );
       }
-    }
-    console.log(
-      `Updating properties to acknowledge writable property request: ${JSON.stringify(writablePropertyResponse.backingObject)}`
-    );
-    this.client.updateClientProperties(writablePropertyResponse)
-      .then(() => {
-        console.log(
-          `Successfully updated properties to acknowledge writable property request version ${properties.version}`
-        );
-      })
-      .catch((err) => {
-        console.error(
-          `Error updating properties to acknowledge writable property request version ${properties.version}: ${err}`
-        );
-      });
-  }
+      console.log(
+        `Updating properties to acknowledge writable property request: ${JSON.stringify(writablePropertyResponse.backingObject)}`
+      );
+      this.client.updateClientProperties(writablePropertyResponse)
+        .then(() => {
+          console.log(
+            `Successfully updated properties to acknowledge writable property request version ${properties.version}`
+          );
+        })
+        .catch((err) => {
+          console.error(
+            `Error updating properties to acknowledge writable property request version ${properties.version}: ${err}`
+          );
+        });
+    };
 
-  handleReboot = (request, response) => {
-    console.log(
-      `Received command request "reboot" with payload "${request.payload}" and request ID ${request.requestID}`
-    );
-    response.send(200)
-      .then(() => {
-        console.log(`Successfully responded to command "reboot" with request ID ${request.requestID}`);
-      })
-      .catch((err) => {
-        console.error(
-          `An error ocurred while responding to command "reboot" with request ID ${request.requestID}: ${err}`
-        );
-      });
-  }
+    this.handleReboot = (request, response) => {
+      console.log(
+        `Received command request "reboot" with payload "${request.payload}" and request ID ${request.requestID}`
+      );
+      response.send(typeof payload === 'number' ? 200 : 400)
+        .then(() => {
+          console.log(`Successfully responded to command "reboot" with request ID ${request.requestID}`);
+        })
+        .catch((err) => {
+          console.error(
+            `An error ocurred while responding to command "reboot" with request ID ${request.requestID}: ${err}`
+          );
+        });
+    };
 
-  handleGetMaxMinReport = (request, response) => {
-    console.log(
-      `Received command request "getMaxMinReport" for component "${request.componentName}" with payload "${request.payload}" and request ID ${request.requestID}`
-    );
-    response.send(200, this.sensor.getMaxMinReportObject())
-      .then(() => {
-        console.log(
-          `Successfully responded to command "getMaxMinReport" for component "${request.componentName}" with request ID ${request.requestID}`
-        );
-      })
-      .catch((err) =>  {
-        console.log(
-          `An error occurred while responding to command "getMaxMinReport" for component "${request.componentName}" with request ID ${request.requestID}: ${err}`
-        );
-      });
-  }
+    this.handleGetMaxMinReport = (request, response) => {
+      console.log(
+        `Received command request "getMaxMinReport" for component "${request.componentName}" with payload "${request.payload}" and request ID ${request.requestID}`
+      );
+      response.send(200, this.sensor.getMaxMinReportObject())
+        .then(() => {
+          console.log(
+            `Successfully responded to command "getMaxMinReport" for component "${request.componentName}" with request ID ${request.requestID}`
+          );
+        })
+        .catch((err) =>  {
+          console.log(
+            `An error occurred while responding to command "getMaxMinReport" for component "${request.componentName}" with request ID ${request.requestID}: ${err}`
+          );
+        });
+    };
 
-  handleSendTelemetry = () => {
-    this.sensor.updateSensor();
-    const currIndex = this.sendTelemetryIndex++;
-    console.log(`Sending telemetry message ${currIndex} to root component, "thermostat1", and "thermostat2"`);
-    this.client.sendTelemetry({ workingSet: 1 + (Math.random() * 90) })
+    this.handleSendTelemetry = () => {
+      this.sensor.updateSensor();
+      const currIndex = this.sendTelemetryIndex++;
+      console.log(`Sending telemetry message ${currIndex} to root component, "thermostat1", and "thermostat2"`);
+      this.client.sendTelemetry({ workingSet: 1 + (Math.random() * 90) })
+        .then(() => {
+          console.log(`Successfully sent telemetry message ${currIndex} for root component`);
+        })
+        .catch((err) => {
+          console.error(`An error occurred while sending telemetry message ${currIndex} for root component: ${err}`);
+        });
+      this.client.sendTelemetry({ temperature: this.sensor.getCurrentTemp() }, thermostat1ComponentName)
+        .then(() => {
+          console.log(`Successfully sent telemetry message ${currIndex} for "thermostat1"`);
+        })
+        .catch((err) => {
+          console.error(`An error ocurred while sending telemetry message ${currIndex} for "thermostat1": ${err}`);
+        });
+      this.client.sendTelemetry({ temperature: this.sensor.getCurrentTemp() }, thermostat2ComponentName)
       .then(() => {
-        console.log(`Successfully sent telemetry message ${currIndex} for root component`);
+        console.log(`Successfully sent telemetry message ${currIndex} for "thermostat2"`);
       })
       .catch((err) => {
-        console.error(`An error occurred while sending telemetry message ${currIndex} for root component: ${err}`);
+        console.error(`An error ocurred while sending telemetry message ${currIndex} for "thermostat2": ${err}`);
       });
-    this.client.sendTelemetry({ temperature: this.sensor.getCurrentTemp() }, thermostat1ComponentName)
-      .then(() => {
-        console.log(`Successfully sent telemetry message ${currIndex} for "thermostat1"`);
-      })
-      .catch((err) => {
-        console.error(`An error ocurred while sending telemetry message ${currIndex} for "thermostat1": ${err}`);
-      });
-    this.client.sendTelemetry({ temperature: this.sensor.getCurrentTemp() }, thermostat2ComponentName)
-    .then(() => {
-      console.log(`Successfully sent telemetry message ${currIndex} for "thermostat2"`);
-    })
-    .catch((err) => {
-      console.error(`An error ocurred while sending telemetry message ${currIndex} for "thermostat2": ${err}`);
-    });
+    };
   }
 
   async main() {
@@ -236,7 +236,7 @@ class TemperatureControllerSample {
     if (deviceSecurityType === 'DPS') {
       if (!idScope || !registrationId || !symmetricKey) {
         throw new Error(
-          'IOTHUB_DEVICE_DPS_ID_SCOPE, IOTHUB_DEVICE_DPS_REGISTRATION_ID, and IOTHUB_DEVICE_DPS_REGISTRATION_KEY must be provided if IOTHUB_DEVICE_SECURITY_TYPE is "DPS"'
+          'IOTHUB_DEVICE_DPS_ID_SCOPE, IOTHUB_DEVICE_DPS_DEVICE_ID, and IOTHUB_DEVICE_DPS_DEVICE_KEY must be provided if IOTHUB_DEVICE_SECURITY_TYPE is "DPS"'
         );
       }
       deviceConnectionString = await provisionDevice({ modelId });
@@ -275,7 +275,7 @@ class TemperatureControllerSample {
       console.log('Successfully updated read-only properties');
     })
     .catch((err) => {
-      console.error(`Error updating read-only properties`);
+      console.error(`Error updating read-only properties: ${err}`);
     });
 
     console.log('Registering listener for writable property requests');
