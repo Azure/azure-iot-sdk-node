@@ -11,10 +11,10 @@
     "base32-encode": "^1.0.0",
     "debug": "^4.3.1",
     "machina": "^4.0.2",
-    "tss.js": "^1.1.0"
+    "tss.js": "^2.0.0"
   },
   "devDependencies": {
-    "@types/node": "^9.6.61",
+    "@types/node": "^16.6.1",
     "array-equal": "^1.0.0",
     "chai": "^4.3.3",
     "jshint": "^2.12.0",
@@ -70,7 +70,7 @@
     "spec": "test/**/_*_test.js"
   },
   "engines": {
-    "node": ">= 10.0.0"
+    "node": ">= 12.0.0"
   },
   "repository": {
     "type": "git",

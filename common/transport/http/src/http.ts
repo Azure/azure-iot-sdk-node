@@ -107,7 +107,7 @@ export class Http {
     // Codes_SRS_NODE_HTTP_13_004: [ Use the request object from the `options` object if one has been provided or default to HTTPS request. ]
     let request = https_request;
     if (requestOptions && requestOptions.request) {
-      request = requestOptions.request;
+      request = requestOptions.request as any;
     }
 
     if (typeof(host) === 'string') {

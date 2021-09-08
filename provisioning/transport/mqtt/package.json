@@ -12,10 +12,10 @@
     "azure-iot-provisioning-device": "1.8.9",
     "debug": "^4.3.1",
     "machina": "^4.0.2",
-    "uuid": "^3.3.2"
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "@types/node": "^9.6.61",
+    "@types/node": "^16.6.1",
     "chai": "^4.3.3",
     "mocha": "^7.1.1",
     "nyc": "^15.0.0",
@@ -54,10 +54,10 @@
       ".tsx"
     ],
     "check-coverage": true,
-    "lines": 97,
+    "lines": 96,
     "functions": 94,
-    "branches": 92,
-    "statements": 97
+    "branches": 89,
+    "statements": 96
   },
   "mocha": {
     "require": [
@@ -69,7 +69,7 @@
     "spec": "test/**/_*_test.js"
   },
   "engines": {
-    "node": ">= 10.0.0"
+    "node": ">= 12.0.0"
   },
   "repository": {
     "type": "git",
