@@ -14,7 +14,7 @@ Instructions for using the npm packages can be found here:
 - [**OpenSSL**][openssl]
 
 
-If you're running linux and want to install Node.js using a package manager, please refer to [these instructions][node-linux]. The Azure IoT SDK for Node.js supports Node.js version 6 and up. It may still work with older versions (Node 0.10, 0.12 and 4) but our dependencies are dropping support for those versions since they have been end-of-lifed, so we cannot guarantee full support for these anymore.
+If you're running linux and want to install Node.js using a package manager, please refer to [these instructions][node-linux]. The Azure IoT SDK for Node.js supports Node.js version 12 and up.
 
 The [Node Version Switcher][nvs] can be used if you would like to be able to switch from one Node.js version to another.
 
