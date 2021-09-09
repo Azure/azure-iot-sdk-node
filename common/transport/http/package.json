@@ -1,13 +1,13 @@
 {
   "name": "azure-iot-http-base",
-  "version": "1.11.10",
+  "version": "1.11.11-alpha.210909.1",
   "description": "HTTP operations used by Azure IoT device and service SDKs",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.12.10",
+    "azure-iot-common": "1.12.11-alpha.210909.1",
     "debug": "^4.3.1",
     "uuid": "^8.3.2"
   },
