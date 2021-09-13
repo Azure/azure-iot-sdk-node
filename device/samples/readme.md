@@ -13,7 +13,7 @@ In order to run the device samples you will first need the following prerequisit
 
 **2) Create and open Codespace**
 
-* Select the Codespaces tab and the New codespace button
+* Select the Codespaces tab and the "New codespace" button
 
   ![screen shot of create codespace](./media/github-codespace.png)
 
