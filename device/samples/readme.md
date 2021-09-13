@@ -2,7 +2,42 @@
 
 This folder contains simple samples showing how to use the various features of the Microsoft Azure IoT Hub service from a device running JavaScript code.
 
-## Read this if you want to run a sample
+## Read this if you want to run sample using GitHub codespace (fastest)
+You can use Github Codespaces to be up and running quickly! Here are the steps to follow.
+
+**1) Make sure you have the prerequisites**
+
+In order to run the device samples you will first need the following prerequisites:
+* An Azure IoT Hub instance. [(Link if you don't.)][lnk-setup-iot-hub]
+* A device identity for your device. [(Link if you don't.)][lnk-manage-iot-hub]
+
+**2) Create and open Codespace**
+
+* Select the Codespaces tab and the New codespace button
+
+  ![screen shot of create codespace](./media/github-codespace.png)
+
+* Once the Codespace is open, all required packages to run the samples will be setup for you
+
+**3) Set the DEVICE_CONNECTION_STRING environment variable**
+
+* From a shell or Node.js command prompt, navigate to the folder where you placed the sample files. 
+* Set the `DEVICE_CONNECTION_STRING` environment variable: 
+
+*in bash*
+```bash
+export DEVICE_CONNECTION_STRING="<YourIoTHubConnectionString>"
+```
+
+**4) Run it**
+
+Run the sample application using the following commands:
+
+```bash
+node simple_sample_device.js
+```
+
+## Read this if you want to run a sample locally
 *How to run a sample in your own folder using published npm packages.*
 
 **1) Make sure you have the prerequisites**
