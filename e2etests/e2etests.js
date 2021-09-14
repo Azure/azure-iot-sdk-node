@@ -15,3 +15,7 @@ require('./test/twin_disconnect.js');
 require('./test/method_disconnect.js');
 require('./test/upload_disconnect.js');
 require('./test/job_client.js');
+require('./test/pnp_telemetry.js');
+require('./test/pnp_commands.js');
+require('./pnp_properties_update.js');
+require('./pnp_properties_requests.js');

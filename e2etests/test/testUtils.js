@@ -4,12 +4,12 @@
 'use strict';
 var deviceSdk = require('azure-iot-device');
 
-function createDeviceClient(deviceTransport, provisionedDevice) {
+function createDeviceClient(deviceTransport, provisionedDevice, modelId) {
   var deviceClient;
   if (provisionedDevice.hasOwnProperty('primaryKey')) {
-    deviceClient = deviceSdk.Client.fromConnectionString(provisionedDevice.connectionString, deviceTransport);
+    deviceClient = deviceSdk.Client.fromConnectionString(provisionedDevice.connectionString, deviceTransport, modelId);
   } else if (provisionedDevice.hasOwnProperty('certificate')) {
-    deviceClient = deviceSdk.Client.fromConnectionString(provisionedDevice.connectionString, deviceTransport);
+    deviceClient = deviceSdk.Client.fromConnectionString(provisionedDevice.connectionString, deviceTransport, modelId);
     var options = {
       cert: provisionedDevice.certificate,
       key: provisionedDevice.clientKey,
@@ -21,7 +21,7 @@ function createDeviceClient(deviceTransport, provisionedDevice) {
     deviceClient._retryPolicy._errorFilter.UnauthorizedError = true;
     deviceClient._maxOperationTimeout = 30000; // retry for at most 30 seconds, we don't want the test to take too long.
   } else {
-    deviceClient = deviceSdk.Client.fromSharedAccessSignature(provisionedDevice.connectionString, deviceTransport);
+    deviceClient = deviceSdk.Client.fromSharedAccessSignature(provisionedDevice.connectionString, deviceTransport, modelId);
   }
   return deviceClient;
 }
