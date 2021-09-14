@@ -34,6 +34,8 @@ Note: In some cases, such as root and self-signed device certs, the tool will pr
 
 Note #2: The tool will likely create a chain which is longer than necessary.  For exammple, if the root certificate has been verified in the provisioning service, it doesn't need to be included in the chain.  Likewise, if any intermediate CA certs have been verifited, they don't need to be included and none of their parent certs need to be included.
 
+Note #3: The tool with produce private keys in the `.key.pem` and `.pfx` format. Note PFX is protected with a test password `1234` you must consider changing before distributing the pfx file.
+
 ```
 F:\repos\node\provisioning\tools>node create_test_cert.js
 create_test_cert.js <command>

@@ -113,5 +113,17 @@ pem.createCertificate(certOptions, function(err, cert) {
     // Note: this saves the root cert as part of the chain.  This isn't necessary, but it doesn't hurt either.
     console.log(chalk.green('saving cert with chain to ' + outputFilenameRoot + '_fullchain.pem.'));
     fs.writeFileSync(outputFilenameRoot + '_fullchain.pem', cert.certificate + '\n' + parentChain);
+    pem.convert.PEM2PFX(
+      {
+        key: outputFilenameRoot + '_key.pem', 
+        cert: outputFilenameRoot + '_cert.pem'
+      }, 
+      outputFilenameRoot + '.pfx', 
+      '1234', 
+      (e,r) => {
+        if (e) throw e
+        if (r) console.log('PFX created with default password')
+      }
+    )
   }
 });
