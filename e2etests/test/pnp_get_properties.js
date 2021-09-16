@@ -2,17 +2,29 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
+/*jshint esversion: 9 */
 
 const Registry = require('azure-iothub').Registry;
 const deviceMqtt = require('azure-iot-device-mqtt');
 const DeviceIdentityHelper = require('./device_identity_helper.js');
+const ClientPropertyCollection = require('azure-iot-device').ClientPropertyCollection;
 const createDeviceClient = require('./testUtils.js').createDeviceClient;
-const assert = require('chai').assert;
 const promisify = require('util').promisify;
+const assert = require('chai').assert;
 
 const connectionString = process.env.IOTHUB_CONNECTION_STRING;
-const firstPropertyUpdate = { fake: 'payload' };
-const secondPropertyUpdate = { fake: null };
+const servicePropertyUpdate = {
+  fake: 'service update',
+  nested: {
+    number: 42
+  }
+};
+const devicePropertyUpdate = {
+  fake: 'device update',
+  nested: {
+    number: 11
+  }
+};
 
 [
   DeviceIdentityHelper.createDeviceWithSas,
@@ -21,12 +33,12 @@ const secondPropertyUpdate = { fake: null };
   DeviceIdentityHelper.createDeviceWithX509CASignedCert
 ].forEach((createDeviceMethod) => {
   [deviceMqtt.Mqtt, deviceMqtt.MqttWs].forEach((deviceTransport) => {
-    pnpPropertiesRequestsTests(deviceTransport, createDeviceMethod);
+    pnpGetPropertiesTests(deviceTransport, createDeviceMethod);
   });
 });
 
-function pnpPropertiesRequestsTests(deviceTransport, createDeviceMethod) {
-  describe(`onWritablePropertyUpdateRequest() over ${deviceTransport.name} using device client with ${createDeviceMethod.name} authentication`, function () {
+function pnpGetPropertiesTests(deviceTransport, createDeviceMethod) {
+  describe(`getClientProperties() over ${deviceTransport.name} using device client with ${createDeviceMethod.name} authentication`, function () {
     this.timeout(120000);
     let deviceInfo, deviceClient, registryClient;
 
@@ -48,26 +60,26 @@ function pnpPropertiesRequestsTests(deviceTransport, createDeviceMethod) {
       await deviceClient.close();
     });
 
-    it('receives writable property update requests and calls the listener', async function () {
-      let propertiesPromise = new Promise(resolve => deviceClient.onWritablePropertyUpdateRequest(resolve));
-      const updateResult = await registryClient.updateTwin(
-        deviceInfo.deviceId,
-        {properties: {desired: firstPropertyUpdate}},
-        '*'
-      );
-      let properties = await propertiesPromise;
-      assert.strictEqual(properties.backingObject.fake, firstPropertyUpdate.fake);
-      assert.strictEqual(properties.version, 2);
-
-      propertiesPromise = new Promise(resolve => deviceClient.onWritablePropertyUpdateRequest(resolve));
+    it('successfully gets the twin from the service', async function () {
       await registryClient.updateTwin(
         deviceInfo.deviceId,
-        {properties: {desired: secondPropertyUpdate}},
-        updateResult.responseBody.etag
+        {properties: {desired: servicePropertyUpdate}},
+        '*'
       );
-      properties = await propertiesPromise;
-      assert.isNull(properties.backingObject.fake);
-      assert.strictEqual(properties.version, 3);
+      await deviceClient.updateClientProperties(new ClientPropertyCollection(devicePropertyUpdate));
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      let clientProperties = await deviceClient.getClientProperties();
+
+      assert.deepEqual(
+        clientProperties.writablePropertiesRequests.backingObject,
+        {$version: 2, ...servicePropertyUpdate}
+      );
+
+      assert.deepEqual(
+        clientProperties.reportedFromDevice.backingObject,
+        {$version: 2, ...devicePropertyUpdate}
+      );
     });
   });
 }

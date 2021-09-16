@@ -9,6 +9,7 @@ const DeviceIdentityHelper = require('./device_identity_helper.js');
 const ClientPropertyCollection = require('azure-iot-device').ClientPropertyCollection;
 const createDeviceClient = require('./testUtils.js').createDeviceClient;
 const assert = require('chai').assert;
+const promisify = require('util').promisify;
 
 const connectionString = process.env.IOTHUB_CONNECTION_STRING;
 const firstPropertyUpdate = { fake: 'payload' };
@@ -31,12 +32,9 @@ function pnpPropertiesUpdateTests(deviceTransport, createDeviceMethod) {
     this.timeout(120000);
     let deviceInfo, deviceClient, registryClient;
 
-    before(function (beforeCallback) {
+    before(async function () {
       registryClient = Registry.fromConnectionString(connectionString);
-      createDeviceMethod(function (err, testDeviceInfo) {
-        deviceInfo = testDeviceInfo;
-        beforeCallback(err);
-      });
+      deviceInfo = await promisify(createDeviceMethod)();
     });
 
     after(function (afterCallback) {

@@ -19,3 +19,4 @@ require('./test/pnp_telemetry.js');
 require('./test/pnp_commands.js');
 require('./pnp_properties_update.js');
 require('./pnp_properties_requests.js');
+require('./pnp_get_properties.js');

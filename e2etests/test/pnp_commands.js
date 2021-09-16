@@ -9,6 +9,7 @@ const deviceMqtt = require('azure-iot-device-mqtt');
 const DeviceIdentityHelper = require('./device_identity_helper.js');
 const createDeviceClient = require('./testUtils.js').createDeviceClient;
 const assert = require('chai').assert;
+const promisify = require('util').promisify;
 
 const hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 const commandName = 'fakeCommand';
@@ -33,12 +34,9 @@ function pnpCommandsTests(deviceTransport, createDeviceMethod) {
     this.timeout(120000);
     let deviceInfo, deviceClient, serviceClient;
 
-    before(function (beforeCallback) {
+    before(async function () {
       serviceClient = ServiceClient.fromConnectionString(hubConnectionString);
-      createDeviceMethod(function (err, testDeviceInfo) {
-        deviceInfo = testDeviceInfo;
-        beforeCallback(err);
-      });
+      deviceInfo = await promisify(createDeviceMethod)();
     });
 
     after(function (afterCallback) {

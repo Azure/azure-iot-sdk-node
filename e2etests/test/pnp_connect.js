@@ -6,6 +6,7 @@
 const DeviceIdentityHelper = require('./device_identity_helper.js');
 const createDeviceClient = require('./testUtils.js').createDeviceClient;
 const assert = require('chai').assert;
+const promisify = require('util').promisify;
 
 const deviceMqtt = require('azure-iot-device-mqtt');
 const IoTHubTokenCredentials = require('azure-iothub').IoTHubTokenCredentials;
@@ -31,12 +32,9 @@ function pnpConnectTests(deviceTransport, createDeviceMethod) {
 
     let deviceInfo, deviceClient, digitalTwinClient;
 
-    before(function (beforeCallback) {
+    before(async function () {
       digitalTwinClient = new DigitalTwinClient(new IoTHubTokenCredentials(hubConnectionString));
-      createDeviceMethod(function (err, testDeviceInfo) {
-        deviceInfo = testDeviceInfo;
-        beforeCallback(err);
-      });
+      deviceInfo = await promisify(createDeviceMethod)();
     });
 
     after(function (afterCallback) {
