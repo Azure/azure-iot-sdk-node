@@ -29,22 +29,22 @@ function pnpConnectTests(deviceTransport, createDeviceMethod) {
   describe(`Connect with model ID over ${deviceTransport.name} using device client with ${createDeviceMethod.name} authentication`, function () {
     this.timeout(60000);
 
-    let provisionedDevice, deviceClient, digitalTwinClient;
+    let deviceInfo, deviceClient, digitalTwinClient;
 
     before(function (beforeCallback) {
       digitalTwinClient = new DigitalTwinClient(new IoTHubTokenCredentials(hubConnectionString));
       createDeviceMethod(function (err, testDeviceInfo) {
-        provisionedDevice = testDeviceInfo;
+        deviceInfo = testDeviceInfo;
         beforeCallback(err);
       });
     });
 
     after(function (afterCallback) {
-      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, afterCallback);
     });
 
     beforeEach(async function () {
-      deviceClient = createDeviceClient(deviceTransport, provisionedDevice, modelId);
+      deviceClient = createDeviceClient(deviceTransport, deviceInfo, modelId);
       await deviceClient.open();
     });
 
@@ -53,7 +53,7 @@ function pnpConnectTests(deviceTransport, createDeviceMethod) {
     });
 
     it('connects to the Hub with the model name', async function () {
-      const digitalTwin = await digitalTwinClient.getDigitalTwin(provisionedDevice.deviceId);
+      const digitalTwin = await digitalTwinClient.getDigitalTwin(deviceInfo.deviceId);
       assert.strictEqual(digitalTwin.$metadata.$model, modelId);
     });
   });

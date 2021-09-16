@@ -29,22 +29,22 @@ const thirdPropertyUpdate = { fake: null };
 function pnpPropertiesUpdateTests(deviceTransport, createDeviceMethod) {
   describe(`updateClientProperties() over ${deviceTransport.name} using device client with ${createDeviceMethod.name} authentication`, function () {
     this.timeout(120000);
-    let provisionedDevice, deviceClient, registryClient;
+    let deviceInfo, deviceClient, registryClient;
 
     before(function (beforeCallback) {
       registryClient = Registry.fromConnectionString(connectionString);
       createDeviceMethod(function (err, testDeviceInfo) {
-        provisionedDevice = testDeviceInfo;
+        deviceInfo = testDeviceInfo;
         beforeCallback(err);
       });
     });
 
     after(function (afterCallback) {
-      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, afterCallback);
     });
 
     beforeEach(async function () {
-      deviceClient = createDeviceClient(deviceTransport, provisionedDevice);
+      deviceClient = createDeviceClient(deviceTransport, deviceInfo);
       await deviceClient.open();
     });
   
@@ -55,14 +55,14 @@ function pnpPropertiesUpdateTests(deviceTransport, createDeviceMethod) {
     it('updates properties and the service gets them', async function () {
       await deviceClient.updateClientProperties(new ClientPropertyCollection(firstPropertyUpdate));
       await new Promise(resolve => setTimeout(resolve, 3000));
-      let twinResponse = await registryClient.getTwin(provisionedDevice.deviceId);
+      let twinResponse = await registryClient.getTwin(deviceInfo.deviceId);
   
       assert.strictEqual(twinResponse.responseBody.properties.reported.fake, firstPropertyUpdate.fake);
       assert.strictEqual(twinResponse.responseBody.properties.reported.$version, 2);
   
       await deviceClient.updateClientProperties(new ClientPropertyCollection(secondPropertyUpdate));
       await new Promise(resolve => setTimeout(resolve, 3000));
-      twinResponse = await registryClient.getTwin(provisionedDevice.deviceId);
+      twinResponse = await registryClient.getTwin(deviceInfo.deviceId);
 
       assert.strictEqual(twinResponse.responseBody.properties.reported.fake, firstPropertyUpdate.fake);
       assert.strictEqual(twinResponse.responseBody.properties.reported.other, secondPropertyUpdate.other);
@@ -70,7 +70,7 @@ function pnpPropertiesUpdateTests(deviceTransport, createDeviceMethod) {
 
       await deviceClient.updateClientProperties(new ClientPropertyCollection(thirdPropertyUpdate));
       await new Promise(resolve => setTimeout(resolve, 3000));
-      twinResponse = await registryClient.getTwin(provisionedDevice.deviceId);
+      twinResponse = await registryClient.getTwin(deviceInfo.deviceId);
       
       assert.isUndefined(twinResponse.responseBody.properties.reported.fake);
       assert.strictEqual(twinResponse.responseBody.properties.reported.other, secondPropertyUpdate.other);

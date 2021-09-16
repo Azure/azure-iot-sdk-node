@@ -46,23 +46,22 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
   describe('Over ' + deviceTransport.name + ' using device/service clients c2d with ' + createDeviceMethod.name + ' authentication', function () {
     this.timeout(60000);
 
-    var serviceClient, deviceClient;
-    var provisionedDevice;
+    var serviceClient, deviceClient, deviceInfo;
 
     before(function (beforeCallback) {
       createDeviceMethod(function (err, testDeviceInfo) {
-        provisionedDevice = testDeviceInfo;
+        deviceInfo = testDeviceInfo;
         beforeCallback(err);
       });
     });
 
     after(function (afterCallback) {
-      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, afterCallback);
     });
 
     beforeEach(function () {
       serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString);
-      deviceClient = createDeviceClient(deviceTransport, provisionedDevice);
+      deviceClient = createDeviceClient(deviceTransport, deviceInfo);
     });
 
     afterEach(function (done) {
@@ -138,7 +137,7 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
             if (serviceErr) {
               done(serviceErr);
             } else {
-              serviceClient.send(provisionedDevice.deviceId, message, function (sendErr) {
+              serviceClient.send(deviceInfo.deviceId, message, function (sendErr) {
                 debug('At service client send callback - error is: ' + sendErr);
                 if (sendErr) {
                   done(sendErr);
@@ -158,21 +157,21 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
   describe('Over ' + deviceTransport.name + ' using device/eventhub clients - d2c with ' + createDeviceMethod.name + ' authentication', function () {
     this.timeout(60000);
 
-    var deviceClient, ehClient, provisionedDevice;
+    var deviceClient, ehClient, deviceInfo;
 
     before(function (beforeCallback) {
       createDeviceMethod(function (err, testDeviceInfo) {
-        provisionedDevice = testDeviceInfo;
+        deviceInfo = testDeviceInfo;
         beforeCallback(err);
       });
     });
 
     after(function (afterCallback) {
-      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, afterCallback);
     });
 
     beforeEach(function () {
-      deviceClient = createDeviceClient(deviceTransport, provisionedDevice);
+      deviceClient = createDeviceClient(deviceTransport, deviceInfo);
     });
 
     afterEach(function (done) {
@@ -200,7 +199,7 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
       buffer.fill(uuidData);
 
       var onEventHubMessage = function (eventData) {
-        if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
+        if (eventData.annotations['iothub-connection-device-id'] === deviceInfo.deviceId) {
           if ((eventData.body.length === bufferSize) && (eventData.body.indexOf(uuidData) === 0)) {
             debug('trying to finish from the receiving side');
             rdv.imDone('ehClient');

@@ -31,7 +31,7 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
       fileSizeInKb: '512000',
     }];
 
-    var provisionedDevice;
+    var deviceInfo;
 
     before(function (beforeCallback) {
       testFilesConfig.forEach(function(fileConfig) {
@@ -40,7 +40,7 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
         fs.writeFileSync(fileConfig.fileName, fileContent);
       });
       DeviceIdentityHelper.createDeviceWithSas(function (err, testDeviceInfo) {
-        provisionedDevice = testDeviceInfo;
+        deviceInfo = testDeviceInfo;
         beforeCallback(err);
       });
     });
@@ -49,12 +49,12 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
       testFilesConfig.forEach(function(fileConfig) {
         fs.unlinkSync(fileConfig.fileName);
       });
-      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, afterCallback);
     });
 
     beforeEach(function () {
       serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString);
-      deviceClient = createDeviceClient(deviceTransport, provisionedDevice);
+      deviceClient = createDeviceClient(deviceTransport, deviceInfo);
     });
 
     afterEach(function (done) {
@@ -83,7 +83,7 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
                   } else {
                     fileNotificationReceiver.on('message', function(msg) {
                       var notification = JSON.parse(msg.data.toString());
-                      if (notification.deviceId === provisionedDevice.deviceId && notification.blobName === provisionedDevice.deviceId + '/' + testBlobName) {
+                      if (notification.deviceId === deviceInfo.deviceId && notification.blobName === deviceInfo.deviceId + '/' + testBlobName) {
                         assert.isString(notification.blobUri);
                         assert.equal(notification.blobSizeInBytes, testFileSize);
                         debug('did reach the service clients on message');

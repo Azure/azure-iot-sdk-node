@@ -39,22 +39,22 @@ function empty_message_tests(deviceTransport, createDeviceMethod) {
     this.timeout(60000);
 
     var serviceClient, deviceClient;
-    var provisionedDevice;
+    var deviceInfo;
 
     before(function (beforeCallback) {
       createDeviceMethod(function (err, testDeviceInfo) {
-        provisionedDevice = testDeviceInfo;
+        deviceInfo = testDeviceInfo;
         beforeCallback(err);
       });
     });
 
     after(function (afterCallback) {
-      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, afterCallback);
     });
 
     beforeEach(function () {
       serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString);
-      deviceClient = createDeviceClient(deviceTransport, provisionedDevice);
+      deviceClient = createDeviceClient(deviceTransport, deviceInfo);
     });
 
     afterEach(function (done) {
@@ -112,7 +112,7 @@ function empty_message_tests(deviceTransport, createDeviceMethod) {
               done(serviceErr);
             } else {
               testRendezvous.imIn(serviceClientParticipant);
-              serviceClient.send(provisionedDevice.deviceId, message, function (sendErr) {
+              serviceClient.send(deviceInfo.deviceId, message, function (sendErr) {
                 debug('At service client send callback - error is: ' + sendErr);
                 if (sendErr) {
                   done(sendErr);
@@ -130,21 +130,21 @@ function empty_message_tests(deviceTransport, createDeviceMethod) {
   describe('Over ' + deviceTransport.name + ' using device/eventhub clients - messaging', function () {
     this.timeout(120000);
 
-    var deviceClient, ehClient, provisionedDevice;
+    var deviceClient, ehClient, deviceInfo;
 
     before(function (beforeCallback) {
       createDeviceMethod(function (err, testDeviceInfo) {
-        provisionedDevice = testDeviceInfo;
+        deviceInfo = testDeviceInfo;
         beforeCallback(err);
       });
     });
 
     after(function (afterCallback) {
-      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, afterCallback);
     });
 
     beforeEach(function () {
-      deviceClient = createDeviceClient(deviceTransport, provisionedDevice);
+      deviceClient = createDeviceClient(deviceTransport, deviceInfo);
     });
 
     afterEach(function (done) {
@@ -166,7 +166,7 @@ function empty_message_tests(deviceTransport, createDeviceMethod) {
       message.messageId = uuidData;
 
       var onEventHubMessage = function (eventData) {
-        if ((eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId)) {
+        if ((eventData.annotations['iothub-connection-device-id'] === deviceInfo.deviceId)) {
           var receivedMsgId = typeof eventData.properties.message_id === 'string' ? eventData.properties.message_id : uuidBuffer.toString(eventData.properties.message_id);
           if (receivedMsgId === uuidData) {
             if(!eventData.body || (eventData.body.length === 0)) {
@@ -180,7 +180,7 @@ function empty_message_tests(deviceTransport, createDeviceMethod) {
             debug('received message from test device but messageId does not match. actual: ' + receivedMsgId + '; expected: ' + uuidData);
           }
         } else {
-          debug('Received message from device: ' + eventData.annotations['iothub-connection-device-id'] + ' when expecting it from: ' + provisionedDevice.deviceId);
+          debug('Received message from device: ' + eventData.annotations['iothub-connection-device-id'] + ' when expecting it from: ' + deviceInfo.deviceId);
         }
       };
 

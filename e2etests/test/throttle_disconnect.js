@@ -60,21 +60,21 @@ var protocolAndTermination = [
 protocolAndTermination.forEach( function (testConfiguration) {
   describe(testConfiguration.transport.name + ' using device/eventhub clients - throttling', function () {
     this.timeout(60000);
-    var deviceClient, ehClient, provisionedDevice;
+    var deviceClient, ehClient, deviceInfo;
 
     before(function (beforeCallback) {
       DeviceIdentityHelper.createDeviceWithSas(function (err, testDeviceInfo) {
-        provisionedDevice = testDeviceInfo;
+        deviceInfo = testDeviceInfo;
         beforeCallback(err);
       });
     });
 
     after(function (afterCallback) {
-      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, afterCallback);
     });
 
     beforeEach(function () {
-      deviceClient = createDeviceClient(testConfiguration.transport, provisionedDevice);
+      deviceClient = createDeviceClient(testConfiguration.transport, deviceInfo);
     });
 
     afterEach(function (testCallback) {
@@ -190,7 +190,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
       }
 
       var onEventHubMessage = function (eventData) {
-        if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
+        if (eventData.annotations['iothub-connection-device-id'] === deviceInfo.deviceId) {
           debug('did get a message for this device.');
           if (findMessage(eventData, originalMessages)) {
             debug('It was one of the messages we sent.');

@@ -16,7 +16,7 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 describe('File upload - HTTP transport', function () {
   this.timeout(120000);
   var serviceClient, deviceClient;
-  var provisionedDevice;
+  var deviceInfo;
   var testFilesConfig = [{
     fileName: 'smallFile',
     fileSizeInKb: '10',
@@ -36,7 +36,7 @@ describe('File upload - HTTP transport', function () {
     });
 
     DeviceIdentityHelper.createDeviceWithSas(function (err, testDeviceInfo) {
-      provisionedDevice = testDeviceInfo;
+      deviceInfo = testDeviceInfo;
       beforeCallback(err);
     });
   });
@@ -46,12 +46,12 @@ describe('File upload - HTTP transport', function () {
       fs.unlinkSync(fileConfig.fileName);
     });
 
-    DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+    DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, afterCallback);
   });
 
   beforeEach(function () {
     serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString);
-    deviceClient = createDeviceClient(HttpTransport, provisionedDevice);
+    deviceClient = createDeviceClient(HttpTransport, deviceInfo);
   });
 
   afterEach(function (done) {
@@ -78,7 +78,7 @@ describe('File upload - HTTP transport', function () {
                 } else {
                   fileNotificationReceiver.on('message', function(msg) {
                     var notification = JSON.parse(msg.data.toString());
-                    if (notification.deviceId === provisionedDevice.deviceId && notification.blobName === provisionedDevice.deviceId + '/' + testBlobName) {
+                    if (notification.deviceId === deviceInfo.deviceId && notification.blobName === deviceInfo.deviceId + '/' + testBlobName) {
                       assert.isString(notification.blobUri);
                       assert.equal(notification.blobSizeInBytes, testFileSize);
                       fileNotificationReceiver.complete(msg, function(err) {

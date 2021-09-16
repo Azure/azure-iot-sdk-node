@@ -4,15 +4,15 @@
 'use strict';
 var deviceSdk = require('azure-iot-device');
 
-function createDeviceClient(deviceTransport, provisionedDevice, modelId) {
+function createDeviceClient(deviceTransport, deviceInfo, modelId) {
   var deviceClient;
-  if (provisionedDevice.hasOwnProperty('primaryKey')) {
-    deviceClient = deviceSdk.Client.fromConnectionString(provisionedDevice.connectionString, deviceTransport, modelId);
-  } else if (provisionedDevice.hasOwnProperty('certificate')) {
-    deviceClient = deviceSdk.Client.fromConnectionString(provisionedDevice.connectionString, deviceTransport, modelId);
+  if (deviceInfo.hasOwnProperty('primaryKey')) {
+    deviceClient = deviceSdk.Client.fromConnectionString(deviceInfo.connectionString, deviceTransport, modelId);
+  } else if (deviceInfo.hasOwnProperty('certificate')) {
+    deviceClient = deviceSdk.Client.fromConnectionString(deviceInfo.connectionString, deviceTransport, modelId);
     var options = {
-      cert: provisionedDevice.certificate,
-      key: provisionedDevice.clientKey,
+      cert: deviceInfo.certificate,
+      key: deviceInfo.clientKey,
     };
     deviceClient.setOptions(options);
     // due to some clock skew, it is possible that the certificate is not valid yet using the IoT hub clock
@@ -21,7 +21,7 @@ function createDeviceClient(deviceTransport, provisionedDevice, modelId) {
     deviceClient._retryPolicy._errorFilter.UnauthorizedError = true;
     deviceClient._maxOperationTimeout = 30000; // retry for at most 30 seconds, we don't want the test to take too long.
   } else {
-    deviceClient = deviceSdk.Client.fromSharedAccessSignature(provisionedDevice.connectionString, deviceTransport, modelId);
+    deviceClient = deviceSdk.Client.fromSharedAccessSignature(deviceInfo.connectionString, deviceTransport, modelId);
   }
   return deviceClient;
 }

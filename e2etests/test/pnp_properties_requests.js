@@ -27,22 +27,22 @@ const secondPropertyUpdate = { fake: null };
 function pnpPropertiesRequestsTests(deviceTransport, createDeviceMethod) {
   describe(`onWritablePropertyUpdateRequest() over ${deviceTransport.name} using device client with ${createDeviceMethod.name} authentication`, function () {
     this.timeout(120000);
-    let provisionedDevice, deviceClient, registryClient;
+    let deviceInfo, deviceClient, registryClient;
 
     before(function (beforeCallback) {
       registryClient = Registry.fromConnectionString(connectionString);
       createDeviceMethod(function (err, testDeviceInfo) {
-        provisionedDevice = testDeviceInfo;
+        deviceInfo = testDeviceInfo;
         beforeCallback(err);
       });
     });
 
     after(function (afterCallback) {
-      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, afterCallback);
     });
 
     beforeEach(async function () {
-      deviceClient = createDeviceClient(deviceTransport, provisionedDevice);
+      deviceClient = createDeviceClient(deviceTransport, deviceInfo);
       await deviceClient.open();
     });
   
@@ -53,7 +53,7 @@ function pnpPropertiesRequestsTests(deviceTransport, createDeviceMethod) {
     it('receives writable property update requests and calls the listener', async function () {
       let propertiesPromise = new Promise(resolve => deviceClient.onWritablePropertyUpdateRequest(resolve));
       const updateResult = await registryClient.updateTwin(
-        provisionedDevice.deviceId,
+        deviceInfo.deviceId,
         {properties: {desired: firstPropertyUpdate}},
         '*'
       );
@@ -63,7 +63,7 @@ function pnpPropertiesRequestsTests(deviceTransport, createDeviceMethod) {
 
       propertiesPromise = new Promise(resolve => deviceClient.onWritablePropertyUpdateRequest(resolve));
       await registryClient.updateTwin(
-        provisionedDevice.deviceId,
+        deviceInfo.deviceId,
         {properties: {desired: secondPropertyUpdate}},
         updateResult.responseBody.etag
       );

@@ -31,22 +31,22 @@ const statusCode = 200;
 function pnpCommandsTests(deviceTransport, createDeviceMethod) {
   describe(`PnP Commands over ${deviceTransport.name} using device client with ${createDeviceMethod.name} authentication`, function () {
     this.timeout(120000);
-    let provisionedDevice, deviceClient, serviceClient;
+    let deviceInfo, deviceClient, serviceClient;
 
     before(function (beforeCallback) {
       serviceClient = ServiceClient.fromConnectionString(hubConnectionString);
       createDeviceMethod(function (err, testDeviceInfo) {
-        provisionedDevice = testDeviceInfo;
+        deviceInfo = testDeviceInfo;
         beforeCallback(err);
       });
     });
 
     after(function (afterCallback) {
-      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, afterCallback);
     });
 
     beforeEach(async function () {
-      deviceClient = createDeviceClient(deviceTransport, provisionedDevice);
+      deviceClient = createDeviceClient(deviceTransport, deviceInfo);
       await deviceClient.open();
     });
   
@@ -70,7 +70,7 @@ function pnpCommandsTests(deviceTransport, createDeviceMethod) {
       });
 
       const response = await serviceClient.invokeDeviceMethod(
-        provisionedDevice.deviceId,
+        deviceInfo.deviceId,
         {methodName: commandName, payload: requestPayload}
       );
 
@@ -94,7 +94,7 @@ function pnpCommandsTests(deviceTransport, createDeviceMethod) {
       });
 
       const response = await serviceClient.invokeDeviceMethod(
-        provisionedDevice.deviceId,
+        deviceInfo.deviceId,
         {methodName: `${componentName}*${commandName}`, payload: requestPayload}
       );
 

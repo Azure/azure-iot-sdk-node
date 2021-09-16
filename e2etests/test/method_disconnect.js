@@ -118,22 +118,22 @@ protocolAndTermination.forEach( function (testConfiguration) {
 
     var deviceClient, serviceClient;
     var secondMethodTimeout;
-    var provisionedDevice;
+    var deviceInfo;
 
     before(function (beforeCallback) {
       DeviceIdentityHelper.createDeviceWithSas(function (err, testDeviceInfo) {
-        provisionedDevice = testDeviceInfo;
+        deviceInfo = testDeviceInfo;
         beforeCallback(err);
       });
     });
 
     after(function (afterCallback) {
-      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, afterCallback);
     });
 
     beforeEach(function () {
       serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString);
-      deviceClient = createDeviceClient(testConfiguration.transport, provisionedDevice);
+      deviceClient = createDeviceClient(testConfiguration.transport, deviceInfo);
       secondMethodTimeout = null;
     });
 
@@ -180,7 +180,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
         debug('service invoking method: ' + methodName + ' with payload:');
         debug(JSON.stringify(methodParams, null, 2));
         serviceClient.invokeDeviceMethod(
-          provisionedDevice.deviceId,
+          deviceInfo.deviceId,
           methodParams,
           function(err, result) {
             if(!err) {

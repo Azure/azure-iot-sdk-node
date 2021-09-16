@@ -29,7 +29,7 @@ function pnpTelemetryTests(deviceTransport, createDeviceMethod) {
   describe(`sendTelemetry() over ${deviceTransport.name} using device client with ${createDeviceMethod.name} authentication`, function () {
     this.timeout(120000);
 
-    let provisionedDevice, deviceClient, ehReceiver;
+    let deviceInfo, deviceClient, ehReceiver;
 
     before(function (beforeCallback) {
       createDeviceMethod(function (err, testDeviceInfo) {
@@ -37,7 +37,7 @@ function pnpTelemetryTests(deviceTransport, createDeviceMethod) {
           beforeCallback(err);
           return;
         }
-        provisionedDevice = testDeviceInfo;
+        deviceInfo = testDeviceInfo;
         ehReceiver = new EventHubReceiverHelper();
         ehReceiver.openClient(function (err) {
           if (err) {
@@ -50,7 +50,7 @@ function pnpTelemetryTests(deviceTransport, createDeviceMethod) {
     });
 
     after(function (afterCallback) {
-      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, (deleteErr) => {
+      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, (deleteErr) => {
         ehReceiver.closeClient((closeErr) => {
           afterCallback(deleteErr || closeErr);
         });
@@ -58,7 +58,7 @@ function pnpTelemetryTests(deviceTransport, createDeviceMethod) {
     });
 
     beforeEach(async function () {
-      deviceClient = createDeviceClient(deviceTransport, provisionedDevice);
+      deviceClient = createDeviceClient(deviceTransport, deviceInfo);
       await deviceClient.open();
     });
 
@@ -74,9 +74,9 @@ function pnpTelemetryTests(deviceTransport, createDeviceMethod) {
       rdv.imIn('deviceClient');
       ehReceiver.on('error', done);
       ehReceiver.on('message', (eventData) => {
-        if (eventData.annotations['iothub-connection-device-id'] !== provisionedDevice.deviceId) {
+        if (eventData.annotations['iothub-connection-device-id'] !== deviceInfo.deviceId) {
           debug(
-            `eventData.annotations['iothub-connection-device-id'] "${eventData.annotations['iothub-connection-device-id']}" doesn't match "${provisionedDevice.deviceId}"`
+            `eventData.annotations['iothub-connection-device-id'] "${eventData.annotations['iothub-connection-device-id']}" doesn't match "${deviceInfo.deviceId}"`
           );
         } else if (eventData.properties.content_type !== 'application/json') {
           debug(
@@ -100,7 +100,11 @@ function pnpTelemetryTests(deviceTransport, createDeviceMethod) {
       });
 
       deviceClient.sendTelemetry({fake: 'payload'}, componentName, (err) => {
-        err ? done(err) : rdv.imDone('deviceClient');
+        if (err) {
+          done(err);
+          return;
+        }
+        rdv.imDone('deviceClient');
       });
     });
 
@@ -110,9 +114,9 @@ function pnpTelemetryTests(deviceTransport, createDeviceMethod) {
       rdv.imIn('deviceClient');
       ehReceiver.on('error', done);
       ehReceiver.on('message', (eventData) => {
-        if (eventData.annotations['iothub-connection-device-id'] !== provisionedDevice.deviceId) {
+        if (eventData.annotations['iothub-connection-device-id'] !== deviceInfo.deviceId) {
           debug(
-            `eventData.annotations['iothub-connection-device-id'] "${eventData.annotations['iothub-connection-device-id']}" doesn't match "${provisionedDevice.deviceId}"`
+            `eventData.annotations['iothub-connection-device-id'] "${eventData.annotations['iothub-connection-device-id']}" doesn't match "${deviceInfo.deviceId}"`
           );
         } else if (eventData.properties.content_type !== 'application/json') {
           debug(
@@ -134,7 +138,11 @@ function pnpTelemetryTests(deviceTransport, createDeviceMethod) {
       });
 
       deviceClient.sendTelemetry({fake: 'payload'}, (err) => {
-        err ? done(err) : rdv.imDone('deviceClient');
+        if (err) {
+          done(err);
+          return;
+        }
+        rdv.imDone('deviceClient');
       });
     });
   });
