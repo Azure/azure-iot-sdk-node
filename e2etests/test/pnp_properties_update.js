@@ -4,71 +4,62 @@
 'use strict';
 
 const Registry = require('azure-iothub').Registry;
-const deviceMqtt = require('azure-iot-device-mqtt');
 const DeviceIdentityHelper = require('./device_identity_helper.js');
 const ClientPropertyCollection = require('azure-iot-device').ClientPropertyCollection;
-const createDeviceClient = require('./testUtils.js').createDeviceClient;
 const assert = require('chai').assert;
-const promisify = require('util').promisify;
+const runPnpTestSuite = require('./pnp_client_helper.js').runPnpTestSuite;
+const createDeviceOrModuleClient = require('./client_creation_helper').createDeviceOrModuleClient;
 
 const connectionString = process.env.IOTHUB_CONNECTION_STRING;
 const firstPropertyUpdate = { fake: 'payload' };
 const secondPropertyUpdate = { other: 42 };
 const thirdPropertyUpdate = { fake: null };
 
-[
-  DeviceIdentityHelper.createDeviceWithSas,
-  DeviceIdentityHelper.createDeviceWithSymmetricKey,
-  DeviceIdentityHelper.createDeviceWithX509SelfSignedCert,
-  DeviceIdentityHelper.createDeviceWithX509CASignedCert
-].forEach((createDeviceMethod) => {
-  [deviceMqtt.Mqtt, deviceMqtt.MqttWs].forEach((deviceTransport) => {
-    pnpPropertiesUpdateTests(deviceTransport, createDeviceMethod);
-  });
-});
+runPnpTestSuite(pnpPropertiesUpdateTests);
 
-function pnpPropertiesUpdateTests(deviceTransport, createDeviceMethod) {
-  describe(`updateClientProperties() over ${deviceTransport.name} using device client with ${createDeviceMethod.name} authentication`, function () {
+function pnpPropertiesUpdateTests(transportCtor, authType, modelId, isModule) {
+  describe(`updateClientProperties() over ${transportCtor.name} using ${isModule ? 'ModuleClient' : 'Client'} with ${authType} authentication`, function () {
     this.timeout(120000);
-    let deviceInfo, deviceClient, registryClient;
+    let moduleId, deviceId, client, registryClient;
 
     before(async function () {
       registryClient = Registry.fromConnectionString(connectionString);
-      deviceInfo = await promisify(createDeviceMethod)();
+      ({ moduleId, deviceId, client } = await createDeviceOrModuleClient(transportCtor, authType, modelId, isModule));
     });
 
     after(function (afterCallback) {
-      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, afterCallback);
+      DeviceIdentityHelper.deleteDevice(deviceId, afterCallback);
     });
 
     beforeEach(async function () {
-      deviceClient = createDeviceClient(deviceTransport, deviceInfo);
-      await deviceClient.open();
+      await client.open();
     });
   
     afterEach(async function () {
-      await deviceClient.close();
+      await client.close();
     });
 
     it('updates properties and the service gets them', async function () {
-      await deviceClient.updateClientProperties(new ClientPropertyCollection(firstPropertyUpdate));
+      const getTwinFunc = registryClient[isModule ? 'getModuleTwin' : 'getTwin'].bind(registryClient, deviceId, isModule ? moduleId : undefined);
+
+      await client.updateClientProperties(new ClientPropertyCollection(firstPropertyUpdate));
       await new Promise(resolve => setTimeout(resolve, 3000));
-      let twinResponse = await registryClient.getTwin(deviceInfo.deviceId);
+      let twinResponse = await getTwinFunc();
   
       assert.strictEqual(twinResponse.responseBody.properties.reported.fake, firstPropertyUpdate.fake);
       assert.strictEqual(twinResponse.responseBody.properties.reported.$version, 2);
   
-      await deviceClient.updateClientProperties(new ClientPropertyCollection(secondPropertyUpdate));
+      await client.updateClientProperties(new ClientPropertyCollection(secondPropertyUpdate));
       await new Promise(resolve => setTimeout(resolve, 3000));
-      twinResponse = await registryClient.getTwin(deviceInfo.deviceId);
+      twinResponse = await getTwinFunc();
 
       assert.strictEqual(twinResponse.responseBody.properties.reported.fake, firstPropertyUpdate.fake);
       assert.strictEqual(twinResponse.responseBody.properties.reported.other, secondPropertyUpdate.other);
       assert.strictEqual(twinResponse.responseBody.properties.reported.$version, 3);
 
-      await deviceClient.updateClientProperties(new ClientPropertyCollection(thirdPropertyUpdate));
+      await client.updateClientProperties(new ClientPropertyCollection(thirdPropertyUpdate));
       await new Promise(resolve => setTimeout(resolve, 3000));
-      twinResponse = await registryClient.getTwin(deviceInfo.deviceId);
+      twinResponse = await getTwinFunc();
       
       assert.isUndefined(twinResponse.responseBody.properties.reported.fake);
       assert.strictEqual(twinResponse.responseBody.properties.reported.other, secondPropertyUpdate.other);

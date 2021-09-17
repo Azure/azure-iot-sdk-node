@@ -6,51 +6,31 @@
 const debug = require('debug')('e2etests:pnp_telemetry');
 
 const DeviceIdentityHelper = require('./device_identity_helper.js');
-const createDeviceClient = require('./testUtils.js').createDeviceClient;
 const Rendezvous = require('./rendezvous_helper').Rendezvous;
 const EventHubReceiverHelper = require('./eventhub_receiver_helper');
-
-const deviceMqtt = require('azure-iot-device-mqtt');
+const runPnpTestSuite = require('./pnp_client_helper.js').runPnpTestSuite;
+const createDeviceOrModuleClient = require('./client_creation_helper').createDeviceOrModuleClient;
+const promisify = require('util').promisify;
 
 const componentName = 'fakeComponent';
 
-[
-  DeviceIdentityHelper.createDeviceWithSas,
-  DeviceIdentityHelper.createDeviceWithSymmetricKey,
-  DeviceIdentityHelper.createDeviceWithX509SelfSignedCert,
-  DeviceIdentityHelper.createDeviceWithX509CASignedCert
-].forEach((createDeviceMethod) => {
-  [deviceMqtt.Mqtt, deviceMqtt.MqttWs].forEach((deviceTransport) => {
-    pnpTelemetryTests(deviceTransport, createDeviceMethod);
-  });
-});
+runPnpTestSuite(pnpTelemetryTests);
 
-function pnpTelemetryTests(deviceTransport, createDeviceMethod) {
-  describe(`sendTelemetry() over ${deviceTransport.name} using device client with ${createDeviceMethod.name} authentication`, function () {
+function pnpTelemetryTests(transportCtor, authType, modelId, isModule) {
+  describe(`sendTelemetry() over ${transportCtor.name} using ${isModule ? 'ModuleClient' : 'Client'} with ${authType} authentication`, function () {
     this.timeout(120000);
 
-    let deviceInfo, deviceClient, ehReceiver;
+    let deviceId, client, ehReceiver;
 
-    before(function (beforeCallback) {
-      createDeviceMethod(function (err, testDeviceInfo) {
-        if (err) {
-          beforeCallback(err);
-          return;
-        }
-        deviceInfo = testDeviceInfo;
-        ehReceiver = new EventHubReceiverHelper();
-        ehReceiver.openClient(function (err) {
-          if (err) {
-            beforeCallback(err);
-            return;
-          }
-          setTimeout(beforeCallback, 3000);
-        });
-      });
+    before(async function () {
+      ({ deviceId, client } = await createDeviceOrModuleClient(transportCtor, authType, modelId, isModule));
+      ehReceiver = new EventHubReceiverHelper();
+      await (promisify(ehReceiver.openClient).bind(ehReceiver))();
+      await new Promise(resolve => setTimeout(resolve, 3000));
     });
 
     after(function (afterCallback) {
-      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, (deleteErr) => {
+      DeviceIdentityHelper.deleteDevice(deviceId, (deleteErr) => {
         ehReceiver.closeClient((closeErr) => {
           afterCallback(deleteErr || closeErr);
         });
@@ -58,12 +38,11 @@ function pnpTelemetryTests(deviceTransport, createDeviceMethod) {
     });
 
     beforeEach(async function () {
-      deviceClient = createDeviceClient(deviceTransport, deviceInfo);
-      await deviceClient.open();
+      await client.open();
     });
 
     afterEach(async function () {
-      await deviceClient.close();
+      await client.close();
       ehReceiver.removeAllListeners('error');
       ehReceiver.removeAllListeners('message');
     });
@@ -71,12 +50,12 @@ function pnpTelemetryTests(deviceTransport, createDeviceMethod) {
     it('sends a telemetry message with a component name and the service sees the message with the correct component name, content type, and content encoding', function (done) {
       const rdv = new Rendezvous(done);
       rdv.imIn('ehReceiver');
-      rdv.imIn('deviceClient');
+      rdv.imIn('client');
       ehReceiver.on('error', done);
       ehReceiver.on('message', (eventData) => {
-        if (eventData.annotations['iothub-connection-device-id'] !== deviceInfo.deviceId) {
+        if (eventData.annotations['iothub-connection-device-id'] !== deviceId) {
           debug(
-            `eventData.annotations['iothub-connection-device-id'] "${eventData.annotations['iothub-connection-device-id']}" doesn't match "${deviceInfo.deviceId}"`
+            `eventData.annotations['iothub-connection-device-id'] "${eventData.annotations['iothub-connection-device-id']}" doesn't match "${deviceId}"`
           );
         } else if (eventData.properties.content_type !== 'application/json') {
           debug(
@@ -99,24 +78,24 @@ function pnpTelemetryTests(deviceTransport, createDeviceMethod) {
         }
       });
 
-      deviceClient.sendTelemetry({fake: 'payload'}, componentName, (err) => {
+      client.sendTelemetry({fake: 'payload'}, componentName, (err) => {
         if (err) {
           done(err);
           return;
         }
-        rdv.imDone('deviceClient');
+        rdv.imDone('client');
       });
     });
 
     it('sends a telemetry message without a component name and the service sees the message with the correct component name, content type, and content encoding', function (done) {
       const rdv = new Rendezvous(done);
       rdv.imIn('ehReceiver');
-      rdv.imIn('deviceClient');
+      rdv.imIn('client');
       ehReceiver.on('error', done);
       ehReceiver.on('message', (eventData) => {
-        if (eventData.annotations['iothub-connection-device-id'] !== deviceInfo.deviceId) {
+        if (eventData.annotations['iothub-connection-device-id'] !== deviceId) {
           debug(
-            `eventData.annotations['iothub-connection-device-id'] "${eventData.annotations['iothub-connection-device-id']}" doesn't match "${deviceInfo.deviceId}"`
+            `eventData.annotations['iothub-connection-device-id'] "${eventData.annotations['iothub-connection-device-id']}" doesn't match "${deviceId}"`
           );
         } else if (eventData.properties.content_type !== 'application/json') {
           debug(
@@ -137,12 +116,12 @@ function pnpTelemetryTests(deviceTransport, createDeviceMethod) {
         }
       });
 
-      deviceClient.sendTelemetry({fake: 'payload'}, (err) => {
+      client.sendTelemetry({fake: 'payload'}, (err) => {
         if (err) {
           done(err);
           return;
         }
-        rdv.imDone('deviceClient');
+        rdv.imDone('client');
       });
     });
   });

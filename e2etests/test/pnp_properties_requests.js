@@ -4,67 +4,50 @@
 'use strict';
 
 const Registry = require('azure-iothub').Registry;
-const deviceMqtt = require('azure-iot-device-mqtt');
 const DeviceIdentityHelper = require('./device_identity_helper.js');
-const createDeviceClient = require('./testUtils.js').createDeviceClient;
 const assert = require('chai').assert;
-const promisify = require('util').promisify;
+const runPnpTestSuite = require('./pnp_client_helper.js').runPnpTestSuite;
+const createDeviceOrModuleClient = require('./client_creation_helper').createDeviceOrModuleClient;
 
 const connectionString = process.env.IOTHUB_CONNECTION_STRING;
 const firstPropertyUpdate = { fake: 'payload' };
 const secondPropertyUpdate = { fake: null };
 
-[
-  DeviceIdentityHelper.createDeviceWithSas,
-  DeviceIdentityHelper.createDeviceWithSymmetricKey,
-  DeviceIdentityHelper.createDeviceWithX509SelfSignedCert,
-  DeviceIdentityHelper.createDeviceWithX509CASignedCert
-].forEach((createDeviceMethod) => {
-  [deviceMqtt.Mqtt, deviceMqtt.MqttWs].forEach((deviceTransport) => {
-    pnpPropertiesRequestsTests(deviceTransport, createDeviceMethod);
-  });
-});
+runPnpTestSuite(pnpPropertiesRequestsTests);
 
-function pnpPropertiesRequestsTests(deviceTransport, createDeviceMethod) {
-  describe(`onWritablePropertyUpdateRequest() over ${deviceTransport.name} using device client with ${createDeviceMethod.name} authentication`, function () {
+function pnpPropertiesRequestsTests(transportCtor, authType, modelId, isModule) {
+  describe(`onWritablePropertyUpdateRequest() over ${transportCtor.name} using ${isModule ? 'ModuleClient' : 'Client'} with ${authType} authentication`, function () {
     this.timeout(120000);
-    let deviceInfo, deviceClient, registryClient;
+    let moduleId, deviceId, client, registryClient;
 
     before(async function () {
       registryClient = Registry.fromConnectionString(connectionString);
-      deviceInfo = await promisify(createDeviceMethod)();
+      ({ moduleId, deviceId, client } = await createDeviceOrModuleClient(transportCtor, authType, modelId, isModule));
     });
 
     after(function (afterCallback) {
-      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, afterCallback);
+      DeviceIdentityHelper.deleteDevice(deviceId, afterCallback);
     });
 
     beforeEach(async function () {
-      deviceClient = createDeviceClient(deviceTransport, deviceInfo);
-      await deviceClient.open();
+      await client.open();
     });
   
     afterEach(async function () {
-      await deviceClient.close();
+      await client.close();
     });
 
     it('receives writable property update requests and calls the listener', async function () {
-      let propertiesPromise = new Promise(resolve => deviceClient.onWritablePropertyUpdateRequest(resolve));
-      const updateResult = await registryClient.updateTwin(
-        deviceInfo.deviceId,
-        {properties: {desired: firstPropertyUpdate}},
-        '*'
-      );
+      let propertiesPromise = new Promise(resolve => client.onWritablePropertyUpdateRequest(resolve));
+      const updateTwinFunc = registryClient[isModule ? 'updateModuleTwin' : 'updateTwin'].bind(registryClient, deviceId, ...(isModule ? [moduleId] : []));
+
+      const updateResult = await updateTwinFunc({properties: {desired: firstPropertyUpdate}}, '*');
       let properties = await propertiesPromise;
       assert.strictEqual(properties.backingObject.fake, firstPropertyUpdate.fake);
       assert.strictEqual(properties.version, 2);
 
-      propertiesPromise = new Promise(resolve => deviceClient.onWritablePropertyUpdateRequest(resolve));
-      await registryClient.updateTwin(
-        deviceInfo.deviceId,
-        {properties: {desired: secondPropertyUpdate}},
-        updateResult.responseBody.etag
-      );
+      propertiesPromise = new Promise(resolve => client.onWritablePropertyUpdateRequest(resolve));
+      await updateTwinFunc({properties: {desired: secondPropertyUpdate}}, updateResult.responseBody.etag);
       properties = await propertiesPromise;
       assert.isNull(properties.backingObject.fake);
       assert.strictEqual(properties.version, 3);

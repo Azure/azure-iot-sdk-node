@@ -5,11 +5,10 @@
 
 const debug = require('debug')('e2etests:pnp_commands');
 const ServiceClient = require('azure-iothub').Client;
-const deviceMqtt = require('azure-iot-device-mqtt');
-const DeviceIdentityHelper = require('./device_identity_helper.js');
-const createDeviceClient = require('./testUtils.js').createDeviceClient;
 const assert = require('chai').assert;
-const promisify = require('util').promisify;
+const runPnpTestSuite = require('./pnp_client_helper.js').runPnpTestSuite;
+const createDeviceOrModuleClient = require('./client_creation_helper').createDeviceOrModuleClient;
+const DeviceIdentityHelper = require('./device_identity_helper.js');
 
 const hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 const commandName = 'fakeCommand';
@@ -18,42 +17,32 @@ const requestPayload = {this: 'is the payload for the request'};
 const responsePayload = {payload: 'for the response'};
 const statusCode = 200;
 
-[
-  DeviceIdentityHelper.createDeviceWithSas,
-  DeviceIdentityHelper.createDeviceWithSymmetricKey,
-  DeviceIdentityHelper.createDeviceWithX509SelfSignedCert,
-  DeviceIdentityHelper.createDeviceWithX509CASignedCert
-].forEach((createDeviceMethod) => {
-  [deviceMqtt.Mqtt, deviceMqtt.MqttWs].forEach((deviceTransport) => {
-    pnpCommandsTests(deviceTransport, createDeviceMethod);
-  });
-});
+runPnpTestSuite(pnpCommandsTests);
 
-function pnpCommandsTests(deviceTransport, createDeviceMethod) {
-  describe(`PnP Commands over ${deviceTransport.name} using device client with ${createDeviceMethod.name} authentication`, function () {
+function pnpCommandsTests(transportCtor, authType, modelId, isModule) {
+  describe(`PnP Commands over ${transportCtor.name} using ${isModule ? 'ModuleClient' : 'Client'} with ${authType} authentication`, function () {
     this.timeout(120000);
-    let deviceInfo, deviceClient, serviceClient;
+    let moduleId, deviceId, client, serviceClient;
 
     before(async function () {
       serviceClient = ServiceClient.fromConnectionString(hubConnectionString);
-      deviceInfo = await promisify(createDeviceMethod)();
+      ({ moduleId, deviceId, client } = await createDeviceOrModuleClient(transportCtor, authType, modelId, isModule));
     });
 
     after(function (afterCallback) {
-      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, afterCallback);
+      DeviceIdentityHelper.deleteDevice(deviceId, afterCallback);
     });
 
     beforeEach(async function () {
-      deviceClient = createDeviceClient(deviceTransport, deviceInfo);
-      await deviceClient.open();
+      await client.open();
     });
   
     afterEach(async function () {
-      await deviceClient.close();
+      await client.close();
     });
 
     it('It receives command requests to the default component', async function () {
-      deviceClient.onCommand(commandName, (request, response) => {
+      client.onCommand(commandName, (request, response) => {
         if (request.commandName !== commandName) {
           debug(`request.commandName ${request.commandName} doesn't match ${commandName}`);
         } else if (request.componentName) {
@@ -68,7 +57,8 @@ function pnpCommandsTests(deviceTransport, createDeviceMethod) {
       });
 
       const response = await serviceClient.invokeDeviceMethod(
-        deviceInfo.deviceId,
+        deviceId,
+        ...(isModule ? [moduleId] : []),
         {methodName: commandName, payload: requestPayload}
       );
 
@@ -77,7 +67,7 @@ function pnpCommandsTests(deviceTransport, createDeviceMethod) {
     });
 
     it('It receives command requests to a component', async function () {
-      deviceClient.onCommand(componentName, commandName, (request, response) => {
+      client.onCommand(componentName, commandName, (request, response) => {
         if (request.commandName !== commandName) {
           debug(`request.commandName ${request.commandName} doesn't match ${commandName}`);
         } else if (request.componentName !== componentName) {
@@ -92,7 +82,8 @@ function pnpCommandsTests(deviceTransport, createDeviceMethod) {
       });
 
       const response = await serviceClient.invokeDeviceMethod(
-        deviceInfo.deviceId,
+        deviceId,
+        ...(isModule ? [moduleId] : []),
         {methodName: `${componentName}*${commandName}`, payload: requestPayload}
       );
 
