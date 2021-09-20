@@ -83,7 +83,7 @@ export class Twin extends EventEmitter {
   get(): Promise<Twin>;
   get(callback?: Callback<Twin>): Promise<Twin> | void {
     return callbackToPromise((_callback) => {
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation("twin.get", this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         this._clearCachedProperties();
         /*Codes_SRS_NODE_DEVICE_TWIN_16_002: [The `get` method shall call the `getTwin` method of the `Transport` object with a callback.]*/
@@ -117,7 +117,7 @@ export class Twin extends EventEmitter {
    * @private
    */
   enableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void {
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+    const retryOp = new RetryOperation("enableTwinDesiredPropertiesUpdates", this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       this._transport.enableTwinDesiredPropertiesUpdates((err) => {
         this.desiredPropertiesUpdatesEnabled = !err;
@@ -133,7 +133,7 @@ export class Twin extends EventEmitter {
   // }
 
   private _updateReportedProperties(state: any, done: (err?: Error) => void): void {
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+    const retryOp = new RetryOperation("_updateReportedProperties", this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       /*Codes_SRS_NODE_DEVICE_TWIN_16_007: [The `update` method shall call the `updateReportedProperties` method of the `Transport` object and pass it the patch object and a callback accepting an error as argument.]*/
       this._transport.updateTwinReportedProperties(state, (err) => {

@@ -17,6 +17,7 @@ import * as dbg from 'debug';
 import * as async from 'async';
 
 const debug = dbg('azure-iot-amqp-base:Amqp');
+const debugErrors = dbg('azure-iot-amqp-base:Amqp:Errors');
 
 export type GenericAmqpBaseCallback<T> = (err: Error | null, result?: T) => void;
 
@@ -133,18 +134,18 @@ export class Amqp {
     this._rheaContainer = rheaCreateContainer();
 
     this._rheaContainer.on('azure-iot-amqp-base:error-indicated', (err: AmqpError) => {
-      debug('azure-iot-amqp-base:error-indicated invoked ' + this._getErrorName(err));
+      debugErrors('azure-iot-amqp-base:error-indicated invoked ' + this._getErrorName(err));
       this._fsm.handle('amqpError', err);
 
     });
 
     const rheaErrorHandler = (context: EventContext) => {
-      debug('rhea error event handler');
+      debugErrors(`rhea error event handler: error = ${context.error}`);
       this._fsm.handle('error', context);
     };
 
     const connectionErrorHandler = (context: EventContext) => {
-      debug('connection error event handler');
+      debugErrors(`connection error event handler: error = ${context.error}`);
       this._fsm.handle('connection_error', context);
     };
 
@@ -159,7 +160,11 @@ export class Amqp {
     };
 
     const connectionDisconnectedHandler = (context: EventContext) => {
-      debug('connection disconnected event handler');
+      if (context.error) {
+        debugErrors(`connection disconnected event handler: error = ${context.error}`);
+      } else {
+        debug('connection disconnected event handler');
+      }
       this._fsm.handle('disconnected', context);
     };
     const manageConnectionHandlers = (operation: string) => {
@@ -171,7 +176,7 @@ export class Amqp {
     };
 
     const sessionErrorHandler = (context: EventContext) => {
-      debug('session error event handler');
+      debugErrors(`session error event handler: error = ${context.error}`);
       this._fsm.handle('session_error', context);
     };
     const sessionOpenHandler = (context: EventContext) => {
@@ -202,12 +207,12 @@ export class Amqp {
               }
             } else if (this._disconnectHandler) {
               debug('calling upper layer disconnect handler');
-              debug('error passed to disconnect handler is: ' + this._getErrorName(err || new errors.NotConnectedError('rhea: connection disconnected')));
+              debugErrors('error passed to disconnect handler is: ' + this._getErrorName(err || new errors.NotConnectedError('rhea: connection disconnected')));
               this._disconnectHandler(err || new errors.NotConnectedError('rhea: connection disconnected'));
             }
           },
           amqpError: (err) => {
-            debug('received an error while disconnected: maybe a bug: ' + (!!err ? err.name : 'falsy error object.'));
+            debugErrors('received an error while disconnected: maybe a bug: ' + (!!err ? err.name : 'falsy error object.'));
           },
           connect: (connectionParameters, connectCallback) => {
             this._fsm.transition('connecting', connectionParameters, connectCallback);
@@ -421,7 +426,7 @@ export class Amqp {
             if (!this._senders[endpoint]) {
               this._fsm.handle('attachSenderLink', endpoint, null, (err) => {
                 if (err) {
-                  debug('failed to attach the sender link: ' + err.toString());
+                  debugErrors('failed to attach the sender link: ' + err.toString());
                   done(err);
                 } else {
                   (this._senders[endpoint] as SenderLink).send(amqpMessage, done);
@@ -540,7 +545,7 @@ export class Amqp {
             const disconnect = (callback) => {
               debug('entering disconnect function of disconnecting state');
               if (err) {
-                debug('with a disconnecting state err: ' + this._getErrorName(err));
+                debugErrors('with a disconnecting state err: ' + this._getErrorName(err));
               }
               //
               // If a disconnection has already occurred there is no point in generating any network traffic.
@@ -569,7 +574,7 @@ export class Amqp {
               }
 
               if (this._sessionCloseOccurred || this._disconnectionOccurred) {
-                debug('forceDetaching link');
+                debugErrors('forceDetaching link');
                 link.forceDetach(err);
                 callback();
               } else {
@@ -635,7 +640,7 @@ export class Amqp {
 
             /*Codes_SRS_NODE_COMMON_AMQP_06_007: [While disconnecting, if the run down does not complete within 45 seconds, the code will be re-run with `forceDetach`es.]*/
             rerunWithForceTimer = setTimeout(() => {
-              debug('the normal rundown expired without completion.  Do it again with force detaches.');
+              debugErrors('the normal rundown expired without completion.  Do it again with force detaches.');
               rundownConnection(true);
             }, 45000);
             rundownConnection(false);
@@ -667,13 +672,13 @@ export class Amqp {
             }
           },
           error: (_context: EventContext) => {
-            debug('ignoring error events while disconnecting');
+            debugErrors('ignoring error events while disconnecting');
           },
           disconnected: (_context: EventContext) => {
             this._disconnectionOccurred = true;
           },
           amqpError: (err) => {
-            debug('ignoring error event while disconnecting: ' + this._getErrorName(err));
+            debugErrors('ignoring error event while disconnecting: ' + this._getErrorName(err));
           },
           '*': () => this._fsm.deferUntilTransition('disconnected')
         }

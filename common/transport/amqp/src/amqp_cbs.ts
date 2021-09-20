@@ -193,7 +193,7 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
               callback();
             }
             let tokenOperation = this._putTokensNotYetSent.shift();
-            while (tokenOperation) {
+            while (tokenOperation) {debug
               this._fsm.handle('putToken', tokenOperation.audience, tokenOperation.token, tokenOperation.callback);
               tokenOperation = this._putTokensNotYetSent.shift();
             }

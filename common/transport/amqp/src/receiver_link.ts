@@ -8,6 +8,7 @@ import { AmqpMessage } from './amqp_message';
 import { AmqpLink } from './amqp_link_interface';
 
 const debug = dbg('azure-iot-amqp-base:ReceiverLink');
+const debugErrors = dbg('azure-iot-amqp-base:ReceiverLink:Errors');
 
 interface DeliveryRecord {
   msg: AmqpMessage;
@@ -133,11 +134,11 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
           },
           detach: (callback, err) => {
             /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_004: [If the `ReceiverLink` is already in the detached state an invocation of `detach` shall immediately invoke the callback with the (potentially) supplied error parameter.] */
-            debug('while detached - detach for receiver link ' + this._linkAddress);
+            debug(this.toString() + ': while detached - detach for receiver link ' + this._linkAddress);
             this._safeCallback(callback, err);
           },
           forceDetach: () => {
-            debug('while detached - force detach for receiver link ' + this._linkAddress);
+            debugErrors(this.toString() + ': while detached - force detach for receiver link ' + this._linkAddress);
             /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_028: [The `forceDetach` method shall return immediately if the link is already detached.]*/
             return;
           },
@@ -153,7 +154,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             this._receiverCloseOccurred = false;
             this._rheaReceiverName = 'rheaReceiver_' + uuid.v4();
             this._combinedOptions.name = this._rheaReceiverName;
-            debug('attaching receiver name: ' + this._rheaReceiverName + ' with address: ' + this._linkAddress);
+            debug(this.toString() + ': attaching receiver name: ' + this._rheaReceiverName + ' with address: ' + this._linkAddress);
             //
             // According to the rhea maintainers, one can depend on that fact that no actual network activity
             // will occur until the nextTick() after the call to open_receiver.  Because of that, one can
@@ -164,13 +165,13 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             manageReceiverHandlers('on');
           },
           receiverOpenEvent: (context: EventContext) => {
-            debug('In receiver attaching state - open event for ' + context.receiver.name);
+            debug(this.toString() + ': In receiver attaching state - open event for ' + context.receiver.name);
             let callback = this._attachingCallback;
             this._attachingCallback = null;
             this._fsm.transition('attached', callback);
           },
           receiverErrorEvent: (context: EventContext) => {
-            debug('In receiver attaching state - error event for ' + context.receiver.name + ' error is: ' + this._getErrorName(context.receiver.error));
+            debugErrors(this.toString() + ': In receiver attaching state - error event for ' + context.receiver.name + ' error is: ' + this._getErrorName(context.receiver.error));
             this._indicatedError = context.receiver.error;
             //
             // We don't transition at this point in that we are guaranteed that the error will be followed by a receiver_close
@@ -178,7 +179,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             //
           },
           receiverCloseEvent: (context: EventContext) => {
-            debug('in receiver attaching state - close event for ' + context.receiver.name);
+            debug(this.toString() + ': In receiver attaching state - close event for ' + context.receiver.name);
             //
             // We enabled the event listeners on the onEnter handler.  They are to stay alive until we
             // are about to transition to the detached state.
@@ -195,7 +196,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
           attach: (null),
           detach: (callback, err) => {
             /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_002: [If the `detach` method is invoked on the `ReceiverLink` while still attaching, the ReceiverLink shall detach.  It will indicate the error to the callback for the `detach` as well as the callback to the `attach`.] */
-            debug('Detaching while attaching of rhea receiver link ' + this._linkAddress);
+            debug(this.toString() + ': Detaching while attaching of rhea receiver link ' + this._linkAddress);
             manageReceiverHandlers('removeListener');
             //
             // We may have a callback outstanding from the request that started the attaching.
@@ -213,7 +214,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
           },
           forceDetach: (err) => {
             /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_003: [If the `forceDetach` method is invoked on the `ReceiverLink` while still attaching, the ReceiverLink shall detach.  With the error supplied to the forceDetach, the `attach` callback will also be invoked.  If the error is NOT falsy it will also be emitted as the argument to the `error` event.] */
-            debug('Force detaching while attaching of rhea receiver link ' + this._linkAddress);
+            debug(this.toString() + ': Force detaching while attaching of rhea receiver link ' + this._linkAddress);
             manageReceiverHandlers('removeListener');
             let error = err || this._indicatedError;
             let attachingCallback = this._attachingCallback;
@@ -231,7 +232,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             if (callback) callback(err);
           },
           receiverErrorEvent: (context: EventContext) => {
-            debug('in receiver attached state - error event for ' + context.receiver.name + ' error is: ' + this._getErrorName(context.receiver.error));
+            debugErrors(this.toString() + ': In receiver attached state - error event for ' + context.receiver.name + ' error is: ' + this._getErrorName(context.receiver.error));
             this._indicatedError = context.receiver.error;
             //
             // We don't transition at this point in that we are guaranteed that the error will be followed by a receiver_close
@@ -248,7 +249,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             let error = this._indicatedError; // This might be undefined.
             this._indicatedError = undefined;
             this._receiverCloseOccurred = true;
-            debug('in receiver attached state - close event for ' + context.receiver.name + ' already indicated error is: ' + this._getErrorName(error));
+            debugErrors(this.toString() + ': In receiver attached state - close event for ' + context.receiver.name + ' already indicated error is: ' + this._getErrorName(error));
             if (error) {
               context.container.emit('azure-iot-amqp-base:error-indicated', error);
             } else {
@@ -260,11 +261,11 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             this._safeCallback(callback);
           },
           detach: (callback, err) => {
-            debug('while attached - detach for receiver link ' + this._linkAddress + ' callback: ' + callback + ' error: ' + this._getErrorName(err));
+            debug(this.toString() + ': While attached - detach for receiver link ' + this._linkAddress + ' callback: ' + callback + ' error: ' + this._getErrorName(err));
             this._fsm.transition('detaching', callback, err);
           },
           forceDetach: (err) => {
-            debug('while attached - force detach for receiver link ' + this._linkAddress);
+            debugErrors(this.toString() + ': While attached - force detach for receiver link ' + this._linkAddress);
             manageReceiverHandlers('removeListener');
             /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_027: [** The `forceDetach` method shall call the `remove` method on the underlying `rhea` link object.]*/
             this._rheaReceiver.remove();
@@ -305,7 +306,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
         detaching: {
           _onEnter: (callback, err) => {
             /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_025: [The `detach` method shall call the `callback` with an `Error` that caused the detach whether it succeeds or fails to cleanly detach the link.]*/
-            debug('Detaching of rhea receiver link ' + this._linkAddress);
+            debug(this.toString() + ': Detaching of rhea receiver link ' + this._linkAddress);
             this._detachingCallback = callback;
             this._indicatedError = err;
             /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_009: [The `detach` method shall detach the link created by `rhea` object.] */
@@ -322,7 +323,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
           },
           receiverErrorEvent: (context: EventContext) => {
             /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_006: [An error occurring during a detach will be indicated in the error result of the `detach`.] */
-            debug('in receiver detaching state - error event for ' + context.receiver.name + ' error is: ' + this._getErrorName(context.receiver.error));
+            debugErrors(this.toString() + ': In receiver detaching state - error event for ' + context.receiver.name + ' error is: ' + this._getErrorName(context.receiver.error));
             this._indicatedError = this._indicatedError || context.receiver.error;
             //
             // We don't transition at this point in that we are guaranteed that the error will be followed by a receiver_close
@@ -330,7 +331,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             //
           },
           receiverCloseEvent: (context: EventContext) => {
-            debug('in receiver detaching state - close event for ' + context.receiver.name + ' already indicated error is: ' + this._getErrorName(this._indicatedError));
+            debugErrors(this.toString() + ': In receiver detaching state - close event for ' + context.receiver.name + ' already indicated error is: ' + this._getErrorName(this._indicatedError));
             let error = this._indicatedError;
             let callback = this._detachingCallback;
             this._detachingCallback = undefined;
@@ -346,7 +347,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             // The caller was free to invoke forceDetach.  That handler will
             // ALWAYS transition to the detached state.
             //
-            debug('while detaching - detach for receiver link ' + this._linkAddress);
+            debug(this.toString() + ': While detaching - detach for receiver link ' + this._linkAddress);
             if (callback) {
               err = err || new Error('Detached invoked while detaching.');
               this._safeCallback(callback, err);
@@ -354,7 +355,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
           },
           forceDetach: (err) => {
             /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_005: [If `forceDetach` invoked while detaching, the detach will be completed with the error supplied to the `forceDetach` or an error indicating that the `detach` was preempted by the `forceDetach`.] */
-            debug('while detaching - Force detaching for receiver link ' + this._linkAddress);
+            debugErrors(this.toString() + ': While detaching - Force detaching for receiver link ' + this._linkAddress);
             this._rheaReceiver.remove();
             let detachCallback = this._detachingCallback;
             let error = err || this._indicatedError || new Error('Detach preempted by force');
@@ -374,7 +375,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
     });
 
     this._fsm.on('transition', (transition) => {
-      debug(transition.fromState + ' -> ' + transition.toState + ' (action:' + transition.action + ')');
+      debug(this.toString() + ": " + transition.fromState + ' -> ' + transition.toState + ' (action:' + transition.action + ')');
     });
 
     this.on('removeListener', (eventName) => {
@@ -390,6 +391,10 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
         this._fsm.handle('attach');
       }
     });
+  }
+
+  toString(): string {
+    return `ReceiverLink([${this._rheaReceiver?.connection.options.id}])`;
   }
 
   detach(callback: (err?: Error) => void, err?: Error | AmqpError): void {

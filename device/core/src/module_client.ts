@@ -106,7 +106,7 @@ export class ModuleClient extends InternalClient {
   sendOutputEvent(outputName: string, message: Message): Promise<results.MessageEnqueued>;
   sendOutputEvent(outputName: string, message: Message, callback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
     return callbackToPromise((_callback) => {
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation("sendOutputEvent", this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         /* Codes_SRS_NODE_MODULE_CLIENT_18_010: [ The `sendOutputEvent` method shall send the event indicated by the `message` argument via the transport associated with the Client instance. ]*/
         this._transport.sendOutputEvent(outputName, message, opCallback);
@@ -129,7 +129,7 @@ export class ModuleClient extends InternalClient {
   sendOutputEventBatch(outputName: string, messages: Message[]): Promise<results.MessageEnqueued>;
   sendOutputEventBatch(outputName: string, messages: Message[], callback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
     return callbackToPromise((_callback) => {
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation("sendOutputEventBatch", this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         /* Codes_SRS_NODE_MODULE_CLIENT_18_011: [ The `sendOutputEventBatch` method shall send the list of events (indicated by the `messages` argument) via the transport associated with the Client instance. ]*/
         this._transport.sendOutputEventBatch(outputName, messages, opCallback);
@@ -259,7 +259,7 @@ export class ModuleClient extends InternalClient {
 
   private _enableInputMessages(callback: (err?: Error) => void): void {
     if (!this._inputMessagesEnabled) {
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation("_enableInpyutMessages", this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         /* Codes_SRS_NODE_MODULE_CLIENT_18_016: [ The client shall connect the transport if needed in order to receive inputMessages. ]*/
         this._transport.enableInputMessages(opCallback);

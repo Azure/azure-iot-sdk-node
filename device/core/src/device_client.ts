@@ -176,7 +176,7 @@ export class Client extends InternalClient {
       /*Codes_SRS_NODE_DEVICE_CLIENT_16_039: [The `uploadToBlob` method shall throw a `ReferenceError` if `streamLength` is falsy.]*/
       if (!streamLength) throw new ReferenceError('streamLength cannot be \'' + streamLength + '\'');
 
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation("uploadToBlob", this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         /*Codes_SRS_NODE_DEVICE_CLIENT_16_040: [The `uploadToBlob` method shall call the `_callback` callback with an `Error` object if the upload fails.]*/
         /*Codes_SRS_NODE_DEVICE_CLIENT_16_041: [The `uploadToBlob` method shall call the `_callback` callback no parameters if the upload succeeds.]*/
@@ -202,7 +202,7 @@ export class Client extends InternalClient {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_DEVICE_CLIENT_41_001: [The `getBlobSharedAccessSignature` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
       if (!blobName) throw new ReferenceError('blobName cannot be \'' + blobName + '\'');
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation("getBlobSharedAccessSignature", this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         /*Codes_SRS_NODE_DEVICE_CLIENT_41_002: [The `getBlobSharedAccessSignature` method shall call the `getBlobSharedAccessSignature` method in the instantiated `_fileUploadApi` class and pass in `blobName` as a parameter.]*/
         this._fileUploadApi.getBlobSharedAccessSignature(blobName, opCallback);
@@ -241,7 +241,7 @@ export class Client extends InternalClient {
       if (!isSuccess && typeof(isSuccess) !== 'boolean' ) throw new ReferenceError('isSuccess cannot be \' ' + isSuccess + ' \'');
       if (!statusCode && !(statusCode === 0)) throw new ReferenceError('statusCode cannot be \' ' + statusCode + ' \'');
       if (!statusDescription && statusDescription !== '') throw new ReferenceError('statusDescription cannot be \' ' + statusDescription + ' \'.');
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation("notifyBlobUploadStatus", this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         let uploadResult = { isSuccess: isSuccess, statusCode: statusCode, statusDescription: statusDescription };
         /*Codes_SRS_NODE_DEVICE_CLIENT_41_015: [The `notifyBlobUploadStatus` method shall call the `notifyUploadComplete` method via the internal `_fileUploadApi` class.]*/
@@ -257,7 +257,7 @@ export class Client extends InternalClient {
 
   private _enableC2D(callback: (err?: Error) => void): void {
     debug('enabling C2D');
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+    const retryOp = new RetryOperation("_enableC2D", this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       this._transport.enableC2D(opCallback);
     }, (err) => {
