@@ -45,8 +45,6 @@ export function translateError(message: string, amqpError: Error): AmqpTransport
   | "com.microsoft:precondition-failed"        | PreconditionFailedError              |
   | "com.microsoft:quota-exceeded"             | IotHubQuotaExceededError             |
   | "com.microsoft:timeout"                    | ServiceUnavailableError              |
-  | "amqp:link:detach-forced, Server Busy. Please retry operation" | ThrottlingError  |
-
   ]*/
 
   if ((amqpError as AmqpError).condition) {
@@ -102,11 +100,6 @@ export function translateError(message: string, amqpError: Error): AmqpTransport
       case 'com.microsoft:timeout':
         error = new errors.ServiceUnavailableError(message);
         break;
-      case 'amqp:link:detach-forced':
-        if ((amqpError as AmqpError).description === 'Server Busy. Please retry operation') {
-          error = new errors.ThrottlingError((amqpError as AmqpError).description);
-        }
-        break;
       default:
         /*Codes_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_002: [If the AMQP error code is unknown, `translateError` should return a generic Javascript `Error` object.]*/
         error = new Error(message);
@@ -127,5 +120,6 @@ export function translateError(message: string, amqpError: Error): AmqpTransport
   *- `message` shall contain a human-readable error message]
   */
   error.amqpError = amqpError;
+
   return error;
 }
