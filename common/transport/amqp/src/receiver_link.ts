@@ -394,7 +394,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
   }
 
   toString(): string {
-    return `ReceiverLink([${this._rheaReceiver?.connection.options.id}])`;
+    return `ReceiverLink([${this._rheaReceiver?.connection?.options?.id}])`;
   }
 
   detach(callback: (err?: Error) => void, err?: Error | AmqpError): void {

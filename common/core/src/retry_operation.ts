@@ -74,7 +74,7 @@ export class RetryOperation {
     };
     this._operationStartTime = Date.now();
     this._operationExpiryTime = this._operationStartTime + this._maxTimeout;
-    debug(`${this._name}:${this._id}:${this._policy.constructor.name} Operation started at ${this._operationStartTime} - Will stop retrying after: ${this._operationExpiryTime}`);
+    debug(`${this._name}:${this._id}:${this._policy?.constructor.name} Operation started at ${this._operationStartTime} - Will stop retrying after: ${this._operationExpiryTime}`);
 
     retryOperation();
   }

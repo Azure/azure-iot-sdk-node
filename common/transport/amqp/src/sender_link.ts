@@ -480,7 +480,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
   }
 
   toString(): string {
-    return `SenderLink([${this._rheaSender?.connection.options.id}])`;
+    return `SenderLink([${this._rheaSender?.connection?.options?.id}])`;
   }
 
   detach(callback: (err?: Error) => void, err?: Error | AmqpError): void {
