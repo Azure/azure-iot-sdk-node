@@ -9,6 +9,7 @@ import * as machina from 'machina';
 import * as dbg from 'debug';
 import * as queryString from 'querystring';
 const debug = dbg('azure-iot-provisioning-device-mqtt:Mqtt');
+const debugErrors = dbg('azure-iot-provisioning-device-mqtt:Mqtt:Errors');
 
 import { MqttBase, MqttBaseTransportConfig } from 'azure-iot-mqtt-base';
 import { errors, X509 } from 'azure-iot-common';
@@ -313,14 +314,14 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
     this._mqttBase.connect(baseConfig, (err) => {
       if (err) {
         /* Codes_SRS_NODE_PROVISIONING_MQTT_18_041: [ If an error is returned from `_mqttBase.connect`, `Mqtt` shall call `callback` passing in the error.] */
-        debug('connect error: ' + err.toString());
+        debugErrors('connect error: ' + err);
         callback(err);
       } else {
         /* Codes_SRS_NODE_PROVISIONING_MQTT_18_042: [ After connecting the transport, `Mqtt` will subscribe to '$dps/registrations/res/#'  by calling `_mqttBase.subscribe`.] */
         this._mqttBase.subscribe(responseTopic, { qos: 1 }, (err) => {
           if (err) {
             /* Codes_SRS_NODE_PROVISIONING_MQTT_18_043: [ If an error is returned from _mqttBase.subscribe, `Mqtt` shall call `callback` passing in the error.] */
-            debug('subscribe error: ' + err.toString());
+            debugErrors('subscribe error: ' + err);
             callback(err);
           } else {
             this._subscribed = true;
@@ -339,7 +340,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
       /* Codes_SRS_NODE_PROVISIONING_MQTT_18_045: [ When Disconnecting, `Mqtt` shall call `_mqttBase.disconnect`.] */
       this._mqttBase.disconnect((disconnectError) => {
         if (disconnectError) {
-          debug('error disconnecting: ' + disconnectError.toString());
+          debugErrors('error disconnecting: ' + disconnectError);
         }
         /* Codes_SRS_NODE_PROVISIONING_MQTT_18_048: [ If either `_mqttBase.unsubscribe` or `_mqttBase.disconnect` fails, `Mqtt` shall call the disconnect `callback` with the failing error, giving preference to the disconnect error.] */
         callback(disconnectError || unsubscribeError);
@@ -353,7 +354,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
         debug('unsubscribed');
         this._subscribed = false;
         if (unsubscribeError) {
-          debug('error unsubscribing: ' + unsubscribeError.toString());
+          debugErrors('error unsubscribing: ' + unsubscribeError);
         }
         disconnect(unsubscribeError);
       });
@@ -375,7 +376,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
     this._mqttBase.publish('$dps/registrations/PUT/iotdps-register/?$rid=' + rid, JSON.stringify(requestBody), { qos: 1 } , (err) => {
       /* Codes_SRS_NODE_PROVISIONING_MQTT_18_004: [ If the publish fails, `registrationRequest` shall call `callback` passing in the error.] */
       if (err) {
-        debug('received an error from the registration publish: ' + err.name);
+        debugErrors('received an error from the registration publish: ' + err);
         delete this._operations[rid];
         callback(err);
       }
@@ -387,7 +388,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_017: [ `queryOperationStatus` shall publish to $dps/registrations/GET/iotdps-get-operationstatus/?$rid=<rid>&operationId=<operationId>.] */
     this._mqttBase.publish('$dps/registrations/GET/iotdps-get-operationstatus/?$rid=' + rid + '&operationId=' + operationId, ' ', { qos: 1 }, (err) => {
       if (err) {
-        debug('received an error from the operationStatus publish: ' + err.name);
+        debugErrors('received an error from the operationStatus publish: ' + err);
         /* Codes_SRS_NODE_PROVISIONING_MQTT_18_018: [ If the publish fails, `queryOperationStatus` shall call `callback` passing in the error */
         delete this._operations[rid];
         callback(err);

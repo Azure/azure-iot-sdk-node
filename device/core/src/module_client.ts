@@ -5,6 +5,7 @@
 
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:ModuleClient');
+const debugErrors = dbg('azure-iot-device:ModuleClients:Errors');
 
 import * as fs from 'fs';
 import { results, Message, RetryOperation, ConnectionString, AuthenticationProvider, Callback, callbackToPromise, DoubleValueCallback } from 'azure-iot-common';
@@ -76,13 +77,18 @@ export class ModuleClient extends InternalClient {
     });
 
     this._moduleDisconnectHandler = (err) => {
-      debug('transport disconnect event: ' + (err ? err.toString() : 'no error'));
+      if (err) {
+        debugErrors('transport disconnect event: ' + err);
+      } else {
+        debug('transport disconnect event:  no error');
+      }
       if (err && this._retryPolicy.shouldRetry(err)) {
         if (this._inputMessagesEnabled) {
           this._inputMessagesEnabled = false;
           debug('re-enabling input message link');
           this._enableInputMessages((err) => {
             if (err) {
+              debugErrors('Error re-enabling input messages: ' + err);
               /*Codes_SRS_NODE_MODULE_CLIENT_16_102: [If the retry policy fails to reestablish the C2D functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
               this.emit('disconnect', new results.Disconnected(err));
             }
@@ -106,7 +112,7 @@ export class ModuleClient extends InternalClient {
   sendOutputEvent(outputName: string, message: Message): Promise<results.MessageEnqueued>;
   sendOutputEvent(outputName: string, message: Message, callback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
     return callbackToPromise((_callback) => {
-      const retryOp = new RetryOperation("sendOutputEvent", this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation('sendOutputEvent', this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         /* Codes_SRS_NODE_MODULE_CLIENT_18_010: [ The `sendOutputEvent` method shall send the event indicated by the `message` argument via the transport associated with the Client instance. ]*/
         this._transport.sendOutputEvent(outputName, message, opCallback);
@@ -129,7 +135,7 @@ export class ModuleClient extends InternalClient {
   sendOutputEventBatch(outputName: string, messages: Message[]): Promise<results.MessageEnqueued>;
   sendOutputEventBatch(outputName: string, messages: Message[], callback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
     return callbackToPromise((_callback) => {
-      const retryOp = new RetryOperation("sendOutputEventBatch", this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation('sendOutputEventBatch', this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         /* Codes_SRS_NODE_MODULE_CLIENT_18_011: [ The `sendOutputEventBatch` method shall send the list of events (indicated by the `messages` argument) via the transport associated with the Client instance. ]*/
         this._transport.sendOutputEventBatch(outputName, messages, opCallback);
@@ -259,7 +265,7 @@ export class ModuleClient extends InternalClient {
 
   private _enableInputMessages(callback: (err?: Error) => void): void {
     if (!this._inputMessagesEnabled) {
-      const retryOp = new RetryOperation("_enableInpyutMessages", this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation('_enableInputMessages', this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         /* Codes_SRS_NODE_MODULE_CLIENT_18_016: [ The client shall connect the transport if needed in order to receive inputMessages. ]*/
         this._transport.enableInputMessages(opCallback);

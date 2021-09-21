@@ -375,7 +375,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
     });
 
     this._fsm.on('transition', (transition) => {
-      debug(this.toString() + ": " + transition.fromState + ' -> ' + transition.toState + ' (action:' + transition.action + ')');
+      debug(this.toString() + ': ' + transition.fromState + ' -> ' + transition.toState + ' (action:' + transition.action + ')');
     });
 
     this.on('removeListener', (eventName) => {

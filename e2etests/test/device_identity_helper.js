@@ -16,8 +16,8 @@ var Registry = require('azure-iothub').Registry;
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 var registry = Registry.fromConnectionString(hubConnectionString);
-// var CARootCert = Buffer.from(process.env.IOTHUB_CA_ROOT_CERT, 'base64').toString('ascii');
-// var CARootCertKey = Buffer.from(process.env.IOTHUB_CA_ROOT_CERT_KEY, 'base64').toString('ascii');
+var CARootCert = Buffer.from(process.env.IOTHUB_CA_ROOT_CERT, 'base64').toString('ascii');
+var CARootCertKey = Buffer.from(process.env.IOTHUB_CA_ROOT_CERT_KEY, 'base64').toString('ascii');
 
 var host = ConnectionString.parse(hubConnectionString).HostName;
 

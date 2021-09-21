@@ -103,7 +103,7 @@ export function translateError(message: string, amqpError: Error): AmqpTransport
         error = new errors.ServiceUnavailableError(message);
         break;
       case 'amqp:link:detach-forced':
-        if ((amqpError as AmqpError).description == 'Server Busy. Please retry operation') {
+        if ((amqpError as AmqpError).description === 'Server Busy. Please retry operation') {
           error = new errors.ThrottlingError((amqpError as AmqpError).description);
         }
         break;

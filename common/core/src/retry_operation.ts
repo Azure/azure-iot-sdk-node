@@ -9,7 +9,7 @@ import * as dbg from 'debug';
 const debug = dbg('azure-iot-common:RetryOperation');
 const debugErrors = dbg('azure-iot-common:RetryOperation:Errors');
 
-var _nextId = 0;
+let _nextId = 0;
 
 /**
  * Implements the necessary logic to retry operations such as connecting, receiving C2D messages, sending telemetry, twin updates, etc.
@@ -20,7 +20,7 @@ export class RetryOperation {
   private _maxTimeout: number;
   private _operationStartTime: number;
   private _operationExpiryTime: number;
-  private _name: string = "";
+  private _name: string = '';
   private _id: number = 0;
 
   /**
