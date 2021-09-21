@@ -8,8 +8,8 @@ You can use Github Codespaces to be up and running quickly! Here are the steps t
 **1) Make sure you have the prerequisites**
 
 In order to run the device samples you will first need the following prerequisites:
-* An Azure IoT Hub instance. [(Link if you don't.)][lnk-setup-iot-hub]
-* A device identity for your device. [(Link if you don't.)][lnk-manage-iot-hub]
+* An Azure IoT Hub instance. [Link if you don't.](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-through-portal)
+* A device identity for your device. [Link if you don't.](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-through-portal#register-a-new-device-in-the-iot-hub)
 
 **2) Create and open Codespace**
 
@@ -21,10 +21,9 @@ In order to run the device samples you will first need the following prerequisit
 
 **3) Set the DEVICE_CONNECTION_STRING environment variable**
 
-* From a shell or Node.js command prompt, navigate to the folder where you placed the sample files. 
+* From the command command prompt, navigate to the folder where you placed the sample files. 
 * Set the `DEVICE_CONNECTION_STRING` environment variable: 
 
-*in bash*
 ```bash
 export DEVICE_CONNECTION_STRING="<YourIoTHubConnectionString>"
 ```
