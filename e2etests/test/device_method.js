@@ -28,10 +28,10 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
     this.timeout(120000);
     var registry = Registry.fromConnectionString(hubConnectionString);
     var deviceClient;
-    var deviceDescription;
+    var registryDeviceDescription;
 
     before(function (done) {
-      deviceDescription = {
+      registryDeviceDescription = {
         deviceId:  '0000e2etest-delete-me-node-device-method-' + uuid.v4(),
         status: 'enabled',
           authentication: {
@@ -42,26 +42,26 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
         }
       };
 
-      debug('creating device: ' + deviceDescription.deviceId);
-      registry.create(deviceDescription, function (err) {
+      debug('creating device: ' + registryDeviceDescription.deviceId);
+      registry.create(registryDeviceDescription, function (err) {
         if (err) {
-          debug('failed to create the device: ' +  deviceDescription.deviceId + ': ' + err.toString());
+          debug('failed to create the device: ' +  registryDeviceDescription.deviceId + ': ' + err.toString());
           return done(err);
         } else {
-          debug('created test device: ' + deviceDescription.deviceId);
+          debug('created test device: ' + registryDeviceDescription.deviceId);
           return done();
         }
       });
     });
 
     after(function (done) {
-      debug('deleting test device: ' + deviceDescription.deviceId);
-      registry.delete(deviceDescription.deviceId, function (err) {
+      debug('deleting test device: ' + registryDeviceDescription.deviceId);
+      registry.delete(registryDeviceDescription.deviceId, function (err) {
         if (err) {
-          debug('failed to delete device: ' +  deviceDescription.deviceId + ': ' + err.toString());
+          debug('failed to delete device: ' +  registryDeviceDescription.deviceId + ': ' + err.toString());
           return done(err);
         } else {
-          debug('device deleted: ' +  deviceDescription.deviceId);
+          debug('device deleted: ' +  registryDeviceDescription.deviceId);
           return done();
         }
       });
@@ -70,7 +70,7 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
     // create a new device for every test
     beforeEach(function (done) {
       var host = ConnectionString.parse(hubConnectionString).HostName;
-      var sas = deviceSas.create(host, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
+      var sas = deviceSas.create(host, registryDeviceDescription.deviceId, registryDeviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
       deviceClient = deviceSdk.Client.fromSharedAccessSignature(sas, protocolCtor);
       debug('connecting device client...');
       deviceClient.open(function (err) {
@@ -90,7 +90,7 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
         debug('disconnecting device client...');
         deviceClient.close(function(err) {
           if (!!err) {
-            console.warn('Could not close connection to device ' + deviceDescription.deviceId + ': ' + err.toString());
+            console.warn('Could not close connection to device ' + registryDeviceDescription.deviceId + ': ' + err.toString());
             return done(err);
           } else {
             debug('device connection closed');
@@ -161,7 +161,7 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
       it('makes and receives a method call with ' + JSON.stringify(testPayload), function(done) {
         setMethodHandler(testPayload);
         var serviceClient = ServiceClient.fromConnectionString(hubConnectionString);
-        sendMethodCall(serviceClient, deviceDescription.deviceId, testPayload, done);
+        sendMethodCall(serviceClient, registryDeviceDescription.deviceId, testPayload, done);
       });
     });
 
@@ -171,7 +171,7 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
       var sas = SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, anHourFromNow());
       var serviceClient = ServiceClient.fromSharedAccessSignature(sas);
       setMethodHandler(testPayload);
-      sendMethodCall(serviceClient, deviceDescription.deviceId, testPayload, done);
+      sendMethodCall(serviceClient, registryDeviceDescription.deviceId, testPayload, done);
     });
 
     it('makes and receives a method call after renewing the SAS token', function(done) {
@@ -180,10 +180,10 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
         deviceClient.on('_sharedAccessSignatureUpdated', function() {
         setTimeout(function() {
           var serviceClient = ServiceClient.fromConnectionString(hubConnectionString);
-          sendMethodCall(serviceClient, deviceDescription.deviceId, testPayload, done);
+          sendMethodCall(serviceClient, registryDeviceDescription.deviceId, testPayload, done);
         }, 1000);
       });
-      deviceClient.updateSharedAccessSignature(deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString());
+      deviceClient.updateSharedAccessSignature(deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, registryDeviceDescription.deviceId, registryDeviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString());
     });
   });
 });

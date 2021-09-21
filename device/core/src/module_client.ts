@@ -455,7 +455,7 @@ export class ModuleClient extends InternalClient {
         } else {
           // Codes_SRS_NODE_MODULE_CLIENT_13_034: [ If the client is running in a non-IoTEdge mode and an environment variable named EdgeModuleCACertificateFile exists then its file contents shall be set as the CA cert for the transport via the transport's setOptions method passing in the CA as the value for the ca property in the options object. ]
           ca = data;
-          const moduleClient = ModuleClient.fromConnectionString(connectionString, transportCtor);
+          const moduleClient = ModuleClient.fromConnectionString(connectionString, transportCtor, modelId);
           moduleClient.setOptions({ ca }, (err) => {
             if (err) {
               callback(err);

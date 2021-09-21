@@ -37,23 +37,22 @@ device_acknowledgment_tests(deviceAmqp.Amqp, DeviceIdentityHelper.createDeviceWi
 function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
   describe('Over ' + deviceTransport.name + ' using ' + createDeviceMethod.name, function () {
     this.timeout(70000);
-    var serviceClient, deviceClient;
-    var provisionedDevice;
+    var serviceClient, deviceClient, deviceInfo;
 
     before(function (beforeCallback) {
       createDeviceMethod(function (err, testDeviceInfo) {
-        provisionedDevice = testDeviceInfo;
+        deviceInfo = testDeviceInfo;
         beforeCallback(err);
       });
     });
 
     after(function (afterCallback) {
-      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, afterCallback);
     });
 
     beforeEach(function () {
       serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString);
-      deviceClient = createDeviceClient(deviceTransport, provisionedDevice);
+      deviceClient = createDeviceClient(deviceTransport, deviceInfo);
     });
 
     afterEach(function (done) {
@@ -139,8 +138,8 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
               done(serviceErr);
             } else {
               testRendezvous.imIn(serviceClientParticipant);
-              debug('+++sending c2d message ' + guid + ' to ' + provisionedDevice.deviceId);
-              serviceClient.send(provisionedDevice.deviceId, guid, function (sendErr, result) {
+              debug('+++sending c2d message ' + guid + ' to ' + deviceInfo.deviceId);
+              serviceClient.send(deviceInfo.deviceId, guid, function (sendErr, result) {
                 if (sendErr) {
                   debug('+++error sending c2d message: ' + sendErr.toString());
                   done(sendErr);
@@ -221,8 +220,8 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
             } else {
               debug('+++service client opened.');
               testRendezvous.imIn(serviceClientParticipant);
-              debug('+++sending c2d message ' + guid + ' to ' + provisionedDevice.deviceId);
-              serviceClient.send(provisionedDevice.deviceId, guid, function (sendErr) {
+              debug('+++sending c2d message ' + guid + ' to ' + deviceInfo.deviceId);
+              serviceClient.send(deviceInfo.deviceId, guid, function (sendErr) {
                 if (sendErr) {
                   debug('+++error sending c2d message: ' + sendErr.toString());
                   done(sendErr);

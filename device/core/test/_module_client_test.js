@@ -10,6 +10,7 @@ var assert = require('chai').assert;
 var sinon = require('sinon');
 var FakeTransport = require('./fake_transport.js');
 var Message = require('azure-iot-common').Message;
+var InvalidOperationError = require('azure-iot-common').errors.InvalidOperationError;
 var ModuleClient = require('../dist/module_client').ModuleClient;
 var errors = require('azure-iot-common').errors;
 var results = require('azure-iot-common').results;
@@ -49,19 +50,34 @@ describe('ModuleClient', function () {
   });
 
   describe('#fromEnvironment', function () {
-    // Tests_SRS_NODE_MODULE_CLIENT_13_033: [ The fromEnvironment method shall throw a ReferenceError if the callback argument is not a function. ]
-    [{}, 20].forEach(function (badCallback) {
-      it('throws if callback is falsy or not a function', function () {
+    [{}, 20].forEach(function (badArgument) {
+      it('throws if the second argument is neither a string nor a function', function () {
         assert.throws(function () {
-          return ModuleClient.fromEnvironment(null, badCallback);
+          return ModuleClient.fromEnvironment(null, badArgument);
+        }, TypeError);
+      });
+    });
+
+    [{}, 20].forEach(function (badCallback) {
+      it('throws if the third argument is not a function', function () {
+        assert.throws(function () {
+          return ModuleClient.fromEnvironment(null, 'dtmi:com:example:Thermostat;1', badCallback);
         }, TypeError);
       });
     });
 
     // Tests_SRS_NODE_MODULE_CLIENT_13_033: [ The fromEnvironment method shall return a Promise if the callback argument is falsy. ]
     [null, undefined].forEach(function (badCallback) {
-      it('returns a Promise if callback is falsy or not a function', function () {
+      it('returns a Promise if callback is falsy or not a function and no modelId is provided', function () {
         const result = ModuleClient.fromEnvironment(null, badCallback);
+        assert.instanceOf(result, Promise);
+        result.catch(_ => {});
+      });
+    });
+
+    [null, undefined].forEach(function (badCallback) {
+      it('returns a Promise if callback is falsy or not a function and a modelId is provided', function () {
+        const result = ModuleClient.fromEnvironment(null, 'dtmi:com:example:Thermostat;1', badCallback);
         assert.instanceOf(result, Promise);
         result.catch(_ => {});
       });
@@ -78,7 +94,7 @@ describe('ModuleClient', function () {
 
     // Tests_SRS_NODE_MODULE_CLIENT_13_028: [ The fromEnvironment method shall delegate to ModuleClient.fromConnectionString if an environment variable called EdgeHubConnectionString or IotHubConnectionString exists. ]
     ['EdgeHubConnectionString', 'IotHubConnectionString'].forEach(function (envName) {
-      describe('calls ModuleClient.fromConnectionString', function () {
+      describe('calls ModuleClient.fromConnectionString with no modelId', function () {
         var stub;
         beforeEach(function () {
           stub = sinon.stub(ModuleClient, 'fromConnectionString').returns(42);
@@ -96,6 +112,31 @@ describe('ModuleClient', function () {
             assert.strictEqual(client, 42);
             assert.strictEqual(stub.called, true);
             assert.strictEqual(stub.args[0][0], 'cs');
+          });
+        });
+      });
+    });
+
+    ['EdgeHubConnectionString', 'IotHubConnectionString'].forEach(function (envName) {
+      describe('calls ModuleClient.fromConnectionString with modelId', function () {
+        var stub;
+        beforeEach(function () {
+          stub = sinon.stub(ModuleClient, 'fromConnectionString').returns(42);
+          process.env[envName] = 'cs';
+        });
+
+        afterEach(function () {
+          stub.restore();
+          delete process.env[envName];
+        });
+
+        it('if env ' + envName + ' is defined', function () {
+          ModuleClient.fromEnvironment(function () {}, 'dtmi:com:example:Thermostat;1', function (err, client) {
+            assert.isNotOk(err);
+            assert.strictEqual(client, 42);
+            assert.strictEqual(stub.called, true);
+            assert.strictEqual(stub.args[0][0], 'cs');
+            assert.strictEqual(stub.args[0][2], 'dtmi:com:example:Thermostat;1');
           });
         });
       });
@@ -314,7 +355,7 @@ describe('ModuleClient', function () {
       var getTrustBundleStub;
       var createWithSigningFunctionStub;
 
-      beforeEach(function () {
+      before(function () {
         env.forEach(function (e) {
           process.env[e[0]] = e[1];
         });
@@ -326,7 +367,7 @@ describe('ModuleClient', function () {
           .callsArgWith(3, null, 'sas token');
       });
 
-      afterEach(function () {
+      after(function () {
         env.forEach(function (e) {
           delete process.env[e[0]];
         });
@@ -360,6 +401,32 @@ describe('ModuleClient', function () {
 
           testCallback();
         });
+      });
+
+      it('calls setModelId on the transport if a modelId is provided', async function () {
+        function Mqtt() {
+          FakeTransport.call(this);
+          this.setModelId = sinon.stub();
+          this.setOptions = sinon.stub();
+        }
+        util.inherits(Mqtt, FakeTransport);
+        const client = await ModuleClient.fromEnvironment(Mqtt, 'dtmi:com:example:Thermostat;1');
+        assert.isTrue(client._transport.setModelId.calledOnceWith('dtmi:com:example:Thermostat;1'));
+      });
+
+      it('fails if a modelId is provided but the transport is neither Mqtt nor MqttWs', async function () {
+        function NotMqtt() {
+          FakeTransport.call(this);
+          this.setModelId = sinon.stub();
+          this.setOptions = sinon.stub();
+        }
+        util.inherits(NotMqtt, FakeTransport);
+        try {
+          await ModuleClient.fromEnvironment(NotMqtt, 'dtmi:com:example:Thermostat;1');
+          throw new Error('Expected fromEnvironment() to fail but it succeeded');
+        } catch (err) {
+          assert.instanceOf(err, InvalidOperationError);
+        }
       });
     });
 

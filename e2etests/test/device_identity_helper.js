@@ -21,14 +21,14 @@ var CARootCertKey = Buffer.from(process.env.IOTHUB_CA_ROOT_CERT_KEY, 'base64').t
 
 var host = ConnectionString.parse(hubConnectionString).HostName;
 
-function setupDevice(deviceDescription, provisionDescription, done) {
-  registry.create(deviceDescription, function (err) {
+function setupDevice(registryDeviceDescription, deviceInfo, done) {
+  registry.create(registryDeviceDescription, function (err) {
     if (err) {
-      debug('Failed to create device identity: ' + deviceDescription.deviceId + ' : ' + err.toString());
+      debug('Failed to create device identity: ' + registryDeviceDescription.deviceId + ' : ' + err.toString());
       done(err);
     } else {
-      debug('Device created: ' + deviceDescription.deviceId);
-      done(null, provisionDescription);
+      debug('Device created: ' + registryDeviceDescription.deviceId);
+      done(null, deviceInfo);
     }
   });
 }

@@ -28,19 +28,19 @@ var transports  = [
 transports.forEach(function (deviceTransport) {
   describe('Shared Access Signature renewal test over ' + deviceTransport.name, function () {
     this.timeout(60000);
-    var provisionedDevice;
+    var deviceInfo;
 
     before(function (beforeCallback) {
       DeviceIdentityHelper.createDeviceWithSymmetricKey(function (err, testDeviceInfo) {
         debug('created test device: ' + testDeviceInfo.deviceId);
-        provisionedDevice = testDeviceInfo;
+        deviceInfo = testDeviceInfo;
         beforeCallback(err);
       });
     });
 
     after(function (afterCallback) {
-      debug('deleting test device: ' + provisionedDevice.deviceId);
-      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+      debug('deleting test device: ' + deviceInfo.deviceId);
+      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, afterCallback);
     });
 
     function createTestMessage(body) {
@@ -55,8 +55,8 @@ transports.forEach(function (deviceTransport) {
     }
 
     function createNewSas() {
-      var cs = ConnectionString.parse(provisionedDevice.connectionString);
-      var sas = SharedAccessSignature.create(cs.HostName, provisionedDevice.deviceId, cs.SharedAccessKey, thirtySecondsFromNow());
+      var cs = ConnectionString.parse(deviceInfo.connectionString);
+      var sas = SharedAccessSignature.create(cs.HostName, deviceInfo.deviceId, cs.SharedAccessKey, thirtySecondsFromNow());
       return sas.toString();
     }
 
@@ -90,7 +90,7 @@ transports.forEach(function (deviceTransport) {
               deviceClient.updateSharedAccessSignature(createNewSas(), function (err) {
                 if (err) return testCallback(err);
 
-                serviceClient.send(provisionedDevice.deviceId, createTestMessage(afterUpdateSas), function (err) {
+                serviceClient.send(deviceInfo.deviceId, createTestMessage(afterUpdateSas), function (err) {
                   if (err) return testCallback(err);
                   testRendezvous.imDone(serviceClientParticipant);
                 });
@@ -104,7 +104,7 @@ transports.forEach(function (deviceTransport) {
         serviceClient.open(function (err) {
           if (err) return testCallback(err);
           testRendezvous.imIn(serviceClientParticipant);
-          serviceClient.send(provisionedDevice.deviceId, createTestMessage(beforeUpdateSas), function (err) {
+          serviceClient.send(deviceInfo.deviceId, createTestMessage(beforeUpdateSas), function (err) {
             if (err) return testCallback(err);
           });
         });
@@ -142,7 +142,7 @@ transports.forEach(function (deviceTransport) {
       var onEventHubMessage = function (eventData) {
         debug('event hubs client: message received from device: \'' + eventData.annotations['iothub-connection-device-id'] + '\'');
         debug('event hubs client: message is: ' + ((eventData.body) ? (eventData.body.toString()) : '(no body)'));
-        if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
+        if (eventData.annotations['iothub-connection-device-id'] === deviceInfo.deviceId) {
           if (eventData.body && eventData.body.indexOf(beforeSas) === 0) {
             debug('event hubs client: first message received: ' + eventData.body.toString());
             debug('device client: updating shared access signature');

@@ -112,9 +112,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
   describe(testConfiguration.transport.name + ' using device/service clients - disconnect c2d', function () {
     this.timeout(60000);
 
-    var serviceClient, deviceClient;
-
-    var provisionedDevice;
+    var serviceClient, deviceClient, deviceInfo;
 
     before(function (beforeCallback) {
       debug('creating test device...');
@@ -124,15 +122,15 @@ protocolAndTermination.forEach( function (testConfiguration) {
           beforeCallback(err);
         } else {
           debug('test device created: ' + testDeviceInfo.deviceId);
-          provisionedDevice = testDeviceInfo;
+          deviceInfo = testDeviceInfo;
           beforeCallback(err);
         }
       });
     });
 
     after(function (afterCallback) {
-      debug('deleting device: ' + provisionedDevice.deviceId);
-      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, function (err) {
+      debug('deleting device: ' + deviceInfo.deviceId);
+      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, function (err) {
         if (err) {
           debug('failed to delete test device: ' + err.toString());
           afterCallback(err);
@@ -145,7 +143,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
 
     beforeEach(function () {
       serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString);
-      deviceClient = createDeviceClient(testConfiguration.transport, provisionedDevice);
+      deviceClient = createDeviceClient(testConfiguration.transport, deviceInfo);
       sendMessageTimeout = null;
     });
 
@@ -218,7 +216,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
             if (serviceErr) {
               testCallback(serviceErr);
             } else {
-              serviceClient.send(provisionedDevice.deviceId, originalMessage, function (sendErr) {
+              serviceClient.send(deviceInfo.deviceId, originalMessage, function (sendErr) {
                 debug('At service client send callback - error is: ' + sendErr);
                 if (sendErr) {
                   testCallback(sendErr);
@@ -260,7 +258,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
       };
 
       var sendMessage = function (messageId) {
-        serviceClient.send(provisionedDevice.deviceId, originalMessages[messageId].message, function (sendErr) {
+        serviceClient.send(deviceInfo.deviceId, originalMessages[messageId].message, function (sendErr) {
           if (sendErr) {
             debug('service client: failed to send message with id: ' + messageId + ': ' + sendErr.toString());
             testCallback(sendErr);

@@ -106,7 +106,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
     // timeouts that could trigger test callbacks
     var twinUpdateAfterFaultInjectionTimeout, faultInjectionTimeout;
 
-    var deviceDescription;
+    var deviceInfo;
     var registry = Registry.fromConnectionString(hubConnectionString);
 
     before(function (beforeCallback) {
@@ -117,15 +117,15 @@ protocolAndTermination.forEach( function (testConfiguration) {
           beforeCallback(err);
         } else {
           debug('test device created: ' + testDeviceInfo.deviceId);
-          deviceDescription = testDeviceInfo;
+          deviceInfo = testDeviceInfo;
           beforeCallback(err);
         }
       });
     });
 
     after(function (afterCallback) {
-      debug('deleting device: ' + deviceDescription.deviceId);
-      DeviceIdentityHelper.deleteDevice(deviceDescription.deviceId, function (err) {
+      debug('deleting device: ' + deviceInfo.deviceId);
+      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, function (err) {
         if (err) {
           debug('failed to delete test device: ' + err.toString());
           afterCallback(err);
@@ -139,12 +139,12 @@ protocolAndTermination.forEach( function (testConfiguration) {
     beforeEach(function (done) {
       twinUpdateAfterFaultInjectionTimeout = null;
       faultInjectionTimeout = null;
-      deviceClient = createDeviceClient(testConfiguration.transport, deviceDescription);
+      deviceClient = createDeviceClient(testConfiguration.transport, deviceInfo);
 
       debug('connecting device client');
       deviceClient.open(function(err) {
         if (err) {
-          debug('error connecting device: ' + deviceDescription.deviceId + ' : ' + err.toString());
+          debug('error connecting device: ' + deviceInfo.deviceId + ' : ' + err.toString());
           done(err);
         } else {
           deviceClient.getTwin(function(err, twin) {
@@ -155,7 +155,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
               debug('got device twin');
               deviceTwin = twin;
               debug('getting twin on the service side');
-              registry.getTwin(deviceDescription.deviceId, function(err, twin) {
+              registry.getTwin(deviceInfo.deviceId, function(err, twin) {
                 if (err) {
                   debug('failed to get the device twin with the registry API: ' + err.toString());
                   done(err);
@@ -219,7 +219,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
         if (deviceTwin.properties.desired.testProp === faultInjectionTestPropertyValue) {
           rdv.imDone(deviceClientIdentifier);
         } else {
-          testCallback(new Error('device client: unexpected disconnect for device: ' + deviceDescription.deviceId));
+          testCallback(new Error('device client: unexpected disconnect for device: ' + deviceInfo.deviceId));
         }
       });
       debug('device client: attaching desired properties change handler');
@@ -249,8 +249,8 @@ protocolAndTermination.forEach( function (testConfiguration) {
         debug('service client: Updating twin properties');
         serviceTwin.update( { properties : { desired : { testProp: faultInjectionTestPropertyValue } } }, function(err) {
           if (err) {
-            debug('service client: Twin update failed for device: ' + deviceDescription.deviceId + '. Error updating twin for fault injection: ' + err.toString());
-            err.message += '; test device: ' + deviceDescription.deviceId;
+            debug('service client: Twin update failed for device: ' + deviceInfo.deviceId + '. Error updating twin for fault injection: ' + err.toString());
+            err.message += '; test device: ' + deviceInfo.deviceId;
             testCallback(err);
           } else {
             debug('service client: twin properties updated to trigger fault injection with value: ' + faultInjectionTestPropertyValue);
@@ -283,7 +283,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
         serviceTwin.update( { properties : { desired : { testProp: afterFaultInjectionTestPropertyValue } } }, function(err) {
           if (err) {
             debug('service client: error updating property after fault injection: ' + err.toString());
-            err.message += '; test device: ' + deviceDescription.deviceId;
+            err.message += '; test device: ' + deviceInfo.deviceId;
             testCallback(err);
           } else {
             debug('service client: sent new property update after fault injection');
@@ -302,9 +302,9 @@ protocolAndTermination.forEach( function (testConfiguration) {
           debug('device client: sending fault injection message');
           deviceClient.sendEvent(terminateMessage, function (sendErr) {
             if (sendErr) {
-              debug('device client: error at fault injection for device: ' + deviceDescription.deviceId + ' : ' + sendErr.toString());
+              debug('device client: error at fault injection for device: ' + deviceInfo.deviceId + ' : ' + sendErr.toString());
             } else {
-              debug('device client: fault injection succeeded for device: ' + deviceDescription.deviceId);
+              debug('device client: fault injection succeeded for device: ' + deviceInfo.deviceId);
             }
           });
           twinUpdateAfterFaultInjectionTimeout = setTimeout(setTwinPropsAfterFaultInjection, (testConfiguration.delayInSeconds + 10) * 1000);
@@ -322,8 +322,8 @@ protocolAndTermination.forEach( function (testConfiguration) {
         debug('service client: updating twin property for fault injection');
         serviceTwin.update( { properties : { desired : { testProp: faultInjectionTestPropertyValue } } }, function(err) {
           if (err) {
-            debug('service client: failed to update twin for fault injection for device: ' + deviceDescription.deviceId + ' : ' + err.toString());
-            err.message += '; deviceId: ' + deviceDescription.deviceId;
+            debug('service client: failed to update twin for fault injection for device: ' + deviceInfo.deviceId + ' : ' + err.toString());
+            err.message += '; deviceId: ' + deviceInfo.deviceId;
             testCallback(err);
           } else {
             debug('service client: successfully sent twin update that will trigger fault injection');

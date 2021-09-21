@@ -110,17 +110,17 @@ var protocolAndTermination = [
 protocolAndTermination.forEach( function (testConfiguration) {
   describe(testConfiguration.transport.name + ' using device/eventhub clients - disconnect d2c', function () {
     this.timeout(60000);
-    var deviceClient, ehClient, provisionedDevice;
+    var deviceClient, ehClient, deviceInfo;
 
     before(function (beforeCallback) {
       DeviceIdentityHelper.createDeviceWithSas(function (err, testDeviceInfo) {
-        provisionedDevice = testDeviceInfo;
+        deviceInfo = testDeviceInfo;
         beforeCallback(err);
       });
     });
 
     after(function (afterCallback) {
-      DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
+      DeviceIdentityHelper.deleteDevice(deviceInfo.deviceId, afterCallback);
     });
 
     afterEach(function (afterEachCallback) {
@@ -159,8 +159,8 @@ protocolAndTermination.forEach( function (testConfiguration) {
         testCallback(err);
       };
       var onEventHubMessage = function (eventData) {
-        if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
-          debug('eventhubs client: received a message from the test device: ' + provisionedDevice.deviceId);
+        if (eventData.annotations['iothub-connection-device-id'] === deviceInfo.deviceId) {
+          debug('eventhubs client: received a message from the test device: ' + deviceInfo.deviceId);
           var received_message_uuid = eventData.properties && eventData.properties.message_id && uuidBuffer.toString(eventData.properties.message_id);
           if (received_message_uuid && received_message_uuid === originalMessage.messageId) {
             rdv.imDone('ehClient');
@@ -186,7 +186,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
       .then(function (client) {
         ehClient = client;
         rdv.imIn('ehClient');
-        deviceClient = createDeviceClient(testConfiguration.transport, provisionedDevice);
+        deviceClient = createDeviceClient(testConfiguration.transport, deviceInfo);
         deviceClient.setRetryPolicy(new NoRetry());
       }).then(function () {
         debug('eventhubs client: connected. getting partition ids');
@@ -306,8 +306,8 @@ protocolAndTermination.forEach( function (testConfiguration) {
       };
 
       var onEventHubMessage = function (eventData) {
-        if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
-          debug('eventhubs client: received a message from the test device: ' + provisionedDevice.deviceId);
+        if (eventData.annotations['iothub-connection-device-id'] === deviceInfo.deviceId) {
+          debug('eventhubs client: received a message from the test device: ' + deviceInfo.deviceId);
           var receivedMessageId = eventData.body.toString();
           if (originalMessages[receivedMessageId]) {
             debug('eventhubs client: It was one of the messages we sent: ' + receivedMessageId);
@@ -345,7 +345,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
       .then(function (client) {
         ehClient = client;
         rdv.imIn('ehClient');
-        deviceClient = createDeviceClient(testConfiguration.transport, provisionedDevice);
+        deviceClient = createDeviceClient(testConfiguration.transport, deviceInfo);
       }).then(function () {
         debug('eventhubs client: connected. getting partition ids');
         return ehClient.getPartitionIds();

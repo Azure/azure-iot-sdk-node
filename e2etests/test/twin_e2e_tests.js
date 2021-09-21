@@ -54,7 +54,7 @@ delete nullMergeResult.tweedle;
 ].forEach(function(protocolCtor) {
   describe('Twin over ' + protocolCtor.name, function() {
     this.timeout(60000);
-    var deviceDescription, deviceClient, deviceTwin, serviceTwin;
+    var registryDeviceDescription, deviceClient, deviceTwin, serviceTwin;
     var host = ConnectionString.parse(hubConnectionString).HostName;
     var registry = Registry.fromConnectionString(hubConnectionString);
 
@@ -62,7 +62,7 @@ delete nullMergeResult.tweedle;
       var pkey = Buffer.from(uuid.v4()).toString('base64');
       var deviceId = '0000e2etest-delete-me-twin-e2e-' + protocolCtor.name + '-'  + uuid.v4();
 
-      deviceDescription = {
+      registryDeviceDescription = {
         deviceId:  deviceId,
         status: 'enabled',
           authentication: {
@@ -75,7 +75,7 @@ delete nullMergeResult.tweedle;
       };
 
       debug('creating test device: ' + deviceId + ' on hub: ' + host);
-      registry.create(deviceDescription, function (err) {
+      registry.create(registryDeviceDescription, function (err) {
         if (err) {
           debug('error creating test device: ' + err.toString());
           return done(err);
@@ -87,20 +87,20 @@ delete nullMergeResult.tweedle;
     });
 
     after(function (done) {
-      debug('deleting test device: ' + deviceDescription.deviceId);
-      registry.delete(deviceDescription.deviceId, function(err) {
+      debug('deleting test device: ' + registryDeviceDescription.deviceId);
+      registry.delete(registryDeviceDescription.deviceId, function(err) {
         if (err) {
           debug('Error deleting test device: ' + err.toString());
           return done(err);
         } else {
-          debug('test device deleted: ' + deviceDescription.deviceId);
+          debug('test device deleted: ' + registryDeviceDescription.deviceId);
           return done();
         }
       });
     });
 
     beforeEach(function (done) {
-      var sas = deviceSas.create(host, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
+      var sas = deviceSas.create(host, registryDeviceDescription.deviceId, registryDeviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
       deviceClient = deviceSdk.Client.fromSharedAccessSignature(sas, protocolCtor);
 
       debug('device client connecting...');
@@ -119,7 +119,7 @@ delete nullMergeResult.tweedle;
               deviceTwin = twin;
 
               debug('service getting device twin...');
-              registry.getTwin(deviceDescription.deviceId, function(err, twin) {
+              registry.getTwin(registryDeviceDescription.deviceId, function(err, twin) {
                 if (err) {
                   debug('error getting the device twin on the service side: ' + err.toString());
                   return done(err);
@@ -406,8 +406,8 @@ delete nullMergeResult.tweedle;
     it('service can send a desired property using actual eTag', async () => {
       let rsp;
       try {
-        rsp = await registry.getTwin(deviceDescription.deviceId);
-        rsp = await registry.updateTwin(deviceDescription.deviceId, { properties: { desired: { telemetryInterval: 100 } } }, rsp.responseBody.etag);
+        rsp = await registry.getTwin(registryDeviceDescription.deviceId);
+        rsp = await registry.updateTwin(registryDeviceDescription.deviceId, { properties: { desired: { telemetryInterval: 100 } } }, rsp.responseBody.etag);
         assert(rsp.responseBody.properties.desired.telemetryInterval, 100);
       } catch (err) {
         debug('unexpected throw during test.');
@@ -417,7 +417,7 @@ delete nullMergeResult.tweedle;
 
     it('service sending invalid eTag gets an error', async () => {
       try {
-        await registry.updateTwin(deviceDescription.deviceId, { properties: { desired: { telemetryInterval: 100 } } }, 'abc');
+        await registry.updateTwin(registryDeviceDescription.deviceId, { properties: { desired: { telemetryInterval: 100 } } }, 'abc');
         assert.fail('Update twin SHOULD have failed.');
       } catch (err) {
         assert.strictEqual(err.name, InvalidEtagError.name);
@@ -426,8 +426,8 @@ delete nullMergeResult.tweedle;
 
 
     it('can send reported properties to the service after renewing the sas token', function(done) {
-      var newSas = deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
-      debug('updating the shared access signature for device: ' + deviceDescription.deviceId);
+      var newSas = deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, registryDeviceDescription.deviceId, registryDeviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
+      debug('updating the shared access signature for device: ' + registryDeviceDescription.deviceId);
       deviceClient.updateSharedAccessSignature(newSas, function (err) {
         if (err) {
           debug('error renewing the shared access signature: ' + err.toString());
@@ -440,8 +440,8 @@ delete nullMergeResult.tweedle;
     });
 
     it('can receive desired properties from the service after renewing the sas token', function(done) {
-      var newSas = deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
-      debug('updating the shared access signature for device: ' + deviceDescription.deviceId);
+      var newSas = deviceSas.create(ConnectionString.parse(hubConnectionString).HostName, registryDeviceDescription.deviceId, registryDeviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
+      debug('updating the shared access signature for device: ' + registryDeviceDescription.deviceId);
       deviceClient.updateSharedAccessSignature(newSas, function (err) {
         if (err) {
           debug('error renewing the shared access signature: ' + err.toString());
@@ -505,7 +505,7 @@ delete nullMergeResult.tweedle;
           serviceTwin.update( { properties : { desired : moreNewProps } }, callback);
         },
         function openDeviceClientAgain(callback) {
-          deviceClient = deviceSdk.Client.fromConnectionString(deviceDescription.connectionString, protocolCtor);
+          deviceClient = deviceSdk.Client.fromConnectionString(registryDeviceDescription.connectionString, protocolCtor);
           deviceClient.open(callback);
         },
         function getDeviceTwin(callback) {
