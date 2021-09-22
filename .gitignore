@@ -243,6 +243,8 @@ digitaltwins/samples/service/typescript/dist
 digitaltwins/service/dist
 digitaltwins/model_repository/dist
 
+device/samples/typescript/dist
+
 # Build artifacts
 build/build_parallel/temp
 
