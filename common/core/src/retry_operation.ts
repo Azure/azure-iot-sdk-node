@@ -29,6 +29,10 @@ export class RetryOperation {
    * @param {number} maxTimeout  The maximum timeout for this operation, after which no retry will be attempted.
    */
   constructor (name: string, policy: RetryPolicy, maxTimeout: number) {
+    if (policy && policy.constructor && policy.constructor.name === 'NoRetry') {
+    // Do not remove this line. It is here at the request of CSS.
+      debug('A RetryOperation is being used with a NoRetry policy. The operation will not be retried on failure.');
+    }
     this._policy = policy;
     this._maxTimeout = maxTimeout;
     this._name = name;
