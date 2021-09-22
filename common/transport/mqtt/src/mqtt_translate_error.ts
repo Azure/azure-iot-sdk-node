@@ -3,7 +3,7 @@
 
 'use strict';
 import * as dbg from 'debug';
-const debug = dbg('azure-iot-mqtt-base:translateError');
+const debugErrors = dbg('azure-iot-mqtt-base:translateError:Errors');
 import { errors } from 'azure-iot-common';
 
 /**
@@ -30,7 +30,6 @@ export class MqttTransportError extends Error {
 export function translateError(mqttError: Error): MqttTransportError {
   let err: MqttTransportError;
 
-  debug('translating: ' + mqttError.toString());
   if ((<any>mqttError).code) {
     // the 'code' property denotes a socket-level error (ENOTFOUND, EAI_AGAIN, etc)
     /*Codes_SRS_NODE_DEVICE_MQTT_ERRORS_16_001: [`translateError` shall return a `NotConnectedError` if the error object has a truthy `code` property (node socket errors)]*/
@@ -75,6 +74,7 @@ export function translateError(mqttError: Error): MqttTransportError {
     /* Codes_SRS_NODE_DEVICE_MQTT_ERRORS_18_011: [** `translateError` shall return an `Error` if none of the other string rules match **]** */
     err = mqttError;
   }
+  debugErrors('translating: ' + mqttError.toString() + ' to ' + err.toString());
 
   err.transportError = mqttError;
   return err;

@@ -6,6 +6,7 @@
 import { Stream } from 'stream';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:DeviceClient');
+const debugErrors = dbg('azure-iot-device:DeviceClient:Errors');
 
 import { AuthenticationProvider, RetryOperation, ConnectionString, results, Callback, ErrorCallback, callbackToPromise } from 'azure-iot-common';
 import { InternalClient, DeviceTransport } from './internal_client';
@@ -54,7 +55,7 @@ export class Client extends InternalClient {
         debug('in removeListener, disabling C2D.');
         this._disableC2D((err) => {
           if (err) {
-            debug('in removeListener, error disabling C2D.');
+            debugErrors('in removeListener, error disabling C2D: ' + err);
             this.emit('error', err);
           } else {
             this._c2dFeature = false;
@@ -70,7 +71,7 @@ export class Client extends InternalClient {
         debug('in newListener, enabling C2D.');
         this._enableC2D((err) => {
           if (err) {
-            debug('in newListener, error enabling C2D.');
+            debugErrors('in newListener, error enabling C2D: ' + err);
             this.emit('error', err);
           } else {
             this._c2dFeature = true;
@@ -87,9 +88,13 @@ export class Client extends InternalClient {
     });
 
     this._deviceDisconnectHandler = (err) => {
-      debug('transport disconnect event: ' + (err ? err.toString() : 'no error'));
+      if (err) {
+        debugErrors('transport disconnect event: ' + err);
+      } else {
+        debug('transport disconenct event: no error');
+      }
       if (err && this._retryPolicy.shouldRetry(err)) {
-        debug('reconnect policy specifies a reconnect on error');
+        debugErrors('reconnect policy specifies a reconnect on error');
         /*Codes_SRS_NODE_DEVICE_CLIENT_16_097: [If the transport emits a `disconnect` event while the client is subscribed to c2d messages the retry policy shall be used to reconnect and re-enable the feature using the transport `enableC2D` method.]*/
         if (this._c2dFeature) {
           // turn on C2D
@@ -97,7 +102,7 @@ export class Client extends InternalClient {
           this._enableC2D((err) => {
             if (err) {
               /*Codes_SRS_NODE_DEVICE_CLIENT_16_102: [If the retry policy fails to reestablish the C2D functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
-              debug('error on _enableC2D in _deviceDisconnectHandler. Failed to reestablish C2D functionality.');
+              debugErrors('error on _enableC2D in _deviceDisconnectHandler. Failed to reestablish C2D functionality: ' + err);
               this.emit('disconnect', new results.Disconnected(err));
             } else {
               debug('_deviceDisconnectHandler has enabled C2D');
@@ -176,7 +181,7 @@ export class Client extends InternalClient {
       /*Codes_SRS_NODE_DEVICE_CLIENT_16_039: [The `uploadToBlob` method shall throw a `ReferenceError` if `streamLength` is falsy.]*/
       if (!streamLength) throw new ReferenceError('streamLength cannot be \'' + streamLength + '\'');
 
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation('uploadToBlob', this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         /*Codes_SRS_NODE_DEVICE_CLIENT_16_040: [The `uploadToBlob` method shall call the `_callback` callback with an `Error` object if the upload fails.]*/
         /*Codes_SRS_NODE_DEVICE_CLIENT_16_041: [The `uploadToBlob` method shall call the `_callback` callback no parameters if the upload succeeds.]*/
@@ -202,7 +207,7 @@ export class Client extends InternalClient {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_DEVICE_CLIENT_41_001: [The `getBlobSharedAccessSignature` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
       if (!blobName) throw new ReferenceError('blobName cannot be \'' + blobName + '\'');
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation('getBlobSharedAccessSignature', this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         /*Codes_SRS_NODE_DEVICE_CLIENT_41_002: [The `getBlobSharedAccessSignature` method shall call the `getBlobSharedAccessSignature` method in the instantiated `_fileUploadApi` class and pass in `blobName` as a parameter.]*/
         this._fileUploadApi.getBlobSharedAccessSignature(blobName, opCallback);
@@ -211,7 +216,7 @@ export class Client extends InternalClient {
         if (!err) {
           debug('got blob storage shared access signature.');
         } else {
-          debug('Could not obtain blob shared access signature.');
+          debugErrors('Could not obtain blob shared access signature: ' + err);
         }
         safeCallback(_callback, err, result);
       });
@@ -241,7 +246,7 @@ export class Client extends InternalClient {
       if (!isSuccess && typeof(isSuccess) !== 'boolean' ) throw new ReferenceError('isSuccess cannot be \' ' + isSuccess + ' \'');
       if (!statusCode && !(statusCode === 0)) throw new ReferenceError('statusCode cannot be \' ' + statusCode + ' \'');
       if (!statusDescription && statusDescription !== '') throw new ReferenceError('statusDescription cannot be \' ' + statusDescription + ' \'.');
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation('notifyBlobUploadStatus', this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         let uploadResult = { isSuccess: isSuccess, statusCode: statusCode, statusDescription: statusDescription };
         /*Codes_SRS_NODE_DEVICE_CLIENT_41_015: [The `notifyBlobUploadStatus` method shall call the `notifyUploadComplete` method via the internal `_fileUploadApi` class.]*/
@@ -257,14 +262,14 @@ export class Client extends InternalClient {
 
   private _enableC2D(callback: (err?: Error) => void): void {
     debug('enabling C2D');
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+    const retryOp = new RetryOperation('_enableC2D', this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       this._transport.enableC2D(opCallback);
     }, (err) => {
       if (!err) {
         debug('enabled C2D');
       } else {
-        debug('Error while enabling C2D.');
+        debugErrors('Error while enabling C2D: ' + err);
       }
       callback(err);
     });
@@ -276,7 +281,7 @@ export class Client extends InternalClient {
       if (!err) {
         debug('disabled C2D');
       } else {
-        debug('Error while disabling C2D.');
+        debugErrors('Error while disabling C2D: ' + err);
       }
       callback(err);
     });

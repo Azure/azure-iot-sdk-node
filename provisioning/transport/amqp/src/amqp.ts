@@ -9,6 +9,7 @@ import * as dbg from 'debug';
 import * as uuid from 'uuid';
 import * as async from 'async';
 const debug = dbg('azure-iot-provisioning-device-amqp:Amqp');
+const debugErrors = dbg('azure-iot-provisioning-device-amqp:Amqp:Errors');
 
 import { X509, errors } from 'azure-iot-common';
 import { ProvisioningTransportOptions, X509ProvisioningTransport, TpmProvisioningTransport, SymmetricKeyProvisioningTransport, RegistrationRequest, RegistrationResult, ProvisioningDeviceConstants } from 'azure-iot-provisioning-device';
@@ -161,8 +162,8 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
             }
             this._amqpBase.connect(config, (err) => {
               if (err) {
-                debug('_amqpBase.connect failed');
-                debug(err);
+                debugErrors('_amqpBase.connect failed');
+                debugErrors(err);
                 /*Codes_SRS_NODE_PROVISIONING_AMQP_16_008: [The `registrationRequest` method shall call its callback with an error if the transport fails to connect.]*/
                 /*Codes_SRS_NODE_PROVISIONING_AMQP_16_018: [The `queryOperationStatus` method shall call its callback with an error if the transport fails to connect.]*/
                 this._amqpStateMachine.transition('disconnected', err, null, callback);
@@ -240,8 +241,8 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
             ```*/
             this._amqpBase.attachReceiverLink(linkEndpoint, linkOptions, (err, receiverLink) => {
               if (err) {
-                debug('_amqpBase.attachReceiverLink failed');
-                debug(err);
+                debugErrors('_amqpBase.attachReceiverLink failed');
+                debugErrors(err);
                 /*Codes_SRS_NODE_PROVISIONING_AMQP_16_010: [The `registrationRequest` method shall call its callback with an error if the transport fails to attach the receiver link.]*/
                 /*Codes_SRS_NODE_PROVISIONING_AMQP_16_020: [The `queryOperationStatus` method shall call its callback with an error if the transport fails to attach the receiver link.]*/
                 /*Codes_SRS_NODE_PROVISIONING_AMQP_18_022: [ `respondToAuthenticationChallenge` shall call its callback passing an `Error` object if the transport fails to attach the receiver link. ]*/
@@ -265,8 +266,8 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
                 ```*/
                 this._amqpBase.attachSenderLink(linkEndpoint, linkOptions, (err, senderLink) => {
                   if (err) {
-                    debug('_amqpBase.attachSenderLink failed');
-                    debug(err);
+                    debugErrors('_amqpBase.attachSenderLink failed');
+                    debugErrors(err);
                     /*Codes_SRS_NODE_PROVISIONING_AMQP_16_009: [The `registrationRequest` method shall call its callback with an error if the transport fails to attach the sender link.]*/
                     /*Codes_SRS_NODE_PROVISIONING_AMQP_16_019: [The `queryOperationStatus` method shall call its callback with an error if the transport fails to attach the sender link.]*/
                     /*Codes_SRS_NODE_PROVISIONING_AMQP_18_021: [ `respondToAuthenticationChallenge` shall call its callback passing an `Error` object if the transport fails to attach the sender link. ]*/
@@ -332,7 +333,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
                 const translatedError = translateError('registration failure', err);
                 /*Codes_SRS_NODE_PROVISIONING_AMQP_06_007: [If the `registrationRequest` send request is rejected with an `InternalError` or `ThrottlingError`, the result.status value will be set with `registering` and the callback will be invoked with *no* error object.] */
                 if ((translatedError instanceof errors.InternalServerError) || ((translatedError as AmqpTransportError) instanceof errors.ThrottlingError)) {
-                  debug('retryable error on registration: ' + err.name);
+                  debugErrors('retryable error on registration: ' + err.name);
                   let retryAfterInMilliseconds: number;
                   /*Codes_SRS_NODE_PROVISIONING_AMQP_06_009: [If the `registrationRequest` rejection error contains the info property`retry-after`, it will be interpreted as the number of seconds that should elapse before the next attempted operation.  Otherwise default.] */
                   if ((err as any).info && (err as any).info[MessagePropertyNames.retryAfter]) {
@@ -342,7 +343,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
                   }
                   callback(null, {status: 'registering'}, null, retryAfterInMilliseconds);
                 } else {
-                  debug('non-retryable error on registration: ' + err.name);
+                  debugErrors('non-retryable error on registration: ' + err);
                   /*Codes_SRS_NODE_PROVISIONING_AMQP_16_011: [The `registrationRequest` method shall call its callback with an error if the transport fails to send the request message.]*/
                   callback(err);
                 }
@@ -373,7 +374,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
                 const translatedError = translateError('query operation status failure', err);
                 /*Codes_SRS_NODE_PROVISIONING_AMQP_06_006: [If the `queryOperationStatus` send request is rejected with an `InternalError` or `ThrottlingError`, the result.status value will be set with `assigning` and the callback will be invoked with *no* error object.] */
                 if ((translatedError instanceof errors.InternalServerError) || ((translatedError as AmqpTransportError) instanceof errors.ThrottlingError)) {
-                  debug('retryable error on queryOperationStatus: ' + err.name);
+                  debugErrors('retryable error on queryOperationStatus: ' + err);
                   let retryAfterInMilliseconds: number;
                   /*Codes_SRS_NODE_PROVISIONING_AMQP_06_008: [If the `queryOperationsStatus` rejection error contains the info property`retry-after`, it will be interpreted as the number of seconds that should elapse before the next attempted operation.  Otherwise default.] */
                   if ((err as any).info && (err as any).info[MessagePropertyNames.retryAfter]) {
@@ -383,7 +384,7 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
                   }
                   callback(null, {status: 'assigning', operationId: operationId}, null, retryAfterInMilliseconds);
                 } else {
-                  debug('non-retryable error on queryOperationStatus: ' + err.name);
+                  debugErrors('non-retryable error on queryOperationStatus: ' + err);
                   /*Codes_SRS_NODE_PROVISIONING_AMQP_16_021: [The `queryOperationStatus` method shall call its callback with an error if the transport fails to send the request message.]*/
                   callback(err);
                 }

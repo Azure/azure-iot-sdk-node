@@ -12,6 +12,7 @@ import * as uuid from 'uuid';
 import * as machina from 'machina';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-mqtt:MqttTwinClient');
+const debugErrors = dbg('azure-iot-device-mqtt:MqttTwinClient:Errors');
 
 // $iothub/twin/PATCH/properties/reported/?$rid={request id}&$version={base version}
 
@@ -104,7 +105,7 @@ export class MqttTwinClient extends EventEmitter {
           _onEnter: function (topicSubscription: TopicSubscription, callback: (err?: Error) => void): void {
             topicSubscription.mqttClient.unsubscribe(topicSubscription.topic, (err, _result) => {
               if (err) {
-                debug('failed to unsubscribe: ' + err.toString());
+                debugErrors('failed to unsubscribe: ' + err);
               } else {
                 debug('unsubscribed from: ' + topicSubscription.topic);
               }
@@ -165,7 +166,7 @@ export class MqttTwinClient extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_019: [The `enableTwinDesiredPropertiesUpdates` shall subscribe to the `$iothub/twin/PATCH/properties/desired/#` topic using the `MqttBase.subscribe` method if it hasn't been subscribed to already.]*/
     this._topicFsm.subscribe(this._desiredPropertiesUpdatesTopic, (err, suback) => {
       if (err) {
-        debug('failed to subscribe to desired properties updates: ' + err.toString());
+        debugErrors('failed to subscribe to desired properties updates: ' + err);
         /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_021: [if subscribing fails with an error the `enableTwinDesiredPropertiesUpdates` shall call its callback with the translated version of this error obtained by using the `translateError` method of the `azure-iot-mqtt-base` package.]*/
         callback(translateError(err));
       } else {
@@ -180,7 +181,7 @@ export class MqttTwinClient extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_022: [The `disableTwinDesiredPropertiesUpdates` shall unsubscribe from the `$iothub/twin/PATCH/properties/desired/#` topic using the `MqttBase.unsubscribe` method if it hasn't been unsubscribed from already.]*/
     this._topicFsm.unsubscribe(this._desiredPropertiesUpdatesTopic, (err, suback) => {
       if (err) {
-        debug('failed to subscribe to desired properties updates: ' + err.toString());
+        debugErrors('failed to subscribe to desired properties updates: ' + err);
         /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_024: [if unsubscribing fails with an error the `disableTwinDesiredPropertiesUpdates` shall call its callback with the translated version of this error obtained by using the `translateError` method of the `azure-iot-mqtt-base` package.]*/
         callback(translateError(err));
       } else {
@@ -267,7 +268,7 @@ export class MqttTwinClient extends EventEmitter {
         debug('received a response for a request we do not know about: ' + query.$rid);
       }
     } else {
-      debug('received a response with a malformed topic property: ' + topic);
+      debugErrors('received a response with a malformed topic property: ' + topic);
     }
   }
 }

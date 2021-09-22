@@ -1,5 +1,6 @@
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:TPMAuthenticationProvider');
+const debugErrors = dbg('azure-iot-device:TPMAuthenticationProvider:Errors');
 
 import { EventEmitter } from 'events';
 import * as machina from 'machina';
@@ -90,7 +91,7 @@ export class TpmAuthenticationProvider extends EventEmitter implements Authentic
             callback(null, this._credentials);
           },
           signingError: (err) => {
-            debug('Unable to create a new SAS token! - ' + err);
+            debugErrors('Unable to create a new SAS token! - ' + err);
             this._fsm.transition('inactive', err);
           },
           signingSuccessful: () => {

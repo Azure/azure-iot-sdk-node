@@ -12,6 +12,7 @@ import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure
 import { translateError } from 'azure-iot-provisioning-device';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-provisioning-device-http:Http');
+const debugErrors = dbg('azure-iot-provisioning-device-http:Http:Errors');
 
 const _defaultHeaders = {
   'Accept' : 'application/json',
@@ -78,7 +79,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
         try {
           authenticationResponse = JSON.parse(err.responseBody);
         } catch (parseError) {
-          debug('challenge could not be parsed: ' + err);
+          debugErrors('challenge could not be parsed: ' + err);
           callback(new errors.FormatError('The server did NOT respond with an appropriately formatted authentication blob.'));
           return;
         }
@@ -87,7 +88,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
         if (typeof authenticationResponse.authenticationKey === 'string') {
           callback(null, Buffer.from(authenticationResponse.authenticationKey, 'base64'));
         } else {
-          debug('Invalid formatted challenge received: ' + err.responseBody);
+          debugErrors('Invalid formatted challenge received: ' + err.responseBody);
           callback(new errors.FormatError('The server did NOT respond with an appropriately formatted authentication blob.'));
         }
       } else {
@@ -95,7 +96,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
         // We should ALWAYS get an error for the un-authenticated request we just made.  The server is sending back something we
         // have no real context to interpret.
         //
-        debug('Invalid response back from the authentication challenge: ' + err);
+        debugErrors('Invalid response back from the authentication challenge: ' + err);
         callback(new errors.InvalidOperationError('The server did NOT respond with an unauthorized error.  For a TPM challenge this is incorrect.'));
       }
     });
@@ -190,7 +191,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
     this._restApiClient.executeApiCall('PUT', path, httpHeaders, requestBody, (err: Error, result?: any, response?: any) => {
       if (err) {
         /* Codes_SRS_NODE_PROVISIONING_HTTP_18_044: [ If the Http request fails for any reason, `registrationRequest` shall call `callback`, passing the error along with the `result` and `response` objects. ] */
-        debug('error executing PUT: ' + err.toString());
+        debugErrors('error executing PUT: ' + err);
         callback(err, result, response);
       } else {
         debug('PUT result received:');
@@ -241,7 +242,7 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
     this._restApiClient.executeApiCall('GET', path, httpHeaders, {}, (err: Error, result?: any, response?: any) => {
       if (err) {
         /* Codes_SRS_NODE_PROVISIONING_HTTP_18_038: [ If the Http request fails for any reason, `queryOperationStatus` shall call `callback`, passing the error along with the `result` and `response` objects. ] */
-        debug('error executing GET: ' + err.toString());
+        debugErrors('error executing GET: ' + err);
         callback(err, result, response);
       } else {
         debug('GET result received:');

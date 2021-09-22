@@ -6,7 +6,7 @@
   "bin": "./lib/iothub_longhaul.js",
   "scripts": {
     "npmlockrefresh": "npm i --package-lock-only",
-    "lint": "tslint --project . -c ../tslint.json",
+    "lint": "tslint --project . -c ../../tslint.json",
     "build": "tsc",
     "setup_links": "npm link azure-iot-common azure-iot-device azure-iot-device-amqp azure-iot-device-mqtt azure-iot-device-http azure-iothub",
     "start": "node lib/iothub_longhaul.js"

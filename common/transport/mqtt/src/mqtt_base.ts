@@ -8,6 +8,7 @@ import * as machina from 'machina';
 import { Client as MqttClient, IClientOptions, IClientPublishOptions, IClientSubscribeOptions } from 'mqtt';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-mqtt-base:MqttBase');
+const debugErrors = dbg('azure-iot-mqtt-base:MqttBase:Errors');
 import { errors, results, SharedAccessSignature, X509 } from 'azure-iot-common';
 
 class OnTheWireMessage {
@@ -183,7 +184,7 @@ export class MqttBase extends EventEmitter {
               callback(err);
             } else {
               if (err) {
-                debug('In mqtt base - no callback for error - emitting \'error\': ' + this._errorDescription(err));
+                debugErrors('In mqtt base - no callback for error - emitting \'error\': ' + this._errorDescription(err));
                 this.emit('error', err);
               }
             }
@@ -271,7 +272,7 @@ export class MqttBase extends EventEmitter {
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_41_002: [The `updateSharedAccessSignature` method shall trigger a forced disconnect if after 30 seconds the mqtt client has failed to complete a non-forced disconnect.]*/
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_41_003: [The `updateSharedAccessSignature` method shall call the `callback` argument with an `Error` if the operation fails after timing out.]*/
             const disconnectTimeout = setTimeout(() => {
-              debug('disconnecting mqtt client timed out. Force disconnecting.');
+              debugErrors('disconnecting mqtt client timed out. Force disconnecting.');
               switched = true;
               this._fsm.handle('forceDisconnect', callback);
             }, 30000);
@@ -283,7 +284,7 @@ export class MqttBase extends EventEmitter {
                 debug('mqtt client disconnected - reconnecting');
                 this._connectClient((err, connack) => {
                   if (err) {
-                    debug('failed to reconnect the client: ' + err.toString());
+                    debugErrors('failed to reconnect the client: ' + err.toString());
                     this._fsm.transition('disconnected', callback, err);
                   } else {
                     debug('mqtt client reconnected successfully');
@@ -300,7 +301,7 @@ export class MqttBase extends EventEmitter {
               debug('mqtt client disconnected - reconnecting');
               this._connectClient((err, connack) => {
                 if (err) {
-                  debug('failed to reconnect the client: ' + err.toString());
+                  debugErrors('failed to reconnect the client: ' + err);
                   this._fsm.transition('disconnected', callback, err);
                 } else {
                   debug('mqtt client reconnected successfully');
@@ -430,8 +431,8 @@ export class MqttBase extends EventEmitter {
 
     const createErrorCallback = (eventName) => {
       return (error) => {
-        debug('received \'' + eventName + '\' from mqtt client');
-        debug(' error supplied is: ' + this._errorDescription(error));
+        debugErrors('received \'' + eventName + '\' from mqtt client');
+        debugErrors(' error supplied is: ' + this._errorDescription(error));
         const err = error || new errors.NotConnectedError('Unable to establish a connection');
         callback(err);
       };
@@ -477,7 +478,7 @@ export class MqttBase extends EventEmitter {
   }
 
   private _errorCallback(err: Error): void {
-    debug('In base mqtt - error event received from mqtt.js client - error is: ' + this._errorDescription(err));
+    debugErrors('In base mqtt - error event received from mqtt.js client - error is: ' + this._errorDescription(err));
     this._fsm.transition('disconnecting', null, err);
   }
 

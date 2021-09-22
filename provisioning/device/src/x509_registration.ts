@@ -9,7 +9,7 @@ import { PollingStateMachine } from './polling_state_machine';
 import * as dbg from 'debug';
 import { Callback, callbackToPromise, ErrorCallback, errorCallbackToPromise } from 'azure-iot-common';
 
-const debug = dbg('azure-iot-provisioning-device:X509Registration');
+const debugErrors = dbg('azure-iot-provisioning-device:X509Registration:Errors');
 
 /**
  * Client used to run the registration of a device using X509 authentication.
@@ -57,7 +57,7 @@ export class X509Registration implements RegistrationClient {
       this._securityClient.getCertificate((err, cert)  => {
         if (err) {
           /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_006: [ If `getCertificate`fails, `register` shall call `_callback` with the error ] */
-          debug('security client returned error on cert acquisition');
+          debugErrors('security client returned error on cert acquisition: ' + err);
           _callback(err);
         } else {
           let registrationId: string = this._securityClient.getRegistrationId();
@@ -76,7 +76,7 @@ export class X509Registration implements RegistrationClient {
           this._pollingStateMachine.register(request, (err?: Error, result?: DeviceRegistrationResult) => {
             this._pollingStateMachine.disconnect((disconnectErr?: Error) => {
               if (disconnectErr) {
-                debug('error disconnecting.  Ignoring.  ' + disconnectErr);
+                debugErrors('error disconnecting.  Ignoring.  ' + disconnectErr);
               }
               if (err) {
                 /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_005: [ If `register` on the pollingStateMachine fails, `register` shall call `_callback` with the error ] */

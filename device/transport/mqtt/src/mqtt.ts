@@ -14,6 +14,7 @@ import { EventEmitter } from 'events';
 import * as util from 'util';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-mqtt:Mqtt');
+const debugErrors = dbg('azure-iot-device-mqtt:Mqtt:Errors');
 import { MqttBaseTransportConfig, MqttBase, translateError } from 'azure-iot-mqtt-base';
 import { MqttTwinClient } from './mqtt_twin_client';
 
@@ -230,6 +231,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
                   this._mqtt.connect(baseConfig, (err, result) => {
                     debug('connect');
                     if (err) {
+                      debugErrors('Connect error: ' + err);
                       if (this._firstConnection) {
                         /* Codes_SRS_NODE_DEVICE_MQTT_41_006: [The `connect` method shall call its callback with an `UnauthorizedError` returned by the primary call to `connect` in the base MQTT client.]*/
                         this._fsm.transition('disconnected', connectCallback, new Error('Failure on first connection (Not authorized): ' + err.message));
@@ -440,7 +442,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
 
     this._fsm.handle('sendEvent', message, undefined, (err, puback) => {
       if (err) {
-        debug('send error: ' + err.toString());
+        debugErrors('send error: ' + err);
         done(err);
       } else {
         debug('PUBACK: ' + JSON.stringify(puback));
@@ -707,7 +709,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     /*Codes_SRS_NODE_DEVICE_MQTT_18_068: [ The `sendOutputEvent` method shall serialize the `outputName` property of the message as a key-value pair on the topic with the key `$.on`. ] */
     this._fsm.handle('sendEvent', message, { '$.on': outputName }, (err, puback) => {
       if (err) {
-        debug('send error: ' + err.toString());
+        debugErrors('send error: ' + err);
         done(err);
       } else {
         debug('PUBACK: ' + JSON.stringify(puback));
@@ -1059,7 +1061,8 @@ function _parseMessage(topic: string, body: any): MethodMessage {
     path = url.path.split('/');
     query = querystring.parse(url.query as string);
   } catch (err) {
-    debug('could not parse topic for received message: ' + topic);
+    debugErrors('Could not parse topic for received message: ' + topic);
+    debugErrors('Error is ' + err);
     return undefined;
   }
 

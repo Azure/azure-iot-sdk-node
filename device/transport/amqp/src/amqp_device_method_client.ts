@@ -9,6 +9,7 @@ import * as machina  from 'machina';
 import * as async from 'async';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-amqp:AmqpDeviceMethodClient');
+const debugErrors = dbg('azure-iot-device-amqp:AmqpDeviceMethodClient:Errors');
 
 import { Message, errors, endpoint, AuthenticationProvider } from 'azure-iot-common';
 import { MethodMessage, DeviceMethodResponse } from 'azure-iot-device';
@@ -58,7 +59,7 @@ export class AmqpDeviceMethodClient extends EventEmitter {
               callback(err);
             } else {
               if (err) {
-                debug('detached with error: ' + err.toString());
+                debugErrors('detached with error: ' + err);
                 /*Codes_SRS_NODE_AMQP_DEVICE_METHOD_CLIENT_16_015: [The `AmqpDeviceMethodClient` object shall forward any error received on a link to any listening client in an `error` event.]*/
                 this.emit('error', err);
               }

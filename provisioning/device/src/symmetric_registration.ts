@@ -9,7 +9,7 @@ import { PollingStateMachine } from './polling_state_machine';
 import * as dbg from 'debug';
 import { Callback, callbackToPromise, ErrorCallback, errorCallbackToPromise } from 'azure-iot-common';
 
-const debug = dbg('azure-iot-provisioning-device:SymmetricKeyRegistration');
+const debugErrors = dbg('azure-iot-provisioning-device:SymmetricKeyRegistration:Errors');
 
 /**
  * Client used to run the registration of a device using Symmetric Key authentication.
@@ -76,7 +76,7 @@ export class SymmetricKeyRegistration implements RegistrationClient {
               this._pollingStateMachine.register(request, (registerError?: Error, result?: DeviceRegistrationResult) => {
                 this._pollingStateMachine.disconnect((disconnectErr: Error) => {
                   if (disconnectErr) {
-                    debug('error disconnecting.  Ignoring.  ' + disconnectErr);
+                    debugErrors('error disconnecting.  Ignoring.  ' + disconnectErr);
                   }
                   /*Codes_SRS_NODE_DPS_SYMMETRIC_REGISTRATION_06_010: [ if the polling register returns an error, the `register` shall invoke the `_callback` with that error. ] */
                   if (registerError) {

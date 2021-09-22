@@ -10,6 +10,7 @@ import { SenderLink } from './sender_link';
 import { ReceiverLink } from './receiver_link';
 
 const debug = dbg('azure-iot-amqp-base:CBS');
+const debugErrors = dbg('azure-iot-amqp-base:CBS:Errors');
 
 /**
  * @interface  module:azure-iot-amqp-base.PutTokenOperation
@@ -205,7 +206,7 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
             this._fsm.transition('detaching', callback, err);
           },
           forceDetach: () => {
-            debug('while attached - force detach for CBS links ' + this._receiverLink + ' ' + this._senderLink);
+            debugErrors('while attached - force detach for CBS links ' + this._receiverLink + ' ' + this._senderLink);
             /*Tests_SRS_NODE_AMQP_CBS_16_022: [The `forceDetach()` method shall call `forceDetach()` on all attached links.]*/
             this._receiverLink.forceDetach();
             this._senderLink.forceDetach();
@@ -281,6 +282,9 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
         detaching: {
           _onEnter: (forwardedCallback, err) => {
             /*Codes_SRS_NODE_AMQP_CBS_16_008: [`detach` shall detach both sender and receiver links and return the state machine to the `detached` state.]*/
+            if (err) {
+              debugErrors('Detaching because of ' + err);
+            }
             const links = [this._senderLink, this._receiverLink];
             async.each(links, (link, callback) => {
               if (link) {

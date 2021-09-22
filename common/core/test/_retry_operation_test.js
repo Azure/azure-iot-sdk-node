@@ -10,6 +10,8 @@ var errors = require('../dist/errors.js');
 var RetryOperation = require('../dist/retry_operation.js').RetryOperation;
 var NoRetry = require('../dist/retry_policy.js').NoRetry;
 
+const fakeOperationName = "__fake_op__";
+
 describe('RetryOperation', function () {
   describe('retry', function () {
     it('uses the RetryPolicy passed to the constructor', function (testCallback) {
@@ -21,7 +23,7 @@ describe('RetryOperation', function () {
       var testError = new Error('fake timeout that shall be retried');
       var actualOperation = sinon.stub().callsArgWith(0, testError);
 
-      var testOperation = new RetryOperation(testPolicy, 1);
+      var testOperation = new RetryOperation(fakeOperationName, testPolicy, 1);
       testOperation.retry(function (callback) {
         actualOperation(callback);
       }, function (finalErr) {
@@ -42,7 +44,7 @@ describe('RetryOperation', function () {
       var testError = new Error('unrecoverable');
       var actualOperation = sinon.stub().callsArgWith(0, testError);
 
-      var testOperation = new RetryOperation(testPolicy, 1);
+      var testOperation = new RetryOperation(fakeOperationName, testPolicy, 1);
       testOperation.retry(function (callback) {
         actualOperation(callback);
       }, function () {
@@ -61,7 +63,7 @@ describe('RetryOperation', function () {
       var testError = new Error('fake timeout that shall be retried');
       var actualOperation = sinon.stub().callsArgWith(0, testError);
 
-      var testOperation = new RetryOperation(testPolicy, 5);
+      var testOperation = new RetryOperation(fakeOperationName, testPolicy, 5);
       testOperation.retry(function (callback) {
         actualOperation(callback);
       }, function (finalErr) {
@@ -81,7 +83,7 @@ describe('RetryOperation', function () {
       var testResult = { success: true };
       var actualOperation = sinon.stub().callsArgWith(0, null, testResult);
 
-      var testOperation = new RetryOperation(testPolicy, 1);
+      var testOperation = new RetryOperation(fakeOperationName, testPolicy, 1);
       testOperation.retry(function (callback) {
         actualOperation(callback);
       }, function (finalErr, finalResult) {
@@ -95,7 +97,7 @@ describe('RetryOperation', function () {
       var testError = new Error('fake timeout that shall not be retried');
       var actualOperation = sinon.stub().callsArgWith(0, testError);
 
-      var testOperation = new RetryOperation(new NoRetry(), 1);
+      var testOperation = new RetryOperation(fakeOperationName, new NoRetry(), 1);
       testOperation.retry(function (callback) {
         actualOperation(callback);
       }, function (finalErr) {

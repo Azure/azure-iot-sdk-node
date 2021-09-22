@@ -7,6 +7,9 @@ import * as errors from './errors';
 import { RetryPolicy } from './retry_policy';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-common:RetryOperation');
+const debugErrors = dbg('azure-iot-common:RetryOperation:Errors');
+
+let _nextId = 0;
 
 /**
  * Implements the necessary logic to retry operations such as connecting, receiving C2D messages, sending telemetry, twin updates, etc.
@@ -17,18 +20,24 @@ export class RetryOperation {
   private _maxTimeout: number;
   private _operationStartTime: number;
   private _operationExpiryTime: number;
+  private _name: string = '';
+  private _id: number = 0;
 
   /**
    * Creates an instance of {@link azure-iot-common.RetryOperation.}
    * @param {RetryPolicy} policy The retry policy to be used for this operation, which determines what error is "retryable" or not and how fast to retry.
    * @param {number} maxTimeout  The maximum timeout for this operation, after which no retry will be attempted.
    */
-  constructor (policy: RetryPolicy, maxTimeout: number) {
+  constructor (name: string, policy: RetryPolicy, maxTimeout: number) {
     if (policy && policy.constructor && policy.constructor.name === 'NoRetry') {
+    // Do not remove this line. It is here at the request of CSS.
       debug('A RetryOperation is being used with a NoRetry policy. The operation will not be retried on failure.');
     }
     this._policy = policy;
     this._maxTimeout = maxTimeout;
+    this._name = name;
+    this._id = _nextId;
+    _nextId += 1;
   }
 
   /**
@@ -49,26 +58,27 @@ export class RetryOperation {
             let nextRetryTimeout = this._policy.nextRetryTimeout(this._retryCount, (err instanceof errors.ThrottlingError));
             /*Codes_SRS_NODE_COMMON_RETRY_OPERATION_16_006: [The `operation` should not be retried past the `maxTimeout` parameter passed to the constructor.]*/
             if (Date.now() >= this._operationExpiryTime || nextRetryTimeout < 0) {
-              debug('Past the maximum timeout for the operation. failing with the latest error.');
+              debugErrors(`${this._name}:${this._id} Past the maximum timeout for the operation. failing with the latest error: ${err.toString()}.`);
               finalCallback(err);
             } else {
-              debug('Will retry after: ' + nextRetryTimeout + ' milliseconds');
+              debug(`${this._name}:${this._id} Will retry after: ${nextRetryTimeout} milliseconds`);
               setTimeout(retryOperation, nextRetryTimeout);
             }
           } else {
-            debug('Error: ' + err.toString() + ' is not retriable');
+            debugErrors(`${this._name}:${this._id} Error: ${err.toString()} is not retriable`);
             /*Codes_SRS_NODE_COMMON_RETRY_OPERATION_16_004: [If the `operation` fails and should not be retried, the `finalCallback` should be called with the last error as the only parameter. ]*/
             finalCallback(err);
           }
         } else {
           /*Codes_SRS_NODE_COMMON_RETRY_OPERATION_16_002: [If the `operation` is successful the `finalCallback` function should be called with a `null` error parameter and the result of the operation.]*/
+          debug(`${this._name}:${this._id} Complete`);
           finalCallback(null, result, response);
         }
       });
     };
     this._operationStartTime = Date.now();
     this._operationExpiryTime = this._operationStartTime + this._maxTimeout;
-    debug('Operation start time: ' + this._operationStartTime + ' - Will stop retrying after: ' + this._operationExpiryTime);
+    debug(`${this._name}:${this._id}:${this._policy?.constructor.name} Operation started at ${this._operationStartTime} - Will stop retrying after: ${this._operationExpiryTime}`);
 
     retryOperation();
   }
