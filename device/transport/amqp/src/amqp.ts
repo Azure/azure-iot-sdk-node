@@ -21,7 +21,7 @@ const handleResult = function (errorMessage: string, done: (err?: Error, result?
   return function (err?: Error, result?: any): void {
     if (err) {
       let translatedErr = translateError(errorMessage, err);
-      debugErrors("Completing with untranslated error: " + getErrorName(err));
+      debugErrors('Completing with untranslated error: ' + getErrorName(err));
       done(translatedErr);
     } else {
       done(null, result);

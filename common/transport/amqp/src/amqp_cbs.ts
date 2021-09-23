@@ -316,6 +316,10 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
     this._fsm.handle('forceDetach');
   }
 
+  toString(): string {
+    return `CBS agent for ${this._senderLink} and ${this._receiverLink}`;
+  }
+
   /**
    * @method             module:azure-iot-amqp-base.Amqp#putToken
    * @description        Sends a put token operation to the IoT Hub to provide authentication for a device.
@@ -365,9 +369,5 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
     if (this._putToken.outstandingPutTokens.length > 0) {
       this._putToken.timeoutTimer = setTimeout(this._removeExpiredPutTokens.bind(this), this._putToken.putTokenTimeOutExaminationInterval);
     }
-  }
-
-  toString(): string {
-    return `CBS agent for ${this._senderLink} and ${this._receiverLink}`;
   }
 }

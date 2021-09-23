@@ -404,7 +404,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
           _onEnter: (callback, err) => {
             /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_023: [The `detach` method shall call the `callback` with the original `Error` that caused the detach whether it succeeds or fails to cleanly detach the link.]*/
             debug(this.toString() + ': Detaching of rhea sender link ' + this._linkAddress);
-            debug(this.toString() + ': Error = ' + getErrorName(err))
+            debug(this.toString() + ': Error = ' + getErrorName(err));
             this._detachingCallback = callback;
             this._indicatedError = err;
             /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_009: [The `detach` method shall detach the link created by `rhea`.] */

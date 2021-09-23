@@ -134,7 +134,7 @@ export function getErrorName(err: any): string {
     } else if (err.name) {
       let name = `javacript error(${err})`;
       if (err.amqpError) {
-        name += `(from ${getErrorName(err.amqpError)})`
+        name += `(from ${getErrorName(err.amqpError)})`;
       }
       return name;
     } else {
