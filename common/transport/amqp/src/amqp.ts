@@ -11,6 +11,7 @@ import { ClaimsBasedSecurityAgent } from './amqp_cbs';
 import { SenderLink } from './sender_link';
 import { ReceiverLink } from './receiver_link';
 import { AmqpLink } from './amqp_link_interface';
+import { getErrorName } from './amqp_common_errors';
 import { create_container as rheaCreateContainer, EventContext, AmqpError, Container, Connection, Session } from 'rhea';
 import merge = require('lodash.merge');
 import * as dbg from 'debug';
@@ -134,7 +135,7 @@ export class Amqp {
     this._rheaContainer = rheaCreateContainer();
 
     this._rheaContainer.on('azure-iot-amqp-base:error-indicated', (err: AmqpError) => {
-      debugErrors('azure-iot-amqp-base:error-indicated invoked ' + this._getErrorName(err));
+      debugErrors('azure-iot-amqp-base:error-indicated invoked ' + getErrorName(err));
       this._fsm.handle('amqpError', err);
 
     });
@@ -176,7 +177,7 @@ export class Amqp {
     };
 
     const sessionErrorHandler = (context: EventContext) => {
-      debugErrors(`session error event handler: error = ${context.error}`);
+      debugErrors(`session error event handler: error = ${getErrorName(context.error)}`);
       this._fsm.handle('session_error', context);
     };
     const sessionOpenHandler = (context: EventContext) => {
@@ -207,7 +208,7 @@ export class Amqp {
               }
             } else if (this._disconnectHandler) {
               debug('calling upper layer disconnect handler');
-              debugErrors('error passed to disconnect handler is: ' + this._getErrorName(err || new errors.NotConnectedError('rhea: connection disconnected')));
+              debugErrors('error passed to disconnect handler is: ' + getErrorName(err || new errors.NotConnectedError('rhea: connection disconnected')));
               this._disconnectHandler(err || new errors.NotConnectedError('rhea: connection disconnected'));
             }
           },
@@ -426,7 +427,7 @@ export class Amqp {
             if (!this._senders[endpoint]) {
               this._fsm.handle('attachSenderLink', endpoint, null, (err) => {
                 if (err) {
-                  debugErrors('failed to attach the sender link: ' + err.toString());
+                  debugErrors('failed to attach the sender link: ' + getErrorName(err));
                   done(err);
                 } else {
                   (this._senders[endpoint] as SenderLink).send(amqpMessage, done);
@@ -520,7 +521,7 @@ export class Amqp {
         },
         disconnecting: {
           _onEnter: (disconnectCallback, err) => {
-            debug('Entering disconnecting state with disconnectCallback: ' + disconnectCallback + ' error of: ' + this._getErrorName(err));
+            debug('Entering disconnecting state with disconnectCallback: ' + disconnectCallback + ' error of: ' + getErrorName(err));
             const sessionEnd = (callback) => {
               //
               // If a disconnection has already happened then there is no point in trying to send a session close.
@@ -545,7 +546,7 @@ export class Amqp {
             const disconnect = (callback) => {
               debug('entering disconnect function of disconnecting state');
               if (err) {
-                debugErrors('with a disconnecting state err: ' + this._getErrorName(err));
+                debugErrors('with a disconnecting state err: ' + getErrorName(err));
               }
               //
               // If a disconnection has already occurred there is no point in generating any network traffic.
@@ -574,11 +575,11 @@ export class Amqp {
               }
 
               if (this._sessionCloseOccurred || this._disconnectionOccurred) {
-                debugErrors('forceDetaching link');
+                debugErrors('forceDetaching link: ' + link);
                 link.forceDetach(err);
                 callback();
               } else {
-                debug('cleanly detaching link');
+                debug('cleanly detaching link: ' + link);
                 link.detach(callback, err);
               }
             };
@@ -678,7 +679,7 @@ export class Amqp {
             this._disconnectionOccurred = true;
           },
           amqpError: (err) => {
-            debugErrors('ignoring error event while disconnecting: ' + this._getErrorName(err));
+            debugErrors('ignoring error event while disconnecting: ' + getErrorName(err));
           },
           '*': () => this._fsm.deferUntilTransition('disconnected')
         }
@@ -858,20 +859,6 @@ export class Amqp {
   private _safeCallback(callback: GenericAmqpBaseCallback<any>, error?: Error | null, result?: any): void {
     if (callback) {
       process.nextTick(() => callback(error, result));
-    }
-  }
-
-  private _getErrorName(err: any): string {
-    if (err) {
-      if (err.condition) {
-        return '(amqp error) ' + err.condition;
-      } else if (err.hasOwnProperty('name')) {
-        return '(javascript error) ' + err.name;
-      } else {
-        return 'unknown error type';
-      }
-    } else {
-      return 'error is falsy';
     }
   }
 }

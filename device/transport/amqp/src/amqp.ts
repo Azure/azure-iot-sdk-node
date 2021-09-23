@@ -11,7 +11,7 @@ import { EventEmitter } from 'events';
 
 import { DeviceTransport, MethodMessage, DeviceMethodResponse, TwinProperties, DeviceClientOptions, SharedAccessKeyAuthenticationProvider } from 'azure-iot-device';
 import { getUserAgentString } from 'azure-iot-device';
-import { Amqp as BaseAmqpClient, AmqpBaseTransportConfig, translateError, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
+import { Amqp as BaseAmqpClient, AmqpBaseTransportConfig, getErrorName, translateError, AmqpMessage, SenderLink, ReceiverLink } from 'azure-iot-amqp-base';
 import { endpoint, SharedAccessSignature, errors, results, Message, AuthenticationProvider, AuthenticationType, TransportConfig } from 'azure-iot-common';
 import { AmqpDeviceMethodClient } from './amqp_device_method_client';
 import { AmqpTwinClient } from './amqp_twin_client';
@@ -20,7 +20,9 @@ import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider
 const handleResult = function (errorMessage: string, done: (err?: Error, result?: any) => void): (err?: Error, result?: any) => void {
   return function (err?: Error, result?: any): void {
     if (err) {
-      done(translateError(errorMessage, err));
+      let translatedErr = translateError(errorMessage, err);
+      debugErrors("Completing with untranslated error: " + getErrorName(err));
+      done(translatedErr);
     } else {
       done(null, result);
     }
@@ -83,7 +85,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
         this._fsm.handle('updateSharedAccessSignature', newCredentials.sharedAccessSignature, (err) => {
           if (err) {
             /*Codes_SRS_NODE_DEVICE_AMQP_16_058: [If the `putToken` operation initiated upon receiving a `newTokenAvailable` event fails, a `disconnect` event shall be emitted with the error from the failed `putToken` operation.]*/
-            debugErrors('Error updating the shared access signature: ' + err);
+            debugErrors('Error updating the shared access signature: ' + getErrorName(err));
             this._fsm.handle('disconnect', () => {
               debug('emitting the disconnect event in response to a update signature failure');
               this.emit('disconnect', err);
@@ -96,7 +98,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
     this._amqp = baseClient || new BaseAmqpClient(false);
     this._amqp.setDisconnectHandler((err) => {
       if (err) {
-        debugErrors('disconnected event handler: ' + err);
+        debugErrors('disconnected event handler: ' + getErrorName(err));
       } else {
         debug('disconnected event handler: no error');
       }
@@ -125,7 +127,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
 
     /*Codes_SRS_NODE_DEVICE_AMQP_16_034: [Any `error` event received on the C2D link shall trigger the emission of an `error` event by the transport, with an argument that is a `C2DDetachedError` object with the `innerError` property set to that error.]*/
     this._c2dErrorListener = (err) => {
-      debugErrors('Error on the C2D link: ' + err);
+      debugErrors('Error on the C2D link: ' + getErrorName(err));
       let c2dError = new errors.CloudToDeviceDetachedError('Cloud-to-device AMQP link failed');
       c2dError.innerError = err;
       this.emit('error', c2dError);
@@ -148,7 +150,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
     };
 
     this._d2cErrorListener = (err) => {
-      debugErrors('Error on the D2C link: ' + err);
+      debugErrors('Error on the D2C link: ' + getErrorName(err));
       this._d2cLink = null;
       // we don't really care because we can reattach the link every time we send and surface the error at that time.
     };
@@ -268,7 +270,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
           },
           amqpConnectionClosed: (err, callback) => {
             /*Codes_SRS_NODE_DEVICE_AMQP_16_080: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is disconnected, the call shall be ignored.]*/
-            debugErrors('ignoring amqpConnectionClosed because already disconnected: ' + err);
+            debugErrors('ignoring amqpConnectionClosed because already disconnected: ' + getErrorName(err));
             callback();
           }
         },
@@ -400,7 +402,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
                 debug('attaching D2C link');
                 this._amqp.attachSenderLink(this._d2cEndpoint, null, (err, link) => {
                   if (err) {
-                    debugErrors('error creating a D2C link: ' + err);
+                    debugErrors('error creating a D2C link: ' + getErrorName(err));
                   } else {
                     debug('got a new D2C link');
                     this._d2cLink = link;
@@ -462,7 +464,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
                 debug('attaching C2D link');
                 this._amqp.attachReceiverLink(this._c2dEndpoint, null, (err, receiverLink) => {
                   if (err) {
-                    debugErrors('error creating a C2D link: ' + err);
+                    debugErrors('error creating a C2D link: ' + getErrorName(err));
                   } else {
                     /*Codes_SRS_NODE_DEVICE_AMQP_16_032: [The `enableC2D` method shall attach the C2D link and call its `callback` once it is successfully attached.]*/
                     debug('C2D link created and attached successfully');
@@ -507,7 +509,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
             async.series([
               (callback) => {
                 if (err) {
-                  debugErrors('force-detaching device methods links because: ' + err);
+                  debugErrors('force-detaching device methods links because: ' + getErrorName(err));
                   this._deviceMethodClient.forceDetach();
                   callback();
                 } else {
@@ -918,7 +920,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
     this._c2dLink = undefined;
     if (tmpC2DLink) {
       if (err) {
-        debugErrors('forceDetaching C2D link because: ' + err);
+        debugErrors('forceDetaching C2D link because: ' + getErrorName(err));
         tmpC2DLink.forceDetach(err);
         // detaching listeners and getting rid of the object anyway.
         tmpC2DLink.removeListener('error', this._c2dErrorListener);
@@ -927,7 +929,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
       } else {
         tmpC2DLink.detach((err) => {
           if (err) {
-            debugErrors('error detaching C2D link: ' + err);
+            debugErrors('error detaching C2D link: ' + getErrorName(err));
           } else {
             debug('C2D link successfully detached');
           }

@@ -6,6 +6,7 @@ import { EventContext, AmqpError, Session, Receiver, ReceiverOptions, Delivery }
 import { errors, results } from 'azure-iot-common';
 import { AmqpMessage } from './amqp_message';
 import { AmqpLink } from './amqp_link_interface';
+import { getErrorName } from './amqp_common_errors';
 
 const debug = dbg('azure-iot-amqp-base:ReceiverLink');
 const debugErrors = dbg('azure-iot-amqp-base:ReceiverLink:Errors');
@@ -171,7 +172,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             this._fsm.transition('attached', callback);
           },
           receiverErrorEvent: (context: EventContext) => {
-            debugErrors(this.toString() + ': In receiver attaching state - error event for ' + context.receiver.name + ' error is: ' + this._getErrorName(context.receiver.error));
+            debugErrors(this.toString() + ': In receiver attaching state - error event for ' + context.receiver.name + ' error is: ' + getErrorName(context.receiver.error));
             this._indicatedError = context.receiver.error;
             //
             // We don't transition at this point in that we are guaranteed that the error will be followed by a receiver_close
@@ -232,7 +233,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             if (callback) callback(err);
           },
           receiverErrorEvent: (context: EventContext) => {
-            debugErrors(this.toString() + ': In receiver attached state - error event for ' + context.receiver.name + ' error is: ' + this._getErrorName(context.receiver.error));
+            debugErrors(this.toString() + ': In receiver attached state - error event for ' + context.receiver.name + ' error is: ' + getErrorName(context.receiver.error));
             this._indicatedError = context.receiver.error;
             //
             // We don't transition at this point in that we are guaranteed that the error will be followed by a receiver_close
@@ -249,7 +250,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             let error = this._indicatedError; // This might be undefined.
             this._indicatedError = undefined;
             this._receiverCloseOccurred = true;
-            debugErrors(this.toString() + ': In receiver attached state - close event for ' + context.receiver.name + ' already indicated error is: ' + this._getErrorName(error));
+            debugErrors(this.toString() + ': In receiver attached state - close event for ' + context.receiver.name + ' already indicated error is: ' + getErrorName(error));
             if (error) {
               context.container.emit('azure-iot-amqp-base:error-indicated', error);
             } else {
@@ -261,7 +262,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             this._safeCallback(callback);
           },
           detach: (callback, err) => {
-            debug(this.toString() + ': While attached - detach for receiver link ' + this._linkAddress + ' callback: ' + callback + ' error: ' + this._getErrorName(err));
+            debug(this.toString() + ': While attached - detach for receiver link ' + this._linkAddress + ' callback: ' + callback + ' error: ' + getErrorName(err));
             this._fsm.transition('detaching', callback, err);
           },
           forceDetach: (err) => {
@@ -323,7 +324,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
           },
           receiverErrorEvent: (context: EventContext) => {
             /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_006: [An error occurring during a detach will be indicated in the error result of the `detach`.] */
-            debugErrors(this.toString() + ': In receiver detaching state - error event for ' + context.receiver.name + ' error is: ' + this._getErrorName(context.receiver.error));
+            debugErrors(this.toString() + ': In receiver detaching state - error event for ' + context.receiver.name + ' error is: ' + getErrorName(context.receiver.error));
             this._indicatedError = this._indicatedError || context.receiver.error;
             //
             // We don't transition at this point in that we are guaranteed that the error will be followed by a receiver_close
@@ -331,7 +332,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             //
           },
           receiverCloseEvent: (context: EventContext) => {
-            debugErrors(this.toString() + ': In receiver detaching state - close event for ' + context.receiver.name + ' already indicated error is: ' + this._getErrorName(this._indicatedError));
+            debugErrors(this.toString() + ': In receiver detaching state - close event for ' + context.receiver.name + ' already indicated error is: ' + getErrorName(this._indicatedError));
             let error = this._indicatedError;
             let callback = this._detachingCallback;
             this._detachingCallback = undefined;
@@ -448,20 +449,6 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
   private _safeCallback(callback: (err?: Error, result?: any) => void, error?: Error | null, result?: any): void {
     if (callback) {
       process.nextTick(() => callback(error, result));
-    }
-  }
-
-  private _getErrorName(err: any): string {
-    if (err) {
-      if (err.condition) {
-        return '(amqp error) ' + err.condition;
-      } else if (err.name) {
-        return '(javascript error) ' + err.name;
-      } else {
-        return 'unknown error type';
-      }
-    } else {
-      return 'error is falsy';
     }
   }
 

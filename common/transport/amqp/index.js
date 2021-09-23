@@ -16,5 +16,6 @@ module.exports = {
   AmqpReceiver: require('./dist/receiver_link.js').ReceiverLink,
   ReceiverLink: require('./dist/receiver_link.js').ReceiverLink,
   SenderLink: require('./dist/sender_link.js').SenderLink,
-  translateError: require('./dist/amqp_common_errors.js').translateError
+  translateError: require('./dist/amqp_common_errors.js').translateError,
+  getErrorName: require('./dist/amqp_common_errors.js').getErrorName
 };
