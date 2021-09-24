@@ -6,6 +6,7 @@ import { EventContext, AmqpError, Session, Sender, SenderOptions } from 'rhea';
 import { results } from 'azure-iot-common';
 import { AmqpMessage } from './amqp_message';
 import { AmqpLink } from './amqp_link_interface';
+import { getErrorName } from './amqp_common_errors';
 
 const debug = dbg('azure-iot-amqp-base:SenderLink');
 const debugErrors = dbg('azure-iot-amqp-base:SenderLink:Errors');
@@ -107,7 +108,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
     };
 
     const senderErrorHandler = (context: EventContext): void => {
-      debug(this.toString() + ': Handling error event: ' + this._getErrorName(context.sender.error));
+      debug(this.toString() + ': Handling error event: ' + getErrorName(context.sender.error));
       this._fsm.handle('senderErrorEvent', context);
     };
 
@@ -198,7 +199,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
               this._fsm.handle('attach', (err) => {
                 /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_027: [If the state machine is not in the attached state and the link is force-detached before successfully attaching , the send callback shall be called with the error passed to forceDetach]*/
                 if (err) {
-                  debugErrors(this.toString() + ': Failed to auto-attach, likely because a forceDetach happened: ' + err.toString());
+                  debugErrors(this.toString() + ': Failed to auto-attach, likely because a forceDetach happened: ' + getErrorName(err));
                   // no need to handle transitions, failing to attach will automatically revert to detached and take care of unsent messages.
                 } else {
                   debug(this.toString() + ': Link was auto-attached.');
@@ -233,7 +234,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             this._fsm.transition('attached', callback);
           },
           senderErrorEvent: (context: EventContext) => {
-            debug(this.toString() + ': In sender attaching state - error event for ' + context.sender.name + ' error is: ' + this._getErrorName(context.sender.error));
+            debug(this.toString() + ': In sender attaching state - error event for ' + context.sender.name + ' error is: ' + getErrorName(context.sender.error));
             this._indicatedError = context.sender.error;
             //
             // We don't transition at this point in that we are guaranteed that the error will be followed by a sender_close
@@ -298,7 +299,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             }
           },
           senderErrorEvent: (context: EventContext) => {
-            debugErrors(this.toString() + ': In sender attached state - error event for ' + context.sender.name + ' error is: ' + this._getErrorName(context.sender.error));
+            debugErrors(this.toString() + ': In sender attached state - error event for ' + context.sender.name + ' error is: ' + getErrorName(context.sender.error));
             this._indicatedError = context.sender.error;
             //
             // We don't transition at this point in that we are guaranteed that the error will be followed by a sender_close
@@ -315,7 +316,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             this._indicatedError = undefined;
             this._senderCloseOccurred = true;
             if (error) {
-              debugErrors(this.toString() + ': In sender attached state - close event for ' + context.sender.name + ' already indicated error is: ' + this._getErrorName(error));
+              debugErrors(this.toString() + ': In sender attached state - close event for ' + context.sender.name + ' already indicated error is: ' + getErrorName(error));
             } else {
               debug(this.toString() + ': In sender attached state - close event for ' + context.sender.name);
             }
@@ -340,7 +341,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             }
           },
           senderRejectedEvent: (context: EventContext) => {
-            debugErrors(this.toString() + ': In sender attached state - rejected event for ' + context.sender.name + ' with a condition of ' + this._getErrorName(context.delivery.remote_state.error));
+            debugErrors(this.toString() + ': In sender attached state - rejected event for ' + context.sender.name + ' with a condition of ' + getErrorName(context.delivery.remote_state.error));
             const op = this._pendingMessageDictionary[context.delivery.id];
             if (op) {
               delete this._pendingMessageDictionary[context.delivery.id];
@@ -351,7 +352,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             }
           },
           senderReleasedEvent: (context: EventContext) => {
-            debug(this.toString() + ': In sender attached state - released event for ' + context.sender.name + ' with a condition of ' + this._getErrorName(context.delivery.remote_state.error));
+            debug(this.toString() + ': In sender attached state - released event for ' + context.sender.name + ' with a condition of ' + getErrorName(context.delivery.remote_state.error));
             const op = this._pendingMessageDictionary[context.delivery.id];
             if (op) {
               delete this._pendingMessageDictionary[context.delivery.id];
@@ -364,7 +365,11 @@ export class SenderLink extends EventEmitter implements AmqpLink {
           /*Codes_SRS_NODE_AMQP_SENDER_LINK_06_007: [The `attach` method shall immediately invoke the `callback` if already in an attached state.] */
           attach: (callback) => callback(),
           detach: (callback, err) => {
-            debug(this.toString() + ': While attached - detach for receiver link ' + this._linkAddress + ' callback: ' + callback + ' error: ' + this._getErrorName(err));
+            if (err) {
+              debugErrors(this.toString() + ': While attached - detach for receiver link ' + this._linkAddress + ' callback: ' + callback + ' error: ' + getErrorName(err));
+            } else {
+              debug(this.toString() + ': While attached - detach for receiver link ' + this._linkAddress + ' callback: ' + callback);
+            }
             this._fsm.transition('detaching', callback, err);
           },
           forceDetach: (err) => {
@@ -399,6 +404,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
           _onEnter: (callback, err) => {
             /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_023: [The `detach` method shall call the `callback` with the original `Error` that caused the detach whether it succeeds or fails to cleanly detach the link.]*/
             debug(this.toString() + ': Detaching of rhea sender link ' + this._linkAddress);
+            debug(this.toString() + ': Error = ' + getErrorName(err));
             this._detachingCallback = callback;
             this._indicatedError = err;
             /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_009: [The `detach` method shall detach the link created by `rhea`.] */
@@ -415,7 +421,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
           },
           senderErrorEvent: (context: EventContext) => {
             /*Codes_SRS_NODE_AMQP_SENDER_LINK_06_010: [An error occurring during a detach will be indicated in the error result of the `detach`.] */
-            debugErrors(this.toString() + ': In sender detaching state - error event for ' + context.sender.name + ' error is: ' + this._getErrorName(context.sender.error));
+            debugErrors(this.toString() + ': In sender detaching state - error event for ' + context.sender.name + ' error is: ' + getErrorName(context.sender.error));
             this._indicatedError = this._indicatedError || context.sender.error;
             //
             // We don't transition at this point in that we are guaranteed that the error will be followed by a sender_close
@@ -423,7 +429,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             //
           },
           senderCloseEvent: (context: EventContext) => {
-            debugErrors(this.toString() + ': In sender detaching state - close event for ' + context.sender.name + ' already indicated error is: ' + this._getErrorName(this._indicatedError));
+            debugErrors(this.toString() + ': In sender detaching state - close event for ' + context.sender.name + ' already indicated error is: ' + getErrorName(this._indicatedError));
             let error = this._indicatedError;
             let callback = this._detachingCallback;
             this._detachingCallback = undefined;
@@ -484,6 +490,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
   }
 
   detach(callback: (err?: Error) => void, err?: Error | AmqpError): void {
+    debug(`${this}: detach with error: ${err}`);
     this._fsm.handle('detach', callback, err);
   }
 
@@ -505,17 +512,4 @@ export class SenderLink extends EventEmitter implements AmqpLink {
     this._fsm.handle('send');
   }
 
-  private _getErrorName(err: any): string {
-    if (err) {
-      if (err.condition) {
-        return '(amqp error) ' + err.condition;
-      } else if (err.name) {
-        return '(javascript error) ' + err.name;
-      } else {
-        return 'unknown error type';
-      }
-    } else {
-      return 'error is falsy';
-    }
-  }
 }

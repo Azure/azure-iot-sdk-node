@@ -7,7 +7,7 @@ import { EventEmitter } from 'events';
 import machina = require('machina');
 
 import { errors, endpoint, AuthenticationProvider } from 'azure-iot-common';
-import { Amqp as BaseAmqpClient, AmqpMessage, SenderLink, ReceiverLink, AmqpTransportError } from 'azure-iot-amqp-base';
+import { Amqp as BaseAmqpClient, AmqpMessage, SenderLink, ReceiverLink, AmqpTransportError, getErrorName } from 'azure-iot-amqp-base';
 import { TwinProperties } from 'azure-iot-device';
 
 import * as uuid from 'uuid';
@@ -370,7 +370,7 @@ export class AmqpTwinClient extends EventEmitter {
       /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_028: [If the `SenderLink.send` call fails, the `enableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure.]*/
       /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_033: [If the `SenderLink.send` call fails, the `disableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure.]*/
       if (err) {
-        debugErrors('could not get twin: ' + err);
+        debugErrors('could not get twin: ' + getErrorName(err));
         delete this._pendingTwinRequests[correlationId];
         callback(err);
       } else {

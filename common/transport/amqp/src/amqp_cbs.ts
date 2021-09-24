@@ -8,9 +8,10 @@ import { errors } from 'azure-iot-common';
 import { AmqpMessage } from './amqp_message';
 import { SenderLink } from './sender_link';
 import { ReceiverLink } from './receiver_link';
+import { getErrorName } from './amqp_common_errors';
 
-const debug = dbg('azure-iot-amqp-base:CBS');
-const debugErrors = dbg('azure-iot-amqp-base:CBS:Errors');
+const debug = dbg('azure-iot-amqp-base:AmqpCbs');
+const debugErrors = dbg('azure-iot-amqp-base:AmqpCbs:Errors');
 
 /**
  * @interface  module:azure-iot-amqp-base.PutTokenOperation
@@ -283,12 +284,12 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
           _onEnter: (forwardedCallback, err) => {
             /*Codes_SRS_NODE_AMQP_CBS_16_008: [`detach` shall detach both sender and receiver links and return the state machine to the `detached` state.]*/
             if (err) {
-              debugErrors('Detaching because of ' + err);
+              debugErrors('Detaching because of ' + getErrorName(err));
             }
             const links = [this._senderLink, this._receiverLink];
             async.each(links, (link, callback) => {
               if (link) {
-                debug('while detaching for link ');
+                debug('while detaching for link: ' + link);
                 link.detach(callback);
               } else {
                 callback();
@@ -313,6 +314,10 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
 
   forceDetach(): void {
     this._fsm.handle('forceDetach');
+  }
+
+  toString(): string {
+    return `CBS agent for ${this._senderLink} and ${this._receiverLink}`;
   }
 
   /**
