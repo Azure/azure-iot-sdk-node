@@ -3,8 +3,7 @@
 
 'use strict';
 
-import timeout from 'async/timeout';
-import * as uuid from 'uuid';
+import { timeout } from 'async';
 import * as dbg from 'debug';
 const debug = dbg('longhaul:d2c_sender');
 
@@ -12,15 +11,51 @@ import { Message } from 'azure-iot-common';
 import { Client, SharedAccessKeyAuthenticationProvider } from 'azure-iot-device';
 import { EventEmitter } from 'events';
 
-export class D2CSender extends EventEmitter {
-  private _timer: NodeJS.Timer;
-  private _client: Client;
-  private _sendInterval: number;
-  private _sendTimeout: number;
+var fault = [
+  {
+    operationType: 'KillTcp',
+    closeReason: ' severs the TCP connection ',
+    delayInSeconds: 2
+  },
+  {
+    operationType: 'KillAmqpConnection',
+    closeReason: ' severs the AMQP connection ',
+    delayInSeconds: 2
+  },
+  {
+    operationType: 'KillAmqpSession',
+    closeReason: ' severs the AMQP session ',
+    delayInSeconds: 1
+  },
+  {
+    operationType: 'KillAmqpCBSLinkReq',
+    closeReason: ' severs AMQP CBS request link ',
+    delayInSeconds: 2
+  },
+  {
+    operationType: 'KillAmqpCBSLinkResp',
+    closeReason: ' severs AMQP CBS response link ',
+    delayInSeconds: 2
+  },
+  {
+    operationType: 'KillAmqpD2CLink',
+    closeReason: ' severs AMQP D2C link ',
+    delayInSeconds: 2
+  },
+  {
+    operationType: 'ShutDownAmqp',
+    closeReason: ' cleanly shutdowns AMQP connection ',
+    delayInSeconds: 2
+  },
+];
 
-  constructor(connStr: string, protocol: any, sendInterval: number, sendTimeout: number) {
+export class D2CSender extends EventEmitter {
+  private _client: Client;
+  private _sendTimeout: number;
+  private _stopped: boolean  = false;
+
+  constructor(connStr: string, protocol: any, sendTimeout: number) {
     super();
-    this._sendInterval = sendInterval;
     this._sendTimeout = sendTimeout;
     const authProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString(connStr);
     this._client = Client.fromAuthenticationProvider(authProvider, protocol);
@@ -45,7 +80,6 @@ export class D2CSender extends EventEmitter {
         debug('failed to start: ' + err.toString());
       } else {
         debug('connected!');
-        this._startSending();
       }
       callback(err);
     });
@@ -53,11 +87,7 @@ export class D2CSender extends EventEmitter {
 
   stop(callback: (err?: Error) => void): void {
     debug('stopping');
-    if (this._timer) {
-      debug('clearing timeout');
-      clearTimeout(this._timer);
-      this._timer = null;
-    }
+    this._stopped = true;
 
     this._client.close((err) => {
       if (err) {
@@ -71,25 +101,64 @@ export class D2CSender extends EventEmitter {
     });
   }
 
-  private _startSending(): void {
-    debug('starting send timer: 1 message every ' + this._sendInterval + ' milliseconds');
-    this._timer = setTimeout(this._send.bind(this), this._sendInterval);
+  startSendingD2c(d2cSendInterval: number): void {
+    let send;
+    let sendIndex = 0;
+    send = () => {
+      if (!this._stopped) {
+        const id = JSON.stringify({ 'msg' : `message index ${sendIndex}` });
+        let msg = new Message(id);
+        msg.messageId = sendIndex.toString();
+        sendIndex += 1;
+        debug('sending message with id: ' + id);
+        // @ts-ignore
+        timeout(this._client.sendEvent.bind(this._client), this._sendTimeout)(msg, (err) => {
+          if (err) {
+            debug('error sending message: ' + id + ': ' + err.message);
+            this.emit('error', err);
+          } else {
+            debug('sent message with id: ' + id);
+            setTimeout(send, d2cSendInterval);
+            this.emit('sent', id);
+          }
+        });
+      }
+    };
+
+    debug('starting send timer: 1 message every ' + d2cSendInterval + ' milliseconds');
+    setTimeout(send, d2cSendInterval);
   }
 
-  private _send(): void {
-    const id = uuid.v4();
-    let msg = new Message(id);
-    msg.messageId = id;
-    debug('sending message with id: ' + id);
-    timeout(this._client.sendEvent.bind(this._client), this._sendTimeout)(msg, (err) => {
-      if (err) {
-        debug('error sending message: ' + id + ': ' + err.message);
-        this.emit('error', err);
-      } else {
-        debug('sent message with id: ' + id);
-        this._timer = setTimeout(this._send.bind(this), this._sendInterval);
-        this.emit('sent', id);
+  startRandomDropping(dropIntervalInSeconds: number, operationType: string, closeReason: string, delayInSeconds:number): void {
+    let faultIndex = 0;
+    let send;
+    send = () => {
+      if (!this._stopped) {
+        var terminateMessage = new Message('');
+
+        operationType = fault[faultIndex % fault.length].operationType;
+        closeReason = fault[faultIndex % fault.length].closeReason;
+        faultIndex += 1;
+
+        terminateMessage.properties.add('AzIoTHub_FaultOperationType', operationType);
+        terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', closeReason);
+        terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', delayInSeconds.toString());
+
+        // @ts-ignore
+        timeout(this._client.sendEvent.bind(this._client), this._sendTimeout)(terminateMessage, (err) => {
+          if (err) {
+            debug('error sending terminate message: ' + err.message);
+            this.emit('error', err);
+          } else {
+            console.log(`---------------------------------------------- ${faultIndex}: sent terminate message of type ${operationType}`);
+            setTimeout(send, dropIntervalInSeconds * 1000);
+          }
+        });
       }
-    });
+    };
+
+    debug('starting drop timer: 1 message every ' + dropIntervalInSeconds + ' seconds');
+    setTimeout(send, dropIntervalInSeconds * 1000);
   }
+
 }

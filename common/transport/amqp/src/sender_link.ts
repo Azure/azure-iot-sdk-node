@@ -3,7 +3,7 @@ import * as dbg from 'debug';
 import * as uuid from 'uuid';
 import { EventEmitter } from 'events';
 import { EventContext, AmqpError, Session, Sender, SenderOptions } from 'rhea';
-import { results } from 'azure-iot-common';
+import { results, errors } from 'azure-iot-common';
 import { AmqpMessage } from './amqp_message';
 import { AmqpLink } from './amqp_link_interface';
 import { getErrorName } from './amqp_common_errors';
@@ -145,7 +145,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
       states: {
         detached: {
           _onEnter: (callback, err) => {
-            let messageCallbackError = err || new Error('Link Detached');
+            let messageCallbackError = err || new errors.ServiceUnavailableError('Sender Link Detached');
             this._rheaSender = null;
             this._rheaSenderName = null;
             debug(this.toString() + ': Link detached: ' + this._linkAddress);
@@ -314,6 +314,12 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             //
             let error = this._indicatedError; // This could be undefined.
             this._indicatedError = undefined;
+            if (!error) {
+              const sender = context.sender as any;
+              if (sender.state.local_open && ! sender.state.remote_open) {
+                error = new errors.ServiceUnavailableError("Remote link closed");
+              }
+            }
             this._senderCloseOccurred = true;
             if (error) {
               debugErrors(this.toString() + ': In sender attached state - close event for ' + context.sender.name + ' already indicated error is: ' + getErrorName(error));

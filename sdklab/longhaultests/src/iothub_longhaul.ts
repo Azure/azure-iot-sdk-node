@@ -4,7 +4,7 @@
 
 'use strict';
 import * as uuid from 'uuid';
-import timeout from 'async/timeout';
+import { timeout } from 'async';
 import * as dbg from 'debug';
 const debug = dbg('longhaul:main');
 
@@ -13,9 +13,11 @@ import { ConnectionString as DeviceConnectionString } from 'azure-iot-device';
 
 import { D2CSender } from './d2c_sender';
 
-const MAX_EXECUTION_TIME = parseInt(process.env.MAX_EXECUTION_TIME_SECONDS) * 1000;
-const SEND_INTERVAL = parseInt(process.env.DEVICE_SEND_INTERVAL_SECONDS) * 1000;
-const SEND_TIMEOUT = parseInt(process.env.DEVICE_SEND_TIMEOUT_SECONDS) * 1000;
+const settings=require('../_settings.json');
+
+const MAX_EXECUTION_TIME = settings.maxRunDurationInSeconds * 1000;
+const D2C_SEND_INTERVAL = 1.0 / settings.sendMessageOperationsPerSecond;
+const SEND_TIMEOUT = settings.operationTimeoutInSeconds * 1000;
 
 const MAX_CREATE_TIME = 30000;
 const MAX_DELETE_TIME = 30000;
@@ -25,14 +27,14 @@ const MAX_STOP_TIME = 30000;
 const ERROR_EXIT_CODE = -1;
 const OK_EXIT_CODE = 0;
 
-const hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+const hubConnectionString = settings.iothubConnectionString;
 const registry = Registry.fromConnectionString(hubConnectionString);
 
 const deviceId = 'node-longhaul-sak-' + uuid.v4();
 let protocol;
 
 /* tslint:disable:no-var-requires */
-switch (process.env.DEVICE_PROTOCOL) {
+switch (settings.deviceTransport) {
   case 'amqp':
     protocol = require('azure-iot-device-amqp').Amqp;
   break;
@@ -49,13 +51,14 @@ switch (process.env.DEVICE_PROTOCOL) {
     protocol = require('azure-iot-device-mqtt').Http;
   break;
   default:
-    debug('unknown protocol: ' + process.env.DEVICE_PROTOCOL);
+    debug('unknown protocol: ' + settings.deviceTransport);
     process.exit(ERROR_EXIT_CODE);
 }
 /* tslint:enable:no-var-requires */
 
 const createDevice = (callback) => {
   debug('creating device: ' + deviceId);
+  // @ts-ignore
   timeout(registry.create.bind(registry), MAX_CREATE_TIME)({ deviceId: deviceId }, (err, deviceInfo) => {
     if (err) {
       debug('error creating device: ' + deviceId + ':' + err.toString());
@@ -70,6 +73,7 @@ const createDevice = (callback) => {
 
 const deleteDevice = (callback) => {
   debug('deleting device: ' + deviceId);
+  // @ts-ignore
   timeout(registry.delete.bind(registry), MAX_DELETE_TIME)(deviceId, (err) => {
     if (err) {
       debug('error deleting the test device: ' + err.toString());
@@ -84,7 +88,7 @@ createDevice((err, deviceConnectionString) => {
   if (err) {
     process.exit(ERROR_EXIT_CODE);
   } else {
-    const sender = new D2CSender(deviceConnectionString, protocol, SEND_INTERVAL, SEND_TIMEOUT);
+    const sender = new D2CSender(deviceConnectionString, protocol, SEND_TIMEOUT);
 
     const stopSender = (callback) => {
       timeout(sender.stop.bind(sender), MAX_STOP_TIME)((err) =>  {
@@ -125,7 +129,10 @@ createDevice((err, deviceConnectionString) => {
           process.exit(ERROR_EXIT_CODE);
         });
       } else {
+        sender.startSendingD2c(D2C_SEND_INTERVAL);
         debug('d2c_sender started');
+
+        sender.startRandomDropping(5, 'KillAmqpCBSLinkReq', ' severs AMQP CBS request link ', 1)
       }
     });
   }
