@@ -13,7 +13,7 @@
     "azure-iot-device-mqtt": "1.15.6"
   },
   "devDependencies": {
-    "@types/node": "^16.9.4",
+    "@types/node": "^16.9.6",
     "@types/ws": "^7.4.7",
     "source-map-support": "^0.5.16",
     "ts-node": "^8.6.2",
@@ -26,6 +26,6 @@
     "lint": "tslint -c ../../../tslint.json --project tsconfig.json",
     "npmlockrefresh": "npm i --package-lock-only",
     "ci": "npm -s run lint && npm -s run build",
-    "clean": "tsc --b..duild --clean"
+    "clean": "tsc --build --clean"
   }
 }
