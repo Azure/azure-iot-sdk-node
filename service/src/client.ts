@@ -488,7 +488,8 @@ export class Client extends EventEmitter {
       host: hostName,
       keyName: '',
       sharedAccessSignature: undefined,
-      tokenCredential: tokenCredential
+      tokenCredential,
+      tokenScope: 'https://azure-devices-provisioning.net/.default'
     };
     return new Client(new transportCtor(config), new RestApiClient(config, packageJson.name + '/' + packageJson.version));
   }
@@ -518,6 +519,11 @@ export namespace Client {
      * The token credential used to authenticate the connection with the Azure IoT hub.
      */
     tokenCredential: TokenCredential;
+
+    /**
+     * The token scope used to get the token from the TokenCredential object
+     */
+    tokenScope?: string;
   }
 
   export interface ServiceReceiver extends Receiver {

@@ -36,7 +36,6 @@ export interface HttpTransportError extends Error {
  * @throws {ArgumentError}   If the config argument is missing a host or sharedAccessSignature error
  */
 export class RestApiClient {
-  private _iotHubPublicScope: string = 'https://iothubs.azure.net/.default';
   private _BearerTokenPrefix: string = 'Bearer ';
   private _MinutesBeforeProactiveRenewal: number = 9;
   private _MillisecsBeforeProactiveRenewal: number = this._MinutesBeforeProactiveRenewal * 60000;
@@ -52,6 +51,7 @@ export class RestApiClient {
     if (!config.host) throw new errors.ArgumentError('config.host cannot be \'' + config.host + '\'');
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_18_001: [The `RestApiClient` constructor shall throw a `ReferenceError` if `userAgent` is falsy.]*/
     if (!userAgent) throw new ReferenceError('userAgent cannot be \'' + userAgent + '\'');
+    if (config.tokenCredential && !config.tokenScope) throw new errors.ArgumentError('config.tokenScope must be defined if config.tokenCredential is defined');
 
     this._config = config;
     this._userAgent = userAgent;
@@ -171,7 +171,7 @@ export class RestApiClient {
    */
    async getToken(): Promise<string> {
     if ((!this._accessToken) || this.isAccessTokenCloseToExpiry(this._accessToken)) {
-      this._accessToken = await this._config.tokenCredential.getToken(this._iotHubPublicScope) as any;
+      this._accessToken = await this._config.tokenCredential.getToken(this._config.tokenScope) as any;
     }
     if (!this._accessToken) {
       throw new Error('AccessToken creation failed');
@@ -373,6 +373,7 @@ export namespace RestApiClient {
         sharedAccessSignature?: string | SharedAccessSignature;
         x509?: X509;
         tokenCredential?: TokenCredential;
+        tokenScope?: string | string[];
     }
 
     export type ResponseCallback = (err: Error, responseBody?: any, response?: any) => void;

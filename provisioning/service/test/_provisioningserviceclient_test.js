@@ -58,7 +58,7 @@ var fakeRegistrationNoEtag = {
 };
 
 function _versionQueryString() {
-  return '?api-version=2019-03-31';
+  return '?api-version=2021-10-01';
 }
 
 
@@ -162,11 +162,39 @@ describe('ProvisioningServiceClient', function () {
         }, errors.ArgumentError);
       });
 
-      it('Throws if \'config.sharedAccessSignature\' is \'' + badConfigProperty + '\'', function () {
+      it('Throws if \'config.sharedAccessSignature\' is \'' + badConfigProperty + '\' and \'config.tokenCredential\' is not defined', function () {
         assert.throws(function () {
           return new ProvisioningServiceClient({
             host: 'host',
             sharedAccessSignature: badConfigProperty
+          });
+        }, errors.ArgumentError);
+      });
+
+      it('Throws if \'config.tokenCredential\' is \'' + badConfigProperty + '\' and \'config.sharedAccessSignature\' is not defined', function () {
+        assert.throws(function () {
+          return new ProvisioningServiceClient({
+            host: 'host',
+            tokenCredential: badConfigProperty
+          });
+        }, errors.ArgumentError);
+      });
+
+      it('Throws if \'config.tokenCredential\' is \'' + badConfigProperty + '\' and \'config.sharedAccessSignature\' is not defined', function () {
+        assert.throws(function () {
+          return new ProvisioningServiceClient({
+            host: 'host',
+            tokenCredential: badConfigProperty
+          });
+        }, errors.ArgumentError);
+      });
+
+      it('Throws if \'config.tokenCredential\' is defined and \'config.tokenScope\' is falsy', function () {
+        assert.throws(function () {
+          return new ProvisioningServiceClient({
+            host: 'host',
+            tokenCredential: {getToken: () => Promise.resolve({token: "fake_token", expiresOnTimestamp: 2456})},
+            tokenScope: badConfigProperty
           });
         }, errors.ArgumentError);
       });
@@ -191,6 +219,28 @@ describe('ProvisioningServiceClient', function () {
     it('Returns a new instance of the ProvisioningServiceClient object', function () {
       var de = ProvisioningServiceClient.fromConnectionString('HostName=a.b.c;SharedAccessKeyName=name;SharedAccessKey=key');
       assert.instanceOf(de, ProvisioningServiceClient);
+    });
+  });
+
+  describe('#fromTokenCredential', function () {
+    it('Returns a new instance of the ProvisioningServiceClient object', function () {
+      const client = ProvisioningServiceClient.fromTokenCredential(
+        'my_host.com',
+        {getToken: () => Promise.resolve({token: 'fake_token', expiresOnTimestamp: 342})}
+      );
+      assert.instanceOf(client, ProvisioningServiceClient);
+    });
+
+    it('Correctly creates the config for the RestApiClient', async function () {
+      const client = ProvisioningServiceClient.fromTokenCredential(
+        'my_host.com',
+        {getToken: () => Promise.resolve({token: 'fake_token', expiresOnTimestamp: 342})}
+      );
+      assert.strictEqual(client._restApiClient._config.host, 'my_host.com');
+      assert.strictEqual(client._restApiClient._config.tokenScope, 'https://azure-devices-provisioning.net/.default');
+      const token = await client._restApiClient._config.tokenCredential.getToken(client._restApiClient._config.tokenScope);
+      assert.strictEqual(token.token, 'fake_token');
+      assert.strictEqual(token.expiresOnTimestamp, 342);
     });
   });
 
