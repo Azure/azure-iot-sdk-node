@@ -10,6 +10,14 @@ import * as fs from 'fs';
 const deviceConnectionString: string =  process.env.DEVICE_CONNECTION_STRING || '';
 const filePath: string = process.env.PATH_TO_FILE || '';
 
+if (deviceConnectionString === '') {
+  console.log('device connection string not set');
+}
+
+if (filePath === '') {
+  console.log('file path value is not set');
+}
+
 const client: Client = Client.fromConnectionString(
   deviceConnectionString,
   Protocol
@@ -23,7 +31,7 @@ fs.stat(filePath, function (err: Error, fileStats: fs.Stats): void {
   }
 
   client.uploadToBlob('testblob.txt', fileStream, fileStats.size).catch((err: Error) => {
-      console.log(err);
+      console.log('error uploading file: ' + err.message);
     }).finally(() => {
       fileStream.destroy();
       process.exit();
