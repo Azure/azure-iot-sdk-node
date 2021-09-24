@@ -145,6 +145,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
       states: {
         detached: {
           _onEnter: (callback, err) => {
+            // question: ServiceUnavailbleError or NotConnectedError?
             let messageCallbackError = err || new errors.ServiceUnavailableError('Sender Link Detached');
             this._rheaSender = null;
             this._rheaSenderName = null;
@@ -315,9 +316,19 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             let error = this._indicatedError; // This could be undefined.
             this._indicatedError = undefined;
             if (!error) {
-              const sender = context.sender as any;
-              if (sender.state?.local_open && ! sender.state?.remote_open) {
-                error = new errors.ServiceUnavailableError('Remote link closed');
+              ///
+              // question for reviewers: Is this a Rhea bug?
+              //
+              // https://github.com/amqp/rhea/blob/e826e8bbffd410eaa5a1efc70650f37c14069b23/lib/link.js#L161-L163
+              //
+              // when they fire the link_error and link_close events, I think context.error should be set.
+              // Since it's not set, we have to guess that there's an error by looking at link state here.
+              //
+              // I think my change is OK?  Do you agree?  Should we push for a Rhea fix?
+              //
+              const senderState = (context.sender as any).state;
+              if (senderState?.local_open && !senderState?.remote_open) {
+                error = new errors.NotConnectedError('Remote link closed');
               }
             }
             this._senderCloseOccurred = true;
