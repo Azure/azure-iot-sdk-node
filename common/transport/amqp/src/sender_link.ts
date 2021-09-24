@@ -316,8 +316,8 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             this._indicatedError = undefined;
             if (!error) {
               const sender = context.sender as any;
-              if (sender.state.local_open && ! sender.state.remote_open) {
-                error = new errors.ServiceUnavailableError("Remote link closed");
+              if (sender.state?.local_open && ! sender.state?.remote_open) {
+                error = new errors.ServiceUnavailableError('Remote link closed');
               }
             }
             this._senderCloseOccurred = true;

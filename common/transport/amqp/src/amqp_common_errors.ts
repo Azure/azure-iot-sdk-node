@@ -112,10 +112,10 @@ export function translateError(message: string, amqpError: Error): AmqpTransport
     error = new Error(errorString);
   } else if (amqpError.constructor?.name) {
     switch (amqpError.constructor.name) {
-      case "NotConnectedError":
+      case 'NotConnectedError':
         error = new errors.ServiceUnavailableError(message);
         break;
-      case "ServiceUnavailableError":
+      case 'ServiceUnavailableError':
         error = amqpError;
         amqpError = null;
         break;

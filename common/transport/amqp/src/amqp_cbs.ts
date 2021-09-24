@@ -370,8 +370,4 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
       this._putToken.timeoutTimer = setTimeout(this._removeExpiredPutTokens.bind(this), this._putToken.putTokenTimeOutExaminationInterval);
     }
   }
-
-  toString(): string {
-    return `CBS agent for ${this._senderLink} and ${this._receiverLink}`;
-  }
 }
