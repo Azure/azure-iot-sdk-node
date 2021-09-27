@@ -8,11 +8,11 @@ import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
 // import { Amqp as Protocol } from 'azure-iot-device-amqp';
 // import { MqttWs as Protocol } from 'azure-iot-device-mqtt';
 
-const deviceConnectionString: string =
-  process.env.DEVICE_CONNECTION_STRING || '';
+const deviceConnectionString: string = process.env.DEVICE_CONNECTION_STRING || '';
 
 if (deviceConnectionString === '') {
   console.log('device connection string not set');
+  process.exit(-1);
 }
 
 const client: Client = Client.fromConnectionString(

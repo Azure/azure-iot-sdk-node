@@ -14,7 +14,7 @@ function main(): void {
 
   if (deviceConnectionString === '') {
     console.log('device connection string has not been set');
-    return;
+    process.exit(-1);
   }
 
   client = Client.fromConnectionString(deviceConnectionString, Protocol);

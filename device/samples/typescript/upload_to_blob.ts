@@ -10,12 +10,16 @@ import * as fs from 'fs';
 const deviceConnectionString: string =  process.env.DEVICE_CONNECTION_STRING || '';
 const filePath: string = process.env.PATH_TO_FILE || '';
 
+// check for connection string
 if (deviceConnectionString === '') {
   console.log('device connection string not set');
+  process.exit(-1);
 }
 
+// check for file path
 if (filePath === '') {
-  console.log('file path value is not set');
+  console.log('file path is not set');
+  process.exit(-1);
 }
 
 const client: Client = Client.fromConnectionString(
