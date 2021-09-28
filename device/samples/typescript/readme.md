@@ -15,7 +15,7 @@ In order to run the device samples you will first need the following prerequisit
 
 * Select the Codespaces tab and the "New codespace" button
 
-  ![screen shot of create codespace](./media/github-codespace.png)
+  ![screen shot of create codespace](../media/github-codespace.png)
 
 * Once the Codespace is open, all required packages to run the samples will be setup for you
 
