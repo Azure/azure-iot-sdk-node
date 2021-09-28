@@ -266,7 +266,7 @@ describe('Registry', function () {
       var registry = Registry.fromTokenCredential("hub.host.tv", fakeTokenCredential);
       assert.equal(registry._restApiClient._config.host, 'hub.host.tv');
       assert.equal(registry._restApiClient._config.tokenCredential, fakeTokenCredential);
-      assert.equal(registry._restApiClient._config.tokenScopes, 'https://iothubs.azure.net/.default');
+      assert.equal(registry._restApiClient._config.tokenScope, 'https://iothubs.azure.net/.default');
     });
   });
 

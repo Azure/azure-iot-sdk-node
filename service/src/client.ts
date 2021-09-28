@@ -489,7 +489,7 @@ export class Client extends EventEmitter {
       keyName: '',
       sharedAccessSignature: undefined,
       tokenCredential,
-      tokenScope: 'https://azure-devices-provisioning.net/.default'
+      tokenScope: 'https://iothubs.azure.net/.default'
     };
     return new Client(new transportCtor(config), new RestApiClient(config, packageJson.name + '/' + packageJson.version));
   }

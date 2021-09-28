@@ -133,7 +133,7 @@ describe('Client', function () {
       assert.equal(client._transport._config.tokenCredential, fakeTokenCredential);
       assert.equal(client._restApiClient._config.host, 'hub.host.tv');
       assert.equal(client._restApiClient._config.tokenCredential, fakeTokenCredential);
-      assert.equal(client._restApiClient._config.tokenScope, 'https://azure-devices-provisioning.net/.default');
+      assert.equal(client._restApiClient._config.tokenScope, 'https://iothubs.azure.net/.default');
     });
   });
 
