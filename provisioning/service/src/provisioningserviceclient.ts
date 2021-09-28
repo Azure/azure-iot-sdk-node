@@ -10,6 +10,7 @@ import { QuerySpecification, Query, QueryResult } from './query';
 // tslint:disable-next-line:no-unused-variable
 import { IndividualEnrollment, EnrollmentGroup, DeviceRegistrationState, BulkEnrollmentOperation, BulkEnrollmentOperationResult, AttestationMechanism } from './interfaces';
 import { ErrorCallback, errorCallbackToPromise, HttpResponseCallback, ResultWithHttpResponse } from 'azure-iot-common';
+import { TokenCredential } from '@azure/core-http';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -27,11 +28,12 @@ export class ProvisioningServiceClient {
     if (!config) {
       /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_001: [The `ProvisioningServiceClient` construction shall throw a `ReferenceError` if the `config` object is falsy.] */
       throw new ReferenceError('The \'config\' parameter cannot be \'' + config + '\'');
-    } else if (!config.host || !config.sharedAccessSignature) {
-      /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_002: [The `ProvisioningServiceClient` constructor shall throw an `ArgumentError` if the `config` object is missing one or more of the following properties:
-                                                            - `host`: the IoT Hub hostname
-                                                            - `sharedAccessSignature`: shared access signature with the permissions for the desired operations.] */
-      throw new ArgumentError('The \'config\' argument is missing either the host or the sharedAccessSignature property');
+    } else if (!config.host) {
+      throw new ArgumentError('The \'config\' argument is missing the host property');
+    } else if (!config.sharedAccessSignature && !config.tokenCredential) {
+      throw new ArgumentError('The \'config\' argument must define either the sharedAccessSignature or tokenCredential property');
+    } else if (config.tokenCredential && !config.tokenScope) {
+      throw new ArgumentError('The \'config\' argument must define the tokenScope property if it defines the tokenCredential property');
     }
 
     /*Codes_SRS_NODE_PROVISIONING_SERVICE_CLIENT_06_003: [The `ProvisioningServiceClient` constructor shall use the `restApiClient` provided as a second argument if it is provided.] */
@@ -349,7 +351,7 @@ export class ProvisioningServiceClient {
   }
 
   private _versionQueryString(): string {
-    return '?api-version=2019-03-31';
+    return '?api-version=2021-10-01';
   }
 
   private _createOrUpdate(endpointPrefix: string, enrollment: any, callback?: (err: Error, enrollmentResponse?: any, response?: any) => void): void {
@@ -606,6 +608,24 @@ export class ProvisioningServiceClient {
     return new ProvisioningServiceClient(config);
   }
 
+  /**
+   * @method          module:azure-iot-provisioning-service.ProvisioningServiceClient#fromTokenCredential
+   * @description     Constructs a ProvisioningServiceClient object from the given Azure TokenCredential
+   *                  using the default transport
+   *                  ({@link module:azure-iothub.Http|Http}).
+   * @param {String}  hostName                  Host name of the Azure service.
+   * @param {String}  tokenCredential           An Azure TokenCredential used to authenticate
+   *                                            with the Azure  service
+   * @returns {module:azure-iot-provisioning-service.ProvisioningServiceClient}
+   */
+  static fromTokenCredential(hostName: string, tokenCredential: TokenCredential): ProvisioningServiceClient {
+    const config: RestApiClient.TransportConfig = {
+      host: hostName,
+      tokenCredential,
+      tokenScope: 'https://azure-devices-provisioning.net/.default'
+    };
+    return new ProvisioningServiceClient(config);
+  }
 }
 
 export type _tsLintWorkaround = { query: QueryResult, results: BulkEnrollmentOperationResult };

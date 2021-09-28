@@ -448,9 +448,8 @@ export class JobClient {
    static fromTokenCredential(hostName: string, tokenCredential: TokenCredential): JobClient {
     const config = {
       host: hostName,
-      keyName: '',
-      sharedAccessSignature: undefined,
-      tokenCredential: tokenCredential
+      tokenCredential,
+      tokenScope: 'https://iothubs.azure.net/.default'
     };
     return new JobClient(new RestApiClient(config, packageJson.name + '/' + packageJson.version));
   }
