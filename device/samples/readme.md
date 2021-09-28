@@ -34,7 +34,7 @@ export DEVICE_CONNECTION_STRING="<YourIoTHubConnectionString>"
 
 Run the sample application using the following commands:
 
-_ for JavaScript_
+_for JavaScript_
 
 ```bash
 node simple_sample_device.js
@@ -64,7 +64,7 @@ In order to run the device samples you will first need the following prerequisit
 
 You need to install proper dependencies as defined in the **package.json**. Run the following commands:
 
-_for JavaScript__
+_for JavaScript_
 
 ```
 cd device/samples/javascript
