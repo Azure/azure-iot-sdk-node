@@ -3,116 +3,132 @@
 
 'use strict';
 
-var Protocol = require('azure-iot-device-mqtt').Mqtt;
-var Client = require('azure-iot-device').Client;
-var ConnectionString = require('azure-iot-device').ConnectionString;
-var Message = require('azure-iot-device').Message;
+import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
+import { Client, ConnectionString, Message } from 'azure-iot-device';
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
-var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
-var deviceId = ConnectionString.parse(deviceConnectionString).DeviceId;
+const deviceConnectionString: string = process.env.DEVICE_CONNECTION_STRING || '';
+
+if (deviceConnectionString === '') {
+  console.log('device connection string not set');
+  process.exit(-1);
+}
+
+const deviceId: string = ConnectionString.parse(
+  deviceConnectionString
+).DeviceId;
 
 // Sensors data
-var temperature = 50;
-var humidity = 50;
-var externalTemperature = 55;
+let temperature: number = 50;
+let humidity: number = 50;
+let externalTemperature: number = 55;
 
 // Create IoT Hub client
-var client = Client.fromConnectionString(deviceConnectionString, Protocol);
+const client: Client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
 // Helper function to print results for an operation
-function printErrorFor(op) {
-  return function printError(err) {
+function printErrorFor(op: any): (err: Error) => void {
+  return function printError(err: Error): void {
     if (err) console.log(op + ' error: ' + err.toString());
   };
 }
 
 // Helper function to generate random number between min and max
-function generateRandomIncrement() {
-  return ((Math.random() * 2) - 1);
+function generateRandomIncrement(): number {
+  return Math.random() * 2 - 1;
 }
 
 // Send device meta data
-var deviceMetaData = {
-  'ObjectType': 'DeviceInfo',
-  'IsSimulatedDevice': 0,
-  'Version': '1.0',
-  'DeviceProperties': {
-    'DeviceID': deviceId,
-    'HubEnabledState': 1,
-    'CreatedTime': '2015-09-21T20:28:55.5448990Z',
-    'DeviceState': 'normal',
-    'UpdatedTime': null,
-    'Manufacturer': 'Contoso Inc.',
-    'ModelNumber': 'MD-909',
-    'SerialNumber': 'SER9090',
-    'FirmwareVersion': '1.10',
-    'Platform': 'node.js',
-    'Processor': 'ARM',
-    'InstalledRAM': '64 MB',
-    'Latitude': 47.617025,
-    'Longitude': -122.191285
+const deviceMetaData: any = {
+  ObjectType: 'DeviceInfo',
+  IsSimulatedDevice: 0,
+  Version: '1.0',
+  DeviceProperties: {
+    DeviceID: deviceId,
+    HubEnabledState: 1,
+    CreatedTime: '2015-09-21T20:28:55.5448990Z',
+    DeviceState: 'normal',
+    UpdatedTime: null,
+    Manufacturer: 'Contoso Inc.',
+    ModelNumber: 'MD-909',
+    SerialNumber: 'SER9090',
+    FirmwareVersion: '1.10',
+    Platform: 'node.js',
+    Processor: 'ARM',
+    InstalledRAM: '64 MB',
+    Latitude: 47.617025,
+    Longitude: -122.191285,
   },
-  'Commands': [{
-    'Name': 'SetTemperature',
-    'Parameters': [{
-      'Name': 'Temperature',
-      'Type': 'double'
-    }]
-  },
+  Commands: [
     {
-      'Name': 'SetHumidity',
-      'Parameters': [{
-        'Name': 'Humidity',
-        'Type': 'double'
-      }]
-    }]
+      Name: 'SetTemperature',
+      Parameters: [
+        {
+          Name: 'Temperature',
+          Type: 'double',
+        },
+      ],
+    },
+    {
+      Name: 'SetHumidity',
+      Parameters: [
+        {
+          Name: 'Humidity',
+          Type: 'double',
+        },
+      ],
+    },
+  ],
 };
 
-client.open(function (err) {
+client.open(function (err: Error): void {
   if (err) {
-    printErrorFor('open')(err);
+    printErrorFor('open error:')(err);
   } else {
     console.log('Sending device metadata:\n' + JSON.stringify(deviceMetaData));
-    client.sendEvent(new Message(JSON.stringify(deviceMetaData)), printErrorFor('send metadata'));
+    client.sendEvent(
+      new Message(JSON.stringify(deviceMetaData)),
+      printErrorFor('send metadata')
+    );
 
-    client.on('message', function (msg) {
+    client.on('message', function (msg: any): void {
       console.log('receive data: ' + msg.getData());
 
       try {
-        var command = JSON.parse(msg.getData());
+        const command: any = JSON.parse(msg.getData());
+
         if (command.Name === 'SetTemperature') {
           temperature = command.Parameters.Temperature;
           console.log('New temperature set to :' + temperature + 'F');
         }
 
         client.complete(msg, printErrorFor('complete'));
-      }
-      catch (err) {
+      } catch (err) {
         printErrorFor('parse received message')(err);
       }
     });
 
     // start event data send routing
-    var sendInterval = setInterval(function () {
+    let sendInterval: NodeJS.Timer = setInterval(function (): void {
       temperature += generateRandomIncrement();
       externalTemperature += generateRandomIncrement();
       humidity += generateRandomIncrement();
 
-      var data = JSON.stringify({
-        'DeviceID': deviceId,
-        'Temperature': temperature,
-        'Humidity': humidity,
-        'ExternalTemperature': externalTemperature
+      let data: string = JSON.stringify({
+        DeviceID: deviceId,
+        Temperature: temperature,
+        Humidity: humidity,
+        ExternalTemperature: externalTemperature,
       });
 
       console.log('Sending device event data:\n' + data);
       client.sendEvent(new Message(data), printErrorFor('send event'));
     }, 1000);
 
-    client.on('error', function (err) {
+    client.on('error', function (err: Error): void {
       printErrorFor('client')(err);
+
       if (sendInterval) clearInterval(sendInterval);
       client.close(printErrorFor('client.close'));
     });

@@ -3,22 +3,29 @@
 
 'use strict';
 
-var clientFromConnectionString = require('azure-iot-device-http').clientFromConnectionString;
-var Message = require('azure-iot-device').Message;
+import { clientFromConnectionString } from 'azure-iot-device-http';
+import { Client, Message } from 'azure-iot-device';
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
-var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
-var client = clientFromConnectionString(deviceConnectionString);
+const deviceConnectionString: string = process.env.DEVICE_CONNECTION_STRING || '';
+
+if (deviceConnectionString === '') {
+  console.log('device connection string not set');
+  process.exit(-1);
+}
+
+const client: Client = clientFromConnectionString(deviceConnectionString);
 
 // Create two messages and send them to the IoT hub as a batch.
-var data = [
+const data: { id: number; message: string }[] = [
   { id: 1, message: 'hello' },
-  { id: 2, message: 'world' }
+  { id: 2, message: 'world' },
 ];
 
-var messages = [];
-data.forEach(function (value) {
+let messages: any[] = [];
+
+data.forEach(function (value: { id: number; message: string }): void {
   messages.push(new Message(JSON.stringify(value)));
 });
 
@@ -26,9 +33,10 @@ console.log('sending ' + messages.length + ' events in a batch');
 
 client.sendEventBatch(messages, printResultFor('send'));
 
-function printResultFor(op) {
-  return function printResult(err, res) {
+function printResultFor(op: any): (err: any, res: any) => void {
+  return function printResult(err: any, res: any): void {
+    // console.log(res);
     if (err) console.log(op + ' error: ' + err.toString());
-    if (res) console.log(op + ' status: ' + res.statusCode + ' ' + res.statusMessage);
+    if (res) console.log(op + ' status: ' + res.transportObj.statusCode + ' ' + res.transportObj.statusMessage);
   };
 }
