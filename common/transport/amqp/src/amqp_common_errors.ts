@@ -123,3 +123,24 @@ export function translateError(message: string, amqpError: Error): AmqpTransport
 
   return error;
 }
+
+/**
+ * @private
+ */
+export function getErrorName(err: any): string {
+  if (err) {
+    if (err.condition) {
+      return `amqp error(${err.condition})`;
+    } else if (err.name) {
+      let name = `javacript error(${err})`;
+      if (err.amqpError) {
+        name += `(from ${getErrorName(err.amqpError)})`;
+      }
+      return name;
+    } else {
+      return 'unknown error type';
+    }
+  } else {
+    return 'error is falsy';
+  }
+}

@@ -9,6 +9,7 @@ import * as fs from 'fs';
 
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:InternalClient');
+const debugErrors = dbg('azure-iot-device:InternalClient:Errors');
 
 import { results, errors, Message, X509, callbackToPromise, Callback } from 'azure-iot-common';
 import { SharedAccessSignature as CommonSharedAccessSignature } from 'azure-iot-common';
@@ -75,7 +76,7 @@ export abstract class InternalClient extends EventEmitter {
     this._transport.on('error', (err) => {
       // errors right now bubble up through the disconnect handler.
       // ultimately we would like to get rid of that disconnect event and rely on the error event instead
-      debug('Transport error: ' + err.toString());
+      debugErrors('Transport error: ' + err);
     });
 
     /*Codes_SRS_NODE_INTERNAL_CLIENT_41_001: [A `connect` event will be emitted when a `connected` event is received from the transport.]*/
@@ -84,7 +85,11 @@ export abstract class InternalClient extends EventEmitter {
     this._methodCallbackMap = {};
 
     this._disconnectHandler = (err) => {
-      debug('transport disconnect event: ' + (err ? err.toString() : 'no error'));
+      if (err) {
+        debugErrors('transport disconnect event: ' + err);
+      } else {
+        debug('transport disconnect event: no error');
+      }
       if (err && this._retryPolicy.shouldRetry(err)) {
         /*Codes_SRS_NODE_INTERNAL_CLIENT_16_098: [If the transport emits a `disconnect` event while the client is subscribed to direct methods the retry policy shall be used to reconnect and re-enable the feature using the transport `enableMethods` method.]*/
         if (this._methodsEnabled) {
@@ -92,6 +97,7 @@ export abstract class InternalClient extends EventEmitter {
           debug('re-enabling Methods link');
           this._enableMethods((err) => {
             if (err) {
+              debugErrors('Error enabling methods: ' + err);
               /*Codes_SRS_NODE_INTERNAL_CLIENT_16_100: [If the retry policy fails to reestablish the direct methods functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
               this.emit('disconnect', new results.Disconnected(err));
             }
@@ -103,6 +109,7 @@ export abstract class InternalClient extends EventEmitter {
           debug('re-enabling Twin');
           this._twin.enableTwinDesiredPropertiesUpdates((err) => {
             if (err) {
+              debugErrors('Error enabling twin: ' + err);
               /*Codes_SRS_NODE_INTERNAL_CLIENT_16_101: [If the retry policy fails to reestablish the twin desired properties updates functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
               this.emit('disconnect', new results.Disconnected(err));
             }
@@ -129,7 +136,7 @@ export abstract class InternalClient extends EventEmitter {
     /*Codes_SRS_NODE_INTERNAL_CLIENT_16_031: [The updateSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature parameter is falsy.]*/
     if (!sharedAccessSignature) throw new ReferenceError('sharedAccessSignature is falsy');
 
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+    const retryOp = new RetryOperation('updateSharedAccessSignature', this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       this._transport.updateSharedAccessSignature(sharedAccessSignature, opCallback);
     }, (err, result) => {
@@ -144,7 +151,7 @@ export abstract class InternalClient extends EventEmitter {
   open(): Promise<results.Connected>;
   open(openCallback?: Callback<results.Connected>): Promise<results.Connected> | void {
     return callbackToPromise((_callback) => {
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation('open', this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         this._transport.connect(opCallback);
       }, (connectErr, connectResult) => {
@@ -158,7 +165,7 @@ export abstract class InternalClient extends EventEmitter {
   sendEvent(message: Message): Promise<results.MessageEnqueued>;
   sendEvent(message: Message, sendEventCallback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
     return callbackToPromise((_callback) => {
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation('sendEvent', this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         /*Codes_SRS_NODE_INTERNAL_CLIENT_05_007: [The sendEvent method shall send the event indicated by the message argument via the transport associated with the Client instance.]*/
         this._transport.sendEvent(message, opCallback);
@@ -172,7 +179,7 @@ export abstract class InternalClient extends EventEmitter {
   sendEventBatch(messages: Message[]): Promise<results.MessageEnqueued>;
   sendEventBatch(messages: Message[], sendEventBatchCallback?: Callback<results.MessageEnqueued>): Promise<results.MessageEnqueued> | void {
     return callbackToPromise((_callback) => {
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation('sendEventBatch', this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         /*Codes_SRS_NODE_INTERNAL_CLIENT_05_008: [The sendEventBatch method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance.]*/
         this._transport.sendEventBatch(messages, opCallback);
@@ -207,7 +214,7 @@ export abstract class InternalClient extends EventEmitter {
         }
       };
 
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation('setTransportOptions', this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         /*Codes_SRS_NODE_INTERNAL_CLIENT_16_021: [The ‘setTransportOptions’ method shall call the ‘setOptions’ method on the transport object.]*/
         this._transport.setOptions(clientOptions, opCallback);
@@ -261,7 +268,7 @@ export abstract class InternalClient extends EventEmitter {
       /*Codes_SRS_NODE_INTERNAL_CLIENT_16_016: [The ‘complete’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
       if (!message) throw new ReferenceError('message is \'' + message + '\'');
 
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation('complete', this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         this._transport.complete(message, opCallback);
       }, (err, result) => {
@@ -276,7 +283,7 @@ export abstract class InternalClient extends EventEmitter {
     return callbackToPromise((_callback) => {
       /*Codes_SRS_NODE_INTERNAL_CLIENT_16_018: [The reject method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
       if (!message) throw new ReferenceError('message is \'' + message + '\'');
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation('reject', this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         this._transport.reject(message, opCallback);
       }, (err, result) => {
@@ -292,7 +299,7 @@ export abstract class InternalClient extends EventEmitter {
       /*Codes_SRS_NODE_INTERNAL_CLIENT_16_017: [The abandon method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
       if (!message) throw new ReferenceError('message is \'' + message + '\'');
 
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation('abandon', this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         this._transport.abandon(message, opCallback);
       }, (err, result) => {
@@ -356,7 +363,7 @@ export abstract class InternalClient extends EventEmitter {
 
   private _invokeSetOptions(options: DeviceClientOptions, done?: (err?: Error, result?: results.TransportConfigured) => void): void {
     // Making this an operation that can be retried because we cannot assume the transport's behavior (whether it's going to disconnect/reconnect, etc).
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+    const retryOp = new RetryOperation('_invokeSetOptions', this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       this._transport.setOptions(options, opCallback);
     }, (err) => {
@@ -411,7 +418,7 @@ export abstract class InternalClient extends EventEmitter {
       } catch (err) {
         response.send(400, 'Invalid request format: ' + err.message, (err) => {
           if (err) {
-            debug('Error sending invalid request response back to application');
+            debugErrors('Error sending invalid request response back to application: ' + err);
           }
         });
       }
@@ -420,7 +427,7 @@ export abstract class InternalClient extends EventEmitter {
 
   private _enableMethods(callback: (err?: Error) => void): void {
     if (!this._methodsEnabled) {
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation('_enableMethods', this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         this._transport.enableMethods(opCallback);
       }, (err) => {

@@ -121,9 +121,9 @@ pem.createCertificate(certOptions, function(err, cert) {
       outputFilenameRoot + '.pfx', 
       '1234', 
       (e,r) => {
-        if (e) throw e
-        if (r) console.log('PFX created with default password')
+        if (e) throw e;
+        if (r) console.log('PFX created with default password');
       }
-    )
+    );
   }
 });

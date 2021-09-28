@@ -10,6 +10,7 @@ import { ProvisioningDeviceConstants } from './constants';
 import { PollingTransport, RegistrationRequest, DeviceRegistrationResult } from './interfaces';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-provisioning-device:PollingStateMachine');
+const debugErrors = dbg('azure-iot-provisioning-device:PollingStateMachine:Errors');
 
 /**
  * @private
@@ -55,7 +56,7 @@ export class PollingStateMachine extends EventEmitter {
             this._queryTimer = setTimeout(() => {
               /* Codes_SRS_NODE_PROVISIONING_TRANSPORT_STATE_MACHINE_18_036: [ If `PollingTransport.registrationRequest` does not call its callback within `ProvisioningDeviceConstants.defaultTimeoutInterval` ms, register shall with with a `TimeoutError` error. ] */
               if (this._currentOperationCallback === callback) {
-                debug('timeout while sending request');
+                debugErrors('timeout while sending request');
                 /* tslint:disable:no-empty */
                 this._fsm.handle('cancel', new errors.TimeoutError(), () => { });
               }
@@ -68,7 +69,7 @@ export class PollingStateMachine extends EventEmitter {
               if (this._currentOperationCallback === callback) {
                 this._fsm.transition('responseReceived', err, request, result, response, pollingInterval, callback);
               } else if (this._currentOperationCallback) {
-                debug('Unexpected: received unexpected response for cancelled operation');
+                debugErrors('Unexpected: received unexpected response for cancelled operation');
               }
             });
           },
@@ -140,6 +141,7 @@ export class PollingStateMachine extends EventEmitter {
         },
         responseError: {
           _onEnter: (err, result, response, callback) => {
+            debugErrors('Response error: ' + err);
             this._currentOperationCallback = null;
             this._fsm.transition('idle', err, result, response, callback);
           },
@@ -191,7 +193,7 @@ export class PollingStateMachine extends EventEmitter {
               if (this._currentOperationCallback === callback) {
                 this._fsm.transition('responseReceived', err, request, result, response, pollingInterval, callback);
               } else if (this._currentOperationCallback) {
-                debug('Unexpected: received unexpected response for cancelled operation');
+                debugErrors('Unexpected: received unexpected response for cancelled operation');
               }
             });
           },
@@ -215,7 +217,7 @@ export class PollingStateMachine extends EventEmitter {
             }
             this._transport.cancel((cancelErr) => {
               if (cancelErr) {
-                debug('error received from transport during cancel:' + cancelErr.toString());
+                debugErrors('error received from transport during cancel: ' + cancelErr);
               }
               this._fsm.transition('idle', cancelErr, null, null, callback);
             });

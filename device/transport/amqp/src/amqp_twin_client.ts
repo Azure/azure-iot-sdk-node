@@ -7,7 +7,7 @@ import { EventEmitter } from 'events';
 import machina = require('machina');
 
 import { errors, endpoint, AuthenticationProvider } from 'azure-iot-common';
-import { Amqp as BaseAmqpClient, AmqpMessage, SenderLink, ReceiverLink, AmqpTransportError } from 'azure-iot-amqp-base';
+import { Amqp as BaseAmqpClient, AmqpMessage, SenderLink, ReceiverLink, AmqpTransportError, getErrorName } from 'azure-iot-amqp-base';
 import { TwinProperties } from 'azure-iot-device';
 
 import * as uuid from 'uuid';
@@ -15,6 +15,7 @@ import * as dbg from 'debug';
 import rhea = require('rhea');
 
 const debug = dbg('azure-iot-device-amqp:AmqpTwinClient');
+const debugErrors = dbg('azure-iot-device-amqp:AmqpTwinClient:Errors');
 
 interface LinkOption {
   properties: {
@@ -230,13 +231,13 @@ export class AmqpTwinClient extends EventEmitter {
             this._client.detachSenderLink(this._endpoint, (detachSenderError: Error, _result?: any) => {
               senderLink.removeListener('error', this._errorHandler);
               if (detachSenderError) {
-                debug('we received an error for the detach of the upstream link during the disconnect.  Moving on to the downstream link.');
+                debugErrors('we received an error for the detach of the upstream link during the disconnect.  Moving on to the downstream link. Error=' + detachSenderError);
               }
               this._client.detachReceiverLink(this._endpoint,  (detachReceiverError: Error, _result?: any) => {
                 receiverLink.removeListener('message', this._messageHandler);
                 receiverLink.removeListener('error', this._errorHandler);
                 if (detachReceiverError) {
-                  debug('we received an error for the detach of the downstream link during the disconnect.');
+                  debugErrors('we received an error for the detach of the downstream link during the disconnect. Error=' + detachReceiverError);
                 }
                 /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_006: [The `detach` method shall call its `callback` with an `Error` if detaching either of the links fail.]*/
                 let possibleError = err || detachSenderError || detachReceiverError;
@@ -369,7 +370,7 @@ export class AmqpTwinClient extends EventEmitter {
       /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_028: [If the `SenderLink.send` call fails, the `enableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure.]*/
       /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_033: [If the `SenderLink.send` call fails, the `disableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure.]*/
       if (err) {
-        debug('could not get twin: ' + err.toString());
+        debugErrors('could not get twin: ' + getErrorName(err));
         delete this._pendingTwinRequests[correlationId];
         callback(err);
       } else {

@@ -7,6 +7,7 @@ import { EventEmitter } from 'events';
 import * as traverse from 'traverse';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device:Twin');
+const debugErrors = dbg('azure-iot-device:Twin:Errors');
 
 import { RetryPolicy, RetryOperation, Callback, callbackToPromise } from 'azure-iot-common';
 import { DeviceTransport } from './internal_client';
@@ -83,13 +84,14 @@ export class Twin extends EventEmitter {
   get(): Promise<Twin>;
   get(callback?: Callback<Twin>): Promise<Twin> | void {
     return callbackToPromise((_callback) => {
-      const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+      const retryOp = new RetryOperation('twin.get', this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
         this._clearCachedProperties();
         /*Codes_SRS_NODE_DEVICE_TWIN_16_002: [The `get` method shall call the `getTwin` method of the `Transport` object with a callback.]*/
         this._transport.getTwin((err, twinProperties) => {
           if (err) {
             /*Codes_SRS_NODE_DEVICE_TWIN_16_003: [If the callback passed to the `getTwin` method is called with an error, the `callback` passed to the call to the `get` method shall be called with that error.]*/
+            debugErrors('error getting twin: ' + err.toString());
             opCallback(err);
           } else {
             /*Codes_SRS_NODE_DEVICE_TWIN_16_004: [If the callback passed to the `getTwin` method is called with no error and a `TwinProperties` object, these properties shall be merged with the current instance properties.]*/
@@ -117,7 +119,7 @@ export class Twin extends EventEmitter {
    * @private
    */
   enableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void {
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+    const retryOp = new RetryOperation('enableTwinDesiredPropertiesUpdates', this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       this._transport.enableTwinDesiredPropertiesUpdates((err) => {
         this.desiredPropertiesUpdatesEnabled = !err;
@@ -133,12 +135,13 @@ export class Twin extends EventEmitter {
   // }
 
   private _updateReportedProperties(state: any, done: (err?: Error) => void): void {
-    const retryOp = new RetryOperation(this._retryPolicy, this._maxOperationTimeout);
+    const retryOp = new RetryOperation('_updateReportedProperties', this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
       /*Codes_SRS_NODE_DEVICE_TWIN_16_007: [The `update` method shall call the `updateReportedProperties` method of the `Transport` object and pass it the patch object and a callback accepting an error as argument.]*/
       this._transport.updateTwinReportedProperties(state, (err) => {
         if (err) {
           /*Codes_SRS_NODE_DEVICE_TWIN_16_008: [If the callback passed to the transport is called with an error, the `callback` argument of the `update` method shall be called with that error.]*/
+          debugErrors('error updating reported properties: ' + err.toString());
           opCallback(err);
         } else {
           /*Codes_SRS_NODE_DEVICE_TWIN_18_031: [If the callback passed to the transport is called with no error, the  `properties.reported.update` shall merge the contents of the patch object into `properties.reported`]*/
@@ -213,7 +216,7 @@ export class Twin extends EventEmitter {
       /*Codes_SRS_NODE_DEVICE_TWIN_16_010: [When a listener is added for the first time on an event which name starts with `properties.desired`, the twin shall call the `enableTwinDesiredPropertiesUpdates` method of the `Transport` object.]*/
       this.enableTwinDesiredPropertiesUpdates((err) => {
         if (err) {
-          debug('error enabling desired properties updates: ' + err.toString());
+          debugErrors('error enabling desired properties updates: ' + err.toString());
           /*Codes_SRS_NODE_DEVICE_TWIN_16_011: [If the callback passed to the transport is called with an error, that error shall be emitted by the Twin object.]*/
           this.emit('error', err);
         } else {

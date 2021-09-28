@@ -6,6 +6,7 @@
 import * as Builder from 'buffer-builder';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-provisioning-device-amqp:SaslTpm');
+const debugErrors = dbg('azure-iot-provisioning-device-amqp:SaslTpm:Errors');
 
 /**
  * @private
@@ -92,6 +93,7 @@ export class SaslTpm {
         /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_005: [ If `step` is called with a first byte that has 11 in the most significant bits, it shall call the challenge callback with the full challenge buffer. ] */
         this._getSasToken(keyBuffer, (err, sasToken) => {
           if (err) {
+            debugErrors('Error getting sas token: ' + err);
             /*Codes_SRS_NODE_PROVISIONING_AMQP_SASL_TPM_18_007: [ If `ChallengeResponseCallback` is called with an error, `step` shall call its callback with an error. ] */
             callback(err);
           } else {

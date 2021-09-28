@@ -6,6 +6,7 @@
 import cron = require('node-crontab');
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-http:Http');
+const debugErrors = dbg('azure-iot-device-http:Http:Errors');
 
 import { EventEmitter } from 'events';
 import { Http as Base } from 'azure-iot-http-base';
@@ -396,7 +397,7 @@ export class Http extends EventEmitter implements DeviceTransport {
       this._authenticationProvider.getDeviceCredentials((err, config) => {
         if (err) {
           /*Codes_SRS_NODE_DEVICE_HTTP_16_033: [if the `getDeviceCredentials` fails with an error, the Http request shall call its callback with that error]*/
-          debug('Error while receiving: ' + err.toString());
+          debugErrors('Error while receiving: ' + err);
           this.emit('error', err);
         } else {
           const path = endpoint.deviceMessagePath(encodeUriComponentStrict(config.deviceId));
