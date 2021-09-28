@@ -34,13 +34,13 @@ export DEVICE_CONNECTION_STRING="<YourIoTHubConnectionString>"
 
 Run the sample application using the following commands:
 
-JavaScript
+_ for JavaScript_
 
 ```bash
 node simple_sample_device.js
 ```
 
-TypeScript
+_for TypeScript_
 
 ```bash
 cd dist
@@ -64,14 +64,14 @@ In order to run the device samples you will first need the following prerequisit
 
 You need to install proper dependencies as defined in the **package.json**. Run the following commands:
 
-JavaScript
+_for JavaScript__
 
 ```
 cd device/samples/javascript
 npm install
 ```
 
-TypeScript
+_for TypeScript_
 
 ```
 cd device/samples/typescript
@@ -97,7 +97,7 @@ $env:DEVICE_CONNECTION_STRING="<YourIoTHubConnectionString>"
 
 **4) Build it**
 
-For the TypeScrip samples, we need to Run the `build` command to transpile the TypeScript code into the JavaScript files:
+For the TypeScript samples, we need to run the `build` command to transpile the TypeScript code into the JavaScript files:
 
 ```
 npm run build
