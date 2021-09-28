@@ -134,7 +134,6 @@ Open the folder containing your Node.js project in Visual Studio Code.
 
 * In the debug tab, click on the configuration drop down and select `IoT Hub Sample Device`, then press `Start Debugging`.
 
-
 ## List of samples
 
 * Simple send and receive messages:
@@ -152,9 +151,9 @@ Open the folder containing your Node.js project in Visual Studio Code.
    * **dmpatterns_fwupdate_device.js**: Shows how a device handles a C2D method to initiate a firmware update and provides progress updates through twin reported properties. See [device management patterns][dm-patterns] for instructions on running the device management patterns samples.
 
 * Uploading blob to Azure:
-   * **device_blob_upload.js**: Uploads a blob to Azure through IoT Hub
-
-
+   * **upload_to_blob.js**: Uploads a blob to Azure through IoT Hub
+   * **upload_to_blob_advanced.js**: More advanced scenario for greater control over the blob upload calls
+   
 ## Read More
 For more information on how to use this library refer to the documents below:
 - [Prepare your node.js development environment][node-devbox-setup]

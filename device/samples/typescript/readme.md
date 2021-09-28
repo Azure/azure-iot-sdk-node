@@ -92,17 +92,17 @@ node simple_sample_device.js
 ## List of samples
 
 * Simple send and receive messages:
-   * **simple_sample_device.js**: Connect to IoT Hub and send and receive messages.
-   * **send_batch_http.js**: Connect to IoT Hub and send a batch of messages over an HTTP connection.
-   * **remote_monitoring**: Implements the device code used to connect to an [Azure IoT Suite Remote Monitoring preconfigured solution][remote-monitoring-pcs].
+   * **simple_sample_device.ts**: Connect to IoT Hub and send and receive messages.
+   * **send_batch_http.ts**: Connect to IoT Hub and send a batch of messages over an HTTP connection.
+   * **remote_monitoring.ts**: Implements the device code used to connect to an [Azure IoT Suite Remote Monitoring preconfigured solution][remote-monitoring-pcs].
 
 * Device services samples (Device Twins, Methods, and Device Management):
-   * **simple_sample_device_twin.js**: Shows how to synchronize a Device Twin with Azure IoT Hub on a device.
-   * **device_method.js**: Shows how to implement an Azure IoT Hub Cloud to Device Direct Method on a device.
+   * **simple_sample_device_twin.ts**: Shows how to synchronize a Device Twin with Azure IoT Hub on a device.
+   * **device_method.ts**: Shows how to implement an Azure IoT Hub Cloud to Device Direct Method on a device.
  
 * Uploading blob to Azure:
-   * **upload_to_blob.js**: Uploads a blob to Azure through IoT Hub
-   * **upload_to_blob_advanced.js**: More advanced scenario for greater control over the blob upload calls
+   * **upload_to_blob.ts**: Uploads a blob to Azure through IoT Hub
+   * **upload_to_blob_advanced.ts**: More advanced scenario for greater control over the blob upload calls
 
 ## Read More
 For more information on how to use this library refer to the documents below:

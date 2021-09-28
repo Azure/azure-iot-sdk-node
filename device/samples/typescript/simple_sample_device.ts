@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 import { Client, Message } from 'azure-iot-device';
 import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
 // import { Amqp as Protocol } from 'azure-iot-device-amqp';

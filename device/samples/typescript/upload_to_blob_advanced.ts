@@ -16,8 +16,6 @@
 // More information on Uploading Files with IoT Hub can be found here:
 // https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-file-upload
 
-'use strict';
-
 import { Client } from 'azure-iot-device';
 import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
 import { errors } from 'azure-iot-common';
