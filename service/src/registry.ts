@@ -1661,11 +1661,10 @@ export class Registry {
    * @returns {module:azure-iothub.Registry}
    */
    static fromTokenCredential(hostName: string, tokenCredential: TokenCredential): Registry {
-
-    const config: Registry.TransportConfig = {
+    const config = {
       host: hostName,
-      sharedAccessSignature: undefined,
-      tokenCredential: tokenCredential
+      tokenCredential,
+      tokenScope: 'https://iothubs.azure.net/.default'
     };
     return new Registry(config);
   }

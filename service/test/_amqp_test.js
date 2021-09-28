@@ -72,7 +72,8 @@ describe('Amqp', function() {
           token: "fakeToken",
           expiresOnTimestamp: Date.now() + 3600000 //One hour from now
         }))
-      }
+      },
+      tokenScope: 'https://iothubs.azure.net/.default'
     };
     var clock = sinon.useFakeTimers();
     try {
@@ -235,7 +236,8 @@ describe('Amqp', function() {
         host: 'hub.host.name',
         tokenCredential: {
           getToken: sinon.stub().rejects()
-        }
+        },
+        tokenScope: 'https://iothubs.azure.net/.default'
       };
       var amqp = new Amqp(tokenCredentialConfig, fakeAmqpBase);
       try {
@@ -279,7 +281,8 @@ describe('Amqp', function() {
             token: "fakeToken",
             expiresOnTimestamp: Date.now() + 3600000 //One hour from now
           }))
-        }
+        },
+        tokenScope: 'https://iothubs.azure.net/.default'
       };
       var transport = new Amqp(tokenCredentialConfig, fakeAmqpBase);
       await transport.connect();
