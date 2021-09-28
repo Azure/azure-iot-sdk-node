@@ -2,7 +2,7 @@
 	"scripts": {
 		"npmlockrefresh": "npm i --package-lock-only",
 		"cm": "git-cz",
-	    "postinstall": "(cd device/samples/javascript && npm install && cd ../../) && (cd device/samples/javascript/pnp && npm install && cd ../../../) && (cd device/samples/typescript && npm install && npm run build)"		
+	    "postinstall": "(cd device/samples/javascript && npm install && cd ../../) && (cd device/samples/javascript/pnp && npm install)"		
 	},
 	"devDependencies": {
 		"@commitlint/cli": "^13.1.0",
