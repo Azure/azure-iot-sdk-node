@@ -110,6 +110,18 @@ export function translateError(message: string, amqpError: Error): AmqpTransport
     // In the case of a invalid Twin object, this will return the generic error message plus the specific error messaged provided from the server.
     let errorString = message + '. ' + (<any>amqpError.message).message.toString();
     error = new Error(errorString);
+  } else if (amqpError.constructor?.name) {
+    // Leave these specific erorrs unwrapped.  Other errors could be added here but we have never seen them arrive here.
+    switch (amqpError.constructor.name) {
+      case 'ServiceUnavailableError':
+      case 'NotConnectedError':
+        error = amqpError;
+        amqpError = null;
+        break;
+      default:
+        error = new Error(message);
+        break;
+    }
   } else {
     /*Codes_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_002: [If the AMQP error code is unknown, `translateError` should return a generic Javascript `Error` object.]*/
     error = new Error(message);

@@ -290,7 +290,7 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
             async.each(links, (link, callback) => {
               if (link) {
                 debug('while detaching for link: ' + link);
-                link.detach(callback);
+                link.detach(callback, err);
               } else {
                 callback();
               }
@@ -308,8 +308,8 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
     this._fsm.handle('attach', callback);
   }
 
-  detach(callback: (err?: Error) => void): void {
-    this._fsm.handle('detach', callback);
+  detach(callback: (err?: Error) => void, err: Error): void {
+    this._fsm.handle('detach', callback, err);
   }
 
   forceDetach(): void {
