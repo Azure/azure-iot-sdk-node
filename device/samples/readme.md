@@ -46,7 +46,7 @@ cd device/samples/typescript/dist
 node simple_sample_device.js
 ```
 
-## Run a samples locally
+## Run samples locally
 
 _How to run a sample in your own folder using published npm packages._
 
