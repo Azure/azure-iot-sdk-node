@@ -4,13 +4,9 @@
         "target":"es5",
         "sourceMap": true,
         "declaration": true,
-        "lib": [
-            "es6"
-        ],
         "noUnusedLocals": true,
         "noUnusedParameters": true,
-        "removeComments": false,
-        "resolveJsonModule": true
+        "removeComments": false
     },
     "include": [
         "./src/**/*.ts"

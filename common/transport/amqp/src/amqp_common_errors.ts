@@ -111,19 +111,7 @@ export function translateError(message: string, amqpError: Error): AmqpTransport
     let errorString = message + '. ' + (<any>amqpError.message).message.toString();
     error = new Error(errorString);
   } else if (amqpError.constructor?.name) {
-    //
-    // Questions for reviewers:
-    //
-    // 1. We don't want to translate these errors because we already have the right error,
-    //    but, what do we do with the passed-in message?  Do we lose that info, or do we
-    //    have some sort of "inner exception". e.g. if the passed error is
-    //    "NotConnectedError: SenderLink disconnected", and message is "Could not send",
-    //    What do we want to return?
-    //
-    // 2. I added these 2 errors becauese I needed to in order to fix the bug. What about
-    //    the oher errors.X values above. like errors.ThrottlingError?  Should I also leave
-    //    those untranslated?
-    //
+    // Leave these specific erorrs unwrapped.  Other errors could be added here but we have never seen them arrive here.
     switch (amqpError.constructor.name) {
       case 'ServiceUnavailableError':
       case 'NotConnectedError':

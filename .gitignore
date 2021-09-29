@@ -251,5 +251,3 @@ lerna-debug.log
 
 # mocha
 **/test-results.*.xml
-
-**/_settings.json
