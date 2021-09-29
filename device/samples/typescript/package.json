@@ -1,0 +1,32 @@
+{
+  "name": "device-samples-typescript",
+  "version": "0.0.1",
+  "private": true,
+  "main": "simple_sample_device.ts",
+  "author": "Microsoft Corp.",
+  "license": "MIT",
+  "dependencies": {
+    "@types/ws": "^7.4.7",
+    "azure-iot-device": "1.17.6",
+    "azure-iot-device-amqp": "1.13.6",
+    "azure-iot-device-http": "1.13.6",
+    "azure-iot-device-mqtt": "1.15.6",
+    "@azure/storage-blob": "^12.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^16.9.6",
+    "@types/ws": "^7.4.7",
+    "source-map-support": "^0.5.16",
+    "ts-node": "^8.6.2",
+    "tslint": "^6.1.3",
+    "typescript": "3.7.5"
+  },
+  "scripts": {
+    "prebuild": "npm run lint",
+    "build": "tsc -p .",
+    "lint": "tslint -c ../../../tslint.json --project tsconfig.json",
+    "npmlockrefresh": "npm i --package-lock-only",
+    "ci": "npm -s run lint && npm -s run build",
+    "clean": "tsc --build --clean"
+  }
+}
