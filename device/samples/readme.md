@@ -1,6 +1,6 @@
 # Samples for the Azure IoT device SDK for Node.js
 
-## Read this if you want to run sample using GitHub codespaces
+## Run samples using GitHub codespaces
 
 You can use Github Codespaces to be up and running quickly! Here are the steps to follow.
 
@@ -8,8 +8,8 @@ You can use Github Codespaces to be up and running quickly! Here are the steps t
 
 In order to run the device samples you will first need the following prerequisites:
 
-- An Azure IoT Hub instance. [(Link if you don't.)][lnk-setup-iot-hub]
-- A device identity for your device. [(Link if you don't.)][lnk-manage-iot-hub]
+- An Azure IoT Hub instance. [(Link if you don't.)][https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-through-portal]
+- A device identity for your device. [(Link if you don't.)][https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-through-portal#register-a-new-device-in-the-iot-hub]
 
 **2) Create and open Codespace**
 
@@ -24,8 +24,6 @@ In order to run the device samples you will first need the following prerequisit
 - From a shell or Node.js command prompt, navigate to the folder where you placed the sample files.
 - Set the `DEVICE_CONNECTION_STRING` environment variable:
 
-_in bash_
-
 ```bash
 export DEVICE_CONNECTION_STRING="<YourIoTHubConnectionString>"
 ```
@@ -37,17 +35,18 @@ Run the sample application using the following commands:
 _for JavaScript_
 
 ```bash
+cd device/samples/javascript
 node simple_sample_device.js
 ```
 
 _for TypeScript_
 
 ```bash
-cd dist
+cd device/samples/typescript/dist
 node simple_sample_device.js
 ```
 
-## Read this if you want to run a sample locally
+## Run a samples locally
 
 _How to run a sample in your own folder using published npm packages._
 
@@ -56,8 +55,8 @@ _How to run a sample in your own folder using published npm packages._
 In order to run the device samples you will first need the following prerequisites:
 
 - The latest or LTS version of Node.js on your device. (Check out [Nodejs.org](https://nodejs.org/) for more info)
-- An Azure IoT Hub instance. [(Link if you don't.)][lnk-setup-iot-hub]
-- A device identity for your device. [(Link if you don't.)][lnk-manage-iot-hub]
+- An Azure IoT Hub instance. [(Link if you don't.)][https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-through-portal]
+- A device identity for your device. [(Link if you don't.)][https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-through-portal#register-a-new-device-in-the-iot-hub]
 - Clone this repo to your local machine
 
 **2) Install dependencies**
@@ -122,7 +121,7 @@ cd dist
 node sample_sample_device.js
 ```
 
-## List of samples
+## List of available samples
 
 ### **Simple send and receive messages...**
 

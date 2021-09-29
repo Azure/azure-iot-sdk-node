@@ -2,4 +2,4 @@
 
 This folder contains simple samples showing how to use the various features of the Microsoft Azure IoT Hub service from a device written using JavaScript.
 
-For instructions on running the JavaScript samples, see the [readme.md](../samples) in the root samples folder.
+For instructions on running the JavaScript samples, see the [readme.md](./samples) in the root samples folder.
