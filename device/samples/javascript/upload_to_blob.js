@@ -14,12 +14,13 @@ var client = Client.fromConnectionString(deviceConnectionString, Protocol);
 fs.stat(filePath, function (err, fileStats) {
   var fileStream = fs.createReadStream(filePath);
 
-  client.uploadToBlob('testblob.txt', fileStream, fileStats.size, function (err, result) {
+  client.uploadToBlob('testblob.txt', fileStream, fileStats.size, function (err) {
     if (err) {
       console.error('error uploading file: ' + err.constructor.name + ': ' + err.message);
     } else {
-      console.log('Upload successful - ' + result);
+      console.log('Upload successful');
     }
     fileStream.destroy();
+    process.exit();
   });
 });
