@@ -154,7 +154,7 @@ node sample_sample_device.js
 
 | Sample                  | Description                                                           | JavaScript | TypeScript |
 | ----------------------- | --------------------------------------------------------------------- | :--------: | :--------: |
-| upload_to_blob          | Uploads a blob to Azure through IoT Hub                               |     ✔      |     ✔      |
+| upload_to_blob          | Uploads a blob to Azure through IoT Hub (deprecated)                             |     ✔      |     ✔      |
 | upload_to_blob_advanced | More advanced scenario for greater control over the blob upload calls |     ✔      |     ✔      |
 
 ## Read More
