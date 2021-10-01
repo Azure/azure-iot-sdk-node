@@ -11,8 +11,7 @@ import {
 import * as url from 'url';
 import * as async from 'async';
 
-const deviceConnectionString: string =
-  process.env.DEVICE_CONNECTION_STRING || '';
+const deviceConnectionString: string = process.env.DEVICE_CONNECTION_STRING || '';
 
 if (deviceConnectionString === '') {
   console.log('device connection string has not been set');
