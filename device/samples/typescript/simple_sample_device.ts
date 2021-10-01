@@ -82,7 +82,7 @@ function generateMessage(): Message {
   return message;
 }
 
-asyncMain().catch((err) => {
+asyncMain().catch((err: any): void => {
   console.log('error code: ', err.code);
   console.log('error message: ', err.message);
   console.log('error stack: ', err.stack);

@@ -129,7 +129,7 @@ node sample_sample_device.js
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | :--------: | :--------: |
 | simple_sample_device          | Connect to IoT Hub and send and receive messages.                                                                                   |     ✔      |     ✔      |
 | simple_sample_device_with_sas | Connect using a SAS Token to IoT Hub and send and receive messages.                                                                 |     ✔      |     ✔      |
-| simple_sample_device_x50      | Connect using an X-509 certificate to IoT Hub and send and receive messages.                                                        |     ✔      |            |
+| simple_sample_device_x509     | Connect using an X-509 certificate to IoT Hub and send and receive messages.                                                        |     ✔      |     ✔      |
 | send_batch_http               | Connect to IoT Hub and send a batch of messages over an HTTP connection.                                                            |     ✔      |     ✔      |
 | remote_monitoring             | Implements the device code used to connect to an [Azure IoT Suite Remote Monitoring preconfigured solution][remote-monitoring-pcs]. |     ✔      |     ✔      |
 | edge_downstream_device        | Connect a downstream device to IoT Edge and send and receive messages.                                                              |     ✔      |     ✔      |
@@ -154,7 +154,7 @@ node sample_sample_device.js
 
 | Sample                  | Description                                                           | JavaScript | TypeScript |
 | ----------------------- | --------------------------------------------------------------------- | :--------: | :--------: |
-| upload_to_blob          | Uploads a blob to Azure through IoT Hub (deprecated)                             |     ✔      |     ✔      |
+| upload_to_blob          | Uploads a blob to Azure through IoT Hub (deprecated)                  |     ✔      |     ✔      |
 | upload_to_blob_advanced | More advanced scenario for greater control over the blob upload calls |     ✔      |     ✔      |
 
 ## Read More
