@@ -128,11 +128,12 @@ node sample_sample_device.js
 | Sample                        | Description                                                                                                                         | JavaScript | TypeScript |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | :--------: | :--------: |
 | simple_sample_device          | Connect to IoT Hub and send and receive messages.                                                                                   |     ✔      |     ✔      |
-| simple_sample_device_with_sas | Connect using a SAS Token to IoT Hub and send and receive messages.                                                                 |     ✔      |            |
+| simple_sample_device_with_sas | Connect using a SAS Token to IoT Hub and send and receive messages.                                                                 |     ✔      |     ✔      |
 | simple_sample_device_x50      | Connect using an X-509 certificate to IoT Hub and send and receive messages.                                                        |     ✔      |            |
 | send_batch_http               | Connect to IoT Hub and send a batch of messages over an HTTP connection.                                                            |     ✔      |     ✔      |
 | remote_monitoring             | Implements the device code used to connect to an [Azure IoT Suite Remote Monitoring preconfigured solution][remote-monitoring-pcs]. |     ✔      |     ✔      |
 | edge_downstream_device        | Connect a downstream device to IoT Edge and send and receive messages.                                                              |     ✔      |            |
+| device_through_proxy          | Connect to IoT Hub and send and recieve messages through a proxy                                                                    |     ✔      |     ✔      |
 
 ### **Device services samples (Device Twins, Methods, and Device Management)...**
 
@@ -141,7 +142,7 @@ node sample_sample_device.js
 | simple_sample_device_twin  | Shows how to synchronize a Device Twin with Azure IoT Hub on a device.                                                                                                                                                                                  |     ✔      |     ✔      |
 | device_method              | Shows how to implement an Azure IoT Hub Cloud to Device Direct Method on a device.                                                                                                                                                                      |     ✔      |     ✔      |
 | dmpatterns_reboot_device   | Shows how a device handles a C2D method to reboot and provides progress updates through twin reported properties. See [device management patterns][dm-patterns] for instructions on running the device management patterns samples.                     |     ✔      |            |
-| dmpatterns_fwupdate_device | Shows how a device handles a C2D method to initiate a firmware update and provides progress updates through twin reported properties. See [device management patterns][dm-patterns] for instructions on running the device management patterns samples. |     ✔      |            |
+| dmpatterns_fwupdate_device | Shows how a device handles a C2D method to initiate a firmware update and provides progress updates through twin reported properties. See [device management patterns][dm-patterns] for instructions on running the device management patterns samples. |     ✔      |     ✔      |
 
 ### **Uploading blob to Azure...**
 
