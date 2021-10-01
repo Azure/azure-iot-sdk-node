@@ -1,15 +1,17 @@
 {
-  "name": "longhaultests",
+  "name": "stressFault",
   "version": "0.0.1",
   "description": "Long haul tests for the Azure IoT SDKs for Node.js",
-  "main": "./lib/iothub_longhaul.js",
-  "bin": "./lib/iothub_longhaul.js",
+  "main": "./dist/stress_fault.js",
+  "bin": "./dist/stress_fault.js",
   "scripts": {
     "npmlockrefresh": "npm i --package-lock-only",
+    "prettier": "npx prettier --write .",
     "lint": "tslint --project . -c ../../tslint.json",
     "build": "tsc",
-    "setup_links": "npm link azure-iot-common azure-iot-device azure-iot-device-amqp azure-iot-device-mqtt azure-iot-device-http azure-iothub",
-    "start": "node dist/iothub_longhaul.js"
+    "start": "node dist/stress_fault.js",
+    "prep": "npm run prettier && npm run lint && npm run build",
+    "run": "npm run prep && npm run start"
   },
   "repository": {
     "type": "git",
@@ -28,7 +30,6 @@
     "typescript": "3.7.5"
   },
   "dependencies": {
-    "async": "^2.6.3",
     "azure-iot-common": "1.12.11",
     "azure-iot-device": "1.17.6",
     "azure-iot-device-amqp": "1.13.6",
