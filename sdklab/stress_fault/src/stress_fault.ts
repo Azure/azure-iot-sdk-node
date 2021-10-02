@@ -19,10 +19,10 @@ const debugErrors = dbg('longhaul:Errors');
 const MILLISECONDS = 1;
 const SECONDS = 1000;
 const MINUTES = 60 * SECONDS;
-// const HOURS = 60 * MINUTES;
+const HOURS = 60 * MINUTES;
 
 // How long to run the test
-const MAX_EXECUTION_TIME = 30 * MINUTES;
+const MAX_EXECUTION_TIME = 24 * HOURS;
 
 // How many device clients to create
 const NUMBER_OF_DEVICES = 10;
@@ -174,7 +174,7 @@ class Device implements TopLevelTask {
 }
 
 // Top-level task for limiting the length of the test.  This task just sleeps
-// until the time elapses and then raises a sting to actually end the task.
+// until the time elapses and then raises a string to actually end the task.
 class TimeLimit implements TopLevelTask {
   _interval: number;
   _resolution: number = 1000;
