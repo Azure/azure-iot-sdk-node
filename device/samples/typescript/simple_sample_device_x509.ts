@@ -33,7 +33,7 @@ if (keyFile === '') {
 }
 
 if (passphrase === '') {
-  console.log('Warning: passphrase is not set');
+  console.log('Info: passphrase is not set');
   process.exit(-1);
 }
 
