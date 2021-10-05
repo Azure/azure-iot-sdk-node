@@ -27,6 +27,7 @@ var translateError = require('../dist/amqp_common_errors.js').translateError;
 | "com.microsoft:precondition-failed"        | PreconditionFailedError              |
 | "com.microsoft:quota-exceeded"             | IotHubQuotaExceededError             |
 | "com.microsoft:timeout"                    | ServiceUnavailableError              |
+| "amqp:link:detach-forced"                  | ServcieUnavailableError              |
 ]*/
 describe('translateError', function() {
   [
@@ -47,6 +48,7 @@ describe('translateError', function() {
     { errorDescription: 'com.microsoft:precondition-failed', errorMessage: 'Precondition failed', expectedErrorType: errors.PreconditionFailedError },
     { errorDescription: 'com.microsoft:quota-exceeded', errorMessage: 'Quota exceeded', expectedErrorType: errors.IotHubQuotaExceededError },
     { errorDescription: 'com.microsoft:timeout', errorMessage: 'Timeout', expectedErrorType: errors.ServiceUnavailableError },
+    { errorDescription: 'amqp:link:detach-forced', errorMessage: 'Error: ', expectedErrorType: errors.ServiceUnavailableError },
     { errorDescription: 'unknown', errorMessage: 'Unknown error', expectedErrorType: Error }
   ].forEach(function(testParams) {
     it('returns an \'' + testParams.expectedErrorType.name + '\' if the amqp error description is \'' + testParams.errorDescription + '\'', function(){
