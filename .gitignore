@@ -208,40 +208,7 @@ $RECYCLE.BIN/
 **/*.map
 
 # Typescript compiler output files
-common/core/dist/
-common/transport/amqp/dist/
-common/transport/http/dist/
-common/transport/mqtt/dist/
-
-device/core/dist/
-device/transport/amqp/dist/
-device/transport/http/dist/
-device/transport/mqtt/dist/
-device/ts-samples/*.js
-
-provisioning/service/dist
-provisioning/transport/amqp/dist/
-provisioning/transport/http/dist/
-provisioning/transport/mqtt/dist/
-provisioning/device/dist/
-provisioning/device/ts-samples/dist
-
-security/x509/dist
-security/tpm/dist
-security/symmetric/dist
-
-service/dist
-service/samples/typescript/dist
-
-ts-e2e/dist
-
-sdklab/longhaultests/dist
-
-digitaltwins/device/dist
-digitaltwins/samples/device/typescript/dist
-digitaltwins/samples/service/typescript/dist
-digitaltwins/service/dist
-digitaltwins/model_repository/dist
+**/dist/
 
 device/samples/typescript/dist
 
@@ -253,3 +220,7 @@ lerna-debug.log
 
 # mocha
 **/test-results.*.xml
+
+# longhaul settings
+**/_settings.json
+
