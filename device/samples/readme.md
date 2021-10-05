@@ -133,7 +133,7 @@ node sample_sample_device.js
 | send_batch_http               | Connect to IoT Hub and send a batch of messages over an HTTP connection.                                                            |     ✔      |     ✔      |
 | remote_monitoring             | Implements the device code used to connect to an [Azure IoT Suite Remote Monitoring preconfigured solution][remote-monitoring-pcs]. |     ✔      |     ✔      |
 | edge_downstream_device        | Connect a downstream device to IoT Edge and send and receive messages.                                                              |     ✔      |     ✔      |
-| device_through_proxy          | Connect to IoT Hub and send and recieve messages through a proxy                                                                    |     ✔      |     ✔      |
+| device_through_proxy          | Connect to IoT Hub and send and recieve messages through a proxy                                                                    |     ✔      |           |
 
 ### **Device services samples (Device Twins, Methods, and Device Management)...**
 
@@ -152,10 +152,10 @@ node sample_sample_device.js
 
 ### **Uploading blob to Azure...**
 
-| Sample                  | Description                                                           | JavaScript | TypeScript |
-| ----------------------- | --------------------------------------------------------------------- | :--------: | :--------: |
-| upload_to_blob (deprecated)          | Uploads a blob to Azure through IoT Hub                  |     ✔      |     ✔      |
-| upload_to_blob_advanced | More advanced scenario for greater control over the blob upload calls |     ✔      |     ✔      |
+| Sample                      | Description                                                           | JavaScript | TypeScript |
+| --------------------------- | --------------------------------------------------------------------- | :--------: | :--------: |
+| upload_to_blob (deprecated) | Uploads a blob to Azure through IoT Hub                               |     ✔      |     ✔      |
+| upload_to_blob_advanced     | More advanced scenario for greater control over the blob upload calls |     ✔      |     ✔      |
 
 ## Read More
 
