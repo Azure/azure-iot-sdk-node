@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// This example is deprecated. We recommend you follow the 'upload_to_blob_advanced.js' sample.
+
 'use strict';
 
 var Protocol = require('azure-iot-device-mqtt').Mqtt;
@@ -14,12 +16,13 @@ var client = Client.fromConnectionString(deviceConnectionString, Protocol);
 fs.stat(filePath, function (err, fileStats) {
   var fileStream = fs.createReadStream(filePath);
 
-  client.uploadToBlob('testblob.txt', fileStream, fileStats.size, function (err, result) {
+  client.uploadToBlob('testblob.txt', fileStream, fileStats.size, function (err) {
     if (err) {
       console.error('error uploading file: ' + err.constructor.name + ': ' + err.message);
     } else {
-      console.log('Upload successful - ' + result);
+      console.log('Upload successful');
     }
     fileStream.destroy();
+    process.exit();
   });
 });
