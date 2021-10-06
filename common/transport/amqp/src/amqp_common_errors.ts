@@ -45,6 +45,7 @@ export function translateError(message: string, amqpError: Error): AmqpTransport
   | "com.microsoft:precondition-failed"        | PreconditionFailedError              |
   | "com.microsoft:quota-exceeded"             | IotHubQuotaExceededError             |
   | "com.microsoft:timeout"                    | ServiceUnavailableError              |
+  | "amqp:link:detach-forced"                  | ServiceUnavailableError              |
   ]*/
 
   if ((amqpError as AmqpError).condition) {
@@ -98,6 +99,9 @@ export function translateError(message: string, amqpError: Error): AmqpTransport
         error = new errors.IotHubQuotaExceededError(message);
         break;
       case 'com.microsoft:timeout':
+        error = new errors.ServiceUnavailableError(message);
+        break;
+      case 'amqp:link:detach-forced':
         error = new errors.ServiceUnavailableError(message);
         break;
       default:
