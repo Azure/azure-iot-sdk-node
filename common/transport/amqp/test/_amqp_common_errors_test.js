@@ -27,7 +27,7 @@ var translateError = require('../dist/amqp_common_errors.js').translateError;
 | "com.microsoft:precondition-failed"        | PreconditionFailedError              |
 | "com.microsoft:quota-exceeded"             | IotHubQuotaExceededError             |
 | "com.microsoft:timeout"                    | ServiceUnavailableError              |
-| "amqp:link:detach-forced"                  | ServcieUnavailableError              |
+| "amqp:link:detach-forced"                  | ServiceUnavailableError              |
 ]*/
 describe('translateError', function() {
   [
