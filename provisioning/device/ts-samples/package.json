@@ -5,17 +5,17 @@
   "author": "Microsoft Corporation",
   "license": "MIT",
   "dependencies": {
-    "azure-iot-device": "1.17.7-100721-alpha.1",
-    "azure-iot-device-amqp": "1.13.7-100721-alpha.1",
-    "azure-iot-device-http": "1.13.7-100721-alpha.1",
-    "azure-iot-device-mqtt": "1.15.7-100721-alpha.1",
-    "azure-iot-provisioning-device": "1.8.11-100721-alpha.1",
-    "azure-iot-provisioning-device-amqp": "1.8.11-100721-alpha.1",
-    "azure-iot-provisioning-device-http": "1.8.11-100721-alpha.1",
-    "azure-iot-provisioning-device-mqtt": "1.7.11-100721-alpha.1",
-    "azure-iot-security-symmetric-key": "1.7.11-100721-alpha.1",
-    "azure-iot-security-tpm": "1.8.11-100721-alpha.1",
-    "azure-iot-security-x509": "1.7.11-100721-alpha.1"
+    "azure-iot-device": "1.17.6",
+    "azure-iot-device-amqp": "1.13.6",
+    "azure-iot-device-http": "1.13.6",
+    "azure-iot-device-mqtt": "1.15.6",
+    "azure-iot-provisioning-device": "1.8.10",
+    "azure-iot-provisioning-device-amqp": "1.8.10",
+    "azure-iot-provisioning-device-http": "1.8.10",
+    "azure-iot-provisioning-device-mqtt": "1.7.10",
+    "azure-iot-security-symmetric-key": "1.7.10",
+    "azure-iot-security-tpm": "1.8.10",
+    "azure-iot-security-x509": "1.7.10"
   },
   "devDependencies": {
     "tslint": "^6.1.3",
