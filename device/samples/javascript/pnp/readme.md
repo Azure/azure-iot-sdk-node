@@ -12,7 +12,7 @@ urlFragment: azure-iot-pnp-device-samples-for-javascript
 
 # IoT Plug And Play device samples
 
-[![Documentation](../../../doc/images/docs-link-buttons/azure-documentation.svg)](https://docs.microsoft.com/azure/iot-develop/)
+[![Documentation](../../../../doc/images/docs-link-buttons/azure-documentation.svg)](https://docs.microsoft.com/azure/iot-develop/)
 
 These samples demonstrate how a device that follows the [IoT Plug and Play conventions](https://docs.microsoft.com/azure/iot-pnp/concepts-convention) interacts with IoT Hub or IoT Central, to:
 
