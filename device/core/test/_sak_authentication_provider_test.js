@@ -244,6 +244,21 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
         sakAuthProvider.stop();
       });
     });
+
+    it('clears _currentTokenExpiryTimeInSeconds so that _shouldRenewToken returns true', async function () {
+      const fakeCredentials = {
+        deviceId: 'fakeDeviceId',
+        host: 'fake.host.name',
+        sharedAccessKey: 'fakeKey'
+      };
+      const sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
+      await sakAuthProvider.getDeviceCredentials();
+      assert.isFalse(isNaN(sakAuthProvider._currentTokenExpiryTimeInSeconds), 'isNaN() returned true when it should have been false');
+      assert.isFalse(sakAuthProvider._shouldRenewToken(), '_shouldRenewToken() returned true when it should have been false');
+      sakAuthProvider.stop();
+      assert.isTrue(isNaN(sakAuthProvider._currentTokenExpiryTimeInSeconds), 'isNaN() returned false when it should have been true');
+      assert.isTrue(sakAuthProvider._shouldRenewToken(), '_shouldRenewToken() returned false when it should have been true');
+    });
   });
 
   describe('setTokenRenewalValues', function () {

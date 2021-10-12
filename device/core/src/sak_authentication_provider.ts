@@ -107,6 +107,7 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
     if (this._renewalTimeout) {
       clearTimeout(this._renewalTimeout);
       this._renewalTimeout = null;
+      this._currentTokenExpiryTimeInSeconds = undefined;
     }
   }
 
