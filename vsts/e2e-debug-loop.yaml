@@ -2,17 +2,17 @@ resources:
 - repo: self
 phases:
 - phase: Phase_1
-  displayName: Ubuntu 16.04
+  displayName: Ubuntu 20.04
 
   condition: succeeded()
   queue:
-    name: Hosted Ubuntu 1604
+    name: Hosted Ubuntu 2004
 
   steps:
   - task: NodeTool@0
-    displayName: 'Use Node 10.15.x'
+    displayName: 'Use Node 12.x'
     inputs:
-      versionSpec: '10.15.x'
+      versionSpec: '12.x'
 
   - script: |
       npm install --global node-gyp
@@ -62,9 +62,9 @@ phases:
     name: Hosted VS2017
   steps:
   - task: NodeTool@0
-    displayName: 'Use Node 8.10.x'
+    displayName: 'Use Node 12.x'
     inputs:
-      versionSpec: 8.10.x
+      versionSpec: 12.x
 
   - powershell: |
       runas.exe /savecred /user:administrator

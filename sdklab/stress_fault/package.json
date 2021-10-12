@@ -37,6 +37,7 @@
     "azure-iot-device-mqtt": "1.15.6",
     "azure-iothub": "1.14.4",
     "debug": "^4.3.1",
+    "pem": "^1.14.2",
     "uuid": "^8.3.2"
   }
 }
