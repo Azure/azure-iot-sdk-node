@@ -5,7 +5,7 @@ resources:
 
 jobs:
 - job: Phase_2
-  displayName: Ubuntu 1604 - Node 12.x
+  displayName: Ubuntu 20.04 - Node 12.x
   condition: succeededOrFailed()
   pool:
     vmImage: 'Ubuntu 20.04'
@@ -58,7 +58,7 @@ jobs:
     condition: succeededOrFailed()
 
 - job: Phase_1
-  displayName: 'Use Windows Node 12.x'
+  displayName: 'windows-latest Node 12.x'
   condition: succeededOrFailed()
   pool:
     vmImage: 'windows-latest'
