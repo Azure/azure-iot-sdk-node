@@ -1,12 +1,12 @@
 resources:
 - repo: self
-phases:
-- phase: Phase_1
+jobs:
+- job: Phase_1
   displayName: Ubuntu 20.04
 
   condition: succeeded()
-  queue:
-    name: Hosted Ubuntu 2004
+  pool:
+    vmImage: 'Ubuntu 20.04'
 
   steps:
   - task: NodeTool@0
@@ -54,12 +54,12 @@ phases:
       IOTHUB_CONN_STRING_INVALID_CERT: $(IOTHUB-CONN-STRING-INVALID-CERT)
       IOTHUB_DEVICE_CONN_STRING_INVALID_CERT: $(IOTHUB-DEVICE-CONN-STRING-INVALID-CERT)
 
-- phase: Phase_2
+- job: Phase_2
   displayName: Windows
 
   condition: succeeded()
-  queue:
-    name: Hosted VS2017
+  pool:
+    vmImage: 'windows-latest'
   steps:
   - task: NodeTool@0
     displayName: 'Use Node 12.x'
