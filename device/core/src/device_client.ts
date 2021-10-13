@@ -91,7 +91,7 @@ export class Client extends InternalClient {
       if (err) {
         debugErrors('transport disconnect event: ' + err);
       } else {
-        debug('transport disconenct event: no error');
+        debug('transport disconnect event: no error');
       }
       if (err && this._retryPolicy.shouldRetry(err)) {
         debugErrors('reconnect policy specifies a reconnect on error');
