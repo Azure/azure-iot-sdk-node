@@ -59,7 +59,7 @@ jobs:
 
   condition: succeeded()
   pool:
-    vmImage: 'windows-latest'
+    vmImage: 'vs2017-win2016'
   steps:
   - task: NodeTool@0
     displayName: 'Use Node 12.x'

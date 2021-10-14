@@ -58,10 +58,10 @@ jobs:
     condition: succeededOrFailed()
 
 - job: Phase_1
-  displayName: 'windows-latest Node 12.x'
+  displayName: 'Windows Node 12.x'
   condition: succeededOrFailed()
   pool:
-    vmImage: 'windows-latest'
+    vmImage: 'vs2017-win2016'
   steps:
   - task: NodeTool@0
     displayName: 'Use Node 12.x'
