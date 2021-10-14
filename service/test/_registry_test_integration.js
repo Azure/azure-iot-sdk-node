@@ -16,7 +16,7 @@ var goodConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 var cn = ConnectionString.parse(goodConnectionString);
 
 var badConnectionStrings = [
-  makeConnectionString('bad' + uuid.v4(), cn.SharedAccessKeyName, cn.SharedAccessKey),
+  makeConnectionString('bad' + uuid.v4() + '.net', cn.SharedAccessKeyName, cn.SharedAccessKey),
   makeConnectionString(cn.HostName, 'bad', cn.SharedAccessKey),
   makeConnectionString(cn.HostName, cn.SharedAccessKeyName, 'bad'),
 ];
