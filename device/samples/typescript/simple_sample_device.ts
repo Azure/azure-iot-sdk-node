@@ -43,11 +43,13 @@ function disconnectHandler(): void {
 function connectHandler(): void {
   console.log('Client connected');
   // Create a message and send it to the IoT Hub every two seconds
-  sendInterval = setInterval(() => {
-    const message = generateMessage();
-    console.log('Sending message: ' + message.getData());
-    client.sendEvent(message, printResultFor('send'));
-  }, 2000);
+  if (!!sendInterval) {
+    sendInterval = setInterval(() => {
+      const message = generateMessage();
+      console.log('Sending message: ' + message.getData());
+      client.sendEvent(message, printResultFor('send'));
+    }, 2000);
+  }
 }
 
 function messageHandler(msg: any): void {
