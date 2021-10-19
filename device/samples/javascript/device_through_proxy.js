@@ -5,7 +5,7 @@
 
 // !IMPORTANT! This sample only pertains to HTTPS Proxy, via the HTTP Transport, MQTTWS Transport, and AMQPWS Transport.
 
-// Uncomment one of these transports and then change it in fromConnectionString to test other transports
+// Choose a protocol by uncommenting one of these transports.
 // const Protocol = require('azure-iot-device-amqp').AmqpWs;
 // const Protocol = require('azure-iot-device-http').Http;
 const Protocol = require('azure-iot-device-mqtt').MqttWs;

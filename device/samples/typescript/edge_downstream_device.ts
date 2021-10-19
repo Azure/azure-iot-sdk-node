@@ -4,7 +4,7 @@
 import * as fs from 'fs';
 import { Client, Message } from 'azure-iot-device';
 
-// Uncomment one of these transports and then change it in fromConnectionString to test other transports
+// Choose a protocol by uncommenting one of these transports.
 // import { Http as Protocol } from 'azure-iot-device-http';
 // import { Amqp as Protocol } from 'azure-iot-device-amqp';
 import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
