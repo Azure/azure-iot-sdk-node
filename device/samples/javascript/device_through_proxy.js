@@ -23,7 +23,10 @@ const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
 let sendInterval;
 
 function disconnectHandler () {
-  clearInterval(sendInterval);
+  if (!!sendInterval) {
+    clearInterval(sendInterval);
+    sendInterval = null;
+  }
   client.removeAllListeners();
   client.open().catch((err) => {
     console.error(err.message);
@@ -53,18 +56,20 @@ function generateMessage () {
   return message;
 }
 
-function errorCallback (err) {
+function errorHandler (err) {
   console.error(err.message);
 }
 
-function connectCallback () {
+function connectHandler () {
   console.log('Client connected');
   // Create a message and send it to the IoT Hub every two seconds
-  sendInterval = setInterval(() => {
-    const message = generateMessage();
-    console.log('Sending message: ' + message.getData());
-    client.sendEvent(message, printResultFor('send'));
-  }, 2000);
+  if (!!sendInterval) {
+    sendInterval = setInterval(() => {
+      const message = generateMessage();
+      console.log('Sending message: ' + message.getData());
+      client.sendEvent(message, printResultFor('send'));
+    }, 2000);
+  }
 
 }
 
@@ -82,8 +87,8 @@ client.setOptions({mqtt: {webSocketAgent: agent}});
 // client.setOptions({amqp: {agent: agent}});
 // HTTP
 // client.setOptions({http: {webSocketAgent: agent}});
-client.on('connect', connectCallback);
-client.on('error', errorCallback);
+client.on('connect', connectHandler);
+client.on('error', errorHandler);
 client.on('disconnect', disconnectHandler);
 client.on('message', messageHandler);
 

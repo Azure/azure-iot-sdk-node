@@ -21,6 +21,7 @@ if (sas === '') {
 // fromSharedAccessSignature must specify a transport constructor, coming from any transport package.
 const client: Client = Client.fromSharedAccessSignature(sas, Protocol);
 
+let sendInterval: NodeJS.Timer;
 let connectCallback = function (err: Error): void {
   if (err) {
     console.error('Could not connect: ' + err);
@@ -38,23 +39,28 @@ let connectCallback = function (err: Error): void {
     });
 
     // Create a message and send it to the IoT Hub every second
-    let sendInterval: NodeJS.Timer = setInterval(function (): void {
-      let windSpeed: number = 10 + (Math.random() * 4); // range: [10, 14]
-      let temperature: number = 20 + (Math.random() * 10); // range: [20, 30]
-      let humidity: number = 60 + (Math.random() * 20); // range: [60, 80]
-      let data: string = JSON.stringify({ deviceId: 'myFirstDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
-      let message: Message = new Message(data);
-      message.properties.add('temperatureAlert', (temperature > 28) ? 'true' : 'false');
-      console.log('Sending message: ' + message.getData());
-      client.sendEvent(message, printResultFor('send'));
-    }, 2000);
+    if (!!sendInterval) {
+      sendInterval = setInterval(function (): void {
+        let windSpeed: number = 10 + (Math.random() * 4); // range: [10, 14]
+        let temperature: number = 20 + (Math.random() * 10); // range: [20, 30]
+        let humidity: number = 60 + (Math.random() * 20); // range: [60, 80]
+        let data: string = JSON.stringify({ deviceId: 'myFirstDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
+        let message: Message = new Message(data);
+        message.properties.add('temperatureAlert', (temperature > 28) ? 'true' : 'false');
+        console.log('Sending message: ' + message.getData());
+        client.sendEvent(message, printResultFor('send'));
+      }, 2000);
+    }
 
     client.on('error', function (err: Error): void {
       console.error(err.message);
     });
 
     client.on('disconnect', function (): void {
-      clearInterval(sendInterval);
+      if (!!sendInterval) {
+        clearInterval(sendInterval);
+        sendInterval = None;
+      }
       client.removeAllListeners();
       client.open(connectCallback);
     });

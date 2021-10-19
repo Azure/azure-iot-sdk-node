@@ -18,6 +18,7 @@ var sas = process.env.IOTHUB_SAS;
 // fromSharedAccessSignature must specify a transport constructor, coming from any transport package.
 var client = Client.fromSharedAccessSignature(sas, Protocol);
 
+var sendInterval;
 var connectCallback = function (err) {
   if (err) {
     console.error('Could not connect: ' + err);
@@ -35,23 +36,28 @@ var connectCallback = function (err) {
     });
 
     // Create a message and send it to the IoT Hub every second
-    var sendInterval = setInterval(function () {
-      var windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
-      var temperature = 20 + (Math.random() * 10); // range: [20, 30]
-      var humidity = 60 + (Math.random() * 20); // range: [60, 80]
-      var data = JSON.stringify({ deviceId: 'myFirstDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
-      var message = new Message(data);
-      message.properties.add('temperatureAlert', (temperature > 28) ? 'true' : 'false');      
-      console.log('Sending message: ' + message.getData());
-      client.sendEvent(message, printResultFor('send'));
-    }, 2000);
+    if (!!sendInterval) {
+      sendInterval = setInterval(function () {
+        var windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
+        var temperature = 20 + (Math.random() * 10); // range: [20, 30]
+        var humidity = 60 + (Math.random() * 20); // range: [60, 80]
+        var data = JSON.stringify({ deviceId: 'myFirstDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
+        var message = new Message(data);
+        message.properties.add('temperatureAlert', (temperature > 28) ? 'true' : 'false');      
+        console.log('Sending message: ' + message.getData());
+        client.sendEvent(message, printResultFor('send'));
+      }, 2000);
+    }
 
     client.on('error', function (err) {
       console.error(err.message);
     });
 
     client.on('disconnect', function () {
-      clearInterval(sendInterval);
+      if (!!sendInteravl) {
+        clearInterval(sendInterval);
+        sendInterval = null;
+      }
       client.removeAllListeners();
       client.open(connectCallback);
     });

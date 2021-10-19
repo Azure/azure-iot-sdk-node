@@ -34,6 +34,7 @@ if (edgeCaCertPath === '') {
 // fromConnectionString must specify a transport constructor, coming from any transport package.
 const client: Client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
+let sendInterval: NodeJS.Timer;
 let connectCallback = function (err: Error): void {
   if (err) {
     console.error('Could not connect: ' + err.message);
@@ -51,23 +52,28 @@ let connectCallback = function (err: Error): void {
     });
 
     // Create a message and send it to the IoT Hub every two seconds
-    let sendInterval: NodeJS.Timer = setInterval(function (): void {
-      const windSpeed: number = 10 + (Math.random() * 4); // range: [10, 14]
-      const temperature: number = 20 + (Math.random() * 10); // range: [20, 30]
-      const humidity: number = 60 + (Math.random() * 20); // range: [60, 80]
-      const data: string = JSON.stringify({ deviceId: 'myFirstDownstreamDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
-      const message: Message = new Message(data);
-      message.properties.add('temperatureAlert', (temperature > 28) ? 'true' : 'false');
-      console.log('Sending message: ' + message.getData());
-      client.sendEvent(message, printResultFor('send'));
-    }, 2000);
+    if (!!sendInterval) {
+      sendInterval = setInterval(function (): void {
+        const windSpeed: number = 10 + (Math.random() * 4); // range: [10, 14]
+        const temperature: number = 20 + (Math.random() * 10); // range: [20, 30]
+        const humidity: number = 60 + (Math.random() * 20); // range: [60, 80]
+        const data: string = JSON.stringify({ deviceId: 'myFirstDownstreamDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
+        const message: Message = new Message(data);
+        message.properties.add('temperatureAlert', (temperature > 28) ? 'true' : 'false');
+        console.log('Sending message: ' + message.getData());
+        client.sendEvent(message, printResultFor('send'));
+      }, 2000);
+    }
 
     client.on('error', function (err: Error): void {
       console.error(err.message);
     });
 
     client.on('disconnect', function (): void {
-      clearInterval(sendInterval);
+      if (!!sendInterval) {
+        clearInterval(sendInterval);
+        sendInterval = null;
+      }
       client.removeAllListeners();
       client.open(connectCallback);
     });

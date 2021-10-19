@@ -19,8 +19,8 @@ const client: Client = Client.fromConnectionString(
 );
 
 async function asyncMain(): Promise<void> {
-  client.on('connect', connectCallback);
-  client.on('error', errorCallback);
+  client.on('connect', connectHandler);
+  client.on('error', errorHandler);
   client.on('disconnect', disconnectHandler);
   client.on('message', messageHandler);
 
@@ -30,13 +30,17 @@ async function asyncMain(): Promise<void> {
 }
 
 function disconnectHandler(): void {
-  clearInterval(sendInterval);
+  if (!!sendInterval) {
+    clearInterval(sendInterval);
+    sendInterval = null;
+  }
+
   client.open().catch((err) => {
     console.error(err.message);
   });
 }
 
-function connectCallback(): void {
+function connectHandler(): void {
   console.log('Client connected');
   // Create a message and send it to the IoT Hub every two seconds
   sendInterval = setInterval(() => {
@@ -51,7 +55,7 @@ function messageHandler(msg: any): void {
   client.complete(msg, printResultFor('completed'));
 }
 
-function errorCallback(err: any): void {
+function errorHandler(err: any): void {
   console.error(err.message);
 }
 
