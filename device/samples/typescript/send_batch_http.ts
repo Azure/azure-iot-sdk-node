@@ -6,7 +6,7 @@ import { Client, Message } from 'azure-iot-device';
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
-const deviceConnectionString: string = process.env.DEVICE_CONNECTION_STRING || '';
+const deviceConnectionString: string = process.env.IOTHUB_DEVICE_CONNECTION_STRING || '';
 
 if (deviceConnectionString === '') {
   console.log('device connection string not set');
