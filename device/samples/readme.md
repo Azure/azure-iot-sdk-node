@@ -19,13 +19,13 @@ In order to run the device samples you will first need the following prerequisit
 
 - Once the Codespace is open, all required packages to run the samples will be setup for you
 
-**3) Set the DEVICE_CONNECTION_STRING environment variable**
+**3) Set the IOTHUB_DEVICE_CONNECTING_STRING environment variable**
 
 - From a shell or Node.js command prompt, navigate to the folder where you placed the sample files.
-- Set the `DEVICE_CONNECTION_STRING` environment variable:
+- Set the `IOTHUB_DEVICE_CONNECTING_STRING` environment variable:
 
 ```bash
-export DEVICE_CONNECTION_STRING="<YourIoTHubConnectionString>"
+export IOTHUB_DEVICE_CONNECTING_STRING="<YourIoTHubConnectionString>"
 ```
 
 **4) Run it**
@@ -55,8 +55,8 @@ _How to run a sample in your own folder using published npm packages._
 In order to run the device samples you will first need the following prerequisites:
 
 - The latest or LTS version of Node.js on your device. (Check out [Nodejs.org](https://nodejs.org/) for more info)
-- An Azure IoT Hub instance. [(Link if you don't.)][https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-through-portal]
-- A device identity for your device. [(Link if you don't.)][https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-through-portal#register-a-new-device-in-the-iot-hub]
+- An Azure IoT Hub instance ([Link if you don't](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-through-portal))
+- A device identity for your device ([Link if you don't](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-through-portal#register-a-new-device-in-the-iot-hub))
 - Clone this repo to your local machine
 
 **2) Install dependencies**
@@ -77,21 +77,21 @@ cd device/samples/typescript
 npm install
 ```
 
-**3) Set the DEVICE_CONNECTION_STRING environment variable**
+**3) Set the IOTHUB_DEVICE_CONNECTING_STRING environment variable**
 
 - From a shell or Node.js command prompt, navigate to the folder where you placed the sample files.
-- Set the `DEVICE_CONNECTION_STRING` environment variable:
+- Set the `IOTHUB_DEVICE_CONNECTION_STRING` environment variable:
 
 _in bash_
 
 ```bash
-export DEVICE_CONNECTION_STRING="<YourIoTHubConnectionString>"
+export IOTHUB_DEVICE_CONNECTION_STRING="<YourIoTHubConnectionString>"
 ```
 
 _in powershell_
 
 ```powershell
-$env:DEVICE_CONNECTION_STRING="<YourIoTHubConnectionString>"
+$env:IOTHUB_DEVICE_CONNECTION_STRING="<YourIoTHubConnectionString>"
 ```
 
 **4) Build it**

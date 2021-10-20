@@ -14,7 +14,7 @@ var Message = require('azure-iot-device').Message;
 
 // String containing Hostname and Device Id in the following format:
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;x509=true"
-var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING; 
+var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING; 
 var certFile = process.env.PATH_TO_CERTIFICATE_FILE;
 var keyFile = process.env.PATH_TO_KEY_FILE;
 var passphrase = process.env.KEY_PASSPHRASE_OR_EMPTY; // Key Passphrase if one exists.

@@ -11,7 +11,7 @@ var client = null;
 
 function main() {
     // open a connection to the device
-    var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+    var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
     client = Client.fromConnectionString(deviceConnectionString, Protocol);
     client.open(onConnect);
 }

@@ -29,7 +29,7 @@ const {
 } = require('@azure/storage-blob');
 
 // make sure you set these environment variables prior to running the sample.
-const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 const localFilePath = process.env.PATH_TO_FILE;
 const storageBlobName = 'testblob.txt';
 

@@ -9,7 +9,7 @@ var Protocol = require('azure-iot-device-mqtt').Mqtt;
 var Client = require('azure-iot-device').Client;
 var fs = require('fs');
 
-var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 var filePath = process.env.PATH_TO_FILE;
 
 var client = Client.fromConnectionString(deviceConnectionString, Protocol);
