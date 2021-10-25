@@ -160,7 +160,7 @@ node sample_sample_device.js
 
 # IoT Plug And Play device samples
 
-[![Documentation](../../../../doc/images/docs-link-buttons/azure-documentation.svg)](https://docs.microsoft.com/azure/iot-develop/)
+[![Documentation](../../../doc/images/docs-link-buttons/azure-documentation.svg)](https://docs.microsoft.com/azure/iot-develop/)
 
 These samples demonstrate how a device that follows the [IoT Plug and Play conventions](https://docs.microsoft.com/azure/iot-pnp/concepts-convention) interacts with IoT Hub or IoT Central, to:
 
@@ -175,7 +175,7 @@ The samples demonstrate two scenarios:
   - The top-level interface defines telemetry, read-only property and commands.
   - The model includes two [Thermostat](https://devicemodels.azure.com/dtmi/com/example/thermostat-1.json) components, and a [device information](https://devicemodels.azure.com/dtmi/azure/devicemanagement/deviceinformation-1.json) component.
 
-## Quickstarts and tutorials
+### Quickstarts and tutorials
 
 To learn more about how to configure and run the Thermostat device sample with IoT Hub, see [Quickstart: Connect a sample IoT Plug and Play device application running on Linux or Windows to IoT Hub](https://docs.microsoft.com/azure/iot-pnp/quickstart-connect-device?pivots=programming-language-javascript).
 
@@ -184,7 +184,7 @@ To learn more about how to configure and run the Temperature Controller device s
 - IoT Hub, see [Tutorial: Connect an IoT Plug and Play multiple component device application running on Linux or Windows to IoT Hub](https://docs.microsoft.com/azure/iot-pnp/tutorial-multiple-components?pivots=programming-language-javascript)
 - IoT Central, see [Tutorial: Create and connect a client application to your Azure IoT Central application](https://docs.microsoft.com/azure/iot-central/core/tutorial-connect-device?pivots=programming-language-javascript)
 
-## Configuring the samples
+### Configuring the samples
 
 Both samples use environment variables to retrieve configuration.
 
@@ -201,14 +201,14 @@ Both samples use environment variables to retrieve configuration.
   - _OPTIONAL_, if you do not wish to use the default endpoint "global.azure-devices-provisioning.net"
     - set IOTHUB_DEVICE_DPS_ENDPOINT="\<DPS endpoint\>"
 
-## Caveats
+### Caveats
 
 - Azure IoT Plug and Play is only supported for MQTT and MQTT over WebSockets for the Azure IoT Node Device SDK. Modifying these samples to use AMQP, AMQP over WebSockets, or HTTP protocols **will not work**.
 - When the thermostat receives a desired temperature, it has no actual affect on the current temperature.
 - The command `getMaxMinReport` allows the application to specify statistics of the temperature since a given date. To keep the sample simple, we ignore this field and instead return statistics from the entire lifecycle of the executable.
 - The temperature controller implements a command named `reboot` which takes a request payload indicating the delay in seconds. The sample will ignore this command.
 
-## Read More
+# Read More
 
 For more information on how to use this library refer to the documents below:
 
