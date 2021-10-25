@@ -18,15 +18,15 @@ import { RegistrationClient } from 'azure-iot-provisioning-device/dist/interface
 let deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 
 // DPS connection information
-const provisioningHost: string = process.env.IOTHUB_DEVICE_DPS_ENDPOINT ||  'global.azure-devices-provisioning.net';
-const idScope: string = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE;
-const registrationId: string = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID;
-const symmetricKey: string = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY;
+const provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT ||  'global.azure-devices-provisioning.net';
+const idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE;
+const registrationId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID;
+const symmetricKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY;
 const useDps = process.env.IOTHUB_DEVICE_SECURITY_TYPE || 'connectionString';
 
 const modelIdObject: { modelId: string } = { modelId: 'dtmi:com:example:Thermostat;1', };
-const telemetrySendInterval: number = 10000;
-const deviceSerialNum: string = '123abc';
+const telemetrySendInterval = 10000;
+const deviceSerialNum = '123abc';
 
 class TemperatureSensor {
   currTemp: number;

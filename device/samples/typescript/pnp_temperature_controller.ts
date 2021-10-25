@@ -12,18 +12,18 @@ import { ProvisioningPayload, RegistrationClient } from 'azure-iot-provisioning-
 let deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING || '';
 
 // DPS connection information
-const provisioningHost: string = process.env.IOTHUB_DEVICE_DPS_ENDPOINT || 'global.azure-devices-provisioning.net';
-const idScope: string = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE;
-const registrationId: string = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID;
-const symmetricKey: string = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY;
-const useDps: string = process.env.IOTHUB_DEVICE_SECURITY_TYPE || 'connectionString';
+const provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT || 'global.azure-devices-provisioning.net';
+const idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE;
+const registrationId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID;
+const symmetricKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY;
+const useDps = process.env.IOTHUB_DEVICE_SECURITY_TYPE || 'connectionString';
 
 const modelIdObject: { modelId: string } = { modelId: 'dtmi:com:example:TemperatureController;2', };
-const messageSubjectProperty: string = '$.sub';
-const thermostat1ComponentName: string = 'thermostat1';
-const thermostat2ComponentName: string = 'thermostat2';
-const deviceInfoComponentName: string = 'deviceInformation';
-const commandComponentCommandNameSeparator: string = '*';
+const messageSubjectProperty = '$.sub';
+const thermostat1ComponentName = 'thermostat1';
+const thermostat2ComponentName = 'thermostat2';
+const deviceInfoComponentName = 'deviceInformation';
+const commandComponentCommandNameSeparator = '*';
 let intervalToken1: NodeJS.Timer;
 let intervalToken2: NodeJS.Timer;
 let intervalToken3: NodeJS.Timer;
@@ -53,10 +53,8 @@ class TemperatureSensor {
     this.currTemp = 1 + Math.random() * 90;
     this.cumulativeTemperature += this.currTemp;
     this.numberOfTemperatureReadings++;
-    
-    if (this.currTemp > this.maxTemp) this.maxTemp = this.currTemp; 
-    if (this.currTemp < this.minTemp) this.minTemp = this.currTemp; 
-    
+    if (this.currTemp > this.maxTemp) this.maxTemp = this.currTemp;
+    if (this.currTemp < this.minTemp) this.minTemp = this.currTemp;
     return this;
   }
 
@@ -84,10 +82,10 @@ class TemperatureSensor {
 const thermostat1: TemperatureSensor = new TemperatureSensor();
 const thermostat2: TemperatureSensor = new TemperatureSensor();
 
-const commandNameGetMaxMinReport1: string = thermostat1ComponentName + commandComponentCommandNameSeparator + 'getMaxMinReport';
-const commandNameGetMaxMinReport2: string = thermostat2ComponentName + commandComponentCommandNameSeparator + 'getMaxMinReport';
-const commandNameReboot: string = 'reboot';
-const serialNumber: string = 'alwinexlepaho8329';
+const commandNameGetMaxMinReport1 = thermostat1ComponentName + commandComponentCommandNameSeparator + 'getMaxMinReport';
+const commandNameGetMaxMinReport2 = thermostat2ComponentName + commandComponentCommandNameSeparator + 'getMaxMinReport';
+const commandNameReboot = 'reboot';
+const serialNumber = 'alwinexlepaho8329';
 
 const commandHandler = async (request: { methodName: any }, response: any) => {
   helperLogCommandRequest(request);

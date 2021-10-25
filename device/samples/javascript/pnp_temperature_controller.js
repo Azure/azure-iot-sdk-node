@@ -21,7 +21,7 @@ const provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT ||'global.azure-
 const idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE;
 const registrationId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID;
 const symmetricKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY;
-const useDps = process.env.IOTHUB_DEVICE_SECURITY_TYPE;
+const useDps = process.env.IOTHUB_DEVICE_SECURITY_TYPE || "connectionString";
 
 const modelIdObject = { modelId: 'dtmi:com:example:TemperatureController;2' };
 const messageSubjectProperty = '$.sub';
