@@ -509,16 +509,16 @@ export namespace Client {
     /**
      * The name of the policy used to connect to the Azure IoT Hub service.
      */
-    keyName: string;
+    keyName?: string;
     /**
      * The shared access signature token used to authenticate the connection with the Azure IoT hub.
      */
-    sharedAccessSignature: string | SharedAccessSignature;
+    sharedAccessSignature?: string | SharedAccessSignature;
 
     /**
      * The token credential used to authenticate the connection with the Azure IoT hub.
      */
-    tokenCredential: TokenCredential;
+    tokenCredential?: TokenCredential;
 
     /**
      * The token scope used to get the token from the TokenCredential object
