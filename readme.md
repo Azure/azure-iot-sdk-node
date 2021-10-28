@@ -123,7 +123,7 @@ LTS branches receive all bug fixes that fall in one of these categories:
 
 No new features or improvements will be picked up in an LTS branch.
 
-LTS branches are named lts_*mm*_*yyyy*, where *mm* and *yyyy* are the month and year when the branch was created. An example of such a branch is *lts_07_2017*.
+LTS branches are named `lts_mm_yyyy`, where *mm* and *yyyy* are the month and year when the branch was created. An example of such a branch is `lts_07_2017`.
 
 ### Schedule<sup>1</sup>
 
