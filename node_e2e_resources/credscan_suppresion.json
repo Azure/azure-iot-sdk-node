@@ -1,0 +1,13 @@
+{
+    "tool": "Credential Scanner",
+    "suppressions": [
+      {
+       "file": "\\test-resources.bicep",
+        "_justification": "Bicep file containing fake shared access tokens"
+      },
+      {
+        "file": "\\deploy.sh",
+         "_justification": "Bash script containing fake shared access tokens"
+       }
+    ]
+}
