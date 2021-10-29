@@ -104,20 +104,28 @@ If you encounter any bugs, have suggestions for new features or if you would lik
 
 The Azure IoT SDK for Node.js supports the LTS and Current versions of the [Node.js runtime](https://nodejs.org/en/about/releases/).
 
-# Long Term Support
+# Releases
+
+The Node SDK offers releases for new features, critical bug fixes, and Long Term Support (LTS). NPM package versioning follows [semantic versioning](https://semver.org/), `x.y.z.` or `major.minor.patch`. Any time the version is updated, it will be tagged `x.y.z`.
+
+## New Features and Critical Bug Fixes
+
+New features and critical bug fixes (including security updates) will be released on the main branch. These releases will be tagged using the date formatted `yyyy-mm-dd`. A feature release will bump the `minor` version and reset the `patch` version to 0. A critical bug fix will bump the `patch` version only.
+
+# Long Term Support (LTS)
 
 The project offers a Long Term Support (LTS) version to allow users that do not need the latest features to be shielded from unwanted changes.
 
-The maintenance lifetime of an LTS branch is currently planned for 12 months. LTS branches receive all bug fixes that fall in one of these categories:
+LTS branches receive all bug fixes that fall in one of these categories:
 
 - security bugfixes
 - critical bugfixes (crashes, memory leaks, etc.)
 
 No new features or improvements will be picked up in an LTS branch.
 
-LTS branches are named lts_*mm*_*yyyy*, where *mm* and *yyyy* are the month and year when the branch was created. An example of such a branch is *lts_07_2017*.
+LTS branches are named `lts_mm_yyyy`, where *mm* and *yyyy* are the month and year when the branch was created. An example of such a branch is `lts_07_2017`.
 
-### Schedule<sup>1</sup>
+### LTS Schedule<sup>1</sup>
 
 Below is a table showing the mapping of the LTS branches to the package versions released
 
