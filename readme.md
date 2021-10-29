@@ -106,7 +106,7 @@ The Azure IoT SDK for Node.js supports the LTS and Current versions of the [Node
 
 # Releases
 
-The Node SDK offers releases for new features, critical bug fixes, and Long Term Support (LTS). General bug fixes will not receive a separate release, but are instead contained within the LTS release. NPM package versioning follows [semantic versioning](https://semver.org/), `x.y.z.` or `major.minor.patch`. Any time the version is updated, it will be tagged `x.y.z`.
+The Node SDK offers releases for new features, critical bug fixes, and Long Term Support (LTS). NPM package versioning follows [semantic versioning](https://semver.org/), `x.y.z.` or `major.minor.patch`. Any time the version is updated, it will be tagged `x.y.z`.
 
 ## New Features and Critical Bug Fixes
 
