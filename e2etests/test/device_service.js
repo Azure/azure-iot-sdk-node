@@ -69,6 +69,9 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
       closeDeviceServiceClients(deviceClient, serviceClient, done);
     });
 
+    /*
+    NOTE: By default, IoT Hubs support a maximum C2D message size of 64KB, which will cause this test to fail.
+    */
     it('Service sends a C2D message of maximum size and it is received by the device', function (done) {
       var receivingSideDone = false;
       var sendingSideDone = false;

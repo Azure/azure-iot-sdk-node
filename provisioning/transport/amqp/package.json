@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-provisioning-device-amqp",
-  "version": "1.8.11",
+  "version": "1.8.12",
   "description": "AMQP transport for Azure Device Provisioning SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
@@ -8,9 +8,9 @@
   "typings": "index.d.ts",
   "dependencies": {
     "async": "^2.6.3",
-    "azure-iot-amqp-base": "2.4.12",
-    "azure-iot-common": "1.12.12",
-    "azure-iot-provisioning-device": "1.8.11",
+    "azure-iot-amqp-base": "2.4.13",
+    "azure-iot-common": "1.12.13",
+    "azure-iot-provisioning-device": "1.8.12",
     "buffer-builder": "^0.2.0",
     "debug": "^4.3.1",
     "machina": "^4.0.2",

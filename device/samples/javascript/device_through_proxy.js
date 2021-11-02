@@ -19,7 +19,7 @@ const url = require('url');
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
-const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 let sendInterval;
 
 function disconnectHandler () {

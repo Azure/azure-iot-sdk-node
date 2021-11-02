@@ -488,7 +488,8 @@ export class Client extends EventEmitter {
       host: hostName,
       keyName: '',
       sharedAccessSignature: undefined,
-      tokenCredential: tokenCredential
+      tokenCredential,
+      tokenScope: 'https://iothubs.azure.net/.default'
     };
     return new Client(new transportCtor(config), new RestApiClient(config, packageJson.name + '/' + packageJson.version));
   }
@@ -508,16 +509,21 @@ export namespace Client {
     /**
      * The name of the policy used to connect to the Azure IoT Hub service.
      */
-    keyName: string;
+    keyName?: string;
     /**
      * The shared access signature token used to authenticate the connection with the Azure IoT hub.
      */
-    sharedAccessSignature: string | SharedAccessSignature;
+    sharedAccessSignature?: string | SharedAccessSignature;
 
     /**
      * The token credential used to authenticate the connection with the Azure IoT hub.
      */
-    tokenCredential: TokenCredential;
+    tokenCredential?: TokenCredential;
+
+    /**
+     * The token scope used to get the token from the TokenCredential object
+     */
+    tokenScope?: string;
   }
 
   export interface ServiceReceiver extends Receiver {

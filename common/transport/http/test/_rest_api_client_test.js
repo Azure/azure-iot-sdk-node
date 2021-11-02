@@ -34,6 +34,26 @@ describe('RestApiClient', function() {
       });
     });
 
+    [undefined, null, ''].forEach(function(tokenScope) {
+      it('throws a ArgumentError if \'config.TokenCredential\' is defined but \'config.TokenScope\' is falsy', function() {
+        assert.throws(function() {
+          return new RestApiClient(
+            {
+              host: 'host',
+              tokenCredential: {
+                getToken: sinon.stub().resolves({
+                  token: 'fake_token',
+                  expiresOnTimestamp: Date.now() + 3600000
+                })
+              },
+              tokenScope
+            },
+            fakeAgent
+          );
+        }, errors.ArgumentError);
+      });
+    });
+
     /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_002: [The `RestApiClient` constructor shall throw an `ArgumentError` if config is missing a `host` property.]*/
     ['host'].forEach(function(badPropName) {
       [undefined, null, ''].forEach(function(badPropValue) {
@@ -551,12 +571,13 @@ describe('RestApiClient', function() {
         })
       }
       var fakeConfig = {
-        host: "fake_host.com",
-        tokenCredential: fakeTokenCredential
+        host: 'fake_host.com',
+        tokenCredential: fakeTokenCredential,
+        tokenScope: 'fake_scope.com'
       }
       var fakeHttpHelper = {
         buildRequest: function(method, path, headers, host, requestCallback) {
-          assert(fakeTokenCredential.getToken.calledOnceWithExactly('https://iothubs.azure.net/.default'))
+          assert(fakeTokenCredential.getToken.calledOnceWithExactly('fake_scope.com'))
           return {
             write: function() { },
             end: function() {
@@ -578,7 +599,8 @@ describe('RestApiClient', function() {
             token: "fakeToken",
             expiresOnTimestamp: Date.now() + 3600000 //One hour from now
           }))
-        }
+        },
+        tokenScope: "fake_scope.com"
       };
       var fakeHttpHelper = {
         buildRequest: function(method, path, headers, host, requestCallback) {
@@ -621,8 +643,8 @@ describe('RestApiClient', function() {
         );
 
         assert(
-          fakeConfig.tokenCredential.getToken.alwaysCalledWithExactly('https://iothubs.azure.net/.default'),
-          "getToken() was called with the incorrect arguments"
+          fakeConfig.tokenCredential.getToken.alwaysCalledWithExactly('fake_scope.com'),
+          'getToken() was called with the incorrect arguments'
         );
       } finally {
         clock.restore();

@@ -71,7 +71,6 @@ export class Amqp extends EventEmitter implements Client.Transport {
   private _fileNotificationEndpoint: string = '/messages/serviceBound/filenotifications';
   private _fileNotificationReceiver: ServiceReceiver;
   private _fileNotificationErrorListener: (err: Error) => void;
-  private _iotHubPublicScope: string = 'https://iothubs.azure.net/.default';
   private _bearerTokenPrefix: string = 'Bearer ';
 
   /**
@@ -223,7 +222,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
                 } else if (this._config.tokenCredential) {
                   this.getToken().then((accessToken) => {
                     const tokenValue = this._bearerTokenPrefix + accessToken.token;
-                    this._amqp.putToken(this._iotHubPublicScope, tokenValue, (err) => {
+                    this._amqp.putToken(this._config.tokenScope, tokenValue, (err) => {
                       if (err) {
                         /*Codes_SRS_NODE_IOTHUB_SERVICE_AMQP_06_004: [** If `putToken` is not successful then the client will remain disconnected and the callback, if provided, will be invoked with an error object.]*/
                         this._fsm.transition('disconnecting', err, callback);
@@ -329,7 +328,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
             this._amqp.putToken(audience, updatedSAS, callback);
           },
           updateAccessToken: (tokenValue, callback) => {
-            this._amqp.putToken(this._iotHubPublicScope, tokenValue, callback);
+            this._amqp.putToken(this._config.tokenScope, tokenValue, callback);
           },
           amqpError: (err) => {
             this._fsm.transition('disconnecting', err);
@@ -580,7 +579,7 @@ export class Amqp extends EventEmitter implements Client.Transport {
    * @returns {Promise<AccessToken>} The access token string.
    */
    async getToken(): Promise<AccessToken> {
-    const accessToken = await this._config.tokenCredential.getToken(this._iotHubPublicScope);
+    const accessToken = await this._config.tokenCredential.getToken(this._config.tokenScope);
     if (!accessToken) {
       throw new Error('AccessToken creation failed');
     }

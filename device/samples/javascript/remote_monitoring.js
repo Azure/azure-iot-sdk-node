@@ -10,7 +10,7 @@ var Message = require('azure-iot-device').Message;
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
-var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 var deviceId = ConnectionString.parse(deviceConnectionString).DeviceId;
 
 // Sensors data

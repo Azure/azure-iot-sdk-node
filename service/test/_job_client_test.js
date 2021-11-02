@@ -196,6 +196,7 @@ describe('JobClient', function() {
       var client = JobClient.fromTokenCredential("hub.host.tv", fakeTokenCredential);
       assert.equal(client._restApiClient._config.host, 'hub.host.tv');
       assert.equal(client._restApiClient._config.tokenCredential, fakeTokenCredential);
+      assert.equal(client._restApiClient._config.tokenScope, 'https://iothubs.azure.net/.default');
     });
   });
 

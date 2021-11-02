@@ -7,7 +7,7 @@ var Protocol = require('azure-iot-device-mqtt').Mqtt;
 var url = require('url');
 var async = require('async');
 
-var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 var client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
 client.open(function(err) {

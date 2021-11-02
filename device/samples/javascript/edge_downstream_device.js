@@ -18,7 +18,7 @@ var Message = require('azure-iot-device').Message;
 //
 // The resulting string should look like the following
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>;GatewayHostName=<edge device hostname>"
-var deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
+var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 
 // Path to the Edge "owner" root CA certificate
 var edge_ca_cert_path = process.env.PATH_TO_EDGE_CA_CERT;
