@@ -4,7 +4,7 @@
 'use strict';
 
 const Protocol = require('azure-iot-device-mqtt').Mqtt;
-// Uncomment one of these transports and then change it in fromConnectionString to test other transports
+// Choose a protocol by uncommenting one of these transports.
 // const Protocol = require('azure-iot-device-amqp').AmqpWs;
 // const Protocol = require('azure-iot-device-http').Http;
 // const Protocol = require('azure-iot-device-amqp').Amqp;
@@ -19,6 +19,7 @@ let sendInterval;
 
 function disconnectHandler () {
   clearInterval(sendInterval);
+  sendInterval = null;
   client.open().catch((err) => {
     console.error(err.message);
   });
@@ -47,26 +48,27 @@ function generateMessage () {
   return message;
 }
 
-function errorCallback (err) {
+function errorHandler (err) {
   console.error(err.message);
 }
 
-function connectCallback () {
+function connectHandler () {
   console.log('Client connected');
   // Create a message and send it to the IoT Hub every two seconds
-  sendInterval = setInterval(() => {
-    const message = generateMessage();
-    console.log('Sending message: ' + message.getData());
-    client.sendEvent(message, printResultFor('send'));
-  }, 2000);
-
+  if (!sendInterval) {
+    sendInterval = setInterval(() => {
+      const message = generateMessage();
+      console.log('Sending message: ' + message.getData());
+      client.sendEvent(message, printResultFor('send'));
+    }, 2000);
+  }
 }
 
 // fromConnectionString must specify a transport constructor, coming from any transport package.
 let client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
-client.on('connect', connectCallback);
-client.on('error', errorCallback);
+client.on('connect', connectHandler);
+client.on('error', errorHandler);
 client.on('disconnect', disconnectHandler);
 client.on('message', messageHandler);
 

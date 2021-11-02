@@ -5,7 +5,7 @@
 
 var fs = require('fs');
 var Protocol = require('azure-iot-device-mqtt').Mqtt;
-// Uncomment one of these transports and then change it in fromConnectionString to test other transports
+// Choose a protocol by uncommenting one of these transports.
 // var Protocol = require('azure-iot-device-http').Http;
 // var Protocol = require('azure-iot-device-amqp').Amqp;
 var Client = require('azure-iot-device').Client;
@@ -26,6 +26,7 @@ var edge_ca_cert_path = process.env.PATH_TO_EDGE_CA_CERT;
 // fromConnectionString must specify a transport constructor, coming from any transport package.
 var client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
+var sendInterval;
 var connectCallback = function (err) {
   if (err) {
     console.error('Could not connect: ' + err.message);
@@ -43,16 +44,18 @@ var connectCallback = function (err) {
     });
 
     // Create a message and send it to the IoT Hub every two seconds
-    var sendInterval = setInterval(function () {
-      var windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
-      var temperature = 20 + (Math.random() * 10); // range: [20, 30]
-      var humidity = 60 + (Math.random() * 20); // range: [60, 80]
-      var data = JSON.stringify({ deviceId: 'myFirstDownstreamDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
-      var message = new Message(data);
-      message.properties.add('temperatureAlert', (temperature > 28) ? 'true' : 'false');
-      console.log('Sending message: ' + message.getData());
-      client.sendEvent(message, printResultFor('send'));
-    }, 2000);
+    if (!sendInterval) {
+      sendInterval = setInterval(function () {
+        var windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
+        var temperature = 20 + (Math.random() * 10); // range: [20, 30]
+        var humidity = 60 + (Math.random() * 20); // range: [60, 80]
+        var data = JSON.stringify({ deviceId: 'myFirstDownstreamDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
+        var message = new Message(data);
+        message.properties.add('temperatureAlert', (temperature > 28) ? 'true' : 'false');
+        console.log('Sending message: ' + message.getData());
+        client.sendEvent(message, printResultFor('send'));
+      }, 2000);
+    }
 
     client.on('error', function (err) {
       console.error(err.message);
@@ -60,6 +63,7 @@ var connectCallback = function (err) {
 
     client.on('disconnect', function () {
       clearInterval(sendInterval);
+      sendInterval = null;
       client.removeAllListeners();
       client.open(connectCallback);
     });

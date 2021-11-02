@@ -5,7 +5,7 @@
 
 // !IMPORTANT! This sample only pertains to HTTPS Proxy, via the HTTP Transport, MQTTWS Transport, and AMQPWS Transport.
 
-// Uncomment one of these transports and then change it in fromConnectionString to test other transports
+// Choose a protocol by uncommenting one of these transports.
 // const Protocol = require('azure-iot-device-amqp').AmqpWs;
 // const Protocol = require('azure-iot-device-http').Http;
 const Protocol = require('azure-iot-device-mqtt').MqttWs;
@@ -24,6 +24,7 @@ let sendInterval;
 
 function disconnectHandler () {
   clearInterval(sendInterval);
+  sendInterval = null;
   client.removeAllListeners();
   client.open().catch((err) => {
     console.error(err.message);
@@ -53,18 +54,20 @@ function generateMessage () {
   return message;
 }
 
-function errorCallback (err) {
+function errorHandler (err) {
   console.error(err.message);
 }
 
-function connectCallback () {
+function connectHandler () {
   console.log('Client connected');
   // Create a message and send it to the IoT Hub every two seconds
-  sendInterval = setInterval(() => {
-    const message = generateMessage();
-    console.log('Sending message: ' + message.getData());
-    client.sendEvent(message, printResultFor('send'));
-  }, 2000);
+  if (!sendInterval) {
+    sendInterval = setInterval(() => {
+      const message = generateMessage();
+      console.log('Sending message: ' + message.getData());
+      client.sendEvent(message, printResultFor('send'));
+    }, 2000);
+  }
 
 }
 
@@ -82,8 +85,8 @@ client.setOptions({mqtt: {webSocketAgent: agent}});
 // client.setOptions({amqp: {agent: agent}});
 // HTTP
 // client.setOptions({http: {webSocketAgent: agent}});
-client.on('connect', connectCallback);
-client.on('error', errorCallback);
+client.on('connect', connectHandler);
+client.on('error', errorHandler);
 client.on('disconnect', disconnectHandler);
 client.on('message', messageHandler);
 
