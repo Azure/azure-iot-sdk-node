@@ -23,10 +23,8 @@ const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 let sendInterval;
 
 function disconnectHandler () {
-  if (!!sendInterval) {
-    clearInterval(sendInterval);
-    sendInterval = null;
-  }
+  clearInterval(sendInterval);
+  sendInterval = null;
   client.removeAllListeners();
   client.open().catch((err) => {
     console.error(err.message);
@@ -63,7 +61,7 @@ function errorHandler (err) {
 function connectHandler () {
   console.log('Client connected');
   // Create a message and send it to the IoT Hub every two seconds
-  if (!!sendInterval) {
+  if (!sendInterval) {
     sendInterval = setInterval(() => {
       const message = generateMessage();
       console.log('Sending message: ' + message.getData());

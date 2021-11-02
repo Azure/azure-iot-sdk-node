@@ -52,7 +52,7 @@ let connectCallback = function (err: Error): void {
     });
 
     // Create a message and send it to the IoT Hub every two seconds
-    if (!!sendInterval) {
+    if (!sendInterval) {
       sendInterval = setInterval(function (): void {
         const windSpeed: number = 10 + (Math.random() * 4); // range: [10, 14]
         const temperature: number = 20 + (Math.random() * 10); // range: [20, 30]
@@ -70,10 +70,8 @@ let connectCallback = function (err: Error): void {
     });
 
     client.on('disconnect', function (): void {
-      if (!!sendInterval) {
-        clearInterval(sendInterval);
-        sendInterval = null;
-      }
+      clearInterval(sendInterval);
+      sendInterval = null;
       client.removeAllListeners();
       client.open(connectCallback);
     });
