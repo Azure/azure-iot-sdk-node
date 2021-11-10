@@ -1,6 +1,6 @@
 # Samples for the Azure IoT Device Provisioning Service SDK for Node.js
 
-This file can be found in https://github.com/Azure/azure-iot-sdk-node/tree/master/provisioning/service/samples
+This file can be found in https://github.com/Azure/azure-iot-sdk-node/tree/main/provisioning/service/samples
 
 This folder contains simple samples showing how to use the various features of the Microsoft Azure IoT Device Provisioning Service from an application running JavaScript code.
 
@@ -82,12 +82,12 @@ For more information on how to use this library refer to the documents below:
 [lnk-manage-iot-hub]: https://aka.ms/manageiothub
 [node-api-reference]: https://docs.microsoft.com/en-us/javascript/api/azure-iot-device/
 [node-devbox-setup]: ../../doc/node-devbox-setup.md
-[create-individual-tpm-enrollment]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/service/samples/create_individual_tpm_enrollment.js
-[create-individual-x509-enrollment]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/service/samples/create_individual_x509_enrollment.js
-[create-enrollment-group]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/service/samples/create_enrollment_group.js
+[create-individual-tpm-enrollment]: https://github.com/azure/azure-iot-sdk-node/tree/main/provisioning/service/samples/create_individual_tpm_enrollment.js
+[create-individual-x509-enrollment]: https://github.com/azure/azure-iot-sdk-node/tree/main/provisioning/service/samples/create_individual_x509_enrollment.js
+[create-enrollment-group]: https://github.com/azure/azure-iot-sdk-node/tree/main/provisioning/service/samples/create_enrollment_group.js
 [dps-service-concepts]: https://docs.microsoft.com/en-us/azure/iot-dps/concepts-service
-[create-delete]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/service/samples/create_delete.js
-[query-link]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/service/samples/query.js
-[run-bulk-operation]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/service/samples/query.js
-[package-json]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/service/samples/package.json
-[create-certificate-for-individual-enrollment]: https://github.com/Azure/azure-iot-sdk-node/tree/master/provisioning/device/samples#creating-x509-device-certificates-for-individual-enrollment
+[create-delete]: https://github.com/azure/azure-iot-sdk-node/tree/main/provisioning/service/samples/create_delete.js
+[query-link]: https://github.com/azure/azure-iot-sdk-node/tree/main/provisioning/service/samples/query.js
+[run-bulk-operation]: https://github.com/azure/azure-iot-sdk-node/tree/main/provisioning/service/samples/query.js
+[package-json]: https://github.com/azure/azure-iot-sdk-node/tree/main/provisioning/service/samples/package.json
+[create-certificate-for-individual-enrollment]: https://github.com/Azure/azure-iot-sdk-node/tree/main/provisioning/device/samples#creating-x509-device-certificates-for-individual-enrollment

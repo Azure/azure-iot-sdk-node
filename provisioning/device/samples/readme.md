@@ -1,6 +1,6 @@
 # Samples for the Azure IoT Device Provisioning Device SDK for Node.js
 
-This file can be found in https://github.com/Azure/azure-iot-sdk-node/tree/master/provisioning/device/samples
+This file can be found in https://github.com/Azure/azure-iot-sdk-node/tree/main/provisioning/device/samples
 
 This folder contains simple samples showing how to use the various features of the Microsoft Azure IoT Hub Device Provisioning Service from an application running JavaScript or TypeScript code.
 
@@ -86,16 +86,16 @@ For more information on how to use this library refer to the documents below:
 [lnk-manage-iot-hub]: https://aka.ms/manageiothub
 [node-api-reference]: https://docs.microsoft.com/en-us/javascript/api/azure-iot-device/
 [node-devbox-setup]: ../../doc/node-devbox-setup.md
-[register-x509]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/device/samples/register_x509.js
-[service-samples]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/service/samples/readme.md
-[service-sample-create-individual-enrollment]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/service/samples/create_individual_enrollment.js
-[service-sample-create-enrollment-group]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/service/samples/create_enrollment_group.js
-[package-json]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/device/samples/package.json
+[register-x509]: https://github.com/azure/azure-iot-sdk-node/tree/main/provisioning/device/samples/register_x509.js
+[service-samples]: https://github.com/azure/azure-iot-sdk-node/tree/main/provisioning/service/samples/readme.md
+[service-sample-create-individual-enrollment]: https://github.com/azure/azure-iot-sdk-node/tree/main/provisioning/service/samples/create_individual_enrollment.js
+[service-sample-create-enrollment-group]: https://github.com/azure/azure-iot-sdk-node/tree/main/provisioning/service/samples/create_enrollment_group.js
+[package-json]: https://github.com/azure/azure-iot-sdk-node/tree/main/provisioning/device/samples/package.json
 [pem-npm]: https://www.npmjs.com/package/pem
-[provisioning-e2e]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/e2e
+[provisioning-e2e]: https://github.com/azure/azure-iot-sdk-node/tree/main/provisioning/e2e
 [c-sdk-create-individual-enrollment]: https://docs.microsoft.com/en-us/azure/iot-dps/quick-create-simulated-device-x509
 [lnk-dps-concepts]: https://docs.microsoft.com/en-us/azure/iot-dps/concepts-service
 [simulate-x509-device] https://docs.microsoft.com/en-us/azure/iot-dps/quick-create-simulated-device-x509-node#simulate-the-device
-[provisioning-tools]: https://github.com/azure/azure-iot-sdk-node/tree/master/provisioning/tools
+[provisioning-tools]: https://github.com/azure/azure-iot-sdk-node/tree/main/provisioning/tools
 [lnk-x509-ca-overview]: https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-x509ca-overview
 [lnk-x509-verification-instructions]: https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-security-x509-get-started#registercerts
