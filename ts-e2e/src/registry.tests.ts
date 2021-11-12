@@ -4,7 +4,7 @@ import { assert } from 'chai';
 
 describe('Registry', () => {
   // tslint:disable:no-invalid-this
-  this.timeout(60000);
+  (this as any).timeout(60000);
   it('creates a device -> gets it -> updates it -> deletes it', (testCallback) => {
     const testDeviceId = uuid.v4();
     const registry = Registry.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);

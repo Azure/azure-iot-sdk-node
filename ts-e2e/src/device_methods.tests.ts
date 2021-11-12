@@ -18,7 +18,7 @@ describe('Device Methods', () => {
   [DeviceMqtt, DeviceMqttWs, DeviceAmqp, DeviceAmqpWs].forEach((transportCtor: any) => {
     describe('Over ' + transportCtor.name, () => {
       // tslint:disable:no-invalid-this
-      this.timeout(60000);
+      (this as any).timeout(60000);
 
       const testDevice = testUtils.createTestDevice();
       const scs = ServiceConnectionString.parse(process.env.IOTHUB_CONNECTION_STRING);

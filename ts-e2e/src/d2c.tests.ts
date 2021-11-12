@@ -15,7 +15,7 @@ const debug = dbg('ts-e2e-d2c');
 
 describe('D2C', () => {
   // tslint:disable:no-invalid-this
-  this.timeout(60000);
+  (this as any).timeout(60000);
   const testDevice = testUtils.createTestDevice();
 
   const hostName = ServiceConnectionString.parse(process.env.IOTHUB_CONNECTION_STRING).HostName;
@@ -61,7 +61,7 @@ describe('D2C', () => {
           partitionIds.forEach((partitionId) => {
             ehClient.receive(partitionId, onEventHubMessage, onEventHubError, { eventPosition: EventPosition.fromEnqueuedTime(startAfterTime) });
           });
-          return new Promise((resolve) => setTimeout(() => resolve(), 3000));
+          return new Promise<void>((resolve) => setTimeout(() => resolve(), 3000));
         }).then(() => {
           debug('EH Client: Receivers created');
           const deviceClient = DeviceClient.fromConnectionString(testDeviceCS, transportCtor);
