@@ -3,7 +3,13 @@
 
 'use strict';
 
+// Choose a protocol by uncommenting one of these transports.
 var Protocol = require('azure-iot-device-mqtt').Mqtt;
+// var Protocol = require('azure-iot-device-amqp').Amqp;
+// var Protocol = require('azure-iot-device-http').Http;
+// var Protocol = require('azure-iot-device-mqtt').MqttWs;
+// var Protocol = require('azure-iot-device-amqp').AmqpWs;
+
 var ModuleClient = require('azure-iot-device').ModuleClient;
 
 ModuleClient.fromEnvironment(Protocol, function (err, client) {

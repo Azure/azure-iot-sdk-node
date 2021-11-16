@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { Client, Twin } from 'azure-iot-device';
+// Choose a protocol by uncommenting one of these transports.
 import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
-// import { AmqpWs as Protocol } from 'azure-iot-device-amqp';
-// import { Http as Protocol } from 'azure-iot-device-Http';
 // import { Amqp as Protocol } from 'azure-iot-device-amqp';
+// import { Http as Protocol } from 'azure-iot-device-Http';
 // import { MqttWs as Protocol } from 'azure-iot-device-mqtt';
+// import { AmqpWs as Protocol } from 'azure-iot-device-amqp';
+
+import { Client, Twin } from 'azure-iot-device';
 
 const deviceConnectionString: string = process.env.IOTHUB_DEVICE_CONNECTION_STRING || '';
 
