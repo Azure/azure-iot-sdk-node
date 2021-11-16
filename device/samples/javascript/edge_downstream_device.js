@@ -3,13 +3,16 @@
 
 'use strict';
 
-var fs = require('fs');
-var Protocol = require('azure-iot-device-mqtt').Mqtt;
 // Choose a protocol by uncommenting one of these transports.
-// var Protocol = require('azure-iot-device-http').Http;
-// var Protocol = require('azure-iot-device-amqp').Amqp;
+var Protocol = require('azure-iot-device-mqtt').Mqtt;
+// const Protocol = require('azure-iot-device-amqp').AmqpWs;
+// const Protocol = require('azure-iot-device-http').Http;
+// const Protocol = require('azure-iot-device-amqp').Amqp;
+// const Protocol = require('azure-iot-device-mqtt').MqttWs;
+
 var Client = require('azure-iot-device').Client;
 var Message = require('azure-iot-device').Message;
+var fs = require('fs');
 
 // 1) Obtain the connection string for your downstream device and to it
 //    append this string GatewayHostName=<edge device hostname>;

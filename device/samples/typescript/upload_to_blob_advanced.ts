@@ -16,8 +16,14 @@
 // More information on Uploading Files with IoT Hub can be found here:
 // https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-file-upload
 
-import { Client } from 'azure-iot-device';
+// Choose a protocol by uncommenting one of these transports.
 import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
+// import { Amqp as Protocol } from 'azure-iot-device-amqp';
+// import { Http as Protocol } from 'azure-iot-device-Http';
+// import { MqttWs as Protocol } from 'azure-iot-device-mqtt';
+// import { AmqpWs as Protocol } from 'azure-iot-device-amqp';
+
+import { Client } from 'azure-iot-device';
 import { errors } from 'azure-iot-common';
 import { AnonymousCredential, BlobUploadCommonResponse, BlockBlobClient, newPipeline, Pipeline } from '@azure/storage-blob';
 

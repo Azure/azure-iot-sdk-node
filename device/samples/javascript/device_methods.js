@@ -3,10 +3,15 @@
 
 'use strict';
 
-require('es5-shim');
+// Choose a protocol by uncommenting one of these transports.
 var Protocol = require('azure-iot-device-mqtt').Mqtt;
-var Client = require('azure-iot-device').Client;
+// const Protocol = require('azure-iot-device-amqp').AmqpWs;
+// const Protocol = require('azure-iot-device-http').Http;
+// const Protocol = require('azure-iot-device-amqp').Amqp;
+// const Protocol = require('azure-iot-device-mqtt').MqttWs;
 
+require('es5-shim');
+var Client = require('azure-iot-device').Client;
 var client = null;
 
 function main() {
