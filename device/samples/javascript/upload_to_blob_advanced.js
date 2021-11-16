@@ -19,20 +19,16 @@
 'use strict';
 
 // Choose a protocol by uncommenting one of these transports.
-var Protocol = require('azure-iot-device-mqtt').Mqtt;
-// const Protocol = require('azure-iot-device-amqp').AmqpWs;
-// const Protocol = require('azure-iot-device-http').Http;
+const Protocol = require('azure-iot-device-mqtt').Mqtt;
 // const Protocol = require('azure-iot-device-amqp').Amqp;
+// const Protocol = require('azure-iot-device-http').Http;
 // const Protocol = require('azure-iot-device-mqtt').MqttWs;
+// const Protocol = require('azure-iot-device-amqp').AmqpWs;
 
 const Client = require('azure-iot-device').Client;
 const errors = require('azure-iot-common').errors;
 
-const {
-  AnonymousCredential,
-  BlockBlobClient,
-  newPipeline
-} = require('@azure/storage-blob');
+const {AnonymousCredential, BlockBlobClient, newPipeline } = require('@azure/storage-blob');
 
 // make sure you set these environment variables prior to running the sample.
 const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;

@@ -2,10 +2,10 @@
 
 // Choose a protocol by uncommenting one of these transports.
 var Protocol = require('azure-iot-device-mqtt').Mqtt;
-// const Protocol = require('azure-iot-device-amqp').AmqpWs;
-// const Protocol = require('azure-iot-device-http').Http;
-// const Protocol = require('azure-iot-device-amqp').Amqp;
-// const Protocol = require('azure-iot-device-mqtt').MqttWs;
+// var Protocol = require('azure-iot-device-amqp').Amqp;
+// var Protocol = require('azure-iot-device-http').Http;
+// var Protocol = require('azure-iot-device-mqtt').MqttWs;
+// var Protocol = require('azure-iot-device-amqp').AmqpWs;
 
 var ModuleClient = require('azure-iot-device').ModuleClient;
 
