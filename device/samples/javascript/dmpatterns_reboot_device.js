@@ -2,9 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 'use strict';
 
-var Client = require('azure-iot-device').Client;
+// Choose a protocol by uncommenting one of these transports.
 var Protocol = require('azure-iot-device-mqtt').Mqtt;
+// var Protocol = require('azure-iot-device-amqp').Amqp;
+// var Protocol = require('azure-iot-device-http').Http;
+// var Protocol = require('azure-iot-device-mqtt').MqttWs;
+// var Protocol = require('azure-iot-device-amqp').AmqpWs;
 
+var Client = require('azure-iot-device').Client;
 
 var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 var client = Client.fromConnectionString(deviceConnectionString, Protocol);
