@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-// This example is deprecated. We recommend you follow the 'upload_to_blob_advanced.js' sample.
+// THIS EXAMPLE IS DEPRECATED
+// We recommend you follow the 'upload_to_blob_advanced.js' sample.
 
 'use strict';
 

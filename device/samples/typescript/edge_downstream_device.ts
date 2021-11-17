@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import * as fs from 'fs';
-import { Client, Message } from 'azure-iot-device';
-
 // Choose a protocol by uncommenting one of these transports.
-// import { Http as Protocol } from 'azure-iot-device-http';
-// import { Amqp as Protocol } from 'azure-iot-device-amqp';
 import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
+// import { Amqp as Protocol } from 'azure-iot-device-amqp';
+// import { Http as Protocol } from 'azure-iot-device-Http';
+// import { MqttWs as Protocol } from 'azure-iot-device-mqtt';
+// import { AmqpWs as Protocol } from 'azure-iot-device-amqp';
+
+import { Client, Message } from 'azure-iot-device';
+import * as fs from 'fs'
 
 // 1) Obtain the connection string for your downstream device and to it
 //    append this string GatewayHostName=<edge device hostname>;

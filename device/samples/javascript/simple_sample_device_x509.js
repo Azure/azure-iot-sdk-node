@@ -3,14 +3,16 @@
 
 'use strict';
 
-var fs = require('fs');
-var Protocol = require('azure-iot-device-mqtt').Mqtt;
 // Choose a protocol by uncommenting one of these transports.
-// var Protocol = require('azure-iot-device-amqp').AmqpWs;
-// var Protocol = require('azure-iot-device-http').Http;
+var Protocol = require('azure-iot-device-mqtt').Mqtt;
 // var Protocol = require('azure-iot-device-amqp').Amqp;
+// var Protocol = require('azure-iot-device-http').Http;
+// var Protocol = require('azure-iot-device-mqtt').MqttWs;
+// var Protocol = require('azure-iot-device-amqp').AmqpWs;
+
 var Client = require('azure-iot-device').Client;
 var Message = require('azure-iot-device').Message;
+var fs = require('fs');
 
 // String containing Hostname and Device Id in the following format:
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;x509=true"
