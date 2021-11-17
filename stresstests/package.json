@@ -1,0 +1,39 @@
+{
+  "name": "azure-iot-stresstests",
+  "description": "Azure IoT Stress Tests",
+  "author": "Microsoft Corporation",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "//": "TODO: will the bump version pipeline update the dependencies?",
+  "dependencies": {
+    "azure-iot-common": "1.12.13",
+    "azure-iot-device": "1.17.8",
+    "azure-iot-device-amqp": "1.13.8",
+    "azure-iot-device-http": "1.13.8",
+    "azure-iot-device-mqtt": "1.15.8",
+    "azure-iothub": "1.14.6",
+    "@azure/event-hubs": "^1.0.8",
+    "uuid": "^8.3.2",
+    "debug": "^4.3.1",
+    "chai": "^4.3.3"
+  },
+  "devDependencies": {
+    "mocha": "^9.1.2"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Azure/azure-iot-sdk-node.git",
+    "directory": "stresstests"
+  },
+  "bugs": {
+    "url": "https://github.com/Azure/azure-iot-sdk-node/issues"
+  },
+  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme"
+}

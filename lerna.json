@@ -21,7 +21,8 @@
     "sdklab/mean_time_recovery",
     "sdklab/stress_fault",
     "e2etests",
-    "ts-e2e"
+    "ts-e2e",
+    "stresstests"
   ],
   "version": "0.0.0",
   "maxBuffer": 1048576

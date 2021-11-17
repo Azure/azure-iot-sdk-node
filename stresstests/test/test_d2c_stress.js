@@ -1,0 +1,160 @@
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+'use strict';
+
+const config = require('./config').d2c;
+const EventHubHelper = require('./event_hub_helper.js');
+const DeviceClientHelper = require('./device_client_helper.js');
+const StressMeasurementsRecorder = require('./stress_measurements_recorder.js');
+const Message = require('azure-iot-common').Message;
+const uuid = require('uuid');
+const assert = require('chai').assert;
+const debug = require('debug')('stresstests:d2c');
+
+/* NOTE: This test relies on the IOTHUB_CONNECTION_STRING environment variable */
+
+config.transportsToTest.forEach(transportToTest => {
+  config.deviceClientHelperMethodsToUse.forEach(deviceClientHelperMethodToUse => {
+    d2cStressTests(transportToTest, deviceClientHelperMethodToUse);
+  });
+});
+
+function d2cStressTests(transportToTest, deviceClientHelperMethodToUse) {
+  describe(`D2C stress tests on client created with ${deviceClientHelperMethodToUse} over transport ${transportToTest.name}`, function() {
+    let deviceClientHelper = null;
+    let eventHubHelper = null;
+    let stressMeasurementsRecorder = null;
+
+    before(function() {
+      // TODO: Remove test skipping when appropriate. 
+      if (['Amqp', 'AmqpWs'].includes(transportToTest.name)) {
+        debug(
+          'Tests over AMQP failing because of an issue with messageIds not '
+          + 'matching up on the service side. Skipping.'
+        );
+        this.skip();
+      }
+      if ([
+        'createDeviceClientX509SelfSigned',
+        'createDeviceClientX509CaSigned'
+      ].includes(deviceClientHelperMethodToUse)) {
+        debug(
+          'DeviceClientHelper has not implemented '
+          + `${deviceClientHelperMethodToUse}. Skipping.`
+        );
+        this.skip();
+      }
+
+      deviceClientHelper = new DeviceClientHelper();
+      eventHubHelper = new EventHubHelper();
+      stressMeasurementsRecorder = new StressMeasurementsRecorder();
+    });
+
+    beforeEach(async function() {
+      await eventHubHelper.open();
+      await deviceClientHelper[deviceClientHelperMethodToUse](transportToTest);
+      stressMeasurementsRecorder.start(
+        deviceClientHelper.client,
+        config.memorySamplingIntervalInMs
+      );
+    })
+
+    afterEach(async function() {
+      this.timeout(30 * 1000);
+      /*  done() should have been called within the test, but we call it here in
+          case the test failed and done() didn't get called. */
+      stressMeasurementsRecorder.done();
+      await Promise.all([
+        eventHubHelper.close(),
+        deviceClientHelper.disposeClient()
+      ]);
+    });
+
+    async function sendSingleMessage() {
+      const messageId = uuid.v4();
+      const deferred = eventHubHelper.awaitMessage(messageId);
+      stressMeasurementsRecorder.messageEnqueued();
+      /* Function creates a string of random ASCII values between 32 and 126 */
+      const randomString = length => Array.from(
+        { length: Math.floor(length) },
+        () => {String.fromCharCode(Math.floor(95 * Math.random() + 32))}
+      ).join('');
+      /* 7 is the number of characters in {"":""} */
+      const payloadSize = Math.max(config.telemetryPayloadSizeInBytes, 7);
+      const keyLength = Math.ceil((payloadSize - 7) / 2);
+      const valLength = payloadSize - keyLength - 7;
+      const message = new Message(JSON.stringify({[randomString(keyLength)]: randomString(valLength)}));
+      message.messageId = messageId;
+      deviceClientHelper.client.sendEvent(message).catch(err => {
+        /*  If the message fails to send, we will catch it when we timeout
+            on receiving the message on the service side. So logging the
+            error here is sufficient. */
+        debug(`Error sending message with ID ${messageId}: ${err}`);
+      });
+      await deferred;
+      stressMeasurementsRecorder.messageArrived(deferred.timeToSettle);
+    }
+
+    async function doContinuousSending(testDurationInMs, messagesPerSecond) {
+      const endTime = Date.now() + testDurationInMs;
+      const promises = [];
+      do {
+        promises.push(sendSingleMessage());
+        await new Promise(resolve => setTimeout(resolve, (1 / messagesPerSecond) * 1000));
+      } while (Date.now() < endTime);
+      await Promise.all(promises);
+    }
+
+    async function doSendingAllAtOnce(messageCount) {
+      await Promise.all(Array.from({length: messageCount}, sendSingleMessage, this));
+    }
+
+    function doMeasurementAssertions() {
+      assert.isAtMost(
+        stressMeasurementsRecorder.peakRssInBytes,
+        config.peakRssFailureTriggerInBytes,
+        `Recorded peak RSS of ${stressMeasurementsRecorder.peakRssInBytes / 1024 / 1024} MiB exceeded`
+        + ` the configured maximum of ${config.peakRssFailureTriggerInBytes / 1024 / 1024} MiB`
+      );
+      assert.isAtMost(
+        Number(stressMeasurementsRecorder.peakReconnectTimeInMs),
+        config.peakReconnectTimeFailureTriggerInMs,
+        `Recorded peak reconnect time of ${stressMeasurementsRecorder.peakReconnectTimeInMs} ms`
+        + ` exceeded the configured maximum of ${config.peakReconnectTimeFailureTriggerInMs} ms`
+      );
+      assert.isAtMost(
+        Number(stressMeasurementsRecorder.peakTelemetryArrivalTimeInMs),
+        config.peakTelemetryArrivalTimeFailureTriggerInMs,
+        `Recorded peak telemetry arrival time of ${stressMeasurementsRecorder.peakTelemetryArrivalTimeInMs} ms`
+        + ` exceeded the configured maximum of ${config.peakTelemetryArrivalTimeFailureTriggerInMs} ms`
+      );
+    }
+
+    it(`can send ${config.continuousTest.messagesPerSecond} messages per second for ${config.continuousTest.testDurationInMs} ms`, async function () {
+      this.timeout(2 * config.continuousTest.testDurationInMs);
+      await doContinuousSending(
+        config.continuousTest.testDurationInMs,
+        config.continuousTest.messagesPerSecond
+      );
+      stressMeasurementsRecorder.done();
+      doMeasurementAssertions();
+    });
+
+    it(`can send ${config.allAtOnceTest.messageCount} messages at once`, async function() {
+      this.timeout(config.allAtOnceTest.elapsedTimeFailureTriggerInMs);
+      await doSendingAllAtOnce(config.allAtOnceTest.messageCount);
+      stressMeasurementsRecorder.done();
+      doMeasurementAssertions();
+    });
+
+    it.skip(`can send ${config.continuousTest.messagesPerSecond} messages per second for ${config.continuousTest.testDurationInMs} ms with a flaky network`, async function() {
+      // TODO
+    });
+
+    it.skip(`can send ${config.continuousTest.messagesPerSecond} messages per second for ${config.continuousTest.testDurationInMs} ms with faults injected`, async function() {
+      // TODO
+    });
+
+  });
+}
