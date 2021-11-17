@@ -73,12 +73,10 @@ function d2cStressTests(transportToTest, deviceClientHelperMethodToUse) {
 
     async function sendSingleMessage() {
       const messageId = uuid.v4();
-      const deferred = eventHubHelper.awaitMessage(messageId);
-      stressMeasurementsRecorder.messageEnqueued();
       /* Function creates a string of random ASCII values between 32 and 126 */
       const randomString = length => Array.from(
         { length: Math.floor(length) },
-        () => {String.fromCharCode(Math.floor(95 * Math.random() + 32))}
+        () => String.fromCharCode(Math.floor(95 * Math.random() + 32))
       ).join('');
       /* 7 is the number of characters in {"":""} */
       const payloadSize = Math.max(config.telemetryPayloadSizeInBytes, 7);
@@ -86,12 +84,36 @@ function d2cStressTests(transportToTest, deviceClientHelperMethodToUse) {
       const valLength = payloadSize - keyLength - 7;
       const message = new Message(JSON.stringify({[randomString(keyLength)]: randomString(valLength)}));
       message.messageId = messageId;
-      deviceClientHelper.client.sendEvent(message).catch(err => {
-        /*  If the message fails to send, we will catch it when we timeout
-            on receiving the message on the service side. So logging the
-            error here is sufficient. */
-        debug(`Error sending message with ID ${messageId}: ${err}`);
-      });
+      const deferred = eventHubHelper.awaitMessage(messageId);
+      stressMeasurementsRecorder.messageEnqueued();
+      let attempts = 0;
+      while (attempts < 5) {
+        if (!deviceClientHelper.client) {
+          throw new Error(
+            `deviceClientHelper.client is ${deviceClientHelper.client}. The `
+            + 'client was probably disposed.'
+          )
+        }
+        try {
+          await deviceClientHelper.client.sendEvent(message);
+          break;
+        } catch (err) {
+          if (++attempts < 5) {
+            const sleepTime = attempts * 5000;
+            debug(
+              `Error sending message with ID ${messageId} after ${attempts} `
+              + `attempts: ${err}. Waiting for ${sleepTime} ms before retrying.`
+            );
+            await new Promise(resolve => setTimeout(resolve, sleepTime));
+          } else {
+            debug(
+              `Error sending message with ID ${messageId} after a maximum of 5 `
+              + `attempts: ${err}. Failing test.`
+            );
+            throw err;
+          }
+        }
+      }
       await deferred;
       stressMeasurementsRecorder.messageArrived(deferred.timeToSettle);
     }

@@ -90,9 +90,11 @@ class EventHubHelper {
           partitionId,
           event => {
             const messageId = event.properties && event.properties.message_id;
+            const body = JSON.stringify(event.body);
             if (!messageId && this._warnNoMessageId) {
               debug(
-                `Received a message without a messageId. Body: ${event.body} `
+                'Received a message without a messageId and body '
+                + `${body.length < 80 ? body : 'too long to display'}. `
                 + '(Warnings of future messages without a messageId on this '
                 + 'client will be suppressed)'
               );
@@ -104,8 +106,9 @@ class EventHubHelper {
             } else if (messageId && this._warnUnexpectedMessage) {
               debug(
                 `Received unexpected message with messageId ${messageId} and `
-                + `body ${JSON.stringify(event.body)}. (Warnings of future `
-                + 'unexpected messages on this client will be suppressed)'
+                + `body ${body.length < 80 ? body : 'too long to display'}. `
+                + '(Warnings of future unexpected messages on this client will '
+                + 'be suppressed)'
               );
               this._warnUnexpectedMessage = false;
             }

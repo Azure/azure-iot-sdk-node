@@ -46,7 +46,10 @@ class DeviceClientHelper {
     debug('disposing client');
     const [client, deviceId] = [this.client, this.deviceId];
     [this.client, this.deviceId, this.moduleId] = [null, null, null];
-    await Promise.all([client.close(), this._registry.delete(deviceId)]);
+    await Promise.all([
+      client.close().then(() => debug('client closed')),
+      this._registry.delete(deviceId).then(() => debug('device id removed from registry'))
+    ]);
   }
 
   /**
