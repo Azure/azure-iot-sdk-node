@@ -6,6 +6,7 @@
   "license": "MIT",
   "main": "common.js",
   "typings": "common.d.ts",
+  "type": "commonjs",
   "dependencies": {
     "debug": "^4.3.1",
     "getos": "^3.2.1"
