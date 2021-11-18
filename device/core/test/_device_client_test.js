@@ -40,11 +40,11 @@ describe('Device Client', function () {
       var clock = this.clock;
 
       var x509ConnectionString = 'HostName=host;DeviceId=id;x509=true';
-      var client = new Client.fromConnectionString(x509ConnectionString, FakeTransport);
+      var client = Client.fromConnectionString(x509ConnectionString, FakeTransport);
       assert.instanceOf(client, Client);
 
       sinon.stub(client._transport, 'updateSharedAccessSignature').callsFake(function () {
-        clock.restore();
+        clock.restoee();
         testCallback(new Error('updateSharedAccessSignature should not have been called'));
       });
 
