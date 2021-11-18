@@ -10,6 +10,7 @@ const StressMeasurementsRecorder = require('./stress_measurements_recorder.js');
 const Message = require('azure-iot-common').Message;
 const uuid = require('uuid');
 const assert = require('chai').assert;
+const wtf = require('wtfnode');
 const debug = require('debug')('stresstests:d2c');
 
 /* NOTE: This test relies on the IOTHUB_CONNECTION_STRING environment variable */
@@ -71,6 +72,8 @@ function d2cStressTests(transportToTest, deviceClientHelperMethodToUse) {
       ]);
     });
 
+    after(wtf.dump);
+
     async function sendSingleMessage() {
       const messageId = uuid.v4();
       /* Function creates a string of random ASCII values between 32 and 126 */
@@ -98,18 +101,18 @@ function d2cStressTests(transportToTest, deviceClientHelperMethodToUse) {
           await deviceClientHelper.client.sendEvent(message);
           break;
         } catch (err) {
+          const transportState = deviceClientHelper.client._transport._fsm
+            && deviceClientHelper.client._transport._fsm.compositeState();
+          debug(
+            `Error sending message with ID ${messageId} after ${attempts} `
+            + `attempts: ${err}.${transportState ? ` transport state: ${transportState}.` : ''}`
+          )
           if (++attempts < 5) {
             const sleepTime = attempts * 5000;
-            debug(
-              `Error sending message with ID ${messageId} after ${attempts} `
-              + `attempts: ${err}. Waiting for ${sleepTime} ms before retrying.`
-            );
+            debug(`Waiting for ${sleepTime} ms before retrying.`);
             await new Promise(resolve => setTimeout(resolve, sleepTime));
           } else {
-            debug(
-              `Error sending message with ID ${messageId} after a maximum of 5 `
-              + `attempts: ${err}. Failing test.`
-            );
+            debug('Reached maximum number of attempts. Failing test.');
             throw err;
           }
         }

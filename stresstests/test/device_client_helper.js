@@ -60,7 +60,7 @@ class DeviceClientHelper {
    * @public
    */
   async createDeviceClientSas(transportCtor, modelId) {
-    debug('creating Client with SAS authentication');
+    debug(`creating Client with SAS authentication and ${transportCtor.name} transport`);
     this._clientCreationChecks(...arguments);
     const deviceDescription = await this._registerSasDevice();
     this.deviceId = deviceDescription.deviceId;
@@ -85,7 +85,7 @@ class DeviceClientHelper {
    * @public
    */
   async createDeviceClientSymmetricKey(transportCtor, modelId) {
-    debug('creating Client with symmetric key authentication');
+    debug(`creating Client with symmetric key authentication and ${transportCtor.name} transport`);
     this._clientCreationChecks(...arguments);
     const deviceDescription = await this._registerSasDevice();
     this.deviceId = deviceDescription.deviceId;
@@ -117,7 +117,7 @@ class DeviceClientHelper {
    * @public
    */
   async createModuleClientSas(transportCtor, modelId) {
-    debug('creating ModuleClient with SAS authentication');
+    debug(`creating ModuleClient with SAS authentication and ${transportCtor.name} transport`);
     this._clientCreationChecks(...arguments);
     const deviceDescription = await this._registerSasDevice();
     const moduleId = `node_stress_delete_me_${uuid.v4()}`
@@ -151,7 +151,7 @@ class DeviceClientHelper {
    * @public
    */
   async createModuleClientSymmetricKey(transportCtor, modelId) {
-    debug('creating ModuleClient with symmetric key authentication');
+    debug(`creating ModuleClient with symmetric key authentication and ${transportCtor.name} transport`);
     this._clientCreationChecks(...arguments);
     const deviceDescription = await this._registerSasDevice();
     const moduleId = `node_stress_delete_me_${uuid.v4()}`

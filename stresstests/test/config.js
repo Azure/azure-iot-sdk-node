@@ -10,19 +10,19 @@ const deviceMqtt = require('azure-iot-device-mqtt');
 module.exports = {
   d2c: {
     transportsToTest: [
-      deviceHttp.Http,
+      // deviceHttp.Http,
       deviceMqtt.Mqtt,
-      deviceMqtt.MqttWs,
-      deviceAmqp.Amqp,
-      deviceAmqp.AmqpWs,
+      // deviceMqtt.MqttWs,
+      // deviceAmqp.Amqp,
+      // deviceAmqp.AmqpWs,
     ],
     deviceClientHelperMethodsToUse: [
       'createDeviceClientSas',
-      'createDeviceClientSymmetricKey',
-      'createDeviceClientX509SelfSigned',
-      'createDeviceClientX509CaSigned',
-      'createModuleClientSas',
-      'createModuleClientSymmetricKey',
+      // 'createDeviceClientSymmetricKey',
+      // 'createDeviceClientX509SelfSigned',
+      // 'createDeviceClientX509CaSigned',
+      // 'createModuleClientSas',
+      // 'createModuleClientSymmetricKey',
     ],
     telemetryPayloadSizeInBytes: 16 * 1024,
     memorySamplingIntervalInMs: 5 * 1000,
