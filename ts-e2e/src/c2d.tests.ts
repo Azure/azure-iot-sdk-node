@@ -11,7 +11,7 @@ const debug = dbg('ts-e2e-c2d');
 
 describe('C2D', () => {
   // tslint:disable:no-invalid-this
-  this.timeout(60000);
+  (this as any).timeout(60000);
   const testDevice2 = testUtils.createTestDevice();
 
   const hostName = ServiceConnectionString.parse(process.env.IOTHUB_CONNECTION_STRING).HostName;

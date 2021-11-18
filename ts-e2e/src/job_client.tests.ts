@@ -8,7 +8,7 @@ const debug = dbg('ts-e2e-jobclient');
 
  describe('JobClient', () => {
   // tslint:disable:no-invalid-this
-  this.timeout(120000);
+  (this as any).timeout(120000);
 
   const testDeviceId = '0000node-e2etests-JobClient-' + uuid.v4();
   let testDevice = null;

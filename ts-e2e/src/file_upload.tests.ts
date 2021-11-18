@@ -9,7 +9,7 @@ import { assert } from 'chai';
 
 describe('File upload', () => {
   // tslint:disable:no-invalid-this
-  this.timeout(60000);
+  (this as any).timeout(60000);
   const testDevice = testUtils.createTestDevice();
 
   const hostName = ServiceConnectionString.parse(process.env.IOTHUB_CONNECTION_STRING).HostName;
