@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-import _ = require('lodash');
+import at = require('lodash.at');
 import { EventEmitter } from 'events';
 import * as traverse from 'traverse';
 import * as dbg from 'debug';
@@ -156,7 +156,7 @@ export class Twin extends EventEmitter {
 
   /* Codes_SRS_NODE_DEVICE_TWIN_18_031: [** `properties.reported.update` shall merge the contents of the patch object into `properties.reported` **]** */
   private _mergePatch(dest: any, patch: any): void {
-    _.merge(dest, patch);
+    Object.assign(dest, patch);
 
     /* Codes_SRS_NODE_DEVICE_TWIN_18_032: [** When merging the patch, if any properties are set to `null`, `properties.reported.update` shall delete that property from `properties.reported`. **]** */
     traverse(dest).forEach(function (prop: any): void {
@@ -189,7 +189,7 @@ export class Twin extends EventEmitter {
       if (path) {
         /* Codes_SRS_NODE_DEVICE_TWIN_18_041: [** When firing a property changed event, the `Twin` object shall name the event from the property using dot notation starting with 'properties.desired.' **]** */
         /* Codes_SRS_NODE_DEVICE_TWIN_18_042: [** When firing a property changed event, the `Twin` object shall pass the changed value of the property as the event parameter **]** */
-        self.emit(Twin.desiredPath + '.' + path, _.at(desiredProperties,path)[0]);
+        self.emit(Twin.desiredPath + '.' + path, at(desiredProperties,path)[0]);
       }
     });
   }
@@ -205,7 +205,7 @@ export class Twin extends EventEmitter {
   private _handleNewListener(eventName: string): void {
     const self = this;
     if (eventName.indexOf(Twin.desiredPath) === 0) {
-      const propertyValue = _.at(this, eventName)[0];
+      const propertyValue = at(this, eventName)[0];
       /*Codes_SRS_NODE_DEVICE_TWIN_18_045: [If a property is already set when a handler is added for that property, the `Twin` object shall fire a property changed event for the property.]*/
       if (propertyValue) {
         process.nextTick(() => {

@@ -24,7 +24,6 @@
     "typescript": "4.4.4"
   },
   "scripts": {
-    "fakeScript": "000001",
     "npmlockrefresh": "npm i --package-lock-only",
     "lint": "tslint --project . -c ../../tslint.json",
     "build": "tsc",

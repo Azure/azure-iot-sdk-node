@@ -13,7 +13,6 @@ import { ReceiverLink } from './receiver_link';
 import { AmqpLink } from './amqp_link_interface';
 import { getErrorName } from './amqp_common_errors';
 import { create_container as rheaCreateContainer, EventContext, AmqpError, Container, Connection, Session } from 'rhea';
-import merge = require('lodash.merge');
 import * as dbg from 'debug';
 import * as async from 'async';
 
@@ -720,7 +719,7 @@ export class Amqp {
       connectionParameters.sasl_mechanisms = {};
       connectionParameters.sasl_mechanisms[config.saslMechanismName] = config.saslMechanism;
     }
-    connectionParameters = merge(connectionParameters, config.policyOverride);
+    Object.assign(connectionParameters, config.policyOverride);
     this._config = config;
     this._fsm.handle('connect', connectionParameters, done);
   }

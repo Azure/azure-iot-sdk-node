@@ -7,7 +7,6 @@ import { AuthenticationProvider, encodeUriComponentStrict, callbackToPromise } f
 import { MethodParams, MethodCallback, MethodResult } from '.';
 import { RestApiClient } from 'azure-iot-http-base';
 import { getUserAgentString } from '../utils';
-import * as _ from 'lodash';
 
 /**
  * @private
@@ -73,7 +72,7 @@ export class MethodClient {
 
   setOptions(options: any): void {
     /*Codes_SRS_NODE_DEVICE_METHOD_CLIENT_16_001: [The `setOptions` method shall merge the options passed in argument with the existing set of options used by the `MethodClient`.]*/
-    this._options = _.merge(this._options, options);
+    Object.assign(this._options, options);
   }
 
   private _init(callback: (err?: Error) => void): void {
