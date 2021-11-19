@@ -44,7 +44,7 @@ describe('Device Client', function () {
       assert.instanceOf(client, Client);
 
       sinon.stub(client._transport, 'updateSharedAccessSignature').callsFake(function () {
-        clock.restoee();
+        clock.restore();
         testCallback(new Error('updateSharedAccessSignature should not have been called'));
       });
 

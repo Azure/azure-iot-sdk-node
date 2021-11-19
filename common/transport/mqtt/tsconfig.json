@@ -1,9 +1,8 @@
 {
     "compilerOptions": {
         "outDir": "./dist",
-        "target":"es5",
+        "target":"es2017",
         "downlevelIteration": true,
-        "lib": [ "es5", "ES2015.Iterable", "es2015.collection" ],
         "sourceMap": true,
         "declaration": true,
         "noUnusedLocals": true,
