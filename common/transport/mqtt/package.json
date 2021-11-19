@@ -57,7 +57,7 @@
     "lines": 97,
     "functions": 93,
     "branches": 93,
-    "statements": 98
+    "statements": 97
   },
   "mocha": {
     "require": [

@@ -51,10 +51,10 @@
       ".tsx"
     ],
     "check-coverage": true,
-    "lines": 89,
-    "functions": 82,
-    "branches": 81,
-    "statements": 89
+    "lines": 88,
+    "functions": 81,
+    "branches": 80,
+    "statements": 88
   },
   "mocha": {
     "require": [
