@@ -89,8 +89,8 @@ If you want to modify the module's code and/or contribute changes, you will need
 [npm_lnk]:https://docs.npmjs.com/getting-started/what-is-npm
 [lnk-setup-iot-hub]: https://aka.ms/howtocreateazureiothub
 [lnk-manage-iot-hub]: https://aka.ms/manageiothub
-[devbox-setup]: https://github.com/Azure/azure-iot-sdk-node/blob/master/doc/node-devbox-setup.md
-[device-samples]: https://github.com/Azure/azure-iot-sdk-node/tree/master/device/samples
+[devbox-setup]: https://github.com/Azure/azure-iot-sdk-node/blob/main/doc/node-devbox-setup.md
+[device-samples]: https://github.com/Azure/azure-iot-sdk-node/tree/main/device/samples
 [node-api-reference]: https://docs.microsoft.com/en-us/javascript/api/azure-iot-device/
 [iot-dev-center]: http://azure.com/iotdev
 [iot-hub-documentation]: https://docs.microsoft.com/en-us/azure/iot-hub/
