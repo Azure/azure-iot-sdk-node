@@ -7,12 +7,12 @@
 
 ## Critical Upcoming Change Notice
 
-All Azure IoT SDK users are advised to be aware of upcoming TLS certificate changes for Azure IoT Hub and Device Provisioning Service 
-that will impact the SDK's ability to connect to these services. In October 2022, both services will migrate from the current 
-[Baltimore CyberTrust CA Root](https://baltimore-cybertrust-root.chain-demos.digicert.com/info/index.html) to the 
-[DigiCert Global G2 CA root](https://global-root-g2.chain-demos.digicert.com/info/index.html). There will be a 
-transition period beforehand where your IoT devices must have both the Baltimore and Digicert public certificates 
-installed in their certificate store in order to prevent connectivity issues. 
+All Azure IoT SDK users are advised to be aware of upcoming TLS certificate changes for Azure IoT Hub and Device Provisioning Service
+that will impact the SDK's ability to connect to these services. In October 2022, both services will migrate from the current
+[Baltimore CyberTrust CA Root](https://baltimore-cybertrust-root.chain-demos.digicert.com/info/index.html) to the
+[DigiCert Global G2 CA root](https://global-root-g2.chain-demos.digicert.com/info/index.html). There will be a
+transition period beforehand where your IoT devices must have both the Baltimore and Digicert public certificates
+installed in their certificate store in order to prevent connectivity issues.
 
 **Devices with only the Baltimore public certificate installed will lose the ability to connect to Azure IoT hub and Device Provisioning Service in October 2022.**
 
@@ -131,8 +131,9 @@ Below is a table showing the mapping of the LTS branches to the package versions
 
 | NPM Package | Github Branch | LTS Status | LTS Start Date | Maintenance End Date | Removed Date |
 | :-----------: | :-----------: | :--------: | :------------: | :------------------: | :----------: |
-| 1.11.x        | [lts_09_2019](https://github.com/Azure/azure-iot-sdk-node/tree/lts_09_2019)   | Active     | 2019-09-09     | 2020-09-09           | 2021-03-09   |
-| 1.17.x        | [lts_07_2020](https://github.com/Azure/azure-iot-sdk-node/tree/lts_07_2020)   | Active     | 2020-07-28     | 2021-07-28           | 2022-01-28   |
+| 1.17.x        | [lts_07_2020](https://github.com/Azure/azure-iot-sdk-node/tree/lts_07_2020)   | Active     | 2020-07-28     | 2022-01-31           | 2022-06-30   |
+
+We have extended the life of the current LTS.  A new LTS will be available in January 2022.
 
 <sup>1</sup> All scheduled dates are subject to change by the Azure IoT SDK team.
 
