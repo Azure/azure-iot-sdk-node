@@ -1,15 +1,14 @@
 {
   "compilerOptions": {
     "outDir": "./dist",
+    "target":"es2017",
+    "module": "commonjs",
     "sourceMap": true,
     "declaration": true,
     "noUnusedParameters": true,
     "removeComments": false,
     "noImplicitAny": true,
     "suppressImplicitAnyIndexErrors": true,
-    "noUnusedLocals": true,
-    "lib": [
-      "es6", "dom"
-    ]
+    "noUnusedLocals": true
   }
 }

@@ -7,9 +7,6 @@
     "removeComments": false,
     "noImplicitAny": true,
     "suppressImplicitAnyIndexErrors": true,
-    "noUnusedLocals": true,
-    "lib": [
-      "es6", "dom"
-    ]
+    "noUnusedLocals": true
   }
 }
