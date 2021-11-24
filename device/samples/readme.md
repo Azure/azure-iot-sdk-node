@@ -8,8 +8,8 @@ You can use Github Codespaces to be up and running quickly! Here are the steps t
 
 In order to run the device samples you will first need the following prerequisites:
 
-- An Azure IoT Hub instance. [(Link if you don't.)][https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-through-portal]
-- A device identity for your device. [(Link if you don't.)][https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-through-portal#register-a-new-device-in-the-iot-hub]
+- An Azure IoT Hub instance. [(Link if you don't.)](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-through-portal)
+- A device identity for your device. [(Link if you don't.)](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-through-portal#register-a-new-device-in-the-iot-hub)
 
 **2) Create and open Codespace**
 
