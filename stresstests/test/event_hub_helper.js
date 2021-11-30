@@ -15,7 +15,7 @@ class Deferred {
   constructor() {
     this.startTime = Date.now();
     this.timeToSettle = null;
-    this.promise = new Promise((resolve, reject) => {
+    promise = new Promise((resolve, reject) => {
       this.resolve = val => {
         this.timeToSettle = Date.now() - this.startTime;
         resolve(val);
@@ -25,8 +25,8 @@ class Deferred {
         reject(val);
       };
     });
-    this.then = this.promise.then.bind(this.promise);
-    this.catch = this.promise.catch.bind(this.promise);
+    this.then = promise.then.bind(promise);
+    this.catch = promise.catch.bind(promise);
   }
 }
 

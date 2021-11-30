@@ -114,8 +114,8 @@ class StressMeasurementsRecorder {
       return;
     }
     clearInterval(this._memorySamplingInterval);
-    this._client.off('connect', this._connectHandler);
-    this._client.off('disconnect', this._disconnectHandler);
+    this._client.off('connect', this._connectHandler.bind(this));
+    this._client.off('disconnect', this._disconnectHandler.bind(this));
     this.totalElapsedTime = Date.now() - this._startTime;
     this._done = true;
   }
@@ -123,7 +123,7 @@ class StressMeasurementsRecorder {
   /**
    * @private
    */
-  _connectHandler = () => {
+  _connectHandler() {
     debug('client emitted a connect event');
     if (this._disconnectedTime) {
       this.peakReconnectTimeInMs = Math.max(this.peakReconnectTimeInMs, Date.now() - this._disconnectedTime);
@@ -134,9 +134,11 @@ class StressMeasurementsRecorder {
   /**
    * @private
    */
-  _disconnectHandler = () => {
-    debug('client emitted a disconnect event')
-    this._disconnectedTime = Date.now()
+  _disconnectHandler() {
+    debug('client emitted a disconnect event');
+    if (!this._disconnectedTime) {
+      this._disconnectedTime = Date.now();
+    }
   };
 }
 

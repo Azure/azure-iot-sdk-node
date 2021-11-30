@@ -5,7 +5,6 @@
   "version": "1.0.0",
   "private": true,
   "license": "MIT",
-  "//": "TODO: will the bump version pipeline update the dependencies?",
   "dependencies": {
     "azure-iot-common": "1.12.13",
     "azure-iot-device": "1.17.8",

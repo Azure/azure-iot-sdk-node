@@ -78,7 +78,7 @@ function d2cStressTests(transportToTest, deviceClientHelperMethodToUse) {
       const messageId = uuid.v4();
       /* Function creates a string of random ASCII values between 32 and 126 */
       const randomString = length => Array.from(
-        { length: Math.floor(length) },
+        { length },
         () => String.fromCharCode(Math.floor(95 * Math.random() + 32))
       ).join('');
       /* 7 is the number of characters in {"":""} */
@@ -89,33 +89,15 @@ function d2cStressTests(transportToTest, deviceClientHelperMethodToUse) {
       message.messageId = messageId;
       const deferred = eventHubHelper.awaitMessage(messageId);
       stressMeasurementsRecorder.messageEnqueued();
-      let attempts = 0;
-      while (attempts < 5) {
-        if (!deviceClientHelper.client) {
-          throw new Error(
-            `deviceClientHelper.client is ${deviceClientHelper.client}. The `
-            + 'client was probably disposed.'
-          )
-        }
-        try {
-          await deviceClientHelper.client.sendEvent(message);
-          break;
-        } catch (err) {
-          const transportState = deviceClientHelper.client._transport._fsm
-            && deviceClientHelper.client._transport._fsm.compositeState();
-          debug(
-            `Error sending message with ID ${messageId} after ${attempts} `
-            + `attempts: ${err}.${transportState ? ` transport state: ${transportState}.` : ''}`
-          )
-          if (++attempts < 5) {
-            const sleepTime = attempts * 5000;
-            debug(`Waiting for ${sleepTime} ms before retrying.`);
-            await new Promise(resolve => setTimeout(resolve, sleepTime));
-          } else {
-            debug('Reached maximum number of attempts. Failing test.');
-            throw err;
-          }
-        }
+      try {
+        await deviceClientHelper.client.sendEvent(message);
+      } catch (err) {
+        const transportState = deviceClientHelper.client._transport._fsm
+          && deviceClientHelper.client._transport._fsm.compositeState();
+        debug(
+          `Error sending message with ID ${messageId}: ${err}.` +
+          `${transportState ? ` Transport state: ${transportState}.` : ''}`
+        );
       }
       await deferred;
       stressMeasurementsRecorder.messageArrived(deferred.timeToSettle);

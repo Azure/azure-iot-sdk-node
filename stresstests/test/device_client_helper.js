@@ -56,12 +56,11 @@ class DeviceClientHelper {
    * Registers a device with the IoT Hub and then creates a corresponding device
    * client (Client) that authenticates using a shared access signature.
    * @param {function} transportCtor - The constructor of the device transport to use.
-   * @param {string} [modelId] - An optional model ID to use for the device.
    * @public
    */
-  async createDeviceClientSas(transportCtor, modelId) {
+  async createDeviceClientSas(transportCtor) {
     debug(`creating Client with SAS authentication and ${transportCtor.name} transport`);
-    this._clientCreationChecks(...arguments);
+    this._clientCreationChecks(transportCtor);
     const deviceDescription = await this._registerSasDevice();
     this.deviceId = deviceDescription.deviceId;
     try {
@@ -70,7 +69,7 @@ class DeviceClientHelper {
         this.deviceId,
         deviceDescription.authentication.symmetricKey.primaryKey,
         anHourFromNow()
-      ).toString(), ...arguments);
+      ).toString(), transportCtor);
     } catch (err) {
       await this._cleanUpFailedClientCreation();
       throw err;
@@ -81,18 +80,17 @@ class DeviceClientHelper {
    * Registers a device with the IoT Hub and then creates a corresponding device
    * client (Client) that authenticates using a symmetric key.
    * @param {function} transportCtor - The constructor of the device transport to use.
-   * @param {string} [modelId] - An optional model ID to use for the device.
    * @public
    */
-  async createDeviceClientSymmetricKey(transportCtor, modelId) {
+  async createDeviceClientSymmetricKey(transportCtor) {
     debug(`creating Client with symmetric key authentication and ${transportCtor.name} transport`);
-    this._clientCreationChecks(...arguments);
+    this._clientCreationChecks(transportCtor);
     const deviceDescription = await this._registerSasDevice();
     this.deviceId = deviceDescription.deviceId;
     try {
       this.client = Client.fromConnectionString(
         `HostName=${this._hubHostName};DeviceId=${this.deviceId};SharedAccessKey=${deviceDescription.authentication.symmetricKey.primaryKey}`,
-        ...arguments
+        transportCtor
       );
     } catch (err) {
       await this._cleanUpFailedClientCreation();
@@ -100,11 +98,11 @@ class DeviceClientHelper {
     }
   }
 
-  async createDeviceClientX509SelfSigned(transportCtor, modelId) {
+  async createDeviceClientX509SelfSigned(transportCtor) {
     throw new Error('createDeviceClientX509SelfSigned() is not implemented yet');
   }
 
-  async createDeviceClientX509CaSigned(transportCtor, modelId) {
+  async createDeviceClientX509CaSigned(transportCtor) {
     throw new Error('createDeviceX509CaSigned() is not implemented yet');
   }
 
@@ -113,12 +111,11 @@ class DeviceClientHelper {
    * a corresponding module client (ModuleClient) that authenticates using a
    * shared access signature.
    * @param {function} transportCtor - The constructor of the device transport to use.
-   * @param {string} [modelId] - An optional model ID to use for the module.
    * @public
    */
-  async createModuleClientSas(transportCtor, modelId) {
+  async createModuleClientSas(transportCtor) {
     debug(`creating ModuleClient with SAS authentication and ${transportCtor.name} transport`);
-    this._clientCreationChecks(...arguments);
+    this._clientCreationChecks(transportCtor);
     const deviceDescription = await this._registerSasDevice();
     const moduleId = `node_stress_delete_me_${uuid.v4()}`
     await this._registry.addModule({
@@ -134,7 +131,7 @@ class DeviceClientHelper {
           deviceDescription.authentication.symmetricKey.primaryKey,
           anHourFromNow()
         ).toString(),
-        ...arguments
+        transportCtor
       )
     } catch (err) {
       await this._cleanUpFailedClientCreation();
@@ -147,12 +144,11 @@ class DeviceClientHelper {
    * a corresponding module client (ModuleClient) that authenticates using a
    * symmetric key.
    * @param {function} transportCtor - The constructor of the device transport to use.
-   * @param {string} [modelId] - An optional model ID to use for the module.
    * @public
    */
-  async createModuleClientSymmetricKey(transportCtor, modelId) {
+  async createModuleClientSymmetricKey(transportCtor) {
     debug(`creating ModuleClient with symmetric key authentication and ${transportCtor.name} transport`);
-    this._clientCreationChecks(...arguments);
+    this._clientCreationChecks(transportCtor);
     const deviceDescription = await this._registerSasDevice();
     const moduleId = `node_stress_delete_me_${uuid.v4()}`
     await this._registry.addModule({
@@ -163,7 +159,7 @@ class DeviceClientHelper {
     try {
       this.client = ModuleClient.fromConnectionString(
         `HostName=${this._hubHostName};DeviceId=${this.deviceId};ModuleId=${this.moduleId};SharedAccessKey=${deviceDescription.authentication.symmetricKey.primaryKey}`,
-        ...arguments
+        transportCtor
       );
     } catch (err) {
       await this._cleanUpFailedClientCreation();
@@ -175,25 +171,19 @@ class DeviceClientHelper {
    * Sets the token valid time in seconds and token renewal margin in seconds
    * for the device client. Only supported for clients with symmetric key
    * authentication.
-   * 
-   * NOTE: This method relies on internal implementation details of the client
-   * and is not guaranteed to work in the future.
    * @param {number} tokenValidTimeInSeconds - The time in seconds that the
    *   token is valid for.
    * @param {number} tokenRenewalMarginInSeconds - The time in seconds before
    *   token expiry that the client will renew the token.
    * @public
    */
-  setTokenRenewalValues(tokenValidTimeInSeconds, tokenRenewalMarginInSeconds) {
+  async setTokenRenewalValues(tokenValidTimeInSeconds, tokenRenewalMarginInSeconds) {
     if (!this.client) {
       throw new Error('Client must be created before setting token renewal values.');
     }
-    if (!this.client._transport || !this.client._transport._authenticationProvider || !this.client._transport._authenticationProvider.setTokenRenewalValues) {
-      throw new Error('Setting token renewal values is not supported on this client.');
-    }
     this._checkType(tokenValidTimeInSeconds, 'tokenValidTimeInSeconds', 'number');
     this._checkType(tokenRenewalMarginInSeconds, 'tokenRenewalMarginInSeconds', 'number');
-    this.client._transport._authenticationProvider.setTokenRenewalValues(...arguments);
+    await this.client.setOptions({ tokenRenewal: { tokenValidTimeInSeconds, tokenRenewalMarginInSeconds } });
   }
   
   // NOTE: ModuleClient does not support X509
@@ -210,16 +200,13 @@ class DeviceClientHelper {
   /**
    * @private
    */
-  _clientCreationChecks(transportCtor, modelId) {
+  _clientCreationChecks(transportCtor) {
     if (this.client) {
       throw new Error(
         'A client already exists. The client must be disposed with disposeClient() before creating a new one.'
       )
     }
     this._checkType(transportCtor, 'transportCtor', 'function');
-    if (modelId) {
-      this._checkType(modelId, 'modelId', 'string');
-    }
   }
 
   /**
