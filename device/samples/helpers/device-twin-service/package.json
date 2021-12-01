@@ -1,13 +1,13 @@
 {
-  "name": "iot-hub",
+  "name": "sample-helpers-device-twin-service",
   "version": "1.0.0",
-  "description": "",
+  "description": "Helper project that acts as a backend service to update device twin desired properties on a specific device.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "danhellem",
   "license": "ISC",
   "dependencies": {
     "azure-iothub": "^1.14.6" 
