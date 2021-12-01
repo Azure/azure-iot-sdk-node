@@ -6,7 +6,7 @@ const deviceId = 'devDevice';
 
 if (connectionString === undefined) {
   console.log('IoT Hub connection string not set');
-  process.exit(-1);
+  process.exit(0);
 }
 
 const registry = iothub.Registry.fromConnectionString(connectionString);
