@@ -290,7 +290,7 @@ async function main() {
 
 
     intervalToken3 = setInterval(() => {
-      const data = JSON.stringify({ workingset: 1 + (Math.random() * 90) });
+      const data = JSON.stringify({ workingSet: 1 + (Math.random() * 90) });
       sendTelemetry(client, data, index3, null).catch((err) => console.log('error ', err.toString()));
       index3 += 1;
     }, 6000);
