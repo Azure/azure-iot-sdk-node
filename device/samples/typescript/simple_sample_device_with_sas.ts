@@ -59,7 +59,7 @@ let connectCallback = function (err: Error): void {
 
     client.on('disconnect', function (): void {
       clearInterval(sendInterval);
-      sendInterval = None;
+      sendInterval = null;
       client.removeAllListeners();
       client.open(connectCallback);
     });

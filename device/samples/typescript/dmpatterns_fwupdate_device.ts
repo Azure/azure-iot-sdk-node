@@ -8,7 +8,7 @@ import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
 // import { MqttWs as Protocol } from 'azure-iot-device-mqtt';
 // import { AmqpWs as Protocol } from 'azure-iot-device-amqp';
 
-import {Client, DeviceMethodRequest, DeviceMethodResponse, Twin,} from 'azure-iot-device';
+import { Client, DeviceMethodRequest, DeviceMethodResponse, Twin } from 'azure-iot-device';
 import * as url from 'url';
 import * as async from 'async';
 

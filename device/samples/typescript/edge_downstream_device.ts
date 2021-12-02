@@ -9,7 +9,7 @@ import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
 // import { AmqpWs as Protocol } from 'azure-iot-device-amqp';
 
 import { Client, Message } from 'azure-iot-device';
-import * as fs from 'fs'
+import * as fs from 'fs';
 
 // 1) Obtain the connection string for your downstream device and to it
 //    append this string GatewayHostName=<edge device hostname>;

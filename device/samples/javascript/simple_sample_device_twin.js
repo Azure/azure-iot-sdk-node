@@ -37,12 +37,12 @@ client.open(function(err) {
         // properties have already been retrieved from the service.  When we
         // add these handlers, there is a chance that the handlers will be called
         // almost immediately if the relevant properties have already been
-        // retrieved from the service.  In this way "property change" could mean
+        // retrieved from the service. In this way "property change" could mean
         // "the property is changing from one value to another value", or it could
         // mean "the property is changing from being unset to being set."
         //
-        // There are 4 examples here.  The app developer has the option to chose
-        // which sample style to use (or mix and match).  All of the events
+        // There are 4 examples here. The app developer has the option to chose
+        // which sample style to use (or mix and match). All of the events
         // shown here will fire and it's up to the app developer to decide what
         // to listen for.
         //
@@ -51,6 +51,11 @@ client.open(function(err) {
         // nothing that stops the developer from writing two different handlers
         // that process the same properties at different levels.
         //
+
+        // ATTENTION!
+        // You will need to send the desired properties updates from a seperate 
+        // backend service. We have created a helper service for you in the 
+        // 'helpers/device-twin-service' directory. See readme for instructions.
 
         // Usage example #1: receiving all patches with a single event handler.
         //
@@ -68,13 +73,14 @@ client.open(function(err) {
         // This code will output desired min and max temperature every time
         // the service updates either one.
         //
-        // For example (service API code):
-        //  twin.properties.desired.update({
-        //    climate : {
-        //      minTemperature: 68,
-        //      maxTemperature: 76
-        //    }
-        //  });
+        // Example patch document for service API code:
+        // const twinPatch1 = {
+        //  properties: {
+        //    desired: {
+        //      climate: { minTemperature: 68, maxTemperature: 76, },
+        //    },
+        //  },
+        // };
         //
         twin.on('properties.desired.climate', function(delta) {
             //
@@ -96,55 +102,67 @@ client.open(function(err) {
         });
 
         // Usage example #3: receiving an event for a single (scalar) property
-        // value.  This event is only fired if the fanOn boolean value is part
+        // value. This event is only fired if the fanOn boolean value is part
         // of the patch.
         //
         // This code will output the new desired fan state whenever the service
         // updates it.
         //
-        // For example (service API code):
-        // twin.properties.desired.update({
-        //   climate : {
-        //      hvac : {
-        //        systemControl : {
-        //          fanOn : true
-        //        }
-        //      }
-        //    }
-        //  });
+        // Example patch document for service API code:
+        // const twinPatch2 = {
+        //  properties: {
+        //    desired: {
+        //      climate: {
+        //        hvac: {
+        //          systemControl: { fanOn: true, },
+        //        },
+        //      },
+        //    },
+        //  },
+        //};
+
         twin.on('properties.desired.climate.hvac.sytemControl', function(fanOn) {
             console.log('setting fan state to ' + fanOn);
         });
 
-        // Usage example #4: handle add or delete operations.  The app developer
+        // Usage example #4: handle add or delete operations. The app developer
         // is responsible for inferring add/update/delete operations based on
         // the contents of the patch.
         //
         // This code will output the results of adding, updating, or deleting
         // modules.
         //
-        // Add example (service API code):
-        //  twin.properties.desired.update({
-        //    modules : {
-        //      wifi : { channel = 6, ssid = 'my_network' },
-        //      climate : { id = 17, units = 'farenheit' }
+        // Add example - patch document for service API code:
+        // const twinPatch3 = {
+        //  properties: {
+        //    desired: {
+        //      modules : {
+        //        wifi : { channel: 6, ssid: 'my_network' },
+        //        climate : { id: 17, units: 'farenheit' }
+        //      }
         //    }
-        //  });
+        //  }
+        // }
         //
-        // Update example (service API code):
-        //  twin.properties.desired.update({
-        //    modules : {
-        //      wifi : { channel = 7, encryption = 'wpa', passphrase = 'foo' }
+        // Update example - patch document for service API code:
+        // const twinPatch4 = {
+        //  properties: {
+        //    desired: {
+        //      modules : {
+        //        wifi : { channel: 7, encryption: 'wpa', passphrase: 'foo' }
+        //      }
         //    }
-        //  });
+        //  }
+        //}
         //
-        // Delete example (service API code):
-        //  twin.properties.desired.update({
-        //    modules : {
-        //      climate = null
+        // Delete example - patch document for service API code:
+        // const twinPatch5 = {
+        //  properties: {
+        //    desired: {
+        //      modules : { climate: null }
         //    }
-        //  });
-        //
+        //  }
+        // }
 
         // To do this, first we have to keep track of "all modules that we know
         // about".
@@ -185,13 +203,10 @@ client.open(function(err) {
         // create a patch to send to the hub
         var patch = {
           firmwareVersion:'1.2.1',
-          weather:{
-            temperature: 72,
-            humidity: 17
-          }
+          weather:{ temperature: 72, humidity: 17 }
         };
 
-         // send the patch
+         // send the patch to update reported properties
         twin.properties.reported.update(patch, function(err) {
           if (err) throw err;
           console.log('twin state reported');
