@@ -57,10 +57,10 @@ async function asyncMain(): Promise<void> {
           // app developer to resolve the collisions.  In other words, there is
           // nothing that stops the developer from writing two different handlers
           // that process the same properties at different levels.
-          
+
           // ATTENTION!
-          // You will need to send the desired properties updates from a seperate 
-          // backend service. We have created a helper service for you in the 
+          // You will need to send the desired properties updates from a seperate
+          // backend service. We have created a helper service for you in the
           // 'helpers/device-twin-service' directory. See readme for instructions.
 
           // Usage example #1: receiving all patches with a single event handler.
@@ -129,7 +129,7 @@ async function asyncMain(): Promise<void> {
           //      },
           //    },
           //  },
-          //};
+          // };
           //
           twin.on(
             'properties.desired.climate.hvac.sytemControl',
@@ -166,7 +166,7 @@ async function asyncMain(): Promise<void> {
           //      }
           //    }
           //  }
-          //}
+          // }
           //
           // Delete example - patch document for service API code:
           // const twinPatch5 = {
