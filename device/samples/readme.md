@@ -25,7 +25,7 @@ In order to run the device samples you will first need the following prerequisit
 - Set the `IOTHUB_DEVICE_CONNECTING_STRING` environment variable:
 
 ```bash
-export IOTHUB_DEVICE_CONNECTING_STRING="<YourIoTHubConnectionString>"
+export IOTHUB_DEVICE_CONNECTING_STRING="<YourIoTHubDeviceConnectionString>"
 ```
 
 **4) Run it**
@@ -85,13 +85,13 @@ npm install
 _in bash_
 
 ```bash
-export IOTHUB_DEVICE_CONNECTION_STRING="<YourIoTHubConnectionString>"
+export IOTHUB_DEVICE_CONNECTION_STRING="<YourIoTHubDeviceConnectionString>"
 ```
 
 _in powershell_
 
 ```powershell
-$env:IOTHUB_DEVICE_CONNECTION_STRING="<YourIoTHubConnectionString>"
+$env:IOTHUB_DEVICE_CONNECTION_STRING="<YourIoTHubDeviceConnectionString>"
 ```
 
 **4) Build it**
