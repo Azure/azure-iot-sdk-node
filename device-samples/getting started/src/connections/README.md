@@ -4,7 +4,7 @@ These samples highlight the different ways to create a client. For simplicity, a
 
 # 🦉 Getting setup
 
-Before you can run any of the samples, you need to need a few things setup and configured. We have provided the links below to help.
+Before you can run any of the samples, you will need to setup and configure a few things. 
 
 - [Setup IoT Hub and devices](../../../help/iot-hub-prerequisites.md)
 - [Setup your local environment](../../../help/dev-environment.md)
@@ -47,9 +47,9 @@ This sample shows you how to create a client connection using a x509 certificate
 Before you get started, make sure you set the following environmental variables. [Click here](../../../help/setting-env-variables.md) if you need help setting environment variables.
 
 | Env variable                    | Description                                                                                                                                                                                                         |
-| :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --- |
+| :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | 
 | IOTHUB_DEVICE_CONNECTION_STRING | The connection string for your IoT Hub device. It contains the Hostname, Device Id & Device Key in the following format:<br/><br/>`"HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"` |
-| PATH_TO_CERTIFICATE_FILE        | Path on disk to the certificate. For example: `c:\mycerts\mydevice.csr`.                                                                                                                                            |     |
+| PATH_TO_CERTIFICATE_FILE        | Path on disk to the certificate. For example: `c:\mycerts\mydevice.csr`.                                                                                                                                            | 
 | PATH_TO_KEY_FILE                | Path on disk to the certificate key. For example: `c:\mykeys\mydevice.key`.                                                                                                                                         |
 | KEY_PASSPHRASE_OR_EMPTY         | Optional key passphrase.                                                                                                                                                                                            |
 
