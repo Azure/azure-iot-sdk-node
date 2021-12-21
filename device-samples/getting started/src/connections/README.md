@@ -6,10 +6,10 @@ These samples highlight the different ways to create a client. For simplicity, a
 
 Before you can run any of the samples, you will need to setup and configure a few things. 
 
-- <a href="../../../help/iot-hub-prerequisites.md" target="_new">Setup IoT Hub and devices</a>
-- <a href="../../../help/dev-environment.md" target="_new">Setup your local environment</a>
-- <a href="../../../help/monitor-iot-hub.md" target="_new">Monitor activity (optional)</a>
-  
+- [Setup IoT Hub and devices](../../../help/iot-hub-prerequisites.md) 
+- [Setup your local environment](../../../help/dev-environment.md) 
+- [Monitor activity (optional)](../../../help/monitor-iot-hub.md)
+
 # 🌟 Samples
 
 ### Connection string
