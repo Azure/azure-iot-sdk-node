@@ -6,9 +6,9 @@ These samples highlight the different ways to create a client. For simplicity, a
 
 Before you can run any of the samples, you will need to setup and configure a few things. 
 
-- [Setup IoT Hub and devices](../../../../../doc/device-samples/iot-hub-prerequisites.md) 
-- [Setup your local environment](../../../../doc/device-samples/dev-environment.md) 
-- [Monitor activity (optional)](../../../../doc/device-samples/monitor-iot-hub.md)
+- [Setup IoT Hub and devices](../../../../doc/device-samples/iot-hub-prerequisites.md) 
+- [Setup your local environment](../../../doc/device-samples/dev-environment.md) 
+- [Monitor activity (optional)](../../../doc/device-samples/monitor-iot-hub.md)
 
 # 🌟 Samples
 
