@@ -11,11 +11,3 @@ Nam non nulla id ante feugiat pulvinar rutrum ut mi. Quisque auctor tempor dui, 
 ## How to guides (level 200-300)
 
 Nulla id tempus tortor, ut viverra odio. Aliquam accumsan magna vel efficitur eleifend. Curabitur consectetur fringilla eros ut pellentesque. Morbi id posuere quam. Nam aliquet nisi mauris, sit amet pharetra tortor euismod ac. Cras ullamcorper non purus et aliquet. Fusce dui mi, pellentesque at sagittis a, fringilla ac velit. Nullam nec enim iaculis, dictum turpis ac, tempus turpis. Pellentesque in dolor suscipit, faucibus risus a, pretium metus.
-
-[Click here for the how-to guides](./how%20to%20guides)
-
-## Solutions (level 400+)
-
-Sed ultricies felis euismod diam porttitor pellentesque. Pellentesque facilisis ligula id commodo gravida. Etiam et dolor sit amet est rhoncus lobortis a eu enim. Proin lacinia dignissim nisi, non volutpat diam semper quis. Pellentesque quis elit elit. Praesent id convallis tortor. Ut metus lectus, aliquet id erat quis, posuere auctor dolor. Nam consectetur nec est sit amet lacinia. Interdum et malesuada fames ac ante ipsum primis in faucibus. In sit amet nisi congue, consequat neque vel, porttitor augue. Fusce nulla nisl, venenatis in dolor tincidunt, suscipit fringilla odio.
-
-[Click here for solutions](./solutions)
