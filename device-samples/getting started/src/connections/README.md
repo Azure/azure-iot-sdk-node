@@ -87,4 +87,4 @@ From the `getting started/src/connections` directory, run `node proxy.js`
 # 👉 Next Steps
 
 - [Send messages](../send%20messages/README.md)
-- [More getting started samples](../../../README.md)
+- [More getting started samples](../../README.md)
