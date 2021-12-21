@@ -16,7 +16,7 @@ Before you can run any of the samples, you will need to setup and configure a fe
 
 The default sample and the simplest way to create a client connection on your device. This sample just creates a connection and sends a single event to Azure IoT Hub.
 
-Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
+Before you get started, make sure you set the following environmental variables. [Click here](../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
 
 | Env variable                    | Description                                                                                                                                                                                                         |
 | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -30,7 +30,7 @@ From the `getting started/src/connections` directory, run `node connection_strin
 
 This sample shows you how to create a client connection using a SAS token. [Learn more](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-dev-guide-sas?tabs=node) about shared access signatures.
 
-Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
+Before you get started, make sure you set the following environmental variables. [Click here](../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
 
 | Env variable | Description                                                                                                                                                    |
 | :----------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -44,7 +44,7 @@ From the `getting started/src/connections` directory, run `node sas.js`
 
 This sample shows you how to create a client connection using a x509 certificates. [Learn more](https://docs.microsoft.com/en-us/azure/iot-hub/tutorial-x509-introduction) about certificates.
 
-Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
+Before you get started, make sure you set the following environmental variables. [Click here](../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
 
 | Env variable                    | Description                                                                                                                                                                                                         |
 | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | 
@@ -61,7 +61,7 @@ From the `getting started/src/connections` directory, run `node x509.js`
 
 This sample using the connection string with options to use a proxy server.
 
-Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
+Before you get started, make sure you set the following environmental variables. [Click here](../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
 
 | Env variable                    | Description                                                                                                                                                                                                         |
 | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -79,9 +79,7 @@ const proxy = "http://localhost:8888/";
 
 From the `getting started/src/connections` directory, run `node proxy.js`
 
-# 📖 Documentation
-
-Nunc malesuada volutpat fermentum. Donec in ante nec diam venenatis eleifend. Cras commodo ligula nec justo lacinia fringilla. Morbi eget congue neque. Duis varius eleifend enim eu euismod. Pellentesque scelerisque convallis tortor. Fusce gravida est diam, ac sodales enim consectetur eu. Duis eu consequat massa.
+# 📖 Further reading
 
 - [Control access to IoT Hub using Shared Access Signatures and security tokens](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-dev-guide-sas?tabs=node)
 - [Understanding Public Key Cryptography and X.509 Public Key Infrastructure](https://docs.microsoft.com/en-us/azure/iot-hub/tutorial-x509-introduction)
