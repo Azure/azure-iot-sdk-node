@@ -1,6 +1,4 @@
-# Setting up IoT hub
-
-## 🔨 Create an IoT hub
+# 🔨 Create an IoT hub
 
 This is an abbreviated description on how to create an IoT hub using the Azure portal. [Click here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-through-portal) for the in-depth walk through. 
 
@@ -26,7 +24,7 @@ This is an abbreviated description on how to create an IoT hub using the Azure p
 
    ![review and create tab of creating an iot hub](./media/iot-hub-create-screen-create.png)
 
-## 📲 Register a new device in the IoT hub
+# 📲 Register a new device in the IoT hub
 
 In this section, you create a device identity in the identity registry in your IoT hub. A device cannot connect to a hub unless it has an entry in the identity registry. For more information, see the [IoT Hub developer guide](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-identity-registry#identity-registry-operations).
 
@@ -42,7 +40,7 @@ In this section, you create a device identity in the identity registry in your I
 
    ![devices pane on device screen](./media/create-device-connection-strings.png)
 
-## 🔎 Other ways to create an IoT hub
+# 🔎 Other ways to create an IoT hub
 
 - [Create an IoT hub using the Azure IoT Tools for Visual Studio Code](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-use-iot-toolkit)
 - [Create an IoT hub using the New-AzIotHub cmdlet](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-using-powershell)
