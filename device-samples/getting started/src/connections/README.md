@@ -8,7 +8,7 @@ Before you can run any of the samples, you will need to setup and configure a fe
 
 - [Setup IoT Hub and devices](../../../help/iot-hub-prerequisites.md)
 - [Setup your local environment](../../../help/dev-environment.md)
-- [Monitor activity](../../../help/monitor-iot-hub.md)
+- [Monitor activity (optional)](../../../help/monitor-iot-hub.md)
 
 # 🌟 Samples
 
