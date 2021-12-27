@@ -70,7 +70,6 @@ Before you get started, make sure you set the following environmental variables.
 There is also a line of code you you will need to change to match the endpoing of your proxy server.
 
 ```javascript
-// Create a Proxy Agent
 // TODO: You need to change this to match the endpoint of your proxy server.
 const proxy = "http://localhost:8888/";
 ```
