@@ -4,10 +4,22 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut quis felis aliquam e
 
 ## Getting started (level 100)
 
-Nam non nulla id ante feugiat pulvinar rutrum ut mi. Quisque auctor tempor dui, et scelerisque enim congue quis. Nunc aliquam arcu risus, eu elementum leo pellentesque sed. Curabitur in auctor magna, at euismod sapien. Aenean nec venenatis tortor. Sed massa lacus, pulvinar vel sodales eget, faucibus mollis quam.
+If are new to the Azure IoT Device SDK, this is the place to start. These samples will help get you up to speed with the basics in just a few minutes. Some of the concepts we cover in the getting started samples are:
 
-[Click here for getting started samples](./getting%20started)
+- [Creating a connection](./getting%20started/src/connections)
+- [Sending telemetry messages](./getting%20started/src/send%20messages)
+- [Receive cloud to device message](./getting%20started/src/receive%20messages)
+- [Receive cloud to device method invocation](./getting%20started/src/receive%20method%20invocation)
+- [Upload files](./getting%20started/src/upload%20files)
+- [Device twins](getting%20started/src/device%20twins)
+- [Azure IoT Edge Modules](getting%20started/src/edge%20modules)
+
+⭐ If this is your first time here, we suggest you start with the [send messages](./getting%20started/src/send%20messages) sample.
+
+[Click here for all getting started samples](./getting%20started)
 
 ## How to guides (level 200-300)
 
 Nulla id tempus tortor, ut viverra odio. Aliquam accumsan magna vel efficitur eleifend. Curabitur consectetur fringilla eros ut pellentesque. Morbi id posuere quam. Nam aliquet nisi mauris, sit amet pharetra tortor euismod ac. Cras ullamcorper non purus et aliquet. Fusce dui mi, pellentesque at sagittis a, fringilla ac velit. Nullam nec enim iaculis, dictum turpis ac, tempus turpis. Pellentesque in dolor suscipit, faucibus risus a, pretium metus.
+
+[Click here for how to guides](./how%20to%20guides)

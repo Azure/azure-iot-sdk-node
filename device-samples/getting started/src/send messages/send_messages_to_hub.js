@@ -12,17 +12,23 @@ const Protocol = require('azure-iot-device-mqtt').Mqtt;
 
 const Client = require('azure-iot-device').Client;
 const Message = require('azure-iot-device').Message;
+let sendInterval = null;
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
 const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
-let sendInterval;
+
+// make sure we have a connection string before we can continue
+if (deviceConnectionString === null || deviceConnectionString === undefined) {
+  console.error('\x1b[31m%s\x1b[0m', 'Missing device connection string');
+  process.exit(0);
+}
 
 function disconnectHandler () {
   clearInterval(sendInterval);
   sendInterval = null;
   client.open().catch((err) => {
-    console.error(err.message);
+    cconsole.error('\x1b[31m%s\x1b[0m', 'Disconnect error: ' + err.message);
   });
 }
 
@@ -36,13 +42,13 @@ function disconnectHandler () {
 // MQTT is simpler: it accepts the message by default, and doesn't support rejecting or abandoning a message.
 function messageHandler (msg) {
   console.log('Id: ' + msg.messageId + ' Body: ' + msg.data);
-  client.complete(msg, printResultFor('completed'));
+  client.complete(msg, printResultFor('Completed'));
 }
 
 function generateMessage () {
-  const windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
-  const temperature = 20 + (Math.random() * 10); // range: [20, 30]
-  const humidity = 60 + (Math.random() * 20); // range: [60, 80]
+  const windSpeed = 10 + (Math.random() * 4);     // range: [10, 14]
+  const temperature = 20 + (Math.random() * 10);  // range: [20, 30]
+  const humidity = 60 + (Math.random() * 20);     // range: [60, 80]
   const data = JSON.stringify({ deviceId: 'myFirstDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
   const message = new Message(data);
   message.properties.add('temperatureAlert', (temperature > 28) ? 'true' : 'false');
@@ -50,7 +56,7 @@ function generateMessage () {
 }
 
 function errorHandler (err) {
-  console.error(err.message);
+  console.error('\x1b[31m%s\x1b[0m', err.message);
 }
 
 function connectHandler () {
@@ -60,7 +66,7 @@ function connectHandler () {
     sendInterval = setInterval(() => {
       const message = generateMessage();
       console.log('Sending message: ' + message.getData());
-      client.sendEvent(message, printResultFor('send'));
+      client.sendEvent(message, printResultFor('Send'));
     }, 2000);
   }
 }
@@ -73,15 +79,17 @@ client.on('error', errorHandler);
 client.on('disconnect', disconnectHandler);
 client.on('message', messageHandler);
 
-client.open()
-.catch(err => {
-  console.error('Could not connect: ' + err.message);
+// open client connection
+client.open().catch((err) => {
+  console.error('\x1b[31m%s\x1b[0m', 'Could not connect: ' + err.message);
+  process.exit(0);
 });
 
-// Helper function to print results in the console
+// helper function to print results in the console
 function printResultFor(op) {
   return function printResult(err, res) {
-    if (err) console.log(op + ' error: ' + err.toString());
+    if (err) console.log('\x1b[31m%s\x1b[0m', op + ' error: ' + err.toString());
     if (res) console.log(op + ' status: ' + res.constructor.name);
   };
-}
+};
+

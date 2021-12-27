@@ -22,7 +22,7 @@ Before you get started, make sure you set the following environmental variables.
 
 ### Send messages to IoT Hub
 
-The default sample and the simplest way to create a client connection on your device. This sample just creates a connection and sends a single event to Azure IoT Hub.
+The default sample and the simplest way to create a client connection on your device. This sample creates a connection and sends telemetry events to Azure IoT Hub.
 
 #### Running the sample
 
@@ -38,7 +38,7 @@ From the `getting started/src/send messages` directory, run `node send_messages_
 
 ### Send messages in batch
 
-text text text                                                                                                                                                                                        |
+Batch up several messages and send them in a single HTTP request.                                                                                                                                                                                      |
 
 #### Running the sample
 
@@ -46,5 +46,5 @@ From the `getting started/src/send messages` directory, run `node send_messages_
 
 # 👉 Next Steps
 
-- [Send messages](../recieve%20messages)
+- [Recieve messages](../recieve%20messages)
 - [More getting started samples](../../)

@@ -11,14 +11,14 @@ import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
 import { Client, Message } from 'azure-iot-device';
 
 const deviceConnectionString: string = process.env.IOTHUB_DEVICE_CONNECTION_STRING || '';
-let sendInterval: NodeJS.Timeout;
 
-if (deviceConnectionString === '') {
-  console.log('device connection string not set');
-  process.exit(-1);
+if (deviceConnectionString === '' || deviceConnectionString === undefined) {
+  console.error('\x1b[31m%s\x1b[0m', 'device connection string not set');
+  process.exit(0);
 }
 
 const client: Client = Client.fromConnectionString(deviceConnectionString, Protocol);
+let sendInterval: NodeJS.Timeout;
 
 async function asyncMain(): Promise<void> {
   client.on('connect', connectHandler);
@@ -27,15 +27,16 @@ async function asyncMain(): Promise<void> {
   client.on('message', messageHandler);
 
   client.open().catch((err) => {
-    console.error('Could not connect: ' + err.message);
+    console.error('\x1b[31m%s\x1b[0m', 'Could not connect: ' + err.message);
+    process.exit(0);
   });
 }
 
 function disconnectHandler(): void {
   clearInterval(sendInterval);
 
-  client.open().catch((err) => {
-    console.error(err.message);
+  client.open().catch((err: Error) => {
+    console.error('\x1b[31m%s\x1b[0m', 'Disconnect error: ' + err.message);
   });
 }
 
@@ -57,13 +58,13 @@ function messageHandler(msg: any): void {
 }
 
 function errorHandler(err: any): void {
-  console.error(err.message);
+  console.error('\x1b[31m%s\x1b[0m', err.message);
 }
 
 function printResultFor(op: any): (err: any, res: any) => void {
   return function printResult(err: any, res: any): void {
     if (err) console.log(op + ' error: ' + err.toString());
-    if (res) console.log(op + ' status: ' + res.constructor.name);
+    if (res) console.log(op + ' status: ' + res.transportObj.statusCode + ' ' + res.transportObj.statusMessage);
   };
 }
 
@@ -73,9 +74,7 @@ function generateMessage(): Message {
   const humidity: number = 60 + Math.random() * 20; // range: [60, 80]
   const data: string = JSON.stringify({ deviceId: 'myFirstDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
   const message: Message = new Message(data);
-
   message.properties.add('temperatureAlert', temperature > 28 ? 'true' : 'false' );
-
   return message;
 }
 

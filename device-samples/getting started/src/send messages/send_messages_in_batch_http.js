@@ -3,32 +3,37 @@
 
 'use strict';
 
-var clientFromConnectionString = require('azure-iot-device-http').clientFromConnectionString;
-var Message = require('azure-iot-device').Message;
+const clientFromConnectionString = require('azure-iot-device-http').clientFromConnectionString;
+const Message = require('azure-iot-device').Message;
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
-var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
-var client = clientFromConnectionString(deviceConnectionString);
+const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
+
+// make sure we have a connection string before we can continue
+if (deviceConnectionString === null || deviceConnectionString === undefined) {
+  console.error('\x1b[31m%s\x1b[0m', 'Missing device connection string');
+  process.exit(0);
+}
+
+const client = clientFromConnectionString(deviceConnectionString);
 
 // Create two messages and send them to the IoT hub as a batch.
-var data = [
-  { id: 1, message: 'hello' },
-  { id: 2, message: 'world' }
+const data = [
+  { id: 1, message: 'message one' },
+  { id: 2, message: 'message two' },
+  { id: 2, message: 'message three' }
 ];
 
-var messages = [];
+let messages = [];
+
 data.forEach(function (value) {
   messages.push(new Message(JSON.stringify(value)));
 });
 
-console.log('sending ' + messages.length + ' events in a batch');
-
-client.sendEventBatch(messages, printResultFor('send'));
-
-function printResultFor(op) {
-  return function printResult(err, res) {
-    if (err) console.log(op + ' error: ' + err.toString());
-    if (res) console.log(op + ' status: ' + res.statusCode + ' ' + res.statusMessage);
-  };
-}
+console.log('Sending ' + messages.length + ' events in a batch');
+client.sendEventBatch(messages, (err, res) => {
+  if (res) console.log('Send status: ' + res.constructor.name); 
+  if (err) console.log('\x1b[31m%s\x1b[0m', op + ' error: ' + err.toString());
+  process.exit(0);
+});

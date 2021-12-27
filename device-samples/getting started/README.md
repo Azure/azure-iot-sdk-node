@@ -10,7 +10,7 @@ These samples will show you the different connections types you can use to creat
 
 ## [Send message](src/send%20messages)
 
-Nunc malesuada volutpat fermentum. Donec in ante nec diam venenatis eleifend. Cras commodo ligula nec justo lacinia fringilla. Morbi eget congue neque. Duis varius eleifend enim eu euismod. Pellentesque scelerisque convallis tortor. Fusce gravida est diam, ac sodales enim consectetur eu. Duis eu consequat massa.
+Send telemetry messages to IoT Hub.
 
 ## [Recieve message](src/receive%20messages)
 
@@ -44,4 +44,3 @@ Sed ultricies felis euismod diam porttitor pellentesque. Pellentesque facilisis 
 
 - [Send messages to IoT Hub](./src/send%20messages)
 - [How to guides](src/../../how%20to%20guides)
-- [Solutions](src/../../solutions)
