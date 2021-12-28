@@ -8,7 +8,10 @@ Also note, that all of these examples use the [connection string](../connections
 
 Before you can run any of the samples, you will need to setup and configure a few things.
 
+> tip: right click and open in new tab
+
 - [Setup IoT Hub and devices](../../../../doc/device-samples/iot-hub-prerequisites.md)
+- [Setup IoT Central and devices](../../../../doc/device-samples/iot-central-prerequisites.md) (only used for send messages to IoT Central)
 - [Setup your local environment](../../../../doc/device-samples/dev-environment.md)
 - [Monitor activity (optional)](../../../../doc/device-samples/monitor-iot-hub.md)
 
