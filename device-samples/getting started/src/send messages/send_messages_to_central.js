@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// To see the dtdl of for this https://github.com/Azure/opendigitaltwins-dtdl
+
 'use strict';
 
 const Protocol = require('azure-iot-device-mqtt').Mqtt;
@@ -9,8 +11,6 @@ const Client = require('azure-iot-device').Client;
 const Message = require('azure-iot-device').Message;
 const SymmetricKeySecurityClient = require('azure-iot-security-symmetric-key').SymmetricKeySecurityClient;
 const ProvisioningDeviceClient = require('azure-iot-provisioning-device').ProvisioningDeviceClient;
-
-// To see the dtdl of for this https://github.com/Azure/opendigitaltwins-dtdl
 
 // DPS connection information
 const provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT || 'global.azure-devices-provisioning.net';
@@ -68,21 +68,7 @@ class TemperatureSensor {
       this.minTemp = this.currTemp;
     }
     return this;
-  }
-
-  getMaxMinReportObject() {
-    return {
-      maxTemp: this.maxTemp,
-      minTemp: this.minTemp,
-      avgTemp: this.cumulativeTemperature / this.numberOfTemperatureReadings,
-      endTime: (new Date(Date.now())).toISOString(),
-      startTime: this.startTime
-    };
-  }
-   
-  getMaxTemperatureValue() {
-    return this.maxTemp;
-  }
+  } 
 }
 
 let intervalToken;
@@ -91,9 +77,7 @@ const deviceTemperatureSensor = new TemperatureSensor();
 async function sendTelemetry(deviceClient, index) {
   console.log('Sending telemetry message %d...', index);
   const msg = new Message(
-    JSON.stringify(
-      deviceTemperatureSensor.updateSensor().getCurrentTemperatureObject()
-    )
+    JSON.stringify(deviceTemperatureSensor.updateSensor().getCurrentTemperatureObject())
   );
   msg.contentType = 'application/json';
   msg.contentEncoding = 'utf-8';
@@ -117,8 +101,7 @@ async function provisionDevice(payload) {
   }
 }
 
-async function main() {
-   
+async function main() {   
   // If the user include a provision host then use DPS
   await provisionDevice(modelIdObject);
   
