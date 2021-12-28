@@ -2,7 +2,7 @@
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut quis felis aliquam eros venenatis ultrices a eget tortor. Donec tristique ante nec libero vestibulum volutpat. Mauris malesuada sodales mauris sed consequat. Donec at accumsan metus. Suspendisse et justo diam. Integer porttitor vitae nibh a aliquam. Curabitur eu elit libero. Phasellus a ultrices nibh, ut gravida nunc. Aliquam hendrerit eros id dolor mollis pulvinar. In iaculis, velit nec ultrices fermentum, erat odio placerat est, non pulvinar justo justo ut felis. Vestibulum ultrices ipsum ac erat aliquam consequat. Morbi sollicitudin gravida leo quis congue. Maecenas blandit ornare enim, et sagittis nisi pretium ac.
 
-## Getting started (level 100)
+## [Getting started (level 100)](./getting%20started)
 
 If are new to the Azure IoT Device SDK, this is the place to start. These samples will help get you up to speed with the basics in just a few minutes. Some of the concepts we cover in the getting started samples are:
 
@@ -16,10 +16,6 @@ If are new to the Azure IoT Device SDK, this is the place to start. These sample
 
 ⭐ If this is your first time here, we suggest you start with the [send messages](./getting%20started/src/send%20messages) sample.
 
-[Click here for all getting started samples](./getting%20started)
-
-## How to guides (level 200-300)
+## [How to guides (level 200-300)](./how%20to%20guides)
 
 Nulla id tempus tortor, ut viverra odio. Aliquam accumsan magna vel efficitur eleifend. Curabitur consectetur fringilla eros ut pellentesque. Morbi id posuere quam. Nam aliquet nisi mauris, sit amet pharetra tortor euismod ac. Cras ullamcorper non purus et aliquet. Fusce dui mi, pellentesque at sagittis a, fringilla ac velit. Nullam nec enim iaculis, dictum turpis ac, tempus turpis. Pellentesque in dolor suscipit, faucibus risus a, pretium metus.
-
-[Click here for how to guides](./how%20to%20guides)

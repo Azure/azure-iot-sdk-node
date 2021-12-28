@@ -6,10 +6,10 @@ Also note, that all of these examples use the [connection string](../connections
 
 # 🦉 Getting setup
 
-Before you can run any of the samples, you will need to setup and configure a few things. 
+Before you can run any of the samples, you will need to setup and configure a few things.
 
-- [Setup IoT Hub and devices](../../../../doc/device-samples/iot-hub-prerequisites.md) 
-- [Setup your local environment](../../../../doc/device-samples/dev-environment.md) 
+- [Setup IoT Hub and devices](../../../../doc/device-samples/iot-hub-prerequisites.md)
+- [Setup your local environment](../../../../doc/device-samples/dev-environment.md)
 - [Monitor activity (optional)](../../../../doc/device-samples/monitor-iot-hub.md)
 
 Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
@@ -30,7 +30,16 @@ From the `getting started/src/send messages` directory, run `node send_messages_
 
 ### Send messages to IoT Central
 
-text text text
+Before you can send telemetry messages to IoT Central, you need to create an IoT Central application and add a new device. [Click here](../../../../doc/device-samples/iot-central-prerequisites.md) for a walk thru on how to do both.
+
+This example does not use the connection string to connect the device. You will need to take the values from the IoT Central application and set them to the following environmental variables. [Click here](../../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
+
+| Env variable                 | Description                                                                                                                                    |
+| :--------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------- |
+| IOTHUB_DEVICE_DPS_ENDPOINT   | Option and the default is `global.azure-devices-provisioning.net`. You only need to set the variable if you chose to use a different endpoint. |
+| IOTHUB_DEVICE_DPS_ID_SCOPE   | `ID scope`                                                                                                                                     |
+| IOTHUB_DEVICE_DPS_DEVICE_ID  | `Device ID`                                                                                                                                    |
+| IOTHUB_DEVICE_DPS_DEVICE_KEY | `Primary Key` or `Secondary key`                                                                                                               |
 
 #### Running the sample
 
@@ -38,7 +47,7 @@ From the `getting started/src/send messages` directory, run `node send_messages_
 
 ### Send messages in batch
 
-Batch up several messages and send them in a single HTTP request.                                                                                                                                                                                      |
+Batch up several messages and send them in a single HTTP request. |
 
 #### Running the sample
 
