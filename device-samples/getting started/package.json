@@ -13,7 +13,8 @@
     "azure-iot-provisioning-device": "1.8.12",
     "azure-iot-provisioning-device-mqtt": "1.7.12",
     "azure-iot-security-symmetric-key": "1.7.12",
-    "https-proxy-agent": "5.0.0"
+    "https-proxy-agent": "5.0.0",
+    "es5-shim": "^4.6.4"
   },
   "devDependencies": {
     "@types/async": "^3.2.8",

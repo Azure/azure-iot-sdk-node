@@ -18,7 +18,7 @@ Morbi rutrum placerat commodo. Nulla nisi mauris, posuere eu dolor a, dignissim 
 
 ## [Recieve method invocation](src/receive%20method%20invocation)
 
-Ut metus lectus, aliquet id erat quis, posuere auctor dolor. Nam consectetur nec est sit amet lacinia. Interdum et malesuada fames ac ante ipsum primis in faucibus. In sit amet nisi congue, consequat neque vel, porttitor augue. Fusce nulla nisl, venenatis in dolor tincidunt, suscipit fringilla odio.
+Direct methods follow a request-response pattern and are meant for communications that require immediate confirmation of their result. For example, interactive control of the device, such as turning a fan on and off.
 
 ## [Device twins](src/device%20twins)
 

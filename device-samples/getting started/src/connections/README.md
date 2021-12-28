@@ -52,7 +52,6 @@ Before you get started, make sure you set the following environmental variables.
 | PATH_TO_CERTIFICATE_FILE        | Path on disk to the certificate. For example: `c:\mycerts\mydevice.csr`.                                                                                                                                            | 
 | PATH_TO_KEY_FILE                | Path on disk to the certificate key. For example: `c:\mykeys\mydevice.key`.                                                                                                                                         |
 | KEY_PASSPHRASE_OR_EMPTY         | Optional key passphrase.                                                                                                                                                                                            |
-
 #### Running the sample
 
 From the `getting started/src/connections` directory, run `node x509.js`
