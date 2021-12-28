@@ -47,7 +47,7 @@ Next, you need to send a message from the cloud to your device. You can do this 
 
 ![image showing device methods side by side](../../../../doc/device-samples/media/azure-portal-and-iot-explorer-direct-method.png)
 
-Click **Invoke method**. When the device recieves the message, the handler is invocated. You should then see the following message in your terminal:
+Click **Invoke method**. When the device recieves the message, the handler invokes the method. You should then see the following message in your terminal:
 
 ```text
 Received method call for method 'fanOn'
