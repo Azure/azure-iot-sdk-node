@@ -38,7 +38,7 @@ Connected to device. Registering handlers for methods.
 Ready to recieve method invocation...
 ```
 
-Next, you need to send a message from the cloud to your device. You can do this from either Azure IoT Explorer or Azure Portal.
+Next, you need to send a message from the cloud to your device. You can do this from either Azure IoT Explorer or [Azure Portal](../../../../doc/device-samples/send-message-with-azure-portal.md).
 
 - Method name: `fanOn`
 - Payload: `"hello world"`

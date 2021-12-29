@@ -60,5 +60,5 @@ From the `getting started/src/send messages` directory, run `node send_messages_
 
 # 👉 Next Steps
 
-- [Recieve messages](../recieve%20messages)
+- [Recieve cloud to device messages](../recieve%20messages)
 - [More getting started samples](../../)

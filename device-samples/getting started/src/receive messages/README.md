@@ -2,7 +2,7 @@
 
 IoT Hub gives you the ability to send one-way notifications to a device app from your solution back end, send cloud-to-device messages from your IoT hub to your device.
 
-Another approach to recieving messages is [cloud to device method invocation](../receive%20method%20invocation).
+Try a different approach. Instead of recieving messages, receive a [cloud to device method invocation](../receive%20method%20invocation).
 
 Note, that these examples use the [connection string](../connections/connection_string.js) method to create a connection client. See the [connections](../connections) section if you want use a different connection method.
 
@@ -38,7 +38,7 @@ Connected to device. Registering message handler.
 Ready to recieve messages...
 ```
 
-Next, you need to send a message from the cloud to your device. You can do this from either Azure IoT Explorer or Azure Portal.
+Next, you need to send a message from the cloud to your device. You can do this from either Azure IoT Explorer or [Azure Portal](../../../../doc/device-samples/send-message-with-azure-portal.md).
 
 - Message body: `hello world`
 
@@ -60,5 +60,5 @@ Received C2D message:
 
 # 👉 Next Steps
 
-- [Cloud to device method invocation](../receive%20method%20invocation)
+- [Receive cloud to device method invocation](../receive%20method%20invocation)
 - [More getting started samples](../../)
