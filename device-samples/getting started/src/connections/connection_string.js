@@ -18,7 +18,7 @@ const Message = require('azure-iot-device').Message;
 const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 
 // make sure we have a connection string before we can continue
-if (deviceConnectionString === null || deviceConnectionString === undefined) {
+if (deviceConnectionString === '' || deviceConnectionString === undefined) {
   console.error('\x1b[31m%s\x1b[0m', 'Missing device connection string');
   process.exit(0);
 }

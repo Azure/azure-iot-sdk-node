@@ -198,6 +198,7 @@ client.open(function(err) {
               }
             }
           });
+          console.log();
         });
 
         // create a patch to send to the hub

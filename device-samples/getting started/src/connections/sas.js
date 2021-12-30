@@ -15,10 +15,10 @@ const Message = require('azure-iot-device').Message;
 
 // String SharedAccessSignature in the following formats:
 //  "SharedAccessSignature sr=<iothub_host_name>/devices/<device_id>&sig=<signature>&se=<expiry>"
-const sas = process.env.IOTHUB_SAS;
+const sas = process.env.IOTHUB_SAS || '';
 
 // make sure we have a connection string before we can continue
-if (sas === null || sas === undefined) {
+if (sas === '' || sas === undefined) {
   console.error('\x1b[31m%s\x1b[0m', 'Missing Shared Access Signature (SAS)');
   process.exit(0);
 }

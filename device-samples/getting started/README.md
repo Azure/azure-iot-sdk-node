@@ -1,4 +1,4 @@
-# Getting started samples
+# Getting started samples (level 100)
 
 These getting started samples are perfect for someone just getting into the [Azure IoT Device SDK for Node.js](https://github.com/Azure/azure-iot-sdk-node). The samples are targeted, simple, and you should be able to get them up and running in just a couple minutes. For more complicated samples and scenarios, see the [How to guides](../how%20to%20guides) section.
 
@@ -14,7 +14,7 @@ Send telemetry messages to IoT Hub and IoT Central.
 
 ## [Recieve message](src/receive%20messages)
 
-Morbi rutrum placerat commodo. Nulla nisi mauris, posuere eu dolor a, dignissim scelerisque lorem. Aenean laoreet sapien elit, ac aliquam enim posuere at. Mauris augue lacus, blandit a metus a, pulvinar varius orci. Phasellus ac erat felis. Integer eget justo id leo tincidunt facilisis non quis ante. 
+Recieve messages from cloud using Azure Portal and Azure IoT Explorer.
 
 ## [Recieve method invocation](src/receive%20method%20invocation)
 

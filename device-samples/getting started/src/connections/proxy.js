@@ -15,10 +15,10 @@ const url = require('url');
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
-const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
+const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING || '';
 
 // make sure we have a connection string before we can continue
-if (deviceConnectionString === null || deviceConnectionString === undefined) {
+if (deviceConnectionString === '' || deviceConnectionString === undefined) {
   console.error('\x1b[31m%s\x1b[0m', 'Missing device connection string');
   process.exit(0);
 }
