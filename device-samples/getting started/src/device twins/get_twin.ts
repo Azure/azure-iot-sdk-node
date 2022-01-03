@@ -32,13 +32,12 @@ client.open(function(err) {
     // Create device Twin
     client.getTwin(function(err: any, twin: any) {
       if (err) {
-        console.error(`Error getting twin: ${err.message}`);
+        console.error('\x1b[31m%s\x1b[0m', `Error getting twin: ${err.message}`);
       } else {
         console.log('Twin created.');   
         console.log('Getting twin properties...');
         console.log(JSON.stringify(twin.properties)); 
-        console.log('\x1b[32m%s\x1b[0m', '\nDone.');   
-        
+             
         process.exit(0);
       }
     });

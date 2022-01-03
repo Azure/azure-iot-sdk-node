@@ -32,7 +32,7 @@ client.open(function (err: any) {
     // Create device Twin
     client.getTwin(function (err: any, twin: any) {
       if (err) {
-        console.error(`Error getting twin: ${err.message}`);
+        console.error('\x1b[31m%s\x1b[0m', `Error getting twin: ${err.message}`);
       } else {
         console.log('Twin created.');
         console.log();
@@ -98,8 +98,7 @@ client.open(function (err: any) {
                   moduleList[key] = twin.properties.desired.modules[key];
                 }
               }
-            });
-            console.log();
+            });          
           });
         });
       }

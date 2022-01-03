@@ -1,52 +1,52 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-'use strict';
-
 // Choose a protocol by uncommenting one of these transports.
-var Protocol = require('azure-iot-device-mqtt').Mqtt;
-// var Protocol = require('azure-iot-device-amqp').Amqp;
-// var Protocol = require('azure-iot-device-http').Http;
-// var Protocol = require('azure-iot-device-mqtt').MqttWs;
-// var Protocol = require('azure-iot-device-amqp').AmqpWs;
+import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
+// import { Amqp as Protocol } from 'azure-iot-device-amqp';
+// import { Http as Protocol } from 'azure-iot-device-Http';
+// import { MqttWs as Protocol } from 'azure-iot-device-mqtt';
+// import { AmqpWs as Protocol } from 'azure-iot-device-amqp';
 
-const Client = require('azure-iot-device').Client;
-const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING || '';
+import { Client } from 'azure-iot-device';
+
+const deviceConnectionString: string = process.env.IOTHUB_DEVICE_CONNECTION_STRING || '';
 
 // make sure we have a connection string before we can continue
 if (deviceConnectionString === '' || deviceConnectionString === undefined) {
-  console.error('\x1b[31m%s\x1b[0m', 'Missing device connection string');
-  process.exit(0);
+    console.error('\x1b[31m%s\x1b[0m', 'Missing device connection string');
+    process.exit(0);
 }
 
 // create the IoTHub client
-const client = Client.fromConnectionString(deviceConnectionString, Protocol);
+const client: Client = Client.fromConnectionString(deviceConnectionString, Protocol);
 console.log('Client created.');
 
 // connect to the hub
-client.open(function (err) {
+client.open(function(err) {
   if (err) {
     console.error('\x1b[31m%s\x1b[0m', `Error opening client: ${err.message}`);
-  } else {
+  }  else {
     console.log('Client opened.');
 
     // Create device Twin
-    client.getTwin(function (err, twin) {
+    client.getTwin(function (err: any, twin: any) {
       if (err) {
-        console.error(`Error getting twin: ${err.message}`);
+        console.error('\x1b[33m%s\x1b[0m', `Error getting twin: ${err.message}`);
       } else {
         console.log('Twin created.');
-        console.log();
+        console.log('Getting twin properties...');
+        console.log(JSON.stringify(twin.properties));         
 
         // Usage example: Receiving all patches with a single event handler. Output
         //                any properties that are received from the service.
-        twin.on('properties.desired', function (delta) {
+        twin.on('properties.desired', function (delta: any) {
           console.log('\x1b[33m%s\x1b[0m', 'New desired properties received:');
           console.log(`  ${JSON.stringify(delta)}`);      
         });
 
         // Usage example #2: receiving an event if anything under properties.desired.climate changes
-        twin.on('properties.desired.climate', function (delta) {
+        twin.on('properties.desired.climate', function (delta: any) {
           //
           // Notice that twin.properties.desired has already been updated before
           // this function was called.
@@ -66,19 +66,19 @@ client.open(function (err) {
 
           // Usage example: Receiving an event for a single (scalar) property value. This
           //                event is only fired if the fanOn boolean value is part of the patch.
-          twin.on('properties.desired.climate.hvac.systemControl', function (delta) {
+          twin.on('properties.desired.climate.hvac.systemControl', function (delta: any) {
               console.log('\x1b[33m%s\x1b[0m', 'New desired properties received for "properties.desired.climate.hvac.sytemControl":');
               console.log(`  fan=${delta.fanOn}`);
             }
           );
 
-          var moduleList = {};
+          let moduleList: any = [];
 
           // Then we use this internal list and compare it to the delta to know
           // if anything was added, removed, or updated.
-          twin.on('properties.desired.modules', function (delta) {
+          twin.on('properties.desired.modules', function (delta: any) {
             console.log('\x1b[33m%s\x1b[0m', 'New desired properties received for "properties.desired.modules":');
-            Object.keys(delta).forEach(function (key) {
+            Object.keys(delta).forEach(function (key: string) {
               if (delta[key] === null && moduleList[key]) {
                 // If our patch contains a null value, but we have a record of
                 // this module, then this is a delete operation.
@@ -102,6 +102,22 @@ client.open(function (err) {
             });
             console.log();
           });
+         
+          // create a patch to send to the hub
+          const patch: { firmwareVersion: string, weather: { temperature: number, humidity: number } } = {
+            firmwareVersion: '1.2.1',
+            weather: { temperature: 72, humidity: 17 }
+          };
+
+          // send the patch to update reported properties
+          twin.properties.reported.update(patch, function(err: Error) {
+            if (err) {
+              console.log('\x1b[31m%s\x1b[0m', `Error updating reported properties: ${err.message}`);           
+            } 
+            else { 
+              console.log('Twin state reported successfully.');                     
+            }
+          });          
         });
       }
     });

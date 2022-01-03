@@ -1,18 +1,16 @@
 # Device Twin Backend Service
 
-This project is used to send device twin patch updates for a specific device. This helper project is needed if you are trying to run the `receive_desired_props.js` sample.
+This project is used to send device twin patch updates for a specific device. This helper project is needed if you are trying to run the `receive_desired_properties.js` sample.
 
 The way it works is:
-- `receive_desired_props.js ` is started up and will listen for device twin desired property updates
-- `twin-service.js` executes and updates the desired properties for the device twin
+- `receive_desired_properties.js ` is started up and will listen for device twin desired property updates
+- `update_desired_properties.js` executes and updates the desired properties for the device twin
 
 ## Setting things up
 
-### IoT Hub and Device
+This sample assumes you already have an instance of IoT Hub created that contains at least one device.
 
-You need to setup an instance of IoT Hub and device. [Click here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-node-node-twin-getstarted) for detailed instructions.
-
-### Configure `twin-service.js`
+### Configure `update_desired_properties.js`
 
 Set the `IOTHUB_CONNECTION_STRING` environmental variable to the IoT Hub connection string. 
 
@@ -22,72 +20,37 @@ Once you have created a device, you also need to set the `deviceId` variable man
     const deviceId = '{device id}';
 ```
 
-## Getting started quickly
+## Getting started
 
 Once you have set your IoT Hub connection string and deviceId, you are ready to run the sample. 
 
-From the `samples\javascript` directory, open a command prompt and run the `simple_sample_device_twin.js` file.
+From the `device twins` directory, open a command prompt and run the command `node receive_desired_properties.js`. It will continue to run and listen for device twin desired property updates.
 
-```
-node simple_sample_device_twin.js
-```
+In a separate command prompt, from the `device twins\service` directory, run the command `node update_desired_properties.js 1`.
 
-In a separate command prompt, from the `helpers\device-twin-service` directory, run the `twin-service.js` file.
-
-```
-node twin-service.js
-```
-
-Watch the `simple_sample_device_twin.js` console as the `twin-service.js` executes. You will notice the handler being called and logged with results that look like this:
+Watch the results from `receive_desired_properties.js` console as the `update_desired_properties.js` executes. You will notice the handler being called and should look something like this:
 
 ```text
-new desired properties received:
-{"climate":{"minTemperature":68,"maxTemperature":76},"$version":36}
-updating desired temp:
-min temp = 68
-max temp = 76
+New desired properties received for "properties.desired.climate":
+  min temp=69
+  max temp=77
+New desired properties received for "properties.desired.climate.hvac.sytemControl":
+  fan=true
+New desired properties received for "properties.desired.modules":
+  Adding module wifi: {"channel":6,"ssid":"my_network","encryption":"wpa","passphrase":"foo"}
+  Adding module climate: {"id":17,"units":"farenheit"}
 ```
 
 ## Digging deeper into the sample
 
-The `twin-service.js` file contains several patch documents that you can run, depending on the example scenario. The script is very simple and should be run each time you want to make a patch update. You will need to set the `twinPatch` variable to the right patch document. 
+The `update_desired_properties.js` allows you to send several different patch documents, depending on the example scenario. To do this you just need to pass a value of 1-4 as the first argument after the `node update_desired_properties.js`
 
-```javascript
-// set to the patch you want to update
-const twinPatch = twinPatch1;
-// const twinPatch = twinPatch2;
-// const twinPatch = twinPatch3;
-// const twinPatch = twinPatch4;  
-// const twinPatch = twinPatch5;
-```
-
-## Usage Examples
-Here are the example scenarios:
-
-### Example #1 (twinPatch1)
-Receiving all patches with a single event handler.
-        
-This code will output any properties that are received from the service
-
-### Example #2 (twinPatch2)
-Receiving an event if anything under `properties.desired.climate` changes
-    
-This code will output desired min and max temperature every time the service updates either one.
-
-### Example #3 (twinPatch3)
-Receiving an event for a single (scalar) property value. This event is only fired if the fanOn boolean value is part of the patch.
-        
-This code will output the new desired fan state whenever the service updates it.
-
-### Example #4 (twinPatch4 & twinPatch5)
-Handle add (twinPatch4) or delete (twinPatch5) operations. The app developer is responsible for inferring add/update/delete operations based on the contents of the patch.
-
-# Documentation
-
-For further reading on device twins:
-
-- [Understand and use device twins in IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-device-twins)
-- [Get started with device twins](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-node-node-twin-getstarted) 
+| Scenario Example                    | Description                                                                                                                                                                                                         |
+| :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `node update_desired_properties.js 1` | Receiving all patches with a single event handler. This code will output any properties that are received from the service  |
+| `node update_desired_properties.js 2` | Receiving an event if anything under `properties.desired.climate` changes. This code will output desired min and max temperature every time the service updates either one.  |
+| `node update_desired_properties.js 3` | Receiving an event for a single (scalar) property value. This event is only fired if the fanOn boolean value is part of the patch. This code will output the new desired fan state whenever the service updates it.  |
+| `node update_desired_properties.js 4` | Handle add or delete operations. The app developer is responsible for inferring add/update/delete operations based on the contents of the patch.  |
 
 # Feedback
 

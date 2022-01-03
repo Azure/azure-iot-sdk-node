@@ -7,14 +7,14 @@ let arg = 1;
 
 // check for iot hub connection string
 if (connectionString == '' || connectionString === undefined) {
-  console.log('\x1b[33m%s\x1b[0m', 'IoT Hub connection string not set');
+  console.log('\x1b[31m%s\x1b[0m', 'IoT Hub connection string not set');
   process.exit(0);
 }
 
 // get the passed in argument to run a specific patch update
 // values 1-5 are legit
 if (process.argv.length != 3) {
-  console.log('\x1b[33m%s\x1b[0m', "Missing patch number. Defaulting to '1'.")
+  console.log('\x1b[31m%s\x1b[0m', "Missing patch number. Defaulting to '1'.")
 } 
 else {
   arg = parseInt(process.argv.slice(2), 10);
@@ -25,9 +25,9 @@ const registry = iothub.Registry.fromConnectionString(connectionString);
 
 registry.getTwin(deviceId, function (err, twin) {
   if (err) {
-    console.error('\x1b[33m%s\x1b[0m', `Error during getTwin (${err.constructor.name}): ${err.message}`);
+    console.error('\x1b[31m%s\x1b[0m', `Error during get twin (${err.constructor.name}): ${err.message}`);
     process.exit(0);
-  } else { 
+  } else {    
 
     // Usage example #1: receiving all patches with a single event handler.
     const twinPatch1 = {
@@ -94,7 +94,7 @@ registry.getTwin(deviceId, function (err, twin) {
     let twinPatch = twinPatch1;
 
     // set to the patch based on the argument value
-    switch(arg) {      
+    switch(arg) {                
       case 2:
         twinPatch = twinPatch2;
         console.log('Using twinPatch2');
@@ -118,7 +118,7 @@ registry.getTwin(deviceId, function (err, twin) {
 
     twin.update(twinPatch, (err, twin) => {
       if (err) {
-        console.error('\x1b[33m%s\x1b[0m', `Error during patch update: ${err.message}`);
+        console.error('\x1b[31m%s\x1b[0m', `Error during patch update: ${err.message}`);
       } else {
         console.log(`Sent patch: ${JSON.stringify(twinPatch)}`);      
       }

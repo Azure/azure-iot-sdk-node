@@ -38,8 +38,7 @@ client.open(function(err) {
         console.log('Twin created.');   
         console.log('Getting twin properties...');
         console.log(JSON.stringify(twin.properties)); 
-        console.log('\x1b[32m%s\x1b[0m', '\nDone.');   
-        
+           
         process.exit(0);
       }
     });

@@ -22,7 +22,7 @@ Direct methods follow a request-response pattern and are meant for communication
 
 ## [Device twins](src/device%20twins)
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut quis felis aliquam eros venenatis ultrices a eget tortor. Donec tristique ante nec libero vestibulum volutpat. Mauris malesuada sodales mauris sed consequat. Donec at accumsan metus. Suspendisse et justo diam. Integer porttitor vitae nibh a aliquam.
+Device twins are JSON documents that store device state information, including metadata, configurations, and conditions. IoT Hub persists a device twin for each device that connects to it. They are designed for synchronization and for querying device configurations and conditions.
 
 ## [Upload file](src/upload%20files)
 
