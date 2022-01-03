@@ -86,3 +86,7 @@ From the `getting started/src/connections` directory, run `node proxy.js`
 
 - [Send messages](../send%20messages)
 - [More getting started samples](../../)
+
+# 💬 Feedback
+
+If you have any feedback or questions about our device samples, please [post it here](https://github.com/Azure/azure-iot-sdk-node/discussions/1042).

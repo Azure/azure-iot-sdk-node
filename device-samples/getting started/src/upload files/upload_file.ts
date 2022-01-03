@@ -32,16 +32,16 @@ const deviceConnectionString: string = process.env.IOTHUB_DEVICE_CONNECTION_STRI
 const filePath: string = process.env.PATH_TO_FILE || '';
 const storageBlobName: string = 'testblob.txt';
 
-// check for connection string
-if (deviceConnectionString === '') {
-  console.log('device connection string not set');
-  process.exit(-1);
+// make sure we have a connection string before we can continue
+if (deviceConnectionString === '' || deviceConnectionString === undefined) {
+  console.error('\x1b[31m%s\x1b[0m', 'Missing device connection string');
+  process.exit(0);
 }
 
-// check for file path
-if (filePath === '') {
-  console.log('file path is not set');
-  process.exit(-1);
+// make sure we have a file path
+if (filePath === '' || filePath === undefined) {
+  console.error('\x1b[31m%s\x1b[0m', 'Missing path to file string');
+  process.exit(0);
 }
 
 async function uploadToBlob(localFilePath: string, client: Client): Promise<void> {
@@ -84,8 +84,7 @@ async function uploadToBlob(localFilePath: string, client: Client): Promise<void
     statusCode = err.code;
     statusDescription = err.message;
 
-    console.log('notifyBlobUploadStatus failed');
-    console.log(err);
+    console.error('\x1b[31m%s\x1b[0m', `notifyBlobUploadStatus failed: ${err.message}`);
   }
 
   await client.notifyBlobUploadStatus(blobInfo.correlationId, isSuccess, statusCode, statusDescription);
@@ -94,9 +93,9 @@ async function uploadToBlob(localFilePath: string, client: Client): Promise<void
 // Create a client device from the connection string and upload the local file to blob storage.
 const deviceClient = Client.fromConnectionString(deviceConnectionString, Protocol);
 uploadToBlob(filePath, deviceClient)
-  .catch((err) => {
-    console.log(err);
+  .catch((err: Error) => {
+    console.error('\x1b[31m%s\x1b[0m', `Upload to blob failed: ${err.message}`);
   })
   .finally(() => {
-    process.exit();
+    process.exit(0);
   });

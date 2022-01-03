@@ -30,9 +30,9 @@ client.open(function (err: any) {
     console.log('Client opened.');
 
     // create device Twin
-    client.getTwin(function (err: any, twin: any) {
-      if (err) {
-        console.error('\x1b[31m%s\x1b[0m', `Error getting twin: ${err.message}`);
+    client.getTwin(function (error: any, twin: any) {
+      if (error) {
+        console.error('\x1b[31m%s\x1b[0m', `Error getting twin: ${error.message}`);
       } else {
         console.log('Twin created.');
         console.log();
@@ -44,14 +44,14 @@ client.open(function (err: any) {
         };
 
          // send the patch to update reported properties
-        twin.properties.reported.update(patch, function(err: any) {
-          if (err) {
-            console.log('\x1b[31m%s\x1b[0m', `Error updating reported properties: ${err.message}`);
+        twin.properties.reported.update(patch, function(er: Error) {
+          if (er) {
+            console.log('\x1b[31m%s\x1b[0m', `Error updating reported properties: ${er.message}`);
             process.exit(0);
-          } 
-          else { 
-            console.log('Twin state reported successfully.');    
-            process.exit(0);        
+          }
+          else {
+            console.log('Twin state reported successfully.');
+            process.exit(0);
           }
         });
       }

@@ -30,9 +30,9 @@ client.open(function (err: any) {
     console.log('Client opened.');
 
     // Create device Twin
-    client.getTwin(function (err: any, twin: any) {
-      if (err) {
-        console.error('\x1b[31m%s\x1b[0m', `Error getting twin: ${err.message}`);
+    client.getTwin(function (error: any, twin: any) {
+      if (error) {
+        console.error('\x1b[31m%s\x1b[0m', `Error getting twin: ${error.message}`);
       } else {
         console.log('Twin created.');
         console.log();
@@ -41,7 +41,7 @@ client.open(function (err: any) {
         //                any properties that are received from the service.
         twin.on('properties.desired', function (delta: any) {
           console.log('\x1b[33m%s\x1b[0m', 'New desired properties received:');
-          console.log(`  ${JSON.stringify(delta)}`);      
+          console.log(`  ${JSON.stringify(delta)}`);
         });
 
         // Usage example #2: receiving an event if anything under properties.desired.climate changes
@@ -60,45 +60,45 @@ client.open(function (err: any) {
           if (delta.minTemperature || delta.maxTemperature) {
             console.log('\x1b[33m%s\x1b[0m','New desired properties received for "properties.desired.climate":');
             if (twin.properties.desired.climate) console.log('  min temp=' + twin.properties.desired.climate.minTemperature);
-            if (twin.properties.desired.climate) console.log('  max temp=' + twin.properties.desired.climate.maxTemperature);           
+            if (twin.properties.desired.climate) console.log('  max temp=' + twin.properties.desired.climate.maxTemperature);
           }
 
           // Usage example: Receiving an event for a single (scalar) property value. This
           //                event is only fired if the fanOn boolean value is part of the patch.
-          twin.on('properties.desired.climate.hvac.systemControl', function (delta: any) {
+          twin.on('properties.desired.climate.hvac.systemControl', function (data: any) {
               console.log('\x1b[33m%s\x1b[0m', 'New desired properties received for "properties.desired.climate.hvac.sytemControl":');
-              console.log(`  fan=${delta.fanOn}`);
+              console.log(`  fan=${data.fanOn}`);
             }
           );
 
-          let moduleList: any = [];
+          const moduleList: any = [];
 
           // Then we use this internal list and compare it to the delta to know
           // if anything was added, removed, or updated.
-          twin.on('properties.desired.modules', function (delta: any) {
+          twin.on('properties.desired.modules', function (data: any) {
             console.log('\x1b[33m%s\x1b[0m', 'New desired properties received for "properties.desired.modules":');
-            Object.keys(delta).forEach(function (key: string) {
-              if (delta[key] === null && moduleList[key]) {
+            Object.keys(data).forEach(function (key: string) {
+              if (data[key] === null && moduleList[key]) {
                 // If our patch contains a null value, but we have a record of
                 // this module, then this is a delete operation.
-                console.log('  Deleting module ' + key);             
+                console.log('  Deleting module ' + key);
                 delete moduleList[key];
-              } else if (delta[key]) {
+              } else if (data[key]) {
                 if (moduleList[key]) {
                   // Our patch contains a module, and we've seen this before.
                   // Must be an update operation.
-                  console.log('  Updating module ' + key + ': ' + JSON.stringify(delta[key]));                
+                  console.log('  Updating module ' + key + ': ' + JSON.stringify(data[key]));
                   // Store the complete object instead of just the delta
                   moduleList[key] = twin.properties.desired.modules[key];
                 } else {
                   // Our patch contains a module, but we've never seen this
                   // before.  Must be an add operation.
-                  console.log('  Adding module ' + key + ': ' + JSON.stringify(delta[key]));               
+                  console.log('  Adding module ' + key + ': ' + JSON.stringify(data[key]));
                   // Store the complete object instead of just the delta
                   moduleList[key] = twin.properties.desired.modules[key];
                 }
               }
-            });          
+            });
           });
         });
       }

@@ -32,13 +32,25 @@ const {AnonymousCredential, BlockBlobClient, newPipeline } = require('@azure/sto
 
 // make sure you set these environment variables prior to running the sample.
 const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
-const localFilePath = process.env.PATH_TO_FILE;
+const filePath = process.env.PATH_TO_FILE;
 const storageBlobName = 'testblob.txt';
+
+// make sure we have a connection string before we can continue
+if (deviceConnectionString === '' || deviceConnectionString === undefined) {
+  console.error('\x1b[31m%s\x1b[0m', 'Missing device connection string');
+  process.exit(0);
+}
+
+// make sure we have a file path
+if (filePath === '' || filePath === undefined) {
+  console.error('\x1b[31m%s\x1b[0m', 'Missing path to file string');
+  process.exit(0);
+}
 
 async function uploadToBlob(localFilePath, client) {
   const blobInfo = await client.getBlobSharedAccessSignature(storageBlobName);
   if (!blobInfo) {
-    throw new errors.ArgumentError('Invalid upload parameters');
+    throw new errors.ArgumentError('\x1b[31m%s\x1b[0m', 'Invalid upload parameters');
   }
 
   const pipeline = newPipeline(new AnonymousCredential(), {
@@ -77,7 +89,7 @@ async function uploadToBlob(localFilePath, client) {
     statusDescription = err.message;
 
     console.log('notifyBlobUploadStatus failed');
-    console.log(err);
+    console.log('\x1b[31m%s\x1b[0m', `Error: ${err.message}`);
   }
 
   await client.notifyBlobUploadStatus(blobInfo.correlationId, isSuccess, statusCode, statusDescription);
@@ -85,10 +97,10 @@ async function uploadToBlob(localFilePath, client) {
 
 // Create a client device from the connection string and upload the local file to blob storage.
 const deviceClient = Client.fromConnectionString(deviceConnectionString, Protocol);
-uploadToBlob(localFilePath, deviceClient)
+uploadToBlob(filePath, deviceClient)
   .catch((err) => {
-    console.log(err);
+    console.log('\x1b[31m%s\x1b[0m', `Error: ${err.message}`);
   })
   .finally(() => {
-    process.exit();
+    process.exit(0);
   });

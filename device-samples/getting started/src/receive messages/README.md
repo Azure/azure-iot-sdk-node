@@ -62,3 +62,7 @@ Received C2D message:
 
 - [Receive cloud to device method invocation](../receive%20method%20invocation)
 - [More getting started samples](../../)
+
+# 💬 Feedback
+
+If you have any feedback or questions about our device samples, please [post it here](https://github.com/Azure/azure-iot-sdk-node/discussions/1042).

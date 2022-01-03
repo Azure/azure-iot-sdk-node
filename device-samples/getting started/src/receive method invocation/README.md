@@ -64,3 +64,7 @@ Response to method 'fanOn' sent successfully.
 
 - [Device twins](../device%20twins)
 - [More getting started samples](../../)
+
+# 💬 Feedback
+
+If you have any feedback or questions about our device samples, please [post it here](https://github.com/Azure/azure-iot-sdk-node/discussions/1042).

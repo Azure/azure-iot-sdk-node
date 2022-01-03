@@ -23,21 +23,20 @@ const client: Client = Client.fromConnectionString(deviceConnectionString, Proto
 console.log('Client created.');
 
 // connect to the hub
-client.open(function(err) {
+client.open(function(err: any) {
   if (err) {
     console.error('\x1b[31m%s\x1b[0m', `Error opening client: ${err.message}`);
   }  else {
     console.log('Client opened.');
 
     // Create device Twin
-    client.getTwin(function(err: any, twin: any) {
-      if (err) {
-        console.error('\x1b[31m%s\x1b[0m', `Error getting twin: ${err.message}`);
+    client.getTwin(function(error: any, twin: any) {
+      if (error) {
+        console.error('\x1b[31m%s\x1b[0m', `Error getting twin: ${error.message}`);
       } else {
-        console.log('Twin created.');   
+        console.log('Twin created.');
         console.log('Getting twin properties...');
-        console.log(JSON.stringify(twin.properties)); 
-             
+        console.log(JSON.stringify(twin.properties));
         process.exit(0);
       }
     });

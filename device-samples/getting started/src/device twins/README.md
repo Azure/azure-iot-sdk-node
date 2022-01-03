@@ -21,6 +21,7 @@ Before you can run any of the samples, you will need to setup and configure a fe
 
 - [Setup IoT Hub and devices](../../../../doc/device-samples/iot-hub-prerequisites.md)
 - [Setup your local environment](../../../../doc/device-samples/dev-environment.md)
+- [Configure simulated backend service](./service)
 
 Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
 
@@ -48,7 +49,7 @@ Getting twin properties...
 {"reported":{"$version":1},"desired":{"$version":1}}
 ```
 
-You can also view the full device twin from the [Azure Portal](../../../../doc/device-samples/device-twin-with-azure-portal.md) or [Azure IoT Explorer]((../../../../doc/device-samples/device-twin-with-iot-explorer.md)).
+You can view the device twin from the [Azure Portal](../../../../doc/device-samples/device-twin-with-azure-portal.md) or [Azure IoT Explorer]((../../../../doc/device-samples/device-twin-with-iot-explorer.md)).
 
 ### Recieve desired properties
 
@@ -56,9 +57,11 @@ How a device would recieve desired property updates from a backend service. For 
 
 #### Running the sample
 
-From the `getting started/src/device twins` directory, run `node receive_desired_properties.js`. You are now running and listening for desired property updates.
+Running this sample requires two steps:
 
-Open a new command (terminal) window and run `getting started/src/service/update_desired_properties.js 1`. This will send an update to a desired property. Go back to the terminal window for `recieve_desired_properties.js` to view the results.
+1. From the `getting started/src/device twins` directory, run `node receive_desired_properties.js`. You are now running and listening for desired property updates.
+
+2. Open a new command (terminal) window and run `getting started/src/service/update_desired_properties.js 1`. This will send an update to a desired property. Go back to the terminal window for `recieve_desired_properties.js` to view the results.
 
 Take a [look at these details](./service) for the `update_desired_properties.js` file for setup, configuration, and additional desired property update options.
 
@@ -82,7 +85,7 @@ You can view the device twin from the [Azure Portal](../../../../doc/device-samp
 
 ### All together
 
-View get twin, recieving desire property updates, and sending reported properties, all from a single file.
+View get twin, recieving desire property updates, and sending reported properties, all together in a single file.
 
 ### Running the sample
 
@@ -100,3 +103,7 @@ From the `getting started/src/device twins` directory, run `node all_together.js
 
 - [Upload files](../upload%20files)
 - [More getting started samples](../../)
+
+# 💬 Feedback
+
+If you have any feedback or questions about our device samples, please [post it here](https://github.com/Azure/azure-iot-sdk-node/discussions/1042).

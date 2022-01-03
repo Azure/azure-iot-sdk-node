@@ -26,13 +26,13 @@ Device twins are JSON documents that store device state information, including m
 
 ## [Upload file](src/upload%20files)
 
-Curabitur eu elit libero. Phasellus a ultrices nibh, ut gravida nunc. Aliquam hendrerit eros id dolor mollis pulvinar. In iaculis, velit nec ultrices fermentum, erat odio placerat est, non pulvinar justo justo ut felis. Vestibulum ultrices ipsum ac erat aliquam consequat. Morbi sollicitudin gravida leo quis congue. Maecenas blandit ornare enim, et sagittis nisi pretium ac.
+In some scenarios you can't easily map the data your devices send into the relatively small device-to-cloud messages that IoT Hub accepts. For example: Large files that contain images or videos. This sample will show you how to upload file to a linked Azure storage account.
 
-## [Edge modules](src/edge%20modules)
-
-Sed ultricies felis euismod diam porttitor pellentesque. Pellentesque facilisis ligula id commodo gravida. Etiam et dolor sit amet est rhoncus lobortis a eu enim. Proin lacinia dignissim nisi, non volutpat diam semper quis. Pellentesque quis elit elit. Praesent id convallis tortor. Ut metus lectus, aliquet id erat quis, posuere auctor dolor. 
-
-# ➡️Next Steps
+# Next Steps
 
 - [Send messages to IoT Hub](./src/send%20messages)
 - [How to guides](src/../../how%20to%20guides)
+
+# Feedback
+
+If you have any feedback or questions about our device samples, please [post it here](https://github.com/Azure/azure-iot-sdk-node/discussions/1042).

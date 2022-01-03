@@ -2,12 +2,18 @@
 
 const iothub = require('azure-iothub');
 const connectionString = process.env.IOTHUB_CONNECTION_STRING || '';
-const deviceId = 'devDevice';
+const deviceId = '{device id}';
 let arg = 1;
 
 // check for iot hub connection string
 if (connectionString == '' || connectionString === undefined) {
   console.log('\x1b[31m%s\x1b[0m', 'IoT Hub connection string not set');
+  process.exit(0);
+}
+
+// check for iot hub connection string
+if (deviceId == '{device id}') {
+  console.log('\x1b[33m%s\x1b[0m', 'DeviceId string not set');
   process.exit(0);
 }
 
