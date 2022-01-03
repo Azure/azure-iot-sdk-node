@@ -1,6 +1,10 @@
 # Azure IoT SDK Node Samples
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut quis felis aliquam eros venenatis ultrices a eget tortor. Donec tristique ante nec libero vestibulum volutpat. Mauris malesuada sodales mauris sed consequat. Donec at accumsan metus. Suspendisse et justo diam. Integer porttitor vitae nibh a aliquam. Curabitur eu elit libero. Phasellus a ultrices nibh, ut gravida nunc. Aliquam hendrerit eros id dolor mollis pulvinar. In iaculis, velit nec ultrices fermentum, erat odio placerat est, non pulvinar justo justo ut felis. Vestibulum ultrices ipsum ac erat aliquam consequat. Morbi sollicitudin gravida leo quis congue. Maecenas blandit ornare enim, et sagittis nisi pretium ac.
+Welcome to our new samples page for the Node.js Azure IoT Device SDK. We have organized the samples into three different buckets to provide you a better developer experience.
+
+- **[Getting started](./getting%20started)**: For those folks just getting started and looking to learn the basics. 
+- **Edge modules**: Using the SDK in Azure IoT Edge modules.
+- **How to guides**: In-depth examples for Azure IoT device builders.
 
 ## [Getting started (level 100)](./getting%20started)
 
