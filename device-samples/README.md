@@ -10,11 +10,14 @@ If are new to the Azure IoT Device SDK, this is the place to start. These sample
 - [Sending telemetry messages](./getting%20started/src/send%20messages)
 - [Receive cloud to device message](./getting%20started/src/receive%20messages)
 - [Receive cloud to device method invocation](./getting%20started/src/receive%20method%20invocation)
-- [Upload files](./getting%20started/src/upload%20files)
 - [Device twins](getting%20started/src/device%20twins)
-- [Azure IoT Edge Modules](getting%20started/src/edge%20modules)
+- [Upload files](./getting%20started/src/upload%20files)
 
 ⭐ If this is your first time here, we suggest you start with the [send messages](./getting%20started/src/send%20messages) sample.
+
+## [Edge modules (level 100-200)](./edge%20modules)
+
+Nulla id tempus tortor, ut viverra odio. Aliquam accumsan magna vel efficitur eleifend. Curabitur consectetur fringilla eros ut pellentesque. Morbi id posuere quam. Nam aliquet nisi mauris, sit amet pharetra tortor euismod ac. Cras ullamcorper non purus et aliquet. Fusce dui mi, pellentesque at sagittis a, fringilla ac velit. Nullam nec enim iaculis, dictum turpis ac, tempus turpis. Pellentesque in dolor suscipit, faucibus risus a, pretium metus.
 
 ## [How to guides (level 200-300)](./how%20to%20guides)
 

@@ -7,7 +7,7 @@ The [Send messages](../send%20messages) sample demonstrates the basic device-to-
 - Vibration data sampled at high frequency
 - Some form of pre-processed data.
 
-This sample will show you how to upload these files into Azure IoT Hub.
+This sample will show you how to upload files into Azure IoT Hub.
 
 # 🦉 Getting setup
 
