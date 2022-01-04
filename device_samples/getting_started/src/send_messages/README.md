@@ -60,7 +60,7 @@ From the `getting_started/src/send_messages` directory, run `node send_messages_
 
 # 👉 Next Steps
 
-- [Recieve cloud to device messages](../recieve_messages)
+- [Recieve cloud to device messages](../receive_messages)
 - [More getting started samples](../../)
 
 # 💬 Feedback

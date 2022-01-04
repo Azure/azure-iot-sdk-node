@@ -2,7 +2,7 @@
 
 IoT Hub gives you the ability to send one-way notifications to a device app from your solution back end, send cloud-to-device messages from your IoT hub to your device.
 
-Try a different approach. Instead of recieving messages, receive a [cloud to device method invocation](../receive%20method%20invocation).
+Try a different approach. Instead of recieving messages, receive a [cloud to device method invocation](../receive_0method_invocation).
 
 Note, that these examples use the [connection string](../connections/connection_string.js) method to create a connection client. See the [connections](../connections) section if you want use a different connection method.
 
