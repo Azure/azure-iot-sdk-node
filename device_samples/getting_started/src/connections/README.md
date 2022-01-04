@@ -84,7 +84,7 @@ From the `getting_started/src/connections` directory, run `node proxy.js`
 
 # 👉 Next Steps
 
-- [Send messages](../send_messages)
+- [Send messages to IoT Hub](../send_messages)
 - [More getting started samples](../../)
 
 # 💬 Feedback

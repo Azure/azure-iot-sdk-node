@@ -51,7 +51,7 @@ notifyBlobUploadStatus success
   
 # 👉 Next Steps
 
-- [Send messages to IoT Hub](./src/send_messages)
+- [Send messages to IoT Hub](../send_messages)
 - [More getting started samples](../../)
 
 # 💬 Feedback
