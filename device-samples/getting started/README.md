@@ -6,7 +6,7 @@ These getting started samples are perfect for someone just getting into the [Azu
 
 ## [Connection types](src/connections)
 
-These samples will show you the different connections types you can use to create a client. To keep things simple, all our samples showcase the **connection string** method. However, you can use other connection methods like Shared Access Signature (SAS), X509 Certificates, and web socket proxies. These samples will show you how to create those clients and send a single event to Azure IoT Hub. 
+These samples will show you the different connection types you can use to create a client. To keep things simple, all our samples showcase the **connection string** method. However, you can use other connection methods like Shared Access Signature (SAS), X509 Certificates, and web socket proxies. These samples will show you how to create those clients and send a single telemetry message to Azure IoT Hub. 
 
 ## [Send message](src/send%20messages)
 

@@ -4,7 +4,7 @@ Environment vairables are a handy way to set variable values that are unique for
 
 For most samples, by default, you need to just set the `IOTHUB_DEVICE_CONNECTION_STRING` environment variable. This is the connection string for the device you registered in IoT hub. 
 
-There are samples that require other or more environmental variables to be set. They will be specifically called out in the sample.
+There are samples that require other or more environment variables to be set. They will be specifically called out in the sample.
 
 ### In bash
 ```bash

@@ -26,7 +26,7 @@ npm install
 For more information on how to use this library refer to the documents below:
 
 - [Prepare your node.js development environment][node-devbox-setup]
-- [Setup IoT Hub][lnk-setup-iot-hub]
+- [Set up IoT Hub][lnk-setup-iot-hub]
 - [Provision devices][lnk-manage-iot-hub]
 - [Node API reference][node-api-reference]
 - [Debugging with Visual Studio Code][debug-with-vscode]
