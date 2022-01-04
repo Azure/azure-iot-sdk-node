@@ -10,12 +10,12 @@ Before you can run any of the samples, you will need to setup and configure a fe
 
 > tip: right click and open in new tab
 
-- [Setup IoT Hub and devices](../../../../doc/device-samples/iot-hub-prerequisites.md)
-- [Setup IoT Central and devices](../../../../doc/device-samples/iot-central-prerequisites.md) (*only used for send messages to IoT Central*)
-- [Setup your local environment](../../../../doc/device-samples/dev-environment.md)
-- [Monitor activity (optional)](../../../../doc/device-samples/monitor-iot-hub.md)
+- [Setup IoT Hub and devices](../../../../doc/devicesamples/iot-hub-prerequisites.md)
+- [Setup IoT Central and devices](../../../../doc/devicesamples/iot-central-prerequisites.md) (*only used for send messages to IoT Central*)
+- [Setup your local environment](../../../../doc/devicesamples/dev-environment.md)
+- [Monitor activity (optional)](../../../../doc/devicesamples/monitor-iot-hub.md)
 
-Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
+Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
 
 | Env variable                    | Description                                                                                                                                                                                                         |
 | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -29,13 +29,13 @@ The default sample and the simplest way to create a client connection on your de
 
 #### Running the sample
 
-From the `getting started/src/send messages` directory, run `node send_messages_to_hub.js`
+From the `getting_started/src/send_messages` directory, run `node send_messages_to_hub.js`
 
 ### Send messages to IoT Central
 
-Before you can send telemetry messages to IoT Central, you need to create an IoT Central application and add a new device. [Click here](../../../../doc/device-samples/iot-central-prerequisites.md) for a walk thru on how to do both.
+Before you can send telemetry messages to IoT Central, you need to create an IoT Central application and add a new device. [Click here](../../../../doc/devicesamples/iot-central-prerequisites.md) for a walk thru on how to do both.
 
-This example does not use the connection string to connect the device. You will need to take the values from the IoT Central application and set them to the following environmental variables. [Click here](../../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
+This example does not use the connection string to connect the device. You will need to take the values from the IoT Central application and set them to the following environmental variables. [Click here](../../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
 
 | Env variable                 | Description                                                                                                                                    |
 | :--------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -44,11 +44,11 @@ This example does not use the connection string to connect the device. You will 
 | IOTHUB_DEVICE_DPS_DEVICE_ID  | `Device ID`                                                                                                                                    |
 | IOTHUB_DEVICE_DPS_DEVICE_KEY | `Primary Key` or `Secondary key`                                                                                                               |
 
-> For a more in-depth example of plug and play capabilies, see [this how to sample](../../../how%20to%20guides/src/plug%20and%20play)
+> For a more in-depth example of plug and play capabilies, see [this how to sample](../../../how_to_guides/src/plug_and_play)
 
 #### Running the sample
 
-From the `getting started/src/send messages` directory, run `node send_messages_to_central.js`
+From the `getting_started/src/send_messages` directory, run `node send_messages_to_central.js`
 
 ### Send messages in batch
 
@@ -56,11 +56,11 @@ Batch up several messages and send them in a single HTTP request. |
 
 #### Running the sample
 
-From the `getting started/src/send messages` directory, run `node send_messages_in_batch_http.js`
+From the `getting_started/src/send_messages` directory, run `node send_messages_in_batch_http.js`
 
 # 👉 Next Steps
 
-- [Recieve cloud to device messages](../recieve%20messages)
+- [Recieve cloud to device messages](../recieve_messages)
 - [More getting started samples](../../)
 
 # 💬 Feedback

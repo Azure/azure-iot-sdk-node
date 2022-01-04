@@ -1,6 +1,6 @@
 # Upload files
 
-The [Send messages](../send%20messages) sample demonstrates the basic device-to-cloud messaging functionality of IoT Hub. However, in some scenarios you can't easily map the data your devices send into the relatively small device-to-cloud messages that IoT Hub accepts. For example:
+The [Send messages](../send_messages) sample demonstrates the basic device-to-cloud messaging functionality of IoT Hub. However, in some scenarios you can't easily map the data your devices send into the relatively small device-to-cloud messages that IoT Hub accepts. For example:
 
 - Large files that contain images
 - Videos
@@ -13,12 +13,12 @@ This sample will show you how to upload files into Azure IoT Hub.
 
 Before you can run any of the samples, you will need to setup and configure a few things. 
 
-- [Setup IoT Hub and devices](../../../../doc/device-samples/iot-hub-prerequisites.md) 
-- [Setup your local environment](../../../../doc/device-samples/dev-environment.md) 
+- [Setup IoT Hub and devices](../../../../doc/devicesamples/iot-hub-prerequisites.md) 
+- [Setup your local environment](../../../../doc/devicesamples/dev-environment.md) 
 - [Associate an Azure Storage account to IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-node-node-file-upload#associate-an-azure-storage-account-to-iot-hub)
-- [Monitor activity (optional)](../../../../doc/device-samples/monitor-iot-hub.md)
+- [Monitor activity (optional)](../../../../doc/devicesamples/monitor-iot-hub.md)
 
-Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
+Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
 
 | Env variable                    | Description                                                                                                                                                                                                         |
 | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -35,7 +35,7 @@ Make sure you properly [Associate an Azure Storage account to IoT Hub](https://d
 
 #### Running the sample
 
-From the `getting started/src/upload files` directory, run `node upload_file.js`
+From the `getting_started/src/upload_files` directory, run `node upload_file.js`
 
 You should then see the following message in the terminal window:
 
@@ -51,7 +51,7 @@ notifyBlobUploadStatus success
   
 # 👉 Next Steps
 
-- [Send messages to IoT Hub](./src/send%20messages)
+- [Send messages to IoT Hub](./src/send_messages)
 - [More getting started samples](../../)
 
 # 💬 Feedback

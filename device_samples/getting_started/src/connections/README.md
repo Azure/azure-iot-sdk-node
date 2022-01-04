@@ -6,9 +6,9 @@ These samples highlight the different ways to create a client. For simplicity, a
 
 Before you can run any of the samples, you will need to setup and configure a few things. 
 
-- [Setup IoT Hub and devices](../../../../doc/device-samples/iot-hub-prerequisites.md) 
-- [Setup your local environment](../../../../doc/device-samples/dev-environment.md) 
-- [Monitor activity (optional)](../../../../doc/device-samples/monitor-iot-hub.md)
+- [Setup IoT Hub and devices](../../../../doc/devicesamples/iot-hub-prerequisites.md) 
+- [Setup your local environment](../../../../doc/devicesamples/dev-environment.md) 
+- [Monitor activity (optional)](../../../../doc/devicesamples/monitor-iot-hub.md)
 
 # 🌟 Samples
 
@@ -16,7 +16,7 @@ Before you can run any of the samples, you will need to setup and configure a fe
 
 The default sample and the simplest way to create a client connection on your device. This sample just creates a connection and sends a single event to Azure IoT Hub.
 
-Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
+Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
 
 | Env variable                    | Description                                                                                                                                                                                                         |
 | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -24,13 +24,13 @@ Before you get started, make sure you set the following environmental variables.
 
 #### Running the sample
 
-From the `getting started/src/connections` directory, run `node connection_string.js`
+From the `getting_started/src/connections` directory, run `node connection_string.js`
 
 ### Shared Access Signature (SAS)
 
 This sample shows you how to create a client connection using a SAS token. [Learn more](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-dev-guide-sas?tabs=node) about shared access signatures.
 
-Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
+Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
 
 | Env variable | Description                                                                                                                                                    |
 | :----------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -44,7 +44,7 @@ From the `getting started/src/connections` directory, run `node sas.js`
 
 This sample shows you how to create a client connection using a x509 certificates. [Learn more](https://docs.microsoft.com/en-us/azure/iot-hub/tutorial-x509-introduction) about certificates.
 
-Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
+Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
 
 | Env variable                    | Description                                                                                                                                                                                                         |
 | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | 
@@ -54,13 +54,13 @@ Before you get started, make sure you set the following environmental variables.
 | KEY_PASSPHRASE_OR_EMPTY         | Optional key passphrase.                                                                                                                                                                                            |
 #### Running the sample
 
-From the `getting started/src/connections` directory, run `node x509.js`
+From the `getting_started/src/connections` directory, run `node x509.js`
 
 ### Web proxy
 
 This sample using the connection string with options to use a proxy server.
 
-Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
+Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
 
 | Env variable                    | Description                                                                                                                                                                                                         |
 | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -75,7 +75,7 @@ const proxy = "http://localhost:8888/";
 
 #### Running the sample
 
-From the `getting started/src/connections` directory, run `node proxy.js`
+From the `getting_started/src/connections` directory, run `node proxy.js`
 
 # 📖 Further reading
 
@@ -84,7 +84,7 @@ From the `getting started/src/connections` directory, run `node proxy.js`
 
 # 👉 Next Steps
 
-- [Send messages](../send%20messages)
+- [Send messages](../send_messages)
 - [More getting started samples](../../)
 
 # 💬 Feedback

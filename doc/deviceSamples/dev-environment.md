@@ -12,12 +12,12 @@ In order to run the device samples you will first need the following prerequisit
 You need to install proper dependencies as defined in the package.json. Run the following commands:
 
 ```bash
-cd device-samples/getting started
+cd device_samples/getting_started
 npm install
 ```
 
 ```bash
-cd device-samples/how to guides
+cd device_samples/how_to_guides
 npm install
 ```
 

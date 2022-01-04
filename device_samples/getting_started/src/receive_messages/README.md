@@ -12,10 +12,10 @@ Before you can run any of the samples, you will need to setup and configure a fe
 
 > tip: right click and open in new tab
 
-- [Setup IoT Hub and devices](../../../../doc/device-samples/iot-hub-prerequisites.md)
-- [Setup your local environment](../../../../doc/device-samples/dev-environment.md)
+- [Setup IoT Hub and devices](../../../../doc/devicesamples/iot-hub-prerequisites.md)
+- [Setup your local environment](../../../../doc/devicesamples/dev-environment.md)
 
-Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/device-samples/setting-env-variables.md) if you need help setting environment variables.
+Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
 
 | Env variable                    | Description                                                                                                                                                                                                         |
 | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -29,7 +29,7 @@ This sample allows you recieve messages on your a device from a sender in the cl
 
 #### Running the sample
 
-From the `getting started/src/receive messages` directory, run `node receive_message.js`
+From the `getting_started/src/receive_messages` directory, run `node receive_message.js`
 
 You should then see the following message in the terminal:
 
@@ -38,11 +38,11 @@ Connected to device. Registering message handler.
 Ready to recieve messages...
 ```
 
-Next, you need to send a message from the cloud to your device. You can do this from either Azure IoT Explorer or [Azure Portal](../../../../doc/device-samples/send-message-with-azure-portal.md).
+Next, you need to send a message from the cloud to your device. You can do this from either Azure IoT Explorer or [Azure Portal](../../../../doc/devicesamples/send-message-with-azure-portal.md).
 
 - Message body: `hello world`
 
-![image showing messages side by side](../../../../doc/device-samples/media/azure-portal-and-iot-explorer-message.png)
+![image showing messages side by side](../../../../doc/devicesamples/media/azure-portal-and-iot-explorer-message.png)
 
 Click **Send message to device**. When the device recieves the message, the registered message handler will process the request. You should then see the following message in your terminal:
 
@@ -60,7 +60,7 @@ Received C2D message:
 
 # 👉 Next Steps
 
-- [Receive cloud to device method invocation](../receive%20method%20invocation)
+- [Receive cloud to device method invocation](../receive_method_invocation)
 - [More getting started samples](../../)
 
 # 💬 Feedback
