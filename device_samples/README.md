@@ -19,7 +19,7 @@ If are new to the Azure IoT Device SDK, this is the place to start. These sample
 
 If this is your first time here, we suggest you start with the [send messages](./getting_started/send_messages) sample.
 
-⚠️ An important note. These samples are for education purposes only. They are not designed to cut and pasted into product code.
+> An important note. These samples are for education purposes only. They are not designed to cut and pasted into product code.
 
 ## [Edge modules (level 100-200)](./edge_modules)
 

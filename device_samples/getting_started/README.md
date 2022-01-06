@@ -4,6 +4,8 @@ These getting started samples are perfect for someone just getting into the [Azu
 
 🔔 If you are just starting with Azure IoT device SDK's, we recommend you start with the basic [send messages to IoT Hub](send_messages) example.
 
+> An important note. These samples are for education purposes only. They are not designed to cut and pasted into product code.
+
 ## [Connection types](connections)
 
 These samples will show you the different connection types you can use to create a client. To keep things simple, all our samples showcase the **connection string** method. However, you can use other connection methods like Shared Access Signature (SAS), X509 Certificates, and web socket proxies. These samples will show you how to create those clients and send a single telemetry message to Azure IoT Hub. 
