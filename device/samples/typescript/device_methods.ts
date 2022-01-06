@@ -14,7 +14,7 @@ let client: Client = null;
 
 function main(): void {
   // open a connection to the device
-  const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING || '';
+  const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING ?? '';
 
   if (deviceConnectionString === '') {
     console.log('device connection string has not been set');

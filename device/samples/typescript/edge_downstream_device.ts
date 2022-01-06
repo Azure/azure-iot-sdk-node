@@ -18,7 +18,7 @@ import * as fs from 'fs';
 //
 // The resulting string should look like the following
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>;GatewayHostName=<edge device hostname>"
-const deviceConnectionString: string = process.env.IOTHUB_DEVICE_CONNECTION_STRING || '';
+const deviceConnectionString: string = process.env.IOTHUB_DEVICE_CONNECTION_STRING ?? '';
 
 // Path to the Edge "owner" root CA certificate
 const edgeCaCertPath: string = process.env.PATH_TO_EDGE_CA_CERT || '';

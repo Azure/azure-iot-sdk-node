@@ -8,7 +8,7 @@ import { Client } from 'azure-iot-device';
 import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
 import * as fs from 'fs';
 
-const deviceConnectionString: string =  process.env.IOTHUB_DEVICE_CONNECTION_STRING || '';
+const deviceConnectionString: string =  process.env.IOTHUB_DEVICE_CONNECTION_STRING ?? '';
 const filePath: string = process.env.PATH_TO_FILE || '';
 
 // check for connection string

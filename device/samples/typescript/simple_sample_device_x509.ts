@@ -13,7 +13,7 @@ import * as fs from 'fs';
 
 // String containing Hostname and Device Id in the following format:
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;x509=true"
-const deviceConnectionString: string = process.env.IOTHUB_DEVICE_CONNECTION_STRING || '';
+const deviceConnectionString: string = process.env.IOTHUB_DEVICE_CONNECTION_STRING ?? '';
 const certFile: string = process.env.PATH_TO_CERTIFICATE_FILE || '';
 const keyFile: string = process.env.PATH_TO_KEY_FILE || '';
 const passphrase: string = process.env.KEY_PASSPHRASE_OR_EMPTY || ''; // Key Passphrase if one exists.

@@ -9,7 +9,7 @@ import { SymmetricKeySecurityClient } from 'azure-iot-security-symmetric-key';
 import { ProvisioningDeviceClient, RegistrationResult } from 'azure-iot-provisioning-device';
 import { ProvisioningPayload, RegistrationClient } from 'azure-iot-provisioning-device/dist/interfaces';
 
-let deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING || '';
+let deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING ?? '';
 
 // DPS connection information
 const provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT || 'global.azure-devices-provisioning.net';

@@ -10,7 +10,7 @@ import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
 
 import { Client, Twin } from 'azure-iot-device';
 
-const deviceConnectionString: string = process.env.IOTHUB_DEVICE_CONNECTION_STRING || '';
+const deviceConnectionString: string = process.env.IOTHUB_DEVICE_CONNECTION_STRING ?? '';
 
 if (deviceConnectionString === '') {
   console.log('device connection string not set');

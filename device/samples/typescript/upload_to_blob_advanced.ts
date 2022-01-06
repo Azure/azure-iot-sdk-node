@@ -28,7 +28,7 @@ import { errors } from 'azure-iot-common';
 import { AnonymousCredential, BlobUploadCommonResponse, BlockBlobClient, newPipeline, Pipeline } from '@azure/storage-blob';
 
 // make sure you set these environment variables prior to running the sample.
-const deviceConnectionString: string = process.env.IOTHUB_DEVICE_CONNECTION_STRING || '';
+const deviceConnectionString: string = process.env.IOTHUB_DEVICE_CONNECTION_STRING ?? '';
 const filePath: string = process.env.PATH_TO_FILE || '';
 const storageBlobName: string = 'testblob.txt';
 
