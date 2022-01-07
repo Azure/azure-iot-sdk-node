@@ -10,77 +10,52 @@ import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
 
 import { Client, Message } from 'azure-iot-device';
 
-const deviceConnectionString: string = process.env.IOTHUB_DEVICE_CONNECTION_STRING ?? '';
-const logRed: string = '\x1b[31m%s\x1b[0m';
-let sendInterval: NodeJS.Timeout;
+const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING || '';
+const logRed = '\x1b[31m%s\x1b[0m';
 
-if (deviceConnectionString === '' || deviceConnectionString === undefined) {
-  console.error(logRed, 'device connection string not set');
-  process.exit(0);
-}
-
-const client: Client = Client.fromConnectionString(deviceConnectionString, Protocol);
-
-async function asyncMain(): Promise<void> {
-  client.on('connect', connectHandler);
-  client.on('error', errorHandler);
-  client.on('disconnect', disconnectHandler);
-  client.on('message', messageHandler);
-
-  client.open().catch((err) => {
-    console.error(logRed, 'Could not connect: ' + err.message);
-    process.exit(0);
-  });
-}
-
-function disconnectHandler(): void {
-  clearInterval(sendInterval);
-
-  client.open().catch((err: Error) => {
-    console.error(logRed, 'Disconnect error: ' + err.message);
-  });
-}
-
-function connectHandler(): void {
-  console.log('Client connected');
-  // Create a message and send it to the IoT Hub every two seconds
-  if (!sendInterval) {
-    sendInterval = setInterval(() => {
-      const message = generateMessage();
-      console.log('Sending message: ' + message.getData());
-      client.sendEvent(message, printResultFor('send'));
-    }, 2000);
-  }
-}
-
-function messageHandler(msg: any): void {
-  console.log('Id: ' + msg.messageId + ' Body: ' + msg.data);
-  client.complete(msg, printResultFor('completed'));
-}
-
-function errorHandler(err: any): void {
-  console.error(logRed, err.message);
-}
-
-function printResultFor(op: any): (err: any, res: any) => void {
-  return function printResult(err: any, res: any): void {
-    if (err) console.log(op + ' error: ' + err.toString());
-    if (res) console.log(op + ' status: ' + res.transportObj.statusCode + ' ' + res.transportObj.statusMessage);
-  };
+if (!deviceConnectionString) {
+  console.error(logRed, 'Missing device connection string');
+  process.exit(1);
 }
 
 function generateMessage(): Message {
-  const windSpeed: number = 10 + Math.random() * 4; // range: [10, 14]
-  const temperature: number = 20 + Math.random() * 10; // range: [20, 30]
-  const humidity: number = 60 + Math.random() * 20; // range: [60, 80]
-  const data: string = JSON.stringify({ deviceId: 'myFirstDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
-  const message: Message = new Message(data);
+  const windSpeed = 10 + Math.random() * 4; // range: [10, 14]
+  const temperature = 20 + Math.random() * 10; // range: [20, 30]
+  const humidity = 60 + Math.random() * 20; // range: [60, 80]
+  const message = new Message(JSON.stringify({ windSpeed, temperature, humidity }));
   message.properties.add('temperatureAlert', temperature > 28 ? 'true' : 'false' );
   return message;
 }
 
-asyncMain().catch((err: any): void => {
-  console.log('error code: ', err.code);
-  console.log('error message: ', err.message);
-  console.log('error stack: ', err.stack);
+async function main() {
+  const client = Client.fromConnectionString(deviceConnectionString, Protocol);
+  await client.open();
+  console.log('Client connection: Open');
+  let disconnected = false;
+  let error!: Error;
+
+  client.once('error', err => error = err);
+  client.once('disconnected', () => disconnected = true);
+
+  while (!disconnected && !error) {
+    const message = generateMessage();
+    console.log(`Sending message: ${message.getData()}`);
+    await client.sendEvent(message);
+    console.log('Message sent');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+  if (error) {
+    throw error;
+  }
+  if (disconnected) {
+    throw new Error('Client disconnected');
+  }
+}
+
+main().then(() => {
+  console.log('Done.');
+  process.exit(0);
+}).catch(err => {
+  console.error(logRed, err);
+  process.exit(1);
 });

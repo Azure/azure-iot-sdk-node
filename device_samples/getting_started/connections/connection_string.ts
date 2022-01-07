@@ -10,45 +10,43 @@ import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
 
 import { Client, Message } from 'azure-iot-device';
 
-// String containing Hostname, Device Id & Device Key in the following formats:
-//  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
-const deviceConnectionString: string = process.env.IOTHUB_DEVICE_CONNECTION_STRING ?? '';
-const logRed: string = '\x1b[31m%s\x1b[0m';
+// String containing Hostname, Device ID, and Device Key in the following format:
+// "HostName=<IoT Hub hostname>;DeviceId=<device id>;SharedAccessKey=<device key>"
+const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING || '';
+const logRed = '\x1b[31m%s\x1b[0m';
 
-// make sure we have a connection string before we can continue
-if (deviceConnectionString === '' || deviceConnectionString === undefined) {
+// Make sure we have a connection string before we can continue
+if (!deviceConnectionString) {
   console.error(logRed, 'Missing device connection string');
-  process.exit(0);
+  process.exit(1);
 }
 
-// fromConnectionString must specify a transport constructor, coming from any transport package.
-const client: Client = Client.fromConnectionString(deviceConnectionString, Protocol);
-const message: Message = new Message(JSON.stringify({ deviceId: 'my-first-device', temperature: 20 + Math.random() * 10, }));
+async function main() {
+  // Client.fromConnectionString() requires a transport constructor coming from
+  // one of the device transport packages.
+  const client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
-// open client connection
-client.open().catch((err: Error) => {
-  console.error(logRed, 'Could not connect: ' + err.message);
-  process.exit(0);
-});
-console.log('Client connection: Open');
+  // Open client connection to IoT Hub
+  console.log('Opening connection to IoT Hub');
+  await client.open();
+  console.log('Client connection: Open');
 
-// send a messge
-console.log('Sending message: ' + message.getData());
-client.sendEvent(message, printResultFor('Send'));
+  // Send a telemetry message to IoT Hub
+  const messageData = JSON.stringify({ temperature: 20 + Math.random() * 10 });
+  console.log(`Sending message: ${messageData}`);
+  await client.sendEvent(new Message(messageData));
+  console.log('Message sent');
 
-// close client connection
-client.close().catch((err: Error) => {
-  console.error(logRed, 'Could not close connection: ' + err.message);
-});
-console.log("Client connection: Closed");
-
-// exit process
-process.exit(0);
-
-// helper function to print results in the console
-function printResultFor(op: any): (err: any, res: any) => void {
-  return function printResult(err: any, res: any): void {
-    if (err) console.log(logRed, op + ' error: ' + err.toString());
-    if (res) console.log(op + ' status: ' + res.constructor.name);
-  };
+  // Close client connection
+  console.log('Closing connection');
+  await client.close();
+  console.log('Client connection: Closed');
 }
+
+main().then(() => {
+  console.log('Done.');
+  process.exit(0);
+}).catch(err => {
+  console.error(logRed, err);
+  process.exit(1);
+});

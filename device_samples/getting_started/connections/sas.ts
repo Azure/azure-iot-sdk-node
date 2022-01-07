@@ -10,46 +10,43 @@ import { Mqtt as Protocol } from 'azure-iot-device-mqtt';
 
 import { Client, Message } from 'azure-iot-device';
 
-// String SharedAccessSignature in the following formats:
-//  "SharedAccessSignature sr=<iothub_host_name>/devices/<device_id>&sig=<signature>&se=<expiry>"
-const sas: string = process.env.IOTHUB_SAS || '';
-const logRed: string = '\x1b[31m%s\x1b[0m';
+// SharedAccessSignature string in the following format:
+// "SharedAccessSignature sr=<IoT Hub hostname>/devices/<device id>&sig=<signature>&se=<expiry>"
+const sas = process.env.IOTHUB_SAS || '';
+const logRed = '\x1b[31m%s\x1b[0m';
 
-// make sure we have a connection string before we can continue
-if (sas === '' || sas === undefined) {
+// Make sure we have a shared access signature before we can continue
+if (!sas) {
   console.error(logRed, 'Missing Shared Access Signature (SAS)');
-  process.exit(0);
+  process.exit(1);
 }
 
-// fromSharedAccessSignature must specify a transport constructor, coming from any transport package.
-const client: Client = Client.fromSharedAccessSignature(sas, Protocol);
-const message: Message = new Message(JSON.stringify({ deviceId: 'my-first-device', temperature: 20 + Math.random() * 10, }));
+async function main() {
+  // Client.fromSharedAccessSignature() requires a transport constructor coming
+  // from one of the device transport packages.
+  const client = Client.fromSharedAccessSignature(sas, Protocol);
 
-// open client connection
-client.open().catch((err: Error) => {
-  console.error(logRed, 'Could not connect: ' + err.message);
-  process.exit(0);
-});
-console.log('Client connection: Open');
+  // Open client connection to IoT Hub
+  console.log('Opening connection to IoT Hub');
+  await client.open();
+  console.log('Client connection: Open');
 
-// send a messge
-console.log('Sending message: ' + message.getData());
-client.sendEvent(message, printResultFor('Send'));
+  // Send a telemetry message to IoT Hub
+  const messageData = JSON.stringify({ temperature: 20 + Math.random() * 10 });
+  console.log(`Sending message: ${messageData}`);
+  await client.sendEvent(new Message(messageData));
+  console.log('Message sent');
 
-// close client connection
-client.close().catch((err: Error) => {
-  console.error(logRed, 'Could not close connection: ' + err.message);
-});
-console.log("Client connection: Closed");
-
-// exit process
-process.exit(0);
-
-// helper function to print results in the console
-function printResultFor(op: any): (err: any, res: any) => void {
-  return function printResult(err: any, res: any): void {
-    if (err) console.log(logRed, op + ' error: ' + err.toString());
-    if (res) console.log(op + ' status: ' + res.constructor.name);
-  };
+  // Close client connection
+  console.log('Closing connection');
+  await client.close();
+  console.log('Client connection: Closed');
 }
 
+main().then(() => {
+  console.log('Done.');
+  process.exit(0);
+}).catch(err => {
+  console.error(logRed, err);
+  process.exit(1);
+});
