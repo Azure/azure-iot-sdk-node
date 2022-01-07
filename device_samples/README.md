@@ -27,4 +27,8 @@ Nulla id tempus tortor, ut viverra odio. Aliquam accumsan magna vel efficitur el
 
 ## [How to guides (level 200-300)](./how_to_guides)
 
-Nulla id tempus tortor, ut viverra odio. Aliquam accumsan magna vel efficitur eleifend. Curabitur consectetur fringilla eros ut pellentesque. Morbi id posuere quam. Nam aliquet nisi mauris, sit amet pharetra tortor euismod ac. Cras ullamcorper non purus et aliquet. Fusce dui mi, pellentesque at sagittis a, fringilla ac velit. Nullam nec enim iaculis, dictum turpis ac, tempus turpis. Pellentesque in dolor suscipit, faucibus risus a, pretium metus.
+Once you have become familair with the [getting started](getting_started) samples, you may be interested in the next level of samples. These "how-to-guides" are samples that support more complicated scenerios on advanced capabilties. They include scenarios like device provisioning, plug and play, and more.
+
+- [Register and connect a device using the Device Provisioning service](./how_to_guides/device_provisioning)
+- [Enabling and using devices with Plug and Play](./how_to_guides/plug_and_play)
+- [Use Device Twins to reboot a device](./how_to_guides/device_reboot)

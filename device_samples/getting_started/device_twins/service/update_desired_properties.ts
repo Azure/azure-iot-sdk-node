@@ -8,22 +8,22 @@ const logRed: string = '\x1b[31m%s\x1b[0m';
 let arg: number = 1;
 
 // check for iot hub connection string
-if (connectionString == '' || connectionString === undefined) {
+if (connectionString === '' || connectionString === undefined) {
   console.log(logRed, 'IoT Hub connection string not set');
   process.exit(0);
 }
 
 // check for iot hub connection string
-if (deviceId == '{device id}') {
+if (deviceId === '{device id}') {
   console.log(logRed, 'DeviceId string not set');
   process.exit(0);
 }
 
 // get the passed in argument to run a specific patch update
 // values 1-5 are legit
-if (process.argv.length != 3) {
+if (process.argv.length !== 3) {
   console.log(logRed, "Missing patch number. Defaulting to '1'.")
-} 
+}
 else {
   arg = parseInt(process.argv.slice(2).toString(), 10);
   if ((arg > 5) || (arg < 1)) arg = 1;
@@ -35,7 +35,7 @@ registry.getTwin(deviceId, function (err: any, twin: any) {
   if (err) {
     console.error(logRed, `Error during get twin (${err.constructor.name}): ${err.message}`);
     process.exit(0);
-  } else {    
+  } else {
 
     // Usage example #1: receiving all patches with a single event handler.
     const twinPatch1 = {
@@ -98,11 +98,11 @@ registry.getTwin(deviceId, function (err: any, twin: any) {
         }
       }
     }
-   
+
     let twinPatch: any = twinPatch1;
 
     // set to the patch based on the argument value
-    switch(arg) {                
+    switch(arg) {
       case 2:
         twinPatch = twinPatch2;
         console.log('Using twinPatch2');
@@ -122,13 +122,13 @@ registry.getTwin(deviceId, function (err: any, twin: any) {
       default:
         twinPatch = twinPatch1;
         console.log('Using twinPatch1');
-    }     
+    }
 
-    twin.update(twinPatch, (err: any, twin: any) => {
-      if (err) {
-        console.error(logRed, `Error during patch update: ${err.message}`);
+    twin.update(twinPatch, (error: any, res: any) => {
+      if (error) {
+        console.error(logRed, `Error during patch update: ${error.message}`);
       } else {
-        console.log(`Sent patch: ${JSON.stringify(twinPatch)}`);      
+        console.log(`Sent patch: ${JSON.stringify(twinPatch)}`);
       }
     });
   }
