@@ -13,10 +13,10 @@ const SymmetricKeySecurityClient = require('azure-iot-security-symmetric-key').S
 const ProvisioningDeviceClient = require('azure-iot-provisioning-device').ProvisioningDeviceClient;
 
 // DPS connection information
-const provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT || 'global.azure-devices-provisioning.net';
-const idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE || '';
-const deviceId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID || '';
-const deviceKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY || '';
+const provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT ?? 'global.azure-devices-provisioning.net';
+const idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE ?? '';
+const deviceId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID ?? '';
+const deviceKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY ?? '';
 
 const modelIdObject = { modelId: 'dtmi:com:example:Thermostat;1' };
 const telemetrySendInterval = 10000;

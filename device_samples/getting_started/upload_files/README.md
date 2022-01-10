@@ -13,12 +13,12 @@ This sample will show you how to upload files into Azure IoT Hub.
 
 Before you can run any of the samples, you will need to setup and configure a few things. 
 
-- [Setup IoT Hub and devices](../../../../doc/devicesamples/iot-hub-prerequisites.md) 
-- [Setup your local environment](../../../../doc/devicesamples/dev-environment.md) 
+- [Setup IoT Hub and devices](../../../doc/devicesamples/iot-hub-prerequisites.md) 
+- [Setup your local environment](../../../doc/devicesamples/dev-environment.md) 
 - [Associate an Azure Storage account to IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-node-node-file-upload#associate-an-azure-storage-account-to-iot-hub)
-- [Monitor activity (optional)](../../../../doc/devicesamples/monitor-iot-hub.md)
+- [Monitor activity (optional)](../../../doc/devicesamples/monitor-iot-hub.md)
 
-Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
+Before you get started, make sure you set the following environmental variables. [Click here](../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
 
 | Env variable                    | Description                                                                                                                                                                                                         |
 | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

@@ -19,11 +19,11 @@ Before you can run any of the samples, you will need to setup and configure a fe
 
 > tip: right click and open in new tab
 
-- [Setup IoT Hub and devices](../../../../doc/devicesamples/iot-hub-prerequisites.md)
-- [Setup your local environment](../../../../doc/devicesamples/dev-environment.md)
+- [Setup IoT Hub and devices](../../../doc/devicesamples/iot-hub-prerequisites.md)
+- [Setup your local environment](../../../doc/devicesamples/dev-environment.md)
 - [Configure simulated backend service](./service)
 
-Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
+Before you get started, make sure you set the following environmental variables. [Click here](../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
 
 | Env variable                    | Description                                                                                                                                                                                                         |
 | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -49,7 +49,7 @@ Getting twin properties...
 {"reported":{"$version":1},"desired":{"$version":1}}
 ```
 
-You can view the device twin from the [Azure Portal](../../../../doc/devicesamples/device-twin-with-azure-portal.md) or [Azure IoT Explorer]((../../../../doc/devicesamples/device-twin-with-iot-explorer.md)).
+You can view the device twin from the [Azure Portal](../../../doc/devicesamples/device-twin-with-azure-portal.md) or [Azure IoT Explorer]((../../../doc/devicesamples/device-twin-with-iot-explorer.md)).
 
 ### Recieve desired properties
 
@@ -81,7 +81,7 @@ Client opened.
 Twin created.
 Twin state reported successfully.
 ```
-You can view the device twin from the [Azure Portal](../../../../doc/devicesamples/device-twin-with-azure-portal.md) or [Azure IoT Explorer]((../../../../doc/devicesamples/device-twin-with-iot-explorer.md)).
+You can view the device twin from the [Azure Portal](../../../doc/devicesamples/device-twin-with-azure-portal.md) or [Azure IoT Explorer]((../../../doc/devicesamples/device-twin-with-iot-explorer.md)).
 
 ### All together
 

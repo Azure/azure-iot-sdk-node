@@ -10,12 +10,12 @@ Before you can run any of the samples, you will need to setup and configure a fe
 
 > tip: right click and open in new tab
 
-- [Setup IoT Hub and devices](../../../../doc/devicesamples/iot-hub-prerequisites.md)
-- [Setup IoT Central and devices](../../../../doc/devicesamples/iot-central-prerequisites.md) (*only used for send messages to IoT Central*)
-- [Setup your local environment](../../../../doc/devicesamples/dev-environment.md)
-- [Monitor activity (optional)](../../../../doc/devicesamples/monitor-iot-hub.md)
+- [Setup IoT Hub and devices](../../../doc/devicesamples/iot-hub-prerequisites.md)
+- [Setup IoT Central and devices](../../../doc/devicesamples/iot-central-prerequisites.md) (*only used for send messages to IoT Central*)
+- [Setup your local environment](../../../doc/devicesamples/dev-environment.md)
+- [Monitor activity (optional)](../../../doc/devicesamples/monitor-iot-hub.md)
 
-Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
+Before you get started, make sure you set the following environmental variables. [Click here](../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
 
 | Env variable                    | Description                                                                                                                                                                                                         |
 | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -33,9 +33,9 @@ From the `getting_started/send_messages` directory, run `node send_messages_to_i
 
 ### Send messages to IoT Central
 
-Before you can send telemetry messages to IoT Central, you need to create an IoT Central application and add a new device. [Click here](../../../../doc/devicesamples/iot-central-prerequisites.md) for a walk thru on how to do both.
+Before you can send telemetry messages to IoT Central, you need to create an IoT Central application and add a new device. [Click here](../../../doc/devicesamples/iot-central-prerequisites.md) for a walk thru on how to do both.
 
-This example does not use the connection string to connect the device. You will need to take the values from the IoT Central application and set them to the following environmental variables. [Click here](../../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
+This example does not use the connection string to connect the device. You will need to take the values from the IoT Central application and set them to the following environmental variables. [Click here](../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
 
 | Env variable                 | Description                                                                                                                                    |
 | :--------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -3,8 +3,6 @@
 
 'use strict';
 
-
-
 const iotHubTransport = require('azure-iot-device-mqtt').Mqtt;
 const Client = require('azure-iot-device').Client;
 const Message = require('azure-iot-device').Message;
@@ -21,8 +19,9 @@ const ProvisioningTransport = require('azure-iot-provisioning-device-mqtt').Mqtt
 
 const provisioningHost = process.env.PROVISIONING_HOST ?? 'global.azure-devices-provisioning.net';
 const idScope = process.env.PROVISIONING_IDSCOPE ?? '';
-const registrationId = process.env.PROVISIONING_REGISTRATION_ID ?? '';
 const symmetricKey = process.env.PROVISIONING_SYMMETRIC_KEY ?? '';
+const registrationId = process.env.PROVISIONING_REGISTRATION_ID ?? 'my-first-device-id';
+
 const logRed = '\x1b[31m%s\x1b[0m';
 
 function computeDerivedSymmetricKey(masterKey, regId) {
@@ -50,6 +49,7 @@ provisioningClient.register(function(err, result) {
     hubClient.open(function(err) {
       if (err) {
         console.error(logRed, 'Could not connect: ' + err.message);
+        process.exit(0);
       } else {
         console.log('Client connected');        
         hubClient.sendEvent(new Message('Hello world'), function(err, res) {

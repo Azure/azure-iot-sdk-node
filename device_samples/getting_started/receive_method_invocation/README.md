@@ -12,10 +12,10 @@ Before you can run any of the samples, you will need to setup and configure a fe
 
 > tip: right click and open in new tab
 
-- [Setup IoT Hub and devices](../../../../doc/devicesamples/iot-hub-prerequisites.md)
-- [Setup your local environment](../../../../doc/devicesamples/dev-environment.md)
+- [Setup IoT Hub and devices](../../../doc/devicesamples/iot-hub-prerequisites.md)
+- [Setup your local environment](../../../doc/devicesamples/dev-environment.md)
 
-Before you get started, make sure you set the following environmental variables. [Click here](../../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
+Before you get started, make sure you set the following environmental variables. [Click here](../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
 
 | Env variable                    | Description                                                                                                                                                                                                         |
 | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -38,14 +38,14 @@ Connected to device. Registering handlers for methods.
 Ready to recieve method invocation...
 ```
 
-Next, you need to send a message from the cloud to your device. You can do this from either Azure IoT Explorer or [Azure Portal](../../../../doc/devicesamples/send-message-with-azure-portal.md).
+Next, you need to send a message from the cloud to your device. You can do this from either Azure IoT Explorer or [Azure Portal](../../../doc/devicesamples/send-message-with-azure-portal.md).
 
 - Method name: `fanOn`
 - Payload: `"hello world"`
 
 > For simplicity in this sample, we are not handling the payload contents, so any JSON formatted payload will work.
 
-![image showing device methods side by side](../../../../doc/devicesamples/media/azure-portal-and-iot-explorer-direct-method.png)
+![image showing device methods side by side](../../../doc/devicesamples/media/azure-portal-and-iot-explorer-direct-method.png)
 
 Click **Invoke method**. When the device recieves the message, the handler invokes the method. You should then see the following message in your terminal:
 
