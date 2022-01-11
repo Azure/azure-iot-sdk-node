@@ -11,7 +11,7 @@ const Protocol = require('azure-iot-device-mqtt').Mqtt;
 
 const Client = require('azure-iot-device').Client;
 
-const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING ?? '';
+const deviceConnectionString = 'HostName=danhellem-iot-hub.azure-devices.net;DeviceId=devDevice;SharedAccessKey=iu68gFDsKK2WqcC8bDFBFe9Bg6Ae10YJVrIbVuxvfKA=';
 const logRed = '\x1b[31m%s\x1b[0m';
 
 // make sure we have a connection string before we can continue
@@ -27,7 +27,7 @@ client.open(function(err) {
     client.onDeviceMethod('reboot', function onReboot(request, response) {
       response.send(200, 'Reboot started', function(err) {
         if (err) {
-          console.error(logReg, 'An error occured when sending a method response:\n' + err.toString());
+          console.error(logReg, 'An error occured when sending a method response: ' + err.toString());
         } else {
           console.log('Response to method \'' + request.methodName + '\' sent successfully.');
         }
@@ -36,9 +36,9 @@ client.open(function(err) {
       // Get device Twin
       client.getTwin(function(err, twin) {
         if (err) {
-          console.error(logred, 'Could not get twin');
+          console.error(logRed, 'Could not get twin');
         } else {
-          console.log('Twin acquired');
+          console.log('Twin acquired.');
 
           // Update the reported properties for this device through the
           // twin. This enables the back end app to query for all device that
@@ -51,9 +51,9 @@ client.open(function(err) {
             }
           }, function(err) {
             if (err) {
-              console.error('Error updating twin');
+              console.error(logRed, 'Error updating twin: ' + err.message );
             } else {
-              console.log('Device reboot twin state reported');
+              console.log('Device reboot twin state reported.');
             }
           });
         }
@@ -62,8 +62,8 @@ client.open(function(err) {
       // Add your device's reboot API for physical restart.
       console.log('Rebooting!');
     });
-    console.log('Client connected to IoT Hub.  Waiting for reboot device method.');
+    console.log('Client connected to IoT Hub. Waiting for reboot device method...');
   } else {
-    console.error(err);
+    console.error(logRed, err.message);
   }
 });

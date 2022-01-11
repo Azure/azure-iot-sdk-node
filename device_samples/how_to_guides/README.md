@@ -16,7 +16,7 @@ IoT Plug and Play enables solution builders to integrate IoT devices with their 
 
 ## [Use Device Twins to reboot a device](device_reboot)
 
-Recieve messages from cloud using Azure Portal and Azure IoT Explorer.
+Use device twins and cloud-to-device method invocations to simulate rebooting a physical device.
 
 # Next Steps
 

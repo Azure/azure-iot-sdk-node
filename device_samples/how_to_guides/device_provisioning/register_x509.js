@@ -50,7 +50,7 @@ deviceClient.register(function(err, result) {
 
         hubClient.sendEvent(new Message('Hello world'), function(err, res) {
           if (err) console.log(logRed, 'Send error: ' + err.message);
-          if (res) console.log(logRed, 'Send status: ' + res.constructor.name);
+          if (res) console.log('Send status: ' + res.constructor.name);
           process.exit(1);
         });
       }
